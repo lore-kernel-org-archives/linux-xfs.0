@@ -1,464 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:38661 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750741AbdL2NV4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Dec 2017 08:21:56 -0500
-Received: by mail-wm0-f67.google.com with SMTP id 64so48016886wme.3
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Dec 2017 05:21:56 -0800 (PST)
+Received: from mx2.suse.de ([195.135.220.15]:57193 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756578AbdLVIv3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 22 Dec 2017 03:51:29 -0500
+Date: Fri, 22 Dec 2017 09:51:25 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 14/15] dax: associate mappings with inodes, and warn if
+ dma collides with truncate
+Message-ID: <20171222085125.GB5320@quack2.suse.cz>
+References: <150949209290.24061.6283157778959640151.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <150949217152.24061.9869502311102659784.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20171110090818.GE4895@lst.de>
+ <CAPcyv4irj_+pJdX1SO6MjsxURcKm8--i_QvyudgHTZE2w4w-sA@mail.gmail.com>
+ <20171220143822.GB31584@quack2.suse.cz>
+ <CAPcyv4jfvkSSMvruQSFqa5N2zmPmnkDbxCzwvgQAqMQOkT8Xgg@mail.gmail.com>
+ <20171221121414.GI31584@quack2.suse.cz>
+ <CAPcyv4ifiiD3iOR6nFV=JyQ+tb8B=mWF=Vzm497WYnpypjgn7A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1712282315030.1899@nanos>
-References: <20171228152710.891701433@linutronix.de> <20171228153308.286787253@linutronix.de>
- <alpine.DEB.2.20.1712282315030.1899@nanos>
-From: Philippe Ombredanne <pombredanne@nexb.com>
-Date: Fri, 29 Dec 2017 14:21:14 +0100
-Message-ID: <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
-Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to describe
- how to properly identify file licenses
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4ifiiD3iOR6nFV=JyQ+tb8B=mWF=Vzm497WYnpypjgn7A@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Matthew Wilcox <mawilcox@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-Thomas,
+On Thu 21-12-17 09:31:50, Dan Williams wrote:
+> On Thu, Dec 21, 2017 at 4:14 AM, Jan Kara <jack@suse.cz> wrote:
+> > On Wed 20-12-17 14:41:14, Dan Williams wrote:
+> >> On Wed, Dec 20, 2017 at 6:38 AM, Jan Kara <jack@suse.cz> wrote:
+> >> > On Tue 19-12-17 17:11:38, Dan Williams wrote:
+> >> >> On Fri, Nov 10, 2017 at 1:08 AM, Christoph Hellwig <hch@lst.de> wrote:
+> >> >> >> +             struct {
+> >> >> >> +                     /*
+> >> >> >> +                      * ZONE_DEVICE pages are never on an lru or handled by
+> >> >> >> +                      * a slab allocator, this points to the hosting device
+> >> >> >> +                      * page map.
+> >> >> >> +                      */
+> >> >> >> +                     struct dev_pagemap *pgmap;
+> >> >> >> +                     /*
+> >> >> >> +                      * inode association for MEMORY_DEVICE_FS_DAX page-idle
+> >> >> >> +                      * callbacks. Note that we don't use ->mapping since
+> >> >> >> +                      * that has hard coded page-cache assumptions in
+> >> >> >> +                      * several paths.
+> >> >> >> +                      */
+> >> >> >
+> >> >> > What assumptions?  I'd much rather fix those up than having two fields
+> >> >> > that have the same functionality.
+> >> >>
+> >> >> [ Reviving this old thread where you asked why I introduce page->inode
+> >> >> instead of reusing page->mapping ]
+> >> >>
+> >> >> For example, xfs_vm_set_page_dirty() assumes that page->mapping being
+> >> >> non-NULL indicates a typical page cache page, this is a false
+> >> >> assumption for DAX. My guess at a fix for this is to add
+> >> >> pagecache_page() checks to locations like this, but I worry about how
+> >> >> to find them all. Where pagecache_page() is:
+> >> >>
+> >> >> bool pagecache_page(struct page *page)
+> >> >> {
+> >> >>         if (!page->mapping)
+> >> >>                 return false;
+> >> >>         if (!IS_DAX(page->mapping->host))
+> >> >>                 return false;
+> >> >>         return true;
+> >> >> }
+> >> >>
+> >> >> Otherwise we go off the rails:
+> >> >>
+> >> >>  WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
+> >> >> xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
+> >> >
+> >> > But this just shows that mapping->a_ops are wrong for this mapping, doesn't
+> >> > it? ->set_page_dirty handler for DAX mapping should just properly handle
+> >> > DAX pages... (and only those)
+> >>
+> >> Ah, yes. Now that I change ->mapping to be non-NULL for DAX pages I
+> >> enable all the address_space_operations to start firing. However,
+> >> instead of adding DAX specific address_space_operations it appears
+> >> ->mapping should never be set for DAX pages, because DAX pages are
+> >> disconnected from the page-writeback machinery.
+> >
+> > page->mapping is not only about page-writeback machinery. It is generally
+> > about page <-> inode relation and that still exists for DAX pages. We even
+> > reuse the mapping->page_tree to store DAX pages. Also requiring proper
+> > address_space_operations for DAX inodes is IMO not a bad thing as such.
+> >
+> > That being said I'm not 100% convinced we should really set page->mapping
+> > for DAX pages. After all they are not page cache pages but rather a
+> > physical storage for the data, don't ever get to LRU, etc. But if you need
+> > page->inode relation somewhere, that is a good indication to me that it
+> > might be just easier to set page->mapping and provide aops that do the
+> > right thing (i.e. usually not much) for them.
+> >
+> > BTW: the ->set_page_dirty() in particular actually *does* need to do
+> > something for DAX pages - corresponding radix tree entries should be
+> > marked dirty so that caches can get flushed when needed.
+> 
+> For this specific concern, the get_user_pages() path will have
+> triggered mkwrite, so the dax dirty tracking in the radix will have
+> already happened by the time we call ->set_page_dirty(). So, it's not
+> yet clear to me that we need that particular op.
 
-On Thu, Dec 28, 2017 at 11:17 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> On Thu, 28 Dec 2017, Thomas Gleixner wrote:
->
-> Sorry for the spam. I somehow missed to refresh the patch before generating
-> the mbox. Find below the correct version of that one which has ALL braces
-> removed which we don't need.
->
-> Thanks,
->
->         tglx
->
-> 8<--------------------------
-> Subject: Documentation: Add license-rules.rst to describe how to properly identify file licenses
-> From: Thomas Gleixner <tglx@linutronix.de>
-> Date: Fri, 10 Nov 2017 09:30:00 +0100
->
-> Add a file to the Documentation directory to describe how file licenses
-> should be described in all kernel files, using the SPDX identifier, as well
-> as where all licenses should be in the kernel source tree for people to
-> refer to (LICENSES/).
->
-> Thanks to Kate and Greg for review and editing and Jonas for the
-> suggestions concerning the meta tags in the licenses files.
->
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Reviewed-by: Jonas Oberg <jonas@fsfe.org>
-> Reviewed-by: Jonathan Corbet <corbet@lwn.net>
-> Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-> Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
-> ---
->  Documentation/index.rst                 |   12 +
->  Documentation/process/license-rules.rst |  370 ++++++++++++++++++++++++++++++++
->  2 files changed, 382 insertions(+)
->  create mode 100644 Documentation/license-rules.rst
->
-> --- a/Documentation/index.rst
-> +++ b/Documentation/index.rst
-> @@ -13,6 +13,18 @@ documents into a coherent whole.  Please
->  documentation are welcome; join the linux-doc list at vger.kernel.org if
->  you want to help out.
->
-> +Licensing documentation
-> +-----------------------
-> +
-> +The following describes the license of the Linux kernel source code
-> +(GPLv2), how to properly mark the license of individual files in the source
-> +tree, as well as links to the full license text.
-> +
-> +.. toctree::
-> +   :maxdepth: 2
-> +
-> +   process/license-rules.rst
-> +
->  User-oriented documentation
->  ---------------------------
->
-> --- /dev/null
-> +++ b/Documentation/process/license-rules.rst
-> @@ -0,0 +1,370 @@
-> +.. SPDX-License-Identifier: GPL-2.0
-> +
-> +Linux kernel licensing rules
-> +============================
-> +
-> +The Linux Kernel is provided under the terms of the GNU General Public
-> +License version 2 only (GPL-2.0), as published by the Free Software
-> +Foundation, and provided in the COPYING file.  This documentation file is
-> +not meant to replace the COPYING file, but provides a description of how
-> +each source file should be annotated to make the licensing it is governed
-> +under clear and unambiguous.
-> +
-> +The license in the COPYING file applies to the kernel source as a whole,
-> +though individual source files can have a different license which is
-> +required to be compatible with the GPL-2.0::
-> +
-> +    GPL-1.0+  :  GNU General Public License v1.0 or later
-> +    GPL-2.0+  :  GNU General Public License v2.0 or later
-> +    LGPL-2.0  :  GNU Library General Public License v2 only
-> +    LGPL-2.0+ :  GNU Library General Public License v2 or later
-> +    LGPL-2.1  :  GNU Lesser General Public License v2.1 only
-> +    LGPL-2.1+ :  GNU Lesser General Public License v2.1 or later
-> +
-> +Aside from that, individual files can be provided under a dual license,
-> +e.g. one of the compatible GPL variants and alternatively under a
-> +permissive license like BSD, MIT etc.
-> +
-> +The User-space API (UAPI) header files, which describe the interface of
-> +user-space programs to the kernel are a special case.  According to the
-> +note in the kernel COPYING file, the syscall interface is a clear boundary,
-> +which does not extend the GPL requirements to any software which uses it to
-> +communicate with the kernel.  Because the UAPI headers must be includable
-> +into any source files which create an executable running on the Linux
-> +kernel, the exception must be documented by a special license expression.
-> +
-> +The common way of expressing the license of a source file is to add the
-> +matching boilerplate text into the top comment of the file.  Due to
-> +formatting, typos etc. these "boilerplates" are hard to validate for
-> +tools which are used in the context of license compliance.
-> +
-> +An alternative to boilerplate text is the use of Software Package Data
-> +Exchange (SPDX) license identifiers in each source file.  SPDX license
-> +identifiers are machine parsable and precise shorthands for the license
-> +under which the content of the file is contributed.  SPDX license
-> +identifiers are managed by the SPDX Workgroup at the Linux Foundation and
-> +have been agreed on by partners throughout the industry, tool vendors, and
-> +legal teams.  For further information see https://spdx.org/
-> +
-> +The Linux kernel requires the precise SPDX identifier in all source files.
-> +The valid identifiers used in the kernel are explained in the section
-> +`License identifiers`_ and have been retrieved from the official SPDX
-> +license list at https://spdx.org/licenses/ along with the license texts.
-> +
-> +License identifier syntax
-> +-------------------------
-> +
-> +1. Placement:
-> +
-> +   The SPDX license identifier in kernel files shall be added at the first
-> +   possible line in a file which can contain a comment.  For the majority
-> +   or files this is the first line, except for scripts which require the
-> +   '#!PATH_TO_INTERPRETER' in the first line.  For those scripts the SPDX
-> +   identifier goes into the second line.
-> +
-> +|
-> +
-> +2. Style:
-> +
-> +   The SPDX license identifier is added in form of a comment.  The comment
-> +   style depends on the file type::
-> +
-> +      C source:        // SPDX-License-Identifier: <SPDX License Expression>
-> +      C header:        /* SPDX-License-Identifier: <SPDX License Expression> */
-> +      ASM:     /* SPDX-License-Identifier: <SPDX License Expression> */
-> +      scripts: # SPDX-License-Identifier: <SPDX License Expression>
-> +      .rst:    .. SPDX-License-Identifier: <SPDX License Expression>
-> +      .dts{i}: // SPDX-License-Identifier: <SPDX License Expression>
-> +
-> +   If a specific tool cannot handle the standard comment style, then the
-> +   appropriate comment mechanism which the tool accepts shall be used. This
-> +   is the reason for having the "/\* \*/" style comment in C header
-> +   files. There was build breakage observed with generated .lds files where
-> +   'ld' failed to parse the C++ comment. This has been fixed by now, but
-> +   there are still older assembler tools which cannot handle C++ style
-> +   comments.
-> +
-> +|
-> +
-> +3. Syntax:
-> +
-> +   A <SPDX License Expression> is either an SPDX short form license
-> +   identifier found on the SPDX License List, or the combination of two
-> +   SPDX short form license identifiers separated by "WITH" when a license
-> +   exception applies. When multiple licenses apply, an expression consists
-> +   of keywords "AND", "OR" separating sub-expressions and surrounded by
-> +   "(", ")" .
-> +
-> +   License identifiers for licenses like [L]GPL with the 'or later' option
-> +   are constructed by using a "+" for indicating the 'or later' option.::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0+
-> +      // SPDX-License-Identifier: LGPL-2.1+
-> +
-> +   WITH should be used when there is a modifier to a license needed.
-> +   For example, the linux kernel UAPI files use the expression::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
-> +      // SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note
-> +
-> +   Other examples using WITH exceptions found in the kernel are::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 WITH mif-exception
-> +      // SPDX-License-Identifier: GPL-2.0+ WITH GCC-exception-2.0
-> +
-> +   Exceptions can only be used with particular License identifiers. The
-> +   valid License identifiers are listed in the tags of the exception text
-> +   file. For details see the point `Exceptions`_ in the chapter `License
-> +   identifiers`_.
-> +
-> +   OR should be used if the file is dual licensed and only one license is
-> +   to be selected.  For example, some dtsi files are available under dual
-> +   licenses::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-> +
-> +   Examples from the kernel for license expressions in dual licensed files::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 OR MIT
-> +      // SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
-> +      // SPDX-License-Identifier: GPL-2.0 OR Apache-2.0
-> +      // SPDX-License-Identifier: GPL-2.0 OR MPL-1.1
-> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) OR MIT
-> +      // SPDX-License-Identifier: GPL-1.0+ OR BSD-3-Clause OR OpenSSL
-> +
-> +   AND should be used if the file has multiple licenses whose terms all
-> +   apply to use the file. For example, if code is inherited from another
-> +   project and permission has been given to put it in the kernel, but the
-> +   original license terms need to remain in effect::
-> +
-> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) AND MIT
-> +
-> +   Another other example where both sets of license terms need to be
-> +   adhered to is::
-> +
-> +      // SPDX-License-Identifier: GPL-1.0+ AND LGPL-2.1+
-> +
-> +License identifiers
-> +-------------------
-> +
-> +The licenses currently used, as well as the licenses for code added to the
-> +kernel, can be broken down into:
-> +
-> +1. _`Preferred licenses`:
-> +
-> +   Whenever possible these licenses should be used as they are known to be
-> +   fully compatible and widely used.  These licenses are available from the
-> +   directory::
-> +
-> +      LICENSES/preferred/
-> +
-> +   in the kernel source tree.
-> +
-> +   The files in this directory contain the full license text and
-> +   `Metatags`_.  The file names are identical to the SPDX license
-> +   identifier which shall be used for the license in source files.
-> +
-> +   Examples::
-> +
-> +      LICENSES/preferred/GPL-2.0
-> +
-> +   Contains the GPL version 2 license text and the required metatags::
-> +
-> +      LICENSES/preferred/MIT
-> +
-> +   Contains the MIT license text and the required metatags
-> +
-> +   _`Metatags`:
-> +
-> +   The following meta tags must be available in a license file:
-> +
-> +   - Valid-License-Identifier:
-> +
-> +     One or more lines which declare which License Identifiers are valid
-> +     inside the project to reference this particular license text.  Usually
-> +     this is a single valid identifier, but e.g. for licenses with the 'or
-> +     later' options two identifiers are valid.
-> +
-> +   - SPDX-URL:
-> +
-> +     The URL of the SPDX page which contains additional information related
-> +     to the license.
-> +
-> +   - Usage-Guidance:
-> +
-> +     Freeform text for usage advice. The text must include correct examples
-> +     for the SPDX license identifiers as they should be put into source
-> +     files according to the `License identifier syntax`_ guidelines.
-> +
-> +   - License-Text:
-> +
-> +     All text after this tag is treated as the original license text
-> +
-> +   File format examples::
-> +
-> +      Valid-License-Identifier: GPL-2.0
-> +      Valid-License-Identifier: GPL-2.0+
-> +      SPDX-URL: https://spdx.org/licenses/GPL-2.0.html
-> +      Usage-Guide:
-> +        To use this license in source code, put one of the following SPDX
-> +       tag/value pairs into a comment according to the placement
-> +       guidelines in the licensing rules documentation.
-> +       For 'GNU General Public License (GPL) version 2 only' use:
-> +         SPDX-License-Identifier: GPL-2.0
-> +       For 'GNU General Public License (GPL) version 2 or any later version' use:
-> +         SPDX-License-Identifier: GPL-2.0+
-> +      License-Text:
-> +        Full license text
-> +
-> +   ::
-> +
-> +      SPDX-License-Identifier: MIT
-> +      SPDX-URL: https://spdx.org/licenses/MIT.html
-> +      Usage-Guide:
-> +       To use this license in source code, put the following SPDX
-> +       tag/value pair into a comment according to the placement
-> +       guidelines in the licensing rules documentation.
-> +         SPDX-License-Identifier: MIT
-> +      License-Text:
-> +        Full license text
-> +
-> +|
-> +
-> +2. Not recommended licenses:
-> +
-> +   These licenses should only be used for existing code or for importing
-> +   code from a different project.  These licenses are available from the
-> +   directory::
-> +
-> +      LICENSES/other/
-> +
-> +   in the kernel source tree.
-> +
-> +   The files in this directory contain the full license text and
-> +   `Metatags`_.  The file names are identical to the SPDX license
-> +   identifier which shall be used for the license in source files.
-> +
-> +   Examples::
-> +
-> +      LICENSES/other/ISC
-> +
-> +   Contains the Internet Systems Consortium license text and the required
-> +   metatags::
-> +
-> +      LICENSES/other/ZLib
-> +
-> +   Contains the ZLIB license text and the required metatags.
-> +
-> +   Metatags:
-> +
-> +   The metatag requirements for 'other' licenses are identical to the
-> +   requirements of the `Preferred licenses`_.
-> +
-> +   File format example::
-> +
-> +      Valid-License-Identifier: ISC
-> +      SPDX-URL: https://spdx.org/licenses/ISC.html
-> +      Usage-Guide:
-> +        Usage of this license in the kernel for new code is discouraged
-> +       and it should solely be used for importing code from an already
-> +       existing project.
-> +        To use this license in source code, put the following SPDX
-> +       tag/value pair into a comment according to the placement
-> +       guidelines in the licensing rules documentation.
-> +         SPDX-License-Identifier: ISC
-> +      License-Text:
-> +        Full license text
-> +
-> +|
-> +
-> +3. _`Exceptions`:
-> +
-> +   Some licenses can be amended with exceptions which grant certain rights
-> +   which the original license does not.  These exceptions are available
-> +   from the directory::
-> +
-> +      LICENSES/exceptions/
-> +
-> +   in the kernel source tree.  The files in this directory contain the full
-> +   exception text and the required `Exception Metatags`_.
-> +
-> +   Examples::
-> +
-> +      LICENSES/exceptions/Linux-syscall-note
-> +
-> +   Contains the Linux syscall exception as documented in the COPYING
-> +   file of the Linux kernel, which is used for UAPI header files.
-> +   e.g. /\* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note \*/::
-> +
-> +      LICENSES/exceptions/GCC-exception-2.0
-> +
-> +   Contains the GCC 'linking exception' which allows to link any binary
-> +   independent of its license against the compiled version of a file marked
-> +   with this exception. This is required for creating runnable executables
-> +   from source code which is not compatible with the GPL.
-> +
-> +   _`Exception Metatags`:
-> +
-> +   The following meta tags must be available in an exception file:
-> +
-> +   - SPDX-Exception-Identifier:
-> +
-> +     One exception identifier which can be used with SPDX license
-> +     identifiers.
-> +
-> +   - SPDX-URL:
-> +
-> +     The URL of the SPDX page which contains additional information related
-> +     to the exception.
-> +
-> +   - SPDX-Licenses:
-> +
-> +     A comma separated list of SPDX license identifiers for which the
-> +     exception can be used.
-> +
-> +   - Usage-Guidance:
-> +
-> +     Freeform text for usage advice. The text must be followed by correct
-> +     examples for the SPDX license identifiers as they should be put into
-> +     source files according to the `License identifier syntax`_ guidelines.
-> +
-> +   - Exception-Text:
-> +
-> +     All text after this tag is treated as the original exception text
-> +
-> +   File format examples::
-> +
-> +      SPDX-Exception-Identifier: Linux-syscall-note
-> +      SPDX-URL: https://spdx.org/licenses/Linux-syscall-note.html
-> +      SPDX-Licenses: GPL-2.0, GPL-2.0+, GPL-1.0+, LGPL-2.0, LGPL-2.0+, LGPL-2.1, LGPL-2.1+
-> +      Usage-Guidance:
-> +        This exception is used together with one of the above SPDX-Licenses
-> +       to mark user-space API (uapi) header files so they can be included
-> +       into non GPL compliant user-space application code.
-> +        To use this exception add it with the keyword WITH to one of the
-> +       identifiers in the SPDX-Licenses tag:
-> +         SPDX-License-Identifier: <SPDX-License> WITH Linux-syscall-note
-> +      Exception-Text:
-> +        Full exception text
-> +
-> +   ::
-> +
-> +      SPDX-Exception-Identifier: GCC-exception-2.0
-> +      SPDX-URL: https://spdx.org/licenses/GCC-exception-2.0.html
-> +      SPDX-Licenses: GPL-2.0, GPL-2.0+
-> +      Usage-Guidance:
-> +        The "GCC Runtime Library exception 2.0" is used together with one
-> +       of the above SPDX-Licenses for code imported from the GCC runtime
-> +       library.
-> +        To use this exception add it with the keyword WITH to one of the
-> +       identifiers in the SPDX-Licenses tag:
-> +         SPDX-License-Identifier: <SPDX-License> WITH GCC-exception-2.0
-> +      Exception-Text:
-> +        Full exception text
-> +
-> +
-> +All SPDX license identifiers and exceptions must have a corresponding file
-> +in the LICENSE subdirectories. This is required to allow tool
-> +verification (e.g. checkpatch.pl) and to have the licenses ready to read
-> +and extract right from the source, which is recommended by various FOSS
-> +organizations, e.g. the `FSFE REUSE initiative <https://reuse.software/>`_.
+Right, but it would still be nice to at least verify in ->set_page_dirty()
+that the DAX page is marked as dirty in the radix tree (that may be
+slightly expensive to keep forever but probably still worth it at least for
+some time).
 
-My review still stands in this updated/corrected version. Thanks!
+BTW: You just made me realize get_user_pages() is likely the path I have
+been looking for for about an year which can indeed dirty a mapped page
+from a different path than page fault (I'm now speaking about non-DAX case
+but it translates to DAX as well). I have been getting sporadical reports
+of filesystems (ext4 and xfs) crashing because a page was dirty but
+filesystem was not prepared for that (which happens in ->page_mkwrite or
+->write_begin). What I think could happen is that someone used mmaped file
+as a buffer for DIO or something like that, that triggered GUP, which
+triggered fault and dirtied a page. Then kswapd came, wrote the page,
+writeprotected it in page tables, and reclaimed buffers from the page. It
+could not free the page itself because DIO still held reference to it.
+And then DIO eventually called bio_set_pages_dirty() which marked pages
+dirty and filesystem eventually barfed on these... I'll talk to MM people
+about this and how could it be possibly fixed - but probably after
+Christmas so I'm writing it here so that I don't forget :).
 
-Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+> >> In other words never
+> >> setting ->mapping bypasses all the possible broken assumptions and
+> >> code paths that take page-cache specific actions before calling an
+> >> address_space_operation.
+> >
+> > If there are any assumptions left after aops are set properly, then we can
+> > reconsider this but for now setting ->mapping and proper aops looks cleaner
+> > to me...
+> 
+> I'll try an address_space_operation with a nop ->set_page_dirty() and
+> see if anything else falls out.
 
+There are also other aops which would be good to NOPify. readpage and
+writepage should probably directly BUG, write_begin and write_end as well
+as we expect iomap to be used with DAX. Ditto for invalidatepage,
+releasepage, freepage, launder_page, is_dirty_writeback, isolate_page as we
+don't expect page reclaim for our pages. Other functions in there would
+need some thought...
+
+								Honza
 -- 
-Cordially
-Philippe Ombredanne
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
