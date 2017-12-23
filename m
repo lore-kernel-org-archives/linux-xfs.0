@@ -1,71 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:56218 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756065AbdLWAQD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:16:03 -0500
-Date: Fri, 22 Dec 2017 16:07:10 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:58394 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756065AbdLWAnA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:43:00 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0gv6k097592
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:42:59 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2120.oracle.com with ESMTP id 2f1ct0r064-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:42:59 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0gwqb028458
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:42:58 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0gvb9026480
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:42:57 GMT
+Subject: [PATCH 01/21] xfs: ignore agfl read errors when not scrubbing agfl
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v4 17/19] xfs: avoid setting XFS_ILOG_CORE if i_version
- doesn't need incrementing
-Message-ID: <20171223000710.GF12613@magnolia>
-References: <20171222120556.7435-1-jlayton@kernel.org>
- <20171222120556.7435-18-jlayton@kernel.org>
+Date: Fri, 22 Dec 2017 16:42:56 -0800
+Message-ID: <151398977659.18741.2172605369601254389.stgit@magnolia>
+In-Reply-To: <151398977028.18741.12031215574014508438.stgit@magnolia>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171222120556.7435-18-jlayton@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 22, 2017 at 07:05:54AM -0500, Jeff Layton wrote:
-> From: Jeff Layton <jlayton@redhat.com>
-> 
-> If XFS_ILOG_CORE is already set then go ahead and increment it.
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks ok,
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+In xfs_scrub_ag_read_headers, if we're not scrubbing the AGFL but
+hit a read error reading the AGFL, we should reset the error code
+so that it doesn't propagate up into the caller.
 
-> ---
->  fs/xfs/xfs_trans_inode.c | 14 ++++++++------
->  1 file changed, 8 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-> index 225544327c4f..4a89da4b6fe7 100644
-> --- a/fs/xfs/xfs_trans_inode.c
-> +++ b/fs/xfs/xfs_trans_inode.c
-> @@ -112,15 +112,17 @@ xfs_trans_log_inode(
->  
->  	/*
->  	 * First time we log the inode in a transaction, bump the inode change
-> -	 * counter if it is configured for this to occur. We don't use
-> -	 * inode_inc_version() because there is no need for extra locking around
-> -	 * i_version as we already hold the inode locked exclusively for
-> -	 * metadata modification.
-> +	 * counter if it is configured for this to occur. While we have the
-> +	 * inode locked exclusively for metadata modification, we can usually
-> +	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
-> +	 * the last time it was incremented. If we have XFS_ILOG_CORE already
-> +	 * set however, then go ahead and bump the i_version counter
-> +	 * unconditionally.
->  	 */
->  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
->  	    IS_I_VERSION(VFS_I(ip))) {
-> -		inode_inc_iversion(VFS_I(ip));
-> -		flags |= XFS_ILOG_CORE;
-> +		if (inode_maybe_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
-> +			flags |= XFS_ILOG_CORE;
->  	}
->  
->  	tp->t_flags |= XFS_TRANS_DIRTY;
-> -- 
-> 2.14.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/common.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 98452ad..6ec4e10 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -302,7 +302,7 @@ xfs_scrub_ag_read_headers(
+ 	error = xfs_alloc_read_agfl(mp, sc->tp, agno, agfl);
+ 	if (error && want_ag_read_header_failure(sc, XFS_SCRUB_TYPE_AGFL))
+ 		goto out;
+-
++	error = 0;
+ out:
+ 	return error;
+ }
+
