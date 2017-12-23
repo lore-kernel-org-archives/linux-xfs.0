@@ -1,62 +1,267 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4228 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751031AbdLAWbF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Dec 2017 17:31:05 -0500
-Subject: Re: [PATCH 1/4] xfs: add scrub to XFS_BUILD_OPTIONS
-References: <2f4bb05f-fd41-7fa3-22f0-9ec9d2224a47@redhat.com>
- <f5769e20-970a-53f5-4fc7-2afd11304ce2@sandeen.net>
- <20171201222922.GZ21412@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <ad19d44f-87bc-0db7-f890-38de214d8acc@redhat.com>
-Date: Fri, 1 Dec 2017 16:31:04 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:39334 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757147AbdLWBN2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:13:28 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN1C8pD079469
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:13:28 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2f1cvd81b8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:13:28 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBN18R3a021755
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:08:27 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN18QFY002926
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:08:26 GMT
+Subject: [PATCH 13/20] xfs: provide a centralized method for verifying
+ inline fork data
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 22 Dec 2017 17:08:25 -0800
+Message-ID: <151399130564.23543.3415524034974708060.stgit@magnolia>
+In-Reply-To: <151399122361.23543.15718507168231759645.stgit@magnolia>
+References: <151399122361.23543.15718507168231759645.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20171201222922.GZ21412@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 12/1/17 4:29 PM, Darrick J. Wong wrote:
-> On Fri, Dec 01, 2017 at 04:12:34PM -0600, Eric Sandeen wrote:
->> Advertise this config option along with the others.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
->> index fcc5dfc..8cee8e8 100644
->> --- a/fs/xfs/xfs_super.h
->> +++ b/fs/xfs/xfs_super.h
->> @@ -44,6 +44,12 @@
->>  # define XFS_REALTIME_STRING
->>  #endif
->>  
->> +#ifdef CONFIG_XFS_ONLINE_SCRUB
->> +# define XFS_SCRUB_STRING	"scrub, "
->> +#else
->> +# define XFS_SCRUB_STRING
->> +#endif
-> 
-> I don't mind this addition to the build options, though I had pictured
-> scrub becoming an integral part of xfs some day and not remaining a
-> configurable option.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It could be removed at that time, unless it's considered an API?
+Replace the current haphazard dir2 shortform verifier callsites with a
+centralized verifier function that can be called either with the default
+verifier functions or with a custom set.  This helps us strengthen
+integrity checking while providing us with flexibility for repair tools.
 
-I'm not hung up on this, if there's no reason for it that's OK.
+xfs_repair wants this to be able to supply its own verifier functions
+when trying to fix possibly corrupt metadata.
 
-> That said I haven't evaluated how much scrub bloats up xfs nor do I know
-> if the kernel tinyfication people would actually want to turn it off??
-> 
-> (For my part I prefer it some day not be Kconfig option so that it won't
-> bitrot ala CONFIG_XFS_RT=y.)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c |   64 ++++++++++++++++++++++++++++------------
+ fs/xfs/libxfs/xfs_inode_fork.h |   14 +++++++++
+ fs/xfs/xfs_icache.c            |    5 +++
+ fs/xfs/xfs_inode.c             |   34 +++++++++++++++++++--
+ fs/xfs/xfs_inode.h             |    2 +
+ fs/xfs/xfs_log_recover.c       |    4 +++
+ 6 files changed, 99 insertions(+), 24 deletions(-)
 
-I'd imagine that it'd be turned on more often than RT but that's just a guess.
 
--Eric
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index a92395a..c1c1a86 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -35,6 +35,8 @@
+ #include "xfs_da_format.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_priv.h"
++#include "xfs_attr_leaf.h"
++#include "xfs_shared.h"
  
+ kmem_zone_t *xfs_ifork_zone;
+ 
+@@ -97,14 +99,6 @@ xfs_iformat_fork(
+ 	if (error)
+ 		return error;
+ 
+-	/* Check inline dir contents. */
+-	if (S_ISDIR(inode->i_mode) && dip->di_format == XFS_DINODE_FMT_LOCAL) {
+-		if (xfs_dir2_sf_verify(ip)) {
+-			xfs_idestroy_fork(ip, XFS_DATA_FORK);
+-			return -EFSCORRUPTED;
+-		}
+-	}
+-
+ 	if (xfs_is_reflink_inode(ip)) {
+ 		ASSERT(ip->i_cowfp == NULL);
+ 		xfs_ifork_init_cow(ip);
+@@ -121,18 +115,6 @@ xfs_iformat_fork(
+ 		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+ 		size = be16_to_cpu(atp->hdr.totsize);
+ 
+-		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
+-			xfs_warn(ip->i_mount,
+-				"corrupt inode %Lu (bad attr fork size %Ld).",
+-				(unsigned long long) ip->i_ino,
+-				(long long) size);
+-			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
+-					     XFS_ERRLEVEL_LOW,
+-					     ip->i_mount, dip);
+-			error = -EFSCORRUPTED;
+-			break;
+-		}
+-
+ 		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
+ 		break;
+ 	case XFS_DINODE_FMT_EXTENTS:
+@@ -740,3 +722,45 @@ xfs_ifork_init_cow(
+ 	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_cnextents = 0;
+ }
++
++/* Default fork content verifiers. */
++struct xfs_ifork_ops xfs_default_ifork_ops = {
++	.verify_attr	= xfs_attr_shortform_verify,
++	.verify_dir	= xfs_dir2_sf_verify,
++	.verify_symlink	= xfs_symlink_shortform_verify,
++};
++
++/* Verify the inline contents of the data fork of an inode. */
++xfs_failaddr_t
++xfs_ifork_verify_data(
++	struct xfs_inode	*ip,
++	struct xfs_ifork_ops	*ops)
++{
++	/* Non-local data fork, we're done. */
++	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
++		return NULL;
++
++	/* Check the inline data fork if there is one. */
++	switch (VFS_I(ip)->i_mode & S_IFMT) {
++	case S_IFDIR:
++		return ops->verify_dir(ip);
++	case S_IFLNK:
++		return ops->verify_symlink(ip);
++	default:
++		return NULL;
++	}
++}
++
++/* Verify the inline contents of the attr fork of an inode. */
++xfs_failaddr_t
++xfs_ifork_verify_attr(
++	struct xfs_inode	*ip,
++	struct xfs_ifork_ops	*ops)
++{
++	/* There has to be an attr fork allocated if aformat is local. */
++	if (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
++		return NULL;
++	if (!XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
++		return __this_address;
++	return ops->verify_attr(ip);
++}
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index b9f0098..dd8aba0 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -186,4 +186,18 @@ extern struct kmem_zone	*xfs_ifork_zone;
+ 
+ extern void xfs_ifork_init_cow(struct xfs_inode *ip);
+ 
++typedef xfs_failaddr_t (*xfs_ifork_verifier_t)(struct xfs_inode *);
++
++struct xfs_ifork_ops {
++	xfs_ifork_verifier_t	verify_symlink;
++	xfs_ifork_verifier_t	verify_dir;
++	xfs_ifork_verifier_t	verify_attr;
++};
++extern struct xfs_ifork_ops	xfs_default_ifork_ops;
++
++xfs_failaddr_t xfs_ifork_verify_data(struct xfs_inode *ip,
++		struct xfs_ifork_ops *ops);
++xfs_failaddr_t xfs_ifork_verify_attr(struct xfs_inode *ip,
++		struct xfs_ifork_ops *ops);
++
+ #endif	/* __XFS_INODE_FORK_H__ */
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 58d2d42..1383603 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -473,6 +473,11 @@ xfs_iget_cache_miss(
+ 	if (error)
+ 		goto out_destroy;
+ 
++	if (!xfs_inode_verify_forks(ip)) {
++		error = -EFSCORRUPTED;
++		goto out_destroy;
++	}
++
+ 	trace_xfs_iget_miss(ip);
+ 
+ 	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6f95bdb..663b546 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3479,6 +3479,34 @@ xfs_iflush(
+ 	return error;
+ }
+ 
++/*
++ * If there are inline format data / attr forks attached to this inode,
++ * make sure they're not corrupt.
++ */
++bool
++xfs_inode_verify_forks(
++	struct xfs_inode	*ip)
++{
++	xfs_failaddr_t		fa;
++
++	fa = xfs_ifork_verify_data(ip, &xfs_default_ifork_ops);
++	if (fa) {
++		xfs_alert(ip->i_mount,
++				"%s: bad inode %llu inline data fork at %pF",
++				__func__, ip->i_ino, fa);
++		return false;
++	}
++
++	fa = xfs_ifork_verify_attr(ip, &xfs_default_ifork_ops);
++	if (fa) {
++		xfs_alert(ip->i_mount,
++				"%s: bad inode %llu inline attr fork at %pF",
++				__func__, ip->i_ino, fa);
++		return false;
++	}
++	return true;
++}
++
+ STATIC int
+ xfs_iflush_int(
+ 	struct xfs_inode	*ip,
+@@ -3557,10 +3585,8 @@ xfs_iflush_int(
+ 	if (ip->i_d.di_version < 3)
+ 		ip->i_d.di_flushiter++;
+ 
+-	/* Check the inline directory data. */
+-	if (S_ISDIR(VFS_I(ip)->i_mode) &&
+-	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
+-	    xfs_dir2_sf_verify(ip))
++	/* Check the inline fork data before we write out. */
++	if (!xfs_inode_verify_forks(ip))
+ 		goto corrupt_out;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index d383e39..386b0bb 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -491,4 +491,6 @@ extern struct kmem_zone	*xfs_inode_zone;
+ /* The default CoW extent size hint. */
+ #define XFS_DEFAULT_COWEXTSZ_HINT 32
+ 
++bool xfs_inode_verify_forks(struct xfs_inode *ip);
++
+ #endif	/* __XFS_INODE_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 28d1abf..04f5b30 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2957,6 +2957,10 @@ xfs_recover_inode_owner_change(
+ 	if (error)
+ 		goto out_free_ip;
+ 
++	if (!xfs_inode_verify_forks(ip)) {
++		error = -EFSCORRUPTED;
++		goto out_free_ip;
++	}
+ 
+ 	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
+ 		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
+
