@@ -1,53 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53615 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751799AbdL0D60 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Dec 2017 22:58:26 -0500
-Date: Tue, 26 Dec 2017 19:58:15 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v5 03/78] xarray: Add the xa_lock to the radix_tree_root
-Message-ID: <20171227035815.GD24828@bombadil.infradead.org>
-References: <20171215220450.7899-1-willy@infradead.org>
- <20171215220450.7899-4-willy@infradead.org>
- <20171226165440.tv6inwa2fgk3bfy6@node.shutemov.name>
- <20171227034340.GC24828@bombadil.infradead.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:49080 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750800AbdLWGAQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Dec 2017 01:00:16 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN5uuro160190
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 06:00:15 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2f1hb9g0aa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 06:00:15 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBN60EMk001323
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 06:00:14 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN60Dik024123
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 06:00:14 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Status Report 12/5/2017 - 12/22/2017
+Message-ID: <67773e67-b4e8-a0a1-6317-4b26d3dcdbb3@oracle.com>
+Date: Fri, 22 Dec 2017 23:00:12 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171227034340.GC24828@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Dec 26, 2017 at 07:43:40PM -0800, Matthew Wilcox wrote:
->     Also add the xa_lock() and xa_unlock() family of wrappers to make it
->     easier to use the lock.  If we could rely on -fplan9-extensions in
->     the compiler, we could avoid all of this syntactic sugar, but that
->     wasn't added until gcc 4.6.
+Status Report 12/5/2017 - 12/22/2017
+   * Mapped corresponding parent pointer code to xfsprogs
+   * Implemented parents_by_handle stub routine in xfsprogs
+     * Enabled parents command in xfs_io
+   * Working on implementing xfstests
+     * Needed to finish parents tool in xfs_io to use in xfstest
+   * Worked with Darrick to make sure parent pointer patches and scrub 
+patches in xfs_progs compile
 
-Oh, in case anyone's wondering, here's how I'd do it with plan9 extensions:
+Projection for next week
+   * Finish xfs_tests and push out set for review with xfs_progs
 
-struct xarray {
-        spinlock_t;
-        int xa_flags;
-        void *xa_head;
-};
+Thanks all!
 
-...
-        spin_lock_irqsave(&mapping->pages, flags);
-        __delete_from_page_cache(page, NULL);
-        spin_unlock_irqrestore(&mapping->pages, flags);
-...
-
-The plan9 extensions permit passing a pointer to a struct which has an
-unnamed element to a function which is expecting a pointer to the type
-of that element.  The compiler does any necessary arithmetic to produce 
-a pointer.  It's exactly as if I had written:
-
-        spin_lock_irqsave(&mapping->pages.xa_lock, flags);
-        __delete_from_page_cache(page, NULL);
-        spin_unlock_irqrestore(&mapping->pages.xa_lock, flags);
-
-More details here: https://9p.io/sys/doc/compiler.html
+Allison Henderson
