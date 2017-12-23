@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39666 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:39864 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757158AbdLWBOE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:14:04 -0500
+        with ESMTP id S1757158AbdLWBOF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:14:05 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN1CS7k079597
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:14:03 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2f1cvd81df-1
+        by aserp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN1C8pH079469
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:14:05 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2f1cvd81km-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:14:03 +0000
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:14:04 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBN18pfH030771
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBN17Hg2010089
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:08:51 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN18p2N006636
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:08:51 GMT
-Subject: [PATCH 17/20] xfs: separate dquot repair into a separate function
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:07:17 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN17HHl005941
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:07:17 GMT
+Subject: [PATCH 02/20] xfs: refactor long-format btree header verification
+ routines
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Dec 2017 17:08:50 -0800
-Message-ID: <151399133030.23543.13471674725718289527.stgit@magnolia>
+Date: Fri, 22 Dec 2017 17:07:16 -0800
+Message-ID: <151399123598.23543.17447669553893249804.stgit@magnolia>
 In-Reply-To: <151399122361.23543.15718507168231759645.stgit@magnolia>
 References: <151399122361.23543.15718507168231759645.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,187 +35,130 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the dquot repair code into a separate function and remove
-XFS_QMOPT_DQREPAIR in favor of calling the helper directly.  Remove
-other dead code because quotacheck is the only caller of DQREPAIR.
+Create two helper functions to verify the headers of a long format
+btree block.  We'll use this later for the realtime rmapbt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dquot_buf.c  |   22 +++++++++++-----
- fs/xfs/libxfs/xfs_quota_defs.h |    3 +-
- fs/xfs/xfs_dquot.c             |   54 ----------------------------------------
- fs/xfs/xfs_qm.c                |    7 ++++-
- 4 files changed, 22 insertions(+), 64 deletions(-)
+ fs/xfs/libxfs/xfs_bmap_btree.c |   22 ++------------------
+ fs/xfs/libxfs/xfs_btree.c      |   45 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h      |    3 +++
+ 3 files changed, 50 insertions(+), 20 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index f8b62fc..6b15c50 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -51,7 +51,6 @@ xfs_dqcheck(
- 	uint		 flags,
- 	const char	 *str)
- {
--	xfs_dqblk_t	 *d = (xfs_dqblk_t *)ddq;
- 	int		errs = 0;
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 00472e1..862be9c 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -435,17 +435,11 @@ xfs_bmbt_verify(
  
- 	/*
-@@ -139,17 +138,26 @@ xfs_dqcheck(
- 		}
- 	}
+ 	switch (block->bb_magic) {
+ 	case cpu_to_be32(XFS_BMAP_CRC_MAGIC):
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
+-			return false;
+-		if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-			return false;
+-		if (be64_to_cpu(block->bb_u.l.bb_blkno) != bp->b_bn)
+-			return false;
+ 		/*
+ 		 * XXX: need a better way of verifying the owner here. Right now
+ 		 * just make sure there has been one set.
+ 		 */
+-		if (be64_to_cpu(block->bb_u.l.bb_owner) == 0)
++		if (!xfs_btree_lblock_v5hdr_verify(bp, XFS_RMAP_OWN_UNKNOWN))
+ 			return false;
+ 		/* fall through */
+ 	case cpu_to_be32(XFS_BMAP_MAGIC):
+@@ -464,20 +458,8 @@ xfs_bmbt_verify(
+ 	level = be16_to_cpu(block->bb_level);
+ 	if (level > max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]))
+ 		return false;
+-	if (be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
+-		return false;
+-
+-	/* sibling pointer verification */
+-	if (!block->bb_u.l.bb_leftsib ||
+-	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
+-	     !xfs_verify_fsbno(mp, be64_to_cpu(block->bb_u.l.bb_leftsib))))
+-		return false;
+-	if (!block->bb_u.l.bb_rightsib ||
+-	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
+-	     !xfs_verify_fsbno(mp, be64_to_cpu(block->bb_u.l.bb_rightsib))))
+-		return false;
  
--	if (!errs || !(flags & XFS_QMOPT_DQREPAIR))
--		return errs;
-+	return errs;
+-	return true;
++	return xfs_btree_lblock_verify(bp, mp->m_bmap_dmxr[level != 0]);
+ }
+ 
+ static void
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 5a6146e..d84fdcb 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4529,6 +4529,51 @@ xfs_btree_change_owner(
+ 			&bbcoi);
+ }
+ 
++/* Verify the v5 fields of a long-format btree block. */
++bool
++xfs_btree_lblock_v5hdr_verify(
++	struct xfs_buf		*bp,
++	uint64_t		owner)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (!uuid_equal(&block->bb_u.l.bb_uuid, &mp->m_sb.sb_meta_uuid))
++		return false;
++	if (block->bb_u.l.bb_blkno != cpu_to_be64(bp->b_bn))
++		return false;
++	if (owner != XFS_RMAP_OWN_UNKNOWN &&
++	    be64_to_cpu(block->bb_u.l.bb_owner) != owner)
++		return false;
++	return true;
 +}
 +
-+/*
-+ * Do some primitive error checking on ondisk dquot data structures.
-+ */
-+int
-+xfs_dquot_repair(
-+	struct xfs_mount	*mp,
-+	struct xfs_disk_dquot	*ddq,
-+	xfs_dqid_t		id,
-+	uint			type)
++/* Verify a long-format btree block. */
++bool
++xfs_btree_lblock_verify(
++	struct xfs_buf		*bp,
++	unsigned int		max_recs)
 +{
-+	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
- 
--	if (flags & XFS_QMOPT_DOWARN)
--		xfs_notice(mp, "Re-initializing dquot ID 0x%x", id);
- 
- 	/*
- 	 * Typically, a repair is only requested by quotacheck.
- 	 */
- 	ASSERT(id != -1);
--	ASSERT(flags & XFS_QMOPT_DQREPAIR);
- 	memset(d, 0, sizeof(xfs_dqblk_t));
- 
- 	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-@@ -163,7 +171,7 @@ xfs_dqcheck(
- 				 XFS_DQUOT_CRC_OFF);
- 	}
- 
--	return errs;
-+	return 0;
- }
- 
- STATIC bool
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index d69c772..7187ec9 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -113,7 +113,6 @@ typedef uint16_t	xfs_qwarncnt_t;
- #define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
- #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
- #define XFS_QMOPT_DOWARN        0x0000400 /* increase warning cnt if needed */
--#define XFS_QMOPT_DQREPAIR	0x0001000 /* repair dquot if damaged */
- #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
- #define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
- #define XFS_QMOPT_DQNEXT	0x0008000 /* return next dquot >= this ID */
-@@ -156,5 +155,7 @@ typedef uint16_t	xfs_qwarncnt_t;
- extern int xfs_dqcheck(struct xfs_mount *mp, xfs_disk_dquot_t *ddq,
- 		       xfs_dqid_t id, uint type, uint flags, const char *str);
- extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
-+extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
-+		xfs_dqid_t id, uint type);
- 
- #endif	/* __XFS_QUOTA_H__ */
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index f248708..0d8c52b 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -399,52 +399,6 @@ xfs_qm_dqalloc(
- 	return error;
- }
- 
--STATIC int
--xfs_qm_dqrepair(
--	struct xfs_mount	*mp,
--	struct xfs_trans	*tp,
--	struct xfs_dquot	*dqp,
--	xfs_dqid_t		firstid,
--	struct xfs_buf		**bpp)
--{
--	int			error;
--	struct xfs_disk_dquot	*ddq;
--	struct xfs_dqblk	*d;
--	int			i;
--
--	/*
--	 * Read the buffer without verification so we get the corrupted
--	 * buffer returned to us. make sure we verify it on write, though.
--	 */
--	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, dqp->q_blkno,
--				   mp->m_quotainfo->qi_dqchunklen,
--				   0, bpp, NULL);
--
--	if (error) {
--		ASSERT(*bpp == NULL);
--		return error;
--	}
--	(*bpp)->b_ops = &xfs_dquot_buf_ops;
--
--	ASSERT(xfs_buf_islocked(*bpp));
--	d = (struct xfs_dqblk *)(*bpp)->b_addr;
--
--	/* Do the actual repair of dquots in this buffer */
--	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
--		ddq = &d[i].dd_diskdq;
--		error = xfs_dqcheck(mp, ddq, firstid + i,
--				       dqp->dq_flags & XFS_DQ_ALLTYPES,
--				       XFS_QMOPT_DQREPAIR, "xfs_qm_dqrepair");
--		if (error) {
--			/* repair failed, we're screwed */
--			xfs_trans_brelse(tp, *bpp);
--			return -EIO;
--		}
--	}
--
--	return 0;
--}
--
- /*
-  * Maps a dquot to the buffer containing its on-disk version.
-  * This returns a ptr to the buffer containing the on-disk dquot
-@@ -526,14 +480,6 @@ xfs_qm_dqtobp(
- 					   dqp->q_blkno,
- 					   mp->m_quotainfo->qi_dqchunklen,
- 					   0, &bp, &xfs_dquot_buf_ops);
--
--		if (error == -EFSCORRUPTED && (flags & XFS_QMOPT_DQREPAIR)) {
--			xfs_dqid_t firstid = (xfs_dqid_t)map.br_startoff *
--						mp->m_quotainfo->qi_dqperchunk;
--			ASSERT(bp == NULL);
--			error = xfs_qm_dqrepair(mp, tp, dqp, firstid, &bp);
--		}
--
- 		if (error) {
- 			ASSERT(bp == NULL);
- 			return error;
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ec952df..407a12b 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -847,6 +847,7 @@ xfs_qm_reset_dqcounts(
- {
- 	struct xfs_dqblk	*dqb;
- 	int			j;
-+	int			error;
- 
- 	trace_xfs_reset_dqcounts(bp, _RET_IP_);
- 
-@@ -870,8 +871,10 @@ xfs_qm_reset_dqcounts(
- 		 * output any warnings because it's perfectly possible to
- 		 * find uninitialised dquot blks. See comment in xfs_dqcheck.
- 		 */
--		xfs_dqcheck(mp, ddq, id+j, type, XFS_QMOPT_DQREPAIR,
--			    "xfs_quotacheck");
-+		error = xfs_dqcheck(mp, ddq, id+j, type, 0, "xfs_quotacheck");
-+		if (error)
-+			xfs_dquot_repair(mp, ddq, id + j, type);
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
 +
- 		/*
- 		 * Reset type in case we are reusing group quota file for
- 		 * project quotas or vice versa
++	/* numrecs verification */
++	if (be16_to_cpu(block->bb_numrecs) > max_recs)
++		return false;
++
++	/* sibling pointer verification */
++	if (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
++	    !xfs_verify_fsbno(mp, be64_to_cpu(block->bb_u.l.bb_leftsib)))
++		return false;
++	if (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
++	    !xfs_verify_fsbno(mp, be64_to_cpu(block->bb_u.l.bb_rightsib)))
++		return false;
++
++	return true;
++}
++
+ /**
+  * xfs_btree_sblock_v5hdr_verify() -- verify the v5 fields of a short-format
+  *				      btree block
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 8a263ea..6bf79ad 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -494,6 +494,9 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+ 
+ bool xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+ bool xfs_btree_sblock_verify(struct xfs_buf *bp, unsigned int max_recs);
++bool xfs_btree_lblock_v5hdr_verify(struct xfs_buf *bp, uint64_t owner);
++bool xfs_btree_lblock_verify(struct xfs_buf *bp, unsigned int max_recs);
++
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
+ xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
 
