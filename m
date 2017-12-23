@@ -1,399 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752448AbdLVXzC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Dec 2017 18:55:02 -0500
-Message-ID: <1513986897.21071.2.camel@kernel.org>
-Subject: Re: [PATCH v4 01/19] fs: new API for handling inode->i_version
-From: Jeff Layton <jlayton@kernel.org>
-Date: Fri, 22 Dec 2017 18:54:57 -0500
-In-Reply-To: <87zi6a73ud.fsf@notabene.neil.brown.name>
+Received: from aserp2130.oracle.com ([141.146.126.79]:56432 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756209AbdLWAQt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:16:49 -0500
+Date: Fri, 22 Dec 2017 16:05:14 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v4 14/19] xfs: convert to new i_version API
+Message-ID: <20171223000514.GE12613@magnolia>
 References: <20171222120556.7435-1-jlayton@kernel.org>
-         <20171222120556.7435-2-jlayton@kernel.org>
-         <87zi6a73ud.fsf@notabene.neil.brown.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+ <20171222120556.7435-15-jlayton@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171222120556.7435-15-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: NeilBrown <neil@brown.name>, linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: Jeff Layton <jlayton@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
 
-On Sat, 2017-12-23 at 10:14 +1100, NeilBrown wrote:
-> On Fri, Dec 22 2017, Jeff Layton wrote:
+On Fri, Dec 22, 2017 at 07:05:51AM -0500, Jeff Layton wrote:
+> From: Jeff Layton <jlayton@redhat.com>
 > 
-> > From: Jeff Layton <jlayton@redhat.com>
-> > 
-> > Add a documentation blob that explains what the i_version field is, how
-> > it is expected to work, and how it is currently implemented by various
-> > filesystems.
-> > 
-> > We already have inode_inc_iversion. Add several other functions for
-> > manipulating and accessing the i_version counter. For now, the
-> > implementation is trivial and basically works the way that all of the
-> > open-coded i_version accesses work today.
-> > 
-> > Future patches will convert existing users of i_version to use the new
-> > API, and then convert the backend implementation to do things more
-> > efficiently.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> > ---
-> >  fs/btrfs/file.c          |   1 +
-> >  fs/btrfs/inode.c         |   1 +
-> >  fs/btrfs/ioctl.c         |   1 +
-> >  fs/btrfs/xattr.c         |   1 +
-> >  fs/ext4/inode.c          |   1 +
-> >  fs/ext4/namei.c          |   1 +
-> >  fs/inode.c               |   1 +
-> >  include/linux/fs.h       |  15 ----
-> >  include/linux/iversion.h | 205 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  9 files changed, 212 insertions(+), 15 deletions(-)
-> >  create mode 100644 include/linux/iversion.h
-> > 
-> > diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-> > index eb1bac7c8553..c95d7b2efefb 100644
-> > --- a/fs/btrfs/file.c
-> > +++ b/fs/btrfs/file.c
-> > @@ -31,6 +31,7 @@
-> >  #include <linux/slab.h>
-> >  #include <linux/btrfs.h>
-> >  #include <linux/uio.h>
-> > +#include <linux/iversion.h>
-> >  #include "ctree.h"
-> >  #include "disk-io.h"
-> >  #include "transaction.h"
-> > diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-> > index e1a7f3cb5be9..27f008b33fc1 100644
-> > --- a/fs/btrfs/inode.c
-> > +++ b/fs/btrfs/inode.c
-> > @@ -43,6 +43,7 @@
-> >  #include <linux/posix_acl_xattr.h>
-> >  #include <linux/uio.h>
-> >  #include <linux/magic.h>
-> > +#include <linux/iversion.h>
-> >  #include "ctree.h"
-> >  #include "disk-io.h"
-> >  #include "transaction.h"
-> > diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> > index 2ef8acaac688..aa452c9e2eff 100644
-> > --- a/fs/btrfs/ioctl.c
-> > +++ b/fs/btrfs/ioctl.c
-> > @@ -43,6 +43,7 @@
-> >  #include <linux/uuid.h>
-> >  #include <linux/btrfs.h>
-> >  #include <linux/uaccess.h>
-> > +#include <linux/iversion.h>
-> >  #include "ctree.h"
-> >  #include "disk-io.h"
-> >  #include "transaction.h"
-> > diff --git a/fs/btrfs/xattr.c b/fs/btrfs/xattr.c
-> > index 2c7e53f9ff1b..5258c1714830 100644
-> > --- a/fs/btrfs/xattr.c
-> > +++ b/fs/btrfs/xattr.c
-> > @@ -23,6 +23,7 @@
-> >  #include <linux/xattr.h>
-> >  #include <linux/security.h>
-> >  #include <linux/posix_acl_xattr.h>
-> > +#include <linux/iversion.h>
-> >  #include "ctree.h"
-> >  #include "btrfs_inode.h"
-> >  #include "transaction.h"
-> > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> > index 7df2c5644e59..fa5d8bc52d2d 100644
-> > --- a/fs/ext4/inode.c
-> > +++ b/fs/ext4/inode.c
-> > @@ -39,6 +39,7 @@
-> >  #include <linux/slab.h>
-> >  #include <linux/bitops.h>
-> >  #include <linux/iomap.h>
-> > +#include <linux/iversion.h>
-> >  
-> >  #include "ext4_jbd2.h"
-> >  #include "xattr.h"
-> > diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-> > index 798b3ac680db..bcf0dff517be 100644
-> > --- a/fs/ext4/namei.c
-> > +++ b/fs/ext4/namei.c
-> > @@ -34,6 +34,7 @@
-> >  #include <linux/quotaops.h>
-> >  #include <linux/buffer_head.h>
-> >  #include <linux/bio.h>
-> > +#include <linux/iversion.h>
-> >  #include "ext4.h"
-> >  #include "ext4_jbd2.h"
-> >  
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index 03102d6ef044..19e72f500f71 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -18,6 +18,7 @@
-> >  #include <linux/buffer_head.h> /* for inode_has_buffers */
-> >  #include <linux/ratelimit.h>
-> >  #include <linux/list_lru.h>
-> > +#include <linux/iversion.h>
-> >  #include <trace/events/writeback.h>
-> >  #include "internal.h"
-> >  
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 511fbaabf624..76382c24e9d0 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -2036,21 +2036,6 @@ static inline void inode_dec_link_count(struct inode *inode)
-> >  	mark_inode_dirty(inode);
-> >  }
-> >  
-> > -/**
-> > - * inode_inc_iversion - increments i_version
-> > - * @inode: inode that need to be updated
-> > - *
-> > - * Every time the inode is modified, the i_version field will be incremented.
-> > - * The filesystem has to be mounted with i_version flag
-> > - */
-> > -
-> > -static inline void inode_inc_iversion(struct inode *inode)
-> > -{
-> > -       spin_lock(&inode->i_lock);
-> > -       inode->i_version++;
-> > -       spin_unlock(&inode->i_lock);
-> > -}
-> > -
-> >  enum file_time_flags {
-> >  	S_ATIME = 1,
-> >  	S_MTIME = 2,
-> > diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-> > new file mode 100644
-> > index 000000000000..bb50d27c71f9
-> > --- /dev/null
-> > +++ b/include/linux/iversion.h
-> > @@ -0,0 +1,205 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> > +#ifndef _LINUX_IVERSION_H
-> > +#define _LINUX_IVERSION_H
-> > +
-> > +#include <linux/fs.h>
-> > +
-> > +/*
-> > + * The change attribute (i_version) is mandated by NFSv4 and is mostly for
-> > + * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
-> > + * appear different to observers if there was a change to the inode's data or
-> > + * metadata since it was last queried.
-> > + *
-> > + * It should be considered an opaque value by observers. If it remains the same
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++--
+>  fs/xfs/xfs_icache.c           | 5 +++--
+>  fs/xfs/xfs_inode.c            | 3 ++-
+>  fs/xfs/xfs_inode_item.c       | 3 ++-
+>  fs/xfs/xfs_trans_inode.c      | 4 +++-
+>  5 files changed, 15 insertions(+), 7 deletions(-)
 > 
->                                  ^^^^^^^^^^^^
-> 
-> You keep using that word ... I don't think it means what you think it
-> means.
-> Change that sentence to:
-> 
->     Observers see i_version as a 64 number which never decreases.
-> 
-> and the rest still makes perfect sense.
-> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 6b7989038d75..b9c0bf80669c 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -32,6 +32,8 @@
+>  #include "xfs_ialloc.h"
+>  #include "xfs_dir2.h"
+>  
+> +#include <linux/iversion.h>
 
-Thanks! Fixed in my tree. I'll not resend the set just for that though.
+/me wonders if these ought to be in fs/xfs/xfs_linux.h since this is
+libxfs, but seeing as I already let that horse escape I might as well
+clean it up separately.
 
-> > + * since it was last checked, then nothing has changed in the inode. If it's
-> > + * different then something has changed. Observers cannot infer anything about
-> > + * the nature or magnitude of the changes from the value, only that the inode
-> > + * has changed in some fashion.
-> > + *
-> > + * Not all filesystems properly implement the i_version counter. Subsystems that
-> > + * want to use i_version field on an inode should first check whether the
-> > + * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VERSION macro).
-> > + *
-> > + * Those that set SB_I_VERSION will automatically have their i_version counter
-> > + * incremented on writes to normal files. If the SB_I_VERSION is not set, then
-> > + * the VFS will not touch it on writes, and the filesystem can use it how it
-> > + * wishes. Note that the filesystem is always responsible for updating the
-> > + * i_version on namespace changes in directories (mkdir, rmdir, unlink, etc.).
-> > + * We consider these sorts of filesystems to have a kernel-managed i_version.
-> > + *
-> > + * Note that some filesystems (e.g. NFS and AFS) just use the field to store
-> > + * a server-provided value (for the most part). For that reason, those
-> > + * filesystems do not set SB_I_VERSION. These filesystems are considered to
-> > + * have a self-managed i_version.
-> > + */
-> > +
-> > +/**
-> > + * inode_set_iversion_raw - set i_version to the specified raw value
-> > + * @inode: inode to set
-> > + * @new: new i_version value to set
-> > + *
-> > + * Set @inode's i_version field to @new. This function is for use by
-> > + * filesystems that self-manage the i_version.
-> > + *
-> > + * For example, the NFS client stores its NFSv4 change attribute in this way,
-> > + * and the AFS client stores the data_version from the server here.
-> > + */
-> > +static inline void
-> > +inode_set_iversion_raw(struct inode *inode, const u64 new)
-> > +{
-> > +	inode->i_version = new;
-> > +}
-> > +
-> > +/**
-> > + * inode_set_iversion - set i_version to a particular value
-> > + * @inode: inode to set
-> > + * @new: new i_version value to set
-> > + *
-> > + * Set @inode's i_version field to @new. This function is for filesystems with
-> > + * a kernel-managed i_version.
-> > + *
-> > + * For now, this just does the same thing as the _raw variant.
-> > + */
-> > +static inline void
-> > +inode_set_iversion(struct inode *inode, const u64 new)
-> > +{
-> > +	inode_set_iversion_raw(inode, new);
-> > +}
-> > +
-> > +/**
-> > + * inode_set_iversion_queried - set i_version to a particular value and set
-> > + *                              flag to indicate that it has been viewed
-> > + * @inode: inode to set
-> > + * @new: new i_version value to set
-> > + *
-> > + * When loading in an i_version value from a backing store, we typically don't
-> > + * know whether it was previously viewed before being stored or not. Thus, we
-> > + * must assume that it was, to ensure that any changes will result in the
-> > + * value changing.
-> > + *
-> > + * This function will set the inode's i_version, and possibly flag the value
-> > + * as if it has already been viewed at least once.
-> > + *
-> > + * For now, this just does what inode_set_iversion does.
-> > + */
-> > +static inline void
-> > +inode_set_iversion_queried(struct inode *inode, const u64 new)
-> > +{
-> > +	inode_set_iversion(inode, new);
-> > +}
-> > +
-> > +/**
-> > + * inode_maybe_inc_iversion - increments i_version
-> > + * @inode: inode with the i_version that should be updated
-> > + * @force: increment the counter even if it's not necessary
-> > + *
-> > + * Every time the inode is modified, the i_version field must be seen to have
-> > + * changed by any observer.
-> > + *
-> > + * In this implementation, we always increment it after taking the i_lock to
-> > + * ensure that we don't race with other incrementors.
-> > + *
-> > + * Returns true if counter was bumped, and false if it wasn't.
-> > + */
-> > +static inline bool
-> > +inode_maybe_inc_iversion(struct inode *inode, bool force)
-> > +{
-> > +	spin_lock(&inode->i_lock);
-> > +	inode->i_version++;
-> > +	spin_unlock(&inode->i_lock);
-> > +	return true;
-> > +}
-> > +
-> > +/**
-> > + * inode_inc_iversion - forcibly increment i_version
-> > + * @inode: inode that needs to be updated
-> > + *
-> > + * Forcbily increment the i_version field. This always results in a change to
-> > + * the observable value.
-> > + */
-> > +static inline void
-> > +inode_inc_iversion(struct inode *inode)
-> > +{
-> > +	inode_maybe_inc_iversion(inode, true);
-> > +}
-> > +
-> > +/**
-> > + * inode_iversion_need_inc - is the i_version in need of being incremented?
-> > + * @inode: inode to check
-> > + *
-> > + * Returns whether the inode->i_version counter needs incrementing on the next
-> > + * change.
-> > + *
-> > + * For now, we assume that it always does.
-> > + */
-> > +static inline bool
-> > +inode_iversion_need_inc(struct inode *inode)
-> > +{
-> > +	return true;
-> > +}
-> > +
-> > +/**
-> > + * inode_peek_iversion_raw - grab a "raw" iversion value
-> > + * @inode: inode from which i_version should be read
-> > + *
-> > + * Grab a "raw" inode->i_version value and return it. The i_version is not
-> > + * flagged or converted in any way. This is mostly used to access a self-managed
-> > + * i_version.
-> > + *
-> > + * With those filesystems, we want to treat the i_version as an entirely
-> > + * opaque value.
-> > + */
-> > +static inline u64
-> > +inode_peek_iversion_raw(const struct inode *inode)
-> > +{
-> > +	return inode->i_version;
-> > +}
-> > +
-> > +/**
-> > + * inode_peek_iversion - read i_version without flagging it to be incremented
-> > + * @inode: inode from which i_version should be read
-> > + *
-> > + * Read the inode i_version counter for an inode without registering it as a
-> > + * query.
-> > + *
-> > + * This is typically used by local filesystems that need to store an i_version
-> > + * on disk. In that situation, it's not necessary to flag it as having been
-> > + * viewed, as the result won't be used to gauge changes from that point.
-> > + */
-> > +static inline u64
-> > +inode_peek_iversion(const struct inode *inode)
-> > +{
-> > +	return inode_peek_iversion_raw(inode);
-> > +}
-> > +
-> > +/**
-> > + * inode_query_iversion - read i_version for later use
-> > + * @inode: inode from which i_version should be read
-> > + *
-> > + * Read the inode i_version counter. This should be used by callers that wish
-> > + * to store the returned i_version for later comparison. This will guarantee
-> > + * that a later query of the i_version will result in a different value if
-> > + * anything has changed.
-> > + *
-> > + * This implementation just does a peek.
-> > + */
-> > +static inline u64
-> > +inode_query_iversion(struct inode *inode)
-> > +{
-> > +	return inode_peek_iversion(inode);
-> > +}
-> > +
-> > +/**
-> > + * inode_cmp_iversion - check whether the i_version counter has changed
-> > + * @inode: inode to check
-> > + * @old: old value to check against its i_version
-> > + *
-> > + * Compare an i_version counter with a previous one. Returns 0 if they are
-> > + * the same or non-zero if they are different.
-> > + */
-> > +static inline s64
-> > +inode_cmp_iversion(const struct inode *inode, const u64 old)
-> > +{
-> > +	return (s64)inode_peek_iversion(inode) - (s64)old;
-> > +}
-> > +#endif
-> > -- 
-> > 2.14.3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Looks ok,
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
 
--- 
-Jeff Layton <jlayton@kernel.org>
+--D
+
+> +
+>  /*
+>   * Check that none of the inode's in the buffer have a next
+>   * unlinked field of 0.
+> @@ -264,7 +266,8 @@ xfs_inode_from_disk(
+>  	to->di_flags	= be16_to_cpu(from->di_flags);
+>  
+>  	if (to->di_version == 3) {
+> -		inode->i_version = be64_to_cpu(from->di_changecount);
+> +		inode_set_iversion_queried(inode,
+> +					   be64_to_cpu(from->di_changecount));
+>  		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
+>  		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+>  		to->di_flags2 = be64_to_cpu(from->di_flags2);
+> @@ -314,7 +317,7 @@ xfs_inode_to_disk(
+>  	to->di_flags = cpu_to_be16(from->di_flags);
+>  
+>  	if (from->di_version == 3) {
+> -		to->di_changecount = cpu_to_be64(inode->i_version);
+> +		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
+>  		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+>  		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+>  		to->di_flags2 = cpu_to_be64(from->di_flags2);
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 43005fbe8b1e..4c315adb05e6 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -37,6 +37,7 @@
+>  
+>  #include <linux/kthread.h>
+>  #include <linux/freezer.h>
+> +#include <linux/iversion.h>
+>  
+>  /*
+>   * Allocate and initialise an xfs_inode.
+> @@ -293,14 +294,14 @@ xfs_reinit_inode(
+>  	int		error;
+>  	uint32_t	nlink = inode->i_nlink;
+>  	uint32_t	generation = inode->i_generation;
+> -	uint64_t	version = inode->i_version;
+> +	uint64_t	version = inode_peek_iversion(inode);
+>  	umode_t		mode = inode->i_mode;
+>  
+>  	error = inode_init_always(mp->m_super, inode);
+>  
+>  	set_nlink(inode, nlink);
+>  	inode->i_generation = generation;
+> -	inode->i_version = version;
+> +	inode_set_iversion_queried(inode, version);
+>  	inode->i_mode = mode;
+>  	return error;
+>  }
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 801274126648..dfc5e60d8af3 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -16,6 +16,7 @@
+>   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>   */
+>  #include <linux/log2.h>
+> +#include <linux/iversion.h>
+>  
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> @@ -833,7 +834,7 @@ xfs_ialloc(
+>  	ip->i_d.di_flags = 0;
+>  
+>  	if (ip->i_d.di_version == 3) {
+> -		inode->i_version = 1;
+> +		inode_set_iversion(inode, 1);
+>  		ip->i_d.di_flags2 = 0;
+>  		ip->i_d.di_cowextsize = 0;
+>  		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 6ee5c3bf19ad..7571abf5dfb3 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -30,6 +30,7 @@
+>  #include "xfs_buf_item.h"
+>  #include "xfs_log.h"
+>  
+> +#include <linux/iversion.h>
+>  
+>  kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
+>  
+> @@ -354,7 +355,7 @@ xfs_inode_to_log_dinode(
+>  	to->di_next_unlinked = NULLAGINO;
+>  
+>  	if (from->di_version == 3) {
+> -		to->di_changecount = inode->i_version;
+> +		to->di_changecount = inode_peek_iversion(inode);
+>  		to->di_crtime.t_sec = from->di_crtime.t_sec;
+>  		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
+>  		to->di_flags2 = from->di_flags2;
+> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> index daa7615497f9..225544327c4f 100644
+> --- a/fs/xfs/xfs_trans_inode.c
+> +++ b/fs/xfs/xfs_trans_inode.c
+> @@ -28,6 +28,8 @@
+>  #include "xfs_inode_item.h"
+>  #include "xfs_trace.h"
+>  
+> +#include <linux/iversion.h>
+> +
+>  /*
+>   * Add a locked inode to the transaction.
+>   *
+> @@ -117,7 +119,7 @@ xfs_trans_log_inode(
+>  	 */
+>  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+>  	    IS_I_VERSION(VFS_I(ip))) {
+> -		VFS_I(ip)->i_version++;
+> +		inode_inc_iversion(VFS_I(ip));
+>  		flags |= XFS_ILOG_CORE;
+>  	}
+>  
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
