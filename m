@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53268 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756956AbdLWAsM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:48:12 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0l7sq065437
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:48:11 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2f1cvd8046-1
+Received: from userp2120.oracle.com ([156.151.31.85]:35006 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756975AbdLWAsp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:48:45 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0lCAH100354
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:48:44 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2f1ct0r0k8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:48:11 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0hAkk012924
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:48:44 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0hhrH003576
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:10 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBN0h94E031387
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:09 GMT
-Subject: [PATCH 03/21] xfs: xfs_scrub_bmap should use for_each_xfs_iext
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:43 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBN0hgho001343
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:42 GMT
+Subject: [PATCH 08/21] xfs: add scrub cross-referencing helpers for the rmap
+ btrees
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Dec 2017 16:43:08 -0800
-Message-ID: <151398978874.18741.7497018527609073813.stgit@magnolia>
+Date: Fri, 22 Dec 2017 16:43:41 -0800
+Message-ID: <151398982164.18741.14153975836991113575.stgit@magnolia>
 In-Reply-To: <151398977028.18741.12031215574014508438.stgit@magnolia>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,35 +35,95 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor xfs_scrub_bmap to use for_each_xfs_iext now that it exists.
+Add a couple of functions to the rmap btrees that will be used
+to cross-reference metadata against the rmapbt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/bmap.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_rmap.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h |    5 ++++
+ 2 files changed, 63 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 42fec0b..0261e11 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -235,7 +235,6 @@ xfs_scrub_bmap(
- 	struct xfs_ifork		*ifp;
- 	xfs_fileoff_t			endoff;
- 	struct xfs_iext_cursor		icur;
--	bool				found;
- 	int				error = 0;
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 50db920..ea78ec3 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2387,3 +2387,61 @@ xfs_rmap_compare(
+ 	else
+ 		return 0;
+ }
++
++/* Is there a record covering a given extent? */
++int
++xfs_rmap_has_record(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	bool			*exists)
++{
++	union xfs_btree_irec	low;
++	union xfs_btree_irec	high;
++
++	memset(&low, 0, sizeof(low));
++	low.r.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.r.rm_startblock = bno + len - 1;
++
++	return xfs_btree_has_record(cur, &low, &high, exists);
++}
++
++/* Is there a record covering a given extent? */
++int
++xfs_rmap_record_exists(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	xfs_extlen_t		len,
++	struct xfs_owner_info	*oinfo,
++	bool			*has_rmap)
++{
++	uint64_t		owner;
++	uint64_t		offset;
++	unsigned int		flags;
++	int			stat;
++	struct xfs_rmap_irec	irec;
++	int			error;
++
++	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
++
++	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*has_rmap = false;
++		return 0;
++	}
++
++	error = xfs_rmap_get_rec(cur, &irec, &stat);
++	if (error)
++		return error;
++	if (!stat) {
++		*has_rmap = false;
++		return 0;
++	}
++
++	*has_rmap = (irec.rm_owner == owner && irec.rm_startblock <= bno &&
++		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 0fcd5b1..380e53b 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -233,5 +233,10 @@ int xfs_rmap_compare(const struct xfs_rmap_irec *a,
+ union xfs_btree_rec;
+ int xfs_rmap_btrec_to_irec(union xfs_btree_rec *rec,
+ 		struct xfs_rmap_irec *irec);
++int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, bool *exists);
++int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, struct xfs_owner_info *oinfo,
++		bool *has_rmap);
  
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
-@@ -314,9 +313,7 @@ xfs_scrub_bmap(
- 	/* Scrub extent records. */
- 	info.lastoff = 0;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
--	for (found = xfs_iext_lookup_extent(ip, ifp, 0, &icur, &irec);
--	     found != 0;
--	     found = xfs_iext_next_extent(ifp, &icur, &irec)) {
-+	for_each_xfs_iext(ifp, &icur, &irec) {
- 		if (xfs_scrub_should_terminate(sc, &error))
- 			break;
- 		if (isnullstartblock(irec.br_startblock))
+ #endif	/* __XFS_RMAP_H__ */
 
