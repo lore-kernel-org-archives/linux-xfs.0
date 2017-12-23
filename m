@@ -1,64 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55028 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756091AbdLVXUq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 18:20:46 -0500
-Date: Fri, 22 Dec 2017 15:17:33 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:56218 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756065AbdLWAQD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:16:03 -0500
+Date: Fri, 22 Dec 2017 16:07:10 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix s_maxbytes overflow problems
-Message-ID: <20171222231733.GD12613@magnolia>
+Subject: Re: [PATCH v4 17/19] xfs: avoid setting XFS_ILOG_CORE if i_version
+ doesn't need incrementing
+Message-ID: <20171223000710.GF12613@magnolia>
+References: <20171222120556.7435-1-jlayton@kernel.org>
+ <20171222120556.7435-18-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20171222120556.7435-18-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Dec 22, 2017 at 07:05:54AM -0500, Jeff Layton wrote:
+> From: Jeff Layton <jlayton@redhat.com>
+> 
+> If XFS_ILOG_CORE is already set then go ahead and increment it.
+> 
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
 
-Fix some integer overflow problems if offset + count happen to be large
-enough to cause an integer overflow.
+Looks ok,
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c  |    4 ++--
- fs/xfs/xfs_iomap.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 21e2d70..4fc526a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -399,7 +399,7 @@ xfs_map_blocks(
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 
--	if ((xfs_ufsize_t)offset + count > mp->m_super->s_maxbytes)
-+	if (offset > mp->m_super->s_maxbytes - count)
- 		count = mp->m_super->s_maxbytes - offset;
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-@@ -1312,7 +1312,7 @@ xfs_get_blocks(
- 	lockmode = xfs_ilock_data_map_shared(ip);
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
--	if ((xfs_ufsize_t)offset + size > mp->m_super->s_maxbytes)
-+	if (offset > mp->m_super->s_maxbytes - size)
- 		size = mp->m_super->s_maxbytes - offset;
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 7ab52a8..66e1edb 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1006,7 +1006,7 @@ xfs_file_iomap_begin(
- 	}
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
--	if ((xfs_fsize_t)offset + length > mp->m_super->s_maxbytes)
-+	if (offset > mp->m_super->s_maxbytes - length)
- 		length = mp->m_super->s_maxbytes - offset;
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+> ---
+>  fs/xfs/xfs_trans_inode.c | 14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> index 225544327c4f..4a89da4b6fe7 100644
+> --- a/fs/xfs/xfs_trans_inode.c
+> +++ b/fs/xfs/xfs_trans_inode.c
+> @@ -112,15 +112,17 @@ xfs_trans_log_inode(
+>  
+>  	/*
+>  	 * First time we log the inode in a transaction, bump the inode change
+> -	 * counter if it is configured for this to occur. We don't use
+> -	 * inode_inc_version() because there is no need for extra locking around
+> -	 * i_version as we already hold the inode locked exclusively for
+> -	 * metadata modification.
+> +	 * counter if it is configured for this to occur. While we have the
+> +	 * inode locked exclusively for metadata modification, we can usually
+> +	 * avoid setting XFS_ILOG_CORE if no one has queried the value since
+> +	 * the last time it was incremented. If we have XFS_ILOG_CORE already
+> +	 * set however, then go ahead and bump the i_version counter
+> +	 * unconditionally.
+>  	 */
+>  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+>  	    IS_I_VERSION(VFS_I(ip))) {
+> -		inode_inc_iversion(VFS_I(ip));
+> -		flags |= XFS_ILOG_CORE;
+> +		if (inode_maybe_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
+> +			flags |= XFS_ILOG_CORE;
+>  	}
+>  
+>  	tp->t_flags |= XFS_TRANS_DIRTY;
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
