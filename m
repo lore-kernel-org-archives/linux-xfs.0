@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51284 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757133AbdLWAoq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:44:46 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0ijpb063583
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:44:45 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2f1cvd8004-1
+Received: from userp2130.oracle.com ([156.151.31.86]:58327 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756065AbdLWApE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:45:04 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0ivQE196383
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:45:03 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2f1cvf000b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:44:45 +0000
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:45:03 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0iijA015100
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0j2da009637
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:44:44 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0ii2Y028524
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:44:44 GMT
-Subject: [PATCH 18/21] xfs: cross-reference the rmapbt data with the
- refcountbt
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:45:03 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0j2hc028621
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:45:02 GMT
+Subject: [PATCH 21/21] xfs: cross-reference the block mappings when possible
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Dec 2017 16:44:43 -0800
-Message-ID: <151398988306.18741.8223158735554937583.stgit@magnolia>
+Date: Fri, 22 Dec 2017 16:45:01 -0800
+Message-ID: <151398990147.18741.17837826861246689519.stgit@magnolia>
 In-Reply-To: <151398977028.18741.12031215574014508438.stgit@magnolia>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,378 +34,71 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Cross reference the refcount data with the rmap data to check that the
-number of rmaps for a given block match the refcount of that block, and
-that CoW blocks (which are owned entirely by the refcountbt) are tracked
-as well.
+Use an inode's block mappings to cross-reference inode block counters.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/refcount.c |  318 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 316 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/inode.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 8add281..b9764f5 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -50,6 +50,274 @@ xfs_scrub_setup_ag_refcountbt(
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index b32a01d..d21866f 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -37,6 +37,8 @@
+ #include "xfs_da_format.h"
+ #include "xfs_reflink.h"
+ #include "xfs_rmap.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_util.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -578,6 +580,37 @@ xfs_scrub_inode_map_raw(
+ 	return error;
+ }
  
- /* Reference count btree scrubber. */
- 
-+/*
-+ * Confirming Reference Counts via Reverse Mappings
-+ *
-+ * We want to count the reverse mappings overlapping a refcount record
-+ * (bno, len, refcount), allowing for the possibility that some of the
-+ * overlap may come from smaller adjoining reverse mappings, while some
-+ * comes from single extents which overlap the range entirely.  The
-+ * outer loop is as follows:
-+ *
-+ * 1. For all reverse mappings overlapping the refcount extent,
-+ *    a. If a given rmap completely overlaps, mark it as seen.
-+ *    b. Otherwise, record the fragment for later processing.
-+ *
-+ * Once we've seen all the rmaps, we know that for all blocks in the
-+ * refcount record we want to find $refcount owners and we've already
-+ * visited $seen extents that overlap all the blocks.  Therefore, we
-+ * need to find ($refcount - $seen) owners for every block in the
-+ * extent; call that quantity $target_nr.  Proceed as follows:
-+ *
-+ * 2. Pull the first $target_nr fragments from the list; all of them
-+ *    should start at or before the start of the extent.
-+ *    Call this subset of fragments the working set.
-+ * 3. Until there are no more unprocessed fragments,
-+ *    a. Find the shortest fragments in the set and remove them.
-+ *    b. Note the block number of the end of these fragments.
-+ *    c. Pull the same number of fragments from the list.  All of these
-+ *       fragments should start at the block number recorded in the
-+ *       previous step.
-+ *    d. Put those fragments in the set.
-+ * 4. Check that there are $target_nr fragments remaining in the list,
-+ *    and that they all end at or beyond the end of the refcount extent.
-+ *
-+ * If the refcount is correct, all the check conditions in the algorithm
-+ * should always hold true.  If not, the refcount is incorrect.
-+ */
-+struct xfs_scrub_refcnt_frag {
-+	struct list_head		list;
-+	struct xfs_rmap_irec		rm;
-+};
-+
-+struct xfs_scrub_refcnt_check {
-+	struct xfs_scrub_context	*sc;
-+	struct list_head		fragments;
-+
-+	/* refcount extent we're examining */
-+	xfs_agblock_t			bno;
-+	xfs_extlen_t			len;
-+	xfs_nlink_t			refcount;
-+
-+	/* number of owners seen */
-+	xfs_nlink_t			seen;
-+};
-+
-+/*
-+ * Decide if the given rmap is large enough that we can redeem it
-+ * towards refcount verification now, or if it's a fragment, in
-+ * which case we'll hang onto it in the hopes that we'll later
-+ * discover that we've collected exactly the correct number of
-+ * fragments as the refcountbt says we should have.
-+ */
-+STATIC int
-+xfs_scrub_refcountbt_rmap_check(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_scrub_refcnt_check	*refchk = priv;
-+	struct xfs_scrub_refcnt_frag	*frag;
-+	xfs_agblock_t			rm_last;
-+	xfs_agblock_t			rc_last;
-+	int				error = 0;
-+
-+	if (xfs_scrub_should_terminate(refchk->sc, &error))
-+		return error;
-+
-+	rm_last = rec->rm_startblock + rec->rm_blockcount - 1;
-+	rc_last = refchk->bno + refchk->len - 1;
-+
-+	/* Confirm that a single-owner refc extent is a CoW stage. */
-+	if (refchk->refcount == 1 && rec->rm_owner != XFS_RMAP_OWN_COW) {
-+		xfs_scrub_btree_xref_set_corrupt(refchk->sc, cur, 0);
-+		return 0;
-+	}
-+
-+	if (rec->rm_startblock <= refchk->bno && rm_last >= rc_last) {
-+		/*
-+		 * The rmap overlaps the refcount record, so we can confirm
-+		 * one refcount owner seen.
-+		 */
-+		refchk->seen++;
-+	} else {
-+		/*
-+		 * This rmap covers only part of the refcount record, so
-+		 * save the fragment for later processing.
-+		 */
-+		frag = kmem_alloc(sizeof(struct xfs_scrub_refcnt_frag),
-+				KM_MAYFAIL | KM_NOFS);
-+		if (!frag)
-+			return -ENOMEM;
-+		memcpy(&frag->rm, rec, sizeof(frag->rm));
-+		list_add_tail(&frag->list, &refchk->fragments);
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Given a bunch of rmap fragments, iterate through them, keeping
-+ * a running tally of the refcount.  If this ever deviates from
-+ * what we expect (which is the refcountbt's refcount minus the
-+ * number of extents that totally covered the refcountbt extent),
-+ * we have a refcountbt error.
-+ */
++/* Cross reference the inode fields with the forks. */
 +STATIC void
-+xfs_scrub_refcountbt_process_rmap_fragments(
-+	struct xfs_scrub_refcnt_check	*refchk)
-+{
-+	struct list_head		worklist;
-+	struct xfs_scrub_refcnt_frag	*frag;
-+	struct xfs_scrub_refcnt_frag	*n;
-+	xfs_agblock_t			bno;
-+	xfs_agblock_t			rbno;
-+	xfs_agblock_t			next_rbno;
-+	xfs_nlink_t			nr;
-+	xfs_nlink_t			target_nr;
-+
-+	target_nr = refchk->refcount - refchk->seen;
-+	if (target_nr == 0)
-+		return;
-+
-+	/*
-+	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
-+	 * references we haven't found yet.  Pull that many off the
-+	 * fragment list and figure out where the smallest rmap ends
-+	 * (and therefore the next rmap should start).  All the rmaps
-+	 * we pull off should start at or before the beginning of the
-+	 * refcount record's range.
-+	 */
-+	INIT_LIST_HEAD(&worklist);
-+	rbno = NULLAGBLOCK;
-+	nr = 1;
-+
-+	/* Find all the rmaps that start at or before the refc extent. */
-+	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-+		if (frag->rm.rm_startblock > refchk->bno)
-+			goto done;
-+		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-+		if (rbno > bno)
-+			rbno = bno;
-+		list_del(&frag->list);
-+		list_add_tail(&frag->list, &worklist);
-+		if (nr == target_nr)
-+			break;
-+		nr++;
-+	}
-+
-+	/*
-+	 * We should have found exactly $target_nr rmap fragments starting
-+	 * at or before the refcount extent.
-+	 */
-+	if (nr != target_nr)
-+		goto done;
-+
-+	while (!list_empty(&refchk->fragments)) {
-+		/* Discard any fragments ending at rbno. */
-+		nr = 0;
-+		next_rbno = NULLAGBLOCK;
-+		list_for_each_entry_safe(frag, n, &worklist, list) {
-+			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-+			if (bno != rbno) {
-+				if (next_rbno > bno)
-+					next_rbno = bno;
-+				continue;
-+			}
-+			list_del(&frag->list);
-+			kmem_free(frag);
-+			nr++;
-+		}
-+
-+		/* Empty list?  We're done. */
-+		if (list_empty(&refchk->fragments))
-+			break;
-+
-+		/* Try to add nr rmaps starting at rbno to the worklist. */
-+		list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-+			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-+			if (frag->rm.rm_startblock != rbno)
-+				goto done;
-+			list_del(&frag->list);
-+			list_add_tail(&frag->list, &worklist);
-+			if (next_rbno > bno)
-+				next_rbno = bno;
-+			nr--;
-+			if (nr == 0)
-+				break;
-+		}
-+
-+		rbno = next_rbno;
-+	}
-+
-+	/*
-+	 * Make sure the last extent we processed ends at or beyond
-+	 * the end of the refcount extent.
-+	 */
-+	if (rbno < refchk->bno + refchk->len)
-+		goto done;
-+
-+	/* Actually record us having seen the remaining refcount. */
-+	refchk->seen = refchk->refcount;
-+done:
-+	/* Delete fragments and work list. */
-+	list_for_each_entry_safe(frag, n, &worklist, list) {
-+		list_del(&frag->list);
-+		kmem_free(frag);
-+	}
-+	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-+		list_del(&frag->list);
-+		kmem_free(frag);
-+	}
-+}
-+
-+/* Use the rmap entries covering this extent to verify the refcount. */
-+STATIC void
-+xfs_scrub_refcountbt_xref_rmap(
++xfs_scrub_inode_xref_bmap(
 +	struct xfs_scrub_context	*sc,
-+	xfs_agblock_t			bno,
-+	xfs_extlen_t			len,
-+	xfs_nlink_t			refcount)
++	struct xfs_dinode		*dip)
 +{
-+	struct xfs_scrub_refcnt_check	refchk = {
-+		.sc = sc,
-+		.bno = bno,
-+		.len = len,
-+		.refcount = refcount,
-+		.seen = 0,
-+	};
-+	struct xfs_rmap_irec		low;
-+	struct xfs_rmap_irec		high;
-+	struct xfs_scrub_refcnt_frag	*frag;
-+	struct xfs_scrub_refcnt_frag	*n;
++	xfs_extnum_t			nextents;
++	xfs_filblks_t			count;
++	xfs_filblks_t			acount;
 +	int				error;
 +
-+	if (!sc->sa.rmap_cur)
++	/* Walk all the extents to check nextents/naextents/nblocks. */
++	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_DATA_FORK,
++			&nextents, &count);
++	if (!xfs_scrub_should_xref(sc, &error, NULL))
 +		return;
++	if (nextents < be32_to_cpu(dip->di_nextents))
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
 +
-+	/* Cross-reference with the rmapbt to confirm the refcount. */
-+	memset(&low, 0, sizeof(low));
-+	low.rm_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.rm_startblock = bno + len - 1;
++	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
++			&nextents, &acount);
++	if (!xfs_scrub_should_xref(sc, &error, NULL))
++		return;
++	if (nextents != be16_to_cpu(dip->di_anextents))
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
 +
-+	INIT_LIST_HEAD(&refchk.fragments);
-+	error = xfs_rmap_query_range(sc->sa.rmap_cur, &low, &high,
-+			&xfs_scrub_refcountbt_rmap_check, &refchk);
-+	if (!xfs_scrub_should_xref(sc, &error, &sc->sa.rmap_cur))
-+		goto out_free;
-+
-+	xfs_scrub_refcountbt_process_rmap_fragments(&refchk);
-+	if (refcount != refchk.seen)
-+		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-+
-+out_free:
-+	list_for_each_entry_safe(frag, n, &refchk.fragments, list) {
-+		list_del(&frag->list);
-+		kmem_free(frag);
-+	}
++	/* Check nblocks against the inode. */
++	if (count + acount != be64_to_cpu(dip->di_nblocks))
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
 +}
 +
  /* Cross-reference with the other btrees. */
  STATIC void
- xfs_scrub_refcountbt_xref(
-@@ -61,6 +329,7 @@ xfs_scrub_refcountbt_xref(
- 	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, len);
- 	xfs_scrub_xref_not_inodes(sc, &sc->sa.ino_cur, bno, len);
- 	xfs_scrub_xref_not_inodes(sc, &sc->sa.fino_cur, bno, len);
-+	xfs_scrub_refcountbt_xref_rmap(sc, bno, len, refcount);
- }
+ xfs_scrub_inode_xref(
+@@ -604,6 +637,7 @@ xfs_scrub_inode_xref(
+ 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
+ 	xfs_scrub_xref_owned_by(sc, &sc->sa.rmap_cur, agbno, 1, &oinfo);
+ 	xfs_scrub_xref_not_shared(sc, &sc->sa.refc_cur, agbno, 1);
++	xfs_scrub_inode_xref_bmap(sc, dip);
  
- /* Scrub a refcountbt record. */
-@@ -70,6 +339,7 @@ xfs_scrub_refcountbt_rec(
- 	union xfs_btree_rec		*rec)
- {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
-+	xfs_agblock_t			*cow_blocks = bs->private;
- 	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
- 	xfs_agblock_t			bno;
- 	xfs_extlen_t			len;
-@@ -85,6 +355,8 @@ xfs_scrub_refcountbt_rec(
- 	has_cowflag = (bno & XFS_REFC_COW_START);
- 	if ((refcount == 1 && !has_cowflag) || (refcount != 1 && has_cowflag))
- 		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
-+	if (has_cowflag)
-+		(*cow_blocks) += len;
- 
- 	/* Check the extent. */
- 	bno &= ~XFS_REFC_COW_START;
-@@ -104,14 +376,56 @@ xfs_scrub_refcountbt_rec(
- 	return error;
- }
- 
-+/* Make sure we have as many refc blocks as the rmap says. */
-+STATIC void
-+xfs_scrub_refcount_xref_rmap(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_owner_info		*oinfo,
-+	xfs_filblks_t			cow_blocks)
-+{
-+	xfs_extlen_t			refcbt_blocks = 0;
-+	xfs_filblks_t			blocks;
-+	int				error;
-+
-+	/* Check that we saw as many refcbt blocks as the rmap knows about. */
-+	error = xfs_btree_count_blocks(sc->sa.refc_cur, &refcbt_blocks);
-+	if (!xfs_scrub_btree_process_error(sc, sc->sa.refc_cur, 0, &error))
-+		return;
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+			&blocks);
-+	if (xfs_scrub_should_xref(sc, &error, &sc->sa.rmap_cur) &&
-+	    blocks != refcbt_blocks)
-+		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-+
-+	if (!sc->sa.rmap_cur)
-+		return;
-+
-+	/* Check that we saw as many cow blocks as the rmap knows about. */
-+	xfs_rmap_ag_owner(oinfo, XFS_RMAP_OWN_COW);
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+			&blocks);
-+	if (xfs_scrub_should_xref(sc, &error, &sc->sa.rmap_cur) &&
-+	    blocks != cow_blocks)
-+		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-+}
-+
- /* Scrub the refcount btree for some AG. */
- int
- xfs_scrub_refcountbt(
- 	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_owner_info		oinfo;
-+	xfs_agblock_t			cow_blocks = 0;
-+	int				error;
- 
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
--	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
--			&oinfo, NULL);
-+	error = xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
-+			&oinfo, &cow_blocks);
-+	if (error)
-+		return error;
-+
-+	if (sc->sa.rmap_cur)
-+		xfs_scrub_refcount_xref_rmap(sc, &oinfo, cow_blocks);
-+
-+	return error;
+ 	xfs_scrub_ag_free(sc, &sa);
  }
 
