@@ -1,13 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40156 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:40458 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752448AbdLWBOH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:14:07 -0500
-Subject: [PATCH 11/20] xfs: create structure verifier function for short
- form symlinks
+        with ESMTP id S1757167AbdLWBOK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:14:10 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN1D1jY079788
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:14:10 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2f1cvd820d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:14:09 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBN17N04021157
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:07:23 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBN17NOD009130
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:07:23 GMT
+Subject: [PATCH 03/20] xfs: refactor short form btree pointer verification
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Dec 2017 17:08:13 -0800
-Message-ID: <151399129325.23543.1193796017454328976.stgit@magnolia>
+Date: Fri, 22 Dec 2017 17:07:22 -0800
+Message-ID: <151399124206.23543.2218961061872626742.stgit@magnolia>
 In-Reply-To: <151399122361.23543.15718507168231759645.stgit@magnolia>
 References: <151399122361.23543.15718507168231759645.stgit@magnolia>
 MIME-Version: 1.0
@@ -17,71 +30,47 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a function to check the structure of short form symlink targets.
+Now that we have xfs_verify_agbno, use it to verify short form btree
+pointers instead of open-coding them.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_shared.h         |    1 +
- fs/xfs/libxfs/xfs_symlink_remote.c |   34 ++++++++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
+ fs/xfs/libxfs/xfs_btree.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index c6f4eb4..67ccb1a 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -143,5 +143,6 @@ bool xfs_symlink_hdr_ok(xfs_ino_t ino, uint32_t offset,
- 			uint32_t size, struct xfs_buf *bp);
- void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
- 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
-+xfs_failaddr_t xfs_symlink_shortform_verify(struct xfs_inode *ip);
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index d84fdcb..be995ee 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4614,19 +4614,19 @@ xfs_btree_sblock_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++	xfs_agblock_t		agno;
  
- #endif /* __XFS_SHARED_H__ */
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-index 5497014..adf2d78 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.c
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-@@ -209,3 +209,37 @@ xfs_symlink_local_to_remote(
- 	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsymlink_hdr) +
- 					ifp->if_bytes - 1);
- }
-+
-+/* Verify the consistency of an inline symlink. */
-+xfs_failaddr_t
-+xfs_symlink_shortform_verify(
-+	struct xfs_inode	*ip)
-+{
-+	char			*sfp;
-+	char			*endp;
-+	struct xfs_ifork	*ifp;
-+	int			size;
-+
-+	ASSERT(ip->i_d.di_format == XFS_DINODE_FMT_LOCAL);
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	sfp = (char *)ifp->if_u1.if_data;
-+	size = ifp->if_bytes;
-+	endp = sfp + size;
-+
-+	/* Zero length symlinks can exist while we're deleting a remote one. */
-+	if (size == 0)
-+		return NULL;
-+
-+	/* No negative sizes or overly long symlink targets. */
-+	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
-+		return __this_address;
-+
-+	/* No NULLs in the target either. */
-+	if (memchr(sfp, 0, size - 1))
-+		return __this_address;
-+
-+	/* We /did/ null-terminate the buffer, right? */
-+	if (*endp != 0)
-+		return __this_address;
-+	return NULL;
-+}
+ 	/* numrecs verification */
+ 	if (be16_to_cpu(block->bb_numrecs) > max_recs)
+ 		return false;
+ 
+ 	/* sibling pointer verification */
+-	if (!block->bb_u.s.bb_leftsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_leftsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK)))
++	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
++	if (block->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) &&
++	    !xfs_verify_agbno(mp, agno, be32_to_cpu(block->bb_u.s.bb_leftsib)))
+ 		return false;
+-	if (!block->bb_u.s.bb_rightsib ||
+-	    (be32_to_cpu(block->bb_u.s.bb_rightsib) >= mp->m_sb.sb_agblocks &&
+-	     block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)))
++	if (block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK) &&
++	    !xfs_verify_agbno(mp, agno, be32_to_cpu(block->bb_u.s.bb_rightsib)))
+ 		return false;
+ 
+ 	return true;
 
