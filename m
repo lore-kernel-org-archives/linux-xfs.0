@@ -1,27 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35006 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:35572 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756975AbdLWAsp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:48:45 -0500
+        with ESMTP id S1756994AbdLWAtJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:49:09 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0lCAH100354
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:48:44 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2f1ct0r0k8-1
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0m94l100790
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:49:09 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2120.oracle.com with ESMTP id 2f1ct0r0re-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:48:44 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0hhrH003576
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:49:08 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0i7jJ030683
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:43 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBN0hgho001343
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:42 GMT
-Subject: [PATCH 08/21] xfs: add scrub cross-referencing helpers for the rmap
- btrees
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:44:07 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id vBN0i7wU031663
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:44:07 GMT
+Subject: [PATCH 12/21] xfs: check btree block ownership with bnobt/rmapbt
+ when scrubbing btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Dec 2017 16:43:41 -0800
-Message-ID: <151398982164.18741.14153975836991113575.stgit@magnolia>
+Date: Fri, 22 Dec 2017 16:44:06 -0800
+Message-ID: <151398984612.18741.15845883360126485561.stgit@magnolia>
 In-Reply-To: <151398977028.18741.12031215574014508438.stgit@magnolia>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,95 +35,141 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a couple of functions to the rmap btrees that will be used
-to cross-reference metadata against the rmapbt.
+When scanning a metadata btree block, cross-reference the block location
+with the free space btree and the reverse mapping btree to ensure that
+the rmapbt knows about the block and the bnobt does not.  Add a
+mechanism to defer checks when we happen to be scanning the bnobt/rmapbt
+itself because it's less efficient to repeatedly clone and destroy the
+cursor.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_rmap.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rmap.h |    5 ++++
- 2 files changed, 63 insertions(+)
+ fs/xfs/scrub/btree.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 92 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 50db920..ea78ec3 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2387,3 +2387,61 @@ xfs_rmap_compare(
- 	else
- 		return 0;
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 36cff8f..9151499 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -362,6 +362,80 @@ xfs_scrub_btree_block_check_siblings(
+ 	return error;
  }
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_rmap_has_record(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	bool			*exists)
-+{
-+	union xfs_btree_irec	low;
-+	union xfs_btree_irec	high;
-+
-+	memset(&low, 0, sizeof(low));
-+	low.r.rm_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.r.rm_startblock = bno + len - 1;
-+
-+	return xfs_btree_has_record(cur, &low, &high, exists);
-+}
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_rmap_record_exists(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	struct xfs_owner_info	*oinfo,
-+	bool			*has_rmap)
-+{
-+	uint64_t		owner;
-+	uint64_t		offset;
-+	unsigned int		flags;
-+	int			stat;
-+	struct xfs_rmap_irec	irec;
-+	int			error;
-+
-+	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
-+
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
-+	if (error)
-+		return error;
-+	if (!stat) {
-+		*has_rmap = false;
-+		return 0;
-+	}
-+
-+	error = xfs_rmap_get_rec(cur, &irec, &stat);
-+	if (error)
-+		return error;
-+	if (!stat) {
-+		*has_rmap = false;
-+		return 0;
-+	}
-+
-+	*has_rmap = (irec.rm_owner == owner && irec.rm_startblock <= bno &&
-+		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 0fcd5b1..380e53b 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -233,5 +233,10 @@ int xfs_rmap_compare(const struct xfs_rmap_irec *a,
- union xfs_btree_rec;
- int xfs_rmap_btrec_to_irec(union xfs_btree_rec *rec,
- 		struct xfs_rmap_irec *irec);
-+int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-+		xfs_extlen_t len, bool *exists);
-+int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-+		xfs_extlen_t len, struct xfs_owner_info *oinfo,
-+		bool *has_rmap);
  
- #endif	/* __XFS_RMAP_H__ */
++struct check_owner {
++	struct list_head	list;
++	xfs_daddr_t		daddr;
++	int			level;
++};
++
++/*
++ * Make sure this btree block isn't in the free list and that there's
++ * an rmap record for it.
++ */
++STATIC int
++xfs_scrub_btree_check_block_owner(
++	struct xfs_scrub_btree		*bs,
++	int				level,
++	xfs_daddr_t			daddr)
++{
++	struct xfs_scrub_ag		sa = { 0 };
++	struct xfs_scrub_ag		*psa;
++	xfs_agnumber_t			agno;
++	int				error = 0;
++
++	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
++
++	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
++		if (!xfs_scrub_btree_xref_process_error(bs->sc, bs->cur,
++				level, &error))
++			return error;
++		psa = &sa;
++	} else {
++		psa = &bs->sc->sa;
++	}
++
++	if (psa == &sa)
++		xfs_scrub_ag_free(bs->sc, &sa);
++
++	return error;
++}
++
++/* Check the owner of a btree block. */
++STATIC int
++xfs_scrub_btree_check_owner(
++	struct xfs_scrub_btree		*bs,
++	int				level,
++	struct xfs_buf			*bp)
++{
++	struct xfs_btree_cur		*cur = bs->cur;
++	struct check_owner		*co;
++
++	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) && bp == NULL)
++		return 0;
++
++	/*
++	 * We want to cross-reference each btree block with the bnobt
++	 * and the rmapbt.  We cannot cross-reference the bnobt or
++	 * rmapbt while scanning the bnobt or rmapbt, respectively,
++	 * because we cannot alter the cursor and we'd prefer not to
++	 * duplicate cursors.  Therefore, save the buffer daddr for
++	 * later scanning.
++	 */
++	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_RMAP) {
++		co = kmem_alloc(sizeof(struct check_owner),
++				KM_MAYFAIL | KM_NOFS);
++		if (!co)
++			return -ENOMEM;
++		co->level = level;
++		co->daddr = XFS_BUF_ADDR(bp);
++		list_add_tail(&co->list, &bs->to_check);
++		return 0;
++	}
++
++	return xfs_scrub_btree_check_block_owner(bs, level, XFS_BUF_ADDR(bp));
++}
++
+ /*
+  * Grab and scrub a btree block given a btree pointer.  Returns block
+  * and buffer pointers (if applicable) if they're ok to use.
+@@ -398,6 +472,14 @@ xfs_scrub_btree_get_block(
+ 	}
+ 
+ 	/*
++	 * Check the block's owner; this function absorbs error codes
++	 * for us.
++	 */
++	error = xfs_scrub_btree_check_owner(bs, level, *pbp);
++	if (error)
++		return error;
++
++	/*
+ 	 * Check the block's siblings; this function absorbs error codes
+ 	 * for us.
+ 	 */
+@@ -468,6 +550,8 @@ xfs_scrub_btree(
+ 	struct xfs_btree_block		*block;
+ 	int				level;
+ 	struct xfs_buf			*bp;
++	struct check_owner		*co;
++	struct check_owner		*n;
+ 	int				i;
+ 	int				error = 0;
+ 
+@@ -559,6 +643,14 @@ xfs_scrub_btree(
+ 	}
+ 
+ out:
++	/* Process deferred owner checks on btree blocks. */
++	list_for_each_entry_safe(co, n, &bs.to_check, list) {
++		if (!error)
++			error = xfs_scrub_btree_check_block_owner(&bs,
++					co->level, co->daddr);
++		list_del(&co->list);
++		kmem_free(co);
++	}
+ 
+ 	return error;
+ }
 
