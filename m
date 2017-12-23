@@ -1,63 +1,266 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:32972 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932187AbdL1Pdo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Dec 2017 10:33:44 -0500
-Message-Id: <20171228153308.937786216@linutronix.de>
-Date: Thu, 28 Dec 2017 16:27:19 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V5 09/11] LICENSES: Add Linux syscall note exception
-References: <20171228152710.891701433@linutronix.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:36196 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752448AbdLWBIG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:08:06 -0500
+Subject: [PATCH 09/20] xfs: move inode fork verifiers to xfs_dinode_verify
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 22 Dec 2017 17:08:01 -0800
+Message-ID: <151399128100.23543.15576803737498651380.stgit@magnolia>
+In-Reply-To: <151399122361.23543.15718507168231759645.stgit@magnolia>
+References: <151399122361.23543.15718507168231759645.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline;
- filename=LICENSES--Add-Linux-syscall-note-exception.patch
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-Copied from the Linux kernel COPYING file.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add the required tags for reference and tooling.
+Consolidate the fork size and format verifiers to xfs_dinode_verify so
+that we can reject bad inodes earlier and in a single place.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- LICENSES/exceptions/Linux-syscall-note |   25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ fs/xfs/libxfs/xfs_inode_buf.c  |   72 ++++++++++++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_inode_fork.c |   86 ----------------------------------------
+ 2 files changed, 69 insertions(+), 89 deletions(-)
 
---- /dev/null
-+++ b/LICENSES/exceptions/Linux-syscall-note
-@@ -0,0 +1,25 @@
-+SPDX-Exception-Identifier: Linux-syscall-note
-+SPDX-URL: https://spdx.org/licenses/Linux-syscall-note.html
-+SPDX-Licenses: GPL-2.0, GPL-2.0+, GPL-1.0+, LGPL-2.0, LGPL-2.0+, LGPL-2.1, LGPL-2.1+
-+Usage-Guide:
-+  This exception is used together with one of the above SPDX-Licenses
-+  to mark user space API (uapi) header files so they can be included
-+  into non GPL compliant user space application code.
-+  To use this exception add it with the keyword WITH to one of the
-+  identifiers in the SPDX-Licenses tag:
-+    SPDX-License-Identifier: <SPDX-License> WITH Linux-syscall-note
-+License-Text:
-+
-+   NOTE! This copyright does *not* cover user programs that use kernel
-+ services by normal system calls - this is merely considered normal use
-+ of the kernel, and does *not* fall under the heading of "derived work".
-+ Also note that the GPL below is copyrighted by the Free Software
-+ Foundation, but the instance of code that it refers to (the Linux
-+ kernel) is copyrighted by me and others who actually wrote it.
-+
-+ Also note that the only valid version of the GPL as far as the kernel
-+ is concerned is _this_ particular version of the license (ie v2, not
-+ v2.2 or v3.x or whatever), unless explicitly otherwise stated.
-+
-+			Linus Torvalds
-+
 
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index a1ba112..4035b5d 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -389,6 +389,7 @@ xfs_dinode_verify(
+ 	uint16_t		mode;
+ 	uint16_t		flags;
+ 	uint64_t		flags2;
++	uint64_t		di_size;
+ 
+ 	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+ 		return __this_address;
+@@ -407,7 +408,8 @@ xfs_dinode_verify(
+ 	}
+ 
+ 	/* don't allow invalid i_size */
+-	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
++	di_size = be64_to_cpu(dip->di_size);
++	if (di_size & (1ULL << 63))
+ 		return __this_address;
+ 
+ 	mode = be16_to_cpu(dip->di_mode);
+@@ -415,14 +417,74 @@ xfs_dinode_verify(
+ 		return __this_address;
+ 
+ 	/* No zero-length symlinks/dirs. */
+-	if ((S_ISLNK(mode) || S_ISDIR(mode)) && dip->di_size == 0)
++	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
+ 		return __this_address;
+ 
++	/* Fork checks carried over from xfs_iformat_fork */
++	if (mode &&
++	    be32_to_cpu(dip->di_nextents) + be16_to_cpu(dip->di_anextents) >
++			be64_to_cpu(dip->di_nblocks))
++		return __this_address;
++
++	if (mode && XFS_DFORK_BOFF(dip) > mp->m_sb.sb_inodesize)
++		return __this_address;
++
++	flags = be16_to_cpu(dip->di_flags);
++
++	if (mode && (flags & XFS_DIFLAG_REALTIME) && !mp->m_rtdev_targp)
++		return __this_address;
++
++	/* Do we have appropriate data fork formats for the mode? */
++	switch (mode & S_IFMT) {
++	case S_IFIFO:
++	case S_IFCHR:
++	case S_IFBLK:
++	case S_IFSOCK:
++		if (dip->di_format != XFS_DINODE_FMT_DEV)
++			return __this_address;
++		break;
++	case S_IFREG:
++	case S_IFLNK:
++	case S_IFDIR:
++		switch (dip->di_format) {
++		case XFS_DINODE_FMT_LOCAL:
++			/*
++			 * no local regular files yet
++			 */
++			if (S_ISREG(mode))
++				return __this_address;
++			if (di_size > XFS_DFORK_DSIZE(dip, mp))
++				return __this_address;
++			/* fall through */
++		case XFS_DINODE_FMT_EXTENTS:
++		case XFS_DINODE_FMT_BTREE:
++			break;
++		default:
++			return __this_address;
++		}
++		break;
++	case 0:
++		/* Uninitialized inode ok. */
++		break;
++	default:
++		return __this_address;
++	}
++
++	if (XFS_DFORK_Q(dip)) {
++		switch (dip->di_aformat) {
++		case XFS_DINODE_FMT_LOCAL:
++		case XFS_DINODE_FMT_EXTENTS:
++		case XFS_DINODE_FMT_BTREE:
++			break;
++		default:
++			return __this_address;
++		}
++	}
++
+ 	/* only version 3 or greater inodes are extensively verified here */
+ 	if (dip->di_version < 3)
+ 		return NULL;
+ 
+-	flags = be16_to_cpu(dip->di_flags);
+ 	flags2 = be64_to_cpu(dip->di_flags2);
+ 
+ 	/* don't allow reflink/cowextsize if we don't have reflink */
+@@ -430,6 +492,10 @@ xfs_dinode_verify(
+             !xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return __this_address;
+ 
++	/* only regular files get reflink */
++	if ((flags2 & XFS_DIFLAG2_REFLINK) && (mode & S_IFMT) != S_IFREG)
++		return __this_address;
++
+ 	/* don't let reflink and realtime mix */
+ 	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags & XFS_DIFLAG_REALTIME))
+ 		return __this_address;
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index c79a161..fd88cbe 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -62,69 +62,11 @@ xfs_iformat_fork(
+ 	int			error = 0;
+ 	xfs_fsize_t             di_size;
+ 
+-	if (unlikely(be32_to_cpu(dip->di_nextents) +
+-		     be16_to_cpu(dip->di_anextents) >
+-		     be64_to_cpu(dip->di_nblocks))) {
+-		xfs_warn(ip->i_mount,
+-			"corrupt dinode %Lu, extent total = %d, nblocks = %Lu.",
+-			(unsigned long long)ip->i_ino,
+-			(int)(be32_to_cpu(dip->di_nextents) +
+-			      be16_to_cpu(dip->di_anextents)),
+-			(unsigned long long)
+-				be64_to_cpu(dip->di_nblocks));
+-		XFS_CORRUPTION_ERROR("xfs_iformat(1)", XFS_ERRLEVEL_LOW,
+-				     ip->i_mount, dip);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	if (unlikely(dip->di_forkoff > ip->i_mount->m_sb.sb_inodesize)) {
+-		xfs_warn(ip->i_mount, "corrupt dinode %Lu, forkoff = 0x%x.",
+-			(unsigned long long)ip->i_ino,
+-			dip->di_forkoff);
+-		XFS_CORRUPTION_ERROR("xfs_iformat(2)", XFS_ERRLEVEL_LOW,
+-				     ip->i_mount, dip);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	if (unlikely((ip->i_d.di_flags & XFS_DIFLAG_REALTIME) &&
+-		     !ip->i_mount->m_rtdev_targp)) {
+-		xfs_warn(ip->i_mount,
+-			"corrupt dinode %Lu, has realtime flag set.",
+-			ip->i_ino);
+-		XFS_CORRUPTION_ERROR("xfs_iformat(realtime)",
+-				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	if (unlikely(xfs_is_reflink_inode(ip) && !S_ISREG(inode->i_mode))) {
+-		xfs_warn(ip->i_mount,
+-			"corrupt dinode %llu, wrong file type for reflink.",
+-			ip->i_ino);
+-		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
+-				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
+-		return -EFSCORRUPTED;
+-	}
+-
+-	if (unlikely(xfs_is_reflink_inode(ip) &&
+-	    (ip->i_d.di_flags & XFS_DIFLAG_REALTIME))) {
+-		xfs_warn(ip->i_mount,
+-			"corrupt dinode %llu, has reflink+realtime flag set.",
+-			ip->i_ino);
+-		XFS_CORRUPTION_ERROR("xfs_iformat(reflink)",
+-				     XFS_ERRLEVEL_LOW, ip->i_mount, dip);
+-		return -EFSCORRUPTED;
+-	}
+-
+ 	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFIFO:
+ 	case S_IFCHR:
+ 	case S_IFBLK:
+ 	case S_IFSOCK:
+-		if (unlikely(dip->di_format != XFS_DINODE_FMT_DEV)) {
+-			XFS_CORRUPTION_ERROR("xfs_iformat(3)", XFS_ERRLEVEL_LOW,
+-					      ip->i_mount, dip);
+-			return -EFSCORRUPTED;
+-		}
+ 		ip->i_d.di_size = 0;
+ 		inode->i_rdev = xfs_to_linux_dev_t(xfs_dinode_get_rdev(dip));
+ 		break;
+@@ -134,32 +76,7 @@ xfs_iformat_fork(
+ 	case S_IFDIR:
+ 		switch (dip->di_format) {
+ 		case XFS_DINODE_FMT_LOCAL:
+-			/*
+-			 * no local regular files yet
+-			 */
+-			if (unlikely(S_ISREG(be16_to_cpu(dip->di_mode)))) {
+-				xfs_warn(ip->i_mount,
+-			"corrupt inode %Lu (local format for regular file).",
+-					(unsigned long long) ip->i_ino);
+-				XFS_CORRUPTION_ERROR("xfs_iformat(4)",
+-						     XFS_ERRLEVEL_LOW,
+-						     ip->i_mount, dip);
+-				return -EFSCORRUPTED;
+-			}
+-
+ 			di_size = be64_to_cpu(dip->di_size);
+-			if (unlikely(di_size < 0 ||
+-				     di_size > XFS_DFORK_DSIZE(dip, ip->i_mount))) {
+-				xfs_warn(ip->i_mount,
+-			"corrupt inode %Lu (bad size %Ld for local inode).",
+-					(unsigned long long) ip->i_ino,
+-					(long long) di_size);
+-				XFS_CORRUPTION_ERROR("xfs_iformat(5)",
+-						     XFS_ERRLEVEL_LOW,
+-						     ip->i_mount, dip);
+-				return -EFSCORRUPTED;
+-			}
+-
+ 			size = (int)di_size;
+ 			error = xfs_iformat_local(ip, dip, XFS_DATA_FORK, size);
+ 			break;
+@@ -170,14 +87,11 @@ xfs_iformat_fork(
+ 			error = xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
+ 			break;
+ 		default:
+-			XFS_ERROR_REPORT("xfs_iformat(6)", XFS_ERRLEVEL_LOW,
+-					 ip->i_mount);
+ 			return -EFSCORRUPTED;
+ 		}
+ 		break;
+ 
+ 	default:
+-		XFS_ERROR_REPORT("xfs_iformat(7)", XFS_ERRLEVEL_LOW, ip->i_mount);
+ 		return -EFSCORRUPTED;
+ 	}
+ 	if (error)
 
