@@ -1,175 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:56432 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756209AbdLWAQt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:16:49 -0500
-Date: Fri, 22 Dec 2017 16:05:14 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:58486 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756065AbdLWAnG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 19:43:06 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN0h5k5097655
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:05 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2f1ct0r06e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:05 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0h4i2002599
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:04 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN0h37A026509
+        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 00:43:03 GMT
+Subject: [PATCH 02/21] xfs: catch a few more error codes when scrubbing
+ secondary sb
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v4 14/19] xfs: convert to new i_version API
-Message-ID: <20171223000514.GE12613@magnolia>
-References: <20171222120556.7435-1-jlayton@kernel.org>
- <20171222120556.7435-15-jlayton@kernel.org>
+Date: Fri, 22 Dec 2017 16:43:02 -0800
+Message-ID: <151398978264.18741.5137794501763948676.stgit@magnolia>
+In-Reply-To: <151398977028.18741.12031215574014508438.stgit@magnolia>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171222120556.7435-15-jlayton@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 22, 2017 at 07:05:51AM -0500, Jeff Layton wrote:
-> From: Jeff Layton <jlayton@redhat.com>
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++--
->  fs/xfs/xfs_icache.c           | 5 +++--
->  fs/xfs/xfs_inode.c            | 3 ++-
->  fs/xfs/xfs_inode_item.c       | 3 ++-
->  fs/xfs/xfs_trans_inode.c      | 4 +++-
->  5 files changed, 15 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 6b7989038d75..b9c0bf80669c 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -32,6 +32,8 @@
->  #include "xfs_ialloc.h"
->  #include "xfs_dir2.h"
->  
-> +#include <linux/iversion.h>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-/me wonders if these ought to be in fs/xfs/xfs_linux.h since this is
-libxfs, but seeing as I already let that horse escape I might as well
-clean it up separately.
+The superblock validation routines return a variety of error codes to
+reject a mount request.  For scrub we can assume that the mount
+succeeded, so if we see these things appear when scrubbing secondary sb
+X, we can treat them all like corruption.
 
-Looks ok,
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/agheader.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
---D
 
-> +
->  /*
->   * Check that none of the inode's in the buffer have a next
->   * unlinked field of 0.
-> @@ -264,7 +266,8 @@ xfs_inode_from_disk(
->  	to->di_flags	= be16_to_cpu(from->di_flags);
->  
->  	if (to->di_version == 3) {
-> -		inode->i_version = be64_to_cpu(from->di_changecount);
-> +		inode_set_iversion_queried(inode,
-> +					   be64_to_cpu(from->di_changecount));
->  		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
->  		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
->  		to->di_flags2 = be64_to_cpu(from->di_flags2);
-> @@ -314,7 +317,7 @@ xfs_inode_to_disk(
->  	to->di_flags = cpu_to_be16(from->di_flags);
->  
->  	if (from->di_version == 3) {
-> -		to->di_changecount = cpu_to_be64(inode->i_version);
-> +		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
->  		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
->  		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
->  		to->di_flags2 = cpu_to_be64(from->di_flags2);
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 43005fbe8b1e..4c315adb05e6 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -37,6 +37,7 @@
->  
->  #include <linux/kthread.h>
->  #include <linux/freezer.h>
-> +#include <linux/iversion.h>
->  
->  /*
->   * Allocate and initialise an xfs_inode.
-> @@ -293,14 +294,14 @@ xfs_reinit_inode(
->  	int		error;
->  	uint32_t	nlink = inode->i_nlink;
->  	uint32_t	generation = inode->i_generation;
-> -	uint64_t	version = inode->i_version;
-> +	uint64_t	version = inode_peek_iversion(inode);
->  	umode_t		mode = inode->i_mode;
->  
->  	error = inode_init_always(mp->m_super, inode);
->  
->  	set_nlink(inode, nlink);
->  	inode->i_generation = generation;
-> -	inode->i_version = version;
-> +	inode_set_iversion_queried(inode, version);
->  	inode->i_mode = mode;
->  	return error;
->  }
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 801274126648..dfc5e60d8af3 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -16,6 +16,7 @@
->   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->   */
->  #include <linux/log2.h>
-> +#include <linux/iversion.h>
->  
->  #include "xfs.h"
->  #include "xfs_fs.h"
-> @@ -833,7 +834,7 @@ xfs_ialloc(
->  	ip->i_d.di_flags = 0;
->  
->  	if (ip->i_d.di_version == 3) {
-> -		inode->i_version = 1;
-> +		inode_set_iversion(inode, 1);
->  		ip->i_d.di_flags2 = 0;
->  		ip->i_d.di_cowextsize = 0;
->  		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 6ee5c3bf19ad..7571abf5dfb3 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -30,6 +30,7 @@
->  #include "xfs_buf_item.h"
->  #include "xfs_log.h"
->  
-> +#include <linux/iversion.h>
->  
->  kmem_zone_t	*xfs_ili_zone;		/* inode log item zone */
->  
-> @@ -354,7 +355,7 @@ xfs_inode_to_log_dinode(
->  	to->di_next_unlinked = NULLAGINO;
->  
->  	if (from->di_version == 3) {
-> -		to->di_changecount = inode->i_version;
-> +		to->di_changecount = inode_peek_iversion(inode);
->  		to->di_crtime.t_sec = from->di_crtime.t_sec;
->  		to->di_crtime.t_nsec = from->di_crtime.t_nsec;
->  		to->di_flags2 = from->di_flags2;
-> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-> index daa7615497f9..225544327c4f 100644
-> --- a/fs/xfs/xfs_trans_inode.c
-> +++ b/fs/xfs/xfs_trans_inode.c
-> @@ -28,6 +28,8 @@
->  #include "xfs_inode_item.h"
->  #include "xfs_trace.h"
->  
-> +#include <linux/iversion.h>
-> +
->  /*
->   * Add a locked inode to the transaction.
->   *
-> @@ -117,7 +119,7 @@ xfs_trans_log_inode(
->  	 */
->  	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
->  	    IS_I_VERSION(VFS_I(ip))) {
-> -		VFS_I(ip)->i_version++;
-> +		inode_inc_iversion(VFS_I(ip));
->  		flags |= XFS_ILOG_CORE;
->  	}
->  
-> -- 
-> 2.14.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index b599358..97beb47 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -126,6 +126,22 @@ xfs_scrub_superblock(
+ 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+ 		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+ 		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
++	/*
++	 * The superblock verifier can return several different error codes
++	 * if it thinks the superblock doesn't look right.  For a mount these
++	 * would all get bounced back to userspace, but if we're here then the
++	 * fs mounted successfully, which means that this secondary superblock
++	 * is simply incorrect.  Treat all these codes the same way we treat
++	 * any corruption.
++	 */
++	switch (error) {
++	case -EINVAL:	/* also -EWRONGFS */
++	case -ENOSYS:
++	case -EFBIG:
++		error = -EFSCORRUPTED;
++	default:
++		break;
++	}
+ 	if (!xfs_scrub_process_error(sc, agno, XFS_SB_BLOCK(mp), &error))
+ 		return error;
+ 
+
