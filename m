@@ -1,272 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:2382 "EHLO mga04.intel.com"
+Received: from trent.utfs.org ([94.185.90.103]:54650 "EHLO trent.utfs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756150AbdLXBFv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:05:51 -0500
-Subject: [PATCH v4 18/18] xfs,
- dax: wire up dax_flush_dma support via a new xfs_sync_dma helper
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:57:37 -0800
-Message-ID: <151407705701.38751.6157642918168721562.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1750968AbdLXJga (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 24 Dec 2017 04:36:30 -0500
+Date: Sun, 24 Dec 2017 01:28:29 -0800 (PST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: WARNING: CPU: 1 PID: 1384 at lib/iov_iter.c:695
+ copy_page_to_iter+0x240/0x3b0
+Message-ID: <alpine.DEB.2.21.9.1712240111060.5962@trent.utfs.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: akpm@linux-foundation.org
-Cc: jack@suse.cz, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+To: linux-xfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-xfs_break_layouts() scans for active pNFS layouts, drops locks and
-rescans for those layouts to be broken. xfs_sync_dma performs
-xfs_break_layouts and also scans for active dax-dma pages, drops locks
-and rescans for those pages to go idle.
+Hi,
 
-dax_flush_dma handles synchronizing against new page-busy events
-(get_user_pages). iIt invalidates all mappings to trigger the
-get_user_pages slow path which will eventually block on the
-XFS_MMAPLOCK. If it finds a dma-busy page it waits for a page-idle
-callback that will fire when the page reference count reaches 1 (recall
-ZONE_DEVICE pages are idle at count 1). While it is waiting, it drops
-locks so we do not deadlock the process that might be trying to elevate
-the page count of more pages before arranging for any of them to go idle
-as is typically the case of iov_iter_get_pages.
+this just happened on an i686 machine of mine:
 
-dax_flush_dma relies on the fs-provided wait_atomic_t_action_f
-(xfs_wait_dax_page) to handle evaluating the page reference count and
-dropping locks when waiting.
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 1384 at lib/iov_iter.c:695 copy_page_to_iter+0x240/0x3b0
+Modules linked in: xfs algif_skcipher af_alg uas nfsv4 dns_resolver nfs 
+nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_meta 
+nf_conntrack_ipv6 nf_defrag_ipv6 nf_conntrack_ipv4 lz4 nf_defrag_ipv4 
+lz4_compress nft_ct nf_conntrack libcrc32c crc32c_generic nft_set_hash 
+nf_tables_inet nf_tables_ipv6 nf_tables_ipv4 nf_tables nfnetlink 
+cpufreq_conservative sch_fq_codel zram evdev tg3 ptp pps_core lpc_ich 
+libphy input_leds ideapad_laptop sparse_keymap wmi serpent_sse2_i586 
+thermal serpent_generic lrw glue_helper ablk_helper cryptd video xts 
+dm_crypt acpi_cpufreq arc4 iTCO_wdt iTCO_vendor_support i2c_i801 fscache 
+loop coretemp battery b43 bcma mac80211 cfg80211 dm_mod dax ssb mmc_core 
+rfkill led_class rng_core pcmcia pcmcia_core nfsd auth_rpcgss oid_registry 
+ac nfs_acl lockd grace
+ sunrpc usb_storage sd_mod atkbd libps2 uhci_hcd ata_piix libata scsi_mod 
+ehci_pci ehci_hcd usbcore usb_common i8042 serio jfs [last unloaded: 
+soundcore]
+CPU: 1 PID: 1384 Comm: java Not tainted 4.14.4-1.0-ARCH #1
+Hardware name: LENOVO                           Lenovo          /Mariana , BIOS 14CN94WW   06/29/2009
+task: f27c1380 task.stack: f1c64000
+EIP: copy_page_to_iter+0x240/0x3b0
+EFLAGS: 00010286 CPU: 1
+EAX: 00001000 EBX: ffb48000 ECX: 000002c0 EDX: 8001006c
+ESI: f67ecb60 EDI: 00000d40 EBP: f1c65e30 ESP: f1c65e08
+ DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+CR0: 80050033 CR2: 09f060cc CR3: 3260f000 CR4: 000006d0
+Call Trace:
+ ? touch_atime+0x2b/0xb0
+ generic_file_read_iter+0x458/0x8c0
+ ? xfs_ilock+0x10d/0x150 [xfs]
+ ? xfs_file_buffered_aio_read+0xed/0x100 [xfs]
+ xfs_file_buffered_aio_read+0x4e/0x100 [xfs]
+ ? set_next_entity+0x13f/0x8b0
+ xfs_file_read_iter+0x54/0xc0 [xfs]
+ __vfs_read+0xe7/0x140
+ vfs_read+0x7b/0x130
+ SyS_pread64+0x81/0xb0
+ do_fast_syscall_32+0x71/0x1d0
+ entry_SYSENTER_32+0x4e/0x7c
+EIP: 0xb7f69cd9
+EFLAGS: 00000293 CPU: 1
+EAX: ffffffda EBX: 0000009b ECX: 23c77f10 EDX: 0000001a
+ESI: 156172c0 EDI: 00000000 EBP: b7f50e70 ESP: 1f32ea60
+ DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 007b
+Code: 75 ec e9 ff fe ff ff 8d 74 26 00 8b 55 ec 8b 45 08 85 d2 8b 58 0c 74 
+09 e8 6e d7 ff ff 84 c0 75 1a 31 f6 e9 13 ff ff ff 8d 76 00 <0f> ff 31 f6 
+83 c4 1c 5b 89 f0 5e 5f 5d c3 66 90 8b 7d 08 8b 45
+---[ end trace 0002deba6d00a28c ]---
 
-Cc: Jan Kara <jack@suse.cz>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/Makefile    |    3 ++
- fs/xfs/xfs_dma.c   |   81 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dma.h   |   24 +++++++++++++++
- fs/xfs/xfs_file.c  |    6 ++--
- fs/xfs/xfs_ioctl.c |    7 ++--
- fs/xfs/xfs_iops.c  |    7 +++-
- 6 files changed, 118 insertions(+), 10 deletions(-)
- create mode 100644 fs/xfs/xfs_dma.c
- create mode 100644 fs/xfs/xfs_dma.h
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 7ceb41a9786a..f2cdc5a3eb6c 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -129,6 +129,9 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
- 				   xfs_qm.o \
- 				   xfs_quotaops.o
- 
-+# dax dma
-+xfs-$(CONFIG_FS_DAX)		+= xfs_dma.o
-+
- # xfs_rtbitmap is shared with libxfs
- xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o
- 
-diff --git a/fs/xfs/xfs_dma.c b/fs/xfs/xfs_dma.c
-new file mode 100644
-index 000000000000..3df1a51a76c4
---- /dev/null
-+++ b/fs/xfs/xfs_dma.c
-@@ -0,0 +1,81 @@
-+/*
-+ * SPDX-License-Identifier: GPL-2.0
-+ * Copyright(c) 2017 Intel Corporation. All rights reserved.
-+ */
-+#include <linux/dax.h>
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_shared.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_bit.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_inode.h"
-+#include "xfs_pnfs.h"
-+
-+/*
-+ * xfs_wait_dax_page - helper for dax_flush_dma to drop locks and sleep
-+ * wait for a page idle event. Returns 1 if the locks did not need to be
-+ * dropped and the page is idle, returns -EINTR if the sleep was
-+ * interrupted and returns 1 when it slept. dax_flush_dma()
-+ * retries/rescans all mappings when the lock is dropped.
-+ */
-+static int xfs_wait_dax_page(
-+	atomic_t		*count,
-+	unsigned int		mode)
-+{
-+	uint			iolock = XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL;
-+	struct page 		*page = refcount_to_page(count);
-+	struct address_space	*mapping = page->mapping;
-+	struct inode		*inode = mapping->host;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL));
-+
-+	if (page_ref_count(page) == 1)
-+		return 0;
-+
-+	xfs_iunlock(ip, iolock);
-+	schedule();
-+	xfs_ilock(ip, iolock);
-+
-+	if (signal_pending_state(mode, current))
-+		return -EINTR;
-+	return 1;
-+}
-+
-+/*
-+ * Synchronize [R]DMA before changing the file's block map. For pNFS,
-+ * recall all layouts. For DAX, wait for transient DMA to complete. All
-+ * other DMA is handled by pinning page cache pages.
-+ *
-+ * iolock must held XFS_IOLOCK_SHARED or XFS_IOLOCK_EXCL on entry and
-+ * will be XFS_IOLOCK_EXCL and XFS_MMAPLOCK_EXCL on exit.
-+ */
-+int xfs_sync_dma(
-+	struct inode		*inode,
-+	uint			*iolock)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	int			error;
-+
-+	while (true) {
-+		error = xfs_break_layouts(inode, iolock);
-+		if (error)
-+			break;
-+
-+		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+		*iolock |= XFS_MMAPLOCK_EXCL;
-+
-+		error = dax_flush_dma(inode->i_mapping, xfs_wait_dax_page);
-+		if (error <= 0)
-+			break;
-+		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-+		*iolock &= ~XFS_MMAPLOCK_EXCL;
-+	}
-+
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_dma.h b/fs/xfs/xfs_dma.h
-new file mode 100644
-index 000000000000..29635639b073
---- /dev/null
-+++ b/fs/xfs/xfs_dma.h
-@@ -0,0 +1,24 @@
-+/*
-+ * SPDX-License-Identifier: GPL-2.0
-+ * Copyright(c) 2017 Intel Corporation. All rights reserved.
-+ */
-+#ifndef __XFS_DMA__
-+#define __XFS_DMA__
-+#ifdef CONFIG_FS_DAX
-+int xfs_sync_dma(struct inode *inode, uint *iolock);
-+#else
-+#include "xfs_pnfs.h"
-+
-+static inline int xfs_sync_dma(struct inode *inode, uint *iolock)
-+{
-+	int error = xfs_break_layouts(inode, iolock);
-+
-+	if (error)
-+		return error;
-+
-+	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_EXCL);
-+	*iolock |= XFS_MMAPLOCK_EXCL;
-+	return 0;
-+}
-+#endif /* CONFIG_FS_DAX */
-+#endif /* __XFS_DMA__ */
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 6df0c133a61e..84fc178da656 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -37,6 +37,7 @@
- #include "xfs_log.h"
- #include "xfs_icache.h"
- #include "xfs_pnfs.h"
-+#include "xfs_dma.h"
- #include "xfs_iomap.h"
- #include "xfs_reflink.h"
- 
-@@ -778,12 +779,11 @@ xfs_file_fallocate(
- 		return -EOPNOTSUPP;
- 
- 	xfs_ilock(ip, iolock);
--	error = xfs_break_layouts(inode, &iolock);
-+	error = xfs_sync_dma(inode, &iolock);
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
-+	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
- 
- 	if (mode & FALLOC_FL_PUNCH_HOLE) {
- 		error = xfs_free_file_space(ip, offset, len);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 20dc65fef6a4..4340bef658b0 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -39,7 +39,7 @@
- #include "xfs_icache.h"
- #include "xfs_symlink.h"
- #include "xfs_trans.h"
--#include "xfs_pnfs.h"
-+#include "xfs_dma.h"
- #include "xfs_acl.h"
- #include "xfs_btree.h"
- #include <linux/fsmap.h>
-@@ -643,12 +643,11 @@ xfs_ioc_space(
- 		return error;
- 
- 	xfs_ilock(ip, iolock);
--	error = xfs_break_layouts(inode, &iolock);
-+	error = xfs_sync_dma(inode, &iolock);
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
-+	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
- 
- 	switch (bf->l_whence) {
- 	case 0: /*SEEK_SET*/
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 67bd97edc73b..c1055337b233 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -37,7 +37,7 @@
- #include "xfs_da_btree.h"
- #include "xfs_dir2.h"
- #include "xfs_trans_space.h"
--#include "xfs_pnfs.h"
-+#include "xfs_dma.h"
- #include "xfs_iomap.h"
- 
- #include <linux/capability.h>
-@@ -1030,11 +1030,12 @@ xfs_vn_setattr(
- 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
- 		uint			iolock = XFS_IOLOCK_EXCL;
- 
--		error = xfs_break_layouts(d_inode(dentry), &iolock);
-+		error = xfs_sync_dma(d_inode(dentry), &iolock);
- 		if (error)
- 			return error;
- 
--		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+		ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
-+
- 		error = xfs_vn_setattr_size(dentry, iattr);
- 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	} else {
 
+This i686 laptop is running 4.14.4-1.0-ARCH [0] and is usually running 
+just fine, although memory pressure is usually quite hight due to some 
+Java program running on that machine. For some reason the system was even 
+more busy today, commands would take a long time to complete and I 
+rebooted the machine. Shortly after boot (and after starting this Java 
+program again), the warning above happened.
+
+I couldn't find this exact message in the archives, the closest thing I 
+found was (mentioning that "EIP:copy_page_to_iter" message):
+ 
+ > 4879b7ae05 ("Merge tag 'dmaengine-4.12-rc1' of .."): WARNING: kernel 
+ > stack regs at bd92bc2e in 01-cpu-hotplug:3811 has bad 'bp' value 000001be
+ > https://patchwork.kernel.org/patch/9981273/
+
+The XFS file system is mounted with:
+
+ > XFS (dm-2): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+ > XFS (dm-2): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+
+But I did not experience any problems with that, yet :)
+
+Full dmesg & .config: http://nerdbynature.de/bits/4.14/
+
+Any pointers?
+
+Thanks,
+Christian.
+
+$ mount | grep xfs
+/dev/mapper/opt on /opt type xfs (rw,nosuid,nodev,relatime,attr2,inode64,noquota)
+
+$ xfs_info /opt/
+meta-data=/dev/mapper/opt        isize=512    agcount=4, agsize=9079797 
+blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=1
+         =                       reflink=1
+data     =                       bsize=4096   blocks=36319185, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=17733, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+[0] https://mirror.archlinux32.org/i686/core/linux-4.14.4-1.0-i686.pkg.tar.xz
+-- 
+BOFH excuse #413:
+
+Cow-tippers tipped a cow onto the server.
