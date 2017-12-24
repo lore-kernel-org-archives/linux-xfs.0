@@ -1,44 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtprelay0084.hostedemail.com ([216.40.44.84]:38445 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750869AbdL2QUF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Dec 2017 11:20:05 -0500
-Message-ID: <1514564399.10256.7.camel@perches.com>
-Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to
- describe how to properly identify file licenses
-From: Joe Perches <joe@perches.com>
-Date: Fri, 29 Dec 2017 08:19:59 -0800
-In-Reply-To: <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
-References: <20171228152710.891701433@linutronix.de>
-         <20171228153308.286787253@linutronix.de>
-         <alpine.DEB.2.20.1712282315030.1899@nanos>
-         <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from sandeen.net ([63.231.237.45]:53574 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751095AbdLXTMP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 24 Dec 2017 14:12:15 -0500
+Received: from Liberator-5.netgear.com (unknown [50.35.53.244])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id DD52177B2D0
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Dec 2017 13:11:49 -0600 (CST)
+Subject: [PATCH 3/3] mkfs: do not allow both "dev" and "name" subopts for log
+ or realtime
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <529c056a-a40c-06b8-a37e-3b1b7e664303@sandeen.net>
+Message-ID: <6ea46cfb-357b-17c4-fc5f-65598431526f@sandeen.net>
+Date: Sun, 24 Dec 2017 11:12:13 -0800
+MIME-Version: 1.0
+In-Reply-To: <529c056a-a40c-06b8-a37e-3b1b7e664303@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, 2017-12-29 at 14:21 +0100, Philippe Ombredanne wrote:
-> Thomas,
-> 
-> On Thu, Dec 28, 2017 at 11:17 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > On Thu, 28 Dec 2017, Thomas Gleixner wrote:
-> > 
-> > Sorry for the spam. I somehow missed to refresh the patch before generating
-> > the mbox. Find below the correct version of that one which has ALL braces
-> > removed which we don't need.
+Today we can specify i.e. both logdev= and name= ;
+it works, with last-parsed-wins behavior:
 
-Has it been legally reviewed and accepted that removal
-of the BSD license text from individual source files is
-appropriate and meets the legal requirements of
-following the BSD license on a per-file basis?
+mkfs.xfs -f -l logdev=/dev/sda1,name=/dev/sda2 /dev/sda3
 
-And if so, who did this review?
+Make these conflict to resolve ambiguity; do the same for
+the realtime subvol.
 
-Is there any license that does not allow removal of the
-license text and does not allow simple substitution of
-the SPDX license identifier in each individual file?
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 035af03..5ae67d5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -507,6 +507,7 @@ struct opt_params lopts = {
+ 		},
+ 		{ .index = L_DEV,
+ 		  .conflicts = { { &lopts, L_AGNUM },
++				 { &lopts, L_NAME },
+ 				 { &lopts, L_INTERNAL },
+ 				 { &lopts, LAST_CONFLICT } },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+@@ -529,6 +530,7 @@ struct opt_params lopts = {
+ 		},
+ 		{ .index = L_NAME,
+ 		  .conflicts = { { &lopts, L_AGNUM },
++				 { &lopts, L_DEV },
+ 				 { &lopts, L_INTERNAL },
+ 				 { &lopts, LAST_CONFLICT } },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+@@ -599,7 +601,8 @@ struct opt_params ropts = {
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_DEV,
+-		  .conflicts = { { &ropts, LAST_CONFLICT } },
++		  .conflicts = { { &ropts, R_NAME },
++			         { &ropts, LAST_CONFLICT } },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_FILE,
+@@ -609,7 +612,8 @@ struct opt_params ropts = {
+ 		  .conflicts = { { &ropts, LAST_CONFLICT } },
+ 		},
+ 		{ .index = R_NAME,
+-		  .conflicts = { { &ropts, LAST_CONFLICT } },
++		  .conflicts = { { &ropts, R_DEV },
++			         { &ropts, LAST_CONFLICT } },
+ 		  .defaultval = SUBOPT_NEEDS_VAL,
+ 		},
+ 		{ .index = R_NOALIGN,
