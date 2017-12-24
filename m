@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from mga03.intel.com ([134.134.136.65]:17309 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752619AbdLXBEc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:04:32 -0500
-Subject: [PATCH v4 03/18] ext2: auto disable dax instead of failing mount
+        id S1752619AbdLXBEg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:04:36 -0500
+Subject: [PATCH v4 04/18] dax: require 'struct page' by default for
+ filesystem dax
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:56:17 -0800
-Message-ID: <151407697703.38751.2935252018151032360.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Sat, 23 Dec 2017 16:56:22 -0800
+Message-ID: <151407698249.38751.17338746909239708376.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,41 +17,121 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+Cc: jack@suse.cz, linux-nvdimm@lists.01.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, ross.zwisler@linux.intel.com, hch@lst.de, Gerald Schaefer <gerald.schaefer@de.ibm.com>
 
-Bring the ext2 filesystem in line with xfs that only warns and continues
-when the "-o dax" option is specified to mount and the backing device
-does not support dax. This is in preparation for removing dax support
-from devices that do not enable get_user_pages() operations on dax
-mappings. In other words 'gup' support is required and configurations
-that were using so called 'page-less' dax will be converted back to
-using the page cache.
+If a dax buffer from a device that does not map pages is passed to
+read(2) or write(2) as a target for direct-I/O it triggers SIGBUS. If
+gdb attempts to examine the contents of a dax buffer from a device that
+does not map pages it triggers SIGBUS. If fork(2) is called on a process
+with a dax mapping from a device that does not map pages it triggers
+SIGBUS. 'struct page' is required otherwise several kernel code paths
+break in surprising ways. Disable filesystem-dax on devices that do not
+map pages.
 
-Removing the broken 'page-less' dax support is a pre-requisite for
-removing the "EXPERIMENTAL" warning when mounting a filesystem in dax
-mode.
+In addition to needing pfn_to_page() to be valid we also require devmap
+pages.  We need this to detect dax pages in the get_user_pages_fast()
+path and so that we can stop managing the VM_MIXEDMAP flag. For DAX
+drivers that have not supported get_user_pages() to date we allow them
+to opt-in to supporting DAX with the CONFIG_FS_DAX_LIMITED configuration
+option which requires ->direct_access() to return pfn_t_special() pfns.
+This leaves DAX support in brd disabled and scheduled for removal.
 
+Note that when the initial dax support was being merged a few years back
+there was concern that struct page was unsuitable for use with next
+generation persistent memory devices. The theoretical concern was that
+struct page access, being such a hotly used data structure in the
+kernel, would lead to media wear out. While that was a reasonable
+conservative starting position it has not held true in practice. We have
+long since committed to using devm_memremap_pages() to support higher
+order kernel functionality that needs get_user_pages() and
+pfn_to_page().
+
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/ext2/super.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ arch/powerpc/platforms/Kconfig |    1 +
+ drivers/dax/super.c            |   10 ++++++++++
+ drivers/s390/block/Kconfig     |    1 +
+ fs/Kconfig                     |    7 +++++++
+ 4 files changed, 19 insertions(+)
 
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index 7646818ab266..38f9222606ee 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -959,8 +959,11 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- 
- 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
- 		err = bdev_dax_supported(sb, blocksize);
--		if (err)
--			goto failed_mount;
-+		if (err) {
-+			ext2_msg(sb, KERN_ERR,
-+				"DAX unsupported by block device. Turning off DAX.");
-+			sbi->s_mount_opt &= ~EXT2_MOUNT_DAX;
-+		}
+diff --git a/arch/powerpc/platforms/Kconfig b/arch/powerpc/platforms/Kconfig
+index 5a96a2763e4a..2ce89b42a9f4 100644
+--- a/arch/powerpc/platforms/Kconfig
++++ b/arch/powerpc/platforms/Kconfig
+@@ -297,6 +297,7 @@ config AXON_RAM
+ 	tristate "Axon DDR2 memory device driver"
+ 	depends on PPC_IBM_CELL_BLADE && BLOCK
+ 	select DAX
++	select FS_DAX_LIMITED
+ 	default m
+ 	help
+ 	  It registers one block device per Axon's DDR2 memory bank found
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 3ec804672601..473af694ad1c 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -15,6 +15,7 @@
+ #include <linux/mount.h>
+ #include <linux/magic.h>
+ #include <linux/genhd.h>
++#include <linux/pfn_t.h>
+ #include <linux/cdev.h>
+ #include <linux/hash.h>
+ #include <linux/slab.h>
+@@ -123,6 +124,15 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
+ 		return len < 0 ? len : -EIO;
  	}
  
- 	/* If the blocksize doesn't match, re-read the thing.. */
++	if ((IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn))
++			|| pfn_t_devmap(pfn))
++		/* pass */;
++	else {
++		pr_debug("VFS (%s): error: dax support not enabled\n",
++				sb->s_id);
++		return -EOPNOTSUPP;
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(__bdev_dax_supported);
+diff --git a/drivers/s390/block/Kconfig b/drivers/s390/block/Kconfig
+index 31f014b57bfc..594ae5fc8e9d 100644
+--- a/drivers/s390/block/Kconfig
++++ b/drivers/s390/block/Kconfig
+@@ -15,6 +15,7 @@ config BLK_DEV_XPRAM
+ config DCSSBLK
+ 	def_tristate m
+ 	select DAX
++	select FS_DAX_LIMITED
+ 	prompt "DCSSBLK support"
+ 	depends on S390 && BLOCK
+ 	help
+diff --git a/fs/Kconfig b/fs/Kconfig
+index 7aee6d699fd6..b40128bf6d1a 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -58,6 +58,13 @@ config FS_DAX_PMD
+ 	depends on ZONE_DEVICE
+ 	depends on TRANSPARENT_HUGEPAGE
+ 
++# Selected by DAX drivers that do not expect filesystem DAX to support
++# get_user_pages() of DAX mappings. I.e. "limited" indicates no support
++# for fork() of processes with MAP_SHARED mappings or support for
++# direct-I/O to a DAX mapping.
++config FS_DAX_LIMITED
++	bool
++
+ endif # BLOCK
+ 
+ # Posix ACL utility routines
 
