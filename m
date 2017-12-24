@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:57357 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756903AbdLXBFT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:05:19 -0500
-Subject: [PATCH v4 12/18] xfs: use DEFINE_FSDAX_AOPS
+        id S1752828AbdLXBFY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:05:24 -0500
+Subject: [PATCH v4 13/18] ext4: use DEFINE_FSDAX_AOPS
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:57:04 -0800
-Message-ID: <151407702457.38751.9874209243918617373.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Sat, 23 Dec 2017 16:57:10 -0800
+Message-ID: <151407703002.38751.15305085717541373826.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,58 +16,44 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: jack@suse.cz, linux-nvdimm@lists.01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, hch@lst.de
 
 In preparation for the dax implementation to start associating dax pages
 to inodes via page->mapping, we need to provide a 'struct
 address_space_operations' instance for dax. Otherwise, direct-I/O
 triggers incorrect page cache assumptions and warnings.
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+Cc: linux-ext4@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/xfs/xfs_aops.c |    2 ++
- fs/xfs/xfs_aops.h |    1 +
- fs/xfs/xfs_iops.c |    5 ++++-
- 3 files changed, 7 insertions(+), 1 deletion(-)
+ fs/ext4/inode.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 21e2d70884e1..361915d53cef 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1492,3 +1492,5 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.is_partially_uptodate  = block_is_partially_uptodate,
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 7df2c5644e59..065d11f43cb3 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3928,6 +3928,8 @@ static const struct address_space_operations ext4_da_aops = {
  	.error_remove_page	= generic_error_remove_page,
  };
+ 
++static DEFINE_FSDAX_AOPS(ext4_dax_aops, ext4_writepages);
 +
-+DEFINE_FSDAX_AOPS(xfs_dax_address_space_operations, xfs_vm_writepages);
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 88c85ea63da0..a6ffbb5fe379 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -54,6 +54,7 @@ struct xfs_ioend {
- };
- 
- extern const struct address_space_operations xfs_address_space_operations;
-+extern const struct address_space_operations xfs_dax_address_space_operations;
- 
- int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 56475fcd76f2..67bd97edc73b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1272,7 +1272,10 @@ xfs_setup_iops(
- 	case S_IFREG:
- 		inode->i_op = &xfs_inode_operations;
- 		inode->i_fop = &xfs_file_operations;
--		inode->i_mapping->a_ops = &xfs_address_space_operations;
-+		if (IS_DAX(inode))
-+			inode->i_mapping->a_ops = &xfs_dax_address_space_operations;
-+		else
-+			inode->i_mapping->a_ops = &xfs_address_space_operations;
- 		break;
- 	case S_IFDIR:
- 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
+ void ext4_set_aops(struct inode *inode)
+ {
+ 	switch (ext4_inode_journal_mode(inode)) {
+@@ -3940,7 +3942,9 @@ void ext4_set_aops(struct inode *inode)
+ 	default:
+ 		BUG();
+ 	}
+-	if (test_opt(inode->i_sb, DELALLOC))
++	if (IS_DAX(inode))
++		inode->i_mapping->a_ops = &ext4_dax_aops;
++	else if (test_opt(inode->i_sb, DELALLOC))
+ 		inode->i_mapping->a_ops = &ext4_da_aops;
+ 	else
+ 		inode->i_mapping->a_ops = &ext4_aops;
 
