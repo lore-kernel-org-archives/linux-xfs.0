@@ -1,357 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:2363 "EHLO mga04.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:19648 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756541AbdLXBFI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:05:08 -0500
-Subject: [PATCH v4 10/18] mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
+        id S1756838AbdLXBFO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:05:14 -0500
+Subject: [PATCH v4 11/18] fs, dax: introduce DEFINE_FSDAX_AOPS
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:56:53 -0800
-Message-ID: <151407701384.38751.18357520725643239723.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Sat, 23 Dec 2017 16:56:59 -0800
+Message-ID: <151407701943.38751.8997225433943672290.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: Michal Hocko <mhocko@suse.com>, jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+Cc: jack@suse.cz, Matthew Wilcox <mawilcox@microsoft.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
 
-The HMM sub-system extended dev_pagemap to arrange a callback when a
-dev_pagemap managed page is freed. Since a dev_pagemap page is free /
-idle when its reference count is 1 it requires an additional branch to
-check the page-type at put_page() time. Given put_page() is a hot-path
-we do not want to incur that check if HMM is not in use, so a static
-branch is used to avoid that overhead when not necessary.
+In preparation for the dax implementation to start associating dax pages
+to inodes via page->mapping, we need to provide a 'struct
+address_space_operations' instance for dax. Otherwise, direct-I/O
+triggers incorrect page cache assumptions and warnings like the
+following:
 
-Now, the FS_DAX implementation wants to reuse this mechanism for
-receiving dev_pagemap ->page_free() callbacks. Rework the HMM-specific
-static-key into a generic mechanism that either HMM or FS_DAX code paths
-can enable.
+ WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
+ xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
+ [..]
+ CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O 4.15.0-rc2+ #984
+ [..]
+ Call Trace:
+  set_page_dirty_lock+0x40/0x60
+  bio_set_pages_dirty+0x37/0x50
+  iomap_dio_actor+0x2b7/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  iomap_apply+0xa4/0x110
+  iomap_dio_rw+0x29e/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_read_iter+0xa0/0xc0 [xfs]
+  __vfs_read+0xf9/0x170
+  vfs_read+0xa6/0x150
+  SyS_pread64+0x93/0xb0
+  entry_SYSCALL_64_fastpath+0x1f/0x96
 
-Cc: "Jérôme Glisse" <jglisse@redhat.com>
-Cc: Michal Hocko <mhocko@suse.com>
+...where the default set_page_dirty() handler assumes that dirty state
+is being tracked in 'struct page' flags.
+
+A DEFINE_FSDAX_AOPS macro helper is provided instead of a global 'struct
+address_space_operations fs_dax_aops' instance, because ->writepages
+needs to be an fs-specific implementation.
+
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/super.c      |    2 ++
- fs/Kconfig               |    1 +
- include/linux/memremap.h |   20 ++-------------
- include/linux/mm.h       |   61 ++++++++++++++++++++++++++++++++--------------
- kernel/memremap.c        |   30 ++++++++++++++++++++---
- mm/Kconfig               |    5 ++++
- mm/hmm.c                 |   13 ++--------
- mm/swap.c                |    3 ++
- 8 files changed, 84 insertions(+), 51 deletions(-)
+ fs/dax.c            |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h |   32 ++++++++++++++++++++++++
+ 2 files changed, 101 insertions(+)
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index e926e373a3a5..0352a098b099 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -191,6 +191,7 @@ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
- 		return NULL;
- 	}
+diff --git a/fs/dax.c b/fs/dax.c
+index 54071cd27e8c..fadc1b13838b 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -45,6 +45,75 @@
+ /* The 'colour' (ie low bits) within a PMD of a page offset.  */
+ #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
  
-+	dev_pagemap_enable_ops();
- 	pgmap->type = MEMORY_DEVICE_FS_DAX;
- 	pgmap->page_free = generic_dax_pagefree;
- 	pgmap->data = owner;
-@@ -215,6 +216,7 @@ void fs_dax_release(struct dax_device *dax_dev, void *owner)
- 	pgmap->type = MEMORY_DEVICE_HOST;
- 	pgmap->page_free = NULL;
- 	pgmap->data = NULL;
-+	dev_pagemap_disable_ops();
- 	mutex_unlock(&devmap_lock);
- }
- EXPORT_SYMBOL_GPL(fs_dax_release);
-diff --git a/fs/Kconfig b/fs/Kconfig
-index b40128bf6d1a..73fe372c00db 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -38,6 +38,7 @@ config FS_DAX
- 	bool "Direct Access (DAX) support"
- 	depends on MMU
- 	depends on !(ARM || MIPS || SPARC)
-+	select DEV_PAGEMAP_OPS
- 	select FS_IOMAP
- 	select DAX
- 	help
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 02d6d042ee7f..60c7608379ca 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -1,7 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 */
- #ifndef _LINUX_MEMREMAP_H_
- #define _LINUX_MEMREMAP_H_
--#include <linux/mm.h>
- #include <linux/ioport.h>
- #include <linux/percpu-refcount.h>
- 
-@@ -130,6 +129,9 @@ struct dev_pagemap {
- 	enum memory_type type;
- };
- 
-+void dev_pagemap_enable_ops(void);
-+void dev_pagemap_disable_ops(void);
++int dax_set_page_dirty(struct page *page)
++{
++	/*
++	 * Unlike __set_page_dirty_no_writeback, dax does all dirty
++	 * tracking in the radix in response to mkwrite faults.
++	 */
++	return 0;
++}
++EXPORT_SYMBOL(dax_set_page_dirty);
 +
- #ifdef CONFIG_ZONE_DEVICE
- void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap);
- struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
-@@ -137,8 +139,6 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
++ssize_t dax_direct_IO(struct kiocb *kiocb, struct iov_iter *iter)
++{
++	/*
++	 * The expectation is that filesystems that implement DAX
++	 * support also arrange for ->read_iter and ->write_iter to
++	 * bypass ->direct_IO.
++	 */
++	WARN_ONCE(1, "dax: incomplete fs implementation\n");
++	return -EINVAL;
++}
++EXPORT_SYMBOL(dax_direct_IO);
++
++int dax_writepage(struct page *page, struct writeback_control *wbc)
++{
++	WARN_ONCE(1, "dax: incomplete fs implementation\n");
++	return -EINVAL;
++}
++EXPORT_SYMBOL(dax_writepage);
++
++int dax_readpage(struct file *filp, struct page *page)
++{
++	WARN_ONCE(1, "dax: incomplete fs implementation\n");
++	return -EINVAL;
++}
++EXPORT_SYMBOL(dax_readpage);
++
++int dax_readpages(struct file *filp, struct address_space *mapping,
++		struct list_head *pages, unsigned nr_pages)
++{
++	WARN_ONCE(1, "dax: incomplete fs implementation\n");
++	return -EINVAL;
++}
++EXPORT_SYMBOL(dax_readpages);
++
++int dax_write_begin(struct file *filp, struct address_space *mapping,
++		loff_t pos, unsigned len, unsigned flags,
++		struct page **pagep, void **fsdata)
++{
++	WARN_ONCE(1, "dax: incomplete fs implementation\n");
++	return -EINVAL;
++}
++EXPORT_SYMBOL(dax_write_begin);
++
++int dax_write_end(struct file *filp, struct address_space *mapping,
++		loff_t pos, unsigned len, unsigned copied,
++		struct page *page, void *fsdata)
++{
++	WARN_ONCE(1, "dax: incomplete fs implementation\n");
++	return -EINVAL;
++}
++EXPORT_SYMBOL(dax_write_end);
++
++void dax_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length)
++{
++	/* nothing to do for dax */
++}
++EXPORT_SYMBOL(dax_invalidatepage);
++
+ static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
  
- unsigned long vmem_altmap_offset(struct vmem_altmap *altmap);
- void vmem_altmap_free(struct vmem_altmap *altmap, unsigned long nr_pfns);
--
--static inline bool is_zone_device_page(const struct page *page);
+ static int __init init_dax_wait_table(void)
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 1c6ed44fe9fc..3502abcbea31 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -53,6 +53,34 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+ 
+ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner);
+ void fs_dax_release(struct dax_device *dax_dev, void *owner);
++int dax_set_page_dirty(struct page *page);
++ssize_t dax_direct_IO(struct kiocb *kiocb, struct iov_iter *iter);
++int dax_writepage(struct page *page, struct writeback_control *wbc);
++int dax_readpage(struct file *filp, struct page *page);
++int dax_readpages(struct file *filp, struct address_space *mapping,
++		struct list_head *pages, unsigned nr_pages);
++int dax_write_begin(struct file *filp, struct address_space *mapping,
++		loff_t pos, unsigned len, unsigned flags,
++		struct page **pagep, void **fsdata);
++int dax_write_end(struct file *filp, struct address_space *mapping,
++		loff_t pos, unsigned len, unsigned copied,
++		struct page *page, void *fsdata);
++void dax_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length);
++
++#define DEFINE_FSDAX_AOPS(name, writepages_fn)	\
++const struct address_space_operations name = {	\
++	.set_page_dirty = dax_set_page_dirty,	\
++	.direct_IO = dax_direct_IO,	\
++	.writepage = dax_writepage,	\
++	.readpage = dax_readpage,	\
++	.writepages = writepages_fn,	\
++	.readpages = dax_readpages,	\
++	.write_begin = dax_write_begin,	\
++	.write_end = dax_write_end,	\
++	.invalidatepage = dax_invalidatepage, \
++}
++
  #else
- static inline void *devm_memremap_pages(struct device *dev,
- 		struct dev_pagemap *pgmap)
-@@ -169,20 +169,6 @@ static inline void vmem_altmap_free(struct vmem_altmap *altmap,
- }
- #endif /* CONFIG_ZONE_DEVICE */
- 
--#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
--static inline bool is_device_private_page(const struct page *page)
--{
--	return is_zone_device_page(page) &&
--		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
--}
--
--static inline bool is_device_public_page(const struct page *page)
--{
--	return is_zone_device_page(page) &&
--		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
--}
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
--
- static inline void put_dev_pagemap(struct dev_pagemap *pgmap)
+ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
  {
- 	if (pgmap)
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index dc124b278173..fda3d7dcddc3 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -812,27 +812,55 @@ static inline bool is_zone_device_page(const struct page *page)
+@@ -73,6 +101,10 @@ static inline struct dax_device *fs_dax_claim_bdev(struct block_device *bdev,
+ static inline void fs_dax_release(struct dax_device *dax_dev, void *owner)
+ {
  }
++
++#define DEFINE_FSDAX_AOPS(name, writepages_fn)	\
++const struct address_space_operations name = { 0 }
++
  #endif
  
--#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
--void put_zone_device_private_or_public_page(struct page *page);
--DECLARE_STATIC_KEY_FALSE(device_private_key);
--#define IS_HMM_ENABLED static_branch_unlikely(&device_private_key)
--static inline bool is_device_private_page(const struct page *page);
--static inline bool is_device_public_page(const struct page *page);
--#else /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
--static inline void put_zone_device_private_or_public_page(struct page *page)
-+#ifdef CONFIG_DEV_PAGEMAP_OPS
-+void __put_devmap_managed_page(struct page *page);
-+DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
-+static inline bool put_devmap_managed_page(struct page *page)
- {
-+	if (!static_branch_unlikely(&devmap_managed_key))
-+		return false;
-+	if (!is_zone_device_page(page))
-+		return false;
-+	switch (page->pgmap->type) {
-+	case MEMORY_DEVICE_PRIVATE:
-+	case MEMORY_DEVICE_PUBLIC:
-+	case MEMORY_DEVICE_FS_DAX:
-+		__put_devmap_managed_page(page);
-+		return true;
-+	default:
-+		break;
-+	}
-+	return false;
- }
--#define IS_HMM_ENABLED 0
-+
- static inline bool is_device_private_page(const struct page *page)
- {
--	return false;
-+	return is_zone_device_page(page) &&
-+		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
- }
-+
- static inline bool is_device_public_page(const struct page *page)
- {
-+	return is_zone_device_page(page) &&
-+		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
-+}
-+
-+#else /* CONFIG_DEV_PAGEMAP_OPS */
-+static inline bool put_devmap_managed_page(struct page *page)
-+{
- 	return false;
- }
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
- 
-+static inline bool is_device_private_page(const struct page *page)
-+{
-+	return false;
-+}
-+
-+static inline bool is_device_public_page(const struct page *page)
-+{
-+	return false;
-+}
-+#endif /* CONFIG_DEV_PAGEMAP_OPS */
- 
- static inline void get_page(struct page *page)
- {
-@@ -850,16 +878,13 @@ static inline void put_page(struct page *page)
- 	page = compound_head(page);
- 
- 	/*
--	 * For private device pages we need to catch refcount transition from
--	 * 2 to 1, when refcount reach one it means the private device page is
--	 * free and we need to inform the device driver through callback. See
-+	 * For devmap managed pages we need to catch refcount transition from
-+	 * 2 to 1, when refcount reach one it means the page is free and we
-+	 * need to inform the device driver through callback. See
- 	 * include/linux/memremap.h and HMM for details.
- 	 */
--	if (IS_HMM_ENABLED && unlikely(is_device_private_page(page) ||
--	    unlikely(is_device_public_page(page)))) {
--		put_zone_device_private_or_public_page(page);
-+	if (put_devmap_managed_page(page))
- 		return;
--	}
- 
- 	if (put_page_testzero(page))
- 		__put_page(page);
-diff --git a/kernel/memremap.c b/kernel/memremap.c
-index c04000361664..bad64045b546 100644
---- a/kernel/memremap.c
-+++ b/kernel/memremap.c
-@@ -467,8 +467,30 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
- }
- #endif /* CONFIG_ZONE_DEVICE */
- 
--#if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
--void put_zone_device_private_or_public_page(struct page *page)
-+#ifdef CONFIG_DEV_PAGEMAP_OPS
-+DEFINE_STATIC_KEY_FALSE(devmap_managed_key);
-+EXPORT_SYMBOL(devmap_managed_key);
-+static atomic_t devmap_enable;
-+
-+/*
-+ * Toggle the static key for ->page_free() callbacks when dev_pagemap
-+ * pages go idle.
-+ */
-+void dev_pagemap_enable_ops(void)
-+{
-+	if (atomic_inc_return(&devmap_enable) == 1)
-+		static_branch_enable(&devmap_managed_key);
-+}
-+EXPORT_SYMBOL(dev_pagemap_enable_ops);
-+
-+void dev_pagemap_disable_ops(void)
-+{
-+	if (atomic_dec_and_test(&devmap_enable))
-+		static_branch_disable(&devmap_managed_key);
-+}
-+EXPORT_SYMBOL(dev_pagemap_disable_ops);
-+
-+void __put_devmap_managed_page(struct page *page)
- {
- 	int count = page_ref_dec_return(page);
- 
-@@ -488,5 +510,5 @@ void put_zone_device_private_or_public_page(struct page *page)
- 	} else if (!count)
- 		__put_page(page);
- }
--EXPORT_SYMBOL(put_zone_device_private_or_public_page);
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
-+EXPORT_SYMBOL(__put_devmap_managed_page);
-+#endif /* CONFIG_DEV_PAGEMAP_OPS */
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 03ff7703d322..f8cf32411e1a 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -705,6 +705,9 @@ config ARCH_HAS_HMM
- config MIGRATE_VMA_HELPER
- 	bool
- 
-+config DEV_PAGEMAP_OPS
-+	bool
-+
- config HMM
- 	bool
- 	select MIGRATE_VMA_HELPER
-@@ -725,6 +728,7 @@ config DEVICE_PRIVATE
- 	bool "Unaddressable device memory (GPU memory, ...)"
- 	depends on ARCH_HAS_HMM
- 	select HMM
-+	select DEV_PAGEMAP_OPS
- 
- 	help
- 	  Allows creation of struct pages to represent unaddressable device
-@@ -735,6 +739,7 @@ config DEVICE_PUBLIC
- 	bool "Addressable device memory (like GPU memory)"
- 	depends on ARCH_HAS_HMM
- 	select HMM
-+	select DEV_PAGEMAP_OPS
- 
- 	help
- 	  Allows creation of struct pages to represent addressable device
-diff --git a/mm/hmm.c b/mm/hmm.c
-index ee75b2923dde..a27b4ae12823 100644
---- a/mm/hmm.c
-+++ b/mm/hmm.c
-@@ -35,15 +35,6 @@
- 
- #define PA_SECTION_SIZE (1UL << PA_SECTION_SHIFT)
- 
--#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
--/*
-- * Device private memory see HMM (Documentation/vm/hmm.txt) or hmm.h
-- */
--DEFINE_STATIC_KEY_FALSE(device_private_key);
--EXPORT_SYMBOL(device_private_key);
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
--
--
- #if IS_ENABLED(CONFIG_HMM_MIRROR)
- static const struct mmu_notifier_ops hmm_mmu_notifier_ops;
- 
-@@ -998,7 +989,7 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
- 	resource_size_t addr;
- 	int ret;
- 
--	static_branch_enable(&device_private_key);
-+	dev_pagemap_enable_ops();
- 
- 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
- 				   GFP_KERNEL, dev_to_node(device));
-@@ -1092,7 +1083,7 @@ struct hmm_devmem *hmm_devmem_add_resource(const struct hmm_devmem_ops *ops,
- 	if (res->desc != IORES_DESC_DEVICE_PUBLIC_MEMORY)
- 		return ERR_PTR(-EINVAL);
- 
--	static_branch_enable(&device_private_key);
-+	dev_pagemap_enable_ops();
- 
- 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
- 				   GFP_KERNEL, dev_to_node(device));
-diff --git a/mm/swap.c b/mm/swap.c
-index 38e1b6374a97..f2acaa93637b 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -29,6 +29,7 @@
- #include <linux/cpu.h>
- #include <linux/notifier.h>
- #include <linux/backing-dev.h>
-+#include <linux/memremap.h>
- #include <linux/memcontrol.h>
- #include <linux/gfp.h>
- #include <linux/uio.h>
-@@ -772,7 +773,7 @@ void release_pages(struct page **pages, int nr)
- 						       flags);
- 				locked_pgdat = NULL;
- 			}
--			put_zone_device_private_or_public_page(page);
-+			put_devmap_managed_page(page);
- 			continue;
- 		}
- 
+ int dax_read_lock(void);
 
