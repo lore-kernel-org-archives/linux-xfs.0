@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56584 "EHLO mga09.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:2325 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750752AbdLXBEV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:04:21 -0500
-Subject: [PATCH v4 01/18] mm, dax: introduce pfn_t_special()
+        id S1750752AbdLXBE0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:04:26 -0500
+Subject: [PATCH v4 02/18] ext4: auto disable dax instead of failing mount
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:56:06 -0800
-Message-ID: <151407696622.38751.4716967585354728059.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Sat, 23 Dec 2017 16:56:11 -0800
+Message-ID: <151407697190.38751.14634783055964566076.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,119 +16,45 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: jack@suse.cz, linux-nvdimm@lists.01.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, ross.zwisler@linux.intel.com, hch@lst.de
+Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
 
-In support of removing the VM_MIXEDMAP indication from DAX VMAs,
-introduce pfn_t_special() for drivers to indicate that _PAGE_SPECIAL
-should be used for DAX ptes. This also helps identify drivers like
-dccssblk that only want to use DAX in a read-only fashion without
-get_user_pages() support.
+Bring the ext4 filesystem in line with xfs that only warns and continues
+when the "-o dax" option is specified to mount and the backing device
+does not support dax. This is in preparation for removing dax support
+from devices that do not enable get_user_pages() operations on dax
+mappings. In other words 'gup' support is required and configurations
+that were using so called 'page-less' dax will be converted back to
+using the page cache.
 
-Ideally we could delete axonram and dcssblk DAX support, but if we need
-to keep it better make it explicit that axonram and dcssblk only support
-a sub-set of DAX due to missing _PAGE_DEVMAP support.
+Removing the broken 'page-less' dax support is a pre-requisite for
+removing the "EXPERIMENTAL" warning when mounting a filesystem in dax
+mode.
 
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- arch/powerpc/sysdev/axonram.c |    2 +-
- drivers/s390/block/dcssblk.c  |    3 ++-
- include/linux/pfn_t.h         |   13 +++++++++++++
- mm/memory.c                   |   16 +++++++++++++++-
- 4 files changed, 31 insertions(+), 3 deletions(-)
+ fs/ext4/super.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/sysdev/axonram.c b/arch/powerpc/sysdev/axonram.c
-index 1b307c80b401..cdbb0e59b3d3 100644
---- a/arch/powerpc/sysdev/axonram.c
-+++ b/arch/powerpc/sysdev/axonram.c
-@@ -151,7 +151,7 @@ __axon_ram_direct_access(struct axon_ram_bank *bank, pgoff_t pgoff, long nr_page
- 	resource_size_t offset = pgoff * PAGE_SIZE;
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 7c46693a14d7..18873ea89e08 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -3710,11 +3710,14 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ 		if (ext4_has_feature_inline_data(sb)) {
+ 			ext4_msg(sb, KERN_ERR, "Cannot use DAX on a filesystem"
+ 					" that may contain inline data");
+-			goto failed_mount;
++			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
+ 		}
+ 		err = bdev_dax_supported(sb, blocksize);
+-		if (err)
+-			goto failed_mount;
++		if (err) {
++			ext4_msg(sb, KERN_ERR,
++				"DAX unsupported by block device. Turning off DAX.");
++			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
++		}
+ 	}
  
- 	*kaddr = (void *) bank->io_addr + offset;
--	*pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV);
-+	*pfn = phys_to_pfn_t(bank->ph_addr + offset, PFN_DEV|PFN_SPECIAL);
- 	return (bank->size - offset) / PAGE_SIZE;
- }
- 
-diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
-index 6aaefb780436..9cae08b36b80 100644
---- a/drivers/s390/block/dcssblk.c
-+++ b/drivers/s390/block/dcssblk.c
-@@ -916,7 +916,8 @@ __dcssblk_direct_access(struct dcssblk_dev_info *dev_info, pgoff_t pgoff,
- 
- 	dev_sz = dev_info->end - dev_info->start + 1;
- 	*kaddr = (void *) dev_info->start + offset;
--	*pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset), PFN_DEV);
-+	*pfn = __pfn_to_pfn_t(PFN_DOWN(dev_info->start + offset),
-+			PFN_DEV|PFN_SPECIAL);
- 
- 	return (dev_sz - offset) / PAGE_SIZE;
- }
-diff --git a/include/linux/pfn_t.h b/include/linux/pfn_t.h
-index 43b1d7648e82..a03c2642a87c 100644
---- a/include/linux/pfn_t.h
-+++ b/include/linux/pfn_t.h
-@@ -15,8 +15,10 @@
- #define PFN_SG_LAST (1ULL << (BITS_PER_LONG_LONG - 2))
- #define PFN_DEV (1ULL << (BITS_PER_LONG_LONG - 3))
- #define PFN_MAP (1ULL << (BITS_PER_LONG_LONG - 4))
-+#define PFN_SPECIAL (1ULL << (BITS_PER_LONG_LONG - 5))
- 
- #define PFN_FLAGS_TRACE \
-+	{ PFN_SPECIAL,	"SPECIAL" }, \
- 	{ PFN_SG_CHAIN,	"SG_CHAIN" }, \
- 	{ PFN_SG_LAST,	"SG_LAST" }, \
- 	{ PFN_DEV,	"DEV" }, \
-@@ -120,4 +122,15 @@ pud_t pud_mkdevmap(pud_t pud);
- #endif
- #endif /* __HAVE_ARCH_PTE_DEVMAP */
- 
-+#ifdef __HAVE_ARCH_PTE_SPECIAL
-+static inline bool pfn_t_special(pfn_t pfn)
-+{
-+	return (pfn.val & PFN_SPECIAL) == PFN_SPECIAL;
-+}
-+#else
-+static inline bool pfn_t_special(pfn_t pfn)
-+{
-+	return false;
-+}
-+#endif /* __HAVE_ARCH_PTE_SPECIAL */
- #endif /* _LINUX_PFN_T_H_ */
-diff --git a/mm/memory.c b/mm/memory.c
-index 5eb3d2524bdc..48a13473b401 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -1897,12 +1897,26 @@ int vm_insert_pfn_prot(struct vm_area_struct *vma, unsigned long addr,
- }
- EXPORT_SYMBOL(vm_insert_pfn_prot);
- 
-+static bool vm_mixed_ok(struct vm_area_struct *vma, pfn_t pfn)
-+{
-+	/* these checks mirror the abort conditions in vm_normal_page */
-+	if (vma->vm_flags & VM_MIXEDMAP)
-+		return true;
-+	if (pfn_t_devmap(pfn))
-+		return true;
-+	if (pfn_t_special(pfn))
-+		return true;
-+	if (is_zero_pfn(pfn_t_to_pfn(pfn)))
-+		return true;
-+	return false;
-+}
-+
- static int __vm_insert_mixed(struct vm_area_struct *vma, unsigned long addr,
- 			pfn_t pfn, bool mkwrite)
- {
- 	pgprot_t pgprot = vma->vm_page_prot;
- 
--	BUG_ON(!(vma->vm_flags & VM_MIXEDMAP));
-+	BUG_ON(!vm_mixed_ok(vma, pfn));
- 
- 	if (addr < vma->vm_start || addr >= vma->vm_end)
- 		return -EFAULT;
+ 	if (ext4_has_feature_encrypt(sb) && es->s_encryption_level) {
 
