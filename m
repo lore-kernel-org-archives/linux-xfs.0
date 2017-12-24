@@ -1,267 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39334 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757147AbdLWBN2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Dec 2017 20:13:28 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id vBN1C8pD079469
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:13:28 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2f1cvd81b8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:13:28 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id vBN18R3a021755
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:08:27 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id vBN18QFY002926
-        for <linux-xfs@vger.kernel.org>; Sat, 23 Dec 2017 01:08:26 GMT
-Subject: [PATCH 13/20] xfs: provide a centralized method for verifying
- inline fork data
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 22 Dec 2017 17:08:25 -0800
-Message-ID: <151399130564.23543.3415524034974708060.stgit@magnolia>
-In-Reply-To: <151399122361.23543.15718507168231759645.stgit@magnolia>
-References: <151399122361.23543.15718507168231759645.stgit@magnolia>
+Received: from mga04.intel.com ([192.55.52.120]:2323 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750752AbdLXBEP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:04:15 -0500
+Subject: [PATCH v4 00/18] dax: fix dma vs truncate/hole-punch
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sat, 23 Dec 2017 16:56:00 -0800
+Message-ID: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: Michal Hocko <mhocko@suse.com>, jack@suse.cz, Peter Zijlstra <peterz@infradead.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Andreas Dilger <adilger.kernel@dilger.ca>, hch@lst.de, Matthew Wilcox <mawilcox@microsoft.com>, Michael Ellerman <mpe@ellerman.id.au>, Jeff Moyer <jmoyer@redhat.com>, Ingo Molnar <mingo@redhat.com>, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-fsdevel@vger.kernel.org, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Gerald Schaefer <gerald.schaefer@de.ibm.com>, linux-nvdimm@lists.01.org, Theodore Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Paul Mackerras <paulus@samba.org>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Changes since v3 [1]:
+* Kill the i_daxdma_lock, and do not impose any new locking constraints
+  on filesystem implementations (Dave)
 
-Replace the current haphazard dir2 shortform verifier callsites with a
-centralized verifier function that can be called either with the default
-verifier functions or with a custom set.  This helps us strengthen
-integrity checking while providing us with flexibility for repair tools.
+* Reuse the existing i_mmap_lock for synchronizing against
+  get_user_pages() by unmapping and causing punch-hole/truncate to
+  re-fault the page before get_user_pages() can elevate the page reference
+  count (Jan)
 
-xfs_repair wants this to be able to supply its own verifier functions
-when trying to fix possibly corrupt metadata.
+* Create a dax-specifc address_space_operations instance for each
+  filesystem. This allows page->mapping to be set for dax pages. (Jan).
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+* Change the ext4 and ext2 policy of 'mount -o dax' vs a device that
+  does not support dax. This converts any environments that may have
+  been using 'page-less' dax back to using page cache.
+
+* Rename wait_on_devmap_idle() to wait_on_atomic_one(), a generic
+  facility for waiting for an atomic counter to reach a value of '1'.
+
+[1]: https://lwn.net/Articles/737273/
+
 ---
- fs/xfs/libxfs/xfs_inode_fork.c |   64 ++++++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_inode_fork.h |   14 +++++++++
- fs/xfs/xfs_icache.c            |    5 +++
- fs/xfs/xfs_inode.c             |   34 +++++++++++++++++++--
- fs/xfs/xfs_inode.h             |    2 +
- fs/xfs/xfs_log_recover.c       |    4 +++
- 6 files changed, 99 insertions(+), 24 deletions(-)
+
+Background:
+
+get_user_pages() pins file backed memory pages for access by dma
+devices. However, it only pins the memory pages not the page-to-file
+offset association. If a file is truncated the pages are mapped out of
+the file and dma may continue indefinitely into a page that is owned by
+a device driver. This breaks coherency of the file vs dma, but the
+assumption is that if userspace wants the file-space truncated it does
+not matter what data is inbound from the device, it is not relevant
+anymore. The only expectation is that dma can safely continue while the
+filesystem reallocates the block(s).
+
+Problem:
+
+This expectation that dma can safely continue while the filesystem
+changes the block map is broken by dax. With dax the target dma page
+*is* the filesystem block. The model of leaving the page pinned for dma,
+but truncating the file block out of the file, means that the filesytem
+is free to reallocate a block under active dma to another file and now
+the expected data-incoherency situation has turned into active
+data-corruption.
+
+Solution:
+
+Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+file while any page/block in the file is under active dma. This solution
+assumes that dma is transient. Cases where dma operations are known to
+not be transient, like RDMA, have been explicitly disabled via
+commits like 5f1d43de5416 "IB/core: disable memory registration of
+filesystem-dax vmas".
+
+The dax_flush_dma() routine is called by filesystems with a lock held
+against mm faults (i_mmap_lock). It then invalidates all mappings to
+trigger any subsequent get_user_pages() to block on i_mmap_lock. Finally
+it scans/rescans all pages in the mapping until it observes all pages
+idle.
+
+So far this solution only targets xfs since it already implements
+xfs_break_layouts in all the locations that would need this
+synchronization. It applies on top of the vmem_altmap / dev_pagemap
+reworks from Christoph.
+
+---
+
+Dan Williams (18):
+      mm, dax: introduce pfn_t_special()
+      ext4: auto disable dax instead of failing mount
+      ext2: auto disable dax instead of failing mount
+      dax: require 'struct page' by default for filesystem dax
+      dax: stop using VM_MIXEDMAP for dax
+      dax: stop using VM_HUGEPAGE for dax
+      dax: store pfns in the radix
+      tools/testing/nvdimm: add 'bio_delay' mechanism
+      mm, dax: enable filesystems to trigger dev_pagemap ->page_free callbacks
+      mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
+      fs, dax: introduce DEFINE_FSDAX_AOPS
+      xfs: use DEFINE_FSDAX_AOPS
+      ext4: use DEFINE_FSDAX_AOPS
+      ext2: use DEFINE_FSDAX_AOPS
+      mm, fs, dax: use page->mapping to warn if dma collides with truncate
+      wait_bit: introduce {wait_on,wake_up}_atomic_one
+      mm, fs, dax: dax_flush_dma, handle dma vs block-map-change collisions
+      xfs, dax: wire up dax_flush_dma support via a new xfs_sync_dma helper
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index a92395a..c1c1a86 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -35,6 +35,8 @@
- #include "xfs_da_format.h"
- #include "xfs_da_btree.h"
- #include "xfs_dir2_priv.h"
-+#include "xfs_attr_leaf.h"
-+#include "xfs_shared.h"
- 
- kmem_zone_t *xfs_ifork_zone;
- 
-@@ -97,14 +99,6 @@ xfs_iformat_fork(
- 	if (error)
- 		return error;
- 
--	/* Check inline dir contents. */
--	if (S_ISDIR(inode->i_mode) && dip->di_format == XFS_DINODE_FMT_LOCAL) {
--		if (xfs_dir2_sf_verify(ip)) {
--			xfs_idestroy_fork(ip, XFS_DATA_FORK);
--			return -EFSCORRUPTED;
--		}
--	}
--
- 	if (xfs_is_reflink_inode(ip)) {
- 		ASSERT(ip->i_cowfp == NULL);
- 		xfs_ifork_init_cow(ip);
-@@ -121,18 +115,6 @@ xfs_iformat_fork(
- 		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
- 		size = be16_to_cpu(atp->hdr.totsize);
- 
--		if (unlikely(size < sizeof(struct xfs_attr_sf_hdr))) {
--			xfs_warn(ip->i_mount,
--				"corrupt inode %Lu (bad attr fork size %Ld).",
--				(unsigned long long) ip->i_ino,
--				(long long) size);
--			XFS_CORRUPTION_ERROR("xfs_iformat(8)",
--					     XFS_ERRLEVEL_LOW,
--					     ip->i_mount, dip);
--			error = -EFSCORRUPTED;
--			break;
--		}
--
- 		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK, size);
- 		break;
- 	case XFS_DINODE_FMT_EXTENTS:
-@@ -740,3 +722,45 @@ xfs_ifork_init_cow(
- 	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
- 	ip->i_cnextents = 0;
- }
-+
-+/* Default fork content verifiers. */
-+struct xfs_ifork_ops xfs_default_ifork_ops = {
-+	.verify_attr	= xfs_attr_shortform_verify,
-+	.verify_dir	= xfs_dir2_sf_verify,
-+	.verify_symlink	= xfs_symlink_shortform_verify,
-+};
-+
-+/* Verify the inline contents of the data fork of an inode. */
-+xfs_failaddr_t
-+xfs_ifork_verify_data(
-+	struct xfs_inode	*ip,
-+	struct xfs_ifork_ops	*ops)
-+{
-+	/* Non-local data fork, we're done. */
-+	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-+		return NULL;
-+
-+	/* Check the inline data fork if there is one. */
-+	switch (VFS_I(ip)->i_mode & S_IFMT) {
-+	case S_IFDIR:
-+		return ops->verify_dir(ip);
-+	case S_IFLNK:
-+		return ops->verify_symlink(ip);
-+	default:
-+		return NULL;
-+	}
-+}
-+
-+/* Verify the inline contents of the attr fork of an inode. */
-+xfs_failaddr_t
-+xfs_ifork_verify_attr(
-+	struct xfs_inode	*ip,
-+	struct xfs_ifork_ops	*ops)
-+{
-+	/* There has to be an attr fork allocated if aformat is local. */
-+	if (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
-+		return NULL;
-+	if (!XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
-+		return __this_address;
-+	return ops->verify_attr(ip);
-+}
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index b9f0098..dd8aba0 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -186,4 +186,18 @@ extern struct kmem_zone	*xfs_ifork_zone;
- 
- extern void xfs_ifork_init_cow(struct xfs_inode *ip);
- 
-+typedef xfs_failaddr_t (*xfs_ifork_verifier_t)(struct xfs_inode *);
-+
-+struct xfs_ifork_ops {
-+	xfs_ifork_verifier_t	verify_symlink;
-+	xfs_ifork_verifier_t	verify_dir;
-+	xfs_ifork_verifier_t	verify_attr;
-+};
-+extern struct xfs_ifork_ops	xfs_default_ifork_ops;
-+
-+xfs_failaddr_t xfs_ifork_verify_data(struct xfs_inode *ip,
-+		struct xfs_ifork_ops *ops);
-+xfs_failaddr_t xfs_ifork_verify_attr(struct xfs_inode *ip,
-+		struct xfs_ifork_ops *ops);
-+
- #endif	/* __XFS_INODE_FORK_H__ */
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 58d2d42..1383603 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -473,6 +473,11 @@ xfs_iget_cache_miss(
- 	if (error)
- 		goto out_destroy;
- 
-+	if (!xfs_inode_verify_forks(ip)) {
-+		error = -EFSCORRUPTED;
-+		goto out_destroy;
-+	}
-+
- 	trace_xfs_iget_miss(ip);
- 
- 	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 6f95bdb..663b546 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3479,6 +3479,34 @@ xfs_iflush(
- 	return error;
- }
- 
-+/*
-+ * If there are inline format data / attr forks attached to this inode,
-+ * make sure they're not corrupt.
-+ */
-+bool
-+xfs_inode_verify_forks(
-+	struct xfs_inode	*ip)
-+{
-+	xfs_failaddr_t		fa;
-+
-+	fa = xfs_ifork_verify_data(ip, &xfs_default_ifork_ops);
-+	if (fa) {
-+		xfs_alert(ip->i_mount,
-+				"%s: bad inode %llu inline data fork at %pF",
-+				__func__, ip->i_ino, fa);
-+		return false;
-+	}
-+
-+	fa = xfs_ifork_verify_attr(ip, &xfs_default_ifork_ops);
-+	if (fa) {
-+		xfs_alert(ip->i_mount,
-+				"%s: bad inode %llu inline attr fork at %pF",
-+				__func__, ip->i_ino, fa);
-+		return false;
-+	}
-+	return true;
-+}
-+
- STATIC int
- xfs_iflush_int(
- 	struct xfs_inode	*ip,
-@@ -3557,10 +3585,8 @@ xfs_iflush_int(
- 	if (ip->i_d.di_version < 3)
- 		ip->i_d.di_flushiter++;
- 
--	/* Check the inline directory data. */
--	if (S_ISDIR(VFS_I(ip)->i_mode) &&
--	    ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
--	    xfs_dir2_sf_verify(ip))
-+	/* Check the inline fork data before we write out. */
-+	if (!xfs_inode_verify_forks(ip))
- 		goto corrupt_out;
- 
- 	/*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index d383e39..386b0bb 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -491,4 +491,6 @@ extern struct kmem_zone	*xfs_inode_zone;
- /* The default CoW extent size hint. */
- #define XFS_DEFAULT_COWEXTSZ_HINT 32
- 
-+bool xfs_inode_verify_forks(struct xfs_inode *ip);
-+
- #endif	/* __XFS_INODE_H__ */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 28d1abf..04f5b30 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2957,6 +2957,10 @@ xfs_recover_inode_owner_change(
- 	if (error)
- 		goto out_free_ip;
- 
-+	if (!xfs_inode_verify_forks(ip)) {
-+		error = -EFSCORRUPTED;
-+		goto out_free_ip;
-+	}
- 
- 	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
- 		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
-
+ arch/powerpc/platforms/Kconfig        |    1 
+ arch/powerpc/sysdev/axonram.c         |    2 
+ drivers/dax/device.c                  |    1 
+ drivers/dax/super.c                   |  100 ++++++++++-
+ drivers/nvdimm/pmem.c                 |    3 
+ drivers/s390/block/Kconfig            |    1 
+ drivers/s390/block/dcssblk.c          |    3 
+ fs/Kconfig                            |    8 +
+ fs/dax.c                              |  295 ++++++++++++++++++++++++++++-----
+ fs/ext2/ext2.h                        |    1 
+ fs/ext2/file.c                        |    1 
+ fs/ext2/inode.c                       |   23 ++-
+ fs/ext2/namei.c                       |   18 --
+ fs/ext2/super.c                       |   13 +
+ fs/ext4/file.c                        |    1 
+ fs/ext4/inode.c                       |    6 +
+ fs/ext4/super.c                       |   15 +-
+ fs/xfs/Makefile                       |    3 
+ fs/xfs/xfs_aops.c                     |    2 
+ fs/xfs/xfs_aops.h                     |    1 
+ fs/xfs/xfs_dma.c                      |   81 +++++++++
+ fs/xfs/xfs_dma.h                      |   24 +++
+ fs/xfs/xfs_file.c                     |    8 -
+ fs/xfs/xfs_ioctl.c                    |    7 -
+ fs/xfs/xfs_iops.c                     |   12 +
+ fs/xfs/xfs_super.c                    |   20 +-
+ include/linux/dax.h                   |   70 +++++++-
+ include/linux/memremap.h              |   28 +--
+ include/linux/mm.h                    |   62 +++++--
+ include/linux/pfn_t.h                 |   13 +
+ include/linux/vma.h                   |   23 +++
+ include/linux/wait_bit.h              |   13 +
+ kernel/memremap.c                     |   30 +++
+ kernel/sched/wait_bit.c               |   59 ++++++-
+ mm/Kconfig                            |    5 +
+ mm/gup.c                              |    5 +
+ mm/hmm.c                              |   13 -
+ mm/huge_memory.c                      |    6 -
+ mm/ksm.c                              |    3 
+ mm/madvise.c                          |    2 
+ mm/memory.c                           |   22 ++
+ mm/migrate.c                          |    3 
+ mm/mlock.c                            |    5 -
+ mm/mmap.c                             |    8 -
+ mm/swap.c                             |    3 
+ tools/testing/nvdimm/Kbuild           |    1 
+ tools/testing/nvdimm/test/iomap.c     |   62 +++++++
+ tools/testing/nvdimm/test/nfit.c      |   34 ++++
+ tools/testing/nvdimm/test/nfit_test.h |    1 
+ 49 files changed, 918 insertions(+), 203 deletions(-)
+ create mode 100644 fs/xfs/xfs_dma.c
+ create mode 100644 fs/xfs/xfs_dma.h
+ create mode 100644 include/linux/vma.h
