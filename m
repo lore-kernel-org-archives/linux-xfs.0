@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:55648 "EHLO mga07.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:2382 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751642AbdLXBFr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:05:47 -0500
-Subject: [PATCH v4 17/18] mm, fs, dax: dax_flush_dma,
- handle dma vs block-map-change collisions
+        id S1756150AbdLXBFv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:05:51 -0500
+Subject: [PATCH v4 18/18] xfs,
+ dax: wire up dax_flush_dma support via a new xfs_sync_dma helper
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:57:31 -0800
-Message-ID: <151407705124.38751.12934858054023659736.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Sat, 23 Dec 2017 16:57:37 -0800
+Message-ID: <151407705701.38751.6157642918168721562.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -17,269 +17,256 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: jack@suse.cz, Matthew Wilcox <mawilcox@microsoft.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, ross.zwisler@linux.intel.com, hch@lst.de
+Cc: jack@suse.cz, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
 
-Background:
+xfs_break_layouts() scans for active pNFS layouts, drops locks and
+rescans for those layouts to be broken. xfs_sync_dma performs
+xfs_break_layouts and also scans for active dax-dma pages, drops locks
+and rescans for those pages to go idle.
 
-get_user_pages() pins file backed memory pages for access by dma
-devices. However, it only pins the memory pages not the page-to-file
-offset association. If a file is truncated the pages are mapped out of
-the file and dma may continue indefinitely into a page that is owned by
-a device driver. This breaks coherency of the file vs dma, but the
-assumption is that if userspace wants the file-space truncated it does
-not matter what data is inbound from the device, it is not relevant
-anymore. The only expectation is that dma can safely continue while the
-filesystem reallocates the block(s).
+dax_flush_dma handles synchronizing against new page-busy events
+(get_user_pages). iIt invalidates all mappings to trigger the
+get_user_pages slow path which will eventually block on the
+XFS_MMAPLOCK. If it finds a dma-busy page it waits for a page-idle
+callback that will fire when the page reference count reaches 1 (recall
+ZONE_DEVICE pages are idle at count 1). While it is waiting, it drops
+locks so we do not deadlock the process that might be trying to elevate
+the page count of more pages before arranging for any of them to go idle
+as is typically the case of iov_iter_get_pages.
 
-Problem:
-
-This expectation that dma can safely continue while the filesystem
-changes the block map is broken by dax. With dax the target dma page
-*is* the filesystem block. The model of leaving the page pinned for dma,
-but truncating the file block out of the file, means that the filesytem
-is free to reallocate a block under active dma to another file and now
-the expected data-incoherency situation has turned into active
-data-corruption.
-
-Solution:
-
-Defer all filesystem operations (fallocate(), truncate()) on a dax mode
-file while any page/block in the file is under active dma. This solution
-assumes that dma is transient. Cases where dma operations are known to
-not be transient, like RDMA, have been explicitly disabled via
-commits like 5f1d43de5416 "IB/core: disable memory registration of
-filesystem-dax vmas".
-
-The dax_flush_dma() routine is intended to be called by filesystems with
-locks held against mm faults (i_mmap_lock). It then invalidates all
-mappings to trigger any subsequent get_user_pages() to block on
-i_mmap_lock. Finally it scans/rescans all pages in the mapping until it
-observes all them idle.
+dax_flush_dma relies on the fs-provided wait_atomic_t_action_f
+(xfs_wait_dax_page) to handle evaluating the page reference count and
+dropping locks when waiting.
 
 Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
 Cc: Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
 Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Reported-by: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/dax.c            |   95 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/dax.h |   27 ++++++++++++++
- mm/gup.c            |    5 +++
- 3 files changed, 127 insertions(+)
+ fs/xfs/Makefile    |    3 ++
+ fs/xfs/xfs_dma.c   |   81 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_dma.h   |   24 +++++++++++++++
+ fs/xfs/xfs_file.c  |    6 ++--
+ fs/xfs/xfs_ioctl.c |    7 ++--
+ fs/xfs/xfs_iops.c  |    7 +++-
+ 6 files changed, 118 insertions(+), 10 deletions(-)
+ create mode 100644 fs/xfs/xfs_dma.c
+ create mode 100644 fs/xfs/xfs_dma.h
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 7d9fff8a1195..eed589bf833e 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -416,6 +416,19 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
- 	}
- }
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 7ceb41a9786a..f2cdc5a3eb6c 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -129,6 +129,9 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+ 				   xfs_qm.o \
+ 				   xfs_quotaops.o
  
-+static struct page *dma_busy_page(void *entry)
-+{
-+	unsigned long pfn, end_pfn;
++# dax dma
++xfs-$(CONFIG_FS_DAX)		+= xfs_dma.o
 +
-+	for_each_entry_pfn(entry, pfn, end_pfn) {
-+		struct page *page = pfn_to_page(pfn);
-+
-+		if (page_ref_count(page) > 1)
-+			return page;
-+	}
-+	return NULL;
-+}
-+
- /*
-  * Find radix tree entry at given index. If it points to an exceptional entry,
-  * return it with the radix tree entry locked. If the radix tree doesn't
-@@ -557,6 +570,87 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 	return entry;
- }
+ # xfs_rtbitmap is shared with libxfs
+ xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o
  
-+int dax_flush_dma(struct address_space *mapping, wait_atomic_t_action_f action)
-+{
-+	pgoff_t	indices[PAGEVEC_SIZE];
-+	struct pagevec pvec;
-+	pgoff_t	index, end;
-+	unsigned i;
-+
-+	/* in the limited case get_user_pages for dax is disabled */
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-+		return 0;
-+
-+	if (!dax_mapping(mapping))
-+		return 0;
-+
-+	if (mapping->nrexceptional == 0)
-+		return 0;
-+
-+retry:
-+	pagevec_init(&pvec);
-+	index = 0;
-+	end = -1;
-+	unmap_mapping_range(mapping, 0, 0, 1);
-+	/*
-+	 * Flush dax_dma_lock() sections to ensure all possible page
-+	 * references have been taken, or will block on the fs
-+	 * 'mmap_lock'.
-+	 */
-+	synchronize_rcu();
-+	while (index < end && pagevec_lookup_entries(&pvec, mapping, index,
-+				min(end - index, (pgoff_t)PAGEVEC_SIZE),
-+				indices)) {
-+		int rc = 0;
-+
-+		for (i = 0; i < pagevec_count(&pvec); i++) {
-+			struct page *pvec_ent = pvec.pages[i];
-+			struct page *page = NULL;
-+			void *entry;
-+
-+			index = indices[i];
-+			if (index >= end)
-+				break;
-+
-+			if (!radix_tree_exceptional_entry(pvec_ent))
-+				continue;
-+
-+			spin_lock_irq(&mapping->tree_lock);
-+			entry = get_unlocked_mapping_entry(mapping, index, NULL);
-+			if (entry)
-+				page = dma_busy_page(entry);
-+			put_unlocked_mapping_entry(mapping, index, entry);
-+			spin_unlock_irq(&mapping->tree_lock);
-+
-+			if (!page)
-+				continue;
-+			rc = wait_on_atomic_one(&page->_refcount, action,
-+					TASK_INTERRUPTIBLE);
-+			if (rc == 0)
-+				continue;
-+			break;
-+		}
-+		pagevec_remove_exceptionals(&pvec);
-+		pagevec_release(&pvec);
-+		index++;
-+
-+		if (rc < 0)
-+			return rc;
-+		if (rc == 0) {
-+			cond_resched();
-+			continue;
-+		}
-+
-+		/*
-+		 * We have dropped fs locks, so we need to revalidate
-+		 * that previously seen idle pages are still idle.
-+		 */
-+		goto retry;
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(dax_flush_dma);
-+
- static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 					  pgoff_t index, bool trunc)
- {
-@@ -581,6 +675,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	spin_unlock_irq(&mapping->tree_lock);
- 	return ret;
- }
-+
- /*
-  * Delete exceptional DAX entry at @index from @mapping. Wait for radix tree
-  * entry to get unlocked before deleting it.
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 3502abcbea31..ccd6aed90f95 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -81,6 +81,15 @@ const struct address_space_operations name = {	\
- 	.invalidatepage = dax_invalidatepage, \
- }
- 
-+static inline void dax_dma_lock(void)
-+{
-+	rcu_read_lock();
-+}
-+
-+static inline void dax_dma_unlock(void)
-+{
-+	rcu_read_unlock();
-+}
- #else
- static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
- {
-@@ -105,6 +114,13 @@ static inline void fs_dax_release(struct dax_device *dax_dev, void *owner)
- #define DEFINE_FSDAX_AOPS(name, writepages_fn)	\
- const struct address_space_operations name = { 0 }
- 
-+static inline void dax_dma_lock(void)
-+{
-+}
-+
-+static inline void dax_dma_unlock(void)
-+{
-+}
- #endif
- 
- int dax_read_lock(void);
-@@ -134,11 +150,22 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
- 
-+static inline struct page *refcount_to_page(atomic_t *c)
-+{
-+	return container_of(c, struct page, _refcount);
-+}
-+
- #ifdef CONFIG_FS_DAX
-+int dax_flush_dma(struct address_space *mapping, wait_atomic_t_action_f action);
- int __dax_zero_page_range(struct block_device *bdev,
- 		struct dax_device *dax_dev, sector_t sector,
- 		unsigned int offset, unsigned int length);
- #else
-+static inline int dax_flush_dma(struct address_space *mapping,
-+		wait_atomic_t_action_f action)
-+{
-+	return 0;
-+}
- static inline int __dax_zero_page_range(struct block_device *bdev,
- 		struct dax_device *dax_dev, sector_t sector,
- 		unsigned int offset, unsigned int length)
-diff --git a/mm/gup.c b/mm/gup.c
-index 9d142eb9e2e9..a8f5e13f7d17 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -13,6 +13,7 @@
- #include <linux/sched/signal.h>
- #include <linux/rwsem.h>
- #include <linux/hugetlb.h>
+diff --git a/fs/xfs/xfs_dma.c b/fs/xfs/xfs_dma.c
+new file mode 100644
+index 000000000000..3df1a51a76c4
+--- /dev/null
++++ b/fs/xfs/xfs_dma.c
+@@ -0,0 +1,81 @@
++/*
++ * SPDX-License-Identifier: GPL-2.0
++ * Copyright(c) 2017 Intel Corporation. All rights reserved.
++ */
 +#include <linux/dax.h>
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_shared.h"
++#include "xfs_trans_resv.h"
++#include "xfs_bit.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_inode.h"
++#include "xfs_pnfs.h"
++
++/*
++ * xfs_wait_dax_page - helper for dax_flush_dma to drop locks and sleep
++ * wait for a page idle event. Returns 1 if the locks did not need to be
++ * dropped and the page is idle, returns -EINTR if the sleep was
++ * interrupted and returns 1 when it slept. dax_flush_dma()
++ * retries/rescans all mappings when the lock is dropped.
++ */
++static int xfs_wait_dax_page(
++	atomic_t		*count,
++	unsigned int		mode)
++{
++	uint			iolock = XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL;
++	struct page 		*page = refcount_to_page(count);
++	struct address_space	*mapping = page->mapping;
++	struct inode		*inode = mapping->host;
++	struct xfs_inode	*ip = XFS_I(inode);
++
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL));
++
++	if (page_ref_count(page) == 1)
++		return 0;
++
++	xfs_iunlock(ip, iolock);
++	schedule();
++	xfs_ilock(ip, iolock);
++
++	if (signal_pending_state(mode, current))
++		return -EINTR;
++	return 1;
++}
++
++/*
++ * Synchronize [R]DMA before changing the file's block map. For pNFS,
++ * recall all layouts. For DAX, wait for transient DMA to complete. All
++ * other DMA is handled by pinning page cache pages.
++ *
++ * iolock must held XFS_IOLOCK_SHARED or XFS_IOLOCK_EXCL on entry and
++ * will be XFS_IOLOCK_EXCL and XFS_MMAPLOCK_EXCL on exit.
++ */
++int xfs_sync_dma(
++	struct inode		*inode,
++	uint			*iolock)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	int			error;
++
++	while (true) {
++		error = xfs_break_layouts(inode, iolock);
++		if (error)
++			break;
++
++		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
++		*iolock |= XFS_MMAPLOCK_EXCL;
++
++		error = dax_flush_dma(inode->i_mapping, xfs_wait_dax_page);
++		if (error <= 0)
++			break;
++		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
++		*iolock &= ~XFS_MMAPLOCK_EXCL;
++	}
++
++	return error;
++}
+diff --git a/fs/xfs/xfs_dma.h b/fs/xfs/xfs_dma.h
+new file mode 100644
+index 000000000000..29635639b073
+--- /dev/null
++++ b/fs/xfs/xfs_dma.h
+@@ -0,0 +1,24 @@
++/*
++ * SPDX-License-Identifier: GPL-2.0
++ * Copyright(c) 2017 Intel Corporation. All rights reserved.
++ */
++#ifndef __XFS_DMA__
++#define __XFS_DMA__
++#ifdef CONFIG_FS_DAX
++int xfs_sync_dma(struct inode *inode, uint *iolock);
++#else
++#include "xfs_pnfs.h"
++
++static inline int xfs_sync_dma(struct inode *inode, uint *iolock)
++{
++	int error = xfs_break_layouts(inode, iolock);
++
++	if (error)
++		return error;
++
++	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_EXCL);
++	*iolock |= XFS_MMAPLOCK_EXCL;
++	return 0;
++}
++#endif /* CONFIG_FS_DAX */
++#endif /* __XFS_DMA__ */
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 6df0c133a61e..84fc178da656 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -37,6 +37,7 @@
+ #include "xfs_log.h"
+ #include "xfs_icache.h"
+ #include "xfs_pnfs.h"
++#include "xfs_dma.h"
+ #include "xfs_iomap.h"
+ #include "xfs_reflink.h"
  
- #include <asm/mmu_context.h>
- #include <asm/pgtable.h>
-@@ -693,7 +694,9 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
- 		if (unlikely(fatal_signal_pending(current)))
- 			return i ? i : -ERESTARTSYS;
- 		cond_resched();
-+		dax_dma_lock();
- 		page = follow_page_mask(vma, start, foll_flags, &page_mask);
-+		dax_dma_unlock();
- 		if (!page) {
- 			int ret;
- 			ret = faultin_page(tsk, vma, start, &foll_flags,
-@@ -1825,7 +1828,9 @@ int get_user_pages_fast(unsigned long start, int nr_pages, int write,
+@@ -778,12 +779,11 @@ xfs_file_fallocate(
+ 		return -EOPNOTSUPP;
  
- 	if (gup_fast_permitted(start, nr_pages, write)) {
- 		local_irq_disable();
-+		dax_dma_lock();
- 		gup_pgd_range(addr, end, write, pages, &nr);
-+		dax_dma_unlock();
- 		local_irq_enable();
- 		ret = nr;
- 	}
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock);
++	error = xfs_sync_dma(inode, &iolock);
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
++	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
+ 
+ 	if (mode & FALLOC_FL_PUNCH_HOLE) {
+ 		error = xfs_free_file_space(ip, offset, len);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 20dc65fef6a4..4340bef658b0 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -39,7 +39,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_symlink.h"
+ #include "xfs_trans.h"
+-#include "xfs_pnfs.h"
++#include "xfs_dma.h"
+ #include "xfs_acl.h"
+ #include "xfs_btree.h"
+ #include <linux/fsmap.h>
+@@ -643,12 +643,11 @@ xfs_ioc_space(
+ 		return error;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock);
++	error = xfs_sync_dma(inode, &iolock);
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
++	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
+ 
+ 	switch (bf->l_whence) {
+ 	case 0: /*SEEK_SET*/
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 67bd97edc73b..c1055337b233 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -37,7 +37,7 @@
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2.h"
+ #include "xfs_trans_space.h"
+-#include "xfs_pnfs.h"
++#include "xfs_dma.h"
+ #include "xfs_iomap.h"
+ 
+ #include <linux/capability.h>
+@@ -1030,11 +1030,12 @@ xfs_vn_setattr(
+ 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+ 		uint			iolock = XFS_IOLOCK_EXCL;
+ 
+-		error = xfs_break_layouts(d_inode(dentry), &iolock);
++		error = xfs_sync_dma(d_inode(dentry), &iolock);
+ 		if (error)
+ 			return error;
+ 
+-		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
++		ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
++
+ 		error = xfs_vn_setattr_size(dentry, iattr);
+ 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	} else {
 
