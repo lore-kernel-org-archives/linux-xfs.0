@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:2325 "EHLO mga04.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:17309 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750752AbdLXBE0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:04:26 -0500
-Subject: [PATCH v4 02/18] ext4: auto disable dax instead of failing mount
+        id S1752619AbdLXBEc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:04:32 -0500
+Subject: [PATCH v4 03/18] ext2: auto disable dax instead of failing mount
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:56:11 -0800
-Message-ID: <151407697190.38751.14634783055964566076.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Sat, 23 Dec 2017 16:56:17 -0800
+Message-ID: <151407697703.38751.2935252018151032360.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -18,7 +18,7 @@ List-Id: xfs
 To: akpm@linux-foundation.org
 Cc: jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
 
-Bring the ext4 filesystem in line with xfs that only warns and continues
+Bring the ext2 filesystem in line with xfs that only warns and continues
 when the "-o dax" option is specified to mount and the backing device
 does not support dax. This is in preparation for removing dax support
 from devices that do not enable get_user_pages() operations on dax
@@ -32,29 +32,25 @@ mode.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/ext4/super.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/ext2/super.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 7c46693a14d7..18873ea89e08 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3710,11 +3710,14 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		if (ext4_has_feature_inline_data(sb)) {
- 			ext4_msg(sb, KERN_ERR, "Cannot use DAX on a filesystem"
- 					" that may contain inline data");
--			goto failed_mount;
-+			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
- 		}
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 7646818ab266..38f9222606ee 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -959,8 +959,11 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ 
+ 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
  		err = bdev_dax_supported(sb, blocksize);
 -		if (err)
 -			goto failed_mount;
 +		if (err) {
-+			ext4_msg(sb, KERN_ERR,
++			ext2_msg(sb, KERN_ERR,
 +				"DAX unsupported by block device. Turning off DAX.");
-+			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
++			sbi->s_mount_opt &= ~EXT2_MOUNT_DAX;
 +		}
  	}
  
- 	if (ext4_has_feature_encrypt(sb) && es->s_encryption_level) {
+ 	/* If the blocksize doesn't match, re-read the thing.. */
 
