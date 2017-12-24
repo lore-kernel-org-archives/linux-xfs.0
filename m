@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:17341 "EHLO mga03.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:55648 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757109AbdLXBFk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Dec 2017 20:05:40 -0500
-Subject: [PATCH v4 16/18] wait_bit: introduce {wait_on,wake_up}_atomic_one
+        id S1751642AbdLXBFr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Dec 2017 20:05:47 -0500
+Subject: [PATCH v4 17/18] mm, fs, dax: dax_flush_dma,
+ handle dma vs block-map-change collisions
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 23 Dec 2017 16:57:26 -0800
-Message-ID: <151407704609.38751.16443220639298609451.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Sat, 23 Dec 2017 16:57:31 -0800
+Message-ID: <151407705124.38751.12934858054023659736.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,194 +17,269 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: akpm@linux-foundation.org
-Cc: jack@suse.cz, linux-nvdimm@lists.01.org, Peter Zijlstra <peterz@infradead.org>, linux-xfs@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+Cc: jack@suse.cz, Matthew Wilcox <mawilcox@microsoft.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, ross.zwisler@linux.intel.com, hch@lst.de
 
-Add a generic facility for awaiting an atomic_t to reach a value of one.
+Background:
 
-Page reference counts typically need to reach zero to be considered a
-free / inactive page. However, ZONE_DEVICE pages allocated via
-devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
-done at init time to assign pages to the page allocator is skipped.
+get_user_pages() pins file backed memory pages for access by dma
+devices. However, it only pins the memory pages not the page-to-file
+offset association. If a file is truncated the pages are mapped out of
+the file and dma may continue indefinitely into a page that is owned by
+a device driver. This breaks coherency of the file vs dma, but the
+assumption is that if userspace wants the file-space truncated it does
+not matter what data is inbound from the device, it is not relevant
+anymore. The only expectation is that dma can safely continue while the
+filesystem reallocates the block(s).
 
-These pages will have their reference count elevated > 1 by
-get_user_pages() when they are under DMA. In order to coordinate DMA to
-these pages vs filesytem operations like hole-punch and truncate the
-filesystem-dax implementation needs to capture the DMA-idle event (1 to
-0 count transition).
+Problem:
 
-For now, this implementation does not have functional behavior change,
-follow-on patches will add waiters for these page-idle events.
+This expectation that dma can safely continue while the filesystem
+changes the block map is broken by dax. With dax the target dma page
+*is* the filesystem block. The model of leaving the page pinned for dma,
+but truncating the file block out of the file, means that the filesytem
+is free to reallocate a block under active dma to another file and now
+the expected data-incoherency situation has turned into active
+data-corruption.
 
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Peter Zijlstra <peterz@infradead.org>
+Solution:
+
+Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+file while any page/block in the file is under active dma. This solution
+assumes that dma is transient. Cases where dma operations are known to
+not be transient, like RDMA, have been explicitly disabled via
+commits like 5f1d43de5416 "IB/core: disable memory registration of
+filesystem-dax vmas".
+
+The dax_flush_dma() routine is intended to be called by filesystems with
+locks held against mm faults (i_mmap_lock). It then invalidates all
+mappings to trigger any subsequent get_user_pages() to block on
+i_mmap_lock. Finally it scans/rescans all pages in the mapping until it
+observes all them idle.
+
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Reported-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/super.c      |    2 +-
- include/linux/wait_bit.h |   13 ++++++++++
- kernel/sched/wait_bit.c  |   59 +++++++++++++++++++++++++++++++++++++++-------
- 3 files changed, 64 insertions(+), 10 deletions(-)
+ fs/dax.c            |   95 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h |   27 ++++++++++++++
+ mm/gup.c            |    5 +++
+ 3 files changed, 127 insertions(+)
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 0352a098b099..85a56f849b0c 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -167,7 +167,7 @@ struct dax_device {
- #if IS_ENABLED(CONFIG_FS_DAX)
- static void generic_dax_pagefree(struct page *page, void *data)
- {
--	/* TODO: wakeup page-idle waiters */
-+	wake_up_atomic_one(&page->_refcount);
+diff --git a/fs/dax.c b/fs/dax.c
+index 7d9fff8a1195..eed589bf833e 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -416,6 +416,19 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+ 	}
  }
  
- struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
-diff --git a/include/linux/wait_bit.h b/include/linux/wait_bit.h
-index 61b39eaf7cad..564c9a0141cd 100644
---- a/include/linux/wait_bit.h
-+++ b/include/linux/wait_bit.h
-@@ -33,10 +33,15 @@ int __wait_on_bit(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *
- int __wait_on_bit_lock(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry, wait_bit_action_f *action, unsigned int mode);
- void wake_up_bit(void *word, int bit);
- void wake_up_atomic_t(atomic_t *p);
-+static inline void wake_up_atomic_one(atomic_t *p)
++static struct page *dma_busy_page(void *entry)
 +{
-+	wake_up_atomic_t(p);
-+}
- int out_of_line_wait_on_bit(void *word, int, wait_bit_action_f *action, unsigned int mode);
- int out_of_line_wait_on_bit_timeout(void *word, int, wait_bit_action_f *action, unsigned int mode, unsigned long timeout);
- int out_of_line_wait_on_bit_lock(void *word, int, wait_bit_action_f *action, unsigned int mode);
- int out_of_line_wait_on_atomic_t(atomic_t *p, wait_atomic_t_action_f action, unsigned int mode);
-+int out_of_line_wait_on_atomic_one(atomic_t *p, wait_atomic_t_action_f action, unsigned int mode);
- struct wait_queue_head *bit_waitqueue(void *word, int bit);
- extern void __init wait_bit_init(void);
- 
-@@ -262,4 +267,12 @@ int wait_on_atomic_t(atomic_t *val, wait_atomic_t_action_f action, unsigned mode
- 	return out_of_line_wait_on_atomic_t(val, action, mode);
- }
- 
-+static inline
-+int wait_on_atomic_one(atomic_t *val, wait_atomic_t_action_f action, unsigned mode)
-+{
-+	might_sleep();
-+	if (atomic_read(val) == 1)
-+		return 0;
-+	return out_of_line_wait_on_atomic_one(val, action, mode);
-+}
- #endif /* _LINUX_WAIT_BIT_H */
-diff --git a/kernel/sched/wait_bit.c b/kernel/sched/wait_bit.c
-index 84cb3acd9260..8739b1e50df5 100644
---- a/kernel/sched/wait_bit.c
-+++ b/kernel/sched/wait_bit.c
-@@ -162,28 +162,47 @@ static inline wait_queue_head_t *atomic_t_waitqueue(atomic_t *p)
- 	return bit_waitqueue(p, 0);
- }
- 
--static int wake_atomic_t_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync,
--				  void *arg)
-+static struct wait_bit_queue_entry *to_wait_bit_q(
-+		struct wait_queue_entry *wq_entry)
-+{
-+	return container_of(wq_entry, struct wait_bit_queue_entry, wq_entry);
-+}
++	unsigned long pfn, end_pfn;
 +
-+static int __wake_atomic_t_function(struct wait_queue_entry *wq_entry,
-+		unsigned mode, int sync, void *arg, int target)
- {
- 	struct wait_bit_key *key = arg;
--	struct wait_bit_queue_entry *wait_bit = container_of(wq_entry, struct wait_bit_queue_entry, wq_entry);
-+	struct wait_bit_queue_entry *wait_bit = to_wait_bit_q(wq_entry);
- 	atomic_t *val = key->flags;
- 
- 	if (wait_bit->key.flags != key->flags ||
- 	    wait_bit->key.bit_nr != key->bit_nr ||
--	    atomic_read(val) != 0)
-+	    atomic_read(val) != target)
- 		return 0;
- 	return autoremove_wake_function(wq_entry, mode, sync, key);
- }
- 
-+static int wake_atomic_t_function(struct wait_queue_entry *wq_entry,
-+		unsigned mode, int sync, void *arg)
-+{
-+	return __wake_atomic_t_function(wq_entry, mode, sync, arg, 0);
-+}
++	for_each_entry_pfn(entry, pfn, end_pfn) {
++		struct page *page = pfn_to_page(pfn);
 +
-+static int wake_atomic_one_function(struct wait_queue_entry *wq_entry,
-+		unsigned mode, int sync, void *arg)
-+{
-+	return __wake_atomic_t_function(wq_entry, mode, sync, arg, 1);
++		if (page_ref_count(page) > 1)
++			return page;
++	}
++	return NULL;
 +}
 +
  /*
-  * To allow interruptible waiting and asynchronous (i.e. nonblocking) waiting,
-  * the actions of __wait_on_atomic_t() are permitted return codes.  Nonzero
-  * return codes halt waiting and return.
-  */
- static __sched
--int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry,
--		       wait_atomic_t_action_f action, unsigned int mode)
-+int __wait_on_atomic_t(struct wait_queue_head *wq_head,
-+		struct wait_bit_queue_entry *wbq_entry,
-+		wait_atomic_t_action_f action, unsigned int mode, int target)
+  * Find radix tree entry at given index. If it points to an exceptional entry,
+  * return it with the radix tree entry locked. If the radix tree doesn't
+@@ -557,6 +570,87 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 	return entry;
+ }
+ 
++int dax_flush_dma(struct address_space *mapping, wait_atomic_t_action_f action)
++{
++	pgoff_t	indices[PAGEVEC_SIZE];
++	struct pagevec pvec;
++	pgoff_t	index, end;
++	unsigned i;
++
++	/* in the limited case get_user_pages for dax is disabled */
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return 0;
++
++	if (!dax_mapping(mapping))
++		return 0;
++
++	if (mapping->nrexceptional == 0)
++		return 0;
++
++retry:
++	pagevec_init(&pvec);
++	index = 0;
++	end = -1;
++	unmap_mapping_range(mapping, 0, 0, 1);
++	/*
++	 * Flush dax_dma_lock() sections to ensure all possible page
++	 * references have been taken, or will block on the fs
++	 * 'mmap_lock'.
++	 */
++	synchronize_rcu();
++	while (index < end && pagevec_lookup_entries(&pvec, mapping, index,
++				min(end - index, (pgoff_t)PAGEVEC_SIZE),
++				indices)) {
++		int rc = 0;
++
++		for (i = 0; i < pagevec_count(&pvec); i++) {
++			struct page *pvec_ent = pvec.pages[i];
++			struct page *page = NULL;
++			void *entry;
++
++			index = indices[i];
++			if (index >= end)
++				break;
++
++			if (!radix_tree_exceptional_entry(pvec_ent))
++				continue;
++
++			spin_lock_irq(&mapping->tree_lock);
++			entry = get_unlocked_mapping_entry(mapping, index, NULL);
++			if (entry)
++				page = dma_busy_page(entry);
++			put_unlocked_mapping_entry(mapping, index, entry);
++			spin_unlock_irq(&mapping->tree_lock);
++
++			if (!page)
++				continue;
++			rc = wait_on_atomic_one(&page->_refcount, action,
++					TASK_INTERRUPTIBLE);
++			if (rc == 0)
++				continue;
++			break;
++		}
++		pagevec_remove_exceptionals(&pvec);
++		pagevec_release(&pvec);
++		index++;
++
++		if (rc < 0)
++			return rc;
++		if (rc == 0) {
++			cond_resched();
++			continue;
++		}
++
++		/*
++		 * We have dropped fs locks, so we need to revalidate
++		 * that previously seen idle pages are still idle.
++		 */
++		goto retry;
++	}
++	return 0;
++}
++EXPORT_SYMBOL_GPL(dax_flush_dma);
++
+ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 					  pgoff_t index, bool trunc)
  {
- 	atomic_t *val;
- 	int ret = 0;
-@@ -191,10 +210,10 @@ int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_en
- 	do {
- 		prepare_to_wait(wq_head, &wbq_entry->wq_entry, mode);
- 		val = wbq_entry->key.flags;
--		if (atomic_read(val) == 0)
-+		if (atomic_read(val) == target)
- 			break;
- 		ret = (*action)(val, mode);
--	} while (!ret && atomic_read(val) != 0);
-+	} while (!ret && atomic_read(val) != target);
- 	finish_wait(wq_head, &wbq_entry->wq_entry);
+@@ -581,6 +675,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 	spin_unlock_irq(&mapping->tree_lock);
  	return ret;
  }
-@@ -210,6 +229,17 @@ int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_en
- 		},							\
- 	}
- 
-+#define DEFINE_WAIT_ATOMIC_ONE(name, p)					\
-+	struct wait_bit_queue_entry name = {				\
-+		.key = __WAIT_ATOMIC_T_KEY_INITIALIZER(p),		\
-+		.wq_entry = {						\
-+			.private	= current,			\
-+			.func		= wake_atomic_one_function,	\
-+			.entry		=				\
-+				LIST_HEAD_INIT((name).wq_entry.entry),	\
-+		},							\
-+	}
 +
- __sched int out_of_line_wait_on_atomic_t(atomic_t *p,
- 					 wait_atomic_t_action_f action,
- 					 unsigned int mode)
-@@ -217,7 +247,7 @@ __sched int out_of_line_wait_on_atomic_t(atomic_t *p,
- 	struct wait_queue_head *wq_head = atomic_t_waitqueue(p);
- 	DEFINE_WAIT_ATOMIC_T(wq_entry, p);
- 
--	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode);
-+	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode, 0);
+ /*
+  * Delete exceptional DAX entry at @index from @mapping. Wait for radix tree
+  * entry to get unlocked before deleting it.
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 3502abcbea31..ccd6aed90f95 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -81,6 +81,15 @@ const struct address_space_operations name = {	\
+ 	.invalidatepage = dax_invalidatepage, \
  }
- EXPORT_SYMBOL(out_of_line_wait_on_atomic_t);
  
-@@ -230,6 +260,17 @@ __sched int atomic_t_wait(atomic_t *counter, unsigned int mode)
- }
- EXPORT_SYMBOL(atomic_t_wait);
- 
-+__sched int out_of_line_wait_on_atomic_one(atomic_t *p,
-+					   wait_atomic_t_action_f action,
-+					   unsigned int mode)
++static inline void dax_dma_lock(void)
 +{
-+	struct wait_queue_head *wq_head = atomic_t_waitqueue(p);
-+	DEFINE_WAIT_ATOMIC_ONE(wq_entry, p);
-+
-+	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode, 1);
++	rcu_read_lock();
 +}
-+EXPORT_SYMBOL(out_of_line_wait_on_atomic_one);
 +
- /**
-  * wake_up_atomic_t - Wake up a waiter on a atomic_t
-  * @p: The atomic_t being waited on, a kernel virtual address
++static inline void dax_dma_unlock(void)
++{
++	rcu_read_unlock();
++}
+ #else
+ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
+ {
+@@ -105,6 +114,13 @@ static inline void fs_dax_release(struct dax_device *dax_dev, void *owner)
+ #define DEFINE_FSDAX_AOPS(name, writepages_fn)	\
+ const struct address_space_operations name = { 0 }
+ 
++static inline void dax_dma_lock(void)
++{
++}
++
++static inline void dax_dma_unlock(void)
++{
++}
+ #endif
+ 
+ int dax_read_lock(void);
+@@ -134,11 +150,22 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
+ 
++static inline struct page *refcount_to_page(atomic_t *c)
++{
++	return container_of(c, struct page, _refcount);
++}
++
+ #ifdef CONFIG_FS_DAX
++int dax_flush_dma(struct address_space *mapping, wait_atomic_t_action_f action);
+ int __dax_zero_page_range(struct block_device *bdev,
+ 		struct dax_device *dax_dev, sector_t sector,
+ 		unsigned int offset, unsigned int length);
+ #else
++static inline int dax_flush_dma(struct address_space *mapping,
++		wait_atomic_t_action_f action)
++{
++	return 0;
++}
+ static inline int __dax_zero_page_range(struct block_device *bdev,
+ 		struct dax_device *dax_dev, sector_t sector,
+ 		unsigned int offset, unsigned int length)
+diff --git a/mm/gup.c b/mm/gup.c
+index 9d142eb9e2e9..a8f5e13f7d17 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -13,6 +13,7 @@
+ #include <linux/sched/signal.h>
+ #include <linux/rwsem.h>
+ #include <linux/hugetlb.h>
++#include <linux/dax.h>
+ 
+ #include <asm/mmu_context.h>
+ #include <asm/pgtable.h>
+@@ -693,7 +694,9 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
+ 		if (unlikely(fatal_signal_pending(current)))
+ 			return i ? i : -ERESTARTSYS;
+ 		cond_resched();
++		dax_dma_lock();
+ 		page = follow_page_mask(vma, start, foll_flags, &page_mask);
++		dax_dma_unlock();
+ 		if (!page) {
+ 			int ret;
+ 			ret = faultin_page(tsk, vma, start, &foll_flags,
+@@ -1825,7 +1828,9 @@ int get_user_pages_fast(unsigned long start, int nr_pages, int write,
+ 
+ 	if (gup_fast_permitted(start, nr_pages, write)) {
+ 		local_irq_disable();
++		dax_dma_lock();
+ 		gup_pgd_range(addr, end, write, pages, &nr);
++		dax_dma_unlock();
+ 		local_irq_enable();
+ 		ret = nr;
+ 	}
 
