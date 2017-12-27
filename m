@@ -1,40 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:40288 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751574AbdLXMfB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Dec 2017 07:35:01 -0500
-From: Xiongwei Song <sxwjean@gmail.com>
-Subject: [PATCH] xfs: destroy mutex qi_tree_lock before free xfs_quotainfo_t object
-Date: Sun, 24 Dec 2017 20:34:47 +0800
-Message-Id: <20171224123447.2998-1-sxwjean@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:57241 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751781AbdL0SIh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Dec 2017 13:08:37 -0500
+Date: Wed, 27 Dec 2017 11:08:36 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v4 08/18] tools/testing/nvdimm: add 'bio_delay' mechanism
+Message-ID: <20171227180836.GA14641@linux.intel.com>
+References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <151407700353.38751.17609507477918854876.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151407700353.38751.17609507477918854876.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, linux-xfs@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: akpm@linux-foundation.org, jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
 
-The mutex qi_tree_lock of xfs_quotainfo_t object was initialized when
-calling xfs_qm_init_quotainfo, but it was not destroyed before free
-xfs_quotainfo_t object when calling xfs_qm_destroy_quotainfo, this was
-incorrect, so destroy it in function xfs_qm_destroy_quotainfo.
+On Sat, Dec 23, 2017 at 04:56:43PM -0800, Dan Williams wrote:
+> In support of testing truncate colliding with dma add a mechanism that
+> delays the completion of block I/O requests by a programmable number of
+> seconds. This allows a truncate operation to be issued while page
+> references are held for direct-I/O.
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-Signed-off-by: Xiongwei Song <sxwjean@gmail.com>
----
- fs/xfs/xfs_qm.c | 1 +
- 1 file changed, 1 insertion(+)
+> @@ -387,4 +389,64 @@ union acpi_object * __wrap_acpi_evaluate_dsm(acpi_handle handle, const guid_t *g
+>  }
+>  EXPORT_SYMBOL(__wrap_acpi_evaluate_dsm);
+>  
+> +static DEFINE_SPINLOCK(bio_lock);
+> +static struct bio *biolist;
+> +int bio_do_queue;
+> +
+> +static void run_bio(struct work_struct *work)
+> +{
+> +	struct delayed_work *dw = container_of(work, typeof(*dw), work);
+> +	struct bio *bio, *next;
+> +
+> +	pr_info("%s\n", __func__);
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ec952dfad359..deceef5cbbf3 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -737,6 +737,7 @@ xfs_qm_destroy_quotainfo(
- 		qi->qi_pquotaip = NULL;
- 	}
- 	mutex_destroy(&qi->qi_quotaofflock);
-+	mutex_destroy(&qi->qi_tree_lock);
- 	kmem_free(qi);
- 	mp->m_quotainfo = NULL;
- }
--- 
-2.15.1
+Did you mean to leave this print in, or was it part of your debug while
+developing?  I don't see any other prints in the rest of the nvdimm testing
+code?
 
+> +	spin_lock(&bio_lock);
+> +	bio_do_queue = 0;
+> +	bio = biolist;
+> +	biolist = NULL;
+> +	spin_unlock(&bio_lock);
+> +
+> +	while (bio) {
+> +		next = bio->bi_next;
+> +		bio->bi_next = NULL;
+> +		bio_endio(bio);
+> +		bio = next;
+> +	}
+> +	kfree(dw);
+> +}
+> +
+> +void nfit_test_inject_bio_delay(int sec)
+> +{
+> +	struct delayed_work *dw = kzalloc(sizeof(*dw), GFP_KERNEL);
+> +
+> +	spin_lock(&bio_lock);
+> +	if (!bio_do_queue) {
+> +		pr_info("%s: %d seconds\n", __func__, sec);
+
+Ditto with this print - did you mean to leave it in?
+
+> +		INIT_DELAYED_WORK(dw, run_bio);
+> +		bio_do_queue = 1;
+> +		schedule_delayed_work(dw, sec * HZ);
+> +		dw = NULL;
+
+Why set dw = NULL here?  In the else case we leak dw - was this dw=NULL meant
+to allow a kfree(dw) after we get out of the if() (and probably after we drop
+the spinlock)?
+
+> +	}
+> +	spin_unlock(&bio_lock);
+> +}
+> +EXPORT_SYMBOL_GPL(nfit_test_inject_bio_delay);
+> +
+
+> diff --git a/tools/testing/nvdimm/test/nfit.c b/tools/testing/nvdimm/test/nfit.c
+> index 7217b2b953b5..9362b01e9a8f 100644
+> --- a/tools/testing/nvdimm/test/nfit.c
+> +++ b/tools/testing/nvdimm/test/nfit.c
+> @@ -872,6 +872,39 @@ static const struct attribute_group *nfit_test_dimm_attribute_groups[] = {
+>  	NULL,
+>  };
+>  
+> +static ssize_t bio_delay_show(struct device_driver *drv, char *buf)
+> +{
+> +	return sprintf(buf, "0\n");
+> +}
+
+It doesn't seem like this _show() routine adds much?  We could have it print
+out the value of 'bio_do_queue' so we can see if we are currently queueing
+bios in a workqueue element, but that suffers pretty badly from a TOCTOU race.
+
+Otherwise we could just omit the _show() altogether and just use
+DRIVER_ATTR_WO(bio_delay).
+
+> +
+> +static ssize_t bio_delay_store(struct device_driver *drv, const char *buf,
+> +		size_t count)
+> +{
+> +	unsigned long delay;
+> +	int rc = kstrtoul(buf, 0, &delay);
+> +
+> +	if (rc < 0)
+> +		return rc;
+> +
+> +	nfit_test_inject_bio_delay(delay);
+> +	return count;
+> +}
+> +DRIVER_ATTR_RW(bio_delay);
+
+   DRIVER_ATTR_WO(bio_delay);  ?
