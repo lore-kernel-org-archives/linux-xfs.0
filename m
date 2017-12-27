@@ -1,120 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:32877 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753719AbdL1Pde (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Dec 2017 10:33:34 -0500
-Message-Id: <20171228152710.891701433@linutronix.de>
-Date: Thu, 28 Dec 2017 16:27:10 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V5 00/11] LICENSES: Add documentation and initial License files
+Received: from bombadil.infradead.org ([65.50.211.133]:53615 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751799AbdL0D60 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Dec 2017 22:58:26 -0500
+Date: Tue, 26 Dec 2017 19:58:15 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v5 03/78] xarray: Add the xa_lock to the radix_tree_root
+Message-ID: <20171227035815.GD24828@bombadil.infradead.org>
+References: <20171215220450.7899-1-willy@infradead.org>
+ <20171215220450.7899-4-willy@infradead.org>
+ <20171226165440.tv6inwa2fgk3bfy6@node.shutemov.name>
+ <20171227034340.GC24828@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171227034340.GC24828@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
 
-This is the 5th version of the licensing rules documentation.
+On Tue, Dec 26, 2017 at 07:43:40PM -0800, Matthew Wilcox wrote:
+>     Also add the xa_lock() and xa_unlock() family of wrappers to make it
+>     easier to use the lock.  If we could rely on -fplan9-extensions in
+>     the compiler, we could avoid all of this syntactic sugar, but that
+>     wasn't added until gcc 4.6.
 
-Changes since v4:
+Oh, in case anyone's wondering, here's how I'd do it with plan9 extensions:
 
- - Made use of boilerplate consistently
+struct xarray {
+        spinlock_t;
+        int xa_flags;
+        void *xa_head;
+};
 
- - Fixed the 'braces' inconsistency spotted by Heiko
- 
- - Picked up Reviewed-by tags
+...
+        spin_lock_irqsave(&mapping->pages, flags);
+        __delete_from_page_cache(page, NULL);
+        spin_unlock_irqrestore(&mapping->pages, flags);
+...
 
-Delta patch vs. V4 below.
+The plan9 extensions permit passing a pointer to a struct which has an
+unnamed element to a function which is expecting a pointer to the type
+of that element.  The compiler does any necessary arithmetic to produce 
+a pointer.  It's exactly as if I had written:
 
-Thanks to everyone who provided input!
+        spin_lock_irqsave(&mapping->pages.xa_lock, flags);
+        __delete_from_page_cache(page, NULL);
+        spin_unlock_irqrestore(&mapping->pages.xa_lock, flags);
 
-Thanks,
-
-        tglx
-
-8<---------------
---- a/Documentation/process/license-rules.rst
-+++ b/Documentation/process/license-rules.rst
-@@ -34,8 +34,8 @@ into any source files which create an ex
- kernel, the exception must be documented by a special license expression.
- 
- The common way of expressing the license of a source file is to add the
--matching boiler plate text into the top comment of the file.  Due to
--formatting, typos etc. these "boiler plates" are hard to validate for
-+matching boilerplate text into the top comment of the file.  Due to
-+formatting, typos etc. these "boilerplates" are hard to validate for
- tools which are used in the context of license compliance.
- 
- An alternative to boilerplate text is the use of Software Package Data
-@@ -89,9 +89,11 @@ License identifier syntax
- 3. Syntax:
- 
-    A <SPDX License Expression> is either an SPDX short form license
--   identifier found on the SPDX License List, or when multiple licenses
--   apply, an expression consisting of keywords "AND", "OR", and "WITH"
--   separating SPDX short form license identifiers surrounded by "(", ")".
-+   identifier found on the SPDX License List, or the combination of two
-+   SPDX short form license identifiers separated by "WITH" when a license
-+   exception applies. When multiple licenses apply, an expression consists
-+   of keywords "AND", "OR" separating sub-expressions and surrounded by
-+   "(", ")" .
- 
-    License identifiers for licenses like [L]GPL with the 'or later' option
-    are constructed by using a "+" for indicating the 'or later' option.::
-@@ -102,13 +104,13 @@ License identifier syntax
-    WITH should be used when there is a modifier to a license needed.
-    For example, the linux kernel UAPI files use the expression::
- 
--      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note)
--      // SPDX-License-Identifier: (GPL-2.0+ WITH Linux-syscall-note)
-+      // SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
-+      // SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note
- 
-    Other examples using WITH exceptions found in the kernel are::
- 
--      // SPDX-License-Identifier: (GPL-2.0 WITH mif-exception)
--      // SPDX-License-Identifier: (GPL-2.0+ WITH GCC-exception-2.0)
-+      // SPDX-License-Identifier: GPL-2.0 WITH mif-exception
-+      // SPDX-License-Identifier: GPL-2.0+ WITH GCC-exception-2.0
- 
-    Exceptions can only be used with particular License identifiers. The
-    valid License identifiers are listed in the tags of the exception text
-@@ -119,28 +121,28 @@ License identifier syntax
-    to be selected.  For example, some dtsi files are available under dual
-    licenses::
- 
--      // SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
-+      // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- 
-    Examples from the kernel for license expressions in dual licensed files::
- 
--      // SPDX-License-Identifier: (GPL-2.0 OR MIT)
--      // SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
--      // SPDX-License-Identifier: (GPL-2.0 OR Apache-2.0)
--      // SPDX-License-Identifier: (GPL-2.0 OR MPL-1.1)
--      // SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR MIT)
--      // SPDX-License-Identifier: ((GPL-1.0+ OR BSD-3-Clause) OR OpenSSL)
-+      // SPDX-License-Identifier: GPL-2.0 OR MIT
-+      // SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
-+      // SPDX-License-Identifier: GPL-2.0 OR Apache-2.0
-+      // SPDX-License-Identifier: GPL-2.0 OR MPL-1.1
-+      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) OR MIT
-+      // SPDX-License-Identifier: GPL-1.0+ OR BSD-3-Clause OR OpenSSL
- 
-    AND should be used if the file has multiple licenses whose terms all
-    apply to use the file. For example, if code is inherited from another
-    project and permission has been given to put it in the kernel, but the
-    original license terms need to remain in effect::
- 
--      // SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) AND MIT)
-+      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) AND MIT
- 
-    Another other example where both sets of license terms need to be
-    adhered to is::
- 
--      // SPDX-License-Identifier: (GPL-1.0+ AND LGPL-2.1+)
-+      // SPDX-License-Identifier: GPL-1.0+ AND LGPL-2.1+
- 
- License identifiers
- -------------------
-
-
+More details here: https://9p.io/sys/doc/compiler.html
