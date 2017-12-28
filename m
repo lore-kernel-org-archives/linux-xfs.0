@@ -1,63 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:38838 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751913AbdL0KYp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Dec 2017 05:24:45 -0500
-Received: by mail-wm0-f49.google.com with SMTP id 64so38496901wme.3
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Dec 2017 02:24:44 -0800 (PST)
-Date: Wed, 27 Dec 2017 13:24:42 +0300
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH v5 05/78] xarray: Replace exceptional entries
-Message-ID: <20171227102442.ozazdtj56q73hvkb@node.shutemov.name>
-References: <20171215220450.7899-1-willy@infradead.org>
- <20171215220450.7899-6-willy@infradead.org>
- <20171226171542.v25xieedd46y5peu@node.shutemov.name>
- <20171227030534.GA24828@bombadil.infradead.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:32972 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932187AbdL1Pdo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Dec 2017 10:33:44 -0500
+Message-Id: <20171228153308.937786216@linutronix.de>
+Date: Thu, 28 Dec 2017 16:27:19 +0100
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: [patch V5 09/11] LICENSES: Add Linux syscall note exception
+References: <20171228152710.891701433@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171227030534.GA24828@bombadil.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Disposition: inline;
+ filename=LICENSES--Add-Linux-syscall-note-exception.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-On Tue, Dec 26, 2017 at 07:05:34PM -0800, Matthew Wilcox wrote:
-> On Tue, Dec 26, 2017 at 08:15:42PM +0300, Kirill A. Shutemov wrote:
-> > >  28 files changed, 249 insertions(+), 240 deletions(-)
-> > 
-> > Everything looks fine to me after quick scan, but hat's a lot of changes for
-> > one patch...
-> 
-> Yeah.  It's pretty mechanical though.
-> 
-> > > -			if (radix_tree_exceptional_entry(page)) {
-> > > +			if (xa_is_value(page)) {
-> > >  				if (!invalidate_exceptional_entry2(mapping,
-> > >  								   index, page))
-> > >  					ret = -EBUSY;
-> > 
-> > invalidate_exceptional_entry? Are we going to leave the terminology here as is?
-> 
-> That is a great question.  If the page cache wants to call its value
-> entries exceptional entries, it can continue to do that.  I think there's
-> a better name for them, but I'm not sure what it is.  Right now, the
-> page cache uses value entries to store:
-> 
-> 1. Shadow entries (for workingset)
-> 2. Swap entries (for shmem)
-> 3. DAX entries
-> 
-> I can't come up with a good name for these three things.  'nonpage' is
-> the only thing which hasn't immediately fallen off my ideas list.
+Copied from the Linux kernel COPYING file.
 
-Yeah, naming problem...
+Add the required tags for reference and tooling.
 
-> But I think renaming exceptional entries in the page cache is a great idea,
-> and I don't want to do it as part of this patch set ;-)
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Fair enough.
+---
+ LICENSES/exceptions/Linux-syscall-note |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
--- 
- Kirill A. Shutemov
+--- /dev/null
++++ b/LICENSES/exceptions/Linux-syscall-note
+@@ -0,0 +1,25 @@
++SPDX-Exception-Identifier: Linux-syscall-note
++SPDX-URL: https://spdx.org/licenses/Linux-syscall-note.html
++SPDX-Licenses: GPL-2.0, GPL-2.0+, GPL-1.0+, LGPL-2.0, LGPL-2.0+, LGPL-2.1, LGPL-2.1+
++Usage-Guide:
++  This exception is used together with one of the above SPDX-Licenses
++  to mark user space API (uapi) header files so they can be included
++  into non GPL compliant user space application code.
++  To use this exception add it with the keyword WITH to one of the
++  identifiers in the SPDX-Licenses tag:
++    SPDX-License-Identifier: <SPDX-License> WITH Linux-syscall-note
++License-Text:
++
++   NOTE! This copyright does *not* cover user programs that use kernel
++ services by normal system calls - this is merely considered normal use
++ of the kernel, and does *not* fall under the heading of "derived work".
++ Also note that the GPL below is copyrighted by the Free Software
++ Foundation, but the instance of code that it refers to (the Linux
++ kernel) is copyrighted by me and others who actually wrote it.
++
++ Also note that the only valid version of the GPL as far as the kernel
++ is concerned is _this_ particular version of the license (ie v2, not
++ v2.2 or v3.x or whatever), unless explicitly otherwise stated.
++
++			Linus Torvalds
++
+
+
