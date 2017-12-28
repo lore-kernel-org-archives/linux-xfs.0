@@ -1,22 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60410 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750983AbdLUNjy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Dec 2017 08:39:54 -0500
-Date: Thu, 21 Dec 2017 05:39:53 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/4] xfs: clean up cow mappings during fs data freeze
-Message-ID: <20171221133953.GE10079@infradead.org>
-References: <151335786780.26575.15542999972223359181.stgit@magnolia>
- <20171219210946.GH12613@magnolia>
+Received: from mr012msb.fastweb.it ([85.18.95.109]:54252 "EHLO
+        mr012msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754445AbdL1XT6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Dec 2017 18:19:58 -0500
+Received: from ceres.assyoma.it (93.63.55.57) by mr012msb.fastweb.it (5.8.043)
+        id 5A415010004076E9 for linux-xfs@vger.kernel.org; Fri, 29 Dec 2017 00:14:14 +0100
+Subject: Block size and read-modify-write
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171219210946.GH12613@magnolia>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Fri, 29 Dec 2017 00:14:14 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: g.danti@assyoma.it
 
-This needs to be a separate thread including -fsdevel.
+Hi list,
+I would ask a question: how XFS block size affect read-modify-write in 
+case of very small writes?
+
+For example, suppose an XFS filesystem with the default 4K data block 
+size. Am I correct saying that:
+- a 512B normal, cached writes will cause a read-modify-write of the 
+entire 4K sector?
+- a 512B O_DIRECT write will *not* cause a read-modify-write of the 4K 
+sector, rather it will be flushed to disk as-is (512 bytes in length)?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
