@@ -1,77 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53574 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751095AbdLXTMP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 24 Dec 2017 14:12:15 -0500
-Received: from Liberator-5.netgear.com (unknown [50.35.53.244])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id DD52177B2D0
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Dec 2017 13:11:49 -0600 (CST)
-Subject: [PATCH 3/3] mkfs: do not allow both "dev" and "name" subopts for log
- or realtime
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <529c056a-a40c-06b8-a37e-3b1b7e664303@sandeen.net>
-Message-ID: <6ea46cfb-357b-17c4-fc5f-65598431526f@sandeen.net>
-Date: Sun, 24 Dec 2017 11:12:13 -0800
+Received: from Galois.linutronix.de ([146.0.238.70]:32927 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753903AbdL1Pdk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Dec 2017 10:33:40 -0500
+Message-Id: <20171228153308.701536151@linutronix.de>
+Date: Thu, 28 Dec 2017 16:27:16 +0100
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: [patch V5 06/11] LICENSES: Add the BSD 3-clause "New" or "Revised"
+ License
+References: <20171228152710.891701433@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <529c056a-a40c-06b8-a37e-3b1b7e664303@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Disposition: inline;
+ filename=LICENSES_Add_the_BSD_3-clause_New_Revised_license.patch
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Today we can specify i.e. both logdev= and name= ;
-it works, with last-parsed-wins behavior:
+Add the full text of the BSD 3-clause "New" or "Revised" License to the
+kernel tree.  It was copied directly from:
 
-mkfs.xfs -f -l logdev=/dev/sda1,name=/dev/sda2 /dev/sda3
+  https://spdx.org/licenses/BSD-3-Clause.html#licenseText
 
-Make these conflict to resolve ambiguity; do the same for
-the realtime subvol.
+Add the required tags for reference and tooling.
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
+ LICENSES/preferred/BSD-3-Clause |   36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+ create mode 100644 LICENSES/BSD-3-Clause
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 035af03..5ae67d5 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -507,6 +507,7 @@ struct opt_params lopts = {
- 		},
- 		{ .index = L_DEV,
- 		  .conflicts = { { &lopts, L_AGNUM },
-+				 { &lopts, L_NAME },
- 				 { &lopts, L_INTERNAL },
- 				 { &lopts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -529,6 +530,7 @@ struct opt_params lopts = {
- 		},
- 		{ .index = L_NAME,
- 		  .conflicts = { { &lopts, L_AGNUM },
-+				 { &lopts, L_DEV },
- 				 { &lopts, L_INTERNAL },
- 				 { &lopts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -599,7 +601,8 @@ struct opt_params ropts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_DEV,
--		  .conflicts = { { &ropts, LAST_CONFLICT } },
-+		  .conflicts = { { &ropts, R_NAME },
-+			         { &ropts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_FILE,
-@@ -609,7 +612,8 @@ struct opt_params ropts = {
- 		  .conflicts = { { &ropts, LAST_CONFLICT } },
- 		},
- 		{ .index = R_NAME,
--		  .conflicts = { { &ropts, LAST_CONFLICT } },
-+		  .conflicts = { { &ropts, R_DEV },
-+			         { &ropts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_NOALIGN,
+--- /dev/null
++++ b/LICENSES/preferred/BSD-3-Clause
+@@ -0,0 +1,36 @@
++Valid-License-Identifier: BSD-3-Clause
++SPDX-URL: https://spdx.org/licenses/BSD-3-Clause.html
++Usage-Guide:
++  To use the BSD 3-clause "New" or "Revised" License put the following SPDX
++  tag/value pair into a comment according to the placement guidelines in
++  the licensing rules documentation:
++    SPDX-License-Identifier: BSD-3-Clause
++License-Text:
++
++Copyright (c) <year> <owner> . All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions are met:
++
++1. Redistributions of source code must retain the above copyright notice,
++   this list of conditions and the following disclaimer.
++
++2. Redistributions in binary form must reproduce the above copyright
++   notice, this list of conditions and the following disclaimer in the
++   documentation and/or other materials provided with the distribution.
++
++3. Neither the name of the copyright holder nor the names of its
++   contributors may be used to endorse or promote products derived from this
++   software without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++POSSIBILITY OF SUCH DAMAGE.
+
+
