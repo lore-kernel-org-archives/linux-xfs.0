@@ -1,666 +1,464 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:6392 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1758243AbdLRJMO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Dec 2017 04:12:14 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1eQrSr-0002su-OU
-        for linux-xfs@vger.kernel.org; Mon, 18 Dec 2017 20:12:01 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.89)
-        (envelope-from <david@fromorbit.com>)
-        id 1eQrSr-0003qR-NK
-        for linux-xfs@vger.kernel.org; Mon, 18 Dec 2017 20:12:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/7] mkfs: support arbitrary conflict specification
-Date: Mon, 18 Dec 2017 20:11:55 +1100
-Message-Id: <20171218091158.14537-5-david@fromorbit.com>
-In-Reply-To: <20171218091158.14537-1-david@fromorbit.com>
-References: <20171218091158.14537-1-david@fromorbit.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:38661 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750741AbdL2NV4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Dec 2017 08:21:56 -0500
+Received: by mail-wm0-f67.google.com with SMTP id 64so48016886wme.3
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Dec 2017 05:21:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.20.1712282315030.1899@nanos>
+References: <20171228152710.891701433@linutronix.de> <20171228153308.286787253@linutronix.de>
+ <alpine.DEB.2.20.1712282315030.1899@nanos>
+From: Philippe Ombredanne <pombredanne@nexb.com>
+Date: Fri, 29 Dec 2017 14:21:14 +0100
+Message-ID: <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
+Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to describe
+ how to properly identify file licenses
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+Thomas,
 
-Currently the conflict table is a single dimension, allowing
-conflicts to be specified in the same option table. however, we
-have conflicts that span option tables (e.g. sector size) and
-so we need to encode both the table and the option that conflicts.
+On Thu, Dec 28, 2017 at 11:17 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> On Thu, 28 Dec 2017, Thomas Gleixner wrote:
+>
+> Sorry for the spam. I somehow missed to refresh the patch before generating
+> the mbox. Find below the correct version of that one which has ALL braces
+> removed which we don't need.
+>
+> Thanks,
+>
+>         tglx
+>
+> 8<--------------------------
+> Subject: Documentation: Add license-rules.rst to describe how to properly identify file licenses
+> From: Thomas Gleixner <tglx@linutronix.de>
+> Date: Fri, 10 Nov 2017 09:30:00 +0100
+>
+> Add a file to the Documentation directory to describe how file licenses
+> should be described in all kernel files, using the SPDX identifier, as well
+> as where all licenses should be in the kernel source tree for people to
+> refer to (LICENSES/).
+>
+> Thanks to Kate and Greg for review and editing and Jonas for the
+> suggestions concerning the meta tags in the licenses files.
+>
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Reviewed-by: Jonas Oberg <jonas@fsfe.org>
+> Reviewed-by: Jonathan Corbet <corbet@lwn.net>
+> Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
+> Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
+> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+> ---
+>  Documentation/index.rst                 |   12 +
+>  Documentation/process/license-rules.rst |  370 ++++++++++++++++++++++++++++++++
+>  2 files changed, 382 insertions(+)
+>  create mode 100644 Documentation/license-rules.rst
+>
+> --- a/Documentation/index.rst
+> +++ b/Documentation/index.rst
+> @@ -13,6 +13,18 @@ documents into a coherent whole.  Please
+>  documentation are welcome; join the linux-doc list at vger.kernel.org if
+>  you want to help out.
+>
+> +Licensing documentation
+> +-----------------------
+> +
+> +The following describes the license of the Linux kernel source code
+> +(GPLv2), how to properly mark the license of individual files in the source
+> +tree, as well as links to the full license text.
+> +
+> +.. toctree::
+> +   :maxdepth: 2
+> +
+> +   process/license-rules.rst
+> +
+>  User-oriented documentation
+>  ---------------------------
+>
+> --- /dev/null
+> +++ b/Documentation/process/license-rules.rst
+> @@ -0,0 +1,370 @@
+> +.. SPDX-License-Identifier: GPL-2.0
+> +
+> +Linux kernel licensing rules
+> +============================
+> +
+> +The Linux Kernel is provided under the terms of the GNU General Public
+> +License version 2 only (GPL-2.0), as published by the Free Software
+> +Foundation, and provided in the COPYING file.  This documentation file is
+> +not meant to replace the COPYING file, but provides a description of how
+> +each source file should be annotated to make the licensing it is governed
+> +under clear and unambiguous.
+> +
+> +The license in the COPYING file applies to the kernel source as a whole,
+> +though individual source files can have a different license which is
+> +required to be compatible with the GPL-2.0::
+> +
+> +    GPL-1.0+  :  GNU General Public License v1.0 or later
+> +    GPL-2.0+  :  GNU General Public License v2.0 or later
+> +    LGPL-2.0  :  GNU Library General Public License v2 only
+> +    LGPL-2.0+ :  GNU Library General Public License v2 or later
+> +    LGPL-2.1  :  GNU Lesser General Public License v2.1 only
+> +    LGPL-2.1+ :  GNU Lesser General Public License v2.1 or later
+> +
+> +Aside from that, individual files can be provided under a dual license,
+> +e.g. one of the compatible GPL variants and alternatively under a
+> +permissive license like BSD, MIT etc.
+> +
+> +The User-space API (UAPI) header files, which describe the interface of
+> +user-space programs to the kernel are a special case.  According to the
+> +note in the kernel COPYING file, the syscall interface is a clear boundary,
+> +which does not extend the GPL requirements to any software which uses it to
+> +communicate with the kernel.  Because the UAPI headers must be includable
+> +into any source files which create an executable running on the Linux
+> +kernel, the exception must be documented by a special license expression.
+> +
+> +The common way of expressing the license of a source file is to add the
+> +matching boilerplate text into the top comment of the file.  Due to
+> +formatting, typos etc. these "boilerplates" are hard to validate for
+> +tools which are used in the context of license compliance.
+> +
+> +An alternative to boilerplate text is the use of Software Package Data
+> +Exchange (SPDX) license identifiers in each source file.  SPDX license
+> +identifiers are machine parsable and precise shorthands for the license
+> +under which the content of the file is contributed.  SPDX license
+> +identifiers are managed by the SPDX Workgroup at the Linux Foundation and
+> +have been agreed on by partners throughout the industry, tool vendors, and
+> +legal teams.  For further information see https://spdx.org/
+> +
+> +The Linux kernel requires the precise SPDX identifier in all source files.
+> +The valid identifiers used in the kernel are explained in the section
+> +`License identifiers`_ and have been retrieved from the official SPDX
+> +license list at https://spdx.org/licenses/ along with the license texts.
+> +
+> +License identifier syntax
+> +-------------------------
+> +
+> +1. Placement:
+> +
+> +   The SPDX license identifier in kernel files shall be added at the first
+> +   possible line in a file which can contain a comment.  For the majority
+> +   or files this is the first line, except for scripts which require the
+> +   '#!PATH_TO_INTERPRETER' in the first line.  For those scripts the SPDX
+> +   identifier goes into the second line.
+> +
+> +|
+> +
+> +2. Style:
+> +
+> +   The SPDX license identifier is added in form of a comment.  The comment
+> +   style depends on the file type::
+> +
+> +      C source:        // SPDX-License-Identifier: <SPDX License Expression>
+> +      C header:        /* SPDX-License-Identifier: <SPDX License Expression> */
+> +      ASM:     /* SPDX-License-Identifier: <SPDX License Expression> */
+> +      scripts: # SPDX-License-Identifier: <SPDX License Expression>
+> +      .rst:    .. SPDX-License-Identifier: <SPDX License Expression>
+> +      .dts{i}: // SPDX-License-Identifier: <SPDX License Expression>
+> +
+> +   If a specific tool cannot handle the standard comment style, then the
+> +   appropriate comment mechanism which the tool accepts shall be used. This
+> +   is the reason for having the "/\* \*/" style comment in C header
+> +   files. There was build breakage observed with generated .lds files where
+> +   'ld' failed to parse the C++ comment. This has been fixed by now, but
+> +   there are still older assembler tools which cannot handle C++ style
+> +   comments.
+> +
+> +|
+> +
+> +3. Syntax:
+> +
+> +   A <SPDX License Expression> is either an SPDX short form license
+> +   identifier found on the SPDX License List, or the combination of two
+> +   SPDX short form license identifiers separated by "WITH" when a license
+> +   exception applies. When multiple licenses apply, an expression consists
+> +   of keywords "AND", "OR" separating sub-expressions and surrounded by
+> +   "(", ")" .
+> +
+> +   License identifiers for licenses like [L]GPL with the 'or later' option
+> +   are constructed by using a "+" for indicating the 'or later' option.::
+> +
+> +      // SPDX-License-Identifier: GPL-2.0+
+> +      // SPDX-License-Identifier: LGPL-2.1+
+> +
+> +   WITH should be used when there is a modifier to a license needed.
+> +   For example, the linux kernel UAPI files use the expression::
+> +
+> +      // SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
+> +      // SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note
+> +
+> +   Other examples using WITH exceptions found in the kernel are::
+> +
+> +      // SPDX-License-Identifier: GPL-2.0 WITH mif-exception
+> +      // SPDX-License-Identifier: GPL-2.0+ WITH GCC-exception-2.0
+> +
+> +   Exceptions can only be used with particular License identifiers. The
+> +   valid License identifiers are listed in the tags of the exception text
+> +   file. For details see the point `Exceptions`_ in the chapter `License
+> +   identifiers`_.
+> +
+> +   OR should be used if the file is dual licensed and only one license is
+> +   to be selected.  For example, some dtsi files are available under dual
+> +   licenses::
+> +
+> +      // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+> +
+> +   Examples from the kernel for license expressions in dual licensed files::
+> +
+> +      // SPDX-License-Identifier: GPL-2.0 OR MIT
+> +      // SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
+> +      // SPDX-License-Identifier: GPL-2.0 OR Apache-2.0
+> +      // SPDX-License-Identifier: GPL-2.0 OR MPL-1.1
+> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) OR MIT
+> +      // SPDX-License-Identifier: GPL-1.0+ OR BSD-3-Clause OR OpenSSL
+> +
+> +   AND should be used if the file has multiple licenses whose terms all
+> +   apply to use the file. For example, if code is inherited from another
+> +   project and permission has been given to put it in the kernel, but the
+> +   original license terms need to remain in effect::
+> +
+> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) AND MIT
+> +
+> +   Another other example where both sets of license terms need to be
+> +   adhered to is::
+> +
+> +      // SPDX-License-Identifier: GPL-1.0+ AND LGPL-2.1+
+> +
+> +License identifiers
+> +-------------------
+> +
+> +The licenses currently used, as well as the licenses for code added to the
+> +kernel, can be broken down into:
+> +
+> +1. _`Preferred licenses`:
+> +
+> +   Whenever possible these licenses should be used as they are known to be
+> +   fully compatible and widely used.  These licenses are available from the
+> +   directory::
+> +
+> +      LICENSES/preferred/
+> +
+> +   in the kernel source tree.
+> +
+> +   The files in this directory contain the full license text and
+> +   `Metatags`_.  The file names are identical to the SPDX license
+> +   identifier which shall be used for the license in source files.
+> +
+> +   Examples::
+> +
+> +      LICENSES/preferred/GPL-2.0
+> +
+> +   Contains the GPL version 2 license text and the required metatags::
+> +
+> +      LICENSES/preferred/MIT
+> +
+> +   Contains the MIT license text and the required metatags
+> +
+> +   _`Metatags`:
+> +
+> +   The following meta tags must be available in a license file:
+> +
+> +   - Valid-License-Identifier:
+> +
+> +     One or more lines which declare which License Identifiers are valid
+> +     inside the project to reference this particular license text.  Usually
+> +     this is a single valid identifier, but e.g. for licenses with the 'or
+> +     later' options two identifiers are valid.
+> +
+> +   - SPDX-URL:
+> +
+> +     The URL of the SPDX page which contains additional information related
+> +     to the license.
+> +
+> +   - Usage-Guidance:
+> +
+> +     Freeform text for usage advice. The text must include correct examples
+> +     for the SPDX license identifiers as they should be put into source
+> +     files according to the `License identifier syntax`_ guidelines.
+> +
+> +   - License-Text:
+> +
+> +     All text after this tag is treated as the original license text
+> +
+> +   File format examples::
+> +
+> +      Valid-License-Identifier: GPL-2.0
+> +      Valid-License-Identifier: GPL-2.0+
+> +      SPDX-URL: https://spdx.org/licenses/GPL-2.0.html
+> +      Usage-Guide:
+> +        To use this license in source code, put one of the following SPDX
+> +       tag/value pairs into a comment according to the placement
+> +       guidelines in the licensing rules documentation.
+> +       For 'GNU General Public License (GPL) version 2 only' use:
+> +         SPDX-License-Identifier: GPL-2.0
+> +       For 'GNU General Public License (GPL) version 2 or any later version' use:
+> +         SPDX-License-Identifier: GPL-2.0+
+> +      License-Text:
+> +        Full license text
+> +
+> +   ::
+> +
+> +      SPDX-License-Identifier: MIT
+> +      SPDX-URL: https://spdx.org/licenses/MIT.html
+> +      Usage-Guide:
+> +       To use this license in source code, put the following SPDX
+> +       tag/value pair into a comment according to the placement
+> +       guidelines in the licensing rules documentation.
+> +         SPDX-License-Identifier: MIT
+> +      License-Text:
+> +        Full license text
+> +
+> +|
+> +
+> +2. Not recommended licenses:
+> +
+> +   These licenses should only be used for existing code or for importing
+> +   code from a different project.  These licenses are available from the
+> +   directory::
+> +
+> +      LICENSES/other/
+> +
+> +   in the kernel source tree.
+> +
+> +   The files in this directory contain the full license text and
+> +   `Metatags`_.  The file names are identical to the SPDX license
+> +   identifier which shall be used for the license in source files.
+> +
+> +   Examples::
+> +
+> +      LICENSES/other/ISC
+> +
+> +   Contains the Internet Systems Consortium license text and the required
+> +   metatags::
+> +
+> +      LICENSES/other/ZLib
+> +
+> +   Contains the ZLIB license text and the required metatags.
+> +
+> +   Metatags:
+> +
+> +   The metatag requirements for 'other' licenses are identical to the
+> +   requirements of the `Preferred licenses`_.
+> +
+> +   File format example::
+> +
+> +      Valid-License-Identifier: ISC
+> +      SPDX-URL: https://spdx.org/licenses/ISC.html
+> +      Usage-Guide:
+> +        Usage of this license in the kernel for new code is discouraged
+> +       and it should solely be used for importing code from an already
+> +       existing project.
+> +        To use this license in source code, put the following SPDX
+> +       tag/value pair into a comment according to the placement
+> +       guidelines in the licensing rules documentation.
+> +         SPDX-License-Identifier: ISC
+> +      License-Text:
+> +        Full license text
+> +
+> +|
+> +
+> +3. _`Exceptions`:
+> +
+> +   Some licenses can be amended with exceptions which grant certain rights
+> +   which the original license does not.  These exceptions are available
+> +   from the directory::
+> +
+> +      LICENSES/exceptions/
+> +
+> +   in the kernel source tree.  The files in this directory contain the full
+> +   exception text and the required `Exception Metatags`_.
+> +
+> +   Examples::
+> +
+> +      LICENSES/exceptions/Linux-syscall-note
+> +
+> +   Contains the Linux syscall exception as documented in the COPYING
+> +   file of the Linux kernel, which is used for UAPI header files.
+> +   e.g. /\* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note \*/::
+> +
+> +      LICENSES/exceptions/GCC-exception-2.0
+> +
+> +   Contains the GCC 'linking exception' which allows to link any binary
+> +   independent of its license against the compiled version of a file marked
+> +   with this exception. This is required for creating runnable executables
+> +   from source code which is not compatible with the GPL.
+> +
+> +   _`Exception Metatags`:
+> +
+> +   The following meta tags must be available in an exception file:
+> +
+> +   - SPDX-Exception-Identifier:
+> +
+> +     One exception identifier which can be used with SPDX license
+> +     identifiers.
+> +
+> +   - SPDX-URL:
+> +
+> +     The URL of the SPDX page which contains additional information related
+> +     to the exception.
+> +
+> +   - SPDX-Licenses:
+> +
+> +     A comma separated list of SPDX license identifiers for which the
+> +     exception can be used.
+> +
+> +   - Usage-Guidance:
+> +
+> +     Freeform text for usage advice. The text must be followed by correct
+> +     examples for the SPDX license identifiers as they should be put into
+> +     source files according to the `License identifier syntax`_ guidelines.
+> +
+> +   - Exception-Text:
+> +
+> +     All text after this tag is treated as the original exception text
+> +
+> +   File format examples::
+> +
+> +      SPDX-Exception-Identifier: Linux-syscall-note
+> +      SPDX-URL: https://spdx.org/licenses/Linux-syscall-note.html
+> +      SPDX-Licenses: GPL-2.0, GPL-2.0+, GPL-1.0+, LGPL-2.0, LGPL-2.0+, LGPL-2.1, LGPL-2.1+
+> +      Usage-Guidance:
+> +        This exception is used together with one of the above SPDX-Licenses
+> +       to mark user-space API (uapi) header files so they can be included
+> +       into non GPL compliant user-space application code.
+> +        To use this exception add it with the keyword WITH to one of the
+> +       identifiers in the SPDX-Licenses tag:
+> +         SPDX-License-Identifier: <SPDX-License> WITH Linux-syscall-note
+> +      Exception-Text:
+> +        Full exception text
+> +
+> +   ::
+> +
+> +      SPDX-Exception-Identifier: GCC-exception-2.0
+> +      SPDX-URL: https://spdx.org/licenses/GCC-exception-2.0.html
+> +      SPDX-Licenses: GPL-2.0, GPL-2.0+
+> +      Usage-Guidance:
+> +        The "GCC Runtime Library exception 2.0" is used together with one
+> +       of the above SPDX-Licenses for code imported from the GCC runtime
+> +       library.
+> +        To use this exception add it with the keyword WITH to one of the
+> +       identifiers in the SPDX-Licenses tag:
+> +         SPDX-License-Identifier: <SPDX-License> WITH GCC-exception-2.0
+> +      Exception-Text:
+> +        Full exception text
+> +
+> +
+> +All SPDX license identifiers and exceptions must have a corresponding file
+> +in the LICENSE subdirectories. This is required to allow tool
+> +verification (e.g. checkpatch.pl) and to have the licenses ready to read
+> +and extract right from the source, which is recommended by various FOSS
+> +organizations, e.g. the `FSFE REUSE initiative <https://reuse.software/>`_.
 
-Add support for a two dimensional conflict definition and convert
-all the code over to use it.
+My review still stands in this updated/corrected version. Thanks!
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- mkfs/xfs_mkfs.c | 257 ++++++++++++++++++++++++++++----------------------------
- 1 file changed, 130 insertions(+), 127 deletions(-)
+Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 7cc5ee2ddb9d..2272700807dc 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -125,7 +125,10 @@ struct opt_params {
- 		bool		str_seen;
- 		bool		convert;
- 		bool		is_power_2;
--		int		conflicts[MAX_CONFLICTS];
-+		struct _conflict {
-+			struct opt_params	*opts;
-+			int			subopt;
-+		}		conflicts[MAX_CONFLICTS];
- 		long long	minval;
- 		long long	maxval;
- 		long long	defaultval;
-@@ -143,8 +146,8 @@ struct opt_params bopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = B_LOG,
--		  .conflicts = { B_SIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &bopts, B_SIZE },
-+				 { &bopts, LAST_CONFLICT } },
- 		  .minval = XFS_MIN_BLOCKSIZE_LOG,
- 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -152,8 +155,8 @@ struct opt_params bopts = {
- 		{ .index = B_SIZE,
- 		  .convert = true,
- 		  .is_power_2 = true,
--		  .conflicts = { B_LOG,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &bopts, B_LOG },
-+				 { &bopts, LAST_CONFLICT } },
- 		  .minval = XFS_MIN_BLOCKSIZE,
- 		  .maxval = XFS_MAX_BLOCKSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -200,84 +203,84 @@ struct opt_params dopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = D_AGCOUNT,
--		  .conflicts = { D_AGSIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_AGSIZE },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .minval = 1,
- 		  .maxval = XFS_MAX_AGNUMBER,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_FILE,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = D_NAME,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &dopts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SIZE,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &dopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = XFS_AG_MIN_BYTES,
- 		  .maxval = LLONG_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SUNIT,
--		  .conflicts = { D_NOALIGN,
--				 D_SU,
--				 D_SW,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_NOALIGN },
-+				 { &dopts, D_SU },
-+				 { &dopts, D_SW },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SWIDTH,
--		  .conflicts = { D_NOALIGN,
--				 D_SU,
--				 D_SW,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_NOALIGN },
-+				 { &dopts, D_SU },
-+				 { &dopts, D_SW },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_AGSIZE,
--		  .conflicts = { D_AGCOUNT,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_AGCOUNT },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = XFS_AG_MIN_BYTES,
- 		  .maxval = XFS_AG_MAX_BYTES,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SU,
--		  .conflicts = { D_NOALIGN,
--				 D_SUNIT,
--				 D_SWIDTH,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_NOALIGN },
-+				 { &dopts, D_SUNIT },
-+				 { &dopts, D_SWIDTH },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SW,
--		  .conflicts = { D_NOALIGN,
--				 D_SUNIT,
--				 D_SWIDTH,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_NOALIGN },
-+				 { &dopts, D_SUNIT },
-+				 { &dopts, D_SWIDTH },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SECTLOG,
--		  .conflicts = { D_SECTSIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_SECTSIZE },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_SECTSIZE,
--		  .conflicts = { D_SECTLOG,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_SECTLOG },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
-@@ -285,35 +288,35 @@ struct opt_params dopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_NOALIGN,
--		  .conflicts = { D_SU,
--				 D_SW,
--				 D_SUNIT,
--				 D_SWIDTH,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &dopts, D_SU },
-+				 { &dopts, D_SW },
-+				 { &dopts, D_SUNIT },
-+				 { &dopts, D_SWIDTH },
-+				 { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = D_RTINHERIT,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &dopts, LAST_CONFLICT } },
- 		  .minval = 1,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = D_PROJINHERIT,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_EXTSZINHERIT,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = D_COWEXTSIZE,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &dopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
-@@ -345,57 +348,57 @@ struct opt_params iopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = I_ALIGN,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &iopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = I_LOG,
--		  .conflicts = { I_PERBLOCK,
--				 I_SIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &iopts, I_PERBLOCK },
-+				 { &iopts, I_SIZE },
-+				 { &iopts, LAST_CONFLICT } },
- 		  .minval = XFS_DINODE_MIN_LOG,
- 		  .maxval = XFS_DINODE_MAX_LOG,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_MAXPCT,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &iopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 100,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_PERBLOCK,
--		  .conflicts = { I_LOG,
--				 I_SIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &iopts, I_LOG },
-+				 { &iopts, I_SIZE },
-+				 { &iopts, LAST_CONFLICT } },
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_INODE_PERBLOCK,
- 		  .maxval = XFS_MAX_BLOCKSIZE / XFS_DINODE_MIN_SIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_SIZE,
--		  .conflicts = { I_PERBLOCK,
--				 I_LOG,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &iopts, I_PERBLOCK },
-+				 { &iopts, I_LOG },
-+				 { &iopts, LAST_CONFLICT } },
- 		  .is_power_2 = true,
- 		  .minval = XFS_DINODE_MIN_SIZE,
- 		  .maxval = XFS_DINODE_MAX_SIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_ATTR,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &iopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 2,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = I_PROJID32BIT,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &iopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = I_SPINODES,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &iopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
-@@ -434,68 +437,68 @@ struct opt_params lopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = L_AGNUM,
--		  .conflicts = { L_DEV,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_DEV },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = UINT_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_INTERNAL,
--		  .conflicts = { L_FILE,
--				 L_DEV,
--				 L_SECTLOG,
--				 L_SECTSIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_FILE },
-+				 { &lopts, L_DEV },
-+				 { &lopts, L_SECTLOG },
-+				 { &lopts, L_SECTSIZE },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = L_SIZE,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &lopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = 2 * 1024 * 1024LL,	/* XXX: XFS_MIN_LOG_BYTES */
- 		  .maxval = XFS_MAX_LOG_BYTES,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_VERSION,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &lopts, LAST_CONFLICT } },
- 		  .minval = 1,
- 		  .maxval = 2,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SUNIT,
--		  .conflicts = { L_SU,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_SU },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .minval = 1,
- 		  .maxval = BTOBB(XLOG_MAX_RECORD_BSIZE),
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SU,
--		  .conflicts = { L_SUNIT,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_SUNIT },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = BBTOB(1),
- 		  .maxval = XLOG_MAX_RECORD_BSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_DEV,
--		  .conflicts = { L_AGNUM,
--				 L_INTERNAL,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_AGNUM },
-+				 { &lopts, L_INTERNAL },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SECTLOG,
--		  .conflicts = { L_SECTSIZE,
--				 L_INTERNAL,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_SECTSIZE },
-+				 { &lopts, L_INTERNAL },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_SECTSIZE,
--		  .conflicts = { L_SECTLOG,
--				 L_INTERNAL,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_SECTLOG },
-+				 { &lopts, L_INTERNAL },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
-@@ -503,20 +506,20 @@ struct opt_params lopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_FILE,
--		  .conflicts = { L_INTERNAL,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_INTERNAL },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = L_NAME,
--		  .conflicts = { L_AGNUM,
--				 L_INTERNAL,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &lopts, L_AGNUM },
-+				 { &lopts, L_INTERNAL },
-+				 { &lopts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = L_LAZYSBCNTR,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &lopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
-@@ -539,15 +542,15 @@ struct opt_params nopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = N_LOG,
--		  .conflicts = { N_SIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &nopts, N_SIZE },
-+				 { &nopts, LAST_CONFLICT } },
- 		  .minval = XFS_MIN_REC_DIRSIZE,
- 		  .maxval = XFS_MAX_BLOCKSIZE_LOG,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = N_SIZE,
--		  .conflicts = { N_LOG,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &nopts, N_LOG },
-+				 { &nopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .is_power_2 = true,
- 		  .minval = 1 << XFS_MIN_REC_DIRSIZE,
-@@ -555,13 +558,13 @@ struct opt_params nopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = N_VERSION,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &nopts, LAST_CONFLICT } },
- 		  .minval = 2,
- 		  .maxval = 2,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = N_FTYPE,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &nopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
-@@ -588,38 +591,38 @@ struct opt_params ropts = {
- 	},
- 	.subopt_params = {
- 		{ .index = R_EXTSIZE,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &ropts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = XFS_MIN_RTEXTSIZE,
- 		  .maxval = XFS_MAX_RTEXTSIZE,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_SIZE,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &ropts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .minval = 0,
- 		  .maxval = LLONG_MAX,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_DEV,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &ropts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_FILE,
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &ropts, LAST_CONFLICT } },
- 		},
- 		{ .index = R_NAME,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &ropts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = R_NOALIGN,
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &ropts, LAST_CONFLICT } },
- 		},
- 	},
- };
-@@ -639,25 +642,25 @@ struct opt_params sopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = S_LOG,
--		  .conflicts = { S_SIZE,
--				 S_SECTSIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &sopts, S_SIZE },
-+				 { &sopts, S_SECTSIZE },
-+				 { &sopts, LAST_CONFLICT } },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SECTLOG,
--		  .conflicts = { S_SIZE,
--				 S_SECTSIZE,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &sopts, S_SIZE },
-+				 { &sopts, S_SECTSIZE },
-+				 { &sopts, LAST_CONFLICT } },
- 		  .minval = XFS_MIN_SECTORSIZE_LOG,
- 		  .maxval = XFS_MAX_SECTORSIZE_LOG,
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SIZE,
--		  .conflicts = { S_LOG,
--				 S_SECTLOG,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &sopts, S_LOG },
-+				 { &sopts, S_SECTLOG },
-+				 { &sopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
-@@ -665,9 +668,9 @@ struct opt_params sopts = {
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = S_SECTSIZE,
--		  .conflicts = { S_LOG,
--				 S_SECTLOG,
--				 LAST_CONFLICT },
-+		  .conflicts = { { &sopts, S_LOG },
-+				 { &sopts, S_SECTLOG },
-+				 { &sopts, LAST_CONFLICT } },
- 		  .convert = true,
- 		  .is_power_2 = true,
- 		  .minval = XFS_MIN_SECTORSIZE,
-@@ -694,29 +697,29 @@ struct opt_params mopts = {
- 	},
- 	.subopt_params = {
- 		{ .index = M_CRC,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &mopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = M_FINOBT,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &mopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = M_UUID,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &mopts, LAST_CONFLICT } },
- 		  .defaultval = SUBOPT_NEEDS_VAL,
- 		},
- 		{ .index = M_RMAPBT,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &mopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
- 		{ .index = M_REFLINK,
--		  .conflicts = { LAST_CONFLICT },
-+		  .conflicts = { { &mopts, LAST_CONFLICT } },
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
-@@ -925,13 +928,14 @@ usage( void )
- 
- static void
- conflict(
--	char		opt,
--	const char	*tab[],
--	int		oldidx,
--	int		newidx)
-+	struct opt_params       *opts,
-+	int			option,
-+	struct opt_params       *con_opts,
-+	int			conflict)
- {
- 	fprintf(stderr, _("Cannot specify both -%c %s and -%c %s\n"),
--		opt, tab[oldidx], opt, tab[newidx]);
-+			opts->name, opts->subopts[option],
-+			con_opts->name, con_opts->subopts[conflict]);
- 	usage();
- }
- 
-@@ -1342,14 +1346,13 @@ check_opt(
- 
- 	/* check for conflicts with the option */
- 	for (i = 0; i < MAX_CONFLICTS; i++) {
--		int conflict_opt = sp->conflicts[i];
-+		struct _conflict *con = &sp->conflicts[i];
- 
--		if (conflict_opt == LAST_CONFLICT)
-+		if (con->subopt == LAST_CONFLICT)
- 			break;
--		if (opts->subopt_params[conflict_opt].seen ||
--		    opts->subopt_params[conflict_opt].str_seen)
--			conflict(opts->name, opts->subopts,
--				 conflict_opt, index);
-+		if (con->opts->subopt_params[con->subopt].seen ||
-+		    con->opts->subopt_params[con->subopt].str_seen)
-+			conflict(opts, index, con->opts, con->subopt);
- 	}
- }
- 
-@@ -1491,13 +1494,13 @@ data_opts_parser(
- 		break;
- 	case D_SECTLOG:
- 		if (cli->sectorsize)
--			conflict('d', opts->subopts, D_SECTSIZE, D_SECTLOG);
-+			conflict(opts, D_SECTSIZE, opts, D_SECTLOG);
- 		sectorlog = getnum(value, opts, D_SECTLOG);
- 		cli->sectorsize = 1 << sectorlog;
- 		break;
- 	case D_SECTSIZE:
- 		if (cli->sectorsize)
--			conflict('d', opts->subopts, D_SECTSIZE, D_SECTLOG);
-+			conflict(opts, D_SECTSIZE, opts, D_SECTLOG);
- 		cli->sectorsize = getnum(value, opts, D_SECTSIZE);
- 		break;
- 	case D_RTINHERIT:
-@@ -1724,7 +1727,7 @@ sector_opts_parser(
- 	case S_LOG:
- 	case S_SECTLOG:
- 		if (cli->sectorsize)
--			conflict('s', opts->subopts, S_SECTSIZE, S_SECTLOG);
-+			conflict(opts, S_SECTSIZE, opts, S_SECTLOG);
- 		sectorlog = getnum(value, opts, S_SECTLOG);
- 		cli->sectorsize = 1 << sectorlog;
- 		cli->lsectorsize = cli->sectorsize;
-@@ -1732,7 +1735,7 @@ sector_opts_parser(
- 	case S_SIZE:
- 	case S_SECTSIZE:
- 		if (cli->sectorsize)
--			conflict('s', opts->subopts, S_SECTLOG, S_SECTSIZE);
-+			conflict(opts, S_SECTSIZE, opts, S_SECTLOG);
- 		cli->sectorsize = getnum(value, opts, S_SECTSIZE);
- 		cli->lsectorsize = cli->sectorsize;
- 		break;
 -- 
-2.15.0
-
+Cordially
+Philippe Ombredanne
