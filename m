@@ -1,46 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:40659 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751426AbdL0K0D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Dec 2017 05:26:03 -0500
-Received: by mail-wm0-f46.google.com with SMTP id f206so38464805wmf.5
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Dec 2017 02:26:02 -0800 (PST)
-Date: Wed, 27 Dec 2017 13:26:00 +0300
-From: "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH v5 06/78] xarray: Change definition of sibling entries
-Message-ID: <20171227102600.vruihaqugwxa25sp@node.shutemov.name>
-References: <20171215220450.7899-1-willy@infradead.org>
- <20171215220450.7899-7-willy@infradead.org>
- <20171226172153.pylgdefajcrthe3b@node.shutemov.name>
- <20171227031326.GB24828@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20171227031326.GB24828@bombadil.infradead.org>
+Received: from smtprelay0084.hostedemail.com ([216.40.44.84]:38445 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750869AbdL2QUF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Dec 2017 11:20:05 -0500
+Message-ID: <1514564399.10256.7.camel@perches.com>
+Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to
+ describe how to properly identify file licenses
+From: Joe Perches <joe@perches.com>
+Date: Fri, 29 Dec 2017 08:19:59 -0800
+In-Reply-To: <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
+References: <20171228152710.891701433@linutronix.de>
+         <20171228153308.286787253@linutronix.de>
+         <alpine.DEB.2.20.1712282315030.1899@nanos>
+         <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
+To: Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-On Tue, Dec 26, 2017 at 07:13:26PM -0800, Matthew Wilcox wrote:
-> On Tue, Dec 26, 2017 at 08:21:53PM +0300, Kirill A. Shutemov wrote:
-> > > +/**
-> > > + * xa_is_internal() - Is the entry an internal entry?
-> > > + * @entry: Entry retrieved from the XArray
-> > > + *
-> > > + * Return: %true if the entry is an internal entry.
-> > > + */
-> > 
-> > What does it mean "internal entry"? Is it just a term for non-value and
-> > non-data pointer entry? Do we allow anybody besides xarray implementation to
-> > use internal entires?
-> > 
-> > Do we have it documented?
+On Fri, 2017-12-29 at 14:21 +0100, Philippe Ombredanne wrote:
+> Thomas,
 > 
-> We do!  include/linux/radix-tree.h has it documented right now:
+> On Thu, Dec 28, 2017 at 11:17 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> > On Thu, 28 Dec 2017, Thomas Gleixner wrote:
+> > 
+> > Sorry for the spam. I somehow missed to refresh the patch before generating
+> > the mbox. Find below the correct version of that one which has ALL braces
+> > removed which we don't need.
 
-Looks good. Thanks.
+Has it been legally reviewed and accepted that removal
+of the BSD license text from individual source files is
+appropriate and meets the legal requirements of
+following the BSD license on a per-file basis?
 
--- 
- Kirill A. Shutemov
+And if so, who did this review?
+
+Is there any license that does not allow removal of the
+license text and does not allow simple substitution of
+the SPDX license identifier in each individual file?
