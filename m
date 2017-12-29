@@ -1,79 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:32927 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753903AbdL1Pdk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Dec 2017 10:33:40 -0500
-Message-Id: <20171228153308.701536151@linutronix.de>
-Date: Thu, 28 Dec 2017 16:27:16 +0100
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: [patch V5 06/11] LICENSES: Add the BSD 3-clause "New" or "Revised"
- License
+Received: from imap.thunk.org ([74.207.234.97]:36056 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751159AbdL2Syu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Dec 2017 13:54:50 -0500
+Date: Fri, 29 Dec 2017 13:54:04 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to
+ describe how to properly identify file licenses
+Message-ID: <20171229185404.GD11757@thunk.org>
 References: <20171228152710.891701433@linutronix.de>
+ <20171228153308.286787253@linutronix.de>
+ <alpine.DEB.2.20.1712282315030.1899@nanos>
+ <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
+ <1514564399.10256.7.camel@perches.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Disposition: inline;
- filename=LICENSES_Add_the_BSD_3-clause_New_Revised_license.patch
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1514564399.10256.7.camel@perches.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: Joe Perches <joe@perches.com>
+Cc: Philippe Ombredanne <pombredanne@nexb.com>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Add the full text of the BSD 3-clause "New" or "Revised" License to the
-kernel tree.  It was copied directly from:
+On Fri, Dec 29, 2017 at 08:19:59AM -0800, Joe Perches wrote:
+> 
+> Has it been legally reviewed and accepted that removal
+> of the BSD license text from individual source files is
+> appropriate and meets the legal requirements of
+> following the BSD license on a per-file basis?
+> 
+> And if so, who did this review?
+> 
+> Is there any license that does not allow removal of the
+> license text and does not allow simple substitution of
+> the SPDX license identifier in each individual file?
 
-  https://spdx.org/licenses/BSD-3-Clause.html#licenseText
+The work to use SPDX lines instead of individual licenses was done by
+Greg K-H in close consultation with Linux Foundation counsels, so I
+would assume that they did look at that particular issue.
 
-Add the required tags for reference and tooling.
+IANAL, but I've talked to lawyers about this issue, and in my
+experience if you talk to three lawyers you will easily get six
+opinions.  As far as I know, none of the licenses explicitly say
+copyright license must be on each file.  Just that the distribution of
+source must include the copyright and license statement.  Exactly how
+that is done is not explicitly specified.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Philippe Ombredanne <pombredanne@nexb.com>
-Reviewed-by: Kate Stewart <kstewart@linuxfoundation.org>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- LICENSES/preferred/BSD-3-Clause |   36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
- create mode 100644 LICENSES/BSD-3-Clause
-
---- /dev/null
-+++ b/LICENSES/preferred/BSD-3-Clause
-@@ -0,0 +1,36 @@
-+Valid-License-Identifier: BSD-3-Clause
-+SPDX-URL: https://spdx.org/licenses/BSD-3-Clause.html
-+Usage-Guide:
-+  To use the BSD 3-clause "New" or "Revised" License put the following SPDX
-+  tag/value pair into a comment according to the placement guidelines in
-+  the licensing rules documentation:
-+    SPDX-License-Identifier: BSD-3-Clause
-+License-Text:
-+
-+Copyright (c) <year> <owner> . All rights reserved.
-+
-+Redistribution and use in source and binary forms, with or without
-+modification, are permitted provided that the following conditions are met:
-+
-+1. Redistributions of source code must retain the above copyright notice,
-+   this list of conditions and the following disclaimer.
-+
-+2. Redistributions in binary form must reproduce the above copyright
-+   notice, this list of conditions and the following disclaimer in the
-+   documentation and/or other materials provided with the distribution.
-+
-+3. Neither the name of the copyright holder nor the names of its
-+   contributors may be used to endorse or promote products derived from this
-+   software without specific prior written permission.
-+
-+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+POSSIBILITY OF SUCH DAMAGE.
-
-
+						- Ted
