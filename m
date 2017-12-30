@@ -1,85 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:65458 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751083AbdL0ARH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Dec 2017 19:17:07 -0500
-Date: Tue, 26 Dec 2017 17:17:05 -0700
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v4 07/18] dax: store pfns in the radix
-Message-ID: <20171227001705.GA4802@linux.intel.com>
-References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151407699792.38751.2859846645388380112.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:34993 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750841AbdL3LC5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Dec 2017 06:02:57 -0500
+Date: Sat, 30 Dec 2017 12:02:45 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to describe
+ how to properly identify file licenses
+In-Reply-To: <20171229185404.GD11757@thunk.org>
+Message-ID: <alpine.DEB.2.20.1712301155260.1899@nanos>
+References: <20171228152710.891701433@linutronix.de> <20171228153308.286787253@linutronix.de> <alpine.DEB.2.20.1712282315030.1899@nanos> <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com> <1514564399.10256.7.camel@perches.com>
+ <20171229185404.GD11757@thunk.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151407699792.38751.2859846645388380112.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, jack@suse.cz, Matthew Wilcox <mawilcox@microsoft.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Joe Perches <joe@perches.com>, Philippe Ombredanne <pombredanne@nexb.com>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-On Sat, Dec 23, 2017 at 04:56:38PM -0800, Dan Williams wrote:
-> In preparation for examining the busy state of dax pages in the truncate
-> path, switch from sectors to pfns in the radix.
+On Fri, 29 Dec 2017, Theodore Ts'o wrote:
+> On Fri, Dec 29, 2017 at 08:19:59AM -0800, Joe Perches wrote:
+> > 
+> > Has it been legally reviewed and accepted that removal
+> > of the BSD license text from individual source files is
+> > appropriate and meets the legal requirements of
+> > following the BSD license on a per-file basis?
+> > 
+> > And if so, who did this review?
+> > 
+> > Is there any license that does not allow removal of the
+> > license text and does not allow simple substitution of
+> > the SPDX license identifier in each individual file?
 > 
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Jeff Moyer <jmoyer@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Matthew Wilcox <mawilcox@microsoft.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/dax/super.c |   15 ++++++++--
->  fs/dax.c            |   75 ++++++++++++++++++---------------------------------
->  2 files changed, 39 insertions(+), 51 deletions(-)
-<>
-> @@ -688,7 +685,7 @@ static int dax_writeback_one(struct block_device *bdev,
->  	 * compare sectors as we must not bail out due to difference in lockbit
->  	 * or entry type.
->  	 */
+> The work to use SPDX lines instead of individual licenses was done by
+> Greg K-H in close consultation with Linux Foundation counsels, so I
+> would assume that they did look at that particular issue.
+> 
+> IANAL, but I've talked to lawyers about this issue, and in my
+> experience if you talk to three lawyers you will easily get six
+> opinions.  As far as I know, none of the licenses explicitly say
+> copyright license must be on each file.  Just that the distribution of
+> source must include the copyright and license statement.  Exactly how
+> that is done is not explicitly specified.
 
-Can you please also fix the comment above this test so it talks about pfns
-instead of sectors?
+Aside of that we are not removing anything, except the obvious one liners
+like
 
-> -	if (dax_radix_sector(entry2) != dax_radix_sector(entry))
-> +	if (dax_radix_pfn(entry2) != dax_radix_pfn(entry))
->  		goto put_unlocked;
->  	if (WARN_ON_ONCE(dax_is_empty_entry(entry) ||
->  				dax_is_zero_entry(entry))) {
-> @@ -718,29 +715,11 @@ static int dax_writeback_one(struct block_device *bdev,
->  	 * 'entry'.  This allows us to flush for PMD_SIZE and not have to
->  	 * worry about partial PMD writebacks.
->  	 */
+	This file is licensed under GPLV2
 
-Ditto for this comment ^^^
+	For licensing see COPYING
 
-> -	sector = dax_radix_sector(entry);
-> +	pfn = dax_radix_pfn(entry);
->  	size = PAGE_SIZE << dax_radix_order(entry);
->  
-> -	id = dax_read_lock();
-> -	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
-> -	if (ret)
-> -		goto dax_unlock;
-> -
-> -	/*
-> -	 * dax_direct_access() may sleep, so cannot hold tree_lock over
-> -	 * its invocation.
-> -	 */
-> -	ret = dax_direct_access(dax_dev, pgoff, size / PAGE_SIZE, &kaddr, &pfn);
-> -	if (ret < 0)
-> -		goto dax_unlock;
-> -
-> -	if (WARN_ON_ONCE(ret < size / PAGE_SIZE)) {
-> -		ret = -EIO;
-> -		goto dax_unlock;
-> -	}
-> -
-> -	dax_mapping_entry_mkclean(mapping, index, pfn_t_to_pfn(pfn));
-> -	dax_flush(dax_dev, kaddr, size);
-> +	dax_mapping_entry_mkclean(mapping, index, pfn);
-> +	dax_flush(dax_dev, page_address(pfn_to_page(pfn)), size);
->  	/*
->  	 * After we have flushed the cache, we can clear the dirty tag. There
->  	 * cannot be new dirty data in the pfn after the flush has completed as
+and similar constructs. Replacing the full boilerplate text is done by
+talking to the respective copyright holders, which usually involves lawyers
+when the copyright holder is a corporate. See for example:
+
+commit 987b154983f0e70b02edf6fc75fcc2f6e6d670b9
+Author: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Date:   Mon Dec 4 10:57:02 2017 +0100
+
+    s390: Remove redudant license text
+
+where the removal has been done by IBM in files copyrighted by IBM.
+
+Thanks,
+
+	tglx
