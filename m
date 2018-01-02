@@ -1,62 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:10161 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45636 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750996AbeABXWR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 18:22:17 -0500
-Date: Wed, 3 Jan 2018 10:22:14 +1100
+        by vger.kernel.org with ESMTP id S1750938AbeABXgS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 18:36:18 -0500
+Date: Wed, 3 Jan 2018 10:36:15 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/20] xfs: refactor xfs_verifier_error and
- xfs_buf_ioerror
-Message-ID: <20180102232214.GZ5858@dastard>
+Subject: Re: [PATCH 06/20] xfs: have buffer verifier functions report failing
+ address
+Message-ID: <20180102233615.GA5858@dastard>
 References: <151399122361.23543.15718507168231759645.stgit@magnolia>
- <151399125430.23543.14769548442400740447.stgit@magnolia>
+ <151399126186.23543.3819575446280820300.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151399125430.23543.14769548442400740447.stgit@magnolia>
+In-Reply-To: <151399126186.23543.3819575446280820300.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 22, 2017 at 05:07:34PM -0800, Darrick J. Wong wrote:
+On Fri, Dec 22, 2017 at 05:07:41PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Since all verification errors also mark the buffer as having an error,
-> we can combine these two calls.  Later we'll add a xfs_failaddr_t
-> parameter to promote the idea of reporting corruption errors and the
-> address of the failing check to enable better debugging reports.
+> Modify each function that checks the contents of a metadata buffer to
+> return the instruction address of the failing test so that we can report
+> more precise failure errors to the log.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c          |   20 ++++++--------------
->  fs/xfs/libxfs/xfs_alloc_btree.c    |   11 ++++-------
->  fs/xfs/libxfs/xfs_attr_leaf.c      |   10 +++-------
->  fs/xfs/libxfs/xfs_attr_remote.c    |   24 +++++++++++-------------
->  fs/xfs/libxfs/xfs_bmap_btree.c     |   11 ++++-------
->  fs/xfs/libxfs/xfs_da_btree.c       |   16 +++++-----------
->  fs/xfs/libxfs/xfs_dir2_block.c     |   10 +++-------
->  fs/xfs/libxfs/xfs_dir2_data.c      |   15 +++++----------
->  fs/xfs/libxfs/xfs_dir2_leaf.c      |   10 +++-------
->  fs/xfs/libxfs/xfs_dir2_node.c      |   13 ++++---------
->  fs/xfs/libxfs/xfs_dquot_buf.c      |   10 +++-------
->  fs/xfs/libxfs/xfs_ialloc.c         |   10 +++-------
->  fs/xfs/libxfs/xfs_ialloc_btree.c   |   11 ++++-------
->  fs/xfs/libxfs/xfs_inode_buf.c      |    3 +--
->  fs/xfs/libxfs/xfs_refcount_btree.c |   11 ++++-------
->  fs/xfs/libxfs/xfs_rmap_btree.c     |   11 ++++-------
->  fs/xfs/libxfs/xfs_sb.c             |   10 ++++------
->  fs/xfs/libxfs/xfs_symlink_remote.c |   10 +++-------
->  fs/xfs/xfs_buf.c                   |    7 ++++---
->  fs/xfs/xfs_buf.h                   |    4 +++-
->  fs/xfs/xfs_error.c                 |    5 ++++-
->  fs/xfs/xfs_error.h                 |    2 +-
->  fs/xfs/xfs_trace.h                 |    6 +++---
->  23 files changed, 89 insertions(+), 151 deletions(-)
+......
+> @@ -211,17 +211,34 @@ __xfs_dir3_data_check(
+>  				stale++;
+>  			if (i > 0 && be32_to_cpu(lep[i].hashval) <
+>  				     be32_to_cpu(lep[i - 1].hashval))
+> -				return false;
+> +				return __this_address;
+>  		}
+>  		if (count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale))
+> -			return false;
+> +			return __this_address;
+>  		if (stale != be32_to_cpu(btp->stale))
+> -			return false;
+> +			return __this_address;
+>  	}
+> -	return true;
+> +	return NULL;
+>  }
+>  
+> -static bool
+> +#ifdef DEBUG
+> +void
+> +xfs_dir3_data_check(
+> +	struct xfs_inode	*dp,
+> +	struct xfs_buf		*bp)
+> +{
+> +	xfs_failaddr_t		fa;
+> +
+> +	fa = __xfs_dir3_data_check(dp, bp);
+> +	if (!fa)
+> +		return;
+> +	xfs_corruption_error(__func__, XFS_ERRLEVEL_LOW, dp->i_mount,
+> +			bp->b_addr, __FILE__, __LINE__, fa);
+> +	ASSERT(0);
+> +}
+> +#endif
 
-Nice! I didn't think there was that much cleanup in this little
-rework :) Looks good to me.
+So the only concern I have here is what {__FILE__, __LINE__} resolve
+to. The macro gave us call site file/line, while this only gives us
+the file/line in xfs_dir3_data_check(). Hence we won't know from the
+corruption output what call to xfs_dir3_data_check() generated the
+report. We can turn the error level up if we want a stack trace on
+error from a production machine, so I can live with this.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
