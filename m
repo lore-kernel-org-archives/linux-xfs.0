@@ -1,150 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47064 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752767AbeADOEy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Jan 2018 09:04:54 -0500
-Date: Thu, 4 Jan 2018 09:04:53 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: speed up directory bestfree block scanning
-Message-ID: <20180104140452.GA23499@bfoster.bfoster>
-References: <20180103062748.16400-1-david@fromorbit.com>
- <20180103115910.GL5858@dastard>
- <20180103134137.GB17932@bfoster.bfoster>
- <20180103210015.GN5858@dastard>
-MIME-Version: 1.0
+Received: from mail-it0-f68.google.com ([209.85.214.68]:37942 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752622AbeABCfe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jan 2018 21:35:34 -0500
+Received: by mail-it0-f68.google.com with SMTP id r6so38086974itr.3
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Jan 2018 18:35:34 -0800 (PST)
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180103210015.GN5858@dastard>
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to describe
+ how to properly identify file licenses
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <20171230041535.GA3393@thunk.org>
+Date: Mon, 1 Jan 2018 19:35:27 -0700
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <12C856B7-06D5-4D99-8D6E-41F3A679CA17@dilger.ca>
+References: <20171228152710.891701433@linutronix.de>
+ <20171228153308.286787253@linutronix.de>
+ <alpine.DEB.2.20.1712282315030.1899@nanos>
+ <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
+ <1514564399.10256.7.camel@perches.com> <20171229185404.GD11757@thunk.org>
+ <CAOFm3uHm5ye7VdbVYcu+a_-3paO7phazNSGzhRL3wzGFcx-MkQ@mail.gmail.com>
+ <20171230041535.GA3393@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Philippe Ombredanne <pombredanne@nexb.com>, Joe Perches <joe@perches.com>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-On Thu, Jan 04, 2018 at 08:00:15AM +1100, Dave Chinner wrote:
-> On Wed, Jan 03, 2018 at 08:41:37AM -0500, Brian Foster wrote:
-> > On Wed, Jan 03, 2018 at 10:59:10PM +1100, Dave Chinner wrote:
-> > > In writing this, I think I can see a quick and simple change that
-> > > will fix this case and improve most other directory grow workloads
-> > > without affecting normal random directory insert/remove performance.
-> > > That is, do a reverse order search starting at the last block rather
-> > > than increasing order search starting at the first block.....
-> > > 
-> > > Ok, now were are talking - performance and scalability improvements!
-> > > 
-> > > 		create time(sec) / rate (files/s)
-> > >  File count     vanilla		    loop-fix		+reverse
-> > >    10k	      0.54 / 18.5k	   0.53 / 18.9k	       0.52 / 19.3k
-> > >    20k	      1.10 / 18.1k	   1.05 / 19.0k	       1.00 / 20.0k
-> > >   100k	      4.21 / 23.8k	   3.91 / 25.6k	       3.58 / 27.9k
-> > >   200k	      9.66 / 20,7k	   7.37 / 27.1k	       7.08 / 28.3k
-> > >     1M	     86.61 / 11.5k	  48.26 / 20.7k	      38.33 / 26.1k
-> > >     2M	    206.13 /  9.7k	 129.71 / 15.4k	      82.20 / 24.3k
-> > >    10M	   2843.57 /  3.5k	1817.39 /  5.5k      591.78 / 16.9k
-> > > 
-> > > Theres still some non-linearity as we approach the 10M number, but
-> > > it's still 5x faster to 10M inodes than the existing code....
-> > > 
-> > 
-> > Nice improvement.. I still need to look at the code, but a quick first
-> > thought is that I wonder if there's somewhere we could stash a 'most
-> > recent freeblock' once we have to grow the directory, even if just as an
-> > in-core hint. Then we could jump straight to the latest block regardless
-> > of the workload.
-> 
-> I thought about that, and then wondered where to stash it, then
-> wondered whether it would miss smaller, better fitting blocks, and
-> then finally realised we didn't need to have cross-operation state
-> to solve the common case of growing directories.
-> 
+On Dec 29, 2017, at 9:15 PM, Theodore Ts'o <tytso@mit.edu> wrote:
+>=20
+> On Fri, Dec 29, 2017 at 11:17:54PM +0100, Philippe Ombredanne wrote:
+>>> As far as I know, none of the licenses explicitly say
+>>> copyright license must be on each file.  Just that the distribution =
+of
+>>> source must include the copyright and license statement.  Exactly =
+how
+>>> that is done is not explicitly specified.
+>>=20
+>> This is also my take. What is done here is not much different than
+>> refactoring duplicated code so it leaves in a single place:
+>>=20
+>> - by "value" at the root in COPYING and in the Documentation.
+>> - by "reference" in the code proper as SPDX ids.
+>>=20
+>> Therefore essential and common requirements to include the license
+>> text is fulfilled in the kernel.
+>>=20
+>> Note that there are a few offenders that will need to clean up their
+>> acts as they came up will both long and "un-removable and
+>> un-alterable" crazy legalese blurbs [1] prefix this:
+>>=20
+>> "DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER"
+>>=20
+>> These will have to be taken care on a case by case basis. These are
+>> pretty stupid and IMHO should have never been allowed to be added to
+>> the kernel in the first place and are ugly warts. It could very well
+>> be that these are not really GPL-compliant notices FWIW: keeping
+>> notices and copyrights is quite different from a restriction of
+>> altering things by moving them around which is exactly what is
+>> happening with the SPDX-ification here.
+>>=20
+>> [1] =
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/dr=
+ivers/staging/lustre/include/linux/libcfs/libcfs.h?h=3Dv4.15-rc5#n5
+>=20
+> Lustre is now owned by Intel so I suspect that some throat clearing
+> noises in the right direction could easily take care of the issue with
+> those files....
 
-Agreed with regard to the growing directories scenario. The thought was
-more around first: avoiding any potential negative effects for other
-workloads, and second: perhaps constructing a more generally applicable
-optimization (cases beyond purely seqential directory grow).
+To correct this, the copyright on the Lustre code is not owned by Intel.
+The copyright on the original Lustre code was transferred from Oracle to
+Seagate a few years ago, but the code that Whamcloud->Intel used for =
+their
+release (which is what the kernel client is based on) was forked many =
+years
+ago from the Oracle version (all under GPL).  There is no single =
+copyright
+holder anymore, since there is no copyright assignment for new =
+contributions
+and it is copyright by whomever contributed it, as with the kernel =
+itself.
 
-> > Hmm, thinking a little more about it, that may not be worth the
-> > complication since part of the concept of "search failure" in this case
-> > is tied to the size of the entry we want to add. Then again, I suppose
-> > such is the case when searching forward/backward as well (i.e., one
-> > large insert fails, grows inode, subsequent small insert may very well
-> > have succeeded with the first freeblock, though now we'd always start at
-> > the recently allocated block at the end).
-> 
-> Right. random hole filling in the directory shouldn't be greatly
-> affected by forward or reverse search order - the eventual search
-> distances are all the same. It does, OTOH, matter greatly for
-> sequntial inserts...
-> 
+I don't see any issue with leaving those header blocks as-is?
 
-Yeah, I think that's a reasonable argument for simply swapping the
-search order (i.e., addresses the first concern above).
+Cheers, Andreas
 
-> After sleeping on it, I suspect that there's a simple on-disk mod to
-> the dir3 header that will improve the search function for all
-> workloads. The dir3 free block header:
-> 
-> struct xfs_dir3_free_hdr {
->         struct xfs_dir3_blk_hdr hdr;
->         __be32                  firstdb;        /* db of first entry */
->         __be32                  nvalid;         /* count of valid entries */
->         __be32                  nused;          /* count of used entries */
->         __be32                  pad;            /* 64 bit alignment */
-> };
-> 
-> has 32 bits of padding in it, and the most entries a free block can
-> have is just under 2^15. Hence we can turn that into a "bestfree"
-> entry that tracks the largest freespace indexed by the block.
-> 
-> Then the free block scan can start by checking the required length
-> against the largest freespace in the bestfree entry and skip the
-> block search altogether if there isn't an indexed block with enough
-> free space inside the freespace index block we are searching.
-> 
 
-So with this we'd still need to walk the range of free blocks, right?
-I.e., we'd just be able to shortcut individual free block processing
-(bests[] iteration) for those that obviously don't satisfy the request.
 
-Assuming I follow that correctly, that sounds reasonable from the
-perspective that it certainly eliminates work. I suppose how worthwhile
-it is probably depends on how much of an effect it has on the higher
-level directory workload. IOW, is performance measurably improved by
-skipping individual free block processing or is that cost mostly
-amortized by having to read/walk all free blocks in the first place?
 
-It may very well be a worthwhile optimization. I think the larger point
-is that more isolated testing is probably required to confirm. The
-improvement from this patch alone doesn't necessarily translate to an
-answer one way or another because this patch creates conditions that
-allow us to skip most of the scan altogether (by jumping right to the
-most recently added block).
 
-> That's a lot more work than just reversing the search order, but I
-> think it's a mod we should (eventually) make because it is an
-> improvement for all insert workloads, not just growing.
-> 
-> The other (far more complex) option is to turn the freespace index
-> into a btree, like we do with the hash indexes. Not sure we need to
-> spend that much effort on this right now, though.
-> 
-
-*nod*
-
-Brian
-
-> > Anyways, just thinking out loud (and recovering from several weeks
-> > vacation). :P
-> 
-> Welcome back :)
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
