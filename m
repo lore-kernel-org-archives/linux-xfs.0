@@ -1,30 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34256 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751150AbeABRUP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Jan 2018 12:20:15 -0500
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <20171222120556.7435-6-jlayton@kernel.org>
-References: <20171222120556.7435-6-jlayton@kernel.org> <20171222120556.7435-1-jlayton@kernel.org>
-Subject: Re: [PATCH v4 05/19] afs: convert to new i_version API
+Received: from aserp2130.oracle.com ([141.146.126.79]:36431 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751211AbeABRsr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 12:48:47 -0500
+Date: Tue, 2 Jan 2018 09:44:14 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] mkfs: do not allow both "dev" and "name" subopts for
+ log or realtime
+Message-ID: <20180102174414.GC4857@magnolia>
+References: <529c056a-a40c-06b8-a37e-3b1b7e664303@sandeen.net>
+ <6ea46cfb-357b-17c4-fc5f-65598431526f@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <5111.1514913610.1@warthog.procyon.org.uk>
-Date: Tue, 02 Jan 2018 17:20:10 +0000
-Message-ID: <5112.1514913610@warthog.procyon.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6ea46cfb-357b-17c4-fc5f-65598431526f@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: dhowells@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, jaltman@auristor.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Jeff Layton <jlayton@kernel.org> wrote:
+On Sun, Dec 24, 2017 at 11:12:13AM -0800, Eric Sandeen wrote:
+> Today we can specify i.e. both logdev= and name= ;
+> it works, with last-parsed-wins behavior:
+> 
+> mkfs.xfs -f -l logdev=/dev/sda1,name=/dev/sda2 /dev/sda3
+> 
+> Make these conflict to resolve ambiguity; do the same for
+> the realtime subvol.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-> Note that AFS has quite a different definition for this counter. AFS
-> only increments it on changes to the data, not for the metadata.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-This also applies to AFS directories: create, mkdir, unlink, rmdir, link,
-symlink, rename, and mountpoint creation/removal all bump the data version
-number on a directory by exactly one if they change it.
-
-David
+> ---
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 035af03..5ae67d5 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -507,6 +507,7 @@ struct opt_params lopts = {
+>  		},
+>  		{ .index = L_DEV,
+>  		  .conflicts = { { &lopts, L_AGNUM },
+> +				 { &lopts, L_NAME },
+>  				 { &lopts, L_INTERNAL },
+>  				 { &lopts, LAST_CONFLICT } },
+>  		  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -529,6 +530,7 @@ struct opt_params lopts = {
+>  		},
+>  		{ .index = L_NAME,
+>  		  .conflicts = { { &lopts, L_AGNUM },
+> +				 { &lopts, L_DEV },
+>  				 { &lopts, L_INTERNAL },
+>  				 { &lopts, LAST_CONFLICT } },
+>  		  .defaultval = SUBOPT_NEEDS_VAL,
+> @@ -599,7 +601,8 @@ struct opt_params ropts = {
+>  		  .defaultval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = R_DEV,
+> -		  .conflicts = { { &ropts, LAST_CONFLICT } },
+> +		  .conflicts = { { &ropts, R_NAME },
+> +			         { &ropts, LAST_CONFLICT } },
+>  		  .defaultval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = R_FILE,
+> @@ -609,7 +612,8 @@ struct opt_params ropts = {
+>  		  .conflicts = { { &ropts, LAST_CONFLICT } },
+>  		},
+>  		{ .index = R_NAME,
+> -		  .conflicts = { { &ropts, LAST_CONFLICT } },
+> +		  .conflicts = { { &ropts, R_DEV },
+> +			         { &ropts, LAST_CONFLICT } },
+>  		  .defaultval = SUBOPT_NEEDS_VAL,
+>  		},
+>  		{ .index = R_NOALIGN,
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
