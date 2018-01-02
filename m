@@ -1,70 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:48627 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750873AbeACBTa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 20:19:30 -0500
-Date: Wed, 3 Jan 2018 12:19:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Block size and read-modify-write
-Message-ID: <20180103011926.GJ5858@dastard>
-References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
- <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:35800 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751097AbeABQui (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Jan 2018 11:50:38 -0500
+Date: Tue, 2 Jan 2018 17:50:34 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 16/19] fs: only set S_VERSION when updating times if
+ necessary
+Message-ID: <20180102165034.GA4911@quack2.suse.cz>
+References: <20171222120556.7435-1-jlayton@kernel.org>
+ <20171222120556.7435-17-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
+In-Reply-To: <20171222120556.7435-17-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>, linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
 
-On Tue, Jan 02, 2018 at 11:25:39AM +0100, Carlos Maiolino wrote:
-> On Fri, Dec 29, 2017 at 12:14:14AM +0100, Gionatan Danti wrote:
-> > Hi list,
-> > I would ask a question: how XFS block size affect read-modify-write in case
-> > of very small writes?
-> > 
+On Fri 22-12-17 07:05:53, Jeff Layton wrote:
+> From: Jeff Layton <jlayton@redhat.com>
 > 
-> Hi,
+> We only really need to update i_version if someone has queried for it
+> since we last incremented it. By doing that, we can avoid having to
+> update the inode if the times haven't changed.
 > 
-> > For example, suppose an XFS filesystem with the default 4K data block size.
-> > Am I correct saying that:
-> > - a 512B normal, cached writes will cause a read-modify-write of the entire
-> > 4K sector?
-
-Cached writes smaller than a *page* will cause RMW cycles in the
-page cache, regardless of the block size of the filesystem.
-
-> > - a 512B O_DIRECT write will *not* cause a read-modify-write of the 4K
-> > sector, rather it will be flushed to disk as-is (512 bytes in length)?
-
-Ok, there is a difference between *sector size* and *filesystem
-block size*. You seem to be using them interchangably in your
-question, and that's not correct.
-
-> IIRC, although the DIO requirement is to have writes aligned to the logical sector
-> size, issuing such IOs not properly aligned with the filesystem block size, have
-> a few consequences.
+> If the times have changed, then we go ahead and forcibly increment the
+> counter, under the assumption that we'll be going to the storage
+> anyway, and the increment itself is relatively cheap.
 > 
-> - It will require exclusive inode io locks, so serializing IOs to the inode
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> ---
+>  fs/inode.c | 10 +++++++---
+>  1 file changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 19e72f500f71..2fa920188759 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -1635,17 +1635,21 @@ static int relatime_need_update(const struct path *path, struct inode *inode,
+>  int generic_update_time(struct inode *inode, struct timespec *time, int flags)
+>  {
+>  	int iflags = I_DIRTY_TIME;
+> +	bool dirty = false;
+>  
+>  	if (flags & S_ATIME)
+>  		inode->i_atime = *time;
+>  	if (flags & S_VERSION)
+> -		inode_inc_iversion(inode);
+> +		dirty |= inode_maybe_inc_iversion(inode, dirty);
+>  	if (flags & S_CTIME)
+>  		inode->i_ctime = *time;
+>  	if (flags & S_MTIME)
+>  		inode->i_mtime = *time;
+> +	if ((flags & (S_ATIME | S_CTIME | S_MTIME)) &&
+> +	    !(inode->i_sb->s_flags & SB_LAZYTIME))
+> +		dirty = true;
 
-That is correct, but....
+When you pass 'dirty' to inode_maybe_inc_iversion(), it is always false.
+Maybe this condition should be at the beginning of the function? Once you
+fix that the patch looks good so you can add:
 
-> - And yes, it will require a RMW to the block in question, all IO are always
->   made in filesystem block size units.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-.... this is not correct for direct IO. The direct IO path does not
-do RMW cycles at all.
 
-Put simply: a 512B DIO write on a (real or emulated) 512B sector
-device with a 4k FSB will be serialised by the filesystem and do a
-single 512B sector write to the device.  However, if the device
-reports as a 4k sector device then a 512B DIO write will be rejected
-by the filesystem because sub-sector IO is not possible.
-
-Cheers,
-
-Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
