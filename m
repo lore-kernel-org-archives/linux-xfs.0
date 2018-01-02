@@ -1,72 +1,402 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35800 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36418 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751097AbeABQui (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Jan 2018 11:50:38 -0500
-Date: Tue, 2 Jan 2018 17:50:34 +0100
+        id S1750960AbeABRAI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Jan 2018 12:00:08 -0500
+Date: Tue, 2 Jan 2018 18:00:05 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 16/19] fs: only set S_VERSION when updating times if
- necessary
-Message-ID: <20180102165034.GA4911@quack2.suse.cz>
+Subject: Re: [PATCH v4 19/19] fs: handle inode->i_version more efficiently
+Message-ID: <20180102170005.GB4911@quack2.suse.cz>
 References: <20171222120556.7435-1-jlayton@kernel.org>
- <20171222120556.7435-17-jlayton@kernel.org>
+ <20171222120556.7435-20-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20171222120556.7435-17-jlayton@kernel.org>
+In-Reply-To: <20171222120556.7435-20-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jeff Layton <jlayton@kernel.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
 
-On Fri 22-12-17 07:05:53, Jeff Layton wrote:
+On Fri 22-12-17 07:05:56, Jeff Layton wrote:
 > From: Jeff Layton <jlayton@redhat.com>
 > 
-> We only really need to update i_version if someone has queried for it
-> since we last incremented it. By doing that, we can avoid having to
-> update the inode if the times haven't changed.
+> Since i_version is mostly treated as an opaque value, we can exploit that
+> fact to avoid incrementing it when no one is watching. With that change,
+> we can avoid incrementing the counter on writes, unless someone has
+> queried for it since it was last incremented. If the a/c/mtime don't
+> change, and the i_version hasn't changed, then there's no need to dirty
+> the inode metadata on a write.
 > 
-> If the times have changed, then we go ahead and forcibly increment the
-> counter, under the assumption that we'll be going to the storage
-> anyway, and the increment itself is relatively cheap.
+> Convert the i_version counter to an atomic64_t, and use the lowest order
+> bit to hold a flag that will tell whether anyone has queried the value
+> since it was last incremented.
+> 
+> When we go to maybe increment it, we fetch the value and check the flag
+> bit.  If it's clear then we don't need to do anything if the update
+> isn't being forced.
+> 
+> If we do need to update, then we increment the counter by 2, and clear
+> the flag bit, and then use a CAS op to swap it into place. If that
+> works, we return true. If it doesn't then do it again with the value
+> that we fetch from the CAS operation.
+> 
+> On the query side, if the flag is already set, then we just shift the
+> value down by 1 bit and return it. Otherwise, we set the flag in our
+> on-stack value and again use cmpxchg to swap it into place if it hasn't
+> changed. If it has, then we use the value from the cmpxchg as the new
+> "old" value and try again.
+> 
+> This method allows us to avoid incrementing the counter on writes (and
+> dirtying the metadata) under typical workloads. We only need to increment
+> if it has been queried since it was last changed.
 > 
 > Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> ---
->  fs/inode.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 19e72f500f71..2fa920188759 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -1635,17 +1635,21 @@ static int relatime_need_update(const struct path *path, struct inode *inode,
->  int generic_update_time(struct inode *inode, struct timespec *time, int flags)
->  {
->  	int iflags = I_DIRTY_TIME;
-> +	bool dirty = false;
->  
->  	if (flags & S_ATIME)
->  		inode->i_atime = *time;
->  	if (flags & S_VERSION)
-> -		inode_inc_iversion(inode);
-> +		dirty |= inode_maybe_inc_iversion(inode, dirty);
->  	if (flags & S_CTIME)
->  		inode->i_ctime = *time;
->  	if (flags & S_MTIME)
->  		inode->i_mtime = *time;
-> +	if ((flags & (S_ATIME | S_CTIME | S_MTIME)) &&
-> +	    !(inode->i_sb->s_flags & SB_LAZYTIME))
-> +		dirty = true;
 
-When you pass 'dirty' to inode_maybe_inc_iversion(), it is always false.
-Maybe this condition should be at the beginning of the function? Once you
-fix that the patch looks good so you can add:
+Looks good to me. You can add:
 
 Reviewed-by: Jan Kara <jack@suse.cz>
 
-
 								Honza
+
+> ---
+>  include/linux/fs.h       |   2 +-
+>  include/linux/iversion.h | 208 ++++++++++++++++++++++++++++++++++-------------
+>  2 files changed, 154 insertions(+), 56 deletions(-)
+> 
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 76382c24e9d0..6804d075933e 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -639,7 +639,7 @@ struct inode {
+>  		struct hlist_head	i_dentry;
+>  		struct rcu_head		i_rcu;
+>  	};
+> -	u64			i_version;
+> +	atomic64_t		i_version;
+>  	atomic_t		i_count;
+>  	atomic_t		i_dio_count;
+>  	atomic_t		i_writecount;
+> diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+> index e08c634779df..cef242e54489 100644
+> --- a/include/linux/iversion.h
+> +++ b/include/linux/iversion.h
+> @@ -5,6 +5,8 @@
+>  #include <linux/fs.h>
+>  
+>  /*
+> + * The inode->i_version field:
+> + * ---------------------------
+>   * The change attribute (i_version) is mandated by NFSv4 and is mostly for
+>   * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
+>   * appear different to observers if there was a change to the inode's data or
+> @@ -27,86 +29,171 @@
+>   * i_version on namespace changes in directories (mkdir, rmdir, unlink, etc.).
+>   * We consider these sorts of filesystems to have a kernel-managed i_version.
+>   *
+> + * This implementation uses the low bit in the i_version field as a flag to
+> + * track when the value has been queried. If it has not been queried since it
+> + * was last incremented, we can skip the increment in most cases.
+> + *
+> + * In the event that we're updating the ctime, we will usually go ahead and
+> + * bump the i_version anyway. Since that has to go to stable storage in some
+> + * fashion, we might as well increment it as well.
+> + *
+> + * With this implementation, the value should always appear to observers to
+> + * increase over time if the file has changed. It's recommended to use
+> + * inode_cmp_iversion() helper to compare values.
+> + *
+>   * Note that some filesystems (e.g. NFS and AFS) just use the field to store
+> - * a server-provided value (for the most part). For that reason, those
+> + * a server-provided value for the most part. For that reason, those
+>   * filesystems do not set SB_I_VERSION. These filesystems are considered to
+>   * have a self-managed i_version.
+> + *
+> + * Persistently storing the i_version
+> + * ----------------------------------
+> + * Queries of the i_version field are not gated on them hitting the backing
+> + * store. It's always possible that the host could crash after allowing
+> + * a query of the value but before it has made it to disk.
+> + *
+> + * To mitigate this problem, filesystems should always use
+> + * inode_set_iversion_queried when loading an existing inode from disk. This
+> + * ensures that the next attempted inode increment will result in the value
+> + * changing.
+> + *
+> + * Storing the value to disk therefore does not count as a query, so those
+> + * filesystems should use inode_peek_iversion to grab the value to be stored.
+> + * There is no need to flag the value as having been queried in that case.
+>   */
+>  
+> +/*
+> + * We borrow the lowest bit in the i_version to use as a flag to tell whether
+> + * it has been queried since we last incremented it. If it has, then we must
+> + * increment it on the next change. After that, we can clear the flag and
+> + * avoid incrementing it again until it has again been queried.
+> + */
+> +#define I_VERSION_QUERIED_SHIFT	(1)
+> +#define I_VERSION_QUERIED	(1ULL << (I_VERSION_QUERIED_SHIFT - 1))
+> +#define I_VERSION_INCREMENT	(1ULL << I_VERSION_QUERIED_SHIFT)
+> +
+>  /**
+>   * inode_set_iversion_raw - set i_version to the specified raw value
+>   * @inode: inode to set
+> - * @new: new i_version value to set
+> + * @val: new i_version value to set
+>   *
+> - * Set @inode's i_version field to @new. This function is for use by
+> + * Set @inode's i_version field to @val. This function is for use by
+>   * filesystems that self-manage the i_version.
+>   *
+>   * For example, the NFS client stores its NFSv4 change attribute in this way,
+>   * and the AFS client stores the data_version from the server here.
+>   */
+>  static inline void
+> -inode_set_iversion_raw(struct inode *inode, const u64 new)
+> +inode_set_iversion_raw(struct inode *inode, const u64 val)
+> +{
+> +	atomic64_set(&inode->i_version, val);
+> +}
+> +
+> +/**
+> + * inode_peek_iversion_raw - grab a "raw" iversion value
+> + * @inode: inode from which i_version should be read
+> + *
+> + * Grab a "raw" inode->i_version value and return it. The i_version is not
+> + * flagged or converted in any way. This is mostly used to access a self-managed
+> + * i_version.
+> + *
+> + * With those filesystems, we want to treat the i_version as an entirely
+> + * opaque value.
+> + */
+> +static inline u64
+> +inode_peek_iversion_raw(const struct inode *inode)
+>  {
+> -	inode->i_version = new;
+> +	return atomic64_read(&inode->i_version);
+>  }
+>  
+>  /**
+>   * inode_set_iversion - set i_version to a particular value
+>   * @inode: inode to set
+> - * @new: new i_version value to set
+> + * @val: new i_version value to set
+>   *
+> - * Set @inode's i_version field to @new. This function is for filesystems with
+> - * a kernel-managed i_version.
+> + * Set @inode's i_version field to @val. This function is for filesystems with
+> + * a kernel-managed i_version, for initializing a newly-created inode from
+> + * scratch.
+>   *
+> - * For now, this just does the same thing as the _raw variant.
+> + * In this case, we do not set the QUERIED flag since we know that this value
+> + * has never been queried.
+>   */
+>  static inline void
+> -inode_set_iversion(struct inode *inode, const u64 new)
+> +inode_set_iversion(struct inode *inode, const u64 val)
+>  {
+> -	inode_set_iversion_raw(inode, new);
+> +	inode_set_iversion_raw(inode, val << I_VERSION_QUERIED_SHIFT);
+>  }
+>  
+>  /**
+> - * inode_set_iversion_queried - set i_version to a particular value and set
+> - *                              flag to indicate that it has been viewed
+> + * inode_set_iversion_queried - set i_version to a particular value as quereied
+>   * @inode: inode to set
+> - * @new: new i_version value to set
+> + * @val: new i_version value to set
+>   *
+> - * When loading in an i_version value from a backing store, we typically don't
+> - * know whether it was previously viewed before being stored or not. Thus, we
+> - * must assume that it was, to ensure that any changes will result in the
+> - * value changing.
+> + * Set @inode's i_version field to @val, and flag it for increment on the next
+> + * change.
+>   *
+> - * This function will set the inode's i_version, and possibly flag the value
+> - * as if it has already been viewed at least once.
+> + * Filesystems that persistently store the i_version on disk should use this
+> + * when loading an existing inode from disk.
+>   *
+> - * For now, this just does what inode_set_iversion does.
+> + * When loading in an i_version value from a backing store, we can't be certain
+> + * that it wasn't previously viewed before being stored. Thus, we must assume
+> + * that it was, to ensure that we don't end up handing out the same value for
+> + * different versions of the same inode.
+>   */
+>  static inline void
+> -inode_set_iversion_queried(struct inode *inode, const u64 new)
+> +inode_set_iversion_queried(struct inode *inode, const u64 val)
+>  {
+> -	inode_set_iversion(inode, new);
+> +	inode_set_iversion_raw(inode, (val << I_VERSION_QUERIED_SHIFT) |
+> +				I_VERSION_QUERIED);
+>  }
+>  
+>  /**
+>   * inode_maybe_inc_iversion - increments i_version
+>   * @inode: inode with the i_version that should be updated
+> - * @force: increment the counter even if it's not necessary
+> + * @force: increment the counter even if it's not necessary?
+>   *
+>   * Every time the inode is modified, the i_version field must be seen to have
+>   * changed by any observer.
+>   *
+> - * In this implementation, we always increment it after taking the i_lock to
+> - * ensure that we don't race with other incrementors.
+> + * If "force" is set or the QUERIED flag is set, then ensure that we increment
+> + * the value, and clear the queried flag.
+>   *
+> - * Returns true if counter was bumped, and false if it wasn't.
+> + * In the common case where neither is set, then we can return "false" without
+> + * updating i_version.
+> + *
+> + * If this function returns false, and no other metadata has changed, then we
+> + * can avoid logging the metadata.
+>   */
+>  static inline bool
+>  inode_maybe_inc_iversion(struct inode *inode, bool force)
+>  {
+> -	atomic64_t *ivp = (atomic64_t *)&inode->i_version;
+> +	u64 cur, old, new;
+> +
+> +	/*
+> +	 * The i_version field is not strictly ordered with any other inode
+> +	 * information, but the legacy inode_inc_iversion code used a spinlock
+> +	 * to serialize increments.
+> +	 *
+> +	 * Here, we add full memory barriers to ensure that any de-facto
+> +	 * ordering with other info is preserved.
+> +	 *
+> +	 * This barrier pairs with the barrier in inode_query_iversion()
+> +	 */
+> +	smp_mb();
+> +	cur = inode_peek_iversion_raw(inode);
+> +	for (;;) {
+> +		/* If flag is clear then we needn't do anything */
+> +		if (!force && !(cur & I_VERSION_QUERIED))
+> +			return false;
+>  
+> -	atomic64_inc(ivp);
+> +		/* Since lowest bit is flag, add 2 to avoid it */
+> +		new = (cur & ~I_VERSION_QUERIED) + I_VERSION_INCREMENT;
+> +
+> +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
+> +		if (likely(old == cur))
+> +			break;
+> +		cur = old;
+> +	}
+>  	return true;
+>  }
+>  
+> @@ -129,31 +216,12 @@ inode_inc_iversion(struct inode *inode)
+>   * @inode: inode to check
+>   *
+>   * Returns whether the inode->i_version counter needs incrementing on the next
+> - * change.
+> - *
+> - * For now, we assume that it always does.
+> + * change. Just fetch the value and check the QUERIED flag.
+>   */
+>  static inline bool
+>  inode_iversion_need_inc(struct inode *inode)
+>  {
+> -	return true;
+> -}
+> -
+> -/**
+> - * inode_peek_iversion_raw - grab a "raw" iversion value
+> - * @inode: inode from which i_version should be read
+> - *
+> - * Grab a "raw" inode->i_version value and return it. The i_version is not
+> - * flagged or converted in any way. This is mostly used to access a self-managed
+> - * i_version.
+> - *
+> - * With those filesystems, we want to treat the i_version as an entirely
+> - * opaque value.
+> - */
+> -static inline u64
+> -inode_peek_iversion_raw(const struct inode *inode)
+> -{
+> -	return inode->i_version;
+> +	return inode_peek_iversion_raw(inode) & I_VERSION_QUERIED;
+>  }
+>  
+>  /**
+> @@ -170,7 +238,7 @@ inode_peek_iversion_raw(const struct inode *inode)
+>  static inline u64
+>  inode_peek_iversion(const struct inode *inode)
+>  {
+> -	return inode_peek_iversion_raw(inode);
+> +	return inode_peek_iversion_raw(inode) >> I_VERSION_QUERIED_SHIFT;
+>  }
+>  
+>  /**
+> @@ -182,12 +250,35 @@ inode_peek_iversion(const struct inode *inode)
+>   * that a later query of the i_version will result in a different value if
+>   * anything has changed.
+>   *
+> - * This implementation just does a peek.
+> + * In this implementation, we fetch the current value, set the QUERIED flag and
+> + * then try to swap it into place with a cmpxchg, if it wasn't already set. If
+> + * that fails, we try again with the newly fetched value from the cmpxchg.
+>   */
+>  static inline u64
+>  inode_query_iversion(struct inode *inode)
+>  {
+> -	return inode_peek_iversion(inode);
+> +	u64 cur, old, new;
+> +
+> +	cur = inode_peek_iversion_raw(inode);
+> +	for (;;) {
+> +		/* If flag is already set, then no need to swap */
+> +		if (cur & I_VERSION_QUERIED) {
+> +			/*
+> +			 * This barrier (and the implicit barrier in the
+> +			 * cmpxchg below) pairs with the barrier in
+> +			 * inode_maybe_inc_iversion().
+> +			 */
+> +			smp_mb();
+> +			break;
+> +		}
+> +
+> +		new = cur | I_VERSION_QUERIED;
+> +		old = atomic64_cmpxchg(&inode->i_version, cur, new);
+> +		if (likely(old == cur))
+> +			break;
+> +		cur = old;
+> +	}
+> +	return cur >> I_VERSION_QUERIED_SHIFT;
+>  }
+>  
+>  /**
+> @@ -196,11 +287,18 @@ inode_query_iversion(struct inode *inode)
+>   * @old: old value to check against its i_version
+>   *
+>   * Compare an i_version counter with a previous one. Returns 0 if they are
+> - * the same or non-zero if they are different.
+> + * the same, a positive value if the one in the inode appears newer than @old,
+> + * and a negative value if @old appears to be newer than the one in the
+> + * inode.
+> + *
+> + * Note that we don't need to set the QUERIED flag in this case, as the value
+> + * in the inode is not being recorded for later use.
+>   */
+> +
+>  static inline s64
+>  inode_cmp_iversion(const struct inode *inode, const u64 old)
+>  {
+> -	return (s64)inode_peek_iversion(inode) - (s64)old;
+> +	return (s64)(inode_peek_iversion_raw(inode) & ~I_VERSION_QUERIED) -
+> +	       (s64)(old << I_VERSION_QUERIED_SHIFT);
+>  }
+>  #endif
+> -- 
+> 2.14.3
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
