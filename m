@@ -1,156 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:20156 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750934AbeABXAz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 18:00:55 -0500
-Date: Wed, 3 Jan 2018 10:00:27 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:9343 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750917AbeABXLg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 18:11:36 -0500
+Date: Wed, 3 Jan 2018 10:11:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 18/18] xfs, dax: wire up dax_flush_dma support via a
- new xfs_sync_dma helper
-Message-ID: <20180102230027.GV5858@dastard>
-References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151407705701.38751.6157642918168721562.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: Re: [PATCH 01/20] xfs: remove XFS_FSB_SANITY_CHECK
+Message-ID: <20180102231132.GW5858@dastard>
+References: <151399122361.23543.15718507168231759645.stgit@magnolia>
+ <151399122992.23543.9403402573788285274.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151407705701.38751.6157642918168721562.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <151399122992.23543.9403402573788285274.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, jack@suse.cz, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Dec 23, 2017 at 04:57:37PM -0800, Dan Williams wrote:
-> xfs_break_layouts() scans for active pNFS layouts, drops locks and
-> rescans for those layouts to be broken. xfs_sync_dma performs
-> xfs_break_layouts and also scans for active dax-dma pages, drops locks
-> and rescans for those pages to go idle.
+On Fri, Dec 22, 2017 at 05:07:09PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> dax_flush_dma handles synchronizing against new page-busy events
-> (get_user_pages). iIt invalidates all mappings to trigger the
-> get_user_pages slow path which will eventually block on the
-> XFS_MMAPLOCK. If it finds a dma-busy page it waits for a page-idle
-> callback that will fire when the page reference count reaches 1 (recall
-> ZONE_DEVICE pages are idle at count 1). While it is waiting, it drops
-> locks so we do not deadlock the process that might be trying to elevate
-> the page count of more pages before arranging for any of them to go idle
-> as is typically the case of iov_iter_get_pages.
+> We already have a function to verify fsb pointers, so get rid of the
+> last users of the (less robust) macro.
 > 
-> dax_flush_dma relies on the fs-provided wait_atomic_t_action_f
-> (xfs_wait_dax_page) to handle evaluating the page reference count and
-> dropping locks when waiting.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I don't see a problem with supporting this functionality, but I
-see lots of problems with the code being presented. First of all,
-I think the "sync dma" abstraction here is all wrong.
+Nice little cleanup :)
 
-In the case of the filesystem, we don't care about whether DMA has
-completed or not, and we *shouldn't have to care* about deep, dark
-secrets of other subsystems.
-
-If I read the current code, I see this in all the "truncate" paths:
-
-	start op
-	break layout leases
-	change layout
-
-and in the IO path:
-
-	start IO
-	break layout leases
-	map IO
-	issue IO
-
-What this change does is make the truncate paths read:
-
-	start op
-	sync DMA
-	change layout
-
-but the IO path is unchanged. (This is not explained in comments or
-commit messages).
-
-And I look at that "sync DMA" step and wonder why the hell we need
-to "sync DMA" because DMA has nothing to do with high level
-filesystem code. It doesn't tell me anything obvious about why we
-need to do this, nor does it tell me what we're actually
-synchronising against.
-
-What we care about in the filesystem code is whether there are
-existing external references to file layout. If there's an external
-reference, then it has to be broken before we can proceed and modify
-the file layout. We don't care what owns that reference, just that
-it has to broken before we continue.
-
-AFAIC, these DMA references are just another external layout
-reference that needs to be broken.  IOWs, this "sync DMA" complexity
-needs to go inside xfs_break_layouts() as it is part of breaking the
-external reference to the file layout - it does not replace the
-layout breaking abstraction and so the implementation needs to
-reflect that.
-
-> + * Synchronize [R]DMA before changing the file's block map. For pNFS,
-> + * recall all layouts. For DAX, wait for transient DMA to complete. All
-> + * other DMA is handled by pinning page cache pages.
-> + *
-> + * iolock must held XFS_IOLOCK_SHARED or XFS_IOLOCK_EXCL on entry and
-> + * will be XFS_IOLOCK_EXCL and XFS_MMAPLOCK_EXCL on exit.
-> + */
-> +int xfs_sync_dma(
-> +	struct inode		*inode,
-> +	uint			*iolock)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	int			error;
-> +
-> +	while (true) {
-> +		error = xfs_break_layouts(inode, iolock);
-> +		if (error)
-> +			break;
-> +
-> +		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> +		*iolock |= XFS_MMAPLOCK_EXCL;
-> +
-> +		error = dax_flush_dma(inode->i_mapping, xfs_wait_dax_page);
-> +		if (error <= 0)
-> +			break;
-> +		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> +		*iolock &= ~XFS_MMAPLOCK_EXCL;
-> +	}
-
-At this level the loop seems sub-optimal. If we don't drop the
-IOLOCK, then we have no reason to call xfs_break_layouts() a second
-time.  Hence in isolation this loop doesn' make sense. Yes, I
-realise that dax_flush_dma() can result in all locks on the inode
-being dropped, but that's hidden in another function whose calling
-scope is not at all obvious from this code.
-
-Also, xfs_wait_dax_page() assumes we have IOLOCK_EXCL held when it
-is called. Nothing enforces the requirement that xfs_sync_dma() is
-passed XFS_IOLOCK_EXCL, and so such assumptions cannot be made.
-Even if it was, I really dislike the idea of a function that
-/assumes/ lock state - that's a landmine that will bite us in the
-rear end at some unexpected point in the future. If you need to
-cycle held locks on an inode, you need to pass the held lock state
-to the function.
-
-Another gripe I have is that calling xfs_sync_dma() implies the mmap
-lock is held exclusively on return. Hiding this locking inside
-xfs_sync_dma removes the code documentation that large tracts of
-code are protected against page faults by the XFS_MMAPLOCK_EXCL lock
-call.  Instead of knowing at a glance that the truncate path
-(xfs_vn_setattr) is protected against page faults, I have to
-remember that xfs_sync_dma() now does this.
-
-This goes back to my initial comments of "what the hell does "sync
-dma" mean in a filesystem context?" - it certainly doesn't make me
-think about inode locking. I don't like hidden/implicitly locking
-like this, because it breaks both the least-surprise and the
-self-documenting code principles....
-
-Cheers,
-
-Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
