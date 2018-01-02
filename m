@@ -1,120 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:41937 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbeABUfu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 15:35:50 -0500
-Received: by mail-ot0-f194.google.com with SMTP id q39so38045216otb.8
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Jan 2018 12:35:50 -0800 (PST)
+Received: from userp2130.oracle.com ([156.151.31.86]:38207 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750745AbeABUnX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 15:43:23 -0500
+Date: Tue, 2 Jan 2018 12:38:19 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: destroy mutex qi_tree_lock before free
+ xfs_quotainfo_t object
+Message-ID: <20180102203819.GF4857@magnolia>
+References: <20171224123447.2998-1-sxwjean@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171227180836.GA14641@linux.intel.com>
-References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151407700353.38751.17609507477918854876.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171227180836.GA14641@linux.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 2 Jan 2018 12:35:49 -0800
-Message-ID: <CAPcyv4gV7UiWAxqq0MWmMX6t=aV0qncKWW60wUzq40tgE_T=3g@mail.gmail.com>
-Subject: Re: [PATCH v4 08/18] tools/testing/nvdimm: add 'bio_delay' mechanism
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171224123447.2998-1-sxwjean@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Xiongwei Song <sxwjean@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Dec 27, 2017 at 10:08 AM, Ross Zwisler
-<ross.zwisler@linux.intel.com> wrote:
-> On Sat, Dec 23, 2017 at 04:56:43PM -0800, Dan Williams wrote:
->> In support of testing truncate colliding with dma add a mechanism that
->> delays the completion of block I/O requests by a programmable number of
->> seconds. This allows a truncate operation to be issued while page
->> references are held for direct-I/O.
->>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->
->> @@ -387,4 +389,64 @@ union acpi_object * __wrap_acpi_evaluate_dsm(acpi_handle handle, const guid_t *g
->>  }
->>  EXPORT_SYMBOL(__wrap_acpi_evaluate_dsm);
->>
->> +static DEFINE_SPINLOCK(bio_lock);
->> +static struct bio *biolist;
->> +int bio_do_queue;
->> +
->> +static void run_bio(struct work_struct *work)
->> +{
->> +     struct delayed_work *dw = container_of(work, typeof(*dw), work);
->> +     struct bio *bio, *next;
->> +
->> +     pr_info("%s\n", __func__);
->
-> Did you mean to leave this print in, or was it part of your debug while
-> developing?  I don't see any other prints in the rest of the nvdimm testing
-> code?
->
->> +     spin_lock(&bio_lock);
->> +     bio_do_queue = 0;
->> +     bio = biolist;
->> +     biolist = NULL;
->> +     spin_unlock(&bio_lock);
->> +
->> +     while (bio) {
->> +             next = bio->bi_next;
->> +             bio->bi_next = NULL;
->> +             bio_endio(bio);
->> +             bio = next;
->> +     }
->> +     kfree(dw);
->> +}
->> +
->> +void nfit_test_inject_bio_delay(int sec)
->> +{
->> +     struct delayed_work *dw = kzalloc(sizeof(*dw), GFP_KERNEL);
->> +
->> +     spin_lock(&bio_lock);
->> +     if (!bio_do_queue) {
->> +             pr_info("%s: %d seconds\n", __func__, sec);
->
-> Ditto with this print - did you mean to leave it in?
+On Sun, Dec 24, 2017 at 08:34:47PM +0800, Xiongwei Song wrote:
+> The mutex qi_tree_lock of xfs_quotainfo_t object was initialized when
+> calling xfs_qm_init_quotainfo, but it was not destroyed before free
+> xfs_quotainfo_t object when calling xfs_qm_destroy_quotainfo, this was
+> incorrect, so destroy it in function xfs_qm_destroy_quotainfo.
 
-Yes, this one plus the previous one are in there deliberately so that
-I can see the injection / completion of the delay relative to when the
-test is performing direct-i/o.
+Already in for-next, but thank you for catching this.
 
->
->> +             INIT_DELAYED_WORK(dw, run_bio);
->> +             bio_do_queue = 1;
->> +             schedule_delayed_work(dw, sec * HZ);
->> +             dw = NULL;
->
-> Why set dw = NULL here?  In the else case we leak dw - was this dw=NULL meant
-> to allow a kfree(dw) after we get out of the if() (and probably after we drop
-> the spinlock)?
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=2196881566225f3c3428d1a5f847a992944daa5b
 
-Something like that, but now it's just a leftover from an initial
-version of the code, will delete.
+--D
 
->> +     }
->> +     spin_unlock(&bio_lock);
->> +}
->> +EXPORT_SYMBOL_GPL(nfit_test_inject_bio_delay);
->> +
->
->> diff --git a/tools/testing/nvdimm/test/nfit.c b/tools/testing/nvdimm/test/nfit.c
->> index 7217b2b953b5..9362b01e9a8f 100644
->> --- a/tools/testing/nvdimm/test/nfit.c
->> +++ b/tools/testing/nvdimm/test/nfit.c
->> @@ -872,6 +872,39 @@ static const struct attribute_group *nfit_test_dimm_attribute_groups[] = {
->>       NULL,
->>  };
->>
->> +static ssize_t bio_delay_show(struct device_driver *drv, char *buf)
->> +{
->> +     return sprintf(buf, "0\n");
->> +}
->
-> It doesn't seem like this _show() routine adds much?  We could have it print
-> out the value of 'bio_do_queue' so we can see if we are currently queueing
-> bios in a workqueue element, but that suffers pretty badly from a TOCTOU race.
->
-> Otherwise we could just omit the _show() altogether and just use
-> DRIVER_ATTR_WO(bio_delay).
-
-Sure.
+> Signed-off-by: Xiongwei Song <sxwjean@gmail.com>
+> ---
+>  fs/xfs/xfs_qm.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index ec952dfad359..deceef5cbbf3 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -737,6 +737,7 @@ xfs_qm_destroy_quotainfo(
+>  		qi->qi_pquotaip = NULL;
+>  	}
+>  	mutex_destroy(&qi->qi_quotaofflock);
+> +	mutex_destroy(&qi->qi_tree_lock);
+>  	kmem_free(qi);
+>  	mp->m_quotainfo = NULL;
+>  }
+> -- 
+> 2.15.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
