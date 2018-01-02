@@ -1,65 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:46368 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750917AbeABW3f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 17:29:35 -0500
+Received: from bombadil.infradead.org ([65.50.211.133]:52500 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbeABWlk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 17:41:40 -0500
+Date: Tue, 2 Jan 2018 14:41:37 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v5 03/78] xarray: Add the xa_lock to the radix_tree_root
+Message-ID: <20180102224137.GC20405@bombadil.infradead.org>
+References: <20171215220450.7899-1-willy@infradead.org>
+ <20171215220450.7899-4-willy@infradead.org>
+ <20171226165440.tv6inwa2fgk3bfy6@node.shutemov.name>
+ <20171227034340.GC24828@bombadil.infradead.org>
+ <20171227035815.GD24828@bombadil.infradead.org>
+ <20180102180155.GD4857@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180102203819.GF4857@magnolia>
-References: <20171224123447.2998-1-sxwjean@gmail.com> <20180102203819.GF4857@magnolia>
-From: Xiongwei Song <sxwjean@gmail.com>
-Date: Wed, 3 Jan 2018 06:29:34 +0800
-Message-ID: <CAEVVKH8koEUA6CWA0DuPMqmuQ3+MNY+9ZE1Cm2UU2KJ1PabK5w@mail.gmail.com>
-Subject: Re: [PATCH] xfs: destroy mutex qi_tree_lock before free
- xfs_quotainfo_t object
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180102180155.GD4857@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>, linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, David Howells <dhowells@redhat.com>, Shaohua Li <shli@kernel.org>, Jens Axboe <axboe@kernel.dk>, Rehas Sachdeva <aquannie@gmail.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, linux-raid@vger.kernel.org
 
-2018-01-03 4:38 GMT+08:00 Darrick J. Wong <darrick.wong@oracle.com>:
-> On Sun, Dec 24, 2017 at 08:34:47PM +0800, Xiongwei Song wrote:
->> The mutex qi_tree_lock of xfs_quotainfo_t object was initialized when
->> calling xfs_qm_init_quotainfo, but it was not destroyed before free
->> xfs_quotainfo_t object when calling xfs_qm_destroy_quotainfo, this was
->> incorrect, so destroy it in function xfs_qm_destroy_quotainfo.
->
-> Already in for-next, but thank you for catching this.
->
-> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=2196881566225f3c3428d1a5f847a992944daa5b
+On Tue, Jan 02, 2018 at 10:01:55AM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 26, 2017 at 07:58:15PM -0800, Matthew Wilcox wrote:
+> >         spin_lock_irqsave(&mapping->pages, flags);
+> >         __delete_from_page_cache(page, NULL);
+> >         spin_unlock_irqrestore(&mapping->pages, flags);
+> >
+> > More details here: https://9p.io/sys/doc/compiler.html
+> 
+> I read the link, and I understand (from section 3.3) that replacing
+> foo.bar.baz.goo with foo.goo is less typing, but otoh the first time I
+> read your example above I thought "we're passing (an array of pages |
+> something that doesn't have the word 'lock' in the name) to
+> spin_lock_irqsave? wtf?"
 
+I can see that being a bit jarring initially.  If you think about what
+object-oriented languages were offering in the nineties, this is basically
+C++ multiple-inheritance / Java interfaces.  So when I read the above
+example, I think "lock the mapping pages, delete from page cache, unlock
+the mapping pages", and I don't have a wtf moment.  It's just simpler to
+read than "lock the mapping pages lock", and less redundant.
 
-Apologies for the noise.
+> I suppose it does force me to go dig into whatever mapping->pages is to
+> figure out that there's an unnamed spinlock_t and that the compiler can
+> insert the appropriate pointer arithmetic, but now my brain trips over
+> 'pages' being at the end of the selector for parameter 1 which slows
+> down my review reading...
+> 
+> OTOH I guess it /did/ motivate me to click the link, so well played,
+> sir. :)
 
-
-Yours sincerely,
-Xiongwei
-
-
-> --D
->
->> Signed-off-by: Xiongwei Song <sxwjean@gmail.com>
->> ---
->>  fs/xfs/xfs_qm.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
->> index ec952dfad359..deceef5cbbf3 100644
->> --- a/fs/xfs/xfs_qm.c
->> +++ b/fs/xfs/xfs_qm.c
->> @@ -737,6 +737,7 @@ xfs_qm_destroy_quotainfo(
->>               qi->qi_pquotaip = NULL;
->>       }
->>       mutex_destroy(&qi->qi_quotaofflock);
->> +     mutex_destroy(&qi->qi_tree_lock);
->>       kmem_free(qi);
->>       mp->m_quotainfo = NULL;
->>  }
->> --
->> 2.15.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Now if only I can trick you into giving your ACK on patch 1,
+"xfs: Rename xa_ elements to ail_"
