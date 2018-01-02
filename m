@@ -1,509 +1,289 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:42772 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:35476 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753523AbeAFBwD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:52:03 -0500
-Subject: [PATCH 04/27] xfs_scrub: dispatch the various phases of the scrub
- program
+        with ESMTP id S1751238AbeABRql (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 12:46:41 -0500
+Date: Tue, 2 Jan 2018 09:41:36 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 05 Jan 2018 17:51:52 -0800
-Message-ID: <151520351248.2027.5786264613325218836.stgit@magnolia>
-In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
-References: <151520348769.2027.9860697266310422360.stgit@magnolia>
+Subject: Re: [PATCH 2/3] mkfs: pass switch case value directly into
+ getnum/getstr
+Message-ID: <20180102174136.GB4857@magnolia>
+References: <529c056a-a40c-06b8-a37e-3b1b7e664303@sandeen.net>
+ <8d4ef402-e625-3f14-5848-499b9ff82923@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8d4ef402-e625-3f14-5848-499b9ff82923@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Dec 24, 2017 at 11:10:21AM -0800, Eric Sandeen wrote:
+> Parsing did does sort of thing:
 
-Create the dispatching routines that we'll use to call out to each
-separate phase of the program.
+'Parsing does this sort of thing:'?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- configure.ac          |    1 
- include/builddefs.in  |    1 
- m4/package_libcdev.m4 |   18 +++
- scrub/Makefile        |    4 +
- scrub/common.c        |   63 +++++++++++
- scrub/common.h        |    4 +
- scrub/xfs_scrub.c     |  275 +++++++++++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 366 insertions(+)
+> 
+> 	case D_AGCOUNT:
+> 		cli->agcount = getnum(value, opts, D_AGCOUNT);
+> 
+> which is just begging for a cut and paste error between the
+> case value and the enum passed into getnum/getstr.  Pass
+> "subopt" instead so that it is always consistent with the case.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
+Otherwise looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/configure.ac b/configure.ac
-index f83d581..796a91b 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -165,6 +165,7 @@ AC_HAVE_GETFSMAP
- AC_HAVE_STATFS_FLAGS
- AC_HAVE_MAP_SYNC
- AC_HAVE_DEVMAPPER
-+AC_HAVE_MALLINFO
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 9470703..28cf0d8 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -119,6 +119,7 @@ HAVE_GETFSMAP = @have_getfsmap@
- HAVE_STATFS_FLAGS = @have_statfs_flags@
- HAVE_MAP_SYNC = @have_map_sync@
- HAVE_DEVMAPPER = @have_devmapper@
-+HAVE_MALLINFO = @have_mallinfo@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 71cedc5..d3955f0 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -344,3 +344,21 @@ AC_DEFUN([AC_HAVE_MAP_SYNC],
- 	AC_MSG_RESULT(no))
-     AC_SUBST(have_map_sync)
-   ])
-+
-+#
-+# Check if we have a mallinfo libc call
-+#
-+AC_DEFUN([AC_HAVE_MALLINFO],
-+  [ AC_MSG_CHECKING([for mallinfo ])
-+    AC_TRY_COMPILE([
-+#include <malloc.h>
-+    ], [
-+         struct mallinfo test;
-+
-+         test.arena = 0; test.hblkhd = 0; test.uordblks = 0; test.fordblks = 0;
-+         test = mallinfo();
-+    ], have_mallinfo=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_mallinfo)
-+  ])
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 62cca3b..097ec84 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -27,6 +27,10 @@ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
- LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
- LLDFLAGS = -static
- 
-+ifeq ($(HAVE_MALLINFO),yes)
-+LCFLAGS += -DHAVE_MALLINFO
-+endif
-+
- default: depend $(LTCOMMAND)
- 
- include $(BUILDRULES)
-diff --git a/scrub/common.c b/scrub/common.c
-index 3c89b7d..9880ab5 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -159,3 +159,66 @@ do_error(char const *msg, ...)
- 		abort();
- 	exit(1);
- }
-+
-+double
-+timeval_subtract(
-+	struct timeval		*tv1,
-+	struct timeval		*tv2)
-+{
-+	return ((tv1->tv_sec - tv2->tv_sec) +
-+		((float) (tv1->tv_usec - tv2->tv_usec)) / 1000000);
-+}
-+
-+/* Produce human readable disk space output. */
-+double
-+auto_space_units(
-+	unsigned long long	bytes,
-+	char			**units)
-+{
-+	if (debug > 1)
-+		goto no_prefix;
-+	if (bytes > (1ULL << 40)) {
-+		*units = "TiB";
-+		return (double)bytes / (1ULL << 40);
-+	} else if (bytes > (1ULL << 30)) {
-+		*units = "GiB";
-+		return (double)bytes / (1ULL << 30);
-+	} else if (bytes > (1ULL << 20)) {
-+		*units = "MiB";
-+		return (double)bytes / (1ULL << 20);
-+	} else if (bytes > (1ULL << 10)) {
-+		*units = "KiB";
-+		return (double)bytes / (1ULL << 10);
-+	}
-+
-+no_prefix:
-+	*units = "B";
-+	return bytes;
-+}
-+
-+/* Produce human readable discrete number output. */
-+double
-+auto_units(
-+	unsigned long long	number,
-+	char			**units)
-+{
-+	if (debug > 1)
-+		goto no_prefix;
-+	if (number > 1000000000000ULL) {
-+		*units = "T";
-+		return number / 1000000000000.0;
-+	} else if (number > 1000000000ULL) {
-+		*units = "G";
-+		return number / 1000000000.0;
-+	} else if (number > 1000000ULL) {
-+		*units = "M";
-+		return number / 1000000.0;
-+	} else if (number > 1000ULL) {
-+		*units = "K";
-+		return number / 1000.0;
-+	}
-+
-+no_prefix:
-+	*units = "";
-+	return number;
-+}
-diff --git a/scrub/common.h b/scrub/common.h
-index 15a59bd..3afc616 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -56,4 +56,8 @@ debug_tweak_on(
- 	return debug && getenv(name) != NULL;
- }
- 
-+double timeval_subtract(struct timeval *tv1, struct timeval *tv2);
-+double auto_space_units(unsigned long long kilobytes, char **units);
-+double auto_units(unsigned long long number, char **units);
-+
- #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 9db3b41..a9c185b 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -21,6 +21,8 @@
- #include <pthread.h>
- #include <stdbool.h>
- #include <stdlib.h>
-+#include <sys/time.h>
-+#include <sys/resource.h>
- #include "platform_defs.h"
- #include "xfs.h"
- #include "input.h"
-@@ -151,6 +153,267 @@ usage(void)
- 	exit(16);
- }
- 
-+#ifndef RUSAGE_BOTH
-+# define RUSAGE_BOTH		(-2)
-+#endif
-+
-+/* Get resource usage for ourselves and all children. */
-+static int
-+scrub_getrusage(
-+	struct rusage		*usage)
-+{
-+	struct rusage		cusage;
-+	int			err;
-+
-+	err = getrusage(RUSAGE_BOTH, usage);
-+	if (!err)
-+		return err;
-+
-+	err = getrusage(RUSAGE_SELF, usage);
-+	if (err)
-+		return err;
-+
-+	err = getrusage(RUSAGE_CHILDREN, &cusage);
-+	if (err)
-+		return err;
-+
-+	usage->ru_minflt += cusage.ru_minflt;
-+	usage->ru_majflt += cusage.ru_majflt;
-+	usage->ru_nswap += cusage.ru_nswap;
-+	usage->ru_inblock += cusage.ru_inblock;
-+	usage->ru_oublock += cusage.ru_oublock;
-+	usage->ru_msgsnd += cusage.ru_msgsnd;
-+	usage->ru_msgrcv += cusage.ru_msgrcv;
-+	usage->ru_nsignals += cusage.ru_nsignals;
-+	usage->ru_nvcsw += cusage.ru_nvcsw;
-+	usage->ru_nivcsw += cusage.ru_nivcsw;
-+	return 0;
-+}
-+
-+/*
-+ * Scrub Phase Dispatch
-+ *
-+ * The operations of the scrub program are split up into several
-+ * different phases.  Each phase builds upon the metadata checked in the
-+ * previous phase, which is to say that we may skip phase (X + 1) if our
-+ * scans in phase (X) reveal corruption.  A phase may be skipped
-+ * entirely.
-+ */
-+
-+/* Resource usage for each phase. */
-+struct phase_rusage {
-+	struct rusage		ruse;
-+	struct timeval		time;
-+	unsigned long long	verified_bytes;
-+	void			*brk_start;
-+	const char		*descr;
-+};
-+
-+/* Operations for each phase. */
-+#define DATASCAN_DUMMY_FN	((void *)1)
-+#define REPAIR_DUMMY_FN		((void *)2)
-+struct phase_ops {
-+	char		*descr;
-+	bool		(*fn)(struct scrub_ctx *);
-+	bool		must_run;
-+};
-+
-+/* Start tracking resource usage for a phase. */
-+static bool
-+phase_start(
-+	struct phase_rusage	*pi,
-+	unsigned int		phase,
-+	const char		*descr)
-+{
-+	int			error;
-+
-+	memset(pi, 0, sizeof(*pi));
-+	error = scrub_getrusage(&pi->ruse);
-+	if (error) {
-+		perror(_("getrusage"));
-+		return false;
-+	}
-+	pi->brk_start = sbrk(0);
-+
-+	error = gettimeofday(&pi->time, NULL);
-+	if (error) {
-+		perror(_("gettimeofday"));
-+		return false;
-+	}
-+
-+	pi->descr = descr;
-+	if ((verbose || display_rusage) && descr) {
-+		fprintf(stdout, _("Phase %u: %s\n"), phase, descr);
-+		fflush(stdout);
-+	}
-+	return true;
-+}
-+
-+/* Report usage stats. */
-+static bool
-+phase_end(
-+	struct phase_rusage	*pi,
-+	unsigned int		phase)
-+{
-+	struct rusage		ruse_now;
-+#ifdef HAVE_MALLINFO
-+	struct mallinfo		mall_now;
-+#endif
-+	struct timeval		time_now;
-+	char			phasebuf[DESCR_BUFSZ];
-+	double			dt;
-+	unsigned long long	in, out;
-+	unsigned long long	io;
-+	double			i, o, t;
-+	double			din, dout, dtot;
-+	char			*iu, *ou, *tu, *dinu, *doutu, *dtotu;
-+	int			error;
-+
-+	if (!display_rusage)
-+		return true;
-+
-+	error = gettimeofday(&time_now, NULL);
-+	if (error) {
-+		perror(_("gettimeofday"));
-+		return false;
-+	}
-+	dt = timeval_subtract(&time_now, &pi->time);
-+
-+	error = scrub_getrusage(&ruse_now);
-+	if (error) {
-+		perror(_("getrusage"));
-+		return false;
-+	}
-+
-+	if (phase)
-+		snprintf(phasebuf, DESCR_BUFSZ, _("Phase %u: "), phase);
-+	else
-+		phasebuf[0] = 0;
-+
-+#define kbytes(x)	(((unsigned long)(x) + 1023) / 1024)
-+#ifdef HAVE_MALLINFO
-+
-+	mall_now = mallinfo();
-+	fprintf(stdout, _("%sMemory used: %luk/%luk (%luk/%luk), "),
-+		phasebuf,
-+		kbytes(mall_now.arena), kbytes(mall_now.hblkhd),
-+		kbytes(mall_now.uordblks), kbytes(mall_now.fordblks));
-+#else
-+	fprintf(stdout, _("%sMemory used: %luk, "),
-+		phasebuf,
-+		(unsigned long) kbytes(((char *) sbrk(0)) -
-+				       ((char *) pi->brk_start)));
-+#endif
-+#undef kbytes
-+
-+	fprintf(stdout, _("time: %5.2f/%5.2f/%5.2fs\n"),
-+		timeval_subtract(&time_now, &pi->time),
-+		timeval_subtract(&ruse_now.ru_utime, &pi->ruse.ru_utime),
-+		timeval_subtract(&ruse_now.ru_stime, &pi->ruse.ru_stime));
-+
-+	/* I/O usage */
-+	in =  ((unsigned long long)ruse_now.ru_inblock -
-+			pi->ruse.ru_inblock) << BBSHIFT;
-+	out = ((unsigned long long)ruse_now.ru_oublock -
-+			pi->ruse.ru_oublock) << BBSHIFT;
-+	io = in + out;
-+	if (io) {
-+		i = auto_space_units(in, &iu);
-+		o = auto_space_units(out, &ou);
-+		t = auto_space_units(io, &tu);
-+		din = auto_space_units(in / dt, &dinu);
-+		dout = auto_space_units(out / dt, &doutu);
-+		dtot = auto_space_units(io / dt, &dtotu);
-+		fprintf(stdout,
-+_("%sI/O: %.1f%s in, %.1f%s out, %.1f%s tot\n"),
-+			phasebuf, i, iu, o, ou, t, tu);
-+		fprintf(stdout,
-+_("%sI/O rate: %.1f%s/s in, %.1f%s/s out, %.1f%s/s tot\n"),
-+			phasebuf, din, dinu, dout, doutu, dtot, dtotu);
-+	}
-+	fflush(stdout);
-+
-+	return true;
-+}
-+
-+/* Run all the phases of the scrubber. */
-+static bool
-+run_scrub_phases(
-+	struct scrub_ctx	*ctx)
-+{
-+	struct phase_ops phases[] =
-+	{
-+		{
-+			.descr = _("Find filesystem geometry."),
-+		},
-+		{
-+			.descr = _("Check internal metadata."),
-+		},
-+		{
-+			.descr = _("Scan all inodes."),
-+		},
-+		{
-+			.descr = _("Defer filesystem repairs."),
-+			.fn = REPAIR_DUMMY_FN,
-+		},
-+		{
-+			.descr = _("Check directory tree."),
-+		},
-+		{
-+			.descr = _("Verify data file integrity."),
-+			.fn = DATASCAN_DUMMY_FN,
-+		},
-+		{
-+			.descr = _("Check summary counters."),
-+		},
-+		{
-+			NULL
-+		},
-+	};
-+	struct phase_rusage	pi;
-+	struct phase_ops	*sp;
-+	bool			moveon = true;
-+	unsigned int		debug_phase = 0;
-+	unsigned int		phase;
-+
-+	if (debug && debug_tweak_on("XFS_SCRUB_PHASE"))
-+		debug_phase = atoi(getenv("XFS_SCRUB_PHASE"));
-+
-+	/* Run all phases of the scrub tool. */
-+	for (phase = 1, sp = phases; sp->fn; sp++, phase++) {
-+		/* Skip certain phases unless they're turned on. */
-+		if (sp->fn == REPAIR_DUMMY_FN ||
-+		    sp->fn == DATASCAN_DUMMY_FN)
-+			continue;
-+
-+		/* Allow debug users to force a particular phase. */
-+		if (debug_phase && phase != debug_phase && !sp->must_run)
-+			continue;
-+
-+		/* Run this phase. */
-+		moveon = phase_start(&pi, phase, sp->descr);
-+		if (!moveon)
-+			break;
-+		moveon = sp->fn(ctx);
-+		if (!moveon) {
-+			str_info(ctx, ctx->mntpoint,
-+_("Scrub aborted after phase %d."),
-+					phase);
-+			break;
-+		}
-+		moveon = phase_end(&pi, phase);
-+		if (!moveon)
-+			break;
-+
-+		/* Too many errors? */
-+		moveon = !xfs_scrub_excessive_errors(ctx);
-+		if (!moveon)
-+			break;
-+	}
-+
-+	return moveon;
-+}
-+
- int
- main(
- 	int			argc,
-@@ -160,6 +423,7 @@ main(
- 	char			*mtab = NULL;
- 	char			*repairstr = "";
- 	struct scrub_ctx	ctx = {0};
-+	struct phase_rusage	all_pi;
- 	unsigned long long	total_errors;
- 	bool			moveon = true;
- 	static bool		injected;
-@@ -272,6 +536,11 @@ _("Only one of the options -n or -y may be specified.\n"));
- 			mtab = _PATH_MOUNTED;
- 	}
- 
-+	/* Initialize overall phase stats. */
-+	moveon = phase_start(&all_pi, 0, NULL);
-+	if (!moveon)
-+		goto out;
-+
- 	/* How many CPUs? */
- 	nproc = sysconf(_SC_NPROCESSORS_ONLN);
- 	if (nproc < 1)
-@@ -289,6 +558,11 @@ _("Only one of the options -n or -y may be specified.\n"));
- 		injected = true;
- 	}
- 
-+	/* Scrub a filesystem. */
-+	moveon = run_scrub_phases(&ctx);
-+	if (!moveon)
-+		ret |= 4;
-+
- 	if (xfs_scrub_excessive_errors(&ctx))
- 		str_info(&ctx, ctx.mntpoint, _("Too many errors; aborting."));
- 
-@@ -318,6 +592,7 @@ _("%s: %llu warnings found.\n"),
- 		ret |= 2;
- 	if (ctx.runtime_errors)
- 		ret |= 4;
-+	phase_end(&all_pi, 0);
- 	free(ctx.mntpoint);
- 
- 	return ret;
+--D
 
+> ---
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 1f3494c..035af03 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1400,7 +1400,7 @@ block_opts_parser(
+>  {
+>  	switch (subopt) {
+>  	case B_SIZE:
+> -		cli->blocksize = getnum(value, opts, B_SIZE);
+> +		cli->blocksize = getnum(value, opts, subopt);
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -1417,52 +1417,52 @@ data_opts_parser(
+>  {
+>  	switch (subopt) {
+>  	case D_AGCOUNT:
+> -		cli->agcount = getnum(value, opts, D_AGCOUNT);
+> +		cli->agcount = getnum(value, opts, subopt);
+>  		break;
+>  	case D_AGSIZE:
+> -		cli->agsize = getstr(value, opts, D_AGSIZE);
+> +		cli->agsize = getstr(value, opts, subopt);
+>  		break;
+>  	case D_FILE:
+> -		cli->xi->disfile = getnum(value, opts, D_FILE);
+> +		cli->xi->disfile = getnum(value, opts, subopt);
+>  		break;
+>  	case D_NAME:
+> -		cli->xi->dname = getstr(value, opts, D_NAME);
+> +		cli->xi->dname = getstr(value, opts, subopt);
+>  		break;
+>  	case D_SIZE:
+> -		cli->dsize = getstr(value, opts, D_SIZE);
+> +		cli->dsize = getstr(value, opts, subopt);
+>  		break;
+>  	case D_SUNIT:
+> -		cli->dsunit = getnum(value, opts, D_SUNIT);
+> +		cli->dsunit = getnum(value, opts, subopt);
+>  		break;
+>  	case D_SWIDTH:
+> -		cli->dswidth = getnum(value, opts, D_SWIDTH);
+> +		cli->dswidth = getnum(value, opts, subopt);
+>  		break;
+>  	case D_SU:
+> -		cli->dsu = getstr(value, opts, D_SU);
+> +		cli->dsu = getstr(value, opts, subopt);
+>  		break;
+>  	case D_SW:
+> -		cli->dsw = getnum(value, opts, D_SW);
+> +		cli->dsw = getnum(value, opts, subopt);
+>  		break;
+>  	case D_NOALIGN:
+> -		cli->sb_feat.nodalign = getnum(value, opts, D_NOALIGN);
+> +		cli->sb_feat.nodalign = getnum(value, opts, subopt);
+>  		break;
+>  	case D_SECTSIZE:
+> -		cli->sectorsize = getnum(value, opts, D_SECTSIZE);
+> +		cli->sectorsize = getnum(value, opts, subopt);
+>  		break;
+>  	case D_RTINHERIT:
+> -		if (getnum(value, opts, D_RTINHERIT))
+> +		if (getnum(value, opts, subopt))
+>  			cli->fsx.fsx_xflags |= XFS_DIFLAG_RTINHERIT;
+>  		break;
+>  	case D_PROJINHERIT:
+> -		cli->fsx.fsx_projid = getnum(value, opts, D_PROJINHERIT);
+> +		cli->fsx.fsx_projid = getnum(value, opts, subopt);
+>  		cli->fsx.fsx_xflags |= XFS_DIFLAG_PROJINHERIT;
+>  		break;
+>  	case D_EXTSZINHERIT:
+> -		cli->fsx.fsx_extsize = getnum(value, opts, D_EXTSZINHERIT);
+> +		cli->fsx.fsx_extsize = getnum(value, opts, subopt);
+>  		cli->fsx.fsx_xflags |= XFS_DIFLAG_EXTSZINHERIT;
+>  		break;
+>  	case D_COWEXTSIZE:
+> -		cli->fsx.fsx_cowextsize = getnum(value, opts, D_COWEXTSIZE);
+> +		cli->fsx.fsx_cowextsize = getnum(value, opts, subopt);
+>  		cli->fsx.fsx_xflags |= FS_XFLAG_COWEXTSIZE;
+>  		break;
+>  	default:
+> @@ -1480,25 +1480,25 @@ inode_opts_parser(
+>  {
+>  	switch (subopt) {
+>  	case I_ALIGN:
+> -		cli->sb_feat.inode_align = getnum(value, opts, I_ALIGN);
+> +		cli->sb_feat.inode_align = getnum(value, opts, subopt);
+>  		break;
+>  	case I_MAXPCT:
+> -		cli->imaxpct = getnum(value, opts, I_MAXPCT);
+> +		cli->imaxpct = getnum(value, opts, subopt);
+>  		break;
+>  	case I_PERBLOCK:
+> -		cli->inopblock = getnum(value, opts, I_PERBLOCK);
+> +		cli->inopblock = getnum(value, opts, subopt);
+>  		break;
+>  	case I_SIZE:
+> -		cli->inodesize = getnum(value, opts, I_SIZE);
+> +		cli->inodesize = getnum(value, opts, subopt);
+>  		break;
+>  	case I_ATTR:
+> -		cli->sb_feat.attr_version = getnum(value, opts, I_ATTR);
+> +		cli->sb_feat.attr_version = getnum(value, opts, subopt);
+>  		break;
+>  	case I_PROJID32BIT:
+> -		cli->sb_feat.projid32bit = getnum(value, opts, I_PROJID32BIT);
+> +		cli->sb_feat.projid32bit = getnum(value, opts, subopt);
+>  		break;
+>  	case I_SPINODES:
+> -		cli->sb_feat.spinodes = getnum(value, opts, I_SPINODES);
+> +		cli->sb_feat.spinodes = getnum(value, opts, subopt);
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -1515,36 +1515,36 @@ log_opts_parser(
+>  {
+>  	switch (subopt) {
+>  	case L_AGNUM:
+> -		cli->logagno = getnum(value, opts, L_AGNUM);
+> +		cli->logagno = getnum(value, opts, subopt);
+>  		break;
+>  	case L_FILE:
+> -		cli->xi->lisfile = getnum(value, opts, L_FILE);
+> +		cli->xi->lisfile = getnum(value, opts, subopt);
+>  		break;
+>  	case L_INTERNAL:
+> -		cli->loginternal = getnum(value, opts, L_INTERNAL);
+> +		cli->loginternal = getnum(value, opts, subopt);
+>  		break;
+>  	case L_SU:
+> -		cli->lsu = getstr(value, opts, L_SU);
+> +		cli->lsu = getstr(value, opts, subopt);
+>  		break;
+>  	case L_SUNIT:
+> -		cli->lsunit = getnum(value, opts, L_SUNIT);
+> +		cli->lsunit = getnum(value, opts, subopt);
+>  		break;
+>  	case L_NAME:
+>  	case L_DEV:
+> -		cli->xi->logname = getstr(value, opts, L_NAME);
+> +		cli->xi->logname = getstr(value, opts, subopt);
+>  		cli->loginternal = 0;
+>  		break;
+>  	case L_VERSION:
+> -		cli->sb_feat.log_version = getnum(value, opts, L_VERSION);
+> +		cli->sb_feat.log_version = getnum(value, opts, subopt);
+>  		break;
+>  	case L_SIZE:
+> -		cli->logsize = getstr(value, opts, L_SIZE);
+> +		cli->logsize = getstr(value, opts, subopt);
+>  		break;
+>  	case L_SECTSIZE:
+> -		cli->lsectorsize = getnum(value, opts, L_SECTSIZE);
+> +		cli->lsectorsize = getnum(value, opts, subopt);
+>  		break;
+>  	case L_LAZYSBCNTR:
+> -		cli->sb_feat.lazy_sb_counters = getnum(value, opts, L_LAZYSBCNTR);
+> +		cli->sb_feat.lazy_sb_counters = getnum(value, opts, subopt);
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -1561,24 +1561,24 @@ meta_opts_parser(
+>  {
+>  	switch (subopt) {
+>  	case M_CRC:
+> -		cli->sb_feat.crcs_enabled = getnum(value, opts, M_CRC);
+> +		cli->sb_feat.crcs_enabled = getnum(value, opts, subopt);
+>  		if (cli->sb_feat.crcs_enabled)
+>  			cli->sb_feat.dirftype = true;
+>  		break;
+>  	case M_FINOBT:
+> -		cli->sb_feat.finobt = getnum(value, opts, M_FINOBT);
+> +		cli->sb_feat.finobt = getnum(value, opts, subopt);
+>  		break;
+>  	case M_UUID:
+>  		if (!value || *value == '\0')
+> -			reqval('m', opts->subopts, M_UUID);
+> +			reqval('m', opts->subopts, subopt);
+>  		if (platform_uuid_parse(value, &cli->uuid))
+>  			illegal(value, "m uuid");
+>  		break;
+>  	case M_RMAPBT:
+> -		cli->sb_feat.rmapbt = getnum(value, opts, M_RMAPBT);
+> +		cli->sb_feat.rmapbt = getnum(value, opts, subopt);
+>  		break;
+>  	case M_REFLINK:
+> -		cli->sb_feat.reflink = getnum(value, opts, M_REFLINK);
+> +		cli->sb_feat.reflink = getnum(value, opts, subopt);
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -1595,19 +1595,19 @@ naming_opts_parser(
+>  {
+>  	switch (subopt) {
+>  	case N_SIZE:
+> -		cli->dirblocksize = getstr(value, opts, N_SIZE);
+> +		cli->dirblocksize = getstr(value, opts, subopt);
+>  		break;
+>  	case N_VERSION:
+> -		value = getstr(value, &nopts, N_VERSION);
+> +		value = getstr(value, &nopts, subopt);
+>  		if (!strcasecmp(value, "ci")) {
+>  			/* ASCII CI mode */
+>  			cli->sb_feat.nci = true;
+>  		} else {
+> -			cli->sb_feat.dir_version = getnum(value, opts, N_VERSION);
+> +			cli->sb_feat.dir_version = getnum(value, opts, subopt);
+>  		}
+>  		break;
+>  	case N_FTYPE:
+> -		cli->sb_feat.dirftype = getnum(value, opts, N_FTYPE);
+> +		cli->sb_feat.dirftype = getnum(value, opts, subopt);
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> @@ -1624,20 +1624,20 @@ rtdev_opts_parser(
+>  {
+>  	switch (subopt) {
+>  	case R_EXTSIZE:
+> -		cli->rtextsize = getstr(value, opts, R_EXTSIZE);
+> +		cli->rtextsize = getstr(value, opts, subopt);
+>  		break;
+>  	case R_FILE:
+> -		cli->xi->risfile = getnum(value, opts, R_FILE);
+> +		cli->xi->risfile = getnum(value, opts, subopt);
+>  		break;
+>  	case R_NAME:
+>  	case R_DEV:
+> -		cli->xi->rtname = getstr(value, opts, R_NAME);
+> +		cli->xi->rtname = getstr(value, opts, subopt);
+>  		break;
+>  	case R_SIZE:
+> -		cli->rtsize = getstr(value, opts, R_SIZE);
+> +		cli->rtsize = getstr(value, opts, subopt);
+>  		break;
+>  	case R_NOALIGN:
+> -		cli->sb_feat.nortalign = getnum(value, opts, R_NOALIGN);
+> +		cli->sb_feat.nortalign = getnum(value, opts, subopt);
+>  		break;
+>  	default:
+>  		return -EINVAL;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
