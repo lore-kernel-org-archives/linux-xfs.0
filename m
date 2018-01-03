@@ -1,91 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:37942 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752622AbeABCfe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jan 2018 21:35:34 -0500
-Received: by mail-it0-f68.google.com with SMTP id r6so38086974itr.3
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Jan 2018 18:35:34 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:48627 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750873AbeACBTa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 20:19:30 -0500
+Date: Wed, 3 Jan 2018 12:19:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Block size and read-modify-write
+Message-ID: <20180103011926.GJ5858@dastard>
+References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
+ <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to describe
- how to properly identify file licenses
-From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <20171230041535.GA3393@thunk.org>
-Date: Mon, 1 Jan 2018 19:35:27 -0700
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <12C856B7-06D5-4D99-8D6E-41F3A679CA17@dilger.ca>
-References: <20171228152710.891701433@linutronix.de>
- <20171228153308.286787253@linutronix.de>
- <alpine.DEB.2.20.1712282315030.1899@nanos>
- <CAOFm3uG_Sj1+jf32CvCeuWZV_nK1f-8B6POd_nZXAEJghnB08w@mail.gmail.com>
- <1514564399.10256.7.camel@perches.com> <20171229185404.GD11757@thunk.org>
- <CAOFm3uHm5ye7VdbVYcu+a_-3paO7phazNSGzhRL3wzGFcx-MkQ@mail.gmail.com>
- <20171230041535.GA3393@thunk.org>
+Content-Disposition: inline
+In-Reply-To: <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Philippe Ombredanne <pombredanne@nexb.com>, Joe Perches <joe@perches.com>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, xfs <linux-xfs@vger.kernel.org>, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: Gionatan Danti <g.danti@assyoma.it>, linux-xfs@vger.kernel.org
 
-On Dec 29, 2017, at 9:15 PM, Theodore Ts'o <tytso@mit.edu> wrote:
->=20
-> On Fri, Dec 29, 2017 at 11:17:54PM +0100, Philippe Ombredanne wrote:
->>> As far as I know, none of the licenses explicitly say
->>> copyright license must be on each file.  Just that the distribution =
-of
->>> source must include the copyright and license statement.  Exactly =
-how
->>> that is done is not explicitly specified.
->>=20
->> This is also my take. What is done here is not much different than
->> refactoring duplicated code so it leaves in a single place:
->>=20
->> - by "value" at the root in COPYING and in the Documentation.
->> - by "reference" in the code proper as SPDX ids.
->>=20
->> Therefore essential and common requirements to include the license
->> text is fulfilled in the kernel.
->>=20
->> Note that there are a few offenders that will need to clean up their
->> acts as they came up will both long and "un-removable and
->> un-alterable" crazy legalese blurbs [1] prefix this:
->>=20
->> "DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER"
->>=20
->> These will have to be taken care on a case by case basis. These are
->> pretty stupid and IMHO should have never been allowed to be added to
->> the kernel in the first place and are ugly warts. It could very well
->> be that these are not really GPL-compliant notices FWIW: keeping
->> notices and copyrights is quite different from a restriction of
->> altering things by moving them around which is exactly what is
->> happening with the SPDX-ification here.
->>=20
->> [1] =
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/dr=
-ivers/staging/lustre/include/linux/libcfs/libcfs.h?h=3Dv4.15-rc5#n5
->=20
-> Lustre is now owned by Intel so I suspect that some throat clearing
-> noises in the right direction could easily take care of the issue with
-> those files....
+On Tue, Jan 02, 2018 at 11:25:39AM +0100, Carlos Maiolino wrote:
+> On Fri, Dec 29, 2017 at 12:14:14AM +0100, Gionatan Danti wrote:
+> > Hi list,
+> > I would ask a question: how XFS block size affect read-modify-write in case
+> > of very small writes?
+> > 
+> 
+> Hi,
+> 
+> > For example, suppose an XFS filesystem with the default 4K data block size.
+> > Am I correct saying that:
+> > - a 512B normal, cached writes will cause a read-modify-write of the entire
+> > 4K sector?
 
-To correct this, the copyright on the Lustre code is not owned by Intel.
-The copyright on the original Lustre code was transferred from Oracle to
-Seagate a few years ago, but the code that Whamcloud->Intel used for =
-their
-release (which is what the kernel client is based on) was forked many =
-years
-ago from the Oracle version (all under GPL).  There is no single =
-copyright
-holder anymore, since there is no copyright assignment for new =
-contributions
-and it is copyright by whomever contributed it, as with the kernel =
-itself.
+Cached writes smaller than a *page* will cause RMW cycles in the
+page cache, regardless of the block size of the filesystem.
 
-I don't see any issue with leaving those header blocks as-is?
+> > - a 512B O_DIRECT write will *not* cause a read-modify-write of the 4K
+> > sector, rather it will be flushed to disk as-is (512 bytes in length)?
 
-Cheers, Andreas
+Ok, there is a difference between *sector size* and *filesystem
+block size*. You seem to be using them interchangably in your
+question, and that's not correct.
 
+> IIRC, although the DIO requirement is to have writes aligned to the logical sector
+> size, issuing such IOs not properly aligned with the filesystem block size, have
+> a few consequences.
+> 
+> - It will require exclusive inode io locks, so serializing IOs to the inode
 
+That is correct, but....
 
+> - And yes, it will require a RMW to the block in question, all IO are always
+>   made in filesystem block size units.
 
+.... this is not correct for direct IO. The direct IO path does not
+do RMW cycles at all.
 
+Put simply: a 512B DIO write on a (real or emulated) 512B sector
+device with a 4k FSB will be serialised by the filesystem and do a
+single 512B sector write to the device.  However, if the device
+reports as a 4k sector device then a 512B DIO write will be rejected
+by the filesystem because sub-sector IO is not possible.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
