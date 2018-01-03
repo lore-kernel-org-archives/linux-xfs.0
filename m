@@ -1,68 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:39517 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750730AbeAZHna (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 02:43:30 -0500
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
-Date: Fri, 26 Jan 2018 09:44:29 +0200
-Message-Id: <1516952669-14769-1-git-send-email-amir73il@gmail.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:60195 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751265AbeACDQ0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 22:16:26 -0500
+Date: Wed, 3 Jan 2018 14:16:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCHv6 1/1] ima: re-introduce own integrity cache lock
+Message-ID: <20180103031621.GK5858@dastard>
+References: <c73e7421902a60bd14c11e1201ba74470d7c782b.1512500794.git.dmitry.kasatkin@huawei.com>
+ <CACE9dm-ws8TKEAzFbCoGdhdEuFLoLtz8dAuF8tor19wMx1pH=g@mail.gmail.com>
+ <20180103014048.GE5146@magnolia>
+ <1514947923.3493.2.camel@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1514947923.3493.2.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, linux-integrity <linux-integrity@vger.kernel.org>, linux-security-module <linux-security-module@vger.kernel.org>, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Dmitry Kasatkin <dmitry.kasatkin@huawei.com>, xfs <linux-xfs@vger.kernel.org>
 
-Commit 66f364649d870 ("xfs: remove if_rdev") moved storing of rdev
-value for special inodes to VFS inodes, but forgot to preserve the
-value of i_rdev when recycling a reclaimable xfs_inode.
+On Tue, Jan 02, 2018 at 09:52:03PM -0500, Mimi Zohar wrote:
+> On Tue, 2018-01-02 at 17:40 -0800, Darrick J. Wong wrote:
+> > [might as well cc linux-xfs]
+> > 
+> > On Thu, Dec 14, 2017 at 12:22:37AM +0200, Dmitry Kasatkin wrote:
+> > > Hi,
+> > > 
+> > > Could I ask FS maintainers to test IMA with this patch additionally
+> > > and provide ack/tested.
+> > > We tested but may be you have and some special testing.
+> > 
+> > Super-late to this party, but unless xfstests has automated tests to
+> > set up IMA on top of an existing filesystem then I most likely have no
+> > idea /how/ to test IMA.  I did a quick grep of xfstests git and I don't
+> > see anything IMA-related.
+> 
+> Back in June I posted a simple xfstests IMA-appraisal test (https://ma
+> rc.info/?l=linux-fsdevel&m=149703820814885&w=4).
 
-This was detected by xfstest overlay/017 with inodex=on mount option
-and xfs base fs. The test does a lookup of overlay chardev and blockdev
-right after drop caches.
+That's a really, really basic test and it doesn't exercise the
+problematic direct IO path this patch fixes problems with. nor does
+it exercise the chmod path, or try to trigger deadlocks or other
+conditions through all the other paths that can trigger IMA actions
+and or failures (e.g. ENOSPC).  IOWs, we need a lot more than a
+"hello world" test to be able to verify filesystems interact with
+IMA properly. e.g. how does it behave at ENOSPC? 
 
-Overlayfs inodes hold a reference on underlying xfs inodes when mount
-option index=on is configured. If drop caches reclaim xfs inodes, before
-it relclaims overlayfs inodes, that can sometimes leave a reclaimable xfs
-inode and that test hits that case quite often.
+How do you test that IMA is fully working and has no regressions
+during your development?  I'm sure there's more than a "hello world"
+test for that....
 
-When that happens, the xfs inode cache remains broken (zere i_rdev)
-until the next cycle mount or drop caches.
+Cheers,
 
-Fixes: 66f364649d870 ("xfs: remove if_rdev")
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
-
-Darrick,
-
-You may want to rush this last minute v4.15 regression fix.
-
-Thanks,
-Amir.
-
- fs/xfs/xfs_icache.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 3861d61fb265..3ce946063ffe 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -295,6 +295,7 @@ xfs_reinit_inode(
- 	uint32_t	generation = inode->i_generation;
- 	uint64_t	version = inode->i_version;
- 	umode_t		mode = inode->i_mode;
-+	dev_t		dev = inode->i_rdev;
- 
- 	error = inode_init_always(mp->m_super, inode);
- 
-@@ -302,6 +303,7 @@ xfs_reinit_inode(
- 	inode->i_generation = generation;
- 	inode->i_version = version;
- 	inode->i_mode = mode;
-+	inode->i_rdev = dev;
- 	return error;
- }
- 
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
