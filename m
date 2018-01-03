@@ -1,194 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f182.google.com ([74.125.82.182]:45064 "EHLO
-        mail-ot0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751167AbeACCVP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 21:21:15 -0500
-Received: by mail-ot0-f182.google.com with SMTP id d44so231929otd.12
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Jan 2018 18:21:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20180102230027.GV5858@dastard>
-References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151407705701.38751.6157642918168721562.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180102230027.GV5858@dastard>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 2 Jan 2018 18:21:13 -0800
-Message-ID: <CAPcyv4gXxoLwZUyHYGUN2i71fjT_r=Mf+USYDLKwPGEYco+1PQ@mail.gmail.com>
-Subject: Re: [PATCH v4 18/18] xfs, dax: wire up dax_flush_dma support via a
- new xfs_sync_dma helper
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:54996 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751169AbeACED0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 23:03:26 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id w033wrTu061763
+        for <linux-xfs@vger.kernel.org>; Tue, 2 Jan 2018 23:03:26 -0500
+Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2f8j8ghkdy-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Jan 2018 23:03:26 -0500
+Received: from localhost
+        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+        Wed, 3 Jan 2018 04:03:23 -0000
+Subject: Re: [PATCHv6 1/1] ima: re-introduce own integrity cache lock
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Date: Tue, 02 Jan 2018 23:03:16 -0500
+In-Reply-To: <20180103031621.GK5858@dastard>
+References: <c73e7421902a60bd14c11e1201ba74470d7c782b.1512500794.git.dmitry.kasatkin@huawei.com>
+         <CACE9dm-ws8TKEAzFbCoGdhdEuFLoLtz8dAuF8tor19wMx1pH=g@mail.gmail.com>
+         <20180103014048.GE5146@magnolia>
+         <1514947923.3493.2.camel@linux.vnet.ibm.com>
+         <20180103031621.GK5858@dastard>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Message-Id: <1514952196.3493.57.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>, linux-integrity <linux-integrity@vger.kernel.org>, linux-security-module <linux-security-module@vger.kernel.org>, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Dmitry Kasatkin <dmitry.kasatkin@huawei.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jan 2, 2018 at 3:00 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sat, Dec 23, 2017 at 04:57:37PM -0800, Dan Williams wrote:
->> xfs_break_layouts() scans for active pNFS layouts, drops locks and
->> rescans for those layouts to be broken. xfs_sync_dma performs
->> xfs_break_layouts and also scans for active dax-dma pages, drops locks
->> and rescans for those pages to go idle.
->>
->> dax_flush_dma handles synchronizing against new page-busy events
->> (get_user_pages). iIt invalidates all mappings to trigger the
->> get_user_pages slow path which will eventually block on the
->> XFS_MMAPLOCK. If it finds a dma-busy page it waits for a page-idle
->> callback that will fire when the page reference count reaches 1 (recall
->> ZONE_DEVICE pages are idle at count 1). While it is waiting, it drops
->> locks so we do not deadlock the process that might be trying to elevate
->> the page count of more pages before arranging for any of them to go idle
->> as is typically the case of iov_iter_get_pages.
->>
->> dax_flush_dma relies on the fs-provided wait_atomic_t_action_f
->> (xfs_wait_dax_page) to handle evaluating the page reference count and
->> dropping locks when waiting.
->
-> I don't see a problem with supporting this functionality, but I
-> see lots of problems with the code being presented. First of all,
-> I think the "sync dma" abstraction here is all wrong.
->
-> In the case of the filesystem, we don't care about whether DMA has
-> completed or not, and we *shouldn't have to care* about deep, dark
-> secrets of other subsystems.
->
-> If I read the current code, I see this in all the "truncate" paths:
->
->         start op
->         break layout leases
->         change layout
->
-> and in the IO path:
->
->         start IO
->         break layout leases
->         map IO
->         issue IO
->
-> What this change does is make the truncate paths read:
->
->         start op
->         sync DMA
->         change layout
->
-> but the IO path is unchanged. (This is not explained in comments or
-> commit messages).
->
-> And I look at that "sync DMA" step and wonder why the hell we need
-> to "sync DMA" because DMA has nothing to do with high level
-> filesystem code. It doesn't tell me anything obvious about why we
-> need to do this, nor does it tell me what we're actually
-> synchronising against.
->
-> What we care about in the filesystem code is whether there are
-> existing external references to file layout. If there's an external
-> reference, then it has to be broken before we can proceed and modify
-> the file layout. We don't care what owns that reference, just that
-> it has to broken before we continue.
->
-> AFAIC, these DMA references are just another external layout
-> reference that needs to be broken.  IOWs, this "sync DMA" complexity
-> needs to go inside xfs_break_layouts() as it is part of breaking the
-> external reference to the file layout - it does not replace the
-> layout breaking abstraction and so the implementation needs to
-> reflect that.
+On Wed, 2018-01-03 at 14:16 +1100, Dave Chinner wrote:
+> On Tue, Jan 02, 2018 at 09:52:03PM -0500, Mimi Zohar wrote:
+> > On Tue, 2018-01-02 at 17:40 -0800, Darrick J. Wong wrote:
+> > > [might as well cc linux-xfs]
+> > > 
+> > > On Thu, Dec 14, 2017 at 12:22:37AM +0200, Dmitry Kasatkin wrote:
+> > > > Hi,
+> > > > 
+> > > > Could I ask FS maintainers to test IMA with this patch additionally
+> > > > and provide ack/tested.
+> > > > We tested but may be you have and some special testing.
+> > > 
+> > > Super-late to this party, but unless xfstests has automated tests to
+> > > set up IMA on top of an existing filesystem then I most likely have no
+> > > idea /how/ to test IMA.  I did a quick grep of xfstests git and I don't
+> > > see anything IMA-related.
+> > 
+> > Back in June I posted a simple xfstests IMA-appraisal test (https://ma
+> > rc.info/?l=linux-fsdevel&m=149703820814885&w=4).
+> 
+> That's a really, really basic test and it doesn't exercise the
+> problematic direct IO path this patch fixes problems with. nor does
+> it exercise the chmod path, or try to trigger deadlocks or other
+> conditions through all the other paths that can trigger IMA actions
+> and or failures (e.g. ENOSPC).  IOWs, we need a lot more than a
+> "hello world" test to be able to verify filesystems interact with
+> IMA properly. e.g. how does it behave at ENOSPC?
 
-These two sentences from the xfs_break_layouts() comment scared me
-down this path of distinguishing dax-dma waiting from pNFS layout
-lease break waiting:
+True, but for now we were looking for some basic testing - opening a
+file and calculating the file hash - on different filesystems, not the
+direct-IO path in particular.  Expanding the IMA-appraisal xfstests is
+high on my "todo" list.
 
----
+Mimi
 
-"Additionally we call it during the write operation, where aren't
-concerned about exposing unallocated blocks but just want to provide
-basic synchronization between a local writer and pNFS clients.  mmap
-writes would also benefit from this sort of synchronization, but due
-to the tricky locking rules in the page fault path we don't bother."
-
----
-
-I was not sure about holding XFS_MMAPLOCK_EXCL over
-xfs_break_layouts() where it has historically not been held, and I was
-worried about the potential deadlock of requiring all pages to be
-unmapped and idle during a write. I.e. would we immediately deadlock
-if userspace performed  direct-I/O to a file with a source buffer that
-was mapped from that same file?
-
-In general though, I agree that xfs_break_layouts() should comprehend
-both cases. I'll investigate if the deadlock is real and perhaps add a
-flag to xfs_break_layouts to distinguish the IO path from the truncate
-paths to at least make that detail internal to the layout breaking
-mechanism.
-
->> + * Synchronize [R]DMA before changing the file's block map. For pNFS,
->> + * recall all layouts. For DAX, wait for transient DMA to complete. All
->> + * other DMA is handled by pinning page cache pages.
->> + *
->> + * iolock must held XFS_IOLOCK_SHARED or XFS_IOLOCK_EXCL on entry and
->> + * will be XFS_IOLOCK_EXCL and XFS_MMAPLOCK_EXCL on exit.
->> + */
->> +int xfs_sync_dma(
->> +     struct inode            *inode,
->> +     uint                    *iolock)
->> +{
->> +     struct xfs_inode        *ip = XFS_I(inode);
->> +     int                     error;
->> +
->> +     while (true) {
->> +             error = xfs_break_layouts(inode, iolock);
->> +             if (error)
->> +                     break;
->> +
->> +             xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
->> +             *iolock |= XFS_MMAPLOCK_EXCL;
->> +
->> +             error = dax_flush_dma(inode->i_mapping, xfs_wait_dax_page);
->> +             if (error <= 0)
->> +                     break;
->> +             xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
->> +             *iolock &= ~XFS_MMAPLOCK_EXCL;
->> +     }
->
-> At this level the loop seems sub-optimal. If we don't drop the
-> IOLOCK, then we have no reason to call xfs_break_layouts() a second
-> time.  Hence in isolation this loop doesn' make sense. Yes, I
-> realise that dax_flush_dma() can result in all locks on the inode
-> being dropped, but that's hidden in another function whose calling
-> scope is not at all obvious from this code.
->
-> Also, xfs_wait_dax_page() assumes we have IOLOCK_EXCL held when it
-> is called. Nothing enforces the requirement that xfs_sync_dma() is
-> passed XFS_IOLOCK_EXCL, and so such assumptions cannot be made.
-> Even if it was, I really dislike the idea of a function that
-> /assumes/ lock state - that's a landmine that will bite us in the
-> rear end at some unexpected point in the future. If you need to
-> cycle held locks on an inode, you need to pass the held lock state
-> to the function.
-
-I agree, and I thought about this, but at the time the callback is
-made the only way we could pass the lock context to
-xfs_wait_dax_page() would be to temporarily store it in the 'struct
-page' which seemed ugly at first glance.
-
-However, we do have space, we could alias it with the other unused
-8-bytes of page->lru.
-
-At least that cleans up the filesystem interface to not need to make
-implicit locking assumptions... I'll go that route.
-
-> Another gripe I have is that calling xfs_sync_dma() implies the mmap
-> lock is held exclusively on return. Hiding this locking inside
-> xfs_sync_dma removes the code documentation that large tracts of
-> code are protected against page faults by the XFS_MMAPLOCK_EXCL lock
-> call.  Instead of knowing at a glance that the truncate path
-> (xfs_vn_setattr) is protected against page faults, I have to
-> remember that xfs_sync_dma() now does this.
->
-> This goes back to my initial comments of "what the hell does "sync
-> dma" mean in a filesystem context?" - it certainly doesn't make me
-> think about inode locking. I don't like hidden/implicitly locking
-> like this, because it breaks both the least-surprise and the
-> self-documenting code principles....
-
-Thanks for this Dave, it's clear. I'll a spin a new version with some
-of the reworks proposed above, but holler if those don't address your
-core concern.
