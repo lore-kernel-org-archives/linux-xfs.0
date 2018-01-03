@@ -1,32 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39954 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751307AbeACQ2S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Jan 2018 11:28:18 -0500
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <1514919462.3462.18.camel@kernel.org>
-References: <1514919462.3462.18.camel@kernel.org> <20171222120556.7435-6-jlayton@kernel.org> <20171222120556.7435-1-jlayton@kernel.org> <5112.1514913610@warthog.procyon.org.uk>
-Subject: Re: [PATCH v4 05/19] afs: convert to new i_version API
+Received: from aserp2120.oracle.com ([141.146.126.78]:57786 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750829AbeACSkS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 13:40:18 -0500
+Subject: [PATCH 1/5] libhandle: zap fdhash in fshandle_destroy
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 03 Jan 2018 10:40:11 -0800
+Message-ID: <151500481167.7713.14079138301635732058.stgit@magnolia>
+In-Reply-To: <151500479880.7713.6538509149156363572.stgit@magnolia>
+References: <151500479880.7713.6538509149156363572.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <14422.1514996892.1@warthog.procyon.org.uk>
-Date: Wed, 03 Jan 2018 16:28:12 +0000
-Message-ID: <14423.1514996892@warthog.procyon.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: dhowells@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, jaltman@auristor.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Jeff Layton <jlayton@kernel.org> wrote:
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-> Thanks! I updated that part of the the commit log to read:
-> 
->     Note that AFS has quite a different definition for this counter. AFS
->     only increments it on changes to the data to the data in regular files
->     and contents of the directories. Inode metadata changes do not result
->     in a version increment.
+Set fdhash_head to zero once we've destroyed the handle list to avoid
+dangling pointer problems.
 
-Sounds good.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libhandle/handle.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-David
+
+diff --git a/libhandle/handle.c b/libhandle/handle.c
+index e6971dd..878d14d 100644
+--- a/libhandle/handle.c
++++ b/libhandle/handle.c
+@@ -73,6 +73,7 @@ fshandle_destroy(void)
+ 		free(h);
+ 		h = nexth;
+ 	}
++	fdhash_head = NULL;
+ }
+ 
+ int
+
