@@ -1,146 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57984 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751514AbeACN2F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Jan 2018 08:28:05 -0500
-Date: Wed, 3 Jan 2018 08:28:03 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: speed up directory bestfree block scanning
-Message-ID: <20180103132802.GA17932@bfoster.bfoster>
-References: <20180103062748.16400-1-david@fromorbit.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31113 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751014AbeACXAH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 18:00:07 -0500
+Date: Thu, 4 Jan 2018 09:59:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Block size and read-modify-write
+Message-ID: <20180103225954.GP5858@dastard>
+References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
+ <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
+ <20180103011926.GJ5858@dastard>
+ <b58a3a90-0e7b-abca-91ce-8b2d8819a75b@assyoma.it>
+ <20180103214741.GO5858@dastard>
+ <fa54fea7ec0d836f2c037f7b71a17365@assyoma.it>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180103062748.16400-1-david@fromorbit.com>
+In-Reply-To: <fa54fea7ec0d836f2c037f7b71a17365@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Gionatan Danti <g.danti@assyoma.it>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jan 03, 2018 at 05:27:48PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jan 03, 2018 at 11:09:30PM +0100, Gionatan Danti wrote:
+> Il 03-01-2018 22:47 Dave Chinner ha scritto:
+> >On Wed, Jan 03, 2018 at 03:54:42PM +0100, Gionatan Danti wrote:
+> >>
+> >>
+> >>On 03/01/2018 02:19, Dave Chinner wrote:
+> >>>Cached writes smaller than a *page* will cause RMW cycles in the
+> >>>page cache, regardless of the block size of the filesystem.
+> >>
+> >>Sure, in this case a page-sized r/m/w cycle happen in the pagecache.
+> >>However it seems to me that, when flushed to disk, writes happens at
+> >>the block level granularity, as you can see from tests[1,2] below.
+> >>Am I wrong? I am missing something?
+> >
+> >You're writing into unwritten extents. That's not a data overwrite,
+> >so behaviour can be very different. And when you have sub-page block
+> >sizes, the filesystem and/or page cache may decide not to read the
+> >whole page if it doesn't need to immmediately. e.g. you'll see
+> >different behaviour between a 512 byte write() and a 512 byte write
+> >via mmap()...
 > 
-> When running a "create millions inodes in a directory" test
-> recently, I noticed we were spending a huge amount of time
-> converting freespace block headers from disk format to in-memory
-> format:
+> The first "dd" execution surely writes into unwritten extents.
+> However, on the following writes real data are overwritten, right?
+
+Yes. But I'm talking about the initial page cache writes in your
+tests, and they were all into unwritten extents. These are the
+writes that had different behaviour in exach test case.
+
+The second write in each test case was the direct IO write. That's
+what went over existing data, written through the page cache by the
+first write. They all had the same behaviour - a single 512 byte
+write - as they were all being written into allocated blocks that
+contained existing data on a device with a logical sector size of
+512 bytes.
+
+> >We've been over this many times in the past few years. user data
+> >alignment is controlled by stripe unit/width specification,
+> >not sector/block sizes.
 > 
->  31.47%  [kernel]  [k] xfs_dir2_node_addname
->  17.86%  [kernel]  [k] xfs_dir3_free_hdr_from_disk
->   3.55%  [kernel]  [k] xfs_dir3_free_bests_p
-> 
-> We shouldn't be hitting the best free block scanning code so hard
-> when doing sequential directory creates, and it turns out there's
-> a highly suboptimal loop searching the the best free array in
-> the freespace block - it decodes the block header before checking
-> each entry inside a loop, instead of decoding the header once before
-> running the entry search loop.
-> 
-> This makes a massive difference to create rates. Profile now looks
-> like this:
-> 
->   13.15%  [kernel]  [k] xfs_dir2_node_addname
->    3.52%  [kernel]  [k] xfs_dir3_leaf_check_int
->    3.11%  [kernel]  [k] xfs_log_commit_cil
-> 
-> And the wall time/average file create rate differences are
-> just as stark:
-> 
-> 		create time(sec) / rate (files/s)
-> File count	     vanilla		    patched
->   10k		   0.54 / 18.5k		   0.53 / 18.9k
->   20k		   1.10	/ 18.1k		   1.05 / 19.0k
->  100k		   4.21	/ 23.8k		   3.91 / 25.6k
->  200k		   9.66	/ 20,7k		   7.37 / 27.1k
->    1M		  86.61	/ 11.5k		  48.26 / 20.7k
->    2M		 206.13	/  9.7k		 129.71 / 15.4k
-> 
-> The larger the directory, the bigger the performance improvement.
-> 
+> Sure, but to avoid/mitigate device-level r/m/w, a proper alignement
+> is not sufficient by itself. You should also avoid partial page
+> writes.
 
-Interesting..
+That's an application problem, not a filesystem problem. All the
+filesystem can do is align/size the data extents to match what is
+optimal for the underlying storage (as we do for RAID) and hope
+the application is smart enough to do large, well formed IOs to
+the filesystem.
 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_dir2_node.c | 30 +++++++++++++++---------------
->  1 file changed, 15 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index 682e2bf370c7..bcf0d43cd6a8 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -1829,24 +1829,24 @@ xfs_dir2_node_addname_int(
->  		 */
->  		bests = dp->d_ops->free_bests_p(free);
->  		dp->d_ops->free_hdr_from_disk(&freehdr, free);
-> -		if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
-> -		    be16_to_cpu(bests[findex]) >= length)
-> -			dbno = freehdr.firstdb + findex;
-> -		else {
-> -			/*
-> -			 * Are we done with the freeblock?
-> -			 */
-> -			if (++findex == freehdr.nvalid) {
-> -				/*
-> -				 * Drop the block.
-> -				 */
-> -				xfs_trans_brelse(tp, fbp);
-> -				fbp = NULL;
-> -				if (fblk && fblk->bp)
-> -					fblk->bp = NULL;
+> Anyway, I got the message: this is not business XFS directly
+> cares about.
 
-Ok, so we're adding a dir entry to a node dir and walking the free space
-blocks to see if we have space somewhere to insert the entry without
-growing the dir. The current code reads the free block, converts the
-header, checks bests[findex], then bumps findex or invalidates the free
-block if we're done with it.
+I think you've jumped to entirely the wrong conclusion. We do care
+about it because if you can't convey/control data alignment at the
+filesystem level, then you can't fully optimise IO at the
+application level.
 
-The updated code reads the free block, converts the header, iterates the
-free index range then invalidates the block when complete (assuming we
-don't find suitable free space). The end result is that we don't convert
-the block header over and over for each index in the individual block.
-Seems reasonable to me, just a couple nits...
+The reality is that we've been doing these sorts of data alignment
+optimisations for the last 20 years with XFS and applications using
+direct IO. We care an awful lot about alignment of the filesystem
+structure to the underlying device characteristics because if we
+don't then IO performance is extremely difficult to maximise and/or
+make deterministic.
 
-> +		do {
-> +
+However, this is such a complex domain that very, very few people
+have the knowledge and expertise to understand how to take advantage
+of it fully. It's hard even to convey just how complex it is to
+people without a solid knowledge base of filesysystem and storage
+knowledge, as this conversion shows...
 
-Extra space above.
+Cheers,
 
-> +			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
-> +			    be16_to_cpu(bests[findex]) >= length) {
-> +				dbno = freehdr.firstdb + findex;
-> +				break;
->  			}
-> +		} while (++findex < freehdr.nvalid);
-> +
-> +		/* Drop the block if we done with the freeblock */
-
-"... if we're done ..."
-
-Also FWIW, according to the comment it looks like the only reason the
-freehdr conversion is elevated to this scope is to accommodate gcc
-foolishness. If so, I'm wondering if a simple NULL init of bests at the
-top of the function would avoid that problem and allow us to move the
-code to where it was apparently intended to be in the first place. Hm?
-
-Brian
-
-> +		if (findex == freehdr.nvalid) {
-> +			xfs_trans_brelse(tp, fbp);
-> +			fbp = NULL;
-> +			if (fblk)
-> +				fblk->bp = NULL;
->  		}
->  	}
-> +
->  	/*
->  	 * If we don't have a data block, we need to allocate one and make
->  	 * the freespace entries refer to it.
-> -- 
-> 2.15.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
