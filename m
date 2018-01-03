@@ -1,59 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:41840 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751278AbeAENF3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 08:05:29 -0500
-Date: Fri, 5 Jan 2018 14:05:26 +0100
-From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: Re: [V4, 01/11] Documentation: Add license-rules.rst to describe how
- to properly identify file licenses
-Message-ID: <20180105130526.GA31648@piout.net>
-References: <alpine.DEB.2.20.1711171057240.1709@nanos>
+Received: from mx1.redhat.com ([209.132.183.28]:60994 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751007AbeACUhw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Jan 2018 15:37:52 -0500
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v4 08/18] tools/testing/nvdimm: add 'bio_delay' mechanism
+References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <151407700353.38751.17609507477918854876.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <20180102214450.GU5858@dastard>
+        <CAPcyv4iaSnWFd6qt52+TQ_k9Kwf1pXLq8GMHdtd-Hg_mvN6rvg@mail.gmail.com>
+        <20180103154613.GL4911@quack2.suse.cz>
+Date: Wed, 03 Jan 2018 15:37:50 -0500
+In-Reply-To: <20180103154613.GL4911@quack2.suse.cz> (Jan Kara's message of
+        "Wed, 3 Jan 2018 16:46:13 +0100")
+Message-ID: <x49fu7mel0h.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1711171057240.1709@nanos>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, linux-nvdimm@lists.01.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-Hi,
+Jan Kara <jack@suse.cz> writes:
 
-I'm definitively late to the party but...
+> On Tue 02-01-18 13:51:49, Dan Williams wrote:
+>> On Tue, Jan 2, 2018 at 1:44 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Sat, Dec 23, 2017 at 04:56:43PM -0800, Dan Williams wrote:
+>> >> In support of testing truncate colliding with dma add a mechanism that
+>> >> delays the completion of block I/O requests by a programmable number of
+>> >> seconds. This allows a truncate operation to be issued while page
+>> >> references are held for direct-I/O.
+>> >>
+>> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>> >
+>> > Why not put this in the generic bio layer code and then write a
+>> > generic fstest to exercise this truncate vs direct IO completion
+>> > race condition on all types of storage and filesystems?
+>> >
+>> > i.e. if it sits in a nvdimm test suite, it's never going to be run
+>> > by filesystem developers....
+>> 
+>> I do want to get it into xfstests eventually. I picked the nvdimm
+>> infrastructure for expediency of getting the fix developed. Also, I
+>> consider the collision in the non-dax case a solved problem since the
+>> core mm will keep the page out of circulation indefinitely.
+>
+> Yes, but there are different races that could happen even for regular page
+> cache pages. So I also think it would be worthwhile to have this inside the
+> block layer possibly as part of the generic fault-injection framework which
+> is already there for fail_make_request. That already supports various
+> filtering, frequency, and other options that could be useful.
 
-On 17/11/2017 at 11:00:33 +0100, Thomas Gleixner wrote:
-> +2. Style:
-> +
-> +   The SPDX license identifier is added in form of a comment.  The comment
-> +   style depends on the file type::
-> +
-> +      C source:   // SPDX-License-Identifier: <SPDX License Expression>
-> +      C header:   /* SPDX-License-Identifier: <SPDX License Expression> */
-> +      ASM:        /* SPDX-License-Identifier: <SPDX License Expression> */
-> +      scripts:    # SPDX-License-Identifier: <SPDX License Expression>
-> +      .rst:	  .. SPDX-License-Identifier: <SPDX License Expression>
-> +      .dts{i}:	  // SPDX-License-Identifier: <SPDX License Expression>
+Or consider extending the dm-delay target (which delays the queuing of
+bios) to support delaying the completions.  I'm not sure I'm a fan of
+sticking all sorts of debug code into the generic I/O submission path.
 
-dtc doesn't handle // comments. This works in the kernel tree because
-dts files are preprocessed by CPP. But this doesn't work when using dtc
-directly (most likely when compiling DT overlays). So, the choice is
-between making dtc handle // comments or changing the documentation.
-
-I don't have an opinion and Rob doesn't seem to care but I think we need
-to do something now instead of letting each maintainer have to handle
-this issue.
-
-> +   If a specific tool cannot handle the standard comment style, then the
-> +   appropriate comment mechanism which the tool accepts shall be used. This
-> +   is the reason for having the "/\* \*/" style comment in C header
-> +   files. There was build breakage observed with generated .lds files where
-> +   'ld' failed to parse the C++ comment. This has been fixed by now, but
-> +   there are still older assembler tools which cannot handle C++ style
-> +   comments.
-> +
--- 
-Alexandre Belloni, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+Cheers,
+Jeff
