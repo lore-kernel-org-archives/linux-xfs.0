@@ -1,96 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:3688 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750945AbeACVsz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 16:48:55 -0500
-Date: Thu, 4 Jan 2018 08:47:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Block size and read-modify-write
-Message-ID: <20180103214741.GO5858@dastard>
-References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
- <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
- <20180103011926.GJ5858@dastard>
- <b58a3a90-0e7b-abca-91ce-8b2d8819a75b@assyoma.it>
+Received: from mx2.suse.de ([195.135.220.15]:34460 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751290AbeACP1o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Jan 2018 10:27:44 -0500
+Date: Wed, 3 Jan 2018 16:27:41 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 05/18] dax: stop using VM_MIXEDMAP for dax
+Message-ID: <20180103152741.GI4911@quack2.suse.cz>
+References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <151407698763.38751.8605535379424429182.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b58a3a90-0e7b-abca-91ce-8b2d8819a75b@assyoma.it>
+In-Reply-To: <151407698763.38751.8605535379424429182.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-On Wed, Jan 03, 2018 at 03:54:42PM +0100, Gionatan Danti wrote:
+On Sat 23-12-17 16:56:27, Dan Williams wrote:
+> VM_MIXEDMAP is used by dax to direct mm paths like vm_normal_page() that
+> the memory page it is dealing with is not typical memory from the linear
+> map. The get_user_pages_fast() path, since it does not resolve the vma,
+> is already using {pte,pmd}_devmap() as a stand-in for VM_MIXEDMAP, so we
+> use that as a VM_MIXEDMAP replacement in some locations. In the cases
+> where there is no pte to consult we fallback to using vma_is_dax() to
+> detect the VM_MIXEDMAP special case.
 > 
+> Now that we have explicit driver pfn_t-flag opt-in/opt-out for
+> get_user_pages() support for DAX we can stop setting VM_MIXEDMAP.  This
+> also means we no longer need to worry about safely manipulating vm_flags
+> in a future where we support dynamically changing the dax mode of a
+> file.
 > 
-> On 03/01/2018 02:19, Dave Chinner wrote:
-> >Cached writes smaller than a *page* will cause RMW cycles in the
-> >page cache, regardless of the block size of the filesystem.
-> 
-> Sure, in this case a page-sized r/m/w cycle happen in the pagecache.
-> However it seems to me that, when flushed to disk, writes happens at
-> the block level granularity, as you can see from tests[1,2] below.
-> Am I wrong? I am missing something?
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Michal Hocko <mhocko@suse.com>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-You're writing into unwritten extents. That's not a data overwrite,
-so behaviour can be very different. And when you have sub-page block
-sizes, the filesystem and/or page cache may decide not to read the
-whole page if it doesn't need to immmediately. e.g. you'll see
-different behaviour between a 512 byte write() and a 512 byte write
-via mmap()...
+...
 
-IOWs, there are so many different combinations of behaviour and
-variables that we don't try to explain every single nuance. If you
-do sub-page and/or sub-block size IO, then expect to page sized RMW
-to occur. It might be smaller depending on the fs config, the file
-layout, the underlying extent type, the type of ioperation the 
-write must perform (e.g. plain overwrite vs copy-on-write), the
-offset into the page/block, etc. The simple message is this: avoid
-sub-block/page size IO if you can possibly avoid it.
+> diff --git a/mm/madvise.c b/mm/madvise.c
+> index 751e97aa2210..eff3ec1e2574 100644
+> --- a/mm/madvise.c
+> +++ b/mm/madvise.c
+> @@ -96,7 +96,7 @@ static long madvise_behavior(struct vm_area_struct *vma,
+>  		new_flags |= VM_DONTDUMP;
+>  		break;
+>  	case MADV_DODUMP:
+> -		if (new_flags & VM_SPECIAL) {
+> +		if (vma_is_dax(vma) || (new_flags & VM_SPECIAL)) {
+>  			error = -EINVAL;
+>  			goto out;
+>  		}
 
-> >Ok, there is a difference between *sector size* and *filesystem
-> >block size*. You seem to be using them interchangably in your
-> >question, and that's not correct.
-> 
-> True, maybe I have issues grasping the concept of sector size from
-> XFS point of view. I understand sector size as an hardware property
-> of the underlying block device, but how does it relate to the
-> filesystem?
-> 
-> I naively supposed that an XFS filesystem created with 4k *sector*
-> size (ie: mkfs.xfs -s size=4096) would prevent 512 bytes O_DIRECT
-> writes, but my test[3] shows that even of such a filesystem a 512B
-> direct write is possible, indeed.
-> 
-> Is sector size information only used by XFS own metadata and
-> journaling in order to avoid costly device-level r/m/w cycles on
-> 512e devices? I understand that on 4Kn device you *have* to avoid
-> sub-sector writes, or the transfer will fail.
+Why do you add the check here? I assume it's because VM_SPECIAL contains
+VM_MIXEDMAP... But then why don't we allow dumping of DAX VMAs? Possibly
+just keep the addition of the check in this patch and then add a separate
+patch removing it with proper justification.
 
-We don't care if the device does internal RMW cycles (RAID does
-that all the time). The sector size we care about is the size of an
-atomic write IO - the IO size that the device guarantees will either
-succeed completely or fail without modification. This is needed for
-journal recovery sanity.
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 48a13473b401..1efb005e8fab 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+...
+> @@ -1228,7 +1232,7 @@ int copy_page_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
+>  	 * efficient than faulting.
+>  	 */
+>  	if (!(vma->vm_flags & (VM_HUGETLB | VM_PFNMAP | VM_MIXEDMAP)) &&
+> -			!vma->anon_vma)
+> +			!vma->anon_vma && !vma_is_dax(vma))
+>  		return 0;
+>  
+>  	if (is_vm_hugetlb_page(vma))
 
-For data, the kernel checks the logical device sector size and
-limits direct IO to those sizes, not the filesystem sector size.
-i.e.  filesystem sector size if there for sizing journal operations
-and metadata, not limiting data access alignment.
+Ditto here... Page fault will fill DAX vmas just fine so I don't see a
+reason why fork would need to copy page tables by hand.
 
-> I want to put some context on the original question, and why I am so
-> interested on r/m/w cycles. SSD's flash-page size has, in recent
-> years (2014+), ballooned to 8/16/32K. I wonder if a matching
-> blocksize and/or sector size are needed to avoid (some of)
-> device-level r/m/w cycles, which can dramatically increase flash
-> write amplification (with reduced endurance).
+Also I suppose comments about VM_MIXEDMAP in do_wp_page() and
+wp_pfn_shared() would use some updating.
 
-We've been over this many times in the past few years. user data
-alignment is controlled by stripe unit/width specification,
-not sector/block sizes.
+I'm not sure but I think VM_SPECIAL checks in mm/hmm.c needs treatment as
+well?
 
--Dave.
+If the replacement was really strict you should also add the check to
+vma_merge() AFAICT. But as in some other cases, we can enable vma merging
+for DAX vmas just fine so as the end result vma_merge() should IMO treat
+DAX vmas. But it would be good to have this change recorded in a changelog
+of a separate patch removing this additional check.
+
+								Honza
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
