@@ -1,103 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.fsfe.org ([217.69.89.162]:45560 "EHLO mail.fsfe.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752463AbeADQbF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Jan 2018 11:31:05 -0500
-Subject: Re: [patch V5 02/11] LICENSES: Add the GPL 2.0 license
-References: <20171228152710.891701433@linutronix.de>
- <20171228153308.366509938@linutronix.de>
-From: Carmen Bianca Bakker <carmenbianca@fsfe.org>
-Message-ID: <b353bb05-e9ea-86b7-7f34-c4c0f6b308fb@fsfe.org>
-Date: Thu, 4 Jan 2018 17:25:38 +0100
-MIME-Version: 1.0
-In-Reply-To: <20171228153308.366509938@linutronix.de>
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC"
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:63883 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751502AbeACG1w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 01:27:52 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eWcWi-0007QV-Te
+        for linux-xfs@vger.kernel.org; Wed, 03 Jan 2018 17:27:48 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.89)
+        (envelope-from <david@fromorbit.com>)
+        id 1eWcWi-0004HE-Sl
+        for linux-xfs@vger.kernel.org; Wed, 03 Jan 2018 17:27:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: speed up directory bestfree block scanning
+Date: Wed,  3 Jan 2018 17:27:48 +1100
+Message-Id: <20180103062748.16400-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC
-Content-Type: multipart/mixed; boundary="HKI7b2tBig5eeSknsN2OzW7175LYzYiMv";
- protected-headers="v1"
-From: Carmen Bianca Bakker <carmenbianca@fsfe.org>
-To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linuxfoundation.org>,
- Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>,
- Kate Stewart <kstewart@linuxfoundation.org>,
- Philippe Ombredanne <pombredanne@nexb.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>,
- Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>,
- Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org,
- Charlemagne Lasse <charlemagnelasse@gmail.com>,
- "Darrick J. Wong" <darrick.wong@oracle.com>,
- Heiko Carstens <heiko.carstens@de.ibm.com>
-Message-ID: <b353bb05-e9ea-86b7-7f34-c4c0f6b308fb@fsfe.org>
-Subject: Re: [patch V5 02/11] LICENSES: Add the GPL 2.0 license
-References: <20171228152710.891701433@linutronix.de>
- <20171228153308.366509938@linutronix.de>
-In-Reply-To: <20171228153308.366509938@linutronix.de>
+From: Dave Chinner <dchinner@redhat.com>
 
---HKI7b2tBig5eeSknsN2OzW7175LYzYiMv
-Content-Type: text/plain; charset=iso-8859-15
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+When running a "create millions inodes in a directory" test
+recently, I noticed we were spending a huge amount of time
+converting freespace block headers from disk format to in-memory
+format:
 
-Hi all,
+ 31.47%  [kernel]  [k] xfs_dir2_node_addname
+ 17.86%  [kernel]  [k] xfs_dir3_free_hdr_from_disk
+  3.55%  [kernel]  [k] xfs_dir3_free_bests_p
 
-Since December, `GPL-2.0` is no longer the correct identifier for the
-licence.  The American FSF has been in talks with the SPDX Workgroup to
-change it to `GPL-2.0-only`.
+We shouldn't be hitting the best free block scanning code so hard
+when doing sequential directory creates, and it turns out there's
+a highly suboptimal loop searching the the best free array in
+the freespace block - it decodes the block header before checking
+each entry inside a loop, instead of decoding the header once before
+running the entry search loop.
 
-See the rationale here:
+This makes a massive difference to create rates. Profile now looks
+like this:
 
-https://www.gnu.org/licenses/identify-licenses-clearly.html
+  13.15%  [kernel]  [k] xfs_dir2_node_addname
+   3.52%  [kernel]  [k] xfs_dir3_leaf_check_int
+   3.11%  [kernel]  [k] xfs_log_commit_cil
 
-See the new canonical licence list here:
+And the wall time/average file create rate differences are
+just as stark:
 
-https://spdx.org/licenses/
+		create time(sec) / rate (files/s)
+File count	     vanilla		    patched
+  10k		   0.54 / 18.5k		   0.53 / 18.9k
+  20k		   1.10	/ 18.1k		   1.05 / 19.0k
+ 100k		   4.21	/ 23.8k		   3.91 / 25.6k
+ 200k		   9.66	/ 20,7k		   7.37 / 27.1k
+   1M		  86.61	/ 11.5k		  48.26 / 20.7k
+   2M		 206.13	/  9.7k		 129.71 / 15.4k
 
-This change is valid for all GPL licences.  Similarly, `GPL-2.0+` has
-been changed to `GPL-2.0-or-later`.
+The larger the directory, the bigger the performance improvement.
 
-I believe that this patch should be changed to reflect that.  The
-identifiers used in this patch are still valid, but deprecated.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_dir2_node.c | 30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-Yours sincerely,
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 682e2bf370c7..bcf0d43cd6a8 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -1829,24 +1829,24 @@ xfs_dir2_node_addname_int(
+ 		 */
+ 		bests = dp->d_ops->free_bests_p(free);
+ 		dp->d_ops->free_hdr_from_disk(&freehdr, free);
+-		if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
+-		    be16_to_cpu(bests[findex]) >= length)
+-			dbno = freehdr.firstdb + findex;
+-		else {
+-			/*
+-			 * Are we done with the freeblock?
+-			 */
+-			if (++findex == freehdr.nvalid) {
+-				/*
+-				 * Drop the block.
+-				 */
+-				xfs_trans_brelse(tp, fbp);
+-				fbp = NULL;
+-				if (fblk && fblk->bp)
+-					fblk->bp = NULL;
++		do {
++
++			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
++			    be16_to_cpu(bests[findex]) >= length) {
++				dbno = freehdr.firstdb + findex;
++				break;
+ 			}
++		} while (++findex < freehdr.nvalid);
++
++		/* Drop the block if we done with the freeblock */
++		if (findex == freehdr.nvalid) {
++			xfs_trans_brelse(tp, fbp);
++			fbp = NULL;
++			if (fblk)
++				fblk->bp = NULL;
+ 		}
+ 	}
++
+ 	/*
+ 	 * If we don't have a data block, we need to allocate one and make
+ 	 * the freespace entries refer to it.
+-- 
+2.15.0
 
---=20
-Carmen Bianca Bakker
-Technical Intern
-Free Software Foundation Europe e.V.
-
-
---HKI7b2tBig5eeSknsN2OzW7175LYzYiMv--
-
---gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEaOz9p2Grh2PLV5z6duum9rbqLskFAlpOVYMACgkQduum9rbq
-LsnfhxAAl6RDRwn3DZgJav2RG7COcj6E9fdCJHSzU4mXmicLq0vqOq1MmHSxeaqI
-C/VBYDHE0uIP2S1O728Rz+sBGLORTUjUQHBth/AB35GMfIJLyDpMLJzDdBXw77sJ
-dK0aFYv5xjkRfNimISVSMxeA8ZjjsbXFvrE4eRnBqw9v/vJPU0k82ukdMSuDgT3l
-PZL26FjQMToQqF53Etm6zisyDcOuflGovryQdyFJjY7s10bfH8Zc/II8mkIy9caa
-sVjrTYIo0zAOBwx/SEeoSQNtFStEn2eFy3VgG7u7n23DJuHsHpRSh6xzOn2LnnfL
-3HphGy9pMGE6lZ2mzUqs73XDeBNNDcISYgvlIHobsG3m66ucGMyd5eFDVJhYdP3I
-Pej5ZxjrevBlVWa0R7Fr3tNng6+8iChmpdOBKEv90B4ZJCrWv4qUgcvzuSsKiuBn
-RA+0yIvRwa5PNAW0+IOUyv7oz1MSUpp5SzDdJq2196WggxyngmCpN9PHStRmrgSk
-Qgo6IEqTvCUDgIT4mrwjWMup1moB8Jkr2p+CqLtEjB2m33CKPeXVi3kEANAezzRm
-vvyiL6bfysUb1TSXxAsSV7bXG2R1hd8UyVdWsJnBDmRZonqYujDoctK0KNn2jLSi
-dUU4vVB8mK25TehPmZJO15WTmwSitP7tIU6rucJFfhcHxP/bd2g=
-=SIe4
------END PGP SIGNATURE-----
-
---gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC--
