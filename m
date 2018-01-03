@@ -1,49 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37572 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37906 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751207AbeACQFF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Jan 2018 11:05:05 -0500
-Date: Wed, 3 Jan 2018 17:05:03 +0100
+        id S1751868AbeACQJz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Jan 2018 11:09:55 -0500
+Date: Wed, 3 Jan 2018 17:09:53 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 11/18] fs, dax: introduce DEFINE_FSDAX_AOPS
-Message-ID: <20180103160503.GM4911@quack2.suse.cz>
+Subject: Re: [PATCH v4 12/18] xfs: use DEFINE_FSDAX_AOPS
+Message-ID: <20180103160953.GN4911@quack2.suse.cz>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151407701943.38751.8997225433943672290.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20171227052910.GE24828@bombadil.infradead.org>
- <CAPcyv4ibKYi_zE=V2W_aLghtr3LiC30A2ffFq-aPQCrikwgy2w@mail.gmail.com>
+ <151407702457.38751.9874209243918617373.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180102211539.GH4857@magnolia>
+ <CAPcyv4hL4F0xDuFpWQ6ZEvtkMmhCa6V2oqr7bNFGeQQknNAf5w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4ibKYi_zE=V2W_aLghtr3LiC30A2ffFq-aPQCrikwgy2w@mail.gmail.com>
+In-Reply-To: <CAPcyv4hL4F0xDuFpWQ6ZEvtkMmhCa6V2oqr7bNFGeQQknNAf5w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: Matthew Wilcox <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, Matthew Wilcox <mawilcox@microsoft.com>, linux-nvdimm@lists.01.org, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
 
-On Tue 02-01-18 12:21:28, Dan Williams wrote:
-> >> +EXPORT_SYMBOL(dax_set_page_dirty);
-> >> +EXPORT_SYMBOL(dax_direct_IO);
-> >> +EXPORT_SYMBOL(dax_writepage);
-> >> +EXPORT_SYMBOL(dax_readpage);
-> >> +EXPORT_SYMBOL(dax_readpages);
-> >> +EXPORT_SYMBOL(dax_write_begin);
-> >> +EXPORT_SYMBOL(dax_write_end);
-> >> +EXPORT_SYMBOL(dax_invalidatepage);
+On Tue 02-01-18 13:40:32, Dan Williams wrote:
+> On Tue, Jan 2, 2018 at 1:15 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > On Sat, Dec 23, 2017 at 04:57:04PM -0800, Dan Williams wrote:
+> >> In preparation for the dax implementation to start associating dax pages
+> >> to inodes via page->mapping, we need to provide a 'struct
+> >> address_space_operations' instance for dax. Otherwise, direct-I/O
+> >> triggers incorrect page cache assumptions and warnings.
+> >>
+> >> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> >> Cc: linux-xfs@vger.kernel.org
+> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> >> ---
+> >>  fs/xfs/xfs_aops.c |    2 ++
+> >>  fs/xfs/xfs_aops.h |    1 +
+> >>  fs/xfs/xfs_iops.c |    5 ++++-
+> >>  3 files changed, 7 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> >> index 21e2d70884e1..361915d53cef 100644
+> >> --- a/fs/xfs/xfs_aops.c
+> >> +++ b/fs/xfs/xfs_aops.c
+> >> @@ -1492,3 +1492,5 @@ const struct address_space_operations xfs_address_space_operations = {
+> >>       .is_partially_uptodate  = block_is_partially_uptodate,
+> >>       .error_remove_page      = generic_error_remove_page,
+> >>  };
+> >> +
+> >> +DEFINE_FSDAX_AOPS(xfs_dax_address_space_operations, xfs_vm_writepages);
 > >
-> > Exporting all these symbols to modules isn't exactly free.  Are you sure it
-> > doesn't make more sense to put tests for dax in the existing aops?
+> > Hmm, if we ever re-enable changing the DAX flag on the fly, will
+> > mapping->a_ops have to change dynamically too?
 > >
+> > How sure are we that we'll never have to set anything in the dax aops
+> > other than ->writepages?
+> >
+> > (I also kinda wonder why not just make the callers savvy vs. a bunch of
+> > dummy aops, but maybe that's been tried in a previous iteration?)
 > 
-> I'd rather have just one global fs_dax_aops instance that all
-> filesystems could reference, but ->writepages() is fundamentally an
-> address_space_operation. Until we can rework that I'd prefer the
-> overhead of the extra exports than sprinkling more IS_DAX checks
-> around.
+> Matthew had similar feedback. I pushed back that I think more IS_DAX
+> sprinkling increases the long term maintenance burden, but now that
+> you've independently asked for the same thing I'm not opposed to
+> changing my mind.
+> 
+> Either way this need to switch the address_space_operations, or
+> synchronize against in-flight address_space_operations is going to
+> complicate the "dynamic toggle the dax mode" feature.
 
-Just for record I agree with what Dave said about this patch. Generic
-address_space_operations are not how aops are commonly defined by
-filesystems. Just create one structure for each fs as Dave suggested.
+ext4 already dynamically switches aops for journalled data vs
+non-journalled data vs nodelalloc case. That being said I'm not quite sure
+this is bug-free ;)
 
 								Honza
 -- 
