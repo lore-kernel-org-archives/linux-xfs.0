@@ -1,68 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56654 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751329AbeACOVc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Jan 2018 09:21:32 -0500
-Date: Wed, 3 Jan 2018 15:21:30 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 03/18] ext2: auto disable dax instead of failing mount
-Message-ID: <20180103142130.GH4911@quack2.suse.cz>
-References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151407697703.38751.2935252018151032360.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:3688 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750945AbeACVsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 16:48:55 -0500
+Date: Thu, 4 Jan 2018 08:47:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Block size and read-modify-write
+Message-ID: <20180103214741.GO5858@dastard>
+References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
+ <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
+ <20180103011926.GJ5858@dastard>
+ <b58a3a90-0e7b-abca-91ce-8b2d8819a75b@assyoma.it>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151407697703.38751.2935252018151032360.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <b58a3a90-0e7b-abca-91ce-8b2d8819a75b@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: linux-xfs@vger.kernel.org
 
-On Sat 23-12-17 16:56:17, Dan Williams wrote:
-> Bring the ext2 filesystem in line with xfs that only warns and continues
-> when the "-o dax" option is specified to mount and the backing device
-> does not support dax. This is in preparation for removing dax support
-> from devices that do not enable get_user_pages() operations on dax
-> mappings. In other words 'gup' support is required and configurations
-> that were using so called 'page-less' dax will be converted back to
-> using the page cache.
+On Wed, Jan 03, 2018 at 03:54:42PM +0100, Gionatan Danti wrote:
 > 
-> Removing the broken 'page-less' dax support is a pre-requisite for
-> removing the "EXPERIMENTAL" warning when mounting a filesystem in dax
-> mode.
 > 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-
-You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  fs/ext2/super.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+> On 03/01/2018 02:19, Dave Chinner wrote:
+> >Cached writes smaller than a *page* will cause RMW cycles in the
+> >page cache, regardless of the block size of the filesystem.
 > 
-> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-> index 7646818ab266..38f9222606ee 100644
-> --- a/fs/ext2/super.c
-> +++ b/fs/ext2/super.c
-> @@ -959,8 +959,11 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
->  
->  	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
->  		err = bdev_dax_supported(sb, blocksize);
-> -		if (err)
-> -			goto failed_mount;
-> +		if (err) {
-> +			ext2_msg(sb, KERN_ERR,
-> +				"DAX unsupported by block device. Turning off DAX.");
-> +			sbi->s_mount_opt &= ~EXT2_MOUNT_DAX;
-> +		}
->  	}
->  
->  	/* If the blocksize doesn't match, re-read the thing.. */
+> Sure, in this case a page-sized r/m/w cycle happen in the pagecache.
+> However it seems to me that, when flushed to disk, writes happens at
+> the block level granularity, as you can see from tests[1,2] below.
+> Am I wrong? I am missing something?
+
+You're writing into unwritten extents. That's not a data overwrite,
+so behaviour can be very different. And when you have sub-page block
+sizes, the filesystem and/or page cache may decide not to read the
+whole page if it doesn't need to immmediately. e.g. you'll see
+different behaviour between a 512 byte write() and a 512 byte write
+via mmap()...
+
+IOWs, there are so many different combinations of behaviour and
+variables that we don't try to explain every single nuance. If you
+do sub-page and/or sub-block size IO, then expect to page sized RMW
+to occur. It might be smaller depending on the fs config, the file
+layout, the underlying extent type, the type of ioperation the 
+write must perform (e.g. plain overwrite vs copy-on-write), the
+offset into the page/block, etc. The simple message is this: avoid
+sub-block/page size IO if you can possibly avoid it.
+
+> >Ok, there is a difference between *sector size* and *filesystem
+> >block size*. You seem to be using them interchangably in your
+> >question, and that's not correct.
 > 
+> True, maybe I have issues grasping the concept of sector size from
+> XFS point of view. I understand sector size as an hardware property
+> of the underlying block device, but how does it relate to the
+> filesystem?
+> 
+> I naively supposed that an XFS filesystem created with 4k *sector*
+> size (ie: mkfs.xfs -s size=4096) would prevent 512 bytes O_DIRECT
+> writes, but my test[3] shows that even of such a filesystem a 512B
+> direct write is possible, indeed.
+> 
+> Is sector size information only used by XFS own metadata and
+> journaling in order to avoid costly device-level r/m/w cycles on
+> 512e devices? I understand that on 4Kn device you *have* to avoid
+> sub-sector writes, or the transfer will fail.
+
+We don't care if the device does internal RMW cycles (RAID does
+that all the time). The sector size we care about is the size of an
+atomic write IO - the IO size that the device guarantees will either
+succeed completely or fail without modification. This is needed for
+journal recovery sanity.
+
+For data, the kernel checks the logical device sector size and
+limits direct IO to those sizes, not the filesystem sector size.
+i.e.  filesystem sector size if there for sizing journal operations
+and metadata, not limiting data access alignment.
+
+> I want to put some context on the original question, and why I am so
+> interested on r/m/w cycles. SSD's flash-page size has, in recent
+> years (2014+), ballooned to 8/16/32K. I wonder if a matching
+> blocksize and/or sector size are needed to avoid (some of)
+> device-level r/m/w cycles, which can dramatically increase flash
+> write amplification (with reduced endurance).
+
+We've been over this many times in the past few years. user data
+alignment is controlled by stripe unit/width specification,
+not sector/block sizes.
+
+-Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
