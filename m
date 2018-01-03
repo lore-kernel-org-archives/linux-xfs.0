@@ -1,35 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:42328 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:59345 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751001AbeACAoy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 19:44:54 -0500
-Date: Wed, 3 Jan 2018 11:44:51 +1100
+        by vger.kernel.org with ESMTP id S1750927AbeACAtn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 19:49:43 -0500
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eWXFS-00075y-6F; Wed, 03 Jan 2018 11:49:38 +1100
+Date: Wed, 3 Jan 2018 11:49:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 19/20] xfs: teach error reporting functions to take
- xfs_failaddr_t
-Message-ID: <20180103004451.GH5858@dastard>
+Subject: Re: [PATCH 20/20] xfs: dump the first 128 bytes of any corrupt buffer
+Message-ID: <20180103004938.GI5858@dastard>
 References: <151399122361.23543.15718507168231759645.stgit@magnolia>
- <151399134260.23543.8399442741926285897.stgit@magnolia>
+ <151399134865.23543.2687306518339510402.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151399134260.23543.8399442741926285897.stgit@magnolia>
+In-Reply-To: <151399134865.23543.2687306518339510402.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 22, 2017 at 05:09:02PM -0800, Darrick J. Wong wrote:
+On Fri, Dec 22, 2017 at 05:09:08PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Convert the two other error reporting functions to take xfs_failaddr_t
-> when the caller wishes to capture a code pointer instead of the classic
-> void * pointer.
+> Increase the corrupt buffer dump to the first 128 bytes since v5
+> filesystems have larger block headers than before.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks good,
+Looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
