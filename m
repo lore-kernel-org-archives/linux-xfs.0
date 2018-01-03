@@ -1,66 +1,348 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36970 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751546AbeABKZn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 05:25:43 -0500
-Received: by mail-wm0-f51.google.com with SMTP id f140so59976160wmd.2
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Jan 2018 02:25:43 -0800 (PST)
-Date: Tue, 2 Jan 2018 11:25:39 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Block size and read-modify-write
-Message-ID: <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
-References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
+Received: from mx1.redhat.com ([209.132.183.28]:40072 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751909AbeACNlj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Jan 2018 08:41:39 -0500
+Date: Wed, 3 Jan 2018 08:41:37 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: speed up directory bestfree block scanning
+Message-ID: <20180103134137.GB17932@bfoster.bfoster>
+References: <20180103062748.16400-1-david@fromorbit.com>
+ <20180103115910.GL5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
+In-Reply-To: <20180103115910.GL5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 29, 2017 at 12:14:14AM +0100, Gionatan Danti wrote:
-> Hi list,
-> I would ask a question: how XFS block size affect read-modify-write in case
-> of very small writes?
+On Wed, Jan 03, 2018 at 10:59:10PM +1100, Dave Chinner wrote:
+> On Wed, Jan 03, 2018 at 05:27:48PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > When running a "create millions inodes in a directory" test
+> > recently, I noticed we were spending a huge amount of time
+> > converting freespace block headers from disk format to in-memory
+> > format:
+> > 
+> >  31.47%  [kernel]  [k] xfs_dir2_node_addname
+> >  17.86%  [kernel]  [k] xfs_dir3_free_hdr_from_disk
+> >   3.55%  [kernel]  [k] xfs_dir3_free_bests_p
+> > 
+> > We shouldn't be hitting the best free block scanning code so hard
+> > when doing sequential directory creates, and it turns out there's
+> > a highly suboptimal loop searching the the best free array in
+> > the freespace block - it decodes the block header before checking
+> > each entry inside a loop, instead of decoding the header once before
+> > running the entry search loop.
+> > 
+> > This makes a massive difference to create rates. Profile now looks
+> > like this:
+> > 
+> >   13.15%  [kernel]  [k] xfs_dir2_node_addname
+> >    3.52%  [kernel]  [k] xfs_dir3_leaf_check_int
+> >    3.11%  [kernel]  [k] xfs_log_commit_cil
+> > 
+> > And the wall time/average file create rate differences are
+> > just as stark:
+> > 
+> > 		create time(sec) / rate (files/s)
+> > File count	     vanilla		    patched
+> >   10k		   0.54 / 18.5k		   0.53 / 18.9k
+> >   20k		   1.10	/ 18.1k		   1.05 / 19.0k
+> >  100k		   4.21	/ 23.8k		   3.91 / 25.6k
+> >  200k		   9.66	/ 20,7k		   7.37 / 27.1k
+> >    1M		  86.61	/ 11.5k		  48.26 / 20.7k
+> >    2M		 206.13	/  9.7k		 129.71 / 15.4k
+> > 
+> > The larger the directory, the bigger the performance improvement.
+> 
+> FWIW, while this improves the free block scanning code, it still
+> doesn't really fix the overall problem with the free space index
+> blocks. The problem there is that the free space index is
+> essentially a linear array, with one index per allocated data
+> block in the directory. This array is scanned linearly on every
+> insert to find the first block with enough free space to hold the
+> new entry. That, unfortunately, is problematic when new blocks are
+> always added at the tail of the list. hence we have to scan the
+> the entire free space index before we find the free space the last
+> insert added.
+> 
+> That's nasty - the result is that by the time we have 5 million
+> entries in the directory we have something like 60,000 4k blocks in
+> the filesystem and only the last one has free space. Hence we're
+> searching 60,000 entries just to find where to insert the next
+> entry. The result is this:
+> 
+> 		    create time(sec)
+> File count	 vanilla        patched
+>  200k		   9.66		   7.37
+>    1M		  86.61		  48.26
+>    2M		 206.13		 129.71
+>   10M		2843.57		1817.39
+> 
+> it goes highly non-linear at above 1M entries in the directory.
+> 
+> In writing this, I think I can see a quick and simple change that
+> will fix this case and improve most other directory grow workloads
+> without affecting normal random directory insert/remove performance.
+> That is, do a reverse order search starting at the last block rather
+> than increasing order search starting at the first block.....
+> 
+> Ok, now were are talking - performance and scalability improvements!
+> 
+> 		create time(sec) / rate (files/s)
+>  File count     vanilla		    loop-fix		+reverse
+>    10k	      0.54 / 18.5k	   0.53 / 18.9k	       0.52 / 19.3k
+>    20k	      1.10 / 18.1k	   1.05 / 19.0k	       1.00 / 20.0k
+>   100k	      4.21 / 23.8k	   3.91 / 25.6k	       3.58 / 27.9k
+>   200k	      9.66 / 20,7k	   7.37 / 27.1k	       7.08 / 28.3k
+>     1M	     86.61 / 11.5k	  48.26 / 20.7k	      38.33 / 26.1k
+>     2M	    206.13 /  9.7k	 129.71 / 15.4k	      82.20 / 24.3k
+>    10M	   2843.57 /  3.5k	1817.39 /  5.5k      591.78 / 16.9k
+> 
+> Theres still some non-linearity as we approach the 10M number, but
+> it's still 5x faster to 10M inodes than the existing code....
 > 
 
-Hi,
+Nice improvement.. I still need to look at the code, but a quick first
+thought is that I wonder if there's somewhere we could stash a 'most
+recent freeblock' once we have to grow the directory, even if just as an
+in-core hint. Then we could jump straight to the latest block regardless
+of the workload.
 
-> For example, suppose an XFS filesystem with the default 4K data block size.
-> Am I correct saying that:
-> - a 512B normal, cached writes will cause a read-modify-write of the entire
-> 4K sector?
-> - a 512B O_DIRECT write will *not* cause a read-modify-write of the 4K
-> sector, rather it will be flushed to disk as-is (512 bytes in length)?
+Hmm, thinking a little more about it, that may not be worth the
+complication since part of the concept of "search failure" in this case
+is tied to the size of the entry we want to add. Then again, I suppose
+such is the case when searching forward/backward as well (i.e., one
+large insert fails, grows inode, subsequent small insert may very well
+have succeeded with the first freeblock, though now we'd always start at
+the recently allocated block at the end).
+
+Anyways, just thinking out loud (and recovering from several weeks
+vacation). :P
+
+Brian
+
+> Reverse search patch - working but not finished, smoke tested only -
+> is attached below. Discuss!
 > 
-
-IIRC, although the DIO requirement is to have writes aligned to the logical sector
-size, issuing such IOs not properly aligned with the filesystem block size, have
-a few consequences.
-
-- It will require exclusive inode io locks, so serializing IOs to the inode
-- And yes, it will require a RMW to the block in question, all IO are always
-  made in filesystem block size units.
-
-I'm probably missing something else here though, but these two are the things I
-had in my mind.
-
-Cheers
-
-> Thanks.
+> Cheers,
 > 
+> Dave.
 > -- 
-> Danti Gionatan
-> Supporto Tecnico
-> Assyoma S.r.l. - www.assyoma.it
-> email: g.danti@assyoma.it - info@assyoma.it
-> GPG public key ID: FF5F32A8
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: reverse search directory freespace indexes
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When a directory is growing rapidly, new blocks tend to get added at
+> the end of teh directory. These end up at teh end of teh freespace
+> index, and when teh directory gets large finding these new
+> freespaces gets expensive. The code does a linear search across the
+> frespace index from the first block in teh directory to teh last,
+> hence meaning the newly added space is the last index searched.
+> 
+> Instead, do a reverse order index search, starting from the last
+> block and index in the freespace index. This makes most lookups for
+> free space on rapidly growing directories O(1) instead of O(N).
+> The result is a major improvement in large directory grow rates:
+> 
+>                 create time(sec) / rate (files/s)
+>  File count     vanilla             patched
+>    10k        0.54 / 18.5k         0.52 / 19.3k
+>    20k        1.10 / 18.1k         1.00 / 20.0k
+>   100k        4.21 / 23.8k         3.58 / 27.9k
+>   200k        9.66 / 20,7k         7.08 / 28.3k
+>     1M       86.61 / 11.5k        38.33 / 26.1k
+>     2M      206.13 /  9.7k        82.20 / 24.3k
+>    10M     2843.57 /  3.5k       591.78 / 16.9k
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_dir2_node.c | 91 ++++++++++++++++++-------------------------
+>  1 file changed, 38 insertions(+), 53 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index bcf0d43cd6a8..d95229a9d700 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -1701,10 +1701,11 @@ xfs_dir2_node_addname_int(
+>  	int			error;		/* error return value */
+>  	xfs_dir2_db_t		fbno;		/* freespace block number */
+>  	struct xfs_buf		*fbp;		/* freespace buffer */
+> -	int			findex;		/* freespace entry index */
+> -	xfs_dir2_free_t		*free=NULL;	/* freespace block structure */
+> +	int			findex = -1;	/* freespace entry index */
+> +	xfs_dir2_free_t		*free = NULL;	/* freespace block structure */
+>  	xfs_dir2_db_t		ifbno;		/* initial freespace block no */
+> -	xfs_dir2_db_t		lastfbno=0;	/* highest freespace block no */
+> +	xfs_dir2_db_t		lastfbno = 0;	/* highest freespace block no */
+> +	xfs_dir2_db_t		firstfbno = 0;	/* lowest freespace block no */
+>  	int			length;		/* length of the new entry */
+>  	int			logfree;	/* need to log free entry */
+>  	xfs_mount_t		*mp;		/* filesystem mount point */
+> @@ -1715,11 +1716,17 @@ xfs_dir2_node_addname_int(
+>  	__be16			*bests;
+>  	struct xfs_dir3_icfree_hdr freehdr;
+>  	struct xfs_dir2_data_free *bf;
+> +	xfs_fileoff_t		fo;		/* freespace block number */
+>  
+>  	dp = args->dp;
+>  	mp = dp->i_mount;
+>  	tp = args->trans;
+>  	length = dp->d_ops->data_entsize(args->namelen);
+> +
+> +	ifbno = -1;
+> +	dbno = -1;
+> +	fbp = NULL;
+> +
+>  	/*
+>  	 * If we came in with a freespace block that means that lookup
+>  	 * found an entry with our hash value.  This is the freespace
+> @@ -1746,62 +1753,38 @@ xfs_dir2_node_addname_int(
+>  			ASSERT(be16_to_cpu(bests[findex]) != NULLDATAOFF);
+>  			ASSERT(be16_to_cpu(bests[findex]) >= length);
+>  			dbno = freehdr.firstdb + findex;
+> -		} else {
+> -			/*
+> -			 * The data block looked at didn't have enough room.
+> -			 * We'll start at the beginning of the freespace entries.
+> -			 */
+> -			dbno = -1;
+> -			findex = 0;
+> +			goto block_found;
+>  		}
+> -	} else {
+> -		/*
+> -		 * Didn't come in with a freespace block, so no data block.
+> -		 */
+> -		ifbno = dbno = -1;
+> -		fbp = NULL;
+> -		findex = 0;
+>  	}
+>  
+>  	/*
+> -	 * If we don't have a data block yet, we're going to scan the
+> +	 * If we don't have a usable data block yet, we're going to scan the
+>  	 * freespace blocks looking for one.  Figure out what the
+> -	 * highest freespace block number is.
+> +	 * highest freespace block number is as we'll start scanning there.
+>  	 */
+> -	if (dbno == -1) {
+> -		xfs_fileoff_t	fo;		/* freespace block number */
+> +	error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK);
+> +	if (error)
+> +		return error;
+> +	lastfbno = xfs_dir2_da_to_db(args->geo, (xfs_dablk_t)fo);
+> +	firstfbno = xfs_dir2_byte_to_db(args->geo, XFS_DIR2_FREE_OFFSET);
+>  
+> -		if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK)))
+> -			return error;
+> -		lastfbno = xfs_dir2_da_to_db(args->geo, (xfs_dablk_t)fo);
+> -		fbno = ifbno;
+> -	}
+>  	/*
+>  	 * While we haven't identified a data block, search the freeblock
+> -	 * data for a good data block.  If we find a null freeblock entry,
+> -	 * indicating a hole in the data blocks, remember that.
+> +	 * data for a good data block. Do a reverse order search, as growing
+> +	 * directories will put new blocks with free space at the end of the
+> +	 * free space index.
+>  	 */
+> -	while (dbno == -1) {
+> -		/*
+> -		 * If we don't have a freeblock in hand, get the next one.
+> -		 */
+> -		if (fbp == NULL) {
+> -			/*
+> -			 * Happens the first time through unless lookup gave
+> -			 * us a freespace block to start with.
+> -			 */
+> -			if (++fbno == 0)
+> -				fbno = xfs_dir2_byte_to_db(args->geo,
+> -							XFS_DIR2_FREE_OFFSET);
+> -			/*
+> -			 * If it's ifbno we already looked at it.
+> -			 */
+> +	for (fbno = lastfbno; fbno >= firstfbno; fbno--) {
+> +
+> +		/* If we don't have a freeblock in hand, get the previous one. */
+> +		if (!fbp) {
+> +			/* If it's ifbno we already looked at it. */
+>  			if (fbno == ifbno)
+> -				fbno++;
+> +				fbno--;
+>  			/*
+>  			 * If it's off the end we're done.
+>  			 */
+> -			if (fbno >= lastfbno)
+> +			if (fbno < firstfbno)
+>  				break;
+>  			/*
+>  			 * Read the block.  There can be holes in the
+> @@ -1817,8 +1800,8 @@ xfs_dir2_node_addname_int(
+>  			if (!fbp)
+>  				continue;
+>  			free = fbp->b_addr;
+> -			findex = 0;
+>  		}
+> +
+>  		/*
+>  		 * Look at the current free entry.  Is it good enough?
+>  		 *
+> @@ -1829,17 +1812,16 @@ xfs_dir2_node_addname_int(
+>  		 */
+>  		bests = dp->d_ops->free_bests_p(free);
+>  		dp->d_ops->free_hdr_from_disk(&freehdr, free);
+> -		do {
+> -
+> +		for (findex = freehdr.nvalid - 1; findex >= 0; findex--){
+>  			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
+>  			    be16_to_cpu(bests[findex]) >= length) {
+>  				dbno = freehdr.firstdb + findex;
+> -				break;
+> +				goto block_found;
+>  			}
+> -		} while (++findex < freehdr.nvalid);
+> +		}
+>  
+>  		/* Drop the block if we done with the freeblock */
+> -		if (findex == freehdr.nvalid) {
+> +		if (findex < 0) {
+>  			xfs_trans_brelse(tp, fbp);
+>  			fbp = NULL;
+>  			if (fblk)
+> @@ -1847,11 +1829,13 @@ xfs_dir2_node_addname_int(
+>  		}
+>  	}
+>  
+> +	ASSERT(dbno == -1);
+> +
+>  	/*
+> -	 * If we don't have a data block, we need to allocate one and make
+> +	 * We don't have a data block so we need to allocate one and make
+>  	 * the freespace entries refer to it.
+>  	 */
+> -	if (unlikely(dbno == -1)) {
+> +	if (dbno == -1) {
+>  		/*
+>  		 * Not allowed to allocate, return failure.
+>  		 */
+> @@ -1981,6 +1965,7 @@ xfs_dir2_node_addname_int(
+>  	 * We had a data block so we don't have to make a new one.
+>  	 */
+>  	else {
+> +block_found:
+>  		/*
+>  		 * If just checking, we succeeded.
+>  		 */
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
