@@ -1,101 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34460 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34583 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751290AbeACP1o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Jan 2018 10:27:44 -0500
-Date: Wed, 3 Jan 2018 16:27:41 +0100
+        id S1752580AbeACP3S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Jan 2018 10:29:18 -0500
+Date: Wed, 3 Jan 2018 16:29:16 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 05/18] dax: stop using VM_MIXEDMAP for dax
-Message-ID: <20180103152741.GI4911@quack2.suse.cz>
+Subject: Re: [PATCH v4 04/18] dax: require 'struct page' by default for
+ filesystem dax
+Message-ID: <20180103152916.GJ4911@quack2.suse.cz>
 References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151407698763.38751.8605535379424429182.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <151407698249.38751.17338746909239708376.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151407698763.38751.8605535379424429182.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <151407698249.38751.17338746909239708376.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: akpm@linux-foundation.org, Michal Hocko <mhocko@suse.com>, jack@suse.cz, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, linux-fsdevel@vger.kernel.org, ross.zwisler@linux.intel.com, hch@lst.de, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: akpm@linux-foundation.org, jack@suse.cz, linux-nvdimm@lists.01.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, ross.zwisler@linux.intel.com, hch@lst.de, Gerald Schaefer <gerald.schaefer@de.ibm.com>
 
-On Sat 23-12-17 16:56:27, Dan Williams wrote:
-> VM_MIXEDMAP is used by dax to direct mm paths like vm_normal_page() that
-> the memory page it is dealing with is not typical memory from the linear
-> map. The get_user_pages_fast() path, since it does not resolve the vma,
-> is already using {pte,pmd}_devmap() as a stand-in for VM_MIXEDMAP, so we
-> use that as a VM_MIXEDMAP replacement in some locations. In the cases
-> where there is no pte to consult we fallback to using vma_is_dax() to
-> detect the VM_MIXEDMAP special case.
+On Sat 23-12-17 16:56:22, Dan Williams wrote:
+> If a dax buffer from a device that does not map pages is passed to
+> read(2) or write(2) as a target for direct-I/O it triggers SIGBUS. If
+> gdb attempts to examine the contents of a dax buffer from a device that
+> does not map pages it triggers SIGBUS. If fork(2) is called on a process
+> with a dax mapping from a device that does not map pages it triggers
+> SIGBUS. 'struct page' is required otherwise several kernel code paths
+> break in surprising ways. Disable filesystem-dax on devices that do not
+> map pages.
 > 
-> Now that we have explicit driver pfn_t-flag opt-in/opt-out for
-> get_user_pages() support for DAX we can stop setting VM_MIXEDMAP.  This
-> also means we no longer need to worry about safely manipulating vm_flags
-> in a future where we support dynamically changing the dax mode of a
-> file.
+> In addition to needing pfn_to_page() to be valid we also require devmap
+> pages.  We need this to detect dax pages in the get_user_pages_fast()
+> path and so that we can stop managing the VM_MIXEDMAP flag. For DAX
+> drivers that have not supported get_user_pages() to date we allow them
+> to opt-in to supporting DAX with the CONFIG_FS_DAX_LIMITED configuration
+> option which requires ->direct_access() to return pfn_t_special() pfns.
+> This leaves DAX support in brd disabled and scheduled for removal.
+> 
+> Note that when the initial dax support was being merged a few years back
+> there was concern that struct page was unsuitable for use with next
+> generation persistent memory devices. The theoretical concern was that
+> struct page access, being such a hotly used data structure in the
+> kernel, would lead to media wear out. While that was a reasonable
+> conservative starting position it has not held true in practice. We have
+> long since committed to using devm_memremap_pages() to support higher
+> order kernel functionality that needs get_user_pages() and
+> pfn_to_page().
 > 
 > Cc: Jan Kara <jack@suse.cz>
-> Cc: Michal Hocko <mhocko@suse.com>
 > Cc: Jeff Moyer <jmoyer@redhat.com>
 > Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
 > Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+> Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+> Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>
 > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-...
+Looks good to me. You can add:
 
-> diff --git a/mm/madvise.c b/mm/madvise.c
-> index 751e97aa2210..eff3ec1e2574 100644
-> --- a/mm/madvise.c
-> +++ b/mm/madvise.c
-> @@ -96,7 +96,7 @@ static long madvise_behavior(struct vm_area_struct *vma,
->  		new_flags |= VM_DONTDUMP;
->  		break;
->  	case MADV_DODUMP:
-> -		if (new_flags & VM_SPECIAL) {
-> +		if (vma_is_dax(vma) || (new_flags & VM_SPECIAL)) {
->  			error = -EINVAL;
->  			goto out;
->  		}
-
-Why do you add the check here? I assume it's because VM_SPECIAL contains
-VM_MIXEDMAP... But then why don't we allow dumping of DAX VMAs? Possibly
-just keep the addition of the check in this patch and then add a separate
-patch removing it with proper justification.
-
-> diff --git a/mm/memory.c b/mm/memory.c
-> index 48a13473b401..1efb005e8fab 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-...
-> @@ -1228,7 +1232,7 @@ int copy_page_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
->  	 * efficient than faulting.
->  	 */
->  	if (!(vma->vm_flags & (VM_HUGETLB | VM_PFNMAP | VM_MIXEDMAP)) &&
-> -			!vma->anon_vma)
-> +			!vma->anon_vma && !vma_is_dax(vma))
->  		return 0;
->  
->  	if (is_vm_hugetlb_page(vma))
-
-Ditto here... Page fault will fill DAX vmas just fine so I don't see a
-reason why fork would need to copy page tables by hand.
-
-Also I suppose comments about VM_MIXEDMAP in do_wp_page() and
-wp_pfn_shared() would use some updating.
-
-I'm not sure but I think VM_SPECIAL checks in mm/hmm.c needs treatment as
-well?
-
-If the replacement was really strict you should also add the check to
-vma_merge() AFAICT. But as in some other cases, we can enable vma merging
-for DAX vmas just fine so as the end result vma_merge() should IMO treat
-DAX vmas. But it would be good to have this change recorded in a changelog
-of a separate patch removing this additional check.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
 
+> ---
+>  arch/powerpc/platforms/Kconfig |    1 +
+>  drivers/dax/super.c            |   10 ++++++++++
+>  drivers/s390/block/Kconfig     |    1 +
+>  fs/Kconfig                     |    7 +++++++
+>  4 files changed, 19 insertions(+)
+> 
+> diff --git a/arch/powerpc/platforms/Kconfig b/arch/powerpc/platforms/Kconfig
+> index 5a96a2763e4a..2ce89b42a9f4 100644
+> --- a/arch/powerpc/platforms/Kconfig
+> +++ b/arch/powerpc/platforms/Kconfig
+> @@ -297,6 +297,7 @@ config AXON_RAM
+>  	tristate "Axon DDR2 memory device driver"
+>  	depends on PPC_IBM_CELL_BLADE && BLOCK
+>  	select DAX
+> +	select FS_DAX_LIMITED
+>  	default m
+>  	help
+>  	  It registers one block device per Axon's DDR2 memory bank found
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 3ec804672601..473af694ad1c 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/mount.h>
+>  #include <linux/magic.h>
+>  #include <linux/genhd.h>
+> +#include <linux/pfn_t.h>
+>  #include <linux/cdev.h>
+>  #include <linux/hash.h>
+>  #include <linux/slab.h>
+> @@ -123,6 +124,15 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
+>  		return len < 0 ? len : -EIO;
+>  	}
+>  
+> +	if ((IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn))
+> +			|| pfn_t_devmap(pfn))
+> +		/* pass */;
+> +	else {
+> +		pr_debug("VFS (%s): error: dax support not enabled\n",
+> +				sb->s_id);
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(__bdev_dax_supported);
+> diff --git a/drivers/s390/block/Kconfig b/drivers/s390/block/Kconfig
+> index 31f014b57bfc..594ae5fc8e9d 100644
+> --- a/drivers/s390/block/Kconfig
+> +++ b/drivers/s390/block/Kconfig
+> @@ -15,6 +15,7 @@ config BLK_DEV_XPRAM
+>  config DCSSBLK
+>  	def_tristate m
+>  	select DAX
+> +	select FS_DAX_LIMITED
+>  	prompt "DCSSBLK support"
+>  	depends on S390 && BLOCK
+>  	help
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index 7aee6d699fd6..b40128bf6d1a 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -58,6 +58,13 @@ config FS_DAX_PMD
+>  	depends on ZONE_DEVICE
+>  	depends on TRANSPARENT_HUGEPAGE
+>  
+> +# Selected by DAX drivers that do not expect filesystem DAX to support
+> +# get_user_pages() of DAX mappings. I.e. "limited" indicates no support
+> +# for fork() of processes with MAP_SHARED mappings or support for
+> +# direct-I/O to a DAX mapping.
+> +config FS_DAX_LIMITED
+> +	bool
+> +
+>  endif # BLOCK
+>  
+>  # Posix ACL utility routines
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
