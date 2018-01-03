@@ -1,101 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31113 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751014AbeACXAH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 18:00:07 -0500
-Date: Thu, 4 Jan 2018 09:59:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Block size and read-modify-write
-Message-ID: <20180103225954.GP5858@dastard>
-References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
- <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
- <20180103011926.GJ5858@dastard>
- <b58a3a90-0e7b-abca-91ce-8b2d8819a75b@assyoma.it>
- <20180103214741.GO5858@dastard>
- <fa54fea7ec0d836f2c037f7b71a17365@assyoma.it>
+Received: from aserp2120.oracle.com ([141.146.126.78]:34826 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750913AbeACW3m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 17:29:42 -0500
+Date: Wed, 3 Jan 2018 14:27:05 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/6] xfs: clean up XFS_AGFL_SIZE
+Message-ID: <20180103222705.GC16402@magnolia>
+References: <1472783257-15941-1-git-send-email-david@fromorbit.com>
+ <1472783257-15941-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fa54fea7ec0d836f2c037f7b71a17365@assyoma.it>
+In-Reply-To: <1472783257-15941-2-git-send-email-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jan 03, 2018 at 11:09:30PM +0100, Gionatan Danti wrote:
-> Il 03-01-2018 22:47 Dave Chinner ha scritto:
-> >On Wed, Jan 03, 2018 at 03:54:42PM +0100, Gionatan Danti wrote:
-> >>
-> >>
-> >>On 03/01/2018 02:19, Dave Chinner wrote:
-> >>>Cached writes smaller than a *page* will cause RMW cycles in the
-> >>>page cache, regardless of the block size of the filesystem.
-> >>
-> >>Sure, in this case a page-sized r/m/w cycle happen in the pagecache.
-> >>However it seems to me that, when flushed to disk, writes happens at
-> >>the block level granularity, as you can see from tests[1,2] below.
-> >>Am I wrong? I am missing something?
-> >
-> >You're writing into unwritten extents. That's not a data overwrite,
-> >so behaviour can be very different. And when you have sub-page block
-> >sizes, the filesystem and/or page cache may decide not to read the
-> >whole page if it doesn't need to immmediately. e.g. you'll see
-> >different behaviour between a 512 byte write() and a 512 byte write
-> >via mmap()...
+On Fri, Sep 02, 2016 at 12:27:32PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> The first "dd" execution surely writes into unwritten extents.
-> However, on the following writes real data are overwritten, right?
-
-Yes. But I'm talking about the initial page cache writes in your
-tests, and they were all into unwritten extents. These are the
-writes that had different behaviour in exach test case.
-
-The second write in each test case was the direct IO write. That's
-what went over existing data, written through the page cache by the
-first write. They all had the same behaviour - a single 512 byte
-write - as they were all being written into allocated blocks that
-contained existing data on a device with a logical sector size of
-512 bytes.
-
-> >We've been over this many times in the past few years. user data
-> >alignment is controlled by stripe unit/width specification,
-> >not sector/block sizes.
+> The AGFL size calculation is about to get more complex, so lets turn
+> the macro into a function first and remove the macro.
 > 
-> Sure, but to avoid/mitigate device-level r/m/w, a proper alignement
-> is not sufficient by itself. You should also avoid partial page
-> writes.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c  | 33 ++++++++++++++++++++++++++-------
+>  fs/xfs/libxfs/xfs_alloc.h  |  2 ++
+>  fs/xfs/libxfs/xfs_format.h | 13 +------------
+>  fs/xfs/xfs_fsops.c         |  2 +-
+>  4 files changed, 30 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 05b5243..23559b9 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -63,6 +63,24 @@ xfs_prealloc_blocks(
+>  }
+>  
+>  /*
+> + * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
+> + * the beginning of the block for a proper header with the location information
+> + * and CRC.
+> + */
+> +int
+> +xfs_agfl_size(
+> +	struct xfs_mount	*mp)
+> +
+> +{
+> +	int			size = mp->m_sb.sb_sectsize;
 
-That's an application problem, not a filesystem problem. All the
-filesystem can do is align/size the data extents to match what is
-optimal for the underlying storage (as we do for RAID) and hope
-the application is smart enough to do large, well formed IOs to
-the filesystem.
+/me wonders if these ought to be unsigned ints, but otherwise:
 
-> Anyway, I got the message: this is not business XFS directly
-> cares about.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I think you've jumped to entirely the wrong conclusion. We do care
-about it because if you can't convey/control data alignment at the
-filesystem level, then you can't fully optimise IO at the
-application level.
+--D
 
-The reality is that we've been doing these sorts of data alignment
-optimisations for the last 20 years with XFS and applications using
-direct IO. We care an awful lot about alignment of the filesystem
-structure to the underlying device characteristics because if we
-don't then IO performance is extremely difficult to maximise and/or
-make deterministic.
-
-However, this is such a complex domain that very, very few people
-have the knowledge and expertise to understand how to take advantage
-of it fully. It's hard even to convey just how complex it is to
-people without a solid knowledge base of filesysystem and storage
-knowledge, as this conversion shows...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +
+> +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> +		return size / sizeof(xfs_agblock_t);
+> +
+> +	return (size - sizeof(struct xfs_agfl)) / sizeof(xfs_agblock_t);
+> +}
+> +
+> +/*
+>   * In order to avoid ENOSPC-related deadlock caused by out-of-order locking of
+>   * AGF buffer (PV 947395), we place constraints on the relationship among
+>   * actual allocations for data blocks, freelist blocks, and potential file data
+> @@ -554,7 +572,7 @@ xfs_agfl_verify(
+>  	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
+>  		return false;
+>  
+> -	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
+> +	for (i = 0; i < xfs_agfl_size(mp); i++) {
+>  		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
+>  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+>  			return false;
+> @@ -2230,7 +2248,7 @@ xfs_alloc_get_freelist(
+>  	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
+>  	be32_add_cpu(&agf->agf_flfirst, 1);
+>  	xfs_trans_brelse(tp, agflbp);
+> -	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+> +	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
+>  		agf->agf_flfirst = 0;
+>  
+>  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> @@ -2338,7 +2356,7 @@ xfs_alloc_put_freelist(
+>  			be32_to_cpu(agf->agf_seqno), &agflbp)))
+>  		return error;
+>  	be32_add_cpu(&agf->agf_fllast, 1);
+> -	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
+> +	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
+>  		agf->agf_fllast = 0;
+>  
+>  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> @@ -2356,7 +2374,7 @@ xfs_alloc_put_freelist(
+>  
+>  	xfs_alloc_log_agf(tp, agbp, logflags);
+>  
+> -	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
+> +	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
+>  
+>  	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+>  	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
+> @@ -2377,6 +2395,7 @@ xfs_agf_verify(
+>  	struct xfs_buf	*bp)
+>   {
+>  	struct xfs_agf	*agf = XFS_BUF_TO_AGF(bp);
+> +	int32_t		agfl_size = xfs_agfl_size(mp);
+>  
+>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>  		if (!uuid_equal(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid))
+> @@ -2389,9 +2408,9 @@ xfs_agf_verify(
+>  	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+>  	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+>  	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+> -	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+> -	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+> -	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
+> +	      be32_to_cpu(agf->agf_flfirst) < agfl_size &&
+> +	      be32_to_cpu(agf->agf_fllast) < agfl_size &&
+> +	      be32_to_cpu(agf->agf_flcount) <= agfl_size))
+>  		return false;
+>  
+>  	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) > XFS_BTREE_MAXLEVELS ||
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index 6fe2d6b..cfdd02f 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -202,6 +202,8 @@ xfs_alloc_get_rec(
+>  
+>  int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+>  			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+> +int xfs_agfl_size(struct xfs_mount *mp);
+> +
+>  int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+>  int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+>  		struct xfs_buf **agbp);
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 270fb5c..60085f3 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -781,24 +781,13 @@ typedef struct xfs_agi {
+>  		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
+>  		(__be32 *)(bp)->b_addr)
+>  
+> -/*
+> - * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
+> - * slots in the beginning of the block for a proper header with the
+> - * location information and CRC.
+> - */
+> -#define XFS_AGFL_SIZE(mp) \
+> -	(((mp)->m_sb.sb_sectsize - \
+> -	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
+> -		sizeof(struct xfs_agfl) : 0)) / \
+> -	  sizeof(xfs_agblock_t))
+> -
+>  typedef struct xfs_agfl {
+>  	__be32		agfl_magicnum;
+>  	__be32		agfl_seqno;
+>  	uuid_t		agfl_uuid;
+>  	__be64		agfl_lsn;
+>  	__be32		agfl_crc;
+> -	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
+> +	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
+>  } __attribute__((packed)) xfs_agfl_t;
+>  
+>  #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 0b7f986..622ca71 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -285,7 +285,7 @@ xfs_growfs_data_private(
+>  		}
+>  
+>  		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+> -		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
+> +		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+>  			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+>  
+>  		error = xfs_bwrite(bp);
+> -- 
+> 2.8.0.rc3
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
