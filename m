@@ -1,218 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50912 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751487AbeAENIh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Jan 2018 08:08:37 -0500
-Date: Fri, 5 Jan 2018 08:08:35 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: refactor the geometry structure filling function
-Message-ID: <20180105130835.GC27973@bfoster.bfoster>
-References: <151512356118.14363.7797314285394643799.stgit@magnolia>
- <151512359134.14363.8696043274247703808.stgit@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:58652 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750945AbeACT0a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 14:26:30 -0500
+Date: Wed, 3 Jan 2018 11:26:26 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 10/8] xfs: check that fs freeze minimizes required recovery
+Message-ID: <20180103192626.GB4854@magnolia>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151512359134.14363.8696043274247703808.stgit@magnolia>
+In-Reply-To: <151314499003.18893.8687182548758898133.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: eguan@redhat.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Jan 04, 2018 at 07:39:51PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Refactor the geometry structure filling function to use the superblock
-> to fill the fields.  While we're at it, make the function less indenty
-> and use some whitespace to make the function easier to read.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Nice cleanup...
+Make sure that a fs freeze operation cleans up as much of the filesystem
+so as to minimize the recovery required in a crash/remount scenario.  In
+particular we want to check that we don't leave CoW preallocations
+sitting around in the refcountbt, though this test looks for anything
+out of the ordinary on the frozen fs.
 
->  fs/xfs/libxfs/xfs_sb.c |  167 ++++++++++++++++++++++++++++--------------------
->  fs/xfs/libxfs/xfs_sb.h |    5 +
->  fs/xfs/xfs_ioctl.c     |    4 +
->  fs/xfs/xfs_ioctl32.c   |    2 -
->  4 files changed, 103 insertions(+), 75 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 139517a..70e5126 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -879,77 +879,104 @@ xfs_sync_sb(
->  
->  int
->  xfs_fs_geometry(
-> -	xfs_mount_t		*mp,
-> -	xfs_fsop_geom_t		*geo,
-> -	int			new_version)
-> +	struct xfs_sb		*sbp,
-> +	struct xfs_fsop_geom	*geo,
-> +	int			struct_version)
->  {
-...
-> +	geo->version = XFS_FSOP_GEOM_VERSION;
-> +	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-> +		     XFS_FSOP_GEOM_FLAGS_DIRV2;
-> +
-> +
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/903     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/903.out |   10 +++++
+ tests/xfs/group   |    1 
+ 3 files changed, 118 insertions(+)
+ create mode 100755 tests/xfs/903
+ create mode 100644 tests/xfs/903.out
 
-One whitespace line too many here..?
-
-> +	if (xfs_sb_version_hasattr(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
-> +
-
-Obviously just a nit... but IMO the extra whitespace between each of
-these feature checks is a bit much. It actually reads cleaner to me to
-kill off the extra lines between them. Just my .02 though..
-
-...
-> +
-> +	geo->rtsectsize = sbp->sb_blocksize;
-> +	geo->dirblocksize = 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
-> +
-
-Slightly unfortunate that we have the geo abstraction and can't use it
-for a simple reporting case. Is there a larger (userspace?) reason mp
-was dropped as a parameter or was that just a cleanup? If the latter,
-perhaps we could continue to pass mp and create a local sbp pointer. If
-the former, then oh well, not a big deal. :P
-
-Brian
-
-> +	if (struct_version < 3)
-> +		return 0;
-> +
-> +	if (xfs_sb_version_haslogv2(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
-> +
-> +	geo->logsunit = sbp->sb_logsunit;
->  
-> -	memset(geo, 0, sizeof(*geo));
-> -
-> -	geo->blocksize = mp->m_sb.sb_blocksize;
-> -	geo->rtextsize = mp->m_sb.sb_rextsize;
-> -	geo->agblocks = mp->m_sb.sb_agblocks;
-> -	geo->agcount = mp->m_sb.sb_agcount;
-> -	geo->logblocks = mp->m_sb.sb_logblocks;
-> -	geo->sectsize = mp->m_sb.sb_sectsize;
-> -	geo->inodesize = mp->m_sb.sb_inodesize;
-> -	geo->imaxpct = mp->m_sb.sb_imax_pct;
-> -	geo->datablocks = mp->m_sb.sb_dblocks;
-> -	geo->rtblocks = mp->m_sb.sb_rblocks;
-> -	geo->rtextents = mp->m_sb.sb_rextents;
-> -	geo->logstart = mp->m_sb.sb_logstart;
-> -	ASSERT(sizeof(geo->uuid) == sizeof(mp->m_sb.sb_uuid));
-> -	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
-> -	if (new_version >= 2) {
-> -		geo->sunit = mp->m_sb.sb_unit;
-> -		geo->swidth = mp->m_sb.sb_width;
-> -	}
-> -	if (new_version >= 3) {
-> -		geo->version = XFS_FSOP_GEOM_VERSION;
-> -		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-> -			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
-> -			(xfs_sb_version_hasattr(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
-> -			(xfs_sb_version_hasquota(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
-> -			(xfs_sb_version_hasalign(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
-> -			(xfs_sb_version_hasdalign(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
-> -			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
-> -			(xfs_sb_version_hassector(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
-> -			(xfs_sb_version_hasasciici(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
-> -			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
-> -			(xfs_sb_version_hasattr2(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
-> -			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
-> -			(xfs_sb_version_hascrc(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
-> -			(xfs_sb_version_hasftype(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
-> -			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
-> -			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
-> -			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
-> -			(xfs_sb_version_hasreflink(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-> -		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
-> -				mp->m_sb.sb_logsectsize : BBSIZE;
-> -		geo->rtsectsize = mp->m_sb.sb_blocksize;
-> -		geo->dirblocksize = mp->m_dir_geo->blksize;
-> -	}
-> -	if (new_version >= 4) {
-> -		geo->flags |=
-> -			(xfs_sb_version_haslogv2(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
-> -		geo->logsunit = mp->m_sb.sb_logsunit;
-> -	}
->  	return 0;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index a16632c..63dcd2a 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -34,7 +34,8 @@ extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
->  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
->  extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
->  
-> -extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
-> -				int nversion);
-> +#define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
-> +extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
-> +				int struct_version);
->  
->  #endif	/* __XFS_SB_H__ */
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 3015e17..89fb1eb 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -810,7 +810,7 @@ xfs_ioc_fsgeometry_v1(
->  	xfs_fsop_geom_t         fsgeo;
->  	int			error;
->  
-> -	error = xfs_fs_geometry(mp, &fsgeo, 3);
-> +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
->  	if (error)
->  		return error;
->  
-> @@ -832,7 +832,7 @@ xfs_ioc_fsgeometry(
->  	xfs_fsop_geom_t		fsgeo;
->  	int			error;
->  
-> -	error = xfs_fs_geometry(mp, &fsgeo, 4);
-> +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 66cc3cd..10fbde3 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -67,7 +67,7 @@ xfs_compat_ioc_fsgeometry_v1(
->  	xfs_fsop_geom_t		  fsgeo;
->  	int			  error;
->  
-> -	error = xfs_fs_geometry(mp, &fsgeo, 3);
-> +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
->  	if (error)
->  		return error;
->  	/* The 32-bit variant simply has some padding at the end */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/tests/xfs/903 b/tests/xfs/903
+new file mode 100755
+index 0000000..1686356
+--- /dev/null
++++ b/tests/xfs/903
+@@ -0,0 +1,107 @@
++#! /bin/bash
++# FS QA Test No. 903
++#
++# Test that frozen filesystems are relatively clean and not full of errors.
++# Prior to freezing a filesystem, we want to minimize the amount of recovery
++# that will have to happen if the system goes down while the fs is frozen.
++# Therefore, start up fsstress and cycle through a few freeze/thaw cycles
++# to ensure that nothing blows up when we try to do this.
++#
++# Unfortunately the log will probably still be dirty, so we can't do much
++# about enforcing a clean repair -n run.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
++# Copyright (c) 2018 Oracle.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1
++trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	# Make sure we thaw the fs before we unmount or else we remove the
++	# mount without actually deactivating the filesystem(!)
++	$XFS_IO_PROG -x -c "thaw" $SCRATCH_MNT 2> /dev/null
++	echo "*** unmount"
++	_scratch_unmount 2>/dev/null
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch
++
++# xfs_db will OOM kill the machine if you don't have huge amounts of RAM, so
++# don't run this on large filesystems.
++_require_no_large_scratch_dev
++
++echo "*** init FS"
++
++rm -f $seqres.full
++_scratch_unmount >/dev/null 2>&1
++echo "*** MKFS ***" >>$seqres.full
++echo "" >>$seqres.full
++_scratch_mkfs_xfs >>$seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount >>$seqres.full 2>&1 || _fail "mount failed"
++
++echo "*** test"
++
++for l in 0 1 2 3 4
++do
++	echo "    *** test $l"
++	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -n 1000 $FSSTRESS_AVOID`
++	$FSSTRESS_PROG  $FSSTRESS_ARGS >>$seqres.full
++
++	$XFS_IO_PROG -x -c 'freeze' $SCRATCH_MNT
++
++	# Log will probably be dirty after the freeze, record state
++	echo "" >>$seqres.full
++	echo "*** xfs_logprint ***" >>$seqres.full
++	echo "" >>$seqres.full
++	log=clean
++	_scratch_xfs_logprint -tb 2>&1 | tee -a $seqres.full \
++		| head | grep -q "<CLEAN>" || log=dirty
++
++	# Fail if repair complains and the log is clean
++	echo "" >>$seqres.full
++	echo "*** XFS_REPAIR -n ***" >>$seqres.full
++	echo "" >>$seqres.full
++	_scratch_xfs_repair -f -n >> $seqres.full 2>&1
++
++	if [ $? -ne 0 ] && [ "$log" = "clean" ]; then
++		_fail "xfs_repair failed"
++	fi
++
++	$XFS_IO_PROG -x -c 'thaw' $SCRATCH_MNT
++done
++
++echo "*** done"
++status=0
++exit 0
+diff --git a/tests/xfs/903.out b/tests/xfs/903.out
+new file mode 100644
+index 0000000..378f0cb
+--- /dev/null
++++ b/tests/xfs/903.out
+@@ -0,0 +1,10 @@
++QA output created by 903
++*** init FS
++*** test
++    *** test 0
++    *** test 1
++    *** test 2
++    *** test 3
++    *** test 4
++*** done
++*** unmount
+diff --git a/tests/xfs/group b/tests/xfs/group
+index e1b1582..23c26c2 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -435,3 +435,4 @@
+ 435 auto quick clone
+ 436 auto quick clone fsr
+ 708 auto quick other
++903 mount auto quick stress
