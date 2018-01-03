@@ -1,85 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36479 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751154AbeACITU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 03:19:20 -0500
-Received: by mail-wm0-f47.google.com with SMTP id b76so1249735wmg.1
-        for <linux-xfs@vger.kernel.org>; Wed, 03 Jan 2018 00:19:19 -0800 (PST)
-Date: Wed, 3 Jan 2018 09:19:16 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Block size and read-modify-write
-Message-ID: <20180103081916.3mpadfsdkk2bh2ph@odin.usersys.redhat.com>
-References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
- <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
- <20180103011926.GJ5858@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180103011926.GJ5858@dastard>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:48766 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751184AbeACCwO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 21:52:14 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id w032pnGv090202
+        for <linux-xfs@vger.kernel.org>; Tue, 2 Jan 2018 21:52:14 -0500
+Received: from e06smtp15.uk.ibm.com (e06smtp15.uk.ibm.com [195.75.94.111])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2f8hru8ub6-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Jan 2018 21:52:14 -0500
+Received: from localhost
+        by e06smtp15.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
+        Wed, 3 Jan 2018 02:52:11 -0000
+Subject: Re: [PATCHv6 1/1] ima: re-introduce own integrity cache lock
+From: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Date: Tue, 02 Jan 2018 21:52:03 -0500
+In-Reply-To: <20180103014048.GE5146@magnolia>
+References: <c73e7421902a60bd14c11e1201ba74470d7c782b.1512500794.git.dmitry.kasatkin@huawei.com>
+         <CACE9dm-ws8TKEAzFbCoGdhdEuFLoLtz8dAuF8tor19wMx1pH=g@mail.gmail.com>
+         <20180103014048.GE5146@magnolia>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Message-Id: <1514947923.3493.2.camel@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Gionatan Danti <g.danti@assyoma.it>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dmitry Kasatkin <dmitry.kasatkin@gmail.com>
+Cc: linux-integrity <linux-integrity@vger.kernel.org>, linux-security-module <linux-security-module@vger.kernel.org>, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Dmitry Kasatkin <dmitry.kasatkin@huawei.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jan 03, 2018 at 12:19:26PM +1100, Dave Chinner wrote:
-> On Tue, Jan 02, 2018 at 11:25:39AM +0100, Carlos Maiolino wrote:
-> > On Fri, Dec 29, 2017 at 12:14:14AM +0100, Gionatan Danti wrote:
-> > > Hi list,
-> > > I would ask a question: how XFS block size affect read-modify-write in case
-> > > of very small writes?
-> > > 
-> > 
+On Tue, 2018-01-02 at 17:40 -0800, Darrick J. Wong wrote:
+> [might as well cc linux-xfs]
+> 
+> On Thu, Dec 14, 2017 at 12:22:37AM +0200, Dmitry Kasatkin wrote:
 > > Hi,
 > > 
-> > > For example, suppose an XFS filesystem with the default 4K data block size.
-> > > Am I correct saying that:
-> > > - a 512B normal, cached writes will cause a read-modify-write of the entire
-> > > 4K sector?
+> > Could I ask FS maintainers to test IMA with this patch additionally
+> > and provide ack/tested.
+> > We tested but may be you have and some special testing.
 > 
-> Cached writes smaller than a *page* will cause RMW cycles in the
-> page cache, regardless of the block size of the filesystem.
-> 
-> > > - a 512B O_DIRECT write will *not* cause a read-modify-write of the 4K
-> > > sector, rather it will be flushed to disk as-is (512 bytes in length)?
-> 
-> Ok, there is a difference between *sector size* and *filesystem
-> block size*. You seem to be using them interchangably in your
-> question, and that's not correct.
-> 
-> > IIRC, although the DIO requirement is to have writes aligned to the logical sector
-> > size, issuing such IOs not properly aligned with the filesystem block size, have
-> > a few consequences.
-> > 
-> > - It will require exclusive inode io locks, so serializing IOs to the inode
-> 
-> That is correct, but....
-> 
-> > - And yes, it will require a RMW to the block in question, all IO are always
-> >   made in filesystem block size units.
-> 
-> .... this is not correct for direct IO. The direct IO path does not
-> do RMW cycles at all.
-> 
-> Put simply: a 512B DIO write on a (real or emulated) 512B sector
-> device with a 4k FSB will be serialised by the filesystem and do a
-> single 512B sector write to the device.  However, if the device
-> reports as a 4k sector device then a 512B DIO write will be rejected
-> by the filesystem because sub-sector IO is not possible.
+> Super-late to this party, but unless xfstests has automated tests to
+> set up IMA on top of an existing filesystem then I most likely have no
+> idea /how/ to test IMA.  I did a quick grep of xfstests git and I don't
+> see anything IMA-related.
 
-Oh, thanks for the correction :)
+Back in June I posted a simple xfstests IMA-appraisal test (https://ma
+rc.info/?l=linux-fsdevel&m=149703820814885&w=4).
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mimi
 
--- 
-Carlos
