@@ -1,49 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57822 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751250AbeAEDjY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 22:39:24 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id w053aTI9106690
-        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:24 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2fa0bqr4fg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Jan 2018 03:39:23 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w053dM7e028944
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:23 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w053dMa1016653
-        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:22 GMT
-Subject: [PATCH 0/3] xfs: refactors for xfsprogs
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 04 Jan 2018 19:39:21 -0800
-Message-ID: <151512356118.14363.7797314285394643799.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:47308 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752011AbeADS3Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 13:29:24 -0500
+Subject: Re: [PATCH 4/5] xfs_repair: fix libxfs namespace problems
+References: <151500479880.7713.6538509149156363572.stgit@magnolia>
+ <151500483196.7713.13575201997749465948.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6a6ca64a-9f33-7eaa-a633-ed6864f9d81f@sandeen.net>
+Date: Thu, 4 Jan 2018 12:29:23 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <151500483196.7713.13575201997749465948.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
 
-This is a short patch series of libxfs refactors mostly done for the
-benefit of debugging purposes and fixing things in xfsprogs:
 
-The first patch reports transaction reservation data via tracepoints;
-eventually xfs_db will grow a similar command so that one can compare
-transaction reservations to debug "log minimum size checks fail on
-freshly mkfs'd fs" problems.
+On 1/3/18 12:40 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Call libxfs_ functions, not xfs_ functions.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Patches 2 & 3 move the xfs_fsop_geometry generator function into
-libsxfs so that xfsprogs can have common functions to generate the
-geometry from a superblock and print the geometry.  Eventually I'll
-teach xfs_db, mkfs, and xfs_spaceman to query fs geometry (either
-directly or via ioctl) and then pretty print the same information.
+Oops, thanks.
 
---D
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
