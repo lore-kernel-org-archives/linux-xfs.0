@@ -1,54 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:23204 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751007AbeACUi6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 15:38:58 -0500
-Date: Thu, 4 Jan 2018 07:38:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: speed up directory bestfree block scanning
-Message-ID: <20180103203854.GM5858@dastard>
-References: <20180103062748.16400-1-david@fromorbit.com>
- <20180103132802.GA17932@bfoster.bfoster>
+Received: from userp2120.oracle.com ([156.151.31.85]:47064 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752284AbeADSGb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 13:06:31 -0500
+Date: Thu, 4 Jan 2018 10:06:26 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/5] xfs_db: check should deal with cow staging events
+ correctly
+Message-ID: <20180104180626.GA5602@magnolia>
+References: <151500479880.7713.6538509149156363572.stgit@magnolia>
+ <151500481975.7713.14990901464976914162.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180103132802.GA17932@bfoster.bfoster>
+In-Reply-To: <151500481975.7713.14990901464976914162.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jan 03, 2018 at 08:28:03AM -0500, Brian Foster wrote:
-> On Wed, Jan 03, 2018 at 05:27:48PM +1100, Dave Chinner wrote:
-> > +			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
-> > +			    be16_to_cpu(bests[findex]) >= length) {
-> > +				dbno = freehdr.firstdb + findex;
-> > +				break;
-> >  			}
-> > +		} while (++findex < freehdr.nvalid);
-> > +
-> > +		/* Drop the block if we done with the freeblock */
+On Wed, Jan 03, 2018 at 10:40:19AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> Subject: [PATCH 2/5] xfs_db: check should deal with cow staging events correctly
+
+s/events/extents/
+
+> Teach xfs_check to record cow staging events correctly.  This means that
+
+s/events/extents/
+
+> we strip off the high bit before using startblock.
+
+high, indeed. :P
+
+--D
+
 > 
-> "... if we're done ..."
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/check.c |   19 +++++++++++++++----
+>  1 file changed, 15 insertions(+), 4 deletions(-)
 > 
-> Also FWIW, according to the comment it looks like the only reason the
-> freehdr conversion is elevated to this scope is to accommodate gcc
-> foolishness. If so, I'm wondering if a simple NULL init of bests at the
-> top of the function would avoid that problem and allow us to move the
-> code to where it was apparently intended to be in the first place. Hm?
-
-Yeah, looking at the follow-on patch, there's a gigantic amount of
-cleanup needed in this function. There's a bunch of "gcc is so
-stupid" hacks amongst the code because the function is too long
-for gcc correctly determine variable usage.
-
-I might sit down and factor it properly because that will make it a
-whole lot simpler and easier to understand...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> diff --git a/db/check.c b/db/check.c
+> index 3afde02..2f8dee5 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -4730,13 +4730,24 @@ scanfunc_refcnt(
+>  		lastblock = 0;
+>  		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
+>  			if (be32_to_cpu(rp[i].rc_refcount) == 1) {
+> -				dbprintf(_(
+> -		"leftover CoW extent (%u/%u) len %u\n"),
+> +				xfs_agblock_t	agbno;
+> +				char		*msg;
+> +
+> +				agbno = be32_to_cpu(rp[i].rc_startblock);
+> +				if (agbno >= XFS_REFC_COW_START) {
+> +					agbno -= XFS_REFC_COW_START;
+> +					msg = _(
+> +		"leftover CoW extent (%u/%u) len %u\n");
+> +				} else {
+> +					msg = _(
+> +		"leftover CoW extent at unexpected address (%u/%u) len %u\n");
+> +				}
+> +				dbprintf(msg,
+>  					seqno,
+> -					be32_to_cpu(rp[i].rc_startblock),
+> +					agbno,
+>  					be32_to_cpu(rp[i].rc_blockcount));
+>  				set_dbmap(seqno,
+> -					be32_to_cpu(rp[i].rc_startblock),
+> +					agbno,
+>  					be32_to_cpu(rp[i].rc_blockcount),
+>  					DBM_COWDATA, seqno, bno);
+>  			} else {
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
