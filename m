@@ -1,37 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48003 "EHLO newverein.lst.de"
+Received: from mx2.suse.de ([195.135.220.15]:45596 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750990AbeADIeu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Jan 2018 03:34:50 -0500
-Date: Thu, 4 Jan 2018 09:34:49 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 18/18] xfs, dax: wire up dax_flush_dma support via a
-        new xfs_sync_dma helper
-Message-ID: <20180104083449.GO2548@lst.de>
-References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com> <151407705701.38751.6157642918168721562.stgit@dwillia2-desk3.amr.corp.intel.com> <20180102230027.GV5858@dastard> <CAPcyv4gXxoLwZUyHYGUN2i71fjT_r=Mf+USYDLKwPGEYco+1PQ@mail.gmail.com> <20180103075112.GF30682@dastard>
+        id S1751595AbeADIwq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 03:52:46 -0500
+Date: Thu, 4 Jan 2018 09:52:44 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Filesystem crashes due to pages without buffers
+Message-ID: <20180104085244.GA29010@quack2.suse.cz>
+References: <20180103100430.GE4911@quack2.suse.cz>
+ <20180104055919.GG30682@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180103075112.GF30682@dastard>
+In-Reply-To: <20180104055919.GG30682@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Jan Kara <jack@suse.cz>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm@lists.01.org, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Wed, Jan 03, 2018 at 06:51:12PM +1100, Dave Chinner wrote:
-> > "Additionally we call it during the write operation, where aren't
-> > concerned about exposing unallocated blocks but just want to provide
-> > basic synchronization between a local writer and pNFS clients.  mmap
-> > writes would also benefit from this sort of synchronization, but due
-> > to the tricky locking rules in the page fault path we don't bother."
-> > ---
+On Thu 04-01-18 16:59:19, Dave Chinner wrote:
+> On Wed, Jan 03, 2018 at 11:04:30AM +0100, Jan Kara wrote:
+> > Hello,
+> > 
+> > Over the years I have seen so far unexplained crashed in filesystem's
+> > (ext4, xfs) writeback path due to dirty pages without buffers attached to
+> > them (see [1] and [2] for relatively recent reports). This was confusing as
+> > reclaim takes care not to strip buffers from a dirty page and both
+> > filesystems do add buffers to a page when it is first written to - in
+> > ->page_mkwrite() and ->write_begin callbacks.
+> > 
+> > Recently I have come across a code path that is probably leading to this
+> > inconsistent state and I'd like to discuss how to best fix the problem
+> > because it's not obvious to me. Consider the following race:
+> > 
+> > CPU1					CPU2
+> > 
+> > addr = mmap(file1, MAP_SHARED, ...);
+> > fd2 = open(file2, O_DIRECT | O_RDONLY);
+> > read(fd2, addr, len)
+> >   do_direct_IO()
+> >     page = dio_get_page()
+> >       dio_refill_pages()
+> >         iov_iter_get_pages()
+> > 	  get_user_pages_fast()
+> >             - page fault
+> >               ->page_mkwrite()
+> >                 block_page_mkwrite()
+> >                   lock_page(page);
+> >                   - attaches buffers to page
+> >                   - makes sure blocks are allocated
+> >                   set_page_dirty(page)
+> >               - install writeable PTE
+> >               unlock_page(page);
+> >     submit_page_section(page)
+> >       - submits bio with 'page' as a buffer
+> > 					kswapd reclaims pages:
+> > 					...
+> > 					shrink_page_list()
+> > 					  trylock_page(page) - this is the
+> > 					    page CPU1 has just faulted in
+> > 					  try_to_unmap(page)
+> > 					  pageout(page);
+> > 					    clear_page_dirty_for_io(page);
+> > 					    ->writepage()
+> > 					  - let's assume page got written
+> > 					    out fast enough, alternatively
+> > 					    we could get to the same path as
+> > 					    soon as the page IO completes
+> > 					  if (page_has_private(page)) {
+> > 					    try_to_release_page(page)
+> > 					      - reclaims buffers from the
+> > 					        page
+> > 					   __remove_mapping(page)
+> > 					     - fails as DIO code still
+> > 					       holds page reference
+> > ...
+> > 
+> > eventually read completes
+> >   dio_bio_complete(bio)
+> >     set_page_dirty_lock(page)
+> >       Bummer, we've just marked the page as dirty without having buffers.
+> >       Eventually writeback will find it and filesystem will complain...
+> > 
+> > Am I missing something?
 > 
-> The pnfs code  went into 3.20 (4.0, IIRC), whilst the XFS_MMAPLOCK
-> code went into 4.1. So the pnfs code was written and tested by
-> Christoph a long time before I added the XFS_MMAPLOCK, despite them
-> landing only one release apart. We've never really gone back to look
-> at this because there hasn't been a need until now....
+> My first question is why is kswapd trying to reclaim a page with an
+> elevated active reference count? i.e. there are active references
+> the VM *doesn't own* to the page, which means that there may well
+> a user that expects the state on the page (e.g. the page private
+> data that the active reference instantiated!) to remain intact until
+> it drops it's active reference.
 
-I suspect we should drop the MMAPLOCK as well, but I'd need to re-read
-and re-test the code.
+Page private data (and most of page state) is protected by a page lock, not
+by a page reference. So reclaim (which is holding the page lock) is free to
+try to reclaim page private data by calling ->releasepage callback.
+
+That being said you are right that the attempt to reclaim a page with
+active references is futile. But the problem is that we don't know how many
+page references are actually left before we unmap the page from page tables
+(each page table entry holds a page reference) and free page private data
+(as that may hold page reference as well - e.g. attach_page_buffers()
+acquires page reference). So checking page references in advance is
+difficult.
+
+Furthermore the core of the problem is not in the fact that page buffers
+are reclaimed. That just makes it visible. The real problem is that page can
+be written to by a GUP user while it is neither writeably mapped in page
+tables nor prepared with ->write_begin. So a similar race violating
+filesystem's assumptions can be like:
+
+CPU1					CPU2
+
+addr = mmap(file1, MAP_SHARED, ...);
+fd2 = open(file2, O_DIRECT | O_RDONLY);
+read(fd2, addr, len)
+  do_direct_IO()
+    ...
+    page = get_user_pages_fast()
+      - page fault handled
+    submit_page_section(page)
+      - submits bio with 'page' as a buffer
+					ordinary writeback:
+					writepages(file1)
+					  clear_page_dirty_for_io(page)
+					    - page gets writeprotected in
+					      page tables
+...
+eventually read completes
+  dio_bio_complete(bio)
+    set_page_dirty_lock(page)
+
+And a race like this is enough to cause data corruption if we are unlucky.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
