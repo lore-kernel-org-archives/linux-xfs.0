@@ -1,242 +1,293 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54040 "EHLO mail.kernel.org"
+Received: from mga01.intel.com ([192.55.52.88]:41529 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752015AbeADGK5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Jan 2018 01:10:57 -0500
-Date: Thu, 4 Jan 2018 08:10:53 +0200
-From: Leon Romanovsky <leon@kernel.org>
-Subject: Re: Filesystem crashes due to pages without buffers
-Message-ID: <20180104061053.GA10145@mtr-leonro.local>
-References: <20180103100430.GE4911@quack2.suse.cz>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="8+OS07CeIgZ706fH"
-Content-Disposition: inline
-In-Reply-To: <20180103100430.GE4911@quack2.suse.cz>
+        id S1751408AbeADING (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 03:13:06 -0500
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH 1/2] ext4: test for DAX + journaling corruption
+Date: Thu,  4 Jan 2018 01:11:20 -0700
+Message-Id: <20180104081121.313-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, RDMA mailing list <linux-rdma@vger.kernel.org>, Majd Dibbiny <majd@mellanox.com>
+To: fstests@vger.kernel.org, Eryu Guan <eguan@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
+Add a regression test for the following kernel commit:
 
---8+OS07CeIgZ706fH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+  ext4: prevent data corruption with journaling + DAX
 
-On Wed, Jan 03, 2018 at 11:04:30AM +0100, Jan Kara wrote:
-> Hello,
->
-> Over the years I have seen so far unexplained crashed in filesystem's
-> (ext4, xfs) writeback path due to dirty pages without buffers attached to
-> them (see [1] and [2] for relatively recent reports). This was confusing as
-> reclaim takes care not to strip buffers from a dirty page and both
-> filesystems do add buffers to a page when it is first written to - in
-> ->page_mkwrite() and ->write_begin callbacks.
->
-> Recently I have come across a code path that is probably leading to this
-> inconsistent state and I'd like to discuss how to best fix the problem
-> because it's not obvious to me. Consider the following race:
->
-> CPU1					CPU2
->
-> addr = mmap(file1, MAP_SHARED, ...);
-> fd2 = open(file2, O_DIRECT | O_RDONLY);
-> read(fd2, addr, len)
->   do_direct_IO()
->     page = dio_get_page()
->       dio_refill_pages()
->         iov_iter_get_pages()
-> 	  get_user_pages_fast()
->             - page fault
->               ->page_mkwrite()
->                 block_page_mkwrite()
->                   lock_page(page);
->                   - attaches buffers to page
->                   - makes sure blocks are allocated
->                   set_page_dirty(page)
->               - install writeable PTE
->               unlock_page(page);
->     submit_page_section(page)
->       - submits bio with 'page' as a buffer
-> 					kswapd reclaims pages:
-> 					...
-> 					shrink_page_list()
-> 					  trylock_page(page) - this is the
-> 					    page CPU1 has just faulted in
-> 					  try_to_unmap(page)
-> 					  pageout(page);
-> 					    clear_page_dirty_for_io(page);
-> 					    ->writepage()
-> 					  - let's assume page got written
-> 					    out fast enough, alternatively
-> 					    we could get to the same path as
-> 					    soon as the page IO completes
-> 					  if (page_has_private(page)) {
-> 					    try_to_release_page(page)
-> 					      - reclaims buffers from the
-> 					        page
-> 					   __remove_mapping(page)
-> 					     - fails as DIO code still
-> 					       holds page reference
-> ...
->
-> eventually read completes
->   dio_bio_complete(bio)
->     set_page_dirty_lock(page)
->       Bummer, we've just marked the page as dirty without having buffers.
->       Eventually writeback will find it and filesystem will complain...
->
-> Am I missing something?
->
-> The problem here is that filesystems fundamentally assume that a page can
-> be written to only between ->write_begin - ->write_end (in this interval
-> the page is locked), or between ->page_mkwrite - ->writepage and above is
-> an example where this does not hold because when a page reference is
-> acquired through get_user_pages(), page can get written to by the holder of
-> the reference and dirtied even after it has been unmapped from page tables
-> and ->writepage has been called. This is not only a cosmetic issue leading
-> to assertion failure but it can also lead to data loss, data corruption, or
-> other unpleasant surprises as filesystems assume page contents cannot be
-> modified until either ->write_begin() or ->page_mkwrite gets called and
-> those calls are serialized by proper locking with problematic operations
-> such as hole punching etc.
->
-> I'm not sure how to fix this problem. We could 'simulate' a writeable page
-> fault in set_page_dirty_lock(). It is a bit ugly since we don't have a
-> virtual address of the fault, don't hold mmap_sem, etc., possibly
-> expensive, but it would make filesystems happy. Data stored by GUP user
-> (e.g. read by DIO in the above case) could still get lost if someone e.g.
-> punched hole under the buffer or otherwise messed with the underlying
-> storage of the page while DIO was running but arguably users could expect
-> such outcome.
->
-> Another possible solution would be to make sure page is writeably mapped
-> until GUP user drops its reference. That would be arguably cleaner but
-> probably that would mean we have to track number of writeable GUP page
-> references separately (no space space in struct page is a problem here) and
-> block page_mkclean() until they are dropped. Also for long term GUP users
-> like Infiniband or V4L we'd have to come up with some solution as we should
-> not block page_mkclean() for so long.
->
-> As a side note DAX needs some solution for GUP users as well. The problems
-> are similar there in nature, just much easier to hit. So at least a
-> solution for long-term GUP users can (and I strongly believe should) be
-> shared between standard and DAX paths.
->
-> Anybody has other ideas how to fix the problem or opinions on which
-> solution would be better to use or some complications I have missed?
->
+The test passes if either we successfully compare the data between the mmap
+with journaling turned on and the one with journaling turned off, or if we
+fail the chattr command to turn on or off journaling.  The latter is how we
+prevent this issue in the kernel.
 
-+RDMA
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-Hi Jan,
+---
 
-I don't have actual proposals how to fix, but wanted to mention that
-we have a customer who experiences those failures in his setup.
-In his case, it is reproducible in 100% of cases in approximately 2
-minutes of run.
+Changes since v1:
 
-His application creates two memory regions with ib_umem_get(), one is
-backed by ext4 and another is anonymous. Approximately after two minutes
-of data traffic, he stops the system and calls to release those memory
-regions with ib_umem_release()->__ib_umem_release()->set_page_dirty_lock().
+ - Reordered .gitignore entry. (Eryu)
 
-A couple of seconds later, he hits the following BUG_ON.
+ - Added comments about how "chattr +j" turns off DAX and about why we need
+   the 'nodelalloc' mount option. (Eryu)
 
-[ 1411.545311] ------------[ cut here ]------------
-[ 1411.545340] kernel BUG at fs/ext4/inode.c:2297!
-[ 1411.545360] invalid opcode: 0000 [#1] SMP
-[ 1411.545381] Modules linked in: xt_nat veth ipt_MASQUERADE
-nf_nat_masquerade_ipv4 iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4
-nf_nat_ipv4 xt_addrtype iptable_filter xt_conntrack nf_nat nf_conntrack
-br_netfilter bridge stp llc overlay(T) rdma_ucm(OE) ib_ucm(OE)
-rdma_cm(OE) iw_cm(OE) ib_ipoib(OE) ib_cm(OE) ib_uverbs(OE) ib_umad(OE)
-mlx5_ib(OE) mlx5_core(OE) mlx4_en(OE) mlx4_ib(OE) ib_core(OE)
-mlx4_core(OE) devlink mlx_compat(OE) intel_powerclamp coretemp
-intel_rapl iosf_mbi kvm_intel vfat fat kvm irqbypass crc32_pclmul
-ghash_clmulni_intel aesni_intel lrw gf128mul ext4 glue_helper
-ablk_helper cryptd mbcache jbd2 iTCO_wdt iTCO_vendor_support mxm_wmi
-pcspkr sb_edac edac_core i2c_i801 sg mei_me mei shpchp lpc_ich
-ipmi_devintf ipmi_si ipmi_msghandler acpi_pad wmi acpi_power_meter
-knem(OE) nfsd auth_rpcgss
-[ 1411.545744] nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c sd_mod
-crc_t10dif crct10dif_generic ast drm_kms_helper crct10dif_pclmul
-crct10dif_common syscopyarea sysfillrect crc32c_intel mpt3sas sysimgblt
-fb_sys_fops ttm ahci raid_class libahci scsi_transport_sas igb drm
-libata dca i2c_algo_bit ptp nvme i2c_core pps_core fjes dm_mirror
-dm_region_hash dm_log dm_mod [last unloaded: devlink]
-[ 1411.545926] CPU: 6 PID: 13195 Comm: node_runner_w8 Tainted: G W OE
------------- T 3.10.0-514.21.1.el7.debug_bz1368895.x86_64 #1
-[ 1411.545975] Hardware name: Quanta Computer Inc D51BP-1U (dual 1G LoM)/S2BP-MB (dual 1G LoM), BIOS S2BP3B04 03/03/2016
-[ 1411.546017] task: ffff881e4b323ec0 ti: ffff881e49bbc000 task.ti: ffff881e49bbc000
-[ 1411.546047] RIP: 0010:[<ffffffffa07083e5>] [<ffffffffa07083e5>] mpage_prepare_extent_to_map+0x2d5/0x2e0 [ext4]
-[ 1411.546103] RSP: 0018:ffff881e49bbfc10 EFLAGS: 00010246
-[ 1411.546125] RAX: 001fffff0000003d RBX: ffff881e49bbfc68 RCX: 0000000000000170
-[ 1411.546154] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88207ff8dde8
-[ 1411.546183] RBP: ffff881e49bbfce8 R08: 0000000000000000 R09: 0000000000000001
-[ 1411.546212] R10: 57fe04c2df4f6680 R11: 0000000000000008 R12: 7ffffffffffffe9e
-[ 1411.546240] R13: 000000000003ffff R14: ffffea0001449a00 R15: ffff881e49bbfd90
-[ 1411.546270] FS: 00007f5dd5de7d40(0000) GS:ffff881fffb80000(0000) knlGS:0000000000000000
-[ 1411.546302] CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 1411.546325] CR2: 00007f5b0c5969c0 CR3: 0000001e5e6ae000 CR4: 00000000003407e0
-[ 1411.546354] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 1411.546383] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[ 1411.546412] Stack:
-[ 1411.546421] ffff881e49bbfc50 0000000000000002 ffff881f07b00628 ffff881e49bbfcb8
-[ 1411.546456] 000000000000017b 000000000000000e 0000000000000000 ffffea00794f6600
-[ 1411.546490] ffffea00794f6640 ffffea00794f6680 ffffea0001449a00 ffffea00014499c0
-[ 1411.546524] Call Trace:
-[ 1411.546545] [<ffffffffa070c9ab>] ext4_writepages+0x45b/0xd60 [ext4]
-[ 1411.546576] [<ffffffff8118d93e>] do_writepages+0x1e/0x40
-[ 1411.546601] [<ffffffff811824f5>] __filemap_fdatawrite_range+0x65/0x80
-[ 1411.546629] [<ffffffff81182641>] filemap_write_and_wait_range+0x41/0x90
-[ 1411.546664] [<ffffffffa0703bba>] ext4_sync_file+0xba/0x320 [ext4]
-[ 1411.546692] [<ffffffff8123028d>] vfs_fsync_range+0x1d/0x30
-[ 1411.546717] [<ffffffff811ba89e>] SyS_msync+0x1fe/0x250
-[ 1411.546741] [<ffffffff816974c9>] system_call_fastpath+0x16/0x1b
-[ 1411.546765] Code: ff ff ff e8 2e 7e a8 e0 8b 85 40 ff ff ff eb c2 48
-8d bd 50 ff ff ff e8 1a 7e a8 e0 eb 8c 4c 89 f7 e8 a0 81 a7 e0 e9 d5 fe
-ff ff <0f> 0b 0f 0b e8 62 d6 97 e0 66 90 0f 1f 44 00 00 55 48 89 e5 41
-[ 1411.548075] RIP [<ffffffffa07083e5>] mpage_prepare_extent_to_map+0x2d5/0x2e0 [ext4]
-[ 1411.549292] RSP <ffff881e49bbfc10>
----here vmcore-dmesg got cut off----
+ - Added a _require_command for chattr. (Eryu)
 
-Thanks
+ - Added $here for src/t_ext4_dax_journal_corruption command. (Eryu)
 
-> 								Honza
->
-> [1] https://www.spinics.net/lists/linux-xfs/msg10090.html
-> [2] https://www.spinics.net/lists/linux-ext4/msg54377.html
->
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
->
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+The previous version of this series is here:
 
---8+OS07CeIgZ706fH
-Content-Type: application/pgp-signature; name="signature.asc"
+https://lists.01.org/pipermail/linux-nvdimm/2017-September/012463.html
 
------BEGIN PGP SIGNATURE-----
+The related kernel patches were merged in v4.15-rc1.
+---
+ .gitignore                          |   1 +
+ src/Makefile                        |   3 +-
+ src/t_ext4_dax_journal_corruption.c | 102 ++++++++++++++++++++++++++++++++++++
+ tests/ext4/030                      |  74 ++++++++++++++++++++++++++
+ tests/ext4/030.out                  |   2 +
+ tests/ext4/group                    |   1 +
+ 6 files changed, 182 insertions(+), 1 deletion(-)
+ create mode 100644 src/t_ext4_dax_journal_corruption.c
+ create mode 100755 tests/ext4/030
+ create mode 100644 tests/ext4/030.out
 
-iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlpNxW0ACgkQ5GN7iDZy
-WKcwCQ/9FXq6iFv39IY5JdJ8VRWGbZVSmShwsUGp5K6ZZ554rMhigVV7w+5ieFVv
-i2ipgYkHXW6RyfTTRQ/JNIkQGO9gAnn2OF0yHxtPgnJnR5GgqdT1JsTZG/vffEmt
-VoVjD56XawF3pD6K3+Ma2/+aoAn9Mz9yDwtwwmFmTYaPTU1CBOf3FvFWbnlQ5Koe
-U2NFWQRHly5kR8n0jmkWMnD7hyYgNEWDRk4xm0Ua6UJeiijvpDvKeHuaMKMlhBns
-E8QXj/1uNwntqgvx46jEWw6qntkygOnMB8lPW7HXmEekDKR4lkkOBS3BkrQEQ0uk
-afcjAj8G3duDCTmGkYxJcsTb9jhlBt2KjjzkC+CZ9sVfdIpUvRiTk5fFIZVTqBk1
-Uhy/mpqlHlPlPJ9PuwWKf+3Rp3R2aucGh04jh9XmTavIg6rYc8tz782j2I1mMFG2
-vJMBwZViTsFBoYU+efornSbQdB0qSKjCpOcw0DiRqXvnEPkhOTf3HsPJRkhiANIT
-mnWXj8uKBJtVZywGOlwxNHCyeZTtlfGXqssFVDlRocqKdjhFGoHXpgKqIZQseMtY
-EAr6iVehIUEvQHEIXGcMRUbLKUt6JKHoIaLZdBBEWu8zpUbWohtGMoLoTrdBEtaw
-YoYW4Fo2I1XgZtCX/SKbhN99K/adHSFF7kiM0tuHooG+y1l45uY=
-=nwWq
------END PGP SIGNATURE-----
+diff --git a/.gitignore b/.gitignore
+index f27c30af..840e4fe4 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -115,6 +115,7 @@
+ /src/t_dir_offset2
+ /src/t_dir_type
+ /src/t_encrypted_d_revalidate
++/src/t_ext4_dax_journal_corruption
+ /src/t_futimens
+ /src/t_getcwd
+ /src/t_holes
+diff --git a/src/Makefile b/src/Makefile
+index b1012172..86c5440c 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -13,7 +13,8 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
+ 	t_mmap_writev t_truncate_cmtime dirhash_collide t_rename_overwrite \
+ 	holetest t_truncate_self t_mmap_dio af_unix t_mmap_stale_pmd \
+-	t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro
++	t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro \
++	t_ext4_dax_journal_corruption
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/t_ext4_dax_journal_corruption.c b/src/t_ext4_dax_journal_corruption.c
+new file mode 100644
+index 00000000..18a2acdc
+--- /dev/null
++++ b/src/t_ext4_dax_journal_corruption.c
+@@ -0,0 +1,102 @@
++#include <errno.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/mman.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <time.h>
++#include <unistd.h>
++
++#define PAGE(a) ((a)*0x1000)
++#define STRLEN 256
++
++void err_exit(char *op)
++{
++	fprintf(stderr, "%s: %s\n", op, strerror(errno));
++	exit(1);
++}
++
++void chattr_cmd(char *chattr, char *cmd, char *file)
++{
++	int ret;
++	char command[STRLEN];
++
++	ret = snprintf(command, STRLEN, "%s %s %s 2>/dev/null", chattr, cmd, file);
++	if (ret < 0)
++		err_exit("snprintf");
++
++	ret = system(command);
++	if (ret) /* Success - the kernel fix is to have this chattr fail */
++		exit(77);
++}
++
++int main(int argc, char *argv[])
++{
++	int fd, err, len = PAGE(1);
++	char *data, *dax_data, *chattr, *file;
++	char string[STRLEN];
++
++	if (argc < 3) {
++		printf("Usage: %s <chattr program> <file>\n", basename(argv[0]));
++		exit(0);
++	}
++
++	chattr = argv[1];
++	file = argv[2];
++
++	srand(time(NULL));
++	snprintf(string, STRLEN, "random number %d\n", rand());
++
++	fd = open(file, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
++	if (fd < 0)
++		err_exit("fd");
++
++	/* begin with journaling off and DAX on */
++	chattr_cmd(chattr, "-j", file);
++
++	ftruncate(fd, 0);
++	fallocate(fd, 0, 0, len);
++
++	dax_data = mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0);
++	if (!dax_data)
++		err_exit("mmap dax_data");
++
++	/*
++	 * This turns on journaling.  It also has the side-effect that it
++	 * turns off DAX for the given inode since journaling and DAX aren't
++	 * allowed to be on at the same time.  This happens in
++	 * ext4_change_inode_journal_flag() in kernel v4.14 and before.
++	 *
++	 * Note that this turns off the runtime DAX flag (S_DAX) in the
++	 * in-memory inode, and has nothing to do with per-inode on-media DAX
++	 * inode flags.
++	 */
++	chattr_cmd(chattr, "+j", file);
++
++	data = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
++	if (!data)
++		err_exit("mmap data");
++
++	/*
++	 * Write the data using the non-DAX mapping, and try and read it back
++	 * using the DAX mapping.
++	 */
++	strcpy(data, string);
++	if (strcmp(dax_data, string) != 0)
++		printf("Data miscompare\n");
++
++	err = munmap(data, len);
++	if (err < 0)
++		err_exit("munmap data");
++
++	err = munmap(dax_data, len);
++	if (err < 0)
++		err_exit("munmap dax_data");
++
++	err = close(fd);
++	if (err < 0)
++		err_exit("close");
++	return 0;
++}
+diff --git a/tests/ext4/030 b/tests/ext4/030
+new file mode 100755
+index 00000000..85da7557
+--- /dev/null
++++ b/tests/ext4/030
+@@ -0,0 +1,74 @@
++#! /bin/bash
++# FS QA Test ext4/030
++#
++# This is a regression test for kernel patch:
++#   ext4: prevent data corruption with journaling + DAX
++# created by Ross Zwisler <ross.zwisler@linux.intel.com>
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2017-2018 Intel Corporation.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# Modify as appropriate.
++_supported_os Linux
++_supported_fs ext4
++_require_scratch_dax
++_require_test_program "t_ext4_dax_journal_corruption"
++_require_command "$CHATTR_PROG" chattr
++
++# real QA test starts here
++_scratch_mkfs > $seqres.full 2>&1
++
++# In order to get our failure condition consistently we need to turn off
++# delayed allocation.  With delayed allocation on this simple test will pass,
++# but we would almost certainly see data corruption down the road as the
++# contents of the journal would conflict with the DAX data.
++_scratch_mount "-o dax,nodelalloc" >> $seqres.full 2>&1
++
++$here/src/t_ext4_dax_journal_corruption $CHATTR_PROG $SCRATCH_MNT/testfile
++
++if [[ $? != 0 && $? != 77 ]]; then
++	echo "Test failed, status $?"
++	exit 1
++fi
++
++# success, all done
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/ext4/030.out b/tests/ext4/030.out
+new file mode 100644
+index 00000000..06a1c8fe
+--- /dev/null
++++ b/tests/ext4/030.out
+@@ -0,0 +1,2 @@
++QA output created by 030
++Silence is golden
+diff --git a/tests/ext4/group b/tests/ext4/group
+index 257bb646..ef768dff 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -32,6 +32,7 @@
+ 027 auto quick fsmap
+ 028 auto quick fsmap
+ 029 auto quick fsmap
++030 auto quick
+ 271 auto rw quick
+ 301 aio auto ioctl rw stress defrag
+ 302 aio auto ioctl rw stress defrag
+-- 
+2.14.3
 
---8+OS07CeIgZ706fH--
