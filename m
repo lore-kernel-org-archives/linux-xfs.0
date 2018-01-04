@@ -1,160 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:33637 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752133AbeADKI3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 05:08:29 -0500
-Date: Thu, 4 Jan 2018 21:08:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Filesystem crashes due to pages without buffers
-Message-ID: <20180104100825.GH30682@dastard>
-References: <20180103100430.GE4911@quack2.suse.cz>
- <20180104055919.GG30682@dastard>
- <20180104085244.GA29010@quack2.suse.cz>
+Received: from mx2.suse.de ([195.135.220.15]:55473 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752159AbeADLMj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 06:12:39 -0500
+Date: Thu, 4 Jan 2018 12:12:33 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v4 17/18] mm, fs, dax: dax_flush_dma, handle dma vs
+ block-map-change collisions
+Message-ID: <20180104111233.GD29010@quack2.suse.cz>
+References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <151407705124.38751.12934858054023659736.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180104085244.GA29010@quack2.suse.cz>
+In-Reply-To: <151407705124.38751.12934858054023659736.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: akpm@linux-foundation.org, jack@suse.cz, Matthew Wilcox <mawilcox@microsoft.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, ross.zwisler@linux.intel.com, hch@lst.de
 
-On Thu, Jan 04, 2018 at 09:52:44AM +0100, Jan Kara wrote:
-> On Thu 04-01-18 16:59:19, Dave Chinner wrote:
-> > On Wed, Jan 03, 2018 at 11:04:30AM +0100, Jan Kara wrote:
-> > > Hello,
-> > > 
-> > > Over the years I have seen so far unexplained crashed in filesystem's
-> > > (ext4, xfs) writeback path due to dirty pages without buffers attached to
-> > > them (see [1] and [2] for relatively recent reports). This was confusing as
-> > > reclaim takes care not to strip buffers from a dirty page and both
-> > > filesystems do add buffers to a page when it is first written to - in
-> > > ->page_mkwrite() and ->write_begin callbacks.
-> > > 
-> > > Recently I have come across a code path that is probably leading to this
-> > > inconsistent state and I'd like to discuss how to best fix the problem
-> > > because it's not obvious to me. Consider the following race:
-> > > 
-> > > CPU1					CPU2
-> > > 
-> > > addr = mmap(file1, MAP_SHARED, ...);
-> > > fd2 = open(file2, O_DIRECT | O_RDONLY);
-> > > read(fd2, addr, len)
-> > >   do_direct_IO()
-> > >     page = dio_get_page()
-> > >       dio_refill_pages()
-> > >         iov_iter_get_pages()
-> > > 	  get_user_pages_fast()
-> > >             - page fault
-> > >               ->page_mkwrite()
-> > >                 block_page_mkwrite()
-> > >                   lock_page(page);
-> > >                   - attaches buffers to page
-> > >                   - makes sure blocks are allocated
-> > >                   set_page_dirty(page)
-> > >               - install writeable PTE
-> > >               unlock_page(page);
-> > >     submit_page_section(page)
-> > >       - submits bio with 'page' as a buffer
-> > > 					kswapd reclaims pages:
-> > > 					...
-> > > 					shrink_page_list()
-> > > 					  trylock_page(page) - this is the
-> > > 					    page CPU1 has just faulted in
-> > > 					  try_to_unmap(page)
-> > > 					  pageout(page);
-> > > 					    clear_page_dirty_for_io(page);
-> > > 					    ->writepage()
-> > > 					  - let's assume page got written
-> > > 					    out fast enough, alternatively
-> > > 					    we could get to the same path as
-> > > 					    soon as the page IO completes
-> > > 					  if (page_has_private(page)) {
-> > > 					    try_to_release_page(page)
-> > > 					      - reclaims buffers from the
-> > > 					        page
-> > > 					   __remove_mapping(page)
-> > > 					     - fails as DIO code still
-> > > 					       holds page reference
-> > > ...
-> > > 
-> > > eventually read completes
-> > >   dio_bio_complete(bio)
-> > >     set_page_dirty_lock(page)
-> > >       Bummer, we've just marked the page as dirty without having buffers.
-> > >       Eventually writeback will find it and filesystem will complain...
-> > > 
-> > > Am I missing something?
-> > 
-> > My first question is why is kswapd trying to reclaim a page with an
-> > elevated active reference count? i.e. there are active references
-> > the VM *doesn't own* to the page, which means that there may well
-> > a user that expects the state on the page (e.g. the page private
-> > data that the active reference instantiated!) to remain intact until
-> > it drops it's active reference.
-> 
-> Page private data (and most of page state) is protected by a page lock, not
-> by a page reference. So reclaim (which is holding the page lock) is free to
-> try to reclaim page private data by calling ->releasepage callback.
+On Sat 23-12-17 16:57:31, Dan Williams wrote:
+> +static struct page *dma_busy_page(void *entry)
+> +{
+> +	unsigned long pfn, end_pfn;
+> +
+> +	for_each_entry_pfn(entry, pfn, end_pfn) {
+> +		struct page *page = pfn_to_page(pfn);
+> +
+> +		if (page_ref_count(page) > 1)
+> +			return page;
+> +	}
+> +	return NULL;
+> +}
+> +
+>  /*
+>   * Find radix tree entry at given index. If it points to an exceptional entry,
+>   * return it with the radix tree entry locked. If the radix tree doesn't
+> @@ -557,6 +570,87 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+>  	return entry;
+>  }
+>  
+> +int dax_flush_dma(struct address_space *mapping, wait_atomic_t_action_f action)
 
-Page private data is "owned" by whoever put the private data there.
-Manipulating the fields and state that says there is private data on
-the page is protected by the page lock.
+I don't quite like the 'dma' terminology when this is all about page
+references in fact. How about renaming like dma_busy_page() ->
+devmap_page_referenced() instead and dax_flush_dma() -> dax_wait_pages_unused()
+or something like that?
 
-> That being said you are right that the attempt to reclaim a page with
-> active references is futile. But the problem is that we don't know how many
-> page references are actually left before we unmap the page from page tables
-> (each page table entry holds a page reference) and free page private data
-> (as that may hold page reference as well - e.g. attach_page_buffers()
-> acquires page reference). So checking page references in advance is
-> difficult.
+> +{
+> +	pgoff_t	indices[PAGEVEC_SIZE];
+> +	struct pagevec pvec;
+> +	pgoff_t	index, end;
+> +	unsigned i;
+> +
+> +	/* in the limited case get_user_pages for dax is disabled */
+> +	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+> +		return 0;
+> +
+> +	if (!dax_mapping(mapping))
+> +		return 0;
+> +
+> +	if (mapping->nrexceptional == 0)
+> +		return 0;
+> +
+> +retry:
+> +	pagevec_init(&pvec);
+> +	index = 0;
+> +	end = -1;
+> +	unmap_mapping_range(mapping, 0, 0, 1);
 
-perhaps we need separate accounting of internal and active
-references (kinda like superblocks), where active references prevent
-reclaim because they require the current state to be maintained
-until the reference is dropped, whilst internal references simply
-prevent the page from being freed until they are released.
+unmap_mapping_range() would be IMHO be more logical in the callers. Maybe
+a cleaner API would be like providing a function
+dax_find_referenced_page(mapping) which either returns NULL or a page that
+has elevated refcount. Filesystem can then drop locks it needs to and call
+wait_on_atomic_one() (possibly hidden in a DAX helper). When wait finishes,
+filesystem can do the retry. That way the whole lock, unlock, wait, retry
+logic is clearly visible in fs code, there's no need of 'action' function
+or propagation of locking state etc.
 
-> Furthermore the core of the problem is not in the fact that page buffers
-> are reclaimed. That just makes it visible. The real problem is that page can
-> be written to by a GUP user while it is neither writeably mapped in page
-> tables nor prepared with ->write_begin. So a similar race violating
-> filesystem's assumptions can be like:
-> 
-> CPU1					CPU2
-> 
-> addr = mmap(file1, MAP_SHARED, ...);
-> fd2 = open(file2, O_DIRECT | O_RDONLY);
-> read(fd2, addr, len)
->   do_direct_IO()
->     ...
->     page = get_user_pages_fast()
->       - page fault handled
->     submit_page_section(page)
->       - submits bio with 'page' as a buffer
-> 					ordinary writeback:
-> 					writepages(file1)
-> 					  clear_page_dirty_for_io(page)
-> 					    - page gets writeprotected in
-> 					      page tables
-> ...
-> eventually read completes
->   dio_bio_complete(bio)
->     set_page_dirty_lock(page)
-> 
-> And a race like this is enough to cause data corruption if we are unlucky.
+> +	/*
+> +	 * Flush dax_dma_lock() sections to ensure all possible page
+> +	 * references have been taken, or will block on the fs
+> +	 * 'mmap_lock'.
+> +	 */
+> +	synchronize_rcu();
 
-Hmmm. if that's the case then we probably need a page flag to
-indicate the page cannot be cleaned, unmapped or reclaimed by
-anything until the GUP reference owner clears that flag. It seems
-analagous to the PageWriteback flag and teh way we avoid certain
-things when we know the page is under IO (e.g. immediate reclaim
-:P).
+Frankly, I don't like synchronize_rcu() in a relatively hot path like this.
+Cannot we just abuse get_dev_pagemap() to fail if truncation is in progress
+for the pfn? We could indicate that by some bit in struct page or something
+like that.
 
-Cheers,
+> +	while (index < end && pagevec_lookup_entries(&pvec, mapping, index,
+> +				min(end - index, (pgoff_t)PAGEVEC_SIZE),
+> +				indices)) {
+> +		int rc = 0;
+> +
+> +		for (i = 0; i < pagevec_count(&pvec); i++) {
+> +			struct page *pvec_ent = pvec.pages[i];
+> +			struct page *page = NULL;
+> +			void *entry;
+> +
+> +			index = indices[i];
+> +			if (index >= end)
+> +				break;
+> +
+> +			if (!radix_tree_exceptional_entry(pvec_ent))
+> +				continue;
 
-Dave.
+This would be a bug so I'm not sure we need to handle that.
+
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
