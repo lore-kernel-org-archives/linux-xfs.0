@@ -1,171 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50425 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751961AbeAERCb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 12:02:31 -0500
-Date: Fri, 5 Jan 2018 09:02:27 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] common/rc: report kmemleak errors
-Message-ID: <20180105170227.GG5602@magnolia>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314499847.18893.9855359031542704591.stgit@magnolia>
- <20171214093718.GH2749@eguan.usersys.redhat.com>
- <20171214181508.GJ6896@magnolia>
- <20180105080255.GH5123@eguan.usersys.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47064 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752767AbeADOEy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 09:04:54 -0500
+Date: Thu, 4 Jan 2018 09:04:53 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: speed up directory bestfree block scanning
+Message-ID: <20180104140452.GA23499@bfoster.bfoster>
+References: <20180103062748.16400-1-david@fromorbit.com>
+ <20180103115910.GL5858@dastard>
+ <20180103134137.GB17932@bfoster.bfoster>
+ <20180103210015.GN5858@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180105080255.GH5123@eguan.usersys.redhat.com>
+In-Reply-To: <20180103210015.GN5858@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 05, 2018 at 04:02:55PM +0800, Eryu Guan wrote:
-> On Thu, Dec 14, 2017 at 10:15:08AM -0800, Darrick J. Wong wrote:
-> > On Thu, Dec 14, 2017 at 05:37:18PM +0800, Eryu Guan wrote:
-> > > On Tue, Dec 12, 2017 at 10:03:18PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > If kmemleak is enabled, scan and report memory leaks after every test.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  check     |    2 ++
-> > > >  common/rc |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  2 files changed, 54 insertions(+)
-> > > > 
-> > > > 
-> > > > diff --git a/check b/check
-> > > > index b2d251a..469188e 100755
-> > > > --- a/check
-> > > > +++ b/check
-> > > > @@ -497,6 +497,7 @@ _check_filesystems()
-> > > >  	fi
-> > > >  }
-> > > >  
-> > > > +_init_kmemleak
-> > > >  _prepare_test_list
-> > > >  
-> > > >  if $OPTIONS_HAVE_SECTIONS; then
-> > > > @@ -793,6 +794,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
-> > > >  		    n_try=`expr $n_try + 1`
-> > > >  		    _check_filesystems
-> > > >  		    _check_dmesg || err=true
-> > > > +		    _check_kmemleak || err=true
-> > > >  		fi
-> > > >  
-> > > >  	    fi
-> > > > diff --git a/common/rc b/common/rc
-> > > > index cb83918..a2bed36 100644
-> > > > --- a/common/rc
-> > > > +++ b/common/rc
-> > > > @@ -3339,6 +3339,58 @@ _check_dmesg()
-> > > >  	fi
-> > > >  }
-> > > >  
-> > > > +# capture the kmemleak report
-> > > > +_capture_kmemleak()
-> > > > +{
-> > > > +	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-> > > > +	local _leak_file="$1"
-> > > > +
-> > > > +	# Tell the kernel to scan for memory leaks.  Apparently the write
-> > > > +	# returns before the scan is complete, so do it twice in the hopes
-> > > > +	# that twice is enough to capture all the leaks.
-> > > > +	echo "scan" > "${_kern_knob}"
-> > > > +	cat "${_kern_knob}" > /dev/null
-> > > > +	echo "scan" > "${_kern_knob}"
-> > > > +	cat "${_kern_knob}" > "${_leak_file}"
-> > > > +	echo "clear" > "${_kern_knob}"
+On Thu, Jan 04, 2018 at 08:00:15AM +1100, Dave Chinner wrote:
+> On Wed, Jan 03, 2018 at 08:41:37AM -0500, Brian Foster wrote:
+> > On Wed, Jan 03, 2018 at 10:59:10PM +1100, Dave Chinner wrote:
+> > > In writing this, I think I can see a quick and simple change that
+> > > will fix this case and improve most other directory grow workloads
+> > > without affecting normal random directory insert/remove performance.
+> > > That is, do a reverse order search starting at the last block rather
+> > > than increasing order search starting at the first block.....
 > > > 
-> > > Hmm, two scans seem not enough either, I could see false positive easily
-> > > in a 'quick' group run, because some leaks are not reported immediately
-> > > after the test but after next test or next few tests. e.g. I saw
-> > > generic/008 (tested on XFS) being reported as leaking memory, and from
-> > > 008.kmemleak I saw:
+> > > Ok, now were are talking - performance and scalability improvements!
 > > > 
-> > > unreferenced object 0xffff880277679800 (size 512):
-> > >   comm "nametest", pid 25007, jiffies 4300176958 (age 9.854s)
-> > > ...
+> > > 		create time(sec) / rate (files/s)
+> > >  File count     vanilla		    loop-fix		+reverse
+> > >    10k	      0.54 / 18.5k	   0.53 / 18.9k	       0.52 / 19.3k
+> > >    20k	      1.10 / 18.1k	   1.05 / 19.0k	       1.00 / 20.0k
+> > >   100k	      4.21 / 23.8k	   3.91 / 25.6k	       3.58 / 27.9k
+> > >   200k	      9.66 / 20,7k	   7.37 / 27.1k	       7.08 / 28.3k
+> > >     1M	     86.61 / 11.5k	  48.26 / 20.7k	      38.33 / 26.1k
+> > >     2M	    206.13 /  9.7k	 129.71 / 15.4k	      82.20 / 24.3k
+> > >    10M	   2843.57 /  3.5k	1817.39 /  5.5k      591.78 / 16.9k
 > > > 
-> > > But "nametest" is only used in generic/007, the leak should be triggered
-> > > by generic/007 too, but 007 was reported as PASS in my case.
+> > > Theres still some non-linearity as we approach the 10M number, but
+> > > it's still 5x faster to 10M inodes than the existing code....
 > > > 
-> > > Not sure what's the best way to deal with these false positive, adding
-> > > more scans seem to work, but that's ugly and requires more test time..
-> > > What do you think?
 > > 
-> > I'm not sure either -- the brief scan I made of mm/kmemleak.c didn't
-> > reveal anything obvious that would explain the behavior we see.  It
-> > might just take a while for determine positively that an item isn't
-> > gray.
+> > Nice improvement.. I still need to look at the code, but a quick first
+> > thought is that I wonder if there's somewhere we could stash a 'most
+> > recent freeblock' once we have to grow the directory, even if just as an
+> > in-core hint. Then we could jump straight to the latest block regardless
+> > of the workload.
 > 
-> Seems so, I did read similar statements elsewhere, but I can't remember
-> now..
+> I thought about that, and then wondered where to stash it, then
+> wondered whether it would miss smaller, better fitting blocks, and
+> then finally realised we didn't need to have cross-operation state
+> to solve the common case of growing directories.
 > 
-> > 
-> > We could change the message to state that found leaks might have
-> > resulted from the previous test?  That's rather unsatisfying, but I
-> > don't know what else to do.
+
+Agreed with regard to the growing directories scenario. The thought was
+more around first: avoiding any potential negative effects for other
+workloads, and second: perhaps constructing a more generally applicable
+optimization (cases beyond purely seqential directory grow).
+
+> > Hmm, thinking a little more about it, that may not be worth the
+> > complication since part of the concept of "search failure" in this case
+> > is tied to the size of the entry we want to add. Then again, I suppose
+> > such is the case when searching forward/backward as well (i.e., one
+> > large insert fails, grows inode, subsequent small insert may very well
+> > have succeeded with the first freeblock, though now we'd always start at
+> > the recently allocated block at the end).
 > 
-> Seems like a reasonable way to go at this stage. I also noticed some
-> leaks probably were not from the test we ran nor fs-related, but other
-> processes on the system, e.g. 
+> Right. random hole filling in the directory shouldn't be greatly
+> affected by forward or reverse search order - the eventual search
+> distances are all the same. It does, OTOH, matter greatly for
+> sequntial inserts...
 > 
-> unreferenced object 0xffff8801768be3c0 (size 256):
->   comm "softirq", pid 0, jiffies 4299031078 (age 14.234s)
->   hex dump (first 32 bytes):
->     01 00 00 00 00 00 00 00 03 00 00 00 00 03 00 00  ................
->     b7 fd 01 00 00 00 00 00 d8 f6 1f 79 02 88 ff ff  ...........y....
->   backtrace:
->     [<ffffffffa077cae8>] init_conntrack+0x4a8/0x4c0 [nf_conntrack]
->     [<ffffffffa077d2c4>] nf_conntrack_in+0x494/0x510 [nf_conntrack]
->     [<ffffffff815f32d7>] nf_hook_slow+0x37/0xb0
->     [<ffffffff815fd6a0>] ip_rcv+0x2f0/0x3c0
->     [<ffffffff815b5833>] __netif_receive_skb_core+0x3d3/0xaa0
->     [<ffffffff815b8154>] netif_receive_skb_internal+0x34/0xc0
->     [<ffffffffa0356654>] br_pass_frame_up+0xb4/0x140 [bridge]
->     [<ffffffffa03568eb>] br_handle_frame_finish+0x20b/0x3f0 [bridge]
->     [<ffffffffa0356c7b>] br_handle_frame+0x16b/0x2c0 [bridge]
->     [<ffffffff815b5651>] __netif_receive_skb_core+0x1f1/0xaa0
->     [<ffffffff815b8154>] netif_receive_skb_internal+0x34/0xc0
->     [<ffffffff815b8dbc>] napi_gro_receive+0xbc/0xe0
->     [<ffffffffa004f64c>] bnx2_poll_work+0x8fc/0x1190 [bnx2]
->     [<ffffffffa004ff13>] bnx2_poll_msix+0x33/0xb0 [bnx2]
->     [<ffffffff815b868e>] net_rx_action+0x26e/0x3a0
->     [<ffffffff816e8778>] __do_softirq+0xc8/0x26c
+
+Yeah, I think that's a reasonable argument for simply swapping the
+search order (i.e., addresses the first concern above).
+
+> After sleeping on it, I suspect that there's a simple on-disk mod to
+> the dir3 header that will improve the search function for all
+> workloads. The dir3 free block header:
 > 
-> Perhaps we can mark the kmemleak check as "experimental" or so? By
-> adding some kind of "disclaimer" in the beginning of $seqres.kmemleak
-> file? So people could have the right expectation on these kmemleak
-> failures.
-
-How about:
-
-"EXPERIMENTAL kmemleak reported some memory leaks!  Due to the way kmemleak
-works, the leak might be from an earlier test, or something totally unrelated.
-
-"unreferenced object 0xffff8801768be3c0 (size 256):
-  comm "softirq", pid 0, jiffies 4299031078 (age 14.234s)
-..."
-
-> > 
-> > Or maybe a sleep 1 in between scans to see if that makes it more likely
-> > to attribute a leak to the correct test?  I don't anticipate running
-> > xfstests with kmemleak=on too terribly often, so the extra ~700s won't
-> > bother me too much.
+> struct xfs_dir3_free_hdr {
+>         struct xfs_dir3_blk_hdr hdr;
+>         __be32                  firstdb;        /* db of first entry */
+>         __be32                  nvalid;         /* count of valid entries */
+>         __be32                  nused;          /* count of used entries */
+>         __be32                  pad;            /* 64 bit alignment */
+> };
 > 
-> This doesn't improve anything to me, 7 of the first 8 tests failed due
-> to kmemleak check after adding 'sleep 1' between scans.
+> has 32 bits of padding in it, and the most entries a free block can
+> have is just under 2^15. Hence we can turn that into a "bestfree"
+> entry that tracks the largest freespace indexed by the block.
+> 
+> Then the free block scan can start by checking the required length
+> against the largest freespace in the bestfree entry and skip the
+> block search altogether if there isn't an indexed block with enough
+> free space inside the freespace index block we are searching.
+> 
 
-<nod>
+So with this we'd still need to walk the range of free blocks, right?
+I.e., we'd just be able to shortcut individual free block processing
+(bests[] iteration) for those that obviously don't satisfy the request.
 
---D
+Assuming I follow that correctly, that sounds reasonable from the
+perspective that it certainly eliminates work. I suppose how worthwhile
+it is probably depends on how much of an effect it has on the higher
+level directory workload. IOW, is performance measurably improved by
+skipping individual free block processing or is that cost mostly
+amortized by having to read/walk all free blocks in the first place?
 
-> Thanks,
-> Eryu
+It may very well be a worthwhile optimization. I think the larger point
+is that more isolated testing is probably required to confirm. The
+improvement from this patch alone doesn't necessarily translate to an
+answer one way or another because this patch creates conditions that
+allow us to skip most of the scan altogether (by jumping right to the
+most recently added block).
+
+> That's a lot more work than just reversing the search order, but I
+> think it's a mod we should (eventually) make because it is an
+> improvement for all insert workloads, not just growing.
+> 
+> The other (far more complex) option is to turn the freespace index
+> into a btree, like we do with the hash indexes. Not sure we need to
+> spend that much effort on this right now, though.
+> 
+
+*nod*
+
+Brian
+
+> > Anyways, just thinking out loud (and recovering from several weeks
+> > vacation). :P
+> 
+> Welcome back :)
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
