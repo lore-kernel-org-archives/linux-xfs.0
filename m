@@ -1,287 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:32958 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751961AbeAEReF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 12:34:05 -0500
-Date: Fri, 5 Jan 2018 09:34:00 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 3/3] xfs: refactor the geometry structure filling function
-Message-ID: <20180105173400.GI5602@magnolia>
-References: <151512356118.14363.7797314285394643799.stgit@magnolia>
- <151512359134.14363.8696043274247703808.stgit@magnolia>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:40891 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751791AbeADE4d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 23:56:33 -0500
+Received: by mail-ot0-f194.google.com with SMTP id d10so436130oti.7
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Jan 2018 20:56:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151512359134.14363.8696043274247703808.stgit@magnolia>
+In-Reply-To: <20180103100430.GE4911@quack2.suse.cz>
+References: <20180103100430.GE4911@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 3 Jan 2018 20:56:32 -0800
+Message-ID: <CAPcyv4grBxGs0cnFVyRx29t0xhG5EBTy_nP=qhsVh5=8nusNsw@mail.gmail.com>
+Subject: Re: Filesystem crashes due to pages without buffers
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 3, 2018 at 2:04 AM, Jan Kara <jack@suse.cz> wrote:
+> Hello,
+>
+> Over the years I have seen so far unexplained crashed in filesystem's
+> (ext4, xfs) writeback path due to dirty pages without buffers attached to
+> them (see [1] and [2] for relatively recent reports). This was confusing as
+> reclaim takes care not to strip buffers from a dirty page and both
+> filesystems do add buffers to a page when it is first written to - in
+> ->page_mkwrite() and ->write_begin callbacks.
+>
+> Recently I have come across a code path that is probably leading to this
+> inconsistent state and I'd like to discuss how to best fix the problem
+> because it's not obvious to me. Consider the following race:
+>
+> CPU1                                    CPU2
+>
+> addr = mmap(file1, MAP_SHARED, ...);
+> fd2 = open(file2, O_DIRECT | O_RDONLY);
+> read(fd2, addr, len)
+>   do_direct_IO()
+>     page = dio_get_page()
+>       dio_refill_pages()
+>         iov_iter_get_pages()
+>           get_user_pages_fast()
+>             - page fault
+>               ->page_mkwrite()
+>                 block_page_mkwrite()
+>                   lock_page(page);
+>                   - attaches buffers to page
+>                   - makes sure blocks are allocated
+>                   set_page_dirty(page)
+>               - install writeable PTE
+>               unlock_page(page);
+>     submit_page_section(page)
+>       - submits bio with 'page' as a buffer
+>                                         kswapd reclaims pages:
+>                                         ...
+>                                         shrink_page_list()
+>                                           trylock_page(page) - this is the
+>                                             page CPU1 has just faulted in
+>                                           try_to_unmap(page)
+>                                           pageout(page);
+>                                             clear_page_dirty_for_io(page);
+>                                             ->writepage()
+>                                           - let's assume page got written
+>                                             out fast enough, alternatively
+>                                             we could get to the same path as
+>                                             soon as the page IO completes
+>                                           if (page_has_private(page)) {
+>                                             try_to_release_page(page)
+>                                               - reclaims buffers from the
+>                                                 page
+>                                            __remove_mapping(page)
+>                                              - fails as DIO code still
+>                                                holds page reference
+> ...
+>
+> eventually read completes
+>   dio_bio_complete(bio)
+>     set_page_dirty_lock(page)
+>       Bummer, we've just marked the page as dirty without having buffers.
+>       Eventually writeback will find it and filesystem will complain...
+>
+> Am I missing something?
+>
+> The problem here is that filesystems fundamentally assume that a page can
+> be written to only between ->write_begin - ->write_end (in this interval
+> the page is locked), or between ->page_mkwrite - ->writepage and above is
+> an example where this does not hold because when a page reference is
+> acquired through get_user_pages(), page can get written to by the holder of
+> the reference and dirtied even after it has been unmapped from page tables
+> and ->writepage has been called. This is not only a cosmetic issue leading
+> to assertion failure but it can also lead to data loss, data corruption, or
+> other unpleasant surprises as filesystems assume page contents cannot be
+> modified until either ->write_begin() or ->page_mkwrite gets called and
+> those calls are serialized by proper locking with problematic operations
+> such as hole punching etc.
+>
+> I'm not sure how to fix this problem. We could 'simulate' a writeable page
+> fault in set_page_dirty_lock(). It is a bit ugly since we don't have a
+> virtual address of the fault, don't hold mmap_sem, etc., possibly
+> expensive, but it would make filesystems happy. Data stored by GUP user
+> (e.g. read by DIO in the above case) could still get lost if someone e.g.
+> punched hole under the buffer or otherwise messed with the underlying
+> storage of the page while DIO was running but arguably users could expect
+> such outcome.
+>
+> Another possible solution would be to make sure page is writeably mapped
+> until GUP user drops its reference. That would be arguably cleaner but
+> probably that would mean we have to track number of writeable GUP page
+> references separately (no space space in struct page is a problem here) and
+> block page_mkclean() until they are dropped. Also for long term GUP users
+> like Infiniband or V4L we'd have to come up with some solution as we should
+> not block page_mkclean() for so long.
 
-Refactor the geometry structure filling function to use the superblock
-to fill the fields.  While we're at it, make the function less indenty
-and use some whitespace to make the function easier to read.
+Do we need to block page_mkclean, or could we defer buffer reclaiming
+to the last put of the page?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix whitespacing, refactor the directory block size calculation
----
- fs/xfs/libxfs/xfs_da_format.h |    6 ++
- fs/xfs/libxfs/xfs_dir2.c      |    5 +
- fs/xfs/libxfs/xfs_sb.c        |  148 ++++++++++++++++++++++-------------------
- fs/xfs/libxfs/xfs_sb.h        |    5 +
- fs/xfs/xfs_ioctl.c            |    4 +
- fs/xfs/xfs_ioctl32.c          |    2 -
- 6 files changed, 92 insertions(+), 78 deletions(-)
+I think once we have the "register memory with lease" mechanism for
+Infiniband we could expand it to the page cache case. The problem is
+the regression this would cause with userspace that expects it can
+maintain file backed memory registrations indefinitely.
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 3771edc..7e77299 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -875,4 +875,10 @@ struct xfs_attr3_rmt_hdr {
- 	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
- 			sizeof(struct xfs_attr3_rmt_hdr) : 0))
- 
-+/* Number of bytes in a directory block. */
-+static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
-+{
-+	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
-+}
-+
- #endif /* __XFS_DA_FORMAT_H__ */
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index e10778c..92f94e1 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -119,8 +119,7 @@ xfs_da_mount(
- 
- 
- 	ASSERT(mp->m_sb.sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
--	ASSERT((1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog)) <=
--	       XFS_MAX_BLOCKSIZE);
-+	ASSERT(xfs_dir2_dirblock_bytes(&mp->m_sb) <= XFS_MAX_BLOCKSIZE);
- 
- 	mp->m_dir_inode_ops = xfs_dir_get_ops(mp, NULL);
- 	mp->m_nondir_inode_ops = xfs_nondir_get_ops(mp, NULL);
-@@ -140,7 +139,7 @@ xfs_da_mount(
- 	dageo = mp->m_dir_geo;
- 	dageo->blklog = mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog;
- 	dageo->fsblog = mp->m_sb.sb_blocklog;
--	dageo->blksize = 1 << dageo->blklog;
-+	dageo->blksize = xfs_dir2_dirblock_bytes(&mp->m_sb);
- 	dageo->fsbcount = 1 << mp->m_sb.sb_dirblklog;
- 
- 	/*
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 139517a..35b005d 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -879,77 +879,85 @@ xfs_sync_sb(
- 
- int
- xfs_fs_geometry(
--	xfs_mount_t		*mp,
--	xfs_fsop_geom_t		*geo,
--	int			new_version)
-+	struct xfs_sb		*sbp,
-+	struct xfs_fsop_geom	*geo,
-+	int			struct_version)
- {
-+	memset(geo, 0, sizeof(struct xfs_fsop_geom));
-+
-+	geo->blocksize = sbp->sb_blocksize;
-+	geo->rtextsize = sbp->sb_rextsize;
-+	geo->agblocks = sbp->sb_agblocks;
-+	geo->agcount = sbp->sb_agcount;
-+	geo->logblocks = sbp->sb_logblocks;
-+	geo->sectsize = sbp->sb_sectsize;
-+	geo->inodesize = sbp->sb_inodesize;
-+	geo->imaxpct = sbp->sb_imax_pct;
-+	geo->datablocks = sbp->sb_dblocks;
-+	geo->rtblocks = sbp->sb_rblocks;
-+	geo->rtextents = sbp->sb_rextents;
-+	geo->logstart = sbp->sb_logstart;
-+	BUILD_BUG_ON(sizeof(geo->uuid) != sizeof(sbp->sb_uuid));
-+	memcpy(geo->uuid, &sbp->sb_uuid, sizeof(sbp->sb_uuid));
-+
-+	if (struct_version < 2)
-+		return 0;
-+
-+	geo->sunit = sbp->sb_unit;
-+	geo->swidth = sbp->sb_width;
-+
-+	if (struct_version < 3)
-+		return 0;
-+
-+	geo->version = XFS_FSOP_GEOM_VERSION;
-+	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-+		     XFS_FSOP_GEOM_FLAGS_DIRV2;
-+	if (xfs_sb_version_hasattr(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
-+	if (xfs_sb_version_hasquota(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_QUOTA;
-+	if (xfs_sb_version_hasalign(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
-+	if (xfs_sb_version_hasdalign(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
-+	if (xfs_sb_version_hasextflgbit(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXTFLG;
-+	if (xfs_sb_version_hassector(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
-+	if (xfs_sb_version_hasasciici(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
-+	if (xfs_sb_version_haslazysbcount(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
-+	if (xfs_sb_version_hasattr2(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
-+	if (xfs_sb_version_hasprojid32bit(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
-+	if (xfs_sb_version_hascrc(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_V5SB;
-+	if (xfs_sb_version_hasftype(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_FTYPE;
-+	if (xfs_sb_version_hasfinobt(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_FINOBT;
-+	if (xfs_sb_version_hassparseinodes(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_SPINODES;
-+	if (xfs_sb_version_hasrmapbt(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
-+	if (xfs_sb_version_hasreflink(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
-+	if (xfs_sb_version_hassector(sbp))
-+		geo->logsectsize = sbp->sb_logsectsize;
-+	else
-+		geo->logsectsize = BBSIZE;
-+	geo->rtsectsize = sbp->sb_blocksize;
-+	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
-+
-+	if (struct_version < 3)
-+		return 0;
-+
-+	if (xfs_sb_version_haslogv2(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
-+
-+	geo->logsunit = sbp->sb_logsunit;
- 
--	memset(geo, 0, sizeof(*geo));
--
--	geo->blocksize = mp->m_sb.sb_blocksize;
--	geo->rtextsize = mp->m_sb.sb_rextsize;
--	geo->agblocks = mp->m_sb.sb_agblocks;
--	geo->agcount = mp->m_sb.sb_agcount;
--	geo->logblocks = mp->m_sb.sb_logblocks;
--	geo->sectsize = mp->m_sb.sb_sectsize;
--	geo->inodesize = mp->m_sb.sb_inodesize;
--	geo->imaxpct = mp->m_sb.sb_imax_pct;
--	geo->datablocks = mp->m_sb.sb_dblocks;
--	geo->rtblocks = mp->m_sb.sb_rblocks;
--	geo->rtextents = mp->m_sb.sb_rextents;
--	geo->logstart = mp->m_sb.sb_logstart;
--	ASSERT(sizeof(geo->uuid) == sizeof(mp->m_sb.sb_uuid));
--	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
--	if (new_version >= 2) {
--		geo->sunit = mp->m_sb.sb_unit;
--		geo->swidth = mp->m_sb.sb_width;
--	}
--	if (new_version >= 3) {
--		geo->version = XFS_FSOP_GEOM_VERSION;
--		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
--			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
--			(xfs_sb_version_hasattr(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
--			(xfs_sb_version_hasquota(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
--			(xfs_sb_version_hasalign(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
--			(xfs_sb_version_hasdalign(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
--			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
--			(xfs_sb_version_hassector(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
--			(xfs_sb_version_hasasciici(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
--			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
--			(xfs_sb_version_hasattr2(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
--			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
--			(xfs_sb_version_hascrc(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
--			(xfs_sb_version_hasftype(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
--			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
--			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
--			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
--			(xfs_sb_version_hasreflink(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
--		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
--				mp->m_sb.sb_logsectsize : BBSIZE;
--		geo->rtsectsize = mp->m_sb.sb_blocksize;
--		geo->dirblocksize = mp->m_dir_geo->blksize;
--	}
--	if (new_version >= 4) {
--		geo->flags |=
--			(xfs_sb_version_haslogv2(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
--		geo->logsunit = mp->m_sb.sb_logsunit;
--	}
- 	return 0;
- }
-diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-index a16632c..63dcd2a 100644
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -34,7 +34,8 @@ extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
- extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
- extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
- 
--extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
--				int nversion);
-+#define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
-+extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
-+				int struct_version);
- 
- #endif	/* __XFS_SB_H__ */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 3015e17..89fb1eb 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -810,7 +810,7 @@ xfs_ioc_fsgeometry_v1(
- 	xfs_fsop_geom_t         fsgeo;
- 	int			error;
- 
--	error = xfs_fs_geometry(mp, &fsgeo, 3);
-+	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
- 	if (error)
- 		return error;
- 
-@@ -832,7 +832,7 @@ xfs_ioc_fsgeometry(
- 	xfs_fsop_geom_t		fsgeo;
- 	int			error;
- 
--	error = xfs_fs_geometry(mp, &fsgeo, 4);
-+	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 66cc3cd..10fbde3 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -67,7 +67,7 @@ xfs_compat_ioc_fsgeometry_v1(
- 	xfs_fsop_geom_t		  fsgeo;
- 	int			  error;
- 
--	error = xfs_fs_geometry(mp, &fsgeo, 3);
-+	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
- 	if (error)
- 		return error;
- 	/* The 32-bit variant simply has some padding at the end */
+What are the implications of holding off page_mkclean or release
+buffers indefinitely?
+
+Is an indefinite / interruptible sleep waiting for the 'put' event of
+a get_user_pages() page unacceptable? The current case that the file
+contents will not be coherent with respect to in-flight RDMA, perhaps
+waiting for that to complete is better than cleaning buffers from the
+page prematurely.
+
+Yes, I have more questions than proposals.
+
+>
+> As a side note DAX needs some solution for GUP users as well. The problems
+> are similar there in nature, just much easier to hit. So at least a
+> solution for long-term GUP users can (and I strongly believe should) be
+> shared between standard and DAX paths.
+
+In the DAX case we rely on the fact that when the page goes idle we
+only need to worry about the filesytem block map changing, the page
+won't get reallocated somewhere else. We can't use page idle as an
+event in this case, however, if the page reference count is one then
+the DIO code can know that it has the page exclusively, so maybe DAX
+and non-DAX can share the page count == 1 event notification.
+
+However there's still the matter of how to callback into the
+filesystem. The DAX case is currently using a pgmap_radix lookup at
+put_page() time to determine when to wakeup waiters. I think this
+should move over to a new address_space_operation. That would help
+with reusing some of the DAX case machinery for this case, but the DIO
+code would need a special case put_page that checks for count == 1 and
+synchronization to hold off the DIO submission path to prevent new
+page elevations.
+
+...are you sure this is still similar enough to the DAX case that they
+can reuse much of the same machinery?
