@@ -1,289 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:35476 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751238AbeABRql (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 12:46:41 -0500
-Date: Tue, 2 Jan 2018 09:41:36 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] mkfs: pass switch case value directly into
- getnum/getstr
-Message-ID: <20180102174136.GB4857@magnolia>
-References: <529c056a-a40c-06b8-a37e-3b1b7e664303@sandeen.net>
- <8d4ef402-e625-3f14-5848-499b9ff82923@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:37782 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752498AbeADUHV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 15:07:21 -0500
+Received: from [10.0.0.4] (erlite [10.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 2DE9D2AB8
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Jan 2018 14:07:20 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 532d03d
+Message-ID: <edd1c5b5-1cb7-d777-1f9a-ca3e48263050@sandeen.net>
+Date: Thu, 4 Jan 2018 14:07:18 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8d4ef402-e625-3f14-5848-499b9ff82923@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="Dc00H4VVKJqCIy175eiTRKJvTAJGjpfhV"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Dec 24, 2017 at 11:10:21AM -0800, Eric Sandeen wrote:
-> Parsing did does sort of thing:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--Dc00H4VVKJqCIy175eiTRKJvTAJGjpfhV
+Content-Type: multipart/mixed; boundary="u1rfwKYZfM9Fks7qtpaVxTU5RftnhZwX0";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <edd1c5b5-1cb7-d777-1f9a-ca3e48263050@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 532d03d
 
-'Parsing does this sort of thing:'?
+--u1rfwKYZfM9Fks7qtpaVxTU5RftnhZwX0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> 	case D_AGCOUNT:
-> 		cli->agcount = getnum(value, opts, D_AGCOUNT);
-> 
-> which is just begging for a cut and paste error between the
-> case value and the enum passed into getnum/getstr.  Pass
-> "subopt" instead so that it is always consistent with the case.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Hi folks,
 
-Otherwise looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+The for-next branch of the xfsprogs repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> ---
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 1f3494c..035af03 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1400,7 +1400,7 @@ block_opts_parser(
->  {
->  	switch (subopt) {
->  	case B_SIZE:
-> -		cli->blocksize = getnum(value, opts, B_SIZE);
-> +		cli->blocksize = getnum(value, opts, subopt);
->  		break;
->  	default:
->  		return -EINVAL;
-> @@ -1417,52 +1417,52 @@ data_opts_parser(
->  {
->  	switch (subopt) {
->  	case D_AGCOUNT:
-> -		cli->agcount = getnum(value, opts, D_AGCOUNT);
-> +		cli->agcount = getnum(value, opts, subopt);
->  		break;
->  	case D_AGSIZE:
-> -		cli->agsize = getstr(value, opts, D_AGSIZE);
-> +		cli->agsize = getstr(value, opts, subopt);
->  		break;
->  	case D_FILE:
-> -		cli->xi->disfile = getnum(value, opts, D_FILE);
-> +		cli->xi->disfile = getnum(value, opts, subopt);
->  		break;
->  	case D_NAME:
-> -		cli->xi->dname = getstr(value, opts, D_NAME);
-> +		cli->xi->dname = getstr(value, opts, subopt);
->  		break;
->  	case D_SIZE:
-> -		cli->dsize = getstr(value, opts, D_SIZE);
-> +		cli->dsize = getstr(value, opts, subopt);
->  		break;
->  	case D_SUNIT:
-> -		cli->dsunit = getnum(value, opts, D_SUNIT);
-> +		cli->dsunit = getnum(value, opts, subopt);
->  		break;
->  	case D_SWIDTH:
-> -		cli->dswidth = getnum(value, opts, D_SWIDTH);
-> +		cli->dswidth = getnum(value, opts, subopt);
->  		break;
->  	case D_SU:
-> -		cli->dsu = getstr(value, opts, D_SU);
-> +		cli->dsu = getstr(value, opts, subopt);
->  		break;
->  	case D_SW:
-> -		cli->dsw = getnum(value, opts, D_SW);
-> +		cli->dsw = getnum(value, opts, subopt);
->  		break;
->  	case D_NOALIGN:
-> -		cli->sb_feat.nodalign = getnum(value, opts, D_NOALIGN);
-> +		cli->sb_feat.nodalign = getnum(value, opts, subopt);
->  		break;
->  	case D_SECTSIZE:
-> -		cli->sectorsize = getnum(value, opts, D_SECTSIZE);
-> +		cli->sectorsize = getnum(value, opts, subopt);
->  		break;
->  	case D_RTINHERIT:
-> -		if (getnum(value, opts, D_RTINHERIT))
-> +		if (getnum(value, opts, subopt))
->  			cli->fsx.fsx_xflags |= XFS_DIFLAG_RTINHERIT;
->  		break;
->  	case D_PROJINHERIT:
-> -		cli->fsx.fsx_projid = getnum(value, opts, D_PROJINHERIT);
-> +		cli->fsx.fsx_projid = getnum(value, opts, subopt);
->  		cli->fsx.fsx_xflags |= XFS_DIFLAG_PROJINHERIT;
->  		break;
->  	case D_EXTSZINHERIT:
-> -		cli->fsx.fsx_extsize = getnum(value, opts, D_EXTSZINHERIT);
-> +		cli->fsx.fsx_extsize = getnum(value, opts, subopt);
->  		cli->fsx.fsx_xflags |= XFS_DIFLAG_EXTSZINHERIT;
->  		break;
->  	case D_COWEXTSIZE:
-> -		cli->fsx.fsx_cowextsize = getnum(value, opts, D_COWEXTSIZE);
-> +		cli->fsx.fsx_cowextsize = getnum(value, opts, subopt);
->  		cli->fsx.fsx_xflags |= FS_XFLAG_COWEXTSIZE;
->  		break;
->  	default:
-> @@ -1480,25 +1480,25 @@ inode_opts_parser(
->  {
->  	switch (subopt) {
->  	case I_ALIGN:
-> -		cli->sb_feat.inode_align = getnum(value, opts, I_ALIGN);
-> +		cli->sb_feat.inode_align = getnum(value, opts, subopt);
->  		break;
->  	case I_MAXPCT:
-> -		cli->imaxpct = getnum(value, opts, I_MAXPCT);
-> +		cli->imaxpct = getnum(value, opts, subopt);
->  		break;
->  	case I_PERBLOCK:
-> -		cli->inopblock = getnum(value, opts, I_PERBLOCK);
-> +		cli->inopblock = getnum(value, opts, subopt);
->  		break;
->  	case I_SIZE:
-> -		cli->inodesize = getnum(value, opts, I_SIZE);
-> +		cli->inodesize = getnum(value, opts, subopt);
->  		break;
->  	case I_ATTR:
-> -		cli->sb_feat.attr_version = getnum(value, opts, I_ATTR);
-> +		cli->sb_feat.attr_version = getnum(value, opts, subopt);
->  		break;
->  	case I_PROJID32BIT:
-> -		cli->sb_feat.projid32bit = getnum(value, opts, I_PROJID32BIT);
-> +		cli->sb_feat.projid32bit = getnum(value, opts, subopt);
->  		break;
->  	case I_SPINODES:
-> -		cli->sb_feat.spinodes = getnum(value, opts, I_SPINODES);
-> +		cli->sb_feat.spinodes = getnum(value, opts, subopt);
->  		break;
->  	default:
->  		return -EINVAL;
-> @@ -1515,36 +1515,36 @@ log_opts_parser(
->  {
->  	switch (subopt) {
->  	case L_AGNUM:
-> -		cli->logagno = getnum(value, opts, L_AGNUM);
-> +		cli->logagno = getnum(value, opts, subopt);
->  		break;
->  	case L_FILE:
-> -		cli->xi->lisfile = getnum(value, opts, L_FILE);
-> +		cli->xi->lisfile = getnum(value, opts, subopt);
->  		break;
->  	case L_INTERNAL:
-> -		cli->loginternal = getnum(value, opts, L_INTERNAL);
-> +		cli->loginternal = getnum(value, opts, subopt);
->  		break;
->  	case L_SU:
-> -		cli->lsu = getstr(value, opts, L_SU);
-> +		cli->lsu = getstr(value, opts, subopt);
->  		break;
->  	case L_SUNIT:
-> -		cli->lsunit = getnum(value, opts, L_SUNIT);
-> +		cli->lsunit = getnum(value, opts, subopt);
->  		break;
->  	case L_NAME:
->  	case L_DEV:
-> -		cli->xi->logname = getstr(value, opts, L_NAME);
-> +		cli->xi->logname = getstr(value, opts, subopt);
->  		cli->loginternal = 0;
->  		break;
->  	case L_VERSION:
-> -		cli->sb_feat.log_version = getnum(value, opts, L_VERSION);
-> +		cli->sb_feat.log_version = getnum(value, opts, subopt);
->  		break;
->  	case L_SIZE:
-> -		cli->logsize = getstr(value, opts, L_SIZE);
-> +		cli->logsize = getstr(value, opts, subopt);
->  		break;
->  	case L_SECTSIZE:
-> -		cli->lsectorsize = getnum(value, opts, L_SECTSIZE);
-> +		cli->lsectorsize = getnum(value, opts, subopt);
->  		break;
->  	case L_LAZYSBCNTR:
-> -		cli->sb_feat.lazy_sb_counters = getnum(value, opts, L_LAZYSBCNTR);
-> +		cli->sb_feat.lazy_sb_counters = getnum(value, opts, subopt);
->  		break;
->  	default:
->  		return -EINVAL;
-> @@ -1561,24 +1561,24 @@ meta_opts_parser(
->  {
->  	switch (subopt) {
->  	case M_CRC:
-> -		cli->sb_feat.crcs_enabled = getnum(value, opts, M_CRC);
-> +		cli->sb_feat.crcs_enabled = getnum(value, opts, subopt);
->  		if (cli->sb_feat.crcs_enabled)
->  			cli->sb_feat.dirftype = true;
->  		break;
->  	case M_FINOBT:
-> -		cli->sb_feat.finobt = getnum(value, opts, M_FINOBT);
-> +		cli->sb_feat.finobt = getnum(value, opts, subopt);
->  		break;
->  	case M_UUID:
->  		if (!value || *value == '\0')
-> -			reqval('m', opts->subopts, M_UUID);
-> +			reqval('m', opts->subopts, subopt);
->  		if (platform_uuid_parse(value, &cli->uuid))
->  			illegal(value, "m uuid");
->  		break;
->  	case M_RMAPBT:
-> -		cli->sb_feat.rmapbt = getnum(value, opts, M_RMAPBT);
-> +		cli->sb_feat.rmapbt = getnum(value, opts, subopt);
->  		break;
->  	case M_REFLINK:
-> -		cli->sb_feat.reflink = getnum(value, opts, M_REFLINK);
-> +		cli->sb_feat.reflink = getnum(value, opts, subopt);
->  		break;
->  	default:
->  		return -EINVAL;
-> @@ -1595,19 +1595,19 @@ naming_opts_parser(
->  {
->  	switch (subopt) {
->  	case N_SIZE:
-> -		cli->dirblocksize = getstr(value, opts, N_SIZE);
-> +		cli->dirblocksize = getstr(value, opts, subopt);
->  		break;
->  	case N_VERSION:
-> -		value = getstr(value, &nopts, N_VERSION);
-> +		value = getstr(value, &nopts, subopt);
->  		if (!strcasecmp(value, "ci")) {
->  			/* ASCII CI mode */
->  			cli->sb_feat.nci = true;
->  		} else {
-> -			cli->sb_feat.dir_version = getnum(value, opts, N_VERSION);
-> +			cli->sb_feat.dir_version = getnum(value, opts, subopt);
->  		}
->  		break;
->  	case N_FTYPE:
-> -		cli->sb_feat.dirftype = getnum(value, opts, N_FTYPE);
-> +		cli->sb_feat.dirftype = getnum(value, opts, subopt);
->  		break;
->  	default:
->  		return -EINVAL;
-> @@ -1624,20 +1624,20 @@ rtdev_opts_parser(
->  {
->  	switch (subopt) {
->  	case R_EXTSIZE:
-> -		cli->rtextsize = getstr(value, opts, R_EXTSIZE);
-> +		cli->rtextsize = getstr(value, opts, subopt);
->  		break;
->  	case R_FILE:
-> -		cli->xi->risfile = getnum(value, opts, R_FILE);
-> +		cli->xi->risfile = getnum(value, opts, subopt);
->  		break;
->  	case R_NAME:
->  	case R_DEV:
-> -		cli->xi->rtname = getstr(value, opts, R_NAME);
-> +		cli->xi->rtname = getstr(value, opts, subopt);
->  		break;
->  	case R_SIZE:
-> -		cli->rtsize = getstr(value, opts, R_SIZE);
-> +		cli->rtsize = getstr(value, opts, subopt);
->  		break;
->  	case R_NOALIGN:
-> -		cli->sb_feat.nortalign = getnum(value, opts, R_NOALIGN);
-> +		cli->sb_feat.nortalign = getnum(value, opts, subopt);
->  		break;
->  	default:
->  		return -EINVAL;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the for-next branch is commit:
+
+532d03d xfs_repair: fix libxfs namespace problems
+
+New Commits:
+
+Brian Foster (1):
+      [5963006] xfs: refactor buffer logging into buffer dirtying helper
+
+Christoph Hellwig (1):
+      [c1a29e9] xfs: remove "no-allocation" reservations for file creatio=
+ns
+
+Darrick J. Wong (11):
+      [6f67c32] xfs: add the ability to join a held buffer to a defer_ops=
+
+      [3fbc4d7] xfs: hold xfs_buf locked between shortform->leaf conversi=
+on and=20
+      [db2cf1d] xfs: account for null transactions in bunmapi
+      [6428e6c] xfs: move xfs_iext_insert tracepoint to report useful inf=
+ormatio
+      [a44b23a] xfs: queue deferred rmap ops for cow staging extent alloc=
+/free i
+      [3ee858a] xfs: always honor OWN_UNKNOWN rmap removal requests
+      [19f9a63] xfs: only skip rmap owner checks for unknown-owner rmap r=
+emoval
+      [1ad4d3b] libhandle: zap fdhash in fshandle_destroy
+      [b638281] xfs_db: check should deal with cow staging extents correc=
+tly
+      [945e47e] xfs_db: fix crash when field list selector string has tra=
+iling s
+      [532d03d] xfs_repair: fix libxfs namespace problems
+
+Dave Chinner (7):
+      [a9857ca] mkfs: use opts parameter during option parsing
+      [a6fb6ab] mkfs: simplify minimum log size calculation
+      [f1301cc] mkfs: protofile only needs to be set up once
+      [cedf1c4] mkfs: support arbitrary conflict specification
+      [64e924d] mkfs: convert subopt name, val pairs to enums and declare=
+d array
+      [6c75555] mkfs: resolve sector size CLI conflicts
+      [2cf637c] mkfs: remove logarithm based CLI options
+
+Eric Sandeen (10):
+      [5c40ca1] xfs: fix leaks on corruption errors in xfs_bmap.c
+      [df90234] Merge branch 'libxfs-4.15-sync' into for-next
+      [b729d14] mkfs: Don't emit default config message yet
+      [ec64d06] mkfs: remove unused m_uuid in sb_feat_args
+      [639d0b0] mkfs: invert project id width boolean name
+      [852b325] mkfs: document sb_feat_args members
+      [129d98a] mkfs: remove use-once default macros
+      [c66bd30] mkfs: un-document removed logarithm based CLI options
+      [e5e612a] mkfs: pass switch case value directly into getnum/getstr
+      [9502da2] mkfs: do not allow both "dev" and "name" subopts for log =
+or real
+
+Ross Zwisler (2):
+      [dad7968] xfs_io: add MAP_SYNC support to mmap()
+      [851c5d1] xfs_io: add a new 'log_writes' command
+
+
+Code Diffstat:
+
+ configure.ac             |   2 +
+ db/check.c               |  19 +-
+ db/flist.c               |   1 +
+ debian/control           |   2 +-
+ include/builddefs.in     |   3 +
+ include/linux.h          |   8 +
+ include/xfs_multidisk.h  |   9 -
+ include/xfs_trans.h      |   1 +
+ io/Makefile              |  10 +
+ io/init.c                |   1 +
+ io/io.h                  |   7 +
+ io/log_writes.c          | 106 ++++++
+ io/mmap.c                |  29 +-
+ libhandle/handle.c       |   1 +
+ libxfs/libxfs_api_defs.h |   3 +-
+ libxfs/trans.c           |  35 +-
+ libxfs/util.c            |   7 +-
+ libxfs/xfs_alloc.c       |   4 +-
+ libxfs/xfs_attr.c        |  20 +-
+ libxfs/xfs_attr_leaf.c   |   9 +-
+ libxfs/xfs_attr_leaf.h   |   3 +-
+ libxfs/xfs_bmap.c        |   8 +-
+ libxfs/xfs_defer.c       |  39 ++-
+ libxfs/xfs_defer.h       |   5 +-
+ libxfs/xfs_ialloc.c      |  10 +-
+ libxfs/xfs_ialloc.h      |   1 -
+ libxfs/xfs_iext_tree.c   |   4 +-
+ libxfs/xfs_refcount.c    |  52 ++-
+ libxfs/xfs_rmap.c        |  99 ++++--
+ libxfs/xfs_rmap.h        |  16 +-
+ m4/Makefile              |   1 +
+ m4/package_devmapper.m4  |  11 +
+ m4/package_libcdev.m4    |  16 +
+ man/man8/mkfs.xfs.8      |  58 ++--
+ man/man8/xfs_io.8        |  29 +-
+ mkfs/Makefile            |   2 +-
+ mkfs/maxtrres.c          | 102 ------
+ mkfs/xfs_mkfs.c          | 828 ++++++++++++++++++++++-------------------=
+------
+ repair/dino_chunks.c     |   2 +-
+ repair/phase6.c          |   2 +-
+ 40 files changed, 858 insertions(+), 707 deletions(-)
+ create mode 100644 io/log_writes.c
+ create mode 100644 m4/package_devmapper.m4
+ delete mode 100644 mkfs/maxtrres.c
+
+
+--u1rfwKYZfM9Fks7qtpaVxTU5RftnhZwX0--
+
+--Dc00H4VVKJqCIy175eiTRKJvTAJGjpfhV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlpOiXcACgkQIK4WkuE9
+3uCuGQ/7BwGekR/PXSib0FL4CjYIlI/ZKEu4LaXTgsQ8Dd025Qpsdz3VViksvHjd
+mB1VMsQuXg9xP3BV+G9i5NxCquNH3R+XW9x/Z/j83Yzyysoq9hjCfoXdYXwfYIBb
+Y5XT2I1VtdSstIV+juSfJBH8PnSNz/x/TdkDVx6LnFrjRsXjf0rqK0ABalMKtxTJ
+1K+im3oji1IiF+7qOlNT/+JFncYPo7OKrFmgZBdQ8lqyDyTkyPGE41TNkkZTpu4h
+uBsJWWwZrZTzNMe3VCt4KjldJh6DgkxXZKiuhHzUgzyuYuWoguYHXuW/iuap7NZb
+J8jvusI7f4BSkWcW1TVgYNAWJJVX1nbAYlkHiwR8lVtBwkZdxNBbcZbMK6hqMLkj
+vmewo5M/Ux3/R8Nsy2Cf6e0HcEmicyJl7YmRKtIQLD0qt2Pi1fKRPK1WJT7t1Gfp
+A3i4B1B9ODnL8TmXKfAIz7HS8u7lV09SblIyEsyme3h1L9uuYACykDsqmWvjrJ1t
++rd0ijQpYvohegY7BdhTp09LEVtBwmrfieT6VtHDIZg0u9VARiZ3A+paUw6TBL8e
+ntBZgHkyjkXF3UpKtdDSxlxDq9ufROCTXgN7hyhxJSHqFSf/IXPBYVoTQAhE2DuA
+cIgnGG88bSpxgZ81gCD9Rp3zR3Z6YaGbr+sUYAySKthALcI73Sg=
+=P8kh
+-----END PGP SIGNATURE-----
+
+--Dc00H4VVKJqCIy175eiTRKJvTAJGjpfhV--
