@@ -1,247 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56230 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751888AbeAERZL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 12:25:11 -0500
-Date: Fri, 5 Jan 2018 09:25:05 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs: refactor the geometry structure filling function
-Message-ID: <20180105172505.GH5602@magnolia>
-References: <151512356118.14363.7797314285394643799.stgit@magnolia>
- <151512359134.14363.8696043274247703808.stgit@magnolia>
- <20180105130835.GC27973@bfoster.bfoster>
+Received: from mail.fsfe.org ([217.69.89.162]:45560 "EHLO mail.fsfe.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752463AbeADQbF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 11:31:05 -0500
+Subject: Re: [patch V5 02/11] LICENSES: Add the GPL 2.0 license
+References: <20171228152710.891701433@linutronix.de>
+ <20171228153308.366509938@linutronix.de>
+From: Carmen Bianca Bakker <carmenbianca@fsfe.org>
+Message-ID: <b353bb05-e9ea-86b7-7f34-c4c0f6b308fb@fsfe.org>
+Date: Thu, 4 Jan 2018 17:25:38 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180105130835.GC27973@bfoster.bfoster>
+In-Reply-To: <20171228153308.366509938@linutronix.de>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-On Fri, Jan 05, 2018 at 08:08:35AM -0500, Brian Foster wrote:
-> On Thu, Jan 04, 2018 at 07:39:51PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Refactor the geometry structure filling function to use the superblock
-> > to fill the fields.  While we're at it, make the function less indenty
-> > and use some whitespace to make the function easier to read.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> Nice cleanup...
-> 
-> >  fs/xfs/libxfs/xfs_sb.c |  167 ++++++++++++++++++++++++++++--------------------
-> >  fs/xfs/libxfs/xfs_sb.h |    5 +
-> >  fs/xfs/xfs_ioctl.c     |    4 +
-> >  fs/xfs/xfs_ioctl32.c   |    2 -
-> >  4 files changed, 103 insertions(+), 75 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > index 139517a..70e5126 100644
-> > --- a/fs/xfs/libxfs/xfs_sb.c
-> > +++ b/fs/xfs/libxfs/xfs_sb.c
-> > @@ -879,77 +879,104 @@ xfs_sync_sb(
-> >  
-> >  int
-> >  xfs_fs_geometry(
-> > -	xfs_mount_t		*mp,
-> > -	xfs_fsop_geom_t		*geo,
-> > -	int			new_version)
-> > +	struct xfs_sb		*sbp,
-> > +	struct xfs_fsop_geom	*geo,
-> > +	int			struct_version)
-> >  {
-> ...
-> > +	geo->version = XFS_FSOP_GEOM_VERSION;
-> > +	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-> > +		     XFS_FSOP_GEOM_FLAGS_DIRV2;
-> > +
-> > +
-> 
-> One whitespace line too many here..?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC
+Content-Type: multipart/mixed; boundary="HKI7b2tBig5eeSknsN2OzW7175LYzYiMv";
+ protected-headers="v1"
+From: Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>,
+ Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>,
+ Kate Stewart <kstewart@linuxfoundation.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>,
+ Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org,
+ Charlemagne Lasse <charlemagnelasse@gmail.com>,
+ "Darrick J. Wong" <darrick.wong@oracle.com>,
+ Heiko Carstens <heiko.carstens@de.ibm.com>
+Message-ID: <b353bb05-e9ea-86b7-7f34-c4c0f6b308fb@fsfe.org>
+Subject: Re: [patch V5 02/11] LICENSES: Add the GPL 2.0 license
+References: <20171228152710.891701433@linutronix.de>
+ <20171228153308.366509938@linutronix.de>
+In-Reply-To: <20171228153308.366509938@linutronix.de>
 
-Yep, fixed.
+--HKI7b2tBig5eeSknsN2OzW7175LYzYiMv
+Content-Type: text/plain; charset=iso-8859-15
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> > +	if (xfs_sb_version_hasattr(sbp))
-> > +		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
-> > +
-> 
-> Obviously just a nit... but IMO the extra whitespace between each of
-> these feature checks is a bit much. It actually reads cleaner to me to
-> kill off the extra lines between them. Just my .02 though..
+Hi all,
 
-Yeah, I suppose since we proceed linearly through that section without
-branching outside the block that it needn't the additional whitespace.
-Fixed.
+Since December, `GPL-2.0` is no longer the correct identifier for the
+licence.  The American FSF has been in talks with the SPDX Workgroup to
+change it to `GPL-2.0-only`.
 
-> ...
-> > +
-> > +	geo->rtsectsize = sbp->sb_blocksize;
-> > +	geo->dirblocksize = 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
-> > +
-> 
-> Slightly unfortunate that we have the geo abstraction and can't use it
-> for a simple reporting case. Is there a larger (userspace?) reason mp
-> was dropped as a parameter or was that just a cleanup? If the latter,
-> perhaps we could continue to pass mp and create a local sbp pointer. If
-> the former, then oh well, not a big deal. :P
+See the rationale here:
 
-At the point that mkfs wants to call this function, it has a fully built
-xfs_sb ready to go, but it hasn't called libxfs_init.  Therefore,
-mp->m_dir_geo hasn't yet been built, and I wanted to preserve the
-behavior that mkfs can spit out the geometry even if libxfs
-initialization fails for some other reason.
+https://www.gnu.org/licenses/identify-licenses-clearly.html
 
-That said, there isn't any reason why I couldn't just make this a helper
-in xfs_da_format.h and refactor all the opencoded instances:
+See the new canonical licence list here:
 
-/* Number of bytes in a directory block. */
-static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
-{
-	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
-}
+https://spdx.org/licenses/
 
---D
+This change is valid for all GPL licences.  Similarly, `GPL-2.0+` has
+been changed to `GPL-2.0-or-later`.
 
-> Brian
-> 
-> > +	if (struct_version < 3)
-> > +		return 0;
-> > +
-> > +	if (xfs_sb_version_haslogv2(sbp))
-> > +		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
-> > +
-> > +	geo->logsunit = sbp->sb_logsunit;
-> >  
-> > -	memset(geo, 0, sizeof(*geo));
-> > -
-> > -	geo->blocksize = mp->m_sb.sb_blocksize;
-> > -	geo->rtextsize = mp->m_sb.sb_rextsize;
-> > -	geo->agblocks = mp->m_sb.sb_agblocks;
-> > -	geo->agcount = mp->m_sb.sb_agcount;
-> > -	geo->logblocks = mp->m_sb.sb_logblocks;
-> > -	geo->sectsize = mp->m_sb.sb_sectsize;
-> > -	geo->inodesize = mp->m_sb.sb_inodesize;
-> > -	geo->imaxpct = mp->m_sb.sb_imax_pct;
-> > -	geo->datablocks = mp->m_sb.sb_dblocks;
-> > -	geo->rtblocks = mp->m_sb.sb_rblocks;
-> > -	geo->rtextents = mp->m_sb.sb_rextents;
-> > -	geo->logstart = mp->m_sb.sb_logstart;
-> > -	ASSERT(sizeof(geo->uuid) == sizeof(mp->m_sb.sb_uuid));
-> > -	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
-> > -	if (new_version >= 2) {
-> > -		geo->sunit = mp->m_sb.sb_unit;
-> > -		geo->swidth = mp->m_sb.sb_width;
-> > -	}
-> > -	if (new_version >= 3) {
-> > -		geo->version = XFS_FSOP_GEOM_VERSION;
-> > -		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-> > -			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
-> > -			(xfs_sb_version_hasattr(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
-> > -			(xfs_sb_version_hasquota(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
-> > -			(xfs_sb_version_hasalign(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
-> > -			(xfs_sb_version_hasdalign(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
-> > -			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
-> > -			(xfs_sb_version_hassector(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
-> > -			(xfs_sb_version_hasasciici(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
-> > -			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
-> > -			(xfs_sb_version_hasattr2(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
-> > -			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
-> > -			(xfs_sb_version_hascrc(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
-> > -			(xfs_sb_version_hasftype(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
-> > -			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
-> > -			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
-> > -			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
-> > -			(xfs_sb_version_hasreflink(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-> > -		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
-> > -				mp->m_sb.sb_logsectsize : BBSIZE;
-> > -		geo->rtsectsize = mp->m_sb.sb_blocksize;
-> > -		geo->dirblocksize = mp->m_dir_geo->blksize;
-> > -	}
-> > -	if (new_version >= 4) {
-> > -		geo->flags |=
-> > -			(xfs_sb_version_haslogv2(&mp->m_sb) ?
-> > -				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
-> > -		geo->logsunit = mp->m_sb.sb_logsunit;
-> > -	}
-> >  	return 0;
-> >  }
-> > diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> > index a16632c..63dcd2a 100644
-> > --- a/fs/xfs/libxfs/xfs_sb.h
-> > +++ b/fs/xfs/libxfs/xfs_sb.h
-> > @@ -34,7 +34,8 @@ extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
-> >  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
-> >  extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
-> >  
-> > -extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
-> > -				int nversion);
-> > +#define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
-> > +extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
-> > +				int struct_version);
-> >  
-> >  #endif	/* __XFS_SB_H__ */
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 3015e17..89fb1eb 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -810,7 +810,7 @@ xfs_ioc_fsgeometry_v1(
-> >  	xfs_fsop_geom_t         fsgeo;
-> >  	int			error;
-> >  
-> > -	error = xfs_fs_geometry(mp, &fsgeo, 3);
-> > +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
-> >  	if (error)
-> >  		return error;
-> >  
-> > @@ -832,7 +832,7 @@ xfs_ioc_fsgeometry(
-> >  	xfs_fsop_geom_t		fsgeo;
-> >  	int			error;
-> >  
-> > -	error = xfs_fs_geometry(mp, &fsgeo, 4);
-> > +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
-> >  	if (error)
-> >  		return error;
-> >  
-> > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> > index 66cc3cd..10fbde3 100644
-> > --- a/fs/xfs/xfs_ioctl32.c
-> > +++ b/fs/xfs/xfs_ioctl32.c
-> > @@ -67,7 +67,7 @@ xfs_compat_ioc_fsgeometry_v1(
-> >  	xfs_fsop_geom_t		  fsgeo;
-> >  	int			  error;
-> >  
-> > -	error = xfs_fs_geometry(mp, &fsgeo, 3);
-> > +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
-> >  	if (error)
-> >  		return error;
-> >  	/* The 32-bit variant simply has some padding at the end */
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I believe that this patch should be changed to reflect that.  The
+identifiers used in this patch are still valid, but deprecated.
+
+Yours sincerely,
+
+--=20
+Carmen Bianca Bakker
+Technical Intern
+Free Software Foundation Europe e.V.
+
+
+--HKI7b2tBig5eeSknsN2OzW7175LYzYiMv--
+
+--gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEaOz9p2Grh2PLV5z6duum9rbqLskFAlpOVYMACgkQduum9rbq
+LsnfhxAAl6RDRwn3DZgJav2RG7COcj6E9fdCJHSzU4mXmicLq0vqOq1MmHSxeaqI
+C/VBYDHE0uIP2S1O728Rz+sBGLORTUjUQHBth/AB35GMfIJLyDpMLJzDdBXw77sJ
+dK0aFYv5xjkRfNimISVSMxeA8ZjjsbXFvrE4eRnBqw9v/vJPU0k82ukdMSuDgT3l
+PZL26FjQMToQqF53Etm6zisyDcOuflGovryQdyFJjY7s10bfH8Zc/II8mkIy9caa
+sVjrTYIo0zAOBwx/SEeoSQNtFStEn2eFy3VgG7u7n23DJuHsHpRSh6xzOn2LnnfL
+3HphGy9pMGE6lZ2mzUqs73XDeBNNDcISYgvlIHobsG3m66ucGMyd5eFDVJhYdP3I
+Pej5ZxjrevBlVWa0R7Fr3tNng6+8iChmpdOBKEv90B4ZJCrWv4qUgcvzuSsKiuBn
+RA+0yIvRwa5PNAW0+IOUyv7oz1MSUpp5SzDdJq2196WggxyngmCpN9PHStRmrgSk
+Qgo6IEqTvCUDgIT4mrwjWMup1moB8Jkr2p+CqLtEjB2m33CKPeXVi3kEANAezzRm
+vvyiL6bfysUb1TSXxAsSV7bXG2R1hd8UyVdWsJnBDmRZonqYujDoctK0KNn2jLSi
+dUU4vVB8mK25TehPmZJO15WTmwSitP7tIU6rucJFfhcHxP/bd2g=
+=SIe4
+-----END PGP SIGNATURE-----
+
+--gUomQIhSsYl54SRq5xlMRhoEagYwCPrRC--
