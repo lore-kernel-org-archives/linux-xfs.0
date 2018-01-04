@@ -1,31 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from walrus.jabberwocky.com ([173.9.29.57]:49506 "EHLO
-        mail.jabberwocky.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751333AbeACFIU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 00:08:20 -0500
-Received: from grover.home.jabberwocky.com (grover.home.jabberwocky.com [172.24.84.28])
-        by mail.jabberwocky.com (Postfix) with ESMTPSA id 0D9DA2077407
-        for <linux-xfs@vger.kernel.org>; Wed,  3 Jan 2018 00:02:14 -0500 (EST)
-From: David Shaw <dshaw@jabberwocky.com>
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Quota performance hit?
-Message-Id: <3DED9052-77EA-4405-BE33-89807AEE23EC@jabberwocky.com>
-Date: Wed, 3 Jan 2018 00:02:13 -0500
+Received: from verein.lst.de ([213.95.11.211]:47977 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751294AbeADIba (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Jan 2018 03:31:30 -0500
+Date: Thu, 4 Jan 2018 09:31:29 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v4 17/18] mm, fs, dax: dax_flush_dma, handle dma vs
+        block-map-change collisions
+Message-ID: <20180104083129.GM2548@lst.de>
+References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com> <151407705124.38751.12934858054023659736.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151407705124.38751.12934858054023659736.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: akpm@linux-foundation.org, jack@suse.cz, Matthew Wilcox <mawilcox@microsoft.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, ross.zwisler@linux.intel.com, hch@lst.de
 
-Hello,
+Not pretty, but probably the best we can do for now..
 
-I wonder if anyone could point me towards any numbers on how much of a performance penalty project quotas incur on a write-heavy filesystem.  The idea being discussed here is putting a project quota on the /var/log directory (so pretty write-heavy) to prevent it from overflowing /var, and thus causing problems for /var/lib, /var/tmp, and other things in /var that need some headroom.  The alternative is to simply use two different filesystems for /var and /var/lib.
-
-Any information or pointers would be welcome.
-
-Thanks,
-
-David
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
