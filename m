@@ -1,85 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr013msb.fastweb.it ([85.18.95.104]:55230 "EHLO
-        mr013msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751917AbeADBiH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 20:38:07 -0500
-Subject: Re: Block size and read-modify-write
+Received: from aserp2120.oracle.com ([141.146.126.78]:38862 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbeADAyL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 19:54:11 -0500
+Date: Wed, 3 Jan 2018 16:52:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ZOMG RFCRAP PATCH 0/2] xfs: horrifying eBPF hacks
+Message-ID: <20180104005248.GD16402@magnolia>
+References: <20171213061825.GO19219@magnolia>
+ <20171221133338.GD1567@infradead.org>
+ <20171221164535.GS12613@magnolia>
+ <F1508AF4-D241-47AA-B690-6AF6073D0E25@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Thu, 04 Jan 2018 02:38:04 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <20180103225954.GP5858@dastard>
-References: <021d36d95a9de952ddd38cc56d18df4f@assyoma.it>
- <20180102102539.5kh2tjo5gmlewiek@odin.usersys.redhat.com>
- <20180103011926.GJ5858@dastard>
- <b58a3a90-0e7b-abca-91ce-8b2d8819a75b@assyoma.it>
- <20180103214741.GO5858@dastard>
- <fa54fea7ec0d836f2c037f7b71a17365@assyoma.it>
- <20180103225954.GP5858@dastard>
-Message-ID: <cbb5ecb1dac9d6c26ce9bede5424cedc@assyoma.it>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <F1508AF4-D241-47AA-B690-6AF6073D0E25@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, g.danti@assyoma.it
+To: Richard Wareing <rwareing@fb.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "david@fromorbit.com" <david@fromorbit.com>
 
-Il 03-01-2018 23:59 Dave Chinner ha scritto:
-> Yes. But I'm talking about the initial page cache writes in your
-> tests, and they were all into unwritten extents. These are the
-> writes that had different behaviour in exach test case.
-
-I have some difficulties grasping that. Please note that each test is a 
-*while loop* of the "dd" command. So, on the first test (dd with cached 
-writes), only the first iteration on the loop should write to an 
-unwritten extent; the second, third an so on should overwrite real data 
-(as "dd" was issued with "oflag=dsync", which immediately flushes data).
-
-So, why you noted that "they were all into unwritten extents"? Again, I 
-am missing something?
-
-> That's an application problem, not a filesystem problem. All the
-> filesystem can do is align/size the data extents to match what is
-> optimal for the underlying storage (as we do for RAID) and hope
-> the application is smart enough to do large, well formed IOs to
-> the filesystem.
-
-You are right, I am surely approaching the issue from the wrong end...
-
-> I think you've jumped to entirely the wrong conclusion. We do care
-> about it because if you can't convey/control data alignment at the
-> filesystem level, then you can't fully optimise IO at the
-> application level.
-
-Uhm no, it is my (bad) english which failed...
-I fully understand XFS does a wonderful job with regard to data 
-alignment.
-What I inteded to say is that I understand it is not an XFS problem if 
-an application does very small writes rather than a large one.
-
-> The reality is that we've been doing these sorts of data alignment
-> optimisations for the last 20 years with XFS and applications using
-> direct IO. We care an awful lot about alignment of the filesystem
-> structure to the underlying device characteristics because if we
-> don't then IO performance is extremely difficult to maximise and/or
-> make deterministic.
+On Thu, Jan 04, 2018 at 12:05:21AM +0000, Richard Wareing wrote:
+> Hey Darrick,
 > 
-> However, this is such a complex domain that very, very few people
-> have the knowledge and expertise to understand how to take advantage
-> of it fully. It's hard even to convey just how complex it is to
-> people without a solid knowledge base of filesysystem and storage
-> knowledge, as this conversion shows...
+> I'll try to get to testing this out early next week, I was out on vacation 
+> the last couple weeks so I kinda fell off the earth for a bit.
+> 
+> I will test for functionality & performance as best I can, but we'll probably
+> want to explore everyone's concerns on leveraging eBPF in this way as
+> well.  I have pretty limited experience with BPF, so I'm probably not going
+> to be super useful in such a discussion, though I'll certainly try to get read
+> up on it.
+> 
+> Is there any precedence for doing this sort of thing with BPF anywhere
+> else in the kernel?
 
-True. I really thank you for the time spent on explaining the issue.
-Apart that studing the source code, there are any resources I can read 
-about these advanced topic?
+Well, we use JIT compiled eBPF to allow userspace to read kernel memory
+now, so it's probably fine to let it fiddle with XFS since we've all
+already lost anyway. ;)
 
-Regards.
+Seriously, no, there isn't any precedent, hence the ZOMFG RFCRAP tags.
+I'm pretty sure that at best BPF XFS falls into a gray area where in
+theory all the protections are sufficient but nobody will ever believe
+it...
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+...but that doesn't mean it isn't worth giving the idea a healthy shake
+on the mailing list.  <cue flames>
+
+--D
+
+> Richard
+> 
+> 
+> > On Dec 21, 2017, at 8:45 AM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > 
+> > On Thu, Dec 21, 2017 at 05:33:38AM -0800, Christoph Hellwig wrote:
+> >> Eek.  Whie eBPF is a really nice debug tool we should never use
+> >> it for actual required kernel I/O functionality.
+> > 
+> > Certainly not in its current hacky form.  I'm curious if Richard has had
+> > a chance to try out these patches to see if it affects performance in a
+> > noticeable way?
+> > 
+> > I /think/ bpf has enough safety mechanisms (no loops, no direct writing
+> > to kernel memory, bytecode verifiers, opcode count limits) that such a
+> > beast could be hidden behind a kconfig option that isn't turned for the
+> > general public.  For people who have these particularly specific use
+> > cases I think it better to have a general mechanism to accomodate them
+> > vs. scattering code all over xfs vs. "no sorry go away", though this
+> > ebpf thing isn't necessarily the final answer.  We do validate that the
+> > proposed iflags are allowed for the fs geometry, though I acknowledge
+> > that the prospect of running ebpf with ilock_excl does give me pause.
+> > 
+> > I'm curious, though, what are your (and everyone else's) concerns about
+> > this?
+> > 
+> > --D
+> > 
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
