@@ -1,134 +1,265 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41548 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:46515 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751208AbeAECth (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 21:49:37 -0500
-Date: Thu, 4 Jan 2018 18:49:24 -0800
+        with ESMTP id S1751250AbeAEDFS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 22:05:18 -0500
+Date: Thu, 4 Jan 2018 19:05:04 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/21] xfs: add scrub cross-referencing helpers for the
- rmap btrees
-Message-ID: <20180105024924.GD5602@magnolia>
+Subject: Re: [PATCH 10/21] xfs: set up scrub cross-referencing helpers
+Message-ID: <20180105030504.GF5602@magnolia>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398982164.18741.14153975836991113575.stgit@magnolia>
- <20180105014053.GV30682@dastard>
+ <151398983388.18741.9974351544672577036.stgit@magnolia>
+ <20180105020826.GX30682@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180105014053.GV30682@dastard>
+In-Reply-To: <20180105020826.GX30682@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 05, 2018 at 12:40:53PM +1100, Dave Chinner wrote:
-> On Fri, Dec 22, 2017 at 04:43:41PM -0800, Darrick J. Wong wrote:
+On Fri, Jan 05, 2018 at 01:08:26PM +1100, Dave Chinner wrote:
+> On Fri, Dec 22, 2017 at 04:43:53PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Add a couple of functions to the rmap btrees that will be used
-> > to cross-reference metadata against the rmapbt.
+> > Create some helper functions that we'll use later to deal with problems
+> > we might encounter while cross referencing metadata with other metadata.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_rmap.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_rmap.h |    5 ++++
-> >  2 files changed, 63 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > index 50db920..ea78ec3 100644
-> > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > @@ -2387,3 +2387,61 @@ xfs_rmap_compare(
-> >  	else
-> >  		return 0;
+> >  fs/xfs/scrub/btree.c  |   72 +++++++++++++++++++++-----
+> >  fs/xfs/scrub/btree.h  |    9 +++
+> >  fs/xfs/scrub/common.c |  138 +++++++++++++++++++++++++++++++++++++++++++++----
+> >  fs/xfs/scrub/common.h |   28 ++++++++++
+> >  fs/xfs/scrub/scrub.c  |   10 ++++
+> >  fs/xfs/scrub/trace.h  |   22 ++++++++
+> >  6 files changed, 257 insertions(+), 22 deletions(-)
+> 
+> ....
+> 
+> > -bool
+> > -xfs_scrub_btree_process_error(
+> > +static bool
+> > +__xfs_scrub_btree_process_error(
+> >  	struct xfs_scrub_context	*sc,
+> >  	struct xfs_btree_cur		*cur,
+> >  	int				level,
+> > -	int				*error)
+> > +	int				*error,
+> > +	bool				xref,
+> > +	void				*ret_ip)
+> >  {
+> >  	if (*error == 0)
+> >  		return true;
+> > @@ -60,36 +62,81 @@ xfs_scrub_btree_process_error(
+> >  	case -EFSBADCRC:
+> >  	case -EFSCORRUPTED:
+> >  		/* Note the badness but don't abort. */
+> > -		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+> > +		sc->sm->sm_flags |= xfs_scrub_process_error_flag(xref);
+> 
+> Hmmmm.
+> 
+> WHy not just pass in the relevant error flag, rather than a boolean
+> used to choose the error flag?
+
+Good idea!
+
+> >  		*error = 0;
+> >  		/* fall through */
+> >  	default:
+> >  		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+> >  			trace_xfs_scrub_ifork_btree_op_error(sc, cur, level,
+> > -					*error, __return_address);
+> > +					*error, ret_ip);
+> >  		else
+> >  			trace_xfs_scrub_btree_op_error(sc, cur, level,
+> > -					*error, __return_address);
+> > +					*error, ret_ip);
+> >  		break;
+> >  	}
+> >  	return false;
 > >  }
-> > +
-> > +/* Is there a record covering a given extent? */
-> > +int
-> > +xfs_rmap_has_record(
-> > +	struct xfs_btree_cur	*cur,
-> > +	xfs_agblock_t		bno,
-> > +	xfs_extlen_t		len,
-> > +	bool			*exists)
+> >  
+> > +bool
+> > +xfs_scrub_btree_process_error(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_btree_cur		*cur,
+> > +	int				level,
+> > +	int				*error)
 > > +{
-> > +	union xfs_btree_irec	low;
-> > +	union xfs_btree_irec	high;
-> > +
-> > +	memset(&low, 0, sizeof(low));
-> > +	low.r.rm_startblock = bno;
-> > +	memset(&high, 0xFF, sizeof(high));
-> > +	high.r.rm_startblock = bno + len - 1;
-> > +
-> > +	return xfs_btree_has_record(cur, &low, &high, exists);
+> > +	return __xfs_scrub_btree_process_error(sc, cur, level, error, false,
+> > +			__return_address);
+> 
+> These then get easier to read, because there isn't a boolean that
+> you don't know what it means without looking at the function being
+> called. i.e
+> 
+> 	return __xfs_scrub_btree_process_error(sc, cur, level, error,
+> 						XFS_SCRUB_OFLAG_CORRUPT,
+> 						__return_address);
 > > +}
 > > +
-> > +/* Is there a record covering a given extent? */
-> > +int
-> > +xfs_rmap_record_exists(
-> > +	struct xfs_btree_cur	*cur,
-> > +	xfs_agblock_t		bno,
-> > +	xfs_extlen_t		len,
-> > +	struct xfs_owner_info	*oinfo,
-> > +	bool			*has_rmap)
+> > +bool
+> > +xfs_scrub_btree_xref_process_error(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_btree_cur		*cur,
+> > +	int				level,
+> > +	int				*error)
 > > +{
-> > +	uint64_t		owner;
-> > +	uint64_t		offset;
-> > +	unsigned int		flags;
-> > +	int			stat;
+> > +	return __xfs_scrub_btree_process_error(sc, cur, level, error, true,
+> > +			__return_address);
 > 
-> has_record to match the other code?
-
-Fixed.
-
-> > +	struct xfs_rmap_irec	irec;
-> > +	int			error;
+> 	return __xfs_scrub_btree_process_error(sc, cur, level, error,
+> 						XFS_SCRUB_OFLAG_XFAIL,
+> 						__return_address);
+> > +}
 > > +
-> > +	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
+> >  /* Record btree block corruption. */
+> > -void
+> > -xfs_scrub_btree_set_corrupt(
+> > +static void
+> > +__xfs_scrub_btree_set_corrupt(
+> >  	struct xfs_scrub_context	*sc,
+> >  	struct xfs_btree_cur		*cur,
+> > -	int				level)
+> > +	int				level,
+> > +	bool				xref,
+> > +	void				*ret_ip)
+> >  {
+> > -	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+> > +	if (xref)
+> > +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
+> > +	else
+> > +		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+> >  
+> >  	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+> >  		trace_xfs_scrub_ifork_btree_error(sc, cur, level,
+> > -				__return_address);
+> > +				ret_ip);
+> >  	else
+> >  		trace_xfs_scrub_btree_error(sc, cur, level,
+> > -				__return_address);
+> > +				ret_ip);
+> > +}
 > > +
-> > +	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
-> > +	if (error)
-> > +		return error;
-> > +	if (!stat) {
-> > +		*has_rmap = false;
-> > +		return 0;
+> > +void
+> > +xfs_scrub_btree_set_corrupt(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_btree_cur		*cur,
+> > +	int				level)
+> > +{
+> > +	__xfs_scrub_btree_set_corrupt(sc, cur, level, false, __return_address);
+> > +}
+> > +
+> > +void
+> > +xfs_scrub_btree_xref_set_corrupt(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_btree_cur		*cur,
+> > +	int				level)
+> > +{
+> > +	__xfs_scrub_btree_set_corrupt(sc, cur, level, true, __return_address);
+> >  }
+> 
+> Same for these (and the other equivalent wrapper sets in the patch).
+
+Yup.
+
+> > +
+> > +/*
+> > + * Predicate that decides if we need to evaluate the cross-reference check.
+> > + * If there was an error accessing the cross-reference btree, just delete
+> > + * the cursor and skip the check.
+> > + */
+> > +bool
+> > +xfs_scrub_should_xref(
+> > +	struct xfs_scrub_context	*sc,
+> > +	int				*error,
+> > +	struct xfs_btree_cur		**curpp)
+> > +{
+> > +	/* If not a btree cross-reference, just check the error code. */
+> > +	if (curpp == NULL) {
+> > +		if (*error == 0)
+> > +			return true;
+> > +		goto fail;
 > > +	}
 > > +
-> > +	error = xfs_rmap_get_rec(cur, &irec, &stat);
-> > +	if (error)
-> > +		return error;
-> > +	if (!stat) {
-> > +		*has_rmap = false;
-> > +		return 0;
-> > +	}
-> > +
-> > +	*has_rmap = (irec.rm_owner == owner && irec.rm_startblock <= bno &&
-> > +		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+> > +	ASSERT(*curpp != NULL);
+> > +	/* If no error or we've already given up on xref, just bail out. */
+> > +	if (*error == 0 || *curpp == NULL)
+> > +		return true;
 > 
-> Ok, so this returns true only if the rmap record spans the entire
-> range we pass in. What does it mean if the rmap record only
-> partially spans the range passed in?
+> Why the assert if we handle the null case just fine?
+> 
+> > +
+> > +	/* xref error, delete cursor and bail out. */
+> > +	xfs_btree_del_cursor(*curpp, XFS_BTREE_ERROR);
+> > +	*curpp = NULL;
+> > +fail:
+> 
+> I think the logic up to this point can be cleaned up to be:
+> 
+> 	if (*error == 0)
+> 		return true;
+> 
+> 	if (curpp) {
+> 		/* If we've already given up on xref, just bail out. */
+> 		if (!*curpp)
+> 			return true;
 
-For the current users (i.e. scrub) we require that the rmap completely
-overlap the queried range.  If there's a gap anywhere (or mergeable
-records) this function returns false and the calling scrub function
-records a scrub xref failure.
+I think this ought to be return false, because we /had/ a cursor and then
+freed it, which means there's no point in continuing with this xref.
 
-How about the following change to the comment above the function?
+(And yes, that's just a bug in the original code...)
 
-"Is there a record for this owner completely covering a given physical
-extent?  If so, *has_rmap will be set to true.  If there is no record
-or the record only covers part of the range, we set *has_rmap to false.
-This function doesn't perform range lookups or offset checks, so it is
-not suitable for checking data fork blocks."
+> 
+> 		/* xref error, delete cursor and bail out. */
+> 		xfs_btree_del_cursor(*curpp, XFS_BTREE_ERROR);
+> 		*curpp = NULL;
+> 	}
+> 
+> 
+> > +	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
+> > +	trace_xfs_scrub_xref_error(sc, *error, __return_address);
+> > +
+> > +	/*
+> > +	 * Errors encountered during cross-referencing with another
+> > +	 * data structure should not cause this scrubber to abort.
+> > +	 */
+> > +	*error = 0;
+> > +	return false;
+> > +}
+> 
+> .....
+> 
+> > @@ -139,4 +155,16 @@ int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
+> >  int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
+> >  				   struct xfs_inode *ip, unsigned int resblks);
+> >  
+> > +/*
+> > + * A libxfs function returned an error while scrubbing an object.
+> > + * If the function failed while operating on the object (!xref) then
+> > + * mark the object itself corrupt.  If the function failed while
+> > + * collecting cross-referencing data from other metadata (xref), then
+> > + * mark that the cross referencing failed.
+> > + */
+> > +static inline __u32 xfs_scrub_process_error_flag(bool xref)
+> > +{
+> > +	return xref ? XFS_SCRUB_OFLAG_XFAIL : XFS_SCRUB_OFLAG_CORRUPT;
+> > +}
+> 
+> If this is really needed, I'd like a better name - "process" doesn't
+> read right. Maybe  xfs_scrub_xref_fail_flag()?
 
-& maybe a:
+It's gone. :)
 
-ASSERT(XFS_RMAP_NON_INODE_OWNER(owner) ||
-       XFS_RMAP_IS_BMBT_BLOCK(offset));
+Thanks for the review so far!
 
 --D
 
+> 
 > Cheers,
 > 
 > Dave.
