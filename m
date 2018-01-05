@@ -1,56 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:56642 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752183AbeAESz6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 13:55:58 -0500
-Date: Fri, 5 Jan 2018 18:55:44 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [V4, 01/11] Documentation: Add license-rules.rst to describe how
- to properly identify file licenses
-Message-ID: <20180105185544.GD17719@n2100.armlinux.org.uk>
-References: <alpine.DEB.2.20.1711171057240.1709@nanos>
- <20180105130526.GA31648@piout.net>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:27831 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751342AbeAEBYj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 20:24:39 -0500
+Date: Fri, 5 Jan 2018 12:23:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/21] xfs: distinguish between corrupt inode and invalid
+ inum in xfs_scrub_get_inode
+Message-ID: <20180105012328.GS30682@dastard>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
+ <151398980084.18741.9629764343639418897.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180105130526.GA31648@piout.net>
+In-Reply-To: <151398980084.18741.9629764343639418897.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 05, 2018 at 02:05:26PM +0100, Alexandre Belloni wrote:
-> Hi,
+On Fri, Dec 22, 2017 at 04:43:20PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I'm definitively late to the party but...
+> In xfs_scrub_get_inode, we don't do a good enough job distinguishing
+> EINVAL returns from xfs_iget w/ IGET_UNTRUSTED -- this can happen if the
+> passed in inode number is invalid (past eofs, inobt says it isn't an
+> inode) or if the inum is actually valid but the inode buffer fails
+> verifier.  In the first case we still want to return ENOENT, but in the
+> second case we want to capture the corruption error.
 > 
-> On 17/11/2017 at 11:00:33 +0100, Thomas Gleixner wrote:
-> > +2. Style:
-> > +
-> > +   The SPDX license identifier is added in form of a comment.  The comment
-> > +   style depends on the file type::
-> > +
-> > +      C source:   // SPDX-License-Identifier: <SPDX License Expression>
-> > +      C header:   /* SPDX-License-Identifier: <SPDX License Expression> */
-> > +      ASM:        /* SPDX-License-Identifier: <SPDX License Expression> */
-> > +      scripts:    # SPDX-License-Identifier: <SPDX License Expression>
-> > +      .rst:	  .. SPDX-License-Identifier: <SPDX License Expression>
-> > +      .dts{i}:	  // SPDX-License-Identifier: <SPDX License Expression>
+> Therefore, if xfs_iget returns EINVAL, try the raw imap lookup.  If that
+> succeeds, we conclude it's a corruption error, otherwise we just bounce
+> out to userspace.
 > 
-> dtc doesn't handle // comments. This works in the kernel tree because
-> dts files are preprocessed by CPP. But this doesn't work when using dtc
-> directly (most likely when compiling DT overlays). So, the choice is
-> between making dtc handle // comments or changing the documentation.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Does all the CPP macros that we use for things like GPIOs work when you
-avoid CPP?
+Looks fine - it's in an error path so isn't going to affect anything
+in the common "everything is fine" case.
 
-What I'm saying is that preprocessing the DTS in the kernel tree with
-CPP appears to be a necessity, and doing so will deal with the C++
-comments.
-
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
-According to speedtest.net: 8.21Mbps down 510kbps up
+Dave Chinner
+david@fromorbit.com
