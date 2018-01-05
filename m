@@ -1,80 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:4449 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751100AbeAEBTa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 20:19:30 -0500
-Date: Fri, 5 Jan 2018 12:17:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/21] xfs: catch a few more error codes when scrubbing
- secondary sb
-Message-ID: <20180105011714.GP30682@dastard>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398978264.18741.5137794501763948676.stgit@magnolia>
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:56642 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752183AbeAESz6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 13:55:58 -0500
+Date: Fri, 5 Jan 2018 18:55:44 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [V4, 01/11] Documentation: Add license-rules.rst to describe how
+ to properly identify file licenses
+Message-ID: <20180105185544.GD17719@n2100.armlinux.org.uk>
+References: <alpine.DEB.2.20.1711171057240.1709@nanos>
+ <20180105130526.GA31648@piout.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151398978264.18741.5137794501763948676.stgit@magnolia>
+In-Reply-To: <20180105130526.GA31648@piout.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-On Fri, Dec 22, 2017 at 04:43:02PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jan 05, 2018 at 02:05:26PM +0100, Alexandre Belloni wrote:
+> Hi,
 > 
-> The superblock validation routines return a variety of error codes to
-> reject a mount request.  For scrub we can assume that the mount
-> succeeded, so if we see these things appear when scrubbing secondary sb
-> X, we can treat them all like corruption.
+> I'm definitively late to the party but...
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/agheader.c |   16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
+> On 17/11/2017 at 11:00:33 +0100, Thomas Gleixner wrote:
+> > +2. Style:
+> > +
+> > +   The SPDX license identifier is added in form of a comment.  The comment
+> > +   style depends on the file type::
+> > +
+> > +      C source:   // SPDX-License-Identifier: <SPDX License Expression>
+> > +      C header:   /* SPDX-License-Identifier: <SPDX License Expression> */
+> > +      ASM:        /* SPDX-License-Identifier: <SPDX License Expression> */
+> > +      scripts:    # SPDX-License-Identifier: <SPDX License Expression>
+> > +      .rst:	  .. SPDX-License-Identifier: <SPDX License Expression>
+> > +      .dts{i}:	  // SPDX-License-Identifier: <SPDX License Expression>
 > 
-> 
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index b599358..97beb47 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -126,6 +126,22 @@ xfs_scrub_superblock(
->  	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
->  		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
->  		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-> +	/*
-> +	 * The superblock verifier can return several different error codes
-> +	 * if it thinks the superblock doesn't look right.  For a mount these
-> +	 * would all get bounced back to userspace, but if we're here then the
-> +	 * fs mounted successfully, which means that this secondary superblock
-> +	 * is simply incorrect.  Treat all these codes the same way we treat
-> +	 * any corruption.
-> +	 */
-> +	switch (error) {
-> +	case -EINVAL:	/* also -EWRONGFS */
-> +	case -ENOSYS:
-> +	case -EFBIG:
-> +		error = -EFSCORRUPTED;
-> +	default:
-> +		break;
-> +	}
->  	if (!xfs_scrub_process_error(sc, agno, XFS_SB_BLOCK(mp), &error))
->  		return error;
+> dtc doesn't handle // comments. This works in the kernel tree because
+> dts files are preprocessed by CPP. But this doesn't work when using dtc
+> directly (most likely when compiling DT overlays). So, the choice is
+> between making dtc handle // comments or changing the documentation.
 
-Yes, this change looks fine, so
+Does all the CPP macros that we use for things like GPIOs work when you
+avoid CPP?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+What I'm saying is that preprocessing the DTS in the kernel tree with
+CPP appears to be a necessity, and doing so will deal with the C++
+comments.
 
-However, what I just realised is that the in-memory primary
-superblock buffer that we do all our normal modification/logging
-work on is an uncached buffer that accessed through xfs_getsb(), not
-a cached buffer we access through xfs_trans_read_buf().
-
-Does the scrub code take this into account?
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 8.8Mbps down 630kbps up
+According to speedtest.net: 8.21Mbps down 510kbps up
