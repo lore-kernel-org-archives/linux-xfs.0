@@ -1,159 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:40891 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751791AbeADE4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 23:56:33 -0500
-Received: by mail-ot0-f194.google.com with SMTP id d10so436130oti.7
-        for <linux-xfs@vger.kernel.org>; Wed, 03 Jan 2018 20:56:33 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.99]:38696 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751933AbeAERmY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jan 2018 12:42:24 -0500
+Date: Fri, 5 Jan 2018 09:42:23 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.15-rc7
+Message-ID: <20180105174223.GJ5602@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180103100430.GE4911@quack2.suse.cz>
-References: <20180103100430.GE4911@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 3 Jan 2018 20:56:32 -0800
-Message-ID: <CAPcyv4grBxGs0cnFVyRx29t0xhG5EBTy_nP=qhsVh5=8nusNsw@mail.gmail.com>
-Subject: Re: Filesystem crashes due to pages without buffers
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Wed, Jan 3, 2018 at 2:04 AM, Jan Kara <jack@suse.cz> wrote:
-> Hello,
->
-> Over the years I have seen so far unexplained crashed in filesystem's
-> (ext4, xfs) writeback path due to dirty pages without buffers attached to
-> them (see [1] and [2] for relatively recent reports). This was confusing as
-> reclaim takes care not to strip buffers from a dirty page and both
-> filesystems do add buffers to a page when it is first written to - in
-> ->page_mkwrite() and ->write_begin callbacks.
->
-> Recently I have come across a code path that is probably leading to this
-> inconsistent state and I'd like to discuss how to best fix the problem
-> because it's not obvious to me. Consider the following race:
->
-> CPU1                                    CPU2
->
-> addr = mmap(file1, MAP_SHARED, ...);
-> fd2 = open(file2, O_DIRECT | O_RDONLY);
-> read(fd2, addr, len)
->   do_direct_IO()
->     page = dio_get_page()
->       dio_refill_pages()
->         iov_iter_get_pages()
->           get_user_pages_fast()
->             - page fault
->               ->page_mkwrite()
->                 block_page_mkwrite()
->                   lock_page(page);
->                   - attaches buffers to page
->                   - makes sure blocks are allocated
->                   set_page_dirty(page)
->               - install writeable PTE
->               unlock_page(page);
->     submit_page_section(page)
->       - submits bio with 'page' as a buffer
->                                         kswapd reclaims pages:
->                                         ...
->                                         shrink_page_list()
->                                           trylock_page(page) - this is the
->                                             page CPU1 has just faulted in
->                                           try_to_unmap(page)
->                                           pageout(page);
->                                             clear_page_dirty_for_io(page);
->                                             ->writepage()
->                                           - let's assume page got written
->                                             out fast enough, alternatively
->                                             we could get to the same path as
->                                             soon as the page IO completes
->                                           if (page_has_private(page)) {
->                                             try_to_release_page(page)
->                                               - reclaims buffers from the
->                                                 page
->                                            __remove_mapping(page)
->                                              - fails as DIO code still
->                                                holds page reference
-> ...
->
-> eventually read completes
->   dio_bio_complete(bio)
->     set_page_dirty_lock(page)
->       Bummer, we've just marked the page as dirty without having buffers.
->       Eventually writeback will find it and filesystem will complain...
->
-> Am I missing something?
->
-> The problem here is that filesystems fundamentally assume that a page can
-> be written to only between ->write_begin - ->write_end (in this interval
-> the page is locked), or between ->page_mkwrite - ->writepage and above is
-> an example where this does not hold because when a page reference is
-> acquired through get_user_pages(), page can get written to by the holder of
-> the reference and dirtied even after it has been unmapped from page tables
-> and ->writepage has been called. This is not only a cosmetic issue leading
-> to assertion failure but it can also lead to data loss, data corruption, or
-> other unpleasant surprises as filesystems assume page contents cannot be
-> modified until either ->write_begin() or ->page_mkwrite gets called and
-> those calls are serialized by proper locking with problematic operations
-> such as hole punching etc.
->
-> I'm not sure how to fix this problem. We could 'simulate' a writeable page
-> fault in set_page_dirty_lock(). It is a bit ugly since we don't have a
-> virtual address of the fault, don't hold mmap_sem, etc., possibly
-> expensive, but it would make filesystems happy. Data stored by GUP user
-> (e.g. read by DIO in the above case) could still get lost if someone e.g.
-> punched hole under the buffer or otherwise messed with the underlying
-> storage of the page while DIO was running but arguably users could expect
-> such outcome.
->
-> Another possible solution would be to make sure page is writeably mapped
-> until GUP user drops its reference. That would be arguably cleaner but
-> probably that would mean we have to track number of writeable GUP page
-> references separately (no space space in struct page is a problem here) and
-> block page_mkclean() until they are dropped. Also for long term GUP users
-> like Infiniband or V4L we'd have to come up with some solution as we should
-> not block page_mkclean() for so long.
+Hi Linus,
 
-Do we need to block page_mkclean, or could we defer buffer reclaiming
-to the last put of the page?
+I have just a few fixes for bugs and resource cleanup problems this week.
+It merges cleanly against your tree as of ~5min ago.
 
-I think once we have the "register memory with lease" mechanism for
-Infiniband we could expand it to the page cache case. The problem is
-the regression this would cause with userspace that expects it can
-maintain file backed memory registrations indefinitely.
+--Darrick
 
-What are the implications of holding off page_mkclean or release
-buffers indefinitely?
+The following changes since commit 68c58e9b9a88c1a9d0c2eaf6c7acefb00f5fbbfb:
 
-Is an indefinite / interruptible sleep waiting for the 'put' event of
-a get_user_pages() page unacceptable? The current case that the file
-contents will not be coherent with respect to in-flight RDMA, perhaps
-waiting for that to complete is better than cleaning buffers from the
-page prematurely.
+  xfs: only skip rmap owner checks for unknown-owner rmap removal (2017-12-21 08:48:38 -0800)
 
-Yes, I have more questions than proposals.
+are available in the git repository at:
 
->
-> As a side note DAX needs some solution for GUP users as well. The problems
-> are similar there in nature, just much easier to hit. So at least a
-> solution for long-term GUP users can (and I strongly believe should) be
-> shared between standard and DAX paths.
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.15-fixes-10
 
-In the DAX case we rely on the fact that when the page goes idle we
-only need to worry about the filesytem block map changing, the page
-won't get reallocated somewhere else. We can't use page idle as an
-event in this case, however, if the page reference count is one then
-the DIO code can know that it has the page exclusively, so maybe DAX
-and non-DAX can share the page count == 1 event notification.
+for you to fetch changes up to b4d8ad7fd3a18e6d92d4ebe858185c704604a57d:
 
-However there's still the matter of how to callback into the
-filesystem. The DAX case is currently using a pgmap_radix lookup at
-put_page() time to determine when to wakeup waiters. I think this
-should move over to a new address_space_operation. That would help
-with reusing some of the DAX case machinery for this case, but the DIO
-code would need a special case put_page that checks for count == 1 and
-synchronization to hold off the DIO submission path to prevent new
-page elevations.
+  xfs: fix s_maxbytes overflow problems (2018-01-02 10:16:32 -0800)
 
-...are you sure this is still similar enough to the DAX case that they
-can reuse much of the same machinery?
+----------------------------------------------------------------
+Changes since last update:
+- Fix resource cleanup of failed quota initialization
+- Fix integer overflow problems wrt s_maxbytes
+
+----------------------------------------------------------------
+Aliaksei Karaliou (2):
+      xfs: quota: fix missed destroy of qi_tree_lock
+      xfs: quota: check result of register_shrinker()
+
+Darrick J. Wong (1):
+      xfs: fix s_maxbytes overflow problems
+
+ fs/xfs/xfs_aops.c  |  4 ++--
+ fs/xfs/xfs_iomap.c |  2 +-
+ fs/xfs/xfs_qm.c    | 46 ++++++++++++++++++++++++++++++----------------
+ 3 files changed, 33 insertions(+), 19 deletions(-)
