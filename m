@@ -1,297 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52184 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752231AbeAETCk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Jan 2018 14:02:40 -0500
-Date: Fri, 5 Jan 2018 14:02:38 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 3/3] xfs: refactor the geometry structure filling
- function
-Message-ID: <20180105190238.GD27973@bfoster.bfoster>
-References: <151512356118.14363.7797314285394643799.stgit@magnolia>
- <151512359134.14363.8696043274247703808.stgit@magnolia>
- <20180105173400.GI5602@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:53901 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751274AbeAECK2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 21:10:28 -0500
+Date: Fri, 5 Jan 2018 13:10:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 02/21] xfs: catch a few more error codes when scrubbing
+ secondary sb
+Message-ID: <20180105021026.GY30682@dastard>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
+ <151398978264.18741.5137794501763948676.stgit@magnolia>
+ <20180105011714.GP30682@dastard>
+ <20180105012410.GB5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180105173400.GI5602@magnolia>
+In-Reply-To: <20180105012410.GB5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 05, 2018 at 09:34:00AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 04, 2018 at 05:24:10PM -0800, Darrick J. Wong wrote:
+> On Fri, Jan 05, 2018 at 12:17:14PM +1100, Dave Chinner wrote:
+> > On Fri, Dec 22, 2017 at 04:43:02PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > The superblock validation routines return a variety of error codes to
+> > > reject a mount request.  For scrub we can assume that the mount
+> > > succeeded, so if we see these things appear when scrubbing secondary sb
+> > > X, we can treat them all like corruption.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/scrub/agheader.c |   16 ++++++++++++++++
+> > >  1 file changed, 16 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> > > index b599358..97beb47 100644
+> > > --- a/fs/xfs/scrub/agheader.c
+> > > +++ b/fs/xfs/scrub/agheader.c
+> > > @@ -126,6 +126,22 @@ xfs_scrub_superblock(
+> > >  	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > >  		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> > >  		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
+> > > +	/*
+> > > +	 * The superblock verifier can return several different error codes
+> > > +	 * if it thinks the superblock doesn't look right.  For a mount these
+> > > +	 * would all get bounced back to userspace, but if we're here then the
+> > > +	 * fs mounted successfully, which means that this secondary superblock
+> > > +	 * is simply incorrect.  Treat all these codes the same way we treat
+> > > +	 * any corruption.
+> > > +	 */
+> > > +	switch (error) {
+> > > +	case -EINVAL:	/* also -EWRONGFS */
+> > > +	case -ENOSYS:
+> > > +	case -EFBIG:
+> > > +		error = -EFSCORRUPTED;
+> > > +	default:
+> > > +		break;
+> > > +	}
+> > >  	if (!xfs_scrub_process_error(sc, agno, XFS_SB_BLOCK(mp), &error))
+> > >  		return error;
+> > 
+> > Yes, this change looks fine, so
+> > 
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > However, what I just realised is that the in-memory primary
+> > superblock buffer that we do all our normal modification/logging
+> > work on is an uncached buffer that accessed through xfs_getsb(), not
+> > a cached buffer we access through xfs_trans_read_buf().
+> > 
+> > Does the scrub code take this into account?
 > 
-> Refactor the geometry structure filling function to use the superblock
-> to fill the fields.  While we're at it, make the function less indenty
-> and use some whitespace to make the function easier to read.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: fix whitespacing, refactor the directory block size calculation
-> ---
+> We don't scrub the primary superblock at all, assuming that mount
+> will reject bad superblocks for us, and we don't touch the primary
+> superblock buffer at all, afaik.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+No worries, I couldn't remember what it did here and didn't find an
+obvious answer as I looked.
 
->  fs/xfs/libxfs/xfs_da_format.h |    6 ++
->  fs/xfs/libxfs/xfs_dir2.c      |    5 +
->  fs/xfs/libxfs/xfs_sb.c        |  148 ++++++++++++++++++++++-------------------
->  fs/xfs/libxfs/xfs_sb.h        |    5 +
->  fs/xfs/xfs_ioctl.c            |    4 +
->  fs/xfs/xfs_ioctl32.c          |    2 -
->  6 files changed, 92 insertions(+), 78 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 3771edc..7e77299 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -875,4 +875,10 @@ struct xfs_attr3_rmt_hdr {
->  	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
->  			sizeof(struct xfs_attr3_rmt_hdr) : 0))
->  
-> +/* Number of bytes in a directory block. */
-> +static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
-> +{
-> +	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
-> +}
-> +
->  #endif /* __XFS_DA_FORMAT_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index e10778c..92f94e1 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -119,8 +119,7 @@ xfs_da_mount(
->  
->  
->  	ASSERT(mp->m_sb.sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
-> -	ASSERT((1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog)) <=
-> -	       XFS_MAX_BLOCKSIZE);
-> +	ASSERT(xfs_dir2_dirblock_bytes(&mp->m_sb) <= XFS_MAX_BLOCKSIZE);
->  
->  	mp->m_dir_inode_ops = xfs_dir_get_ops(mp, NULL);
->  	mp->m_nondir_inode_ops = xfs_nondir_get_ops(mp, NULL);
-> @@ -140,7 +139,7 @@ xfs_da_mount(
->  	dageo = mp->m_dir_geo;
->  	dageo->blklog = mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog;
->  	dageo->fsblog = mp->m_sb.sb_blocklog;
-> -	dageo->blksize = 1 << dageo->blklog;
-> +	dageo->blksize = xfs_dir2_dirblock_bytes(&mp->m_sb);
->  	dageo->fsbcount = 1 << mp->m_sb.sb_dirblklog;
->  
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 139517a..35b005d 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -879,77 +879,85 @@ xfs_sync_sb(
->  
->  int
->  xfs_fs_geometry(
-> -	xfs_mount_t		*mp,
-> -	xfs_fsop_geom_t		*geo,
-> -	int			new_version)
-> +	struct xfs_sb		*sbp,
-> +	struct xfs_fsop_geom	*geo,
-> +	int			struct_version)
->  {
-> +	memset(geo, 0, sizeof(struct xfs_fsop_geom));
-> +
-> +	geo->blocksize = sbp->sb_blocksize;
-> +	geo->rtextsize = sbp->sb_rextsize;
-> +	geo->agblocks = sbp->sb_agblocks;
-> +	geo->agcount = sbp->sb_agcount;
-> +	geo->logblocks = sbp->sb_logblocks;
-> +	geo->sectsize = sbp->sb_sectsize;
-> +	geo->inodesize = sbp->sb_inodesize;
-> +	geo->imaxpct = sbp->sb_imax_pct;
-> +	geo->datablocks = sbp->sb_dblocks;
-> +	geo->rtblocks = sbp->sb_rblocks;
-> +	geo->rtextents = sbp->sb_rextents;
-> +	geo->logstart = sbp->sb_logstart;
-> +	BUILD_BUG_ON(sizeof(geo->uuid) != sizeof(sbp->sb_uuid));
-> +	memcpy(geo->uuid, &sbp->sb_uuid, sizeof(sbp->sb_uuid));
-> +
-> +	if (struct_version < 2)
-> +		return 0;
-> +
-> +	geo->sunit = sbp->sb_unit;
-> +	geo->swidth = sbp->sb_width;
-> +
-> +	if (struct_version < 3)
-> +		return 0;
-> +
-> +	geo->version = XFS_FSOP_GEOM_VERSION;
-> +	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-> +		     XFS_FSOP_GEOM_FLAGS_DIRV2;
-> +	if (xfs_sb_version_hasattr(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
-> +	if (xfs_sb_version_hasquota(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_QUOTA;
-> +	if (xfs_sb_version_hasalign(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
-> +	if (xfs_sb_version_hasdalign(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
-> +	if (xfs_sb_version_hasextflgbit(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXTFLG;
-> +	if (xfs_sb_version_hassector(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
-> +	if (xfs_sb_version_hasasciici(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
-> +	if (xfs_sb_version_haslazysbcount(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
-> +	if (xfs_sb_version_hasattr2(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
-> +	if (xfs_sb_version_hasprojid32bit(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
-> +	if (xfs_sb_version_hascrc(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_V5SB;
-> +	if (xfs_sb_version_hasftype(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_FTYPE;
-> +	if (xfs_sb_version_hasfinobt(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_FINOBT;
-> +	if (xfs_sb_version_hassparseinodes(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_SPINODES;
-> +	if (xfs_sb_version_hasrmapbt(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
-> +	if (xfs_sb_version_hasreflink(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
-> +	if (xfs_sb_version_hassector(sbp))
-> +		geo->logsectsize = sbp->sb_logsectsize;
-> +	else
-> +		geo->logsectsize = BBSIZE;
-> +	geo->rtsectsize = sbp->sb_blocksize;
-> +	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
-> +
-> +	if (struct_version < 3)
-> +		return 0;
-> +
-> +	if (xfs_sb_version_haslogv2(sbp))
-> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
-> +
-> +	geo->logsunit = sbp->sb_logsunit;
->  
-> -	memset(geo, 0, sizeof(*geo));
-> -
-> -	geo->blocksize = mp->m_sb.sb_blocksize;
-> -	geo->rtextsize = mp->m_sb.sb_rextsize;
-> -	geo->agblocks = mp->m_sb.sb_agblocks;
-> -	geo->agcount = mp->m_sb.sb_agcount;
-> -	geo->logblocks = mp->m_sb.sb_logblocks;
-> -	geo->sectsize = mp->m_sb.sb_sectsize;
-> -	geo->inodesize = mp->m_sb.sb_inodesize;
-> -	geo->imaxpct = mp->m_sb.sb_imax_pct;
-> -	geo->datablocks = mp->m_sb.sb_dblocks;
-> -	geo->rtblocks = mp->m_sb.sb_rblocks;
-> -	geo->rtextents = mp->m_sb.sb_rextents;
-> -	geo->logstart = mp->m_sb.sb_logstart;
-> -	ASSERT(sizeof(geo->uuid) == sizeof(mp->m_sb.sb_uuid));
-> -	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
-> -	if (new_version >= 2) {
-> -		geo->sunit = mp->m_sb.sb_unit;
-> -		geo->swidth = mp->m_sb.sb_width;
-> -	}
-> -	if (new_version >= 3) {
-> -		geo->version = XFS_FSOP_GEOM_VERSION;
-> -		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-> -			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
-> -			(xfs_sb_version_hasattr(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
-> -			(xfs_sb_version_hasquota(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
-> -			(xfs_sb_version_hasalign(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
-> -			(xfs_sb_version_hasdalign(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
-> -			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
-> -			(xfs_sb_version_hassector(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
-> -			(xfs_sb_version_hasasciici(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
-> -			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
-> -			(xfs_sb_version_hasattr2(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
-> -			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
-> -			(xfs_sb_version_hascrc(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
-> -			(xfs_sb_version_hasftype(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
-> -			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
-> -			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
-> -			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
-> -			(xfs_sb_version_hasreflink(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
-> -		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
-> -				mp->m_sb.sb_logsectsize : BBSIZE;
-> -		geo->rtsectsize = mp->m_sb.sb_blocksize;
-> -		geo->dirblocksize = mp->m_dir_geo->blksize;
-> -	}
-> -	if (new_version >= 4) {
-> -		geo->flags |=
-> -			(xfs_sb_version_haslogv2(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
-> -		geo->logsunit = mp->m_sb.sb_logsunit;
-> -	}
->  	return 0;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index a16632c..63dcd2a 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -34,7 +34,8 @@ extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
->  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
->  extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
->  
-> -extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
-> -				int nversion);
-> +#define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
-> +extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
-> +				int struct_version);
->  
->  #endif	/* __XFS_SB_H__ */
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 3015e17..89fb1eb 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -810,7 +810,7 @@ xfs_ioc_fsgeometry_v1(
->  	xfs_fsop_geom_t         fsgeo;
->  	int			error;
->  
-> -	error = xfs_fs_geometry(mp, &fsgeo, 3);
-> +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
->  	if (error)
->  		return error;
->  
-> @@ -832,7 +832,7 @@ xfs_ioc_fsgeometry(
->  	xfs_fsop_geom_t		fsgeo;
->  	int			error;
->  
-> -	error = xfs_fs_geometry(mp, &fsgeo, 4);
-> +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 66cc3cd..10fbde3 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -67,7 +67,7 @@ xfs_compat_ioc_fsgeometry_v1(
->  	xfs_fsop_geom_t		  fsgeo;
->  	int			  error;
->  
-> -	error = xfs_fs_geometry(mp, &fsgeo, 3);
-> +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
->  	if (error)
->  		return error;
->  	/* The 32-bit variant simply has some padding at the end */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
