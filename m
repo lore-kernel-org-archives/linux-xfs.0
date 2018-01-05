@@ -1,177 +1,247 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43340 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752679AbeADNeh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Jan 2018 08:34:37 -0500
-Message-ID: <1515072872.20282.19.camel@kernel.org>
-Subject: Re: [PATCH v4 12/19] ocfs2: convert to new i_version API
-From: Jeff Layton <jlayton@kernel.org>
-Date: Thu, 04 Jan 2018 08:34:32 -0500
-In-Reply-To: <20171222120556.7435-13-jlayton@kernel.org>
-References: <20171222120556.7435-1-jlayton@kernel.org>
-         <20171222120556.7435-13-jlayton@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from aserp2120.oracle.com ([141.146.126.78]:56230 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751888AbeAERZL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 12:25:11 -0500
+Date: Fri, 5 Jan 2018 09:25:05 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] xfs: refactor the geometry structure filling function
+Message-ID: <20180105172505.GH5602@magnolia>
+References: <151512356118.14363.7797314285394643799.stgit@magnolia>
+ <151512359134.14363.8696043274247703808.stgit@magnolia>
+ <20180105130835.GC27973@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180105130835.GC27973@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, 2017-12-22 at 07:05 -0500, Jeff Layton wrote:
-> From: Jeff Layton <jlayton@redhat.com>
+On Fri, Jan 05, 2018 at 08:08:35AM -0500, Brian Foster wrote:
+> On Thu, Jan 04, 2018 at 07:39:51PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Refactor the geometry structure filling function to use the superblock
+> > to fill the fields.  While we're at it, make the function less indenty
+> > and use some whitespace to make the function easier to read.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
 > 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/ocfs2/dir.c          | 15 ++++++++-------
->  fs/ocfs2/inode.c        |  3 ++-
->  fs/ocfs2/namei.c        |  3 ++-
->  fs/ocfs2/quota_global.c |  3 ++-
->  4 files changed, 14 insertions(+), 10 deletions(-)
+> Nice cleanup...
 > 
-> diff --git a/fs/ocfs2/dir.c b/fs/ocfs2/dir.c
-> index febe6312ceff..32f9c72dff17 100644
-> --- a/fs/ocfs2/dir.c
-> +++ b/fs/ocfs2/dir.c
-> @@ -42,6 +42,7 @@
->  #include <linux/highmem.h>
->  #include <linux/quotaops.h>
->  #include <linux/sort.h>
-> +#include <linux/iversion.h>
->  
->  #include <cluster/masklog.h>
->  
-> @@ -1174,7 +1175,7 @@ static int __ocfs2_delete_entry(handle_t *handle, struct inode *dir,
->  				le16_add_cpu(&pde->rec_len,
->  						le16_to_cpu(de->rec_len));
->  			de->inode = 0;
-> -			dir->i_version++;
-> +			inode_inc_iversion(dir);
->  			ocfs2_journal_dirty(handle, bh);
->  			goto bail;
->  		}
-> @@ -1729,7 +1730,7 @@ int __ocfs2_add_entry(handle_t *handle,
->  			if (ocfs2_dir_indexed(dir))
->  				ocfs2_recalc_free_list(dir, handle, lookup);
->  
-> -			dir->i_version++;
-> +			inode_inc_iversion(dir);
->  			ocfs2_journal_dirty(handle, insert_bh);
->  			retval = 0;
->  			goto bail;
-> @@ -1775,7 +1776,7 @@ static int ocfs2_dir_foreach_blk_id(struct inode *inode,
->  		 * readdir(2), then we might be pointing to an invalid
->  		 * dirent right now.  Scan from the start of the block
->  		 * to make sure. */
-> -		if (*f_version != inode->i_version) {
-> +		if (inode_cmp_iversion(inode, *f_version)) {
->  			for (i = 0; i < i_size_read(inode) && i < offset; ) {
->  				de = (struct ocfs2_dir_entry *)
->  					(data->id_data + i);
-> @@ -1791,7 +1792,7 @@ static int ocfs2_dir_foreach_blk_id(struct inode *inode,
->  				i += le16_to_cpu(de->rec_len);
->  			}
->  			ctx->pos = offset = i;
-> -			*f_version = inode->i_version;
-> +			*f_version = inode_query_iversion(inode);
->  		}
->  
->  		de = (struct ocfs2_dir_entry *) (data->id_data + ctx->pos);
-> @@ -1869,7 +1870,7 @@ static int ocfs2_dir_foreach_blk_el(struct inode *inode,
->  		 * readdir(2), then we might be pointing to an invalid
->  		 * dirent right now.  Scan from the start of the block
->  		 * to make sure. */
-> -		if (*f_version != inode->i_version) {
-> +		if (inode_cmp_iversion(inode, *f_version)) {
->  			for (i = 0; i < sb->s_blocksize && i < offset; ) {
->  				de = (struct ocfs2_dir_entry *) (bh->b_data + i);
->  				/* It's too expensive to do a full
-> @@ -1886,7 +1887,7 @@ static int ocfs2_dir_foreach_blk_el(struct inode *inode,
->  			offset = i;
->  			ctx->pos = (ctx->pos & ~(sb->s_blocksize - 1))
->  				| offset;
-> -			*f_version = inode->i_version;
-> +			*f_version = inode_query_iversion(inode);
->  		}
->  
->  		while (ctx->pos < i_size_read(inode)
-> @@ -1940,7 +1941,7 @@ static int ocfs2_dir_foreach_blk(struct inode *inode, u64 *f_version,
->   */
->  int ocfs2_dir_foreach(struct inode *inode, struct dir_context *ctx)
->  {
-> -	u64 version = inode->i_version;
-> +	u64 version = inode_query_iversion(inode);
->  	ocfs2_dir_foreach_blk(inode, &version, ctx, true);
->  	return 0;
->  }
-> diff --git a/fs/ocfs2/inode.c b/fs/ocfs2/inode.c
-> index 1a1e0078ab38..d51b80edd972 100644
-> --- a/fs/ocfs2/inode.c
-> +++ b/fs/ocfs2/inode.c
-> @@ -28,6 +28,7 @@
->  #include <linux/highmem.h>
->  #include <linux/pagemap.h>
->  #include <linux/quotaops.h>
-> +#include <linux/iversion.h>
->  
->  #include <asm/byteorder.h>
->  
-> @@ -302,7 +303,7 @@ void ocfs2_populate_inode(struct inode *inode, struct ocfs2_dinode *fe,
->  	OCFS2_I(inode)->ip_attr = le32_to_cpu(fe->i_attr);
->  	OCFS2_I(inode)->ip_dyn_features = le16_to_cpu(fe->i_dyn_features);
->  
-> -	inode->i_version = 1;
-> +	inode_set_iversion(inode, 1);
->  	inode->i_generation = le32_to_cpu(fe->i_generation);
->  	inode->i_rdev = huge_decode_dev(le64_to_cpu(fe->id1.dev1.i_rdev));
->  	inode->i_mode = le16_to_cpu(fe->i_mode);
-> diff --git a/fs/ocfs2/namei.c b/fs/ocfs2/namei.c
-> index 3b0a10d9b36f..c801eddc4bf3 100644
-> --- a/fs/ocfs2/namei.c
-> +++ b/fs/ocfs2/namei.c
-> @@ -41,6 +41,7 @@
->  #include <linux/slab.h>
->  #include <linux/highmem.h>
->  #include <linux/quotaops.h>
-> +#include <linux/iversion.h>
->  
->  #include <cluster/masklog.h>
->  
-> @@ -1520,7 +1521,7 @@ static int ocfs2_rename(struct inode *old_dir,
->  			mlog_errno(status);
->  			goto bail;
->  		}
-> -		new_dir->i_version++;
-> +		inode_inc_iversion(new_dir);
->  
->  		if (S_ISDIR(new_inode->i_mode))
->  			ocfs2_set_links_count(newfe, 0);
-> diff --git a/fs/ocfs2/quota_global.c b/fs/ocfs2/quota_global.c
-> index b39d14cbfa34..d03411784aaf 100644
-> --- a/fs/ocfs2/quota_global.c
-> +++ b/fs/ocfs2/quota_global.c
-> @@ -12,6 +12,7 @@
->  #include <linux/writeback.h>
->  #include <linux/workqueue.h>
->  #include <linux/llist.h>
-> +#include <linux/iversion.h>
->  
->  #include <cluster/masklog.h>
->  
-> @@ -289,7 +290,7 @@ ssize_t ocfs2_quota_write(struct super_block *sb, int type,
->  		mlog_errno(err);
->  		return err;
->  	}
-> -	gqinode->i_version++;
-> +	inode_query_iversion(gqinode);
+> >  fs/xfs/libxfs/xfs_sb.c |  167 ++++++++++++++++++++++++++++--------------------
+> >  fs/xfs/libxfs/xfs_sb.h |    5 +
+> >  fs/xfs/xfs_ioctl.c     |    4 +
+> >  fs/xfs/xfs_ioctl32.c   |    2 -
+> >  4 files changed, 103 insertions(+), 75 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > index 139517a..70e5126 100644
+> > --- a/fs/xfs/libxfs/xfs_sb.c
+> > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > @@ -879,77 +879,104 @@ xfs_sync_sb(
+> >  
+> >  int
+> >  xfs_fs_geometry(
+> > -	xfs_mount_t		*mp,
+> > -	xfs_fsop_geom_t		*geo,
+> > -	int			new_version)
+> > +	struct xfs_sb		*sbp,
+> > +	struct xfs_fsop_geom	*geo,
+> > +	int			struct_version)
+> >  {
+> ...
+> > +	geo->version = XFS_FSOP_GEOM_VERSION;
+> > +	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+> > +		     XFS_FSOP_GEOM_FLAGS_DIRV2;
+> > +
+> > +
+> 
+> One whitespace line too many here..?
 
-Bug here: this should have been an inode_inc_iversion. Fixed in tree.
+Yep, fixed.
 
->  	ocfs2_mark_inode_dirty(handle, gqinode, oinfo->dqi_gqi_bh);
->  	return len;
->  }
+> > +	if (xfs_sb_version_hasattr(sbp))
+> > +		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
+> > +
+> 
+> Obviously just a nit... but IMO the extra whitespace between each of
+> these feature checks is a bit much. It actually reads cleaner to me to
+> kill off the extra lines between them. Just my .02 though..
 
--- 
-Jeff Layton <jlayton@kernel.org>
+Yeah, I suppose since we proceed linearly through that section without
+branching outside the block that it needn't the additional whitespace.
+Fixed.
+
+> ...
+> > +
+> > +	geo->rtsectsize = sbp->sb_blocksize;
+> > +	geo->dirblocksize = 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
+> > +
+> 
+> Slightly unfortunate that we have the geo abstraction and can't use it
+> for a simple reporting case. Is there a larger (userspace?) reason mp
+> was dropped as a parameter or was that just a cleanup? If the latter,
+> perhaps we could continue to pass mp and create a local sbp pointer. If
+> the former, then oh well, not a big deal. :P
+
+At the point that mkfs wants to call this function, it has a fully built
+xfs_sb ready to go, but it hasn't called libxfs_init.  Therefore,
+mp->m_dir_geo hasn't yet been built, and I wanted to preserve the
+behavior that mkfs can spit out the geometry even if libxfs
+initialization fails for some other reason.
+
+That said, there isn't any reason why I couldn't just make this a helper
+in xfs_da_format.h and refactor all the opencoded instances:
+
+/* Number of bytes in a directory block. */
+static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
+{
+	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
+}
+
+--D
+
+> Brian
+> 
+> > +	if (struct_version < 3)
+> > +		return 0;
+> > +
+> > +	if (xfs_sb_version_haslogv2(sbp))
+> > +		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
+> > +
+> > +	geo->logsunit = sbp->sb_logsunit;
+> >  
+> > -	memset(geo, 0, sizeof(*geo));
+> > -
+> > -	geo->blocksize = mp->m_sb.sb_blocksize;
+> > -	geo->rtextsize = mp->m_sb.sb_rextsize;
+> > -	geo->agblocks = mp->m_sb.sb_agblocks;
+> > -	geo->agcount = mp->m_sb.sb_agcount;
+> > -	geo->logblocks = mp->m_sb.sb_logblocks;
+> > -	geo->sectsize = mp->m_sb.sb_sectsize;
+> > -	geo->inodesize = mp->m_sb.sb_inodesize;
+> > -	geo->imaxpct = mp->m_sb.sb_imax_pct;
+> > -	geo->datablocks = mp->m_sb.sb_dblocks;
+> > -	geo->rtblocks = mp->m_sb.sb_rblocks;
+> > -	geo->rtextents = mp->m_sb.sb_rextents;
+> > -	geo->logstart = mp->m_sb.sb_logstart;
+> > -	ASSERT(sizeof(geo->uuid) == sizeof(mp->m_sb.sb_uuid));
+> > -	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
+> > -	if (new_version >= 2) {
+> > -		geo->sunit = mp->m_sb.sb_unit;
+> > -		geo->swidth = mp->m_sb.sb_width;
+> > -	}
+> > -	if (new_version >= 3) {
+> > -		geo->version = XFS_FSOP_GEOM_VERSION;
+> > -		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+> > -			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
+> > -			(xfs_sb_version_hasattr(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
+> > -			(xfs_sb_version_hasquota(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
+> > -			(xfs_sb_version_hasalign(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
+> > -			(xfs_sb_version_hasdalign(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
+> > -			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
+> > -			(xfs_sb_version_hassector(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
+> > -			(xfs_sb_version_hasasciici(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
+> > -			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
+> > -			(xfs_sb_version_hasattr2(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
+> > -			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
+> > -			(xfs_sb_version_hascrc(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
+> > -			(xfs_sb_version_hasftype(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
+> > -			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
+> > -			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
+> > -			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+> > -			(xfs_sb_version_hasreflink(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
+> > -		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+> > -				mp->m_sb.sb_logsectsize : BBSIZE;
+> > -		geo->rtsectsize = mp->m_sb.sb_blocksize;
+> > -		geo->dirblocksize = mp->m_dir_geo->blksize;
+> > -	}
+> > -	if (new_version >= 4) {
+> > -		geo->flags |=
+> > -			(xfs_sb_version_haslogv2(&mp->m_sb) ?
+> > -				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
+> > -		geo->logsunit = mp->m_sb.sb_logsunit;
+> > -	}
+> >  	return 0;
+> >  }
+> > diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> > index a16632c..63dcd2a 100644
+> > --- a/fs/xfs/libxfs/xfs_sb.h
+> > +++ b/fs/xfs/libxfs/xfs_sb.h
+> > @@ -34,7 +34,8 @@ extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
+> >  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
+> >  extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
+> >  
+> > -extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
+> > -				int nversion);
+> > +#define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
+> > +extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
+> > +				int struct_version);
+> >  
+> >  #endif	/* __XFS_SB_H__ */
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index 3015e17..89fb1eb 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -810,7 +810,7 @@ xfs_ioc_fsgeometry_v1(
+> >  	xfs_fsop_geom_t         fsgeo;
+> >  	int			error;
+> >  
+> > -	error = xfs_fs_geometry(mp, &fsgeo, 3);
+> > +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
+> >  	if (error)
+> >  		return error;
+> >  
+> > @@ -832,7 +832,7 @@ xfs_ioc_fsgeometry(
+> >  	xfs_fsop_geom_t		fsgeo;
+> >  	int			error;
+> >  
+> > -	error = xfs_fs_geometry(mp, &fsgeo, 4);
+> > +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
+> >  	if (error)
+> >  		return error;
+> >  
+> > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> > index 66cc3cd..10fbde3 100644
+> > --- a/fs/xfs/xfs_ioctl32.c
+> > +++ b/fs/xfs/xfs_ioctl32.c
+> > @@ -67,7 +67,7 @@ xfs_compat_ioc_fsgeometry_v1(
+> >  	xfs_fsop_geom_t		  fsgeo;
+> >  	int			  error;
+> >  
+> > -	error = xfs_fs_geometry(mp, &fsgeo, 3);
+> > +	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
+> >  	if (error)
+> >  		return error;
+> >  	/* The 32-bit variant simply has some padding at the end */
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
