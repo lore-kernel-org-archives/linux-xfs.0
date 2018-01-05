@@ -1,77 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60282 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758095AbeAHWmW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 17:42:22 -0500
-Date: Mon, 8 Jan 2018 14:38:45 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3] xfs: clarify units in the failed metadata io message
-Message-ID: <20180108223845.GZ5602@magnolia>
-References: <20180108194015.GT5602@magnolia>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:41222 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752743AbeAEWsI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 17:48:08 -0500
+Subject: Re: [V4, 01/11] Documentation: Add license-rules.rst to describe how
+ to properly identify file licenses
+References: <alpine.DEB.2.20.1711171057240.1709@nanos>
+ <20180105130526.GA31648@piout.net>
+From: Frank Rowand <frowand.list@gmail.com>
+Message-ID: <7769bd49-146b-ea8c-3b2c-b5987653a665@gmail.com>
+Date: Fri, 5 Jan 2018 14:48:04 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180108194015.GT5602@magnolia>
+In-Reply-To: <20180105130526.GA31648@piout.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: Alexandre Belloni <alexandre.belloni@free-electrons.com>, Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 01/05/18 05:05, Alexandre Belloni wrote:
+> Hi,
+> 
+> I'm definitively late to the party but...
+> 
+> On 17/11/2017 at 11:00:33 +0100, Thomas Gleixner wrote:
+>> +2. Style:
+>> +
+>> +   The SPDX license identifier is added in form of a comment.  The comment
+>> +   style depends on the file type::
+>> +
+>> +      C source:   // SPDX-License-Identifier: <SPDX License Expression>
+>> +      C header:   /* SPDX-License-Identifier: <SPDX License Expression> */
+>> +      ASM:        /* SPDX-License-Identifier: <SPDX License Expression> */
+>> +      scripts:    # SPDX-License-Identifier: <SPDX License Expression>
+>> +      .rst:	  .. SPDX-License-Identifier: <SPDX License Expression>
+>> +      .dts{i}:	  // SPDX-License-Identifier: <SPDX License Expression>
+> 
+> dtc doesn't handle // comments. This works in the kernel tree because
 
-If a metadata IO error happens, we report the location of the failed IO
-request in units of daddrs.  However, the printk message misleads people
-into thinking that the units are fs blocks, so fix the reported units.
+dtc does handle // comments.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v3: fix only the units reporting, don't print the caller
-v2: fix more messages
----
- fs/xfs/xfs_buf.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 1981ef7..0820c1c 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -585,7 +585,7 @@ _xfs_buf_find(
- 		 * returning a specific error on buffer lookup failures.
- 		 */
- 		xfs_alert(btp->bt_mount,
--			  "%s: Block out of range: block 0x%llx, EOFS 0x%llx ",
-+			  "%s: daddr 0x%llx out of range, EOFS 0x%llx",
- 			  __func__, cmap.bm_bn, eofs);
- 		WARN_ON(1);
- 		return NULL;
-@@ -1196,8 +1196,9 @@ xfs_buf_ioerror_alert(
- 	const char		*func)
- {
- 	xfs_alert(bp->b_target->bt_mount,
--"metadata I/O error: block 0x%llx (\"%s\") error %d numblks %d",
--		(uint64_t)XFS_BUF_ADDR(bp), func, -bp->b_error, bp->b_length);
-+"metadata I/O error in \"%s\" at daddr 0x%llx len %d error %d",
-+			func, (uint64_t)XFS_BUF_ADDR(bp), bp->b_length,
-+			-bp->b_error);
- }
- 
- int
-@@ -1379,7 +1380,7 @@ _xfs_buf_ioapply(
- 			 */
- 			if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 				xfs_warn(mp,
--					"%s: no ops on block 0x%llx/0x%x",
-+					"%s: no buf ops on daddr 0x%llx len %d",
- 					__func__, bp->b_bn, bp->b_length);
- 				xfs_hex_dump(bp->b_addr,
- 						XFS_CORRUPTION_DUMP_LEN);
-@@ -1673,7 +1674,7 @@ xfs_wait_buftarg(
- 			list_del_init(&bp->b_lru);
- 			if (bp->b_flags & XBF_WRITE_FAIL) {
- 				xfs_alert(btp->bt_mount,
--"Corruption Alert: Buffer at block 0x%llx had permanent write failures!",
-+"Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
- 					(long long)bp->b_bn);
- 				xfs_alert(btp->bt_mount,
- "Please run xfs_repair to determine the extent of the problem.");
+$ cat test_comment.dts 
+/dts-v1/;
+
+// this is comment 1
+
+/* this is comment 2 */
+
+/ {
+	#address-cells = < 1 >;
+	#size-cells = < 1 >;
+
+	// this is comment 3
+
+	tree_1: soc@0 {
+		reg = <0x0 0x0>;
+	};
+
+};
+
+
+Using the dtc version in linux v4.14:
+
+$ dtc -v
+Version: DTC 1.4.4-g756ffc4f
+
+$ dtc -O dts test_comment.dts
+/dts-v1/;
+
+/ {
+  	#address-cells = <0x1>;
+	#size-cells = <0x1>;
+
+	tree_1: soc@0 {
+		reg = <0x0 0x0>;
+	};
+};
+
+
+Using the latest dtc version in the git_dtc repo:
+
+$ dtc -v
+Version: DTC 1.4.6-ge5438801
+
+$ dtc -O dts test_comment.dts 
+/dts-v1/;
+
+/ {
+	#address-cells = <0x1>;
+	#size-cells = <0x1>;
+
+	tree_1: soc@0 {
+		reg = <0x0 0x0>;
+	};
+};
+
+-Frank
+
+
+> dts files are preprocessed by CPP. But this doesn't work when using dtc
+> directly (most likely when compiling DT overlays). So, the choice is
+> between making dtc handle // comments or changing the documentation.
+> 
+> I don't have an opinion and Rob doesn't seem to care but I think we need
+> to do something now instead of letting each maintainer have to handle
+> this issue.
+> 
+>> +   If a specific tool cannot handle the standard comment style, then the
+>> +   appropriate comment mechanism which the tool accepts shall be used. This
+>> +   is the reason for having the "/\* \*/" style comment in C header
+>> +   files. There was build breakage observed with generated .lds files where
+>> +   'ld' failed to parse the C++ comment. This has been fixed by now, but
+>> +   there are still older assembler tools which cannot handle C++ style
+>> +   comments.
+>> +
+
