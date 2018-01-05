@@ -1,139 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:30848 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751250AbeAEDiV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 22:38:21 -0500
-Date: Fri, 5 Jan 2018 14:38:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/21] xfs: add scrub cross-referencing helpers for the
- rmap btrees
-Message-ID: <20180105033817.GB30682@dastard>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398982164.18741.14153975836991113575.stgit@magnolia>
- <20180105014053.GV30682@dastard>
- <20180105024924.GD5602@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:44212 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751278AbeAENIZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jan 2018 08:08:25 -0500
+Date: Fri, 5 Jan 2018 08:08:23 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: trace log reservations at mount time
+Message-ID: <20180105130822.GA27973@bfoster.bfoster>
+References: <151512356118.14363.7797314285394643799.stgit@magnolia>
+ <151512356737.14363.9190260401902946215.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180105024924.GD5602@magnolia>
+In-Reply-To: <151512356737.14363.9190260401902946215.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 04, 2018 at 06:49:24PM -0800, Darrick J. Wong wrote:
-> On Fri, Jan 05, 2018 at 12:40:53PM +1100, Dave Chinner wrote:
-> > On Fri, Dec 22, 2017 at 04:43:41PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add a couple of functions to the rmap btrees that will be used
-> > > to cross-reference metadata against the rmapbt.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_rmap.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/libxfs/xfs_rmap.h |    5 ++++
-> > >  2 files changed, 63 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > > index 50db920..ea78ec3 100644
-> > > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > > @@ -2387,3 +2387,61 @@ xfs_rmap_compare(
-> > >  	else
-> > >  		return 0;
-> > >  }
-> > > +
-> > > +/* Is there a record covering a given extent? */
-> > > +int
-> > > +xfs_rmap_has_record(
-> > > +	struct xfs_btree_cur	*cur,
-> > > +	xfs_agblock_t		bno,
-> > > +	xfs_extlen_t		len,
-> > > +	bool			*exists)
-> > > +{
-> > > +	union xfs_btree_irec	low;
-> > > +	union xfs_btree_irec	high;
-> > > +
-> > > +	memset(&low, 0, sizeof(low));
-> > > +	low.r.rm_startblock = bno;
-> > > +	memset(&high, 0xFF, sizeof(high));
-> > > +	high.r.rm_startblock = bno + len - 1;
-> > > +
-> > > +	return xfs_btree_has_record(cur, &low, &high, exists);
-> > > +}
-> > > +
-> > > +/* Is there a record covering a given extent? */
-> > > +int
-> > > +xfs_rmap_record_exists(
-> > > +	struct xfs_btree_cur	*cur,
-> > > +	xfs_agblock_t		bno,
-> > > +	xfs_extlen_t		len,
-> > > +	struct xfs_owner_info	*oinfo,
-> > > +	bool			*has_rmap)
-> > > +{
-> > > +	uint64_t		owner;
-> > > +	uint64_t		offset;
-> > > +	unsigned int		flags;
-> > > +	int			stat;
-> > 
-> > has_record to match the other code?
+On Thu, Jan 04, 2018 at 07:39:27PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Fixed.
+> At each mount, emit the transaction reservation type information via
+> tracepoints.  This makes it easier to compare the log reservation info
+> calculated by the kernel and xfsprogs so that we can more easily diagnose
+> minimum log size failures on freshly formatted filesystems.
 > 
-> > > +	struct xfs_rmap_irec	irec;
-> > > +	int			error;
-> > > +
-> > > +	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
-> > > +
-> > > +	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
-> > > +	if (error)
-> > > +		return error;
-> > > +	if (!stat) {
-> > > +		*has_rmap = false;
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	error = xfs_rmap_get_rec(cur, &irec, &stat);
-> > > +	if (error)
-> > > +		return error;
-> > > +	if (!stat) {
-> > > +		*has_rmap = false;
-> > > +		return 0;
-> > > +	}
-> > > +
-> > > +	*has_rmap = (irec.rm_owner == owner && irec.rm_startblock <= bno &&
-> > > +		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
-> > 
-> > Ok, so this returns true only if the rmap record spans the entire
-> > range we pass in. What does it mean if the rmap record only
-> > partially spans the range passed in?
-> 
-> For the current users (i.e. scrub) we require that the rmap completely
-> overlap the queried range.  If there's a gap anywhere (or mergeable
-> records) this function returns false and the calling scrub function
-> records a scrub xref failure.
-> 
-> How about the following change to the comment above the function?
-> 
-> "Is there a record for this owner completely covering a given physical
-> extent?  If so, *has_rmap will be set to true.  If there is no record
-> or the record only covers part of the range, we set *has_rmap to false.
-> This function doesn't perform range lookups or offset checks, so it is
-> not suitable for checking data fork blocks."
-> 
-> & maybe a:
-> 
-> ASSERT(XFS_RMAP_NON_INODE_OWNER(owner) ||
->        XFS_RMAP_IS_BMBT_BLOCK(offset));
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Yup, that explains what is going on a whole lot better :P
+Seems fine:
 
-Cheers,
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  fs/xfs/libxfs/xfs_log_rlimit.c |    2 +-
+>  fs/xfs/libxfs/xfs_shared.h     |    3 +++
+>  fs/xfs/xfs_trace.h             |   26 ++++++++++++++++++++++++++
+>  fs/xfs/xfs_trans.c             |   22 ++++++++++++++++++++++
+>  4 files changed, 52 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
+> index c105979..cc4cbe2 100644
+> --- a/fs/xfs/libxfs/xfs_log_rlimit.c
+> +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
+> @@ -55,7 +55,7 @@ xfs_log_calc_max_attrsetm_res(
+>   * the maximum one in terms of the pre-calculated values which were done
+>   * at mount time.
+>   */
+> -STATIC void
+> +void
+>  xfs_log_get_max_trans_res(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_trans_res	*max_resp)
+> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+> index 67ccb1a..d0b84da 100644
+> --- a/fs/xfs/libxfs/xfs_shared.h
+> +++ b/fs/xfs/libxfs/xfs_shared.h
+> @@ -76,6 +76,9 @@ struct xfs_log_item_desc {
+>  int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
+>  int	xfs_log_calc_minimum_size(struct xfs_mount *);
+>  
+> +struct xfs_trans_res;
+> +void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+> +				  struct xfs_trans_res *max_resp);
+>  
+>  /*
+>   * Values for t_flags.
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 9235b2c..b6251f8 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3313,6 +3313,32 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
+>  DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
+>  DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
+>  
+> +TRACE_EVENT(xfs_trans_resv_calc,
+> +	TP_PROTO(struct xfs_mount *mp, unsigned int type,
+> +		 struct xfs_trans_res *res),
+> +	TP_ARGS(mp, type, res),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(int, type)
+> +		__field(uint, logres)
+> +		__field(int, logcount)
+> +		__field(int, logflags)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = mp->m_super->s_dev;
+> +		__entry->type = type;
+> +		__entry->logres = res->tr_logres;
+> +		__entry->logcount = res->tr_logcount;
+> +		__entry->logflags = res->tr_logflags;
+> +	),
+> +	TP_printk("dev %d:%d type %d logres %u logcount %d flags 0x%x",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->type,
+> +		  __entry->logres,
+> +		  __entry->logcount,
+> +		  __entry->logflags)
+> +);
+> +
+>  #endif /* _TRACE_XFS_H */
+>  
+>  #undef TRACE_INCLUDE_PATH
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index a87f657..86f92df 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -35,6 +35,27 @@
+>  kmem_zone_t	*xfs_trans_zone;
+>  kmem_zone_t	*xfs_log_item_desc_zone;
+>  
+> +#if defined(CONFIG_TRACEPOINTS)
+> +static void
+> +xfs_trans_trace_reservations(
+> +	struct xfs_mount	*mp)
+> +{
+> +	struct xfs_trans_res	resv;
+> +	struct xfs_trans_res	*res;
+> +	struct xfs_trans_res	*end_res;
+> +	int			i;
+> +
+> +	res = (struct xfs_trans_res *)M_RES(mp);
+> +	end_res = (struct xfs_trans_res *)(M_RES(mp) + 1);
+> +	for (i = 0; res < end_res; i++, res++)
+> +		trace_xfs_trans_resv_calc(mp, i, res);
+> +	xfs_log_get_max_trans_res(mp, &resv);
+> +	trace_xfs_trans_resv_calc(mp, -1, &resv);
+> +}
+> +#else
+> +# define xfs_trans_trace_reservations(mp)
+> +#endif
+> +
+>  /*
+>   * Initialize the precomputed transaction reservation values
+>   * in the mount structure.
+> @@ -44,6 +65,7 @@ xfs_trans_init(
+>  	struct xfs_mount	*mp)
+>  {
+>  	xfs_trans_resv_calc(mp, M_RES(mp));
+> +	xfs_trans_trace_reservations(mp);
+>  }
+>  
+>  /*
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
