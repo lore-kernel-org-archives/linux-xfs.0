@@ -1,152 +1,281 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44212 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751278AbeAENIZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Jan 2018 08:08:25 -0500
-Date: Fri, 5 Jan 2018 08:08:23 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: trace log reservations at mount time
-Message-ID: <20180105130822.GA27973@bfoster.bfoster>
+Received: from userp2120.oracle.com ([156.151.31.85]:51938 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751250AbeAEDjs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 22:39:48 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id w053aXrn021300
+        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:48 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2fa04d85x0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Jan 2018 03:39:47 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w053dkaQ004774
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:47 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w053dkFo016864
+        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:46 GMT
+Subject: [PATCH 2/3] xfs: hoist xfs_fs_geometry to libxfs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 04 Jan 2018 19:39:45 -0800
+Message-ID: <151512358515.14363.15388539486249607694.stgit@magnolia>
+In-Reply-To: <151512356118.14363.7797314285394643799.stgit@magnolia>
 References: <151512356118.14363.7797314285394643799.stgit@magnolia>
- <151512356737.14363.9190260401902946215.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151512356737.14363.9190260401902946215.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 04, 2018 at 07:39:27PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> At each mount, emit the transaction reservation type information via
-> tracepoints.  This makes it easier to compare the log reservation info
-> calculated by the kernel and xfsprogs so that we can more easily diagnose
-> minimum log size failures on freshly formatted filesystems.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Seems fine:
+Move xfs_fs_geometry to libxfs so that we can clean up the fs geometry
+reporting in xfsprogs.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_sb.c |   79 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_sb.h |    3 ++
+ fs/xfs/xfs_fsops.c     |   77 -----------------------------------------------
+ fs/xfs/xfs_fsops.h     |    1 -
+ fs/xfs/xfs_ioctl.c     |    1 +
+ fs/xfs/xfs_ioctl32.c   |    1 +
+ 6 files changed, 84 insertions(+), 78 deletions(-)
 
->  fs/xfs/libxfs/xfs_log_rlimit.c |    2 +-
->  fs/xfs/libxfs/xfs_shared.h     |    3 +++
->  fs/xfs/xfs_trace.h             |   26 ++++++++++++++++++++++++++
->  fs/xfs/xfs_trans.c             |   22 ++++++++++++++++++++++
->  4 files changed, 52 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_log_rlimit.c b/fs/xfs/libxfs/xfs_log_rlimit.c
-> index c105979..cc4cbe2 100644
-> --- a/fs/xfs/libxfs/xfs_log_rlimit.c
-> +++ b/fs/xfs/libxfs/xfs_log_rlimit.c
-> @@ -55,7 +55,7 @@ xfs_log_calc_max_attrsetm_res(
->   * the maximum one in terms of the pre-calculated values which were done
->   * at mount time.
->   */
-> -STATIC void
-> +void
->  xfs_log_get_max_trans_res(
->  	struct xfs_mount	*mp,
->  	struct xfs_trans_res	*max_resp)
-> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-> index 67ccb1a..d0b84da 100644
-> --- a/fs/xfs/libxfs/xfs_shared.h
-> +++ b/fs/xfs/libxfs/xfs_shared.h
-> @@ -76,6 +76,9 @@ struct xfs_log_item_desc {
->  int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
->  int	xfs_log_calc_minimum_size(struct xfs_mount *);
->  
-> +struct xfs_trans_res;
-> +void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
-> +				  struct xfs_trans_res *max_resp);
->  
->  /*
->   * Values for t_flags.
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 9235b2c..b6251f8 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3313,6 +3313,32 @@ DEFINE_GETFSMAP_EVENT(xfs_getfsmap_low_key);
->  DEFINE_GETFSMAP_EVENT(xfs_getfsmap_high_key);
->  DEFINE_GETFSMAP_EVENT(xfs_getfsmap_mapping);
->  
-> +TRACE_EVENT(xfs_trans_resv_calc,
-> +	TP_PROTO(struct xfs_mount *mp, unsigned int type,
-> +		 struct xfs_trans_res *res),
-> +	TP_ARGS(mp, type, res),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(int, type)
-> +		__field(uint, logres)
-> +		__field(int, logcount)
-> +		__field(int, logflags)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = mp->m_super->s_dev;
-> +		__entry->type = type;
-> +		__entry->logres = res->tr_logres;
-> +		__entry->logcount = res->tr_logcount;
-> +		__entry->logflags = res->tr_logflags;
-> +	),
-> +	TP_printk("dev %d:%d type %d logres %u logcount %d flags 0x%x",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->type,
-> +		  __entry->logres,
-> +		  __entry->logcount,
-> +		  __entry->logflags)
-> +);
-> +
->  #endif /* _TRACE_XFS_H */
->  
->  #undef TRACE_INCLUDE_PATH
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index a87f657..86f92df 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -35,6 +35,27 @@
->  kmem_zone_t	*xfs_trans_zone;
->  kmem_zone_t	*xfs_log_item_desc_zone;
->  
-> +#if defined(CONFIG_TRACEPOINTS)
-> +static void
-> +xfs_trans_trace_reservations(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct xfs_trans_res	resv;
-> +	struct xfs_trans_res	*res;
-> +	struct xfs_trans_res	*end_res;
-> +	int			i;
-> +
-> +	res = (struct xfs_trans_res *)M_RES(mp);
-> +	end_res = (struct xfs_trans_res *)(M_RES(mp) + 1);
-> +	for (i = 0; res < end_res; i++, res++)
-> +		trace_xfs_trans_resv_calc(mp, i, res);
-> +	xfs_log_get_max_trans_res(mp, &resv);
-> +	trace_xfs_trans_resv_calc(mp, -1, &resv);
-> +}
-> +#else
-> +# define xfs_trans_trace_reservations(mp)
-> +#endif
-> +
->  /*
->   * Initialize the precomputed transaction reservation values
->   * in the mount structure.
-> @@ -44,6 +65,7 @@ xfs_trans_init(
->  	struct xfs_mount	*mp)
->  {
->  	xfs_trans_resv_calc(mp, M_RES(mp));
-> +	xfs_trans_trace_reservations(mp);
->  }
->  
->  /*
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 63e0331..139517a 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -40,6 +40,8 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_bmap.h"
+ #include "xfs_refcount_btree.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
+ 
+ /*
+  * Physical superblock buffer manipulations. Shared with libxfs in userspace.
+@@ -874,3 +876,80 @@ xfs_sync_sb(
+ 		xfs_trans_set_sync(tp);
+ 	return xfs_trans_commit(tp);
+ }
++
++int
++xfs_fs_geometry(
++	xfs_mount_t		*mp,
++	xfs_fsop_geom_t		*geo,
++	int			new_version)
++{
++
++	memset(geo, 0, sizeof(*geo));
++
++	geo->blocksize = mp->m_sb.sb_blocksize;
++	geo->rtextsize = mp->m_sb.sb_rextsize;
++	geo->agblocks = mp->m_sb.sb_agblocks;
++	geo->agcount = mp->m_sb.sb_agcount;
++	geo->logblocks = mp->m_sb.sb_logblocks;
++	geo->sectsize = mp->m_sb.sb_sectsize;
++	geo->inodesize = mp->m_sb.sb_inodesize;
++	geo->imaxpct = mp->m_sb.sb_imax_pct;
++	geo->datablocks = mp->m_sb.sb_dblocks;
++	geo->rtblocks = mp->m_sb.sb_rblocks;
++	geo->rtextents = mp->m_sb.sb_rextents;
++	geo->logstart = mp->m_sb.sb_logstart;
++	ASSERT(sizeof(geo->uuid) == sizeof(mp->m_sb.sb_uuid));
++	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
++	if (new_version >= 2) {
++		geo->sunit = mp->m_sb.sb_unit;
++		geo->swidth = mp->m_sb.sb_width;
++	}
++	if (new_version >= 3) {
++		geo->version = XFS_FSOP_GEOM_VERSION;
++		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
++			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
++			(xfs_sb_version_hasattr(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
++			(xfs_sb_version_hasquota(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
++			(xfs_sb_version_hasalign(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
++			(xfs_sb_version_hasdalign(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
++			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
++			(xfs_sb_version_hassector(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
++			(xfs_sb_version_hasasciici(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
++			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
++			(xfs_sb_version_hasattr2(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
++			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
++			(xfs_sb_version_hascrc(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
++			(xfs_sb_version_hasftype(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
++			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
++			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
++			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
++			(xfs_sb_version_hasreflink(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
++		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
++				mp->m_sb.sb_logsectsize : BBSIZE;
++		geo->rtsectsize = mp->m_sb.sb_blocksize;
++		geo->dirblocksize = mp->m_dir_geo->blksize;
++	}
++	if (new_version >= 4) {
++		geo->flags |=
++			(xfs_sb_version_haslogv2(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
++		geo->logsunit = mp->m_sb.sb_logsunit;
++	}
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index 961e647..a16632c 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -34,4 +34,7 @@ extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
+ extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
+ extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
+ 
++extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
++				int nversion);
++
+ #endif	/* __XFS_SB_H__ */
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 60a2e12..84d7383 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -49,83 +49,6 @@
+  * File system operations
+  */
+ 
+-int
+-xfs_fs_geometry(
+-	xfs_mount_t		*mp,
+-	xfs_fsop_geom_t		*geo,
+-	int			new_version)
+-{
+-
+-	memset(geo, 0, sizeof(*geo));
+-
+-	geo->blocksize = mp->m_sb.sb_blocksize;
+-	geo->rtextsize = mp->m_sb.sb_rextsize;
+-	geo->agblocks = mp->m_sb.sb_agblocks;
+-	geo->agcount = mp->m_sb.sb_agcount;
+-	geo->logblocks = mp->m_sb.sb_logblocks;
+-	geo->sectsize = mp->m_sb.sb_sectsize;
+-	geo->inodesize = mp->m_sb.sb_inodesize;
+-	geo->imaxpct = mp->m_sb.sb_imax_pct;
+-	geo->datablocks = mp->m_sb.sb_dblocks;
+-	geo->rtblocks = mp->m_sb.sb_rblocks;
+-	geo->rtextents = mp->m_sb.sb_rextents;
+-	geo->logstart = mp->m_sb.sb_logstart;
+-	ASSERT(sizeof(geo->uuid)==sizeof(mp->m_sb.sb_uuid));
+-	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
+-	if (new_version >= 2) {
+-		geo->sunit = mp->m_sb.sb_unit;
+-		geo->swidth = mp->m_sb.sb_width;
+-	}
+-	if (new_version >= 3) {
+-		geo->version = XFS_FSOP_GEOM_VERSION;
+-		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+-			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
+-			(xfs_sb_version_hasattr(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
+-			(xfs_sb_version_hasquota(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
+-			(xfs_sb_version_hasalign(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
+-			(xfs_sb_version_hasdalign(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
+-			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
+-			(xfs_sb_version_hassector(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
+-			(xfs_sb_version_hasasciici(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
+-			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
+-			(xfs_sb_version_hasattr2(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
+-			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
+-			(xfs_sb_version_hascrc(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
+-			(xfs_sb_version_hasftype(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
+-			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
+-			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
+-			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+-			(xfs_sb_version_hasreflink(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
+-		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+-				mp->m_sb.sb_logsectsize : BBSIZE;
+-		geo->rtsectsize = mp->m_sb.sb_blocksize;
+-		geo->dirblocksize = mp->m_dir_geo->blksize;
+-	}
+-	if (new_version >= 4) {
+-		geo->flags |=
+-			(xfs_sb_version_haslogv2(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
+-		geo->logsunit = mp->m_sb.sb_logsunit;
+-	}
+-	return 0;
+-}
+-
+ static struct xfs_buf *
+ xfs_growfs_get_hdr_buf(
+ 	struct xfs_mount	*mp,
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index 2954c13..20484ed 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -18,7 +18,6 @@
+ #ifndef __XFS_FSOPS_H__
+ #define	__XFS_FSOPS_H__
+ 
+-extern int xfs_fs_geometry(xfs_mount_t *mp, xfs_fsop_geom_t *geo, int nversion);
+ extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
+ extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
+ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 20dc65f..3015e17 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -45,6 +45,7 @@
+ #include <linux/fsmap.h>
+ #include "xfs_fsmap.h"
+ #include "scrub/xfs_scrub.h"
++#include "xfs_sb.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/cred.h>
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 35c79e2..66cc3cd 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -37,6 +37,7 @@
+ #include "xfs_ioctl.h"
+ #include "xfs_ioctl32.h"
+ #include "xfs_trace.h"
++#include "xfs_sb.h"
+ 
+ #define  _NATIVE_IOC(cmd, type) \
+ 	  _IOC(_IOC_DIR(cmd), _IOC_TYPE(cmd), _IOC_NR(cmd), sizeof(type))
+
