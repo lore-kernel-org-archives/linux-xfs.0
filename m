@@ -1,125 +1,279 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:35758 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753080AbeAEVxn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 16:53:43 -0500
-Date: Fri, 5 Jan 2018 13:53:39 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:51998 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751342AbeAEDjy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 22:39:54 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.21/8.16.0.21) with SMTP id w053bqM0021754
+        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:53 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2fa04d85x5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 05 Jan 2018 03:39:53 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w053dqOw031346
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:53 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w053dqIb004740
+        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 03:39:52 GMT
+Subject: [PATCH 3/3] xfs: refactor the geometry structure filling function
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 08/21] xfs: add scrub cross-referencing helpers for the
- rmap btrees
-Message-ID: <20180105215339.GL5602@magnolia>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398982164.18741.14153975836991113575.stgit@magnolia>
+Date: Thu, 04 Jan 2018 19:39:51 -0800
+Message-ID: <151512359134.14363.8696043274247703808.stgit@magnolia>
+In-Reply-To: <151512356118.14363.7797314285394643799.stgit@magnolia>
+References: <151512356118.14363.7797314285394643799.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151398982164.18741.14153975836991113575.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a couple of functions to the rmap btrees that will be used
-to cross-reference metadata against the rmapbt.
+Refactor the geometry structure filling function to use the superblock
+to fill the fields.  While we're at it, make the function less indenty
+and use some whitespace to make the function easier to read.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: expand documentation to clarify the behavior of _record_exists
----
- fs/xfs/libxfs/xfs_rmap.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rmap.h |    5 +++
- 2 files changed, 72 insertions(+)
+ fs/xfs/libxfs/xfs_sb.c |  167 ++++++++++++++++++++++++++++--------------------
+ fs/xfs/libxfs/xfs_sb.h |    5 +
+ fs/xfs/xfs_ioctl.c     |    4 +
+ fs/xfs/xfs_ioctl32.c   |    2 -
+ 4 files changed, 103 insertions(+), 75 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 50db920..79822cf 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -2387,3 +2387,70 @@ xfs_rmap_compare(
- 	else
- 		return 0;
- }
-+
-+/* Is there a record covering a given extent? */
-+int
-+xfs_rmap_has_record(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	bool			*exists)
-+{
-+	union xfs_btree_irec	low;
-+	union xfs_btree_irec	high;
-+
-+	memset(&low, 0, sizeof(low));
-+	low.r.rm_startblock = bno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.r.rm_startblock = bno + len - 1;
-+
-+	return xfs_btree_has_record(cur, &low, &high, exists);
-+}
-+
-+/*
-+ * Is there a record for this owner completely covering a given physical
-+ * extent?  If so, *has_rmap will be set to true.  If there is no record
-+ * or the record only covers part of the range, we set *has_rmap to false.
-+ * This function doesn't perform range lookups or offset checks, so it is
-+ * not suitable for checking data fork blocks.
-+ */
-+int
-+xfs_rmap_record_exists(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	struct xfs_owner_info	*oinfo,
-+	bool			*has_rmap)
-+{
-+	uint64_t		owner;
-+	uint64_t		offset;
-+	unsigned int		flags;
-+	int			has_record;
-+	struct xfs_rmap_irec	irec;
-+	int			error;
-+
-+	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
-+	ASSERT(XFS_RMAP_NON_INODE_OWNER(owner) ||
-+	       (flags & XFS_RMAP_BMBT_BLOCK));
-+
-+	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags,
-+			&has_record);
-+	if (error)
-+		return error;
-+	if (!has_record) {
-+		*has_rmap = false;
-+		return 0;
-+	}
-+
-+	error = xfs_rmap_get_rec(cur, &irec, &has_record);
-+	if (error)
-+		return error;
-+	if (!has_record) {
-+		*has_rmap = false;
-+		return 0;
-+	}
-+
-+	*has_rmap = (irec.rm_owner == owner && irec.rm_startblock <= bno &&
-+		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-index 0fcd5b1..380e53b 100644
---- a/fs/xfs/libxfs/xfs_rmap.h
-+++ b/fs/xfs/libxfs/xfs_rmap.h
-@@ -233,5 +233,10 @@ int xfs_rmap_compare(const struct xfs_rmap_irec *a,
- union xfs_btree_rec;
- int xfs_rmap_btrec_to_irec(union xfs_btree_rec *rec,
- 		struct xfs_rmap_irec *irec);
-+int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-+		xfs_extlen_t len, bool *exists);
-+int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
-+		xfs_extlen_t len, struct xfs_owner_info *oinfo,
-+		bool *has_rmap);
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 139517a..70e5126 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -879,77 +879,104 @@ xfs_sync_sb(
  
- #endif	/* __XFS_RMAP_H__ */
+ int
+ xfs_fs_geometry(
+-	xfs_mount_t		*mp,
+-	xfs_fsop_geom_t		*geo,
+-	int			new_version)
++	struct xfs_sb		*sbp,
++	struct xfs_fsop_geom	*geo,
++	int			struct_version)
+ {
++	memset(geo, 0, sizeof(struct xfs_fsop_geom));
++
++	geo->blocksize = sbp->sb_blocksize;
++	geo->rtextsize = sbp->sb_rextsize;
++	geo->agblocks = sbp->sb_agblocks;
++	geo->agcount = sbp->sb_agcount;
++	geo->logblocks = sbp->sb_logblocks;
++	geo->sectsize = sbp->sb_sectsize;
++	geo->inodesize = sbp->sb_inodesize;
++	geo->imaxpct = sbp->sb_imax_pct;
++	geo->datablocks = sbp->sb_dblocks;
++	geo->rtblocks = sbp->sb_rblocks;
++	geo->rtextents = sbp->sb_rextents;
++	geo->logstart = sbp->sb_logstart;
++	BUILD_BUG_ON(sizeof(geo->uuid) != sizeof(sbp->sb_uuid));
++	memcpy(geo->uuid, &sbp->sb_uuid, sizeof(sbp->sb_uuid));
++
++	if (struct_version < 2)
++		return 0;
++
++	geo->sunit = sbp->sb_unit;
++	geo->swidth = sbp->sb_width;
++
++	if (struct_version < 3)
++		return 0;
++
++	geo->version = XFS_FSOP_GEOM_VERSION;
++	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
++		     XFS_FSOP_GEOM_FLAGS_DIRV2;
++
++
++	if (xfs_sb_version_hasattr(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
++
++	if (xfs_sb_version_hasquota(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_QUOTA;
++
++	if (xfs_sb_version_hasalign(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
++
++	if (xfs_sb_version_hasdalign(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
++
++	if (xfs_sb_version_hasextflgbit(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXTFLG;
++
++	if (xfs_sb_version_hassector(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
++
++	if (xfs_sb_version_hasasciici(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
++
++	if (xfs_sb_version_haslazysbcount(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
++
++	if (xfs_sb_version_hasattr2(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
++
++	if (xfs_sb_version_hasprojid32bit(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
++
++	if (xfs_sb_version_hascrc(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_V5SB;
++
++	if (xfs_sb_version_hasftype(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_FTYPE;
++
++	if (xfs_sb_version_hasfinobt(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_FINOBT;
++
++	if (xfs_sb_version_hassparseinodes(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_SPINODES;
++
++	if (xfs_sb_version_hasrmapbt(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
++
++	if (xfs_sb_version_hasreflink(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
++
++	if (xfs_sb_version_hassector(sbp))
++		geo->logsectsize = sbp->sb_logsectsize;
++	else
++		geo->logsectsize = BBSIZE;
++
++	geo->rtsectsize = sbp->sb_blocksize;
++	geo->dirblocksize = 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
++
++	if (struct_version < 3)
++		return 0;
++
++	if (xfs_sb_version_haslogv2(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
++
++	geo->logsunit = sbp->sb_logsunit;
+ 
+-	memset(geo, 0, sizeof(*geo));
+-
+-	geo->blocksize = mp->m_sb.sb_blocksize;
+-	geo->rtextsize = mp->m_sb.sb_rextsize;
+-	geo->agblocks = mp->m_sb.sb_agblocks;
+-	geo->agcount = mp->m_sb.sb_agcount;
+-	geo->logblocks = mp->m_sb.sb_logblocks;
+-	geo->sectsize = mp->m_sb.sb_sectsize;
+-	geo->inodesize = mp->m_sb.sb_inodesize;
+-	geo->imaxpct = mp->m_sb.sb_imax_pct;
+-	geo->datablocks = mp->m_sb.sb_dblocks;
+-	geo->rtblocks = mp->m_sb.sb_rblocks;
+-	geo->rtextents = mp->m_sb.sb_rextents;
+-	geo->logstart = mp->m_sb.sb_logstart;
+-	ASSERT(sizeof(geo->uuid) == sizeof(mp->m_sb.sb_uuid));
+-	memcpy(geo->uuid, &mp->m_sb.sb_uuid, sizeof(mp->m_sb.sb_uuid));
+-	if (new_version >= 2) {
+-		geo->sunit = mp->m_sb.sb_unit;
+-		geo->swidth = mp->m_sb.sb_width;
+-	}
+-	if (new_version >= 3) {
+-		geo->version = XFS_FSOP_GEOM_VERSION;
+-		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+-			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
+-			(xfs_sb_version_hasattr(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
+-			(xfs_sb_version_hasquota(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_QUOTA : 0) |
+-			(xfs_sb_version_hasalign(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_IALIGN : 0) |
+-			(xfs_sb_version_hasdalign(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_DALIGN : 0) |
+-			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
+-			(xfs_sb_version_hassector(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
+-			(xfs_sb_version_hasasciici(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_DIRV2CI : 0) |
+-			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
+-			(xfs_sb_version_hasattr2(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
+-			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
+-			(xfs_sb_version_hascrc(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_V5SB : 0) |
+-			(xfs_sb_version_hasftype(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
+-			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
+-			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_SPINODES : 0) |
+-			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0) |
+-			(xfs_sb_version_hasreflink(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_REFLINK : 0);
+-		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+-				mp->m_sb.sb_logsectsize : BBSIZE;
+-		geo->rtsectsize = mp->m_sb.sb_blocksize;
+-		geo->dirblocksize = mp->m_dir_geo->blksize;
+-	}
+-	if (new_version >= 4) {
+-		geo->flags |=
+-			(xfs_sb_version_haslogv2(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
+-		geo->logsunit = mp->m_sb.sb_logsunit;
+-	}
+ 	return 0;
+ }
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index a16632c..63dcd2a 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -34,7 +34,8 @@ extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
+ extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
+ extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
+ 
+-extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
+-				int nversion);
++#define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
++extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
++				int struct_version);
+ 
+ #endif	/* __XFS_SB_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 3015e17..89fb1eb 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -810,7 +810,7 @@ xfs_ioc_fsgeometry_v1(
+ 	xfs_fsop_geom_t         fsgeo;
+ 	int			error;
+ 
+-	error = xfs_fs_geometry(mp, &fsgeo, 3);
++	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
+ 	if (error)
+ 		return error;
+ 
+@@ -832,7 +832,7 @@ xfs_ioc_fsgeometry(
+ 	xfs_fsop_geom_t		fsgeo;
+ 	int			error;
+ 
+-	error = xfs_fs_geometry(mp, &fsgeo, 4);
++	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 66cc3cd..10fbde3 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -67,7 +67,7 @@ xfs_compat_ioc_fsgeometry_v1(
+ 	xfs_fsop_geom_t		  fsgeo;
+ 	int			  error;
+ 
+-	error = xfs_fs_geometry(mp, &fsgeo, 3);
++	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
+ 	if (error)
+ 		return error;
+ 	/* The 32-bit variant simply has some padding at the end */
+
