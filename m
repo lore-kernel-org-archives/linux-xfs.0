@@ -1,181 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:42380 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751166AbeAECTf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 21:19:35 -0500
-Date: Thu, 4 Jan 2018 18:19:32 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/21] xfs: add scrub cross-referencing helpers for the
- inode btrees
-Message-ID: <20180105021932.GC5602@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48018 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751387AbeAECZF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 21:25:05 -0500
+Date: Fri, 5 Jan 2018 13:24:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 12/21] xfs: check btree block ownership with bnobt/rmapbt
+ when scrubbing btree
+Message-ID: <20180105022436.GA30682@dastard>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398981557.18741.8176324698766997260.stgit@magnolia>
- <20180105013606.GU30682@dastard>
+ <151398984612.18741.15845883360126485561.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180105013606.GU30682@dastard>
+In-Reply-To: <151398984612.18741.15845883360126485561.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 05, 2018 at 12:36:06PM +1100, Dave Chinner wrote:
-> On Fri, Dec 22, 2017 at 04:43:35PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a couple of functions to the inode btrees that will be used
-> > to cross-reference metadata against the inobt.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ialloc.c |   99 ++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_ialloc.h |    6 +++
-> >  2 files changed, 105 insertions(+)
+On Fri, Dec 22, 2017 at 04:44:06PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Some minor things.
+> When scanning a metadata btree block, cross-reference the block location
+> with the free space btree and the reverse mapping btree to ensure that
+> the rmapbt knows about the block and the bnobt does not.  Add a
+> mechanism to defer checks when we happen to be scanning the bnobt/rmapbt
+> itself because it's less efficient to repeatedly clone and destroy the
+> cursor.
 > 
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index 3b57ef0..5de1ef3 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -2751,3 +2751,102 @@ xfs_verify_dir_ino(
-> >  		return false;
-> >  	return xfs_verify_ino(mp, ino);
-> >  }
-> > +
-> > +/* Is there an inode record covering a given range of inode numbers? */
-> > +int
-> > +xfs_ialloc_has_inode_record(
-> > +	struct xfs_btree_cur	*cur,
-> > +	xfs_agino_t		low,
-> > +	xfs_agino_t		high,
-> > +	bool			*exists)
-> > +{
-> > +	struct xfs_inobt_rec_incore	irec;
-> > +	xfs_agino_t		agino;
-> > +	uint16_t		holemask;
-> > +	int			has;
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/btree.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 92 insertions(+)
 > 
-> has_record
+> 
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index 36cff8f..9151499 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+> @@ -362,6 +362,80 @@ xfs_scrub_btree_block_check_siblings(
+>  	return error;
+>  }
+>  
+> +struct check_owner {
+> +	struct list_head	list;
+> +	xfs_daddr_t		daddr;
+> +	int			level;
+> +};
+> +
+> +/*
+> + * Make sure this btree block isn't in the free list and that there's
+> + * an rmap record for it.
+> + */
+> +STATIC int
+> +xfs_scrub_btree_check_block_owner(
+> +	struct xfs_scrub_btree		*bs,
+> +	int				level,
+> +	xfs_daddr_t			daddr)
+> +{
+> +	struct xfs_scrub_ag		sa = { 0 };
+> +	struct xfs_scrub_ag		*psa;
+> +	xfs_agnumber_t			agno;
+> +	int				error = 0;
+> +
+> +	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
+> +
+> +	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
+> +		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
+> +		if (!xfs_scrub_btree_xref_process_error(bs->sc, bs->cur,
+> +				level, &error))
+> +			return error;
+> +		psa = &sa;
+> +	} else {
+> +		psa = &bs->sc->sa;
+> +	}
+> +
+> +	if (psa == &sa)
+> +		xfs_scrub_ag_free(bs->sc, &sa);
+> +
+> +	return error;
+> +}
 
-Fixed.
+I'm missing something here - where's the owner check?
 
-> > +	int			i;
-> > +	int			error;
-> > +
-> > +	*exists = false;
-> > +	error = xfs_inobt_lookup(cur, low, XFS_LOOKUP_LE, &has);
-> > +	while (error == 0 && has) {
-> > +		error = xfs_inobt_get_rec(cur, &irec, &has);
-> > +		if (error || irec.ir_startino > high)
-> > +			break;
-> > +
-> > +		agino = irec.ir_startino;
-> > +		holemask = irec.ir_holemask;
-> > +		for (i = 0; i < XFS_INOBT_HOLEMASK_BITS; holemask >>= 1,
-> > +				i++, agino += XFS_INODES_PER_HOLEMASK_BIT) {
-> > +			if (holemask & 1)
-> > +				continue;
-> > +			if (agino + XFS_INODES_PER_HOLEMASK_BIT > low &&
-> > +					agino <= high) {
-> > +				*exists = true;
-> > +				goto out;
-> 
-> return 0;
-> 
-> Then the out label can go away.
+Cheers,
 
-Fixed.
-
-> > +			}
-> > +		}
-> > +
-> > +		error = xfs_btree_increment(cur, 0, &has);
-> > +	}
-> > +out:
-> > +	return error;
-> > +}
-> > +
-> > +/* Is there an inode record covering a given extent? */
-> > +int
-> > +xfs_ialloc_has_inodes_at_extent(
-> > +	struct xfs_btree_cur	*cur,
-> > +	xfs_agblock_t		bno,
-> > +	xfs_extlen_t		len,
-> > +	bool			*exists)
-> > +{
-> > +	xfs_agino_t		low;
-> > +	xfs_agino_t		high;
-> > +
-> > +	low = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno, 0);
-> > +	high = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno + len, 0) - 1;
-> > +
-> > +	return xfs_ialloc_has_inode_record(cur, low, high, exists);
-> > +}
-> > +
-> > +struct xfs_ialloc_count_inodes {
-> > +	xfs_agino_t			count;
-> > +	xfs_agino_t			freecount;
-> > +};
-> > +
-> > +/* Record inode counts across all inobt records. */
-> > +STATIC int
-> > +xfs_ialloc_count_inodes_helper(
-> > +	struct xfs_btree_cur		*cur,
-> > +	union xfs_btree_rec		*rec,
-> > +	void				*priv)
-> > +{
-> > +	struct xfs_inobt_rec_incore	irec;
-> > +	struct xfs_ialloc_count_inodes	*ci = priv;
-> > +
-> > +	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, &irec);
-> > +	ci->count += irec.ir_count;
-> > +	ci->freecount += irec.ir_freecount;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/* Count allocated and free inodes under an inobt. */
-> > +int
-> > +xfs_ialloc_count_inodes(
-> > +	struct xfs_btree_cur		*cur,
-> > +	xfs_agino_t			*count,
-> > +	xfs_agino_t			*freecount)
-> > +{
-> > +	struct xfs_ialloc_count_inodes	ci = {0};
-> > +	int				error;
-> > +
-> > +	ASSERT(cur->bc_btnum == XFS_BTNUM_INO);
-> > +	error = xfs_btree_query_all(cur, xfs_ialloc_count_inodes_helper, &ci);
-> > +	if (!error) {
-> > +		*count = ci.count;
-> > +		*freecount = ci.freecount;
-> > +	}
-> > +	return error;
-> 
-> Took me a minute to release that the branch was run when !error.
-> I'd be more obvious if it used typical error handling:
-> 
-> 	if (error)
-> 		return error;
-> 	*count = ci.count;
-> 	*freecount = ci.freecount;
-> 	return 0;
-
-Fixed.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
