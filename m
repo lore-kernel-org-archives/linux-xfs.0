@@ -1,89 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48018 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751387AbeAECZF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 21:25:05 -0500
-Date: Fri, 5 Jan 2018 13:24:36 +1100
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:30848 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751250AbeAEDiV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jan 2018 22:38:21 -0500
+Date: Fri, 5 Jan 2018 14:38:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 12/21] xfs: check btree block ownership with bnobt/rmapbt
- when scrubbing btree
-Message-ID: <20180105022436.GA30682@dastard>
+Subject: Re: [PATCH 08/21] xfs: add scrub cross-referencing helpers for the
+ rmap btrees
+Message-ID: <20180105033817.GB30682@dastard>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398984612.18741.15845883360126485561.stgit@magnolia>
+ <151398982164.18741.14153975836991113575.stgit@magnolia>
+ <20180105014053.GV30682@dastard>
+ <20180105024924.GD5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151398984612.18741.15845883360126485561.stgit@magnolia>
+In-Reply-To: <20180105024924.GD5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 22, 2017 at 04:44:06PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 04, 2018 at 06:49:24PM -0800, Darrick J. Wong wrote:
+> On Fri, Jan 05, 2018 at 12:40:53PM +1100, Dave Chinner wrote:
+> > On Fri, Dec 22, 2017 at 04:43:41PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Add a couple of functions to the rmap btrees that will be used
+> > > to cross-reference metadata against the rmapbt.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_rmap.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/libxfs/xfs_rmap.h |    5 ++++
+> > >  2 files changed, 63 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+> > > index 50db920..ea78ec3 100644
+> > > --- a/fs/xfs/libxfs/xfs_rmap.c
+> > > +++ b/fs/xfs/libxfs/xfs_rmap.c
+> > > @@ -2387,3 +2387,61 @@ xfs_rmap_compare(
+> > >  	else
+> > >  		return 0;
+> > >  }
+> > > +
+> > > +/* Is there a record covering a given extent? */
+> > > +int
+> > > +xfs_rmap_has_record(
+> > > +	struct xfs_btree_cur	*cur,
+> > > +	xfs_agblock_t		bno,
+> > > +	xfs_extlen_t		len,
+> > > +	bool			*exists)
+> > > +{
+> > > +	union xfs_btree_irec	low;
+> > > +	union xfs_btree_irec	high;
+> > > +
+> > > +	memset(&low, 0, sizeof(low));
+> > > +	low.r.rm_startblock = bno;
+> > > +	memset(&high, 0xFF, sizeof(high));
+> > > +	high.r.rm_startblock = bno + len - 1;
+> > > +
+> > > +	return xfs_btree_has_record(cur, &low, &high, exists);
+> > > +}
+> > > +
+> > > +/* Is there a record covering a given extent? */
+> > > +int
+> > > +xfs_rmap_record_exists(
+> > > +	struct xfs_btree_cur	*cur,
+> > > +	xfs_agblock_t		bno,
+> > > +	xfs_extlen_t		len,
+> > > +	struct xfs_owner_info	*oinfo,
+> > > +	bool			*has_rmap)
+> > > +{
+> > > +	uint64_t		owner;
+> > > +	uint64_t		offset;
+> > > +	unsigned int		flags;
+> > > +	int			stat;
+> > 
+> > has_record to match the other code?
 > 
-> When scanning a metadata btree block, cross-reference the block location
-> with the free space btree and the reverse mapping btree to ensure that
-> the rmapbt knows about the block and the bnobt does not.  Add a
-> mechanism to defer checks when we happen to be scanning the bnobt/rmapbt
-> itself because it's less efficient to repeatedly clone and destroy the
-> cursor.
+> Fixed.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/btree.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 92 insertions(+)
+> > > +	struct xfs_rmap_irec	irec;
+> > > +	int			error;
+> > > +
+> > > +	xfs_owner_info_unpack(oinfo, &owner, &offset, &flags);
+> > > +
+> > > +	error = xfs_rmap_lookup_le(cur, bno, len, owner, offset, flags, &stat);
+> > > +	if (error)
+> > > +		return error;
+> > > +	if (!stat) {
+> > > +		*has_rmap = false;
+> > > +		return 0;
+> > > +	}
+> > > +
+> > > +	error = xfs_rmap_get_rec(cur, &irec, &stat);
+> > > +	if (error)
+> > > +		return error;
+> > > +	if (!stat) {
+> > > +		*has_rmap = false;
+> > > +		return 0;
+> > > +	}
+> > > +
+> > > +	*has_rmap = (irec.rm_owner == owner && irec.rm_startblock <= bno &&
+> > > +		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+> > 
+> > Ok, so this returns true only if the rmap record spans the entire
+> > range we pass in. What does it mean if the rmap record only
+> > partially spans the range passed in?
 > 
+> For the current users (i.e. scrub) we require that the rmap completely
+> overlap the queried range.  If there's a gap anywhere (or mergeable
+> records) this function returns false and the calling scrub function
+> records a scrub xref failure.
 > 
-> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-> index 36cff8f..9151499 100644
-> --- a/fs/xfs/scrub/btree.c
-> +++ b/fs/xfs/scrub/btree.c
-> @@ -362,6 +362,80 @@ xfs_scrub_btree_block_check_siblings(
->  	return error;
->  }
->  
-> +struct check_owner {
-> +	struct list_head	list;
-> +	xfs_daddr_t		daddr;
-> +	int			level;
-> +};
-> +
-> +/*
-> + * Make sure this btree block isn't in the free list and that there's
-> + * an rmap record for it.
-> + */
-> +STATIC int
-> +xfs_scrub_btree_check_block_owner(
-> +	struct xfs_scrub_btree		*bs,
-> +	int				level,
-> +	xfs_daddr_t			daddr)
-> +{
-> +	struct xfs_scrub_ag		sa = { 0 };
-> +	struct xfs_scrub_ag		*psa;
-> +	xfs_agnumber_t			agno;
-> +	int				error = 0;
-> +
-> +	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
-> +
-> +	if (bs->cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-> +		error = xfs_scrub_ag_init(bs->sc, agno, &sa);
-> +		if (!xfs_scrub_btree_xref_process_error(bs->sc, bs->cur,
-> +				level, &error))
-> +			return error;
-> +		psa = &sa;
-> +	} else {
-> +		psa = &bs->sc->sa;
-> +	}
-> +
-> +	if (psa == &sa)
-> +		xfs_scrub_ag_free(bs->sc, &sa);
-> +
-> +	return error;
-> +}
+> How about the following change to the comment above the function?
+> 
+> "Is there a record for this owner completely covering a given physical
+> extent?  If so, *has_rmap will be set to true.  If there is no record
+> or the record only covers part of the range, we set *has_rmap to false.
+> This function doesn't perform range lookups or offset checks, so it is
+> not suitable for checking data fork blocks."
+> 
+> & maybe a:
+> 
+> ASSERT(XFS_RMAP_NON_INODE_OWNER(owner) ||
+>        XFS_RMAP_IS_BMBT_BLOCK(offset));
 
-I'm missing something here - where's the owner check?
+Yup, that explains what is going on a whole lot better :P
 
 Cheers,
 
