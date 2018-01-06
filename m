@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45944 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753494AbeAFCHg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 21:07:36 -0500
-Subject: [PATCH 10/27] xfs_scrub: add file space map iteration functions
+Received: from aserp2130.oracle.com ([141.146.126.79]:43080 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753494AbeAFBxF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:53:05 -0500
+Subject: [PATCH 15/27] xfs_scrub: scan inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 05 Jan 2018 17:52:29 -0800
-Message-ID: <151520354940.2027.10483445005054005807.stgit@magnolia>
+Date: Fri, 05 Jan 2018 17:53:00 -0800
+Message-ID: <151520358021.2027.12299421773754270788.stgit@magnolia>
 In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
 References: <151520348769.2027.9860697266310422360.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,45 +20,36 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These helpers enable userspace to iterate all the space map information
-for a file.  The iteration function uses GETBMAPX.
+Scan all the inodes in the system for problems.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile  |    2 +
- scrub/filemap.c |  158 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/filemap.h |   39 ++++++++++++++
- 3 files changed, 199 insertions(+)
- create mode 100644 scrub/filemap.c
- create mode 100644 scrub/filemap.h
+ scrub/Makefile    |    1 
+ scrub/phase3.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    1 
+ scrub/xfs_scrub.h |    2 +
+ 4 files changed, 156 insertions(+)
+ create mode 100644 scrub/phase3.c
 
 
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 24e0c44..a3534e6 100644
+index 30dbe54..e0d15d8 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -18,6 +18,7 @@ endif	# scrub_prereqs
- HFILES = \
- common.h \
- disk.h \
-+filemap.h \
- inodes.h \
- spacemap.h \
- xfs_scrub.h
-@@ -25,6 +26,7 @@ xfs_scrub.h
- CFILES = \
- common.c \
- disk.c \
-+filemap.c \
+@@ -35,6 +35,7 @@ fscounters.c \
  inodes.c \
  phase1.c \
+ phase2.c \
++phase3.c \
+ scrub.c \
  spacemap.c \
-diff --git a/scrub/filemap.c b/scrub/filemap.c
+ xfs_scrub.c
+diff --git a/scrub/phase3.c b/scrub/phase3.c
 new file mode 100644
-index 0000000..1c3c1cc
+index 0000000..b3fc510
 --- /dev/null
-+++ b/scrub/filemap.c
-@@ -0,0 +1,158 @@
++++ b/scrub/phase3.c
+@@ -0,0 +1,152 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -79,187 +70,167 @@ index 0000000..1c3c1cc
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
 +#include <stdio.h>
-+#include <stdbool.h>
 +#include <stdint.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <string.h>
++#include <stdbool.h>
 +#include <sys/types.h>
 +#include <sys/stat.h>
 +#include <sys/statvfs.h>
 +#include "xfs.h"
-+#include "xfs_fs.h"
 +#include "path.h"
++#include "workqueue.h"
 +#include "xfs_scrub.h"
 +#include "common.h"
-+#include "filemap.h"
++#include "counter.h"
++#include "inodes.h"
++#include "scrub.h"
++
++/* Phase 3: Scan all inodes. */
 +
 +/*
-+ * These routines provide a simple interface to query the block
-+ * mappings of the fork of a given inode via GETBMAPX and call a
-+ * function to iterate each mapping result.
++ * Run a per-file metadata scanner.  We use the ino/gen interface to
++ * ensure that the inode we're checking matches what the inode scan
++ * told us to look at.
 + */
-+
-+#define BMAP_NR		2048
-+
-+/* Iterate all the extent block mappings between the key and fork end. */
-+bool
-+xfs_iterate_filemaps(
++static bool
++xfs_scrub_fd(
 +	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	int			fd,
-+	int			whichfork,
-+	struct xfs_bmap		*key,
-+	xfs_bmap_iter_fn	fn,
++	bool			(*fn)(struct scrub_ctx *, uint64_t,
++				      uint32_t, int),
++	struct xfs_bstat	*bs)
++{
++	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt_fd);
++}
++
++struct scrub_inode_ctx {
++	struct ptcounter	*icount;
++	bool			moveon;
++};
++
++/* Verify the contents, xattrs, and extent maps of an inode. */
++static int
++xfs_scrub_inode(
++	struct scrub_ctx	*ctx,
++	struct xfs_handle	*handle,
++	struct xfs_bstat	*bstat,
 +	void			*arg)
 +{
-+	struct fsxattr		fsx;
-+	struct getbmapx		*map;
-+	struct getbmapx		*p;
-+	struct xfs_bmap		bmap;
-+	char			bmap_descr[DESCR_BUFSZ];
++	struct scrub_inode_ctx	*ictx = arg;
++	struct ptcounter	*icount = ictx->icount;
 +	bool			moveon = true;
-+	xfs_off_t		new_off;
-+	int			getxattr_type;
-+	int			i;
-+	int			error;
++	int			fd = -1;
 +
-+	switch (whichfork) {
-+	case XFS_ATTR_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s attr"), descr);
-+		break;
-+	case XFS_COW_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s CoW"), descr);
-+		break;
-+	case XFS_DATA_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s data"), descr);
-+		break;
-+	default:
-+		abort();
++	background_sleep();
++
++	/* Try to open the inode to pin it. */
++	if (S_ISREG(bstat->bs_mode)) {
++		fd = xfs_open_handle(handle);
++		/* Stale inode means we scan the whole cluster again. */
++		if (fd < 0 && errno == ESTALE)
++			return ESTALE;
 +	}
 +
-+	map = calloc(BMAP_NR, sizeof(struct getbmapx));
-+	if (!map) {
-+		str_errno(ctx, bmap_descr);
++	/* Scrub the inode. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat);
++	if (!moveon)
++		goto out;
++
++	/* Scrub all block mappings. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat);
++	if (!moveon)
++		goto out;
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat);
++	if (!moveon)
++		goto out;
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat);
++	if (!moveon)
++		goto out;
++
++	if (S_ISLNK(bstat->bs_mode)) {
++		/* Check symlink contents. */
++		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino,
++				bstat->bs_gen, ctx->mnt_fd);
++	} else if (S_ISDIR(bstat->bs_mode)) {
++		/* Check the directory entries. */
++		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat);
++	}
++	if (!moveon)
++		goto out;
++
++	/* Check all the extended attributes. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat);
++	if (!moveon)
++		goto out;
++
++	/* Check parent pointers. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat);
++	if (!moveon)
++		goto out;
++
++out:
++	ptcounter_add(icount, 1);
++	if (fd >= 0)
++		close(fd);
++	if (!moveon)
++		ictx->moveon = false;
++	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
++}
++
++/* Verify all the inodes in a filesystem. */
++bool
++xfs_scan_inodes(
++	struct scrub_ctx	*ctx)
++{
++	struct scrub_inode_ctx	ictx;
++	bool			ret;
++
++	ictx.moveon = true;
++	ictx.icount = ptcounter_init(scrub_nproc(ctx));
++	if (!ictx.icount) {
++		str_error(ctx, ctx->mntpoint, _("Could not create counter."));
 +		return false;
 +	}
 +
-+	map->bmv_offset = BTOBB(key->bm_offset);
-+	map->bmv_block = BTOBB(key->bm_physical);
-+	if (key->bm_length == 0)
-+		map->bmv_length = ULLONG_MAX;
-+	else
-+		map->bmv_length = BTOBB(key->bm_length);
-+	map->bmv_count = BMAP_NR;
-+	map->bmv_iflags = BMV_IF_NO_DMAPI_READ | BMV_IF_PREALLOC |
-+			  BMV_IF_NO_HOLES;
-+	switch (whichfork) {
-+	case XFS_ATTR_FORK:
-+		getxattr_type = XFS_IOC_FSGETXATTRA;
-+		map->bmv_iflags |= BMV_IF_ATTRFORK;
-+		break;
-+	case XFS_COW_FORK:
-+		map->bmv_iflags |= BMV_IF_COWFORK;
-+		getxattr_type = FS_IOC_FSGETXATTR;
-+		break;
-+	case XFS_DATA_FORK:
-+		getxattr_type = FS_IOC_FSGETXATTR;
-+		break;
-+	default:
-+		abort();
-+	}
++	ret = xfs_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
++	if (!ret)
++		ictx.moveon = false;
++	if (!ictx.moveon)
++		goto free;
++	xfs_scrub_report_preen_triggers(ctx);
++	ctx->inodes_checked = ptcounter_value(ictx.icount);
 +
-+	error = ioctl(fd, getxattr_type, &fsx);
-+	if (error < 0) {
-+		str_errno(ctx, bmap_descr);
-+		moveon = false;
-+		goto out;
-+	}
-+
-+	while ((error = ioctl(fd, XFS_IOC_GETBMAPX, map)) == 0) {
-+		for (i = 0, p = &map[i + 1]; i < map->bmv_entries; i++, p++) {
-+			bmap.bm_offset = BBTOB(p->bmv_offset);
-+			bmap.bm_physical = BBTOB(p->bmv_block);
-+			bmap.bm_length = BBTOB(p->bmv_length);
-+			bmap.bm_flags = p->bmv_oflags;
-+			moveon = fn(ctx, bmap_descr, fd, whichfork, &fsx,
-+					&bmap, arg);
-+			if (!moveon)
-+				goto out;
-+			if (xfs_scrub_excessive_errors(ctx)) {
-+				moveon = false;
-+				goto out;
-+			}
-+		}
-+
-+		if (map->bmv_entries == 0)
-+			break;
-+		p = map + map->bmv_entries;
-+		if (p->bmv_oflags & BMV_OF_LAST)
-+			break;
-+
-+		new_off = p->bmv_offset + p->bmv_length;
-+		map->bmv_length -= new_off - map->bmv_offset;
-+		map->bmv_offset = new_off;
-+	}
-+
-+	/*
-+	 * Pre-reflink filesystems don't know about CoW forks, so don't
-+	 * be too surprised if it fails.
-+	 */
-+	if (whichfork == XFS_COW_FORK && error && errno == EINVAL)
-+		error = 0;
-+
-+	if (error)
-+		str_errno(ctx, bmap_descr);
-+out:
-+	memcpy(key, map, sizeof(struct getbmapx));
-+	free(map);
-+	return moveon;
++free:
++	ptcounter_free(ictx.icount);
++	return ictx.moveon;
 +}
-diff --git a/scrub/filemap.h b/scrub/filemap.h
-new file mode 100644
-index 0000000..30d53d0
---- /dev/null
-+++ b/scrub/filemap.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_FILEMAP_H_
-+#define XFS_SCRUB_FILEMAP_H_
-+
-+/* inode fork block mapping */
-+struct xfs_bmap {
-+	uint64_t	bm_offset;	/* file offset of segment in bytes */
-+	uint64_t	bm_physical;	/* physical starting byte  */
-+	uint64_t	bm_length;	/* length of segment, bytes */
-+	uint32_t	bm_flags;	/* output flags */
-+};
-+
-+typedef bool (*xfs_bmap_iter_fn)(struct scrub_ctx *ctx, const char *descr,
-+		int fd, int whichfork, struct fsxattr *fsx,
-+		struct xfs_bmap *bmap, void *arg);
-+
-+bool xfs_iterate_filemaps(struct scrub_ctx *ctx, const char *descr, int fd,
-+		int whichfork, struct xfs_bmap *key, xfs_bmap_iter_fn fn,
-+		void *arg);
-+
-+#endif /* XFS_SCRUB_FILEMAP_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index be52a98..5bde6cf 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -357,6 +357,7 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Scan all inodes."),
++			.fn = xfs_scan_inodes,
+ 		},
+ 		{
+ 			.descr = _("Defer filesystem repairs."),
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 4c3882b..41d471b 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -89,6 +89,7 @@ struct scrub_ctx {
+ 	unsigned long long	runtime_errors;
+ 	unsigned long long	errors_found;
+ 	unsigned long long	warnings_found;
++	unsigned long long	inodes_checked;
+ 	bool			need_repair;
+ 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+ };
+@@ -98,5 +99,6 @@ void xfs_shutdown_fs(struct scrub_ctx *ctx);
+ bool xfs_cleanup_fs(struct scrub_ctx *ctx);
+ bool xfs_setup_fs(struct scrub_ctx *ctx);
+ bool xfs_scan_metadata(struct scrub_ctx *ctx);
++bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
