@@ -1,58 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51888 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932273AbeAWXP3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 18:15:29 -0500
-Date: Tue, 23 Jan 2018 15:15:22 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:43102 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753411AbeAFBxK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:53:10 -0500
+Subject: [PATCH 16/27] xfs_scrub: check directory connectivity
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_copy: accept CRC version of ABTB_MAGIC in ASSERT
-Message-ID: <20180123231522.GS25805@magnolia>
-References: <9c888b88-b664-730c-a1ff-50ee438714dd@redhat.com>
+Date: Fri, 05 Jan 2018 17:53:06 -0800
+Message-ID: <151520358640.2027.7884761399254522940.stgit@magnolia>
+In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
+References: <151520348769.2027.9860697266310422360.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9c888b88-b664-730c-a1ff-50ee438714dd@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Radek Burkat <radek@pinkbike.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 23, 2018 at 04:59:52PM -0600, Eric Sandeen wrote:
-> Not sure how this was missed for so long, but to handle CRC
-> filesystems, this ASSERT on block magic must accept CRC magic
-> as well.
-> 
-> Reported-by: Radek Burkat <radek@pinkbike.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I was /about/ to squawk about 'just use the allocbt verifier' but then
-remembered that we don't use the xfs_buf infrastructure...
+Opening directories by file handle will cause the kernel to perform
+parent lookups all the way to the root directory.  Take advantage of
+this to ensure that directories actually connect to the root.  Some
+day we'll have parent pointers and can make this more comprehensive.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/Makefile    |    1 +
+ scrub/phase5.c    |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    1 +
+ scrub/xfs_scrub.h |    1 +
+ 4 files changed, 104 insertions(+)
+ create mode 100644 scrub/phase5.c
 
-> ---
-> 
-> (yes, it's > 80 cols but .. so is most of this indented 
-> code block o_O)
-> 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index fb37375..16ee4d9 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -1140,7 +1140,8 @@ main(int argc, char **argv)
->  				 ((char *) btree_buf.data +
->  				  pos - btree_buf.position);
->  
-> -			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC);
-> +			ASSERT(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC ||
-> +			       be32_to_cpu(block->bb_magic) == XFS_ABTB_CRC_MAGIC);
->  		}
->  
->  		/*
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/scrub/Makefile b/scrub/Makefile
+index e0d15d8..adb868e 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -36,6 +36,7 @@ inodes.c \
+ phase1.c \
+ phase2.c \
+ phase3.c \
++phase5.c \
+ scrub.c \
+ spacemap.c \
+ xfs_scrub.c
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+new file mode 100644
+index 0000000..0b161e3
+--- /dev/null
++++ b/scrub/phase5.c
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "path.h"
++#include "workqueue.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "inodes.h"
++#include "scrub.h"
++
++/* Phase 5: Check directory connectivity. */
++
++/*
++ * Verify the connectivity of the directory tree.
++ * We know that the kernel's open-by-handle function will try to reconnect
++ * parents of an opened directory, so we'll accept that as sufficient.
++ */
++static int
++xfs_scrub_connections(
++	struct scrub_ctx	*ctx,
++	struct xfs_handle	*handle,
++	struct xfs_bstat	*bstat,
++	void			*arg)
++{
++	bool			*pmoveon = arg;
++	char			descr[DESCR_BUFSZ];
++	bool			moveon = true;
++	xfs_agnumber_t		agno;
++	xfs_agino_t		agino;
++	int			fd = -1;
++
++	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
++	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
++	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
++			(uint64_t)bstat->bs_ino, agno, agino);
++	background_sleep();
++
++	/* Open the dir, let the kernel try to reconnect it to the root. */
++	if (S_ISDIR(bstat->bs_mode)) {
++		fd = xfs_open_handle(handle);
++		if (fd < 0) {
++			if (errno == ESTALE)
++				return ESTALE;
++			str_errno(ctx, descr);
++			goto out;
++		}
++	}
++
++out:
++	if (fd >= 0)
++		close(fd);
++	if (!moveon)
++		*pmoveon = false;
++	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
++}
++
++/* Check directory connectivity. */
++bool
++xfs_scan_connections(
++	struct scrub_ctx	*ctx)
++{
++	bool			moveon = true;
++	bool			ret;
++
++	if (ctx->errors_found) {
++		str_info(ctx, ctx->mntpoint,
++_("Filesystem has errors, skipping connectivity checks."));
++		return true;
++	}
++
++	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
++	if (!ret)
++		moveon = false;
++	if (!moveon)
++		return false;
++	xfs_scrub_report_preen_triggers(ctx);
++	return true;
++}
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 5bde6cf..64517f4 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -365,6 +365,7 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Check directory tree."),
++			.fn = xfs_scan_connections,
+ 		},
+ 		{
+ 			.descr = _("Verify data file integrity."),
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 41d471b..c9f53d8 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -100,5 +100,6 @@ bool xfs_cleanup_fs(struct scrub_ctx *ctx);
+ bool xfs_setup_fs(struct scrub_ctx *ctx);
+ bool xfs_scan_metadata(struct scrub_ctx *ctx);
+ bool xfs_scan_inodes(struct scrub_ctx *ctx);
++bool xfs_scan_connections(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
+
