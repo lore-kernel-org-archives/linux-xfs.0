@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40472 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753578AbeAFB6Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:58:25 -0500
-Subject: [PATCH 18/27] xfs_scrub: warn about normalized Unicode name
- collisions
+Received: from aserp2130.oracle.com ([141.146.126.79]:43265 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753498AbeAFBxn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:53:43 -0500
+Subject: [PATCH 21/27] xfs_scrub: scrub file data blocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 05 Jan 2018 17:53:18 -0800
-Message-ID: <151520359869.2027.5097323049467056197.stgit@magnolia>
+Date: Fri, 05 Jan 2018 17:53:38 -0800
+Message-ID: <151520361807.2027.808101481520701260.stgit@magnolia>
 In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
 References: <151520348769.2027.9860697266310422360.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,369 +20,129 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Iterate all directory and xattr names to look for name collisions
-amongst Unicode normalized names.  This is generally a sign of buggy
-programs or malicious duplicate files.
+Read all data blocks from the disk, hoping to catch IO errors.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- configure.ac            |    2 
- debian/control          |    2 
- include/builddefs.in    |    2 
- m4/Makefile             |    1 
- m4/package_unistring.m4 |   19 ++
- scrub/Makefile          |   12 +
- scrub/common.c          |   20 ++
- scrub/common.h          |    3 
- scrub/phase5.c          |   53 +++++-
- scrub/unicrash.c        |  399 +++++++++++++++++++++++++++++++++++++++++++++++
- scrub/unicrash.h        |   49 ++++++
- scrub/xfs_scrub.c       |    2 
- 12 files changed, 546 insertions(+), 18 deletions(-)
- create mode 100644 m4/package_unistring.m4
- create mode 100644 scrub/unicrash.c
- create mode 100644 scrub/unicrash.h
+ configure.ac          |    2 
+ include/builddefs.in  |    2 
+ m4/package_libcdev.m4 |   28 +++
+ scrub/Makefile        |    7 -
+ scrub/phase6.c        |  516 +++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/vfs.c           |  221 +++++++++++++++++++++
+ scrub/vfs.h           |   31 +++
+ scrub/xfs_scrub.c     |    4 
+ scrub/xfs_scrub.h     |    2 
+ 9 files changed, 811 insertions(+), 2 deletions(-)
+ create mode 100644 scrub/phase6.c
+ create mode 100644 scrub/vfs.c
+ create mode 100644 scrub/vfs.h
 
 
 diff --git a/configure.ac b/configure.ac
-index e2e3f66..fc44bd5 100644
+index fc44bd5..8eda010 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -168,6 +168,8 @@ AC_HAVE_DEVMAPPER
- AC_HAVE_MALLINFO
- AC_PACKAGE_WANT_ATTRIBUTES_H
+@@ -170,6 +170,8 @@ AC_PACKAGE_WANT_ATTRIBUTES_H
  AC_HAVE_LIBATTR
-+AC_PACKAGE_WANT_UNINORM_H
-+AC_HAVE_U8NORMALIZE
+ AC_PACKAGE_WANT_UNINORM_H
+ AC_HAVE_U8NORMALIZE
++AC_HAVE_OPENAT
++AC_HAVE_FSTATAT
  
  if test "$enable_blkid" = yes; then
  AC_HAVE_BLKID_TOPO
-diff --git a/debian/control b/debian/control
-index f664a6b..36d1bd8 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libunistring-dev
- Standards-Version: 3.9.1
- Homepage: https://xfs.wiki.kernel.org/
- 
 diff --git a/include/builddefs.in b/include/builddefs.in
-index cc1b7e2..1c264a0 100644
+index 1c264a0..2f8d33f 100644
 --- a/include/builddefs.in
 +++ b/include/builddefs.in
-@@ -36,6 +36,7 @@ LIBEDITLINE = @libeditline@
- LIBREADLINE = @libreadline@
- LIBBLKID = @libblkid@
- LIBDEVMAPPER = @libdevmapper@
-+LIBUNISTRING = @libunistring@
- LIBXFS = $(TOPDIR)/libxfs/libxfs.la
- LIBFROG = $(TOPDIR)/libfrog/libfrog.la
- LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
-@@ -121,6 +122,7 @@ HAVE_MAP_SYNC = @have_map_sync@
- HAVE_DEVMAPPER = @have_devmapper@
+@@ -123,6 +123,8 @@ HAVE_DEVMAPPER = @have_devmapper@
  HAVE_MALLINFO = @have_mallinfo@
  HAVE_LIBATTR = @have_libattr@
-+HAVE_U8NORMALIZE = @have_u8normalize@
+ HAVE_U8NORMALIZE = @have_u8normalize@
++HAVE_OPENAT = @have_openat@
++HAVE_FSTATAT = @have_fstatat@
  
  GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
  #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/Makefile b/m4/Makefile
-index d5f1d2f..61d617e 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -22,6 +22,7 @@ LSRCFILES = \
- 	package_pthread.m4 \
- 	package_sanitizer.m4 \
- 	package_types.m4 \
-+	package_unistring.m4 \
- 	package_utilies.m4 \
- 	package_uuiddev.m4 \
- 	multilib.m4 \
-diff --git a/m4/package_unistring.m4 b/m4/package_unistring.m4
-new file mode 100644
-index 0000000..9cbfcb0
---- /dev/null
-+++ b/m4/package_unistring.m4
-@@ -0,0 +1,19 @@
-+AC_DEFUN([AC_PACKAGE_WANT_UNINORM_H],
-+  [ AC_CHECK_HEADERS(uninorm.h)
-+    if test $ac_cv_header_uninorm_h = no; then
-+	AC_CHECK_HEADERS(uninorm.h,, [
-+	echo
-+	echo 'WARNING: could not find a valid uninorm.h header.'])
-+    fi
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index d3955f0..e0abc12 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -362,3 +362,31 @@ AC_DEFUN([AC_HAVE_MALLINFO],
+        AC_MSG_RESULT(no))
+     AC_SUBST(have_mallinfo)
+   ])
++
++#
++# Check if we have a openat call
++#
++AC_DEFUN([AC_HAVE_OPENAT],
++  [ AC_CHECK_DECL([openat],
++       have_openat=yes,
++       [],
++       [#include <sys/types.h>
++        #include <sys/stat.h>
++        #include <fcntl.h>]
++       )
++    AC_SUBST(have_openat)
 +  ])
 +
-+AC_DEFUN([AC_HAVE_U8NORMALIZE],
-+  [ AC_CHECK_LIB(unistring, u8_normalize,[
-+	libunistring=-lunistring
-+	have_u8normalize=yes
-+    ],[
-+	echo
-+	echo 'WARNING: xfs_scrub will not be built with Unicode libraries.'])
-+    AC_SUBST(libunistring)
-+    AC_SUBST(have_u8normalize)
++#
++# Check if we have a fstatat call
++#
++AC_DEFUN([AC_HAVE_FSTATAT],
++  [ AC_CHECK_DECL([fstatat],
++       have_fstatat=yes,
++       [],
++       [#define _GNU_SOURCE
++       #include <sys/types.h>
++       #include <sys/stat.h>
++       #include <unistd.h>])
++    AC_SUBST(have_fstatat)
 +  ])
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 67ac6af..858bc40 100644
+index 3b3eb95..4b70efa 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -24,6 +24,7 @@ fscounters.h \
- inodes.h \
+@@ -8,9 +8,9 @@ include $(TOPDIR)/include/builddefs
+ # On linux we get fsmap from the system or define it ourselves
+ # so include this based on platform type.  If this reverts to only
+ # the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
+-SCRUB_PREREQS=$(PKG_PLATFORM)
++SCRUB_PREREQS=$(PKG_PLATFORM)$(HAVE_OPENAT)$(HAVE_FSTATAT)
+ 
+-ifeq ($(SCRUB_PREREQS),linux)
++ifeq ($(SCRUB_PREREQS),linuxyesyes)
+ LTCOMMAND = xfs_scrub
+ INSTALL_SCRUB = install-scrub
+ endif	# scrub_prereqs
+@@ -27,6 +27,7 @@ read_verify.h \
  scrub.h \
  spacemap.h \
-+unicrash.h \
+ unicrash.h \
++vfs.h \
  xfs_scrub.h
  
  CFILES = \
-@@ -41,8 +42,8 @@ scrub.c \
+@@ -41,9 +42,11 @@ phase1.c \
+ phase2.c \
+ phase3.c \
+ phase5.c \
++phase6.c \
+ read_verify.c \
+ scrub.c \
  spacemap.c \
++vfs.c \
  xfs_scrub.c
  
--LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
--LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
-+LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUNISTRING)
-+LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG) $(LIBUNISTRING)
- LLDFLAGS = -static
- 
- ifeq ($(HAVE_MALLINFO),yes)
-@@ -57,9 +58,14 @@ ifeq ($(HAVE_LIBATTR),yes)
- LCFLAGS += -DHAVE_LIBATTR
- endif
- 
-+ifeq ($(HAVE_U8NORMALIZE),yes)
-+CFILES += unicrash.c
-+LCFLAGS += -DHAVE_U8NORMALIZE
-+endif
-+
- default: depend $(LTCOMMAND)
- 
--phase5.o: $(TOPDIR)/include/builddefs
-+phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
- 
- include $(BUILDRULES)
- 
-diff --git a/scrub/common.c b/scrub/common.c
-index b02e7fc..10c4017 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -75,6 +75,26 @@ __str_errno(
- 	pthread_mutex_unlock(&ctx->lock);
- }
- 
-+/* Print a warning string and whatever error is stored in errno. */
-+void
-+__str_errno_warn(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	const char		*file,
-+	int			line)
-+{
-+	char			buf[DESCR_BUFSZ];
-+
-+	pthread_mutex_lock(&ctx->lock);
-+	fprintf(stderr, _("Warning: %s: %s."), descr,
-+			strerror_r(errno, buf, DESCR_BUFSZ));
-+	if (debug)
-+		fprintf(stderr, _(" (%s line %d)"), file, line);
-+	fprintf(stderr, "\n");
-+	ctx->warnings_found++;
-+	pthread_mutex_unlock(&ctx->lock);
-+}
-+
- /* Print an error string and some error text. */
- void
- __str_error(
-diff --git a/scrub/common.h b/scrub/common.h
-index e5a13d8..dd2070e 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -41,11 +41,14 @@ void __record_repair(struct scrub_ctx *ctx, const char *descr, const char *file,
- 		int line, const char *format, ...);
- void __record_preen(struct scrub_ctx *ctx, const char *descr, const char *file,
- 		int line, const char *format, ...);
-+void __str_errno_warn(struct scrub_ctx *, const char *descr, const char *file,
-+		      int line);
- 
- #define str_errno(ctx, str)		__str_errno(ctx, str, __FILE__, __LINE__)
- #define str_error(ctx, str, ...)	__str_error(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
- #define str_warn(ctx, str, ...)		__str_warn(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
- #define str_info(ctx, str, ...)		__str_info(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
-+#define str_errno_warn(ctx, str)	__str_errno_warn(ctx, str, __FILE__, __LINE__)
- #define dbg_printf(fmt, ...)		{if (debug > 1) {printf(fmt, __VA_ARGS__);}}
- 
- /* Is this debug tweak enabled? */
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 98d30f8..8b8aeed 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -35,6 +35,7 @@
- #include "common.h"
- #include "inodes.h"
- #include "scrub.h"
-+#include "unicrash.h"
- 
- /* Phase 5: Check directory connectivity. */
- 
-@@ -92,8 +93,10 @@ static bool
- xfs_scrub_scan_dirents(
- 	struct scrub_ctx	*ctx,
- 	const char		*descr,
--	int			*fd)
-+	int			*fd,
-+	struct xfs_bstat	*bstat)
- {
-+	struct unicrash		*uc = NULL;
- 	DIR			*dir;
- 	struct dirent		*dentry;
- 	bool			moveon = true;
-@@ -105,15 +108,24 @@ xfs_scrub_scan_dirents(
- 	}
- 	*fd = -1; /* closedir will close *fd for us */
- 
-+	moveon = unicrash_dir_init(&uc, ctx, bstat);
-+	if (!moveon)
-+		goto out_unicrash;
-+
- 	dentry = readdir(dir);
- 	while (dentry) {
- 		moveon = xfs_scrub_check_name(ctx, descr, _("directory"),
- 				dentry->d_name);
- 		if (!moveon)
- 			break;
-+		moveon = unicrash_check_dir_name(uc, descr, dentry);
-+		if (!moveon)
-+			break;
- 		dentry = readdir(dir);
- 	}
-+	unicrash_free(uc);
- 
-+out_unicrash:
- 	closedir(dir);
- out:
- 	return moveon;
-@@ -142,6 +154,7 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 	struct scrub_ctx		*ctx,
- 	const char			*descr,
- 	struct xfs_handle		*handle,
-+	struct xfs_bstat		*bstat,
- 	const struct xfs_attr_ns	*attr_ns)
- {
- 	struct attrlist_cursor		cur;
-@@ -149,10 +162,15 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 	char				keybuf[NAME_MAX + 1];
- 	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
- 	struct attrlist_ent		*ent;
-+	struct unicrash			*uc;
- 	bool				moveon = true;
- 	int				i;
- 	int				error;
- 
-+	moveon = unicrash_xattr_init(&uc, ctx, bstat);
-+	if (!moveon)
-+		return false;
-+
- 	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
- 	memset(&cur, 0, sizeof(cur));
- 	memset(keybuf, 0, NAME_MAX + 1);
-@@ -168,6 +186,9 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 					_("extended attribute"), keybuf);
- 			if (!moveon)
- 				goto out;
-+			moveon = unicrash_check_xattr_name(uc, descr, keybuf);
-+			if (!moveon)
-+				goto out;
- 		}
- 
- 		if (!attrlist->al_more)
-@@ -178,6 +199,7 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 	if (error && errno != ESTALE)
- 		str_errno(ctx, descr);
- out:
-+	unicrash_free(uc);
- 	return moveon;
- }
- 
-@@ -189,14 +211,15 @@ static bool
- xfs_scrub_scan_fhandle_xattrs(
- 	struct scrub_ctx		*ctx,
- 	const char			*descr,
--	struct xfs_handle		*handle)
-+	struct xfs_handle		*handle,
-+	struct xfs_bstat		*bstat)
- {
- 	const struct xfs_attr_ns	*ns;
- 	bool				moveon = true;
- 
- 	for (ns = attr_ns; ns->name; ns++) {
- 		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, descr,
--				handle, ns);
-+				handle, bstat, ns);
- 		if (!moveon)
- 			break;
- 	}
-@@ -217,6 +240,8 @@ xfs_scrub_scan_fhandle_xattrs(
-  * Verify the connectivity of the directory tree.
-  * We know that the kernel's open-by-handle function will try to reconnect
-  * parents of an opened directory, so we'll accept that as sufficient.
-+ *
-+ * Check for potential Unicode collisions in names.
-  */
- static int
- xfs_scrub_connections(
-@@ -227,7 +252,7 @@ xfs_scrub_connections(
- {
- 	bool			*pmoveon = arg;
- 	char			descr[DESCR_BUFSZ];
--	bool			moveon = true;
-+	bool			moveon;
- 	xfs_agnumber_t		agno;
- 	xfs_agino_t		agino;
- 	int			fd = -1;
-@@ -238,10 +263,10 @@ xfs_scrub_connections(
- 			(uint64_t)bstat->bs_ino, agno, agino);
- 	background_sleep();
- 
--        /* Warn about naming problems in xattrs. */
--        moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle);
--        if (!moveon)
--                goto out;
-+	/* Warn about naming problems in xattrs. */
-+	moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle, bstat);
-+	if (!moveon)
-+		goto out;
- 
- 	/* Open the dir, let the kernel try to reconnect it to the root. */
- 	if (S_ISDIR(bstat->bs_mode)) {
-@@ -254,12 +279,12 @@ xfs_scrub_connections(
- 		}
- 	}
- 
--        /* Warn about naming problems in the directory entries. */
--        if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
--                moveon = xfs_scrub_scan_dirents(ctx, descr, &fd);
--                if (!moveon)
--                        goto out;
--        }
-+	/* Warn about naming problems in the directory entries. */
-+	if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
-+		moveon = xfs_scrub_scan_dirents(ctx, descr, &fd, bstat);
-+		if (!moveon)
-+			goto out;
-+	}
- 
- out:
- 	if (fd >= 0)
-diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUNISTRING)
+diff --git a/scrub/phase6.c b/scrub/phase6.c
 new file mode 100644
-index 0000000..25d6701
+index 0000000..5ecb8dc
 --- /dev/null
-+++ b/scrub/unicrash.c
-@@ -0,0 +1,399 @@
++++ b/scrub/phase6.c
+@@ -0,0 +1,516 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -406,389 +165,506 @@ index 0000000..25d6701
 +#include <stdio.h>
 +#include <stdint.h>
 +#include <stdbool.h>
-+#include <stdlib.h>
 +#include <dirent.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
 +#include <sys/statvfs.h>
-+#include <unistr.h>
-+#include <uninorm.h>
 +#include "xfs.h"
++#include "xfs_fs.h"
++#include "handle.h"
 +#include "path.h"
++#include "ptvar.h"
++#include "workqueue.h"
 +#include "xfs_scrub.h"
 +#include "common.h"
++#include "bitmap.h"
++#include "disk.h"
++#include "filemap.h"
++#include "inodes.h"
++#include "read_verify.h"
++#include "spacemap.h"
++#include "vfs.h"
 +
 +/*
-+ * Detect collisions of Unicode-normalized names.
++ * Phase 6: Verify data file integrity.
 + *
-+ * Record all the name->ino mappings in a directory/xattr, with a twist!
-+ * The twist is that we perform unicode normalization on every name we
-+ * see, so that we can warn about a directory containing more than one
-+ * directory entries that normalize to the same Unicode string.  These
-+ * entries are at best a sign of Unicode mishandling, or some sort of
-+ * weird name substitution attack if the entries do not point to the
-+ * same inode.  Warn if we see multiple dirents that do not all point to
-+ * the same inode.
-+ *
-+ * For extended attributes we perform the same collision checks on the
-+ * attribute, though any collision is enough to trigger a warning.
-+ *
-+ * We flag these collisions as warnings and not errors because XFS
-+ * treats names as a sequence of arbitrary nonzero bytes.  While a
-+ * Unicode collision is not technically a filesystem corruption, we
-+ * ought to say something if there's a possibility for misleading a
-+ * user.
-+ *
-+ * To normalize, we use Unicode NFKC.  We use the composing
-+ * normalization mode (e.g. "E WITH ACUTE" instead of "E" then "ACUTE")
-+ * because that's what W3C (and in general Linux) uses.  This enables us
-+ * to detect multiple object names that normalize to the same name and
-+ * could be confusing to users.  Furthermore, we use the compatibility
-+ * mode to detect names with compatible but different code points to
-+ * strengthen those checks.
++ * Identify potential data block extents with GETFSMAP, then feed those
++ * extents to the read-verify pool to get the verify commands batched,
++ * issued, and (if there are problems) reported back to us.  If there
++ * are errors, we'll record the bad regions and (if available) use rmap
++ * to tell us if metadata are now corrupt.  Otherwise, we'll scan the
++ * whole directory tree looking for files that overlap the bad regions
++ * and report the paths of the now corrupt files.
 + */
 +
-+struct name_entry {
-+	struct name_entry	*next;
-+	xfs_ino_t		ino;
-+	size_t			uninamelen;
-+	uint8_t			uniname[0];
-+};
-+#define NAME_ENTRY_SZ(nl)	(sizeof(struct name_entry) + 1 + \
-+				 (nl * sizeof(uint8_t)))
-+
-+struct unicrash {
-+	struct scrub_ctx	*ctx;
-+	bool			compare_ino;
-+	size_t			nr_buckets;
-+	struct name_entry	*buckets[0];
-+};
-+#define UNICRASH_SZ(nr)		(sizeof(struct unicrash) + \
-+				 (nr * sizeof(struct name_entry *)))
-+
-+/*
-+ * We only care about validating utf8 collisions if the underlying
-+ * system configuration says we're using utf8.  If the language
-+ * specifier string used to output messages has ".UTF-8" somewhere in
-+ * its name, then we conclude utf8 is in use.  Otherwise, no checking is
-+ * performed.
-+ *
-+ * Most modern Linux systems default to utf8, so the only time this
-+ * check will return false is if the administrator configured things
-+ * this way or if things are so messed up there is no locale data at
-+ * all.
-+ */
-+#define UTF8_STR		".UTF-8"
-+#define UTF8_STRLEN		(sizeof(UTF8_STR) - 1)
-+static bool
-+is_utf8_locale(void)
++/* Find the fd for a given device identifier. */
++static struct disk *
++xfs_dev_to_disk(
++	struct scrub_ctx	*ctx,
++	dev_t			dev)
 +{
-+	const char		*msg_locale;
-+	static int		answer = -1;
++	if (dev == ctx->fsinfo.fs_datadev)
++		return ctx->datadev;
++	else if (dev == ctx->fsinfo.fs_logdev)
++		return ctx->logdev;
++	else if (dev == ctx->fsinfo.fs_rtdev)
++		return ctx->rtdev;
++	abort();
++}
 +
-+	if (answer != -1)
-+		return answer;
++/* Find the device major/minor for a given file descriptor. */
++static dev_t
++xfs_disk_to_dev(
++	struct scrub_ctx	*ctx,
++	struct disk		*disk)
++{
++	if (disk == ctx->datadev)
++		return ctx->fsinfo.fs_datadev;
++	else if (disk == ctx->logdev)
++		return ctx->fsinfo.fs_logdev;
++	else if (disk == ctx->rtdev)
++		return ctx->fsinfo.fs_rtdev;
++	abort();
++}
 +
-+	msg_locale = setlocale(LC_MESSAGES, NULL);
-+	if (msg_locale == NULL)
-+		return false;
++struct owner_decode {
++	uint64_t		owner;
++	const char		*descr;
++};
 +
-+	if (strstr(msg_locale, UTF8_STR) != NULL)
-+		answer = 1;
++static const struct owner_decode special_owners[] = {
++	{XFS_FMR_OWN_FREE,	"free space"},
++	{XFS_FMR_OWN_UNKNOWN,	"unknown owner"},
++	{XFS_FMR_OWN_FS,	"static FS metadata"},
++	{XFS_FMR_OWN_LOG,	"journalling log"},
++	{XFS_FMR_OWN_AG,	"per-AG metadata"},
++	{XFS_FMR_OWN_INOBT,	"inode btree blocks"},
++	{XFS_FMR_OWN_INODES,	"inodes"},
++	{XFS_FMR_OWN_REFC,	"refcount btree"},
++	{XFS_FMR_OWN_COW,	"CoW staging"},
++	{XFS_FMR_OWN_DEFECTIVE,	"bad blocks"},
++	{0, NULL},
++};
++
++/* Decode a special owner. */
++static const char *
++xfs_decode_special_owner(
++	uint64_t			owner)
++{
++	const struct owner_decode	*od = special_owners;
++
++	while (od->descr) {
++		if (od->owner == owner)
++			return od->descr;
++		od++;
++	}
++
++	return NULL;
++}
++
++/* Routines to translate bad physical extents into file paths and offsets. */
++
++struct xfs_verify_error_info {
++	struct bitmap			*d_bad;		/* bytes */
++	struct bitmap			*r_bad;		/* bytes */
++};
++
++/* Report if this extent overlaps a bad region. */
++static bool
++xfs_report_verify_inode_bmap(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	int				fd,
++	int				whichfork,
++	struct fsxattr			*fsx,
++	struct xfs_bmap			*bmap,
++	void				*arg)
++{
++	struct xfs_verify_error_info	*vei = arg;
++	struct bitmap			*bmp;
++
++	/* Only report errors for real extents. */
++	if (bmap->bm_flags & (BMV_OF_PREALLOC | BMV_OF_DELALLOC))
++		return true;
++
++	if (fsx->fsx_xflags & FS_XFLAG_REALTIME)
++		bmp = vei->r_bad;
 +	else
-+		answer = 0;
-+	return answer;
-+}
++		bmp = vei->d_bad;
 +
-+/* Set up unicrash global state. */
-+void
-+unicrash_setup(void)
-+{
-+	is_utf8_locale();
-+}
-+
-+/* Initialize the collision detector. */
-+static bool
-+unicrash_init(
-+	struct unicrash		**ucp,
-+	struct scrub_ctx	*ctx,
-+	bool			compare_ino,
-+	size_t			nr_buckets)
-+{
-+	struct unicrash		*p;
-+
-+	if (!is_utf8_locale()) {
-+		*ucp = NULL;
++	if (!bitmap_test(bmp, bmap->bm_physical, bmap->bm_length))
 +		return true;
-+	}
 +
-+	if (nr_buckets > 65536)
-+		nr_buckets = 65536;
-+	else if (nr_buckets < 16)
-+		nr_buckets = 16;
-+
-+	p = calloc(1, UNICRASH_SZ(nr_buckets));
-+	if (!p)
-+		return false;
-+	p->ctx = ctx;
-+	p->nr_buckets = nr_buckets;
-+	p->compare_ino = compare_ino;
-+	*ucp = p;
-+
++	str_error(ctx, descr,
++_("offset %llu failed read verification."), bmap->bm_offset);
 +	return true;
 +}
 +
-+/* Initialize the collision detector for a directory. */
-+bool
-+unicrash_dir_init(
-+	struct unicrash		**ucp,
-+	struct scrub_ctx	*ctx,
-+	struct xfs_bstat	*bstat)
-+{
-+	/*
-+	 * Assume 64 bytes per dentry, clamp buckets between 16 and 64k.
-+	 * Same general idea as dir_hash_init in xfs_repair.
-+	 */
-+	return unicrash_init(ucp, ctx, true, bstat->bs_size / 64);
-+}
-+
-+/* Initialize the collision detector for an extended attribute. */
-+bool
-+unicrash_xattr_init(
-+	struct unicrash		**ucp,
-+	struct scrub_ctx	*ctx,
-+	struct xfs_bstat	*bstat)
-+{
-+	/* Assume 16 attributes per extent for lack of a better idea. */
-+	return unicrash_init(ucp, ctx, false, 16 * (1 + bstat->bs_aextents));
-+}
-+
-+/* Free the crash detector. */
-+void
-+unicrash_free(
-+	struct unicrash		*uc)
-+{
-+	struct name_entry	*ne;
-+	struct name_entry	*x;
-+	size_t			i;
-+
-+	if (!uc)
-+		return;
-+
-+	for (i = 0; i < uc->nr_buckets; i++) {
-+		for (ne = uc->buckets[i]; ne != NULL; ne = x) {
-+			x = ne->next;
-+			free(ne);
-+		}
-+	}
-+	free(uc);
-+}
-+
-+/* Steal the dirhash function from libxfs, avoid linking with libxfs. */
-+
-+#define rol32(x, y)		(((x) << (y)) | ((x) >> (32 - (y))))
-+
-+/*
-+ * Implement a simple hash on a character string.
-+ * Rotate the hash value by 7 bits, then XOR each character in.
-+ * This is implemented with some source-level loop unrolling.
-+ */
-+static xfs_dahash_t
-+unicrash_hashname(
-+	const uint8_t		*name,
-+	size_t			namelen)
-+{
-+	xfs_dahash_t		hash;
-+
-+	/*
-+	 * Do four characters at a time as long as we can.
-+	 */
-+	for (hash = 0; namelen >= 4; namelen -= 4, name += 4)
-+		hash = (name[0] << 21) ^ (name[1] << 14) ^ (name[2] << 7) ^
-+		       (name[3] << 0) ^ rol32(hash, 7 * 4);
-+
-+	/*
-+	 * Now do the rest of the characters.
-+	 */
-+	switch (namelen) {
-+	case 3:
-+		return (name[0] << 14) ^ (name[1] << 7) ^ (name[2] << 0) ^
-+		       rol32(hash, 7 * 3);
-+	case 2:
-+		return (name[0] << 7) ^ (name[1] << 0) ^ rol32(hash, 7 * 2);
-+	case 1:
-+		return (name[0] << 0) ^ rol32(hash, 7 * 1);
-+	default: /* case 0: */
-+		return hash;
-+	}
-+}
-+
-+/*
-+ * Normalize a name according to Unicode NFKC normalization rules.
-+ * Returns true if the name was already normalized.
-+ */
++/* Iterate the extent mappings of a file to report errors. */
 +static bool
-+unicrash_normalize(
-+	const char		*in,
-+	uint8_t			*out,
-+	size_t			outlen)
++xfs_report_verify_fd(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	int				fd,
++	void				*arg)
 +{
-+	size_t			inlen = strlen(in);
++	struct xfs_bmap			key = {0};
++	bool				moveon;
 +
-+	assert(inlen <= outlen);
-+	if (!u8_normalize(UNINORM_NFKC, (const uint8_t *)in, inlen,
-+			out, &outlen)) {
-+		/* Didn't normalize, just return the same buffer. */
-+		memcpy(out, in, inlen + 1);
-+		return true;
-+	}
-+	out[outlen] = 0;
-+	return outlen == inlen ? memcmp(in, out, inlen) == 0 : false;
-+}
-+
-+/* Complain about Unicode problems. */
-+static void
-+unicrash_complain(
-+	struct unicrash		*uc,
-+	const char		*descr,
-+	const char		*what,
-+	bool			normal,
-+	bool			unique,
-+	const char		*name,
-+	uint8_t			*uniname)
-+{
-+	char			*bad1 = NULL;
-+	char			*bad2 = NULL;
-+
-+	bad1 = string_escape(name);
-+	bad2 = string_escape((char *)uniname);
-+
-+	if (!normal && should_warn_about_name(uc->ctx))
-+		str_info(uc->ctx, descr,
-+_("Unicode name \"%s\" in %s should be normalized as \"%s\"."),
-+				bad1, what, bad2);
-+	if (!unique)
-+		str_warn(uc->ctx, descr,
-+_("Duplicate normalized Unicode name \"%s\" found in %s."),
-+				bad1, what);
-+
-+	free(bad1);
-+	free(bad2);
-+}
-+
-+/*
-+ * Try to add a name -> ino entry to the collision detector.  The name
-+ * must be normalized according to Unicode NFKC normalization rules to
-+ * detect byte-unique names that map to the same sequence of Unicode
-+ * code points.
-+ *
-+ * This function returns true either if there was no previous mapping or
-+ * there was a mapping that matched exactly.  It returns false if
-+ * there is already a record with that name pointing to a different
-+ * inode.
-+ */
-+static bool
-+unicrash_add(
-+	struct unicrash		*uc,
-+	uint8_t			*uniname,
-+	xfs_ino_t		ino,
-+	bool			*unique)
-+{
-+	struct name_entry	*ne;
-+	struct name_entry	*x;
-+	struct name_entry	**nep;
-+	size_t			uninamelen = u8_strlen(uniname);
-+	size_t			bucket;
-+	xfs_dahash_t		hash;
-+
-+	/* Do we already know about that name? */
-+	hash = unicrash_hashname(uniname, uninamelen);
-+	bucket = hash % uc->nr_buckets;
-+	for (nep = &uc->buckets[bucket], ne = *nep; ne != NULL; ne = x) {
-+		if (u8_strcmp(uniname, ne->uniname) == 0) {
-+			*unique = uc->compare_ino ? ne->ino == ino : false;
-+			return true;
-+		}
-+		nep = &ne->next;
-+		x = ne->next;
-+	}
-+
-+	/* Remember that name. */
-+	x = malloc(NAME_ENTRY_SZ(uninamelen));
-+	if (!x)
-+		return false;
-+	x->next = NULL;
-+	x->ino = ino;
-+	x->uninamelen = uninamelen;
-+	memcpy(x->uniname, uniname, uninamelen + 1);
-+	*nep = x;
-+	*unique = true;
-+
-+	return true;
-+}
-+
-+/* Check a name for unicode normalization problems or collisions. */
-+static bool
-+__unicrash_check_name(
-+	struct unicrash		*uc,
-+	const char		*descr,
-+	const char		*namedescr,
-+	const char		*name,
-+	xfs_ino_t		ino)
-+{
-+	uint8_t			uniname[(NAME_MAX * 2) + 1];
-+	bool			moveon;
-+	bool			normal;
-+	bool			unique;
-+
-+	memset(uniname, 0, (NAME_MAX * 2) + 1);
-+	normal = unicrash_normalize(name, uniname, NAME_MAX * 2);
-+	moveon = unicrash_add(uc, uniname, ino, &unique);
++	/* data fork */
++	moveon = xfs_iterate_filemaps(ctx, descr, fd, XFS_DATA_FORK, &key,
++			xfs_report_verify_inode_bmap, arg);
 +	if (!moveon)
 +		return false;
 +
-+	if (normal && unique)
-+		return true;
-+
-+	unicrash_complain(uc, descr, namedescr, normal, unique, name,
-+			uniname);
++	/* attr fork */
++	moveon = xfs_iterate_filemaps(ctx, descr, fd, XFS_ATTR_FORK, &key,
++			xfs_report_verify_inode_bmap, arg);
++	if (!moveon)
++		return false;
 +	return true;
 +}
 +
-+/* Check a directory entry for unicode normalization problems or collisions. */
-+bool
-+unicrash_check_dir_name(
-+	struct unicrash		*uc,
-+	const char		*descr,
-+	struct dirent		*dentry)
++/* Report read verify errors in unlinked (but still open) files. */
++static int
++xfs_report_verify_inode(
++	struct scrub_ctx		*ctx,
++	struct xfs_handle		*handle,
++	struct xfs_bstat		*bstat,
++	void				*arg)
 +{
-+	if (!uc)
-+		return true;
-+	return __unicrash_check_name(uc, descr, _("directory"),
-+			dentry->d_name, dentry->d_ino);
++	char				descr[DESCR_BUFSZ];
++	char				buf[DESCR_BUFSZ];
++	bool				moveon;
++	int				fd;
++	int				error;
++
++	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (unlinked)"),
++			(uint64_t)bstat->bs_ino);
++
++	/* Ignore linked files and things we can't open. */
++	if (bstat->bs_nlink != 0)
++		return 0;
++	if (!S_ISREG(bstat->bs_mode) && !S_ISDIR(bstat->bs_mode))
++		return 0;
++
++	/* Try to open the inode. */
++	fd = xfs_open_handle(handle);
++	if (fd < 0) {
++		error = errno;
++		if (error == ESTALE)
++			return error;
++
++		str_warn(ctx, descr, "%s", strerror_r(error, buf, DESCR_BUFSZ));
++		return error;
++	}
++
++	/* Go find the badness. */
++	moveon = xfs_report_verify_fd(ctx, descr, fd, arg);
++	close(fd);
++
++	return moveon ? 0 : XFS_ITERATE_INODES_ABORT;
++}
++
++/* Scan a directory for matches in the read verify error list. */
++static bool
++xfs_report_verify_dir(
++	struct scrub_ctx	*ctx,
++	const char		*path,
++	int			dir_fd,
++	void			*arg)
++{
++	return xfs_report_verify_fd(ctx, path, dir_fd, arg);
 +}
 +
 +/*
-+ * Check an extended attribute name for unicode normalization problems
-+ * or collisions.
++ * Scan the inode associated with a directory entry for matches with
++ * the read verify error list.
++ */
++static bool
++xfs_report_verify_dirent(
++	struct scrub_ctx	*ctx,
++	const char		*path,
++	int			dir_fd,
++	struct dirent		*dirent,
++	struct stat		*sb,
++	void			*arg)
++{
++	bool			moveon;
++	int			fd;
++
++	/* Ignore things we can't open. */
++	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode))
++		return true;
++
++	/* Ignore . and .. */
++	if (!strcmp(".", dirent->d_name) || !strcmp("..", dirent->d_name))
++		return true;
++
++	/*
++	 * If we were given a dirent, open the associated file under
++	 * dir_fd for badblocks scanning.  If dirent is NULL, then it's
++	 * the directory itself we want to scan.
++	 */
++	fd = openat(dir_fd, dirent->d_name,
++			O_RDONLY | O_NOATIME | O_NOFOLLOW | O_NOCTTY);
++	if (fd < 0)
++		return true;
++
++	/* Go find the badness. */
++	moveon = xfs_report_verify_fd(ctx, path, fd, arg);
++	if (moveon)
++		goto out;
++
++out:
++	close(fd);
++
++	return moveon;
++}
++
++/* Given bad extent lists for the data & rtdev, find bad files. */
++static bool
++xfs_report_verify_errors(
++	struct scrub_ctx		*ctx,
++	struct bitmap			*d_bad,
++	struct bitmap			*r_bad)
++{
++	struct xfs_verify_error_info	vei;
++	bool				moveon;
++
++	vei.d_bad = d_bad;
++	vei.r_bad = r_bad;
++
++	/* Scan the directory tree to get file paths. */
++	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
++			xfs_report_verify_dirent, &vei);
++	if (!moveon)
++		return false;
++
++	/* Scan for unlinked files. */
++	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, &vei);
++}
++
++/* Verify disk blocks with GETFSMAP */
++
++struct xfs_verify_extent {
++	struct read_verify_pool	*readverify;
++	struct ptvar		*rvstate;
++	struct bitmap		*d_bad;		/* bytes */
++	struct bitmap		*r_bad;		/* bytes */
++};
++
++/* Report an IO error resulting from read-verify based off getfsmap. */
++static bool
++xfs_check_rmap_error_report(
++	struct scrub_ctx	*ctx,
++	const char		*descr,
++	struct fsmap		*map,
++	void			*arg)
++{
++	const char		*type;
++	char			buf[32];
++	uint64_t		err_physical = *(uint64_t *)arg;
++	uint64_t		err_off;
++
++	if (err_physical > map->fmr_physical)
++		err_off = err_physical - map->fmr_physical;
++	else
++		err_off = 0;
++
++	snprintf(buf, 32, _("disk offset %"PRIu64),
++			(uint64_t)BTOBB(map->fmr_physical + err_off));
++
++	if (map->fmr_flags & FMR_OF_SPECIAL_OWNER) {
++		type = xfs_decode_special_owner(map->fmr_owner);
++		str_error(ctx, buf,
++_("%s failed read verification."),
++				type);
++	}
++
++	/*
++	 * XXX: If we had a getparent() call we could report IO errors
++	 * efficiently.  Until then, we'll have to scan the dir tree
++	 * to find the bad file's pathname.
++	 */
++
++	return true;
++}
++
++/*
++ * Remember a read error for later, and see if rmap will tell us about the
++ * owner ahead of time.
++ */
++void
++xfs_check_rmap_ioerr(
++	struct scrub_ctx		*ctx,
++	struct disk			*disk,
++	uint64_t			start,
++	uint64_t			length,
++	int				error,
++	void				*arg)
++{
++	struct fsmap			keys[2];
++	char				descr[DESCR_BUFSZ];
++	struct xfs_verify_extent	*ve = arg;
++	struct bitmap			*tree;
++	dev_t				dev;
++	bool				moveon;
++
++	dev = xfs_disk_to_dev(ctx, disk);
++
++	/*
++	 * If we don't have parent pointers, save the bad extent for
++	 * later rescanning.
++	 */
++	if (dev == ctx->fsinfo.fs_datadev)
++		tree = ve->d_bad;
++	else if (dev == ctx->fsinfo.fs_rtdev)
++		tree = ve->r_bad;
++	else
++		tree = NULL;
++	if (tree) {
++		moveon = bitmap_set(tree, start, length);
++		if (!moveon)
++			str_errno(ctx, ctx->mntpoint);
++	}
++
++	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d ioerr @ %"PRIu64":%"PRIu64" "),
++			major(dev), minor(dev), start, length);
++
++	/* Go figure out which blocks are bad from the fsmap. */
++	memset(keys, 0, sizeof(struct fsmap) * 2);
++	keys->fmr_device = dev;
++	keys->fmr_physical = start;
++	(keys + 1)->fmr_device = dev;
++	(keys + 1)->fmr_physical = start + length - 1;
++	(keys + 1)->fmr_owner = ULLONG_MAX;
++	(keys + 1)->fmr_offset = ULLONG_MAX;
++	(keys + 1)->fmr_flags = UINT_MAX;
++	xfs_iterate_fsmap(ctx, descr, keys, xfs_check_rmap_error_report,
++			&start);
++}
++
++/* Schedule a read-verify of a (data block) extent. */
++static bool
++xfs_check_rmap(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	struct fsmap			*map,
++	void				*arg)
++{
++	struct xfs_verify_extent	*ve = arg;
++	struct disk			*disk;
++
++	dbg_printf("rmap dev %d:%d phys %"PRIu64" owner %"PRId64
++			" offset %"PRIu64" len %"PRIu64" flags 0x%x\n",
++			major(map->fmr_device), minor(map->fmr_device),
++			(uint64_t)map->fmr_physical, (int64_t)map->fmr_owner,
++			(uint64_t)map->fmr_offset, (uint64_t)map->fmr_length,
++			map->fmr_flags);
++
++	/* "Unknown" extents should be verified; they could be data. */
++	if ((map->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++			map->fmr_owner == XFS_FMR_OWN_UNKNOWN)
++		map->fmr_flags &= ~FMR_OF_SPECIAL_OWNER;
++
++	/*
++	 * We only care about read-verifying data extents that have been
++	 * written to disk.  This means we can skip "special" owners
++	 * (metadata), xattr blocks, unwritten extents, and extent maps.
++	 * These should all get checked elsewhere in the scrubber.
++	 */
++	if (map->fmr_flags & (FMR_OF_PREALLOC | FMR_OF_ATTR_FORK |
++			      FMR_OF_EXTENT_MAP | FMR_OF_SPECIAL_OWNER))
++		goto out;
++
++	/* XXX: Filter out directory data blocks. */
++
++	/* Schedule the read verify command for (eventual) running. */
++	disk = xfs_dev_to_disk(ctx, map->fmr_device);
++
++	read_verify_schedule_io(ve->readverify, ptvar_get(ve->rvstate), disk,
++			map->fmr_physical, map->fmr_length, ve);
++
++out:
++	/* Is this the last extent?  Fire off the read. */
++	if (map->fmr_flags & FMR_OF_LAST)
++		read_verify_force_io(ve->readverify, ptvar_get(ve->rvstate));
++
++	return true;
++}
++
++/*
++ * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
++ * do data checksums, we trust that the underlying storage will pass back
++ * an IO error if it can't retrieve whatever we previously stored there.
++ * If we hit an IO error, we'll record the bad blocks in a bitmap and then
++ * scan the extent maps of the entire fs tree to figure (and the unlinked
++ * inodes) out which files are now broken.
 + */
 +bool
-+unicrash_check_xattr_name(
-+	struct unicrash		*uc,
-+	const char		*descr,
-+	const char		*attrname)
++xfs_scan_blocks(
++	struct scrub_ctx		*ctx)
 +{
-+	if (!uc)
-+		return true;
-+	return __unicrash_check_name(uc, descr, _("extended attribute"),
-+			attrname, 0);
++	struct xfs_verify_extent	ve;
++	bool				moveon;
++
++	ve.rvstate = ptvar_init(scrub_nproc(ctx), sizeof(struct read_verify));
++	if (!ve.rvstate) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	moveon = bitmap_init(&ve.d_bad);
++	if (!moveon) {
++		str_errno(ctx, ctx->mntpoint);
++		goto out_ve;
++	}
++
++	moveon = bitmap_init(&ve.r_bad);
++	if (!moveon) {
++		str_errno(ctx, ctx->mntpoint);
++		goto out_dbad;
++	}
++
++	ve.readverify = read_verify_pool_init(ctx, ctx->geo.blocksize,
++			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
++	if (!ve.readverify) {
++		moveon = false;
++		str_error(ctx, ctx->mntpoint,
++_("Could not create media verifier."));
++		goto out_rbad;
++	}
++	moveon = xfs_scan_all_spacemaps(ctx, xfs_check_rmap, &ve);
++	if (!moveon)
++		goto out_pool;
++	read_verify_pool_flush(ve.readverify);
++	ctx->bytes_checked += read_verify_bytes(ve.readverify);
++	read_verify_pool_destroy(ve.readverify);
++
++	/* Scan the whole dir tree to see what matches the bad extents. */
++	if (!bitmap_empty(ve.d_bad) || !bitmap_empty(ve.r_bad))
++		moveon = xfs_report_verify_errors(ctx, ve.d_bad, ve.r_bad);
++
++	bitmap_free(&ve.r_bad);
++	bitmap_free(&ve.d_bad);
++	ptvar_free(ve.rvstate);
++	return moveon;
++
++out_pool:
++	read_verify_pool_destroy(ve.readverify);
++out_rbad:
++	bitmap_free(&ve.r_bad);
++out_dbad:
++	bitmap_free(&ve.d_bad);
++out_ve:
++	ptvar_free(ve.rvstate);
++	return moveon;
 +}
-diff --git a/scrub/unicrash.h b/scrub/unicrash.h
+diff --git a/scrub/vfs.c b/scrub/vfs.c
 new file mode 100644
-index 0000000..d4561b7
+index 0000000..6a51090
 --- /dev/null
-+++ b/scrub/unicrash.h
-@@ -0,0 +1,49 @@
++++ b/scrub/vfs.c
+@@ -0,0 +1,221 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -808,54 +684,277 @@ index 0000000..d4561b7
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+#ifndef XFS_SCRUB_UNICRASH_H_
-+#define XFS_SCRUB_UNICRASH_H_
++#include <stdio.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <dirent.h>
++#include <sys/types.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "handle.h"
++#include "path.h"
++#include "workqueue.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "vfs.h"
 +
-+struct unicrash;
++/*
++ * Helper functions to assist in traversing a directory tree using regular
++ * VFS calls.
++ */
 +
-+/* Unicode name collision detection. */
-+#ifdef HAVE_U8NORMALIZE
++/* Scan a filesystem tree. */
++struct scan_fs_tree {
++	unsigned int		nr_dirs;
++	pthread_mutex_t		lock;
++	pthread_cond_t		wakeup;
++	struct stat		root_sb;
++	bool			moveon;
++	scan_fs_tree_dir_fn	dir_fn;
++	scan_fs_tree_dirent_fn	dirent_fn;
++	void			*arg;
++};
 +
-+struct dirent;
++/* Per-work-item scan context. */
++struct scan_fs_tree_dir {
++	char			*path;
++	struct scan_fs_tree	*sft;
++	bool			rootdir;
++};
 +
-+void unicrash_setup(void);
-+bool unicrash_dir_init(struct unicrash **ucp, struct scrub_ctx *ctx,
-+		struct xfs_bstat *bstat);
-+bool unicrash_xattr_init(struct unicrash **ucp, struct scrub_ctx *ctx,
-+		struct xfs_bstat *bstat);
-+void unicrash_free(struct unicrash *uc);
-+bool unicrash_check_dir_name(struct unicrash *uc, const char *descr,
-+		struct dirent *dirent);
-+bool unicrash_check_xattr_name(struct unicrash *uc, const char *descr,
-+		const char *attrname);
-+#else
-+# define unicrash_setup()
-+# define unicrash_dir_init(u, c, b)		(true)
-+# define unicrash_xattr_init(u, c, b)		(true)
-+# define unicrash_free(u)			do {(u) = (u);} while (0)
-+# define unicrash_check_dir_name(u, d, n)	(true)
-+# define unicrash_check_xattr_name(u, d, n)	(true)
-+#endif /* HAVE_U8NORMALIZE */
++/* Scan a directory sub tree. */
++static void
++scan_fs_dir(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	struct scan_fs_tree_dir	*sftd = arg;
++	struct scan_fs_tree	*sft = sftd->sft;
++	DIR			*dir;
++	struct dirent		*dirent;
++	char			newpath[PATH_MAX];
++	struct scan_fs_tree_dir	*new_sftd;
++	struct stat		sb;
++	int			dir_fd;
++	int			error;
 +
-+#endif /* XFS_SCRUB_UNICRASH_H_ */
++	/* Open the directory. */
++	dir_fd = open(sftd->path, O_RDONLY | O_NOATIME | O_NOFOLLOW | O_NOCTTY);
++	if (dir_fd < 0) {
++		if (errno != ENOENT)
++			str_errno(ctx, sftd->path);
++		goto out;
++	}
++
++	/* Caller-specific directory checks. */
++	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
++		sft->moveon = false;
++		goto out;
++	}
++
++	/* Iterate the directory entries. */
++	dir = fdopendir(dir_fd);
++	if (!dir) {
++		str_errno(ctx, sftd->path);
++		goto out;
++	}
++	rewinddir(dir);
++	for (dirent = readdir(dir); dirent != NULL; dirent = readdir(dir)) {
++		snprintf(newpath, PATH_MAX, "%s/%s", sftd->path,
++				dirent->d_name);
++
++		/* Get the stat info for this directory entry. */
++		error = fstatat(dir_fd, dirent->d_name, &sb,
++				AT_NO_AUTOMOUNT | AT_SYMLINK_NOFOLLOW);
++		if (error) {
++			str_errno(ctx, newpath);
++			continue;
++		}
++
++		/* Ignore files on other filesystems. */
++		if (sb.st_dev != sft->root_sb.st_dev)
++			continue;
++
++		/* Caller-specific directory entry function. */
++		if (!sft->dirent_fn(ctx, newpath, dir_fd, dirent, &sb,
++				sft->arg)) {
++			sft->moveon = false;
++			break;
++		}
++
++		if (xfs_scrub_excessive_errors(ctx)) {
++			sft->moveon = false;
++			break;
++		}
++
++		/* If directory, call ourselves recursively. */
++		if (S_ISDIR(sb.st_mode) && strcmp(".", dirent->d_name) &&
++		    strcmp("..", dirent->d_name)) {
++			new_sftd = malloc(sizeof(struct scan_fs_tree_dir));
++			if (!new_sftd) {
++				str_errno(ctx, newpath);
++				sft->moveon = false;
++				break;
++			}
++			new_sftd->path = strdup(newpath);
++			new_sftd->sft = sft;
++			new_sftd->rootdir = false;
++			pthread_mutex_lock(&sft->lock);
++			sft->nr_dirs++;
++			pthread_mutex_unlock(&sft->lock);
++			error = workqueue_add(wq, scan_fs_dir, 0, new_sftd);
++			if (error) {
++				str_error(ctx, ctx->mntpoint,
++_("Could not queue subdirectory scan work."));
++				sft->moveon = false;
++				break;
++			}
++		}
++	}
++
++	/* Close dir, go away. */
++	error = closedir(dir);
++	if (error)
++		str_errno(ctx, sftd->path);
++
++out:
++	pthread_mutex_lock(&sft->lock);
++	sft->nr_dirs--;
++	if (sft->nr_dirs == 0)
++		pthread_cond_signal(&sft->wakeup);
++	pthread_mutex_unlock(&sft->lock);
++
++	free(sftd->path);
++	free(sftd);
++}
++
++/* Scan the entire filesystem. */
++bool
++scan_fs_tree(
++	struct scrub_ctx	*ctx,
++	scan_fs_tree_dir_fn	dir_fn,
++	scan_fs_tree_dirent_fn	dirent_fn,
++	void			*arg)
++{
++	struct workqueue	wq;
++	struct scan_fs_tree	sft;
++	struct scan_fs_tree_dir	*sftd;
++	int			ret;
++
++	sft.moveon = true;
++	sft.nr_dirs = 1;
++	sft.root_sb = ctx->mnt_sb;
++	sft.dir_fn = dir_fn;
++	sft.dirent_fn = dirent_fn;
++	sft.arg = arg;
++	pthread_mutex_init(&sft.lock, NULL);
++	pthread_cond_init(&sft.wakeup, NULL);
++
++	sftd = malloc(sizeof(struct scan_fs_tree_dir));
++	if (!sftd) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++	sftd->path = strdup(ctx->mntpoint);
++	sftd->sft = &sft;
++	sftd->rootdir = true;
++
++	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
++			scrub_nproc_workqueue(ctx));
++	if (ret) {
++		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		goto out_free;
++	}
++	ret = workqueue_add(&wq, scan_fs_dir, 0, sftd);
++	if (ret) {
++		str_error(ctx, ctx->mntpoint,
++_("Could not queue directory scan work."));
++		goto out_free;
++	}
++
++	pthread_mutex_lock(&sft.lock);
++	pthread_cond_wait(&sft.wakeup, &sft.lock);
++	assert(sft.nr_dirs == 0);
++	pthread_mutex_unlock(&sft.lock);
++	workqueue_destroy(&wq);
++
++	return sft.moveon;
++out_free:
++	free(sftd->path);
++	free(sftd);
++	return false;
++}
+diff --git a/scrub/vfs.h b/scrub/vfs.h
+new file mode 100644
+index 0000000..100eb18
+--- /dev/null
++++ b/scrub/vfs.h
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_VFS_H_
++#define XFS_SCRUB_VFS_H_
++
++typedef bool (*scan_fs_tree_dir_fn)(struct scrub_ctx *, const char *,
++		int, void *);
++typedef bool (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
++		int, struct dirent *, struct stat *, void *);
++
++bool scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
++		scan_fs_tree_dirent_fn dirent_fn, void *arg);
++
++#endif /* XFS_SCRUB_VFS_H_ */
 diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 64517f4..f7e4e37 100644
+index f7e4e37..fa1d089 100644
 --- a/scrub/xfs_scrub.c
 +++ b/scrub/xfs_scrub.c
-@@ -31,6 +31,7 @@
- #include "path.h"
- #include "xfs_scrub.h"
- #include "common.h"
-+#include "unicrash.h"
+@@ -390,6 +390,10 @@ run_scrub_phases(
  
- /*
-  * XFS Online Metadata Scrub (and Repair)
-@@ -529,6 +530,7 @@ _("Only one of the options -n or -y may be specified.\n"));
- 	if (optind != argc - 1)
- 		usage();
+ 	/* Run all phases of the scrub tool. */
+ 	for (phase = 1, sp = phases; sp->fn; sp++, phase++) {
++		/* Turn on certain phases if user said to. */
++		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data)
++			sp->fn = xfs_scan_blocks;
++
+ 		/* Skip certain phases unless they're turned on. */
+ 		if (sp->fn == REPAIR_DUMMY_FN ||
+ 		    sp->fn == DATASCAN_DUMMY_FN)
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 31a927c..026631a 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -93,6 +93,7 @@ struct scrub_ctx {
+ 	unsigned long long	errors_found;
+ 	unsigned long long	warnings_found;
+ 	unsigned long long	inodes_checked;
++	unsigned long long	bytes_checked;
+ 	unsigned long long	naming_warnings;
+ 	bool			need_repair;
+ 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+@@ -105,5 +106,6 @@ bool xfs_setup_fs(struct scrub_ctx *ctx);
+ bool xfs_scan_metadata(struct scrub_ctx *ctx);
+ bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ bool xfs_scan_connections(struct scrub_ctx *ctx);
++bool xfs_scan_blocks(struct scrub_ctx *ctx);
  
-+	unicrash_setup();
- 	ctx.mntpoint = strdup(argv[optind]);
- 
- 	/* Find the mount record for the passed-in argument. */
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
