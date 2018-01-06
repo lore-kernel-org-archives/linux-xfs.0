@@ -1,63 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40499 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752561AbeAEXmE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 18:42:04 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.21/8.16.0.21) with SMTP id w05NRfLv121400
-        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 23:42:03 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2faj7f85fy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Jan 2018 23:42:03 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w05Ng2Ts014458
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 23:42:02 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w05Ng2aF004329
-        for <linux-xfs@vger.kernel.org>; Fri, 5 Jan 2018 23:42:02 GMT
-Date: Fri, 5 Jan 2018 15:42:01 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:44709 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752619AbeAFADZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 19:03:25 -0500
+Date: Fri, 5 Jan 2018 16:03:16 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-documentation: master updated to 14bbbf5
-Message-ID: <20180105234201.GN5602@magnolia>
+Subject: [PATCH] xfsprogs: update dead urls
+Message-ID: <20180106000316.GO5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Hi folks,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The master branch of the xfs-documentation repository at:
+Since oss.sgi.com is dead and xfs.org is slowly migrating to
+xfs.wiki.kernel.org, update all the documentation links to point to the
+current landing pads.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ README           |    2 +-
+ debian/control   |    6 +++---
+ debian/copyright |    2 +-
+ debian/watch     |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-14bbbf5 xfsdocs: clarify log item header structure
-
-New Commits:
-
-Darrick J. Wong (2):
-      [b208862] xfsdocs: fix some small discrepancies with libxfs
-      [14bbbf5] xfsdocs: clarify log item header structure
-
-
-Code Diffstat:
-
- design/XFS_Filesystem_Structure/btrees.asciidoc              |  2 +-
- design/XFS_Filesystem_Structure/dabtrees.asciidoc            |  8 ++++++--
- design/XFS_Filesystem_Structure/extended_attributes.asciidoc |  1 +
- design/XFS_Filesystem_Structure/internal_inodes.asciidoc     |  2 +-
- design/XFS_Filesystem_Structure/journaling_log.asciidoc      | 12 ++++++++++++
- 5 files changed, 21 insertions(+), 4 deletions(-)
+diff --git a/README b/README
+index 123af50..2936ee1 100644
+--- a/README
++++ b/README
+@@ -9,4 +9,4 @@ and references to other XFS manual pages.
+ 
+ For more information and details on how to contribute to the
+ XFS project see the web pages at:
+-	http://xfs.org/
++	https://xfs.wiki.kernel.org/
+diff --git a/debian/control b/debian/control
+index 5c26e3d..f5980b2 100644
+--- a/debian/control
++++ b/debian/control
+@@ -5,7 +5,7 @@ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+ Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev
+ Standards-Version: 3.9.1
+-Homepage: http://xfs.org/
++Homepage: https://xfs.wiki.kernel.org/
+ 
+ Package: xfsprogs
+ Depends: ${shlibs:Depends}, ${misc:Depends}
+@@ -24,7 +24,7 @@ Description: Utilities for managing the XFS filesystem
+  Btrees (directories, extents, free space) to aid both performance
+  and scalability.
+  .
+- Refer to the documentation at http://oss.sgi.com/projects/xfs/
++ Refer to the documentation at https://xfs.wiki.kernel.org/
+  for complete details.
+ 
+ Package: xfslibs-dev
+@@ -44,7 +44,7 @@ Description: XFS filesystem-specific static libraries and headers
+  Btrees (directories, extents, free space) to aid both performance
+  and scalability.
+  .
+- Refer to the documentation at http://xfs.org/
++ Refer to the documentation at https://xfs.wiki.kernel.org/
+  for complete details.
+ 
+ Package: xfsprogs-udeb
+diff --git a/debian/copyright b/debian/copyright
+index b677c25..74f4c89 100644
+--- a/debian/copyright
++++ b/debian/copyright
+@@ -1,7 +1,7 @@
+ This package was debianized by Nathan Scott nathans@debian.org on
+ Sun, 19 Nov 2000 07:37:09 -0500.
+ 
+-It can be downloaded from ftp://oss.sgi.com/projects/xfs/download/
++It can be downloaded from https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+ 
+ Copyright:
+ 
+diff --git a/debian/watch b/debian/watch
+index 0aa3e8d..88f6a0f 100644
+--- a/debian/watch
++++ b/debian/watch
+@@ -1,3 +1,3 @@
+ version=3
+ opts=uversionmangle=s/(\d)[_\.\-\+]?((RC|rc|pre|dev|beta|alpha)\d*)$/$1~$2/ \
+-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-(.+)\.tar\.gz
++https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-(.+)\.tar\.xz
