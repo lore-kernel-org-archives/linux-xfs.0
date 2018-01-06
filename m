@@ -1,121 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp1.onthe.net.au ([203.22.196.249]:37493 "EHLO
-        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751265AbeAPBfj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 20:35:39 -0500
-Date: Tue, 16 Jan 2018 12:35:36 +1100
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: Re: _xfs_buf_find: Block out of range, then umount hung
-Message-ID: <20180116013536.GA10406@onthe.net.au>
-References: <20180113145228.GA16780@onthe.net.au>
- <20180115120258.GA44369@bfoster.bfoster>
+Received: from aserp2130.oracle.com ([141.146.126.79]:42647 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753653AbeAFBvb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:51:31 -0500
+Subject: [PATCH v11 00/27] xfsprogs: online scrub/repair support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 05 Jan 2018 17:51:27 -0800
+Message-ID: <151520348769.2027.9860697266310422360.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20180115120258.GA44369@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 15, 2018 at 07:02:58AM -0500, Brian Foster wrote:
-> On Sun, Jan 14, 2018 at 01:52:28AM +1100, Chris Dunlop wrote:
->> Hi,
->>
->> tl;dr: a filesystem corruption (cause unknown) has produced an unkillable
->> umount. Is the only recourse to reboot?
->
-> From this particular state, probably.
+Hi all,
 
-Yeah, I figured that and rebooted.
+This is the eleventh revision of a patchset that adds to XFS userland tools
+support for online metadata scrubbing and repair.  Since v10 I've rebased
+to the latest for-next, fixed some wonky error messages, and fixed a few
+minor problems I found via code inspection.  However, this patch series is
+more or less the same as v10.
 
-> So for one reason or another, you end up trying to remove a bogus block
-> number from the AGFL (perhaps the old agfl size issue?).
+We start by creating the basic shell of the program that can do argument
+parsing and error reporting, create some abstractions for the XFS ioctls
+that we use to iterate and scrub metadata, and then tie together all the
+in-kernel scrubbing in separate scrub phases.
 
-This stuff?
+Next, we move on to checking the directory tree for connectivity and
+naming problems and add the infrastructure to perform an (optional) scan
+of the in-use parts of the disk media.  We also implement a minimal
+preen -- if the fs checks out, we can try to run fstrim; and some basic
+progress reporting if the program is running interactively.
 
-https://www.spinics.net/lists/xfs/msg42213.html
+Finally, we add some wrapper scripts to schedule scrubs of all the
+mounted filesystems; and the necessary systemd / cron infrastructure
+that is needed to automatically scan everything once a week.  All of
+this is disabled by default.  The systemd integration allows us to give
+scrub exactly the privileges it needs while walling off the rest of the
+system.
 
-FYI the filesystem was created on linux-3.18.25 and the error appeared shortly 
-after moving to linux-4.9.76.
+If you're going to start using this mess, you probably ought to just
+pull from my git tree for xfsprogs[1].  This series relies on the
+libfrog patches sent earlier.  Kernel support will appear in 4.15.
 
->> Jan 13 19:57:31 b2 kernel: ================================================
->> Jan 13 19:57:31 b2 kernel: [ BUG: lock held when returning to user space! ]
->> Jan 13 19:57:31 b2 kernel: 4.9.76-otn-00021-g2af03421 #1 Tainted: G        W
->> Jan 13 19:57:31 b2 kernel: ------------------------------------------------
->> Jan 13 19:57:31 b2 kernel: tp_fstore_op/31412 is leaving the kernel with locks still held!
->> Jan 13 19:57:31 b2 kernel: 1 lock held by tp_fstore_op/31412:
->> Jan 13 19:57:31 b2 kernel:  #0:  (sb_internal){......}, at: [<ffffffffa07692a3>] xfs_trans_alloc+0xe3/0x130 [xfs]
->
-> Though it looks like we return to userspace in transaction context..?
-> This is the same pid as above and the current code looks like the
-> transaction should be cancelled in xfs_attr_set(). We're somewhere down
-> in xfs_attr_leaf_addname(), however. From there, both calls to
-> xfs_defer_finish() jump to out_defer_cancel on failure, which sets
-> args->trans = NULL before we return. Hmm, that looks like a bug to me.
->
-> Are you able to reproduce this particular hung unmount behavior? If so,
-> does anything change with something like the appended hunk? Note that
-> you may have to backport that to v4.9-<whatever> since it appears that
-> is before out_defer_cancel was created.
+Comments and questions are, as always, welcome.
 
-Sorry, wasn't able to reproduce: once it was up again mount didn't succeed:
+--D
 
-# mount /dev/sdp1 /var/lib/ceph/osd/ceph-60
-mount: mount /dev/sdp1 on /var/lib/ceph/osd/ceph-60 failed: Structure needs cleaning
-# mount -f /dev/sdp1 /var/lib/ceph/osd/ceph-60
-# umount /var/lib/ceph/osd/ceph-60
-umount: /var/lib/ceph/osd/ceph-60: not mounted
-
-I tried an 'xfs_repair -L' which found some stuff, but I don't know if the 
-"stuff" was due to the log being lost or part of the original problem:
-
-# xfs_repair -L -vv /dev/sdp1
-Phase 1 - find and verify superblock...
-        - max_mem = 148590945, icount = 203072, imem = 793, dblock = 233112145, dmem = 113824
-        - block cache size set to 18553288 entries
-Phase 2 - using internal log
-        - zero log...
-zero_log: head block 554618 tail block 553989
-ALERT: The filesystem has valuable metadata changes in a log which is being
-destroyed because the -L option was used.
-        - scan filesystem freespace and inode maps...
-bad agbno 4294967295 in agfl, agno 2
-freeblk count 8 != flcount 7 in ag 2
-bad agbno 4294967295 in agfl, agno 1
-freeblk count 7 != flcount 6 in ag 1
-sb_ifree 42557, counted 42256
-sb_fdblocks 82529171, counted 82532805
-...
-
-The rest of the output didn't look particularly interesting to my untrained 
-eye, but the full output is available at: https://pastebin.com/KD7BKTLu
-
-The mount succeeded after this.
-
-In the end, as I wasn't sure of the status of the data and it was replicated 
-elsewhere anyway, I blew away the filesystem and started again.
-
-Thanks for your time!
-
-Chris
-
-
->
-> Brian
->
-> ---8<---
->
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index a76914db72ef..e86c51d39e66 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -717,7 +717,6 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
-> 	return error;
-> out_defer_cancel:
-> 	xfs_defer_cancel(args->dfops);
-> -	args->trans = NULL;
-> 	return error;
-> }
->
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
