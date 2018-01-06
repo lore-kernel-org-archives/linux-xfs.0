@@ -1,486 +1,405 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54738 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:40854 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753080AbeAEVy4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 16:54:56 -0500
-Date: Fri, 5 Jan 2018 13:54:51 -0800
+        with ESMTP id S1753499AbeAFB7A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:59:00 -0500
+Subject: [PATCH 23/27] xfs_scrub: check summary counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 10/21] xfs: set up scrub cross-referencing helpers
-Message-ID: <20180105215451.GM5602@magnolia>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398983388.18741.9974351544672577036.stgit@magnolia>
+Date: Fri, 05 Jan 2018 17:53:55 -0800
+Message-ID: <151520363571.2027.17429967148406189012.stgit@magnolia>
+In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
+References: <151520348769.2027.9860697266310422360.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151398983388.18741.9974351544672577036.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create some helper functions that we'll use later to deal with problems
-we might encounter while cross referencing metadata with other metadata.
+Make sure the filesystem summary counters are somewhat close to what
+we can find by scanning the filesystem.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: pass corruption flags directly to helpers, reducing helper function count
----
- fs/xfs/scrub/btree.c  |   71 +++++++++++++++++++++-----
- fs/xfs/scrub/btree.h  |    9 +++
- fs/xfs/scrub/common.c |  135 +++++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/scrub/common.h |   16 ++++++
- fs/xfs/scrub/scrub.c  |   10 ++++
- fs/xfs/scrub/trace.h  |   22 ++++++++
- 6 files changed, 241 insertions(+), 22 deletions(-)
+ scrub/Makefile    |    1 
+ scrub/common.c    |   28 ++++++
+ scrub/common.h    |    4 +
+ scrub/phase7.c    |  266 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    5 -
+ scrub/xfs_scrub.h |    1 
+ 6 files changed, 302 insertions(+), 3 deletions(-)
+ create mode 100644 scrub/phase7.c
 
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index df07661..e17d154 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -42,12 +42,14 @@
-  * Check for btree operation errors.  See the section about handling
-  * operational errors in common.c.
-  */
--bool
--xfs_scrub_btree_process_error(
-+static bool
-+__xfs_scrub_btree_process_error(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_btree_cur		*cur,
- 	int				level,
--	int				*error)
-+	int				*error,
-+	__u32				errflag,
-+	void				*ret_ip)
- {
- 	if (*error == 0)
- 		return true;
-@@ -60,36 +62,80 @@ xfs_scrub_btree_process_error(
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
--		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		sc->sm->sm_flags |= errflag;
- 		*error = 0;
- 		/* fall through */
- 	default:
- 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
- 			trace_xfs_scrub_ifork_btree_op_error(sc, cur, level,
--					*error, __return_address);
-+					*error, ret_ip);
- 		else
- 			trace_xfs_scrub_btree_op_error(sc, cur, level,
--					*error, __return_address);
-+					*error, ret_ip);
- 		break;
- 	}
- 	return false;
- }
+
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 1fb6e84..fd26624 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -43,6 +43,7 @@ phase2.c \
+ phase3.c \
+ phase5.c \
+ phase6.c \
++phase7.c \
+ read_verify.c \
+ scrub.c \
+ spacemap.c \
+diff --git a/scrub/common.c b/scrub/common.c
+index 10c4017..bcdb8c0 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -413,3 +413,31 @@ _("More than %u naming warnings, shutting up."),
  
+ 	return debug || verbose || res;
+ }
++
++/* Decide if a value is within +/- (n/d) of a desired value. */
 +bool
-+xfs_scrub_btree_process_error(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level,
-+	int				*error)
++within_range(
++	struct scrub_ctx	*ctx,
++	unsigned long long	value,
++	unsigned long long	desired,
++	unsigned long long	abs_threshold,
++	unsigned int		n,
++	unsigned int		d,
++	const char		*descr)
 +{
-+	return __xfs_scrub_btree_process_error(sc, cur, level, error,
-+			XFS_SCRUB_OFLAG_CORRUPT, __return_address);
-+}
++	assert(n < d);
 +
-+bool
-+xfs_scrub_btree_xref_process_error(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level,
-+	int				*error)
-+{
-+	return __xfs_scrub_btree_process_error(sc, cur, level, error,
-+			XFS_SCRUB_OFLAG_XFAIL, __return_address);
-+}
-+
- /* Record btree block corruption. */
--void
--xfs_scrub_btree_set_corrupt(
-+static void
-+__xfs_scrub_btree_set_corrupt(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_btree_cur		*cur,
--	int				level)
-+	int				level,
-+	__u32				errflag,
-+	void				*ret_ip)
- {
--	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+	sc->sm->sm_flags |= errflag;
- 
- 	if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
- 		trace_xfs_scrub_ifork_btree_error(sc, cur, level,
--				__return_address);
-+				ret_ip);
- 	else
- 		trace_xfs_scrub_btree_error(sc, cur, level,
--				__return_address);
-+				ret_ip);
-+}
-+
-+void
-+xfs_scrub_btree_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level)
-+{
-+	__xfs_scrub_btree_set_corrupt(sc, cur, level, XFS_SCRUB_OFLAG_CORRUPT,
-+			__return_address);
-+}
-+
-+void
-+xfs_scrub_btree_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_btree_cur		*cur,
-+	int				level)
-+{
-+	__xfs_scrub_btree_set_corrupt(sc, cur, level, XFS_SCRUB_OFLAG_XCORRUPT,
-+			__return_address);
- }
- 
- /*
-@@ -512,5 +558,6 @@ xfs_scrub_btree(
- 	}
- 
- out:
-+
- 	return error;
- }
-diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
-index 4de825a6..e2b868e 100644
---- a/fs/xfs/scrub/btree.h
-+++ b/fs/xfs/scrub/btree.h
-@@ -26,10 +26,19 @@
- bool xfs_scrub_btree_process_error(struct xfs_scrub_context *sc,
- 		struct xfs_btree_cur *cur, int level, int *error);
- 
-+/* Check for btree xref operation errors. */
-+bool xfs_scrub_btree_xref_process_error(struct xfs_scrub_context *sc,
-+				struct xfs_btree_cur *cur, int level,
-+				int *error);
-+
- /* Check for btree corruption. */
- void xfs_scrub_btree_set_corrupt(struct xfs_scrub_context *sc,
- 		struct xfs_btree_cur *cur, int level);
- 
-+/* Check for btree xref discrepancies. */
-+void xfs_scrub_btree_xref_set_corrupt(struct xfs_scrub_context *sc,
-+		struct xfs_btree_cur *cur, int level);
-+
- struct xfs_scrub_btree;
- typedef int (*xfs_scrub_btree_rec_fn)(
- 	struct xfs_scrub_btree	*bs,
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index d5c37d8..35c47cf 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -78,12 +78,14 @@
-  */
- 
- /* Check for operational errors. */
--bool
--xfs_scrub_process_error(
-+static bool
-+__xfs_scrub_process_error(
- 	struct xfs_scrub_context	*sc,
- 	xfs_agnumber_t			agno,
- 	xfs_agblock_t			bno,
--	int				*error)
-+	int				*error,
-+	__u32				errflag,
-+	void				*ret_ip)
- {
- 	switch (*error) {
- 	case 0:
-@@ -95,24 +97,48 @@ xfs_scrub_process_error(
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
--		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		sc->sm->sm_flags |= errflag;
- 		*error = 0;
- 		/* fall through */
- 	default:
- 		trace_xfs_scrub_op_error(sc, agno, bno, *error,
--				__return_address);
-+				ret_ip);
- 		break;
- 	}
- 	return false;
- }
- 
--/* Check for operational errors for a file offset. */
- bool
--xfs_scrub_fblock_process_error(
-+xfs_scrub_process_error(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agnumber_t			agno,
-+	xfs_agblock_t			bno,
-+	int				*error)
-+{
-+	return __xfs_scrub_process_error(sc, agno, bno, error,
-+			XFS_SCRUB_OFLAG_CORRUPT, __return_address);
-+}
-+
-+bool
-+xfs_scrub_xref_process_error(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agnumber_t			agno,
-+	xfs_agblock_t			bno,
-+	int				*error)
-+{
-+	return __xfs_scrub_process_error(sc, agno, bno, error,
-+			XFS_SCRUB_OFLAG_XFAIL, __return_address);
-+}
-+
-+/* Check for operational errors for a file offset. */
-+static bool
-+__xfs_scrub_fblock_process_error(
- 	struct xfs_scrub_context	*sc,
- 	int				whichfork,
- 	xfs_fileoff_t			offset,
--	int				*error)
-+	int				*error,
-+	__u32				errflag,
-+	void				*ret_ip)
- {
- 	switch (*error) {
- 	case 0:
-@@ -124,17 +150,39 @@ xfs_scrub_fblock_process_error(
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
- 		/* Note the badness but don't abort. */
--		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+		sc->sm->sm_flags |= errflag;
- 		*error = 0;
- 		/* fall through */
- 	default:
- 		trace_xfs_scrub_file_op_error(sc, whichfork, offset, *error,
--				__return_address);
-+				ret_ip);
- 		break;
- 	}
- 	return false;
- }
- 
-+bool
-+xfs_scrub_fblock_process_error(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset,
-+	int				*error)
-+{
-+	return __xfs_scrub_fblock_process_error(sc, whichfork, offset, error,
-+			XFS_SCRUB_OFLAG_CORRUPT, __return_address);
-+}
-+
-+bool
-+xfs_scrub_fblock_xref_process_error(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset,
-+	int				*error)
-+{
-+	return __xfs_scrub_fblock_process_error(sc, whichfork, offset, error,
-+			XFS_SCRUB_OFLAG_XFAIL, __return_address);
-+}
-+
- /*
-  * Handling scrub corruption/optimization/warning checks.
-  *
-@@ -183,6 +231,16 @@ xfs_scrub_block_set_corrupt(
- 	trace_xfs_scrub_block_error(sc, bp->b_bn, __return_address);
- }
- 
-+/* Record a corruption while cross-referencing. */
-+void
-+xfs_scrub_block_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp)
-+{
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	trace_xfs_scrub_block_error(sc, bp->b_bn, __return_address);
-+}
-+
- /*
-  * Record a corrupt inode.  The trace data will include the block given
-  * by bp if bp is given; otherwise it will use the block location of the
-@@ -198,6 +256,17 @@ xfs_scrub_ino_set_corrupt(
- 	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
- }
- 
-+/* Record a corruption while cross-referencing with an inode. */
-+void
-+xfs_scrub_ino_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	xfs_ino_t			ino,
-+	struct xfs_buf			*bp)
-+{
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
-+}
-+
- /* Record corruption in a block indexed by a file fork. */
- void
- xfs_scrub_fblock_set_corrupt(
-@@ -209,6 +278,17 @@ xfs_scrub_fblock_set_corrupt(
- 	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
- }
- 
-+/* Record a corruption while cross-referencing a fork block. */
-+void
-+xfs_scrub_fblock_xref_set_corrupt(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_fileoff_t			offset)
-+{
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
-+	trace_xfs_scrub_fblock_error(sc, whichfork, offset, __return_address);
-+}
-+
- /*
-  * Warn about inodes that need administrative review but is not
-  * incorrect.
-@@ -588,3 +668,38 @@ xfs_scrub_setup_inode_contents(
- 	/* scrub teardown will unlock and release the inode for us */
- 	return error;
- }
-+
-+/*
-+ * Predicate that decides if we need to evaluate the cross-reference check.
-+ * If there was an error accessing the cross-reference btree, just delete
-+ * the cursor and skip the check.
-+ */
-+bool
-+xfs_scrub_should_xref(
-+	struct xfs_scrub_context	*sc,
-+	int				*error,
-+	struct xfs_btree_cur		**curpp)
-+{
-+	if (*error == 0)
++	/* Don't complain if difference does not exceed an absolute value. */
++	if (value < desired && desired - value < abs_threshold)
++		return true;
++	if (value > desired && value - desired < abs_threshold)
 +		return true;
 +
-+	if (curpp) {
-+		/* If we've already given up on xref, just bail out. */
-+		if (!*curpp)
-+			return false;
++	/* Complain if the difference exceeds a certain percentage. */
++	if (value < desired * (d - n) / d)
++		return false;
++	if (value > desired * (d + n) / d)
++		return false;
 +
-+		/* xref error, delete cursor and bail out. */
-+		xfs_btree_del_cursor(*curpp, XFS_BTREE_ERROR);
-+		*curpp = NULL;
++	return true;
++}
+diff --git a/scrub/common.h b/scrub/common.h
+index dd2070e..bd67a17 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -80,4 +80,8 @@ char *string_escape(const char *in);
+ #define TOO_MANY_NAME_WARNINGS	10000
+ bool should_warn_about_name(struct scrub_ctx *ctx);
+ 
++bool within_range(struct scrub_ctx *ctx, unsigned long long value,
++		unsigned long long desired, unsigned long long abs_threshold,
++		unsigned int n, unsigned int d, const char *descr);
++
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/phase7.c b/scrub/phase7.c
+new file mode 100644
+index 0000000..460ca8a
+--- /dev/null
++++ b/scrub/phase7.c
+@@ -0,0 +1,266 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <stdlib.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "path.h"
++#include "ptvar.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "fscounters.h"
++#include "spacemap.h"
++
++/* Phase 7: Check summary counters. */
++
++struct xfs_summary_counts {
++	unsigned long long	dbytes;		/* data dev bytes */
++	unsigned long long	rbytes;		/* rt dev bytes */
++	unsigned long long	next_phys;	/* next phys bytes we see? */
++	unsigned long long	agbytes;	/* freespace bytes */
++};
++
++/* Record block usage. */
++static bool
++xfs_record_block_summary(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	struct fsmap			*fsmap,
++	void				*arg)
++{
++	struct xfs_summary_counts	*counts;
++	unsigned long long		len;
++
++	counts = ptvar_get((struct ptvar *)arg);
++	if (fsmap->fmr_device == ctx->fsinfo.fs_logdev)
++		return true;
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_FREE)
++		return true;
++
++	len = fsmap->fmr_length;
++
++	/* freesp btrees live in free space, need to adjust counters later. */
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_AG) {
++		counts->agbytes += fsmap->fmr_length;
++	}
++	if (fsmap->fmr_device == ctx->fsinfo.fs_rtdev) {
++		/* Count realtime extents. */
++		counts->rbytes += len;
++	} else {
++		/* Count datadev extents. */
++		if (counts->next_phys >= fsmap->fmr_physical + len)
++			return true;
++		else if (counts->next_phys > fsmap->fmr_physical)
++			len = counts->next_phys - fsmap->fmr_physical;
++		counts->dbytes += len;
++		counts->next_phys = fsmap->fmr_physical + fsmap->fmr_length;
 +	}
 +
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
-+	trace_xfs_scrub_xref_error(sc, *error, __return_address);
++	return true;
++}
++
++/* Add all the summaries in the per-thread counter */
++static bool
++xfs_add_summaries(
++	struct ptvar			*ptv,
++	void				*data,
++	void				*arg)
++{
++	struct xfs_summary_counts	*total = arg;
++	struct xfs_summary_counts	*item = data;
++
++	total->dbytes += item->dbytes;
++	total->rbytes += item->rbytes;
++	total->agbytes += item->agbytes;
++	return true;
++}
++
++/*
++ * Count all inodes and blocks in the filesystem as told by GETFSMAP and
++ * BULKSTAT, and compare that to summary counters.  Since this is a live
++ * filesystem we'll be content if the summary counts are within 10% of
++ * what we observed.
++ */
++bool
++xfs_scan_summary(
++	struct scrub_ctx		*ctx)
++{
++	struct xfs_summary_counts	totalcount = {0};
++	struct ptvar			*ptvar;
++	unsigned long long		used_data;
++	unsigned long long		used_rt;
++	unsigned long long		used_files;
++	unsigned long long		stat_data;
++	unsigned long long		stat_rt;
++	uint64_t			counted_inodes = 0;
++	unsigned long long		absdiff;
++	unsigned long long		d_blocks;
++	unsigned long long		d_bfree;
++	unsigned long long		r_blocks;
++	unsigned long long		r_bfree;
++	unsigned long long		f_files;
++	unsigned long long		f_free;
++	bool				moveon;
++	bool				complain;
++	int				error;
++
++	/* Flush everything out to disk before we start counting. */
++	error = syncfs(ctx->mnt_fd);
++	if (error) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	ptvar = ptvar_init(scrub_nproc(ctx), sizeof(struct xfs_summary_counts));
++	if (!ptvar) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	/* Use fsmap to count blocks. */
++	moveon = xfs_scan_all_spacemaps(ctx, xfs_record_block_summary, ptvar);
++	if (!moveon)
++		goto out_free;
++	moveon = ptvar_foreach(ptvar, xfs_add_summaries, &totalcount);
++	if (!moveon)
++		goto out_free;
++	ptvar_free(ptvar);
++
++	/* Scan the whole fs. */
++	moveon = xfs_count_all_inodes(ctx, &counted_inodes);
++	if (!moveon)
++		goto out;
++
++	moveon = xfs_scan_estimate_blocks(ctx, &d_blocks, &d_bfree, &r_blocks,
++			&r_bfree, &f_files, &f_free);
++	if (!moveon)
++		return moveon;
 +
 +	/*
-+	 * Errors encountered during cross-referencing with another
-+	 * data structure should not cause this scrubber to abort.
++	 * If we counted blocks with fsmap, then dblocks includes
++	 * blocks for the AGFL and the freespace/rmap btrees.  The
++	 * filesystem treats them as "free", but since we scanned
++	 * them, we'll consider them used.
 +	 */
-+	*error = 0;
-+	return false;
++	d_bfree -= totalcount.agbytes >> ctx->blocklog;
++
++	/* Report on what we found. */
++	used_data = (d_blocks - d_bfree) << ctx->blocklog;
++	used_rt = (r_blocks - r_bfree) << ctx->blocklog;
++	used_files = f_files - f_free;
++	stat_data = totalcount.dbytes;
++	stat_rt = totalcount.rbytes;
++
++	/*
++	 * Complain if the counts are off by more than 10% unless
++	 * the inaccuracy is less than 32MB worth of blocks or 100 inodes.
++	 */
++	absdiff = 1ULL << 25;
++	complain = verbose;
++	complain |= !within_range(ctx, stat_data, used_data, absdiff, 1, 10,
++			_("data blocks"));
++	complain |= !within_range(ctx, stat_rt, used_rt, absdiff, 1, 10,
++			_("realtime blocks"));
++	complain |= !within_range(ctx, counted_inodes, used_files, 100, 1, 10,
++			_("inodes"));
++
++	if (complain) {
++		double		d, r, i;
++		char		*du, *ru, *iu;
++
++		if (used_rt || stat_rt) {
++			d = auto_space_units(used_data, &du);
++			r = auto_space_units(used_rt, &ru);
++			i = auto_units(used_files, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s realtime data used;  %.2f%s inodes used.\n"),
++					d, du, r, ru, i, iu);
++			d = auto_space_units(stat_data, &du);
++			r = auto_space_units(stat_rt, &ru);
++			i = auto_units(counted_inodes, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s realtime data found; %.2f%s inodes found.\n"),
++					d, du, r, ru, i, iu);
++		} else {
++			d = auto_space_units(used_data, &du);
++			i = auto_units(used_files, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s inodes used.\n"),
++					d, du, i, iu);
++			d = auto_space_units(stat_data, &du);
++			i = auto_units(counted_inodes, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s inodes found.\n"),
++					d, du, i, iu);
++		}
++		fflush(stdout);
++	}
++
++	/*
++	 * Complain if the checked inode counts are off, which
++	 * implies an incomplete check.
++	 */
++	if (verbose ||
++	    !within_range(ctx, counted_inodes, ctx->inodes_checked, 100, 1, 10,
++			_("checked inodes"))) {
++		double		i1, i2;
++		char		*i1u, *i2u;
++
++		i1 = auto_units(counted_inodes, &i1u);
++		i2 = auto_units(ctx->inodes_checked, &i2u);
++		fprintf(stdout,
++_("%.1f%s inodes counted; %.1f%s inodes checked.\n"),
++				i1, i1u, i2, i2u);
++		fflush(stdout);
++	}
++
++	/*
++	 * Complain if the checked block counts are off, which
++	 * implies an incomplete check.
++	 */
++	if (ctx->bytes_checked &&
++	    (verbose ||
++	     !within_range(ctx, used_data + used_rt,
++			ctx->bytes_checked, absdiff, 1, 10,
++			_("verified blocks")))) {
++		double		b1, b2;
++		char		*b1u, *b2u;
++
++		b1 = auto_space_units(used_data + used_rt, &b1u);
++		b2 = auto_space_units(ctx->bytes_checked, &b2u);
++		fprintf(stdout,
++_("%.1f%s data counted; %.1f%s data verified.\n"),
++				b1, b1u, b2, b2u);
++		fflush(stdout);
++	}
++
++	moveon = true;
++
++out:
++	return moveon;
++out_free:
++	ptvar_free(ptvar);
++	return moveon;
 +}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index fe12053..11a5bd0 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -56,6 +56,11 @@ bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
- 		xfs_fileoff_t offset, int *error);
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index fa1d089..bc40f3c 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -374,6 +374,8 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Check summary counters."),
++			.fn = xfs_scan_summary,
++			.must_run = true,
+ 		},
+ 		{
+ 			NULL
+@@ -443,9 +445,6 @@ main(
+ 	static bool		injected;
+ 	int			ret = 0;
  
-+bool xfs_scrub_xref_process_error(struct xfs_scrub_context *sc,
-+		xfs_agnumber_t agno, xfs_agblock_t bno, int *error);
-+bool xfs_scrub_fblock_xref_process_error(struct xfs_scrub_context *sc,
-+		int whichfork, xfs_fileoff_t offset, int *error);
-+
- void xfs_scrub_block_set_preen(struct xfs_scrub_context *sc,
- 		struct xfs_buf *bp);
- void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, xfs_ino_t ino,
-@@ -68,6 +73,13 @@ void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
- void xfs_scrub_fblock_set_corrupt(struct xfs_scrub_context *sc, int whichfork,
- 		xfs_fileoff_t offset);
+-	fprintf(stderr, "XXX: This program is not complete!\n");
+-	return 4;
+-
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+ 	bindtextdomain(PACKAGE, LOCALEDIR);
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 026631a..a5cdba8 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -107,5 +107,6 @@ bool xfs_scan_metadata(struct scrub_ctx *ctx);
+ bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ bool xfs_scan_connections(struct scrub_ctx *ctx);
+ bool xfs_scan_blocks(struct scrub_ctx *ctx);
++bool xfs_scan_summary(struct scrub_ctx *ctx);
  
-+void xfs_scrub_block_xref_set_corrupt(struct xfs_scrub_context *sc,
-+		struct xfs_buf *bp);
-+void xfs_scrub_ino_xref_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
-+		struct xfs_buf *bp);
-+void xfs_scrub_fblock_xref_set_corrupt(struct xfs_scrub_context *sc,
-+		int whichfork, xfs_fileoff_t offset);
-+
- void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc, xfs_ino_t ino,
- 		struct xfs_buf *bp);
- void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
-@@ -76,6 +88,10 @@ void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
- void xfs_scrub_set_incomplete(struct xfs_scrub_context *sc);
- int xfs_scrub_checkpoint_log(struct xfs_mount *mp);
- 
-+/* Are we set up for a cross-referencing operation? */
-+bool xfs_scrub_should_xref(struct xfs_scrub_context *sc, int *error,
-+			   struct xfs_btree_cur **curpp);
-+
- /* Setup functions */
- int xfs_scrub_setup_fs(struct xfs_scrub_context *sc, struct xfs_inode *ip);
- int xfs_scrub_setup_ag_allocbt(struct xfs_scrub_context *sc,
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index cd46077..0ed2a12 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -110,6 +110,16 @@
-  * structure itself is corrupt, the CORRUPT flag will be set.  If
-  * the metadata is correct but otherwise suboptimal, the PREEN flag
-  * will be set.
-+ *
-+ * We perform secondary validation of filesystem metadata by
-+ * cross-referencing every record with all other available metadata.
-+ * For example, for block mapping extents, we verify that there are no
-+ * records in the free space and inode btrees corresponding to that
-+ * space extent and that there is a corresponding entry in the reverse
-+ * mapping btree.  Inconsistent metadata is noted by setting the
-+ * XCORRUPT flag; btree query function errors are noted by setting the
-+ * XFAIL flag and deleting the cursor to prevent further attempts to
-+ * cross-reference with a defective btree.
-  */
- 
- /*
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index c4ebfb5..81becf6 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -491,6 +491,28 @@ DEFINE_EVENT(xfs_scrub_sbtree_class, name, \
- DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_rec);
- DEFINE_SCRUB_SBTREE_EVENT(xfs_scrub_btree_key);
- 
-+TRACE_EVENT(xfs_scrub_xref_error,
-+	TP_PROTO(struct xfs_scrub_context *sc, int error, void *ret_ip),
-+	TP_ARGS(sc, error, ret_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int, type)
-+		__field(int, error)
-+		__field(void *, ret_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = sc->mp->m_super->s_dev;
-+		__entry->type = sc->sm->sm_type;
-+		__entry->error = error;
-+		__entry->ret_ip = ret_ip;
-+	),
-+	TP_printk("dev %d:%d type %u xref error %d ret_ip %pF",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->type,
-+		  __entry->error,
-+		  __entry->ret_ip)
-+);
-+
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
- 
- #undef TRACE_INCLUDE_PATH
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
+
