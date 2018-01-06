@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43506 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:43493 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753711AbeAFByT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:54:19 -0500
-Subject: [PATCH 26/27] xfs_scrub: create a script to scrub all xfs
- filesystems
+        with ESMTP id S1753703AbeAFByR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:54:17 -0500
+Subject: [PATCH 22/27] xfs_scrub: optionally use SCSI READ VERIFY commands
+ to scrub data blocks on disk
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 05 Jan 2018 17:54:14 -0800
-Message-ID: <151520365436.2027.16511464158136478480.stgit@magnolia>
+Date: Fri, 05 Jan 2018 17:53:44 -0800
+Message-ID: <151520362433.2027.4170200471542469126.stgit@magnolia>
 In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
 References: <151520348769.2027.9860697266310422360.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,289 +21,317 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create an xfs_scrub_all command to find all XFS filesystems
-and run an online scrub against them all.
+If we sense that we're talking to a raw SCSI disk, use the SCSI READ
+VERIFY command to ask the disk to verify a disk internally.  This can
+sharply reduce the runtime of the data block verification phase on
+devices whose internal bandwidth exceeds their link bandwidth.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- debian/control           |    3 +
- debian/rules             |    1 
- man/man8/xfs_scrub_all.8 |   32 ++++++++++
- scrub/Makefile           |   15 ++++
- scrub/xfs_scrub_all.in   |  154 ++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 201 insertions(+), 4 deletions(-)
- create mode 100644 man/man8/xfs_scrub_all.8
- create mode 100644 scrub/xfs_scrub_all.in
+ configure.ac          |    2 +
+ include/builddefs.in  |    2 +
+ m4/package_libcdev.m4 |   30 ++++++++++
+ scrub/Makefile        |    8 +++
+ scrub/disk.c          |  146 +++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/disk.h          |    1 
+ 6 files changed, 188 insertions(+), 1 deletion(-)
 
 
-diff --git a/debian/control b/debian/control
-index 36d1bd8..801744b 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,12 +3,13 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libunistring-dev
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libunistring-dev, dh-python
- Standards-Version: 3.9.1
- Homepage: https://xfs.wiki.kernel.org/
+diff --git a/configure.ac b/configure.ac
+index 8eda010..bb032e5 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -172,6 +172,8 @@ AC_PACKAGE_WANT_UNINORM_H
+ AC_HAVE_U8NORMALIZE
+ AC_HAVE_OPENAT
+ AC_HAVE_FSTATAT
++AC_HAVE_SG_IO
++AC_HAVE_HDIO_GETGEO
  
- Package: xfsprogs
- Depends: ${shlibs:Depends}, ${misc:Depends}
-+Recommends: ${python3:Depends}, util-linux
- Provides: fsck-backend
- Suggests: xfsdump, acl, attr, quota
- Breaks: xfsdump (<< 3.0.0)
-diff --git a/debian/rules b/debian/rules
-index baefdba..abb794e 100755
---- a/debian/rules
-+++ b/debian/rules
-@@ -76,6 +76,7 @@ binary-arch: checkroot built
- 	$(pkgdi)  $(MAKE) -C debian install-d-i
- 	$(pkgme)  $(MAKE) dist
- 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
-+	dh_python3
- 	dh_installdocs
- 	dh_installchangelogs
- 	dh_strip
-diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
-new file mode 100644
-index 0000000..5e1420b
---- /dev/null
-+++ b/man/man8/xfs_scrub_all.8
-@@ -0,0 +1,32 @@
-+.TH xfs_scrub_all 8
-+.SH NAME
-+xfs_scrub_all \- scrub all mounted XFS filesystems
-+.SH SYNOPSIS
-+.B xfs_scrub_all
-+.SH DESCRIPTION
-+.B xfs_scrub_all
-+attempts to read and check all the metadata on all mounted XFS filesystems.
-+The online scrub is performed via the
-+.B xfs_scrub
-+tool, either by running it directly or by using systemd to start it
-+in a restricted fashion.
-+Mounted filesystems are mapped to physical storage devices so that scrub
-+operations can be run in parallel so long as no two scrubbers access
-+the same device simultaneously.
-+.SH EXIT CODE
-+The exit code returned by
-+.B xfs_scrub_all
-+is the sum of the following conditions:
-+.br
-+\	0\	\-\ No errors
-+.br
-+\	4\	\-\ File system errors left uncorrected
-+.br
-+\	8\	\-\ Operational error
-+.br
-+\	16\	\-\ Usage or syntax error
-+.TP
-+These are the same error codes returned by xfs_scrub.
-+.br
-+.SH SEE ALSO
-+.BR xfs_scrub (8).
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 2f8d33f..d44faf9 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -125,6 +125,8 @@ HAVE_LIBATTR = @have_libattr@
+ HAVE_U8NORMALIZE = @have_u8normalize@
+ HAVE_OPENAT = @have_openat@
+ HAVE_FSTATAT = @have_fstatat@
++HAVE_SG_IO = @have_sg_io@
++HAVE_HDIO_GETGEO = @have_hdio_getgeo@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index e0abc12..9258c27 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -390,3 +390,33 @@ AC_DEFUN([AC_HAVE_FSTATAT],
+        #include <unistd.h>])
+     AC_SUBST(have_fstatat)
+   ])
++
++#
++# Check if we have the SG_IO ioctl
++#
++AC_DEFUN([AC_HAVE_SG_IO],
++  [ AC_MSG_CHECKING([for struct sg_io_hdr ])
++    AC_TRY_COMPILE([#include <scsi/sg.h>],
++    [
++         struct sg_io_hdr hdr;
++         ioctl(0, SG_IO, &hdr);
++    ], have_sg_io=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_sg_io)
++  ])
++
++#
++# Check if we have the HDIO_GETGEO ioctl
++#
++AC_DEFUN([AC_HAVE_HDIO_GETGEO],
++  [ AC_MSG_CHECKING([for struct hd_geometry ])
++    AC_TRY_COMPILE([#include <linux/hdreg.h>],
++    [
++         struct hd_geometry hdr;
++         ioctl(0, HDIO_GETGEO, &hdr);
++    ], have_hdio_getgeo=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_hdio_getgeo)
++  ])
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 7a80ff6..f709606 100644
+index 4b70efa..1fb6e84 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -13,6 +13,8 @@ SCRUB_PREREQS=$(PKG_PLATFORM)$(HAVE_OPENAT)$(HAVE_FSTATAT)
- ifeq ($(SCRUB_PREREQS),linuxyesyes)
- LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
-+XFS_SCRUB_ALL_PROG = xfs_scrub_all
-+XFS_SCRUB_ARGS = -b -n
- endif	# scrub_prereqs
- 
- HFILES = \
-@@ -82,17 +84,24 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
- LCFLAGS += -DHAVE_HDIO_GETGEO
+@@ -70,6 +70,14 @@ CFILES += unicrash.c
+ LCFLAGS += -DHAVE_U8NORMALIZE
  endif
  
--default: depend $(LTCOMMAND)
-+default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
++ifeq ($(HAVE_SG_IO),yes)
++LCFLAGS += -DHAVE_SG_IO
++endif
 +
-+xfs_scrub_all: xfs_scrub_all.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
-+	$(Q)chmod a+x $@
++ifeq ($(HAVE_HDIO_GETGEO),yes)
++LCFLAGS += -DHAVE_HDIO_GETGEO
++endif
++
+ default: depend $(LTCOMMAND)
  
  phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
+diff --git a/scrub/disk.c b/scrub/disk.c
+index 546a06c..35c5a76 100644
+--- a/scrub/disk.c
++++ b/scrub/disk.c
+@@ -29,12 +29,19 @@
+ #include <sys/statvfs.h>
+ #include <sys/vfs.h>
+ #include <linux/fs.h>
++#ifdef HAVE_SG_IO
++# include <scsi/sg.h>
++#endif
++#ifdef HAVE_HDIO_GETGEO
++# include <linux/hdreg.h>
++#endif
+ #include "platform_defs.h"
+ #include "libfrog.h"
+ #include "xfs.h"
+ #include "path.h"
+ #include "xfs_fs.h"
+ #include "xfs_scrub.h"
++#include "common.h"
+ #include "disk.h"
  
- include $(BUILDRULES)
+ /*
+@@ -90,12 +97,119 @@ disk_heads(
+ 	return __disk_heads(disk);
+ }
  
--install: default $(INSTALL_SCRUB)
-+install: $(INSTALL_SCRUB)
++/*
++ * Execute a SCSI VERIFY(16) to verify disk contents.
++ * For devices that support this command, this can sharply reduce the
++ * runtime of the data block verification phase if the storage device's
++ * internal bandwidth exceeds its link bandwidth.  However, it only
++ * works if we're talking to a raw SCSI device, and only if we trust the
++ * firmware.
++ */
++#ifdef HAVE_SG_IO
++# define SENSE_BUF_LEN		64
++# define VERIFY16_CMDLEN	16
++# define VERIFY16_CMD		0x8F
++
++# ifndef SG_FLAG_Q_AT_TAIL
++#  define SG_FLAG_Q_AT_TAIL	0x10
++# endif
++static int
++disk_scsi_verify(
++	struct disk		*disk,
++	uint64_t		startblock, /* lba */
++	uint64_t		blockcount) /* lba */
++{
++	struct sg_io_hdr	iohdr;
++	unsigned char		cdb[VERIFY16_CMDLEN];
++	unsigned char		sense[SENSE_BUF_LEN];
++	uint64_t		llba;
++	uint64_t		veri_len = blockcount;
++	int			error;
++
++	assert(!debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"));
++
++	llba = startblock + (disk->d_start >> BBSHIFT);
++
++	/* Borrowed from sg_verify */
++	cdb[0] = VERIFY16_CMD;
++	cdb[1] = 0; /* skip PI, DPO, and byte check. */
++	cdb[2] = (llba >> 56) & 0xff;
++	cdb[3] = (llba >> 48) & 0xff;
++	cdb[4] = (llba >> 40) & 0xff;
++	cdb[5] = (llba >> 32) & 0xff;
++	cdb[6] = (llba >> 24) & 0xff;
++	cdb[7] = (llba >> 16) & 0xff;
++	cdb[8] = (llba >> 8) & 0xff;
++	cdb[9] = llba & 0xff;
++	cdb[10] = (veri_len >> 24) & 0xff;
++	cdb[11] = (veri_len >> 16) & 0xff;
++	cdb[12] = (veri_len >> 8) & 0xff;
++	cdb[13] = veri_len & 0xff;
++	cdb[14] = 0;
++	cdb[15] = 0;
++	memset(sense, 0, SENSE_BUF_LEN);
++
++	/* v3 SG_IO */
++	memset(&iohdr, 0, sizeof(iohdr));
++	iohdr.interface_id = 'S';
++	iohdr.dxfer_direction = SG_DXFER_NONE;
++	iohdr.cmdp = cdb;
++	iohdr.cmd_len = VERIFY16_CMDLEN;
++	iohdr.sbp = sense;
++	iohdr.mx_sb_len = SENSE_BUF_LEN;
++	iohdr.flags |= SG_FLAG_Q_AT_TAIL;
++	iohdr.timeout = 30000; /* 30s */
++
++	error = ioctl(disk->d_fd, SG_IO, &iohdr);
++	if (error)
++		return error;
++
++	dbg_printf("VERIFY(16) fd %d lba %"PRIu64" len %"PRIu64" info %x "
++			"status %d masked %d msg %d host %d driver %d "
++			"duration %d resid %d\n",
++			disk->d_fd, startblock, blockcount, iohdr.info,
++			iohdr.status, iohdr.masked_status, iohdr.msg_status,
++			iohdr.host_status, iohdr.driver_status, iohdr.duration,
++			iohdr.resid);
++
++	if (iohdr.info & SG_INFO_CHECK) {
++		dbg_printf("status: msg %x host %x driver %x\n",
++				iohdr.msg_status, iohdr.host_status,
++				iohdr.driver_status);
++		errno = EIO;
++		return -1;
++	}
++
++	return error;
++}
++#else
++# define disk_scsi_verify(...)		(ENOTTY)
++#endif /* HAVE_SG_IO */
++
++/* Test the availability of the kernel scrub ioctl. */
++static bool
++disk_can_scsi_verify(
++	struct disk		*disk)
++{
++	int			error;
++
++	if (debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"))
++		return false;
++
++	error = disk_scsi_verify(disk, 0, 1);
++	return error == 0;
++}
++
+ /* Open a disk device and discover its geometry. */
+ struct disk *
+ disk_open(
+ 	const char		*pathname)
+ {
++#ifdef HAVE_HDIO_GETGEO
++	struct hd_geometry	bdgeo;
++#endif
+ 	struct disk		*disk;
++	bool			suspicious_disk = false;
+ 	int			lba_sz;
+ 	int			error;
  
--install-scrub:
-+install-scrub: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-+	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
+@@ -126,13 +240,34 @@ disk_open(
+ 		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
+ 		if (error)
+ 			disk->d_blksize = 0;
+-		disk->d_start = 0;
++#ifdef HAVE_HDIO_GETGEO
++		error = ioctl(disk->d_fd, HDIO_GETGEO, &bdgeo);
++		if (!error) {
++			/*
++			 * dm devices will pass through ioctls, which means
++			 * we can't use SCSI VERIFY unless the start is 0.
++			 * Most dm devices don't set geometry (unlike scsi
++			 * and nvme) so use a zeroed out CHS to screen them
++			 * out.
++			 */
++			if (bdgeo.start != 0 &&
++			    (unsigned long long)bdgeo.heads * bdgeo.sectors *
++					bdgeo.sectors == 0)
++				suspicious_disk = true;
++			disk->d_start = bdgeo.start << BBSHIFT;
++		} else
++#endif
++			disk->d_start = 0;
+ 	} else {
+ 		disk->d_size = disk->d_sb.st_size;
+ 		disk->d_blksize = disk->d_sb.st_blksize;
+ 		disk->d_start = 0;
+ 	}
  
- install-dev:
++	/* Can we issue SCSI VERIFY? */
++	if (!suspicious_disk && disk_can_scsi_verify(disk))
++		disk->d_flags |= DISK_FLAG_SCSI_VERIFY;
++
+ 	return disk;
+ out_close:
+ 	close(disk->d_fd);
+@@ -155,6 +290,10 @@ disk_close(
+ 	return error;
+ }
  
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-new file mode 100644
-index 0000000..7738644
---- /dev/null
-+++ b/scrub/xfs_scrub_all.in
-@@ -0,0 +1,154 @@
-+#!/usr/bin/env python3
++#define BTOLBAT(d, bytes)	((uint64_t)(bytes) >> (d)->d_lbalog)
++#define LBASIZE(d)		(1ULL << (d)->d_lbalog)
++#define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
 +
-+# Run online scrubbers in parallel, but avoid thrashing.
-+#
-+# Copyright (C) 2018 Oracle.  All rights reserved.
-+#
-+# Author: Darrick J. Wong <darrick.wong@oracle.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License
-+# as published by the Free Software Foundation; either version 2
-+# of the License, or (at your option) any later version.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+ /* Read-verify an extent of a disk device. */
+ ssize_t
+ disk_read_verify(
+@@ -163,5 +302,10 @@ disk_read_verify(
+ 	uint64_t		start,
+ 	uint64_t		length)
+ {
++	/* Convert to logical block size. */
++	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
++		return disk_scsi_verify(disk, BTOLBAT(disk, start),
++				BTOLBA(disk, length));
 +
-+import subprocess
-+import json
-+import threading
-+import time
-+import sys
-+
-+retcode = 0
-+terminate = False
-+
-+def find_mounts():
-+	'''Map mountpoints to physical disks.'''
-+
-+	fs = {}
-+	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-+	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-+	result.wait()
-+	if result.returncode != 0:
-+		return fs
-+	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
-+	output = ' '.join(sarray)
-+	bdevdata = json.loads(output)
-+	# The lsblk output had better be in disks-then-partitions order
-+	for bdev in bdevdata['blockdevices']:
-+		if bdev['type'] in ('disk', 'loop'):
-+			lastdisk = bdev['kname']
-+		if bdev['fstype'] == 'xfs':
-+			mnt = bdev['mountpoint']
-+			if mnt is None:
-+				continue
-+			if mnt in fs:
-+				fs[mnt].add(lastdisk)
-+			else:
-+				fs[mnt] = set([lastdisk])
-+	return fs
-+
-+def run_killable(cmd, stdout, killfuncs, kill_fn):
-+	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
-+	try:
-+		proc = subprocess.Popen(cmd, stdout = stdout)
-+		real_kill_fn = lambda: kill_fn(proc)
-+		killfuncs.add(real_kill_fn)
-+		proc.wait()
-+		try:
-+			killfuncs.remove(real_kill_fn)
-+		except:
-+			pass
-+		return proc.returncode
-+	except:
-+		return -1
-+
-+def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
-+	'''Run a scrub process.'''
-+	global retcode, terminate
-+
-+	print("Scrubbing %s..." % mnt)
-+	sys.stdout.flush()
-+
-+	try:
-+		if terminate:
-+			return
-+
-+		# Invoke xfs_scrub manually
-+		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
-+		ret = run_killable(cmd, None, killfuncs, \
-+				lambda proc: proc.terminate())
-+		if ret >= 0:
-+			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
-+			sys.stdout.flush()
-+			retcode |= ret
-+			return
-+
-+		if terminate:
-+			return
-+
-+		print("Unable to start scrub tool.")
-+		sys.stdout.flush()
-+	finally:
-+		running_devs -= mntdevs
-+		cond.acquire()
-+		cond.notify()
-+		cond.release()
-+
-+def main():
-+	'''Find mounts, schedule scrub runs.'''
-+	def thr(mnt, devs):
-+		a = (mnt, cond, running_devs, devs, killfuncs)
-+		thr = threading.Thread(target = run_scrub, args = a)
-+		thr.start()
-+	global retcode, terminate
-+
-+	fs = find_mounts()
-+
-+	# Schedule scrub jobs...
-+	running_devs = set()
-+	killfuncs = set()
-+	cond = threading.Condition()
-+	while len(fs) > 0:
-+		if len(running_devs) == 0:
-+			mnt, devs = fs.popitem()
-+			running_devs.update(devs)
-+			thr(mnt, devs)
-+		poppers = set()
-+		for mnt in fs:
-+			devs = fs[mnt]
-+			can_run = True
-+			for dev in devs:
-+				if dev in running_devs:
-+					can_run = False
-+					break
-+			if can_run:
-+				running_devs.update(devs)
-+				poppers.add(mnt)
-+				thr(mnt, devs)
-+		for p in poppers:
-+			fs.pop(p)
-+		cond.acquire()
-+		try:
-+			cond.wait()
-+		except KeyboardInterrupt:
-+			terminate = True
-+			print("Terminating...")
-+			sys.stdout.flush()
-+			while len(killfuncs) > 0:
-+				fn = killfuncs.pop()
-+				fn()
-+			fs = []
-+		cond.release()
-+
-+	sys.exit(retcode)
-+
-+if __name__ == '__main__':
-+	main()
+ 	return pread(disk->d_fd, buf, length, start);
+ }
+diff --git a/scrub/disk.h b/scrub/disk.h
+index 834678e..8a00144 100644
+--- a/scrub/disk.h
++++ b/scrub/disk.h
+@@ -20,6 +20,7 @@
+ #ifndef XFS_SCRUB_DISK_H_
+ #define XFS_SCRUB_DISK_H_
+ 
++#define DISK_FLAG_SCSI_VERIFY	0x1
+ struct disk {
+ 	struct stat	d_sb;
+ 	int		d_fd;
 
