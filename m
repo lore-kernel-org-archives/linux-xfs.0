@@ -1,91 +1,355 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60240 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:42901 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754006AbeALAYy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 19:24:54 -0500
-Date: Thu, 11 Jan 2018 16:24:35 -0800
+        with ESMTP id S1753527AbeAFBw2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 20:52:28 -0500
+Subject: [PATCH 09/27] xfs_scrub: add space map iteration functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/27] xfs_scrub: add file space map iteration functions
-Message-ID: <20180112002435.GL5602@magnolia>
+Date: Fri, 05 Jan 2018 17:52:23 -0800
+Message-ID: <151520354327.2027.5602784249446714830.stgit@magnolia>
+In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
 References: <151520348769.2027.9860697266310422360.stgit@magnolia>
- <151520354940.2027.10483445005054005807.stgit@magnolia>
- <149cf293-b65f-f013-50d8-964f072b8ae2@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <149cf293-b65f-f013-50d8-964f072b8ae2@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 05:19:22PM -0600, Eric Sandeen wrote:
-> On 1/5/18 7:52 PM, Darrick J. Wong wrote:
-> 
-> 
-> > + * These routines provide a simple interface to query the block
-> > + * mappings of the fork of a given inode via GETBMAPX and call a
-> > + * function to iterate each mapping result.
-> > + */
-> > +
-> > +#define BMAP_NR		2048
-> > +
-> > +/* Iterate all the extent block mappings between the key and fork end. */
-> > +bool
-> > +xfs_iterate_filemaps(
-> > +	struct scrub_ctx	*ctx,
-> > +	const char		*descr,
-> > +	int			fd,
-> > +	int			whichfork,
-> > +	struct xfs_bmap		*key,
-> 
-> <coverity pass>
-> 
-> Ok key is an xfs_bmap:
-> 
-> /* inode fork block mapping */
-> struct xfs_bmap {
->         uint64_t        bm_offset;      /* file offset of segment in bytes */
->         uint64_t        bm_physical;    /* physical starting byte  */
->         uint64_t        bm_length;      /* length of segment, bytes */
->         uint32_t        bm_flags;       /* output flags */
-> };
-> 
-> > +	xfs_bmap_iter_fn	fn,
-> > +	void			*arg)
-> > +{
-> > +	struct fsxattr		fsx;
-> > +	struct getbmapx		*map
-> map is a getbmapx ...
-> 
-> struct getbmapx {
->         __s64           bmv_offset;     /* file offset of segment in blocks */
->         __s64           bmv_block;      /* starting block (64-bit daddr_t)  */
->         __s64           bmv_length;     /* length of segment, blocks        */
->         __s32           bmv_count;      /* # of entries in array incl. 1st  */
->         __s32           bmv_entries;    /* # of entries filled in (output). */
->         __s32           bmv_iflags;     /* input flags (1st structure)      */
->         __s32           bmv_oflags;     /* output flags (after 1st structure)*/
->         __s32           bmv_unused1;    /* future use                       */
->         __s32           bmv_unused2;    /* future use                       */
-> };
-> 
-> ...
-> 
-> > +out:
-> > +	memcpy(key, map, sizeof(struct getbmapx));
-> 
-> so I don't think that fits, right?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I can't remember why this line is even needed, so away it goes.
+These helpers enable userspace to iterate all the space map information
+in a filesystem.  The iteration function uses GETFSMAP.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/Makefile   |    2 
+ scrub/spacemap.c |  256 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/spacemap.h |   31 +++++++
+ 3 files changed, 289 insertions(+)
+ create mode 100644 scrub/spacemap.c
+ create mode 100644 scrub/spacemap.h
 
-> 
-> 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 4d1c908..24e0c44 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -19,6 +19,7 @@ HFILES = \
+ common.h \
+ disk.h \
+ inodes.h \
++spacemap.h \
+ xfs_scrub.h
+ 
+ CFILES = \
+@@ -26,6 +27,7 @@ common.c \
+ disk.c \
+ inodes.c \
+ phase1.c \
++spacemap.c \
+ xfs_scrub.c
+ 
+ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+diff --git a/scrub/spacemap.c b/scrub/spacemap.c
+new file mode 100644
+index 0000000..2dc6e2b
+--- /dev/null
++++ b/scrub/spacemap.c
+@@ -0,0 +1,256 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <string.h>
++#include <pthread.h>
++#include <sys/statvfs.h>
++#include "workqueue.h"
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "path.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "spacemap.h"
++
++/*
++ * Filesystem space map iterators.
++ *
++ * Logically, we call GETFSMAP to fetch a set of space map records and
++ * call a function to iterate over the records.  However, that's not
++ * what actually happens -- the work is split into separate items, with
++ * each AG, the realtime device, and the log device getting their own
++ * work items.  For an XFS with a realtime device and an external log,
++ * this means that we can have up to ($agcount + 2) threads running at
++ * once.
++ *
++ * This comes into play if we want to have per-workitem memory.  Maybe.
++ * XXX: do we really need all that ?
++ */
++
++#define FSMAP_NR	65536
++
++/* Iterate all the fs block mappings between the two keys. */
++bool
++xfs_iterate_fsmap(
++	struct scrub_ctx	*ctx,
++	const char		*descr,
++	struct fsmap		*keys,
++	xfs_fsmap_iter_fn	fn,
++	void			*arg)
++{
++	struct fsmap_head	*head;
++	struct fsmap		*p;
++	bool			moveon = true;
++	int			i;
++	int			error;
++
++	head = malloc(fsmap_sizeof(FSMAP_NR));
++	if (!head) {
++		str_errno(ctx, descr);
++		return false;
++	}
++
++	memset(head, 0, sizeof(*head));
++	memcpy(head->fmh_keys, keys, sizeof(struct fsmap) * 2);
++	head->fmh_count = FSMAP_NR;
++
++	while ((error = ioctl(ctx->mnt_fd, FS_IOC_GETFSMAP, head)) == 0) {
++		for (i = 0, p = head->fmh_recs;
++		     i < head->fmh_entries;
++		     i++, p++) {
++			moveon = fn(ctx, descr, p, arg);
++			if (!moveon)
++				goto out;
++			if (xfs_scrub_excessive_errors(ctx)) {
++				moveon = false;
++				goto out;
++			}
++		}
++
++		if (head->fmh_entries == 0)
++			break;
++		p = &head->fmh_recs[head->fmh_entries - 1];
++		if (p->fmr_flags & FMR_OF_LAST)
++			break;
++		fsmap_advance(head);
++	}
++
++	if (error) {
++		str_errno(ctx, descr);
++		moveon = false;
++	}
++out:
++	free(head);
++	return moveon;
++}
++
++/* GETFSMAP wrappers routines. */
++struct xfs_scan_blocks {
++	xfs_fsmap_iter_fn	fn;
++	void			*arg;
++	bool			moveon;
++};
++
++/* Iterate all the reverse mappings of an AG. */
++static void
++xfs_scan_ag_blocks(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	struct xfs_scan_blocks	*sbx = arg;
++	char			descr[DESCR_BUFSZ];
++	struct fsmap		keys[2];
++	off64_t			bperag;
++	bool			moveon;
++
++	bperag = (off64_t)ctx->geo.agblocks *
++		 (off64_t)ctx->geo.blocksize;
++
++	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u fsmap"),
++				major(ctx->fsinfo.fs_datadev),
++				minor(ctx->fsinfo.fs_datadev),
++				agno);
++
++	memset(keys, 0, sizeof(struct fsmap) * 2);
++	keys->fmr_device = ctx->fsinfo.fs_datadev;
++	keys->fmr_physical = agno * bperag;
++	(keys + 1)->fmr_device = ctx->fsinfo.fs_datadev;
++	(keys + 1)->fmr_physical = ((agno + 1) * bperag) - 1;
++	(keys + 1)->fmr_owner = ULLONG_MAX;
++	(keys + 1)->fmr_offset = ULLONG_MAX;
++	(keys + 1)->fmr_flags = UINT_MAX;
++
++	moveon = xfs_iterate_fsmap(ctx, descr, keys, sbx->fn, sbx->arg);
++	if (!moveon)
++		sbx->moveon = false;
++}
++
++/* Iterate all the reverse mappings of a standalone device. */
++static void
++xfs_scan_dev_blocks(
++	struct scrub_ctx	*ctx,
++	int			idx,
++	dev_t			dev,
++	struct xfs_scan_blocks	*sbx)
++{
++	struct fsmap		keys[2];
++	char			descr[DESCR_BUFSZ];
++	bool			moveon;
++
++	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d fsmap"),
++			major(dev), minor(dev));
++
++	memset(keys, 0, sizeof(struct fsmap) * 2);
++	keys->fmr_device = dev;
++	(keys + 1)->fmr_device = dev;
++	(keys + 1)->fmr_physical = ULLONG_MAX;
++	(keys + 1)->fmr_owner = ULLONG_MAX;
++	(keys + 1)->fmr_offset = ULLONG_MAX;
++	(keys + 1)->fmr_flags = UINT_MAX;
++
++	moveon = xfs_iterate_fsmap(ctx, descr, keys, sbx->fn, sbx->arg);
++	if (!moveon)
++		sbx->moveon = false;
++}
++
++/* Iterate all the reverse mappings of the realtime device. */
++static void
++xfs_scan_rt_blocks(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++
++	xfs_scan_dev_blocks(ctx, agno, ctx->fsinfo.fs_rtdev, arg);
++}
++
++/* Iterate all the reverse mappings of the log device. */
++static void
++xfs_scan_log_blocks(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++
++	xfs_scan_dev_blocks(ctx, agno, ctx->fsinfo.fs_logdev, arg);
++}
++
++/* Scan all the blocks in a filesystem. */
++bool
++xfs_scan_all_spacemaps(
++	struct scrub_ctx	*ctx,
++	xfs_fsmap_iter_fn	fn,
++	void			*arg)
++{
++	struct workqueue	wq;
++	struct xfs_scan_blocks	sbx;
++	xfs_agnumber_t		agno;
++	int			ret;
++
++	sbx.moveon = true;
++	sbx.fn = fn;
++	sbx.arg = arg;
++
++	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
++			scrub_nproc_workqueue(ctx));
++	if (ret) {
++		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		return false;
++	}
++	if (ctx->fsinfo.fs_rt) {
++		ret = workqueue_add(&wq, xfs_scan_rt_blocks,
++				ctx->geo.agcount + 1, &sbx);
++		if (ret) {
++			sbx.moveon = false;
++			str_error(ctx, ctx->mntpoint,
++_("Could not queue rtdev fsmap work."));
++			goto out;
++		}
++	}
++	if (ctx->fsinfo.fs_log) {
++		ret = workqueue_add(&wq, xfs_scan_log_blocks,
++				ctx->geo.agcount + 2, &sbx);
++		if (ret) {
++			sbx.moveon = false;
++			str_error(ctx, ctx->mntpoint,
++_("Could not queue logdev fsmap work."));
++			goto out;
++		}
++	}
++	for (agno = 0; agno < ctx->geo.agcount; agno++) {
++		ret = workqueue_add(&wq, xfs_scan_ag_blocks, agno, &sbx);
++		if (ret) {
++			sbx.moveon = false;
++			str_error(ctx, ctx->mntpoint,
++_("Could not queue AG %u fsmap work."), agno);
++			break;
++		}
++	}
++out:
++	workqueue_destroy(&wq);
++
++	return sbx.moveon;
++}
+diff --git a/scrub/spacemap.h b/scrub/spacemap.h
+new file mode 100644
+index 0000000..9ee46f7
+--- /dev/null
++++ b/scrub/spacemap.h
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_SPACEMAP_H_
++#define XFS_SCRUB_SPACEMAP_H_
++
++typedef bool (*xfs_fsmap_iter_fn)(struct scrub_ctx *ctx, const char *descr,
++		struct fsmap *fsr, void *arg);
++
++bool xfs_iterate_fsmap(struct scrub_ctx *ctx, const char *descr,
++		struct fsmap *keys, xfs_fsmap_iter_fn fn, void *arg);
++bool xfs_scan_all_spacemaps(struct scrub_ctx *ctx, xfs_fsmap_iter_fn fn,
++		void *arg);
++
++#endif /* XFS_SCRUB_SPACEMAP_H_ */
+
