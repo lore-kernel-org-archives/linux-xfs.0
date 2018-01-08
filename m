@@ -1,146 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:41926 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1758437AbeAHXz3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 18:55:29 -0500
-Date: Tue, 9 Jan 2018 10:55:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 15/21] xfs: cross-reference bnobt records with cntbt
-Message-ID: <20180108235525.GH16421@dastard>
+Received: from userp2120.oracle.com ([156.151.31.85]:56730 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752011AbeAIAJM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 19:09:12 -0500
+Date: Mon, 8 Jan 2018 15:59:00 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 13/21] xfs: introduce scrubber cross-referencing stubs
+Message-ID: <20180108235900.GA5602@magnolia>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398986464.18741.745289369411639057.stgit@magnolia>
+ <151398985228.18741.6364419677377927534.stgit@magnolia>
+ <20180108233640.GF16421@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151398986464.18741.745289369411639057.stgit@magnolia>
+In-Reply-To: <20180108233640.GF16421@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Dec 22, 2017 at 04:44:24PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 09, 2018 at 10:36:40AM +1100, Dave Chinner wrote:
+> On Fri, Dec 22, 2017 at 04:44:12PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create some stubs that will be used to cross-reference metadata records.
+> > The actual cross-referencing will be filled in by subsequent patches.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/scrub/agheader.c |   65 ++++++++++++++++++++++++++++++++++++++++++++++-
+> >  fs/xfs/scrub/alloc.c    |   14 ++++++++++
+> >  fs/xfs/scrub/bmap.c     |   28 ++++++++++++++++++++
+> >  fs/xfs/scrub/ialloc.c   |   17 ++++++++++++
+> >  fs/xfs/scrub/inode.c    |   13 +++++++++
+> >  fs/xfs/scrub/refcount.c |   15 +++++++++++
+> >  fs/xfs/scrub/rmap.c     |   13 +++++++++
+> >  7 files changed, 163 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> > index 97beb47..5be9059 100644
+> > --- a/fs/xfs/scrub/agheader.c
+> > +++ b/fs/xfs/scrub/agheader.c
+> > @@ -37,7 +37,10 @@
+> >  #include "scrub/common.h"
+> >  #include "scrub/trace.h"
+> >  
+> > -/* Walk all the blocks in the AGFL. */
+> > +/*
+> > + * Walk all the blocks in the AGFL.  The fn function can return any negative
+> > + * error code or XFS_BTREE_QUERY_RANGE_ABORT.
+> > + */
+> >  int
+> >  xfs_scrub_walk_agfl(
+> >  	struct xfs_scrub_context	*sc,
+> > @@ -98,6 +101,14 @@ xfs_scrub_walk_agfl(
+> >  
+> >  /* Superblock */
+> >  
+> > +/* Cross-reference with the other btrees. */
+> > +STATIC void
+> > +xfs_scrub_superblock_xref(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_buf			*bp)
+> > +{
+> > +}
+> > +
+> >  /*
+> >   * Scrub the filesystem superblock.
+> >   *
+> > @@ -386,11 +397,23 @@ xfs_scrub_superblock(
+> >  			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
+> >  		xfs_scrub_block_set_corrupt(sc, bp);
+> >  
+> > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > +		goto out;
+> > +
+> > +	xfs_scrub_superblock_xref(sc, bp);
+> > +out:
 > 
-> Scrub should make sure that each bnobt record has a corresponding
-> cntbt record.
+> I know this is just a set of stubs, but why isn't the "skip xref
+> because it's already marked corrupt" check inside the xref
+> functions?
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/agheader.c |   26 ++++++++++++++++++++++++++
->  fs/xfs/scrub/alloc.c    |   37 +++++++++++++++++++++++++++++++++++++
->  2 files changed, 63 insertions(+)
+> That gets rid of all these gotos and makes the code simpler....
+
+Done.
+
+--D
+
+> Cheers,
 > 
-> 
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index 3bb0f96..e87022f 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -444,6 +444,7 @@ xfs_scrub_agf_xref(
->  	struct xfs_btree_cur		**pcur;
->  	xfs_agblock_t			bno;
->  	xfs_extlen_t			blocks;
-> +	int				have;
->  	int				error;
->  
->  	bno = XFS_AGF_BLOCK(mp);
-> @@ -465,6 +466,31 @@ xfs_scrub_agf_xref(
->  			xfs_scrub_block_xref_set_corrupt(sc, sc->sa.agf_bp);
->  	}
->  
-> +	/* Cross-reference with the cntbt. */
-> +	pcur = &sc->sa.cnt_cur;
-> +	while (*pcur) {
-> +		xfs_agblock_t		agbno;
-> +
-> +		/* Any freespace at all? */
-> +		error = xfs_alloc_lookup_le(*pcur, 0, -1U, &have);
-> +		if (!xfs_scrub_should_xref(sc, &error, pcur))
-> +			break;
-> +		if (!have) {
-> +			if (agf->agf_freeblks != be32_to_cpu(0))
-
-No need to endian convert 0.
-
-> +				xfs_scrub_block_xref_set_corrupt(sc,
-> +						sc->sa.agf_bp);
-> +			break;
-> +		}
-> +
-> +		/* Check agf_longest */
-> +		error = xfs_alloc_get_rec(*pcur, &agbno, &blocks, &have);
-> +		if (!xfs_scrub_should_xref(sc, &error, pcur))
-> +			break;
-> +		if (!have || blocks != be32_to_cpu(agf->agf_longest))
-> +			xfs_scrub_block_xref_set_corrupt(sc, sc->sa.agf_bp);
-> +		break;
-> +	}
-
-Why is this a while loop? It'll break out at the end of the first
-loop - did you forget to remove that last break statement?
-
-> +
->  	/* scrub teardown will take care of sc->sa for us */
->  }
->  
-> diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-> index 3d6f8cc..9a28e3d 100644
-> --- a/fs/xfs/scrub/alloc.c
-> +++ b/fs/xfs/scrub/alloc.c
-> @@ -31,6 +31,7 @@
->  #include "xfs_sb.h"
->  #include "xfs_alloc.h"
->  #include "xfs_rmap.h"
-> +#include "xfs_alloc.h"
->  #include "scrub/xfs_scrub.h"
->  #include "scrub/scrub.h"
->  #include "scrub/common.h"
-> @@ -57,6 +58,42 @@ xfs_scrub_allocbt_xref(
->  	xfs_agblock_t			bno,
->  	xfs_extlen_t			len)
->  {
-> +	struct xfs_btree_cur		**pcur;
-> +	struct xfs_scrub_ag		*psa = &sc->sa;
-> +	xfs_agblock_t			fbno;
-> +	xfs_extlen_t			flen;
-> +	int				has_otherrec;
-> +	int				error;
-> +
-> +	/*
-> +	 * Ensure there's a corresponding cntbt/bnobt record matching
-> +	 * this bnobt/cntbt record, respectively.
-> +	 */
-> +	if (sc->sm->sm_type == XFS_SCRUB_TYPE_BNOBT)
-> +		pcur = &psa->cnt_cur;
-> +	else
-> +		pcur = &psa->bno_cur;
-> +	while (*pcur) {
-> +		error = xfs_alloc_lookup_le(*pcur, bno, len, &has_otherrec);
-> +		if (!xfs_scrub_should_xref(sc, &error, pcur))
-> +			break;
-> +		if (!has_otherrec) {
-> +			xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
-> +			break;
-> +		}
-> +
-> +		error = xfs_alloc_get_rec(*pcur, &fbno, &flen, &has_otherrec);
-> +		if (!xfs_scrub_should_xref(sc, &error, pcur))
-> +			break;
-> +		if (!has_otherrec) {
-> +			xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
-> +			break;
-> +		}
-> +
-> +		if (fbno != bno || flen != len)
-> +			xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
-> +		break;
-> +	}
-
-Same again - I don't see why this is a while loop.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
