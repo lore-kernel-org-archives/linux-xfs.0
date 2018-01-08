@@ -1,44 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38668 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:50342 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932324AbeAHNq3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Jan 2018 08:46:29 -0500
-Message-ID: <1515419184.3486.21.camel@kernel.org>
-Subject: Re: [PATCH v4 19/19] fs: handle inode->i_version more efficiently
-From: Jeff Layton <jlayton@kernel.org>
-Date: Mon, 08 Jan 2018 08:46:24 -0500
-In-Reply-To: <20180108133025.GA31867@bombadil.infradead.org>
-References: <20171222120556.7435-1-jlayton@kernel.org>
-         <20171222120556.7435-20-jlayton@kernel.org>
-         <20180108133025.GA31867@bombadil.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1756355AbeAHOIp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jan 2018 09:08:45 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 809A7155E0
+        for <linux-xfs@vger.kernel.org>; Mon,  8 Jan 2018 14:08:45 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 61E0760BEC
+        for <linux-xfs@vger.kernel.org>; Mon,  8 Jan 2018 14:08:45 +0000 (UTC)
+Date: Mon, 8 Jan 2018 09:08:44 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 0/7] xfs: inode transaction reservation fixups
+Message-ID: <20180108140843.GA41128@bfoster.bfoster>
+References: <20171130185836.18481-1-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20171130185836.18481-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, 2018-01-08 at 05:30 -0800, Matthew Wilcox wrote:
-> On Fri, Dec 22, 2017 at 07:05:56AM -0500, Jeff Layton wrote:
-> > +	cur = inode_peek_iversion_raw(inode);
-> > +	for (;;) {
-> > +		/* If flag is clear then we needn't do anything */
-> > +		if (!force && !(cur & I_VERSION_QUERIED))
-> > +			return false;
-> > +		/* Since lowest bit is flag, add 2 to avoid it */
-> > +		new = (cur & ~I_VERSION_QUERIED) + I_VERSION_INCREMENT;
+On Thu, Nov 30, 2017 at 01:58:29PM -0500, Brian Foster wrote:
+> Hi all,
 > 
-> Isn't this an extraordinarily complicated way of spelling:
+> Here's v2 of the inode tx reservation fixups. This drops the agfl fixup
+> patch for the time being and adds some additional reservation fixups and
+> refactoring based on Dave's feedback. This survives xfstests in a few
+> different configurations and also happens to survive my inode unlink
+> reservation overrun tests.
 > 
-> 		new = cur + 1;
+> Thoughts, reviews, flames appreciated.
 > 
-> We know 'cur' has I_VERSION_QUERIED set, so clearing that bit and adding
-> two is going to be the same as adding 1 ... right?
+> Brian
+> 
+> v2:
+> - Update AGI unlinked list and truncate reservations
+> - Update commit log for ifree refactor patch.
+> - Additional refactoring patches.
+> - Dropped agfl fixup patch.
+> v1: https://marc.info/?l=linux-xfs&m=151181428031884&w=2
 > 
 
-It would be, but if "force" is true, then I_VERSION_QUERIED may not be
-set.
--- 
-Jeff Layton <jlayton@kernel.org>
+Ping...
+
+It looks like this is all reviewed, but perhaps just not merged yet (or
+I'm just not looking in the right place)..?
+
+Brian
+
+> Brian Foster (7):
+>   xfs: print transaction log reservation on overrun
+>   xfs: include inobt buffers in ifree tx log reservation
+>   xfs: fix up agi unlinked list reservations
+>   xfs: truncate transaction does not modify the inobt
+>   xfs: include an allocfree res for inobt modifications
+>   xfs: refactor inode chunk alloc/free tx reservation
+>   xfs: eliminate duplicate icreate tx reservation functions
+> 
+>  fs/xfs/libxfs/xfs_trans_resv.c | 202 ++++++++++++++++++++---------------------
+>  fs/xfs/xfs_log.c               |   4 +-
+>  2 files changed, 99 insertions(+), 107 deletions(-)
+> 
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
