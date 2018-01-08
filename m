@@ -1,74 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60140 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:47310 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754232AbeAHUcb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 15:32:31 -0500
-Date: Mon, 8 Jan 2018 12:32:25 -0800
+        with ESMTP id S1756384AbeAHVck (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 16:32:40 -0500
+Date: Mon, 8 Jan 2018 13:32:35 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: clarify units in the failed metadata io message
-Message-ID: <20180108203225.GV5602@magnolia>
+Subject: [PATCH v2] xfs: clarify units in the failed metadata io message
+Message-ID: <20180108213235.GW5602@magnolia>
 References: <20180108194015.GT5602@magnolia>
- <fb402d1c-c609-77de-8ae8-6cb19aadd448@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fb402d1c-c609-77de-8ae8-6cb19aadd448@sandeen.net>
+In-Reply-To: <20180108194015.GT5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-On Mon, Jan 08, 2018 at 02:19:58PM -0600, Eric Sandeen wrote:
-> On 1/8/18 1:40 PM, Darrick J. Wong wrote:> From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If a metadata IO error happens, we report the location of the failed IO
-> > request in units of daddrs.  However, the printk message misleads people
-> > into thinking that the units are fs blocks, so fix the reported units.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_buf.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 1981ef7..582c64a 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -1196,7 +1196,7 @@ xfs_buf_ioerror_alert(
-> >  	const char		*func)
-> >  {
-> >  	xfs_alert(bp->b_target->bt_mount,
-> > -"metadata I/O error: block 0x%llx (\"%s\") error %d numblks %d",
-> > +"metadata I/O error: daddr 0x%llx (\"%s\") error %d numblks %d",
-> >  		(uint64_t)XFS_BUF_ADDR(bp), func, -bp->b_error, bp->b_length);
-> Ok, so I might have nodded in approval on IRC a little early; if "block"
-> was misleading, I think "numblks" is too.  So if you change one to
-> daddr, I wonder if the other should be changed as well to, um ...
-> 
-> 
-> "metadata I/O error: daddr 0x%llx (\"%s\") error %d count %d"
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-"metadata I/O error in ("\%s\") at daddr 0x%llx len %d error %d"
+If a metadata IO error happens, we report the location of the failed IO
+request in units of daddrs.  However, the printk message misleads people
+into thinking that the units are fs blocks, so fix the reported units.
 
-also:
-"%s: daddr out of range: block 0x%llx, EOFS 0x%llx ", __func__, b_bn, eofs
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix more messages
+---
+ fs/xfs/xfs_buf.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-"%s: no ops on buf for daddr 0x%llx/0x%x", __func__, b_bn, b_length
-
-"Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!"
-
-So I guess it's also not consistent how we print buffer length either?
-I'll work on something to clean all this up...
-
---D
-
-> ?  That's a bit vague but at least not misleadingly containing a form of
-> "blocks" - whatchathink?  Maybe "len?"  Even "sectors" is a bit overloaded
-> now.  :(
-> 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 1981ef7..641b823 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -585,8 +585,8 @@ _xfs_buf_find(
+ 		 * returning a specific error on buffer lookup failures.
+ 		 */
+ 		xfs_alert(btp->bt_mount,
+-			  "%s: Block out of range: block 0x%llx, EOFS 0x%llx ",
+-			  __func__, cmap.bm_bn, eofs);
++			  "%pS: daddr 0x%llx out of range, EOFS 0x%llx",
++			  __return_address, cmap.bm_bn, eofs);
+ 		WARN_ON(1);
+ 		return NULL;
+ 	}
+@@ -1196,8 +1196,9 @@ xfs_buf_ioerror_alert(
+ 	const char		*func)
+ {
+ 	xfs_alert(bp->b_target->bt_mount,
+-"metadata I/O error: block 0x%llx (\"%s\") error %d numblks %d",
+-		(uint64_t)XFS_BUF_ADDR(bp), func, -bp->b_error, bp->b_length);
++"metadata I/O error in %pS (\"%s\") at daddr 0x%llx len %d error %d",
++			__return_address, func, (uint64_t)XFS_BUF_ADDR(bp),
++			bp->b_length, -bp->b_error);
+ }
+ 
+ int
+@@ -1379,7 +1380,7 @@ _xfs_buf_ioapply(
+ 			 */
+ 			if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 				xfs_warn(mp,
+-					"%s: no ops on block 0x%llx/0x%x",
++					"%s: no buf ops on daddr 0x%llx len %d",
+ 					__func__, bp->b_bn, bp->b_length);
+ 				xfs_hex_dump(bp->b_addr,
+ 						XFS_CORRUPTION_DUMP_LEN);
+@@ -1673,7 +1674,7 @@ xfs_wait_buftarg(
+ 			list_del_init(&bp->b_lru);
+ 			if (bp->b_flags & XBF_WRITE_FAIL) {
+ 				xfs_alert(btp->bt_mount,
+-"Corruption Alert: Buffer at block 0x%llx had permanent write failures!",
++"Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
+ 					(long long)bp->b_bn);
+ 				xfs_alert(btp->bt_mount,
+ "Please run xfs_repair to determine the extent of the problem.");
