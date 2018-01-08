@@ -1,133 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36326 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751704AbeAHVse (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 16:48:34 -0500
-Date: Mon, 8 Jan 2018 13:43:27 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove experimental tag for reflinks
-Message-ID: <20180108214327.GX5602@magnolia>
-References: <20170830145400.3681-1-hch@lst.de>
- <20170831064033.GF3775@magnolia>
- <20170831221951.GR10621@dastard>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:43505 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932905AbeAHXwO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 18:52:14 -0500
+Date: Tue, 9 Jan 2018 10:51:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 14/21] xfs: cross-reference with the bnobt
+Message-ID: <20180108235125.GG16421@dastard>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
+ <151398985848.18741.1443595678961710395.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20170831221951.GR10621@dastard>
+In-Reply-To: <151398985848.18741.1443595678961710395.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Sep 01, 2017 at 08:19:52AM +1000, Dave Chinner wrote:
-> On Wed, Aug 30, 2017 at 11:40:33PM -0700, Darrick J. Wong wrote:
-> > On Wed, Aug 30, 2017 at 04:54:00PM +0200, Christoph Hellwig wrote:
-> > > But reject reflink + DAX file systems for now until the code to
-> > > support reflinks on DAX is actually implemented.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/xfs_super.c | 8 +++-----
-> > >  1 file changed, 3 insertions(+), 5 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index 38aaacdbb8b3..92521032468e 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -1634,7 +1634,9 @@ xfs_fs_fill_super(
-> > >  		}
-> > >  		if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > >  			xfs_alert(mp,
-> > > -		"DAX and reflink have not been tested together!");
-> > > +		"DAX and reflink can not be used together!");
-> > > +			error = -EINVAL;
-> > > +			goto out_filestream_unmount;
-> > 
-> > /This/ hunk seems fine, but...
-> > 
-> > >  	}
-> > >  
-> > >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> > > @@ -1648,10 +1650,6 @@ xfs_fs_fill_super(
-> > >  	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
-> > >  	}
-> > >  
-> > > -	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > > -		xfs_alert(mp,
-> > > -	"EXPERIMENTAL reflink feature enabled. Use at your own risk!");
-> > > -
-> > 
-> > ...I frankly would rather wait until we land and stabilize the incore
-> > extent rework, because I'd rather not have the reflink story be: 1) we
-> > declare reflink stable in 4.14; 2) immediately people start loading up
-> > XFSes with sparse VM images that blow up on high order allocations and
-> > then 3) we get a whole lot of complaints about it.  Then in 4.15 we 4)
-> > land the incore extent map only now we're dragging those same users
-> > through the mud while /that/ stabilizes, with the result 5) that
-> > everyone thinks we've gone off the deep end and doesn't trust us
-> > anymore.
+On Fri, Dec 22, 2017 at 04:44:18PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Which is a lose-lose proposition. IOWs, to be avoided at all costs.
+> When we're scrubbing various btrees, cross-reference the records with
+> the bnobt to ensure that we don't also think the space is free.
 > 
-> > I wish that didn't also mean waiting another 6 months for something that
-> > none of us /developers/ have seen in practice,
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/agheader.c |   84 +++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/alloc.c    |   19 +++++++++++
+>  fs/xfs/scrub/bmap.c     |   21 +++++++++++-
+>  fs/xfs/scrub/btree.c    |   12 +++++++
+>  fs/xfs/scrub/ialloc.c   |    1 +
+>  fs/xfs/scrub/inode.c    |   15 ++++++++
+>  fs/xfs/scrub/refcount.c |    1 +
+>  fs/xfs/scrub/rmap.c     |    4 ++
+>  fs/xfs/scrub/scrub.h    |    5 +++
+>  9 files changed, 161 insertions(+), 1 deletion(-)
 > 
-> Oh, I've seen it plenty of times in practice. Restoring large
-> metadumps with (tens of) millions of tiny extents is the common
-> cause for me.
 > 
-> > especially since the
-> > enterprise distros will have plenty of time to backport all this stuff
-> > before their next big releases if it /does/ become a problem.  It's fine
-> > enough for me (and Christoph's customers, evidently) but is that enough?
-> 
-> FYI, this has been a problem on RHEL for a long time. It's a long
-> standing, well known problem and that's one of the reasons why
-> it's at the top of my list to fix right now.
-> 
-> > <shrug> Not sure what to do about my own fear factor. :)  Anyone want to
-> > offer further comments?  A quick git history trip says sparse inodes
-> > took about 13 months to go from initial commit to EXPERIMENTAL removed?
-> 
-> I always aimed to remove the experimental tag 4 kernel releases
-> after the initial merge, assuming testing and required functionality
-> was all there and complete early on in the stabilisation process.
-> Generally I had a set of criteria that needed to be fulfilled before
-> I'd remove the tag, and ticked them off as fixes were merged.
-> 
-> e.g.  CRCs were introduced in 3.10, the experimental tag was removed
-> in 3.15, so 5 releases in that case. We didn't get CRCs working
-> sanely until 3.11 and there was still a lot of userspace stuff that
-> lagged (and having a fully working userspace was a criteria for
-> removing experimental from the kernel code), so it took longer to
-> stabilise than something smaller like sparse inodes.
-> 
-> Fixing the extent list memory allocation problem was always
-> something on my list of "need to fix before reflink can be deployed
-> in anger", so I'd much prefer that we are conservative in removing
-> the experimental tag. It doesn't hurt anyone if we keep it on until
-> we get the extent tree rework merged, and it's better to err on the
-> side of keeping it too long than not long enough.
+> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> index 5be9059..3bb0f96 100644
+> --- a/fs/xfs/scrub/agheader.c
+> +++ b/fs/xfs/scrub/agheader.c
+> @@ -107,6 +107,20 @@ xfs_scrub_superblock_xref(
+>  	struct xfs_scrub_context	*sc,
+>  	struct xfs_buf			*bp)
+>  {
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_agnumber_t			agno = sc->sm->sm_agno;
+> +	xfs_agblock_t			bno;
+> +	int				error;
+> +
+> +	bno = XFS_SB_BLOCK(mp);
 
-Hmm, it's been 4 months since we last picked up this thread.  We've
-had 7 releases since reflink itself went upstream, which for most
-features would be long enough to remove the EXPERIMENTAL tag for 4.16.
+	agbno
 
-On the other hand, the extent list memory allocation fix series hasn't
-had much time to stabilize, which could be a reason to leave the tag.
+> +
+> +	error = xfs_scrub_ag_init(sc, agno, &sc->sa);
+> +	if (!xfs_scrub_xref_process_error(sc, agno, bno, &error))
+> +		return;
+> +
+> +	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
 
-Thoughts?
+"xref_not_free". That doesn't tell me what it's actually checking
+is not free, or what it's checking against. Seeing as we're checking
+these all against the bnobt, wouldn't something like this be more
+obvious:
 
---D
+	xfs_scrub_is_used_space(sc, agbno, 1);
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +	/* scrub teardown will take care of sc->sa for us */
+>  }
+>  
+>  /*
+> @@ -407,11 +421,51 @@ xfs_scrub_superblock(
+>  
+>  /* AGF */
+>  
+> +/* Tally freespace record lengths. */
+> +STATIC int
+> +xfs_scrub_agf_record_bno_lengths(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_alloc_rec_incore	*rec,
+> +	void				*priv)
+> +{
+> +	xfs_extlen_t			*blocks = priv;
+> +
+> +	(*blocks) += rec->ar_blockcount;
+> +	return 0;
+> +}
+> +
+>  /* Cross-reference with the other btrees. */
+>  STATIC void
+>  xfs_scrub_agf_xref(
+>  	struct xfs_scrub_context	*sc)
+>  {
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_agf			*agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> +	struct xfs_btree_cur		**pcur;
+> +	xfs_agblock_t			bno;
+> +	xfs_extlen_t			blocks;
+> +	int				error;
+> +
+> +	bno = XFS_AGF_BLOCK(mp);
+
+agbno. (and for all the others)
+
+> +
+> +	error = xfs_scrub_ag_btcur_init(sc, &sc->sa);
+> +	if (error)
+> +		return;
+> +
+> +	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
+> +
+> +	/* Check agf_freeblks */
+> +	pcur = &sc->sa.bno_cur;
+> +	if (*pcur) {
+> +		blocks = 0;
+> +		error = xfs_alloc_query_all(*pcur,
+> +				xfs_scrub_agf_record_bno_lengths, &blocks);
+> +		if (xfs_scrub_should_xref(sc, &error, pcur) &&
+> +		    blocks != be32_to_cpu(agf->agf_freeblks))
+> +			xfs_scrub_block_xref_set_corrupt(sc, sc->sa.agf_bp);
+> +	}
+
+I have no idea what xfs_scrub_should_xref() means in this context.
+We're doing a xref scrub, so why are we asking if we should be
+running a xref?
+
+
+> diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+> index 0d95b84..3d6f8cc 100644
+> --- a/fs/xfs/scrub/alloc.c
+> +++ b/fs/xfs/scrub/alloc.c
+> @@ -114,3 +114,22 @@ xfs_scrub_cntbt(
+>  {
+>  	return xfs_scrub_allocbt(sc, XFS_BTNUM_CNT);
+>  }
+> +
+> +/* xref check that the extent is not free */
+> +void
+> +xfs_scrub_xref_not_free(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_btree_cur		**pcur,
+> +	xfs_agblock_t			bno,
+> +	xfs_extlen_t			len)
+> +{
+> +	bool				is_freesp;
+> +	int				error;
+> +
+> +	if (!(*pcur))
+> +		return;
+> +
+> +	error = xfs_alloc_has_record(*pcur, bno, len, &is_freesp);
+> +	if (xfs_scrub_should_xref(sc, &error, pcur) && is_freesp)
+> +		xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
+> +}
+
+Again, "should_xref" doesn't actually tell me anything about what
+this function is doing...
+
+> @@ -117,6 +117,25 @@ xfs_scrub_bmap_extent_xref(
+>  	struct xfs_btree_cur		*cur,
+>  	struct xfs_bmbt_irec		*irec)
+>  {
+> +	struct xfs_scrub_ag		sa = { 0 };
+> +	struct xfs_mount		*mp = info->sc->mp;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			agbno;
+> +	xfs_extlen_t			len;
+> +	int				error;
+> +
+> +	agno = XFS_FSB_TO_AGNO(mp, irec->br_startblock);
+> +	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
+> +	len = irec->br_blockcount;
+> +
+> +	error = xfs_scrub_ag_init(info->sc, agno, &sa);
+> +	if (!xfs_scrub_fblock_process_error(info->sc, info->whichfork,
+> +			irec->br_startoff, &error))
+> +		return;
+> +
+> +	xfs_scrub_xref_not_free(info->sc, &sa.bno_cur, agbno, len);
+> +
+> +	xfs_scrub_ag_free(info->sc, &sa);
+
+Why do we use an on-stack struct xfs_scrub_ag here, and not the one
+embedded into the scrub context like all the other functions in this
+patch?
+
+>  }
+>  
+>  /* Scrub a single extent record. */
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index 9151499..ae58fcc 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+> @@ -381,9 +381,12 @@ xfs_scrub_btree_check_block_owner(
+>  	struct xfs_scrub_ag		sa = { 0 };
+>  	struct xfs_scrub_ag		*psa;
+>  	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			bno;
+> +	bool				is_freesp;
+>  	int				error = 0;
+>  
+>  	agno = xfs_daddr_to_agno(bs->cur->bc_mp, daddr);
+> +	bno = xfs_daddr_to_agbno(bs->cur->bc_mp, daddr);
+
+agbno.
+
+> @@ -584,6 +584,21 @@ xfs_scrub_inode_xref(
+>  	xfs_ino_t			ino,
+>  	struct xfs_dinode		*dip)
+>  {
+> +	struct xfs_scrub_ag		sa = { 0 };
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			agbno;
+> +	int				error;
+> +
+> +	agno = XFS_INO_TO_AGNO(sc->mp, ino);
+> +	agbno = XFS_INO_TO_AGBNO(sc->mp, ino);
+> +
+> +	error = xfs_scrub_ag_init(sc, agno, &sa);
+> +	if (!xfs_scrub_xref_process_error(sc, agno, agbno, &error))
+> +		return;
+> +
+> +	xfs_scrub_xref_not_free(sc, &sa.bno_cur, agbno, 1);
+> +
+> +	xfs_scrub_ag_free(sc, &sa);
+
+Same question here - on-stack vs embedded....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
