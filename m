@@ -1,136 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53940 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755418AbeAHTEp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 14:04:45 -0500
-Date: Mon, 8 Jan 2018 11:02:16 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] vfs/xfs: clean up cow mappings during fs data freeze
-Message-ID: <20180108190216.GR5602@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mail.kernel.org ([198.145.29.99]:48678 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755658AbeAHTPe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jan 2018 14:15:34 -0500
+Message-ID: <1515438929.3486.48.camel@kernel.org>
+Subject: Re: [PATCH v4 19/19] fs: handle inode->i_version more efficiently
+From: Jeff Layton <jlayton@kernel.org>
+Date: Mon, 08 Jan 2018 14:15:29 -0500
+In-Reply-To: <20180108183353.emiwsd4aic4gmytr@kozik-lap>
+References: <20171222120556.7435-1-jlayton@kernel.org>
+         <20171222120556.7435-20-jlayton@kernel.org>
+         <CAJKOXPd8ojTjiGF3nKQKWtVrEsjWfjvg6rLL+RGnbu_SZMDu7g@mail.gmail.com>
+         <1515416208.3486.14.camel@kernel.org>
+         <CAJKOXPfv4eSERDiUuZuJ7KdpyGU0=Eqt_A+J6knp-FEW9BZoSw@mail.gmail.com>
+         <1515418164.3486.18.camel@kernel.org>
+         <20180108172928.aqndozcpljb73uj6@kozik-lap>
+         <1515434419.3486.41.camel@kernel.org>
+         <20180108183353.emiwsd4aic4gmytr@kozik-lap>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, linux-samsung-soc@vger.kernel.org, Marek Szyprowski <m.szyprowski@samsung.com>, =?UTF-8?Q?Bart=C5=82omiej_?= =?UTF-8?Q?=C5=BBo=C5=82nierkiewicz?= <b.zolnierkie@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, 2018-01-08 at 19:33 +0100, Krzysztof Kozlowski wrote:
+> On Mon, Jan 08, 2018 at 01:00:19PM -0500, Jeff Layton wrote:
+> > On Mon, 2018-01-08 at 18:29 +0100, Krzysztof Kozlowski wrote:
+> 
+> (...)
+> 
+> > > > Ok, thanks. If you're seeing hangs then that might imply that we have
+> > > > some sort of excessive looping going on in the cmpxchg loops.
+> > > > 
+> > > > Could you apply the patch below and let me know if it causes either of
+> > > > the warnings to pop? That might at least point us in the right
+> > > > direction:
+> > > 
+> > > No new warnings with attached patch (except existing already lockdep:
+> > > "INFO: trying to register non-static key.").
+> > > 
+> > 
+> > Yeah, I saw that in the original logs and it looks unrelated (and
+> > harmless).
+> > 
+> > > Systemd timeouts on mounting /home but after entering rescue shell there
+> > > is no problem running mount /home:
+> > > 	Give root password for maintenance
+> > > 	(or press Control-D to continue): 
+> > > 	root@odroidxu3:~# mount /home
+> > > 	[  220.659331] EXT4-fs (mmcblk1p2): mounted filesystem with ordered data mode. Opts: (null)
+> > > 
+> > 
+> > Ok, thanks for testing it. So I guess we can probably rule out excessive
+> > looping in those functions as the issue.
+> > 
+> > To make sure I understand the problem: When systemd tries to do the
+> > initial mount of /home (which is an ext4 filesystem), it hangs. But once
+> > it drops to the shell, it works, if you do the mount by hand.
+> > 
+> > Is that correct?
+> 
+> Yes, although it also timeouts on setting up /dev/ttySAC2 (serial
+> console).
+> 
+> > If so, then is it possible to trigger sysrq commands during the hanging
+> > mount attempt? Maybe you could use e.g. sysrq-l, sysrq-w, etc. to
+> > determine what it's blocking on?
 
-As part of the fs freezing process, we want to free the copy-on-write
-reservations after all the dirty data has been written to disk but prior
-to freezing the filesystem.  Currently, only a sync_filesystem call is
-hardwired into the VFS code, so provide a new callout, ->freeze_data, so
-that filesystems can override with whatever behavior they want.
+(trimming the output)
 
-In the case of XFS, that behavior is "sync and then clean the cow
-mappings".  This reduces the amount of recovery that must happen if the
-system goes down while the fs is frozen.
+Thanks. I don't really see anything obvious in that info,
+unfortunately. What we really need to do is find the systemd task
+performing the mount, and see what it's doing.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+We do have one questionable bug in the NFS changes though. Does this
+patch help at all?
+
+-------------------------------8<---------------------------------
+
+SQUASH: nfs: fix i_version increment when adding a request
+
+NFS treats this value as an opaque value with no flag, so we must
+increment it as such instead of using inode_inc_iversion.
+
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/super.c         |   23 +++++++++++++++++------
- fs/xfs/xfs_super.c |   21 +++++++++++++++++++++
- include/linux/fs.h |    1 +
- 3 files changed, 39 insertions(+), 6 deletions(-)
+ fs/nfs/write.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/super.c b/fs/super.c
-index d4e33e8..f0ee186 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1454,7 +1454,16 @@ int freeze_super(struct super_block *sb)
- 	sb_wait_write(sb, SB_FREEZE_PAGEFAULT);
- 
- 	/* All writers are done so after syncing there won't be dirty data */
--	sync_filesystem(sb);
-+	if (sb->s_op->freeze_data) {
-+		ret = sb->s_op->freeze_data(sb);
-+		if (ret) {
-+			printk(KERN_ERR
-+				"VFS:Filesystem data freeze failed\n");
-+			goto freeze_fail;
-+		}
-+	} else {
-+		sync_filesystem(sb);
-+	}
- 
- 	/* Now wait for internal filesystem counter */
- 	sb->s_writers.frozen = SB_FREEZE_FS;
-@@ -1465,11 +1474,7 @@ int freeze_super(struct super_block *sb)
- 		if (ret) {
- 			printk(KERN_ERR
- 				"VFS:Filesystem freeze failed\n");
--			sb->s_writers.frozen = SB_UNFROZEN;
--			sb_freeze_unlock(sb);
--			wake_up(&sb->s_writers.wait_unfrozen);
--			deactivate_locked_super(sb);
--			return ret;
-+			goto freeze_fail;
- 		}
- 	}
- 	/*
-@@ -1480,6 +1485,12 @@ int freeze_super(struct super_block *sb)
- 	lockdep_sb_freeze_release(sb);
- 	up_write(&sb->s_umount);
- 	return 0;
-+freeze_fail:
-+	sb->s_writers.frozen = SB_UNFROZEN;
-+	sb_freeze_unlock(sb);
-+	wake_up(&sb->s_writers.wait_unfrozen);
-+	deactivate_locked_super(sb);
-+	return ret;
- }
- EXPORT_SYMBOL(freeze_super);
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 2db6a40..2817bce 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1408,6 +1408,26 @@ xfs_fs_remount(
- }
- 
- /*
-+ * First stage of a freeze.  We need to sync all the dirty data and clean up
-+ * all the leftover CoW mappings to make the filesystem as tidy as possible.
-+ */
-+STATIC int
-+xfs_fs_freeze_data(
-+	struct super_block	*sb)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+	int			error;
-+
-+	error = sync_filesystem(sb);
-+	if (error)
-+		return error;
-+
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return 0;
-+	return xfs_icache_free_cowblocks(mp, NULL);
-+}
-+
-+/*
-  * Second stage of a freeze. The data is already frozen so we only
-  * need to take care of the metadata. Once that's done sync the superblock
-  * to the log to dirty it in case of a crash while frozen. This ensures that we
-@@ -1780,6 +1800,7 @@ static const struct super_operations xfs_super_operations = {
- 	.drop_inode		= xfs_fs_drop_inode,
- 	.put_super		= xfs_fs_put_super,
- 	.sync_fs		= xfs_fs_sync_fs,
-+	.freeze_data		= xfs_fs_freeze_data,
- 	.freeze_fs		= xfs_fs_freeze,
- 	.unfreeze_fs		= xfs_fs_unfreeze,
- 	.statfs			= xfs_fs_statfs,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2995a27..d53d55f 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1811,6 +1811,7 @@ struct super_operations {
- 	void (*put_super) (struct super_block *);
- 	int (*sync_fs)(struct super_block *sb, int wait);
- 	int (*freeze_super) (struct super_block *);
-+	int (*freeze_data) (struct super_block *);
- 	int (*freeze_fs) (struct super_block *);
- 	int (*thaw_super) (struct super_block *);
- 	int (*unfreeze_fs) (struct super_block *);
+diff --git a/fs/nfs/write.c b/fs/nfs/write.c
+index a03fbac1f88c..48837b6250e9 100644
+--- a/fs/nfs/write.c
++++ b/fs/nfs/write.c
+@@ -755,7 +755,7 @@ static void nfs_inode_add_request(struct inode *inode, struct nfs_page *req)
+ 	spin_lock(&mapping->private_lock);
+ 	if (!nfs_have_writebacks(inode) &&
+ 	    NFS_PROTO(inode)->have_delegation(inode, FMODE_WRITE))
+-		inode_inc_iversion(inode);
++		atomic64_inc(&inode->i_version);
+ 	if (likely(!PageSwapCache(req->wb_page))) {
+ 		set_bit(PG_MAPPED, &req->wb_flags);
+ 		SetPagePrivate(req->wb_page);
+-- 
+2.14.3
+
