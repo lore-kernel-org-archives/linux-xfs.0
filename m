@@ -1,134 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59976 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49986 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753090AbeAGPeu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Jan 2018 10:34:50 -0500
-Date: Sun, 7 Jan 2018 23:34:48 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 7/8] generic: run a long-soak write-only fsstress test
-Message-ID: <20180107153448.GP5123@eguan.usersys.redhat.com>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <151314504409.18893.7360024939760569598.stgit@magnolia>
+        id S1755907AbeAHIow (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jan 2018 03:44:52 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EDEA8C04B32E
+        for <linux-xfs@vger.kernel.org>; Mon,  8 Jan 2018 08:44:51 +0000 (UTC)
+Received: from localhost (ovpn-116-184.ams2.redhat.com [10.36.116.184])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 980E25D724
+        for <linux-xfs@vger.kernel.org>; Mon,  8 Jan 2018 08:44:51 +0000 (UTC)
+Date: Mon, 8 Jan 2018 08:44:50 +0000
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: statfs b_avail & b_free different if the filesystem is mounted
+ readonly
+Message-ID: <20180108084450.GU2787@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <151314504409.18893.7360024939760569598.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Dec 12, 2017 at 10:04:04PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Let a lot of writes soak in with multithreaded fsstress to look for bugs
-> and other problems.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/generic/933     |   64 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/933.out |    2 ++
->  tests/generic/group   |    1 +
->  3 files changed, 67 insertions(+)
->  create mode 100755 tests/generic/933
->  create mode 100644 tests/generic/933.out
-> 
-> 
-> diff --git a/tests/generic/933 b/tests/generic/933
-> new file mode 100755
-> index 0000000..0cbd081
-> --- /dev/null
-> +++ b/tests/generic/933
-> @@ -0,0 +1,64 @@
-> +#! /bin/bash
-> +# FS QA Test No. 933
-> +#
-> +# Run an all-writes fsstress run with multiple threads to shake out
-> +# bugs in the write path.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_supported_os Linux
-> +
-> +_require_scratch
-> +_require_command "$KILLALL_PROG" "killall"
-> +
-> +rm -f $seqres.full
-> +
-> +echo "Silence is golden."
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount >> $seqres.full 2>&1
-> +
-> +nr_cpus=$((LOAD_FACTOR * 4))
-> +nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
-> +$FSSTRESS_PROG $FSSTRESS_AVOID -w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus -v >> $seqres.full
+We had a question[1] posed by a libguestfs user who wondered why the
+output of ‘virt-df’ and ‘df’ differ for an XFS filesystem.  After
+looking into the details it turns out that the statfs(2) system call
+gives slightly different answers if the filesystem is mounted
+read-write vs read-only.
 
-I removed '-v' option on commit, otherwise the resulting $seqres.full is
-too large (almost 200M).
+  ><rescue> mount /dev/sda1 /sysroot
+  ><rescue> stat -f /sysroot
+    File: "/sysroot"
+      ID: 80100000000 Namelen: 255     Type: xfs
+  Block size: 4096       Fundamental block size: 4096
+  Blocks: Total: 24713      Free: 23347      Available: 23347
+  Inodes: Total: 51136      Free: 51133
 
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/933.out b/tests/generic/933.out
-> new file mode 100644
-> index 0000000..758765d
-> --- /dev/null
-> +++ b/tests/generic/933.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 933
-> +Silence is golden.
-> diff --git a/tests/generic/group b/tests/generic/group
-> index ff1ddc9..3c4fff5 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -473,3 +473,4 @@
->  468 shutdown auto quick metadata
->  469 auto quick
->  932 shutdown auto log metadata
-> +933 auto rw clone
+vs:
 
-I also removed the 'clone' group, it only runs clone operations
-implicitly by fsstress.
+  ><rescue> mount -o ro /dev/sda1 /sysroot
+  ><rescue> stat -f /sysroot
+    File: "/sysroot"
+      ID: 80100000000 Namelen: 255     Type: xfs
+  Block size: 4096       Fundamental block size: 4096
+  Blocks: Total: 24713      Free: 24653      Available: 24653
+  Inodes: Total: 51136      Free: 51133
 
-Thanks,
-Eryu
+‘virt-df’ uses ‘-o ro’ and in the ‘df’ case the user had the
+filesystem mounted read-write, hence different results.
+
+I looked into the kernel code and it's all pretty complicated.  I
+couldn't see exactly where this difference could come from.
+
+My questions are: Is there a reason for this difference, and is one of
+the answers more correct than the other?
+
+Rich.
+
+[1] https://www.redhat.com/archives/libguestfs/2018-January/msg00002.html
+
+-- 
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+Read my programming and virtualization blog: http://rwmj.wordpress.com
+libguestfs lets you edit virtual machines.  Supports shell scripting,
+bindings from many languages.  http://libguestfs.org
