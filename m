@@ -1,109 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38454 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753701AbeAIVmy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 16:42:54 -0500
-Date: Tue, 9 Jan 2018 16:42:42 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: don't leak perag metadata reservation on finobt
- block free
-Message-ID: <20180109214242.GA14500@bfoster.bfoster>
-References: <20180109183558.13344-1-bfoster@redhat.com>
- <20180109201619.GG5602@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:16434 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756163AbeAIWZ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jan 2018 17:25:27 -0500
+Date: Wed, 10 Jan 2018 09:25:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Growing RAID10 with active XFS filesystem
+Message-ID: <20180109222523.GJ16421@dastard>
+References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
+ <20180108192607.GS5602@magnolia>
+ <20180108220139.GB16421@dastard>
+ <5A548D31.4000002@youngman.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180109201619.GG5602@magnolia>
+In-Reply-To: <5A548D31.4000002@youngman.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Wols Lists <antlists@youngman.org.uk>
+Cc: linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
 
-On Tue, Jan 09, 2018 at 12:16:19PM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 09, 2018 at 01:35:58PM -0500, Brian Foster wrote:
-> > We started using the perag metadata reservation for free inode btree
-> > blocks in commit 76d771b4cbe33 ("xfs: use per-AG reservations for
-> > the finobt"). While this change consumes metadata res. for finobt
-> > block allocations, we still don't replenish the res. pool when
-> > finobt blocks are freed. This leads to leaking reservation as finobt
-> > blocks are allocated and freed over time, which in turn can lead to
-> > overruse of blocks that should be protected by the reservation.
-> > 
-> > Update the finobt free block path to specify the metadata
-> > reservation type as done in the allocation path.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ialloc_btree.c | 25 +++++++++++++++++++++----
-> >  1 file changed, 21 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > index 47f44d624cb1..18fe6b3a7802 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> > @@ -146,16 +146,33 @@ xfs_finobt_alloc_block(
-> >  }
-> >  
-> >  STATIC int
-> > -xfs_inobt_free_block(
-> > +__xfs_inobt_free_block(
-> >  	struct xfs_btree_cur	*cur,
-> > -	struct xfs_buf		*bp)
-> > +	struct xfs_buf		*bp,
-> > +	enum xfs_ag_resv_type	resv)
-> >  {
-> >  	struct xfs_owner_info	oinfo;
-> >  
-> >  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
-> >  	return xfs_free_extent(cur->bc_tp,
-> >  			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1,
-> > -			&oinfo, XFS_AG_RESV_NONE);
-> > +			&oinfo, resv);
-> > +}
-> > +
-> > +STATIC int
-> > +xfs_inobt_free_block(
-> > +	struct xfs_btree_cur	*cur,
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_NONE);
-> > +}
-> > +
-> > +STATIC int
-> > +xfs_finobt_free_block(
-> > +	struct xfs_btree_cur	*cur,
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
+On Tue, Jan 09, 2018 at 09:36:49AM +0000, Wols Lists wrote:
+> On 08/01/18 22:01, Dave Chinner wrote:
+> > Yup, 21 devices in a RAID 10. That's a really nasty config for
+> > RAID10 which requires an even number of disks to mirror correctly.
+> > Why does MD even allow this sort of whacky, sub-optimal
+> > configuration?
 > 
-> cur->bc_mp->m_inotbt_nores ? XFS_AG_RESV_NONE : XFS_AG_RESV_METADATA
+> Just to point out - if this is raid-10 (and not raid-1+0 which is a
+> completely different beast) this is actually a normal linux config. I'm
+> planning to set up a raid-10 across 3 devices. What happens is that is
+> that raid-10 writes X copies across Y devices. If X = Y then it's a
+> normal mirror config, if X > Y it makes good use of space (and if X < Y
+> it doesn't make sense :-)
 > 
-> Since we don't use the finobt reservation if there wasn't room.
+> SDA: 1, 2, 4, 5
 > 
+> SDB: 1, 3, 4, 6
+> 
+> SDC: 2, 3, 5, 6
 
-Yep.. will send a v2. Thanks!
+It's nice to know that MD has redefined RAID-10 to be different to
+the industry standard definition that has been used for 20 years and
+optimised filesystem layouts for.  Rotoring data across odd numbers
+of disks like this is going to really, really suck on filesystems
+that are stripe layout aware..
 
-Brian
+For example, XFS has hot-spot prevention algorithms in it's
+internal physical layout for striped devices. It aligns AGs across
+different stripe units so that metadata and data doesn't all get
+aligned to the one disk in a RAID0/5/6 stripe. If the stripes are
+rotoring across disks themselves, then we're going to end up back in
+the same position we started with - multiple AGs aligned to the
+same disk.
 
-> --D
-> 
-> >  }
-> >  
-> >  STATIC int
-> > @@ -380,7 +397,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
-> >  	.dup_cursor		= xfs_inobt_dup_cursor,
-> >  	.set_root		= xfs_finobt_set_root,
-> >  	.alloc_block		= xfs_finobt_alloc_block,
-> > -	.free_block		= xfs_inobt_free_block,
-> > +	.free_block		= xfs_finobt_free_block,
-> >  	.get_minrecs		= xfs_inobt_get_minrecs,
-> >  	.get_maxrecs		= xfs_inobt_get_maxrecs,
-> >  	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
-> > -- 
-> > 2.13.6
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The result is that many XFS workloads are going to hotspot disks and
+result in unbalanced load when there are an odd number of disks in a
+RAID-10 array.  Actually, it's probably worse than having no
+alignment, because it makes hotspot occurrence and behaviour very
+unpredictable.
+
+Worse is the fact that there's absolutely nothing we can do to
+optimise allocation alignment or IO behaviour at the filesystem
+level. We'll have to make mkfs.xfs aware of this clusterfuck and
+turn off stripe alignment when we detect such a layout, but that
+doesn't help all the existing user installations out there right
+now.
+
+IMO, odd-numbered disks in RAID-10 should be considered harmful and
+never used....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
