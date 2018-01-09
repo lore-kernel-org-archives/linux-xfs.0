@@ -1,58 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35730 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:50514 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752937AbeA3Qqk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 Jan 2018 11:46:40 -0500
-Subject: Re: [PATCH 2/2] xfs_db: interpret inode timestamps as signed integers
-References: <151692412532.32390.5360363880930671862.stgit@magnolia>
- <151692413760.32390.5793227794979561043.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e4bc60aa-1ee0-a14a-500c-868cd78958a3@sandeen.net>
-Date: Tue, 30 Jan 2018 10:46:37 -0600
+        id S1758807AbeAIPzi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 10:55:38 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BED21356E1
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2018 15:55:38 +0000 (UTC)
+Date: Tue, 9 Jan 2018 10:55:37 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] db/print: bad character cause illegal memory access
+Message-ID: <20180109155536.GA888@bfoster.bfoster>
+References: <20180109062027.4570-1-zlang@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <151692413760.32390.5793227794979561043.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180109062027.4570-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: Zorro Lang <zlang@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 1/25/18 5:48 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 09, 2018 at 02:20:27PM +0800, Zorro Lang wrote:
+> xfs_db can print specified field values, likes:
+>   # xfs_db -c "inode $inum" -c "print core.nblocks" $dev
 > 
-> The Linux kernel treats core.*time.sec as a signed integer value, so
-> xfs_db should do likewise, or else files will have inconsistent times
-> if the seconds count is negative.
+> But when we give it some bad chararcters, the 'print' command will
+> crash:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
+>   # xfs_db -r -c "inode 67211167" -c "print core.*" /dev/mapper/rhel-root
+>   bad character in field *
+>   *** Error in `xfs_db': free(): invalid pointer: 0x00007fa116e937b8 ***
+>   ...
+>   (crash messages)
+>   ...
+>   # xfs_db -r -c "inode 67211167" -c "print core.\"" /dev/mapper/rhel-root
+>   missing closing quote
+>   *** Error in `xfs_db': free(): invalid pointer: 0x00007f6e8e3c37b8 ***
+>   ...
+>   (crash messages)
+>   ...
+> 
+> The reason is xfs_db call ftok_free() to free ftok_t list, but
+> flist_split() forgets to set the tail to NULL. That cause ftok_free()
+> trys to free illegal memory address.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 > ---
->  db/fprint.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  db/flist.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> 
-> diff --git a/db/fprint.c b/db/fprint.c
-> index 261a31e..e8eb510 100644
-> --- a/db/fprint.c
-> +++ b/db/fprint.c
-> @@ -147,7 +147,8 @@ fp_time(
->  	     i++, bitpos += size) {
->  		if (array)
->  			dbprintf("%d:", i + base);
-> -		t=(time_t)getbitval((char *)obj + byteize(bitpos), 0, sizeof(int32_t)*8, 0);
-> +		t = (time_t)getbitval((char *)obj + byteize(bitpos), 0,
-> +				sizeof(int32_t) * 8, BVSIGNED);
->  		c = ctime(&t);
->  		dbprintf("%24.24s", c);
->  		if (i < count - 1)
+> diff --git a/db/flist.c b/db/flist.c
+> index e11acbfc..1a875b95 100644
+> --- a/db/flist.c
+> +++ b/db/flist.c
+> @@ -371,11 +371,14 @@ flist_split(
+>  	v = xmalloc(sizeof(*v));
+>  	v->tok = NULL;
+>  	while (*s) {
+> +		v = xrealloc(v, (nv + 1) * sizeof(*v));
+>  		/* need to add string handling */
+>  		if (*s == '\"') {
+>  			s++; /* skip first quote */
+>  			if ((a = strrchr(s, '\"')) == NULL) {
+>  				dbprintf(_("missing closing quote %s\n"), s);
+> +				v[nv].tok = NULL;
+> +				v[nv].tokty = TT_END;
+>  				ftok_free(v);
+>  				return NULL;
+>  			}
+> @@ -393,19 +396,21 @@ flist_split(
+>  			t = puncttypes[a - punctchars];
+>  		} else {
+>  			dbprintf(_("bad character in field %s\n"), s);
+> +			v[nv].tok = NULL;
+> +			v[nv].tokty = TT_END;
+>  			ftok_free(v);
+>  			return NULL;
+>  		}
+>  		a = xmalloc(l + 1);
+>  		strncpy(a, s, l);
+>  		a[l] = '\0';
+> -		v = xrealloc(v, (nv + 2) * sizeof(*v));
+>  		v[nv].tok = a;
+>  		v[nv].tokty = t;
+>  		nv++;
+>  		s += l + tailskip;
+>  		tailskip = 0;
+>  	}
+> +	v = xrealloc(v, (nv + 1) * sizeof(*v));
+>  	v[nv].tok = NULL;
+
+Could we just move the above line into the loop (right after nv is
+bumped) to initialize .tok similar to the initial allocation before the
+loop?
+
+Brian
+
+>  	v[nv].tokty = TT_END;
+>  	return v;
+> -- 
+> 2.13.6
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
