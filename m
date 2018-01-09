@@ -1,384 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44620 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757643AbeAIVAV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jan 2018 16:00:21 -0500
-Date: Tue, 9 Jan 2018 13:00:12 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 13/21] xfs: introduce scrubber cross-referencing stubs
-Message-ID: <20180109210012.GH5602@magnolia>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398985228.18741.6364419677377927534.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151398985228.18741.6364419677377927534.stgit@magnolia>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36338 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759816AbeAIU5P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jan 2018 15:57:15 -0500
+Received: by mail-pg0-f65.google.com with SMTP id j2so7608669pgv.3
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Jan 2018 12:57:15 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH 05/36] usercopy: WARN() on slab cache usercopy region violations
+Date: Tue,  9 Jan 2018 12:55:34 -0800
+Message-Id: <1515531365-37423-6-git-send-email-keescook@chromium.org>
+In-Reply-To: <1515531365-37423-1-git-send-email-keescook@chromium.org>
+References: <1515531365-37423-1-git-send-email-keescook@chromium.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>
+To: linux-kernel@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>, David Windsor <dave@nullcore.net>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Laura Abbott <labbott@redhat.com>, Ingo Molnar <mingo@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: David Windsor <dave@nullcore.net>
 
-Create some stubs that will be used to cross-reference metadata records.
-The actual cross-referencing will be filled in by subsequent patches.
+This patch adds checking of usercopy cache whitelisting, and is modified
+from Brad Spengler/PaX Team's PAX_USERCOPY whitelisting code in the
+last public patch of grsecurity/PaX based on my understanding of the
+code. Changes or omissions from the original code are mine and don't
+reflect the original grsecurity/PaX code.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+The SLAB and SLUB allocators are modified to WARN() on all copy operations
+in which the kernel heap memory being modified falls outside of the cache's
+defined usercopy region.
+
+Signed-off-by: David Windsor <dave@nullcore.net>
+[kees: adjust commit log and comments, switch to WARN-by-default]
+Cc: Christoph Lameter <cl@linux.com>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Laura Abbott <labbott@redhat.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
-v2: move the OFLAG_CORRUPT checks into the helpers to clean up the call sites
----
- fs/xfs/scrub/agheader.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/alloc.c    |   13 ++++++++++
- fs/xfs/scrub/bmap.c     |   29 ++++++++++++++++++++++
- fs/xfs/scrub/ialloc.c   |   15 +++++++++++
- fs/xfs/scrub/inode.c    |   12 +++++++++
- fs/xfs/scrub/refcount.c |   14 ++++++++++
- fs/xfs/scrub/rmap.c     |   12 +++++++++
- 7 files changed, 157 insertions(+), 1 deletion(-)
+ mm/slab.c     | 30 +++++++++++++++++++++++++-----
+ mm/slub.c     | 34 +++++++++++++++++++++++++++-------
+ mm/usercopy.c | 12 ++++++++++++
+ 3 files changed, 64 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 97beb47..1477aad 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -37,7 +37,10 @@
- #include "scrub/common.h"
- #include "scrub/trace.h"
+diff --git a/mm/slab.c b/mm/slab.c
+index f1ead7b7909d..d9939828f8e4 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -4392,7 +4392,9 @@ module_init(slab_proc_init);
  
--/* Walk all the blocks in the AGFL. */
-+/*
-+ * Walk all the blocks in the AGFL.  The fn function can return any negative
-+ * error code or XFS_BTREE_QUERY_RANGE_ABORT.
-+ */
- int
- xfs_scrub_walk_agfl(
- 	struct xfs_scrub_context	*sc,
-@@ -98,6 +101,16 @@ xfs_scrub_walk_agfl(
- 
- /* Superblock */
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_superblock_xref(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
+ #ifdef CONFIG_HARDENED_USERCOPY
  /*
-  * Scrub the filesystem superblock.
+- * Rejects objects that are incorrectly sized.
++ * Rejects incorrectly sized objects and objects that are to be copied
++ * to/from userspace but do not fall entirely within the containing slab
++ * cache's usercopy region.
   *
-@@ -386,11 +399,22 @@ xfs_scrub_superblock(
- 			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
- 		xfs_scrub_block_set_corrupt(sc, bp);
+  * Returns NULL if check passes, otherwise const char * to name of cache
+  * to indicate an error.
+@@ -4412,11 +4414,29 @@ int __check_heap_object(const void *ptr, unsigned long n, struct page *page,
+ 	/* Find offset within object. */
+ 	offset = ptr - index_to_obj(cachep, page, objnr) - obj_offset(cachep);
  
-+	xfs_scrub_superblock_xref(sc, bp);
+-	/* Allow address range falling entirely within object size. */
+-	if (offset <= cachep->object_size && n <= cachep->object_size - offset)
+-		return 0;
++	/* Make sure object falls entirely within cache's usercopy region. */
++	if (offset < cachep->useroffset ||
++	    offset - cachep->useroffset > cachep->usersize ||
++	    n > cachep->useroffset - offset + cachep->usersize) {
++		/*
++		 * If the copy is still within the allocated object, produce
++		 * a warning instead of rejecting the copy. This is intended
++		 * to be a temporary method to find any missing usercopy
++		 * whitelists.
++		 */
++		if (offset <= cachep->object_size &&
++		    n <= cachep->object_size - offset) {
++			WARN_ONCE(1, "unexpected usercopy %s with bad or missing whitelist with SLAB object '%s' (offset %lu, size %lu)",
++				  to_user ? "exposure" : "overwrite",
++				  cachep->name, offset, n);
++			return 0;
++		}
+ 
+-	return report_usercopy("SLAB object", cachep->name, to_user, offset, n);
++		return report_usercopy("SLAB object", cachep->name, to_user,
++				       offset, n);
++	}
 +
- 	return error;
++	return 0;
  }
+ #endif /* CONFIG_HARDENED_USERCOPY */
  
- /* AGF */
+diff --git a/mm/slub.c b/mm/slub.c
+index 8738a8d8bf8e..2aa4972a2058 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3813,7 +3813,9 @@ EXPORT_SYMBOL(__kmalloc_node);
  
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_agf_xref(
-+	struct xfs_scrub_context	*sc)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub the AGF. */
- int
- xfs_scrub_agf(
-@@ -469,6 +493,7 @@ xfs_scrub_agf(
- 	if (agfl_count != 0 && fl_count != agfl_count)
- 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+ #ifdef CONFIG_HARDENED_USERCOPY
+ /*
+- * Rejects objects that are incorrectly sized.
++ * Rejects incorrectly sized objects and objects that are to be copied
++ * to/from userspace but do not fall entirely within the containing slab
++ * cache's usercopy region.
+  *
+  * Returns NULL if check passes, otherwise const char * to name of cache
+  * to indicate an error.
+@@ -3823,11 +3825,9 @@ int __check_heap_object(const void *ptr, unsigned long n, struct page *page,
+ {
+ 	struct kmem_cache *s;
+ 	unsigned long offset;
+-	size_t object_size;
  
-+	xfs_scrub_agf_xref(sc);
- out:
- 	return error;
- }
-@@ -481,6 +506,16 @@ struct xfs_scrub_agfl_info {
- 	xfs_agblock_t			*entries;
- };
+ 	/* Find object and usable object size. */
+ 	s = page->slab_cache;
+-	object_size = slab_ksize(s);
  
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_agfl_block_xref(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agblock_t			agbno)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub an AGFL block. */
- STATIC int
- xfs_scrub_agfl_block(
-@@ -498,6 +533,8 @@ xfs_scrub_agfl_block(
- 	else
- 		xfs_scrub_block_set_corrupt(sc, sc->sa.agfl_bp);
- 
-+	xfs_scrub_agfl_block_xref(sc, agbno);
-+
- 	return 0;
- }
- 
-@@ -512,6 +549,15 @@ xfs_scrub_agblock_cmp(
- 	return (int)*a - (int)*b;
- }
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_agfl_xref(
-+	struct xfs_scrub_context	*sc)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub the AGFL. */
- int
- xfs_scrub_agfl(
-@@ -532,6 +578,11 @@ xfs_scrub_agfl(
- 	if (!sc->sa.agf_bp)
- 		return -EFSCORRUPTED;
- 
-+	xfs_scrub_agfl_xref(sc);
-+
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		goto out;
-+
- 	/* Allocate buffer to ensure uniqueness of AGFL entries. */
- 	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
- 	agflcount = be32_to_cpu(agf->agf_flcount);
-@@ -574,6 +625,15 @@ xfs_scrub_agfl(
- 
- /* AGI */
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_agi_xref(
-+	struct xfs_scrub_context	*sc)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub the AGI. */
- int
- xfs_scrub_agi(
-@@ -652,6 +712,7 @@ xfs_scrub_agi(
- 	if (agi->agi_pad32 != cpu_to_be32(0))
- 		xfs_scrub_block_set_corrupt(sc, sc->sa.agi_bp);
- 
-+	xfs_scrub_agi_xref(sc);
- out:
- 	return error;
- }
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index 059663e..03ed403 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -50,6 +50,17 @@ xfs_scrub_setup_ag_allocbt(
- 
- /* Free space btree scrubber. */
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_allocbt_xref(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agblock_t			agbno,
-+	xfs_extlen_t			len)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub a bnobt/cntbt record. */
- STATIC int
- xfs_scrub_allocbt_rec(
-@@ -70,6 +81,8 @@ xfs_scrub_allocbt_rec(
- 	    !xfs_verify_agbno(mp, agno, bno + len - 1))
- 		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
- 
-+	xfs_scrub_allocbt_xref(bs->sc, bno, len);
-+
- 	return error;
- }
- 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 0261e11..b693192 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -99,6 +99,30 @@ struct xfs_scrub_bmap_info {
- 	int				whichfork;
- };
- 
-+/* Cross-reference a single rtdev extent record. */
-+STATIC void
-+xfs_scrub_bmap_rt_extent_xref(
-+	struct xfs_scrub_bmap_info	*info,
-+	struct xfs_inode		*ip,
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_bmbt_irec		*irec)
-+{
-+	if (info->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
-+/* Cross-reference a single datadev extent record. */
-+STATIC void
-+xfs_scrub_bmap_extent_xref(
-+	struct xfs_scrub_bmap_info	*info,
-+	struct xfs_inode		*ip,
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_bmbt_irec		*irec)
-+{
-+	if (info->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub a single extent record. */
- STATIC int
- xfs_scrub_bmap_extent(
-@@ -158,6 +182,11 @@ xfs_scrub_bmap_extent(
- 		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
- 				irec->br_startoff);
- 
-+	if (info->is_rt)
-+		xfs_scrub_bmap_rt_extent_xref(info, ip, cur, irec);
-+	else
-+		xfs_scrub_bmap_extent_xref(info, ip, cur, irec);
-+
- 	info->lastoff = irec->br_startoff + irec->br_blockcount;
- 	return error;
- }
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 496d6f2..9294148 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -58,6 +58,19 @@ xfs_scrub_setup_ag_iallocbt(
- 
- /* Inode btree scrubber. */
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_iallocbt_chunk_xref(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_inobt_rec_incore	*irec,
-+	xfs_agino_t			agino,
-+	xfs_agblock_t			agbno,
-+	xfs_extlen_t			len)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Is this chunk worth checking? */
- STATIC bool
- xfs_scrub_iallocbt_chunk(
-@@ -76,6 +89,8 @@ xfs_scrub_iallocbt_chunk(
- 	    !xfs_verify_agbno(mp, agno, bno + len - 1))
- 		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
- 
-+	xfs_scrub_iallocbt_chunk_xref(bs->sc, irec, agino, bno, len);
-+
- 	return true;
- }
- 
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 304e8bc..2aa12e1 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -577,6 +577,17 @@ xfs_scrub_inode_map_raw(
- 	return error;
- }
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_inode_xref(
-+	struct xfs_scrub_context	*sc,
-+	xfs_ino_t			ino,
-+	struct xfs_dinode		*dip)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub an inode. */
- int
- xfs_scrub_inode(
-@@ -626,6 +637,7 @@ xfs_scrub_inode(
- 			xfs_scrub_ino_set_preen(sc, ino, bp);
+ 	/* Reject impossible pointers. */
+ 	if (ptr < page_address(page))
+@@ -3845,11 +3845,31 @@ int __check_heap_object(const void *ptr, unsigned long n, struct page *page,
+ 		offset -= s->red_left_pad;
  	}
  
-+	xfs_scrub_inode_xref(sc, ino, dip);
- out:
- 	if (bp)
- 		xfs_trans_brelse(sc->tp, bp);
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 2f88a8d..d202382 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -50,6 +50,18 @@ xfs_scrub_setup_ag_refcountbt(
+-	/* Allow address range falling entirely within object size. */
+-	if (offset <= object_size && n <= object_size - offset)
+-		return 0;
++	/* Make sure object falls entirely within cache's usercopy region. */
++	if (offset < s->useroffset ||
++	    offset - s->useroffset > s->usersize ||
++	    n > s->useroffset - offset + s->usersize) {
++		size_t object_size;
  
- /* Reference count btree scrubber. */
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_refcountbt_xref(
-+	struct xfs_scrub_context	*sc,
-+	xfs_agblock_t			bno,
-+	xfs_extlen_t			len,
-+	xfs_nlink_t			refcount)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
+-	return report_usercopy("SLUB object", s->name, to_user, offset, n);
++		/*
++		 * If the copy is still within the allocated object, produce
++		 * a warning instead of rejecting the copy. This is intended
++		 * to be a temporary method to find any missing usercopy
++		 * whitelists.
++		 */
++		object_size = slab_ksize(s);
++		if ((offset <= object_size && n <= object_size - offset)) {
++			WARN_ONCE(1, "unexpected usercopy %s with bad or missing whitelist with SLUB object '%s' (offset %lu size %lu)",
++				  to_user ? "exposure" : "overwrite",
++				  s->name, offset, n);
++			return 0;
++		}
 +
- /* Scrub a refcountbt record. */
- STATIC int
- xfs_scrub_refcountbt_rec(
-@@ -83,6 +95,8 @@ xfs_scrub_refcountbt_rec(
- 	if (refcount == 0)
- 		xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
- 
-+	xfs_scrub_refcountbt_xref(bs->sc, bno, len, refcount);
++		return report_usercopy("SLUB object", s->name, to_user,
++				       offset, n);
++	}
 +
- 	return error;
++	return 0;
+ }
+ #endif /* CONFIG_HARDENED_USERCOPY */
+ 
+diff --git a/mm/usercopy.c b/mm/usercopy.c
+index a8426a502136..4ed615d4efc8 100644
+--- a/mm/usercopy.c
++++ b/mm/usercopy.c
+@@ -58,6 +58,18 @@ static noinline int check_stack_object(const void *obj, unsigned long len)
+ 	return GOOD_STACK;
  }
  
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 97846c4..8655948 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -51,6 +51,16 @@ xfs_scrub_setup_ag_rmapbt(
- 
- /* Reverse-mapping scrubber. */
- 
-+/* Cross-reference with the other btrees. */
-+STATIC void
-+xfs_scrub_rmapbt_xref(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_rmap_irec		*irec)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+}
-+
- /* Scrub an rmapbt record. */
- STATIC int
- xfs_scrub_rmapbt_rec(
-@@ -121,6 +131,8 @@ xfs_scrub_rmapbt_rec(
- 		    irec.rm_owner > XFS_RMAP_OWN_FS)
- 			xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, 0);
- 	}
-+
-+	xfs_scrub_rmapbt_xref(bs->sc, &irec);
- out:
- 	return error;
- }
++/*
++ * If this function is reached, then CONFIG_HARDENED_USERCOPY has found an
++ * unexpected state during a copy_from_user() or copy_to_user() call.
++ * There are several checks being performed on the buffer by the
++ * __check_object_size() function. Normal stack buffer usage should never
++ * trip the checks, and kernel text addressing will always trip the check.
++ * For cache objects, it is checking that only the whitelisted range of
++ * bytes for a given cache is being accessed (via the cache's usersize and
++ * useroffset fields). To adjust a cache whitelist, use the usercopy-aware
++ * kmem_cache_create_usercopy() function to create the cache (and
++ * carefully audit the whitelist range).
++ */
+ int report_usercopy(const char *name, const char *detail, bool to_user,
+ 		    unsigned long offset, unsigned long len)
+ {
+-- 
+2.7.4
+
