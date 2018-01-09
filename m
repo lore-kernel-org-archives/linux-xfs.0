@@ -1,86 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53604 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750818AbeAIHNk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jan 2018 02:13:40 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w097C2TX036096
-        for <linux-xfs@vger.kernel.org>; Tue, 9 Jan 2018 07:13:39 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2fcpfyrf05-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Jan 2018 07:13:39 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w097DbCf016188
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 9 Jan 2018 07:13:38 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w097DbTr011879
-        for <linux-xfs@vger.kernel.org>; Tue, 9 Jan 2018 07:13:37 GMT
-Date: Mon, 8 Jan 2018 23:13:36 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: harden directory integrity checks some more
-Message-ID: <20180109071336.GD5602@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:39258 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752488AbeAIJ1y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 04:27:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <1515447593.3486.54.camel@kernel.org>
+References: <20171222120556.7435-1-jlayton@kernel.org> <20171222120556.7435-20-jlayton@kernel.org>
+ <CAJKOXPd8ojTjiGF3nKQKWtVrEsjWfjvg6rLL+RGnbu_SZMDu7g@mail.gmail.com>
+ <1515416208.3486.14.camel@kernel.org> <CAJKOXPfv4eSERDiUuZuJ7KdpyGU0=Eqt_A+J6knp-FEW9BZoSw@mail.gmail.com>
+ <1515418164.3486.18.camel@kernel.org> <20180108172928.aqndozcpljb73uj6@kozik-lap>
+ <1515434419.3486.41.camel@kernel.org> <20180108183353.emiwsd4aic4gmytr@kozik-lap>
+ <1515438929.3486.48.camel@kernel.org> <20180108201713.rdfjn7j65cuqmwuo@kozik-lap>
+ <1515447593.3486.54.camel@kernel.org>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Date: Tue, 9 Jan 2018 10:27:50 +0100
+Message-ID: <CAJKOXPfW8h4U8RKY86Sz-5BVxRQAu-ACEJtZ0hCiLVSn7tEB0Q@mail.gmail.com>
+Subject: Re: [PATCH v4 19/19] fs: handle inode->i_version more efficiently
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, linux-samsung-soc@vger.kernel.org, Marek Szyprowski <m.szyprowski@samsung.com>, =?UTF-8?B?QmFydMWCb21pZWogxbtvxYJuaWVya2lld2ljeg==?= <b.zolnierkie@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jan 8, 2018 at 10:39 PM, Jeff Layton <jlayton@kernel.org> wrote:
+>>
+>
+> Got it, that's helpful. Does this patch help (on top of the others) ?
+>
+> ------------------------8<--------------------------
+>
+> SQUASH: nfs: compare raw iversion counter since that's what's
+>  being stored
+>
 
-If a malicious filesystem image contains a block+ format directory
-wherein the directory inode's core.mode is set such that
-S_ISDIR(core.mode) == 0, and if there are subdirectories of the
-corrupted directory, an attempt to traverse up the directory tree will
-crash the kernel in __xfs_dir3_data_check.  Running the online scrub's
-parent checks will tend to do this.
+Did not apply cleanly (in include/linux/iversion.h) but it was easy to
+adjust. However still no improvements. Applied on top of others.
 
-The crash occurs because the directory inode's d_ops get set to
-xfs_dir[23]_nondir_ops (it's not a directory) but the parent pointer
-scrubber's indiscriminate call to xfs_readdir proceeds past the ASSERT
-if we have non fatal asserts configured.
-
-Fix the null pointer dereference crash in __xfs_dir3_data_check by
-looking for S_ISDIR or NULL data_entry_p; and teach the parent scrubber
-to bail out if it is fed a non-directory "parent".
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2_data.c |    7 +++++++
- fs/xfs/scrub/parent.c         |    2 +-
- 2 files changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 3237812..31d5ec6 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -73,6 +73,13 @@ __xfs_dir3_data_check(
- 	 */
- 	ops = xfs_dir_get_ops(mp, dp);
- 
-+	/*
-+	 * If this isn't a directory, or we got handed the non-dir ops,
-+	 * something is seriously wrong.  Bail out.
-+	 */
-+	if ((dp && !S_ISDIR(VFS_I(dp)->i_mode)) || !ops->data_entry_p)
-+		return __this_address;
-+
- 	hdr = bp->b_addr;
- 	p = (char *)ops->data_entry_p(hdr);
- 
-diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index dd704fd..0d38514 100644
---- a/fs/xfs/scrub/parent.c
-+++ b/fs/xfs/scrub/parent.c
-@@ -171,7 +171,7 @@ xfs_scrub_parent_validate(
- 	error = xfs_iget(mp, sc->tp, dnum, 0, 0, &dp);
- 	if (!xfs_scrub_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
- 		goto out;
--	if (dp == sc->ip) {
-+	if (dp == sc->ip || !S_ISDIR(VFS_I(dp)->i_mode)) {
- 		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
- 		goto out_rele;
- 	}
+Best regards,
+Krzysztof
