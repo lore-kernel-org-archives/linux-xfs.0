@@ -1,99 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50734 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758168AbeAISZq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jan 2018 13:25:46 -0500
-Date: Tue, 9 Jan 2018 10:25:42 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: harden directory integrity checks some more
-Message-ID: <20180109182542.GE5602@magnolia>
-References: <20180109071336.GD5602@magnolia>
- <20180109160915.GB888@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180109160915.GB888@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:33790 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752097AbeAISf7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 13:35:59 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3553080473
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2018 18:35:59 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 17F745F90D
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2018 18:35:59 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: don't leak perag metadata reservation on finobt block free
+Date: Tue,  9 Jan 2018 13:35:58 -0500
+Message-Id: <20180109183558.13344-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jan 09, 2018 at 11:09:16AM -0500, Brian Foster wrote:
-> On Mon, Jan 08, 2018 at 11:13:36PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If a malicious filesystem image contains a block+ format directory
-> > wherein the directory inode's core.mode is set such that
-> > S_ISDIR(core.mode) == 0, and if there are subdirectories of the
-> > corrupted directory, an attempt to traverse up the directory tree will
-> > crash the kernel in __xfs_dir3_data_check.  Running the online scrub's
-> > parent checks will tend to do this.
-> > 
-> > The crash occurs because the directory inode's d_ops get set to
-> > xfs_dir[23]_nondir_ops (it's not a directory) but the parent pointer
-> > scrubber's indiscriminate call to xfs_readdir proceeds past the ASSERT
-> > if we have non fatal asserts configured.
-> > 
-> > Fix the null pointer dereference crash in __xfs_dir3_data_check by
-> > looking for S_ISDIR or NULL data_entry_p; and teach the parent scrubber
-> > to bail out if it is fed a non-directory "parent".
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_dir2_data.c |    7 +++++++
-> >  fs/xfs/scrub/parent.c         |    2 +-
-> >  2 files changed, 8 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-> > index 3237812..31d5ec6 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_data.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_data.c
-> > @@ -73,6 +73,13 @@ __xfs_dir3_data_check(
-> >  	 */
-> >  	ops = xfs_dir_get_ops(mp, dp);
-> >  
-> > +	/*
-> > +	 * If this isn't a directory, or we got handed the non-dir ops,
-> > +	 * something is seriously wrong.  Bail out.
-> > +	 */
-> > +	if ((dp && !S_ISDIR(VFS_I(dp)->i_mode)) || !ops->data_entry_p)
-> > +		return __this_address;
-> > +
-> 
-> I wonder if something like (ops == xfs_nondir_get_ops(mp, NULL)) would
-> be a bit more explicit for the second part of this check..? Otherwise
-> seems Ok to me.
+We started using the perag metadata reservation for free inode btree
+blocks in commit 76d771b4cbe33 ("xfs: use per-AG reservations for
+the finobt"). While this change consumes metadata res. for finobt
+block allocations, we still don't replenish the res. pool when
+finobt blocks are freed. This leads to leaking reservation as finobt
+blocks are allocated and freed over time, which in turn can lead to
+overruse of blocks that should be protected by the reservation.
 
-Sure, though I prefer (ops != xfs_dir_get_ops(mp, NULL)) for defensive
-reasons.
+Update the finobt free block path to specify the metadata
+reservation type as done in the allocation path.
 
---D
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
-> 
-> Brian
-> 
-> >  	hdr = bp->b_addr;
-> >  	p = (char *)ops->data_entry_p(hdr);
-> >  
-> > diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-> > index dd704fd..0d38514 100644
-> > --- a/fs/xfs/scrub/parent.c
-> > +++ b/fs/xfs/scrub/parent.c
-> > @@ -171,7 +171,7 @@ xfs_scrub_parent_validate(
-> >  	error = xfs_iget(mp, sc->tp, dnum, 0, 0, &dp);
-> >  	if (!xfs_scrub_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
-> >  		goto out;
-> > -	if (dp == sc->ip) {
-> > +	if (dp == sc->ip || !S_ISDIR(VFS_I(dp)->i_mode)) {
-> >  		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> >  		goto out_rele;
-> >  	}
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 47f44d624cb1..18fe6b3a7802 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -146,16 +146,33 @@ xfs_finobt_alloc_block(
+ }
+ 
+ STATIC int
+-xfs_inobt_free_block(
++__xfs_inobt_free_block(
+ 	struct xfs_btree_cur	*cur,
+-	struct xfs_buf		*bp)
++	struct xfs_buf		*bp,
++	enum xfs_ag_resv_type	resv)
+ {
+ 	struct xfs_owner_info	oinfo;
+ 
+ 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
+ 	return xfs_free_extent(cur->bc_tp,
+ 			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1,
+-			&oinfo, XFS_AG_RESV_NONE);
++			&oinfo, resv);
++}
++
++STATIC int
++xfs_inobt_free_block(
++	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*bp)
++{
++	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_NONE);
++}
++
++STATIC int
++xfs_finobt_free_block(
++	struct xfs_btree_cur	*cur,
++	struct xfs_buf		*bp)
++{
++	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
+ }
+ 
+ STATIC int
+@@ -380,7 +397,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
+ 	.dup_cursor		= xfs_inobt_dup_cursor,
+ 	.set_root		= xfs_finobt_set_root,
+ 	.alloc_block		= xfs_finobt_alloc_block,
+-	.free_block		= xfs_inobt_free_block,
++	.free_block		= xfs_finobt_free_block,
+ 	.get_minrecs		= xfs_inobt_get_minrecs,
+ 	.get_maxrecs		= xfs_inobt_get_maxrecs,
+ 	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+-- 
+2.13.6
+
