@@ -1,227 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39026 "EHLO sandeen.net"
+Received: from mail.kernel.org ([198.145.29.99]:42094 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753186AbeALAQD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 19:16:03 -0500
-Subject: Re: [PATCH 01/27] xfs_scrub: create online filesystem scrub program
-References: <151520348769.2027.9860697266310422360.stgit@magnolia>
- <151520349393.2027.11445111828418979100.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <beabcf8b-4a09-60c9-ad27-c123ddb545b3@sandeen.net>
-Date: Thu, 11 Jan 2018 18:16:02 -0600
-MIME-Version: 1.0
-In-Reply-To: <151520349393.2027.11445111828418979100.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1753077AbeAIOLQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 09:11:16 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v5 04/19] affs: convert to new i_version API
+Date: Tue,  9 Jan 2018 09:10:44 -0500
+Message-Id: <20180109141059.25929-5-jlayton@kernel.org>
+In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
+References: <20180109141059.25929-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
 
-On 1/5/18 7:51 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Jeff Layton <jlayton@redhat.com>
 
-<man page nitpicking>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ fs/affs/amigaffs.c | 5 +++--
+ fs/affs/dir.c      | 5 +++--
+ fs/affs/super.c    | 3 ++-
+ 3 files changed, 8 insertions(+), 5 deletions(-)
 
-> diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
-> new file mode 100644
-> index 0000000..95f4fea
-> --- /dev/null
-> +++ b/man/man8/xfs_scrub.8
-> @@ -0,0 +1,117 @@
-> +.TH xfs_scrub 8
-> +.SH NAME
-> +xfs_scrub \- scrub the contents of an XFS filesystem
-> +.SH SYNOPSIS
-> +.B xfs_scrub
-> +[
-> +.B \-abemnTvVxy
-               ^
-> +]
-> +.I mount-point
-
-or block device?
-
-> +.br
-> +.B xfs_scrub \-V
-                  ^
-
-If V is special it probably shouldn't be in the first arg string?
-
-Do you mean to hide the "-d" option?
-
-
-> +.SH DESCRIPTION
-> +.B xfs_scrub
-> +attempts to check and repair all metadata in a mounted XFS filesystem.
-> +.PP
-> +.B xfs_scrub
-> +asks the kernel to scrub all metadata objects in the filesystem.
-> +Metadata records are scanned for obviously bad values and then
-> +cross-referenced against other metadata.
-> +The goal is to establish a threasonable confidence about the consistency
-
-"reasonable"
-
-> +of the overall filesystem by examining the consistency of individual
-> +metadata records against the other metadata in the filesystem across the
-> +entire filesystem.
-
-Redundant, "examining the consistency of individual metadata records against
-the other medtadata in the filesystem."  would suffice.
-
-> +Damaged metadata can be rebuilt from other metadata if there is
-> +sufficient redundancy (and no other corruption) in the metadata.
-
-Again redundant, maybe just "if there is sufficient redundancy within
-other intact metadata?"
-
-> +.PP
-> +This utility does not know how to correct all errors.
-> +If the tool cannot fix the detected errors, you must unmount the
-> +filesystem and run
-> +.B xfs_repair
-> +to fix the problems.
-> +If this tool is not run with either of the
-> +.B \-n
-> +or
-> +.B \-y
-> +options, then it will optimize the filesystem when possible,
-> +but it will not try to fix errors.
-
-I think the manpage needs to describe what this optimization might
-involve, at least at a high level.  Will it fsr all my files? Will
-it trim my free space?  Will it compact my directories?  Will it ...?
-What exactly am I agreeing to here? :)
-
-> +.SH OPTIONS
-> +.TP
-> +.BI \-a " errors"
-> +Abort if more than this many errors are found on the filesystem.
-> +.TP
-> +.B \-b
-> +Run in background mode.
-> +If the option is specified once, only run a single scrubbing thread at a
-> +time.
-> +If given more than once, an artificial delay of 100us is added to each
-> +scrub call to reduce CPU overhead even further.
-
-I wonder, should it take a value instead of -bbbbbbbbb?
-
-> +.TP
-> +.B \-e
-> +Specifies what happens when errors are detected.
-> +If
-> +.IR shutdown
-> +is given, the filesystem will be taken offline if errors are found.
-> +Not all backends can shut down a filesystem.
-
-<user> what's a backend? </user>
-
-> +If
-> +.IR continue
-> +is given, no action taken if errors are found.
-> +This is the default.
-
-<user> so how do I know what errors were found? </user>
-
-> +.TP
-> +.BI \-m " file"
-> +Search this file for mounted filesystems instead of /etc/mtab.
-> +.TP
-> +.B \-n
-> +Dry run, do not modify anything in the filesystem.
-> +This disables all preening and optimization behaviors, and disables
-> +calling FITRIM on the free space after a successful run.
-
-what if I only want to disable FITRIM?  (-k?)
-Oh, and it runs FITRIM?  Can you mention that more prominently
-in the behavior description?  (and should it, given that we
-have a tool for that purpose?)
-
-> +.TP
-> +.BI \-T
-> +Print timing and memory usage information for each phase.
-> +.TP
-> +.B \-v
-> +Enable verbose mode, which prints periodic status updates.
-> +.TP
-> +.B \-V
-> +Prints the version number and exits.
-> +.TP
-> +.B \-x
-> +Scrub all file data too.
-
-colloquial?  maybe s/too/as well/ 
-
-> +The block list will be sorted in disk order for better performance.
-
-Cool, so when I'm done, my filesystem will have better performance if I use -x?
-and none of my files will be corrupted!  ;)
-
-The read order is probably an implementation detail that doesn't need to be in
-the manpage.  It may be worth changing the description a bit to make it
-clearer that the purpose is to determine readability of every file block?
-I mean, that should probably be obvious, but ...
-
-> +.B xfs_scrub
-> +will issue O_DIRECT reads to the block device directly.
-> +If the block device is a SCSI disk, it will issue READ VERIFY commands
-> +directly to the disk.
-
-+ These actions will confirm that all file data blocks can be read from storage.
-
-or something?
-
-> +.TP
-> +.B \-y
-> +Try to repair all filesystem errors.
-> +If the errors cannot be fixed online, then the filesystem must be taken
-> +offline for repair.
-> +.SH EXIT CODE
-> +The exit code returned by
-> +.B xfs_scrub
-> +is the sum of the following conditions:
-> +.br
-> +\	0\	\-\ No errors
-> +.br
-> +\	1\	\-\ File system errors left uncorrected
-> +.br
-> +\	2\	\-\ File system optimizations possible
-> +.br
-> +\	4\	\-\ Operational error
-> +.br
-> +\	8\	\-\ Usage or syntax error
-> +.br
-> +.SH CAVEATS
-> +.B xfs_scrub
-> +is an immature utility!
-
-Might it damage my filesystem? ;)
-
-> +This program takes advantage of in-kernel scrubbing to verify a given
-> +data structure with locks held.
-> +The kernel must support the BULKSTAT, FSGEOMETRY, FSCOUNTS, GET_RESBLKS,
-> +GETBMAPX, GETFSMAP, INUMBERS, and SCRUB_METADATA ioctls.
-
-Some of those ioctls are ancient and probably don't need to be specified...
-Can you do anything at all without SCRUB_METADATA?  If not,
-is SCRUB_METADATA sufficient to determine that the kernel has the rest
-of what it needs?
-
-> +This can tie up the system for a while.
-
-Maybe that's a statement to go right after "locks held"
-
-> +.PP
-> +If errors are found and cannot be repaired, the filesystem must be taken
-> +offline and repaired.
-
-"unmounted and repaired" might be more specific?  *shrug*
-
-> +.SH SEE ALSO
-> +.BR xfs_repair (8).
-
+diff --git a/fs/affs/amigaffs.c b/fs/affs/amigaffs.c
+index 0f0e6925e97d..14a6c1b90c9f 100644
+--- a/fs/affs/amigaffs.c
++++ b/fs/affs/amigaffs.c
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <linux/math64.h>
++#include <linux/iversion.h>
+ #include "affs.h"
+ 
+ /*
+@@ -60,7 +61,7 @@ affs_insert_hash(struct inode *dir, struct buffer_head *bh)
+ 	affs_brelse(dir_bh);
+ 
+ 	dir->i_mtime = dir->i_ctime = current_time(dir);
+-	dir->i_version++;
++	inode_inc_iversion(dir);
+ 	mark_inode_dirty(dir);
+ 
+ 	return 0;
+@@ -114,7 +115,7 @@ affs_remove_hash(struct inode *dir, struct buffer_head *rem_bh)
+ 	affs_brelse(bh);
+ 
+ 	dir->i_mtime = dir->i_ctime = current_time(dir);
+-	dir->i_version++;
++	inode_inc_iversion(dir);
+ 	mark_inode_dirty(dir);
+ 
+ 	return retval;
+diff --git a/fs/affs/dir.c b/fs/affs/dir.c
+index a105e77df2c1..d180b46453cf 100644
+--- a/fs/affs/dir.c
++++ b/fs/affs/dir.c
+@@ -14,6 +14,7 @@
+  *
+  */
+ 
++#include <linux/iversion.h>
+ #include "affs.h"
+ 
+ static int affs_readdir(struct file *, struct dir_context *);
+@@ -80,7 +81,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
+ 	 * we can jump directly to where we left off.
+ 	 */
+ 	ino = (u32)(long)file->private_data;
+-	if (ino && file->f_version == inode->i_version) {
++	if (ino && inode_cmp_iversion(inode, file->f_version) == 0) {
+ 		pr_debug("readdir() left off=%d\n", ino);
+ 		goto inside;
+ 	}
+@@ -130,7 +131,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
+ 		} while (ino);
+ 	}
+ done:
+-	file->f_version = inode->i_version;
++	file->f_version = inode_query_iversion(inode);
+ 	file->private_data = (void *)(long)ino;
+ 	affs_brelse(fh_bh);
+ 
+diff --git a/fs/affs/super.c b/fs/affs/super.c
+index 1117e36134cc..e602619aed9d 100644
+--- a/fs/affs/super.c
++++ b/fs/affs/super.c
+@@ -21,6 +21,7 @@
+ #include <linux/writeback.h>
+ #include <linux/blkdev.h>
+ #include <linux/seq_file.h>
++#include <linux/iversion.h>
+ #include "affs.h"
+ 
+ static int affs_statfs(struct dentry *dentry, struct kstatfs *buf);
+@@ -102,7 +103,7 @@ static struct inode *affs_alloc_inode(struct super_block *sb)
+ 	if (!i)
+ 		return NULL;
+ 
+-	i->vfs_inode.i_version = 1;
++	inode_set_iversion(&i->vfs_inode, 1);
+ 	i->i_lc = NULL;
+ 	i->i_ext_bh = NULL;
+ 	i->i_pa_cnt = 0;
+-- 
+2.14.3
 
