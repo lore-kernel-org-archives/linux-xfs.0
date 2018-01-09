@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42210 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42130 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756533AbeAIOLX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 09:11:23 -0500
+        id S1756477AbeAIOLS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 09:11:18 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v5 07/19] exofs: switch to new i_version API
-Date: Tue,  9 Jan 2018 09:10:47 -0500
-Message-Id: <20180109141059.25929-8-jlayton@kernel.org>
+Subject: [PATCH v5 05/19] afs: convert to new i_version API
+Date: Tue,  9 Jan 2018 09:10:45 -0500
+Message-Id: <20180109141059.25929-6-jlayton@kernel.org>
 In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
 References: <20180109141059.25929-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,74 +17,74 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
+For AFS, it's generally treated as an opaque value, so we use the
+*_raw variants of the API here.
+
+Note that AFS has quite a different definition for this counter. AFS
+only increments it on changes to the data to the data in regular files
+and contents of the directories. Inode metadata changes do not result
+in a version increment.
+
+We'll need to reconcile that somehow if we ever want to present this to
+userspace via statx.
+
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/exofs/dir.c   | 9 +++++----
- fs/exofs/super.c | 3 ++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
+ fs/afs/fsclient.c | 3 ++-
+ fs/afs/inode.c    | 5 +++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/fs/exofs/dir.c b/fs/exofs/dir.c
-index 98233a97b7b8..c5a53fcc43ea 100644
---- a/fs/exofs/dir.c
-+++ b/fs/exofs/dir.c
-@@ -31,6 +31,7 @@
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- 
-+#include <linux/iversion.h>
- #include "exofs.h"
- 
- static inline unsigned exofs_chunk_size(struct inode *inode)
-@@ -60,7 +61,7 @@ static int exofs_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 	struct inode *dir = mapping->host;
- 	int err = 0;
- 
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 
- 	if (!PageUptodate(page))
- 		SetPageUptodate(page);
-@@ -241,7 +242,7 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
- 	unsigned long n = pos >> PAGE_SHIFT;
- 	unsigned long npages = dir_pages(inode);
- 	unsigned chunk_mask = ~(exofs_chunk_size(inode)-1);
--	int need_revalidate = (file->f_version != inode->i_version);
-+	bool need_revalidate = inode_cmp_iversion(inode, file->f_version);
- 
- 	if (pos > inode->i_size - EXOFS_DIR_REC_LEN(1))
- 		return 0;
-@@ -264,8 +265,8 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
- 								chunk_mask);
- 				ctx->pos = (n<<PAGE_SHIFT) + offset;
- 			}
--			file->f_version = inode->i_version;
--			need_revalidate = 0;
-+			file->f_version = inode_query_iversion(inode);
-+			need_revalidate = false;
- 		}
- 		de = (struct exofs_dir_entry *)(kaddr + offset);
- 		limit = kaddr + exofs_last_byte(inode, n) -
-diff --git a/fs/exofs/super.c b/fs/exofs/super.c
-index 819624cfc8da..7e244093c0e5 100644
---- a/fs/exofs/super.c
-+++ b/fs/exofs/super.c
-@@ -38,6 +38,7 @@
- #include <linux/module.h>
- #include <linux/exportfs.h>
+diff --git a/fs/afs/fsclient.c b/fs/afs/fsclient.c
+index b90ef39ae914..88ec38c2d83c 100644
+--- a/fs/afs/fsclient.c
++++ b/fs/afs/fsclient.c
+@@ -13,6 +13,7 @@
  #include <linux/slab.h>
+ #include <linux/sched.h>
+ #include <linux/circ_buf.h>
 +#include <linux/iversion.h>
+ #include "internal.h"
+ #include "afs_fs.h"
  
- #include "exofs.h"
+@@ -124,7 +125,7 @@ static void xdr_decode_AFSFetchStatus(const __be32 **_bp,
+ 		vnode->vfs_inode.i_ctime.tv_sec	= status->mtime_client;
+ 		vnode->vfs_inode.i_mtime	= vnode->vfs_inode.i_ctime;
+ 		vnode->vfs_inode.i_atime	= vnode->vfs_inode.i_ctime;
+-		vnode->vfs_inode.i_version	= data_version;
++		inode_set_iversion_raw(&vnode->vfs_inode, data_version);
+ 	}
  
-@@ -159,7 +160,7 @@ static struct inode *exofs_alloc_inode(struct super_block *sb)
- 	if (!oi)
- 		return NULL;
+ 	expected_version = status->data_version;
+diff --git a/fs/afs/inode.c b/fs/afs/inode.c
+index 3415eb7484f6..dcd2e08d6cdb 100644
+--- a/fs/afs/inode.c
++++ b/fs/afs/inode.c
+@@ -21,6 +21,7 @@
+ #include <linux/sched.h>
+ #include <linux/mount.h>
+ #include <linux/namei.h>
++#include <linux/iversion.h>
+ #include "internal.h"
  
--	oi->vfs_inode.i_version = 1;
-+	inode_set_iversion(&oi->vfs_inode, 1);
- 	return &oi->vfs_inode;
- }
+ static const struct inode_operations afs_symlink_inode_operations = {
+@@ -89,7 +90,7 @@ static int afs_inode_map_status(struct afs_vnode *vnode, struct key *key)
+ 	inode->i_atime		= inode->i_mtime = inode->i_ctime;
+ 	inode->i_blocks		= 0;
+ 	inode->i_generation	= vnode->fid.unique;
+-	inode->i_version	= vnode->status.data_version;
++	inode_set_iversion_raw(inode, vnode->status.data_version);
+ 	inode->i_mapping->a_ops	= &afs_fs_aops;
  
+ 	read_sequnlock_excl(&vnode->cb_lock);
+@@ -218,7 +219,7 @@ struct inode *afs_iget_autocell(struct inode *dir, const char *dev_name,
+ 	inode->i_ctime.tv_nsec	= 0;
+ 	inode->i_atime		= inode->i_mtime = inode->i_ctime;
+ 	inode->i_blocks		= 0;
+-	inode->i_version	= 0;
++	inode_set_iversion_raw(inode, 0);
+ 	inode->i_generation	= 0;
+ 
+ 	set_bit(AFS_VNODE_PSEUDODIR, &vnode->flags);
 -- 
 2.14.3
 
