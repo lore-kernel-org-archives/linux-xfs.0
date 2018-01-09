@@ -1,206 +1,402 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:22555 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753520AbeAKCOq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 21:14:46 -0500
-Date: Thu, 11 Jan 2018 13:14:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Growing RAID10 with active XFS filesystem
-Message-ID: <20180111021441.GT16421@dastard>
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia>
- <20180108220139.GB16421@dastard>
- <5A548D31.4000002@youngman.org.uk>
- <20180109222523.GJ16421@dastard>
- <5A55AFE7.3080500@youngman.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5A55AFE7.3080500@youngman.org.uk>
+Received: from mail.kernel.org ([198.145.29.99]:41920 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756286AbeAIOLH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 09:11:07 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v5 01/19] fs: new API for handling inode->i_version
+Date: Tue,  9 Jan 2018 09:10:41 -0500
+Message-Id: <20180109141059.25929-2-jlayton@kernel.org>
+In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
+References: <20180109141059.25929-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wols Lists <antlists@youngman.org.uk>
-Cc: linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
 
-On Wed, Jan 10, 2018 at 06:17:11AM +0000, Wols Lists wrote:
-> On 09/01/18 22:25, Dave Chinner wrote:
-> > On Tue, Jan 09, 2018 at 09:36:49AM +0000, Wols Lists wrote:
-> >> On 08/01/18 22:01, Dave Chinner wrote:
-> >>> Yup, 21 devices in a RAID 10. That's a really nasty config for
-> >>> RAID10 which requires an even number of disks to mirror correctly.
-> >>> Why does MD even allow this sort of whacky, sub-optimal
-> >>> configuration?
-> >>
-> >> Just to point out - if this is raid-10 (and not raid-1+0 which is a
-> >> completely different beast) this is actually a normal linux config. I'm
-> >> planning to set up a raid-10 across 3 devices. What happens is that is
-> >> that raid-10 writes X copies across Y devices. If X = Y then it's a
-> >> normal mirror config, if X > Y it makes good use of space (and if X < Y
-> >> it doesn't make sense :-)
-> >>
-> >> SDA: 1, 2, 4, 5
-> >>
-> >> SDB: 1, 3, 4, 6
-> >>
-> >> SDC: 2, 3, 5, 6
-> > 
-> > It's nice to know that MD has redefined RAID-10 to be different to
-> > the industry standard definition that has been used for 20 years and
-> > optimised filesystem layouts for.  Rotoring data across odd numbers
-> > of disks like this is going to really, really suck on filesystems
-> > that are stripe layout aware..
-> 
-> Actually, I thought that the industry standard definition referred to
-> Raid-1+0. It's just colloquially referred to as raid-10.
+From: Jeff Layton <jlayton@redhat.com>
 
-https://en.wikipedia.org/wiki/Nested_RAID_levels#RAID_10
+Add a documentation blob that explains what the i_version field is, how
+it is expected to work, and how it is currently implemented by various
+filesystems.
 
-"However, a nonstandard definition of "RAID 10" was created for the
-Linux MD driver"
+We already have inode_inc_iversion. Add several other functions for
+manipulating and accessing the i_version counter. For now, the
+implementation is trivial and basically works the way that all of the
+open-coded i_version accesses work today.
 
-So it's not just me who thinks what MD is doing is non-standard.
+Future patches will convert existing users of i_version to use the new
+API, and then convert the backend implementation to do things more
+efficiently.
 
-> > For example, XFS has hot-spot prevention algorithms in it's
-> > internal physical layout for striped devices. It aligns AGs across
-> > different stripe units so that metadata and data doesn't all get
-> > aligned to the one disk in a RAID0/5/6 stripe. If the stripes are
-> > rotoring across disks themselves, then we're going to end up back in
-> > the same position we started with - multiple AGs aligned to the
-> > same disk.
-> 
-> Are you telling me that xfs is aware of the internal structure of an
-> md-raid array?
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/btrfs/file.c          |   1 +
+ fs/btrfs/inode.c         |   1 +
+ fs/btrfs/ioctl.c         |   1 +
+ fs/btrfs/xattr.c         |   1 +
+ fs/ext4/inode.c          |   1 +
+ fs/ext4/namei.c          |   1 +
+ fs/inode.c               |   1 +
+ include/linux/fs.h       |  15 ---
+ include/linux/iversion.h | 236 +++++++++++++++++++++++++++++++++++++++++++++++
+ 9 files changed, 243 insertions(+), 15 deletions(-)
+ create mode 100644 include/linux/iversion.h
 
-It's aware of the /alignment/ characteristics of block devices, and
-these alignment characteristics are exported by MD. e.g.  These are
-exported in /sys/block/<dev>/queue in
-
-	minimum_io_size
-		- typically the stripe chunk size
-	optimal_io_size
-		- typically the stripe width
-
-We get this stuff from DM and MD devices, hardware raid (via scsi
-code pages), thinp devices (i.e. to tell us the allocation
-granularity so we can align/size IO to match it) and any other block
-device that wants to tell us about optimal IO geometry. libblkid
-provides us with this information, and it's not just mkfs.xfs that
-uses it. e.g. mkfs.ext4 also uses it for the exact same purpose as
-XFS....
-
-> Given that md-raid is an abstraction layer, this seems
-> rather dangerous to me - you're breaking the abstraction and this could
-> explain the OP's problem. Md-raid changed underneath the filesystem, on
-> the assumption that the filesystem wouldn't notice, and the filesystem
-> *did*. BANG!
-
-No, we aren't breaking any abstractions. It's always been that case
-that the filesystem needs to be correctly aligned to the underlying
-storage geometry if performance is desired. Think about old skool
-filesystems that were aware of the old C/H/S layout of drives back
-in the 80s. Optimising layouts for "cylinder groups" in the hardware
-gave major performance improvements and we can trace ext4's block
-group concept all the way back to those specific hardware geometry
-requirements.
-
-I suspect that the problem here is that realtively few people
-understand why alignment to the underlying storage geometry is
-necessary and don't realise the lengths the storage stack goes to
-ensuring alignment is optimal.  It's mostly hidden and automatic
-these days because most users lack the knowledge to be able to set
-this sort of stuff up correctly.
-
-> > The result is that many XFS workloads are going to hotspot disks and
-> > result in unbalanced load when there are an odd number of disks in a
-> > RAID-10 array.  Actually, it's probably worse than having no
-> > alignment, because it makes hotspot occurrence and behaviour very
-> > unpredictable.
-> > 
-> > Worse is the fact that there's absolutely nothing we can do to
-> > optimise allocation alignment or IO behaviour at the filesystem
-> > level. We'll have to make mkfs.xfs aware of this clusterfuck and
-> > turn off stripe alignment when we detect such a layout, but that
-> > doesn't help all the existing user installations out there right
-> > now.
-> 
-> So you're telling me that mkfs.xfs *IS* aware of the underlying raid
-> structure. OOPS! What happens when that structure changes for instance a
-> raid-5 is converted to raid-6, or another disk is added?
-
-RAID-5 to RAID-6 doesn't change the stripe alignment. That's still
-N data disks per stripe, so the geometry and alignment is unchanged
-and has no impact on the layout.
-
-But changing the stripe geometry (i.e. number of data disks)
-completely fucks IO alignment and that impacts overall storage
-performance.  None of the existing data in the filesystem is aligned
-to the underlying storage anymore so overwrites will cause all sorts
-of RMW storms, you'll get IO hotspots because what used to be on
-separate disks is now all on the same disk, etc. And the filesystem
-won't be able to fix this because unless you increase the number
-data disks by an integer multiple, the alignment cannot be changed
-due to fixed locations of metadata in the filesystem.
-
-> If you have to
-> have special code to deal with md-raid and changes in said raid, where's
-> the problem with more code for raid-10?
-
-I didn't stay we had code to handle "changes in said raid". That's
-explicitly what we /don't have/. To handle a geometry/alignment
-change in the underlying storage we have to *resilver the entire
-filesystem*. And, well, we can't easily do that because that means
-we'd have to completely rewrite and re-index the filesystem. It's
-faster, easier and more reliable to dump/mkfs/restore the filesystem
-than it is to resilver it.
-
-There's many, many reasons why RAID reshaping is considered harmful
-and is not recommended by anyone who understands the whole storage
-stack intimately.
-
-> > IMO, odd-numbered disks in RAID-10 should be considered harmful and
-> > never used....
-> > 
-> What about when you have an odd number of mirrors? :-)
-
-Be a smart-ass all you want, but it doesn't change the fact that the
-"grow-by-one-disk" clusterfuck occurs when you have an odd number of
-mirrors, too.
-
-> Seriously, can't you just make sure that xfs rotates the stripe units
-> using a number that is relatively prime to the number of disks?
-
-Who said we don't already rotate through stripe units?
-
-And, well, there are situations where ignoring geometry is good
-(e.g. delayed allocation allows us to pack lots of small files
-together so they aggregate into full stripe writes and avoid RMW
-cycles) and there are situations where stripe width rather than
-stripe unit alignment is desirable for a single allocation (e.g.
-large sequential direct IO writes so we avoid RMW cycles due to
-partial stripe overlaps in IO).
-
-These IO alignment optimisations are all done on-the-fly by
-filesystems.  Filesystems do far more than you realise with the
-geometry information they are provided with and that's why assuming
-that you can transparently change the storage geometry without the
-filesystem (and hence users) caring about such changes is
-fundamentally wrong.
-
-> (Just so's you know who I am, I've taken over editorship of the raid
-> wiki. This is exactly the stuff that belongs on there, so as soon as I
-> understand what's going on I'll write it up, and I'm happy to be
-> educated :-) But I do like to really grasp what's going on, so expect
-> lots of naive questions ... There's not a lot of information on how raid
-> and filesystems interact, and I haven't really got to grips wioth any of
-> that at the moment, and I don't use xfs. I use ext4 on gentoo, and the
-> default btrfs on SUSE.)
-
-You've got an awful lot of learning to do, then.
-
-Cheers,
-
-Dave.
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index eb1bac7c8553..c95d7b2efefb 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -31,6 +31,7 @@
+ #include <linux/slab.h>
+ #include <linux/btrfs.h>
+ #include <linux/uio.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "disk-io.h"
+ #include "transaction.h"
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index e1a7f3cb5be9..27f008b33fc1 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -43,6 +43,7 @@
+ #include <linux/posix_acl_xattr.h>
+ #include <linux/uio.h>
+ #include <linux/magic.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "disk-io.h"
+ #include "transaction.h"
+diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+index 2ef8acaac688..aa452c9e2eff 100644
+--- a/fs/btrfs/ioctl.c
++++ b/fs/btrfs/ioctl.c
+@@ -43,6 +43,7 @@
+ #include <linux/uuid.h>
+ #include <linux/btrfs.h>
+ #include <linux/uaccess.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "disk-io.h"
+ #include "transaction.h"
+diff --git a/fs/btrfs/xattr.c b/fs/btrfs/xattr.c
+index 2c7e53f9ff1b..5258c1714830 100644
+--- a/fs/btrfs/xattr.c
++++ b/fs/btrfs/xattr.c
+@@ -23,6 +23,7 @@
+ #include <linux/xattr.h>
+ #include <linux/security.h>
+ #include <linux/posix_acl_xattr.h>
++#include <linux/iversion.h>
+ #include "ctree.h"
+ #include "btrfs_inode.h"
+ #include "transaction.h"
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 7df2c5644e59..fa5d8bc52d2d 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -39,6 +39,7 @@
+ #include <linux/slab.h>
+ #include <linux/bitops.h>
+ #include <linux/iomap.h>
++#include <linux/iversion.h>
+ 
+ #include "ext4_jbd2.h"
+ #include "xattr.h"
+diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
+index 798b3ac680db..bcf0dff517be 100644
+--- a/fs/ext4/namei.c
++++ b/fs/ext4/namei.c
+@@ -34,6 +34,7 @@
+ #include <linux/quotaops.h>
+ #include <linux/buffer_head.h>
+ #include <linux/bio.h>
++#include <linux/iversion.h>
+ #include "ext4.h"
+ #include "ext4_jbd2.h"
+ 
+diff --git a/fs/inode.c b/fs/inode.c
+index 03102d6ef044..19e72f500f71 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -18,6 +18,7 @@
+ #include <linux/buffer_head.h> /* for inode_has_buffers */
+ #include <linux/ratelimit.h>
+ #include <linux/list_lru.h>
++#include <linux/iversion.h>
+ #include <trace/events/writeback.h>
+ #include "internal.h"
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 511fbaabf624..76382c24e9d0 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2036,21 +2036,6 @@ static inline void inode_dec_link_count(struct inode *inode)
+ 	mark_inode_dirty(inode);
+ }
+ 
+-/**
+- * inode_inc_iversion - increments i_version
+- * @inode: inode that need to be updated
+- *
+- * Every time the inode is modified, the i_version field will be incremented.
+- * The filesystem has to be mounted with i_version flag
+- */
+-
+-static inline void inode_inc_iversion(struct inode *inode)
+-{
+-       spin_lock(&inode->i_lock);
+-       inode->i_version++;
+-       spin_unlock(&inode->i_lock);
+-}
+-
+ enum file_time_flags {
+ 	S_ATIME = 1,
+ 	S_MTIME = 2,
+diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+new file mode 100644
+index 000000000000..d09cc3a08740
+--- /dev/null
++++ b/include/linux/iversion.h
+@@ -0,0 +1,236 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_IVERSION_H
++#define _LINUX_IVERSION_H
++
++#include <linux/fs.h>
++
++/*
++ * The change attribute (i_version) is mandated by NFSv4 and is mostly for
++ * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
++ * appear different to observers if there was a change to the inode's data or
++ * metadata since it was last queried.
++ *
++ * Observers see the i_version as a 64-bit number that never changes. If it
++ * remains the same since it was last checked, then nothing has changed in the
++ * inode. If it's different then something has changed. Observers cannot infer
++ * anything about the nature or magnitude of the changes from the value, only
++ * that the inode has changed in some fashion.
++ *
++ * Not all filesystems properly implement the i_version counter. Subsystems that
++ * want to use i_version field on an inode should first check whether the
++ * filesystem sets the SB_I_VERSION flag (usually via the IS_I_VERSION macro).
++ *
++ * Those that set SB_I_VERSION will automatically have their i_version counter
++ * incremented on writes to normal files. If the SB_I_VERSION is not set, then
++ * the VFS will not touch it on writes, and the filesystem can use it how it
++ * wishes. Note that the filesystem is always responsible for updating the
++ * i_version on namespace changes in directories (mkdir, rmdir, unlink, etc.).
++ * We consider these sorts of filesystems to have a kernel-managed i_version.
++ *
++ * Note that some filesystems (e.g. NFS and AFS) just use the field to store
++ * a server-provided value (for the most part). For that reason, those
++ * filesystems do not set SB_I_VERSION. These filesystems are considered to
++ * have a self-managed i_version.
++ */
++
++/**
++ * inode_set_iversion_raw - set i_version to the specified raw value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for use by
++ * filesystems that self-manage the i_version.
++ *
++ * For example, the NFS client stores its NFSv4 change attribute in this way,
++ * and the AFS client stores the data_version from the server here.
++ */
++static inline void
++inode_set_iversion_raw(struct inode *inode, u64 new)
++{
++	inode->i_version = new;
++}
++
++/**
++ * inode_set_iversion - set i_version to a particular value
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * Set @inode's i_version field to @new. This function is for filesystems with
++ * a kernel-managed i_version.
++ *
++ * For now, this just does the same thing as the _raw variant.
++ */
++static inline void
++inode_set_iversion(struct inode *inode, u64 new)
++{
++	inode_set_iversion_raw(inode, new);
++}
++
++/**
++ * inode_set_iversion_queried - set i_version to a particular value and set
++ *                              flag to indicate that it has been viewed
++ * @inode: inode to set
++ * @new: new i_version value to set
++ *
++ * When loading in an i_version value from a backing store, we typically don't
++ * know whether it was previously viewed before being stored or not. Thus, we
++ * must assume that it was, to ensure that any changes will result in the
++ * value changing.
++ *
++ * This function will set the inode's i_version, and possibly flag the value
++ * as if it has already been viewed at least once.
++ *
++ * For now, this just does what inode_set_iversion does.
++ */
++static inline void
++inode_set_iversion_queried(struct inode *inode, u64 new)
++{
++	inode_set_iversion(inode, new);
++}
++
++/**
++ * inode_maybe_inc_iversion - increments i_version
++ * @inode: inode with the i_version that should be updated
++ * @force: increment the counter even if it's not necessary
++ *
++ * Every time the inode is modified, the i_version field must be seen to have
++ * changed by any observer.
++ *
++ * In this implementation, we always increment it after taking the i_lock to
++ * ensure that we don't race with other incrementors.
++ *
++ * Returns true if counter was bumped, and false if it wasn't.
++ */
++static inline bool
++inode_maybe_inc_iversion(struct inode *inode, bool force)
++{
++	spin_lock(&inode->i_lock);
++	inode->i_version++;
++	spin_unlock(&inode->i_lock);
++	return true;
++}
++
++/**
++ * inode_inc_iversion - forcibly increment i_version
++ * @inode: inode that needs to be updated
++ *
++ * Forcbily increment the i_version field. This always results in a change to
++ * the observable value.
++ */
++static inline void
++inode_inc_iversion(struct inode *inode)
++{
++	inode_maybe_inc_iversion(inode, true);
++}
++
++/**
++ * inode_iversion_need_inc - is the i_version in need of being incremented?
++ * @inode: inode to check
++ *
++ * Returns whether the inode->i_version counter needs incrementing on the next
++ * change.
++ *
++ * For now, we assume that it always does.
++ */
++static inline bool
++inode_iversion_need_inc(struct inode *inode)
++{
++	return true;
++}
++
++/**
++ * inode_peek_iversion_raw - grab a "raw" iversion value
++ * @inode: inode from which i_version should be read
++ *
++ * Grab a "raw" inode->i_version value and return it. The i_version is not
++ * flagged or converted in any way. This is mostly used to access a self-managed
++ * i_version.
++ *
++ * With those filesystems, we want to treat the i_version as an entirely
++ * opaque value.
++ */
++static inline u64
++inode_peek_iversion_raw(const struct inode *inode)
++{
++	return inode->i_version;
++}
++
++/**
++ * inode_inc_iversion_raw - forcibly increment raw i_version
++ * @inode: inode that needs to be updated
++ *
++ * Forcbily increment the raw i_version field. This always results in a change
++ * to the raw value.
++ *
++ * NFS will use the i_version field to store the value from the server. It
++ * mostly treats it as opaque, but in the case where it holds a write
++ * delegation, it must increment the value itself. This function does that.
++ */
++static inline void
++inode_inc_iversion_raw(struct inode *inode)
++{
++	inode_inc_iversion(inode);
++}
++
++/**
++ * inode_peek_iversion - read i_version without flagging it to be incremented
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter for an inode without registering it as a
++ * query.
++ *
++ * This is typically used by local filesystems that need to store an i_version
++ * on disk. In that situation, it's not necessary to flag it as having been
++ * viewed, as the result won't be used to gauge changes from that point.
++ */
++static inline u64
++inode_peek_iversion(const struct inode *inode)
++{
++	return inode_peek_iversion_raw(inode);
++}
++
++/**
++ * inode_query_iversion - read i_version for later use
++ * @inode: inode from which i_version should be read
++ *
++ * Read the inode i_version counter. This should be used by callers that wish
++ * to store the returned i_version for later comparison. This will guarantee
++ * that a later query of the i_version will result in a different value if
++ * anything has changed.
++ *
++ * This implementation just does a peek.
++ */
++static inline u64
++inode_query_iversion(struct inode *inode)
++{
++	return inode_peek_iversion(inode);
++}
++
++/**
++ * inode_cmp_iversion_raw - check whether the raw i_version counter has changed
++ * @inode: inode to check
++ * @old: old value to check against its i_version
++ *
++ * Compare the current raw i_version counter with a previous one. Returns 0 if
++ * they are the same or non-zero if they are different.
++ */
++static inline s64
++inode_cmp_iversion_raw(const struct inode *inode, u64 old)
++{
++	return (s64)inode_peek_iversion_raw(inode) - (s64)old;
++}
++
++/**
++ * inode_cmp_iversion - check whether the i_version counter has changed
++ * @inode: inode to check
++ * @old: old value to check against its i_version
++ *
++ * Compare an i_version counter with a previous one. Returns 0 if they are
++ * the same or non-zero if they are different.
++ */
++static inline s64
++inode_cmp_iversion(const struct inode *inode, u64 old)
++{
++	return (s64)inode_peek_iversion(inode) - (s64)old;
++}
++#endif
 -- 
-Dave Chinner
-david@fromorbit.com
+2.14.3
+
