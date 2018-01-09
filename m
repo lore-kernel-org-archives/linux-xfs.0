@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42470 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42388 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752596AbeAIOLk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 09:11:40 -0500
+        id S1752596AbeAIOLf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 09:11:35 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v5 13/19] ufs: use new i_version API
-Date: Tue,  9 Jan 2018 09:10:53 -0500
-Message-Id: <20180109141059.25929-14-jlayton@kernel.org>
+Subject: [PATCH v5 11/19] nfsd: convert to new i_version API
+Date: Tue,  9 Jan 2018 09:10:51 -0500
+Message-Id: <20180109141059.25929-12-jlayton@kernel.org>
 In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
 References: <20180109141059.25929-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,96 +17,35 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 
 From: Jeff Layton <jlayton@redhat.com>
 
+Mostly just making sure we use the "get" wrappers so we know when
+it is being fetched for later use.
+
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
- fs/ufs/dir.c   | 9 +++++----
- fs/ufs/inode.c | 3 ++-
- fs/ufs/super.c | 3 ++-
- 3 files changed, 9 insertions(+), 6 deletions(-)
+ fs/nfsd/nfsfh.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/ufs/dir.c b/fs/ufs/dir.c
-index 2edc1755b7c5..50dfce000864 100644
---- a/fs/ufs/dir.c
-+++ b/fs/ufs/dir.c
-@@ -20,6 +20,7 @@
- #include <linux/time.h>
- #include <linux/fs.h>
- #include <linux/swap.h>
+diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
+index 43f31cf49bae..b8444189223b 100644
+--- a/fs/nfsd/nfsfh.h
++++ b/fs/nfsd/nfsfh.h
+@@ -11,6 +11,7 @@
+ #include <linux/crc32.h>
+ #include <linux/sunrpc/svc.h>
+ #include <uapi/linux/nfsd/nfsfh.h>
 +#include <linux/iversion.h>
  
- #include "ufs_fs.h"
- #include "ufs.h"
-@@ -47,7 +48,7 @@ static int ufs_commit_chunk(struct page *page, loff_t pos, unsigned len)
- 	struct inode *dir = mapping->host;
- 	int err = 0;
+ static inline __u32 ino_t_to_u32(ino_t ino)
+ {
+@@ -259,7 +260,7 @@ static inline u64 nfsd4_change_attribute(struct inode *inode)
+ 	chattr =  inode->i_ctime.tv_sec;
+ 	chattr <<= 30;
+ 	chattr += inode->i_ctime.tv_nsec;
+-	chattr += inode->i_version;
++	chattr += inode_query_iversion(inode);
+ 	return chattr;
+ }
  
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	block_write_end(NULL, mapping, pos, len, len, page, NULL);
- 	if (pos+len > dir->i_size) {
- 		i_size_write(dir, pos+len);
-@@ -428,7 +429,7 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
- 	unsigned long n = pos >> PAGE_SHIFT;
- 	unsigned long npages = dir_pages(inode);
- 	unsigned chunk_mask = ~(UFS_SB(sb)->s_uspi->s_dirblksize - 1);
--	int need_revalidate = file->f_version != inode->i_version;
-+	bool need_revalidate = inode_cmp_iversion(inode, file->f_version);
- 	unsigned flags = UFS_SB(sb)->s_flags;
- 
- 	UFSD("BEGIN\n");
-@@ -455,8 +456,8 @@ ufs_readdir(struct file *file, struct dir_context *ctx)
- 				offset = ufs_validate_entry(sb, kaddr, offset, chunk_mask);
- 				ctx->pos = (n<<PAGE_SHIFT) + offset;
- 			}
--			file->f_version = inode->i_version;
--			need_revalidate = 0;
-+			file->f_version = inode_query_iversion(inode);
-+			need_revalidate = false;
- 		}
- 		de = (struct ufs_dir_entry *)(kaddr+offset);
- 		limit = kaddr + ufs_last_byte(inode, n) - UFS_DIR_REC_LEN(1);
-diff --git a/fs/ufs/inode.c b/fs/ufs/inode.c
-index afb601c0dda0..c843ec858cf7 100644
---- a/fs/ufs/inode.c
-+++ b/fs/ufs/inode.c
-@@ -36,6 +36,7 @@
- #include <linux/mm.h>
- #include <linux/buffer_head.h>
- #include <linux/writeback.h>
-+#include <linux/iversion.h>
- 
- #include "ufs_fs.h"
- #include "ufs.h"
-@@ -693,7 +694,7 @@ struct inode *ufs_iget(struct super_block *sb, unsigned long ino)
- 	if (err)
- 		goto bad_inode;
- 
--	inode->i_version++;
-+	inode_inc_iversion(inode);
- 	ufsi->i_lastfrag =
- 		(inode->i_size + uspi->s_fsize - 1) >> uspi->s_fshift;
- 	ufsi->i_dir_start_lookup = 0;
-diff --git a/fs/ufs/super.c b/fs/ufs/super.c
-index 4d497e9c6883..b6ba80e05bff 100644
---- a/fs/ufs/super.c
-+++ b/fs/ufs/super.c
-@@ -88,6 +88,7 @@
- #include <linux/log2.h>
- #include <linux/mount.h>
- #include <linux/seq_file.h>
-+#include <linux/iversion.h>
- 
- #include "ufs_fs.h"
- #include "ufs.h"
-@@ -1440,7 +1441,7 @@ static struct inode *ufs_alloc_inode(struct super_block *sb)
- 	if (!ei)
- 		return NULL;
- 
--	ei->vfs_inode.i_version = 1;
-+	inode_set_iversion(&ei->vfs_inode, 1);
- 	seqlock_init(&ei->meta_lock);
- 	mutex_init(&ei->truncate_mutex);
- 	return &ei->vfs_inode;
 -- 
 2.14.3
 
