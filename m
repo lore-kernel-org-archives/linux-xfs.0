@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42166 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:42210 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752596AbeAIOLV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 09:11:21 -0500
+        id S1756533AbeAIOLX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 09:11:23 -0500
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v5 06/19] btrfs: convert to new i_version API
-Date: Tue,  9 Jan 2018 09:10:46 -0500
-Message-Id: <20180109141059.25929-7-jlayton@kernel.org>
+Subject: [PATCH v5 07/19] exofs: switch to new i_version API
+Date: Tue,  9 Jan 2018 09:10:47 -0500
+Message-Id: <20180109141059.25929-8-jlayton@kernel.org>
 In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
 References: <20180109141059.25929-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,91 +18,73 @@ Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel
 From: Jeff Layton <jlayton@redhat.com>
 
 Signed-off-by: Jeff Layton <jlayton@redhat.com>
-Acked-by: David Sterba <dsterba@suse.com>
 ---
- fs/btrfs/delayed-inode.c | 7 +++++--
- fs/btrfs/inode.c         | 6 ++++--
- fs/btrfs/tree-log.c      | 4 +++-
- 3 files changed, 12 insertions(+), 5 deletions(-)
+ fs/exofs/dir.c   | 9 +++++----
+ fs/exofs/super.c | 3 ++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/fs/btrfs/delayed-inode.c b/fs/btrfs/delayed-inode.c
-index 5d73f79ded8b..6a246ae2bcb2 100644
---- a/fs/btrfs/delayed-inode.c
-+++ b/fs/btrfs/delayed-inode.c
-@@ -18,6 +18,7 @@
+diff --git a/fs/exofs/dir.c b/fs/exofs/dir.c
+index 98233a97b7b8..c5a53fcc43ea 100644
+--- a/fs/exofs/dir.c
++++ b/fs/exofs/dir.c
+@@ -31,6 +31,7 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   */
  
++#include <linux/iversion.h>
+ #include "exofs.h"
+ 
+ static inline unsigned exofs_chunk_size(struct inode *inode)
+@@ -60,7 +61,7 @@ static int exofs_commit_chunk(struct page *page, loff_t pos, unsigned len)
+ 	struct inode *dir = mapping->host;
+ 	int err = 0;
+ 
+-	dir->i_version++;
++	inode_inc_iversion(dir);
+ 
+ 	if (!PageUptodate(page))
+ 		SetPageUptodate(page);
+@@ -241,7 +242,7 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
+ 	unsigned long n = pos >> PAGE_SHIFT;
+ 	unsigned long npages = dir_pages(inode);
+ 	unsigned chunk_mask = ~(exofs_chunk_size(inode)-1);
+-	int need_revalidate = (file->f_version != inode->i_version);
++	bool need_revalidate = inode_cmp_iversion(inode, file->f_version);
+ 
+ 	if (pos > inode->i_size - EXOFS_DIR_REC_LEN(1))
+ 		return 0;
+@@ -264,8 +265,8 @@ exofs_readdir(struct file *file, struct dir_context *ctx)
+ 								chunk_mask);
+ 				ctx->pos = (n<<PAGE_SHIFT) + offset;
+ 			}
+-			file->f_version = inode->i_version;
+-			need_revalidate = 0;
++			file->f_version = inode_query_iversion(inode);
++			need_revalidate = false;
+ 		}
+ 		de = (struct exofs_dir_entry *)(kaddr + offset);
+ 		limit = kaddr + exofs_last_byte(inode, n) -
+diff --git a/fs/exofs/super.c b/fs/exofs/super.c
+index 819624cfc8da..7e244093c0e5 100644
+--- a/fs/exofs/super.c
++++ b/fs/exofs/super.c
+@@ -38,6 +38,7 @@
+ #include <linux/module.h>
+ #include <linux/exportfs.h>
  #include <linux/slab.h>
 +#include <linux/iversion.h>
- #include "delayed-inode.h"
- #include "disk-io.h"
- #include "transaction.h"
-@@ -1700,7 +1701,8 @@ static void fill_stack_inode_item(struct btrfs_trans_handle *trans,
- 	btrfs_set_stack_inode_nbytes(inode_item, inode_get_bytes(inode));
- 	btrfs_set_stack_inode_generation(inode_item,
- 					 BTRFS_I(inode)->generation);
--	btrfs_set_stack_inode_sequence(inode_item, inode->i_version);
-+	btrfs_set_stack_inode_sequence(inode_item,
-+				       inode_peek_iversion(inode));
- 	btrfs_set_stack_inode_transid(inode_item, trans->transid);
- 	btrfs_set_stack_inode_rdev(inode_item, inode->i_rdev);
- 	btrfs_set_stack_inode_flags(inode_item, BTRFS_I(inode)->flags);
-@@ -1754,7 +1756,8 @@ int btrfs_fill_inode(struct inode *inode, u32 *rdev)
- 	BTRFS_I(inode)->generation = btrfs_stack_inode_generation(inode_item);
-         BTRFS_I(inode)->last_trans = btrfs_stack_inode_transid(inode_item);
  
--	inode->i_version = btrfs_stack_inode_sequence(inode_item);
-+	inode_set_iversion_queried(inode,
-+				   btrfs_stack_inode_sequence(inode_item));
- 	inode->i_rdev = 0;
- 	*rdev = btrfs_stack_inode_rdev(inode_item);
- 	BTRFS_I(inode)->flags = btrfs_stack_inode_flags(inode_item);
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 27f008b33fc1..ac8692849a81 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -3778,7 +3778,8 @@ static int btrfs_read_locked_inode(struct inode *inode)
- 	BTRFS_I(inode)->generation = btrfs_inode_generation(leaf, inode_item);
- 	BTRFS_I(inode)->last_trans = btrfs_inode_transid(leaf, inode_item);
+ #include "exofs.h"
  
--	inode->i_version = btrfs_inode_sequence(leaf, inode_item);
-+	inode_set_iversion_queried(inode,
-+				   btrfs_inode_sequence(leaf, inode_item));
- 	inode->i_generation = BTRFS_I(inode)->generation;
- 	inode->i_rdev = 0;
- 	rdev = btrfs_inode_rdev(leaf, inode_item);
-@@ -3946,7 +3947,8 @@ static void fill_inode_item(struct btrfs_trans_handle *trans,
- 				     &token);
- 	btrfs_set_token_inode_generation(leaf, item, BTRFS_I(inode)->generation,
- 					 &token);
--	btrfs_set_token_inode_sequence(leaf, item, inode->i_version, &token);
-+	btrfs_set_token_inode_sequence(leaf, item, inode_peek_iversion(inode),
-+				       &token);
- 	btrfs_set_token_inode_transid(leaf, item, trans->transid, &token);
- 	btrfs_set_token_inode_rdev(leaf, item, inode->i_rdev, &token);
- 	btrfs_set_token_inode_flags(leaf, item, BTRFS_I(inode)->flags, &token);
-diff --git a/fs/btrfs/tree-log.c b/fs/btrfs/tree-log.c
-index 7bf9b31561db..1b7d92075c1f 100644
---- a/fs/btrfs/tree-log.c
-+++ b/fs/btrfs/tree-log.c
-@@ -20,6 +20,7 @@
- #include <linux/slab.h>
- #include <linux/blkdev.h>
- #include <linux/list_sort.h>
-+#include <linux/iversion.h>
- #include "tree-log.h"
- #include "disk-io.h"
- #include "locking.h"
-@@ -3609,7 +3610,8 @@ static void fill_inode_item(struct btrfs_trans_handle *trans,
- 	btrfs_set_token_inode_nbytes(leaf, item, inode_get_bytes(inode),
- 				     &token);
+@@ -159,7 +160,7 @@ static struct inode *exofs_alloc_inode(struct super_block *sb)
+ 	if (!oi)
+ 		return NULL;
  
--	btrfs_set_token_inode_sequence(leaf, item, inode->i_version, &token);
-+	btrfs_set_token_inode_sequence(leaf, item,
-+				       inode_peek_iversion(inode), &token);
- 	btrfs_set_token_inode_transid(leaf, item, trans->transid, &token);
- 	btrfs_set_token_inode_rdev(leaf, item, inode->i_rdev, &token);
- 	btrfs_set_token_inode_flags(leaf, item, BTRFS_I(inode)->flags, &token);
+-	oi->vfs_inode.i_version = 1;
++	inode_set_iversion(&oi->vfs_inode, 1);
+ 	return &oi->vfs_inode;
+ }
+ 
 -- 
 2.14.3
 
