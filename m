@@ -1,63 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39879 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755291AbeAIA5t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 19:57:49 -0500
-Date: Tue, 9 Jan 2018 11:57:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/21] xfs: cross-reference with the bnobt
-Message-ID: <20180109005744.GI16421@dastard>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398985848.18741.1443595678961710395.stgit@magnolia>
- <20180108235125.GG16421@dastard>
- <20180109003441.GB5602@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180109003441.GB5602@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:42608 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932310AbeAIOLt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 09:11:49 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v5 16/19] fs: only set S_VERSION when updating times if necessary
+Date: Tue,  9 Jan 2018 09:10:56 -0500
+Message-Id: <20180109141059.25929-17-jlayton@kernel.org>
+In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
+References: <20180109141059.25929-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
 
-On Mon, Jan 08, 2018 at 04:34:41PM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 09, 2018 at 10:51:25AM +1100, Dave Chinner wrote:
-> > On Fri, Dec 22, 2017 at 04:44:18PM -0800, Darrick J. Wong wrote:
-> > > +	error = xfs_scrub_ag_btcur_init(sc, &sc->sa);
-> > > +	if (error)
-> > > +		return;
-> > > +
-> > > +	xfs_scrub_xref_not_free(sc, &sc->sa.bno_cur, bno, 1);
-> > > +
-> > > +	/* Check agf_freeblks */
-> > > +	pcur = &sc->sa.bno_cur;
-> > > +	if (*pcur) {
-> > > +		blocks = 0;
-> > > +		error = xfs_alloc_query_all(*pcur,
-> > > +				xfs_scrub_agf_record_bno_lengths, &blocks);
-> > > +		if (xfs_scrub_should_xref(sc, &error, pcur) &&
-> > > +		    blocks != be32_to_cpu(agf->agf_freeblks))
-> > > +			xfs_scrub_block_xref_set_corrupt(sc, sc->sa.agf_bp);
-> > > +	}
-> > 
-> > I have no idea what xfs_scrub_should_xref() means in this context.
-> > We're doing a xref scrub, so why are we asking if we should be
-> > running a xref?
-> 
-> Given that we tried to retrieve some data from some other data
-> structure, the function xfs_scrub_should_xref decides if we should
-> actually bother with the comparison checks?   In other words, if the
-> xfs_alloc_query_all returned an error code then we need to delete *pcur
-> and we can skip the "blocks != be32..." check since it makes no sense.
-> 
-> How about xfs_scrub_should_check_xref?
+From: Jeff Layton <jlayton@redhat.com>
 
-Yes, that makes more sense.
+We only really need to update i_version if someone has queried for it
+since we last incremented it. By doing that, we can avoid having to
+update the inode if the times haven't changed.
 
-Cheers,
+If the times have changed, then we go ahead and forcibly increment the
+counter, under the assumption that we'll be going to the storage
+anyway, and the increment itself is relatively cheap.
 
-Dave.
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/inode.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/fs/inode.c b/fs/inode.c
+index 19e72f500f71..e2ca0f4b5151 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1635,17 +1635,21 @@ static int relatime_need_update(const struct path *path, struct inode *inode,
+ int generic_update_time(struct inode *inode, struct timespec *time, int flags)
+ {
+ 	int iflags = I_DIRTY_TIME;
++	bool dirty = false;
+ 
+ 	if (flags & S_ATIME)
+ 		inode->i_atime = *time;
+ 	if (flags & S_VERSION)
+-		inode_inc_iversion(inode);
++		dirty = inode_maybe_inc_iversion(inode, false);
+ 	if (flags & S_CTIME)
+ 		inode->i_ctime = *time;
+ 	if (flags & S_MTIME)
+ 		inode->i_mtime = *time;
++	if ((flags & (S_ATIME | S_CTIME | S_MTIME)) &&
++	    !(inode->i_sb->s_flags & SB_LAZYTIME))
++		dirty = true;
+ 
+-	if (!(inode->i_sb->s_flags & SB_LAZYTIME) || (flags & S_VERSION))
++	if (dirty)
+ 		iflags |= I_DIRTY_SYNC;
+ 	__mark_inode_dirty(inode, iflags);
+ 	return 0;
+@@ -1864,7 +1868,7 @@ int file_update_time(struct file *file)
+ 	if (!timespec_equal(&inode->i_ctime, &now))
+ 		sync_it |= S_CTIME;
+ 
+-	if (IS_I_VERSION(inode))
++	if (IS_I_VERSION(inode) && inode_iversion_need_inc(inode))
+ 		sync_it |= S_VERSION;
+ 
+ 	if (!sync_it)
 -- 
-Dave Chinner
-david@fromorbit.com
+2.14.3
+
