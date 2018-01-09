@@ -1,193 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33738 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:42436 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751394AbeAILdS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 06:33:18 -0500
-Date: Tue, 9 Jan 2018 19:33:16 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 10/8] xfs: check that fs freeze minimizes required
- recovery
-Message-ID: <20180109113316.GX5123@eguan.usersys.redhat.com>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
- <20180103192626.GB4854@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180103192626.GB4854@magnolia>
+        id S1756794AbeAIOLi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jan 2018 09:11:38 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v5 12/19] ocfs2: convert to new i_version API
+Date: Tue,  9 Jan 2018 09:10:52 -0500
+Message-Id: <20180109141059.25929-13-jlayton@kernel.org>
+In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
+References: <20180109141059.25929-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
 
-On Wed, Jan 03, 2018 at 11:26:26AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Make sure that a fs freeze operation cleans up as much of the filesystem
-> so as to minimize the recovery required in a crash/remount scenario.  In
-> particular we want to check that we don't leave CoW preallocations
-> sitting around in the refcountbt, though this test looks for anything
-> out of the ordinary on the frozen fs.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/903     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/903.out |   10 +++++
->  tests/xfs/group   |    1 
->  3 files changed, 118 insertions(+)
->  create mode 100755 tests/xfs/903
->  create mode 100644 tests/xfs/903.out
-> 
-> diff --git a/tests/xfs/903 b/tests/xfs/903
-> new file mode 100755
-> index 0000000..1686356
-> --- /dev/null
-> +++ b/tests/xfs/903
-> @@ -0,0 +1,107 @@
-> +#! /bin/bash
-> +# FS QA Test No. 903
-> +#
-> +# Test that frozen filesystems are relatively clean and not full of errors.
-> +# Prior to freezing a filesystem, we want to minimize the amount of recovery
-> +# that will have to happen if the system goes down while the fs is frozen.
-> +# Therefore, start up fsstress and cycle through a few freeze/thaw cycles
-> +# to ensure that nothing blows up when we try to do this.
-> +#
-> +# Unfortunately the log will probably still be dirty, so we can't do much
-> +# about enforcing a clean repair -n run.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
-> +# Copyright (c) 2018 Oracle.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1
-> +trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	# Make sure we thaw the fs before we unmount or else we remove the
-> +	# mount without actually deactivating the filesystem(!)
-> +	$XFS_IO_PROG -x -c "thaw" $SCRATCH_MNT 2> /dev/null
-> +	echo "*** unmount"
-> +	_scratch_unmount 2>/dev/null
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +
-> +_require_scratch
-> +
-> +# xfs_db will OOM kill the machine if you don't have huge amounts of RAM, so
-> +# don't run this on large filesystems.
-> +_require_no_large_scratch_dev
+From: Jeff Layton <jlayton@redhat.com>
 
-Looks like this is copied from some other test, but seems
-_check_xfs_filesystem already skips _xfs_check if $LARGE_SCRATCH_DEV is
-'yes', so we don't need this _require rule now.
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/ocfs2/dir.c          | 15 ++++++++-------
+ fs/ocfs2/inode.c        |  3 ++-
+ fs/ocfs2/namei.c        |  3 ++-
+ fs/ocfs2/quota_global.c |  3 ++-
+ 4 files changed, 14 insertions(+), 10 deletions(-)
 
-> +
-> +echo "*** init FS"
-> +
-> +rm -f $seqres.full
-> +_scratch_unmount >/dev/null 2>&1
+diff --git a/fs/ocfs2/dir.c b/fs/ocfs2/dir.c
+index febe6312ceff..32f9c72dff17 100644
+--- a/fs/ocfs2/dir.c
++++ b/fs/ocfs2/dir.c
+@@ -42,6 +42,7 @@
+ #include <linux/highmem.h>
+ #include <linux/quotaops.h>
+ #include <linux/sort.h>
++#include <linux/iversion.h>
+ 
+ #include <cluster/masklog.h>
+ 
+@@ -1174,7 +1175,7 @@ static int __ocfs2_delete_entry(handle_t *handle, struct inode *dir,
+ 				le16_add_cpu(&pde->rec_len,
+ 						le16_to_cpu(de->rec_len));
+ 			de->inode = 0;
+-			dir->i_version++;
++			inode_inc_iversion(dir);
+ 			ocfs2_journal_dirty(handle, bh);
+ 			goto bail;
+ 		}
+@@ -1729,7 +1730,7 @@ int __ocfs2_add_entry(handle_t *handle,
+ 			if (ocfs2_dir_indexed(dir))
+ 				ocfs2_recalc_free_list(dir, handle, lookup);
+ 
+-			dir->i_version++;
++			inode_inc_iversion(dir);
+ 			ocfs2_journal_dirty(handle, insert_bh);
+ 			retval = 0;
+ 			goto bail;
+@@ -1775,7 +1776,7 @@ static int ocfs2_dir_foreach_blk_id(struct inode *inode,
+ 		 * readdir(2), then we might be pointing to an invalid
+ 		 * dirent right now.  Scan from the start of the block
+ 		 * to make sure. */
+-		if (*f_version != inode->i_version) {
++		if (inode_cmp_iversion(inode, *f_version)) {
+ 			for (i = 0; i < i_size_read(inode) && i < offset; ) {
+ 				de = (struct ocfs2_dir_entry *)
+ 					(data->id_data + i);
+@@ -1791,7 +1792,7 @@ static int ocfs2_dir_foreach_blk_id(struct inode *inode,
+ 				i += le16_to_cpu(de->rec_len);
+ 			}
+ 			ctx->pos = offset = i;
+-			*f_version = inode->i_version;
++			*f_version = inode_query_iversion(inode);
+ 		}
+ 
+ 		de = (struct ocfs2_dir_entry *) (data->id_data + ctx->pos);
+@@ -1869,7 +1870,7 @@ static int ocfs2_dir_foreach_blk_el(struct inode *inode,
+ 		 * readdir(2), then we might be pointing to an invalid
+ 		 * dirent right now.  Scan from the start of the block
+ 		 * to make sure. */
+-		if (*f_version != inode->i_version) {
++		if (inode_cmp_iversion(inode, *f_version)) {
+ 			for (i = 0; i < sb->s_blocksize && i < offset; ) {
+ 				de = (struct ocfs2_dir_entry *) (bh->b_data + i);
+ 				/* It's too expensive to do a full
+@@ -1886,7 +1887,7 @@ static int ocfs2_dir_foreach_blk_el(struct inode *inode,
+ 			offset = i;
+ 			ctx->pos = (ctx->pos & ~(sb->s_blocksize - 1))
+ 				| offset;
+-			*f_version = inode->i_version;
++			*f_version = inode_query_iversion(inode);
+ 		}
+ 
+ 		while (ctx->pos < i_size_read(inode)
+@@ -1940,7 +1941,7 @@ static int ocfs2_dir_foreach_blk(struct inode *inode, u64 *f_version,
+  */
+ int ocfs2_dir_foreach(struct inode *inode, struct dir_context *ctx)
+ {
+-	u64 version = inode->i_version;
++	u64 version = inode_query_iversion(inode);
+ 	ocfs2_dir_foreach_blk(inode, &version, ctx, true);
+ 	return 0;
+ }
+diff --git a/fs/ocfs2/inode.c b/fs/ocfs2/inode.c
+index 1a1e0078ab38..d51b80edd972 100644
+--- a/fs/ocfs2/inode.c
++++ b/fs/ocfs2/inode.c
+@@ -28,6 +28,7 @@
+ #include <linux/highmem.h>
+ #include <linux/pagemap.h>
+ #include <linux/quotaops.h>
++#include <linux/iversion.h>
+ 
+ #include <asm/byteorder.h>
+ 
+@@ -302,7 +303,7 @@ void ocfs2_populate_inode(struct inode *inode, struct ocfs2_dinode *fe,
+ 	OCFS2_I(inode)->ip_attr = le32_to_cpu(fe->i_attr);
+ 	OCFS2_I(inode)->ip_dyn_features = le16_to_cpu(fe->i_dyn_features);
+ 
+-	inode->i_version = 1;
++	inode_set_iversion(inode, 1);
+ 	inode->i_generation = le32_to_cpu(fe->i_generation);
+ 	inode->i_rdev = huge_decode_dev(le64_to_cpu(fe->id1.dev1.i_rdev));
+ 	inode->i_mode = le16_to_cpu(fe->i_mode);
+diff --git a/fs/ocfs2/namei.c b/fs/ocfs2/namei.c
+index 3b0a10d9b36f..c801eddc4bf3 100644
+--- a/fs/ocfs2/namei.c
++++ b/fs/ocfs2/namei.c
+@@ -41,6 +41,7 @@
+ #include <linux/slab.h>
+ #include <linux/highmem.h>
+ #include <linux/quotaops.h>
++#include <linux/iversion.h>
+ 
+ #include <cluster/masklog.h>
+ 
+@@ -1520,7 +1521,7 @@ static int ocfs2_rename(struct inode *old_dir,
+ 			mlog_errno(status);
+ 			goto bail;
+ 		}
+-		new_dir->i_version++;
++		inode_inc_iversion(new_dir);
+ 
+ 		if (S_ISDIR(new_inode->i_mode))
+ 			ocfs2_set_links_count(newfe, 0);
+diff --git a/fs/ocfs2/quota_global.c b/fs/ocfs2/quota_global.c
+index b39d14cbfa34..7a922190a8c7 100644
+--- a/fs/ocfs2/quota_global.c
++++ b/fs/ocfs2/quota_global.c
+@@ -12,6 +12,7 @@
+ #include <linux/writeback.h>
+ #include <linux/workqueue.h>
+ #include <linux/llist.h>
++#include <linux/iversion.h>
+ 
+ #include <cluster/masklog.h>
+ 
+@@ -289,7 +290,7 @@ ssize_t ocfs2_quota_write(struct super_block *sb, int type,
+ 		mlog_errno(err);
+ 		return err;
+ 	}
+-	gqinode->i_version++;
++	inode_inc_iversion(gqinode);
+ 	ocfs2_mark_inode_dirty(handle, gqinode, oinfo->dqi_gqi_bh);
+ 	return len;
+ }
+-- 
+2.14.3
 
-_require_scratch umounts it for you :)
-
-> +echo "*** MKFS ***" >>$seqres.full
-> +echo "" >>$seqres.full
-> +_scratch_mkfs_xfs >>$seqres.full 2>&1 || _fail "mkfs failed"
-> +_scratch_mount >>$seqres.full 2>&1 || _fail "mount failed"
-> +
-> +echo "*** test"
-> +
-> +for l in 0 1 2 3 4
-> +do
-> +	echo "    *** test $l"
-> +	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -n 1000 $FSSTRESS_AVOID`
-> +	$FSSTRESS_PROG  $FSSTRESS_ARGS >>$seqres.full
-> +
-> +	$XFS_IO_PROG -x -c 'freeze' $SCRATCH_MNT
-> +
-> +	# Log will probably be dirty after the freeze, record state
-> +	echo "" >>$seqres.full
-> +	echo "*** xfs_logprint ***" >>$seqres.full
-> +	echo "" >>$seqres.full
-> +	log=clean
-> +	_scratch_xfs_logprint -tb 2>&1 | tee -a $seqres.full \
-> +		| head | grep -q "<CLEAN>" || log=dirty
-> +
-> +	# Fail if repair complains and the log is clean
-> +	echo "" >>$seqres.full
-> +	echo "*** XFS_REPAIR -n ***" >>$seqres.full
-> +	echo "" >>$seqres.full
-> +	_scratch_xfs_repair -f -n >> $seqres.full 2>&1
-> +
-> +	if [ $? -ne 0 ] && [ "$log" = "clean" ]; then
-> +		_fail "xfs_repair failed"
-> +	fi
-
-Hmm, I enlarged the loop count to 100 and didn't see a single CLEAN log,
-I suspect this test is unlikely to fail..
-
-Thanks,
-Eryu
-
-> +
-> +	$XFS_IO_PROG -x -c 'thaw' $SCRATCH_MNT
-> +done
-> +
-> +echo "*** done"
-> +status=0
-> +exit 0
-> diff --git a/tests/xfs/903.out b/tests/xfs/903.out
-> new file mode 100644
-> index 0000000..378f0cb
-> --- /dev/null
-> +++ b/tests/xfs/903.out
-> @@ -0,0 +1,10 @@
-> +QA output created by 903
-> +*** init FS
-> +*** test
-> +    *** test 0
-> +    *** test 1
-> +    *** test 2
-> +    *** test 3
-> +    *** test 4
-> +*** done
-> +*** unmount
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index e1b1582..23c26c2 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -435,3 +435,4 @@
->  435 auto quick clone
->  436 auto quick clone fsr
->  708 auto quick other
-> +903 mount auto quick stress
