@@ -1,269 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45798 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751050AbeAPWXd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 17:23:33 -0500
-Date: Tue, 16 Jan 2018 14:23:14 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 24/27] xfs_scrub: fstrim the free areas if there are no
- errors on the filesystem
-Message-ID: <20180116222314.GW5602@magnolia>
-References: <151520348769.2027.9860697266310422360.stgit@magnolia>
- <151520364185.2027.9541960389654762144.stgit@magnolia>
- <36955880-90ad-86c3-9db1-59191e267533@sandeen.net>
+Received: from resqmta-po-04v.sys.comcast.net ([96.114.154.163]:59752 "EHLO
+        resqmta-po-04v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751689AbeAJSeV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 13:34:21 -0500
+Date: Wed, 10 Jan 2018 12:31:47 -0600 (CST)
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [PATCH 05/36] usercopy: WARN() on slab cache usercopy region
+ violations
+In-Reply-To: <1515531365-37423-6-git-send-email-keescook@chromium.org>
+Message-ID: <alpine.DEB.2.20.1801101229380.7926@nuc-kabylake>
+References: <1515531365-37423-1-git-send-email-keescook@chromium.org> <1515531365-37423-6-git-send-email-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <36955880-90ad-86c3-9db1-59191e267533@sandeen.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Laura Abbott <labbott@redhat.com>, Ingo Molnar <mingo@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
 
-On Tue, Jan 16, 2018 at 04:07:44PM -0600, Eric Sandeen wrote:
-> On 1/5/18 7:54 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If the filesystem scan comes out clean or fixes all the problems, call
-> > fstrim to clean out the free areas (if it's an ssd/thinp/whatever).
-> 
-> Is this the right patch header for this patch?
-> 
-> Oh ok, this adds a "repair phase" which is really only implementing
-> preen for now, which is really only fstrimming at this point.
-> 
-> so:
-> 
-> preen()
->   if no errors
->      xfs_repair_fs() (IMHO odd to call "repair" on a clean filesystem?)
->        fstrim
-> 
-> So I guess what was confusing to me is that you do "preen" work under
-> "repair" functions.  I get it that they might all be lumped together
-> in pending work now, but I'm still wrapping my head around what does
-> and doesn't happen in various modes, and how to recognize that in
-> the code...
+On Tue, 9 Jan 2018, Kees Cook wrote:
 
-Based on our extended IRC conversations I was planning to rename the
-"repair list" to "action items" so that we could have a
-xfs_process_action_items() that actually takes care of issuing the
-repair calls, then we could have two wrappers:
+> @@ -3823,11 +3825,9 @@ int __check_heap_object(const void *ptr, unsigned long n, struct page *page,
 
-xfs_repair_fs() -> xfs_process_action_items(); fstrim();
-xfs_preen_fs() -> if (!ctx->errors_found) xfs_process_action_items()
+Could we do the check in mm_slab_common.c for all allocators and just have
+a small function in each allocators that give you the metadata needed for
+the object?
 
-> 
-> 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  scrub/Makefile    |    1 +
-> >  scrub/phase4.c    |   52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  scrub/vfs.c       |   23 +++++++++++++++++++++++
-> >  scrub/vfs.h       |    2 ++
-> >  scrub/xfs_scrub.c |   26 +++++++++++++++++++++++++-
-> >  scrub/xfs_scrub.h |    1 +
-> >  6 files changed, 104 insertions(+), 1 deletion(-)
-> >  create mode 100644 scrub/phase4.c
-> > 
-> > 
-> > diff --git a/scrub/Makefile b/scrub/Makefile
-> > index fd26624..91f99ff 100644
-> > --- a/scrub/Makefile
-> > +++ b/scrub/Makefile
-> > @@ -41,6 +41,7 @@ inodes.c \
-> >  phase1.c \
-> >  phase2.c \
-> >  phase3.c \
-> > +phase4.c \
-> >  phase5.c \
-> >  phase6.c \
-> >  phase7.c \
-> > diff --git a/scrub/phase4.c b/scrub/phase4.c
-> > new file mode 100644
-> > index 0000000..dadf4de
-> > --- /dev/null
-> > +++ b/scrub/phase4.c
-> > @@ -0,0 +1,52 @@
-> > +/*
-> > + * Copyright (C) 2018 Oracle.  All Rights Reserved.
-> > + *
-> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> > + * modify it under the terms of the GNU General Public License
-> > + * as published by the Free Software Foundation; either version 2
-> > + * of the License, or (at your option) any later version.
-> > + *
-> > + * This program is distributed in the hope that it would be useful,
-> > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > + * GNU General Public License for more details.
-> > + *
-> > + * You should have received a copy of the GNU General Public License
-> > + * along with this program; if not, write the Free Software Foundation,
-> > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> > + */
-> > +#include <stdio.h>
-> > +#include <stdint.h>
-> > +#include <stdbool.h>
-> > +#include <dirent.h>
-> > +#include <sys/types.h>
-> > +#include <sys/stat.h>
-> > +#include <sys/statvfs.h>
-> > +#include "xfs.h"
-> > +#include "xfs_fs.h"
-> > +#include "list.h"
-> > +#include "path.h"
-> > +#include "workqueue.h"
-> > +#include "xfs_scrub.h"
-> > +#include "common.h"
-> > +#include "scrub.h"
-> > +#include "vfs.h"
-> > +
-> > +/* Phase 4: Repair filesystem. */
-> > +
-> > +/* Fix everything that needs fixing. */
-> > +bool
-> > +xfs_repair_fs(
-> > +	struct scrub_ctx		*ctx)
-> > +{
-> > +	bool				moveon = true;
-> > +
-> > +	pthread_mutex_lock(&ctx->lock);
-> > +	if (moveon && ctx->errors_found == 0)
-> > +		fstrim(ctx);
-> > +	pthread_mutex_unlock(&ctx->lock);
-> > +
-> > +	return moveon;
-> > +}
-> > diff --git a/scrub/vfs.c b/scrub/vfs.c
-> > index 6a51090..98d356f 100644
-> > --- a/scrub/vfs.c
-> > +++ b/scrub/vfs.c
-> > @@ -219,3 +219,26 @@ _("Could not queue directory scan work."));
-> >  	free(sftd);
-> >  	return false;
-> >  }
-> > +
-> > +#ifndef FITRIM
-> > +struct fstrim_range {
-> > +	__u64 start;
-> > +	__u64 len;
-> > +	__u64 minlen;
-> > +};
-> > +#define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
-> > +#endif
-> 
-> (I wonder if we should move all these "if it ain't available define it"
-> stuff into a single header file at some point...)
+> + * carefully audit the whitelist range).
+> + */
+>  int report_usercopy(const char *name, const char *detail, bool to_user,
+>  		    unsigned long offset, unsigned long len)
+>  {
 
-Yeah, probably....
+Should this not be added earlier?
 
-> > +
-> > +/* Call FITRIM to trim all the unused space in a filesystem. */
-> > +void
-> > +fstrim(
-> > +	struct scrub_ctx	*ctx)
-> > +{
-> > +	struct fstrim_range	range = {0};
-> > +	int			error;
-> > +
-> > +	range.len = ULLONG_MAX;
-> > +	error = ioctl(ctx->mnt_fd, FITRIM, &range);
-> > +	if (error && errno != EOPNOTSUPP && errno != ENOTTY)
-> > +		perror(_("fstrim"));
-> > +}
-> 
-> still wondering if we should have an option to skip this, given some device's
-> horrific performance under fstrim, and/or an other desire to keep an image
-> whole.
-
-I already added it in my dev tree.  -k turns off FITRIM.
-
-> > diff --git a/scrub/vfs.h b/scrub/vfs.h
-> > index 100eb18..3305159 100644
-> > --- a/scrub/vfs.h
-> > +++ b/scrub/vfs.h
-> > @@ -28,4 +28,6 @@ typedef bool (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
-> >  bool scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
-> >  		scan_fs_tree_dirent_fn dirent_fn, void *arg);
-> >  
-> > +void fstrim(struct scrub_ctx *ctx);
-> > +
-> >  #endif /* XFS_SCRUB_VFS_H_ */
-> > diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> > index bc40f3c..7809431 100644
-> > --- a/scrub/xfs_scrub.c
-> > +++ b/scrub/xfs_scrub.c
-> > @@ -340,6 +340,20 @@ _("%sI/O rate: %.1f%s/s in, %.1f%s/s out, %.1f%s/s tot\n"),
-> >  	return true;
-> >  }
-> >  
-> > +/* Run the preening phase if there are no errors. */
-> > +static bool
-> > +preen(
-> > +	struct scrub_ctx	*ctx)
-> > +{
-> > +	if (ctx->errors_found) {
-> > +		str_info(ctx, ctx->mntpoint,
-> > +_("Errors found, please re-run with -y."));
-> > +		return true;
-> > +	}
-> > +
-> > +	return xfs_repair_fs(ctx);
-> > +}
-> > +
-> >  /* Run all the phases of the scrubber. */
-> >  static bool
-> >  run_scrub_phases(
-> > @@ -393,8 +407,18 @@ run_scrub_phases(
-> >  	/* Run all phases of the scrub tool. */
-> >  	for (phase = 1, sp = phases; sp->fn; sp++, phase++) {
-> >  		/* Turn on certain phases if user said to. */
-> > -		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data)
-> > +		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data) {
-> >  			sp->fn = xfs_scan_blocks;
-> > +		} else if (sp->fn == REPAIR_DUMMY_FN) {
-> > +			if (ctx->mode == SCRUB_MODE_PREEN) {
-> > +				sp->descr = _("Preen filesystem.");
-> > +				sp->fn = preen;
-> > +			} else if (ctx->mode == SCRUB_MODE_REPAIR) {
-> > +				sp->descr = _("Repair filesystem.");
-> > +				sp->fn = xfs_repair_fs;
-> > +			}
-> > +			sp->must_run = true;
-> 
-> if must_run is always true here, should it just be initialized in
-> the structure along w/ the other must_run phases?
-
-Ok.
-
---D
-
-> > +		}
-> >  
-> >  		/* Skip certain phases unless they're turned on. */
-> >  		if (sp->fn == REPAIR_DUMMY_FN ||
-> > diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-> > index a5cdba8..4a383f1 100644
-> > --- a/scrub/xfs_scrub.h
-> > +++ b/scrub/xfs_scrub.h
-> > @@ -108,5 +108,6 @@ bool xfs_scan_inodes(struct scrub_ctx *ctx);
-> >  bool xfs_scan_connections(struct scrub_ctx *ctx);
-> >  bool xfs_scan_blocks(struct scrub_ctx *ctx);
-> >  bool xfs_scan_summary(struct scrub_ctx *ctx);
-> > +bool xfs_repair_fs(struct scrub_ctx *ctx);
-> >  
-> >  #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
