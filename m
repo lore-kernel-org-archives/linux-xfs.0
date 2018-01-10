@@ -1,78 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34871 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:53864 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751239AbeAIPOb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 10:14:31 -0500
-Date: Tue, 9 Jan 2018 16:14:28 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v5 02/19] fs: don't take the i_lock in inode_inc_iversion
-Message-ID: <20180109151428.yuhawmbgv7tywjcq@quack2.suse.cz>
-References: <20180109141059.25929-1-jlayton@kernel.org>
- <20180109141059.25929-3-jlayton@kernel.org>
+        id S1751616AbeAJHAl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Jan 2018 02:00:41 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8D2AB25BBC
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 07:00:41 +0000 (UTC)
+Date: Wed, 10 Jan 2018 15:00:37 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] db/print: bad character cause illegal memory access
+Message-ID: <20180110070037.GO4684@dhcp12-143.nay.redhat.com>
+References: <20180109062027.4570-1-zlang@redhat.com>
+ <20180109155536.GA888@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180109141059.25929-3-jlayton@kernel.org>
+In-Reply-To: <20180109155536.GA888@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue 09-01-18 09:10:42, Jeff Layton wrote:
-> From: Jeff Layton <jlayton@redhat.com>
+On Tue, Jan 09, 2018 at 10:55:37AM -0500, Brian Foster wrote:
+> On Tue, Jan 09, 2018 at 02:20:27PM +0800, Zorro Lang wrote:
+> > xfs_db can print specified field values, likes:
+> >   # xfs_db -c "inode $inum" -c "print core.nblocks" $dev
+> > 
+> > But when we give it some bad chararcters, the 'print' command will
+> > crash:
+> > 
+> >   # xfs_db -r -c "inode 67211167" -c "print core.*" /dev/mapper/rhel-root
+> >   bad character in field *
+> >   *** Error in `xfs_db': free(): invalid pointer: 0x00007fa116e937b8 ***
+> >   ...
+> >   (crash messages)
+> >   ...
+> >   # xfs_db -r -c "inode 67211167" -c "print core.\"" /dev/mapper/rhel-root
+> >   missing closing quote
+> >   *** Error in `xfs_db': free(): invalid pointer: 0x00007f6e8e3c37b8 ***
+> >   ...
+> >   (crash messages)
+> >   ...
+> > 
+> > The reason is xfs_db call ftok_free() to free ftok_t list, but
+> > flist_split() forgets to set the tail to NULL. That cause ftok_free()
+> > trys to free illegal memory address.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> >  db/flist.c | 7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/db/flist.c b/db/flist.c
+> > index e11acbfc..1a875b95 100644
+> > --- a/db/flist.c
+> > +++ b/db/flist.c
+> > @@ -371,11 +371,14 @@ flist_split(
+> >  	v = xmalloc(sizeof(*v));
+> >  	v->tok = NULL;
+> >  	while (*s) {
+> > +		v = xrealloc(v, (nv + 1) * sizeof(*v));
+> >  		/* need to add string handling */
+> >  		if (*s == '\"') {
+> >  			s++; /* skip first quote */
+> >  			if ((a = strrchr(s, '\"')) == NULL) {
+> >  				dbprintf(_("missing closing quote %s\n"), s);
+> > +				v[nv].tok = NULL;
+> > +				v[nv].tokty = TT_END;
+> >  				ftok_free(v);
+> >  				return NULL;
+> >  			}
+> > @@ -393,19 +396,21 @@ flist_split(
+> >  			t = puncttypes[a - punctchars];
+> >  		} else {
+> >  			dbprintf(_("bad character in field %s\n"), s);
+> > +			v[nv].tok = NULL;
+> > +			v[nv].tokty = TT_END;
+> >  			ftok_free(v);
+> >  			return NULL;
+> >  		}
+> >  		a = xmalloc(l + 1);
+> >  		strncpy(a, s, l);
+> >  		a[l] = '\0';
+> > -		v = xrealloc(v, (nv + 2) * sizeof(*v));
+> >  		v[nv].tok = a;
+> >  		v[nv].tokty = t;
+> >  		nv++;
+> >  		s += l + tailskip;
+> >  		tailskip = 0;
+> >  	}
+> > +	v = xrealloc(v, (nv + 1) * sizeof(*v));
+> >  	v[nv].tok = NULL;
 > 
-> The rationale for taking the i_lock when incrementing this value is
-> lost in antiquity. The readers of the field don't take it (at least
-> not universally), so my assumption is that it was only done here to
-> serialize incrementors.
-> 
-> If that is indeed the case, then we can drop the i_lock from this
-> codepath and treat it as a atomic64_t for the purposes of
-> incrementing it. This allows us to use inode_inc_iversion without
-> any danger of lock inversion.
-> 
-> Note that the read side is not fetched atomically with this change.
-> The assumption here is that that is not a critical issue since the
-> i_version is not fully synchronized with anything else anyway.
-> 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> Could we just move the above line into the loop (right after nv is
+> bumped) to initialize .tok similar to the initial allocation before the
+> loop?
 
-This changes the memory barrier behavior but IMO it is good enough for an
-intermediate version. You can add:
+Thanks for you review, Brian. I found djwong@ has fixed this bug on xfsprogs
+for-next branch by:
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+commit 945e47e2fcc5d1cec693122286da06d8ab829c52
+Author: Darrick J. Wong <darrick.wong@oracle.com>
+Date:   Thu Jan 4 13:58:29 2018 -0600
 
-								Honza
+    xfs_db: fix crash when field list selector string has trailing slash
 
-> ---
->  include/linux/iversion.h | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+
+Thanks for you help,
+Zorro
+
 > 
-> diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-> index d09cc3a08740..5ad9eaa3a9b0 100644
-> --- a/include/linux/iversion.h
-> +++ b/include/linux/iversion.h
-> @@ -104,12 +104,13 @@ inode_set_iversion_queried(struct inode *inode, u64 new)
->  static inline bool
->  inode_maybe_inc_iversion(struct inode *inode, bool force)
->  {
-> -	spin_lock(&inode->i_lock);
-> -	inode->i_version++;
-> -	spin_unlock(&inode->i_lock);
-> +	atomic64_t *ivp = (atomic64_t *)&inode->i_version;
-> +
-> +	atomic64_inc(ivp);
->  	return true;
->  }
->  
-> +
->  /**
->   * inode_inc_iversion - forcibly increment i_version
->   * @inode: inode that needs to be updated
-> -- 
-> 2.14.3
+> Brian
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> >  	v[nv].tokty = TT_END;
+> >  	return v;
+> > -- 
+> > 2.13.6
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
