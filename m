@@ -1,26 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34710 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751238AbeAJVuH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 16:50:07 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0ALlHei109783
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:06 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2fdtjur527-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:06 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0ALo5Dt012929
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:05 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0ALo4Oc030225
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:04 GMT
-Date: Wed, 10 Jan 2018 13:50:03 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:40032 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752108AbeAJWDz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 17:03:55 -0500
+Date: Wed, 10 Jan 2018 14:03:36 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: record whichfork in iext tracepoints
-Message-ID: <20180110215003.GT5602@magnolia>
+Subject: [PATCH] xfs: recheck reflink / dirty page status before freeing CoW
+ reservations
+Message-ID: <20180110220336.GU5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -28,50 +15,141 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eryu Guan <eguan@redhat.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Record the whichfork number of the fork being operated on in iext
-tracepoints.  This makes it easier to trace our way through complex
-remapping operations like copy on write.
+Eryu Guan reported seeing occasional hangs when running generic/269 with
+a new fsstress that supports clonerange/deduperange.  The cause of this
+hang is an infinite loop when we convert the CoW fork extents from
+unwritten to real just prior to writing the pages out; the infinite
+loop happens because there's nothing in the CoW fork to convert, and so
+it spins forever.
 
+The underlying issue here is that when we go to perform these CoW fork
+conversions, we're supposed to have an extent waiting for us, but the
+low space CoW reaper has snuck in and blown them away!  There are four
+conditions that can dissuade the reaper from touching our file -- no
+reflink iflag; dirty page cache; writeback in progress; or directio in
+progress.  We check the four conditions prior to taking the locks, but
+we neglect to recheck them once we have the locks, which is how we end
+up whacking the writeback that's in progress.
+
+Therefore, refactor the four checks into a helper function and call it
+once again once we have the locks to make sure we really want to reap
+the inode.  While we're at it, add an ASSERT for this weird condition so
+that we'll fail noisily if we ever screw this up again.
+
+Reported-by: Eryu Guan <eguan@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_trace.h |   15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |    7 +++++
+ fs/xfs/xfs_icache.c      |   61 +++++++++++++++++++++++++++++-----------------
+ 2 files changed, 46 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index cd87985..1c38b79 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -233,6 +233,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
- 		__field(xfs_exntst_t, state)
- 		__field(int, bmap_state)
- 		__field(unsigned long, caller_ip)
-+		__field(int, whichfork)
- 	),
- 	TP_fast_assign(
- 		struct xfs_ifork	*ifp;
-@@ -250,11 +251,19 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
- 		__entry->state = r.br_state;
- 		__entry->bmap_state = state;
- 		__entry->caller_ip = caller_ip;
--	),
--	TP_printk("dev %d:%d ino 0x%llx state %s cur 0x%p/%d "
-+		if (ifp == XFS_IFORK_PTR(ip, XFS_DATA_FORK))
-+			__entry->whichfork = XFS_DATA_FORK;
-+		else if (ifp == XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
-+			__entry->whichfork = XFS_ATTR_FORK;
-+		else if (ifp == XFS_IFORK_PTR(ip, XFS_COW_FORK))
-+			__entry->whichfork = XFS_COW_FORK;
-+		else
-+			__entry->whichfork = -1;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx fork %d state %s cur 0x%p/%d "
- 		  "offset %lld block %lld count %lld flag %d caller %ps",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
-+		  __entry->ino, __entry->whichfork,
- 		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
- 		  __entry->leaf,
- 		  __entry->pos,
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index a01cef4..7bd933f 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4311,6 +4311,13 @@ xfs_bmapi_write(
+ 	while (bno < end && n < *nmap) {
+ 		bool			need_alloc = false, wasdelay = false;
+ 
++		/*
++		 * CoW fork conversions should /never/ hit EOF.  There should
++		 * always be something for us to work on.
++		 */
++		ASSERT(!eof || !(flags & XFS_BMAPI_CONVERT) ||
++			       !(flags & XFS_BMAPI_COWFORK));
++
+ 		/* in hole or beyoned EOF? */
+ 		if (eof || bma.got.br_startoff > bno) {
+ 			if (flags & XFS_BMAPI_DELALLOC) {
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 1f84562..3fbcc03 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1654,6 +1654,35 @@ xfs_inode_clear_eofblocks_tag(
+ 			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
+ }
+ 
++/* Is this a good time to reap the CoW reservations for this file? */
++static bool
++xfs_can_free_cowblocks(
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp)
++{
++	/*
++	 * Just clear the tag if we have an empty cow fork or none at all. It's
++	 * possible the inode was fully unshared since it was originally tagged.
++	 */
++	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
++		trace_xfs_inode_free_cowblocks_invalid(ip);
++		xfs_inode_clear_cowblocks_tag(ip);
++		return false;
++	}
++
++	/*
++	 * If the mapping is dirty or under writeback we cannot touch the
++	 * CoW fork.  Leave it alone if we're in the midst of a directio.
++	 */
++	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
++	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
++	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
++	    atomic_read(&VFS_I(ip)->i_dio_count))
++		return false;
++
++	return true;
++}
++
+ /*
+  * Automatic CoW Reservation Freeing
+  *
+@@ -1672,29 +1701,12 @@ xfs_inode_free_cowblocks(
+ 	int			flags,
+ 	void			*args)
+ {
+-	int ret;
+-	struct xfs_eofblocks *eofb = args;
+-	int match;
++	struct xfs_eofblocks	*eofb = args;
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++	int			match;
++	int			ret = 0;
+ 
+-	/*
+-	 * Just clear the tag if we have an empty cow fork or none at all. It's
+-	 * possible the inode was fully unshared since it was originally tagged.
+-	 */
+-	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
+-		trace_xfs_inode_free_cowblocks_invalid(ip);
+-		xfs_inode_clear_cowblocks_tag(ip);
+-		return 0;
+-	}
+-
+-	/*
+-	 * If the mapping is dirty or under writeback we cannot touch the
+-	 * CoW fork.  Leave it alone if we're in the midst of a directio.
+-	 */
+-	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
+-	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+-	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+-	    atomic_read(&VFS_I(ip)->i_dio_count))
++	if (!xfs_can_free_cowblocks(ip, ifp))
+ 		return 0;
+ 
+ 	if (eofb) {
+@@ -1715,7 +1727,12 @@ xfs_inode_free_cowblocks(
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 
+-	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
++	/*
++	 * Check again, nobody else should be able to dirty blocks or change
++	 * the reflink iflag now that we have the first two locks held.
++	 */
++	if (xfs_can_free_cowblocks(ip, ifp))
++		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+ 
+ 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
