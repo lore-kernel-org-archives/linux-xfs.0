@@ -1,64 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:35201 "EHLO
-        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752495AbeAJVGP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 16:06:15 -0500
-Received: by mail-vk0-f66.google.com with SMTP id o73so244881vkd.2
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 13:06:15 -0800 (PST)
+Received: from aserp2120.oracle.com ([141.146.126.78]:34710 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751238AbeAJVuH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 16:50:07 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0ALlHei109783
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:06 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2fdtjur527-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:06 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0ALo5Dt012929
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:05 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0ALo4Oc030225
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 21:50:04 GMT
+Date: Wed, 10 Jan 2018 13:50:03 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: record whichfork in iext tracepoints
+Message-ID: <20180110215003.GT5602@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1801101219390.7926@nuc-kabylake>
-References: <1515531365-37423-1-git-send-email-keescook@chromium.org>
- <1515531365-37423-5-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1801101219390.7926@nuc-kabylake>
-From: Kees Cook <keescook@chromium.org>
-Date: Wed, 10 Jan 2018 13:06:13 -0800
-Message-ID: <CAGXu5j+BcHbg4z_zZO8fsjFvQ1TCVvC1TH3d8J=1qXusAqXwLw@mail.gmail.com>
-Subject: Re: [PATCH 04/36] usercopy: Prepare for usercopy whitelisting
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Linux-MM <linux-mm@kvack.org>, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, Laura Abbott <labbott@redhat.com>, Mark Rutland <mark.rutland@arm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, kernel-hardening@lists.openwall.com
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jan 10, 2018 at 10:28 AM, Christopher Lameter <cl@linux.com> wrote:
-> On Tue, 9 Jan 2018, Kees Cook wrote:
->
->> +struct kmem_cache *kmem_cache_create_usercopy(const char *name,
->> +                     size_t size, size_t align, slab_flags_t flags,
->> +                     size_t useroffset, size_t usersize,
->> +                     void (*ctor)(void *));
->
-> Hmmm... At some point we should switch kmem_cache_create to pass a struct
-> containing all the parameters. Otherwise the API will blow up with
-> additional functions.
->
->> index 2181719fd907..70c4b4bb4d1f 100644
->> --- a/include/linux/stddef.h
->> +++ b/include/linux/stddef.h
->> @@ -19,6 +19,8 @@ enum {
->>  #define offsetof(TYPE, MEMBER)       ((size_t)&((TYPE *)0)->MEMBER)
->>  #endif
->>
->> +#define sizeof_field(structure, field) sizeof((((structure *)0)->field))
->> +
->>  /**
->>   * offsetofend(TYPE, MEMBER)
->>   *
->
-> Have a separate patch for adding this functionality? Its not a slab
-> maintainer
-> file.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Good idea; I've done this now.
+Record the whichfork number of the fork being operated on in iext
+tracepoints.  This makes it easier to trace our way through complex
+remapping operations like copy on write.
 
-> Rest looks ok.
->
-> Acked-by: Christoph Lameter <cl@linux.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_trace.h |   15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-Thanks!
-
--Kees
-
--- 
-Kees Cook
-Pixel Security
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index cd87985..1c38b79 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -233,6 +233,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+ 		__field(xfs_exntst_t, state)
+ 		__field(int, bmap_state)
+ 		__field(unsigned long, caller_ip)
++		__field(int, whichfork)
+ 	),
+ 	TP_fast_assign(
+ 		struct xfs_ifork	*ifp;
+@@ -250,11 +251,19 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+ 		__entry->state = r.br_state;
+ 		__entry->bmap_state = state;
+ 		__entry->caller_ip = caller_ip;
+-	),
+-	TP_printk("dev %d:%d ino 0x%llx state %s cur 0x%p/%d "
++		if (ifp == XFS_IFORK_PTR(ip, XFS_DATA_FORK))
++			__entry->whichfork = XFS_DATA_FORK;
++		else if (ifp == XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
++			__entry->whichfork = XFS_ATTR_FORK;
++		else if (ifp == XFS_IFORK_PTR(ip, XFS_COW_FORK))
++			__entry->whichfork = XFS_COW_FORK;
++		else
++			__entry->whichfork = -1;
++	),
++	TP_printk("dev %d:%d ino 0x%llx fork %d state %s cur 0x%p/%d "
+ 		  "offset %lld block %lld count %lld flag %d caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->ino,
++		  __entry->ino, __entry->whichfork,
+ 		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
+ 		  __entry->leaf,
+ 		  __entry->pos,
