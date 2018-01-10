@@ -1,155 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40032 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752108AbeAJWDz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 17:03:55 -0500
-Date: Wed, 10 Jan 2018 14:03:36 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:46070 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752187AbeAJWyn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 17:54:43 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0AMqfZA155806
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 22:54:43 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2fdtjurcjq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 22:54:43 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0AMsg5b011151
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 22:54:42 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0AMsfP6030131
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 22:54:42 GMT
+Date: Wed, 10 Jan 2018 14:54:40 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: recheck reflink / dirty page status before freeing CoW
- reservations
-Message-ID: <20180110220336.GU5602@magnolia>
+Subject: Re: Parent pointer design bugs
+Message-ID: <20180110225440.GV5602@magnolia>
+References: <adf6f96f-fc4b-e2eb-a204-db8a39007fa7@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <adf6f96f-fc4b-e2eb-a204-db8a39007fa7@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: Eryu Guan <eguan@redhat.com>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 10, 2018 at 12:46:16PM -0700, Allison Henderson wrote:
+> Hi all,
+> 
+> I've been working on a new xfstest for parent pointers, and discovered
+> that parent pointers are not getting created for protofiles.
 
-Eryu Guan reported seeing occasional hangs when running generic/269 with
-a new fsstress that supports clonerange/deduperange.  The cause of this
-hang is an infinite loop when we convert the CoW fork extents from
-unwritten to real just prior to writing the pages out; the infinite
-loop happens because there's nothing in the CoW fork to convert, and so
-it spins forever.
+xfsprogs, IOWs.
 
-The underlying issue here is that when we go to perform these CoW fork
-conversions, we're supposed to have an extent waiting for us, but the
-low space CoW reaper has snuck in and blown them away!  There are four
-conditions that can dissuade the reaper from touching our file -- no
-reflink iflag; dirty page cache; writeback in progress; or directio in
-progress.  We check the four conditions prior to taking the locks, but
-we neglect to recheck them once we have the locks, which is how we end
-up whacking the writeback that's in progress.
+> I'm exploring the idea of adding the parent pointer in
+> xfs_dir_createname (instead of xfs-create/xfs_link/xfs_rename).  But I
+> think that means that I'd have to change xfs_dir_createname to take
+> the new xfs_inode instead of just the xfs_ino_t.
 
-Therefore, refactor the four checks into a helper function and call it
-once again once we have the locks to make sure we really want to reap
-the inode.  While we're at it, add an ASSERT for this weird condition so
-that we'll fail noisily if we ever screw this up again.
+Yes, you'd probably want to pass the inode to xfs_dir_createname (and I
+suppose xfs_dir_removename) if you decide to move the point at which you
+queue the pptr defer op into the _dir_ functions.
 
-Reported-by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c |    7 +++++
- fs/xfs/xfs_icache.c      |   61 +++++++++++++++++++++++++++++-----------------
- 2 files changed, 46 insertions(+), 22 deletions(-)
+However, consider the repair case where we either (a) have a dir entry
+and no pptr or (b) have a pptr but no dir entry.  It's easy to repair
+the directory links in either scenario if directory updates and parent
+pointer updates are kept as separate libxfs calls.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a01cef4..7bd933f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4311,6 +4311,13 @@ xfs_bmapi_write(
- 	while (bno < end && n < *nmap) {
- 		bool			need_alloc = false, wasdelay = false;
- 
-+		/*
-+		 * CoW fork conversions should /never/ hit EOF.  There should
-+		 * always be something for us to work on.
-+		 */
-+		ASSERT(!eof || !(flags & XFS_BMAPI_CONVERT) ||
-+			       !(flags & XFS_BMAPI_COWFORK));
-+
- 		/* in hole or beyoned EOF? */
- 		if (eof || bma.got.br_startoff > bno) {
- 			if (flags & XFS_BMAPI_DELALLOC) {
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 1f84562..3fbcc03 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1654,6 +1654,35 @@ xfs_inode_clear_eofblocks_tag(
- 			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
- }
- 
-+/* Is this a good time to reap the CoW reservations for this file? */
-+static bool
-+xfs_can_free_cowblocks(
-+	struct xfs_inode	*ip,
-+	struct xfs_ifork	*ifp)
-+{
-+	/*
-+	 * Just clear the tag if we have an empty cow fork or none at all. It's
-+	 * possible the inode was fully unshared since it was originally tagged.
-+	 */
-+	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-+		trace_xfs_inode_free_cowblocks_invalid(ip);
-+		xfs_inode_clear_cowblocks_tag(ip);
-+		return false;
-+	}
-+
-+	/*
-+	 * If the mapping is dirty or under writeback we cannot touch the
-+	 * CoW fork.  Leave it alone if we're in the midst of a directio.
-+	 */
-+	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-+	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-+	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-+	    atomic_read(&VFS_I(ip)->i_dio_count))
-+		return false;
-+
-+	return true;
-+}
-+
- /*
-  * Automatic CoW Reservation Freeing
-  *
-@@ -1672,29 +1701,12 @@ xfs_inode_free_cowblocks(
- 	int			flags,
- 	void			*args)
- {
--	int ret;
--	struct xfs_eofblocks *eofb = args;
--	int match;
-+	struct xfs_eofblocks	*eofb = args;
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-+	int			match;
-+	int			ret = 0;
- 
--	/*
--	 * Just clear the tag if we have an empty cow fork or none at all. It's
--	 * possible the inode was fully unshared since it was originally tagged.
--	 */
--	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
--		trace_xfs_inode_free_cowblocks_invalid(ip);
--		xfs_inode_clear_cowblocks_tag(ip);
--		return 0;
--	}
--
--	/*
--	 * If the mapping is dirty or under writeback we cannot touch the
--	 * CoW fork.  Leave it alone if we're in the midst of a directio.
--	 */
--	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
--	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
--	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
--	    atomic_read(&VFS_I(ip)->i_dio_count))
-+	if (!xfs_can_free_cowblocks(ip, ifp))
- 		return 0;
- 
- 	if (eofb) {
-@@ -1715,7 +1727,12 @@ xfs_inode_free_cowblocks(
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- 
--	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-+	/*
-+	 * Check again, nobody else should be able to dirty blocks or change
-+	 * the reflink iflag now that we have the first two locks held.
-+	 */
-+	if (xfs_can_free_cowblocks(ip, ifp))
-+		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
- 
- 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+There's also mkfs/proto.c which want to be able to create an arbitrary
+directory tree in exactly the same way as a regular creation would.  It
+seems to me that the orphanage management functions in repair/phase6.c
+are doing basically the same sort of things -- creating the lost+found
+directory, linking orphaned inodes into said lost+found directory,
+re-stuffing collected directory entries into a directory, etc.  Perhaps
+it makes more sense to hoist some of the fs/xfs/xfs_inode.c functions
+into libxfs, add the pptr calls to those functions, port that to
+xfsprogs, and then refactor mkfs/repair to use the new libxfs functions?
+
+FWIW xfs_inode.c is already ~3600 lines long and contains routines for
+handling inodes and for various directory manipulations involving
+inodes, so I think it's fine to break that file up.
+
+> Which I'm not sure is going to work out in all cases where it is used.
+> Before I end up chasing it too long and changing the design too much,
+> I wanted to get some feed back to see what folks thoughts were.
+> Thanks!
+
+tldr: I'm leaning towards refactor and port some of the xfs_inode
+routines to xfsprogs... :)
+
+--D
+
+> 
+> Allison Henderson
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
