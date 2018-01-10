@@ -1,110 +1,369 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42094 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:49960 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753077AbeAIOLQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 09:11:16 -0500
-From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v5 04/19] affs: convert to new i_version API
-Date: Tue,  9 Jan 2018 09:10:44 -0500
-Message-Id: <20180109141059.25929-5-jlayton@kernel.org>
-In-Reply-To: <20180109141059.25929-1-jlayton@kernel.org>
-References: <20180109141059.25929-1-jlayton@kernel.org>
+        id S1752467AbeAJUlc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Jan 2018 15:41:32 -0500
+Date: Wed, 10 Jan 2018 15:32:23 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH RFC 2/4] xfs: defer agfl block frees when dfops is
+ available
+Message-ID: <20180110203223.GC17232@bfoster.bfoster>
+References: <20171207185810.48757-1-bfoster@redhat.com>
+ <20171207185810.48757-3-bfoster@redhat.com>
+ <20171207224126.GJ4094@dastard>
+ <20171208141629.GB55826@bfoster.bfoster>
+ <20180108215602.GA43411@bfoster.bfoster>
+ <20180109204315.GA1168@magnolia>
+ <20180110125858.GB17232@bfoster.bfoster>
+ <20180110190823.GR5602@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180110190823.GR5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-From: Jeff Layton <jlayton@redhat.com>
+On Wed, Jan 10, 2018 at 11:08:23AM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 10, 2018 at 07:58:59AM -0500, Brian Foster wrote:
+> > On Tue, Jan 09, 2018 at 12:43:15PM -0800, Darrick J. Wong wrote:
+> > > On Mon, Jan 08, 2018 at 04:56:03PM -0500, Brian Foster wrote:
+> > > > cc Darrick
+> > > > 
+> > > > On Fri, Dec 08, 2017 at 09:16:30AM -0500, Brian Foster wrote:
+> > > > > On Fri, Dec 08, 2017 at 09:41:26AM +1100, Dave Chinner wrote:
+> > > > > > On Thu, Dec 07, 2017 at 01:58:08PM -0500, Brian Foster wrote:
+> > > > ...
+> > > > > > 
+> > > > > > Ok, so it uses the EFI/EFD to make sure that the block freeing is
+> > > > > > logged and replayed. So my question is:
+> > > > > > 
+> > > > > > > +/*
+> > > > > > > + * AGFL blocks are accounted differently in the reserve pools and are not
+> > > > > > > + * inserted into the busy extent list.
+> > > > > > > + */
+> > > > > > > +STATIC int
+> > > > > > > +xfs_agfl_free_finish_item(
+> > > > > > > +	struct xfs_trans		*tp,
+> > > > > > > +	struct xfs_defer_ops		*dop,
+> > > > > > > +	struct list_head		*item,
+> > > > > > > +	void				*done_item,
+> > > > > > > +	void				**state)
+> > > > > > > +{
+> > > > > > 
+> > > > > > How does this function get called by log recovery when processing
+> > > > > > the EFI as there is no flag in the EFI that says this was a AGFL
+> > > > > > block?
+> > > > > > 
+> > > > > 
+> > > > > It doesn't...
+> > > > > 
+> > > > > > That said, I haven't traced through whether this matters or not,
+> > > > > > but I suspect it does because freelist frees use XFS_AG_RESV_AGFL
+> > > > > > and that avoids accounting the free to the superblock counters
+> > > > > > because the block is already accounted as free space....
+> > > > > > 
+> > > > > 
+> > > > > I don't think it does matter. I actually tested log recovery precisely
+> > > > > for this question, to see whether the traditional EFI recovery path
+> > > > > would disrupt accounting or anything and I didn't reproduce any problems
+> > > > > (well, except for that rmap record cleanup failure thing).
+> > > > > 
+> > > > > However, I do still need to trace through and understand why that is, to
+> > > > > know for sure that there aren't any problems lurking here (and if not, I
+> > > > > should probably document it), but I suspect the reason is that the
+> > > > > differences between how agfl and regular blocks are handled here only
+> > > > > affect in-core state of the AG reservation pools. These are all
+> > > > > reinitialized from zero on a subsequent mount based on the on-disk state
+> > > > > (... but good point, and I will try to confirm that before posting a
+> > > > > non-RFC variant).
+> > > > > 
+> > > > 
+> > > > After catching back up with this and taking a closer look at the code, I
+> > > > can confirm that generic EFI recovery works fine for deferred AGFL block
+> > > > frees. What happens is essentially that the slot is freed and the block
+> > > > free is deferred in a particular tx. If we crash before that tx commits,
+> > > > then obviously nothing changes and we're fine. If we crash after that tx
+> > > > commits, EFI recovery frees the block and the AGFL reserve pool
+> > > > adjustment is irrelevant as the in-core res counters are initialized
+> > > > from the current state of the fs after log recovery has completed (so
+> > > > even if we knew this was an agfl block, attempting reservation
+> > > > adjustments at recovery time would probably be wrong).
+> > > > 
+> > > > That aside, looking through the perag res code had me a bit curious
+> > > > about why we reserve all agfl blocks in the first place. IIUC, the AGFL
+> > > > reserve pool actually serves the rmapbt, since that (and that alone) is
+> > > > what the mount time reservation is based on. AGFL blocks can be used for
+> > > > other purposes, however, and the current runtime reservation is adjusted
+> > > > based on all AGFL activity. Is there a reason this reserve pool does not
+> > > > specifically target rmapbt allocations? Doesn't not doing so allow some
+> > > > percentage of the rmapbt reserved blocks to be consumed by other
+> > > > structures (alloc btrees) until/unless the fs is remounted? I'm
+> > > > wondering if specifically there's a risk of something like the
+> > > > following:
+> > > > 
+> > > > - mount fs with some number N of AGFL reserved blocks based on current
+> > > >   rmapbt state. Suppose the size of the rmapbt is R.
+> > > > - A bunch of agfl blocks are used over time (U). Suppose 50% of those go
+> > > >   to the rmapbt and the other 50% to alloc btrees and whatnot.
+> > > >   ar_reserved is reduced by U, but R only increases by U/2.
+> > > > - a bunch more unrelated physical allocations occur and consume all
+> > > >   non-reserved space
+> > > > - the fs unmounts/mounts and the perag code looks for the remaining U/2
+> > > >   blocks to reserve for the rmapbt, but not all of those blocks are
+> > > >   available because we depleted the reserved pool faster than the rmapbt
+> > > >   grew.
+> > > > 
+> > > > Darrick, hm? FWIW, a quick test to allocate 100% of an AG to a file,
+> > > > punch out every other block for a few minutes and then remount kind of
+> > > > shows what I'm wondering about:
+> > > > 
+> > > >  mount-3215  [002] ...1  1642.401846: xfs_ag_resv_init: dev 253:3 agno 0 resv 2 freeblks 259564 flcount 6 resv 3193 ask 3194 len 3194
+> > > > ...
+> > > >  <...>-28260 [000] ...1  1974.946866: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36317 flcount 9 resv 2936 ask 3194 len 1
+> > > >  <...>-28428 [002] ...1  1976.371830: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36483 flcount 9 resv 2935 ask 3194 len 1
+> > > >  <...>-28490 [002] ...1  1976.898147: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36544 flcount 9 resv 2934 ask 3194 len 1
+> > > >  <...>-28491 [002] ...1  1976.907967: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36544 flcount 9 resv 2933 ask 3194 len 1
+> > > > umount-28664 [002] ...1  1983.335444: xfs_ag_resv_free: dev 253:3 agno 0 resv 2 freeblks 36643 flcount 10 resv 2932 ask 3194 len 0
+> > > >  mount-28671 [000] ...1  1991.396640: xfs_ag_resv_init: dev 253:3 agno 0 resv 2 freeblks 36643 flcount 10 resv 3038 ask 3194 len 3194
+> > > 
+> > > Yep, that's a bug.  Our current agfl doesn't have much of a way to
+> > > signal to the perag reservation code that it's using blocks for the
+> > > rmapbt vs. any other use, so we use up the reservation and then pull
+> > > from the non-reserved free space after that, with the result that
+> > > sometimes we can blow the assert in xfs_ag_resv_init.  I've not been
+> > > able to come up with a convincing way to fix this problem, largely
+> > > because of:
+> > > 
+> > 
+> > Ok..
+> > 
+> > > > We consume the res as we go, unmount with some held reservation value,
+> > > > immediately remount and the associated reservation has jumped by 100
+> > > > blocks or so. (Granted, whether this can manifest into a tangible
+> > > > problem may be another story altogether.).
+> > > 
+> > > It's theoretically possible -- even with the perag reservation
+> > > functioning perfectly we still can run the ag totally out of blocks if
+> > > the rmap expands beyond our assumed max rmapbt size of max(1 record per
+> > > block, 1% of the ag).
+> > > 
+> > > Say you have agblocks = 11000, allocate 50% of the AG to a file, then
+> > > reflink that extent into 10000 other files.  Then dirty every other
+> > > block in each of the 10000 reflink copies.  Even if all the dirtied
+> > > blocks end up in some other AG, we've still expanded the number of rmap
+> > > records from 10001 to 5000 * 10000 == 50,000,000, which is much bigger
+> > > than our original estimation.
+> > > 
+> > 
+> > Yeah, though I think the effectiveness of the maximum sized rmapbt
+> > estimation is a separate issue from the accuracy of the reservation
+> > accounting system. The latter makes me worry that certain, sustained
+> > workloads could amplify the divergence between runtime accounting and
+> > reality such that the reservation system is ineffective even in cases
+> > that don't test the worst case estimation. That may be less likely in
+> > the current situation where the AGFL consumers are semi-related, but
+> > it's hard to characterize.
+> 
+> Agreed, on both points.
+> 
+> > > Unfortunately the options here aren't good -- we can't reserve enough
+> > > blocks to cover the maximal rmapbt when reflink is enabled, so the best
+> > > we could do is fail write_begin with ENOSPC if the shared extent's AG is
+> > > critically low on reservation, but that kinda sucks because at that
+> > > point the CoW /should/ be moving blocks (and therefore mappings) away
+> > > from the full AG.
+> > > 
+> > 
+> > Two potential options came to mind when reading the code:
+> > 
+> > - Factor all possible AGFL consumers into the perag AGFL reservation
+> >   calculation to address the impedence mismatch between the calculation
+> >   and runtime accounting.
+> > - Refactor the RESV_AGFL reservation into an RESV_RMAPBT reservation
+> >   that sits on top of the AGFL rather than behind it.
+> > 
+> > ... neither of which is fully thought out from a sanity perspective.
+> > 
+> > The former strikes me as significantly more complicated as it would
+> > require the reservation calculation (and estimation) to account for all
+> > possible consumers of the AGFL. That comes along with all the expected
+> > future maintenance cost for future AGFL consumers. Add to that the fact
+> > that the reservation is really only needed for the rmapbt at this point
+> > in time and this seems like an undesirable option.
+> 
+> <nod>  I also don't know that we're not going to someday add another
+> consumer of agfl blocks that also needs its own perag reservation, in
+> which case we'd have to have more accounting.  Or...
+> 
+> > The latter more simply moves the accounting to where rmapbt blocks are
+> > consumed/freed, irrespective of where the blocks are allocated from. I
+> > _think_ that should allow for accurate reservation accounting without
+> > losing any major capability (i.e., the reservation value is still an
+> > estimation in the end), but I could be missing something in the bowels
+> > of the res. code. I do wonder a bit about the reservation
+> > over-protecting blocks in the free space btrees based on the current
+> > AGFL population, but it's not immediately clear to me if or how much
+> > that matters (and perhaps is something that could be addressed,
+> > anyways). Thoughts?
+> 
+> Hmmm.  Right now the perag code reserves some number of blocks for
+> future use by the rmapbt.  The agfl (via fix_freelist) refreshes from
+> the perag pool; and the bnobt/rmapbt get blocks from the agfl.  IOWs, we
+> use the agfl reservation (sloppily) as a backstop for the agfl, and
+> RESV_AGFL gets charged for any agfl allocation, even if it ultimately
+> goes to something that isn't the rmapbt, even though the rmapbt code put
+> that reservation there for its own use.
+> 
+> You propose moving the xfs_ag_resv_{alloc,free}_extent accounting bits
+> to xfs_rmapbt_{alloc,free}_block so that only rmapbt allocations can
+> drain from RESV_AGFL (or put back to the pool).  This fixes the
+> accounting problem, since only those who set up RESV_AGFL reservations
+> actually get to account from them, i.e. we no longer lose RESV_AGFL
+> blocks to the bnobt.  Therefore, fix_freelist is no longer responsible
+> for passing RESV_AGFL into the extent allocation/free routines ... but
+> does the rmapbt directly allocate its own blocks now?  (I don't think
+> this is possible, because we'd then have to create an OWN_FS rmap record
+> for the new rmapbt blocks.)  Or does it still draw from the agfl, in
+> which case we have to figure out how to get reserved blocks to the
+> rmapbt if the agfl can't supply any blocks?
+> 
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- fs/affs/amigaffs.c | 5 +++--
- fs/affs/dir.c      | 5 +++--
- fs/affs/super.c    | 3 ++-
- 3 files changed, 8 insertions(+), 5 deletions(-)
+I would expect the rmapbt to continue to allocate blocks from the agfl.
+The idea is to refactor the reservation accounting only and not try to
+mess with how the broader rmap mechanism works. With regard to the agfl,
+shouldn't _fix_freelist() always populate the AGFL such that rmapbt
+allocs tied to the upcoming operation are always satisfied?
 
-diff --git a/fs/affs/amigaffs.c b/fs/affs/amigaffs.c
-index 0f0e6925e97d..14a6c1b90c9f 100644
---- a/fs/affs/amigaffs.c
-+++ b/fs/affs/amigaffs.c
-@@ -10,6 +10,7 @@
-  */
+FWIW, I hacked up the following earlier that I think illustrates the
+idea. This essentially just pushes the accounting down into the rmap
+btree block allocator functions via a RESV_RMAPBT pool. The AGFL tag
+stays around because we apparently don't make any sb changes for AGFL
+blocks and thus we still need a way to tell the perag code to do nothing
+in xfs_alloc_fix_freelist().
+
+This is obviously crap code that just remaps the existing RESV_AGFL pool
+to RESV_RMAPBT and repurposes RESV_AGFL to an accounting no-op for
+experimental purposes. It does seem to allow the simple "alloc some
+rmapbt blocks -> unmount -> mount" test to work as one would expect, but
+I haven't tested anything beyond that.
+
+Brian
+
+---8<---
+
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 2291f4224e24..9db2259557b1 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -325,8 +325,11 @@ xfs_ag_resv_alloc_extent(
+ 	trace_xfs_ag_resv_alloc_extent(pag, type, args->len);
  
- #include <linux/math64.h>
-+#include <linux/iversion.h>
- #include "affs.h"
+ 	switch (type) {
+-	case XFS_AG_RESV_METADATA:
+ 	case XFS_AG_RESV_AGFL:
++		return;
++	case XFS_AG_RESV_RMAPBT:
++		type = XFS_AG_RESV_AGFL;
++	case XFS_AG_RESV_METADATA:
+ 		resv = xfs_perag_resv(pag, type);
+ 		break;
+ 	default:
+@@ -351,6 +354,20 @@ xfs_ag_resv_alloc_extent(
+ 				-((int64_t)args->len - len));
+ }
  
- /*
-@@ -60,7 +61,7 @@ affs_insert_hash(struct inode *dir, struct buffer_head *bh)
- 	affs_brelse(dir_bh);
++void
++xfs_ag_resv_rmapbt_alloc(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_alloc_arg	args = {0};
++	struct xfs_perag	*pag;
++
++	args.len = 1;
++	pag = xfs_perag_get(mp, agno);
++	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
++	xfs_perag_put(pag);
++}
++
+ /* Free a block to the reservation. */
+ void
+ xfs_ag_resv_free_extent(
+@@ -365,8 +382,11 @@ xfs_ag_resv_free_extent(
+ 	trace_xfs_ag_resv_free_extent(pag, type, len);
  
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	mark_inode_dirty(dir);
+ 	switch (type) {
+-	case XFS_AG_RESV_METADATA:
+ 	case XFS_AG_RESV_AGFL:
++		return;
++	case XFS_AG_RESV_RMAPBT:
++		type = XFS_AG_RESV_AGFL;
++	case XFS_AG_RESV_METADATA:
+ 		resv = xfs_perag_resv(pag, type);
+ 		break;
+ 	default:
+@@ -387,3 +407,15 @@ xfs_ag_resv_free_extent(
+ 	if (len > leftover)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, len - leftover);
+ }
++
++void
++xfs_ag_resv_rmapbt_free(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_perag	*pag;
++
++	pag = xfs_perag_get(mp, agno);
++	xfs_ag_resv_free_extent(pag, XFS_AG_RESV_RMAPBT, NULL, 1);
++	xfs_perag_put(pag);
++}
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+index 8d6c687deef3..071b9152bdbf 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.h
++++ b/fs/xfs/libxfs/xfs_ag_resv.h
+@@ -32,4 +32,7 @@ void xfs_ag_resv_alloc_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
+ void xfs_ag_resv_free_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
+ 		struct xfs_trans *tp, xfs_extlen_t len);
  
++void xfs_ag_resv_rmapbt_alloc(struct xfs_mount *, xfs_agnumber_t);
++void xfs_ag_resv_rmapbt_free(struct xfs_mount *, xfs_agnumber_t);
++
+ #endif	/* __XFS_AG_RESV_H__ */
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index e829c3e489ea..8560091554e0 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -130,6 +130,8 @@ xfs_rmapbt_alloc_block(
+ 	be32_add_cpu(&agf->agf_rmap_blocks, 1);
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
+ 
++	xfs_ag_resv_rmapbt_alloc(cur->bc_mp, cur->bc_private.a.agno);
++
+ 	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+ 	*stat = 1;
  	return 0;
-@@ -114,7 +115,7 @@ affs_remove_hash(struct inode *dir, struct buffer_head *rem_bh)
- 	affs_brelse(bh);
+@@ -158,6 +160,8 @@ xfs_rmapbt_free_block(
+ 			      XFS_EXTENT_BUSY_SKIP_DISCARD);
+ 	xfs_trans_agbtree_delta(cur->bc_tp, -1);
  
- 	dir->i_mtime = dir->i_ctime = current_time(dir);
--	dir->i_version++;
-+	inode_inc_iversion(dir);
- 	mark_inode_dirty(dir);
++	xfs_ag_resv_rmapbt_free(cur->bc_mp, cur->bc_private.a.agno);
++
+ 	return 0;
+ }
  
- 	return retval;
-diff --git a/fs/affs/dir.c b/fs/affs/dir.c
-index a105e77df2c1..d180b46453cf 100644
---- a/fs/affs/dir.c
-+++ b/fs/affs/dir.c
-@@ -14,6 +14,7 @@
-  *
-  */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index e0792d036be2..9a235c7c6f1b 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -328,6 +328,7 @@ enum xfs_ag_resv_type {
+ 	XFS_AG_RESV_NONE = 0,
+ 	XFS_AG_RESV_METADATA,
+ 	XFS_AG_RESV_AGFL,
++	XFS_AG_RESV_RMAPBT,
+ };
  
-+#include <linux/iversion.h>
- #include "affs.h"
- 
- static int affs_readdir(struct file *, struct dir_context *);
-@@ -80,7 +81,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 	 * we can jump directly to where we left off.
- 	 */
- 	ino = (u32)(long)file->private_data;
--	if (ino && file->f_version == inode->i_version) {
-+	if (ino && inode_cmp_iversion(inode, file->f_version) == 0) {
- 		pr_debug("readdir() left off=%d\n", ino);
- 		goto inside;
- 	}
-@@ -130,7 +131,7 @@ affs_readdir(struct file *file, struct dir_context *ctx)
- 		} while (ino);
- 	}
- done:
--	file->f_version = inode->i_version;
-+	file->f_version = inode_query_iversion(inode);
- 	file->private_data = (void *)(long)ino;
- 	affs_brelse(fh_bh);
- 
-diff --git a/fs/affs/super.c b/fs/affs/super.c
-index 1117e36134cc..e602619aed9d 100644
---- a/fs/affs/super.c
-+++ b/fs/affs/super.c
-@@ -21,6 +21,7 @@
- #include <linux/writeback.h>
- #include <linux/blkdev.h>
- #include <linux/seq_file.h>
-+#include <linux/iversion.h>
- #include "affs.h"
- 
- static int affs_statfs(struct dentry *dentry, struct kstatfs *buf);
-@@ -102,7 +103,7 @@ static struct inode *affs_alloc_inode(struct super_block *sb)
- 	if (!i)
- 		return NULL;
- 
--	i->vfs_inode.i_version = 1;
-+	inode_set_iversion(&i->vfs_inode, 1);
- 	i->i_lc = NULL;
- 	i->i_ext_bh = NULL;
- 	i->i_pa_cnt = 0;
--- 
-2.14.3
-
+ struct xfs_ag_resv {
