@@ -1,130 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:38960 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752922AbeAKEGt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 23:06:49 -0500
-Date: Wed, 10 Jan 2018 20:06:34 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:34338 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752922AbeAKEKl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 23:10:41 -0500
+Date: Wed, 10 Jan 2018 20:10:33 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 2/3] xfs/realtime: Default rtinherit=1, add
- _require_no_rtinherit function
-Message-ID: <20180111040634.GW5602@magnolia>
+Subject: Re: [PATCH v3 1/3] xfs/realtime: Add require_no_realtime function
+Message-ID: <20180111041033.GX5602@magnolia>
 References: <20180111030901.1961285-1-rwareing@fb.com>
- <20180111030901.1961285-3-rwareing@fb.com>
+ <20180111030901.1961285-2-rwareing@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180111030901.1961285-3-rwareing@fb.com>
+In-Reply-To: <20180111030901.1961285-2-rwareing@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Richard Wareing <rwareing@fb.com>
 Cc: fstests@vger.kernel.org, eguan@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Jan 10, 2018 at 07:09:00PM -0800, Richard Wareing wrote:
-> To better exercise the data path code of realtime subvolumes, we will
-> set rtinherit=1 during mkfs calls.  For tests which this is not desired
-> we introduce a _require_no_rtinherit function to opt out of this
-> behavior.
+On Wed, Jan 10, 2018 at 07:08:59PM -0800, Richard Wareing wrote:
+> Some tests do not play well with realtime devices, in an effort to
+> produce a stable set of test which exercise the realtime code paths
+> we introduce a _require_no_realtime function to allow tests to opt
+> out of realtime subvolume test runs.
 > 
 > Signed-off-by: Richard Wareing <rwareing@fb.com>
 > ---
 > Changes since v2:
-> * Removed use of RT_INHERT, instead we now simply bail from the test.  Users
->   will have to create two separate configs for realtime one with rtinherit=1
->   in the mkfs options, one without and do separate runs to get full test
->   coverage.
-> * Added comments explaining reasons for _require_no_rtinherit declarations
+> * Fixed tests generic/409-411, _get_mount now honors $SCRATCH_OPTIONS
+> * tests/xfs/202 reverted, the test does indeed work with larger test
+>   device
+> * Added comments explaining why _require_no_realtime was declared
 > 
 > Changes since v1:
 > * None
 > 
->  common/rc         | 11 +++++++++++
->  tests/generic/250 |  3 +++
->  tests/generic/252 |  3 +++
->  tests/generic/441 |  3 +++
->  tests/xfs/170     |  1 +
->  5 files changed, 21 insertions(+)
+>  common/rc     | 18 ++++++++++++++++--
+>  tests/xfs/077 |  2 ++
+>  tests/xfs/189 |  1 +
+>  tests/xfs/284 |  2 ++
+>  4 files changed, 21 insertions(+), 2 deletions(-)
 > 
 > diff --git a/common/rc b/common/rc
-> index f5fe739..1720a72 100644
+> index 9216efd..f5fe739 100644
 > --- a/common/rc
 > +++ b/common/rc
-> @@ -33,6 +33,17 @@ BC=$(which bc 2> /dev/null) || BC=
->  VALID_TEST_ID="[0-9]\{3\}"
->  VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
+> @@ -198,8 +198,14 @@ _mount()
+>  _get_mount()
+>  {
+>  	local mnt_point=${!#}
+> +	local mnt_dev=${@:(-2):1}
+> +        local scratch_opts=""
+
+tab/space indentation problem?
+
+> +	if [ "$mnt_dev" == "$SCRATCH_DEV" ]; then
+
+"=" for comparison, not "==" (it's bashism, though we probably don't care...?)
+
+> +		_scratch_options mount
+> +		scratch_opts="$SCRATCH_OPTIONS"
+> +	fi
 >  
-> +# When running tests with a realtime device configured, the realtime inherit
-> +# flag will be set during mkfs via -d rtinherit=1 option.  For some tests
-> +# this may render the test invalid (i.e. it uses a function which is not
-> +# supported by the realtime subvolume); to prevent failure these tests may
-> +# disable this behavior by calling _require_no_rtinherit .
-> +_require_no_rtinherit()
+> -	_mount $*
+> +	_mount $scratch_opts $*
+>  	if [ $? -eq 0 ]; then
+>  		MOUNTED_POINT_STACK="$mnt_point $MOUNTED_POINT_STACK"
+>  	else
+> @@ -230,7 +236,7 @@ _clear_mount_stack()
+>  
+>  _scratch_options()
+>  {
+> -    type=$1
+> +    local type=$1
+>      SCRATCH_OPTIONS=""
+>  
+>      if [ "$FSTYP" != "xfs" ]; then
+> @@ -1737,6 +1743,14 @@ _require_realtime()
+>  	_notrun "Realtime device required, skipped this test"
+>  }
+>  
+> +# This test requires that a realtime subvolume is not in use
+> +#
+> +_require_no_realtime()
 > +{
-> +  echo "$MKFS_OPTIONS" | egrep -q "rtinherit([^=]|=1)" && \
-> +    _notrun "rtinherit mkfs option is not supported by this test."
+> +    [ -n "$SCRATCH_RTDEV" ] && \
+> +	_notrun "Test not compatible with realtime subvolumes, skipped this test"
 
-It's worth checking that FSTYP==xfs since this feature only exists in xfs.
-
---D
+Do we have to check USE_EXTERNAL = yes here too?
 
 > +}
 > +
->  _require_math()
->  {
->  	if [ -z "$BC" ]; then
-> diff --git a/tests/generic/250 b/tests/generic/250
-> index 3c4fe6d..a8fd97e 100755
-> --- a/tests/generic/250
-> +++ b/tests/generic/250
-> @@ -48,6 +48,9 @@ _require_scratch
->  _require_dm_target error
->  _require_xfs_io_command "falloc"
->  _require_odirect
-> +# This test uses "dm" without taking into account the data could be on
-> +# realtime subvolume, thus the test will fail with rtinherit=1
-> +_require_no_rtinherit
+>  # this test requires that a specified command (executable) exists
+>  # $1 - command, $2 - name for error message
+>  #
+> diff --git a/tests/xfs/077 b/tests/xfs/077
+> index eba4f08..6d5ac1a 100755
+> --- a/tests/xfs/077
+> +++ b/tests/xfs/077
+> @@ -50,6 +50,8 @@ _cleanup()
 >  
->  rm -f $seqres.full
->  
-> diff --git a/tests/generic/252 b/tests/generic/252
-> index ffedd56..b506d59 100755
-> --- a/tests/generic/252
-> +++ b/tests/generic/252
-> @@ -47,6 +47,9 @@ _supported_os Linux
+>  _supported_fs xfs
+>  _supported_os Linux
+> +# xfs_copy does not support realtime devices
+
+This seems like more of a bug in xfs_copy to me... :)
+
+--D
+
+> +_require_no_realtime
 >  _require_scratch
->  _require_dm_target error
->  _require_xfs_io_command "falloc"
-> +# This test uses "dm" without taking into account the data could be on
-> +# realtime subvolume, thus the test will fail with rtinherit=1
-> +_require_no_rtinherit
->  _require_aiodio "aiocp"
->  AIO_TEST="src/aio-dio-regress/aiocp"
+>  _require_xfs_crc
+>  _require_meta_uuid
+> diff --git a/tests/xfs/189 b/tests/xfs/189
+> index 636f6f0..699eb3c 100755
+> --- a/tests/xfs/189
+> +++ b/tests/xfs/189
+> @@ -236,6 +236,7 @@ _putback_scratch_fstab()
+>  _supported_fs xfs
+>  _supported_os Linux
 >  
-> diff --git a/tests/generic/441 b/tests/generic/441
-> index 075d877..5fbfece 100755
-> --- a/tests/generic/441
-> +++ b/tests/generic/441
-> @@ -47,6 +47,9 @@ _cleanup()
+> +_require_no_realtime
+>  _require_scratch
+>  _require_noattr2
+>  
+> diff --git a/tests/xfs/284 b/tests/xfs/284
+> index e3625fe..d0eb5bd 100755
+> --- a/tests/xfs/284
+> +++ b/tests/xfs/284
+> @@ -49,6 +49,8 @@ rm -f $seqres.full
 >  # real QA test starts here
+>  _supported_fs xfs
 >  _supported_os Linux
+> +# xfs_copy does not support realtime devices
+> +_require_no_realtime
+>  _require_test
 >  _require_scratch
-> +# This test uses "dm" without taking into account the data could be on
-> +# realtime subvolume, thus the test will fail with rtinherit=1
-> +_require_no_rtinherit
->  
->  # Generally, we want to avoid journal errors on the extended testcase. Only
->  # unset the -s flag if we have a logdev
-> diff --git a/tests/xfs/170 b/tests/xfs/170
-> index c5ae8e4..6deef1b 100755
-> --- a/tests/xfs/170
-> +++ b/tests/xfs/170
-> @@ -50,6 +50,7 @@ _supported_fs xfs
->  _supported_os Linux
->  
->  _require_scratch
-> +_require_no_rtinherit
->  
->  _check_filestreams_support || _notrun "filestreams not available"
 >  
 > -- 
 > 2.9.5
