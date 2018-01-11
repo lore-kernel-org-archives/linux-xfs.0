@@ -1,99 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35098 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751882AbeAJX6P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 18:58:15 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0ANvJHS056353
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 23:58:14 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2fdv65r4fc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 23:58:14 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0ANwEcw025910
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 23:58:14 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0ANwDEQ010877
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 23:58:14 GMT
-Subject: Re: Parent pointer design bugs
-References: <adf6f96f-fc4b-e2eb-a204-db8a39007fa7@oracle.com>
- <20180110225440.GV5602@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <da529817-04d5-086e-d9c1-37de7425d0a9@oracle.com>
-Date: Wed, 10 Jan 2018 16:58:13 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180110225440.GV5602@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:44489 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753521AbeAKCD1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 21:03:27 -0500
+Received: by mail-pg0-f68.google.com with SMTP id m20so1581052pgc.11
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 18:03:26 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH 07/38] usercopy: WARN() on slab cache usercopy region violations
+Date: Wed, 10 Jan 2018 18:02:39 -0800
+Message-Id: <1515636190-24061-8-git-send-email-keescook@chromium.org>
+In-Reply-To: <1515636190-24061-1-git-send-email-keescook@chromium.org>
+References: <1515636190-24061-1-git-send-email-keescook@chromium.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Laura Abbott <labbott@redhat.com>, Ingo Molnar <mingo@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, David Windsor <dave@nullcore.net>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
 
+This patch adds checking of usercopy cache whitelisting, and is modified
+from Brad Spengler/PaX Team's PAX_USERCOPY whitelisting code in the
+last public patch of grsecurity/PaX based on my understanding of the
+code. Changes or omissions from the original code are mine and don't
+reflect the original grsecurity/PaX code.
 
+The SLAB and SLUB allocators are modified to WARN() on all copy operations
+in which the kernel heap memory being modified falls outside of the cache's
+defined usercopy region.
 
-On 01/10/2018 03:54 PM, Darrick J. Wong wrote:
-> On Wed, Jan 10, 2018 at 12:46:16PM -0700, Allison Henderson wrote:
->> Hi all,
->>
->> I've been working on a new xfstest for parent pointers, and discovered
->> that parent pointers are not getting created for protofiles.
-> 
-> xfsprogs, IOWs.
-> 
->> I'm exploring the idea of adding the parent pointer in
->> xfs_dir_createname (instead of xfs-create/xfs_link/xfs_rename).  But I
->> think that means that I'd have to change xfs_dir_createname to take
->> the new xfs_inode instead of just the xfs_ino_t.
-> 
-> Yes, you'd probably want to pass the inode to xfs_dir_createname (and I
-> suppose xfs_dir_removename) if you decide to move the point at which you
-> queue the pptr defer op into the _dir_ functions.
-> 
-> However, consider the repair case where we either (a) have a dir entry
-> and no pptr or (b) have a pptr but no dir entry.  It's easy to repair
-> the directory links in either scenario if directory updates and parent
-> pointer updates are kept as separate libxfs calls.
-> 
-> There's also mkfs/proto.c which want to be able to create an arbitrary
-> directory tree in exactly the same way as a regular creation would.  It
-> seems to me that the orphanage management functions in repair/phase6.c
-> are doing basically the same sort of things -- creating the lost+found
-> directory, linking orphaned inodes into said lost+found directory,
-> re-stuffing collected directory entries into a directory, etc.  Perhaps
-> it makes more sense to hoist some of the fs/xfs/xfs_inode.c functions
-> into libxfs, add the pptr calls to those functions, port that to
-> xfsprogs, and then refactor mkfs/repair to use the new libxfs functions?
-> 
-> FWIW xfs_inode.c is already ~3600 lines long and contains routines for
-> handling inodes and for various directory manipulations involving
-> inodes, so I think it's fine to break that file up.
-> 
->> Which I'm not sure is going to work out in all cases where it is used.
->> Before I end up chasing it too long and changing the design too much,
->> I wanted to get some feed back to see what folks thoughts were.
->> Thanks!
-> 
-> tldr: I'm leaning towards refactor and port some of the xfs_inode
-> routines to xfsprogs... :)
-> 
+Based on an earlier patch from David Windsor.
 
-Alrighty, I'll see what I can work out.  Thank you!!
+Cc: Christoph Lameter <cl@linux.com>
+Cc: Pekka Enberg <penberg@kernel.org>
+Cc: David Rientjes <rientjes@google.com>
+Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Laura Abbott <labbott@redhat.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ mm/slab.c     | 22 +++++++++++++++++++---
+ mm/slab.h     |  2 ++
+ mm/slub.c     | 23 +++++++++++++++++++----
+ mm/usercopy.c | 21 ++++++++++++++++++---
+ 4 files changed, 58 insertions(+), 10 deletions(-)
 
-> --D
-> 
->>
->> Allison Henderson
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=9lB1PDKzm2gfSE5y-lOY3Vh-lrKgdXAOkR4V96QBhB0&s=qvbtvoxhw2nHvyF_z-kqLeLED9hGVZb1cp_alEA5rNI&e=
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=9lB1PDKzm2gfSE5y-lOY3Vh-lrKgdXAOkR4V96QBhB0&s=qvbtvoxhw2nHvyF_z-kqLeLED9hGVZb1cp_alEA5rNI&e=
-> 
+diff --git a/mm/slab.c b/mm/slab.c
+index 47acfe54e1ae..1c02f6e94235 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -4392,7 +4392,9 @@ module_init(slab_proc_init);
+ 
+ #ifdef CONFIG_HARDENED_USERCOPY
+ /*
+- * Rejects objects that are incorrectly sized.
++ * Rejects incorrectly sized objects and objects that are to be copied
++ * to/from userspace but do not fall entirely within the containing slab
++ * cache's usercopy region.
+  *
+  * Returns NULL if check passes, otherwise const char * to name of cache
+  * to indicate an error.
+@@ -4412,10 +4414,24 @@ void __check_heap_object(const void *ptr, unsigned long n, struct page *page,
+ 	/* Find offset within object. */
+ 	offset = ptr - index_to_obj(cachep, page, objnr) - obj_offset(cachep);
+ 
+-	/* Allow address range falling entirely within object size. */
+-	if (offset <= cachep->object_size && n <= cachep->object_size - offset)
++	/* Allow address range falling entirely within usercopy region. */
++	if (offset >= cachep->useroffset &&
++	    offset - cachep->useroffset <= cachep->usersize &&
++	    n <= cachep->useroffset - offset + cachep->usersize)
+ 		return;
+ 
++	/*
++	 * If the copy is still within the allocated object, produce
++	 * a warning instead of rejecting the copy. This is intended
++	 * to be a temporary method to find any missing usercopy
++	 * whitelists.
++	 */
++	if (offset <= cachep->object_size &&
++	    n <= cachep->object_size - offset) {
++		usercopy_warn("SLAB object", cachep->name, to_user, offset, n);
++		return;
++	}
++
+ 	usercopy_abort("SLAB object", cachep->name, to_user, offset, n);
+ }
+ #endif /* CONFIG_HARDENED_USERCOPY */
+diff --git a/mm/slab.h b/mm/slab.h
+index 1897991df3fa..b476c435680f 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -530,6 +530,8 @@ static inline void cache_random_seq_destroy(struct kmem_cache *cachep) { }
+ #endif /* CONFIG_SLAB_FREELIST_RANDOM */
+ 
+ #ifdef CONFIG_HARDENED_USERCOPY
++void usercopy_warn(const char *name, const char *detail, bool to_user,
++		   unsigned long offset, unsigned long len);
+ void __noreturn usercopy_abort(const char *name, const char *detail,
+ 			       bool to_user, unsigned long offset,
+ 			       unsigned long len);
+diff --git a/mm/slub.c b/mm/slub.c
+index f40a57164dd6..6d9b1e7d3226 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3813,7 +3813,9 @@ EXPORT_SYMBOL(__kmalloc_node);
+ 
+ #ifdef CONFIG_HARDENED_USERCOPY
+ /*
+- * Rejects objects that are incorrectly sized.
++ * Rejects incorrectly sized objects and objects that are to be copied
++ * to/from userspace but do not fall entirely within the containing slab
++ * cache's usercopy region.
+  *
+  * Returns NULL if check passes, otherwise const char * to name of cache
+  * to indicate an error.
+@@ -3827,7 +3829,6 @@ void __check_heap_object(const void *ptr, unsigned long n, struct page *page,
+ 
+ 	/* Find object and usable object size. */
+ 	s = page->slab_cache;
+-	object_size = slab_ksize(s);
+ 
+ 	/* Reject impossible pointers. */
+ 	if (ptr < page_address(page))
+@@ -3845,10 +3846,24 @@ void __check_heap_object(const void *ptr, unsigned long n, struct page *page,
+ 		offset -= s->red_left_pad;
+ 	}
+ 
+-	/* Allow address range falling entirely within object size. */
+-	if (offset <= object_size && n <= object_size - offset)
++	/* Allow address range falling entirely within usercopy region. */
++	if (offset >= s->useroffset &&
++	    offset - s->useroffset <= s->usersize &&
++	    n <= s->useroffset - offset + s->usersize)
+ 		return;
+ 
++	/*
++	 * If the copy is still within the allocated object, produce
++	 * a warning instead of rejecting the copy. This is intended
++	 * to be a temporary method to find any missing usercopy
++	 * whitelists.
++	 */
++	object_size = slab_ksize(s);
++	if (offset <= object_size && n <= object_size - offset) {
++		usercopy_warn("SLUB object", s->name, to_user, offset, n);
++		return;
++	}
++
+ 	usercopy_abort("SLUB object", s->name, to_user, offset, n);
+ }
+ #endif /* CONFIG_HARDENED_USERCOPY */
+diff --git a/mm/usercopy.c b/mm/usercopy.c
+index a562dd094ace..e9e9325f7638 100644
+--- a/mm/usercopy.c
++++ b/mm/usercopy.c
+@@ -59,13 +59,28 @@ static noinline int check_stack_object(const void *obj, unsigned long len)
+ }
+ 
+ /*
+- * If this function is reached, then CONFIG_HARDENED_USERCOPY has found an
+- * unexpected state during a copy_from_user() or copy_to_user() call.
++ * If these functions are reached, then CONFIG_HARDENED_USERCOPY has found
++ * an unexpected state during a copy_from_user() or copy_to_user() call.
+  * There are several checks being performed on the buffer by the
+  * __check_object_size() function. Normal stack buffer usage should never
+  * trip the checks, and kernel text addressing will always trip the check.
+- * For cache objects, copies must be within the object size.
++ * For cache objects, it is checking that only the whitelisted range of
++ * bytes for a given cache is being accessed (via the cache's usersize and
++ * useroffset fields). To adjust a cache whitelist, use the usercopy-aware
++ * kmem_cache_create_usercopy() function to create the cache (and
++ * carefully audit the whitelist range).
+  */
++void usercopy_warn(const char *name, const char *detail, bool to_user,
++		   unsigned long offset, unsigned long len)
++{
++	WARN_ONCE(1, "Bad or missing usercopy whitelist? Kernel memory %s attempt detected %s %s%s%s%s (offset %lu, size %lu)!\n",
++		 to_user ? "exposure" : "overwrite",
++		 to_user ? "from" : "to",
++		 name ? : "unknown?!",
++		 detail ? " '" : "", detail ? : "", detail ? "'" : "",
++		 offset, len);
++}
++
+ void __noreturn usercopy_abort(const char *name, const char *detail,
+ 			       bool to_user, unsigned long offset,
+ 			       unsigned long len)
+-- 
+2.7.4
+
