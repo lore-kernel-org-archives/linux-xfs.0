@@ -1,109 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34164 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753165AbeAKNYZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 08:24:25 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0BDOK3M050100
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 08:24:24 -0500
-Received: from e06smtp13.uk.ibm.com (e06smtp13.uk.ibm.com [195.75.94.109])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2fe7rxb17a-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 08:24:23 -0500
-Received: from localhost
-        by e06smtp13.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 11 Jan 2018 13:24:07 -0000
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [RFC PATCH] xfs: Fix "use after free" of intent items
-Date: Thu, 11 Jan 2018 18:55:21 +0530
-In-Reply-To: <20180111125223.10727-1-chandan@linux.vnet.ibm.com>
-References: <20180111125223.10727-1-chandan@linux.vnet.ibm.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:50714 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934422AbeAKRIX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 12:08:23 -0500
+Date: Thu, 11 Jan 2018 09:07:52 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: record whichfork in iext tracepoints
+Message-ID: <20180111170752.GY5602@magnolia>
+References: <20180110215003.GT5602@magnolia>
+ <20180111120403.GA22600@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <4344588.3YHvTizCoe@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180111120403.GA22600@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: hch@infradead.org, darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thursday, January 11, 2018 6:22:23 PM IST Chandan Rajendra wrote:
-> generic/388 can cause the following "use after free" error to occur,
+On Thu, Jan 11, 2018 at 07:04:04AM -0500, Brian Foster wrote:
+> On Wed, Jan 10, 2018 at 01:50:03PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Record the whichfork number of the fork being operated on in iext
+> > tracepoints.  This makes it easier to trace our way through complex
+> > remapping operations like copy on write.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_trace.h |   15 ++++++++++++---
+> >  1 file changed, 12 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index cd87985..1c38b79 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -233,6 +233,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+> >  		__field(xfs_exntst_t, state)
+> >  		__field(int, bmap_state)
+> >  		__field(unsigned long, caller_ip)
+> > +		__field(int, whichfork)
+> >  	),
+> >  	TP_fast_assign(
+> >  		struct xfs_ifork	*ifp;
+> > @@ -250,11 +251,19 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+> >  		__entry->state = r.br_state;
+> >  		__entry->bmap_state = state;
+> >  		__entry->caller_ip = caller_ip;
+> > -	),
+> > -	TP_printk("dev %d:%d ino 0x%llx state %s cur 0x%p/%d "
+> > +		if (ifp == XFS_IFORK_PTR(ip, XFS_DATA_FORK))
+> > +			__entry->whichfork = XFS_DATA_FORK;
+> > +		else if (ifp == XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
+> > +			__entry->whichfork = XFS_ATTR_FORK;
+> > +		else if (ifp == XFS_IFORK_PTR(ip, XFS_COW_FORK))
+> > +			__entry->whichfork = XFS_COW_FORK;
+> > +		else
+> > +			__entry->whichfork = -1;
+> > +	),
+> > +	TP_printk("dev %d:%d ino 0x%llx fork %d state %s cur 0x%p/%d "
+> >  		  "offset %lld block %lld count %lld flag %d caller %ps",
+> >  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > -		  __entry->ino,
+> > +		  __entry->ino, __entry->whichfork,
+> >  		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
 > 
->  =============================================================================
->  BUG xfs_efi_item (Not tainted): Poison overwritten
->  -----------------------------------------------------------------------------
-> 
->  Disabling lock debugging due to kernel taint
->  INFO: 0x00000000292c4bd4-0x00000000292c4bd4. First byte 0x6a instead of 0x6b
->  INFO: Allocated in .kmem_zone_alloc+0xcc/0x190 age=79 cpu=0 pid=12436
->  	.__slab_alloc+0x54/0x80
->  	.kmem_cache_alloc+0x124/0x350
->  	.kmem_zone_alloc+0xcc/0x190
->  	.xfs_efi_init+0x48/0xf0
->  	.xfs_extent_free_create_intent+0x40/0x130
->  	.xfs_defer_intake_work+0x74/0x1e0
->  	.xfs_defer_finish+0xac/0x5c0
->  	.xfs_itruncate_extents+0x170/0x590
->  	.xfs_inactive_truncate+0xcc/0x170
->  	.xfs_inactive+0x1d8/0x2f0
->  	.xfs_fs_destroy_inode+0xe4/0x3d0
->  	.destroy_inode+0x68/0xb0
->  	.do_unlinkat+0x1e8/0x390
->  	system_call+0x58/0x6c
->  INFO: Freed in .xfs_efi_item_free+0x44/0x80 age=79 cpu=0 pid=12436
->  	.kmem_cache_free+0x120/0x2b0
->  	.xfs_efi_item_free+0x44/0x80
->  	.xfs_trans_free_items+0xd4/0x130
->  	.__xfs_trans_commit+0xd0/0x350
->  	.xfs_trans_roll+0x4c/0x90
->  	.xfs_defer_trans_roll+0xa4/0x2b0
->  	.xfs_defer_finish+0xb8/0x5c0
->  	.xfs_itruncate_extents+0x170/0x590
->  	.xfs_inactive_truncate+0xcc/0x170
->  	.xfs_inactive+0x1d8/0x2f0
->  	.xfs_fs_destroy_inode+0xe4/0x3d0
->  	.destroy_inode+0x68/0xb0
->  	.do_unlinkat+0x1e8/0x390
->  	system_call+0x58/0x6c
-> 
-> This happens due to the following interaction,
-> 1. xfs_defer_finish() creates "extent free" intent item and adds it to the
->    list at xfs_trans->t_items.
-> 2. xfs_defer_trans_roll() invokes __xfs_trans_commit(). Here, if the
->    XFS_MOUNT_FS_SHUTDOWN flag is set, we invoke io_unlock() operation of the
->    corresponding log item. For "extent free" log items xfs_efi_item_unlock()
->    gets invoked which frees the xfs_efi_log_item.
-> 3. xfs_defer_trans_roll() then invokes xfs_defer_trans_abort(). Since the
->    xfs_defer_pending->dfp_intent is still set to the "extent free" intent
->    item, we invoke xfs_extent_free_abort_intent(). This accesses the
->    previously freed xfs_efi_log_item to decrement the ref count.
-> 
-> This commit fixes the bug by changing xfs_efi_item_unlock() to invoke
-> xfs_efi_release() instead of xfs_efi_item_free(). The xfs_efi_log_item gets
-> freed when xfs_extent_free_abort_intent() invokes xfs_efi_release() once again
-> i.e. its refcount becomes zero and hence xfs_efi_item_free() is invoked.
-> 
-> Reported-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-> ---
-> 
-> The above mentioned "use after free" occurs with other log items.
-> (e.g. xfs_rui_item). If the below fix is found to be correct, I will
-> apply it to other affected log items as well and post a new patch.
-> 
+> Doesn't ->bmap_state include this information? Looks like attr/cow
+> strings are included in the EXT_FLAGS list as well.
 
-I am assuming that the refcount for xfs_efi_item is set to 2 to account
-for,
-1. Linking the corresponding log descriptor item to the transaction's
-   t_items list.
-2. For storing the pointer to the intent item at 
-   xfs_defer_pending->dfp_intent.
+Aha, that's why it wasn't printing DATA for data fork updates.  Silly me.
+Sorry for the noise. :/
 
-Please let me know if my assumption is incorrect.
+--D
 
--- 
-chandan
-
+> Brian
+> 
+> >  		  __entry->leaf,
+> >  		  __entry->pos,
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
