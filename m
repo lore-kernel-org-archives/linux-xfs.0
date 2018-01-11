@@ -1,237 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43886 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932386AbeAKUc6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 15:32:58 -0500
-Date: Thu, 11 Jan 2018 12:32:46 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: recheck reflink / dirty page status before freeing
- CoW reservations
-Message-ID: <20180111203246.GJ5602@magnolia>
-References: <20180110220336.GU5602@magnolia>
- <20180111120410.GB22600@bfoster.bfoster>
- <20180111174027.GZ5602@magnolia>
- <20180111193828.GC22600@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180111193828.GC22600@bfoster.bfoster>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:41552 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932734AbeAKV1Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 16:27:24 -0500
+Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
+MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v3 2/3] xfs/realtime: Default rtinherit=1, add
+ _require_no_rtinherit function
+From: Richard Wareing <rwareing@fb.com>
+In-Reply-To: <20180111040634.GW5602@magnolia>
+Date: Thu, 11 Jan 2018 13:27:06 -0800
+Content-Transfer-Encoding: 7bit
+Message-ID: <DD8EBABB-4A47-49CB-8D90-0DE447594ED1@fb.com>
+References: <20180111030901.1961285-1-rwareing@fb.com>
+ <20180111030901.1961285-3-rwareing@fb.com> <20180111040634.GW5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eryu Guan <eguan@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, eguan@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 02:38:28PM -0500, Brian Foster wrote:
-> On Thu, Jan 11, 2018 at 09:40:27AM -0800, Darrick J. Wong wrote:
-> > On Thu, Jan 11, 2018 at 07:04:10AM -0500, Brian Foster wrote:
-> > > On Wed, Jan 10, 2018 at 02:03:36PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Eryu Guan reported seeing occasional hangs when running generic/269 with
-> > > > a new fsstress that supports clonerange/deduperange.  The cause of this
-> > > > hang is an infinite loop when we convert the CoW fork extents from
-> > > > unwritten to real just prior to writing the pages out; the infinite
-> > > > loop happens because there's nothing in the CoW fork to convert, and so
-> > > > it spins forever.
-> > > > 
-> > > > The underlying issue here is that when we go to perform these CoW fork
-> > > > conversions, we're supposed to have an extent waiting for us, but the
-> > > > low space CoW reaper has snuck in and blown them away!  There are four
-> > > > conditions that can dissuade the reaper from touching our file -- no
-> > > > reflink iflag; dirty page cache; writeback in progress; or directio in
-> > > > progress.  We check the four conditions prior to taking the locks, but
-> > > > we neglect to recheck them once we have the locks, which is how we end
-> > > > up whacking the writeback that's in progress.
-> > > > 
-> > > > Therefore, refactor the four checks into a helper function and call it
-> > > > once again once we have the locks to make sure we really want to reap
-> > > > the inode.  While we're at it, add an ASSERT for this weird condition so
-> > > > that we'll fail noisily if we ever screw this up again.
-> > > > 
-> > > > Reported-by: Eryu Guan <eguan@redhat.com>
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_bmap.c |    7 +++++
-> > > >  fs/xfs/xfs_icache.c      |   61 +++++++++++++++++++++++++++++-----------------
-> > > >  2 files changed, 46 insertions(+), 22 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > index a01cef4..7bd933f 100644
-> > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > @@ -4311,6 +4311,13 @@ xfs_bmapi_write(
-> > > >  	while (bno < end && n < *nmap) {
-> > > >  		bool			need_alloc = false, wasdelay = false;
-> > > >  
-> > > > +		/*
-> > > > +		 * CoW fork conversions should /never/ hit EOF.  There should
-> > > > +		 * always be something for us to work on.
-> > > > +		 */
-> > > > +		ASSERT(!eof || !(flags & XFS_BMAPI_CONVERT) ||
-> > > > +			       !(flags & XFS_BMAPI_COWFORK));
-> > > > +
-> > > 
-> > > The hunk just below asserts for BMAPI_COWFORK in a case that explicitly
-> > > considers eof. That makes the logic confusing to follow IMO, but I'm
-> > > more wondering whether pushing something like ASSERT(!((flags & CONVERT)
-> > > && (flags & COWFORK))) down into that hunk is effectively the same
-> > > thing..?  I.e., is it also true that we should not find a hole in the
-> > > (CONVERT & COW) case?
-> > 
-> > Yes.
-> > 
-> > > >  		/* in hole or beyoned EOF? */
-> > > >  		if (eof || bma.got.br_startoff > bno) {
-> > > >  			if (flags & XFS_BMAPI_DELALLOC) {
-> > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > > index 1f84562..3fbcc03 100644
-> > > > --- a/fs/xfs/xfs_icache.c
-> > > > +++ b/fs/xfs/xfs_icache.c
-> > > > @@ -1654,6 +1654,35 @@ xfs_inode_clear_eofblocks_tag(
-> > > >  			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
-> > > >  }
-> > > >  
-> > > > +/* Is this a good time to reap the CoW reservations for this file? */
-> > > > +static bool
-> > > > +xfs_can_free_cowblocks(
-> > > > +	struct xfs_inode	*ip,
-> > > > +	struct xfs_ifork	*ifp)
-> > > > +{
-> > > > +	/*
-> > > > +	 * Just clear the tag if we have an empty cow fork or none at all. It's
-> > > > +	 * possible the inode was fully unshared since it was originally tagged.
-> > > > +	 */
-> > > > +	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-> > > > +		trace_xfs_inode_free_cowblocks_invalid(ip);
-> > > > +		xfs_inode_clear_cowblocks_tag(ip);
-> > > > +		return false;
-> > > 
-> > > I think the flag update and tracepoint should probably remain in the
-> > > caller. They're somewhat misplaced for a "xfs_can_do_something()"
-> > > helper, particularly if it's ever exported and used in other contexts in
-> > > the future. Otherwise seems fine.
-> > 
-> > Hmm.  There's a subtlety to step around here, which is that this
-> > predicate can return false to mean "nothing here to see" or to mean
-> > "cannot clear anything at this time".  We want the trace+clear for the
-> > first case, but not the second.
-> > 
-> > I suppose this function could return the regular error code int and the
-> > caller can figure out what that means to it, but then all the post-check
-> > stuff ends up duplicated in the callers... so maybe I should just rename
-> > it xfs_prep_free_cowblocks().
-> > 
-> 
-> Are both checks necessarily required to be repeated under lock to fix
-> the bug? IOW, Could the !fork || !flag check remain in the caller to
-> cover the first case?
+Darrick J. Wong <darrick.wong@oracle.com> wrote:
 
-They're necessary in both cases; generic/269 (when it wasn't hanging)
-would also blow the xfs_is_reflink_inode assert in
-xfs_reflink_cancel_cow_range if the flag got cleared before we can grab
-the iolock/mmaplock.
+> On Wed, Jan 10, 2018 at 07:09:00PM -0800, Richard Wareing wrote:
+>> To better exercise the data path code of realtime subvolumes, we will
+>> set rtinherit=1 during mkfs calls.  For tests which this is not desired
+>> we introduce a _require_no_rtinherit function to opt out of this
+>> behavior.
+>>
+>> Signed-off-by: Richard Wareing <rwareing@fb.com>
+>> ---
+>> Changes since v2:
+>> * Removed use of RT_INHERT, instead we now simply bail from the test.   
+>> Users
+>>   will have to create two separate configs for realtime one with rtinherit=1
+>>   in the mkfs options, one without and do separate runs to get full test
+>>   coverage.
+>> * Added comments explaining reasons for _require_no_rtinherit declarations
+>>
+>> Changes since v1:
+>> * None
+>>
+>>  common/rc         | 11 +++++++++++
+>>  tests/generic/250 |  3 +++
+>>  tests/generic/252 |  3 +++
+>>  tests/generic/441 |  3 +++
+>>  tests/xfs/170     |  1 +
+>>  5 files changed, 21 insertions(+)
+>>
+>> diff --git a/common/rc b/common/rc
+>> index f5fe739..1720a72 100644
+>> --- a/common/rc
+>> +++ b/common/rc
+>> @@ -33,6 +33,17 @@ BC=$(which bc 2> /dev/null) || BC=
+>>  VALID_TEST_ID="[0-9]\{3\}"
+>>  VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
+>>
+>> +# When running tests with a realtime device configured, the realtime  
+>> inherit
+>> +# flag will be set during mkfs via -d rtinherit=1 option.  For some tests
+>> +# this may render the test invalid (i.e. it uses a function which is not
+>> +# supported by the realtime subvolume); to prevent failure these tests  
+>> may
+>> +# disable this behavior by calling _require_no_rtinherit .
+>> +_require_no_rtinherit()
+>> +{
+>> +  echo "$MKFS_OPTIONS" | egrep -q "rtinherit([^=]|=1)" && \
+>> +    _notrun "rtinherit mkfs option is not supported by this test."
+>
+> It's worth checking that FSTYP==xfs since this feature only exists in xfs.
+>
 
-> > And change the comment to:
-> > 
-> > /*
-> >  * Set ourselves up to free CoW blocks from this file.  If it's already
-> >  * clean then we can bail out quickly, but otherwise we must back off if
-> >  * the file is undergoing some kind of write.
-> >  */
-> > 
-> 
-> That sounds reasonable too.
+Not a problem, probably worth doing for clarity too.
 
-<nod>
 
---D
-
-> Brian
-> 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > +	}
-> > > > +
-> > > > +	/*
-> > > > +	 * If the mapping is dirty or under writeback we cannot touch the
-> > > > +	 * CoW fork.  Leave it alone if we're in the midst of a directio.
-> > > > +	 */
-> > > > +	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-> > > > +	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> > > > +	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-> > > > +	    atomic_read(&VFS_I(ip)->i_dio_count))
-> > > > +		return false;
-> > > > +
-> > > > +	return true;
-> > > > +}
-> > > > +
-> > > >  /*
-> > > >   * Automatic CoW Reservation Freeing
-> > > >   *
-> > > > @@ -1672,29 +1701,12 @@ xfs_inode_free_cowblocks(
-> > > >  	int			flags,
-> > > >  	void			*args)
-> > > >  {
-> > > > -	int ret;
-> > > > -	struct xfs_eofblocks *eofb = args;
-> > > > -	int match;
-> > > > +	struct xfs_eofblocks	*eofb = args;
-> > > >  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> > > > +	int			match;
-> > > > +	int			ret = 0;
-> > > >  
-> > > > -	/*
-> > > > -	 * Just clear the tag if we have an empty cow fork or none at all. It's
-> > > > -	 * possible the inode was fully unshared since it was originally tagged.
-> > > > -	 */
-> > > > -	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-> > > > -		trace_xfs_inode_free_cowblocks_invalid(ip);
-> > > > -		xfs_inode_clear_cowblocks_tag(ip);
-> > > > -		return 0;
-> > > > -	}
-> > > > -
-> > > > -	/*
-> > > > -	 * If the mapping is dirty or under writeback we cannot touch the
-> > > > -	 * CoW fork.  Leave it alone if we're in the midst of a directio.
-> > > > -	 */
-> > > > -	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-> > > > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> > > > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-> > > > -	    atomic_read(&VFS_I(ip)->i_dio_count))
-> > > > +	if (!xfs_can_free_cowblocks(ip, ifp))
-> > > >  		return 0;
-> > > >  
-> > > >  	if (eofb) {
-> > > > @@ -1715,7 +1727,12 @@ xfs_inode_free_cowblocks(
-> > > >  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> > > >  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> > > >  
-> > > > -	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-> > > > +	/*
-> > > > +	 * Check again, nobody else should be able to dirty blocks or change
-> > > > +	 * the reflink iflag now that we have the first two locks held.
-> > > > +	 */
-> > > > +	if (xfs_can_free_cowblocks(ip, ifp))
-> > > > +		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-> > > >  
-> > > >  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> > > >  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --D
+>
+>> +}
+>> +
+>>  _require_math()
+>>  {
+>>  	if [ -z "$BC" ]; then
+>> diff --git a/tests/generic/250 b/tests/generic/250
+>> index 3c4fe6d..a8fd97e 100755
+>> --- a/tests/generic/250
+>> +++ b/tests/generic/250
+>> @@ -48,6 +48,9 @@ _require_scratch
+>>  _require_dm_target error
+>>  _require_xfs_io_command "falloc"
+>>  _require_odirect
+>> +# This test uses "dm" without taking into account the data could be on
+>> +# realtime subvolume, thus the test will fail with rtinherit=1
+>> +_require_no_rtinherit
+>>
+>>  rm -f $seqres.full
+>>
+>> diff --git a/tests/generic/252 b/tests/generic/252
+>> index ffedd56..b506d59 100755
+>> --- a/tests/generic/252
+>> +++ b/tests/generic/252
+>> @@ -47,6 +47,9 @@ _supported_os Linux
+>>  _require_scratch
+>>  _require_dm_target error
+>>  _require_xfs_io_command "falloc"
+>> +# This test uses "dm" without taking into account the data could be on
+>> +# realtime subvolume, thus the test will fail with rtinherit=1
+>> +_require_no_rtinherit
+>>  _require_aiodio "aiocp"
+>>  AIO_TEST="src/aio-dio-regress/aiocp"
+>>
+>> diff --git a/tests/generic/441 b/tests/generic/441
+>> index 075d877..5fbfece 100755
+>> --- a/tests/generic/441
+>> +++ b/tests/generic/441
+>> @@ -47,6 +47,9 @@ _cleanup()
+>>  # real QA test starts here
+>>  _supported_os Linux
+>>  _require_scratch
+>> +# This test uses "dm" without taking into account the data could be on
+>> +# realtime subvolume, thus the test will fail with rtinherit=1
+>> +_require_no_rtinherit
+>>
+>>  # Generally, we want to avoid journal errors on the extended testcase. Only
+>>  # unset the -s flag if we have a logdev
+>> diff --git a/tests/xfs/170 b/tests/xfs/170
+>> index c5ae8e4..6deef1b 100755
+>> --- a/tests/xfs/170
+>> +++ b/tests/xfs/170
+>> @@ -50,6 +50,7 @@ _supported_fs xfs
+>>  _supported_os Linux
+>>
+>>  _require_scratch
+>> +_require_no_rtinherit
+>>
+>>  _check_filestreams_support || _notrun "filestreams not available"
+>>
+>> -- 
+>> 2.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
