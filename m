@@ -1,91 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4167 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753600AbeAKJYZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 04:24:25 -0500
-Subject: Re: [PATCH v4 0/4] test for XFS umount hang caused by the pending
- dquota log item in AIL
-References: <20180111064933.12088-1-houtao1@huawei.com>
- <20180111080242.GI5123@eguan.usersys.redhat.com>
-From: Hou Tao <houtao1@huawei.com>
-Message-ID: <65b44353-ff8b-b7bf-900b-c4a7863dd428@huawei.com>
-Date: Thu, 11 Jan 2018 17:23:38 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:55082 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932483AbeAKMEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jan 2018 07:04:05 -0500
+Date: Thu, 11 Jan 2018 07:04:04 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: record whichfork in iext tracepoints
+Message-ID: <20180111120403.GA22600@bfoster.bfoster>
+References: <20180110215003.GT5602@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180111080242.GI5123@eguan.usersys.redhat.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180110215003.GT5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>
-Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Hi Eryu,
+On Wed, Jan 10, 2018 at 01:50:03PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Record the whichfork number of the fork being operated on in iext
+> tracepoints.  This makes it easier to trace our way through complex
+> remapping operations like copy on write.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_trace.h |   15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index cd87985..1c38b79 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -233,6 +233,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+>  		__field(xfs_exntst_t, state)
+>  		__field(int, bmap_state)
+>  		__field(unsigned long, caller_ip)
+> +		__field(int, whichfork)
+>  	),
+>  	TP_fast_assign(
+>  		struct xfs_ifork	*ifp;
+> @@ -250,11 +251,19 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+>  		__entry->state = r.br_state;
+>  		__entry->bmap_state = state;
+>  		__entry->caller_ip = caller_ip;
+> -	),
+> -	TP_printk("dev %d:%d ino 0x%llx state %s cur 0x%p/%d "
+> +		if (ifp == XFS_IFORK_PTR(ip, XFS_DATA_FORK))
+> +			__entry->whichfork = XFS_DATA_FORK;
+> +		else if (ifp == XFS_IFORK_PTR(ip, XFS_ATTR_FORK))
+> +			__entry->whichfork = XFS_ATTR_FORK;
+> +		else if (ifp == XFS_IFORK_PTR(ip, XFS_COW_FORK))
+> +			__entry->whichfork = XFS_COW_FORK;
+> +		else
+> +			__entry->whichfork = -1;
+> +	),
+> +	TP_printk("dev %d:%d ino 0x%llx fork %d state %s cur 0x%p/%d "
+>  		  "offset %lld block %lld count %lld flag %d caller %ps",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> -		  __entry->ino,
+> +		  __entry->ino, __entry->whichfork,
+>  		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
 
-On 2018/1/11 16:02, Eryu Guan wrote:
-> On Thu, Jan 11, 2018 at 02:49:29PM +0800, Hou Tao wrote:
->> Hi,
->>
->> This is the v4 patchset for testing the XFS umount hang problem caused by
->> the pending dquota log item in AIL. The problem had been fixed by commit
->> 373b058 ("xfs: Properly retry failed dquot items in case of error during
->> buffer writeback"). The changes for v4 are appended in the commit log
->> of each patches.
->>
->> Comments and questions are welcome.
-> 
-> The patches all look good, thanks a lot for the revision!
-> 
->>
->> Regards,
->> Tao
->>
->> Hou Tao (4):
->>   dmflakey: support multiple dm targets for a dm-flakey device
->>   dmflakey: support error_writes feature for dm-flakey
->>   xfs: test for umount hang caused by the pending dquota log item in AIL
->>   common/rc: factor out _scratch_xfs_[get|set]_sb_field
-> 
-> I switched the order of the last two patches, i.e. refactor
-> _scratch_xfs_[get|set]_sb_field first then use the new helper in the new
-> test in the end, so we don't add new test then update it again in the
-> same patch set.
+Doesn't ->bmap_state include this information? Looks like attr/cow
+strings are included in the EXT_FLAGS list as well.
 
-Yes, it's better after the order switch and thanks for that.
+Brian
 
-Regards,
-Tao
-
-> Thanks,
-> Eryu
-> 
->>
->>  common/dmflakey   |  31 +++++++++-
->>  common/fuzzy      |  33 -----------
->>  common/xfs        |  47 +++++++++++++++
->>  tests/xfs/007     |   6 +-
->>  tests/xfs/098     |   4 +-
->>  tests/xfs/186     |   3 +-
->>  tests/xfs/199     |  13 ++--
->>  tests/xfs/307     |  11 +---
->>  tests/xfs/308     |  11 +---
->>  tests/xfs/339     |   6 +-
->>  tests/xfs/340     |   2 +-
->>  tests/xfs/999     | 174 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>  tests/xfs/999.out |   2 +
->>  tests/xfs/group   |   1 +
->>  14 files changed, 269 insertions(+), 75 deletions(-)
->>  create mode 100755 tests/xfs/999
->>  create mode 100644 tests/xfs/999.out
->>
->> -- 
->> 2.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
+>  		  __entry->leaf,
+>  		  __entry->pos,
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
