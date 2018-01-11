@@ -1,126 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:56496 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965183AbeALWHO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 17:07:14 -0500
-Date: Fri, 12 Jan 2018 14:07:05 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:37294 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933538AbeAKTo1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 14:44:27 -0500
+Date: Thu, 11 Jan 2018 11:44:23 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: account finobt blocks properly in perag
- reservation
-Message-ID: <20180112220705.GY5602@magnolia>
-References: <20180111194024.28775-1-bfoster@redhat.com>
+Subject: Re: [PATCH 3/8] xfs: remove unused buf_fsprivate3
+Message-ID: <20180111194423.GC5602@magnolia>
+References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+ <1515699458-6925-4-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180111194024.28775-1-bfoster@redhat.com>
+In-Reply-To: <1515699458-6925-4-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 02:40:24PM -0500, Brian Foster wrote:
-> XFS started using the perag metadata reservation pool for free inode
-> btree blocks in commit 76d771b4cbe33 ("xfs: use per-AG reservations
-> for the finobt"). To handle backwards compatibility, finobt blocks
-> are accounted against the pool so long as the full reservation is
-> available at mount time. Otherwise the ->m_inotbt_nores flag is set
-> and the filesystem falls back to the traditional per-transaction
-> finobt reservation.
+On Thu, Jan 11, 2018 at 01:37:33PM -0600, Eric Sandeen wrote:
+> The buf_fsprivate3 field has no actual use, other than a pointless
+> "if it's not set, set it" in xfs_buf_item_init; nobody cares after
+> that.  Remove it.
 > 
-> This commit has two problems:
-> 
-> - finobt blocks are always accounted against the metadata
->   reservation on allocation, regardless of ->m_inotbt_nores state
-> - finobt blocks are never returned to the reservation pool on free
-> 
-> The first problem affects reflink+finobt filesystems where the full
-> finobt reservation is not available at mount time. finobt blocks are
-> essentially stolen from the reflink reservation, putting refcountbt
-> management at risk of allocation failure. The second problem is an
-> unconditional leak of metadata reservation whenever finobt is
-> enabled.
-> 
-> Update the finobt block allocation callouts to consider
-> ->m_inotbt_nores and account blocks appropriately. Blocks should be
-> consistently accounted against the metadata pool when
-> ->m_inotbt_nores is false and otherwise tagged as RESV_NONE.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Looks ok, will test...
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 > ---
+>  libxfs/libxfs_io.h | 4 ----
+>  libxfs/logitem.c   | 2 --
+>  2 files changed, 6 deletions(-)
 > 
-> v2:
-> - Update both allocation and free paths to consider ->m_inotbt_nores.
-> v1: https://marc.info/?l=linux-xfs&m=151552296126950&w=2
-> 
->  fs/xfs/libxfs/xfs_ialloc_btree.c | 29 +++++++++++++++++++++++++----
->  1 file changed, 25 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> index 47f44d624cb1..af197a5f3a82 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> @@ -141,21 +141,42 @@ xfs_finobt_alloc_block(
->  	union xfs_btree_ptr	*new,
->  	int			*stat)
->  {
-> +	if (cur->bc_mp->m_inotbt_nores)
-> +		return xfs_inobt_alloc_block(cur, start, new, stat);
->  	return __xfs_inobt_alloc_block(cur, start, new, stat,
->  			XFS_AG_RESV_METADATA);
->  }
+> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+> index 5acd3df..2fce04d 100644
+> --- a/libxfs/libxfs_io.h
+> +++ b/libxfs/libxfs_io.h
+> @@ -70,7 +70,6 @@ typedef struct xfs_buf {
+>  	unsigned int		b_recur;
+>  	void			*b_fspriv;
+>  	void			*b_transp;
+> -	void			*b_fsprivate3;
+>  	void			*b_addr;
+>  	int			b_error;
+>  	const struct xfs_buf_ops *b_ops;
+> @@ -111,9 +110,6 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+>  #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
+>  #define XFS_BUF_SET_COUNT(bp,cnt)	((bp)->b_bcount = (cnt))
 >  
->  STATIC int
-> -xfs_inobt_free_block(
-> +__xfs_inobt_free_block(
->  	struct xfs_btree_cur	*cur,
-> -	struct xfs_buf		*bp)
-> +	struct xfs_buf		*bp,
-> +	enum xfs_ag_resv_type	resv)
->  {
->  	struct xfs_owner_info	oinfo;
->  
->  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
->  	return xfs_free_extent(cur->bc_tp,
->  			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1,
-> -			&oinfo, XFS_AG_RESV_NONE);
-> +			&oinfo, resv);
-> +}
-> +
-> +STATIC int
-> +xfs_inobt_free_block(
-> +	struct xfs_btree_cur	*cur,
-> +	struct xfs_buf		*bp)
-> +{
-> +	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_NONE);
-> +}
-> +
-> +STATIC int
-> +xfs_finobt_free_block(
-> +	struct xfs_btree_cur	*cur,
-> +	struct xfs_buf		*bp)
-> +{
-> +	if (cur->bc_mp->m_inotbt_nores)
-> +		return xfs_inobt_free_block(cur, bp);
-> +	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
->  }
->  
->  STATIC int
-> @@ -380,7 +401,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
->  	.dup_cursor		= xfs_inobt_dup_cursor,
->  	.set_root		= xfs_finobt_set_root,
->  	.alloc_block		= xfs_finobt_alloc_block,
-> -	.free_block		= xfs_inobt_free_block,
-> +	.free_block		= xfs_finobt_free_block,
->  	.get_minrecs		= xfs_inobt_get_minrecs,
->  	.get_maxrecs		= xfs_inobt_get_maxrecs,
->  	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+> -#define XFS_BUF_FSPRIVATE3(bp,type)	((type)(bp)->b_fsprivate3)
+> -#define XFS_BUF_SET_FSPRIVATE3(bp,val)	(bp)->b_fsprivate3 = (void *)(val)
+> -
+>  #define XFS_BUF_SET_PRIORITY(bp,pri)	cache_node_set_priority( \
+>  						libxfs_bcache, \
+>  						(struct cache_node *)(bp), \
+> diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+> index 0c183b5..0c50fcf 100644
+> --- a/libxfs/logitem.c
+> +++ b/libxfs/logitem.c
+> @@ -96,8 +96,6 @@ xfs_buf_item_init(
+>  	 * the first.  If we do already have one, there is
+>  	 * nothing to do here so return.
+>  	 */
+> -	if (XFS_BUF_FSPRIVATE3(bp, xfs_mount_t *) != mp)
+> -		XFS_BUF_SET_FSPRIVATE3(bp, mp);
+>  	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
+>  	if (bp->b_fspriv != NULL) {
+>  		lip = bp->b_fspriv;
 > -- 
-> 2.13.6
+> 1.8.3.1
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
