@@ -1,404 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57136 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753534AbeAQWEI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:04:08 -0500
-Subject: [PATCH 20/29] xfs_scrub: create infrastructure to read verify data
- blocks
+Received: from aserp2130.oracle.com ([141.146.126.79]:34774 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932766AbeAKUUc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 15:20:32 -0500
+Date: Thu, 11 Jan 2018 12:20:26 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:58 -0800
-Message-ID: <151622663836.31925.17080625317108397871.stgit@magnolia>
-In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
-References: <151622651142.31925.4179778330985746435.stgit@magnolia>
+Subject: Re: [PATCH 6/8] libxfs: manage xfs_buf_zone count within cache
+Message-ID: <20180111202026.GG5602@magnolia>
+References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+ <1515699458-6925-7-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1515699458-6925-7-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 11, 2018 at 01:37:36PM -0600, Eric Sandeen wrote:
+> Fake up the xfs_buf_zone allocated count a bit to account
+> for buffers freed to and allocated from cache.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+>  libxfs/rdwr.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 474e5eb..c5ffd4d 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -665,6 +665,7 @@ __libxfs_getbufr(int blen)
+>  				free(bp->b_maps);
+>  			bp->b_maps = NULL;
+>  		}
+> +		xfs_buf_zone->allocated++;
 
-Manage the scheduling, issuance, and reporting of data block
-verification reads.  This enables us to combine adjacent (or nearly
-adjacent) read requests, and to take advantage of high-IOPS devices by
-issuing IO from multiple threads.
+I'm confused.  kmem_zone_zalloc increments zone->allocated and
+kmem_zone_free decrements it.  Now we're messing with ->allocated
+ourselves, which means that buffers that have ended up on
+xfs_buf_freelist are still allocated (according to the heap) but the
+zone accounting thinks the buffer is freed?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/Makefile      |    2 
- scrub/read_verify.c |  268 +++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/read_verify.h |   50 ++++++++++
- scrub/xfs_scrub.h   |    3 +
- 4 files changed, 323 insertions(+)
- create mode 100644 scrub/read_verify.c
- create mode 100644 scrub/read_verify.h
+<goes away, reviews the next patch, comes back>
 
+The next patch has xfs_buf_freelist frees the buffer directly and
+bypassing kmem_zone_free.  So I wonder, if you change the next patch to
+call kmem_zone_free and kill this patch, won't the accounting work out?
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index a9aaa99..3b3eb95 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -23,6 +23,7 @@ disk.h \
- filemap.h \
- fscounters.h \
- inodes.h \
-+read_verify.h \
- scrub.h \
- spacemap.h \
- unicrash.h \
-@@ -40,6 +41,7 @@ phase1.c \
- phase2.c \
- phase3.c \
- phase5.c \
-+read_verify.c \
- scrub.c \
- spacemap.c \
- xfs_scrub.c
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-new file mode 100644
-index 0000000..244626d
---- /dev/null
-+++ b/scrub/read_verify.c
-@@ -0,0 +1,268 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <stdlib.h>
-+#include <sys/statvfs.h>
-+#include "workqueue.h"
-+#include "path.h"
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "counter.h"
-+#include "disk.h"
-+#include "read_verify.h"
-+
-+/*
-+ * Read Verify Pool
-+ *
-+ * Manages the data block read verification phase.  The caller schedules
-+ * verification requests, which are then scheduled to be run by a thread
-+ * pool worker.  Adjacent (or nearly adjacent) requests can be combined
-+ * to reduce overhead when free space fragmentation is high.  The thread
-+ * pool takes care of issuing multiple IOs to the device, if possible.
-+ */
-+
-+/*
-+ * Perform all IO in 32M chunks.  This cannot exceed 65536 sectors
-+ * because that's the biggest SCSI VERIFY(16) we dare to send.
-+ */
-+#define RVP_IO_MAX_SIZE		(33554432)
-+#define RVP_IO_MAX_SECTORS	(RVP_IO_MAX_SIZE >> BBSHIFT)
-+
-+/* Tolerate 64k holes in adjacent read verify requests. */
-+#define RVP_IO_BATCH_LOCALITY	(65536)
-+
-+struct read_verify_pool {
-+	struct workqueue	wq;		/* thread pool */
-+	struct scrub_ctx	*ctx;		/* scrub context */
-+	void			*readbuf;	/* read buffer */
-+	struct ptcounter	*verified_bytes;
-+	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
-+	size_t			miniosz;	/* minimum io size, bytes */
-+};
-+
-+/* Create a thread pool to run read verifiers. */
-+struct read_verify_pool *
-+read_verify_pool_init(
-+	struct scrub_ctx		*ctx,
-+	size_t				miniosz,
-+	read_verify_ioerr_fn_t		ioerr_fn,
-+	unsigned int			nproc)
-+{
-+	struct read_verify_pool		*rvp;
-+	bool				ret;
-+	int				error;
-+
-+	rvp = calloc(1, sizeof(struct read_verify_pool));
-+	if (!rvp)
-+		return NULL;
-+
-+	error = posix_memalign((void **)&rvp->readbuf, page_size,
-+			RVP_IO_MAX_SIZE);
-+	if (error || !rvp->readbuf)
-+		goto out_free;
-+	rvp->verified_bytes = ptcounter_init(nproc);
-+	if (!rvp->verified_bytes)
-+		goto out_buf;
-+	rvp->miniosz = miniosz;
-+	rvp->ctx = ctx;
-+	rvp->ioerr_fn = ioerr_fn;
-+	/* Run in the main thread if we only want one thread. */
-+	if (nproc == 1)
-+		nproc = 0;
-+	ret = workqueue_create(&rvp->wq, (struct xfs_mount *)rvp, nproc);
-+	if (ret)
-+		goto out_counter;
-+	return rvp;
-+
-+out_counter:
-+	ptcounter_free(rvp->verified_bytes);
-+out_buf:
-+	free(rvp->readbuf);
-+out_free:
-+	free(rvp);
-+	return NULL;
-+}
-+
-+/* Finish up any read verification work. */
-+void
-+read_verify_pool_flush(
-+	struct read_verify_pool		*rvp)
-+{
-+	workqueue_destroy(&rvp->wq);
-+}
-+
-+/* Finish up any read verification work and tear it down. */
-+void
-+read_verify_pool_destroy(
-+	struct read_verify_pool		*rvp)
-+{
-+	ptcounter_free(rvp->verified_bytes);
-+	free(rvp->readbuf);
-+	free(rvp);
-+}
-+
-+/*
-+ * Issue a read-verify IO in big batches.
-+ */
-+static void
-+read_verify(
-+	struct workqueue		*wq,
-+	xfs_agnumber_t			agno,
-+	void				*arg)
-+{
-+	struct read_verify		*rv = arg;
-+	struct read_verify_pool		*rvp;
-+	unsigned long long		verified = 0;
-+	ssize_t				sz;
-+	ssize_t				len;
-+
-+	rvp = (struct read_verify_pool *)wq->wq_ctx;
-+	while (rv->io_length > 0) {
-+		len = min(rv->io_length, RVP_IO_MAX_SIZE);
-+		dbg_printf("diskverify %d %"PRIu64" %zu\n", rv->io_disk->d_fd,
-+				rv->io_start, len);
-+		sz = disk_read_verify(rv->io_disk, rvp->readbuf,
-+				rv->io_start, len);
-+		if (sz < 0) {
-+			dbg_printf("IOERR %d %"PRIu64" %zu\n",
-+					rv->io_disk->d_fd,
-+					rv->io_start, len);
-+			/* IO error, so try the next logical block. */
-+			len = rvp->miniosz;
-+			rvp->ioerr_fn(rvp->ctx, rv->io_disk, rv->io_start, len,
-+					errno, rv->io_end_arg);
-+		}
-+
-+		verified += len;
-+		rv->io_start += len;
-+		rv->io_length -= len;
-+	}
-+
-+	free(rv);
-+	ptcounter_add(rvp->verified_bytes, verified);
-+}
-+
-+/* Queue a read verify request. */
-+static bool
-+read_verify_queue(
-+	struct read_verify_pool		*rvp,
-+	struct read_verify		*rv)
-+{
-+	struct read_verify		*tmp;
-+	bool				ret;
-+
-+	dbg_printf("verify fd %d start %"PRIu64" len %"PRIu64"\n",
-+			rv->io_disk->d_fd, rv->io_start, rv->io_length);
-+
-+	tmp = malloc(sizeof(struct read_verify));
-+	if (!tmp) {
-+		rvp->ioerr_fn(rvp->ctx, rv->io_disk, rv->io_start,
-+				rv->io_length, errno, rv->io_end_arg);
-+		return true;
-+	}
-+	memcpy(tmp, rv, sizeof(*tmp));
-+
-+	ret = workqueue_add(&rvp->wq, read_verify, 0, tmp);
-+	if (ret) {
-+		str_error(rvp->ctx, rvp->ctx->mntpoint,
-+_("Could not queue read-verify work."));
-+		free(tmp);
-+		return false;
-+	}
-+	rv->io_length = 0;
-+	return true;
-+}
-+
-+/*
-+ * Issue an IO request.  We'll batch subsequent requests if they're
-+ * within 64k of each other
-+ */
-+bool
-+read_verify_schedule_io(
-+	struct read_verify_pool		*rvp,
-+	struct read_verify		*rv,
-+	struct disk			*disk,
-+	uint64_t			start,
-+	uint64_t			length,
-+	void				*end_arg)
-+{
-+	uint64_t			req_end;
-+	uint64_t			rv_end;
-+
-+	assert(rvp->readbuf);
-+	req_end = start + length;
-+	rv_end = rv->io_start + rv->io_length;
-+
-+	/*
-+	 * If we have a stashed IO, we haven't changed fds, the error
-+	 * reporting is the same, and the two extents are close,
-+	 * we can combine them.
-+	 */
-+	if (rv->io_length > 0 && disk == rv->io_disk &&
-+	    end_arg == rv->io_end_arg &&
-+	    ((start >= rv->io_start && start <= rv_end + RVP_IO_BATCH_LOCALITY) ||
-+	     (rv->io_start >= start &&
-+	      rv->io_start <= req_end + RVP_IO_BATCH_LOCALITY))) {
-+		rv->io_start = min(rv->io_start, start);
-+		rv->io_length = max(req_end, rv_end) - rv->io_start;
-+	} else  {
-+		/* Otherwise, issue the stashed IO (if there is one) */
-+		if (rv->io_length > 0)
-+			return read_verify_queue(rvp, rv);
-+
-+		/* Stash the new IO. */
-+		rv->io_disk = disk;
-+		rv->io_start = start;
-+		rv->io_length = length;
-+		rv->io_end_arg = end_arg;
-+	}
-+
-+	return true;
-+}
-+
-+/* Force any stashed IOs into the verifier. */
-+bool
-+read_verify_force_io(
-+	struct read_verify_pool		*rvp,
-+	struct read_verify		*rv)
-+{
-+	bool				moveon;
-+
-+	assert(rvp->readbuf);
-+	if (rv->io_length == 0)
-+		return true;
-+
-+	moveon = read_verify_queue(rvp, rv);
-+	if (moveon)
-+		rv->io_length = 0;
-+	return moveon;
-+}
-+
-+/* How many bytes has this process verified? */
-+uint64_t
-+read_verify_bytes(
-+	struct read_verify_pool		*rvp)
-+{
-+	return ptcounter_value(rvp->verified_bytes);
-+}
-diff --git a/scrub/read_verify.h b/scrub/read_verify.h
-new file mode 100644
-index 0000000..cea7a08
---- /dev/null
-+++ b/scrub/read_verify.h
-@@ -0,0 +1,50 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_READ_VERIFY_H_
-+#define XFS_SCRUB_READ_VERIFY_H_
-+
-+struct scrub_ctx;
-+struct read_verify_pool;
-+
-+/* Function called when an IO error happens. */
-+typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
-+		struct disk *disk, uint64_t start, uint64_t length,
-+		int error, void *arg);
-+
-+struct read_verify_pool *read_verify_pool_init(struct scrub_ctx *ctx,
-+		size_t miniosz, read_verify_ioerr_fn_t ioerr_fn,
-+		unsigned int nproc);
-+void read_verify_pool_flush(struct read_verify_pool *rvp);
-+void read_verify_pool_destroy(struct read_verify_pool *rvp);
-+
-+struct read_verify {
-+	void			*io_end_arg;
-+	struct disk		*io_disk;
-+	uint64_t		io_start;	/* bytes */
-+	uint64_t		io_length;	/* bytes */
-+};
-+
-+bool read_verify_schedule_io(struct read_verify_pool *rvp,
-+		struct read_verify *rv, struct disk *disk, uint64_t start,
-+		uint64_t length, void *end_arg);
-+bool read_verify_force_io(struct read_verify_pool *rvp, struct read_verify *rv);
-+uint64_t read_verify_bytes(struct read_verify_pool *rvp);
-+
-+#endif /* XFS_SCRUB_READ_VERIFY_H_ */
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 0aef76b..c883bdb 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -80,6 +80,9 @@ struct scrub_ctx {
- 	void			*fshandle;
- 	size_t			fshandle_len;
- 
-+	/* Data block read verification buffer */
-+	void			*readbuf;
-+
- 	/* Mutable scrub state; use lock. */
- 	pthread_mutex_t		lock;
- 	unsigned long long	max_errors;
+(xfs buf zone allocated == 0)
 
+bp = _zone_alloc()
+xfs_buf_zone->allocated++
+
+...do stuff with buffer...
+
+xfs_buf_relse(bp)
+list_add(bp, xfs_buf_freelist)
+
+...buffer still allocated, xfs_buf_zone->allocated == 1...
+
+libxfs_bcache_free()
+_zone_free(bp)
+xfs_buf_zone->allocated--
+
+...exit program, and:
+xfs_buf_zone->allocated == 0
+
+I think killing this patch and teaching the next one to kmem_zone_free
+the buffer works, right?  Or am I missing some subtlety here, in which
+case said subtlety needs comments.
+
+--D
+
+>  	} else
+>  		bp = kmem_zone_zalloc(xfs_buf_zone, 0);
+>  	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+> @@ -1245,6 +1246,7 @@ libxfs_brelse(
+>  			"releasing dirty buffer to free list!");
+>  
+>  	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
+> +	xfs_buf_zone->allocated--;
+>  	list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
+>  	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+>  }
+> @@ -1268,6 +1270,7 @@ libxfs_bulkrelse(
+>  	}
+>  
+>  	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
+> +	xfs_buf_zone->allocated -= count;
+>  	list_splice(list, &xfs_buf_freelist.cm_list);
+>  	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
+>  
+> -- 
+> 1.8.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
