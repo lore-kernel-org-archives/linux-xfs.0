@@ -1,206 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33740 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932429AbeAKRlG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 12:41:06 -0500
-Date: Thu, 11 Jan 2018 09:40:27 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: recheck reflink / dirty page status before freeing
- CoW reservations
-Message-ID: <20180111174027.GZ5602@magnolia>
-References: <20180110220336.GU5602@magnolia>
- <20180111120410.GB22600@bfoster.bfoster>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:23585 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933167AbeAKWOk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 17:14:40 -0500
+Date: Fri, 12 Jan 2018 09:09:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/8] libxfs: manage xfs_buf_zone count within cache
+Message-ID: <20180111220951.GV16421@dastard>
+References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+ <1515699458-6925-7-git-send-email-sandeen@sandeen.net>
+ <20180111202026.GG5602@magnolia>
+ <f55b38bc-09eb-46f9-4b64-97f1117ac7ca@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180111120410.GB22600@bfoster.bfoster>
+In-Reply-To: <f55b38bc-09eb-46f9-4b64-97f1117ac7ca@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eryu Guan <eguan@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 07:04:10AM -0500, Brian Foster wrote:
-> On Wed, Jan 10, 2018 at 02:03:36PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Eryu Guan reported seeing occasional hangs when running generic/269 with
-> > a new fsstress that supports clonerange/deduperange.  The cause of this
-> > hang is an infinite loop when we convert the CoW fork extents from
-> > unwritten to real just prior to writing the pages out; the infinite
-> > loop happens because there's nothing in the CoW fork to convert, and so
-> > it spins forever.
-> > 
-> > The underlying issue here is that when we go to perform these CoW fork
-> > conversions, we're supposed to have an extent waiting for us, but the
-> > low space CoW reaper has snuck in and blown them away!  There are four
-> > conditions that can dissuade the reaper from touching our file -- no
-> > reflink iflag; dirty page cache; writeback in progress; or directio in
-> > progress.  We check the four conditions prior to taking the locks, but
-> > we neglect to recheck them once we have the locks, which is how we end
-> > up whacking the writeback that's in progress.
-> > 
-> > Therefore, refactor the four checks into a helper function and call it
-> > once again once we have the locks to make sure we really want to reap
-> > the inode.  While we're at it, add an ASSERT for this weird condition so
-> > that we'll fail noisily if we ever screw this up again.
-> > 
-> > Reported-by: Eryu Guan <eguan@redhat.com>
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |    7 +++++
-> >  fs/xfs/xfs_icache.c      |   61 +++++++++++++++++++++++++++++-----------------
-> >  2 files changed, 46 insertions(+), 22 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index a01cef4..7bd933f 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -4311,6 +4311,13 @@ xfs_bmapi_write(
-> >  	while (bno < end && n < *nmap) {
-> >  		bool			need_alloc = false, wasdelay = false;
-> >  
-> > +		/*
-> > +		 * CoW fork conversions should /never/ hit EOF.  There should
-> > +		 * always be something for us to work on.
-> > +		 */
-> > +		ASSERT(!eof || !(flags & XFS_BMAPI_CONVERT) ||
-> > +			       !(flags & XFS_BMAPI_COWFORK));
-> > +
+On Thu, Jan 11, 2018 at 02:48:33PM -0600, Eric Sandeen wrote:
 > 
-> The hunk just below asserts for BMAPI_COWFORK in a case that explicitly
-> considers eof. That makes the logic confusing to follow IMO, but I'm
-> more wondering whether pushing something like ASSERT(!((flags & CONVERT)
-> && (flags & COWFORK))) down into that hunk is effectively the same
-> thing..?  I.e., is it also true that we should not find a hole in the
-> (CONVERT & COW) case?
-
-Yes.
-
-> >  		/* in hole or beyoned EOF? */
-> >  		if (eof || bma.got.br_startoff > bno) {
-> >  			if (flags & XFS_BMAPI_DELALLOC) {
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 1f84562..3fbcc03 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1654,6 +1654,35 @@ xfs_inode_clear_eofblocks_tag(
-> >  			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
-> >  }
-> >  
-> > +/* Is this a good time to reap the CoW reservations for this file? */
-> > +static bool
-> > +xfs_can_free_cowblocks(
-> > +	struct xfs_inode	*ip,
-> > +	struct xfs_ifork	*ifp)
-> > +{
-> > +	/*
-> > +	 * Just clear the tag if we have an empty cow fork or none at all. It's
-> > +	 * possible the inode was fully unshared since it was originally tagged.
-> > +	 */
-> > +	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-> > +		trace_xfs_inode_free_cowblocks_invalid(ip);
-> > +		xfs_inode_clear_cowblocks_tag(ip);
-> > +		return false;
 > 
-> I think the flag update and tracepoint should probably remain in the
-> caller. They're somewhat misplaced for a "xfs_can_do_something()"
-> helper, particularly if it's ever exported and used in other contexts in
-> the future. Otherwise seems fine.
-
-Hmm.  There's a subtlety to step around here, which is that this
-predicate can return false to mean "nothing here to see" or to mean
-"cannot clear anything at this time".  We want the trace+clear for the
-first case, but not the second.
-
-I suppose this function could return the regular error code int and the
-caller can figure out what that means to it, but then all the post-check
-stuff ends up duplicated in the callers... so maybe I should just rename
-it xfs_prep_free_cowblocks().
-
-And change the comment to:
-
-/*
- * Set ourselves up to free CoW blocks from this file.  If it's already
- * clean then we can bail out quickly, but otherwise we must back off if
- * the file is undergoing some kind of write.
- */
-
---D
-
-> Brian
+> On 1/11/18 2:20 PM, Darrick J. Wong wrote:
+> > On Thu, Jan 11, 2018 at 01:37:36PM -0600, Eric Sandeen wrote:
+> >> Fake up the xfs_buf_zone allocated count a bit to account
+> >> for buffers freed to and allocated from cache.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> >> ---
+> >>  libxfs/rdwr.c | 3 +++
+> >>  1 file changed, 3 insertions(+)
+> >>
+> >> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> >> index 474e5eb..c5ffd4d 100644
+> >> --- a/libxfs/rdwr.c
+> >> +++ b/libxfs/rdwr.c
+> >> @@ -665,6 +665,7 @@ __libxfs_getbufr(int blen)
+> >>  				free(bp->b_maps);
+> >>  			bp->b_maps = NULL;
+> >>  		}
+> >> +		xfs_buf_zone->allocated++;
+> > 
+> > I'm confused.  kmem_zone_zalloc increments zone->allocated and
+> > kmem_zone_free decrements it.  Now we're messing with ->allocated
+> > ourselves, which means that buffers that have ended up on
+> > xfs_buf_freelist are still allocated (according to the heap) but the
+> > zone accounting thinks the buffer is freed?
+> > 
+> > <goes away, reviews the next patch, comes back>
+> > 
+> > The next patch has xfs_buf_freelist frees the buffer directly and
+> > bypassing kmem_zone_free.  So I wonder, if you change the next patch to
+> > call kmem_zone_free and kill this patch, won't the accounting work out?
+> > 
+> > (xfs buf zone allocated == 0)
+> > 
+> > bp = _zone_alloc()
+> > xfs_buf_zone->allocated++
+> > 
+> > ...do stuff with buffer...
+> > 
+> > xfs_buf_relse(bp)
+> > list_add(bp, xfs_buf_freelist)
+> > 
+> > ...buffer still allocated, xfs_buf_zone->allocated == 1...
+> > 
+> > libxfs_bcache_free()
+> > _zone_free(bp)
+> > xfs_buf_zone->allocated--
+> > 
+> > ...exit program, and:
+> > xfs_buf_zone->allocated == 0
+> > 
+> > I think killing this patch and teaching the next one to kmem_zone_free
+> > the buffer works, right?  Or am I missing some subtlety here, in which
+> > case said subtlety needs comments.
 > 
-> > +	}
-> > +
-> > +	/*
-> > +	 * If the mapping is dirty or under writeback we cannot touch the
-> > +	 * CoW fork.  Leave it alone if we're in the midst of a directio.
-> > +	 */
-> > +	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-> > +	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> > +	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-> > +	    atomic_read(&VFS_I(ip)->i_dio_count))
-> > +		return false;
-> > +
-> > +	return true;
-> > +}
-> > +
-> >  /*
-> >   * Automatic CoW Reservation Freeing
-> >   *
-> > @@ -1672,29 +1701,12 @@ xfs_inode_free_cowblocks(
-> >  	int			flags,
-> >  	void			*args)
-> >  {
-> > -	int ret;
-> > -	struct xfs_eofblocks *eofb = args;
-> > -	int match;
-> > +	struct xfs_eofblocks	*eofb = args;
-> >  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> > +	int			match;
-> > +	int			ret = 0;
-> >  
-> > -	/*
-> > -	 * Just clear the tag if we have an empty cow fork or none at all. It's
-> > -	 * possible the inode was fully unshared since it was originally tagged.
-> > -	 */
-> > -	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-> > -		trace_xfs_inode_free_cowblocks_invalid(ip);
-> > -		xfs_inode_clear_cowblocks_tag(ip);
-> > -		return 0;
-> > -	}
-> > -
-> > -	/*
-> > -	 * If the mapping is dirty or under writeback we cannot touch the
-> > -	 * CoW fork.  Leave it alone if we're in the midst of a directio.
-> > -	 */
-> > -	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
-> > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
-> > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
-> > -	    atomic_read(&VFS_I(ip)->i_dio_count))
-> > +	if (!xfs_can_free_cowblocks(ip, ifp))
-> >  		return 0;
-> >  
-> >  	if (eofb) {
-> > @@ -1715,7 +1727,12 @@ xfs_inode_free_cowblocks(
-> >  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> >  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> >  
-> > -	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-> > +	/*
-> > +	 * Check again, nobody else should be able to dirty blocks or change
-> > +	 * the reflink iflag now that we have the first two locks held.
-> > +	 */
-> > +	if (xfs_can_free_cowblocks(ip, ifp))
-> > +		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-> >  
-> >  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> >  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Yes, it would work out.  This patch was trying to fake up actual use
+> by libxfs, because my main goal was to be able to find leaks in libxfs.
+> Counting it as still allocated when libxfs thinks it's put it away
+> seems to confuse that goal.
+> 
+> In the end, it's just where I want to draw the line for the accounting.
+> 
+> In this way I was hoping to keep the cache details out of that
+> accounting.  When libxfs says the buffer is done and puts the last ref,
+> it's considered to be freed by libxfs, whether or not the cache chooses
+> to hang on to it, discard it later, or whatever.
+
+It's not the job of the zone allocator to track whether something
+is cached or not - it just tracks how many objects are allocated.
+
+Indeed, the libxfs cache iitself keeps track of how many objects it
+has remaining in it, and if you define CACHE_DEBUG it will issue a
+warning if the cache is not empty after it has been purged and is
+being torn down.  i.e. we already have debug mechanisms to tell if
+we are leaking objects through the cache...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
