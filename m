@@ -1,48 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43692 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965724AbeAKThv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 14:37:51 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 0/8] libxfs: cleanup & leak detection
-Date: Thu, 11 Jan 2018 13:37:30 -0600
-Message-Id: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31869 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752804AbeAKXOB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 18:14:01 -0500
+Date: Fri, 12 Jan 2018 10:13:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS journal corruption after every reboot/shutdown
+Message-ID: <20180111231358.GW16421@dastard>
+References: <20180111224451.GA3413@fritha.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180111224451.GA3413@fritha.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Heinz Diehl <htd+ml@fritha.org>
+Cc: linux-xfs@vger.kernel.org
 
-This series is motivated by 2 things; moving libxfs transaction
-code slightly closer to how it looks in the kernel, and also
-adding (or fixing) infrastructure to better detect leaks in
-libxfs.
+On Thu, Jan 11, 2018 at 11:44:51PM +0100, Heinz Diehl wrote:
+> Hi,
+> 
+> the root partition on three different Fedora 27 based machines is
+> XFS-formatted. After every reboot or shutdown, dmesgs shows the following lines after
+> restarting:
+> 
+> [htd@kiera ~]$ dmesg | grep XFS
+> [    2.773271] SGI XFS with ACLs, security attributes, no debug enabled
+> [    2.774950] XFS (sda2): Mounting V4 Filesystem
+> [    2.851266] XFS (sda2): Starting recovery (logdev: internal)
+> [    2.876522] XFS (sda2): Ending recovery (logdev: internal)
 
-The first 3 patches just tidy up the use of some
-of the private buffer fields in xfs_buf, to match the kernel.
+That's not corruption - that's normal log recovery running at mount
+time.
 
-The next 5 revolve around using pseudo memory zones in libxfs
-and detecting whether all allocated items have been freed when
-libxfs is torn down.  By default there should be no functional
-change here, but if the LIBXFS_LEAK_CHECK env var is set, it
-will squawk about leaks and exit with exit(1):
+> /dev/sda2 is the root partition. /home, which also is XFS formatted, is
+> fine. The journal gets automatically recovered in the boot process and
+> root mounts just fine. But this happens after every single reboot or
+> shutdown - on three different machines with two different kernels
+> (4.14.4 and 4.14.12) and three different harddisks. And it's always
+> and solely the root partition which is affected.
+> 
+> To me, it looks like the root partition doesn't get properly unmounted
+> on reboot or shutdown, but I can not find anything in the logs that is
+> suspicious. I have also looked into systemd sourcecode and the systemd shutdown
+> process, but can not see that the root partition is actually unmounted.
 
-[sandeen@sandeen xfsprogs]$ mkfs/mkfs.xfs -dfile,name=fsfile2,size=1g
-meta-data=fsfile2                isize=512    agcount=4, agsize=65536 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
-data     =                       bsize=4096   blocks=262144, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-zone xfs_buf_log_item freed with 3 items allocated
-[sandeen@sandeen xfsprogs]$ echo $?
-1
+That's because it's not. systemd itself still has open references to
+the root filesysetm, so when it tries to unmount the root fs, it
+fails with -EBUSY. So it then remounts the root filesystem read
+only. It does this with ext3/4 filesystems as well - put a serial
+console on your machine and just before the machine reboots/powers
+off you'll see something like this:
 
-I've got more going on to fix up these leaks, but this lays the groundwork
-in a hopefully easy series to review.
+[1883430.750756] systemd-shutdown[1]: Unmounting file systems.
+[1883430.752130] systemd-shutdown[17403]: Remounting '/' read-only in with options 'seclabel,errors=remount-ro,data=ordered'.
+[1883430.856501] EXT4-fs (sda1): re-mounted. Opts: errors=remount-ro,data=ordered
+[1883430.908480] systemd-shutdown[1]: All filesystems unmounted.
 
-Thanks,
--Eric
+On XFS, this leaves the journal dirty so that when the filesystem
+is mounted on boot it can clean up things like orphan inodes that
+were present at the time of the remount,ro (e.g. open but unlinked
+files).
 
+IOWs, what you are seeing is normal filesystem behaviour that is a
+result of systemd being unable to unmount the root filesystem
+cleanly because it still has references open to the root filesystem.
+
+> I have also filed a bug report here because there's F27 on all machines:
+> https://bugzilla.redhat.com/show_bug.cgi?id=1533620
+
+Not a bug, please close it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
