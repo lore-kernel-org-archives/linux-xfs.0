@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4163 "EHLO huawei.com"
+Received: from szxga04-in.huawei.com ([45.249.212.190]:4162 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753817AbeAKGmT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 01:42:19 -0500
+        id S1753916AbeAKGmU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jan 2018 01:42:20 -0500
 From: Hou Tao <houtao1@huawei.com>
-Subject: [PATCH v4 0/4] test for XFS umount hang caused by the pending dquota log item in AIL
-Date: Thu, 11 Jan 2018 14:49:29 +0800
-Message-ID: <20180111064933.12088-1-houtao1@huawei.com>
+Subject: [PATCH v4 1/4] dmflakey: support multiple dm targets for a dm-flakey device
+Date: Thu, 11 Jan 2018 14:49:30 +0800
+Message-ID: <20180111064933.12088-2-houtao1@huawei.com>
+In-Reply-To: <20180111064933.12088-1-houtao1@huawei.com>
+References: <20180111064933.12088-1-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,43 +17,43 @@ List-Id: xfs
 To: fstests@vger.kernel.org
 Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-Hi,
+dm-flakey can be used to emulate IO write error, however, when
+we also need to prevent the IO error for a specific range of the
+block device (eg., the log region of a XFS), we need to specify
+multiple dm targets for the dm device.
 
-This is the v4 patchset for testing the XFS umount hang problem caused by
-the pending dquota log item in AIL. The problem had been fixed by commit
-373b058 ("xfs: Properly retry failed dquot items in case of error during
-buffer writeback"). The changes for v4 are appended in the commit log
-of each patches.
+Option --table can not accommodate the multiple dm targets case,
+so let dmsetup get the possible-multiple-targets table from
+standard input.
 
-Comments and questions are welcome.
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+v4: add comments for reading dm target table from standard input
+---
+ common/dmflakey | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Regards,
-Tao
-
-Hou Tao (4):
-  dmflakey: support multiple dm targets for a dm-flakey device
-  dmflakey: support error_writes feature for dm-flakey
-  xfs: test for umount hang caused by the pending dquota log item in AIL
-  common/rc: factor out _scratch_xfs_[get|set]_sb_field
-
- common/dmflakey   |  31 +++++++++-
- common/fuzzy      |  33 -----------
- common/xfs        |  47 +++++++++++++++
- tests/xfs/007     |   6 +-
- tests/xfs/098     |   4 +-
- tests/xfs/186     |   3 +-
- tests/xfs/199     |  13 ++--
- tests/xfs/307     |  11 +---
- tests/xfs/308     |  11 +---
- tests/xfs/339     |   6 +-
- tests/xfs/340     |   2 +-
- tests/xfs/999     | 174 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/999.out |   2 +
- tests/xfs/group   |   1 +
- 14 files changed, 269 insertions(+), 75 deletions(-)
- create mode 100755 tests/xfs/999
- create mode 100644 tests/xfs/999.out
-
+diff --git a/common/dmflakey b/common/dmflakey
+index 4434307..e34fce8 100644
+--- a/common/dmflakey
++++ b/common/dmflakey
+@@ -77,11 +77,14 @@ _load_flakey_table()
+ 	$DMSETUP_PROG suspend $suspend_opt flakey-test
+ 	[ $? -ne 0 ] && _fatal "failed to suspend flakey-test"
+ 
+-	$DMSETUP_PROG load flakey-test --table "$table"
++	# There may be multiple dm targets in the table, and these dm targets
++	# will be joined by the newline ("\n"). Option --table can not cope with
++	# the multiple-targets case, so get them by reading from standard input.
++	echo -e "$table" | $DMSETUP_PROG load flakey-test
+ 	[ $? -ne 0 ] && _fatal "failed to load table into flakey-test"
+ 
+ 	$DMSETUP_PROG resume flakey-test
+-	[ $? -ne 0 ] && _fatal  "failed to resumeflakey-test"
++	[ $? -ne 0 ] && _fatal  "failed to resume flakey-test"
+ }
+ 
+ # Silently drop all writes and unmount/remount to simulate a crash/power
 -- 
 2.9.5
 
