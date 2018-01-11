@@ -1,384 +1,230 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:42684 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753494AbeAFCCW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jan 2018 21:02:22 -0500
-Subject: [PATCH 08/27] xfs_scrub: add inode iteration functions
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 05 Jan 2018 17:52:17 -0800
-Message-ID: <151520353709.2027.3766103386645316719.stgit@magnolia>
-In-Reply-To: <151520348769.2027.9860697266310422360.stgit@magnolia>
-References: <151520348769.2027.9860697266310422360.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from sandeen.net ([63.231.237.45]:43696 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965726AbeAKThv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jan 2018 14:37:51 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 2/8] xfs: add a proper transaction pointer to struct xfs_buf
+Date: Thu, 11 Jan 2018 13:37:32 -0600
+Message-Id: <1515699458-6925-3-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
 
-These helpers enable userspace to count or iterate all inodes in a
-filesystem.  The counting function uses INUMBERS, while the inode
-iterator uses INUMBERS and BULKSTAT to iterate over every inode that
-should be in the filesystem.
+Source kernel commit bf9d9013a2a559858efb590bf922377be9d6d969
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Replace the typeless b_fspriv2 and the ugly macros around it with a properly
+typed transaction pointer.  As a fallout the log buffer state debug checks
+are also removed.  We could have kept them using casts, but as they do
+not have a real purpose we can as well just remove them.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alex Elder <aelder@sgi.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- scrub/Makefile |    2 
- scrub/inodes.c |  284 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/inodes.h |   32 ++++++
- 3 files changed, 318 insertions(+)
- create mode 100644 scrub/inodes.c
- create mode 100644 scrub/inodes.h
+ libxfs/libxfs_io.h |  4 +---
+ libxfs/trans.c     | 44 ++++++++++++++++++++++----------------------
+ 2 files changed, 23 insertions(+), 25 deletions(-)
 
-
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 5239dae..4d1c908 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -18,11 +18,13 @@ endif	# scrub_prereqs
- HFILES = \
- common.h \
- disk.h \
-+inodes.h \
- xfs_scrub.h
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 29fb1c7..5acd3df 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -69,7 +69,7 @@ typedef struct xfs_buf {
+ 	pthread_t		b_holder;
+ 	unsigned int		b_recur;
+ 	void			*b_fspriv;
+-	void			*b_fsprivate2;
++	void			*b_transp;
+ 	void			*b_fsprivate3;
+ 	void			*b_addr;
+ 	int			b_error;
+@@ -111,8 +111,6 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+ #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
+ #define XFS_BUF_SET_COUNT(bp,cnt)	((bp)->b_bcount = (cnt))
  
- CFILES = \
- common.c \
- disk.c \
-+inodes.c \
- phase1.c \
- xfs_scrub.c
+-#define XFS_BUF_FSPRIVATE2(bp,type)	((type)(bp)->b_fsprivate2)
+-#define XFS_BUF_SET_FSPRIVATE2(bp,val)	(bp)->b_fsprivate2 = (void *)(val)
+ #define XFS_BUF_FSPRIVATE3(bp,type)	((type)(bp)->b_fsprivate3)
+ #define XFS_BUF_SET_FSPRIVATE3(bp,val)	(bp)->b_fsprivate3 = (void *)(val)
  
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-new file mode 100644
-index 0000000..694bca7
---- /dev/null
-+++ b/scrub/inodes.c
-@@ -0,0 +1,284 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdbool.h>
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <pthread.h>
-+#include <sys/statvfs.h>
-+#include "platform_defs.h"
-+#include "xfs.h"
-+#include "xfs_arch.h"
-+#include "xfs_format.h"
-+#include "handle.h"
-+#include "path.h"
-+#include "workqueue.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "inodes.h"
-+
-+/*
-+ * Iterate a range of inodes.
-+ *
-+ * This is a little more involved than repeatedly asking BULKSTAT for a
-+ * buffer's worth of stat data for some number of inodes.  We want to
-+ * scan as many of the inodes that the inobt thinks there are, including
-+ * the ones that are broken, but if we ask for n inodes start at x,
-+ * it'll skip the bad ones and fill from beyond the range (x + n).
-+ *
-+ * Therefore, we ask INUMBERS to return one inobt chunk's worth of inode
-+ * bitmap information.  Then we try to BULKSTAT only the inodes that
-+ * were present in that chunk, and compare what we got against what
-+ * INUMBERS said was there.  If there's a mismatch, we know that we have
-+ * an inode that fails the verifiers but so we can inject the bulkstat
-+ * information to force the scrub code to deal with the broken inodes.
-+ *
-+ * If the iteration function returns ESTALE, that means that the inode
-+ * has been deleted and possibly recreated since the BULKSTAT call.  We
-+ * wil refresh the stat information and try again up to 30 times before
-+ * reporting the staleness as an error.
-+ */
-+
-+/*
-+ * Call into the filesystem for inode/bulkstat information and call our
-+ * iterator function.  We'll try to fill the bulkstat information in
-+ * batches, but we also can detect iget failures.
-+ */
-+static bool
-+xfs_iterate_inodes_range(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	void			*fshandle,
-+	uint64_t		first_ino,
-+	uint64_t		last_ino,
-+	xfs_inode_iter_fn	fn,
-+	void			*arg)
-+{
-+	struct xfs_fsop_bulkreq	igrpreq = {0};
-+	struct xfs_fsop_bulkreq	bulkreq = {0};
-+	struct xfs_fsop_bulkreq	onereq = {0};
-+	struct xfs_handle	handle;
-+	struct xfs_inogrp	inogrp;
-+	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK] = {0};
-+	char			idescr[DESCR_BUFSZ];
-+	char			buf[DESCR_BUFSZ];
-+	struct xfs_bstat	*bs;
-+	__u64			last_stale = first_ino - 1;
-+	__u64			igrp_ino;
-+	__u64			oneino;
-+	__u64			ino;
-+	__s32			bulklen = 0;
-+	__s32			onelen = 0;
-+	__s32			igrplen = 0;
-+	bool			moveon = true;
-+	int			i;
-+	int			error;
-+	int			stale_count = 0;
-+
-+	onereq.lastip  = &oneino;
-+	onereq.icount  = 1;
-+	onereq.ocount  = &onelen;
-+
-+	bulkreq.lastip  = &ino;
-+	bulkreq.icount  = XFS_INODES_PER_CHUNK;
-+	bulkreq.ubuffer = &bstat;
-+	bulkreq.ocount  = &bulklen;
-+
-+	igrpreq.lastip  = &igrp_ino;
-+	igrpreq.icount  = 1;
-+	igrpreq.ubuffer = &inogrp;
-+	igrpreq.ocount  = &igrplen;
-+
-+	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
-+	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
-+			sizeof(handle.ha_fid.fid_len);
-+	handle.ha_fid.fid_pad = 0;
-+
-+	/* Find the inode chunk & alloc mask */
-+	igrp_ino = first_ino;
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	while (!error && igrplen) {
-+		/* Load the inodes. */
-+		ino = inogrp.xi_startino - 1;
-+		bulkreq.icount = inogrp.xi_alloccount;
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT, &bulkreq);
-+		if (error)
-+			str_warn(ctx, descr, "%s", strerror_r(errno,
-+						buf, DESCR_BUFSZ));
-+
-+		/* Did we get exactly the inodes we expected? */
-+		for (i = 0, bs = bstat; i < XFS_INODES_PER_CHUNK; i++) {
-+			if (!(inogrp.xi_allocmask & (1ULL << i)))
-+				continue;
-+			if (bs->bs_ino == inogrp.xi_startino + i) {
-+				bs++;
-+				continue;
-+			}
-+
-+			/* Load the one inode. */
-+			oneino = inogrp.xi_startino + i;
-+			onereq.ubuffer = bs;
-+			error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT_SINGLE,
-+					&onereq);
-+			if (error || bs->bs_ino != inogrp.xi_startino + i) {
-+				memset(bs, 0, sizeof(struct xfs_bstat));
-+				bs->bs_ino = inogrp.xi_startino + i;
-+				bs->bs_blksize = ctx->mnt_sv.f_frsize;
-+			}
-+			bs++;
-+		}
-+
-+		/* Iterate all the inodes. */
-+		for (i = 0, bs = bstat; i < inogrp.xi_alloccount; i++, bs++) {
-+			if (bs->bs_ino > last_ino)
-+				goto out;
-+
-+			handle.ha_fid.fid_ino = bs->bs_ino;
-+			handle.ha_fid.fid_gen = bs->bs_gen;
-+			error = fn(ctx, &handle, bs, arg);
-+			switch (error) {
-+			case 0:
-+				break;
-+			case ESTALE:
-+				if (last_stale == inogrp.xi_startino)
-+					stale_count++;
-+				else {
-+					last_stale = inogrp.xi_startino;
-+					stale_count = 0;
-+				}
-+				if (stale_count < 30) {
-+					igrp_ino = inogrp.xi_startino;
-+					goto igrp_retry;
-+				}
-+				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
-+						(uint64_t)bs->bs_ino);
-+				str_warn(ctx, idescr, "%s", strerror_r(error,
-+						buf, DESCR_BUFSZ));
-+				break;
-+			case XFS_ITERATE_INODES_ABORT:
-+				error = 0;
-+				/* fall thru */
-+			default:
-+				moveon = false;
-+				errno = error;
-+				goto err;
-+			}
-+			if (xfs_scrub_excessive_errors(ctx)) {
-+				moveon = false;
-+				goto out;
-+			}
-+		}
-+
-+igrp_retry:
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	}
-+
-+err:
-+	if (error) {
-+		str_errno(ctx, descr);
-+		moveon = false;
-+	}
-+out:
-+	return moveon;
-+}
-+
-+/* BULKSTAT wrapper routines. */
-+struct xfs_scan_inodes {
-+	xfs_inode_iter_fn	fn;
-+	void			*arg;
-+	bool			moveon;
-+};
-+
-+/* Scan all the inodes in an AG. */
-+static void
-+xfs_scan_ag_inodes(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
-+{
-+	struct xfs_scan_inodes	*si = arg;
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	char			descr[DESCR_BUFSZ];
-+	uint64_t		ag_ino;
-+	uint64_t		next_ag_ino;
-+	bool			moveon;
-+
-+	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
-+				major(ctx->fsinfo.fs_datadev),
-+				minor(ctx->fsinfo.fs_datadev),
-+				agno);
-+
-+	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
-+	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
-+
-+	moveon = xfs_iterate_inodes_range(ctx, descr, ctx->fshandle, ag_ino,
-+			next_ag_ino - 1, si->fn, si->arg);
-+	if (!moveon)
-+		si->moveon = false;
-+}
-+
-+/* Scan all the inodes in a filesystem. */
-+bool
-+xfs_scan_all_inodes(
-+	struct scrub_ctx	*ctx,
-+	xfs_inode_iter_fn	fn,
-+	void			*arg)
-+{
-+	struct xfs_scan_inodes	si;
-+	xfs_agnumber_t		agno;
-+	struct workqueue	wq;
-+	int			ret;
-+
-+	si.moveon = true;
-+	si.fn = fn;
-+	si.arg = arg;
-+
-+	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
-+			scrub_nproc_workqueue(ctx));
-+	if (ret) {
-+		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
-+		return false;
-+	}
-+
-+	for (agno = 0; agno < ctx->geo.agcount; agno++) {
-+		ret = workqueue_add(&wq, xfs_scan_ag_inodes, agno, &si);
-+		if (ret) {
-+			si.moveon = false;
-+			str_error(ctx, ctx->mntpoint,
-+_("Could not queue AG %u bulkstat work."), agno);
-+			break;
-+		}
-+	}
-+
-+	workqueue_destroy(&wq);
-+
-+	return si.moveon;
-+}
-+
-+/*
-+ * Open a file by handle, or return a negative error code.
-+ */
-+int
-+xfs_open_handle(
-+	struct xfs_handle	*handle)
-+{
-+	return open_by_fshandle(handle, sizeof(*handle),
-+			O_RDONLY | O_NOATIME | O_NOFOLLOW | O_NOCTTY);
-+}
-diff --git a/scrub/inodes.h b/scrub/inodes.h
-new file mode 100644
-index 0000000..693cb05
---- /dev/null
-+++ b/scrub/inodes.h
-@@ -0,0 +1,32 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_INODES_H_
-+#define XFS_SCRUB_INODES_H_
-+
-+typedef int (*xfs_inode_iter_fn)(struct scrub_ctx *ctx,
-+		struct xfs_handle *handle, struct xfs_bstat *bs, void *arg);
-+
-+#define XFS_ITERATE_INODES_ABORT	(-1)
-+bool xfs_scan_all_inodes(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
-+		void *arg);
-+
-+int xfs_open_handle(struct xfs_handle *handle);
-+
-+#endif /* XFS_SCRUB_INODES_H_ */
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 6a1901b..57ff3ea 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -299,7 +299,7 @@ libxfs_trans_inode_alloc_buf(
+ {
+ 	xfs_buf_log_item_t	*bip = bp->b_fspriv;;
+ 
+-	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++	ASSERT(bp->bp_transp == tp);
+ 	ASSERT(bip != NULL);
+ 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+@@ -365,7 +365,7 @@ libxfs_trans_dirty_buf(
+ {
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+-	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++	ASSERT(bp->bp_transp == tp);
+ 	ASSERT(bip != NULL);
+ 
+ #ifdef XACT_DEBUG
+@@ -430,11 +430,11 @@ libxfs_trans_brelse(
+ #endif
+ 
+ 	if (tp == NULL) {
+-		ASSERT(XFS_BUF_FSPRIVATE2(bp, void *) == NULL);
++		ASSERT(bp->bp_transp == NULL);
+ 		libxfs_putbuf(bp);
+ 		return;
+ 	}
+-	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++	ASSERT(bp->bp_transp == tp);
+ 	bip = bp->b_fspriv;
+ 	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+ 	if (bip->bli_recur > 0) {
+@@ -449,7 +449,7 @@ libxfs_trans_brelse(
+ 	xfs_trans_del_item(&bip->bli_item);
+ 	if (bip->bli_flags & XFS_BLI_HOLD)
+ 		bip->bli_flags &= ~XFS_BLI_HOLD;
+-	XFS_BUF_SET_FSPRIVATE2(bp, NULL);
++	bp->b_transp = NULL;
+ 	libxfs_putbuf(bp);
+ }
+ 
+@@ -463,7 +463,7 @@ libxfs_trans_binval(
+ 	fprintf(stderr, "binval'd buffer %p, transaction %p\n", bp, tp);
+ #endif
+ 
+-	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++	ASSERT(bp->bp_transp == tp);
+ 	ASSERT(bip != NULL);
+ 
+ 	if (bip->bli_flags & XFS_BLI_STALE)
+@@ -485,7 +485,7 @@ libxfs_trans_bjoin(
+ {
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	ASSERT(XFS_BUF_FSPRIVATE2(bp, void *) == NULL);
++	ASSERT(bp->bp_transp == NULL);
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "bjoin'd buffer %p, transaction %p\n", bp, tp);
+ #endif
+@@ -493,7 +493,7 @@ libxfs_trans_bjoin(
+ 	xfs_buf_item_init(bp, tp->t_mountp);
+ 	bip = bp->b_fspriv;
+ 	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+-	XFS_BUF_SET_FSPRIVATE2(bp, tp);
++	bp->b_transp = tp;
+ }
+ 
+ void
+@@ -503,7 +503,7 @@ libxfs_trans_bhold(
+ {
+ 	xfs_buf_log_item_t	*bip =bp->b_fspriv;
+ 
+-	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++	ASSERT(bp->bp_transp == tp);
+ 	ASSERT(bp->b_fspriv != NULL);
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "bhold'd buffer %p, transaction %p\n", bp, tp);
+@@ -528,7 +528,7 @@ libxfs_trans_get_buf_map(
+ 
+ 	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
+ 	if (bp != NULL) {
+-		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++		ASSERT(bp->bp_transp == tp);
+ 		bip = bp->b_fspriv;
+ 		ASSERT(bip != NULL);
+ 		bip->bli_recur++;
+@@ -547,8 +547,8 @@ libxfs_trans_get_buf_map(
+ 	bip->bli_recur = 0;
+ 	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+ 
+-	/* initialize b_fsprivate2 so we can find it incore */
+-	XFS_BUF_SET_FSPRIVATE2(bp, tp);
++	/* initialize b_transp so we can find it incore */
++	bp->b_transp = tp;
+ 	return bp;
+ }
+ 
+@@ -568,7 +568,7 @@ libxfs_trans_getsb(
+ 
+ 	bp = xfs_trans_buf_item_match(tp, mp->m_dev, &map, 1);
+ 	if (bp != NULL) {
+-		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++		ASSERT(bp->bp_transp == tp);
+ 		bip = bp->b_fspriv;
+ 		ASSERT(bip != NULL);
+ 		bip->bli_recur++;
+@@ -585,8 +585,8 @@ libxfs_trans_getsb(
+ 	bip->bli_recur = 0;
+ 	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+ 
+-	/* initialize b_fsprivate2 so we can find it incore */
+-	XFS_BUF_SET_FSPRIVATE2(bp, tp);
++	/* initialize b_transp so we can find it incore */
++	bp->b_transp = tp;
+ 	return bp;
+ }
+ 
+@@ -619,7 +619,7 @@ libxfs_trans_read_buf_map(
+ 
+ 	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
+ 	if (bp != NULL) {
+-		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
++		ASSERT(bp->bp_transp == tp);
+ 		ASSERT(bp->b_fspriv != NULL);
+ 		bip = bp->b_fspriv;
+ 		bip->bli_recur++;
+@@ -642,8 +642,8 @@ libxfs_trans_read_buf_map(
+ 	bip->bli_recur = 0;
+ 	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
+ 
+-	/* initialise b_fsprivate2 so we can find it incore */
+-	XFS_BUF_SET_FSPRIVATE2(bp, tp);
++	/* initialise b_transp so we can find it incore */
++	bp->b_transp = tp;
+ done:
+ 	*bpp = bp;
+ 	return 0;
+@@ -735,8 +735,8 @@ inode_item_done(
+ 	}
+ 
+ 	ip->i_transp = NULL;	/* disassociate from transaction */
+-	bp->b_fspriv = NULL;			/* remove log item */
+-	XFS_BUF_SET_FSPRIVATE2(bp, NULL);	/* remove xact ptr */
++	bp->b_fspriv = NULL;	/* remove log item */
++	bp->b_transp = NULL;	/* remove xact ptr */
+ 	libxfs_writebuf(bp, 0);
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "flushing dirty inode %llu, buffer %p\n",
+@@ -755,7 +755,7 @@ buf_item_done(
+ 	bp = bip->bli_buf;
+ 	ASSERT(bp != NULL);
+ 	bp->b_fspriv = NULL;			/* remove log item */
+-	XFS_BUF_SET_FSPRIVATE2(bp, NULL);	/* remove xact ptr */
++	bp->b_transp = NULL;			/* remove xact ptr */
+ 
+ 	hold = (bip->bli_flags & XFS_BLI_HOLD);
+ 	if (bip->bli_flags & XFS_BLI_DIRTY) {
+@@ -804,7 +804,7 @@ buf_item_unlock(
+ 	uint			hold;
+ 
+ 	/* Clear the buffer's association with this transaction. */
+-	XFS_BUF_SET_FSPRIVATE2(bip->bli_buf, NULL);
++	bip->bli_buf->b_transp = NULL;
+ 
+ 	hold = bip->bli_flags & XFS_BLI_HOLD;
+ 	bip->bli_flags &= ~XFS_BLI_HOLD;
+-- 
+1.8.3.1
 
