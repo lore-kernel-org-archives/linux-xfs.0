@@ -1,87 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57614 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:35332 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933811AbeAKThK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 14:37:10 -0500
-Date: Thu, 11 Jan 2018 11:30:32 -0800
-From: Liu Bo <bo.li.liu@oracle.com>
-Subject: Re: [PATCH v5 18/19] btrfs: only dirty the inode in
- btrfs_update_time if something was changed
-Message-ID: <20180111193031.GA12421@dhcp-10-159-141-29.vpn.oracle.com>
-Reply-To: bo.li.liu@oracle.com
-References: <20180109141059.25929-1-jlayton@kernel.org>
- <20180109141059.25929-19-jlayton@kernel.org>
+        with ESMTP id S932068AbeALABA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 19:01:00 -0500
+Date: Thu, 11 Jan 2018 15:59:24 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/27] xfs_scrub: create an abstraction for a block device
+Message-ID: <20180111235924.GK5602@magnolia>
+References: <151520348769.2027.9860697266310422360.stgit@magnolia>
+ <151520352472.2027.8375038586822233334.stgit@magnolia>
+ <a4228240-76f6-5f43-cecf-5bd7d572bfcb@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180109141059.25929-19-jlayton@kernel.org>
+In-Reply-To: <a4228240-76f6-5f43-cecf-5bd7d572bfcb@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-Hi Jeff,
-
-On Tue, Jan 09, 2018 at 09:10:58AM -0500, Jeff Layton wrote:
-> From: Jeff Layton <jlayton@redhat.com>
+On Thu, Jan 11, 2018 at 05:24:58PM -0600, Eric Sandeen wrote:
+> On 1/5/18 7:52 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> At this point, we know that "now" and the file times may differ, and we
-> suspect that the i_version has been flagged to be bumped. Attempt to
-> bump the i_version, and only mark the inode dirty if that actually
-> occurred or if one of the times was updated.
+> ...
 > 
-> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> Acked-by: David Sterba <dsterba@suse.com>
-> ---
->  fs/btrfs/inode.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+> > +/*
+> > + * Disk Abstraction
+> > + *
+> > + * These routines help us to discover the geometry of a block device,
+> > + * estimate the amount of concurrent IOs that we can send to it, and
+> > + * abstract the process of performing read verification of disk blocks.
+> > + */
+> > +
+> > +/* Figure out how many disk heads are available. */
+> > +static unsigned int
+> > +__disk_heads(
+> > +	struct disk		*disk)
+> > +{
+> > +	int			iomin;
+> > +	int			ioopt;
+> > +	unsigned short		rot;
+> > +	int			error;
+> > +
+> > +	/* If it's not a block device, throw all the CPUs at it. */
+> > +	if (!S_ISBLK(disk->d_sb.st_mode))
+> > +		return nproc;
+> > +
+> > +	/* Non-rotational device?  Throw all the CPUs. */
+> > +	rot = 1;
+> > +	error = ioctl(disk->d_fd, BLKROTATIONAL, &rot);
+> > +	if (error == 0 && rot == 0)
+> > +		return nproc;
 > 
-> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-> index ac8692849a81..76245323a7c8 100644
-> --- a/fs/btrfs/inode.c
-> +++ b/fs/btrfs/inode.c
-> @@ -6107,19 +6107,20 @@ static int btrfs_update_time(struct inode *inode, struct timespec *now,
->  			     int flags)
->  {
->  	struct btrfs_root *root = BTRFS_I(inode)->root;
-> +	bool dirty = flags & ~S_VERSION;
->  
->  	if (btrfs_root_readonly(root))
->  		return -EROFS;
->  
->  	if (flags & S_VERSION)
-> -		inode_inc_iversion(inode);
-> +		dirty |= inode_maybe_inc_iversion(inode, dirty);
->  	if (flags & S_CTIME)
->  		inode->i_ctime = *now;
->  	if (flags & S_MTIME)
->  		inode->i_mtime = *now;
->  	if (flags & S_ATIME)
->  		inode->i_atime = *now;
-> -	return btrfs_dirty_inode(inode);
-> +	return dirty ? btrfs_dirty_inode(inode) : 0;
->  }
->  
-
-In order to have a easier error handling for ENOSPC, btrfs has split
-file_update_time() into 2-step work,
-- step 1 is to update time/iversion of in-memory inode in
-  update_time_for_write(),
-- step 2 is to update the time/iversion of on-disk inode in
-  btrfs_update_inode()->fill_inode_item().
-
-I think update_time_for_write() also needs to be updated to use the
-new iversion API.
-
-With that,
-
-Reviewed-by: Liu Bo <bo.li.liu@oracle.com>
-
-Thanks,
-
--liubo
->  /*
-> -- 
-> 2.14.3
+> I needed
 > 
+> +#ifndef BLKROTATIONAL
+> +#define BLKROTATIONAL _IO(0x12,126)
+> +#endif
+> 
+> to make this compile on my not /that/ ancient (?) rhel6 box ;)
+
+Hmm... well, since I don't see backporting xfs kernel scrub to 2.6.32
+maybe xfsprogs' build system should just turn off xfs_scrub on old
+systems?
+
+In any case, I #ifdef BLKROTATIONAL'd out the entire clause.
+
+--D
+
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
