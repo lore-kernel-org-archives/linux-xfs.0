@@ -1,150 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:41552 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932734AbeAKV1Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 16:27:24 -0500
-Content-Type: text/plain; charset="us-ascii"; delsp=yes; format=flowed
-MIME-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH v3 2/3] xfs/realtime: Default rtinherit=1, add
- _require_no_rtinherit function
-From: Richard Wareing <rwareing@fb.com>
-In-Reply-To: <20180111040634.GW5602@magnolia>
-Date: Thu, 11 Jan 2018 13:27:06 -0800
-Content-Transfer-Encoding: 7bit
-Message-ID: <DD8EBABB-4A47-49CB-8D90-0DE447594ED1@fb.com>
-References: <20180111030901.1961285-1-rwareing@fb.com>
- <20180111030901.1961285-3-rwareing@fb.com> <20180111040634.GW5602@magnolia>
+Received: from mout.kundenserver.de ([217.72.192.75]:56783 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933287AbeAKWox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 17:44:53 -0500
+Received: from localhost ([88.90.245.8]) by mrelayeu.kundenserver.de (mreue101
+ [212.227.15.183]) with ESMTPSA (Nemesis) id 0Letvr-1fDTzP0N9r-00qkMs for
+ <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 23:44:52 +0100
+Date: Thu, 11 Jan 2018 23:44:51 +0100
+From: Heinz Diehl <htd+ml@fritha.org>
+Subject: XFS journal corruption after every reboot/shutdown
+Message-ID: <20180111224451.GA3413@fritha.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, eguan@redhat.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Darrick J. Wong <darrick.wong@oracle.com> wrote:
+Hi,
 
-> On Wed, Jan 10, 2018 at 07:09:00PM -0800, Richard Wareing wrote:
->> To better exercise the data path code of realtime subvolumes, we will
->> set rtinherit=1 during mkfs calls.  For tests which this is not desired
->> we introduce a _require_no_rtinherit function to opt out of this
->> behavior.
->>
->> Signed-off-by: Richard Wareing <rwareing@fb.com>
->> ---
->> Changes since v2:
->> * Removed use of RT_INHERT, instead we now simply bail from the test.   
->> Users
->>   will have to create two separate configs for realtime one with rtinherit=1
->>   in the mkfs options, one without and do separate runs to get full test
->>   coverage.
->> * Added comments explaining reasons for _require_no_rtinherit declarations
->>
->> Changes since v1:
->> * None
->>
->>  common/rc         | 11 +++++++++++
->>  tests/generic/250 |  3 +++
->>  tests/generic/252 |  3 +++
->>  tests/generic/441 |  3 +++
->>  tests/xfs/170     |  1 +
->>  5 files changed, 21 insertions(+)
->>
->> diff --git a/common/rc b/common/rc
->> index f5fe739..1720a72 100644
->> --- a/common/rc
->> +++ b/common/rc
->> @@ -33,6 +33,17 @@ BC=$(which bc 2> /dev/null) || BC=
->>  VALID_TEST_ID="[0-9]\{3\}"
->>  VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
->>
->> +# When running tests with a realtime device configured, the realtime  
->> inherit
->> +# flag will be set during mkfs via -d rtinherit=1 option.  For some tests
->> +# this may render the test invalid (i.e. it uses a function which is not
->> +# supported by the realtime subvolume); to prevent failure these tests  
->> may
->> +# disable this behavior by calling _require_no_rtinherit .
->> +_require_no_rtinherit()
->> +{
->> +  echo "$MKFS_OPTIONS" | egrep -q "rtinherit([^=]|=1)" && \
->> +    _notrun "rtinherit mkfs option is not supported by this test."
->
-> It's worth checking that FSTYP==xfs since this feature only exists in xfs.
->
+the root partition on three different Fedora 27 based machines is
+XFS-formatted. After every reboot or shutdown, dmesgs shows the following lines after
+restarting:
 
-Not a problem, probably worth doing for clarity too.
+[htd@kiera ~]$ dmesg | grep XFS
+[    2.773271] SGI XFS with ACLs, security attributes, no debug enabled
+[    2.774950] XFS (sda2): Mounting V4 Filesystem
+[    2.851266] XFS (sda2): Starting recovery (logdev: internal)
+[    2.876522] XFS (sda2): Ending recovery (logdev: internal)
 
+/dev/sda2 is the root partition. /home, which also is XFS formatted, is
+fine. The journal gets automatically recovered in the boot process and
+root mounts just fine. But this happens after every single reboot or
+shutdown - on three different machines with two different kernels
+(4.14.4 and 4.14.12) and three different harddisks. And it's always
+and solely the root partition which is affected.
 
-> --D
->
->> +}
->> +
->>  _require_math()
->>  {
->>  	if [ -z "$BC" ]; then
->> diff --git a/tests/generic/250 b/tests/generic/250
->> index 3c4fe6d..a8fd97e 100755
->> --- a/tests/generic/250
->> +++ b/tests/generic/250
->> @@ -48,6 +48,9 @@ _require_scratch
->>  _require_dm_target error
->>  _require_xfs_io_command "falloc"
->>  _require_odirect
->> +# This test uses "dm" without taking into account the data could be on
->> +# realtime subvolume, thus the test will fail with rtinherit=1
->> +_require_no_rtinherit
->>
->>  rm -f $seqres.full
->>
->> diff --git a/tests/generic/252 b/tests/generic/252
->> index ffedd56..b506d59 100755
->> --- a/tests/generic/252
->> +++ b/tests/generic/252
->> @@ -47,6 +47,9 @@ _supported_os Linux
->>  _require_scratch
->>  _require_dm_target error
->>  _require_xfs_io_command "falloc"
->> +# This test uses "dm" without taking into account the data could be on
->> +# realtime subvolume, thus the test will fail with rtinherit=1
->> +_require_no_rtinherit
->>  _require_aiodio "aiocp"
->>  AIO_TEST="src/aio-dio-regress/aiocp"
->>
->> diff --git a/tests/generic/441 b/tests/generic/441
->> index 075d877..5fbfece 100755
->> --- a/tests/generic/441
->> +++ b/tests/generic/441
->> @@ -47,6 +47,9 @@ _cleanup()
->>  # real QA test starts here
->>  _supported_os Linux
->>  _require_scratch
->> +# This test uses "dm" without taking into account the data could be on
->> +# realtime subvolume, thus the test will fail with rtinherit=1
->> +_require_no_rtinherit
->>
->>  # Generally, we want to avoid journal errors on the extended testcase. Only
->>  # unset the -s flag if we have a logdev
->> diff --git a/tests/xfs/170 b/tests/xfs/170
->> index c5ae8e4..6deef1b 100755
->> --- a/tests/xfs/170
->> +++ b/tests/xfs/170
->> @@ -50,6 +50,7 @@ _supported_fs xfs
->>  _supported_os Linux
->>
->>  _require_scratch
->> +_require_no_rtinherit
->>
->>  _check_filestreams_support || _notrun "filestreams not available"
->>
->> -- 
->> 2.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To me, it looks like the root partition doesn't get properly unmounted
+on reboot or shutdown, but I can not find anything in the logs that is
+suspicious. I have also looked into systemd sourcecode and the systemd shutdown
+process, but can not see that the root partition is actually unmounted.
 
+Do you have any advice what to do further, or any hint on what could be
+happening here? Is this behaviour intended?
 
+I have also filed a bug report here because there's F27 on all machines:
+https://bugzilla.redhat.com/show_bug.cgi?id=1533620
+
+Many thanks in advance,
+ Heinz 
