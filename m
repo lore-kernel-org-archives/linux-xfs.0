@@ -1,290 +1,237 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45250 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932346AbeALBaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 20:30:12 -0500
-Subject: Re: [PATCH 03/27] xfs_scrub: set up command line argument parsing
-References: <151520348769.2027.9860697266310422360.stgit@magnolia>
- <151520350632.2027.11272777646597420008.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e9e65539-8811-af76-ebf6-0d75cc261401@sandeen.net>
-Date: Thu, 11 Jan 2018 19:30:11 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:43886 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932386AbeAKUc6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 15:32:58 -0500
+Date: Thu, 11 Jan 2018 12:32:46 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: recheck reflink / dirty page status before freeing
+ CoW reservations
+Message-ID: <20180111203246.GJ5602@magnolia>
+References: <20180110220336.GU5602@magnolia>
+ <20180111120410.GB22600@bfoster.bfoster>
+ <20180111174027.GZ5602@magnolia>
+ <20180111193828.GC22600@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <151520350632.2027.11272777646597420008.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180111193828.GC22600@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Eryu Guan <eguan@redhat.com>
 
-On 1/5/18 7:51 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 11, 2018 at 02:38:28PM -0500, Brian Foster wrote:
+> On Thu, Jan 11, 2018 at 09:40:27AM -0800, Darrick J. Wong wrote:
+> > On Thu, Jan 11, 2018 at 07:04:10AM -0500, Brian Foster wrote:
+> > > On Wed, Jan 10, 2018 at 02:03:36PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Eryu Guan reported seeing occasional hangs when running generic/269 with
+> > > > a new fsstress that supports clonerange/deduperange.  The cause of this
+> > > > hang is an infinite loop when we convert the CoW fork extents from
+> > > > unwritten to real just prior to writing the pages out; the infinite
+> > > > loop happens because there's nothing in the CoW fork to convert, and so
+> > > > it spins forever.
+> > > > 
+> > > > The underlying issue here is that when we go to perform these CoW fork
+> > > > conversions, we're supposed to have an extent waiting for us, but the
+> > > > low space CoW reaper has snuck in and blown them away!  There are four
+> > > > conditions that can dissuade the reaper from touching our file -- no
+> > > > reflink iflag; dirty page cache; writeback in progress; or directio in
+> > > > progress.  We check the four conditions prior to taking the locks, but
+> > > > we neglect to recheck them once we have the locks, which is how we end
+> > > > up whacking the writeback that's in progress.
+> > > > 
+> > > > Therefore, refactor the four checks into a helper function and call it
+> > > > once again once we have the locks to make sure we really want to reap
+> > > > the inode.  While we're at it, add an ASSERT for this weird condition so
+> > > > that we'll fail noisily if we ever screw this up again.
+> > > > 
+> > > > Reported-by: Eryu Guan <eguan@redhat.com>
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_bmap.c |    7 +++++
+> > > >  fs/xfs/xfs_icache.c      |   61 +++++++++++++++++++++++++++++-----------------
+> > > >  2 files changed, 46 insertions(+), 22 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > > > index a01cef4..7bd933f 100644
+> > > > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > > > @@ -4311,6 +4311,13 @@ xfs_bmapi_write(
+> > > >  	while (bno < end && n < *nmap) {
+> > > >  		bool			need_alloc = false, wasdelay = false;
+> > > >  
+> > > > +		/*
+> > > > +		 * CoW fork conversions should /never/ hit EOF.  There should
+> > > > +		 * always be something for us to work on.
+> > > > +		 */
+> > > > +		ASSERT(!eof || !(flags & XFS_BMAPI_CONVERT) ||
+> > > > +			       !(flags & XFS_BMAPI_COWFORK));
+> > > > +
+> > > 
+> > > The hunk just below asserts for BMAPI_COWFORK in a case that explicitly
+> > > considers eof. That makes the logic confusing to follow IMO, but I'm
+> > > more wondering whether pushing something like ASSERT(!((flags & CONVERT)
+> > > && (flags & COWFORK))) down into that hunk is effectively the same
+> > > thing..?  I.e., is it also true that we should not find a hole in the
+> > > (CONVERT & COW) case?
+> > 
+> > Yes.
+> > 
+> > > >  		/* in hole or beyoned EOF? */
+> > > >  		if (eof || bma.got.br_startoff > bno) {
+> > > >  			if (flags & XFS_BMAPI_DELALLOC) {
+> > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > index 1f84562..3fbcc03 100644
+> > > > --- a/fs/xfs/xfs_icache.c
+> > > > +++ b/fs/xfs/xfs_icache.c
+> > > > @@ -1654,6 +1654,35 @@ xfs_inode_clear_eofblocks_tag(
+> > > >  			trace_xfs_perag_clear_eofblocks, XFS_ICI_EOFBLOCKS_TAG);
+> > > >  }
+> > > >  
+> > > > +/* Is this a good time to reap the CoW reservations for this file? */
+> > > > +static bool
+> > > > +xfs_can_free_cowblocks(
+> > > > +	struct xfs_inode	*ip,
+> > > > +	struct xfs_ifork	*ifp)
+> > > > +{
+> > > > +	/*
+> > > > +	 * Just clear the tag if we have an empty cow fork or none at all. It's
+> > > > +	 * possible the inode was fully unshared since it was originally tagged.
+> > > > +	 */
+> > > > +	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
+> > > > +		trace_xfs_inode_free_cowblocks_invalid(ip);
+> > > > +		xfs_inode_clear_cowblocks_tag(ip);
+> > > > +		return false;
+> > > 
+> > > I think the flag update and tracepoint should probably remain in the
+> > > caller. They're somewhat misplaced for a "xfs_can_do_something()"
+> > > helper, particularly if it's ever exported and used in other contexts in
+> > > the future. Otherwise seems fine.
+> > 
+> > Hmm.  There's a subtlety to step around here, which is that this
+> > predicate can return false to mean "nothing here to see" or to mean
+> > "cannot clear anything at this time".  We want the trace+clear for the
+> > first case, but not the second.
+> > 
+> > I suppose this function could return the regular error code int and the
+> > caller can figure out what that means to it, but then all the post-check
+> > stuff ends up duplicated in the callers... so maybe I should just rename
+> > it xfs_prep_free_cowblocks().
+> > 
 > 
-> Parse command line options in order to set up the context in which we
-> will scrub the filesystem.
+> Are both checks necessarily required to be repeated under lock to fix
+> the bug? IOW, Could the !fork || !flag check remain in the caller to
+> cover the first case?
+
+They're necessary in both cases; generic/269 (when it wasn't hanging)
+would also blow the xfs_is_reflink_inode assert in
+xfs_reflink_cancel_cow_range if the flag got cleared before we can grab
+the iolock/mmaplock.
+
+> > And change the comment to:
+> > 
+> > /*
+> >  * Set ourselves up to free CoW blocks from this file.  If it's already
+> >  * clean then we can bail out quickly, but otherwise we must back off if
+> >  * the file is undergoing some kind of write.
+> >  */
+> > 
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/common.h    |    8 ++
->  scrub/xfs_scrub.c |  207 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  scrub/xfs_scrub.h |   34 +++++++++
->  3 files changed, 249 insertions(+)
+> That sounds reasonable too.
+
+<nod>
+
+--D
+
+> Brian
 > 
-> 
-> diff --git a/scrub/common.h b/scrub/common.h
-> index f620620..15a59bd 100644
-> --- a/scrub/common.h
-> +++ b/scrub/common.h
-> @@ -48,4 +48,12 @@ void __record_preen(struct scrub_ctx *ctx, const char *descr, const char *file,
->  #define str_info(ctx, str, ...)		__str_info(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
->  #define dbg_printf(fmt, ...)		{if (debug > 1) {printf(fmt, __VA_ARGS__);}}
->  
-> +/* Is this debug tweak enabled? */
-> +static inline bool
-> +debug_tweak_on(
-> +	const char		*name)
-> +{
-> +	return debug && getenv(name) != NULL;
-
-since it's debug anyway, I wonder if printing
-"FOO_BAR_TWEAK is on" would be useful here.
-
-> +}
-> +
->  #endif /* XFS_SCRUB_COMMON_H_ */
-> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> index 10116a8..9db3b41 100644
-> --- a/scrub/xfs_scrub.c
-> +++ b/scrub/xfs_scrub.c
-> @@ -20,7 +20,12 @@
->  #include <stdio.h>
->  #include <pthread.h>
->  #include <stdbool.h>
-> +#include <stdlib.h>
-> +#include "platform_defs.h"
-> +#include "xfs.h"
-> +#include "input.h"
->  #include "xfs_scrub.h"
-> +#include "common.h"
->  
->  /*
->   * XFS Online Metadata Scrub (and Repair)
-> @@ -107,11 +112,213 @@ unsigned int			debug;
->  /* Should we dump core if errors happen? */
->  bool				dumpcore;
->  
-> +/* Display resource usage at the end of each phase? */
-> +bool				display_rusage;
-> +
-> +/* Background mode; higher values insert more pauses between scrub calls. */
-> +unsigned int			bg_mode;
-> +
-> +/* Maximum number of processors available to us. */
-> +int				nproc;
-> +
-> +/* Number of threads we're allowed to use. */
-> +unsigned int			nr_threads;
-> +
-> +/* Verbosity; higher values print more information. */
-> +bool				verbose;
-> +
-> +/* Should we scrub the data blocks? */
-> +bool				scrub_data;
-> +
-> +/* Size of a memory page. */
-> +long				page_size;
-> +
-> +static void __attribute__((noreturn))
-> +usage(void)
-> +{
-> +	fprintf(stderr, _("Usage: %s [OPTIONS] mountpoint\n"), progname);
-> +	fprintf(stderr, _("-a:\tStop after this many errors are found.\n"));
-> +	fprintf(stderr, _("-b:\tBackground mode.\n"));
-> +	fprintf(stderr, _("-e:\tWhat to do if errors are found.\n"));
-> +	fprintf(stderr, _("-m:\tPath to /etc/mtab.\n"));
-> +	fprintf(stderr, _("-n:\tDry run.  Do not modify anything.\n"));
-> +	fprintf(stderr, _("-T:\tDisplay timing/usage information.\n"));
-> +	fprintf(stderr, _("-v:\tVerbose output.\n"));
-> +	fprintf(stderr, _("-V:\tPrint version.\n"));
-> +	fprintf(stderr, _("-x:\tScrub file data too.\n"));
-> +	fprintf(stderr, _("-y:\tRepair all errors.\n"));
-> +
-> +	exit(16);
-> +}
-> +
->  int
->  main(
->  	int			argc,
->  	char			**argv)
->  {
-> +	int			c;
-> +	char			*mtab = NULL;
-> +	char			*repairstr = "";
-> +	struct scrub_ctx	ctx = {0};
-> +	unsigned long long	total_errors;
-> +	bool			moveon = true;
-> +	static bool		injected;
-> +	int			ret = 0;
-> +
->  	fprintf(stderr, "XXX: This program is not complete!\n");
->  	return 4;
-> +
-> +	progname = basename(argv[0]);
-> +	setlocale(LC_ALL, "");
-> +	bindtextdomain(PACKAGE, LOCALEDIR);
-> +	textdomain(PACKAGE);
-> +
-> +	pthread_mutex_init(&ctx.lock, NULL);
-> +	ctx.mode = SCRUB_MODE_DEFAULT;
-> +	ctx.error_action = ERRORS_CONTINUE;
-> +	while ((c = getopt(argc, argv, "a:bde:m:nTvxVy")) != EOF) {
-> +		switch (c) {
-> +		case 'a':
-> +			ctx.max_errors = cvt_u64(optarg, 10);
-> +			if (errno) {
-> +				perror(optarg);
-> +				usage();
-> +			}
-> +			break;
-> +		case 'b':
-> +			nr_threads = 1;
-> +			bg_mode++;
-> +			break;
-> +		case 'd':
-> +			debug++;
-> +			dumpcore = true;
-> +			break;
-> +		case 'e':
-> +			if (!strcmp("continue", optarg))
-> +				ctx.error_action = ERRORS_CONTINUE;
-> +			else if (!strcmp("shutdown", optarg))
-> +				ctx.error_action = ERRORS_SHUTDOWN;
-> +			else
-> +				usage();
-
-Nothing tells me what I did wrong here,
-
-# scrub/xfs_scrub -e make_it_so /mnt/test
-Usage: xfs_scrub [OPTIONS] mountpoint
--a:	Stop after this many errors are found.
--b:	Background mode.
--C:	Print progress information to this fd.
--e:	What to do if errors are found.
-...
-
-I told it what to do... what's wrong?
-
-> +			break;
-> +		case 'm':
-> +			mtab = optarg;
-> +			break;
-> +		case 'n':
-> +			if (ctx.mode != SCRUB_MODE_DEFAULT) {
-> +				fprintf(stderr,
-> +_("Only one of the options -n or -y may be specified.\n"));
-> +				return 1;
-> +			}
-> +			ctx.mode = SCRUB_MODE_DRY_RUN;
-> +			break;
-> +		case 'T':
-> +			display_rusage = true;
-> +			break;
-> +		case 'v':
-> +			verbose = true;
-> +			break;
-> +		case 'V':
-> +			fprintf(stdout, _("%s version %s\n"), progname,
-> +					VERSION);
-> +			fflush(stdout);
-> +			exit(0);
-> +		case 'x':
-> +			scrub_data = true;
-> +			break;
-> +		case 'y':
-> +			if (ctx.mode != SCRUB_MODE_DEFAULT) {
-> +				fprintf(stderr,
-> +_("Only one of the options -n or -y may be specified.\n"));
-> +				return 1;
-> +			}
-> +			ctx.mode = SCRUB_MODE_REPAIR;
-> +			break;
-> +		case '?':
-
-'?' isn't in the getopt string ...
-
-# scrub/xfs_scrub ?
-xfs_scrub: could not stat: ?: No such file or directory
-
-
-> +			/* fall through */
-> +		default:
-> +			usage();
-> +		}
-> +	}
-> +
-> +	/* Override thread count if debugger */
-> +	if (debug_tweak_on("XFS_SCRUB_THREADS")) {
-
-can you document all these tweaks somewhere near the top in a comment?
-
-> +		unsigned int	x;
-> +
-> +		x = cvt_u32(getenv("XFS_SCRUB_THREADS"), 10);
-> +		if (errno) {
-> +			perror("nr_threads");
-> +			usage();
-> +		}
-> +		nr_threads = x;
-> +	}
-> +
-> +	if (optind != argc - 1)
-> +		usage();
-> +
-> +	ctx.mntpoint = strdup(argv[optind]);
-> +
-> +	/*
-> +	 * If the user did not specify an explicit mount table, try to use
-> +	 * /proc/mounts if it is available, else /etc/mtab.  We prefer
-> +	 * /proc/mounts because it is kernel controlled, while /etc/mtab
-> +	 * may contain garbage that userspace tools like pam_mounts wrote
-> +	 * into it.
-> +	 */
-> +	if (!mtab) {
-> +		if (access(_PATH_PROC_MOUNTS, R_OK) == 0)
-> +			mtab = _PATH_PROC_MOUNTS;
-> +		else
-> +			mtab = _PATH_MOUNTED;
-> +	}
-> +
-> +	/* How many CPUs? */
-> +	nproc = sysconf(_SC_NPROCESSORS_ONLN);
-> +	if (nproc < 1)
-> +		nproc = 1;
-> +
-> +	/* Set up a page-aligned buffer for read verification. */
-> +	page_size = sysconf(_SC_PAGESIZE);
-> +	if (page_size < 0) {
-> +		str_errno(&ctx, ctx.mntpoint);
-> +		goto out;
-> +	}
-> +
-> +	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
-> +		ctx.mode = SCRUB_MODE_REPAIR;
-> +		injected = true;
-> +	}
-
-what is "injected" used for?  How could it already be set?.
-
-> +
-> +	if (xfs_scrub_excessive_errors(&ctx))
-> +		str_info(&ctx, ctx.mntpoint, _("Too many errors; aborting."));
-
-wait wut?  oh right, you'll add $DO_STUFF above this in later patches ;)
-
-
-Rest looks ok
-
--Eric
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > +	}
+> > > > +
+> > > > +	/*
+> > > > +	 * If the mapping is dirty or under writeback we cannot touch the
+> > > > +	 * CoW fork.  Leave it alone if we're in the midst of a directio.
+> > > > +	 */
+> > > > +	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
+> > > > +	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+> > > > +	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+> > > > +	    atomic_read(&VFS_I(ip)->i_dio_count))
+> > > > +		return false;
+> > > > +
+> > > > +	return true;
+> > > > +}
+> > > > +
+> > > >  /*
+> > > >   * Automatic CoW Reservation Freeing
+> > > >   *
+> > > > @@ -1672,29 +1701,12 @@ xfs_inode_free_cowblocks(
+> > > >  	int			flags,
+> > > >  	void			*args)
+> > > >  {
+> > > > -	int ret;
+> > > > -	struct xfs_eofblocks *eofb = args;
+> > > > -	int match;
+> > > > +	struct xfs_eofblocks	*eofb = args;
+> > > >  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> > > > +	int			match;
+> > > > +	int			ret = 0;
+> > > >  
+> > > > -	/*
+> > > > -	 * Just clear the tag if we have an empty cow fork or none at all. It's
+> > > > -	 * possible the inode was fully unshared since it was originally tagged.
+> > > > -	 */
+> > > > -	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
+> > > > -		trace_xfs_inode_free_cowblocks_invalid(ip);
+> > > > -		xfs_inode_clear_cowblocks_tag(ip);
+> > > > -		return 0;
+> > > > -	}
+> > > > -
+> > > > -	/*
+> > > > -	 * If the mapping is dirty or under writeback we cannot touch the
+> > > > -	 * CoW fork.  Leave it alone if we're in the midst of a directio.
+> > > > -	 */
+> > > > -	if ((VFS_I(ip)->i_state & I_DIRTY_PAGES) ||
+> > > > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+> > > > -	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+> > > > -	    atomic_read(&VFS_I(ip)->i_dio_count))
+> > > > +	if (!xfs_can_free_cowblocks(ip, ifp))
+> > > >  		return 0;
+> > > >  
+> > > >  	if (eofb) {
+> > > > @@ -1715,7 +1727,12 @@ xfs_inode_free_cowblocks(
+> > > >  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> > > >  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> > > >  
+> > > > -	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+> > > > +	/*
+> > > > +	 * Check again, nobody else should be able to dirty blocks or change
+> > > > +	 * the reflink iflag now that we have the first two locks held.
+> > > > +	 */
+> > > > +	if (xfs_can_free_cowblocks(ip, ifp))
+> > > > +		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+> > > >  
+> > > >  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+> > > >  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
