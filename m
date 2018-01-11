@@ -1,230 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39799 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751704AbeAHWB4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jan 2018 17:01:56 -0500
-Date: Tue, 9 Jan 2018 09:01:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Growing RAID10 with active XFS filesystem
-Message-ID: <20180108220139.GB16421@dastard>
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia>
+Received: from sandeen.net ([63.231.237.45]:46606 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932419AbeAKULK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jan 2018 15:11:10 -0500
+Subject: Re: [PATCH 7/8] libxfs: add function to free all bufferse in bcache
+References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+ <1515699458-6925-8-git-send-email-sandeen@sandeen.net>
+ <20180111200530.GF5602@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e51327b1-955f-01b5-2af9-4c816f19d8c5@sandeen.net>
+Date: Thu, 11 Jan 2018 14:11:09 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180108192607.GS5602@magnolia>
+In-Reply-To: <20180111200530.GF5602@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs.pkoch@dfgh.net, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-[cc linux-raid, like the OP intended to do]
-
-[For XFS folk, the original linux-raid thread is here:
- https://marc.info/?l=linux-raid&m=151525346428531&w=2 ]
-
-On Mon, Jan 08, 2018 at 11:26:07AM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 08, 2018 at 08:08:09PM +0100, xfs.pkoch@dfgh.net wrote:
-> > Dear Linux-Raid and Linux-XFS experts:
-> > 
-> > I'm posting this on both the linux-raid and linux-xfs
-> > mailing list as it's not clear at this point wether
-> > this is a MD- od XFS-problem.
-> > 
-> > I have described my problem in a recent posting on
-> > linux-raid and Wol's conclusion was:
-> > 
-> > >In other words, one or more of the following three are true :-
-> > >1) The OP has been caught by some random act of God
-> > >2) There's a serious flaw in "mdadm --grow"
-> > >3) There's a serious flaw in xfs
-> > >
-> > >Cheers,
-> > >Wol
-> > 
-> > There's very important data on our RAID10 device but I doubt
-> > it's important enough for God to take a hand into our storage.
-> > 
-> > But let me first summarize what happened and why I believe that
-> > this is an XFS-problem:
-
-The evidence doesn't support that claim.
-
-tl;dr: block device IO errors occurred immediately after a MD
-reshape started and the filesystem simply reported and responded
-appropriately to those MD device IO errors.
-
-> > Machine running Linux 3.14.69 with no kernel-patches.
-
-So really old kernel....
-
-> > XFS filesystem was created with XFS userutils 3.1.11.
-
-And a really old userspace, too.
-
-> > I did a fresh compile of xfsprogs-4.9.0 yesterday when
-> > I realized that the 3.1.11 xfs_repair did not help.
-> > 
-> > mdadm is V3.3
-> > 
-> > /dev/md5 is a RAID10-device that was created in Feb 2013
-> > with 10 2TB disks and an ext3 filesystem on it. Once in a
-> > while I added two more 2TB disks. Reshaping was done
-> > while the ext3 filesystem was mounted. Then the ext3
-> > filesystem was unmounted resized and mounted again. That
-> > worked until I resized the RAID10 from 16 to 20 disks and
-> > realized that ext3 does not support filesystems >16TB.
-> > 
-> > I switched to XFS and created a 20TB filesystem. Here are
-> > the details:
-> > 
-> > # xfs_info /dev/md5
-> > meta-data=/dev/md5               isize=256    agcount=32, agsize=152608128 blks
-> >           =                       sectsz=512   attr=2
-> > data     =                       bsize=4096   blocks=4883457280, imaxpct=5
-> >           =                       sunit=128    swidth=1280 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0
-> > log      =internal               bsize=4096   blocks=521728, version=2
-> >           =                       sectsz=512   sunit=8 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > Please notice: Ths XFS-filesystem has a size of
-> > 4883457280*4K = 19,533,829,120K
-> > 
-> > On saturday I tried to add two more 2TB disks to the RAID10
-> > and the XFS filesystem was mounted (and in medium use) at that
-> > time. Commands were:
-> > 
-> > # mdadm /dev/md5 --add /dev/sdo
-> > # mdadm --grow /dev/md5 --raid-devices=21
-
-You added one device, not two. That's a recipe for a reshape that
-moves every block of data in the device to a different location.
-
-> > # mdadm -D /dev/md5
-> > /dev/md5:
-> >          Version : 1.2
-> >    Creation Time : Sun Feb 10 16:58:10 2013
-> >       Raid Level : raid10
-> >       Array Size : 19533829120 (18628.91 GiB 20002.64 GB)
-> >    Used Dev Size : 1953382912 (1862.89 GiB 2000.26 GB)
-> >     Raid Devices : 21
-> >    Total Devices : 21
-> >      Persistence : Superblock is persistent
-> > 
-> >      Update Time : Sat Jan  6 15:08:37 2018
-> >            State : clean, reshaping
-> >   Active Devices : 21
-> > Working Devices : 21
-> >   Failed Devices : 0
-> >    Spare Devices : 0
-> > 
-> >           Layout : near=2
-> >       Chunk Size : 512K
-> > 
-> >   Reshape Status : 1% complete
-> >    Delta Devices : 1, (20->21)
-
-Yup, 21 devices in a RAID 10. That's a really nasty config for
-RAID10 which requires an even number of disks to mirror correctly.
-Why does MD even allow this sort of whacky, sub-optimal
-configuration?
-
-[....]
-
-> > Immediately after the RAID10 reshape operation started the
-> > XFS-filesystem reported I/O-errors and was severly damaged.
-> > I waited for the reshape operation to finish and tried to repair
-> > the filesystem with xfs_repair (version 3.1.11) but xfs_repair
-> > crashed, so I tried 4.9.0-version aif xfs_reapair with no luck
-> > either.
-
-[...]
-
-> > Here are the relevant log messages:
-> > 
-> > >Jan  6 14:45:00 backup kernel: md: reshape of RAID array md5
-> > >Jan  6 14:45:00 backup kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> > >Jan  6 14:45:00 backup kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
-> > >Jan  6 14:45:00 backup kernel: md: using 128k window, over a total of 19533829120k.
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): metadata I/O error: block 0x12c08f360 ("xfs_trans_read_buf_map") error 5 numblks 16
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): xfs_imap_to_bp: xfs_trans_read_buf() returned error 5.
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): metadata I/O error: block 0x12c08f360 ("xfs_trans_read_buf_map") error 5 numblks 16
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): xfs_imap_to_bp: xfs_trans_read_buf() returned error 5.
-> > >... hundreds of the above XFS-messages deleted
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): Log I/O Error Detected.  Shutting down filesystem
-> > >Jan  6 14:45:00 backup kernel: XFS (md5): Please umount the filesystem and rectify the problem(s)
-
-IOWs, within /a second/ of the reshape starting, the active, error
-free XFS filesystem received hundreds of IO errors on both read and
-write IOs from the MD device and shut down the filesystem.
-
-XFS is just the messenger here - something has gone badly wrong at
-the MD layer when the reshape kicked off.
-
-> > Please notice: no error message about hardware-problems.
-> > All 21 disks are fine and the next messages from the
-> > md-driver was:
-> > 
-> > >Jan  7 02:28:02 backup kernel: md: md5: reshape done.
-> > >Jan  7 02:28:03 backup kernel: md5: detected capacity change from 20002641018880 to 21002772807680
-
-Ok, so the reshape took about 12 hours to run, and it grew to 21TB.
-A 12 hour long operation is what I'd expect for a major
-rearrangement of every block in the MD device....
-
-> > I'm wondering about one thing: the first xfs message is about a
-> > meatadata I/O error on block 0x12c08f360. Since the xfs filesystem
+On 1/11/18 2:05 PM, Darrick J. Wong wrote:
+> On Thu, Jan 11, 2018 at 01:37:37PM -0600, Eric Sandeen wrote:
+>> Subject: libxfs: add function to free all bufferse in bcache
 > 
-> I'm sure Dave will have more to say about this, but...
+> s/bufferse/buffers/
+
+That's just my flair ;)
+
+>> libxfs_bcache_purge simply moves all "free" buffers
+>> onto the xfs_buf_freelist mru list; add a new function to
+>> actually free them when we tear everything down, so leak
+>> checkers don't go nuts about lots of unfreed xfs_bufs
+>> at exit.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>> ---
+>>  libxfs/init.c      |  2 ++
+>>  libxfs/libxfs_io.h |  1 +
+>>  libxfs/rdwr.c      | 16 ++++++++++++++++
+>>  3 files changed, 19 insertions(+)
+>>
+>> diff --git a/libxfs/init.c b/libxfs/init.c
+>> index 7bde8b7..aea308b 100644
+>> --- a/libxfs/init.c
+>> +++ b/libxfs/init.c
+>> @@ -889,6 +889,8 @@ void
+>>  libxfs_destroy(void)
+>>  {
+>>  	manage_zones(1);
+>> +	libxfs_bcache_purge();
+>> +	libxfs_bcache_free();
+>>  	cache_destroy(libxfs_bcache);
+>>  }
+>>  
+>> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+>> index 2fce04d..81d2804 100644
+>> --- a/libxfs/libxfs_io.h
+>> +++ b/libxfs/libxfs_io.h
+>> @@ -191,6 +191,7 @@ extern void	libxfs_readbuf_verify(struct xfs_buf *bp,
+>>  			const struct xfs_buf_ops *ops);
+>>  extern xfs_buf_t *libxfs_getsb(struct xfs_mount *, int);
+>>  extern void	libxfs_bcache_purge(void);
+>> +extern void	libxfs_bcache_free(void);
+>>  extern void	libxfs_bcache_flush(void);
+>>  extern void	libxfs_purgebuf(xfs_buf_t *);
+>>  extern int	libxfs_bcache_overflowed(void);
+>> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+>> index c5ffd4d..1dcabdd 100644
+>> --- a/libxfs/rdwr.c
+>> +++ b/libxfs/rdwr.c
+>> @@ -1278,6 +1278,22 @@ libxfs_bulkrelse(
+>>  }
+>>  
+>>  /*
+>> + * Free everything from the xfs_buf_freelist MRU, used at final teardown
+>> + */
+>> +void
+>> +libxfs_bcache_free(void)
+>> +{
+>> +	struct list_head	*cm_list;
+>> +	xfs_buf_t		*bp, *next;
+>> +
+>> + 	cm_list = &xfs_buf_freelist.cm_list;
+>> +	list_for_each_entry_safe(bp, next, cm_list, b_node.cn_mru) {
+>> +		free(bp->b_addr);
 > 
-> "block 0x12c08f360" == units of sectors, not fs blocks.
+> Hm, do we need to free bp->b_maps here?  Just looking at
+> __libxfs_getbufr (aka the other function that can tear down a
+> bp->b_addr).
+
+Oh yeah, probably so.
+>> +		free(bp);
 > 
-> IOWs, this IO error happened at offset 2,577,280,712,704 (~2.5TB)
+> kmem_zone_free, since we got the bp from kmem_zone_alloc.
 
-That's correct, Darrick - it's well within the known fileysetm
-bounds.
+Well remember I faked up the zone allocation count for buffers in and out of
+cache. If I zone_free here, count ll go way negative (but nobody will check at
+that point).  I'm not sure if this is all too strange to live...?
 
-> XFS doesn't change the fs size until you tell it to (via growfs);
-> even if the underlying storage geometry changes, XFS won't act on it
-> until the admin tells it to.
-> 
-> What did xfs_repair do?
+> Do we need to reinit xfs_buf_freelist.cm_list, since ->next now points
+> to freed list items?
 
-Yeah, I'd like to see that output (from 4.9.0) too, but experience
-tells me it did nothing helpful w.r.t data recovery from a badly
-corrupted device.... :/
+Probably so.  Nobody uses it at this point anyway but still, best to leave it
+in a sane state I guess.
 
-> > This looks like a severe XFS-problem to me.
-
-I'll say this again: tHe evidence does not support that conclusion.
-
-XFS has done exactly the right thing to protect the filesystem when
-fatal IO errors started occurring at the block layer: it shut down
-and stopped trying to modify the filesystem.  What caused those
-errors and any filesystem and/or data corruption to occur, OTOH, has
-nothing to do with XFS.
-
-> > But my hope is that all the data taht was within the filesystem
-> > before Jan 6 14:45 is not involved in the corruption. If xfs
-> > started to use space beyond the end of the underlying raid
-> > device this should have affected only data that was created,
-> > modified or deleted after Jan 6 14:45.
-
-Experience tells me that you cannot trust a single byte of data in
-that block device now, regardless of it's age and when it was last
-modified. The MD reshape may have completed, but what it did is
-highly questionable and you need to verify the contents of every
-single directory and file.
-
-When this sort of things happens, often the best data recovery
-strategy (i.e. fastest and most reliable) is to simply throw
-everything away and restore from known good backups...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
