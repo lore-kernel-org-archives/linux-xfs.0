@@ -1,58 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35616 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56174 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750916AbeAKHys (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 02:54:48 -0500
-Date: Thu, 11 Jan 2018 15:54:41 +0800
+        id S1753660AbeAKICx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jan 2018 03:02:53 -0500
+Date: Thu, 11 Jan 2018 16:02:42 +0800
 From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs: recheck reflink / dirty page status before freeing
- CoW reservations
-Message-ID: <20180111075441.GH5123@eguan.usersys.redhat.com>
-References: <20180110220336.GU5602@magnolia>
+Subject: Re: [PATCH v4 0/4] test for XFS umount hang caused by the pending
+ dquota log item in AIL
+Message-ID: <20180111080242.GI5123@eguan.usersys.redhat.com>
+References: <20180111064933.12088-1-houtao1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180110220336.GU5602@magnolia>
+In-Reply-To: <20180111064933.12088-1-houtao1@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Hou Tao <houtao1@huawei.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-On Wed, Jan 10, 2018 at 02:03:36PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 11, 2018 at 02:49:29PM +0800, Hou Tao wrote:
+> Hi,
 > 
-> Eryu Guan reported seeing occasional hangs when running generic/269 with
-> a new fsstress that supports clonerange/deduperange.  The cause of this
-> hang is an infinite loop when we convert the CoW fork extents from
-> unwritten to real just prior to writing the pages out; the infinite
-> loop happens because there's nothing in the CoW fork to convert, and so
-> it spins forever.
+> This is the v4 patchset for testing the XFS umount hang problem caused by
+> the pending dquota log item in AIL. The problem had been fixed by commit
+> 373b058 ("xfs: Properly retry failed dquot items in case of error during
+> buffer writeback"). The changes for v4 are appended in the commit log
+> of each patches.
 > 
-> The underlying issue here is that when we go to perform these CoW fork
-> conversions, we're supposed to have an extent waiting for us, but the
-> low space CoW reaper has snuck in and blown them away!  There are four
-> conditions that can dissuade the reaper from touching our file -- no
-> reflink iflag; dirty page cache; writeback in progress; or directio in
-> progress.  We check the four conditions prior to taking the locks, but
-> we neglect to recheck them once we have the locks, which is how we end
-> up whacking the writeback that's in progress.
+> Comments and questions are welcome.
+
+The patches all look good, thanks a lot for the revision!
+
 > 
-> Therefore, refactor the four checks into a helper function and call it
-> once again once we have the locks to make sure we really want to reap
-> the inode.  While we're at it, add an ASSERT for this weird condition so
-> that we'll fail noisily if we ever screw this up again.
+> Regards,
+> Tao
 > 
-> Reported-by: Eryu Guan <eguan@redhat.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Hou Tao (4):
+>   dmflakey: support multiple dm targets for a dm-flakey device
+>   dmflakey: support error_writes feature for dm-flakey
+>   xfs: test for umount hang caused by the pending dquota log item in AIL
+>   common/rc: factor out _scratch_xfs_[get|set]_sb_field
 
-I applied this patch on top of v4.15-rc5 kernel, and ran generic/083
-generic/269 and generic/270 (where I hit the soft lockup and hang before)
-multiple times and tests all passed. I also ran all tests in 'enospc'
-group on 1k/2k/4k XFS with reflink enabled, tests passed too. So
+I switched the order of the last two patches, i.e. refactor
+_scratch_xfs_[get|set]_sb_field first then use the new helper in the new
+test in the end, so we don't add new test then update it again in the
+same patch set.
 
-Tested-by: Eryu Guan <eguan@redhat.com>
-
-Thanks!
-
+Thanks,
 Eryu
+
+> 
+>  common/dmflakey   |  31 +++++++++-
+>  common/fuzzy      |  33 -----------
+>  common/xfs        |  47 +++++++++++++++
+>  tests/xfs/007     |   6 +-
+>  tests/xfs/098     |   4 +-
+>  tests/xfs/186     |   3 +-
+>  tests/xfs/199     |  13 ++--
+>  tests/xfs/307     |  11 +---
+>  tests/xfs/308     |  11 +---
+>  tests/xfs/339     |   6 +-
+>  tests/xfs/340     |   2 +-
+>  tests/xfs/999     | 174 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/999.out |   2 +
+>  tests/xfs/group   |   1 +
+>  14 files changed, 269 insertions(+), 75 deletions(-)
+>  create mode 100755 tests/xfs/999
+>  create mode 100644 tests/xfs/999.out
+> 
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
