@@ -1,45 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:57340 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751263AbeAJT4T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 14:56:19 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0AJplav076495
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 19:56:18 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2fds41r4pt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 19:56:18 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0AJkHMN006943
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 19:46:18 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0AJkHps030539
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Jan 2018 19:46:17 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Parent pointer design bugs
-Message-ID: <adf6f96f-fc4b-e2eb-a204-db8a39007fa7@oracle.com>
-Date: Wed, 10 Jan 2018 12:46:16 -0700
+Received: from szxga04-in.huawei.com ([45.249.212.190]:4167 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753600AbeAKJYZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jan 2018 04:24:25 -0500
+Subject: Re: [PATCH v4 0/4] test for XFS umount hang caused by the pending
+ dquota log item in AIL
+References: <20180111064933.12088-1-houtao1@huawei.com>
+ <20180111080242.GI5123@eguan.usersys.redhat.com>
+From: Hou Tao <houtao1@huawei.com>
+Message-ID: <65b44353-ff8b-b7bf-900b-c4a7863dd428@huawei.com>
+Date: Thu, 11 Jan 2018 17:23:38 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+In-Reply-To: <20180111080242.GI5123@eguan.usersys.redhat.com>
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, cmaiolino@redhat.com
 
-Hi all,
+Hi Eryu,
 
-I've been working on a new xfstest for parent pointers, and discovered 
-that parent pointers are not getting created for protofiles.  I'm
-exploring the idea of adding the parent pointer in xfs_dir_createname 
-(instead of xfs-create/xfs_link/xfs_rename).  But I think that means 
-that I'd have to change xfs_dir_createname to take the new xfs_inode 
-instead of just the xfs_ino_t.  Which I'm not sure is
-going to work out in all cases where it is used.  Before I end up 
-chasing it too long and changing the design too much, I wanted to get 
-some feed back to see what folks thoughts were.  Thanks!
+On 2018/1/11 16:02, Eryu Guan wrote:
+> On Thu, Jan 11, 2018 at 02:49:29PM +0800, Hou Tao wrote:
+>> Hi,
+>>
+>> This is the v4 patchset for testing the XFS umount hang problem caused by
+>> the pending dquota log item in AIL. The problem had been fixed by commit
+>> 373b058 ("xfs: Properly retry failed dquot items in case of error during
+>> buffer writeback"). The changes for v4 are appended in the commit log
+>> of each patches.
+>>
+>> Comments and questions are welcome.
+> 
+> The patches all look good, thanks a lot for the revision!
+> 
+>>
+>> Regards,
+>> Tao
+>>
+>> Hou Tao (4):
+>>   dmflakey: support multiple dm targets for a dm-flakey device
+>>   dmflakey: support error_writes feature for dm-flakey
+>>   xfs: test for umount hang caused by the pending dquota log item in AIL
+>>   common/rc: factor out _scratch_xfs_[get|set]_sb_field
+> 
+> I switched the order of the last two patches, i.e. refactor
+> _scratch_xfs_[get|set]_sb_field first then use the new helper in the new
+> test in the end, so we don't add new test then update it again in the
+> same patch set.
 
-Allison Henderson
+Yes, it's better after the order switch and thanks for that.
+
+Regards,
+Tao
+
+> Thanks,
+> Eryu
+> 
+>>
+>>  common/dmflakey   |  31 +++++++++-
+>>  common/fuzzy      |  33 -----------
+>>  common/xfs        |  47 +++++++++++++++
+>>  tests/xfs/007     |   6 +-
+>>  tests/xfs/098     |   4 +-
+>>  tests/xfs/186     |   3 +-
+>>  tests/xfs/199     |  13 ++--
+>>  tests/xfs/307     |  11 +---
+>>  tests/xfs/308     |  11 +---
+>>  tests/xfs/339     |   6 +-
+>>  tests/xfs/340     |   2 +-
+>>  tests/xfs/999     | 174 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/999.out |   2 +
+>>  tests/xfs/group   |   1 +
+>>  14 files changed, 269 insertions(+), 75 deletions(-)
+>>  create mode 100755 tests/xfs/999
+>>  create mode 100644 tests/xfs/999.out
+>>
+>> -- 
+>> 2.9.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
