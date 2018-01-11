@@ -1,109 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:23585 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933167AbeAKWOk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 17:14:40 -0500
-Date: Fri, 12 Jan 2018 09:09:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/8] libxfs: manage xfs_buf_zone count within cache
-Message-ID: <20180111220951.GV16421@dastard>
-References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
- <1515699458-6925-7-git-send-email-sandeen@sandeen.net>
- <20180111202026.GG5602@magnolia>
- <f55b38bc-09eb-46f9-4b64-97f1117ac7ca@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:57614 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933811AbeAKThK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 14:37:10 -0500
+Date: Thu, 11 Jan 2018 11:30:32 -0800
+From: Liu Bo <bo.li.liu@oracle.com>
+Subject: Re: [PATCH v5 18/19] btrfs: only dirty the inode in
+ btrfs_update_time if something was changed
+Message-ID: <20180111193031.GA12421@dhcp-10-159-141-29.vpn.oracle.com>
+Reply-To: bo.li.liu@oracle.com
+References: <20180109141059.25929-1-jlayton@kernel.org>
+ <20180109141059.25929-19-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f55b38bc-09eb-46f9-4b64-97f1117ac7ca@sandeen.net>
+In-Reply-To: <20180109141059.25929-19-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
 
-On Thu, Jan 11, 2018 at 02:48:33PM -0600, Eric Sandeen wrote:
-> 
-> 
-> On 1/11/18 2:20 PM, Darrick J. Wong wrote:
-> > On Thu, Jan 11, 2018 at 01:37:36PM -0600, Eric Sandeen wrote:
-> >> Fake up the xfs_buf_zone allocated count a bit to account
-> >> for buffers freed to and allocated from cache.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> >> ---
-> >>  libxfs/rdwr.c | 3 +++
-> >>  1 file changed, 3 insertions(+)
-> >>
-> >> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> >> index 474e5eb..c5ffd4d 100644
-> >> --- a/libxfs/rdwr.c
-> >> +++ b/libxfs/rdwr.c
-> >> @@ -665,6 +665,7 @@ __libxfs_getbufr(int blen)
-> >>  				free(bp->b_maps);
-> >>  			bp->b_maps = NULL;
-> >>  		}
-> >> +		xfs_buf_zone->allocated++;
-> > 
-> > I'm confused.  kmem_zone_zalloc increments zone->allocated and
-> > kmem_zone_free decrements it.  Now we're messing with ->allocated
-> > ourselves, which means that buffers that have ended up on
-> > xfs_buf_freelist are still allocated (according to the heap) but the
-> > zone accounting thinks the buffer is freed?
-> > 
-> > <goes away, reviews the next patch, comes back>
-> > 
-> > The next patch has xfs_buf_freelist frees the buffer directly and
-> > bypassing kmem_zone_free.  So I wonder, if you change the next patch to
-> > call kmem_zone_free and kill this patch, won't the accounting work out?
-> > 
-> > (xfs buf zone allocated == 0)
-> > 
-> > bp = _zone_alloc()
-> > xfs_buf_zone->allocated++
-> > 
-> > ...do stuff with buffer...
-> > 
-> > xfs_buf_relse(bp)
-> > list_add(bp, xfs_buf_freelist)
-> > 
-> > ...buffer still allocated, xfs_buf_zone->allocated == 1...
-> > 
-> > libxfs_bcache_free()
-> > _zone_free(bp)
-> > xfs_buf_zone->allocated--
-> > 
-> > ...exit program, and:
-> > xfs_buf_zone->allocated == 0
-> > 
-> > I think killing this patch and teaching the next one to kmem_zone_free
-> > the buffer works, right?  Or am I missing some subtlety here, in which
-> > case said subtlety needs comments.
-> 
-> Yes, it would work out.  This patch was trying to fake up actual use
-> by libxfs, because my main goal was to be able to find leaks in libxfs.
-> Counting it as still allocated when libxfs thinks it's put it away
-> seems to confuse that goal.
-> 
-> In the end, it's just where I want to draw the line for the accounting.
-> 
-> In this way I was hoping to keep the cache details out of that
-> accounting.  When libxfs says the buffer is done and puts the last ref,
-> it's considered to be freed by libxfs, whether or not the cache chooses
-> to hang on to it, discard it later, or whatever.
+Hi Jeff,
 
-It's not the job of the zone allocator to track whether something
-is cached or not - it just tracks how many objects are allocated.
+On Tue, Jan 09, 2018 at 09:10:58AM -0500, Jeff Layton wrote:
+> From: Jeff Layton <jlayton@redhat.com>
+> 
+> At this point, we know that "now" and the file times may differ, and we
+> suspect that the i_version has been flagged to be bumped. Attempt to
+> bump the i_version, and only mark the inode dirty if that actually
+> occurred or if one of the times was updated.
+> 
+> Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> Acked-by: David Sterba <dsterba@suse.com>
+> ---
+>  fs/btrfs/inode.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> index ac8692849a81..76245323a7c8 100644
+> --- a/fs/btrfs/inode.c
+> +++ b/fs/btrfs/inode.c
+> @@ -6107,19 +6107,20 @@ static int btrfs_update_time(struct inode *inode, struct timespec *now,
+>  			     int flags)
+>  {
+>  	struct btrfs_root *root = BTRFS_I(inode)->root;
+> +	bool dirty = flags & ~S_VERSION;
+>  
+>  	if (btrfs_root_readonly(root))
+>  		return -EROFS;
+>  
+>  	if (flags & S_VERSION)
+> -		inode_inc_iversion(inode);
+> +		dirty |= inode_maybe_inc_iversion(inode, dirty);
+>  	if (flags & S_CTIME)
+>  		inode->i_ctime = *now;
+>  	if (flags & S_MTIME)
+>  		inode->i_mtime = *now;
+>  	if (flags & S_ATIME)
+>  		inode->i_atime = *now;
+> -	return btrfs_dirty_inode(inode);
+> +	return dirty ? btrfs_dirty_inode(inode) : 0;
+>  }
+>  
 
-Indeed, the libxfs cache iitself keeps track of how many objects it
-has remaining in it, and if you define CACHE_DEBUG it will issue a
-warning if the cache is not empty after it has been purged and is
-being torn down.  i.e. we already have debug mechanisms to tell if
-we are leaking objects through the cache...
+In order to have a easier error handling for ENOSPC, btrfs has split
+file_update_time() into 2-step work,
+- step 1 is to update time/iversion of in-memory inode in
+  update_time_for_write(),
+- step 2 is to update the time/iversion of on-disk inode in
+  btrfs_update_inode()->fill_inode_item().
 
-Cheers,
+I think update_time_for_write() also needs to be updated to use the
+new iversion API.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+With that,
+
+Reviewed-by: Liu Bo <bo.li.liu@oracle.com>
+
+Thanks,
+
+-liubo
+>  /*
+> -- 
+> 2.14.3
+> 
