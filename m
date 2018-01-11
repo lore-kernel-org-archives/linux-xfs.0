@@ -1,233 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56640 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934058AbeAJM7C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Jan 2018 07:59:02 -0500
-Date: Wed, 10 Jan 2018 07:58:59 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC 2/4] xfs: defer agfl block frees when dfops is
- available
-Message-ID: <20180110125858.GB17232@bfoster.bfoster>
-References: <20171207185810.48757-1-bfoster@redhat.com>
- <20171207185810.48757-3-bfoster@redhat.com>
- <20171207224126.GJ4094@dastard>
- <20171208141629.GB55826@bfoster.bfoster>
- <20180108215602.GA43411@bfoster.bfoster>
- <20180109204315.GA1168@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:4139 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753528AbeAKDH5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jan 2018 22:07:57 -0500
+Date: Thu, 11 Jan 2018 14:07:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Growing RAID10 with active XFS filesystem
+Message-ID: <20180111030723.GU16421@dastard>
+References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
+ <20180108192607.GS5602@magnolia>
+ <20180108220139.GB16421@dastard>
+ <5A548D31.4000002@youngman.org.uk>
+ <20180109222523.GJ16421@dastard>
+ <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180109204315.GA1168@magnolia>
+In-Reply-To: <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Phil Turmel <philip@turmel.org>
+Cc: Wols Lists <antlists@youngman.org.uk>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
 
-On Tue, Jan 09, 2018 at 12:43:15PM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 08, 2018 at 04:56:03PM -0500, Brian Foster wrote:
-> > cc Darrick
-> > 
-> > On Fri, Dec 08, 2017 at 09:16:30AM -0500, Brian Foster wrote:
-> > > On Fri, Dec 08, 2017 at 09:41:26AM +1100, Dave Chinner wrote:
-> > > > On Thu, Dec 07, 2017 at 01:58:08PM -0500, Brian Foster wrote:
-> > ...
-> > > > 
-> > > > Ok, so it uses the EFI/EFD to make sure that the block freeing is
-> > > > logged and replayed. So my question is:
-> > > > 
-> > > > > +/*
-> > > > > + * AGFL blocks are accounted differently in the reserve pools and are not
-> > > > > + * inserted into the busy extent list.
-> > > > > + */
-> > > > > +STATIC int
-> > > > > +xfs_agfl_free_finish_item(
-> > > > > +	struct xfs_trans		*tp,
-> > > > > +	struct xfs_defer_ops		*dop,
-> > > > > +	struct list_head		*item,
-> > > > > +	void				*done_item,
-> > > > > +	void				**state)
-> > > > > +{
-> > > > 
-> > > > How does this function get called by log recovery when processing
-> > > > the EFI as there is no flag in the EFI that says this was a AGFL
-> > > > block?
-> > > > 
-> > > 
-> > > It doesn't...
-> > > 
-> > > > That said, I haven't traced through whether this matters or not,
-> > > > but I suspect it does because freelist frees use XFS_AG_RESV_AGFL
-> > > > and that avoids accounting the free to the superblock counters
-> > > > because the block is already accounted as free space....
-> > > > 
-> > > 
-> > > I don't think it does matter. I actually tested log recovery precisely
-> > > for this question, to see whether the traditional EFI recovery path
-> > > would disrupt accounting or anything and I didn't reproduce any problems
-> > > (well, except for that rmap record cleanup failure thing).
-> > > 
-> > > However, I do still need to trace through and understand why that is, to
-> > > know for sure that there aren't any problems lurking here (and if not, I
-> > > should probably document it), but I suspect the reason is that the
-> > > differences between how agfl and regular blocks are handled here only
-> > > affect in-core state of the AG reservation pools. These are all
-> > > reinitialized from zero on a subsequent mount based on the on-disk state
-> > > (... but good point, and I will try to confirm that before posting a
-> > > non-RFC variant).
-> > > 
-> > 
-> > After catching back up with this and taking a closer look at the code, I
-> > can confirm that generic EFI recovery works fine for deferred AGFL block
-> > frees. What happens is essentially that the slot is freed and the block
-> > free is deferred in a particular tx. If we crash before that tx commits,
-> > then obviously nothing changes and we're fine. If we crash after that tx
-> > commits, EFI recovery frees the block and the AGFL reserve pool
-> > adjustment is irrelevant as the in-core res counters are initialized
-> > from the current state of the fs after log recovery has completed (so
-> > even if we knew this was an agfl block, attempting reservation
-> > adjustments at recovery time would probably be wrong).
-> > 
-> > That aside, looking through the perag res code had me a bit curious
-> > about why we reserve all agfl blocks in the first place. IIUC, the AGFL
-> > reserve pool actually serves the rmapbt, since that (and that alone) is
-> > what the mount time reservation is based on. AGFL blocks can be used for
-> > other purposes, however, and the current runtime reservation is adjusted
-> > based on all AGFL activity. Is there a reason this reserve pool does not
-> > specifically target rmapbt allocations? Doesn't not doing so allow some
-> > percentage of the rmapbt reserved blocks to be consumed by other
-> > structures (alloc btrees) until/unless the fs is remounted? I'm
-> > wondering if specifically there's a risk of something like the
-> > following:
-> > 
-> > - mount fs with some number N of AGFL reserved blocks based on current
-> >   rmapbt state. Suppose the size of the rmapbt is R.
-> > - A bunch of agfl blocks are used over time (U). Suppose 50% of those go
-> >   to the rmapbt and the other 50% to alloc btrees and whatnot.
-> >   ar_reserved is reduced by U, but R only increases by U/2.
-> > - a bunch more unrelated physical allocations occur and consume all
-> >   non-reserved space
-> > - the fs unmounts/mounts and the perag code looks for the remaining U/2
-> >   blocks to reserve for the rmapbt, but not all of those blocks are
-> >   available because we depleted the reserved pool faster than the rmapbt
-> >   grew.
-> > 
-> > Darrick, hm? FWIW, a quick test to allocate 100% of an AG to a file,
-> > punch out every other block for a few minutes and then remount kind of
-> > shows what I'm wondering about:
-> > 
-> >  mount-3215  [002] ...1  1642.401846: xfs_ag_resv_init: dev 253:3 agno 0 resv 2 freeblks 259564 flcount 6 resv 3193 ask 3194 len 3194
-> > ...
-> >  <...>-28260 [000] ...1  1974.946866: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36317 flcount 9 resv 2936 ask 3194 len 1
-> >  <...>-28428 [002] ...1  1976.371830: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36483 flcount 9 resv 2935 ask 3194 len 1
-> >  <...>-28490 [002] ...1  1976.898147: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36544 flcount 9 resv 2934 ask 3194 len 1
-> >  <...>-28491 [002] ...1  1976.907967: xfs_ag_resv_alloc_extent: dev 253:3 agno 0 resv 2 freeblks 36544 flcount 9 resv 2933 ask 3194 len 1
-> > umount-28664 [002] ...1  1983.335444: xfs_ag_resv_free: dev 253:3 agno 0 resv 2 freeblks 36643 flcount 10 resv 2932 ask 3194 len 0
-> >  mount-28671 [000] ...1  1991.396640: xfs_ag_resv_init: dev 253:3 agno 0 resv 2 freeblks 36643 flcount 10 resv 3038 ask 3194 len 3194
+on Wed, Jan 10, 2018 at 09:10:55AM -0500, Phil Turmel wrote:
+> On 01/09/2018 05:25 PM, Dave Chinner wrote:
 > 
-> Yep, that's a bug.  Our current agfl doesn't have much of a way to
-> signal to the perag reservation code that it's using blocks for the
-> rmapbt vs. any other use, so we use up the reservation and then pull
-> from the non-reserved free space after that, with the result that
-> sometimes we can blow the assert in xfs_ag_resv_init.  I've not been
-> able to come up with a convincing way to fix this problem, largely
-> because of:
+> > It's nice to know that MD has redefined RAID-10 to be different to
+> > the industry standard definition that has been used for 20 years and
+> > optimised filesystem layouts for.  Rotoring data across odd numbers
+> > of disks like this is going to really, really suck on filesystems
+> > that are stripe layout aware..
 > 
+> You're a bit late to this party, Dave.  MD has implemented raid10 like
+> this as far back as I can remember, and it is especially valuable when
+> running more than two copies.  Running raid10,n3 across four or five
+> devices is a nice capacity boost without giving up triple copies (when
+> multiples of three aren't available) or giving up the performance of
+> mirrored raid.
 
-Ok..
+XFS comes from a different background - high performance, high
+reliability and hardware RAID storage. Think hundreds of drives in a
+filesystem, not a handful. i.e. The XFS world is largely enterprise
+and HPC storage, not small DIY solutions for a home or back-room
+office.  We live in a different world, and MD rarely enters mine.
 
-> > We consume the res as we go, unmount with some held reservation value,
-> > immediately remount and the associated reservation has jumped by 100
-> > blocks or so. (Granted, whether this can manifest into a tangible
-> > problem may be another story altogether.).
+> > For example, XFS has hot-spot prevention algorithms in it's
+> > internal physical layout for striped devices. It aligns AGs across
+> > different stripe units so that metadata and data doesn't all get
+> > aligned to the one disk in a RAID0/5/6 stripe. If the stripes are
+> > rotoring across disks themselves, then we're going to end up back in
+> > the same position we started with - multiple AGs aligned to the
+> > same disk.
 > 
-> It's theoretically possible -- even with the perag reservation
-> functioning perfectly we still can run the ag totally out of blocks if
-> the rmap expands beyond our assumed max rmapbt size of max(1 record per
-> block, 1% of the ag).
+> All of MD's default raid5 and raid6 layouts rotate stripes, too, so that
+> parity and syndrome are distributed uniformly.
+
+Well, yes, but it appears you haven't thought through what that
+typically means.  Take a 4+1, chunk size 128k, stripe width 512k
+
+A	B	C	D	E
+0	0	0	0	P
+P	1	1	1	1
+2	P	2	2	2
+3	3	P	3	3
+4	4	4	P	4
+
+For every 5 stripe widths, each disk holds one stripe unit of
+parity. Hence 80% of data accesses aligned to a specific data offset
+hit that disk. i.e. disk A is hit by 0-128k, parity for 512-1024k,
+1024-1152k, 1536-1664k and 2048-2176k. IOWs, if we align stuff to
+512k, we're going to hit disk A 80% of the time and disk B 20% of
+the time.
+
+So, if mkfs.xfs ends up aligning all AGs to a multiple of 512k, then
+all our static AG metadata is aligned to disk A. Further, all the
+AGs will align their first stripe unit in a stripe width to Disk A,
+too.  Hence this results in a major IO hotspot on disk A, and
+smaller hotspot on disk B. Disks C, D, and E will have the least IO
+load on them.
+
+By telling XFS that the stripe unit is 128k and the stripe width is
+512k, we can avoid this problem. mkfs.xfs will rotor it's AG
+alignment by some number of stripe units at a time. i.e. AG 0 aligns
+to disk A, AG 1 aligns to disk B, AG 2 aligns to disk 3, and so on.
+
+The result is that base alignment used by the filesystem is now
+distributed evenly across all disks in the RAID array and so all
+disks get loaded evenly. The hot spots go away because the
+filesystem has aligned it's layout appropriately for the underlying
+storage geometry.  This applies to any RAID geometry that stripes
+data across multiple disks in a regular/predictable pattern.
+
+[ I'd cite an internal SGI paper written in 1999 that measured and
+analysed all this on RAID0 in real world workloads and industry
+standard benchmarks like AIM7 and SpecSFS and lead to the mkfs.xfs
+changes I described above, but, well, I haven't had access to that
+since I left SGI 10 years ago... ]
+
+> > IMO, odd-numbered disks in RAID-10 should be considered harmful and
+> > never used....
 > 
-> Say you have agblocks = 11000, allocate 50% of the AG to a file, then
-> reflink that extent into 10000 other files.  Then dirty every other
-> block in each of the 10000 reflink copies.  Even if all the dirtied
-> blocks end up in some other AG, we've still expanded the number of rmap
-> records from 10001 to 5000 * 10000 == 50,000,000, which is much bigger
-> than our original estimation.
-> 
+> Users are perfectly able to layer raid1+0 or raid0+1 if they don't want
+> the features of raid10.  Given the advantages of MD's raid10, a pedant
+> could say XFS's lack of support for it should be considered harmful and
+> XFS never used.  (-:
 
-Yeah, though I think the effectiveness of the maximum sized rmapbt
-estimation is a separate issue from the accuracy of the reservation
-accounting system. The latter makes me worry that certain, sustained
-workloads could amplify the divergence between runtime accounting and
-reality such that the reservation system is ineffective even in cases
-that don't test the worst case estimation. That may be less likely in
-the current situation where the AGFL consumers are semi-related, but
-it's hard to characterize.
+MD RAID is fine with XFS as long as you use a sane layout and avoid
+doing stupid things that require reshaping and changing the geometry
+of the underlying device. Reshaping is where the trouble all
+starts...
 
-> Unfortunately the options here aren't good -- we can't reserve enough
-> blocks to cover the maximal rmapbt when reflink is enabled, so the best
-> we could do is fail write_begin with ENOSPC if the shared extent's AG is
-> critically low on reservation, but that kinda sucks because at that
-> point the CoW /should/ be moving blocks (and therefore mappings) away
-> from the full AG.
-> 
+Cheers,
 
-Two potential options came to mind when reading the code:
-
-- Factor all possible AGFL consumers into the perag AGFL reservation
-  calculation to address the impedence mismatch between the calculation
-  and runtime accounting.
-- Refactor the RESV_AGFL reservation into an RESV_RMAPBT reservation
-  that sits on top of the AGFL rather than behind it.
-
-... neither of which is fully thought out from a sanity perspective.
-
-The former strikes me as significantly more complicated as it would
-require the reservation calculation (and estimation) to account for all
-possible consumers of the AGFL. That comes along with all the expected
-future maintenance cost for future AGFL consumers. Add to that the fact
-that the reservation is really only needed for the rmapbt at this point
-in time and this seems like an undesirable option.
-
-The latter more simply moves the accounting to where rmapbt blocks are
-consumed/freed, irrespective of where the blocks are allocated from. I
-_think_ that should allow for accurate reservation accounting without
-losing any major capability (i.e., the reservation value is still an
-estimation in the end), but I could be missing something in the bowels
-of the res. code. I do wonder a bit about the reservation
-over-protecting blocks in the free space btrees based on the current
-AGFL population, but it's not immediately clear to me if or how much
-that matters (and perhaps is something that could be addressed,
-anyways). Thoughts?
-
-Brian
-
-> (We already cut off reflinking when the perag reservations are
-> critically low, but that's only because we assume the caller will fall
-> back to a physical copy and that the physical copy will land in some
-> other AG.)
-> 
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > Brian
-> > > 
-> > > > Cheers,
-> > > > 
-> > > > Dave.
-> > > > -- 
-> > > > Dave Chinner
-> > > > david@fromorbit.com
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
