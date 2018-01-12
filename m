@@ -1,85 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43706 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965732AbeAKThw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 14:37:52 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 7/8] libxfs: add function to free all bufferse in bcache
-Date: Thu, 11 Jan 2018 13:37:37 -0600
-Message-Id: <1515699458-6925-8-git-send-email-sandeen@sandeen.net>
-In-Reply-To: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
-References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+Received: from aserp2130.oracle.com ([141.146.126.79]:56496 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965183AbeALWHO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 17:07:14 -0500
+Date: Fri, 12 Jan 2018 14:07:05 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: account finobt blocks properly in perag
+ reservation
+Message-ID: <20180112220705.GY5602@magnolia>
+References: <20180111194024.28775-1-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180111194024.28775-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-libxfs_bcache_purge simply moves all "free" buffers
-onto the xfs_buf_freelist mru list; add a new function to
-actually free them when we tear everything down, so leak
-checkers don't go nuts about lots of unfreed xfs_bufs
-at exit.
+On Thu, Jan 11, 2018 at 02:40:24PM -0500, Brian Foster wrote:
+> XFS started using the perag metadata reservation pool for free inode
+> btree blocks in commit 76d771b4cbe33 ("xfs: use per-AG reservations
+> for the finobt"). To handle backwards compatibility, finobt blocks
+> are accounted against the pool so long as the full reservation is
+> available at mount time. Otherwise the ->m_inotbt_nores flag is set
+> and the filesystem falls back to the traditional per-transaction
+> finobt reservation.
+> 
+> This commit has two problems:
+> 
+> - finobt blocks are always accounted against the metadata
+>   reservation on allocation, regardless of ->m_inotbt_nores state
+> - finobt blocks are never returned to the reservation pool on free
+> 
+> The first problem affects reflink+finobt filesystems where the full
+> finobt reservation is not available at mount time. finobt blocks are
+> essentially stolen from the reflink reservation, putting refcountbt
+> management at risk of allocation failure. The second problem is an
+> unconditional leak of metadata reservation whenever finobt is
+> enabled.
+> 
+> Update the finobt block allocation callouts to consider
+> ->m_inotbt_nores and account blocks appropriately. Blocks should be
+> consistently accounted against the metadata pool when
+> ->m_inotbt_nores is false and otherwise tagged as RESV_NONE.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
- libxfs/init.c      |  2 ++
- libxfs/libxfs_io.h |  1 +
- libxfs/rdwr.c      | 16 ++++++++++++++++
- 3 files changed, 19 insertions(+)
+Looks ok, will test...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 7bde8b7..aea308b 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -889,6 +889,8 @@ void
- libxfs_destroy(void)
- {
- 	manage_zones(1);
-+	libxfs_bcache_purge();
-+	libxfs_bcache_free();
- 	cache_destroy(libxfs_bcache);
- }
- 
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 2fce04d..81d2804 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -191,6 +191,7 @@ extern void	libxfs_readbuf_verify(struct xfs_buf *bp,
- 			const struct xfs_buf_ops *ops);
- extern xfs_buf_t *libxfs_getsb(struct xfs_mount *, int);
- extern void	libxfs_bcache_purge(void);
-+extern void	libxfs_bcache_free(void);
- extern void	libxfs_bcache_flush(void);
- extern void	libxfs_purgebuf(xfs_buf_t *);
- extern int	libxfs_bcache_overflowed(void);
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index c5ffd4d..1dcabdd 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1278,6 +1278,22 @@ libxfs_bulkrelse(
- }
- 
- /*
-+ * Free everything from the xfs_buf_freelist MRU, used at final teardown
-+ */
-+void
-+libxfs_bcache_free(void)
-+{
-+	struct list_head	*cm_list;
-+	xfs_buf_t		*bp, *next;
-+
-+ 	cm_list = &xfs_buf_freelist.cm_list;
-+	list_for_each_entry_safe(bp, next, cm_list, b_node.cn_mru) {
-+		free(bp->b_addr);
-+		free(bp);
-+	}
-+}
-+
-+/*
-  * When a buffer is marked dirty, the error is cleared. Hence if we are trying
-  * to flush a buffer prior to cache reclaim that has an error on it it means
-  * we've already tried to flush it and it failed. Prevent repeated corruption
--- 
-1.8.3.1
-
+> ---
+> 
+> v2:
+> - Update both allocation and free paths to consider ->m_inotbt_nores.
+> v1: https://marc.info/?l=linux-xfs&m=151552296126950&w=2
+> 
+>  fs/xfs/libxfs/xfs_ialloc_btree.c | 29 +++++++++++++++++++++++++----
+>  1 file changed, 25 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> index 47f44d624cb1..af197a5f3a82 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> @@ -141,21 +141,42 @@ xfs_finobt_alloc_block(
+>  	union xfs_btree_ptr	*new,
+>  	int			*stat)
+>  {
+> +	if (cur->bc_mp->m_inotbt_nores)
+> +		return xfs_inobt_alloc_block(cur, start, new, stat);
+>  	return __xfs_inobt_alloc_block(cur, start, new, stat,
+>  			XFS_AG_RESV_METADATA);
+>  }
+>  
+>  STATIC int
+> -xfs_inobt_free_block(
+> +__xfs_inobt_free_block(
+>  	struct xfs_btree_cur	*cur,
+> -	struct xfs_buf		*bp)
+> +	struct xfs_buf		*bp,
+> +	enum xfs_ag_resv_type	resv)
+>  {
+>  	struct xfs_owner_info	oinfo;
+>  
+>  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
+>  	return xfs_free_extent(cur->bc_tp,
+>  			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1,
+> -			&oinfo, XFS_AG_RESV_NONE);
+> +			&oinfo, resv);
+> +}
+> +
+> +STATIC int
+> +xfs_inobt_free_block(
+> +	struct xfs_btree_cur	*cur,
+> +	struct xfs_buf		*bp)
+> +{
+> +	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_NONE);
+> +}
+> +
+> +STATIC int
+> +xfs_finobt_free_block(
+> +	struct xfs_btree_cur	*cur,
+> +	struct xfs_buf		*bp)
+> +{
+> +	if (cur->bc_mp->m_inotbt_nores)
+> +		return xfs_inobt_free_block(cur, bp);
+> +	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
+>  }
+>  
+>  STATIC int
+> @@ -380,7 +401,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
+>  	.dup_cursor		= xfs_inobt_dup_cursor,
+>  	.set_root		= xfs_finobt_set_root,
+>  	.alloc_block		= xfs_finobt_alloc_block,
+> -	.free_block		= xfs_inobt_free_block,
+> +	.free_block		= xfs_finobt_free_block,
+>  	.get_minrecs		= xfs_inobt_get_minrecs,
+>  	.get_maxrecs		= xfs_inobt_get_maxrecs,
+>  	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
