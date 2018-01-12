@@ -1,284 +1,299 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35240 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933129AbeAKTmW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 14:42:22 -0500
-Date: Thu, 11 Jan 2018 11:42:19 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:44414 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754016AbeALBJJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 20:09:09 -0500
+Date: Thu, 11 Jan 2018 17:08:51 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] xfs: remove wrappers around b_fspriv
-Message-ID: <20180111194219.GA5602@magnolia>
-References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
- <1515699458-6925-2-git-send-email-sandeen@sandeen.net>
+Subject: Re: [PATCH 01/27] xfs_scrub: create online filesystem scrub program
+Message-ID: <20180112010851.GP5602@magnolia>
+References: <151520348769.2027.9860697266310422360.stgit@magnolia>
+ <151520349393.2027.11445111828418979100.stgit@magnolia>
+ <beabcf8b-4a09-60c9-ad27-c123ddb545b3@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1515699458-6925-2-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <beabcf8b-4a09-60c9-ad27-c123ddb545b3@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 01:37:31PM -0600, Eric Sandeen wrote:
-> From: Christoph Hellwig <hch@lst.de>
+On Thu, Jan 11, 2018 at 06:16:02PM -0600, Eric Sandeen wrote:
+> On 1/5/18 7:51 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Source kernel commit adadbeefb34f755a3477da51035eeeec2c1fde38
+> <man page nitpicking>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
->  libxfs/libxfs_io.h |  2 --
->  libxfs/logitem.c   |  6 +++---
->  libxfs/trans.c     | 48 +++++++++++++++++++++---------------------------
->  libxfs/util.c      |  2 +-
->  4 files changed, 25 insertions(+), 33 deletions(-)
+> > diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
+> > new file mode 100644
+> > index 0000000..95f4fea
+> > --- /dev/null
+> > +++ b/man/man8/xfs_scrub.8
+> > @@ -0,0 +1,117 @@
+> > +.TH xfs_scrub 8
+> > +.SH NAME
+> > +xfs_scrub \- scrub the contents of an XFS filesystem
+> > +.SH SYNOPSIS
+> > +.B xfs_scrub
+> > +[
+> > +.B \-abemnTvVxy
+>                ^
+> > +]
+> > +.I mount-point
 > 
-> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-> index 1209e52..29fb1c7 100644
-> --- a/libxfs/libxfs_io.h
-> +++ b/libxfs/libxfs_io.h
-> @@ -111,8 +111,6 @@ enum xfs_buf_flags_t {	/* b_flags bits */
->  #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
->  #define XFS_BUF_SET_COUNT(bp,cnt)	((bp)->b_bcount = (cnt))
->  
-> -#define XFS_BUF_FSPRIVATE(bp,type)	((type)(bp)->b_fspriv)
-> -#define XFS_BUF_SET_FSPRIVATE(bp,val)	(bp)->b_fspriv = (void *)(val)
+> or block device?
+> 
+> > +.br
+> > +.B xfs_scrub \-V
+>                   ^
+> 
+> If V is special it probably shouldn't be in the first arg string?
 
-/me still hates the unhelpful 'priv' name, but yay for demacroing.
+Yes, fixed.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Do you mean to hide the "-d" option?
+
+-d turn on debug mode; I was going to keep that hidden from users.
+
+> 
+> > +.SH DESCRIPTION
+> > +.B xfs_scrub
+> > +attempts to check and repair all metadata in a mounted XFS filesystem.
+> > +.PP
+> > +.B xfs_scrub
+> > +asks the kernel to scrub all metadata objects in the filesystem.
+> > +Metadata records are scanned for obviously bad values and then
+> > +cross-referenced against other metadata.
+> > +The goal is to establish a threasonable confidence about the consistency
+> 
+> "reasonable"
+
+Fixed.
+
+> > +of the overall filesystem by examining the consistency of individual
+> > +metadata records against the other metadata in the filesystem across the
+> > +entire filesystem.
+> 
+> Redundant, "examining the consistency of individual metadata records against
+> the other medtadata in the filesystem."  would suffice.
+
+Fixed.
+
+> > +Damaged metadata can be rebuilt from other metadata if there is
+> > +sufficient redundancy (and no other corruption) in the metadata.
+> 
+> Again redundant, maybe just "if there is sufficient redundancy within
+> other intact metadata?"
+
+"Damaged metadata can be rebuilt from other metadata if there exists
+redundant data structures which are intact."
+
+?
+
+> > +.PP
+> > +This utility does not know how to correct all errors.
+> > +If the tool cannot fix the detected errors, you must unmount the
+> > +filesystem and run
+> > +.B xfs_repair
+> > +to fix the problems.
+> > +If this tool is not run with either of the
+> > +.B \-n
+> > +or
+> > +.B \-y
+> > +options, then it will optimize the filesystem when possible,
+> > +but it will not try to fix errors.
+> 
+> I think the manpage needs to describe what this optimization might
+> involve, at least at a high level.  Will it fsr all my files? Will
+> it trim my free space?  Will it compact my directories?  Will it ...?
+> What exactly am I agreeing to here? :)
+
+"Optimizations may include, but are not limited to, activities such as
+compacting metadata or bypassing shared block write checks for files
+that no longer share blocks."
+
+> > +.SH OPTIONS
+> > +.TP
+> > +.BI \-a " errors"
+> > +Abort if more than this many errors are found on the filesystem.
+> > +.TP
+> > +.B \-b
+> > +Run in background mode.
+> > +If the option is specified once, only run a single scrubbing thread at a
+> > +time.
+> > +If given more than once, an artificial delay of 100us is added to each
+> > +scrub call to reduce CPU overhead even further.
+> 
+> I wonder, should it take a value instead of -bbbbbbbbb?
+
+More than ten -b and this program gets reallllly slow.  There are
+currently six global fs checks, ten per-AG checks, and seven per-file
+checks.  On my /home filesystem with 4M inodes and 32 AGs that adds up
+to...
+
+6 + (32 * 10) + (4M * 7) == ~28M scrub calls, or 324 days to perform
+a scan.
+
+> > +.TP
+> > +.B \-e
+> > +Specifies what happens when errors are detected.
+> > +If
+> > +.IR shutdown
+> > +is given, the filesystem will be taken offline if errors are found.
+> > +Not all backends can shut down a filesystem.
+> 
+> <user> what's a backend? </user>
+
+Leftover remnant from the days when this was a frankentool that could be
+used to walk filesystems via the standard interfaces.  I removed this
+sentence.
+
+> > +If
+> > +.IR continue
+> > +is given, no action taken if errors are found.
+> > +This is the default.
+> 
+> <user> so how do I know what errors were found? </user>
+
+"Filesystem corruption and optimization opportunities will be logged to
+the standard error stream."
+
+I'll put that at the top.
+
+> > +.TP
+> > +.BI \-m " file"
+> > +Search this file for mounted filesystems instead of /etc/mtab.
+> > +.TP
+> > +.B \-n
+> > +Dry run, do not modify anything in the filesystem.
+> > +This disables all preening and optimization behaviors, and disables
+> > +calling FITRIM on the free space after a successful run.
+> 
+> what if I only want to disable FITRIM?  (-k?)
+
+Oh all right. :)
+
+> Oh, and it runs FITRIM?  Can you mention that more prominently
+> in the behavior description?
+
+I'll put it in the list of optimizations.
+
+> (and should it, given that we have a tool for that purpose?)
+
+Yes we have fstrim but I consider it too scary to run out of the
+blue without checking the health of the free space info first.
+
+> > +.TP
+> > +.BI \-T
+> > +Print timing and memory usage information for each phase.
+> > +.TP
+> > +.B \-v
+> > +Enable verbose mode, which prints periodic status updates.
+> > +.TP
+> > +.B \-V
+> > +Prints the version number and exits.
+> > +.TP
+> > +.B \-x
+> > +Scrub all file data too.
+> 
+> colloquial?  maybe s/too/as well/ 
+
+"Read all file data extents to look for disk errors."
+
+> > +The block list will be sorted in disk order for better performance.
+> 
+> Cool, so when I'm done, my filesystem will have better performance if I use -x?
+> and none of my files will be corrupted!  ;)
+> 
+> The read order is probably an implementation detail that doesn't need to be in
+> the manpage.  It may be worth changing the description a bit to make it
+> clearer that the purpose is to determine readability of every file block?
+> I mean, that should probably be obvious, but ...
+
+Eh, I'll just remove it.
+
+> > +.B xfs_scrub
+> > +will issue O_DIRECT reads to the block device directly.
+> > +If the block device is a SCSI disk, it will issue READ VERIFY commands
+> > +directly to the disk.
+> 
+> + These actions will confirm that all file data blocks can be read from storage.
+> 
+> or something?
+
+Ok, added that verbatim.
+
+> > +.TP
+> > +.B \-y
+> > +Try to repair all filesystem errors.
+> > +If the errors cannot be fixed online, then the filesystem must be taken
+> > +offline for repair.
+> > +.SH EXIT CODE
+> > +The exit code returned by
+> > +.B xfs_scrub
+> > +is the sum of the following conditions:
+> > +.br
+> > +\	0\	\-\ No errors
+> > +.br
+> > +\	1\	\-\ File system errors left uncorrected
+> > +.br
+> > +\	2\	\-\ File system optimizations possible
+> > +.br
+> > +\	4\	\-\ Operational error
+> > +.br
+> > +\	8\	\-\ Usage or syntax error
+> > +.br
+> > +.SH CAVEATS
+> > +.B xfs_scrub
+> > +is an immature utility!
+> 
+> Might it damage my filesystem? ;)
+
+It glides as softly as a piston!
+
+
+
+
+...oh, are we not doing the monorail song?
+
+> > +This program takes advantage of in-kernel scrubbing to verify a given
+> > +data structure with locks held.
+
+"This program takes advantage of in-kernel scrubbing to verify a given
+data structure with locks held and can keep the filesystem busy for a
+long time."
+
+> > +The kernel must support the BULKSTAT, FSGEOMETRY, FSCOUNTS, GET_RESBLKS,
+> > +GETBMAPX, GETFSMAP, INUMBERS, and SCRUB_METADATA ioctls.
+> 
+> Some of those ioctls are ancient and probably don't need to be specified...
+> Can you do anything at all without SCRUB_METADATA?  If not,
+> is SCRUB_METADATA sufficient to determine that the kernel has the rest
+> of what it needs?
+
+SCRUB_METADATA is enough, provided we don't get kernel-tinyfication'd.
+
+> > +This can tie up the system for a while.
+> 
+> Maybe that's a statement to go right after "locks held"
+
+Ok.
+
+> > +.PP
+> > +If errors are found and cannot be repaired, the filesystem must be taken
+> > +offline and repaired.
+> 
+> "unmounted and repaired" might be more specific?  *shrug*
+
+Ok.
 
 --D
 
->  #define XFS_BUF_FSPRIVATE2(bp,type)	((type)(bp)->b_fsprivate2)
->  #define XFS_BUF_SET_FSPRIVATE2(bp,val)	(bp)->b_fsprivate2 = (void *)(val)
->  #define XFS_BUF_FSPRIVATE3(bp,type)	((type)(bp)->b_fsprivate3)
-> diff --git a/libxfs/logitem.c b/libxfs/logitem.c
-> index 4dcc506..0c183b5 100644
-> --- a/libxfs/logitem.c
-> +++ b/libxfs/logitem.c
-> @@ -99,8 +99,8 @@ xfs_buf_item_init(
->  	if (XFS_BUF_FSPRIVATE3(bp, xfs_mount_t *) != mp)
->  		XFS_BUF_SET_FSPRIVATE3(bp, mp);
->  	XFS_BUF_SET_BDSTRAT_FUNC(bp, xfs_bdstrat_cb);
-> -	if (XFS_BUF_FSPRIVATE(bp, void *) != NULL) {
-> -		lip = XFS_BUF_FSPRIVATE(bp, xfs_log_item_t *);
-> +	if (bp->b_fspriv != NULL) {
-> +		lip = bp->b_fspriv;
->  		if (lip->li_type == XFS_LI_BUF) {
->  #ifdef LI_DEBUG
->  			fprintf(stderr,
-> @@ -123,7 +123,7 @@ xfs_buf_item_init(
->  	bip->bli_format.blf_type = XFS_LI_BUF;
->  	bip->bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
->  	bip->bli_format.blf_len = (unsigned short)BTOBB(XFS_BUF_COUNT(bp));
-> -	XFS_BUF_SET_FSPRIVATE(bp, bip);
-> +	bp->b_fspriv = bip;
->  }
->  
->  
-> diff --git a/libxfs/trans.c b/libxfs/trans.c
-> index 3d64f26..6a1901b 100644
-> --- a/libxfs/trans.c
-> +++ b/libxfs/trans.c
-> @@ -297,11 +297,10 @@ libxfs_trans_inode_alloc_buf(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> -	xfs_buf_log_item_t	*bip;
-> +	xfs_buf_log_item_t	*bip = bp->b_fspriv;;
->  
->  	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-> +	ASSERT(bip != NULL);
->  	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
->  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
->  }
-> @@ -364,12 +363,11 @@ libxfs_trans_dirty_buf(
->  	struct xfs_trans	*tp,
->  	struct xfs_buf		*bp)
->  {
-> -	struct xfs_buf_log_item	*bip;
-> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
->  
->  	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-> +	ASSERT(bip != NULL);
->  
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
->  #ifdef XACT_DEBUG
->  	fprintf(stderr, "dirtied buffer %p, transaction %p\n", bp, tp);
->  #endif
-> @@ -393,12 +391,10 @@ libxfs_trans_log_buf(
->  	uint			first,
->  	uint			last)
->  {
-> -	struct xfs_buf_log_item	*bip;
-> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
->  
->  	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
->  
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-> -
->  	xfs_trans_dirty_buf(tp, bp);
->  	xfs_buf_item_log(bip, first, last);
->  }
-> @@ -439,7 +435,7 @@ libxfs_trans_brelse(
->  		return;
->  	}
->  	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-> +	bip = bp->b_fspriv;
->  	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
->  	if (bip->bli_recur > 0) {
->  		bip->bli_recur--;
-> @@ -462,15 +458,14 @@ libxfs_trans_binval(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> -	xfs_buf_log_item_t	*bip;
-> +	xfs_buf_log_item_t	*bip = bp->b_fspriv;
->  #ifdef XACT_DEBUG
->  	fprintf(stderr, "binval'd buffer %p, transaction %p\n", bp, tp);
->  #endif
->  
->  	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-> +	ASSERT(bip != NULL);
->  
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
->  	if (bip->bli_flags & XFS_BLI_STALE)
->  		return;
->  	XFS_BUF_UNDELAYWRITE(bp);
-> @@ -496,7 +491,7 @@ libxfs_trans_bjoin(
->  #endif
->  
->  	xfs_buf_item_init(bp, tp->t_mountp);
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-> +	bip = bp->b_fspriv;
->  	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
->  	XFS_BUF_SET_FSPRIVATE2(bp, tp);
->  }
-> @@ -506,15 +501,14 @@ libxfs_trans_bhold(
->  	xfs_trans_t		*tp,
->  	xfs_buf_t		*bp)
->  {
-> -	xfs_buf_log_item_t	*bip;
-> +	xfs_buf_log_item_t	*bip =bp->b_fspriv;
->  
->  	ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-> +	ASSERT(bp->b_fspriv != NULL);
->  #ifdef XACT_DEBUG
->  	fprintf(stderr, "bhold'd buffer %p, transaction %p\n", bp, tp);
->  #endif
->  
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
->  	bip->bli_flags |= XFS_BLI_HOLD;
->  }
->  
-> @@ -535,7 +529,7 @@ libxfs_trans_get_buf_map(
->  	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
->  	if (bp != NULL) {
->  		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-> +		bip = bp->b_fspriv;
->  		ASSERT(bip != NULL);
->  		bip->bli_recur++;
->  		return bp;
-> @@ -549,7 +543,7 @@ libxfs_trans_get_buf_map(
->  #endif
->  
->  	xfs_buf_item_init(bp, tp->t_mountp);
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
-> +	bip = bp->b_fspriv;
->  	bip->bli_recur = 0;
->  	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
->  
-> @@ -575,7 +569,7 @@ libxfs_trans_getsb(
->  	bp = xfs_trans_buf_item_match(tp, mp->m_dev, &map, 1);
->  	if (bp != NULL) {
->  		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-> +		bip = bp->b_fspriv;
->  		ASSERT(bip != NULL);
->  		bip->bli_recur++;
->  		return bp;
-> @@ -587,7 +581,7 @@ libxfs_trans_getsb(
->  #endif
->  
->  	xfs_buf_item_init(bp, mp);
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
-> +	bip = bp->b_fspriv;
->  	bip->bli_recur = 0;
->  	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
->  
-> @@ -626,8 +620,8 @@ libxfs_trans_read_buf_map(
->  	bp = xfs_trans_buf_item_match(tp, btp, map, nmaps);
->  	if (bp != NULL) {
->  		ASSERT(XFS_BUF_FSPRIVATE2(bp, xfs_trans_t *) == tp);
-> -		ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-> -		bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t*);
-> +		ASSERT(bp->b_fspriv != NULL);
-> +		bip = bp->b_fspriv;
->  		bip->bli_recur++;
->  		goto done;
->  	}
-> @@ -644,7 +638,7 @@ libxfs_trans_read_buf_map(
->  #endif
->  
->  	xfs_buf_item_init(bp, tp->t_mountp);
-> -	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
-> +	bip = bp->b_fspriv;
->  	bip->bli_recur = 0;
->  	xfs_trans_add_item(tp, (xfs_log_item_t *)bip);
->  
-> @@ -732,7 +726,7 @@ inode_item_done(
->  		return;
->  	}
->  
-> -	XFS_BUF_SET_FSPRIVATE(bp, iip);
-> +	bp->b_fspriv = iip;
->  	error = libxfs_iflush_int(ip, bp);
->  	if (error) {
->  		fprintf(stderr, _("%s: warning - iflush_int failed (%d)\n"),
-> @@ -741,7 +735,7 @@ inode_item_done(
->  	}
->  
->  	ip->i_transp = NULL;	/* disassociate from transaction */
-> -	XFS_BUF_SET_FSPRIVATE(bp, NULL);	/* remove log item */
-> +	bp->b_fspriv = NULL;			/* remove log item */
->  	XFS_BUF_SET_FSPRIVATE2(bp, NULL);	/* remove xact ptr */
->  	libxfs_writebuf(bp, 0);
->  #ifdef XACT_DEBUG
-> @@ -760,7 +754,7 @@ buf_item_done(
->  
->  	bp = bip->bli_buf;
->  	ASSERT(bp != NULL);
-> -	XFS_BUF_SET_FSPRIVATE(bp, NULL);	/* remove log item */
-> +	bp->b_fspriv = NULL;			/* remove log item */
->  	XFS_BUF_SET_FSPRIVATE2(bp, NULL);	/* remove xact ptr */
->  
->  	hold = (bip->bli_flags & XFS_BLI_HOLD);
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 8003b26..5f49b82 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -466,7 +466,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
->  	xfs_dinode_t		*dip;
->  	xfs_mount_t		*mp;
->  
-> -	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
-> +	ASSERT(bp-b_fspriv != NULL);
->  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
->  		ip->i_d.di_nextents > ip->i_df.if_ext_max);
->  	ASSERT(ip->i_d.di_version > 1);
-> -- 
-> 1.8.3.1
+> > +.SH SEE ALSO
+> > +.BR xfs_repair (8).
+> 
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
