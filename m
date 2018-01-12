@@ -1,209 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51502 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753808AbeAQWGZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:25 -0500
-Subject: [PATCH 13/29] xfs_scrub: scan filesystem and AG metadata
+Received: from aserp2120.oracle.com ([141.146.126.78]:37662 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965220AbeALWEI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 17:04:08 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0CLvM7X044711
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:08 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2ff5c081qj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:08 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0CM47Qi010675
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:07 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0CM47cC008261
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:07 GMT
+Subject: [PATCH 1/5] xfs: check sb_agblocks and sb_agblklog when validating
+ superblock
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:14 -0800
-Message-ID: <151622659440.31925.9409310697989741930.stgit@magnolia>
-In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
-References: <151622651142.31925.4179778330985746435.stgit@magnolia>
+Date: Fri, 12 Jan 2018 14:04:06 -0800
+Message-ID: <151579464601.8694.5478076755339350941.stgit@magnolia>
+In-Reply-To: <151579463950.8694.320025813242574491.stgit@magnolia>
+References: <151579463950.8694.320025813242574491.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Scrub the filesystem and per-AG metadata.
+Currently, we don't check sb_agblocks or sb_agblklog when we validate
+the superblock, which means that we can fuzz garbage values into those
+values and the mount succeeds.  This leads to all sorts of UBSAN
+warnings in xfs/350 since we can then coerce other parts of xfs into
+shifting by ridiculously large values.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile    |    1 
- scrub/phase2.c    |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.c |    1 
- scrub/xfs_scrub.h |    1 
- 4 files changed, 136 insertions(+)
- create mode 100644 scrub/phase2.c
+ fs/xfs/libxfs/xfs_fs.h |    7 +++++++
+ fs/xfs/libxfs/xfs_sb.c |    3 +++
+ 2 files changed, 10 insertions(+)
 
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 915b801..9edc933 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -32,6 +32,7 @@ filemap.c \
- fscounters.c \
- inodes.c \
- phase1.c \
-+phase2.c \
- scrub.c \
- spacemap.c \
- xfs_scrub.c
-diff --git a/scrub/phase2.c b/scrub/phase2.c
-new file mode 100644
-index 0000000..153ae02
---- /dev/null
-+++ b/scrub/phase2.c
-@@ -0,0 +1,133 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/statvfs.h>
-+#include "xfs.h"
-+#include "path.h"
-+#include "workqueue.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "scrub.h"
-+
-+/* Phase 2: Check internal metadata. */
-+
-+/* Scrub each AG's metadata btrees. */
-+static void
-+xfs_scan_ag_metadata(
-+	struct workqueue		*wq,
-+	xfs_agnumber_t			agno,
-+	void				*arg)
-+{
-+	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	bool				*pmoveon = arg;
-+	bool				moveon;
-+	char				descr[DESCR_BUFSZ];
-+
-+	snprintf(descr, DESCR_BUFSZ, _("AG %u"), agno);
-+
-+	/*
-+	 * First we scrub and fix the AG headers, because we need
-+	 * them to work well enough to check the AG btrees.
-+	 */
-+	moveon = xfs_scrub_ag_headers(ctx, agno);
-+	if (!moveon)
-+		goto err;
-+
-+	/* Now scrub the AG btrees. */
-+	moveon = xfs_scrub_ag_metadata(ctx, agno);
-+	if (!moveon)
-+		goto err;
-+
-+	return;
-+err:
-+	*pmoveon = false;
-+}
-+
-+/* Scrub whole-FS metadata btrees. */
-+static void
-+xfs_scan_fs_metadata(
-+	struct workqueue		*wq,
-+	xfs_agnumber_t			agno,
-+	void				*arg)
-+{
-+	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	bool				*pmoveon = arg;
-+	bool				moveon;
-+
-+	moveon = xfs_scrub_fs_metadata(ctx);
-+	if (!moveon)
-+		*pmoveon = false;
-+}
-+
-+/* Scan all filesystem metadata. */
-+bool
-+xfs_scan_metadata(
-+	struct scrub_ctx	*ctx)
-+{
-+	struct workqueue	wq;
-+	xfs_agnumber_t		agno;
-+	bool			moveon = true;
-+	int			ret;
-+
-+	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
-+			scrub_nproc_workqueue(ctx));
-+	if (ret) {
-+		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
-+		return false;
-+	}
-+
-+	/*
-+	 * In case we ever use the primary super scrubber to perform fs
-+	 * upgrades (followed by a full scrub), do that before we launch
-+	 * anything else.
-+	 */
-+	moveon = xfs_scrub_primary_super(ctx);
-+	if (!moveon)
-+		return moveon;
-+
-+	for (agno = 0; moveon && agno < ctx->geo.agcount; agno++) {
-+		ret = workqueue_add(&wq, xfs_scan_ag_metadata, agno, &moveon);
-+		if (ret) {
-+			moveon = false;
-+			str_error(ctx, ctx->mntpoint,
-+_("Could not queue AG %u scrub work."), agno);
-+			goto out;
-+		}
-+	}
-+
-+	if (!moveon)
-+		goto out;
-+
-+	ret = workqueue_add(&wq, xfs_scan_fs_metadata, 0, &moveon);
-+	if (ret) {
-+		moveon = false;
-+		str_error(ctx, ctx->mntpoint,
-+_("Could not queue filesystem scrub work."));
-+		goto out;
-+	}
-+
-+out:
-+	workqueue_destroy(&wq);
-+	return moveon;
-+}
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index c3ad82f..2755d97 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -362,6 +362,7 @@ run_scrub_phases(
- 		},
- 		{
- 			.descr = _("Check internal metadata."),
-+			.fn = xfs_scan_metadata,
- 		},
- 		{
- 			.descr = _("Scan all inodes."),
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 914490a..7802101 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -94,5 +94,6 @@ struct scrub_ctx {
- void xfs_shutdown_fs(struct scrub_ctx *ctx);
- bool xfs_cleanup_fs(struct scrub_ctx *ctx);
- bool xfs_setup_fs(struct scrub_ctx *ctx);
-+bool xfs_scan_metadata(struct scrub_ctx *ctx);
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index fc4386a..2701ea0 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
+ #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
  
- #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
++/* Limits on sb_agblocks/sb_agblklog */
++#define XFS_AG_BYTES(bblog)	((long long)BBSIZE << (bblog))
++#define XFS_AG_MIN_BYTES	((XFS_AG_BYTES(15)))	/* 16 MB */
++#define XFS_AG_MAX_BYTES	((XFS_AG_BYTES(31)))	/* 1 TB */
++#define XFS_AG_MIN_BLOCKS(blog)	(XFS_AG_MIN_BYTES >> (blog))
++#define XFS_AG_MAX_BLOCKS(blog)	((XFS_AG_MAX_BYTES - 1) >> (blog))
++
+ /* keep the maximum size under 2^31 by a small amount */
+ #define XFS_MAX_LOG_BYTES \
+ 	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 08e44a0..1f81b49 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -253,6 +253,9 @@ xfs_mount_validate_sb(
+ 	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+ 	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
+ 	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
++	    sbp->sb_agblocks < XFS_AG_MIN_BLOCKS(sbp->sb_blocklog)	||
++	    sbp->sb_agblocks > XFS_AG_MAX_BLOCKS(sbp->sb_blocklog)	||
++	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
+ 	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+ 	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+ 	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
 
