@@ -1,155 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56686 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750832AbeAPNM6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Jan 2018 08:12:58 -0500
-Date: Tue, 16 Jan 2018 08:12:56 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: _xfs_buf_find: Block out of range, then umount hung
-Message-ID: <20180116131255.GC52295@bfoster.bfoster>
-References: <20180113145228.GA16780@onthe.net.au>
- <20180115120258.GA44369@bfoster.bfoster>
- <20180116013536.GA10406@onthe.net.au>
+Received: from aserp2130.oracle.com ([141.146.126.79]:35224 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965156AbeALWOP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 17:14:15 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0CMCMuq063588
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:14:14 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2130.oracle.com with ESMTP id 2ff5e302tp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:14:14 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0CM4Dnr025543
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:13 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0CM4DSL017409
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:13 GMT
+Subject: [PATCH 2/5] xfs: don't iunlock unlocked inodes
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 12 Jan 2018 14:04:12 -0800
+Message-ID: <151579465207.8694.2459805113822761321.stgit@magnolia>
+In-Reply-To: <151579463950.8694.320025813242574491.stgit@magnolia>
+References: <151579463950.8694.320025813242574491.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180116013536.GA10406@onthe.net.au>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Dunlop <chris@onthe.net.au>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 16, 2018 at 12:35:36PM +1100, Chris Dunlop wrote:
-> On Mon, Jan 15, 2018 at 07:02:58AM -0500, Brian Foster wrote:
-> > On Sun, Jan 14, 2018 at 01:52:28AM +1100, Chris Dunlop wrote:
-> > > Hi,
-> > > 
-> > > tl;dr: a filesystem corruption (cause unknown) has produced an unkillable
-> > > umount. Is the only recourse to reboot?
-> > 
-> > From this particular state, probably.
-> 
-> Yeah, I figured that and rebooted.
-> 
-> > So for one reason or another, you end up trying to remove a bogus block
-> > number from the AGFL (perhaps the old agfl size issue?).
-> 
-> This stuff?
-> 
-> https://www.spinics.net/lists/xfs/msg42213.html
-> 
-> FYI the filesystem was created on linux-3.18.25 and the error appeared
-> shortly after moving to linux-4.9.76.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yeah, though I guess that was more of a v5 superblock thing which
-probably isn't relevant if the filesystem was from v3.18. Somebody else
-may be able to chime in on that.
+Don't iunlock an unlocked inode, which can happen if the parent pointer
+scrubber bails out with sc->ip unlocked while trying to grab the parent
+directory inode.
 
-> > > Jan 13 19:57:31 b2 kernel: ================================================
-> > > Jan 13 19:57:31 b2 kernel: [ BUG: lock held when returning to user space! ]
-> > > Jan 13 19:57:31 b2 kernel: 4.9.76-otn-00021-g2af03421 #1 Tainted: G        W
-> > > Jan 13 19:57:31 b2 kernel: ------------------------------------------------
-> > > Jan 13 19:57:31 b2 kernel: tp_fstore_op/31412 is leaving the kernel with locks still held!
-> > > Jan 13 19:57:31 b2 kernel: 1 lock held by tp_fstore_op/31412:
-> > > Jan 13 19:57:31 b2 kernel:  #0:  (sb_internal){......}, at: [<ffffffffa07692a3>] xfs_trans_alloc+0xe3/0x130 [xfs]
-> > 
-> > Though it looks like we return to userspace in transaction context..?
-> > This is the same pid as above and the current code looks like the
-> > transaction should be cancelled in xfs_attr_set(). We're somewhere down
-> > in xfs_attr_leaf_addname(), however. From there, both calls to
-> > xfs_defer_finish() jump to out_defer_cancel on failure, which sets
-> > args->trans = NULL before we return. Hmm, that looks like a bug to me.
-> > 
-> > Are you able to reproduce this particular hung unmount behavior? If so,
-> > does anything change with something like the appended hunk? Note that
-> > you may have to backport that to v4.9-<whatever> since it appears that
-> > is before out_defer_cancel was created.
-> 
-> Sorry, wasn't able to reproduce: once it was up again mount didn't succeed:
-> 
-> # mount /dev/sdp1 /var/lib/ceph/osd/ceph-60
-> mount: mount /dev/sdp1 on /var/lib/ceph/osd/ceph-60 failed: Structure needs cleaning
-> # mount -f /dev/sdp1 /var/lib/ceph/osd/ceph-60
-> # umount /var/lib/ceph/osd/ceph-60
-> umount: /var/lib/ceph/osd/ceph-60: not mounted
-> 
-> I tried an 'xfs_repair -L' which found some stuff, but I don't know if the
-> "stuff" was due to the log being lost or part of the original problem:
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/scrub.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-xfs_repair output is usually noisy (and not very useful) when a dirty
-log is zapped. Did you retain a copy of the mount failure error from the
-log?
 
-Anyways, I injected an error at one of the xfs_defer_finish() calls in
-xfs_attr_leaf_addname() and hit the unmount problem:
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 9c177ea..89178b9 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -193,7 +193,8 @@ xfs_scrub_teardown(
+ 		sc->fs_frozen = false;
+ 	}
+ 	if (sc->ip) {
+-		xfs_iunlock(sc->ip, sc->ilock_flags);
++		if (sc->ilock_flags)
++			xfs_iunlock(sc->ip, sc->ilock_flags);
+ 		if (sc->ip != ip_in &&
+ 		    !xfs_internal_inum(sc->mp, sc->ip->i_ino))
+ 			iput(VFS_I(sc->ip));
 
-[  269.007928] ================================================
-[  269.008798] WARNING: lock held when returning to user space!
-[  269.009615] 4.15.0-rc7+ #94 Tainted: G           O    
-[  269.010327] ------------------------------------------------
-[  269.011525] setfattr/1213 is leaving the kernel with locks still held!
-[  269.012275] 1 lock held by setfattr/1213:
-[  269.012704]  #0:  (sb_internal#2){.+.+}, at: [<00000000f32b9a4b>] xfs_trans_alloc+0xe0/0x120 [xfs]
-
-... so we should be able to fix that, at least.
-
-> # xfs_repair -L -vv /dev/sdp1
-> Phase 1 - find and verify superblock...
->        - max_mem = 148590945, icount = 203072, imem = 793, dblock = 233112145, dmem = 113824
->        - block cache size set to 18553288 entries
-> Phase 2 - using internal log
->        - zero log...
-> zero_log: head block 554618 tail block 553989
-> ALERT: The filesystem has valuable metadata changes in a log which is being
-> destroyed because the -L option was used.
->        - scan filesystem freespace and inode maps...
-> bad agbno 4294967295 in agfl, agno 2
-> freeblk count 8 != flcount 7 in ag 2
-> bad agbno 4294967295 in agfl, agno 1
-> freeblk count 7 != flcount 6 in ag 1
-> sb_ifree 42557, counted 42256
-> sb_fdblocks 82529171, counted 82532805
-> ...
-> 
-> The rest of the output didn't look particularly interesting to my untrained
-> eye, but the full output is available at: https://pastebin.com/KD7BKTLu
-> 
-> The mount succeeded after this.
-> 
-> In the end, as I wasn't sure of the status of the data and it was replicated
-> elsewhere anyway, I blew away the filesystem and started again.
-> 
-
-Backups! :)
-
-Brian
-
-> Thanks for your time!
-> 
-> Chris
-> 
-> 
-> > 
-> > Brian
-> > 
-> > ---8<---
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index a76914db72ef..e86c51d39e66 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -717,7 +717,6 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
-> > 	return error;
-> > out_defer_cancel:
-> > 	xfs_defer_cancel(args->dfops);
-> > -	args->trans = NULL;
-> > 	return error;
-> > }
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
