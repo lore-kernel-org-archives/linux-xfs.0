@@ -1,349 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:3006 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750740AbeAOXtp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 18:49:45 -0500
-Date: Tue, 16 Jan 2018 10:49:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 18/21] xfs: cross-reference the rmapbt data with the
- refcountbt
-Message-ID: <20180115234928.GD16421@dastard>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398988306.18741.8223158735554937583.stgit@magnolia>
- <20180109212517.GM5602@magnolia>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:34722 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932860AbeALEQp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 23:16:45 -0500
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0C4E8GZ017814
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 20:16:45 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2fejmxgp1y-4
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 20:16:45 -0800
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v4 2/3] xfs/realtime: Default rtinherit=1, add _require_no_rtinherit function
+Date: Thu, 11 Jan 2018 20:16:18 -0800
+Message-ID: <20180112041619.540900-3-rwareing@fb.com>
+In-Reply-To: <20180112041619.540900-1-rwareing@fb.com>
+References: <20180112041619.540900-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180109212517.GM5602@magnolia>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: darrick.wong@oracle.com, eguan@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Jan 09, 2018 at 01:25:17PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Cross reference the refcount data with the rmap data to check that the
-> number of rmaps for a given block match the refcount of that block, and
-> that CoW blocks (which are owned entirely by the refcountbt) are tracked
-> as well.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: streamline scrubber arguments, remove stack allocated objects
-> ---
->  fs/xfs/scrub/refcount.c |  318 +++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 316 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> index 700f8f1..df18e47 100644
-> --- a/fs/xfs/scrub/refcount.c
-> +++ b/fs/xfs/scrub/refcount.c
-> @@ -50,6 +50,274 @@ xfs_scrub_setup_ag_refcountbt(
->  
->  /* Reference count btree scrubber. */
->  
-> +/*
-> + * Confirming Reference Counts via Reverse Mappings
-> + *
-> + * We want to count the reverse mappings overlapping a refcount record
-> + * (bno, len, refcount), allowing for the possibility that some of the
-> + * overlap may come from smaller adjoining reverse mappings, while some
-> + * comes from single extents which overlap the range entirely.  The
-> + * outer loop is as follows:
-> + *
-> + * 1. For all reverse mappings overlapping the refcount extent,
-> + *    a. If a given rmap completely overlaps, mark it as seen.
-> + *    b. Otherwise, record the fragment for later processing.
-> + *
-> + * Once we've seen all the rmaps, we know that for all blocks in the
-> + * refcount record we want to find $refcount owners and we've already
-> + * visited $seen extents that overlap all the blocks.  Therefore, we
-> + * need to find ($refcount - $seen) owners for every block in the
-> + * extent; call that quantity $target_nr.  Proceed as follows:
-> + *
-> + * 2. Pull the first $target_nr fragments from the list; all of them
-> + *    should start at or before the start of the extent.
-> + *    Call this subset of fragments the working set.
-> + * 3. Until there are no more unprocessed fragments,
-> + *    a. Find the shortest fragments in the set and remove them.
-> + *    b. Note the block number of the end of these fragments.
-> + *    c. Pull the same number of fragments from the list.  All of these
-> + *       fragments should start at the block number recorded in the
-> + *       previous step.
-> + *    d. Put those fragments in the set.
-> + * 4. Check that there are $target_nr fragments remaining in the list,
-> + *    and that they all end at or beyond the end of the refcount extent.
-> + *
-> + * If the refcount is correct, all the check conditions in the algorithm
-> + * should always hold true.  If not, the refcount is incorrect.
+To better exercise the data path code of realtime subvolumes, we will
+set rtinherit=1 during mkfs calls.  For tests which this is not desired
+we introduce a _require_no_rtinherit function to opt out of this
+behavior.
 
-This needs a comment somewhere in here describing the order of
-the records on the fragment list. AFAICT, it's ordered by start
-bno, but I'm not 100% sure and it seems the code is dependent on
-strict ordering of records the frag list....
+Signed-off-by: Richard Wareing <rwareing@fb.com>
+---
+Changes since v3:
+* XFS FS check in _require_no_rtinherit
+* Fixed comment for _require_no_rtinherit to reflect (reworked) function
 
-.....
+Changes since v2:
+* Removed use of RT_INHERT, instead we now simply bail from the test.  Users
+  will have to create two separate configs for realtime one with rtinherit=1
+  in the mkfs options, one without and do separate runs to get full test
+  coverage.
+* Added comments explaining reasons for _require_no_rtinherit declarations
 
-> +	} else {
-> +		/*
-> +		 * This rmap covers only part of the refcount record, so
-> +		 * save the fragment for later processing.
-> +		 */
-> +		frag = kmem_alloc(sizeof(struct xfs_scrub_refcnt_frag),
-> +				KM_MAYFAIL | KM_NOFS);
-> +		if (!frag)
-> +			return -ENOMEM;
-> +		memcpy(&frag->rm, rec, sizeof(frag->rm));
-> +		list_add_tail(&frag->list, &refchk->fragments);
+Changes since v1:
+* None
 
-I'm making the assumption here that we're seeing records in the
-order they are in the rmap tree and that it's in increase startblock
-order, hence the list is ordered that way....
+ common/rc         | 10 ++++++++++
+ tests/generic/250 |  3 +++
+ tests/generic/252 |  3 +++
+ tests/generic/441 |  3 +++
+ tests/xfs/170     |  1 +
+ 5 files changed, 20 insertions(+)
 
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Given a bunch of rmap fragments, iterate through them, keeping
-> + * a running tally of the refcount.  If this ever deviates from
-> + * what we expect (which is the refcountbt's refcount minus the
-> + * number of extents that totally covered the refcountbt extent),
-> + * we have a refcountbt error.
-> + */
-> +STATIC void
-> +xfs_scrub_refcountbt_process_rmap_fragments(
-> +	struct xfs_scrub_refcnt_check	*refchk)
-> +{
-> +	struct list_head		worklist;
-> +	struct xfs_scrub_refcnt_frag	*frag;
-> +	struct xfs_scrub_refcnt_frag	*n;
-> +	xfs_agblock_t			bno;
-> +	xfs_agblock_t			rbno;
-> +	xfs_agblock_t			next_rbno;
-> +	xfs_nlink_t			nr;
-> +	xfs_nlink_t			target_nr;
-> +
-> +	target_nr = refchk->refcount - refchk->seen;
-> +	if (target_nr == 0)
-> +		return;
-> +
-> +	/*
-> +	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
-> +	 * references we haven't found yet.  Pull that many off the
-> +	 * fragment list and figure out where the smallest rmap ends
-> +	 * (and therefore the next rmap should start).  All the rmaps
-> +	 * we pull off should start at or before the beginning of the
-> +	 * refcount record's range.
-> +	 */
-> +	INIT_LIST_HEAD(&worklist);
-> +	rbno = NULLAGBLOCK;
-> +	nr = 1;
-> +
-> +	/* Find all the rmaps that start at or before the refc extent. */
-> +	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> +		if (frag->rm.rm_startblock > refchk->bno)
-> +			goto done;
-
-.... and is where the code implies lowest to highest startblock
-ordering on the frag list.
-
-> +		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> +		if (rbno > bno)
-> +			rbno = bno;
-
-Can we put that check the other way around? we're looking for the
-shortest/smallest end block, so
-
-		if (bno < rbno)
-			rbno = bno;
-
-Makes a lot more sense to me.
-
-> +		list_del(&frag->list);
-> +		list_add_tail(&frag->list, &worklist);
-
-list_move_tail()?
-
-Ok, so we are moving fragments that start before the recount bno to
-the work list.
-
-> +		if (nr == target_nr)
-> +			break;
-> +		nr++;
-> +	}
-> +
-> +	/*
-> +	 * We should have found exactly $target_nr rmap fragments starting
-> +	 * at or before the refcount extent.
-> +	 */
-> +	if (nr != target_nr)
-> +		goto done;
-
-ok. so on error we clean up and free the frag list and work list....
-
-> +
-> +	while (!list_empty(&refchk->fragments)) {
-> +		/* Discard any fragments ending at rbno. */
-> +		nr = 0;
-> +		next_rbno = NULLAGBLOCK;
-> +		list_for_each_entry_safe(frag, n, &worklist, list) {
-
-Ok, this needs to be clearer than it's walking the working set
-of fragments. I had to read this code several times before I worked
-out this is where the "working set" was being processed....
-
-> +			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> +			if (bno != rbno) {
-> +				if (next_rbno > bno)
-> +					next_rbno = bno;
-
-Same comment here about being a next_rbno "smallest bno" variable.
-
-> +				continue;
-> +			}
-> +			list_del(&frag->list);
-> +			kmem_free(frag);
-> +			nr++;
-> +		}
-> +
-> +		/* Empty list?  We're done. */
-> +		if (list_empty(&refchk->fragments))
-> +			break;
-> +
-> +		/* Try to add nr rmaps starting at rbno to the worklist. */
-> +		list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> +			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> +			if (frag->rm.rm_startblock != rbno)
-> +				goto done;
-
-definitely assuming the frag list is ordered here :P
-
-> +			list_del(&frag->list);
-> +			list_add_tail(&frag->list, &worklist);
-> +			if (next_rbno > bno)
-> +				next_rbno = bno;
-> +			nr--;
-> +			if (nr == 0)
-> +				break;
-> +		}
-
-Ok, so if we get here with nr > 0, then we must have emptied the
-fragment list onto the work list, right? At this point, the outer
-loop will terminate. Don't we need to run the worklist processing
-loop one last time?
-
-> +		rbno = next_rbno;
-> +	}
-
-.....
-> +/* Use the rmap entries covering this extent to verify the refcount. */
-> +STATIC void
-> +xfs_scrub_refcountbt_xref_rmap(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_agblock_t			bno,
-> +	xfs_extlen_t			len,
-> +	xfs_nlink_t			refcount)
-> +{
-> +	struct xfs_scrub_refcnt_check	refchk = {
-> +		.sc = sc,
-> +		.bno = bno,
-> +		.len = len,
-> +		.refcount = refcount,
-> +		.seen = 0,
-> +	};
-> +	struct xfs_rmap_irec		low;
-> +	struct xfs_rmap_irec		high;
-> +	struct xfs_scrub_refcnt_frag	*frag;
-> +	struct xfs_scrub_refcnt_frag	*n;
-> +	int				error;
-> +
-> +	if (!sc->sa.rmap_cur)
-> +		return;
-> +
-> +	/* Cross-reference with the rmapbt to confirm the refcount. */
-> +	memset(&low, 0, sizeof(low));
-> +	low.rm_startblock = bno;
-> +	memset(&high, 0xFF, sizeof(high));
-> +	high.rm_startblock = bno + len - 1;
-
-This range query init feels like a familiar pattern now. Helper
-function (separate patch)?
-
-....
-
-> +/* Make sure we have as many refc blocks as the rmap says. */
-> +STATIC void
-> +xfs_scrub_refcount_xref_rmap(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_owner_info		*oinfo,
-> +	xfs_filblks_t			cow_blocks)
-> +{
-> +	xfs_extlen_t			refcbt_blocks = 0;
-> +	xfs_filblks_t			blocks;
-> +	int				error;
-> +
-> +	/* Check that we saw as many refcbt blocks as the rmap knows about. */
-> +	error = xfs_btree_count_blocks(sc->sa.refc_cur, &refcbt_blocks);
-> +	if (!xfs_scrub_btree_process_error(sc, sc->sa.refc_cur, 0, &error))
-> +		return;
-> +	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-> +			&blocks);
-> +	if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur) &&
-> +	    blocks != refcbt_blocks)
-> +		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-> +
-> +	if (!sc->sa.rmap_cur)
-> +		return;
-> +
-> +	/* Check that we saw as many cow blocks as the rmap knows about. */
-> +	xfs_rmap_ag_owner(oinfo, XFS_RMAP_OWN_COW);
-> +	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-> +			&blocks);
-> +	if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur) &&
-> +	    blocks != cow_blocks)
-> +		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-
-Bit of a landmine that this code changes the owner info structure
-that was passed in....
-
-> +}
-> +
->  /* Scrub the refcount btree for some AG. */
->  int
->  xfs_scrub_refcountbt(
->  	struct xfs_scrub_context	*sc)
->  {
->  	struct xfs_owner_info		oinfo;
-> +	xfs_agblock_t			cow_blocks = 0;
-> +	int				error;
->  
->  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
-> -	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
-> -			&oinfo, NULL);
-> +	error = xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
-> +			&oinfo, &cow_blocks);
-> +	if (error)
-> +		return error;
-> +
-> +	if (sc->sa.rmap_cur)
-> +		xfs_scrub_refcount_xref_rmap(sc, &oinfo, cow_blocks);
-
-.... because that's not obvious in this code here if we add anymore
-code after this call.
-
-> +
-> +	return error;
-
-error is zero here, so "return 0" instead?
-
-Cheers,
-
-Dave.
-
+diff --git a/common/rc b/common/rc
+index 76f9d69..cceabce 100644
+--- a/common/rc
++++ b/common/rc
+@@ -33,6 +33,16 @@ BC=$(which bc 2> /dev/null) || BC=
+ VALID_TEST_ID="[0-9]\{3\}"
+ VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
+ 
++# Some tests are not relevant or functional when testing XFS realtime
++# subvolumes along with the rtinherit=1 mkfs option.  In these cases,
++# this test will opt-out of the test.
++_require_no_rtinherit()
++{
++  [ "$FSTYP" = "xfs" ] && echo "$MKFS_OPTIONS" | 
++    egrep -q "rtinherit([^=]|=1)" && \
++    _notrun "rtinherit mkfs option is not supported by this test."
++}
++
+ _require_math()
+ {
+ 	if [ -z "$BC" ]; then
+diff --git a/tests/generic/250 b/tests/generic/250
+index 3c4fe6d..a8fd97e 100755
+--- a/tests/generic/250
++++ b/tests/generic/250
+@@ -48,6 +48,9 @@ _require_scratch
+ _require_dm_target error
+ _require_xfs_io_command "falloc"
+ _require_odirect
++# This test uses "dm" without taking into account the data could be on
++# realtime subvolume, thus the test will fail with rtinherit=1
++_require_no_rtinherit
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/252 b/tests/generic/252
+index ffedd56..b506d59 100755
+--- a/tests/generic/252
++++ b/tests/generic/252
+@@ -47,6 +47,9 @@ _supported_os Linux
+ _require_scratch
+ _require_dm_target error
+ _require_xfs_io_command "falloc"
++# This test uses "dm" without taking into account the data could be on
++# realtime subvolume, thus the test will fail with rtinherit=1
++_require_no_rtinherit
+ _require_aiodio "aiocp"
+ AIO_TEST="src/aio-dio-regress/aiocp"
+ 
+diff --git a/tests/generic/441 b/tests/generic/441
+index 075d877..5fbfece 100755
+--- a/tests/generic/441
++++ b/tests/generic/441
+@@ -47,6 +47,9 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _require_scratch
++# This test uses "dm" without taking into account the data could be on
++# realtime subvolume, thus the test will fail with rtinherit=1
++_require_no_rtinherit
+ 
+ # Generally, we want to avoid journal errors on the extended testcase. Only
+ # unset the -s flag if we have a logdev
+diff --git a/tests/xfs/170 b/tests/xfs/170
+index c5ae8e4..6deef1b 100755
+--- a/tests/xfs/170
++++ b/tests/xfs/170
+@@ -50,6 +50,7 @@ _supported_fs xfs
+ _supported_os Linux
+ 
+ _require_scratch
++_require_no_rtinherit
+ 
+ _check_filestreams_support || _notrun "filestreams not available"
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
+
