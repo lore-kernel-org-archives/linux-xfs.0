@@ -1,107 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48140 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbeAOXP6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 18:15:58 -0500
-Date: Mon, 15 Jan 2018 11:49:12 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/5] xfs: check sb_agblocks and sb_agblklog when
- validating superblock
-Message-ID: <20180115194912.GZ5602@magnolia>
-References: <151579463950.8694.320025813242574491.stgit@magnolia>
- <151579464601.8694.5478076755339350941.stgit@magnolia>
- <20180115144108.GA47688@bfoster.bfoster>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:41244 "EHLO
+        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753469AbeALEQX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 23:16:23 -0500
+Received: from pps.filterd (m0109332.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0C4EGxV012250
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 20:16:22 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 2fegmv1705-3
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 20:16:22 -0800
+From: Richard Wareing <rwareing@fb.com>
+Subject: [PATCH v4 0/3] Fix/harden "quick" tests for realtime subvolumes
+Date: Thu, 11 Jan 2018 20:16:16 -0800
+Message-ID: <20180112041619.540900-1-rwareing@fb.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180115144108.GA47688@bfoster.bfoster>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: darrick.wong@oracle.com, eguan@redhat.com, linux-xfs@vger.kernel.org
 
-On Mon, Jan 15, 2018 at 09:41:09AM -0500, Brian Foster wrote:
-> On Fri, Jan 12, 2018 at 02:04:06PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Currently, we don't check sb_agblocks or sb_agblklog when we validate
-> > the superblock, which means that we can fuzz garbage values into those
-> > values and the mount succeeds.  This leads to all sorts of UBSAN
-> > warnings in xfs/350 since we can then coerce other parts of xfs into
-> > shifting by ridiculously large values.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
-> >  fs/xfs/libxfs/xfs_sb.c |    3 +++
-> >  2 files changed, 10 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index fc4386a..2701ea0 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
-> >  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
-> >  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
-> >  
-> > +/* Limits on sb_agblocks/sb_agblklog */
-> > +#define XFS_AG_BYTES(bblog)	((long long)BBSIZE << (bblog))
-> > +#define XFS_AG_MIN_BYTES	((XFS_AG_BYTES(15)))	/* 16 MB */
-> > +#define XFS_AG_MAX_BYTES	((XFS_AG_BYTES(31)))	/* 1 TB */
-> > +#define XFS_AG_MIN_BLOCKS(blog)	(XFS_AG_MIN_BYTES >> (blog))
-> > +#define XFS_AG_MAX_BLOCKS(blog)	((XFS_AG_MAX_BYTES - 1) >> (blog))
-> > +
-> 
-> Hmm, we have some similar but differently named definitions just above.
-> E.g., XFS_MIN_AG_BLOCKS vs. XFS_AG_MIN_BLOCKS()..? I'm not sure where
-> the 64 block value comes from, but assuming it's valid.. perhaps we
-> should use that field for the block count and new ones for byte values?
+See v3 cover letter, everything still applies.
 
-This whole block of code came from xfs_multidisk.h in xfsprogs... but
-yes, this naming stuff gets a bit confusing.
+Richard Wareing (3):
+  xfs/realtime: Add require_no_realtime function
+  xfs/realtime: Default rtinherit=1, add _require_no_rtinherit function
+  xfs/realtime: Fix direct invocations of xfs_repair
 
-> Regardless of whether we want to check the block count here at all, I
-> think it's more straightforward (and less code) to just define two new
-> XFS_MIN/MAX_AG_BYTES values and then update the checks to use existing
-> conversions in terms of bytes (rather than obfuscate what is really a
-> size check behind block macros). For example, something like:
-> 
-> 	...
-> 	XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_MIN_AG_BYTES ||
-> 	XFS_FSB_TO_B(mp, sbp->ag_agblocks) > XFS_MAX_AG_BYTES ||
-> 	...
+ common/rc         | 28 ++++++++++++++++++++++++++--
+ tests/generic/250 |  3 +++
+ tests/generic/252 |  3 +++
+ tests/generic/441 |  3 +++
+ tests/xfs/070     |  5 ++++-
+ tests/xfs/077     |  2 ++
+ tests/xfs/170     |  1 +
+ tests/xfs/189     |  1 +
+ tests/xfs/284     |  2 ++
+ tests/xfs/291     |  5 ++++-
+ 10 files changed, 49 insertions(+), 4 deletions(-)
 
-Ok, I'll do that.  Thanks for the review!
+-- 
+2.9.5
 
---D
-
-> Brian
-> 
-> >  /* keep the maximum size under 2^31 by a small amount */
-> >  #define XFS_MAX_LOG_BYTES \
-> >  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
-> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > index 08e44a0..1f81b49 100644
-> > --- a/fs/xfs/libxfs/xfs_sb.c
-> > +++ b/fs/xfs/libxfs/xfs_sb.c
-> > @@ -253,6 +253,9 @@ xfs_mount_validate_sb(
-> >  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
-> >  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
-> >  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
-> > +	    sbp->sb_agblocks < XFS_AG_MIN_BLOCKS(sbp->sb_blocklog)	||
-> > +	    sbp->sb_agblocks > XFS_AG_MAX_BLOCKS(sbp->sb_blocklog)	||
-> > +	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
-> >  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
-> >  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
-> >  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
