@@ -1,227 +1,290 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43708 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:45250 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965733AbeAKThw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 14:37:52 -0500
+        id S932346AbeALBaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jan 2018 20:30:12 -0500
+Subject: Re: [PATCH 03/27] xfs_scrub: set up command line argument parsing
+References: <151520348769.2027.9860697266310422360.stgit@magnolia>
+ <151520350632.2027.11272777646597420008.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 8/8] libxfs: Catch non-empty zones on destroy
-Date: Thu, 11 Jan 2018 13:37:38 -0600
-Message-Id: <1515699458-6925-9-git-send-email-sandeen@sandeen.net>
-In-Reply-To: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
-References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+Message-ID: <e9e65539-8811-af76-ebf6-0d75cc261401@sandeen.net>
+Date: Thu, 11 Jan 2018 19:30:11 -0600
+MIME-Version: 1.0
+In-Reply-To: <151520350632.2027.11272777646597420008.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-Move xfs_inode_zone definition to its primary file, and add
-it to the list of zones to release; properly release
-xfs_ili_zone as well.
+On 1/5/18 7:51 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Parse command line options in order to set up the context in which we
+> will scrub the filesystem.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  scrub/common.h    |    8 ++
+>  scrub/xfs_scrub.c |  207 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  scrub/xfs_scrub.h |   34 +++++++++
+>  3 files changed, 249 insertions(+)
+> 
+> 
+> diff --git a/scrub/common.h b/scrub/common.h
+> index f620620..15a59bd 100644
+> --- a/scrub/common.h
+> +++ b/scrub/common.h
+> @@ -48,4 +48,12 @@ void __record_preen(struct scrub_ctx *ctx, const char *descr, const char *file,
+>  #define str_info(ctx, str, ...)		__str_info(ctx, str, __FILE__, __LINE__, __VA_ARGS__)
+>  #define dbg_printf(fmt, ...)		{if (debug > 1) {printf(fmt, __VA_ARGS__);}}
+>  
+> +/* Is this debug tweak enabled? */
+> +static inline bool
+> +debug_tweak_on(
+> +	const char		*name)
+> +{
+> +	return debug && getenv(name) != NULL;
 
-Create and use a kmem_zone_destroy which warns if we are
-releasing a non-empty zone when the LIBXFS_LEAK_CHECK
-environment variable is set, wire this into libxfs_destroy(),
-and call that when various tools exit.
+since it's debug anyway, I wonder if printing
+"FOO_BAR_TWEAK is on" would be useful here.
 
-The LIBXFS_LEAK_CHECK environment variable also causes
-the program to exit with failure when a leak is detected.
+> +}
+> +
+>  #endif /* XFS_SCRUB_COMMON_H_ */
+> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+> index 10116a8..9db3b41 100644
+> --- a/scrub/xfs_scrub.c
+> +++ b/scrub/xfs_scrub.c
+> @@ -20,7 +20,12 @@
+>  #include <stdio.h>
+>  #include <pthread.h>
+>  #include <stdbool.h>
+> +#include <stdlib.h>
+> +#include "platform_defs.h"
+> +#include "xfs.h"
+> +#include "input.h"
+>  #include "xfs_scrub.h"
+> +#include "common.h"
+>  
+>  /*
+>   * XFS Online Metadata Scrub (and Repair)
+> @@ -107,11 +112,213 @@ unsigned int			debug;
+>  /* Should we dump core if errors happen? */
+>  bool				dumpcore;
+>  
+> +/* Display resource usage at the end of each phase? */
+> +bool				display_rusage;
+> +
+> +/* Background mode; higher values insert more pauses between scrub calls. */
+> +unsigned int			bg_mode;
+> +
+> +/* Maximum number of processors available to us. */
+> +int				nproc;
+> +
+> +/* Number of threads we're allowed to use. */
+> +unsigned int			nr_threads;
+> +
+> +/* Verbosity; higher values print more information. */
+> +bool				verbose;
+> +
+> +/* Should we scrub the data blocks? */
+> +bool				scrub_data;
+> +
+> +/* Size of a memory page. */
+> +long				page_size;
+> +
+> +static void __attribute__((noreturn))
+> +usage(void)
+> +{
+> +	fprintf(stderr, _("Usage: %s [OPTIONS] mountpoint\n"), progname);
+> +	fprintf(stderr, _("-a:\tStop after this many errors are found.\n"));
+> +	fprintf(stderr, _("-b:\tBackground mode.\n"));
+> +	fprintf(stderr, _("-e:\tWhat to do if errors are found.\n"));
+> +	fprintf(stderr, _("-m:\tPath to /etc/mtab.\n"));
+> +	fprintf(stderr, _("-n:\tDry run.  Do not modify anything.\n"));
+> +	fprintf(stderr, _("-T:\tDisplay timing/usage information.\n"));
+> +	fprintf(stderr, _("-v:\tVerbose output.\n"));
+> +	fprintf(stderr, _("-V:\tPrint version.\n"));
+> +	fprintf(stderr, _("-x:\tScrub file data too.\n"));
+> +	fprintf(stderr, _("-y:\tRepair all errors.\n"));
+> +
+> +	exit(16);
+> +}
+> +
+>  int
+>  main(
+>  	int			argc,
+>  	char			**argv)
+>  {
+> +	int			c;
+> +	char			*mtab = NULL;
+> +	char			*repairstr = "";
+> +	struct scrub_ctx	ctx = {0};
+> +	unsigned long long	total_errors;
+> +	bool			moveon = true;
+> +	static bool		injected;
+> +	int			ret = 0;
+> +
+>  	fprintf(stderr, "XXX: This program is not complete!\n");
+>  	return 4;
+> +
+> +	progname = basename(argv[0]);
+> +	setlocale(LC_ALL, "");
+> +	bindtextdomain(PACKAGE, LOCALEDIR);
+> +	textdomain(PACKAGE);
+> +
+> +	pthread_mutex_init(&ctx.lock, NULL);
+> +	ctx.mode = SCRUB_MODE_DEFAULT;
+> +	ctx.error_action = ERRORS_CONTINUE;
+> +	while ((c = getopt(argc, argv, "a:bde:m:nTvxVy")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			ctx.max_errors = cvt_u64(optarg, 10);
+> +			if (errno) {
+> +				perror(optarg);
+> +				usage();
+> +			}
+> +			break;
+> +		case 'b':
+> +			nr_threads = 1;
+> +			bg_mode++;
+> +			break;
+> +		case 'd':
+> +			debug++;
+> +			dumpcore = true;
+> +			break;
+> +		case 'e':
+> +			if (!strcmp("continue", optarg))
+> +				ctx.error_action = ERRORS_CONTINUE;
+> +			else if (!strcmp("shutdown", optarg))
+> +				ctx.error_action = ERRORS_SHUTDOWN;
+> +			else
+> +				usage();
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
- copy/xfs_copy.c     |  1 +
- db/init.c           |  2 ++
- include/kmem.h      |  1 +
- libxfs/init.c       | 38 +++++++++++++++++++++++---------------
- libxfs/kmem.c       | 14 ++++++++++++++
- libxfs/rdwr.c       |  2 +-
- mkfs/xfs_mkfs.c     |  1 +
- repair/xfs_repair.c |  1 +
- 8 files changed, 44 insertions(+), 16 deletions(-)
+Nothing tells me what I did wrong here,
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index fb37375..648db86 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -1214,6 +1214,7 @@ main(int argc, char **argv)
- 
- 	check_errors();
- 	libxfs_umount(mp);
-+	libxfs_destroy();
- 
- 	return 0;
- }
-diff --git a/db/init.c b/db/init.c
-index b108a06..29fc344 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -236,5 +236,7 @@ close_devices:
- 		libxfs_device_close(x.logdev);
- 	if (x.rtdev)
- 		libxfs_device_close(x.rtdev);
-+	libxfs_destroy();
-+
- 	return exitcode;
- }
-diff --git a/include/kmem.h b/include/kmem.h
-index 65f0ade..80ce25b 100644
---- a/include/kmem.h
-+++ b/include/kmem.h
-@@ -31,6 +31,7 @@ typedef struct kmem_zone {
- } kmem_zone_t;
- 
- extern kmem_zone_t *kmem_zone_init(int, char *);
-+extern int	kmem_zone_destroy(kmem_zone_t *);
- extern void	*kmem_zone_alloc(kmem_zone_t *, int);
- extern void	*kmem_zone_zalloc(kmem_zone_t *, int);
- 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index aea308b..e32f27c 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -43,9 +43,7 @@ int libxfs_bhash_size;		/* #buckets in bcache */
- 
- int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
- 
--static void manage_zones(int);	/* setup global zones */
--
--kmem_zone_t	*xfs_inode_zone;
-+static int manage_zones(int);	/* setup/teardown global zones */
- 
- /*
-  * dev_map - map open devices to fd.
-@@ -374,11 +372,12 @@ done:
- /*
-  * Initialize/destroy all of the zone allocators we use.
-  */
--static void
-+static int 
- manage_zones(int release)
- {
- 	extern kmem_zone_t	*xfs_buf_zone;
- 	extern kmem_zone_t	*xfs_ili_zone;
-+	extern kmem_zone_t	*xfs_inode_zone;
- 	extern kmem_zone_t	*xfs_ifork_zone;
- 	extern kmem_zone_t	*xfs_buf_item_zone;
- 	extern kmem_zone_t	*xfs_da_state_zone;
-@@ -389,16 +388,19 @@ manage_zones(int release)
- 	extern void		xfs_dir_startup();
- 
- 	if (release) {	/* free zone allocation */
--		kmem_free(xfs_buf_zone);
--		kmem_free(xfs_inode_zone);
--		kmem_free(xfs_ifork_zone);
--		kmem_free(xfs_buf_item_zone);
--		kmem_free(xfs_da_state_zone);
--		kmem_free(xfs_btree_cur_zone);
--		kmem_free(xfs_bmap_free_item_zone);
--		kmem_free(xfs_trans_zone);
--		kmem_free(xfs_log_item_desc_zone);
--		return;
-+		int	leaked = 0;
-+
-+		leaked += kmem_zone_destroy(xfs_buf_zone);
-+		leaked += kmem_zone_destroy(xfs_ili_zone);
-+		leaked += kmem_zone_destroy(xfs_inode_zone);
-+		leaked += kmem_zone_destroy(xfs_ifork_zone);
-+		leaked += kmem_zone_destroy(xfs_buf_item_zone);
-+		leaked += kmem_zone_destroy(xfs_da_state_zone);
-+		leaked += kmem_zone_destroy(xfs_btree_cur_zone);
-+		leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
-+		leaked += kmem_zone_destroy(xfs_trans_zone);
-+		leaked += kmem_zone_destroy(xfs_log_item_desc_zone);
-+		return leaked;
- 	}
- 	/* otherwise initialise zone allocation */
- 	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
-@@ -420,6 +422,8 @@ manage_zones(int release)
- 	xfs_log_item_desc_zone = kmem_zone_init(
- 			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
- 	xfs_dir_startup();
-+
-+	return 0;
- }
- 
- /*
-@@ -888,10 +892,14 @@ libxfs_umount(xfs_mount_t *mp)
- void
- libxfs_destroy(void)
- {
--	manage_zones(1);
-+	int	leaked;
-+
-+	leaked = manage_zones(1);
- 	libxfs_bcache_purge();
- 	libxfs_bcache_free();
- 	cache_destroy(libxfs_bcache);
-+	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
-+		exit(1);
- }
- 
- int
-diff --git a/libxfs/kmem.c b/libxfs/kmem.c
-index c8bcb50..d599b3d 100644
---- a/libxfs/kmem.c
-+++ b/libxfs/kmem.c
-@@ -23,6 +23,20 @@ kmem_zone_init(int size, char *name)
- 	return ptr;
- }
- 
-+int
-+kmem_zone_destroy(kmem_zone_t *zone)
-+{
-+	int	leaked = 0;
-+
-+	if (getenv("LIBXFS_LEAK_CHECK") && zone->allocated) {
-+		leaked = 1;
-+		printf("zone %s freed with %d items allocated\n",
-+					zone->zone_name, zone->allocated);
-+	}
-+	free(zone);
-+	return leaked;
-+}
-+
- void *
- kmem_zone_alloc(kmem_zone_t *zone, int flags)
- {
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 1dcabdd..fdb2865 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1352,8 +1352,8 @@ struct cache_operations libxfs_bcache_operations = {
-  * Inode cache stubs.
-  */
- 
-+kmem_zone_t		*xfs_inode_zone;
- extern kmem_zone_t	*xfs_ili_zone;
--extern kmem_zone_t	*xfs_inode_zone;
- 
- int
- libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 5f1ac9f..e08d1d1 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -4028,6 +4028,7 @@ main(
- 	if (xi.logdev && xi.logdev != xi.ddev)
- 		libxfs_device_close(xi.logdev);
- 	libxfs_device_close(xi.ddev);
-+	libxfs_destroy();
- 
- 	return 0;
- }
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index b2dd91b..312a0d0 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -1082,6 +1082,7 @@ _("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\
- 	if (x.logdev && x.logdev != x.ddev)
- 		libxfs_device_close(x.logdev);
- 	libxfs_device_close(x.ddev);
-+	libxfs_destroy();
- 
- 	if (verbose)
- 		summary_report();
--- 
-1.8.3.1
+# scrub/xfs_scrub -e make_it_so /mnt/test
+Usage: xfs_scrub [OPTIONS] mountpoint
+-a:	Stop after this many errors are found.
+-b:	Background mode.
+-C:	Print progress information to this fd.
+-e:	What to do if errors are found.
+...
 
+I told it what to do... what's wrong?
+
+> +			break;
+> +		case 'm':
+> +			mtab = optarg;
+> +			break;
+> +		case 'n':
+> +			if (ctx.mode != SCRUB_MODE_DEFAULT) {
+> +				fprintf(stderr,
+> +_("Only one of the options -n or -y may be specified.\n"));
+> +				return 1;
+> +			}
+> +			ctx.mode = SCRUB_MODE_DRY_RUN;
+> +			break;
+> +		case 'T':
+> +			display_rusage = true;
+> +			break;
+> +		case 'v':
+> +			verbose = true;
+> +			break;
+> +		case 'V':
+> +			fprintf(stdout, _("%s version %s\n"), progname,
+> +					VERSION);
+> +			fflush(stdout);
+> +			exit(0);
+> +		case 'x':
+> +			scrub_data = true;
+> +			break;
+> +		case 'y':
+> +			if (ctx.mode != SCRUB_MODE_DEFAULT) {
+> +				fprintf(stderr,
+> +_("Only one of the options -n or -y may be specified.\n"));
+> +				return 1;
+> +			}
+> +			ctx.mode = SCRUB_MODE_REPAIR;
+> +			break;
+> +		case '?':
+
+'?' isn't in the getopt string ...
+
+# scrub/xfs_scrub ?
+xfs_scrub: could not stat: ?: No such file or directory
+
+
+> +			/* fall through */
+> +		default:
+> +			usage();
+> +		}
+> +	}
+> +
+> +	/* Override thread count if debugger */
+> +	if (debug_tweak_on("XFS_SCRUB_THREADS")) {
+
+can you document all these tweaks somewhere near the top in a comment?
+
+> +		unsigned int	x;
+> +
+> +		x = cvt_u32(getenv("XFS_SCRUB_THREADS"), 10);
+> +		if (errno) {
+> +			perror("nr_threads");
+> +			usage();
+> +		}
+> +		nr_threads = x;
+> +	}
+> +
+> +	if (optind != argc - 1)
+> +		usage();
+> +
+> +	ctx.mntpoint = strdup(argv[optind]);
+> +
+> +	/*
+> +	 * If the user did not specify an explicit mount table, try to use
+> +	 * /proc/mounts if it is available, else /etc/mtab.  We prefer
+> +	 * /proc/mounts because it is kernel controlled, while /etc/mtab
+> +	 * may contain garbage that userspace tools like pam_mounts wrote
+> +	 * into it.
+> +	 */
+> +	if (!mtab) {
+> +		if (access(_PATH_PROC_MOUNTS, R_OK) == 0)
+> +			mtab = _PATH_PROC_MOUNTS;
+> +		else
+> +			mtab = _PATH_MOUNTED;
+> +	}
+> +
+> +	/* How many CPUs? */
+> +	nproc = sysconf(_SC_NPROCESSORS_ONLN);
+> +	if (nproc < 1)
+> +		nproc = 1;
+> +
+> +	/* Set up a page-aligned buffer for read verification. */
+> +	page_size = sysconf(_SC_PAGESIZE);
+> +	if (page_size < 0) {
+> +		str_errno(&ctx, ctx.mntpoint);
+> +		goto out;
+> +	}
+> +
+> +	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
+> +		ctx.mode = SCRUB_MODE_REPAIR;
+> +		injected = true;
+> +	}
+
+what is "injected" used for?  How could it already be set?.
+
+> +
+> +	if (xfs_scrub_excessive_errors(&ctx))
+> +		str_info(&ctx, ctx.mntpoint, _("Too many errors; aborting."));
+
+wait wut?  oh right, you'll add $DO_STUFF above this in later patches ;)
+
+
+Rest looks ok
+
+-Eric
