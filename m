@@ -1,83 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42740 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751228AbeAPMss (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Jan 2018 07:48:48 -0500
-Date: Tue, 16 Jan 2018 07:48:46 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 1/5] xfs: check sb_agblocks and sb_agblklog when
- validating superblock
-Message-ID: <20180116124846.GA52295@bfoster.bfoster>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39350 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965193AbeALWEc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 17:04:32 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0CLvQIu044747
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:32 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2ff5c082by-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:32 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0CM4Vbr010643
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:31 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0CM4Vvc008431
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:31 GMT
+Subject: [PATCH 5/5] xfs: btree format ifork loader should check for zero
+ numrecs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 12 Jan 2018 14:04:30 -0800
+Message-ID: <151579467015.8694.7629126647166170386.stgit@magnolia>
+In-Reply-To: <151579463950.8694.320025813242574491.stgit@magnolia>
 References: <151579463950.8694.320025813242574491.stgit@magnolia>
- <151579464601.8694.5478076755339350941.stgit@magnolia>
- <20180115200313.GC5602@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180115200313.GC5602@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 15, 2018 at 12:03:13PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Currently, we don't check sb_agblocks or sb_agblklog when we validate
-> the superblock, which means that we can fuzz garbage values into those
-> values and the mount succeeds.  This leads to all sorts of UBSAN
-> warnings in xfs/350 since we can then coerce other parts of xfs into
-> shifting by ridiculously large values.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: simplify ag min/max size definitions
-> ---
->  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
->  fs/xfs/libxfs/xfs_sb.c |    3 +++
->  2 files changed, 10 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index fc4386a..3ab1870 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
->  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
->  
-> +/*
-> + * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
-> + * 16MB or larger than 1TB.
-> + */
-> +#define XFS_AG_MIN_BYTES	(1ULL << 24)	/* 16 MB */
-> +#define XFS_AG_MAX_BYTES	(1ULL << 40)	/* 1 TB */
-> +
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Dave's comment aside... just a nit: the definitions above use
-XFS_[MIN|MAX]_* naming rather than XFS_AG_*. It would be nice to be
-consistent there if we stick with these.
+A btree format inode fork with zero records makes no sense, so reject it
+if we see it, or else we can miscalculate memory allocations.  Found by
+zeroes fuzzing {a,u3}.bmbt.numrecs in xfs/{374,378,412} with KASAN.
 
-Brian
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c |    1 +
+ 1 file changed, 1 insertion(+)
 
->  /* keep the maximum size under 2^31 by a small amount */
->  #define XFS_MAX_LOG_BYTES \
->  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 08e44a0..bdb4f74 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -253,6 +253,9 @@ xfs_mount_validate_sb(
->  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
->  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
->  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
-> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_AG_MIN_BYTES	||
-> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_AG_MAX_BYTES	||
-> +	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
->  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
->  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
->  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 84eaf17..8c01dd5 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -307,6 +307,7 @@ xfs_iformat_btree(
+ 	 */
+ 	if (unlikely(XFS_IFORK_NEXTENTS(ip, whichfork) <=
+ 					XFS_IFORK_MAXEXT(ip, whichfork) ||
++		     nrecs == 0 ||
+ 		     XFS_BMDR_SPACE_CALC(nrecs) >
+ 					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+ 		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks) ||
+
