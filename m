@@ -1,123 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from resqmta-po-06v.sys.comcast.net ([96.114.154.165]:60916 "EHLO
-        resqmta-po-06v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751238AbeAPSRF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 13:17:05 -0500
-Date: Tue, 16 Jan 2018 12:17:01 -0600 (CST)
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: kmem_cache_attr (was Re: [PATCH 04/36] usercopy: Prepare for
- usercopy whitelisting)
-In-Reply-To: <alpine.DEB.2.20.1801161205590.1771@nuc-kabylake>
-Message-ID: <alpine.DEB.2.20.1801161215500.2945@nuc-kabylake>
-References: <1515531365-37423-1-git-send-email-keescook@chromium.org> <1515531365-37423-5-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1801101219390.7926@nuc-kabylake> <20180114230719.GB32027@bombadil.infradead.org> <alpine.DEB.2.20.1801160913260.3908@nuc-kabylake>
- <20180116160525.GF30073@bombadil.infradead.org> <alpine.DEB.2.20.1801161049320.5162@nuc-kabylake> <20180116174315.GA10461@bombadil.infradead.org> <alpine.DEB.2.20.1801161205590.1771@nuc-kabylake>
+Received: from mout.kundenserver.de ([212.227.126.187]:64960 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754555AbeAMIR3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Jan 2018 03:17:29 -0500
+Date: Sat, 13 Jan 2018 09:17:25 +0100
+From: Heinz Diehl <htd+ml@fritha.org>
+Subject: Re: XFS journal corruption after every reboot/shutdown
+Message-ID: <20180113081725.GA27564@fritha.org>
+Reply-To: linux-xfs@vger.kernel.org
+References: <20180111224451.GA3413@fritha.org>
+ <20180111231358.GW16421@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180111231358.GW16421@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, Laura Abbott <labbott@redhat.com>, Mark Rutland <mark.rutland@arm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Draft patch of how the data structs could change. kmem_cache_attr is read
-only.
+On 12.01.2018, Dave Chinner wrote: 
 
-Index: linux/include/linux/slab.h
-===================================================================
---- linux.orig/include/linux/slab.h
-+++ linux/include/linux/slab.h
-@@ -135,9 +135,17 @@ struct mem_cgroup;
- void __init kmem_cache_init(void);
- bool slab_is_available(void);
+> On XFS, this leaves the journal dirty so that when the filesystem
+> is mounted on boot it can clean up things like orphan inodes that
+> were present at the time of the remount,ro (e.g. open but unlinked
+> files).
 
--struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
--			slab_flags_t,
--			void (*)(void *));
-+typedef kmem_cache_ctor void (*ctor)(void *);
-+
-+struct kmem_cache_attr {
-+	char name[16];
-+	unsigned int size;
-+	unsigned int align;
-+	slab_flags_t flags;
-+	kmem_cache_ctor ctor;
-+}
-+
-+struct kmem_cache *kmem_cache_create(const kmem_cache_attr *);
- void kmem_cache_destroy(struct kmem_cache *);
- int kmem_cache_shrink(struct kmem_cache *);
+> IOWs, what you are seeing is normal filesystem behaviour that is a
+> result of systemd being unable to unmount the root filesystem
+> cleanly because it still has references open to the root filesystem.
 
-Index: linux/include/linux/slab_def.h
-===================================================================
---- linux.orig/include/linux/slab_def.h
-+++ linux/include/linux/slab_def.h
-@@ -10,6 +10,7 @@
+Ok, I see. Thanks for clarifying!
 
- struct kmem_cache {
- 	struct array_cache __percpu *cpu_cache;
-+	struct kmem_cache_attr *attr;
+> > I have also filed a bug report here because there's F27 on all machines:
+> > https://bugzilla.redhat.com/show_bug.cgi?id=1533620
+ 
+> Not a bug, please close it.
 
- /* 1) Cache tunables. Protected by slab_mutex */
- 	unsigned int batchcount;
-@@ -35,14 +36,9 @@ struct kmem_cache {
- 	struct kmem_cache *freelist_cache;
- 	unsigned int freelist_size;
+I remember a time not too long ago where the root fs was clean after a
+reboot/shutdown (maybe around F25?). So something must have changed
+in the way systemd performs a reboot/shutdown..
 
--	/* constructor func */
--	void (*ctor)(void *obj);
--
- /* 4) cache creation/removal */
--	const char *name;
- 	struct list_head list;
- 	int refcount;
--	int object_size;
- 	int align;
-
- /* 5) statistics */
-Index: linux/include/linux/slub_def.h
-===================================================================
---- linux.orig/include/linux/slub_def.h
-+++ linux/include/linux/slub_def.h
-@@ -83,9 +83,9 @@ struct kmem_cache {
- 	struct kmem_cache_cpu __percpu *cpu_slab;
- 	/* Used for retriving partial slabs etc */
- 	slab_flags_t flags;
-+	struct kmem_cache_attr *attr;
- 	unsigned long min_partial;
- 	int size;		/* The size of an object including meta data */
--	int object_size;	/* The size of an object without meta data */
- 	int offset;		/* Free pointer offset. */
- #ifdef CONFIG_SLUB_CPU_PARTIAL
- 	int cpu_partial;	/* Number of per cpu partial objects to keep around */
-@@ -97,12 +97,10 @@ struct kmem_cache {
- 	struct kmem_cache_order_objects min;
- 	gfp_t allocflags;	/* gfp flags to use on each alloc */
- 	int refcount;		/* Refcount for slab cache destroy */
--	void (*ctor)(void *);
- 	int inuse;		/* Offset to metadata */
- 	int align;		/* Alignment */
- 	int reserved;		/* Reserved bytes at the end of slabs */
- 	int red_left_pad;	/* Left redzone padding size */
--	const char *name;	/* Name (only for display!) */
- 	struct list_head list;	/* List of slab caches */
- #ifdef CONFIG_SYSFS
- 	struct kobject kobj;	/* For sysfs */
-Index: linux/mm/slab.h
-===================================================================
---- linux.orig/mm/slab.h
-+++ linux/mm/slab.h
-@@ -18,13 +18,11 @@
-  * SLUB is no longer needed.
-  */
- struct kmem_cache {
--	unsigned int object_size;/* The original size of the object */
-+	struct kmem_cache_attr *attr
- 	unsigned int size;	/* The aligned/padded/added on size  */
- 	unsigned int align;	/* Alignment as calculated */
- 	slab_flags_t flags;	/* Active flags on the slab */
--	const char *name;	/* Slab name for sysfs */
- 	int refcount;		/* Use counter */
--	void (*ctor)(void *);	/* Called on object slot creation */
- 	struct list_head list;	/* List of all slab caches on the system */
- };
-
+Thanks,
+ Heinz
+ 
