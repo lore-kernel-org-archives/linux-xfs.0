@@ -1,8 +1,8 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:13907 "EHLO
-        greer.hardwarefreak.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S965304AbeAMA1F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 19:27:05 -0500
+Received: from ns3.fnarfbargle.com ([43.245.164.105]:56578 "EHLO
+        ns3.fnarfbargle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754962AbeAMMvR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Jan 2018 07:51:17 -0500
 Subject: Re: Growing RAID10 with active XFS filesystem
 References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
  <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
@@ -11,155 +11,94 @@ References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
  <20180111030723.GU16421@dastard> <5A58B901.7080609@youngman.org.uk>
  <20180112152538.2c4d8cd4@harpe.intellique.com>
  <5A58F5FB.7000101@youngman.org.uk>
-From: Stan Hoeppner <stan@hardwarefreak.org>
-Message-ID: <09819eb5-b342-01ca-1b96-cf5395dcd2e2@hardwarefreak.org>
-Date: Fri, 12 Jan 2018 18:20:22 -0600
+ <20180112193710.1369f4ad@harpe.intellique.com>
+ <8a8f7b91-80b5-3600-a82b-b55691d0ac6b@youngman.org.uk>
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Message-ID: <268a13e5-5075-7fb9-caae-8ab281737ff2@fnarfbargle.com>
+Date: Sat, 13 Jan 2018 20:30:01 +0800
 MIME-Version: 1.0
-In-Reply-To: <5A58F5FB.7000101@youngman.org.uk>
+In-Reply-To: <8a8f7b91-80b5-3600-a82b-b55691d0ac6b@youngman.org.uk>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wols Lists <antlists@youngman.org.uk>, Emmanuel Florac <eflorac@intellique.com>
+To: Wol's lists <antlists@youngman.org.uk>, Emmanuel Florac <eflorac@intellique.com>
 Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
 
-On 01/12/2018 11:52 AM, Wols Lists wrote:
-> On 12/01/18 14:25, Emmanuel Florac wrote:
->> Le Fri, 12 Jan 2018 13:32:49 +0000
->> Wols Lists <antlists@youngman.org.uk> écrivait:
->>
->>> On 11/01/18 03:07, Dave Chinner wrote:
->>>> XFS comes from a different background - high performance, high
->>>> reliability and hardware RAID storage. Think hundreds of drives in a
->>>> filesystem, not a handful. i.e. The XFS world is largely enterprise
->>>> and HPC storage, not small DIY solutions for a home or back-room
->>>> office.  We live in a different world, and MD rarely enters mine.
->>> So what happens when the hardware raid structure changes?
->> hardware RAID controllers don't expose RAID structure to the software.
->> So As far as XFS knows, a hardware RAID is just a very large disk.
->> That's when using stripe unit and stripe width options make sense in
->> mkfs_xfs.
-> Umm... So you can't partially populate a chassis and add more disks as
-> you need them? So you have to manually pass stripe unit and width at
-> creation time and then they are set in stone? Sorry that doesn't sound
-> that enterprisey to me :-(
+On 13/01/18 03:35, Wol's lists wrote:
 
-It's not set in stone.  If the RAID geometry changes one can specify the 
-new geometry at mount say in fstab.  New writes to the filesystem will 
-obey the new specified geometry.
->>> Ext allows you to grow a filesystem. Btrfs allows you to grow a
->>> filesystem. Reiser allows you to grow a file system. Can you add more
->>> disks to XFS and grow the filesystem?
->> Of course. xfs_growfs is your friend. Worked with online filesystems
->> many years before that functionality came to other filesystems.
->>
->>> My point is that all this causes geometries to change, and ext and
->>> btrfs amongst others can clearly handle this. Can XFS?
->> Neither XFS, ext4 or btrfs can handle this. That's why Dave mentioned
->> the fact that growing your RAID is almost always the wrong solution.
->> A much better solution is to add a new array and use LVM to aggregate
->> it with the existing ones.
-> Isn't this what btrfs does with a rebalance? And I may well be wrong,
-> but I got the impression that some file systems could change stripe
-> geometries dynamically.
->
-> Adding a new array imho breaks the KISS principle. So I now have
-> multiple arrays sitting on the hard drives (wasting parity disks if I
-> have raid5/6), multiple instances of LVM on top of that, and then the
-> filesystem sitting on top of multiple volumes.
->
-> As a hobbyist I want one array, with one LVM on top of that, and one
-> filesystem per volume. Anything else starts to get confusing. And if I'm
-> a professional sys-admin I would want that in spades! It's all very well
-> expecting a sys-admin to cope, but the fewer boobytraps and landmines
-> left lying around, the better!
->
-> Squaring the circle, again :-(
->> Basically growing an array then the filesystem on it generally works
->> OK, BUT it may kill performance (or not). YMMV. At least, you *probably
->> won't* get the performance gain that the difference of stripe width
->> would permit when starting anew.
->>
-> Point taken - but how are you going to backup your huge petabyte XFS
-> filesystem to get the performance on your bigger array? Catch 22 ...
->
->>> Because if it can, it seems to me the obvious solution to changing
->>> raid geometries is that you need to grow the filesystem, and get that
->>> to adjust its geometries.
->> Unfortunately that's nigh impossible. No filesystem in existence does
->> that. The closest thing is ZFS ability to dynamically change stripe
->> sizes, but when you extend a ZFS zpool it doesn't rebalance existing
->> files and data (and offers absolutely no way to do it). Sorry, no pony.
->>
-> Well, how does raid get away with it, rebalancing and restriping
-> everything :-)
->
-> Yes I know, it's a major change if the original file system design
-> didn't allow for it, and major file system changes can be extremely
-> destructive to user data ...
->
->>> Bear in mind, SUSE has now adopted XFS as the default filesystem for
->>> partitions other than /. This means you are going to get a lot of
->>> "hobbyist" systems running XFS on top of MD and LVM. Are you telling
->>> me that XFS is actually very badly suited to be a default filesystem
->>> for SUSE?
->> Doesn't seem so. In fact XFS is less permissive than other filesystems,
->> and it's a *darn good thing* IMO. It's better having frightening error
->> messages "XFS force shutdown" than corrupted data, isn't it?
-> False dichotomy, I'm afraid. Do you really want a filesystem that
-> guarantees integrity, but trashes performance when you want to take
-> advantage of features such as resizing? I'd rather have integrity,
-> performance *and* features :-) (Pick any two, I know :-)
->>> What concerns me here is, not having a clue how LVM handles changing
->>> partition sizes, what effect this will have on filesystems ... The
->>> problem is the Unix philosophy of "do one thing and do it well".
->>> Sometimes that's just not practical.
->> LVM volumes changes are propagated to upper levels.
-> And what does the filesystem do with them? If LVM is sat on MD, what then?
->> If you don't like Unix principles, use Windows then :)
->>
-> The phrase "a rock and a hard place" comes to mind. Neither were
-> designed with commercial solidity and integrity and reliability in mind.
-> And having used commercial systems I get the impression NIH is alive and
-> kicking far too much. Both Linux and Windows are much more reliable and
-> solid than they were, but too many of those features are bolt-ons, and
-> they feel like it ...
->
->>> The Unix philosophy says "leave
->>> partition management to lvm, leave redundancy to md, leave the files
->>> to the filesystem, ..." and then the filesystem comes along and says
->>> "hey, I can't do my job very well, if I don't have a clue about the
->>> physical disk layout". It's a hard circle to square ... :-)
->> Yeah, that was apparently the very same thinking that brought us ZFS.
->>
->>> (Anecdotes about btrfs are that it's made a right pigs ear of trying
->>> to do everything itself.)
->>>
->> Not so sure. Btrfs is excellent, taking into account how little love it
->> received for many years at Oracle.
->>
-> Yep. The solid features are just that - solid. Snag is, a lot of the
-> nice features are still experimental, and dangerous! Parity raid, for
-> example ... and I've heard rumours that the flaws could be unfixable, at
-> least not until btrfs-2 whenever that gets started ...
->
-> When MD adds disks, it rewrites the array from top to bottom or the
-> other way round, moving everything over to the new layout. Is there no
-> way a file system can do the same sort of thing? Okay, it would probably
-> need to be a defrag-like utility and linux prides itself on not needing
-> defrag :-)
->
-> Or could it simply switch over to optimising for the new geometry,
-> accept the fact that the reshape will have caused hotspots, and every
-> time it rewrites (meta)data, it adjusts it to the new geometry to
-> reduce/remove hotspots over time?
->
-> Cheers,
-> Wol
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'll get round to writing all this up soon, so the wiki will try and 
+> persuade people that resizing arrays is not actually the brightest of 
+> ideas.
 
+Now hang on. Don't go tarring every use case with the same brush.
+
+There are many use cases for a bucket of disks and high performance is 
+but one of them.
+
+Leaving aside XFS, let's look at EXT3/4 as they seem to be generally the 
+most common filesystems in use for your average "install it and run it" 
+user (ie *ME*).
+
+If you read the mke2fs man page and check out stripe and stride (which 
+you *used* to have to specify manually), both of them imply they are 
+important for letting the filesystem know the construction of your RAID 
+for *performance* reasons.
+
+Nowhere does *anything* make any mention of changing geometry, and if 
+you gave a 10 second thought to those parameters and their explanations 
+you'd have to think "This filesystem was optimised for the RAID geometry 
+it was built with. If I change that, then I won't have the same 
+performance I did have at the time of creation". Or maybe that was only 
+obvious to me.
+
+Anyway, I happily grew several large arrays over the years *knowing* 
+that there would be a performance impact, because for my use case I 
+didn't actually care.
+
+"Enterprise" don't grow arrays. They build a storage solution that is 
+often extremely finely tuned for exactly their workload and they use it. 
+If they need more storage they either replicate or build another (with 
+the consequential months of tests/tuning) storage configuration. I see 
+Stan Hoeppner replied. If you want a good read, get him going on 
+workload specific XFS tuning.
+
+It's only hacks like me that tack disks onto built arrays, but I did it 
+*knowing* it wasn't going to affect my workload as all I wanted was a 
+huge bucket of storage with quick reads. Writes don't happen often 
+enough to matter.
+
+Exposing the geometry to the filesystem is there to give the filesystem 
+a chance of performing operations in a manner least likely to create a 
+performance hotspot (as pointed out by Dave Chinner). They are hints. 
+Change the geometry after the fact and all bets are off.
+
+On another note, personally I've used XFS in a couple of performance 
+sensitive roles over the years (when it *really* mattered), but as I 
+don't often wade into that end of the pool I tend to stick with the ext 
+series.
+
+e2fsck has gotten me out of some really tight spots and I can rely on it 
+making the best of a really bad mess. With XFS I've never had the 
+pleasure of running it on anything other than top of the line hardware, 
+so it never had to clean up after me. It does go like a stung cat though 
+when it's tuned up.
+
+If I were to suggest an addition to the RAID wiki, it'd be to elaborate 
+on the *creation* time tuning a filesystem create tool does with the 
+RAID geometry, and to point out that once you grow the RAID, all 
+performance bets are off. I've never met a filesystem that would break 
+however.
+
+I've grown RAID 1, 5 & 6. Growing RAID10 with anything other than a near 
+configuration and adding another set of disks just feels like a disaster 
+waiting to happen. Even I'm not that game.
+
+I do have a staging machine now with a few spare disks, so I might have 
+a crack at it, but I won't be using a kernel and userspace as old as the 
+thread initiator.
+
+Regards,
+Brad
