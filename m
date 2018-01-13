@@ -1,60 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44048 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754016AbeALBPz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 20:15:55 -0500
-Subject: Re: [PATCH 02/27] xfs_scrub: common error handling
-References: <151520348769.2027.9860697266310422360.stgit@magnolia>
- <151520350018.2027.6588345400822739821.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2a192224-9951-9e10-f7ac-daf9bab2d9ea@sandeen.net>
-Date: Thu, 11 Jan 2018 19:15:52 -0600
+Received: from auth-3.ukservers.net ([217.10.138.152]:46559 "EHLO
+        auth-3.ukservers.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753865AbeAMT3Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Jan 2018 14:29:25 -0500
+Subject: Re: Growing RAID10 with active XFS filesystem
+References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
+ <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
+ <5A548D31.4000002@youngman.org.uk> <20180109222523.GJ16421@dastard>
+ <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
+ <20180111030723.GU16421@dastard> <5A58B901.7080609@youngman.org.uk>
+ <20180112152538.2c4d8cd4@harpe.intellique.com>
+ <5A58F5FB.7000101@youngman.org.uk>
+ <09819eb5-b342-01ca-1b96-cf5395dcd2e2@hardwarefreak.org>
+From: Wol's lists <antlists@youngman.org.uk>
+Message-ID: <5fd3434f-0d25-7c64-fa1b-9ed33f18df9c@youngman.org.uk>
+Date: Sat, 13 Jan 2018 19:29:19 +0000
 MIME-Version: 1.0
-In-Reply-To: <151520350018.2027.6588345400822739821.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <09819eb5-b342-01ca-1b96-cf5395dcd2e2@hardwarefreak.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.org>, Emmanuel Florac <eflorac@intellique.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
 
-On 1/5/18 7:51 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Standardize how we record and report errors.
-> 
+On 13/01/18 00:20, Stan Hoeppner wrote:
+> It's not set in stone.  If the RAID geometry changes one can specify the 
+> new geometry at mount say in fstab.  New writes to the filesystem will 
+> obey the new specified geometry.
 
+Does this then update the defaults, or do you need to specify the new 
+geometry every mount? Inquiring minds need to know :-)
 
-> +/*
-> + * Reporting Status to the Console
-> + *
-> + * We aim for a roughly standard reporting format -- the severity of the
-> + * status being reported, a textual description of the objecting being
-
-object?  (I mean, I suppose it might be objecting to your horribly
-corrupted filesystem?) ;)
-
-> + * reported, and whatever the status happens to be.
-> + *
-> + * Errors are the most severe and reflect filesystem corruption.
-> + * Warnings indicate that something is amiss and needs the attention of
-> + * the administrator, but does not constitute a corruption.  Information
-> + * is merely advisory.
-> + */
-> +
-
-
->  /* Program name; needed for libxcmd error reports. */
->  char				*progname = "xfs_scrub";
->  
-> +/* Debug level; higher values mean more verbosity. */
-> +unsigned int			debug;
-> +
-> +/* Should we dump core if errors happen? */
-> +bool				dumpcore;
-
-not independent of debug right, but ... *shrug* 
-
--Eric
+Cheers,
+Wol
