@@ -1,31 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from resqmta-po-01v.sys.comcast.net ([96.114.154.160]:49908 "EHLO
-        resqmta-po-01v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S964802AbeALP40 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 10:56:26 -0500
-Date: Fri, 12 Jan 2018 09:56:21 -0600 (CST)
-From: Christopher Lameter <cl@linux.com>
-Subject: RE: [PATCH 04/36] usercopy: Prepare for usercopy whitelisting
-In-Reply-To: <b8c3f85827ca493e9f4517f646ac97da@AcuMS.aculab.com>
-Message-ID: <alpine.DEB.2.20.1801120955540.12791@nuc-kabylake>
-References: <1515531365-37423-1-git-send-email-keescook@chromium.org> <1515531365-37423-5-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1801101219390.7926@nuc-kabylake> <b8c3f85827ca493e9f4517f646ac97da@AcuMS.aculab.com>
+Received: from mout.kundenserver.de ([212.227.126.131]:55427 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750936AbeANIl2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Jan 2018 03:41:28 -0500
+Date: Sun, 14 Jan 2018 09:41:24 +0100
+From: Heinz Diehl <htd+ml@fritha.org>
+Subject: Re: XFS journal corruption after every reboot/shutdown
+Message-ID: <20180114084124.GA1879@fritha.org>
+References: <20180111224451.GA3413@fritha.org>
+ <20180111231358.GW16421@dastard>
+ <20180113081725.GA27564@fritha.org>
+ <CAJCQCtS=qEmRtcqO+U-Ut_V5jFdyEjehiy+Vafxdt-PMvv-Z9g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtS=qEmRtcqO+U-Ut_V5jFdyEjehiy+Vafxdt-PMvv-Z9g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Kees Cook <keescook@chromium.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, Laura Abbott <labbott@redhat.com>, Mark Rutland <mark.rutland@arm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "kernel-hardening@lists.openwall.com" <kernel-hardening@lists.openwall.com>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
 
-On Fri, 12 Jan 2018, David Laight wrote:
+On 13.01.2018, Chris Murphy wrote: 
 
-> > Hmmm... At some point we should switch kmem_cache_create to pass a struct
-> > containing all the parameters. Otherwise the API will blow up with
-> > additional functions.
->
-> Or add an extra function to 'configure' the kmem_cache with the
-> extra parameters.
+> You could try to mask the use of plymouth in systemd (or uninstall
+> it). If the problem goes away, that's the culprit.
 
-We probably need even more configurability if we add callbacks for object
-reclaim / moving.
+I removed plymouth a long time ago, because to me it's useless.
+
+> If it doesn't you can probably track down what's holding up the remount ro with
+> https://freedesktop.org/wiki/Software/systemd/Debugging/#index2h1
+> And following the "eventually shuts down" section.
+
+And that solved the problem! Not the debugging itself, but the debug script
+that is mentioned in the text you directed me to. After placing the
+debug script in /usr/lib/systemd/systemd-shutdown, the root fs is
+clean after reboot/shutdown:
+
+[htd@chiara ~]$ dmesg | grep XFS
+[    2.085668] SGI XFS with ACLs, security attributes, no debug enabled
+[    2.086856] XFS (nvme0n1p3): Mounting V5 Filesystem
+[    2.093919] XFS (nvme0n1p3): Ending clean mount
+
+Here's the debug script:
+
+#!/bin/sh
+mount -o remount,rw /
+dmesg > /shutdown-log.txt
+mount -o remount,ro /
+
+It simply remounts the root fs rw, dumps the output of dmesg to disk,
+and remounts the root fs ro afterwards. I tried to find out exactly
+where and when in the shutdown process this script is executed, but
+have to admit that my understanding of systemd is not deep enough.
+
+I think something in how systemd performs a reboot/shutdown is
+wrong. Will add this information to my bug report and hope this rings
+a bell for the systemd developers. 
+
+Thanks a lot,
+Heinz
+
+
+
 
