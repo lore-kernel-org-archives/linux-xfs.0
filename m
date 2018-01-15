@@ -1,54 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45268 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750931AbeAQWCb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:02:31 -0500
-Subject: [PATCH v11.1 00/29] xfsprogs: online scrub/repair support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:01:51 -0800
-Message-ID: <151622651142.31925.4179778330985746435.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:12498 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750732AbeAOVc2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 16:32:28 -0500
+Date: Tue, 16 Jan 2018 08:31:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 1/5] xfs: check sb_agblocks and sb_agblklog when
+ validating superblock
+Message-ID: <20180115213102.GZ16421@dastard>
+References: <151579463950.8694.320025813242574491.stgit@magnolia>
+ <151579464601.8694.5478076755339350941.stgit@magnolia>
+ <20180115200313.GC5602@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180115200313.GC5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-Hi all,
+On Mon, Jan 15, 2018 at 12:03:13PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Currently, we don't check sb_agblocks or sb_agblklog when we validate
+> the superblock, which means that we can fuzz garbage values into those
+> values and the mount succeeds.  This leads to all sorts of UBSAN
+> warnings in xfs/350 since we can then coerce other parts of xfs into
+> shifting by ridiculously large values.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: simplify ag min/max size definitions
+> ---
+>  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
+>  fs/xfs/libxfs/xfs_sb.c |    3 +++
+>  2 files changed, 10 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index fc4386a..3ab1870 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
+>  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
+>  
+> +/*
+> + * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
+> + * 16MB or larger than 1TB.
+> + */
+> +#define XFS_AG_MIN_BYTES	(1ULL << 24)	/* 16 MB */
+> +#define XFS_AG_MAX_BYTES	(1ULL << 40)	/* 1 TB */
 
-This is the eleventh revision (+ fixes suggested by Eric Sandeen) of a
-patchset that adds to XFS userland tools support for online metadata
-scrubbing and repair.  Since v10 I've rebased to the latest for-next,
-fixed some wonky error messages, and fixed a few minor problems I found
-via code inspection.  However, this patch series is more or less the
-same as v11.
+Sure, but....
+> +
+>  /* keep the maximum size under 2^31 by a small amount */
+>  #define XFS_MAX_LOG_BYTES \
+>  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 08e44a0..bdb4f74 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -253,6 +253,9 @@ xfs_mount_validate_sb(
+>  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+>  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
+>  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_AG_MIN_BYTES	||
+> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_AG_MAX_BYTES	||
 
-We start by creating the basic shell of the program that can do argument
-parsing and error reporting, create some abstractions for the XFS ioctls
-that we use to iterate and scrub metadata, and then tie together all the
-in-kernel scrubbing in separate scrub phases.
+.... this really needs to be checked against sb_dblocks /
+sb_agcount. i.e. check against current filesystem size and geometry,
+not against the theoretical maximum.
 
-Next, we move on to checking the directory tree for connectivity and
-naming problems and add the infrastructure to perform an (optional) scan
-of the in-use parts of the disk media.  We also implement a minimal
-preen -- if the fs checks out, we can try to run fstrim; and some basic
-progress reporting if the program is running interactively.
+Cheers,
 
-Finally, we add some wrapper scripts to schedule scrubs of all the
-mounted filesystems; and the necessary systemd / cron infrastructure
-that is needed to automatically scan everything once a week.  All of
-this is disabled by default.  The systemd integration allows us to give
-scrub exactly the privileges it needs while walling off the rest of the
-system.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git tree for xfsprogs[1].  This series relies on the
-libfrog patches sent earlier.  Kernel support will appear in 4.15.
-
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
