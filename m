@@ -1,48 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from auth-3.ukservers.net ([217.10.138.152]:60344 "EHLO
-        auth-3.ukservers.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752427AbeANVdX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Jan 2018 16:33:23 -0500
-Subject: Re: Growing RAID10 with active XFS filesystem
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
- <5A548D31.4000002@youngman.org.uk> <20180109222523.GJ16421@dastard>
- <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
- <20180111030723.GU16421@dastard> <5A58B901.7080609@youngman.org.uk>
- <20180112152538.2c4d8cd4@harpe.intellique.com>
-From: Wol's lists <antlists@youngman.org.uk>
-Message-ID: <37abf496-57aa-fd12-26b7-09d43f08e6d5@youngman.org.uk>
-Date: Sun, 14 Jan 2018 21:33:17 +0000
+Received: from mx1.redhat.com ([209.132.183.28]:46398 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933521AbeAOOmT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 Jan 2018 09:42:19 -0500
+Date: Mon, 15 Jan 2018 09:42:17 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/5] xfs: btree format ifork loader should check for zero
+ numrecs
+Message-ID: <20180115144216.GE47688@bfoster.bfoster>
+References: <151579463950.8694.320025813242574491.stgit@magnolia>
+ <151579467015.8694.7629126647166170386.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180112152538.2c4d8cd4@harpe.intellique.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151579467015.8694.7629126647166170386.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 12/01/18 14:25, Emmanuel Florac wrote:
->> My point is that all this causes geometries to change, and ext and
->> btrfs amongst others can clearly handle this. Can XFS?
-
-> Neither XFS, ext4 or btrfs can handle this. That's why Dave mentioned
-> the fact that growing your RAID is almost always the wrong solution.
-> A much better solution is to add a new array and use LVM to aggregate
-> it with the existing ones.
-
-Does the new array need the same geometry as the old one?
-
-What happens if my original array is a 4-disk raid-5, and then I add a 
-3-disk raid-5? Can XFS cope with the different optimisations required 
-for the different layouts on the different arrays?
+On Fri, Jan 12, 2018 at 02:04:30PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Basically growing an array then the filesystem on it generally works
-> OK, BUT it may kill performance (or not). YMMV. At least, you *probably
-> won't* get the performance gain that the difference of stripe width
-> would permit when starting anew.
+> A btree format inode fork with zero records makes no sense, so reject it
+> if we see it, or else we can miscalculate memory allocations.  Found by
+> zeroes fuzzing {a,u3}.bmbt.numrecs in xfs/{374,378,412} with KASAN.
 > 
-Cheers,
-Wol
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_inode_fork.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 84eaf17..8c01dd5 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -307,6 +307,7 @@ xfs_iformat_btree(
+>  	 */
+>  	if (unlikely(XFS_IFORK_NEXTENTS(ip, whichfork) <=
+>  					XFS_IFORK_MAXEXT(ip, whichfork) ||
+> +		     nrecs == 0 ||
+>  		     XFS_BMDR_SPACE_CALC(nrecs) >
+>  					XFS_DFORK_SIZE(dip, mp, whichfork) ||
+>  		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks) ||
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
