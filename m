@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51917 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933608AbeAOOlq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Jan 2018 09:41:46 -0500
-Date: Mon, 15 Jan 2018 09:41:44 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/5] xfs: directory scrubber must walk through data block
- to offset
-Message-ID: <20180115144143.GC47688@bfoster.bfoster>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:12947 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750716AbeAOV4u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 16:56:50 -0500
+Date: Tue, 16 Jan 2018 08:56:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 3/5] xfs: directory scrubber must walk through data
+ block to offset
+Message-ID: <20180115215648.GA16421@dastard>
 References: <151579463950.8694.320025813242574491.stgit@magnolia>
  <151579465813.8694.2293343683195960907.stgit@magnolia>
+ <20180115200447.GD5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151579465813.8694.2293343683195960907.stgit@magnolia>
+In-Reply-To: <20180115200447.GD5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Fri, Jan 12, 2018 at 02:04:18PM -0800, Darrick J. Wong wrote:
+On Mon, Jan 15, 2018 at 12:04:47PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > In xfs_scrub_dir_rec, we must walk through the directory block entries
@@ -30,12 +31,14 @@ On Fri, Jan 12, 2018 at 02:04:18PM -0800, Darrick J. Wong wrote:
 > xfs/390 with KASAN enabled.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+> v2: improve defensive pointer checking (endp theoretically can be null)
 > ---
 >  fs/xfs/libxfs/xfs_dir2.h      |    1 +
 >  fs/xfs/libxfs/xfs_dir2_data.c |   19 +++++++++++++++++++
->  fs/xfs/scrub/dir.c            |   26 +++++++++++++++++++++++++-
->  3 files changed, 45 insertions(+), 1 deletion(-)
-> 
+>  fs/xfs/scrub/dir.c            |   30 +++++++++++++++++++++++++++++-
+>  3 files changed, 49 insertions(+), 1 deletion(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
 > index 1a8f2cf..2c77195 100644
@@ -48,60 +51,46 @@ On Fri, Jan 12, 2018 at 02:04:18PM -0800, Darrick J. Wong wrote:
 > +void *xfs_dir3_data_endp(struct xfs_mount *mp, struct xfs_dir2_data_hdr *hdr);
 >  
 >  #endif	/* __XFS_DIR2_H__ */
-...
-> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> index f5a0d17..6acbed0 100644
-> --- a/fs/xfs/scrub/dir.c
-> +++ b/fs/xfs/scrub/dir.c
-> @@ -200,6 +200,7 @@ xfs_scrub_dir_rec(
->  	struct xfs_inode		*dp = ds->dargs.dp;
->  	struct xfs_dir2_data_entry	*dent;
->  	struct xfs_buf			*bp;
-> +	char				*p, *endp;
->  	xfs_ino_t			ino;
->  	xfs_dablk_t			rec_bno;
->  	xfs_dir2_db_t			db;
-> @@ -239,8 +240,31 @@ xfs_scrub_dir_rec(
+> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+> index 853d9ab..b87db03 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> @@ -1098,3 +1098,22 @@ xfs_dir2_data_use_free(
 >  	}
->  	xfs_scrub_buffer_recheck(ds->sc, bp);
->  
-> -	/* Retrieve the entry, sanity check it, and compare hashes. */
->  	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
+>  	*needscanp = needscan;
+>  }
 > +
-> +	/* Make sure we got a real directory entry. */
-> +	p = (char *)mp->m_dir_inode_ops->data_entry_p(bp->b_addr);
-> +	endp = xfs_dir3_data_endp(mp, bp->b_addr);
-
-If this helper can return NULL perhaps we should check for that case
-too? Otherwise looks fine:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +	while (p < endp) {
-> +		struct xfs_dir2_data_entry	*dep;
-> +		struct xfs_dir2_data_unused	*dup;
-> +
-> +		dup = (struct xfs_dir2_data_unused *)p;
-> +		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-> +			p += be16_to_cpu(dup->length);
-> +			continue;
-> +		}
-> +		dep = (struct xfs_dir2_data_entry *)p;
-> +		if (dep == dent)
-> +			break;
-> +		p += mp->m_dir_inode_ops->data_entsize(dep->namelen);
+> +/* Find the end of the entry data in a data/block format dir block. */
+> +void *
+> +xfs_dir3_data_endp(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_dir2_data_hdr	*hdr)
+> +{
+> +	switch (hdr->magic) {
+> +	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
+> +	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+> +		return xfs_dir2_block_leaf_p(
+> +				xfs_dir2_block_tail_p(mp->m_dir_geo, hdr));
+> +	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+> +	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+> +		return (char *)hdr + mp->m_dir_geo->blksize;
+> +	default:
+> +		return NULL;
 > +	}
-> +	if (p == endp) {
-> +		xfs_scrub_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
-> +		goto out_relse;
-> +	}
-> +
-> +	/* Retrieve the entry, sanity check it, and compare hashes. */
->  	ino = be64_to_cpu(dent->inumber);
->  	hash = be32_to_cpu(ent->hashval);
->  	tag = be16_to_cpup(dp->d_ops->data_entry_tag_p(dent));
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +}
+
+Ok, this pattern is used in a few places. e.g.
+xfs_dir2_data_make_free, __xfs_dir3_data_check and
+xfs_dir2_data_freescan_int, so if you're going to add a helper, at
+least convert all the other places there is the same code over to
+use it...
+
+Also, it should be passed a geo struct, not a xfs_mount.
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
