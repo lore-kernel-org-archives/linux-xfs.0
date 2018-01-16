@@ -1,93 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35189 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751107AbeAPRnT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 12:43:19 -0500
-Date: Tue, 16 Jan 2018 09:43:15 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: kmem_cache_attr (was Re: [PATCH 04/36] usercopy: Prepare for
- usercopy whitelisting)
-Message-ID: <20180116174315.GA10461@bombadil.infradead.org>
-References: <1515531365-37423-1-git-send-email-keescook@chromium.org>
- <1515531365-37423-5-git-send-email-keescook@chromium.org>
- <alpine.DEB.2.20.1801101219390.7926@nuc-kabylake>
- <20180114230719.GB32027@bombadil.infradead.org>
- <alpine.DEB.2.20.1801160913260.3908@nuc-kabylake>
- <20180116160525.GF30073@bombadil.infradead.org>
- <alpine.DEB.2.20.1801161049320.5162@nuc-kabylake>
+Received: from mx1.redhat.com ([209.132.183.28]:24721 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751415AbeAPSDR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 16 Jan 2018 13:03:17 -0500
+Date: Tue, 16 Jan 2018 13:02:22 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 1/5] xfs: check sb_agblocks and sb_agblklog when
+ validating superblock
+Message-ID: <20180116180222.GC52829@bfoster.bfoster>
+References: <151579463950.8694.320025813242574491.stgit@magnolia>
+ <151579464601.8694.5478076755339350941.stgit@magnolia>
+ <20180115200313.GC5602@magnolia>
+ <20180116124846.GA52295@bfoster.bfoster>
+ <20180116173432.GQ5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.20.1801161049320.5162@nuc-kabylake>
+In-Reply-To: <20180116173432.GQ5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, Laura Abbott <labbott@redhat.com>, Mark Rutland <mark.rutland@arm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 16, 2018 at 10:54:27AM -0600, Christopher Lameter wrote:
-> On Tue, 16 Jan 2018, Matthew Wilcox wrote:
+On Tue, Jan 16, 2018 at 09:34:32AM -0800, Darrick J. Wong wrote:
+> On Tue, Jan 16, 2018 at 07:48:46AM -0500, Brian Foster wrote:
+> > On Mon, Jan 15, 2018 at 12:03:13PM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Currently, we don't check sb_agblocks or sb_agblklog when we validate
+> > > the superblock, which means that we can fuzz garbage values into those
+> > > values and the mount succeeds.  This leads to all sorts of UBSAN
+> > > warnings in xfs/350 since we can then coerce other parts of xfs into
+> > > shifting by ridiculously large values.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > > v2: simplify ag min/max size definitions
+> > > ---
+> > >  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
+> > >  fs/xfs/libxfs/xfs_sb.c |    3 +++
+> > >  2 files changed, 10 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > > index fc4386a..3ab1870 100644
+> > > --- a/fs/xfs/libxfs/xfs_fs.h
+> > > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > > @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
+> > >  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
+> > >  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
+> > >  
+> > > +/*
+> > > + * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
+> > > + * 16MB or larger than 1TB.
+> > > + */
+> > > +#define XFS_AG_MIN_BYTES	(1ULL << 24)	/* 16 MB */
+> > > +#define XFS_AG_MAX_BYTES	(1ULL << 40)	/* 1 TB */
+> > > +
+> > 
+> > Dave's comment aside... just a nit: the definitions above use
+> > XFS_[MIN|MAX]_* naming rather than XFS_AG_*. It would be nice to be
+> > consistent there if we stick with these.
 > 
-> > I think that's a good thing!  /proc/slabinfo really starts to get grotty
-> > above 16 bytes.  I'd like to chop off "_cache" from the name of every
-> > single slab!  If ext4_allocation_context has to become ext4_alloc_ctx,
-> > I don't think we're going to lose any valuable information.
+> Since I was extracting the constants from xfs_multidisk.h I thought it
+> important to maintain the symbolic name to avoid breaking userspace.
+> I guess we /could/ just add XFS_MIN_AG_BYTES to libxfs and change
+> xfs_multidisk.h to do:
 > 
-> Ok so we are going to cut off at 16 charaacters? Sounds good to me.
 
-Excellent!
+Oh, I missed that..
 
-> > > struct kmem_cache_attr {
-> > > 	char *name;
-> > > 	size_t size;
-> > > 	size_t align;
-> > > 	slab_flags_t flags;
-> > > 	unsigned int useroffset;
-> > > 	unsinged int usersize;
-> > > 	void (*ctor)(void *);
-> > > 	kmem_isolate_func *isolate;
-> > > 	kmem_migrate_func *migrate;
-> > > 	...
-> > > }
-> >
-> > In these slightly-more-security-conscious days, it's considered poor
-> > practice to have function pointers in writable memory.  That was why
-> > I wanted to make the kmem_cache_attr const.
+> #define XFS_AG_MIN_BYTES	(XFS_MIN_AG_BYTES)
 > 
-> Sure this data is never changed. It can be const.
-
-It's changed at initialisation.  Look:
-
-kmem_cache_create(const char *name, size_t size, size_t align,
-                  slab_flags_t flags, void (*ctor)(void *))
-        s = create_cache(cache_name, size, size,
-                         calculate_alignment(flags, align, size),
-                         flags, ctor, NULL, NULL);
-
-The 'align' that ends up in s->align, is not the user-specified align.
-It's also dependent on runtime information (cache_line_size()), so it
-can't be calculated at compile time.
-
-'flags' also gets mangled:
-        flags &= CACHE_CREATE_MASK;
-
-
-> I am not married to either way of specifying the sizes. unsigned int would
-> be fine with me. SLUB falls back to the page allocator anyways for
-> anything above 2* PAGE_SIZE and I think we can do the same for the other
-> allocators as well. Zeroing or initializing such a large memory chunk is
-> much more expensive than the allocation so it does not make much sense to
-> have that directly supported in the slab allocators.
-
-The only slabs larger than 4kB on my system right now are:
-kvm_vcpu               0      0  19136    1    8 : tunables    8    4    0 : slabdata      0      0      0
-net_namespace          1      1   6080    1    2 : tunables    8    4    0 : slabdata      1      1      0
-
-(other than the fake slabs for kmalloc)
-
-> Some platforms support 64K page size and I could envision a 2M page size
-> at some point. So I think we cannot use 16 bits there.
+> Or just decide that we don't care since we never install that header to
+> /usr/include ?
 > 
-> If no one objects then I can use unsigned int there again.
 
-unsigned int would be my preference.
+I think elevating these into libxfs warrant using whatever
+sane/clean/consistent names fit in best from the perspective of libxfs.
+If this is an internal define in xfsprogs, perhaps we can just
+s/XFS_AG_MIN_BYTES/XFS_MIN_AG_BYTES/ there once this change trickles
+down? Looks like it's only used in a handful of places.
+
+Brian
+
+> --D
+> 
+> > Brian
+> > 
+> > >  /* keep the maximum size under 2^31 by a small amount */
+> > >  #define XFS_MAX_LOG_BYTES \
+> > >  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+> > > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > > index 08e44a0..bdb4f74 100644
+> > > --- a/fs/xfs/libxfs/xfs_sb.c
+> > > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > > @@ -253,6 +253,9 @@ xfs_mount_validate_sb(
+> > >  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+> > >  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
+> > >  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+> > > +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_AG_MIN_BYTES	||
+> > > +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_AG_MAX_BYTES	||
+> > > +	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
+> > >  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+> > >  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+> > >  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
