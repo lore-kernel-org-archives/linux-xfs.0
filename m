@@ -1,120 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34018 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754372AbeAKTk1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jan 2018 14:40:27 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 19D64C05975E
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 19:40:27 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B56946560F
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 19:40:26 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: account finobt blocks properly in perag reservation
-Date: Thu, 11 Jan 2018 14:40:24 -0500
-Message-Id: <20180111194024.28775-1-bfoster@redhat.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58434 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750885AbeAPNxv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 08:53:51 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0GDrdoB126336
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jan 2018 08:53:50 -0500
+Received: from e06smtp11.uk.ibm.com (e06smtp11.uk.ibm.com [195.75.94.107])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2fhguxwg50-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jan 2018 08:53:50 -0500
+Received: from localhost
+        by e06smtp11.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Tue, 16 Jan 2018 13:53:46 -0000
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: [RFC PATCH] xfs: Fix "use after free" of intent items
+Date: Tue, 16 Jan 2018 19:25:02 +0530
+In-Reply-To: <20180112150223.GB32050@bfoster.bfoster>
+References: <20180111125223.10727-1-chandan@linux.vnet.ibm.com> <20180112150223.GB32050@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <10110382.0xkuEa3Mc5@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@infradead.org, darrick.wong@oracle.com
 
-XFS started using the perag metadata reservation pool for free inode
-btree blocks in commit 76d771b4cbe33 ("xfs: use per-AG reservations
-for the finobt"). To handle backwards compatibility, finobt blocks
-are accounted against the pool so long as the full reservation is
-available at mount time. Otherwise the ->m_inotbt_nores flag is set
-and the filesystem falls back to the traditional per-transaction
-finobt reservation.
+On Friday, January 12, 2018 8:32:24 PM IST Brian Foster wrote:
+> On Thu, Jan 11, 2018 at 06:22:23PM +0530, Chandan Rajendra wrote:
+> > generic/388 can cause the following "use after free" error to occur,
+> > 
+> >  =============================================================================
+> >  BUG xfs_efi_item (Not tainted): Poison overwritten
+> >  -----------------------------------------------------------------------------
+> > 
+> >  Disabling lock debugging due to kernel taint
+> >  INFO: 0x00000000292c4bd4-0x00000000292c4bd4. First byte 0x6a instead of 0x6b
+> >  INFO: Allocated in .kmem_zone_alloc+0xcc/0x190 age=79 cpu=0 pid=12436
+> >  	.__slab_alloc+0x54/0x80
+> >  	.kmem_cache_alloc+0x124/0x350
+> >  	.kmem_zone_alloc+0xcc/0x190
+> >  	.xfs_efi_init+0x48/0xf0
+> >  	.xfs_extent_free_create_intent+0x40/0x130
+> >  	.xfs_defer_intake_work+0x74/0x1e0
+> >  	.xfs_defer_finish+0xac/0x5c0
+> >  	.xfs_itruncate_extents+0x170/0x590
+> >  	.xfs_inactive_truncate+0xcc/0x170
+> >  	.xfs_inactive+0x1d8/0x2f0
+> >  	.xfs_fs_destroy_inode+0xe4/0x3d0
+> >  	.destroy_inode+0x68/0xb0
+> >  	.do_unlinkat+0x1e8/0x390
+> >  	system_call+0x58/0x6c
+> >  INFO: Freed in .xfs_efi_item_free+0x44/0x80 age=79 cpu=0 pid=12436
+> >  	.kmem_cache_free+0x120/0x2b0
+> >  	.xfs_efi_item_free+0x44/0x80
+> >  	.xfs_trans_free_items+0xd4/0x130
+> >  	.__xfs_trans_commit+0xd0/0x350
+> >  	.xfs_trans_roll+0x4c/0x90
+> >  	.xfs_defer_trans_roll+0xa4/0x2b0
+> >  	.xfs_defer_finish+0xb8/0x5c0
+> >  	.xfs_itruncate_extents+0x170/0x590
+> >  	.xfs_inactive_truncate+0xcc/0x170
+> >  	.xfs_inactive+0x1d8/0x2f0
+> >  	.xfs_fs_destroy_inode+0xe4/0x3d0
+> >  	.destroy_inode+0x68/0xb0
+> >  	.do_unlinkat+0x1e8/0x390
+> >  	system_call+0x58/0x6c
+> > 
+> > This happens due to the following interaction,
+> > 1. xfs_defer_finish() creates "extent free" intent item and adds it to the
+> >    list at xfs_trans->t_items.
+> > 2. xfs_defer_trans_roll() invokes __xfs_trans_commit(). Here, if the
+> >    XFS_MOUNT_FS_SHUTDOWN flag is set, we invoke io_unlock() operation of the
+> >    corresponding log item. For "extent free" log items xfs_efi_item_unlock()
+> >    gets invoked which frees the xfs_efi_log_item.
+> > 3. xfs_defer_trans_roll() then invokes xfs_defer_trans_abort(). Since the
+> >    xfs_defer_pending->dfp_intent is still set to the "extent free" intent
+> >    item, we invoke xfs_extent_free_abort_intent(). This accesses the
+> >    previously freed xfs_efi_log_item to decrement the ref count.
+> > 
+> > This commit fixes the bug by changing xfs_efi_item_unlock() to invoke
+> > xfs_efi_release() instead of xfs_efi_item_free(). The xfs_efi_log_item gets
+> > freed when xfs_extent_free_abort_intent() invokes xfs_efi_release() once again
+> > i.e. its refcount becomes zero and hence xfs_efi_item_free() is invoked.
+> > 
+> 
+> Interesting.. trying to refamiliarize myself with the expected reference
+> counting rules here, I see that this goes back to the old
+> xfs_bmap_finish() mechanism. That guy would grab an EFI, log it and then
+> attempt to roll/commit the transaction. IIRC, the direct release covers
+> the case where that tx commit fails. That is essentially equivalent to a
+> tx cancel in this example, so the tx is freed and xfs_bmap_finish() is
+> done (returns with an error). The ->iop_unlock() frees the EFI in this
+> case explicitly because 1.) the refcount is initialized to 2, one for
+> the log and one for the EFD and 2.) the EFD is never created in this
+> situation.
+> 
+> Given that, I suspect this code was correct with the bmap_finish() code
+> and became a problem sometime later. Have you done any investigation to
+> confirm/deny whether this is a regression since v4.7 or so?
 
-This commit has two problems:
+You are right. The code was working fine with v4.6.  IMHO, this was due the
+"committed" argument that was passed to __xfs_trans_roll(). This 
+argument tracked if the log items were committed to the CIL. 
 
-- finobt blocks are always accounted against the metadata
-  reservation on allocation, regardless of ->m_inotbt_nores state
-- finobt blocks are never returned to the reservation pool on free
+If __xfs_trans_roll() did return an error and "committed" was set to  true,
+we just release one of the refcounts of the efi, since the efd will never
+be created. The final refcount will be released when the EFI is added
+to the AIL.
 
-The first problem affects reflink+finobt filesystems where the full
-finobt reservation is not available at mount time. finobt blocks are
-essentially stolen from the reflink reservation, putting refcountbt
-management at risk of allocation failure. The second problem is an
-unconditional leak of metadata reservation whenever finobt is
-enabled.
+If __xfs_trans_roll() did return an error and "committed" was set to false,
+we end up freeing the efi via ->iop_unlock() function and no action
+is taken in xfs_bmap_finish().  However, with the present code
+xfs_defer_trans_roll() ends up unconditionally (well almost; It does
+check for the presence of a non-NULL pointer at 
+xfs_defer_pending->dfp_intent) invoking xfs_extent_free_abort_intent(),
+which access the freed memory.
 
-Update the finobt block allocation callouts to consider
-->m_inotbt_nores and account blocks appropriately. Blocks should be
-consistently accounted against the metadata pool when
-->m_inotbt_nores is false and otherwise tagged as RESV_NONE.
+I am working on a new patch for fixing this. Thanks for guidance.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-v2:
-- Update both allocation and free paths to consider ->m_inotbt_nores.
-v1: https://marc.info/?l=linux-xfs&m=151552296126950&w=2
-
- fs/xfs/libxfs/xfs_ialloc_btree.c | 29 +++++++++++++++++++++++++----
- 1 file changed, 25 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 47f44d624cb1..af197a5f3a82 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -141,21 +141,42 @@ xfs_finobt_alloc_block(
- 	union xfs_btree_ptr	*new,
- 	int			*stat)
- {
-+	if (cur->bc_mp->m_inotbt_nores)
-+		return xfs_inobt_alloc_block(cur, start, new, stat);
- 	return __xfs_inobt_alloc_block(cur, start, new, stat,
- 			XFS_AG_RESV_METADATA);
- }
- 
- STATIC int
--xfs_inobt_free_block(
-+__xfs_inobt_free_block(
- 	struct xfs_btree_cur	*cur,
--	struct xfs_buf		*bp)
-+	struct xfs_buf		*bp,
-+	enum xfs_ag_resv_type	resv)
- {
- 	struct xfs_owner_info	oinfo;
- 
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
- 	return xfs_free_extent(cur->bc_tp,
- 			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1,
--			&oinfo, XFS_AG_RESV_NONE);
-+			&oinfo, resv);
-+}
-+
-+STATIC int
-+xfs_inobt_free_block(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_buf		*bp)
-+{
-+	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_NONE);
-+}
-+
-+STATIC int
-+xfs_finobt_free_block(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_buf		*bp)
-+{
-+	if (cur->bc_mp->m_inotbt_nores)
-+		return xfs_inobt_free_block(cur, bp);
-+	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
- }
- 
- STATIC int
-@@ -380,7 +401,7 @@ static const struct xfs_btree_ops xfs_finobt_ops = {
- 	.dup_cursor		= xfs_inobt_dup_cursor,
- 	.set_root		= xfs_finobt_set_root,
- 	.alloc_block		= xfs_finobt_alloc_block,
--	.free_block		= xfs_inobt_free_block,
-+	.free_block		= xfs_finobt_free_block,
- 	.get_minrecs		= xfs_inobt_get_minrecs,
- 	.get_maxrecs		= xfs_inobt_get_maxrecs,
- 	.init_key_from_rec	= xfs_inobt_init_key_from_rec,
 -- 
-2.13.6
+chandan
 
