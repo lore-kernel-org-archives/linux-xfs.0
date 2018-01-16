@@ -1,110 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60913 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753148AbeAQUXE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:04 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 91/99] btrfs: Convert name_cache to XArray
-Date: Wed, 17 Jan 2018 12:21:55 -0800
-Message-Id: <20180117202203.19756-92-willy@infradead.org>
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-References: <20180117202203.19756-1-willy@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33168 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751438AbeAPTpj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 16 Jan 2018 14:45:39 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: cancel tx on xfs_defer_finish() error during xattr set/remove
+Date: Tue, 16 Jan 2018 14:45:37 -0500
+Message-Id: <20180116194537.34451-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Chris Dunlop <chris@onthe.net.au>
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+Chris Dunlop reports a problem where an xattr operation fails,
+reports the following error to syslog and hangs during unmount:
 
-This is a very straightforward conversion.  The handling of collisions
-in the namecache could be better handled with an hlist, but that's a
-patch for another day.
+ ================================================
+ [ BUG: lock held when returning to user space! ]
+ ...
+ ------------------------------------------------
+ <PID> is leaving the kernel with locks still held!
+ 1 lock held by <PID>:
+  #0:  (sb_internal){......}, at: [<ffffffffa07692a3>] xfs_trans_alloc+0xe3/0x130 [xfs]
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+The failure/shutdown occurs during deferred ops processing which
+leads to an error return from xfs_defer_finish() via
+xfs_attr_leaf_addname(). While the root cause of the failure is
+unknown corruption, the cause of the subsequent BUG above and
+unmount hang is failure to cancel the transaction before returning
+to userspace.
+
+The transaction is not cancelled because the out_defer_cancel error
+handling paths in the xfs_attr_[leaf|node]_[add|remove]name()
+functions clear args.trans without releasing the transaction. The
+callers therefore lose the reference to the transaction and fail to
+cancel it.
+
+Since xfs_attr_[set|remove]() always cancel args.trans when != NULL
+and xfs_defer_finish()->...->xfs_trans_roll() should always return
+with a valid transaction, update the leaf/node xattr functions to
+not reset args.trans in the error path responsible for cancelling
+deferred ops.
+
+Reported-by: Chris Dunlop <chris@onthe.net.au>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/btrfs/send.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/fs/btrfs/send.c b/fs/btrfs/send.c
-index 20d3300bd268..3891a8e958fa 100644
---- a/fs/btrfs/send.c
-+++ b/fs/btrfs/send.c
-@@ -23,7 +23,7 @@
- #include <linux/mount.h>
- #include <linux/xattr.h>
- #include <linux/posix_acl_xattr.h>
--#include <linux/radix-tree.h>
-+#include <linux/xarray.h>
- #include <linux/vmalloc.h>
- #include <linux/string.h>
- #include <linux/compat.h>
-@@ -118,7 +118,7 @@ struct send_ctx {
- 	struct list_head new_refs;
- 	struct list_head deleted_refs;
- 
--	struct radix_tree_root name_cache;
-+	struct xarray name_cache;
- 	struct list_head name_cache_list;
- 	int name_cache_size;
- 
-@@ -2021,8 +2021,7 @@ static int name_cache_insert(struct send_ctx *sctx,
- 	int ret = 0;
- 	struct list_head *nce_head;
- 
--	nce_head = radix_tree_lookup(&sctx->name_cache,
--			(unsigned long)nce->ino);
-+	nce_head = xa_load(&sctx->name_cache, (unsigned long)nce->ino);
- 	if (!nce_head) {
- 		nce_head = kmalloc(sizeof(*nce_head), GFP_KERNEL);
- 		if (!nce_head) {
-@@ -2031,7 +2030,8 @@ static int name_cache_insert(struct send_ctx *sctx,
- 		}
- 		INIT_LIST_HEAD(nce_head);
- 
--		ret = radix_tree_insert(&sctx->name_cache, nce->ino, nce_head);
-+		ret = xa_insert(&sctx->name_cache, nce->ino, nce_head,
-+								GFP_KERNEL);
- 		if (ret < 0) {
- 			kfree(nce_head);
- 			kfree(nce);
-@@ -2050,8 +2050,7 @@ static void name_cache_delete(struct send_ctx *sctx,
- {
- 	struct list_head *nce_head;
- 
--	nce_head = radix_tree_lookup(&sctx->name_cache,
--			(unsigned long)nce->ino);
-+	nce_head = xa_load(&sctx->name_cache, (unsigned long)nce->ino);
- 	if (!nce_head) {
- 		btrfs_err(sctx->send_root->fs_info,
- 	      "name_cache_delete lookup failed ino %llu cache size %d, leaking memory",
-@@ -2066,7 +2065,7 @@ static void name_cache_delete(struct send_ctx *sctx,
- 	 * We may not get to the final release of nce_head if the lookup fails
- 	 */
- 	if (nce_head && list_empty(nce_head)) {
--		radix_tree_delete(&sctx->name_cache, (unsigned long)nce->ino);
-+		xa_erase(&sctx->name_cache, (unsigned long)nce->ino);
- 		kfree(nce_head);
- 	}
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index a76914db72ef..ce4a34a2751d 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -717,7 +717,6 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 	return error;
+ out_defer_cancel:
+ 	xfs_defer_cancel(args->dfops);
+-	args->trans = NULL;
+ 	return error;
  }
-@@ -2077,7 +2076,7 @@ static struct name_cache_entry *name_cache_search(struct send_ctx *sctx,
- 	struct list_head *nce_head;
- 	struct name_cache_entry *cur;
  
--	nce_head = radix_tree_lookup(&sctx->name_cache, (unsigned long)ino);
-+	nce_head = xa_load(&sctx->name_cache, (unsigned long)ino);
- 	if (!nce_head)
- 		return NULL;
+@@ -770,7 +769,6 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ 	return 0;
+ out_defer_cancel:
+ 	xfs_defer_cancel(args->dfops);
+-	args->trans = NULL;
+ 	return error;
+ }
  
-@@ -6526,7 +6525,7 @@ long btrfs_ioctl_send(struct file *mnt_file, struct btrfs_ioctl_send_args *arg)
+@@ -1045,7 +1043,6 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+ 	return retval;
+ out_defer_cancel:
+ 	xfs_defer_cancel(args->dfops);
+-	args->trans = NULL;
+ 	goto out;
+ }
  
- 	INIT_LIST_HEAD(&sctx->new_refs);
- 	INIT_LIST_HEAD(&sctx->deleted_refs);
--	INIT_RADIX_TREE(&sctx->name_cache, GFP_KERNEL);
-+	xa_init(&sctx->name_cache);
- 	INIT_LIST_HEAD(&sctx->name_cache_list);
+@@ -1186,7 +1183,6 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 	return error;
+ out_defer_cancel:
+ 	xfs_defer_cancel(args->dfops);
+-	args->trans = NULL;
+ 	goto out;
+ }
  
- 	sctx->flags = arg->flags;
 -- 
-2.15.1
+2.13.6
 
