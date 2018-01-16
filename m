@@ -1,43 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32018 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750796AbeAQAwc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 19:52:32 -0500
-Date: Wed, 17 Jan 2018 11:52:30 +1100
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:16920 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751804AbeAPC5v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 21:57:51 -0500
+Date: Tue, 16 Jan 2018 13:57:46 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 17/21] xfs: cross-reference reverse-mapping btree
-Message-ID: <20180117005230.GF6304@dastard>
+Subject: Re: [PATCH v2 20/21] xfs: cross-reference the realtime bitmap
+Message-ID: <20180116025746.GF16421@dastard>
 References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398987679.18741.2129470901020229164.stgit@magnolia>
- <20180116232502.GB5602@magnolia>
+ <151398989544.18741.8012375240764840486.stgit@magnolia>
+ <20180109212609.GO5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180116232502.GB5602@magnolia>
+In-Reply-To: <20180109212609.GO5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 16, 2018 at 03:25:02PM -0800, Darrick J. Wong wrote:
+On Tue, Jan 09, 2018 at 01:26:09PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When scrubbing various btrees, we should cross-reference the records
-> with the reverse mapping btree and ensure that traversing the btree
-> finds the same number of blocks that the rmapbt thinks are owned by
-> that btree.
+> While we're scrubbing various btrees, cross-reference the records
+> with the other metadata.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> v3: fix indenting and standardize helper naming, refactor helpers per dave's suggestion
 > v2: streamline scrubber arguments, remove stack allocated objects
 > ---
+>  fs/xfs/libxfs/xfs_rtbitmap.c |   30 ++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/bmap.c          |    3 +++
+>  fs/xfs/scrub/rtbitmap.c      |   20 ++++++++++++++++++++
+>  fs/xfs/scrub/scrub.h         |    6 ++++++
+>  fs/xfs/xfs_rtalloc.h         |    4 ++++
+>  5 files changed, 63 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+> index 3fb29a5..a3f25a2 100644
+> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
+> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+> @@ -1097,3 +1097,33 @@ xfs_verify_rtbno(
+>  {
+>  	return rtbno < mp->m_sb.sb_rblocks;
+>  }
+> +
+> +/* Is the given extent all free? */
+> +int
+> +xfs_rtalloc_extent_is_free(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_trans		*tp,
+> +	xfs_rtblock_t			start,
+> +	xfs_rtblock_t			len,
 
-Looks ok.
+shouldn't that be a xfs_extlen_t?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> +	bool				*is_free)
+> +{
+> +	xfs_rtblock_t			end;
+> +	xfs_extlen_t			clen;
 
+clen? Not sure what that is shorthand for.
+
+
+> +	int				matches;
+> +	int				error;
+> +
+> +	*is_free = false;
+> +	while (len) {
+> +		clen = len > ~0U ? ~0U : len;
+
+So we're checking for a len > UINT_MAX and clamping it here because
+the rt code uses 32 bit extent lengths internally? If we actually
+need 64 bit extent lengths, then isn't using UINT_MAX more obvious
+as to the purpose? i.e
+
+	if (len > UINT_MAX)
+		clen = UINT_MAX;
+	else
+		clen = len;
+
+> +		error = xfs_rtcheck_range(mp, tp, start, clen, 1, &end,
+> +				&matches);
+> +		if (error || !matches || end < start + clen)
+> +			return error;
+> +
+> +		len -= end - start;
+> +		start = end + 1;
+> +	}
+> +
+> +	*is_free = true;
+> +	return error;
+> +}
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index 5c34e025..2908a1b 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -278,6 +278,9 @@ xfs_scrub_bmap_rt_extent_xref(
+>  {
+>  	if (info->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+>  		return;
+> +
+> +	xfs_scrub_xref_not_rtfree(info->sc, irec->br_startblock,
+> +			irec->br_blockcount);
+
+So, irec->br_blockcount is a xfs_extlen, which is 32 bits....
+
+>  }
+>  
+>  /* Cross-reference a single datadev extent record. */
+> diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+> index 6860d5d..1828b17 100644
+> --- a/fs/xfs/scrub/rtbitmap.c
+> +++ b/fs/xfs/scrub/rtbitmap.c
+> @@ -98,3 +98,23 @@ xfs_scrub_rtsummary(
+>  	/* XXX: implement this some day */
+>  	return -ENOENT;
+>  }
+> +
+> +
+> +/* xref check that the extent is not free in the rtbitmap */
+> +void
+> +xfs_scrub_xref_not_rtfree(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_fsblock_t			fsbno,
+> +	xfs_fsblock_t			len)
+
+So we're quietly converting it to a 64 bit length here. ANd not even
+using xfs_rtblock_t as you'd expect for a realtime block...
+
+What caller needs/uses a 64 bit extent length? All the rt allocation
+code uses xfs_extlen_t for lengths, so I'm a bit confused as to why
+it's needed here.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
