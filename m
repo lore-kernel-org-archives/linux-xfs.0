@@ -1,53 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from auth-3.ukservers.net ([217.10.138.152]:38352 "EHLO
-        auth-3.ukservers.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964998AbeALTfY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 14:35:24 -0500
-Subject: Re: Growing RAID10 with active XFS filesystem
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
- <20180108192607.GS5602@magnolia> <20180108220139.GB16421@dastard>
- <5A548D31.4000002@youngman.org.uk> <20180109222523.GJ16421@dastard>
- <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
- <20180111030723.GU16421@dastard> <5A58B901.7080609@youngman.org.uk>
- <20180112152538.2c4d8cd4@harpe.intellique.com>
- <5A58F5FB.7000101@youngman.org.uk>
- <20180112193710.1369f4ad@harpe.intellique.com>
-From: Wol's lists <antlists@youngman.org.uk>
-Message-ID: <8a8f7b91-80b5-3600-a82b-b55691d0ac6b@youngman.org.uk>
-Date: Fri, 12 Jan 2018 19:35:18 +0000
+Received: from aserp2120.oracle.com ([141.146.126.78]:35208 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750764AbeAPHA4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 02:00:56 -0500
+Date: Mon, 15 Jan 2018 23:00:46 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/5] xfs: check sb_agblocks and sb_agblklog when
+ validating superblock
+Message-ID: <20180116070046.GM5602@magnolia>
+References: <151579463950.8694.320025813242574491.stgit@magnolia>
+ <151579464601.8694.5478076755339350941.stgit@magnolia>
+ <20180115200313.GC5602@magnolia>
+ <20180115213102.GZ16421@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20180112193710.1369f4ad@harpe.intellique.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180115213102.GZ16421@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On 12/01/18 18:37, Emmanuel Florac wrote:
->> Or could it simply switch over to optimising for the new geometry,
->> accept the fact that the reshape will have caused hotspots, and every
->> time it rewrites (meta)data, it adjusts it to the new geometry to
->> reduce/remove hotspots over time?
->>
-> I suppose it's doable but not sufficiently a prominent use case to
-> bother much.
+On Tue, Jan 16, 2018 at 08:31:02AM +1100, Dave Chinner wrote:
+> On Mon, Jan 15, 2018 at 12:03:13PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Currently, we don't check sb_agblocks or sb_agblklog when we validate
+> > the superblock, which means that we can fuzz garbage values into those
+> > values and the mount succeeds.  This leads to all sorts of UBSAN
+> > warnings in xfs/350 since we can then coerce other parts of xfs into
+> > shifting by ridiculously large values.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v2: simplify ag min/max size definitions
+> > ---
+> >  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
+> >  fs/xfs/libxfs/xfs_sb.c |    3 +++
+> >  2 files changed, 10 insertions(+)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > index fc4386a..3ab1870 100644
+> > --- a/fs/xfs/libxfs/xfs_fs.h
+> > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
+> >  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
+> >  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
+> >  
+> > +/*
+> > + * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
+> > + * 16MB or larger than 1TB.
+> > + */
+> > +#define XFS_AG_MIN_BYTES	(1ULL << 24)	/* 16 MB */
+> > +#define XFS_AG_MAX_BYTES	(1ULL << 40)	/* 1 TB */
+> 
+> Sure, but....
+> > +
+> >  /* keep the maximum size under 2^31 by a small amount */
+> >  #define XFS_MAX_LOG_BYTES \
+> >  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > index 08e44a0..bdb4f74 100644
+> > --- a/fs/xfs/libxfs/xfs_sb.c
+> > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > @@ -253,6 +253,9 @@ xfs_mount_validate_sb(
+> >  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+> >  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
+> >  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+> > +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_AG_MIN_BYTES	||
+> > +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_AG_MAX_BYTES	||
+> 
+> .... this really needs to be checked against sb_dblocks /
+> sb_agcount. i.e. check against current filesystem size and geometry,
+> not against the theoretical maximum.
 
-Stick it on the "nice to have when somebody gets round to it" list :-) 
-But it at least should get put on the list ...
+I think I prefer to check the theoretical maximum /and/ whether or not
+ceil(dblocks/agblocks) == agcount, since we'd have to check agblocks != 0
+prior to doing that anyway.
 
-I'll get round to writing all this up soon, so the wiki will try and 
-persuade people that resizing arrays is not actually the brightest of 
-ideas.
+--D
 
-The trouble is lack of people talking to each other and thinking that 
-they can rely on the "do one job and do it well". Except of course that 
-you can't square a circle ... :-)
-
-But this really is stuff that needs to be on the wiki, and it's stuff 
-the MD and filesystem people don't talk about with each other, I expect :-(
-
-Cheers,
-Wol
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
