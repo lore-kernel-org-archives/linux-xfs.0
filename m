@@ -1,87 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39274 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965193AbeALWE0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 17:04:26 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0CLvQIs044747
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:25 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2ff5c082bk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:25 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0CM4PT2020337
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:25 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0CM4PMw011671
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:25 GMT
-Subject: [PATCH 4/5] xfs: attr leaf verifier needs to check for obviously
- bad count
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Jan 2018 14:04:24 -0800
-Message-ID: <151579466415.8694.4992590880368427655.stgit@magnolia>
-In-Reply-To: <151579463950.8694.320025813242574491.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:42740 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751228AbeAPMss (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 16 Jan 2018 07:48:48 -0500
+Date: Tue, 16 Jan 2018 07:48:46 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 1/5] xfs: check sb_agblocks and sb_agblklog when
+ validating superblock
+Message-ID: <20180116124846.GA52295@bfoster.bfoster>
 References: <151579463950.8694.320025813242574491.stgit@magnolia>
+ <151579464601.8694.5478076755339350941.stgit@magnolia>
+ <20180115200313.GC5602@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180115200313.GC5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jan 15, 2018 at 12:03:13PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Currently, we don't check sb_agblocks or sb_agblklog when we validate
+> the superblock, which means that we can fuzz garbage values into those
+> values and the mount succeeds.  This leads to all sorts of UBSAN
+> warnings in xfs/350 since we can then coerce other parts of xfs into
+> shifting by ridiculously large values.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: simplify ag min/max size definitions
+> ---
+>  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
+>  fs/xfs/libxfs/xfs_sb.c |    3 +++
+>  2 files changed, 10 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index fc4386a..3ab1870 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
+>  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
+>  
+> +/*
+> + * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
+> + * 16MB or larger than 1TB.
+> + */
+> +#define XFS_AG_MIN_BYTES	(1ULL << 24)	/* 16 MB */
+> +#define XFS_AG_MAX_BYTES	(1ULL << 40)	/* 1 TB */
+> +
 
-In the attribute leaf verifier, we can check for obviously bad values of
-firstused and count so that later attempts at lasthash don't run off the
-end of the memory buffer.  Found by ones fuzzing hdr.count in xfs/400 with
-KASAN.
+Dave's comment aside... just a nit: the definitions above use
+XFS_[MIN|MAX]_* naming rather than XFS_AG_*. It would be nice to be
+consistent there if we stick with these.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c |   19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+Brian
 
-
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 6fddce7..712d458 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -249,12 +249,13 @@ xfs_attr3_leaf_hdr_to_disk(
- 
- static xfs_failaddr_t
- xfs_attr3_leaf_verify(
--	struct xfs_buf		*bp)
-+	struct xfs_buf			*bp)
- {
--	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_attr_leafblock *leaf = bp->b_addr;
--	struct xfs_perag *pag = bp->b_pag;
--	struct xfs_attr3_icleaf_hdr ichdr;
-+	struct xfs_attr3_icleaf_hdr	ichdr;
-+	struct xfs_mount		*mp = bp->b_target->bt_mount;
-+	struct xfs_attr_leafblock	*leaf = bp->b_addr;
-+	struct xfs_perag		*pag = bp->b_pag;
-+	struct xfs_attr_leaf_entry	*entries;
- 
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
- 
-@@ -282,6 +283,14 @@ xfs_attr3_leaf_verify(
- 	if (pag && pag->pagf_init && ichdr.count == 0)
- 		return __this_address;
- 
-+	if (ichdr.firstused > mp->m_attr_geo->blksize)
-+		return __this_address;
-+
-+	entries = xfs_attr3_leaf_entryp(bp->b_addr);
-+	if ((char *)&entries[ichdr.count] >=
-+	    (char *)bp->b_addr + ichdr.firstused)
-+		return __this_address;
-+
- 	/* XXX: need to range check rest of attr header values */
- 	/* XXX: hash order check? */
- 
-
+>  /* keep the maximum size under 2^31 by a small amount */
+>  #define XFS_MAX_LOG_BYTES \
+>  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 08e44a0..bdb4f74 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -253,6 +253,9 @@ xfs_mount_validate_sb(
+>  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+>  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
+>  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_AG_MIN_BYTES	||
+> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_AG_MAX_BYTES	||
+> +	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
+>  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
