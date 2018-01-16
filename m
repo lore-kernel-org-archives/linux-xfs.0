@@ -1,117 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49550 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750823AbeAPXcn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 18:32:43 -0500
-Date: Tue, 16 Jan 2018 15:32:37 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:40048 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751389AbeAPXeS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 18:34:18 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0GNMCH0105951
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jan 2018 23:34:18 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2130.oracle.com with ESMTP id 2fhsdqgdwe-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jan 2018 23:34:18 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0GNYH0U014228
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jan 2018 23:34:17 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0GNYGYC031560
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jan 2018 23:34:17 GMT
+Date: Tue, 16 Jan 2018 15:34:15 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 4/5] xfs: attr leaf verifier needs to check for
- obviously bad count
-Message-ID: <20180116233237.GG5602@magnolia>
-References: <151579463950.8694.320025813242574491.stgit@magnolia>
- <151579466415.8694.4992590880368427655.stgit@magnolia>
- <20180115200527.GE5602@magnolia>
- <20180116125044.GB52295@bfoster.bfoster>
+Subject: [PATCH] xfs: check that br_blockcount doesn't overflow
+Message-ID: <20180116233415.GH5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180116125044.GB52295@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jan 16, 2018 at 07:50:45AM -0500, Brian Foster wrote:
-> On Mon, Jan 15, 2018 at 12:05:27PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In the attribute leaf verifier, we can check for obviously bad values of
-> > firstused and count so that later attempts at lasthash don't run off the
-> > end of the memory buffer.  Found by ones fuzzing hdr.count in xfs/400 with
-> > KASAN.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v2: strengthen checking, clarify what we're testing via comments
-> > ---
-> 
-> Ok, digging more into the code I see that firstused refers to the lowest
-> ->nameidx of the xfs_attr_leaf_entry's in the block. On insert,
-> ->nameidx is constructed from freemap.base, which starts at just beyond
-> the block header. freemap.base+freemap.size essentially refers to a raw
-> block offset where the name/value info is placed, so I think I just
-> misread that code the first time around. This makes sense and the
-> cleanups look good. Thanks for the clarification.
-> 
-> One more small question..
-> 
-> >  fs/xfs/libxfs/xfs_attr_leaf.c |   26 +++++++++++++++++++++-----
-> >  1 file changed, 21 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > index 6fddce7..f1a1c60 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > @@ -249,12 +249,13 @@ xfs_attr3_leaf_hdr_to_disk(
-> >  
-> >  static xfs_failaddr_t
-> >  xfs_attr3_leaf_verify(
-> > -	struct xfs_buf		*bp)
-> > +	struct xfs_buf			*bp)
-> >  {
-> > -	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> > -	struct xfs_attr_leafblock *leaf = bp->b_addr;
-> > -	struct xfs_perag *pag = bp->b_pag;
-> > -	struct xfs_attr3_icleaf_hdr ichdr;
-> > +	struct xfs_attr3_icleaf_hdr	ichdr;
-> > +	struct xfs_mount		*mp = bp->b_target->bt_mount;
-> > +	struct xfs_attr_leafblock	*leaf = bp->b_addr;
-> > +	struct xfs_perag		*pag = bp->b_pag;
-> > +	struct xfs_attr_leaf_entry	*entries;
-> >  
-> >  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
-> >  
-> > @@ -282,6 +283,21 @@ xfs_attr3_leaf_verify(
-> >  	if (pag && pag->pagf_init && ichdr.count == 0)
-> >  		return __this_address;
-> >  
-> > +	/*
-> > +	 * firstused is the block offset of the first name info structure.
-> > +	 * Make sure it doesn't go off the block or crash into the header.
-> > +	 */
-> > +	if (ichdr.firstused > mp->m_attr_geo->blksize)
-> > +		return __this_address;
-> > +	if (ichdr.firstused < xfs_attr3_leaf_hdr_size(leaf))
-> > +		return __this_address;
-> > +
-> > +	/* Make sure the entries array doesn't crash into the name info. */
-> > +	entries = xfs_attr3_leaf_entryp(bp->b_addr);
-> > +	if ((char *)&entries[ichdr.count] >=
-> > +	    (char *)bp->b_addr + ichdr.firstused)
-> > +		return __this_address;
-> > +
-> 
-> Can the end of the entries list align with the first namelist object if
-> the block is full, for example? E.g., is '&entries[ichdr.count] ==
-> bp->b_addr + ichdr.firstused' a sane possibility?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes.  Good catch!  I'll change the '>=' to '>'.
+xfs_bmbt_irec.br_blockcount is declared as xfs_filblks_t, which is an
+unsigned 64-bit integer.  Though the bmbt helpers will never set a value
+larger than 2^21 (since the underlying on-disk extent record has a
+length field that is only 21 bits wide), we should be a little defensive
+about checking that a bmbt record doesn't exceed what we're expecting or
+overflow into the next AG.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/bmap.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-> That aside, this looks good to me:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> >  	/* XXX: need to range check rest of attr header values */
-> >  	/* XXX: hash order check? */
-> >  
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 3a815db..fa64bd4 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -348,6 +348,7 @@ xfs_scrub_bmap_extent(
+ {
+ 	struct xfs_mount		*mp = info->sc->mp;
+ 	struct xfs_buf			*bp = NULL;
++	xfs_filblks_t			end;
+ 	int				error = 0;
+ 
+ 	if (cur)
+@@ -375,19 +376,23 @@ xfs_scrub_bmap_extent(
+ 				irec->br_startoff);
+ 
+ 	/* Make sure the extent points to a valid place. */
++	if (irec->br_blockcount > MAXEXTLEN)
++		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
++				irec->br_startoff);
+ 	if (irec->br_startblock + irec->br_blockcount <= irec->br_startblock)
+ 		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
+ 				irec->br_startoff);
++	end = irec->br_startblock + irec->br_blockcount - 1;
+ 	if (info->is_rt &&
+ 	    (!xfs_verify_rtbno(mp, irec->br_startblock) ||
+-	     !xfs_verify_rtbno(mp, irec->br_startblock +
+-				irec->br_blockcount - 1)))
++	     !xfs_verify_rtbno(mp, end)))
+ 		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
+ 				irec->br_startoff);
+ 	if (!info->is_rt &&
+ 	    (!xfs_verify_fsbno(mp, irec->br_startblock) ||
+-	     !xfs_verify_fsbno(mp, irec->br_startblock +
+-				irec->br_blockcount - 1)))
++	     !xfs_verify_fsbno(mp, end) ||
++	     XFS_FSB_TO_AGNO(mp, irec->br_startblock) !=
++	     XFS_FSB_TO_AGNO(mp, end)))
+ 		xfs_scrub_fblock_set_corrupt(info->sc, info->whichfork,
+ 				irec->br_startoff);
+ 
