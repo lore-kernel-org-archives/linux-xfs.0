@@ -1,93 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47946 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934028AbeAOOlV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Jan 2018 09:41:21 -0500
-Date: Mon, 15 Jan 2018 09:41:09 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/5] xfs: check sb_agblocks and sb_agblklog when
- validating superblock
-Message-ID: <20180115144108.GA47688@bfoster.bfoster>
+Received: from userp2120.oracle.com ([156.151.31.85]:38698 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750716AbeAPHBZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 02:01:25 -0500
+Date: Mon, 15 Jan 2018 23:01:08 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 3/5] xfs: directory scrubber must walk through data
+ block to offset
+Message-ID: <20180116070108.GN5602@magnolia>
 References: <151579463950.8694.320025813242574491.stgit@magnolia>
- <151579464601.8694.5478076755339350941.stgit@magnolia>
+ <151579465813.8694.2293343683195960907.stgit@magnolia>
+ <20180115200447.GD5602@magnolia>
+ <20180115215648.GA16421@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151579464601.8694.5478076755339350941.stgit@magnolia>
+In-Reply-To: <20180115215648.GA16421@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Fri, Jan 12, 2018 at 02:04:06PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 16, 2018 at 08:56:48AM +1100, Dave Chinner wrote:
+> On Mon, Jan 15, 2018 at 12:04:47PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > In xfs_scrub_dir_rec, we must walk through the directory block entries
+> > to arrive at the offset given by the hash structure.  If we blindly
+> > trust the hash address, we can end up midway into a directory entry and
+> > stray outside the block.  Found by lastbit fuzzing lents[3].address in
+> > xfs/390 with KASAN enabled.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > v2: improve defensive pointer checking (endp theoretically can be null)
+> > ---
+> >  fs/xfs/libxfs/xfs_dir2.h      |    1 +
+> >  fs/xfs/libxfs/xfs_dir2_data.c |   19 +++++++++++++++++++
+> >  fs/xfs/scrub/dir.c            |   30 +++++++++++++++++++++++++++++-
+> >  3 files changed, 49 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> > index 1a8f2cf..2c77195 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2.h
+> > +++ b/fs/xfs/libxfs/xfs_dir2.h
+> > @@ -340,5 +340,6 @@ xfs_dir2_leaf_tail_p(struct xfs_da_geometry *geo, struct xfs_dir2_leaf *lp)
+> >  #define XFS_READDIR_BUFSIZE	(32768)
+> >  
+> >  unsigned char xfs_dir3_get_dtype(struct xfs_mount *mp, uint8_t filetype);
+> > +void *xfs_dir3_data_endp(struct xfs_mount *mp, struct xfs_dir2_data_hdr *hdr);
+> >  
+> >  #endif	/* __XFS_DIR2_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+> > index 853d9ab..b87db03 100644
+> > --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> > +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> > @@ -1098,3 +1098,22 @@ xfs_dir2_data_use_free(
+> >  	}
+> >  	*needscanp = needscan;
+> >  }
+> > +
+> > +/* Find the end of the entry data in a data/block format dir block. */
+> > +void *
+> > +xfs_dir3_data_endp(
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_dir2_data_hdr	*hdr)
+> > +{
+> > +	switch (hdr->magic) {
+> > +	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
+> > +	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+> > +		return xfs_dir2_block_leaf_p(
+> > +				xfs_dir2_block_tail_p(mp->m_dir_geo, hdr));
+> > +	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+> > +	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+> > +		return (char *)hdr + mp->m_dir_geo->blksize;
+> > +	default:
+> > +		return NULL;
+> > +	}
+> > +}
 > 
-> Currently, we don't check sb_agblocks or sb_agblklog when we validate
-> the superblock, which means that we can fuzz garbage values into those
-> values and the mount succeeds.  This leads to all sorts of UBSAN
-> warnings in xfs/350 since we can then coerce other parts of xfs into
-> shifting by ridiculously large values.
+> Ok, this pattern is used in a few places. e.g.
+> xfs_dir2_data_make_free, __xfs_dir3_data_check and
+> xfs_dir2_data_freescan_int, so if you're going to add a helper, at
+> least convert all the other places there is the same code over to
+> use it...
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
->  fs/xfs/libxfs/xfs_sb.c |    3 +++
->  2 files changed, 10 insertions(+)
+> Also, it should be passed a geo struct, not a xfs_mount.
+
+Ok.
+
+--D
+
+> Cheers,
 > 
+> Dave.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index fc4386a..2701ea0 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
->  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
->  
-> +/* Limits on sb_agblocks/sb_agblklog */
-> +#define XFS_AG_BYTES(bblog)	((long long)BBSIZE << (bblog))
-> +#define XFS_AG_MIN_BYTES	((XFS_AG_BYTES(15)))	/* 16 MB */
-> +#define XFS_AG_MAX_BYTES	((XFS_AG_BYTES(31)))	/* 1 TB */
-> +#define XFS_AG_MIN_BLOCKS(blog)	(XFS_AG_MIN_BYTES >> (blog))
-> +#define XFS_AG_MAX_BLOCKS(blog)	((XFS_AG_MAX_BYTES - 1) >> (blog))
-> +
-
-Hmm, we have some similar but differently named definitions just above.
-E.g., XFS_MIN_AG_BLOCKS vs. XFS_AG_MIN_BLOCKS()..? I'm not sure where
-the 64 block value comes from, but assuming it's valid.. perhaps we
-should use that field for the block count and new ones for byte values?
-
-Regardless of whether we want to check the block count here at all, I
-think it's more straightforward (and less code) to just define two new
-XFS_MIN/MAX_AG_BYTES values and then update the checks to use existing
-conversions in terms of bytes (rather than obfuscate what is really a
-size check behind block macros). For example, something like:
-
-	...
-	XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_MIN_AG_BYTES ||
-	XFS_FSB_TO_B(mp, sbp->ag_agblocks) > XFS_MAX_AG_BYTES ||
-	...
-
-Brian
-
->  /* keep the maximum size under 2^31 by a small amount */
->  #define XFS_MAX_LOG_BYTES \
->  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 08e44a0..1f81b49 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -253,6 +253,9 @@ xfs_mount_validate_sb(
->  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
->  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
->  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
-> +	    sbp->sb_agblocks < XFS_AG_MIN_BLOCKS(sbp->sb_blocklog)	||
-> +	    sbp->sb_agblocks > XFS_AG_MAX_BLOCKS(sbp->sb_blocklog)	||
-> +	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
->  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
->  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
->  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
-> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
