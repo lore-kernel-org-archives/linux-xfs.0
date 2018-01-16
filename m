@@ -1,79 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:41549 "EHLO mail1.g1.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935043AbeAORIX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Jan 2018 12:08:23 -0500
-Date: Mon, 15 Jan 2018 18:08:26 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Growing RAID10 with active XFS filesystem
-Message-ID: <20180115180826.01665812@harpe.intellique.com>
-In-Reply-To: <37abf496-57aa-fd12-26b7-09d43f08e6d5@youngman.org.uk>
-References: <f289da8f-96ec-7db4-abb1-b151d553c088@gmail.com>
-        <20180108192607.GS5602@magnolia>
-        <20180108220139.GB16421@dastard>
-        <5A548D31.4000002@youngman.org.uk>
-        <20180109222523.GJ16421@dastard>
-        <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
-        <20180111030723.GU16421@dastard>
-        <5A58B901.7080609@youngman.org.uk>
-        <20180112152538.2c4d8cd4@harpe.intellique.com>
-        <37abf496-57aa-fd12-26b7-09d43f08e6d5@youngman.org.uk>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64870 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750903AbeAPCoz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 21:44:55 -0500
+Date: Tue, 16 Jan 2018 13:44:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 19/21] xfs: cross-reference refcount btree during scrub
+Message-ID: <20180116024447.GE16421@dastard>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
+ <151398988926.18741.14757152372859283463.stgit@magnolia>
+ <20180109212547.GN5602@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/cGC7Lu0slVysKYXb2rcXYKI"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180109212547.GN5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wol's lists <antlists@youngman.org.uk>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
---Sig_/cGC7Lu0slVysKYXb2rcXYKI
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jan 09, 2018 at 01:25:47PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> During metadata btree scrub, we should cross-reference with the
+> reference counts.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: streamline scrubber arguments, remove stack allocated objects
+> ---
 
-Le Sun, 14 Jan 2018 21:33:17 +0000
-"Wol's lists" <antlists@youngman.org.uk> =C3=A9crivait:
+....
 
-> On 12/01/18 14:25, Emmanuel Florac wrote:
-> >> My point is that all this causes geometries to change, and ext and
-> >> btrfs amongst others can clearly handle this. Can XFS? =20
->=20
-> > Neither XFS, ext4 or btrfs can handle this. That's why Dave
-> > mentioned the fact that growing your RAID is almost always the
-> > wrong solution. A much better solution is to add a new array and
-> > use LVM to aggregate it with the existing ones. =20
->=20
-> Does the new array need the same geometry as the old one?
+> +/* Make sure the refcount records match this data fork extent. */
+> +STATIC void
+> +xfs_scrub_bmap_xref_refcount_data(
+> +	struct xfs_scrub_bmap_info	*info,
+> +	struct xfs_bmbt_irec		*irec,
+> +	xfs_fsblock_t			bno)
 
-That's the best way to preserve performance, yes.
-=20
-> What happens if my original array is a 4-disk raid-5, and then I add
-> a 3-disk raid-5? Can XFS cope with the different optimisations
-> required for the different layouts on the different arrays?
+What's in the irec if it's not the block number of the extent we
+are looking up?
 
-No because your array will remain optimised for the initial layout.
-However, if you add a new array with the same stripe characteristics you
-should at least NOT lose performance. See also the mount options  Stan
-mentioned earlier :)
+Actually, I may have just answered that myself: bno is actually
+an agbno, not an fsbno. So that should be:
 
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+	xfs_agblock_t			agbno)
 
---Sig_/cGC7Lu0slVysKYXb2rcXYKI
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
+> +{
+> +	xfs_agblock_t			fbno;
+> +	xfs_extlen_t			flen;
+> +	int				error;
+> +
+> +	if (!info->sc->sa.refc_cur)
+> +		return;
+> +
+> +	/* If this is shared, the inode flag must be set. */
+> +	error = xfs_refcount_find_shared(info->sc->sa.refc_cur, bno,
+> +			irec->br_blockcount, &fbno, &flen, false);
+> +	if (!xfs_scrub_should_check_xref(info->sc, &error,
+> +			&info->sc->sa.refc_cur))
+> +		return;
+> +
+> +	if (flen != 0 && !xfs_is_reflink_inode(info->sc->ip))
+> +		xfs_scrub_fblock_xref_set_corrupt(info->sc, info->whichfork,
+> +				irec->br_startoff);
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+So is the block corrupt or is the inode flags corrupt? What
+determines the object we mark as corrupt/needing fixing here?
 
-iEYEARECAAYFAlpc4AoACgkQX3jQXNUicVanHgCg43/NQQ0c8KsZWZWDxtSHf6oP
-wUAAoJy932P8g04MufkNxCjZIhI8RAbw
-=B8gg
------END PGP SIGNATURE-----
+> +/* Make sure the refcount records match this attr fork extent. */
+> +STATIC void
+> +xfs_scrub_bmap_xref_refcount_attr(
+> +	struct xfs_scrub_bmap_info	*info,
+> +	struct xfs_bmbt_irec		*irec,
+> +	xfs_fsblock_t			bno)
 
---Sig_/cGC7Lu0slVysKYXb2rcXYKI--
+agbno
+
+> +{
+> +	xfs_agblock_t			fbno;
+> +	xfs_extlen_t			flen;
+> +	int				error;
+> +
+> +	if (!info->sc->sa.refc_cur)
+> +		return;
+> +
+> +	/* No shared attr fork extents */
+> +	error = xfs_refcount_find_shared(info->sc->sa.refc_cur, bno,
+> +			irec->br_blockcount, &fbno, &flen, false);
+> +	if (!xfs_scrub_should_check_xref(info->sc, &error,
+> +			&info->sc->sa.refc_cur))
+> +		return;
+> +
+> +	if (flen != 0)
+> +		xfs_scrub_fblock_xref_set_corrupt(info->sc, info->whichfork,
+> +				irec->br_startoff);
+> +}
+> +
+> +/* Make sure the refcount records match this CoW fork extent. */
+> +STATIC void
+> +xfs_scrub_bmap_xref_refcount_cow(
+> +	struct xfs_scrub_bmap_info	*info,
+> +	struct xfs_bmbt_irec		*irec,
+> +	xfs_fsblock_t			bno)
+
+agbno
+
+> +{
+> +	if (!info->sc->sa.refc_cur)
+> +		return;
+> +
+> +	xfs_scrub_xref_has_cow_staging(info->sc, bno, irec->br_blockcount);
+> +}
+> +
+>  /* Cross-reference a single rtdev extent record. */
+>  STATIC void
+>  xfs_scrub_bmap_rt_extent_xref(
+> @@ -243,6 +309,17 @@ xfs_scrub_bmap_extent_xref(
+>  	xfs_scrub_xref_is_used_space(info->sc, agbno, len);
+>  	xfs_scrub_xref_not_inodes(info->sc, agbno, len);
+>  	xfs_scrub_bmap_xref_rmap(info, irec, agbno);
+> +	switch (info->whichfork) {
+> +	case XFS_DATA_FORK:
+> +		xfs_scrub_bmap_xref_refcount_data(info, irec, agbno);
+> +		break;
+> +	case XFS_ATTR_FORK:
+> +		xfs_scrub_bmap_xref_refcount_attr(info, irec, agbno);
+> +		break;
+> +	case XFS_COW_FORK:
+> +		xfs_scrub_bmap_xref_refcount_cow(info, irec, agbno);
+> +		break;
+
+This is where the agbno comes from :P
+
+> +	}
+>  
+>  	xfs_scrub_ag_free(info->sc, &info->sc->sa);
+>  }
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 30603b4..fb16314 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -97,6 +97,7 @@ xfs_scrub_iallocbt_chunk_xref(
+>  
+>  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
+>  	xfs_scrub_xref_owned_by(sc, agbno, len, &oinfo);
+> +	xfs_scrub_xref_not_shared(sc, agbno, len);
+>  }
+>  
+>  /* Is this chunk worth checking? */
+> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> index fc546f2..f12586c 100644
+> --- a/fs/xfs/scrub/inode.c
+> +++ b/fs/xfs/scrub/inode.c
+> @@ -652,6 +652,7 @@ xfs_scrub_inode_xref(
+>  	xfs_scrub_inode_xref_finobt(sc, ino);
+>  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
+>  	xfs_scrub_xref_owned_by(sc, agbno, 1, &oinfo);
+> +	xfs_scrub_xref_not_shared(sc, agbno, 1);
+>  
+>  	xfs_scrub_ag_free(sc, &sc->sa);
+>  }
+> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+> index df18e47..6e5b12a 100644
+> --- a/fs/xfs/scrub/refcount.c
+> +++ b/fs/xfs/scrub/refcount.c
+> @@ -31,6 +31,7 @@
+>  #include "xfs_sb.h"
+>  #include "xfs_alloc.h"
+>  #include "xfs_rmap.h"
+> +#include "xfs_refcount.h"
+>  #include "scrub/xfs_scrub.h"
+>  #include "scrub/scrub.h"
+>  #include "scrub/common.h"
+> @@ -428,3 +429,67 @@ xfs_scrub_refcountbt(
+>  
+>  	return error;
+>  }
+> +
+> +/* xref check that a cow staging extent is marked in the refcountbt. */
+> +void
+> +xfs_scrub_xref_has_cow_staging(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_agblock_t			bno,
+
+agbno
+
+> +	xfs_extlen_t			len)
+> +{
+> +	struct xfs_refcount_irec	rc;
+> +	bool				has_cowflag;
+> +	int				has_refcount;
+> +	int				error;
+.....
+> +/*
+> + * xref check that the extent is not shared.  Only file data blocks
+> + * can have multiple owners.
+> + */
+> +void
+> +xfs_scrub_xref_not_shared(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_agblock_t			bno,
+
+agbno
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
