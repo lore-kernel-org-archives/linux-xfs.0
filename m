@@ -1,200 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:40888 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750740AbeAOWRP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 17:17:15 -0500
-Date: Tue, 16 Jan 2018 09:17:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 16/21] xfs: cross-reference inode btrees during scrub
-Message-ID: <20180115221711.GB16421@dastard>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398987068.18741.4829286717637372866.stgit@magnolia>
- <20180109212218.GK5602@magnolia>
+Received: from resqmta-ch2-07v.sys.comcast.net ([69.252.207.39]:46880 "EHLO
+        resqmta-ch2-07v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750752AbeAPP3m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 10:29:42 -0500
+Date: Tue, 16 Jan 2018 09:21:30 -0600 (CST)
+From: Christopher Lameter <cl@linux.com>
+Subject: kmem_cache_attr (was Re: [PATCH 04/36] usercopy: Prepare for usercopy
+ whitelisting)
+In-Reply-To: <20180114230719.GB32027@bombadil.infradead.org>
+Message-ID: <alpine.DEB.2.20.1801160913260.3908@nuc-kabylake>
+References: <1515531365-37423-1-git-send-email-keescook@chromium.org> <1515531365-37423-5-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1801101219390.7926@nuc-kabylake> <20180114230719.GB32027@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180109212218.GK5602@magnolia>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, Laura Abbott <labbott@redhat.com>, Mark Rutland <mark.rutland@arm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
 
-On Tue, Jan 09, 2018 at 01:22:18PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Cross-reference the inode btrees with the other metadata when we
-> scrub the filesystem.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: streamline scrubber arguments, remove stack allocated objects
-> ---
->  fs/xfs/scrub/agheader.c |   19 +++++++++++++
->  fs/xfs/scrub/alloc.c    |    1 +
->  fs/xfs/scrub/bmap.c     |    1 +
->  fs/xfs/scrub/ialloc.c   |   70 +++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/inode.c    |   49 +++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/refcount.c |    1 +
->  fs/xfs/scrub/rmap.c     |    4 +++
->  fs/xfs/scrub/scrub.h    |    4 +++
->  8 files changed, 149 insertions(+)
-> 
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index 3b66cd4..4d4ce1f 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -122,6 +122,7 @@ xfs_scrub_superblock_xref(
->  		return;
->  
->  	xfs_scrub_xref_is_used_space(sc, agbno, 1);
-> +	xfs_scrub_xref_not_inodes(sc, agbno, 1);
+On Sun, 14 Jan 2018, Matthew Wilcox wrote:
 
-Seems a bit strange to have "is" in "_is_used_space" and then don't
-put it in "_is_not_inodes"....
+> > Hmmm... At some point we should switch kmem_cache_create to pass a struct
+> > containing all the parameters. Otherwise the API will blow up with
+> > additional functions.
+>
+> Obviously I agree with you.  I'm inclined to not let that delay Kees'
+> patches; we can fix the few places that use this API later.  At this
+> point, my proposal for the ultimate form would be:
 
-> @@ -752,6 +760,17 @@ xfs_scrub_agi_xref(
->  		return;
->  
->  	xfs_scrub_xref_is_used_space(sc, agbno, 1);
-> +	xfs_scrub_xref_not_inodes(sc, agbno, 1);
+Right. Thats why I said "at some point"....
 
-Hmmm, what this actually means is "_is_not_inode_chunk", right?
-Kinda obscure to have the inode index checking it's "not inodes" :P
+>
+> struct kmem_cache_attr {
+> 	const char name[32];
 
-> +	if (sc->sa.ino_cur) {
-> +		error = xfs_ialloc_count_inodes(sc->sa.ino_cur, &icount,
-> +				&freecount);
-> +		if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.ino_cur) &&
-> +		    (be32_to_cpu(agi->agi_count) != icount ||
-> +		     be32_to_cpu(agi->agi_freecount) != freecount))
-> +			xfs_scrub_block_xref_set_corrupt(sc, sc->sa.agi_bp);
-> +	}
+Want to avoid the string reference mess that occurred in the past?
+Is that really necessary? But it would limit the size of the name.
 
-Reduce the indent by doing:
+> 	void (*ctor)(void *);
+> 	unsigned int useroffset;
+> 	unsigned int user_size;
+> };
+>
+> kmem_create_cache_attr(const struct kmem_cache_attr *attr, unsigned int size,
+> 			unsigned int align, slab_flags_t flags)
+>
+> (my rationale is that everything in attr should be const, but size, align
+> and flags all get modified by the slab code).
 
-if (!sc->sa.ino_cur)
-	return;
+Thought about putting all the parameters into the kmem_cache_attr struct.
 
-?
+So
 
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 4526894..34c133e 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -67,10 +67,32 @@ xfs_scrub_iallocbt_chunk_xref(
->  	xfs_agblock_t			agbno,
->  	xfs_extlen_t			len)
->  {
-> +	struct xfs_btree_cur		**pcur;
-> +	bool				has_irec;
-> +	int				error;
-> +
->  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
->  		return;
->  
->  	xfs_scrub_xref_is_used_space(sc, agbno, len);
-> +
-> +	/*
-> +	 * If we're checking the finobt, cross-reference with the inobt.
-> +	 * Otherwise we're checking the inobt; if there is an finobt,
-> +	 * make sure we have a record or not depending on freecount.
-> +	 */
-> +	if (sc->sm->sm_type == XFS_SCRUB_TYPE_FINOBT)
-> +		pcur = &sc->sa.ino_cur;
-> +	else
-> +		pcur = &sc->sa.fino_cur;
-> +	if (*pcur) {
-> +		error = xfs_ialloc_has_inode_record(*pcur,
-> +				agino, agino, &has_irec);
-> +		if (xfs_scrub_should_check_xref(sc, &error, pcur) &&
-> +		    ((irec->ir_freecount > 0 && !has_irec) ||
-> +		     (irec->ir_freecount == 0 && has_irec)))
-> +			xfs_scrub_btree_xref_set_corrupt(sc, *pcur, 0);
-> +	}
-
-Same here?
-
->  }
->  
->  /* Is this chunk worth checking? */
-> @@ -352,3 +374,51 @@ xfs_scrub_finobt(
->  {
->  	return xfs_scrub_iallocbt(sc, XFS_BTNUM_FINO);
->  }
-> +
-> +/* xref check that the extent is not covered by inodes */
-> +void
-> +xfs_scrub_xref_not_inodes(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_agblock_t			bno,
-> +	xfs_extlen_t			len)
-> +{
-> +	bool				has_inodes;
-> +	int				error;
-> +
-> +	if (sc->sa.ino_cur) {
-> +		error = xfs_ialloc_has_inodes_at_extent(sc->sa.ino_cur, bno,
-> +				len, &has_inodes);
-> +		if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.ino_cur) &&
-> +		    has_inodes)
-> +			xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.ino_cur, 0);
-> +	}
-> +
-> +	if (sc->sa.fino_cur) {
-> +		error = xfs_ialloc_has_inodes_at_extent(sc->sa.fino_cur, bno,
-> +				len, &has_inodes);
-> +		if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.fino_cur) &&
-> +		    has_inodes)
-> +			xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.fino_cur,
-> +					0);
-> +	}
-> +}
-> +
-> +/* xref check that the extent is covered by inodes */
-> +void
-> +xfs_scrub_xref_are_inodes(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_agblock_t			bno,
-> +	xfs_extlen_t			len)
-> +{
-> +	bool				has_inodes;
-> +	int				error;
-> +
-> +	if (!sc->sa.ino_cur)
-> +		return;
-> +
-> +	error = xfs_ialloc_has_inodes_at_extent(sc->sa.ino_cur, bno,
-> +			len, &has_inodes);
-> +	if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.ino_cur) &&
-> +	    !has_inodes)
-> +		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.ino_cur, 0);
-> +}
-
-That's 3 copies of that check and error handling.
-
-xfs_scrub_xref_inode_check(
-	struct xfs_scrub_context	*sc,
-	xfs_agblock_t			bno,
-	xfs_extlen_t			len,
-	struct xfs_btree_cursor		**icur))
-{
-	error = xfs_ialloc_has_inodes_at_extent(*icur, bno, len, &has_inodes);
-	if (xfs_scrub_should_check_xref(sc, &error, icur) &&
-	    !has_inodes)
-		xfs_scrub_btree_xref_set_corrupt(sc, *icur, 0);
+struct kmem_cache_attr {
+	char *name;
+	size_t size;
+	size_t align;
+	slab_flags_t flags;
+	unsigned int useroffset;
+	unsinged int usersize;
+	void (*ctor)(void *);
+	kmem_isolate_func *isolate;
+	kmem_migrate_func *migrate;
+	...
 }
 
-And the callers become:
-
-	if (sc->sa.ino_cur)
-		xfs_scrub_xref_inode_check(sc, bno, len, &sc->sa.ino_cur);
-
-I find that much easier to read...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
