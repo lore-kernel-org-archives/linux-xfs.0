@@ -1,200 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:48189 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753992AbeAQUXD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:03 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 86/99] btrfs: Convert reada_zones to XArray
-Date: Wed, 17 Jan 2018 12:21:50 -0800
-Message-Id: <20180117202203.19756-87-willy@infradead.org>
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-References: <20180117202203.19756-1-willy@infradead.org>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:42285 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751086AbeAPEtE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 23:49:04 -0500
+Received: by mail-ot0-f194.google.com with SMTP id s3so12526356otc.9
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Jan 2018 20:49:03 -0800 (PST)
+MIME-Version: 1.0
+From: Philipp Schrader <philipp@peloton-tech.com>
+Date: Mon, 15 Jan 2018 20:49:02 -0800
+Message-ID: <CA+0CQ21AhCGcBdNo5RY4Q=oakNQO1S_jgHU2f-BdG-fL71ZyFw@mail.gmail.com>
+Subject: Reproducible XFS filesystem artifacts
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Austin Schuh <austin@peloton-tech.com>, Alison Chaiken <alison@peloton-tech.com>
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+Hi all,
 
-The use of the reada_lock means we have to use the xa_reserve() API.
-If we can avoid using reada_lock to protect this xarray, we can drop
-the use of that function.
+We're currently trying to clean up our build processes to make sure
+that all binary output is reproducible (along the lines of
+https://reproducible-builds.org/).
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- fs/btrfs/reada.c   | 54 +++++++++++++++++++-----------------------------------
- fs/btrfs/volumes.c |  2 +-
- fs/btrfs/volumes.h |  2 +-
- 3 files changed, 21 insertions(+), 37 deletions(-)
+A few of our build artifacts are filesystem images. We have VFAT and
+XFS images. They represent the system updates for units in the field
+and at developers' desks.
 
-diff --git a/fs/btrfs/reada.c b/fs/btrfs/reada.c
-index ab852b8e3e37..ef8e84ff2012 100644
---- a/fs/btrfs/reada.c
-+++ b/fs/btrfs/reada.c
-@@ -239,17 +239,16 @@ static struct reada_zone *reada_find_zone(struct btrfs_device *dev, u64 logical,
- {
- 	struct btrfs_fs_info *fs_info = dev->fs_info;
- 	int ret;
--	struct reada_zone *zone;
-+	struct reada_zone *curr, *zone;
- 	struct btrfs_block_group_cache *cache = NULL;
- 	u64 start;
- 	u64 end;
-+	unsigned long index = logical >> PAGE_SHIFT;
- 	int i;
- 
--	zone = NULL;
- 	spin_lock(&fs_info->reada_lock);
--	ret = radix_tree_gang_lookup(&dev->reada_zones, (void **)&zone,
--				     logical >> PAGE_SHIFT, 1);
--	if (ret == 1 && logical >= zone->start && logical <= zone->end) {
-+	zone = xa_find(&dev->reada_zones, &index, ULONG_MAX, XA_PRESENT);
-+	if (zone && logical >= zone->start && logical <= zone->end) {
- 		kref_get(&zone->refcnt);
- 		spin_unlock(&fs_info->reada_lock);
- 		return zone;
-@@ -269,7 +268,8 @@ static struct reada_zone *reada_find_zone(struct btrfs_device *dev, u64 logical,
- 	if (!zone)
- 		return NULL;
- 
--	ret = radix_tree_preload(GFP_KERNEL);
-+	ret = xa_reserve(&dev->reada_zones,
-+			 (unsigned long)(end >> PAGE_SHIFT), GFP_KERNEL);
- 	if (ret) {
- 		kfree(zone);
- 		return NULL;
-@@ -290,21 +290,18 @@ static struct reada_zone *reada_find_zone(struct btrfs_device *dev, u64 logical,
- 	zone->ndevs = bbio->num_stripes;
- 
- 	spin_lock(&fs_info->reada_lock);
--	ret = radix_tree_insert(&dev->reada_zones,
-+	curr = xa_cmpxchg(&dev->reada_zones,
- 				(unsigned long)(zone->end >> PAGE_SHIFT),
--				zone);
--
--	if (ret == -EEXIST) {
-+				NULL, zone, GFP_NOWAIT | __GFP_NOWARN);
-+	if (curr) {
- 		kfree(zone);
--		ret = radix_tree_gang_lookup(&dev->reada_zones, (void **)&zone,
--					     logical >> PAGE_SHIFT, 1);
--		if (ret == 1 && logical >= zone->start && logical <= zone->end)
-+		zone = curr;
-+		if (logical >= zone->start && logical <= zone->end)
- 			kref_get(&zone->refcnt);
- 		else
- 			zone = NULL;
- 	}
- 	spin_unlock(&fs_info->reada_lock);
--	radix_tree_preload_end();
- 
- 	return zone;
- }
-@@ -537,9 +534,7 @@ static void reada_zone_release(struct kref *kref)
- {
- 	struct reada_zone *zone = container_of(kref, struct reada_zone, refcnt);
- 
--	radix_tree_delete(&zone->device->reada_zones,
--			  zone->end >> PAGE_SHIFT);
--
-+	xa_erase(&zone->device->reada_zones, zone->end >> PAGE_SHIFT);
- 	kfree(zone);
- }
- 
-@@ -592,7 +587,7 @@ static void reada_peer_zones_set_lock(struct reada_zone *zone, int lock)
- 
- 	for (i = 0; i < zone->ndevs; ++i) {
- 		struct reada_zone *peer;
--		peer = radix_tree_lookup(&zone->devs[i]->reada_zones, index);
-+		peer = xa_load(&zone->devs[i]->reada_zones, index);
- 		if (peer && peer->device != zone->device)
- 			peer->locked = lock;
- 	}
-@@ -603,12 +598,11 @@ static void reada_peer_zones_set_lock(struct reada_zone *zone, int lock)
-  */
- static int reada_pick_zone(struct btrfs_device *dev)
- {
--	struct reada_zone *top_zone = NULL;
-+	struct reada_zone *zone, *top_zone = NULL;
- 	struct reada_zone *top_locked_zone = NULL;
- 	u64 top_elems = 0;
- 	u64 top_locked_elems = 0;
- 	unsigned long index = 0;
--	int ret;
- 
- 	if (dev->reada_curr_zone) {
- 		reada_peer_zones_set_lock(dev->reada_curr_zone, 0);
-@@ -616,14 +610,7 @@ static int reada_pick_zone(struct btrfs_device *dev)
- 		dev->reada_curr_zone = NULL;
- 	}
- 	/* pick the zone with the most elements */
--	while (1) {
--		struct reada_zone *zone;
--
--		ret = radix_tree_gang_lookup(&dev->reada_zones,
--					     (void **)&zone, index, 1);
--		if (ret == 0)
--			break;
--		index = (zone->end >> PAGE_SHIFT) + 1;
-+	xa_for_each(&dev->reada_zones, zone, index, ULONG_MAX, XA_PRESENT) {
- 		if (zone->locked) {
- 			if (zone->elems > top_locked_elems) {
- 				top_locked_elems = zone->elems;
-@@ -819,15 +806,13 @@ static void dump_devs(struct btrfs_fs_info *fs_info, int all)
- 
- 	spin_lock(&fs_info->reada_lock);
- 	list_for_each_entry(device, &fs_devices->devices, dev_list) {
-+		struct reada_zone *zone;
-+
- 		btrfs_debug(fs_info, "dev %lld has %d in flight", device->devid,
- 			atomic_read(&device->reada_in_flight));
- 		index = 0;
--		while (1) {
--			struct reada_zone *zone;
--			ret = radix_tree_gang_lookup(&device->reada_zones,
--						     (void **)&zone, index, 1);
--			if (ret == 0)
--				break;
-+		xa_for_each(&dev->reada_zones, zone, index, ULONG_MAX,
-+								XA_PRESENT) {
- 			pr_debug("  zone %llu-%llu elems %llu locked %d devs",
- 				    zone->start, zone->end, zone->elems,
- 				    zone->locked);
-@@ -839,7 +824,6 @@ static void dump_devs(struct btrfs_fs_info *fs_info, int all)
- 				pr_cont(" curr off %llu",
- 					device->reada_next - zone->start);
- 			pr_cont("\n");
--			index = (zone->end >> PAGE_SHIFT) + 1;
- 		}
- 		cnt = 0;
- 		index = 0;
-diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
-index cba286183ff9..8e683799b436 100644
---- a/fs/btrfs/volumes.c
-+++ b/fs/btrfs/volumes.c
-@@ -247,7 +247,7 @@ static struct btrfs_device *__alloc_device(void)
- 	atomic_set(&dev->reada_in_flight, 0);
- 	atomic_set(&dev->dev_stats_ccnt, 0);
- 	btrfs_device_data_ordered_init(dev);
--	INIT_RADIX_TREE(&dev->reada_zones, GFP_NOFS & ~__GFP_DIRECT_RECLAIM);
-+	xa_init(&dev->reada_zones);
- 	INIT_RADIX_TREE(&dev->reada_extents, GFP_NOFS & ~__GFP_DIRECT_RECLAIM);
- 
- 	return dev;
-diff --git a/fs/btrfs/volumes.h b/fs/btrfs/volumes.h
-index 335fd1590458..aeabe03d3e44 100644
---- a/fs/btrfs/volumes.h
-+++ b/fs/btrfs/volumes.h
-@@ -139,7 +139,7 @@ struct btrfs_device {
- 	atomic_t reada_in_flight;
- 	u64 reada_next;
- 	struct reada_zone *reada_curr_zone;
--	struct radix_tree_root reada_zones;
-+	struct xarray reada_zones;
- 	struct radix_tree_root reada_extents;
- 
- 	/* disk I/O failure stats. For detailed description refer to
--- 
-2.15.1
+We're trying to make these images reproducible and I'm in need of some
+help. As far as I can tell, one of the biggest culprits is VFAT's
+"creation time" and XFS' ctime fields.
 
+Example of VFAT's differences:
+$ hexdump -C ~/swu-tests/swu1/dvt-controller-kernel.vfat >
+~/swu-tests/swu1/dvt-controller-kernel.vfat.dump
+$ hexdump -C ~/swu-tests/swu3/dvt-controller-kernel.vfat >
+~/swu-tests/swu3/dvt-controller-kernel.vfat.dump
+$ diff -u ~/swu-tests/swu1/dvt-controller-kernel.vfat.dump
+~/swu-tests/swu3/dvt-controller-kernel.vfat.dump
+--- /x1/home/philipp/swu-tests/swu1/dvt-controller-kernel.vfat.dump
+ 2017-12-28 12:19:57.349880993 -0800
++++ /x1/home/philipp/swu-tests/swu3/dvt-controller-kernel.vfat.dump
+ 2017-12-28 12:19:50.253881196 -0800
+...
+@@ -1011,13 +1011,13 @@
+ *
+ 00006200  41 7a 00 49 00 6d 00 61  00 67 00 0f 00 7c 65 00  |Az.I.m.a.g...|e.|
+ 00006210  00 00 ff ff ff ff ff ff  ff ff 00 00 ff ff ff ff  |................|
+-00006220  5a 49 4d 41 47 45 20 20  20 20 20 20 00 00 63 9b  |ZIMAGE      ..c.|
++00006220  5a 49 4d 41 47 45 20 20  20 20 20 20 00 64 d8 95  |ZIMAGE      .d..|
+ 00006230  9c 4b 9c 4b 00 00 00 00  21 00 03 00 a0 2d 4a 00  |.K.K....!....-J.|
+ 00006240  42 6f 00 6c 00 6c 00 65  00 72 00 0f 00 67 2d 00  |Bo.l.l.e.r...g-.|
+ 00006250  64 00 76 00 74 00 2e 00  64 00 00 00 74 00 62 00  |d.v.t...d...t.b.|
+...
+
+As per the structure, that's the ctime (creation time) being different.
+https://www.kernel.org/doc/Documentation/filesystems/vfat.txt
+
+I've not had much luck digging into the XFS spec to see prove that the
+ctime is different, but I'm pretty certain. When I mount the images, I
+can see that ctime is different:
+$ stat -c %x,%y,%z,%n /mnt/{a,b}/log/syslog
+2017-12-28 11:26:53.552000096 -0800,1969-12-31 16:00:00.000000000
+-0800,2017-12-28 11:28:50.524000060 -0800,/mnt/a/log/syslog
+2017-12-28 10:46:38.739999913 -0800,1969-12-31 16:00:00.000000000
+-0800,2017-12-28 10:48:17.180000049 -0800,/mnt/b/log/syslog
+
+As far as I can tell, there are no mount options to null out the ctime
+fields. (As an aside I'm curious as to the reason for this).
+
+Is there a tool that lets me null out ctime fields on a XFS filesystem
+image? Or maybe is there a library that lets me traverse the file
+system and set the fields to zero manually?
+
+Does what I'm asking make sense? I feel like I'm not the first person
+to tackle this, but I haven't been lucky with finding anything to
+address this.
+
+Thanks,
+Phil
