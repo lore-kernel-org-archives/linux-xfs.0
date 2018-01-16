@@ -1,132 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:34722 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932860AbeALEQp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 23:16:45 -0500
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w0C4E8GZ017814
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 20:16:45 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 2fejmxgp1y-4
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jan 2018 20:16:45 -0800
-From: Richard Wareing <rwareing@fb.com>
-Subject: [PATCH v4 2/3] xfs/realtime: Default rtinherit=1, add _require_no_rtinherit function
-Date: Thu, 11 Jan 2018 20:16:18 -0800
-Message-ID: <20180112041619.540900-3-rwareing@fb.com>
-In-Reply-To: <20180112041619.540900-1-rwareing@fb.com>
-References: <20180112041619.540900-1-rwareing@fb.com>
+Received: from smtp1.onthe.net.au ([203.22.196.249]:37493 "EHLO
+        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751265AbeAPBfj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 20:35:39 -0500
+Date: Tue, 16 Jan 2018 12:35:36 +1100
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: Re: _xfs_buf_find: Block out of range, then umount hung
+Message-ID: <20180116013536.GA10406@onthe.net.au>
+References: <20180113145228.GA16780@onthe.net.au>
+ <20180115120258.GA44369@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20180115120258.GA44369@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: darrick.wong@oracle.com, eguan@redhat.com, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-To better exercise the data path code of realtime subvolumes, we will
-set rtinherit=1 during mkfs calls.  For tests which this is not desired
-we introduce a _require_no_rtinherit function to opt out of this
-behavior.
+On Mon, Jan 15, 2018 at 07:02:58AM -0500, Brian Foster wrote:
+> On Sun, Jan 14, 2018 at 01:52:28AM +1100, Chris Dunlop wrote:
+>> Hi,
+>>
+>> tl;dr: a filesystem corruption (cause unknown) has produced an unkillable
+>> umount. Is the only recourse to reboot?
+>
+> From this particular state, probably.
 
-Signed-off-by: Richard Wareing <rwareing@fb.com>
----
-Changes since v3:
-* XFS FS check in _require_no_rtinherit
-* Fixed comment for _require_no_rtinherit to reflect (reworked) function
+Yeah, I figured that and rebooted.
 
-Changes since v2:
-* Removed use of RT_INHERT, instead we now simply bail from the test.  Users
-  will have to create two separate configs for realtime one with rtinherit=1
-  in the mkfs options, one without and do separate runs to get full test
-  coverage.
-* Added comments explaining reasons for _require_no_rtinherit declarations
+> So for one reason or another, you end up trying to remove a bogus block
+> number from the AGFL (perhaps the old agfl size issue?).
 
-Changes since v1:
-* None
+This stuff?
 
- common/rc         | 10 ++++++++++
- tests/generic/250 |  3 +++
- tests/generic/252 |  3 +++
- tests/generic/441 |  3 +++
- tests/xfs/170     |  1 +
- 5 files changed, 20 insertions(+)
+https://www.spinics.net/lists/xfs/msg42213.html
 
-diff --git a/common/rc b/common/rc
-index 76f9d69..cceabce 100644
---- a/common/rc
-+++ b/common/rc
-@@ -33,6 +33,16 @@ BC=$(which bc 2> /dev/null) || BC=
- VALID_TEST_ID="[0-9]\{3\}"
- VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
- 
-+# Some tests are not relevant or functional when testing XFS realtime
-+# subvolumes along with the rtinherit=1 mkfs option.  In these cases,
-+# this test will opt-out of the test.
-+_require_no_rtinherit()
-+{
-+  [ "$FSTYP" = "xfs" ] && echo "$MKFS_OPTIONS" | 
-+    egrep -q "rtinherit([^=]|=1)" && \
-+    _notrun "rtinherit mkfs option is not supported by this test."
-+}
-+
- _require_math()
- {
- 	if [ -z "$BC" ]; then
-diff --git a/tests/generic/250 b/tests/generic/250
-index 3c4fe6d..a8fd97e 100755
---- a/tests/generic/250
-+++ b/tests/generic/250
-@@ -48,6 +48,9 @@ _require_scratch
- _require_dm_target error
- _require_xfs_io_command "falloc"
- _require_odirect
-+# This test uses "dm" without taking into account the data could be on
-+# realtime subvolume, thus the test will fail with rtinherit=1
-+_require_no_rtinherit
- 
- rm -f $seqres.full
- 
-diff --git a/tests/generic/252 b/tests/generic/252
-index ffedd56..b506d59 100755
---- a/tests/generic/252
-+++ b/tests/generic/252
-@@ -47,6 +47,9 @@ _supported_os Linux
- _require_scratch
- _require_dm_target error
- _require_xfs_io_command "falloc"
-+# This test uses "dm" without taking into account the data could be on
-+# realtime subvolume, thus the test will fail with rtinherit=1
-+_require_no_rtinherit
- _require_aiodio "aiocp"
- AIO_TEST="src/aio-dio-regress/aiocp"
- 
-diff --git a/tests/generic/441 b/tests/generic/441
-index 075d877..5fbfece 100755
---- a/tests/generic/441
-+++ b/tests/generic/441
-@@ -47,6 +47,9 @@ _cleanup()
- # real QA test starts here
- _supported_os Linux
- _require_scratch
-+# This test uses "dm" without taking into account the data could be on
-+# realtime subvolume, thus the test will fail with rtinherit=1
-+_require_no_rtinherit
- 
- # Generally, we want to avoid journal errors on the extended testcase. Only
- # unset the -s flag if we have a logdev
-diff --git a/tests/xfs/170 b/tests/xfs/170
-index c5ae8e4..6deef1b 100755
---- a/tests/xfs/170
-+++ b/tests/xfs/170
-@@ -50,6 +50,7 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_scratch
-+_require_no_rtinherit
- 
- _check_filestreams_support || _notrun "filestreams not available"
- 
--- 
-2.9.5
+FYI the filesystem was created on linux-3.18.25 and the error appeared shortly 
+after moving to linux-4.9.76.
 
+>> Jan 13 19:57:31 b2 kernel: ================================================
+>> Jan 13 19:57:31 b2 kernel: [ BUG: lock held when returning to user space! ]
+>> Jan 13 19:57:31 b2 kernel: 4.9.76-otn-00021-g2af03421 #1 Tainted: G        W
+>> Jan 13 19:57:31 b2 kernel: ------------------------------------------------
+>> Jan 13 19:57:31 b2 kernel: tp_fstore_op/31412 is leaving the kernel with locks still held!
+>> Jan 13 19:57:31 b2 kernel: 1 lock held by tp_fstore_op/31412:
+>> Jan 13 19:57:31 b2 kernel:  #0:  (sb_internal){......}, at: [<ffffffffa07692a3>] xfs_trans_alloc+0xe3/0x130 [xfs]
+>
+> Though it looks like we return to userspace in transaction context..?
+> This is the same pid as above and the current code looks like the
+> transaction should be cancelled in xfs_attr_set(). We're somewhere down
+> in xfs_attr_leaf_addname(), however. From there, both calls to
+> xfs_defer_finish() jump to out_defer_cancel on failure, which sets
+> args->trans = NULL before we return. Hmm, that looks like a bug to me.
+>
+> Are you able to reproduce this particular hung unmount behavior? If so,
+> does anything change with something like the appended hunk? Note that
+> you may have to backport that to v4.9-<whatever> since it appears that
+> is before out_defer_cancel was created.
+
+Sorry, wasn't able to reproduce: once it was up again mount didn't succeed:
+
+# mount /dev/sdp1 /var/lib/ceph/osd/ceph-60
+mount: mount /dev/sdp1 on /var/lib/ceph/osd/ceph-60 failed: Structure needs cleaning
+# mount -f /dev/sdp1 /var/lib/ceph/osd/ceph-60
+# umount /var/lib/ceph/osd/ceph-60
+umount: /var/lib/ceph/osd/ceph-60: not mounted
+
+I tried an 'xfs_repair -L' which found some stuff, but I don't know if the 
+"stuff" was due to the log being lost or part of the original problem:
+
+# xfs_repair -L -vv /dev/sdp1
+Phase 1 - find and verify superblock...
+        - max_mem = 148590945, icount = 203072, imem = 793, dblock = 233112145, dmem = 113824
+        - block cache size set to 18553288 entries
+Phase 2 - using internal log
+        - zero log...
+zero_log: head block 554618 tail block 553989
+ALERT: The filesystem has valuable metadata changes in a log which is being
+destroyed because the -L option was used.
+        - scan filesystem freespace and inode maps...
+bad agbno 4294967295 in agfl, agno 2
+freeblk count 8 != flcount 7 in ag 2
+bad agbno 4294967295 in agfl, agno 1
+freeblk count 7 != flcount 6 in ag 1
+sb_ifree 42557, counted 42256
+sb_fdblocks 82529171, counted 82532805
+...
+
+The rest of the output didn't look particularly interesting to my untrained 
+eye, but the full output is available at: https://pastebin.com/KD7BKTLu
+
+The mount succeeded after this.
+
+In the end, as I wasn't sure of the status of the data and it was replicated 
+elsewhere anyway, I blew away the filesystem and started again.
+
+Thanks for your time!
+
+Chris
+
+
+>
+> Brian
+>
+> ---8<---
+>
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index a76914db72ef..e86c51d39e66 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -717,7 +717,6 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+> 	return error;
+> out_defer_cancel:
+> 	xfs_defer_cancel(args->dfops);
+> -	args->trans = NULL;
+> 	return error;
+> }
+>
