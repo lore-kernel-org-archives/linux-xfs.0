@@ -1,357 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44605 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753561AbeAQUXC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:02 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 83/99] hwspinlock: Convert to XArray
-Date: Wed, 17 Jan 2018 12:21:47 -0800
-Message-Id: <20180117202203.19756-84-willy@infradead.org>
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-References: <20180117202203.19756-1-willy@infradead.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:55196 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbeAPXFk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 18:05:40 -0500
+Date: Tue, 16 Jan 2018 15:05:36 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 07/21] xfs: add scrub cross-referencing helpers for
+ the inode btrees
+Message-ID: <20180116230536.GY5602@magnolia>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
+ <151398981557.18741.8176324698766997260.stgit@magnolia>
+ <20180105215145.GK5602@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180105215145.GK5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+On Fri, Jan 05, 2018 at 01:51:45PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add a couple of functions to the inode btrees that will be used
+> to cross-reference metadata against the inobt.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: minor fixes suggested by dchinner
 
-I had to mess with the locking a bit as I converted the code from a
-mutex to the xa_lock.
+Ping?
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- drivers/hwspinlock/hwspinlock_core.c | 151 ++++++++++++-----------------------
- 1 file changed, 52 insertions(+), 99 deletions(-)
+--D
 
-diff --git a/drivers/hwspinlock/hwspinlock_core.c b/drivers/hwspinlock/hwspinlock_core.c
-index 4074441444fe..acb6e315925f 100644
---- a/drivers/hwspinlock/hwspinlock_core.c
-+++ b/drivers/hwspinlock/hwspinlock_core.c
-@@ -23,43 +23,32 @@
- #include <linux/types.h>
- #include <linux/err.h>
- #include <linux/jiffies.h>
--#include <linux/radix-tree.h>
-+#include <linux/xarray.h>
- #include <linux/hwspinlock.h>
- #include <linux/pm_runtime.h>
--#include <linux/mutex.h>
- #include <linux/of.h>
- 
- #include "hwspinlock_internal.h"
- 
--/* radix tree tags */
--#define HWSPINLOCK_UNUSED	(0) /* tags an hwspinlock as unused */
-+#define HWSPINLOCK_UNUSED	XA_TAG_0
- 
- /*
-- * A radix tree is used to maintain the available hwspinlock instances.
-- * The tree associates hwspinlock pointers with their integer key id,
-+ * An xarray is used to maintain the available hwspinlock instances.
-+ * The array associates hwspinlock pointers with their integer key id,
-  * and provides easy-to-use API which makes the hwspinlock core code simple
-  * and easy to read.
-  *
-- * Radix trees are quick on lookups, and reasonably efficient in terms of
-+ * The XArray is quick on lookups, and reasonably efficient in terms of
-  * storage, especially with high density usages such as this framework
-  * requires (a continuous range of integer keys, beginning with zero, is
-  * used as the ID's of the hwspinlock instances).
-  *
-- * The radix tree API supports tagging items in the tree, which this
-- * framework uses to mark unused hwspinlock instances (see the
-- * HWSPINLOCK_UNUSED tag above). As a result, the process of querying the
-- * tree, looking for an unused hwspinlock instance, is now reduced to a
-- * single radix tree API call.
-+ * The xarray API supports tagging items, which this framework uses to mark
-+ * unused hwspinlock instances (see the HWSPINLOCK_UNUSED tag above). As a
-+ * result, the process of querying the array, looking for an unused
-+ * hwspinlock instance, is reduced to a single call.
-  */
--static RADIX_TREE(hwspinlock_tree, GFP_KERNEL);
--
--/*
-- * Synchronization of access to the tree is achieved using this mutex,
-- * as the radix-tree API requires that users provide all synchronisation.
-- * A mutex is needed because we're using non-atomic radix tree allocations.
-- */
--static DEFINE_MUTEX(hwspinlock_tree_lock);
--
-+static DEFINE_XARRAY(hwspinlock_xa);
- 
- /**
-  * __hwspin_trylock() - attempt to lock a specific hwspinlock
-@@ -294,10 +283,9 @@ of_hwspin_lock_simple_xlate(const struct of_phandle_args *hwlock_spec)
-  */
- int of_hwspin_lock_get_id(struct device_node *np, int index)
- {
-+	XA_STATE(xas, &hwspinlock_xa, 0);
- 	struct of_phandle_args args;
- 	struct hwspinlock *hwlock;
--	struct radix_tree_iter iter;
--	void **slot;
- 	int id;
- 	int ret;
- 
-@@ -309,22 +297,15 @@ int of_hwspin_lock_get_id(struct device_node *np, int index)
- 	/* Find the hwspinlock device: we need its base_id */
- 	ret = -EPROBE_DEFER;
- 	rcu_read_lock();
--	radix_tree_for_each_slot(slot, &hwspinlock_tree, &iter, 0) {
--		hwlock = radix_tree_deref_slot(slot);
--		if (unlikely(!hwlock))
--			continue;
--		if (radix_tree_deref_retry(hwlock)) {
--			slot = radix_tree_iter_retry(&iter);
-+	xas_for_each(&xas, hwlock, ULONG_MAX) {
-+		if (xas_retry(&xas, hwlock))
- 			continue;
--		}
- 
--		if (hwlock->bank->dev->of_node == args.np) {
--			ret = 0;
-+		if (hwlock->bank->dev->of_node == args.np)
- 			break;
--		}
- 	}
- 	rcu_read_unlock();
--	if (ret < 0)
-+	if (!hwlock)
- 		goto out;
- 
- 	id = of_hwspin_lock_simple_xlate(&args);
-@@ -332,6 +313,7 @@ int of_hwspin_lock_get_id(struct device_node *np, int index)
- 		ret = -EINVAL;
- 		goto out;
- 	}
-+	ret = 0;
- 	id += hwlock->bank->base_id;
- 
- out:
-@@ -342,26 +324,19 @@ EXPORT_SYMBOL_GPL(of_hwspin_lock_get_id);
- 
- static int hwspin_lock_register_single(struct hwspinlock *hwlock, int id)
- {
--	struct hwspinlock *tmp;
--	int ret;
-+	void *curr;
- 
--	mutex_lock(&hwspinlock_tree_lock);
--
--	ret = radix_tree_insert(&hwspinlock_tree, id, hwlock);
--	if (ret) {
--		if (ret == -EEXIST)
-+	curr = xa_cmpxchg(&hwspinlock_xa, id, NULL, hwlock, GFP_KERNEL);
-+	if (curr) {
-+		if (!xa_is_err(curr))
- 			pr_err("hwspinlock id %d already exists!\n", id);
- 		goto out;
- 	}
- 
- 	/* mark this hwspinlock as available */
--	tmp = radix_tree_tag_set(&hwspinlock_tree, id, HWSPINLOCK_UNUSED);
--
--	/* self-sanity check which should never fail */
--	WARN_ON(tmp != hwlock);
-+	xa_set_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
- 
- out:
--	mutex_unlock(&hwspinlock_tree_lock);
- 	return 0;
- }
- 
-@@ -370,23 +345,16 @@ static struct hwspinlock *hwspin_lock_unregister_single(unsigned int id)
- 	struct hwspinlock *hwlock = NULL;
- 	int ret;
- 
--	mutex_lock(&hwspinlock_tree_lock);
--
- 	/* make sure the hwspinlock is not in use (tag is set) */
--	ret = radix_tree_tag_get(&hwspinlock_tree, id, HWSPINLOCK_UNUSED);
-+	ret = xa_get_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
- 	if (ret == 0) {
- 		pr_err("hwspinlock %d still in use (or not present)\n", id);
- 		goto out;
- 	}
- 
--	hwlock = radix_tree_delete(&hwspinlock_tree, id);
--	if (!hwlock) {
--		pr_err("failed to delete hwspinlock %d\n", id);
--		goto out;
--	}
-+	hwlock = xa_erase(&hwspinlock_xa, id);
- 
- out:
--	mutex_unlock(&hwspinlock_tree_lock);
- 	return hwlock;
- }
- 
-@@ -477,8 +445,7 @@ EXPORT_SYMBOL_GPL(hwspin_lock_unregister);
-  * __hwspin_lock_request() - tag an hwspinlock as used and power it up
-  *
-  * This is an internal function that prepares an hwspinlock instance
-- * before it is given to the user. The function assumes that
-- * hwspinlock_tree_lock is taken.
-+ * before it is given to the user.
-  *
-  * Returns 0 or positive to indicate success, and a negative value to
-  * indicate an error (with the appropriate error code)
-@@ -486,7 +453,6 @@ EXPORT_SYMBOL_GPL(hwspin_lock_unregister);
- static int __hwspin_lock_request(struct hwspinlock *hwlock)
- {
- 	struct device *dev = hwlock->bank->dev;
--	struct hwspinlock *tmp;
- 	int ret;
- 
- 	/* prevent underlying implementation from being removed */
-@@ -501,16 +467,7 @@ static int __hwspin_lock_request(struct hwspinlock *hwlock)
- 		dev_err(dev, "%s: can't power on device\n", __func__);
- 		pm_runtime_put_noidle(dev);
- 		module_put(dev->driver->owner);
--		return ret;
- 	}
--
--	/* mark hwspinlock as used, should not fail */
--	tmp = radix_tree_tag_clear(&hwspinlock_tree, hwlock_to_id(hwlock),
--							HWSPINLOCK_UNUSED);
--
--	/* self-sanity check that should never fail */
--	WARN_ON(tmp != hwlock);
--
- 	return ret;
- }
- 
-@@ -548,29 +505,28 @@ struct hwspinlock *hwspin_lock_request(void)
- {
- 	struct hwspinlock *hwlock;
- 	int ret;
-+	unsigned long index = 0;
- 
--	mutex_lock(&hwspinlock_tree_lock);
-+	xa_lock(&hwspinlock_xa);
- 
- 	/* look for an unused lock */
--	ret = radix_tree_gang_lookup_tag(&hwspinlock_tree, (void **)&hwlock,
--						0, 1, HWSPINLOCK_UNUSED);
--	if (ret == 0) {
-+	hwlock = xa_find(&hwspinlock_xa, &index, ULONG_MAX, HWSPINLOCK_UNUSED);
-+	if (!hwlock) {
- 		pr_warn("a free hwspinlock is not available\n");
--		hwlock = NULL;
--		goto out;
-+		xa_unlock(&hwspinlock_xa);
-+		return NULL;
- 	}
- 
--	/* sanity check that should never fail */
--	WARN_ON(ret > 1);
--
- 	/* mark as used and power up */
-+	__xa_clear_tag(&hwspinlock_xa, index, HWSPINLOCK_UNUSED);
-+	xa_unlock(&hwspinlock_xa);
-+
- 	ret = __hwspin_lock_request(hwlock);
--	if (ret < 0)
--		hwlock = NULL;
-+	if (ret == 0)
-+		return hwlock;
- 
--out:
--	mutex_unlock(&hwspinlock_tree_lock);
--	return hwlock;
-+	xa_set_tag(&hwspinlock_xa, index, HWSPINLOCK_UNUSED);
-+	return NULL;
- }
- EXPORT_SYMBOL_GPL(hwspin_lock_request);
- 
-@@ -592,10 +548,10 @@ struct hwspinlock *hwspin_lock_request_specific(unsigned int id)
- 	struct hwspinlock *hwlock;
- 	int ret;
- 
--	mutex_lock(&hwspinlock_tree_lock);
-+	xa_lock(&hwspinlock_xa);
- 
- 	/* make sure this hwspinlock exists */
--	hwlock = radix_tree_lookup(&hwspinlock_tree, id);
-+	hwlock = xa_load(&hwspinlock_xa, id);
- 	if (!hwlock) {
- 		pr_warn("hwspinlock %u does not exist\n", id);
- 		goto out;
-@@ -605,21 +561,25 @@ struct hwspinlock *hwspin_lock_request_specific(unsigned int id)
- 	WARN_ON(hwlock_to_id(hwlock) != id);
- 
- 	/* make sure this hwspinlock is unused */
--	ret = radix_tree_tag_get(&hwspinlock_tree, id, HWSPINLOCK_UNUSED);
-+	ret = xa_get_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
- 	if (ret == 0) {
- 		pr_warn("hwspinlock %u is already in use\n", id);
--		hwlock = NULL;
- 		goto out;
- 	}
- 
- 	/* mark as used and power up */
-+	__xa_clear_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
-+	xa_unlock(&hwspinlock_xa);
-+
- 	ret = __hwspin_lock_request(hwlock);
--	if (ret < 0)
--		hwlock = NULL;
-+	if (ret == 0)
-+		return hwlock;
- 
-+	xa_set_tag(&hwspinlock_xa, id, HWSPINLOCK_UNUSED);
-+	return NULL;
- out:
--	mutex_unlock(&hwspinlock_tree_lock);
--	return hwlock;
-+	xa_unlock(&hwspinlock_xa);
-+	return NULL;
- }
- EXPORT_SYMBOL_GPL(hwspin_lock_request_specific);
- 
-@@ -638,7 +598,6 @@ EXPORT_SYMBOL_GPL(hwspin_lock_request_specific);
- int hwspin_lock_free(struct hwspinlock *hwlock)
- {
- 	struct device *dev;
--	struct hwspinlock *tmp;
- 	int ret;
- 
- 	if (!hwlock) {
-@@ -647,12 +606,11 @@ int hwspin_lock_free(struct hwspinlock *hwlock)
- 	}
- 
- 	dev = hwlock->bank->dev;
--	mutex_lock(&hwspinlock_tree_lock);
- 
- 	/* make sure the hwspinlock is used */
--	ret = radix_tree_tag_get(&hwspinlock_tree, hwlock_to_id(hwlock),
-+	ret = xa_get_tag(&hwspinlock_xa, hwlock_to_id(hwlock),
- 							HWSPINLOCK_UNUSED);
--	if (ret == 1) {
-+	if (ret) {
- 		dev_err(dev, "%s: hwlock is already free\n", __func__);
- 		dump_stack();
- 		ret = -EINVAL;
-@@ -665,16 +623,11 @@ int hwspin_lock_free(struct hwspinlock *hwlock)
- 		goto out;
- 
- 	/* mark this hwspinlock as available */
--	tmp = radix_tree_tag_set(&hwspinlock_tree, hwlock_to_id(hwlock),
--							HWSPINLOCK_UNUSED);
--
--	/* sanity check (this shouldn't happen) */
--	WARN_ON(tmp != hwlock);
-+	xa_set_tag(&hwspinlock_xa, hwlock_to_id(hwlock), HWSPINLOCK_UNUSED);
- 
- 	module_put(dev->driver->owner);
- 
- out:
--	mutex_unlock(&hwspinlock_tree_lock);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(hwspin_lock_free);
--- 
-2.15.1
-
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c |   99 ++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_ialloc.h |    6 +++
+>  2 files changed, 105 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 3b57ef0..decda7e 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2751,3 +2751,102 @@ xfs_verify_dir_ino(
+>  		return false;
+>  	return xfs_verify_ino(mp, ino);
+>  }
+> +
+> +/* Is there an inode record covering a given range of inode numbers? */
+> +int
+> +xfs_ialloc_has_inode_record(
+> +	struct xfs_btree_cur	*cur,
+> +	xfs_agino_t		low,
+> +	xfs_agino_t		high,
+> +	bool			*exists)
+> +{
+> +	struct xfs_inobt_rec_incore	irec;
+> +	xfs_agino_t		agino;
+> +	uint16_t		holemask;
+> +	int			has_record;
+> +	int			i;
+> +	int			error;
+> +
+> +	*exists = false;
+> +	error = xfs_inobt_lookup(cur, low, XFS_LOOKUP_LE, &has_record);
+> +	while (error == 0 && has_record) {
+> +		error = xfs_inobt_get_rec(cur, &irec, &has_record);
+> +		if (error || irec.ir_startino > high)
+> +			break;
+> +
+> +		agino = irec.ir_startino;
+> +		holemask = irec.ir_holemask;
+> +		for (i = 0; i < XFS_INOBT_HOLEMASK_BITS; holemask >>= 1,
+> +				i++, agino += XFS_INODES_PER_HOLEMASK_BIT) {
+> +			if (holemask & 1)
+> +				continue;
+> +			if (agino + XFS_INODES_PER_HOLEMASK_BIT > low &&
+> +					agino <= high) {
+> +				*exists = true;
+> +				return 0;
+> +			}
+> +		}
+> +
+> +		error = xfs_btree_increment(cur, 0, &has_record);
+> +	}
+> +	return error;
+> +}
+> +
+> +/* Is there an inode record covering a given extent? */
+> +int
+> +xfs_ialloc_has_inodes_at_extent(
+> +	struct xfs_btree_cur	*cur,
+> +	xfs_agblock_t		bno,
+> +	xfs_extlen_t		len,
+> +	bool			*exists)
+> +{
+> +	xfs_agino_t		low;
+> +	xfs_agino_t		high;
+> +
+> +	low = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno, 0);
+> +	high = XFS_OFFBNO_TO_AGINO(cur->bc_mp, bno + len, 0) - 1;
+> +
+> +	return xfs_ialloc_has_inode_record(cur, low, high, exists);
+> +}
+> +
+> +struct xfs_ialloc_count_inodes {
+> +	xfs_agino_t			count;
+> +	xfs_agino_t			freecount;
+> +};
+> +
+> +/* Record inode counts across all inobt records. */
+> +STATIC int
+> +xfs_ialloc_count_inodes_helper(
+> +	struct xfs_btree_cur		*cur,
+> +	union xfs_btree_rec		*rec,
+> +	void				*priv)
+> +{
+> +	struct xfs_inobt_rec_incore	irec;
+> +	struct xfs_ialloc_count_inodes	*ci = priv;
+> +
+> +	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, &irec);
+> +	ci->count += irec.ir_count;
+> +	ci->freecount += irec.ir_freecount;
+> +
+> +	return 0;
+> +}
+> +
+> +/* Count allocated and free inodes under an inobt. */
+> +int
+> +xfs_ialloc_count_inodes(
+> +	struct xfs_btree_cur		*cur,
+> +	xfs_agino_t			*count,
+> +	xfs_agino_t			*freecount)
+> +{
+> +	struct xfs_ialloc_count_inodes	ci = {0};
+> +	int				error;
+> +
+> +	ASSERT(cur->bc_btnum == XFS_BTNUM_INO);
+> +	error = xfs_btree_query_all(cur, xfs_ialloc_count_inodes_helper, &ci);
+> +	if (error)
+> +		return error;
+> +
+> +	*count = ci.count;
+> +	*freecount = ci.freecount;
+> +	return 0;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+> index 66a8de0..c5402bb 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.h
+> +++ b/fs/xfs/libxfs/xfs_ialloc.h
+> @@ -170,6 +170,12 @@ int xfs_read_agi(struct xfs_mount *mp, struct xfs_trans *tp,
+>  union xfs_btree_rec;
+>  void xfs_inobt_btrec_to_irec(struct xfs_mount *mp, union xfs_btree_rec *rec,
+>  		struct xfs_inobt_rec_incore *irec);
+> +int xfs_ialloc_has_inodes_at_extent(struct xfs_btree_cur *cur,
+> +		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
+> +int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
+> +		xfs_agino_t high, bool *exists);
+> +int xfs_ialloc_count_inodes(struct xfs_btree_cur *cur, xfs_agino_t *count,
+> +		xfs_agino_t *freecount);
+>  
+>  int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
+>  void xfs_ialloc_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
