@@ -1,135 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60166 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965172AbeALWJV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jan 2018 17:09:21 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0CM7X9a114362
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:09:21 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2ff5ge80jf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:09:20 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0CM4JdD020112
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:19 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0CM4JOA008325
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jan 2018 22:04:19 GMT
-Subject: [PATCH 3/5] xfs: directory scrubber must walk through data block to
- offset
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Jan 2018 14:04:18 -0800
-Message-ID: <151579465813.8694.2293343683195960907.stgit@magnolia>
-In-Reply-To: <151579463950.8694.320025813242574491.stgit@magnolia>
-References: <151579463950.8694.320025813242574491.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:56686 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750832AbeAPNM6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 16 Jan 2018 08:12:58 -0500
+Date: Tue, 16 Jan 2018 08:12:56 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: _xfs_buf_find: Block out of range, then umount hung
+Message-ID: <20180116131255.GC52295@bfoster.bfoster>
+References: <20180113145228.GA16780@onthe.net.au>
+ <20180115120258.GA44369@bfoster.bfoster>
+ <20180116013536.GA10406@onthe.net.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180116013536.GA10406@onthe.net.au>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: Chris Dunlop <chris@onthe.net.au>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 16, 2018 at 12:35:36PM +1100, Chris Dunlop wrote:
+> On Mon, Jan 15, 2018 at 07:02:58AM -0500, Brian Foster wrote:
+> > On Sun, Jan 14, 2018 at 01:52:28AM +1100, Chris Dunlop wrote:
+> > > Hi,
+> > > 
+> > > tl;dr: a filesystem corruption (cause unknown) has produced an unkillable
+> > > umount. Is the only recourse to reboot?
+> > 
+> > From this particular state, probably.
+> 
+> Yeah, I figured that and rebooted.
+> 
+> > So for one reason or another, you end up trying to remove a bogus block
+> > number from the AGFL (perhaps the old agfl size issue?).
+> 
+> This stuff?
+> 
+> https://www.spinics.net/lists/xfs/msg42213.html
+> 
+> FYI the filesystem was created on linux-3.18.25 and the error appeared
+> shortly after moving to linux-4.9.76.
+> 
 
-In xfs_scrub_dir_rec, we must walk through the directory block entries
-to arrive at the offset given by the hash structure.  If we blindly
-trust the hash address, we can end up midway into a directory entry and
-stray outside the block.  Found by lastbit fuzzing lents[3].address in
-xfs/390 with KASAN enabled.
+Yeah, though I guess that was more of a v5 superblock thing which
+probably isn't relevant if the filesystem was from v3.18. Somebody else
+may be able to chime in on that.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2.h      |    1 +
- fs/xfs/libxfs/xfs_dir2_data.c |   19 +++++++++++++++++++
- fs/xfs/scrub/dir.c            |   26 +++++++++++++++++++++++++-
- 3 files changed, 45 insertions(+), 1 deletion(-)
+> > > Jan 13 19:57:31 b2 kernel: ================================================
+> > > Jan 13 19:57:31 b2 kernel: [ BUG: lock held when returning to user space! ]
+> > > Jan 13 19:57:31 b2 kernel: 4.9.76-otn-00021-g2af03421 #1 Tainted: G        W
+> > > Jan 13 19:57:31 b2 kernel: ------------------------------------------------
+> > > Jan 13 19:57:31 b2 kernel: tp_fstore_op/31412 is leaving the kernel with locks still held!
+> > > Jan 13 19:57:31 b2 kernel: 1 lock held by tp_fstore_op/31412:
+> > > Jan 13 19:57:31 b2 kernel:  #0:  (sb_internal){......}, at: [<ffffffffa07692a3>] xfs_trans_alloc+0xe3/0x130 [xfs]
+> > 
+> > Though it looks like we return to userspace in transaction context..?
+> > This is the same pid as above and the current code looks like the
+> > transaction should be cancelled in xfs_attr_set(). We're somewhere down
+> > in xfs_attr_leaf_addname(), however. From there, both calls to
+> > xfs_defer_finish() jump to out_defer_cancel on failure, which sets
+> > args->trans = NULL before we return. Hmm, that looks like a bug to me.
+> > 
+> > Are you able to reproduce this particular hung unmount behavior? If so,
+> > does anything change with something like the appended hunk? Note that
+> > you may have to backport that to v4.9-<whatever> since it appears that
+> > is before out_defer_cancel was created.
+> 
+> Sorry, wasn't able to reproduce: once it was up again mount didn't succeed:
+> 
+> # mount /dev/sdp1 /var/lib/ceph/osd/ceph-60
+> mount: mount /dev/sdp1 on /var/lib/ceph/osd/ceph-60 failed: Structure needs cleaning
+> # mount -f /dev/sdp1 /var/lib/ceph/osd/ceph-60
+> # umount /var/lib/ceph/osd/ceph-60
+> umount: /var/lib/ceph/osd/ceph-60: not mounted
+> 
+> I tried an 'xfs_repair -L' which found some stuff, but I don't know if the
+> "stuff" was due to the log being lost or part of the original problem:
+> 
 
+xfs_repair output is usually noisy (and not very useful) when a dirty
+log is zapped. Did you retain a copy of the mount failure error from the
+log?
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 1a8f2cf..2c77195 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -340,5 +340,6 @@ xfs_dir2_leaf_tail_p(struct xfs_da_geometry *geo, struct xfs_dir2_leaf *lp)
- #define XFS_READDIR_BUFSIZE	(32768)
- 
- unsigned char xfs_dir3_get_dtype(struct xfs_mount *mp, uint8_t filetype);
-+void *xfs_dir3_data_endp(struct xfs_mount *mp, struct xfs_dir2_data_hdr *hdr);
- 
- #endif	/* __XFS_DIR2_H__ */
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index 853d9ab..b87db03 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -1098,3 +1098,22 @@ xfs_dir2_data_use_free(
- 	}
- 	*needscanp = needscan;
- }
-+
-+/* Find the end of the entry data in a data/block format dir block. */
-+void *
-+xfs_dir3_data_endp(
-+	struct xfs_mount		*mp,
-+	struct xfs_dir2_data_hdr	*hdr)
-+{
-+	switch (hdr->magic) {
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-+	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
-+		return xfs_dir2_block_leaf_p(
-+				xfs_dir2_block_tail_p(mp->m_dir_geo, hdr));
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-+	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
-+		return (char *)hdr + mp->m_dir_geo->blksize;
-+	default:
-+		return NULL;
-+	}
-+}
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index f5a0d17..6acbed0 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -200,6 +200,7 @@ xfs_scrub_dir_rec(
- 	struct xfs_inode		*dp = ds->dargs.dp;
- 	struct xfs_dir2_data_entry	*dent;
- 	struct xfs_buf			*bp;
-+	char				*p, *endp;
- 	xfs_ino_t			ino;
- 	xfs_dablk_t			rec_bno;
- 	xfs_dir2_db_t			db;
-@@ -239,8 +240,31 @@ xfs_scrub_dir_rec(
- 	}
- 	xfs_scrub_buffer_recheck(ds->sc, bp);
- 
--	/* Retrieve the entry, sanity check it, and compare hashes. */
- 	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
-+
-+	/* Make sure we got a real directory entry. */
-+	p = (char *)mp->m_dir_inode_ops->data_entry_p(bp->b_addr);
-+	endp = xfs_dir3_data_endp(mp, bp->b_addr);
-+	while (p < endp) {
-+		struct xfs_dir2_data_entry	*dep;
-+		struct xfs_dir2_data_unused	*dup;
-+
-+		dup = (struct xfs_dir2_data_unused *)p;
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			p += be16_to_cpu(dup->length);
-+			continue;
-+		}
-+		dep = (struct xfs_dir2_data_entry *)p;
-+		if (dep == dent)
-+			break;
-+		p += mp->m_dir_inode_ops->data_entsize(dep->namelen);
-+	}
-+	if (p == endp) {
-+		xfs_scrub_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
-+		goto out_relse;
-+	}
-+
-+	/* Retrieve the entry, sanity check it, and compare hashes. */
- 	ino = be64_to_cpu(dent->inumber);
- 	hash = be32_to_cpu(ent->hashval);
- 	tag = be16_to_cpup(dp->d_ops->data_entry_tag_p(dent));
+Anyways, I injected an error at one of the xfs_defer_finish() calls in
+xfs_attr_leaf_addname() and hit the unmount problem:
 
+[  269.007928] ================================================
+[  269.008798] WARNING: lock held when returning to user space!
+[  269.009615] 4.15.0-rc7+ #94 Tainted: G           O    
+[  269.010327] ------------------------------------------------
+[  269.011525] setfattr/1213 is leaving the kernel with locks still held!
+[  269.012275] 1 lock held by setfattr/1213:
+[  269.012704]  #0:  (sb_internal#2){.+.+}, at: [<00000000f32b9a4b>] xfs_trans_alloc+0xe0/0x120 [xfs]
+
+... so we should be able to fix that, at least.
+
+> # xfs_repair -L -vv /dev/sdp1
+> Phase 1 - find and verify superblock...
+>        - max_mem = 148590945, icount = 203072, imem = 793, dblock = 233112145, dmem = 113824
+>        - block cache size set to 18553288 entries
+> Phase 2 - using internal log
+>        - zero log...
+> zero_log: head block 554618 tail block 553989
+> ALERT: The filesystem has valuable metadata changes in a log which is being
+> destroyed because the -L option was used.
+>        - scan filesystem freespace and inode maps...
+> bad agbno 4294967295 in agfl, agno 2
+> freeblk count 8 != flcount 7 in ag 2
+> bad agbno 4294967295 in agfl, agno 1
+> freeblk count 7 != flcount 6 in ag 1
+> sb_ifree 42557, counted 42256
+> sb_fdblocks 82529171, counted 82532805
+> ...
+> 
+> The rest of the output didn't look particularly interesting to my untrained
+> eye, but the full output is available at: https://pastebin.com/KD7BKTLu
+> 
+> The mount succeeded after this.
+> 
+> In the end, as I wasn't sure of the status of the data and it was replicated
+> elsewhere anyway, I blew away the filesystem and started again.
+> 
+
+Backups! :)
+
+Brian
+
+> Thanks for your time!
+> 
+> Chris
+> 
+> 
+> > 
+> > Brian
+> > 
+> > ---8<---
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > index a76914db72ef..e86c51d39e66 100644
+> > --- a/fs/xfs/libxfs/xfs_attr.c
+> > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > @@ -717,7 +717,6 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+> > 	return error;
+> > out_defer_cancel:
+> > 	xfs_defer_cancel(args->dfops);
+> > -	args->trans = NULL;
+> > 	return error;
+> > }
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
