@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:53217 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59931 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753975AbeAQUXB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:01 -0500
+        with ESMTP id S1754011AbeAQUXF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:05 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 82/99] s390: Convert gmap to XArray
-Date: Wed, 17 Jan 2018 12:21:46 -0800
-Message-Id: <20180117202203.19756-83-willy@infradead.org>
+Subject: [PATCH v6 93/99] f2fs: Convert ino_root to XArray
+Date: Wed, 17 Jan 2018 12:21:57 -0800
+Message-Id: <20180117202203.19756-94-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,357 +17,214 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-The three radix trees in gmap are all converted to the XArray.
-This is another case where the multiple locks held mandates the use
-of the xa_reserve() API.  The gmap_insert_rmap() function is
-considerably simplified by using the advanced API;
-gmap_radix_tree_free() turns out to just be xa_destroy(), and
-gmap_rmap_radix_tree_free() is a nice little iteration followed
-by xa_destroy().
+I did a fairly major rewrite of __add_ino_entry(); please check carefully.
+Also, we can remove ino_list unless it's important to write out orphan
+inodes in the order they were orphaned.  It may also make more sense to
+combine the array of inode_management structures into a single XArray
+with tags, but that would be a job for someone who understands this
+filesystem better than I do.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- arch/s390/include/asm/gmap.h |  12 ++--
- arch/s390/mm/gmap.c          | 133 +++++++++++++++----------------------------
- 2 files changed, 51 insertions(+), 94 deletions(-)
+ fs/f2fs/checkpoint.c | 85 +++++++++++++++++++++++-----------------------------
+ fs/f2fs/f2fs.h       |  3 +-
+ 2 files changed, 38 insertions(+), 50 deletions(-)
 
-diff --git a/arch/s390/include/asm/gmap.h b/arch/s390/include/asm/gmap.h
-index e07cce88dfb0..7695a01d19d7 100644
---- a/arch/s390/include/asm/gmap.h
-+++ b/arch/s390/include/asm/gmap.h
-@@ -14,14 +14,14 @@
-  * @list: list head for the mm->context gmap list
-  * @crst_list: list of all crst tables used in the guest address space
-  * @mm: pointer to the parent mm_struct
-- * @guest_to_host: radix tree with guest to host address translation
-- * @host_to_guest: radix tree with pointer to segment table entries
-+ * @guest_to_host: guest to host address translation
-+ * @host_to_guest: pointers to segment table entries
-  * @guest_table_lock: spinlock to protect all entries in the guest page table
-  * @ref_count: reference counter for the gmap structure
-  * @table: pointer to the page directory
-  * @asce: address space control element for gmap page table
-  * @pfault_enabled: defines if pfaults are applicable for the guest
-- * @host_to_rmap: radix tree with gmap_rmap lists
-+ * @host_to_rmap: gmap_rmap lists
-  * @children: list of shadow gmap structures
-  * @pt_list: list of all page tables used in the shadow guest address space
-  * @shadow_lock: spinlock to protect the shadow gmap list
-@@ -35,8 +35,8 @@ struct gmap {
- 	struct list_head list;
- 	struct list_head crst_list;
- 	struct mm_struct *mm;
--	struct radix_tree_root guest_to_host;
--	struct radix_tree_root host_to_guest;
-+	struct xarray guest_to_host;
-+	struct xarray host_to_guest;
- 	spinlock_t guest_table_lock;
- 	atomic_t ref_count;
- 	unsigned long *table;
-@@ -45,7 +45,7 @@ struct gmap {
- 	void *private;
- 	bool pfault_enabled;
- 	/* Additional data for shadow guest address spaces */
--	struct radix_tree_root host_to_rmap;
-+	struct xarray host_to_rmap;
- 	struct list_head children;
- 	struct list_head pt_list;
- 	spinlock_t shadow_lock;
-diff --git a/arch/s390/mm/gmap.c b/arch/s390/mm/gmap.c
-index 05d459b638f5..818a5e80914d 100644
---- a/arch/s390/mm/gmap.c
-+++ b/arch/s390/mm/gmap.c
-@@ -60,9 +60,9 @@ static struct gmap *gmap_alloc(unsigned long limit)
- 	INIT_LIST_HEAD(&gmap->crst_list);
- 	INIT_LIST_HEAD(&gmap->children);
- 	INIT_LIST_HEAD(&gmap->pt_list);
--	INIT_RADIX_TREE(&gmap->guest_to_host, GFP_KERNEL);
--	INIT_RADIX_TREE(&gmap->host_to_guest, GFP_ATOMIC);
--	INIT_RADIX_TREE(&gmap->host_to_rmap, GFP_ATOMIC);
-+	xa_init(&gmap->guest_to_host);
-+	xa_init(&gmap->host_to_guest);
-+	xa_init(&gmap->host_to_rmap);
- 	spin_lock_init(&gmap->guest_table_lock);
- 	spin_lock_init(&gmap->shadow_lock);
- 	atomic_set(&gmap->ref_count, 1);
-@@ -121,55 +121,16 @@ static void gmap_flush_tlb(struct gmap *gmap)
- 		__tlb_flush_global();
- }
+diff --git a/fs/f2fs/checkpoint.c b/fs/f2fs/checkpoint.c
+index 4aa69bc1c70a..04d69679da13 100644
+--- a/fs/f2fs/checkpoint.c
++++ b/fs/f2fs/checkpoint.c
+@@ -403,33 +403,30 @@ static void __add_ino_entry(struct f2fs_sb_info *sbi, nid_t ino,
+ 	struct inode_management *im = &sbi->im[type];
+ 	struct ino_entry *e, *tmp;
  
--static void gmap_radix_tree_free(struct radix_tree_root *root)
--{
--	struct radix_tree_iter iter;
--	unsigned long indices[16];
--	unsigned long index;
--	void __rcu **slot;
--	int i, nr;
+-	tmp = f2fs_kmem_cache_alloc(ino_entry_slab, GFP_NOFS);
 -
--	/* A radix tree is freed by deleting all of its entries */
--	index = 0;
--	do {
--		nr = 0;
--		radix_tree_for_each_slot(slot, root, &iter, index) {
--			indices[nr] = iter.index;
--			if (++nr == 16)
--				break;
--		}
--		for (i = 0; i < nr; i++) {
--			index = indices[i];
--			radix_tree_delete(root, index);
--		}
--	} while (nr > 0);
--}
+-	radix_tree_preload(GFP_NOFS | __GFP_NOFAIL);
 -
--static void gmap_rmap_radix_tree_free(struct radix_tree_root *root)
-+static void gmap_rmap_free(struct xarray *xa)
- {
- 	struct gmap_rmap *rmap, *rnext, *head;
--	struct radix_tree_iter iter;
--	unsigned long indices[16];
--	unsigned long index;
--	void __rcu **slot;
--	int i, nr;
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
+-	if (!e) {
+-		e = tmp;
+-		if (unlikely(radix_tree_insert(&im->ino_root, ino, e)))
+-			f2fs_bug_on(sbi, 1);
 -
--	/* A radix tree is freed by deleting all of its entries */
--	index = 0;
--	do {
--		nr = 0;
--		radix_tree_for_each_slot(slot, root, &iter, index) {
--			indices[nr] = iter.index;
--			if (++nr == 16)
--				break;
--		}
--		for (i = 0; i < nr; i++) {
--			index = indices[i];
--			head = radix_tree_delete(root, index);
--			gmap_for_each_rmap_safe(rmap, rnext, head)
--				kfree(rmap);
--		}
--	} while (nr > 0);
-+	unsigned long index = 0;
+-		memset(e, 0, sizeof(struct ino_entry));
+-		e->ino = ino;
+-
+-		list_add_tail(&e->list, &im->ino_list);
+-		if (type != ORPHAN_INO)
+-			im->ino_num++;
++	xa_lock(&im->ino_root);
++	e = xa_load(&im->ino_root, ino);
++	if (e)
++		goto found;
++	xa_unlock(&im->ino_root);
 +
-+	xa_for_each(xa, head, index, ULONG_MAX, XA_PRESENT) {
-+		gmap_for_each_rmap_safe(rmap, rnext, head)
-+			kfree(rmap);
-+	}
-+	xa_destroy(xa);
- }
- 
- /**
-@@ -188,15 +149,15 @@ static void gmap_free(struct gmap *gmap)
- 	/* Free all segment & region tables. */
- 	list_for_each_entry_safe(page, next, &gmap->crst_list, lru)
- 		__free_pages(page, CRST_ALLOC_ORDER);
--	gmap_radix_tree_free(&gmap->guest_to_host);
--	gmap_radix_tree_free(&gmap->host_to_guest);
-+	xa_destroy(&gmap->guest_to_host);
-+	xa_destroy(&gmap->host_to_guest);
- 
- 	/* Free additional data for a shadow gmap */
- 	if (gmap_is_shadow(gmap)) {
- 		/* Free all page tables. */
- 		list_for_each_entry_safe(page, next, &gmap->pt_list, lru)
- 			page_table_free_pgste(page);
--		gmap_rmap_radix_tree_free(&gmap->host_to_rmap);
-+		gmap_rmap_free(&gmap->host_to_rmap);
- 		/* Release reference to the parent */
- 		gmap_put(gmap->parent);
++	tmp = f2fs_kmem_cache_alloc(ino_entry_slab, GFP_NOFS | __GFP_ZERO);
++	xa_lock(&im->ino_root);
++	e = __xa_cmpxchg(&im->ino_root, ino, NULL, tmp,
++						GFP_NOFS | __GFP_NOFAIL);
++	if (e) {
++		kmem_cache_free(ino_entry_slab, tmp);
++		goto found;
  	}
-@@ -358,7 +319,7 @@ static int __gmap_unlink_by_vmaddr(struct gmap *gmap, unsigned long vmaddr)
++	e = tmp;
  
- 	BUG_ON(gmap_is_shadow(gmap));
- 	spin_lock(&gmap->guest_table_lock);
--	entry = radix_tree_delete(&gmap->host_to_guest, vmaddr >> PMD_SHIFT);
-+	entry = xa_erase(&gmap->host_to_guest, vmaddr >> PMD_SHIFT);
- 	if (entry) {
- 		flush = (*entry != _SEGMENT_ENTRY_EMPTY);
- 		*entry = _SEGMENT_ENTRY_EMPTY;
-@@ -378,7 +339,7 @@ static int __gmap_unmap_by_gaddr(struct gmap *gmap, unsigned long gaddr)
- {
- 	unsigned long vmaddr;
- 
--	vmaddr = (unsigned long) radix_tree_delete(&gmap->guest_to_host,
-+	vmaddr = (unsigned long) xa_erase(&gmap->guest_to_host,
- 						   gaddr >> PMD_SHIFT);
- 	return vmaddr ? __gmap_unlink_by_vmaddr(gmap, vmaddr) : 0;
- }
-@@ -441,9 +402,9 @@ int gmap_map_segment(struct gmap *gmap, unsigned long from,
- 		/* Remove old translation */
- 		flush |= __gmap_unmap_by_gaddr(gmap, to + off);
- 		/* Store new translation */
--		if (radix_tree_insert(&gmap->guest_to_host,
-+		if (xa_is_err(xa_store(&gmap->guest_to_host,
- 				      (to + off) >> PMD_SHIFT,
--				      (void *) from + off))
-+				      (void *) from + off, GFP_KERNEL)))
- 			break;
- 	}
- 	up_write(&gmap->mm->mmap_sem);
-@@ -474,7 +435,7 @@ unsigned long __gmap_translate(struct gmap *gmap, unsigned long gaddr)
- 	unsigned long vmaddr;
- 
- 	vmaddr = (unsigned long)
--		radix_tree_lookup(&gmap->guest_to_host, gaddr >> PMD_SHIFT);
-+		xa_load(&gmap->guest_to_host, gaddr >> PMD_SHIFT);
- 	/* Note: guest_to_host is empty for a shadow gmap */
- 	return vmaddr ? (vmaddr | (gaddr & ~PMD_MASK)) : -EFAULT;
- }
-@@ -588,21 +549,19 @@ int __gmap_link(struct gmap *gmap, unsigned long gaddr, unsigned long vmaddr)
- 	if (pmd_large(*pmd))
- 		return -EFAULT;
- 	/* Link gmap segment table entry location to page table. */
--	rc = radix_tree_preload(GFP_KERNEL);
-+	rc = xa_reserve(&gmap->host_to_guest, vmaddr >> PMD_SHIFT, GFP_KERNEL);
- 	if (rc)
- 		return rc;
- 	ptl = pmd_lock(mm, pmd);
- 	spin_lock(&gmap->guest_table_lock);
- 	if (*table == _SEGMENT_ENTRY_EMPTY) {
--		rc = radix_tree_insert(&gmap->host_to_guest,
--				       vmaddr >> PMD_SHIFT, table);
-+		rc = xa_err(xa_store(&gmap->host_to_guest, vmaddr >> PMD_SHIFT,
-+				table, GFP_NOWAIT | __GFP_NOFAIL));
- 		if (!rc)
- 			*table = pmd_val(*pmd);
--	} else
--		rc = 0;
-+	}
- 	spin_unlock(&gmap->guest_table_lock);
- 	spin_unlock(ptl);
++	e->ino = ino;
++	list_add_tail(&e->list, &im->ino_list);
++	if (type != ORPHAN_INO)
++		im->ino_num++;
++found:
+ 	if (type == FLUSH_INO)
+ 		f2fs_set_bit(devidx, (char *)&e->dirty_device);
+-
+-	spin_unlock(&im->ino_lock);
 -	radix_tree_preload_end();
- 	return rc;
+-
+-	if (e != tmp)
+-		kmem_cache_free(ino_entry_slab, tmp);
++	xa_unlock(&im->ino_root);
  }
  
-@@ -660,7 +619,7 @@ void __gmap_zap(struct gmap *gmap, unsigned long gaddr)
- 	pte_t *ptep;
+ static void __remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+@@ -437,17 +434,14 @@ static void __remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+ 	struct inode_management *im = &sbi->im[type];
+ 	struct ino_entry *e;
  
- 	/* Find the vm address for the guest address */
--	vmaddr = (unsigned long) radix_tree_lookup(&gmap->guest_to_host,
-+	vmaddr = (unsigned long) xa_load(&gmap->guest_to_host,
- 						   gaddr >> PMD_SHIFT);
- 	if (vmaddr) {
- 		vmaddr |= gaddr & ~PMD_MASK;
-@@ -682,8 +641,7 @@ void gmap_discard(struct gmap *gmap, unsigned long from, unsigned long to)
- 	for (gaddr = from; gaddr < to;
- 	     gaddr = (gaddr + PMD_SIZE) & PMD_MASK) {
- 		/* Find the vm address for the guest address */
--		vmaddr = (unsigned long)
--			radix_tree_lookup(&gmap->guest_to_host,
-+		vmaddr = (unsigned long) xa_load(&gmap->guest_to_host,
- 					  gaddr >> PMD_SHIFT);
- 		if (!vmaddr)
- 			continue;
-@@ -1002,29 +960,24 @@ int gmap_read_table(struct gmap *gmap, unsigned long gaddr, unsigned long *val)
- EXPORT_SYMBOL_GPL(gmap_read_table);
- 
- /**
-- * gmap_insert_rmap - add a rmap to the host_to_rmap radix tree
-+ * gmap_insert_rmap - add a rmap to the host_to_rmap
-  * @sg: pointer to the shadow guest address space structure
-  * @vmaddr: vm address associated with the rmap
-  * @rmap: pointer to the rmap structure
-  *
-- * Called with the sg->guest_table_lock
-+ * Called with the sg->guest_table_lock and page table lock held
-  */
- static inline void gmap_insert_rmap(struct gmap *sg, unsigned long vmaddr,
- 				    struct gmap_rmap *rmap)
- {
--	void __rcu **slot;
-+	XA_STATE(xas, &sg->host_to_rmap, vmaddr >> PAGE_SHIFT);
- 
- 	BUG_ON(!gmap_is_shadow(sg));
--	slot = radix_tree_lookup_slot(&sg->host_to_rmap, vmaddr >> PAGE_SHIFT);
--	if (slot) {
--		rmap->next = radix_tree_deref_slot_protected(slot,
--							&sg->guest_table_lock);
--		radix_tree_replace_slot(&sg->host_to_rmap, slot, rmap);
--	} else {
--		rmap->next = NULL;
--		radix_tree_insert(&sg->host_to_rmap, vmaddr >> PAGE_SHIFT,
--				  rmap);
--	}
-+
-+	xas_lock(&xas);
-+	rmap->next = xas_load(&xas);
-+	xas_store(&xas, rmap);
-+	xas_unlock(&xas);
- }
- 
- /**
-@@ -1058,7 +1011,8 @@ static int gmap_protect_rmap(struct gmap *sg, unsigned long raddr,
- 		if (!rmap)
- 			return -ENOMEM;
- 		rmap->raddr = raddr;
--		rc = radix_tree_preload(GFP_KERNEL);
-+		rc = xa_reserve(&sg->host_to_rmap, vmaddr >> PAGE_SHIFT,
-+				GFP_KERNEL);
- 		if (rc) {
- 			kfree(rmap);
- 			return rc;
-@@ -1074,7 +1028,7 @@ static int gmap_protect_rmap(struct gmap *sg, unsigned long raddr,
- 			spin_unlock(&sg->guest_table_lock);
- 			gmap_pte_op_end(ptl);
- 		}
--		radix_tree_preload_end();
-+		xa_release(&sg->host_to_rmap, vmaddr >> PAGE_SHIFT);
- 		if (rc) {
- 			kfree(rmap);
- 			rc = gmap_pte_op_fixup(parent, paddr, vmaddr, prot);
-@@ -1962,7 +1916,8 @@ int gmap_shadow_page(struct gmap *sg, unsigned long saddr, pte_t pte)
- 			rc = vmaddr;
- 			break;
- 		}
--		rc = radix_tree_preload(GFP_KERNEL);
-+		rc = xa_reserve(&sg->host_to_rmap, vmaddr >> PAGE_SHIFT,
-+				GFP_KERNEL);
- 		if (rc)
- 			break;
- 		rc = -EAGAIN;
-@@ -1974,7 +1929,8 @@ int gmap_shadow_page(struct gmap *sg, unsigned long saddr, pte_t pte)
- 			if (!tptep) {
- 				spin_unlock(&sg->guest_table_lock);
- 				gmap_pte_op_end(ptl);
--				radix_tree_preload_end();
-+				xa_release(&sg->host_to_rmap,
-+						vmaddr >> PAGE_SHIFT);
- 				break;
- 			}
- 			rc = ptep_shadow_pte(sg->mm, saddr, sptep, tptep, pte);
-@@ -1983,11 +1939,13 @@ int gmap_shadow_page(struct gmap *sg, unsigned long saddr, pte_t pte)
- 				gmap_insert_rmap(sg, vmaddr, rmap);
- 				rmap = NULL;
- 				rc = 0;
-+			} else {
-+				xa_release(&sg->host_to_rmap,
-+						vmaddr >> PAGE_SHIFT);
- 			}
- 			gmap_pte_op_end(ptl);
- 			spin_unlock(&sg->guest_table_lock);
- 		}
--		radix_tree_preload_end();
- 		if (!rc)
- 			break;
- 		rc = gmap_pte_op_fixup(parent, paddr, vmaddr, prot);
-@@ -2030,7 +1988,7 @@ static void gmap_shadow_notify(struct gmap *sg, unsigned long vmaddr,
- 		return;
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
++	xa_lock(&im->ino_root);
++	e = __xa_erase(&im->ino_root, ino);
+ 	if (e) {
+ 		list_del(&e->list);
+-		radix_tree_delete(&im->ino_root, ino);
+ 		im->ino_num--;
+-		spin_unlock(&im->ino_lock);
+ 		kmem_cache_free(ino_entry_slab, e);
+-		return;
  	}
- 	/* Remove the page table tree from on specific entry */
--	head = radix_tree_delete(&sg->host_to_rmap, vmaddr >> PAGE_SHIFT);
-+	head = xa_erase(&sg->host_to_rmap, vmaddr >> PAGE_SHIFT);
- 	gmap_for_each_rmap_safe(rmap, rnext, head) {
- 		bits = rmap->raddr & _SHADOW_RMAP_MASK;
- 		raddr = rmap->raddr ^ bits;
-@@ -2078,8 +2036,7 @@ void ptep_notify(struct mm_struct *mm, unsigned long vmaddr,
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(gmap, &mm->context.gmap_list, list) {
- 		spin_lock(&gmap->guest_table_lock);
--		table = radix_tree_lookup(&gmap->host_to_guest,
--					  vmaddr >> PMD_SHIFT);
-+		table = xa_load(&gmap->host_to_guest, vmaddr >> PMD_SHIFT);
- 		if (table)
- 			gaddr = __gmap_segment_gaddr(table) + offset;
- 		spin_unlock(&gmap->guest_table_lock);
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ }
+ 
+ void add_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+@@ -466,12 +460,8 @@ void remove_ino_entry(struct f2fs_sb_info *sbi, nid_t ino, int type)
+ bool exist_written_data(struct f2fs_sb_info *sbi, nid_t ino, int mode)
+ {
+ 	struct inode_management *im = &sbi->im[mode];
+-	struct ino_entry *e;
+ 
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
+-	spin_unlock(&im->ino_lock);
+-	return e ? true : false;
++	return xa_load(&im->ino_root, ino) ? true : false;
+ }
+ 
+ void release_ino_entry(struct f2fs_sb_info *sbi, bool all)
+@@ -482,14 +472,14 @@ void release_ino_entry(struct f2fs_sb_info *sbi, bool all)
+ 	for (i = all ? ORPHAN_INO : APPEND_INO; i < MAX_INO_ENTRY; i++) {
+ 		struct inode_management *im = &sbi->im[i];
+ 
+-		spin_lock(&im->ino_lock);
++		xa_lock(&im->ino_root);
+ 		list_for_each_entry_safe(e, tmp, &im->ino_list, list) {
+ 			list_del(&e->list);
+-			radix_tree_delete(&im->ino_root, e->ino);
++			__xa_erase(&im->ino_root, e->ino);
+ 			kmem_cache_free(ino_entry_slab, e);
+ 			im->ino_num--;
+ 		}
+-		spin_unlock(&im->ino_lock);
++		xa_unlock(&im->ino_root);
+ 	}
+ }
+ 
+@@ -506,11 +496,11 @@ bool is_dirty_device(struct f2fs_sb_info *sbi, nid_t ino,
+ 	struct ino_entry *e;
+ 	bool is_dirty = false;
+ 
+-	spin_lock(&im->ino_lock);
+-	e = radix_tree_lookup(&im->ino_root, ino);
++	xa_lock(&im->ino_root);
++	e = xa_load(&im->ino_root, ino);
+ 	if (e && f2fs_test_bit(devidx, (char *)&e->dirty_device))
+ 		is_dirty = true;
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ 	return is_dirty;
+ }
+ 
+@@ -519,11 +509,11 @@ int acquire_orphan_inode(struct f2fs_sb_info *sbi)
+ 	struct inode_management *im = &sbi->im[ORPHAN_INO];
+ 	int err = 0;
+ 
+-	spin_lock(&im->ino_lock);
++	xa_lock(&im->ino_root);
+ 
+ #ifdef CONFIG_F2FS_FAULT_INJECTION
+ 	if (time_to_inject(sbi, FAULT_ORPHAN)) {
+-		spin_unlock(&im->ino_lock);
++		xa_unlock(&im->ino_root);
+ 		f2fs_show_injection_info(FAULT_ORPHAN);
+ 		return -ENOSPC;
+ 	}
+@@ -532,7 +522,7 @@ int acquire_orphan_inode(struct f2fs_sb_info *sbi)
+ 		err = -ENOSPC;
+ 	else
+ 		im->ino_num++;
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ 
+ 	return err;
+ }
+@@ -541,10 +531,10 @@ void release_orphan_inode(struct f2fs_sb_info *sbi)
+ {
+ 	struct inode_management *im = &sbi->im[ORPHAN_INO];
+ 
+-	spin_lock(&im->ino_lock);
++	xa_lock(&im->ino_root);
+ 	f2fs_bug_on(sbi, im->ino_num == 0);
+ 	im->ino_num--;
+-	spin_unlock(&im->ino_lock);
++	xa_unlock(&im->ino_root);
+ }
+ 
+ void add_orphan_inode(struct inode *inode)
+@@ -677,7 +667,7 @@ static void write_orphan_inodes(struct f2fs_sb_info *sbi, block_t start_blk)
+ 	orphan_blocks = GET_ORPHAN_BLOCKS(im->ino_num);
+ 
+ 	/*
+-	 * we don't need to do spin_lock(&im->ino_lock) here, since all the
++	 * we don't need to lock the ino_root here, since all the
+ 	 * orphan inode operations are covered under f2fs_lock_op().
+ 	 * And, spin_lock should be avoided due to page operations below.
+ 	 */
+@@ -1433,8 +1423,7 @@ void init_ino_entry_info(struct f2fs_sb_info *sbi)
+ 	for (i = 0; i < MAX_INO_ENTRY; i++) {
+ 		struct inode_management *im = &sbi->im[i];
+ 
+-		INIT_RADIX_TREE(&im->ino_root, GFP_ATOMIC);
+-		spin_lock_init(&im->ino_lock);
++		xa_init(&im->ino_root);
+ 		INIT_LIST_HEAD(&im->ino_list);
+ 		im->ino_num = 0;
+ 	}
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 6abf26c31d01..b3ee784b49bc 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -994,8 +994,7 @@ enum inode_type {
+ 
+ /* for inner inode cache management */
+ struct inode_management {
+-	struct radix_tree_root ino_root;	/* ino entry array */
+-	spinlock_t ino_lock;			/* for ino entry lock */
++	struct xarray ino_root;			/* ino entry array */
+ 	struct list_head ino_list;		/* inode list head */
+ 	unsigned long ino_num;			/* number of entries */
+ };
 -- 
 2.15.1
 
