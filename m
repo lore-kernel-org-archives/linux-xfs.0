@@ -1,81 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34768 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbeAOULD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 15:11:03 -0500
-Date: Mon, 15 Jan 2018 12:05:27 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:60516 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750868AbeAQBgx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 20:36:53 -0500
+Date: Tue, 16 Jan 2018 17:31:45 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/5] xfs: attr leaf verifier needs to check for obviously
- bad count
-Message-ID: <20180115200527.GE5602@magnolia>
-References: <151579463950.8694.320025813242574491.stgit@magnolia>
- <151579466415.8694.4992590880368427655.stgit@magnolia>
+Subject: Re: [PATCH v11 00/27] xfsprogs: online scrub/repair support
+Message-ID: <20180117013145.GD25805@magnolia>
+References: <151520348769.2027.9860697266310422360.stgit@magnolia>
+ <e1d9b126-a8de-b9c2-4578-b69b8e17b1c8@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151579466415.8694.4992590880368427655.stgit@magnolia>
+In-Reply-To: <e1d9b126-a8de-b9c2-4578-b69b8e17b1c8@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 11, 2018 at 10:17:28PM -0600, Eric Sandeen wrote:
+> On 1/5/18 7:51 PM, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > This is the eleventh revision of a patchset that adds to XFS userland tools
+> > support for online metadata scrubbing and repair.  Since v10 I've rebased
+> > to the latest for-next, fixed some wonky error messages, and fixed a few
+> > minor problems I found via code inspection.  However, this patch series is
+> > more or less the same as v10.
+> 
+> General note rather than finding the patches they came from ;)
+> 
+> these can be made static and in some cases removed from header files,
+> and/or ... hm, some aren't used at all.
+> 
+>   'bitmap_dump' is unique to scrub/bitmap.o  (function)
+>   'bitmap_iterate' is unique to scrub/bitmap.o  (function)
 
-In the attribute leaf verifier, we can check for obviously bad values of
-firstused and count so that later attempts at lasthash don't run off the
-end of the memory buffer.  Found by ones fuzzing hdr.count in xfs/400 with
-KASAN.
+These only exist #ifdef DEBUG
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: strengthen checking, clarify what we're testing via comments
----
- fs/xfs/libxfs/xfs_attr_leaf.c |   26 +++++++++++++++++++++-----
- 1 file changed, 21 insertions(+), 5 deletions(-)
+>   'do_error' is unique to scrub/common.o  (function)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 6fddce7..f1a1c60 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -249,12 +249,13 @@ xfs_attr3_leaf_hdr_to_disk(
- 
- static xfs_failaddr_t
- xfs_attr3_leaf_verify(
--	struct xfs_buf		*bp)
-+	struct xfs_buf			*bp)
- {
--	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_attr_leafblock *leaf = bp->b_addr;
--	struct xfs_perag *pag = bp->b_pag;
--	struct xfs_attr3_icleaf_hdr ichdr;
-+	struct xfs_attr3_icleaf_hdr	ichdr;
-+	struct xfs_mount		*mp = bp->b_target->bt_mount;
-+	struct xfs_attr_leafblock	*leaf = bp->b_addr;
-+	struct xfs_perag		*pag = bp->b_pag;
-+	struct xfs_attr_leaf_entry	*entries;
- 
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
- 
-@@ -282,6 +283,21 @@ xfs_attr3_leaf_verify(
- 	if (pag && pag->pagf_init && ichdr.count == 0)
- 		return __this_address;
- 
-+	/*
-+	 * firstused is the block offset of the first name info structure.
-+	 * Make sure it doesn't go off the block or crash into the header.
-+	 */
-+	if (ichdr.firstused > mp->m_attr_geo->blksize)
-+		return __this_address;
-+	if (ichdr.firstused < xfs_attr3_leaf_hdr_size(leaf))
-+		return __this_address;
-+
-+	/* Make sure the entries array doesn't crash into the name info. */
-+	entries = xfs_attr3_leaf_entryp(bp->b_addr);
-+	if ((char *)&entries[ichdr.count] >=
-+	    (char *)bp->b_addr + ichdr.firstused)
-+		return __this_address;
-+
- 	/* XXX: need to range check rest of attr header values */
- 	/* XXX: hash order check? */
- 
+Unused, removed.
+
+>   'display_rusage' is unique to scrub/xfs_scrub.o  (global variable)
+>   'is_service' is unique to scrub/xfs_scrub.o  (global variable)
+>   'scrub_data' is unique to scrub/xfs_scrub.o  (global variable)
+>   'xfs_check_rmap_ioerr' is unique to scrub/phase6.o  (function)
+
+Ok, these have been made local to the file.
+
+>   'progname' is unique to scrub/xfs_scrub.o  (global variable)
+
+I thought we needed to have this for libxfs?
+
+Ah, right, we don't link against libxfs anymore. :)
+
+--D
+
+> bitmap_dump (and so bitmap_iterate) are unused
+> do_error is unused as well?
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
