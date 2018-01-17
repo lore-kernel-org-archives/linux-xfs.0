@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59791 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:36435 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753843AbeAQUWz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:55 -0500
+        with ESMTP id S1753791AbeAQUWy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:54 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 69/99] brd: Convert to XArray
-Date: Wed, 17 Jan 2018 12:21:33 -0800
-Message-Id: <20180117202203.19756-70-willy@infradead.org>
+Subject: [PATCH v6 66/99] page cache: Finish XArray conversion
+Date: Wed, 17 Jan 2018 12:21:30 -0800
+Message-Id: <20180117202203.19756-67-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,176 +17,55 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Convert brd_pages from a radix tree to an XArray.  Simpler and smaller
-code; in particular another user of radix_tree_preload is eliminated.
+With no more radix tree API users left, we can drop the GFP flags
+and use xa_init() instead of INIT_RADIX_TREE().
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- drivers/block/brd.c | 93 ++++++++++++++++-------------------------------------
- 1 file changed, 28 insertions(+), 65 deletions(-)
+ fs/inode.c         | 2 +-
+ include/linux/fs.h | 2 +-
+ mm/swap_state.c    | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index 8028a3a7e7fd..59a1af7aaa79 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -17,7 +17,7 @@
- #include <linux/bio.h>
- #include <linux/highmem.h>
- #include <linux/mutex.h>
--#include <linux/radix-tree.h>
-+#include <linux/xarray.h>
- #include <linux/fs.h>
- #include <linux/slab.h>
- #include <linux/backing-dev.h>
-@@ -29,9 +29,9 @@
- #define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
- 
- /*
-- * Each block ramdisk device has a radix_tree brd_pages of pages that stores
-- * the pages containing the block device's contents. A brd page's ->index is
-- * its offset in PAGE_SIZE units. This is similar to, but in no way connected
-+ * Each block ramdisk device has an xarray brd_pages that stores the pages
-+ * containing the block device's contents. A brd page's ->index is its
-+ * offset in PAGE_SIZE units. This is similar to, but in no way connected
-  * with, the kernel's pagecache or buffer cache (which sit above our block
-  * device).
-  */
-@@ -41,13 +41,7 @@ struct brd_device {
- 	struct request_queue	*brd_queue;
- 	struct gendisk		*brd_disk;
- 	struct list_head	brd_list;
--
--	/*
--	 * Backing store of pages and lock to protect it. This is the contents
--	 * of the block device.
--	 */
--	spinlock_t		brd_lock;
--	struct radix_tree_root	brd_pages;
-+	struct xarray		brd_pages;
- };
- 
- /*
-@@ -62,17 +56,9 @@ static struct page *brd_lookup_page(struct brd_device *brd, sector_t sector)
- 	 * The page lifetime is protected by the fact that we have opened the
- 	 * device node -- brd pages will never be deleted under us, so we
- 	 * don't need any further locking or refcounting.
--	 *
--	 * This is strictly true for the radix-tree nodes as well (ie. we
--	 * don't actually need the rcu_read_lock()), however that is not a
--	 * documented feature of the radix-tree API so it is better to be
--	 * safe here (we don't have total exclusion from radix tree updates
--	 * here, only deletes).
- 	 */
--	rcu_read_lock();
- 	idx = sector >> PAGE_SECTORS_SHIFT; /* sector to page index */
--	page = radix_tree_lookup(&brd->brd_pages, idx);
--	rcu_read_unlock();
-+	page = xa_load(&brd->brd_pages, idx);
- 
- 	BUG_ON(page && page->index != idx);
- 
-@@ -87,7 +73,7 @@ static struct page *brd_lookup_page(struct brd_device *brd, sector_t sector)
- static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
+diff --git a/fs/inode.c b/fs/inode.c
+index c7b00573c10d..f5680b805336 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -348,7 +348,7 @@ EXPORT_SYMBOL(inc_nlink);
+ void address_space_init_once(struct address_space *mapping)
  {
- 	pgoff_t idx;
--	struct page *page;
-+	struct page *curr, *page;
- 	gfp_t gfp_flags;
- 
- 	page = brd_lookup_page(brd, sector);
-@@ -108,62 +94,40 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
- 	if (!page)
- 		return NULL;
- 
--	if (radix_tree_preload(GFP_NOIO)) {
--		__free_page(page);
--		return NULL;
--	}
--
--	spin_lock(&brd->brd_lock);
- 	idx = sector >> PAGE_SECTORS_SHIFT;
- 	page->index = idx;
--	if (radix_tree_insert(&brd->brd_pages, idx, page)) {
-+	curr = xa_cmpxchg(&brd->brd_pages, idx, NULL, page, GFP_NOIO);
-+	if (curr) {
- 		__free_page(page);
--		page = radix_tree_lookup(&brd->brd_pages, idx);
--		BUG_ON(!page);
--		BUG_ON(page->index != idx);
-+		if (xa_err(curr)) {
-+			page = NULL;
-+		} else {
-+			page = curr;
-+			BUG_ON(!page);
-+			BUG_ON(page->index != idx);
-+		}
- 	}
--	spin_unlock(&brd->brd_lock);
--
--	radix_tree_preload_end();
- 
- 	return page;
- }
- 
- /*
-- * Free all backing store pages and radix tree. This must only be called when
-+ * Free all backing store pages and xarray.  This must only be called when
-  * there are no other users of the device.
+ 	memset(mapping, 0, sizeof(*mapping));
+-	INIT_RADIX_TREE(&mapping->pages, GFP_ATOMIC | __GFP_ACCOUNT);
++	xa_init_flags(&mapping->pages, XA_FLAGS_LOCK_IRQ);
+ 	init_rwsem(&mapping->i_mmap_rwsem);
+ 	INIT_LIST_HEAD(&mapping->private_list);
+ 	spin_lock_init(&mapping->private_lock);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index c58bc3c619bf..b459bf4ddb62 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -410,7 +410,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
   */
--#define FREE_BATCH 16
- static void brd_free_pages(struct brd_device *brd)
- {
--	unsigned long pos = 0;
--	struct page *pages[FREE_BATCH];
--	int nr_pages;
--
--	do {
--		int i;
--
--		nr_pages = radix_tree_gang_lookup(&brd->brd_pages,
--				(void **)pages, pos, FREE_BATCH);
--
--		for (i = 0; i < nr_pages; i++) {
--			void *ret;
--
--			BUG_ON(pages[i]->index < pos);
--			pos = pages[i]->index;
--			ret = radix_tree_delete(&brd->brd_pages, pos);
--			BUG_ON(!ret || ret != pages[i]);
--			__free_page(pages[i]);
--		}
--
--		pos++;
-+	XA_STATE(xas, &brd->brd_pages, 0);
-+	struct page *page;
- 
--		/*
--		 * This assumes radix_tree_gang_lookup always returns as
--		 * many pages as possible. If the radix-tree code changes,
--		 * so will this have to.
--		 */
--	} while (nr_pages == FREE_BATCH);
-+	/* lockdep can't know there are no other users */
-+	xas_lock(&xas);
-+	xas_for_each(&xas, page, ULONG_MAX) {
-+		BUG_ON(page->index != xas.xa_index);
-+		__free_page(page);
-+		xas_store(&xas, NULL);
-+	}
-+	xas_unlock(&xas);
- }
- 
- /*
-@@ -373,8 +337,7 @@ static struct brd_device *brd_alloc(int i)
- 	if (!brd)
- 		goto out;
- 	brd->brd_number		= i;
--	spin_lock_init(&brd->brd_lock);
--	INIT_RADIX_TREE(&brd->brd_pages, GFP_ATOMIC);
-+	xa_init(&brd->brd_pages);
- 
- 	brd->brd_queue = blk_alloc_queue(GFP_KERNEL);
- 	if (!brd->brd_queue)
+ struct address_space {
+ 	struct inode		*host;
+-	struct radix_tree_root	pages;
++	struct xarray		pages;
+ 	gfp_t			gfp_mask;
+ 	atomic_t		i_mmap_writable;
+ 	struct rb_root_cached	i_mmap;
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 219e3b4f09e6..25f027d0bb00 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -573,7 +573,7 @@ int init_swap_address_space(unsigned int type, unsigned long nr_pages)
+ 		return -ENOMEM;
+ 	for (i = 0; i < nr; i++) {
+ 		space = spaces + i;
+-		INIT_RADIX_TREE(&space->pages, GFP_ATOMIC|__GFP_NOWARN);
++		xa_init_flags(&space->pages, XA_FLAGS_LOCK_IRQ);
+ 		atomic_set(&space->i_mmap_writable, 0);
+ 		space->a_ops = &swap_aops;
+ 		/* swap cache doesn't use writeback related tags */
 -- 
 2.15.1
 
