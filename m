@@ -1,411 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58518 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751505AbeAPTwK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 14:52:10 -0500
-Date: Tue, 16 Jan 2018 11:47:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 18/21] xfs: cross-reference the rmapbt data with the
- refcountbt
-Message-ID: <20180116194704.GT5602@magnolia>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398988306.18741.8223158735554937583.stgit@magnolia>
- <20180109212517.GM5602@magnolia>
- <20180115234928.GD16421@dastard>
- <20180116064955.GI5602@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180116064955.GI5602@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:46467 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753561AbeAQUWg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:36 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v6 25/99] page cache: Convert page deletion to XArray
+Date: Wed, 17 Jan 2018 12:20:49 -0800
+Message-Id: <20180117202203.19756-26-willy@infradead.org>
+In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
+References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-On Mon, Jan 15, 2018 at 10:49:55PM -0800, Darrick J. Wong wrote:
-> On Tue, Jan 16, 2018 at 10:49:28AM +1100, Dave Chinner wrote:
-> > On Tue, Jan 09, 2018 at 01:25:17PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Cross reference the refcount data with the rmap data to check that the
-> > > number of rmaps for a given block match the refcount of that block, and
-> > > that CoW blocks (which are owned entirely by the refcountbt) are tracked
-> > > as well.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > > v2: streamline scrubber arguments, remove stack allocated objects
-> > > ---
-> > >  fs/xfs/scrub/refcount.c |  318 +++++++++++++++++++++++++++++++++++++++++++++++
-> > >  1 file changed, 316 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> > > index 700f8f1..df18e47 100644
-> > > --- a/fs/xfs/scrub/refcount.c
-> > > +++ b/fs/xfs/scrub/refcount.c
-> > > @@ -50,6 +50,274 @@ xfs_scrub_setup_ag_refcountbt(
-> > >  
-> > >  /* Reference count btree scrubber. */
-> > >  
-> > > +/*
-> > > + * Confirming Reference Counts via Reverse Mappings
-> > > + *
-> > > + * We want to count the reverse mappings overlapping a refcount record
-> > > + * (bno, len, refcount), allowing for the possibility that some of the
-> > > + * overlap may come from smaller adjoining reverse mappings, while some
-> > > + * comes from single extents which overlap the range entirely.  The
-> > > + * outer loop is as follows:
-> > > + *
-> > > + * 1. For all reverse mappings overlapping the refcount extent,
-> > > + *    a. If a given rmap completely overlaps, mark it as seen.
-> > > + *    b. Otherwise, record the fragment for later processing.
-> > > + *
-> > > + * Once we've seen all the rmaps, we know that for all blocks in the
-> > > + * refcount record we want to find $refcount owners and we've already
-> > > + * visited $seen extents that overlap all the blocks.  Therefore, we
-> > > + * need to find ($refcount - $seen) owners for every block in the
-> > > + * extent; call that quantity $target_nr.  Proceed as follows:
-> > > + *
-> > > + * 2. Pull the first $target_nr fragments from the list; all of them
-> > > + *    should start at or before the start of the extent.
-> > > + *    Call this subset of fragments the working set.
-> > > + * 3. Until there are no more unprocessed fragments,
-> > > + *    a. Find the shortest fragments in the set and remove them.
-> > > + *    b. Note the block number of the end of these fragments.
-> > > + *    c. Pull the same number of fragments from the list.  All of these
-> > > + *       fragments should start at the block number recorded in the
-> > > + *       previous step.
-> > > + *    d. Put those fragments in the set.
-> > > + * 4. Check that there are $target_nr fragments remaining in the list,
-> > > + *    and that they all end at or beyond the end of the refcount extent.
-> > > + *
-> > > + * If the refcount is correct, all the check conditions in the algorithm
-> > > + * should always hold true.  If not, the refcount is incorrect.
-> > 
-> > This needs a comment somewhere in here describing the order of
-> > the records on the fragment list. AFAICT, it's ordered by start
-> > bno, but I'm not 100% sure and it seems the code is dependent on
-> > strict ordering of records the frag list....
-> 
-> Yes, the list must be ordered by agbno, which should be the case if we
-> iterated the rmap records in order.  We /could/ potentially list_sort
-> to ensure that this code doesn't blow up even if the rmapbt decides to
-> feed us out of order garbage.
-> 
-> Could?  Should.
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Hm.  In theory the rmap should never feed us out of order rmaps, but if
-it does that's an xref corruption, so we can employ a computationally
-less expensive order check (over list_sort) and bail out if the list
-is out of order.
+The code is slightly shorter and simpler.
 
-> > .....
-> > 
-> > > +	} else {
-> > > +		/*
-> > > +		 * This rmap covers only part of the refcount record, so
-> > > +		 * save the fragment for later processing.
-> > > +		 */
-> > > +		frag = kmem_alloc(sizeof(struct xfs_scrub_refcnt_frag),
-> > > +				KM_MAYFAIL | KM_NOFS);
-> > > +		if (!frag)
-> > > +			return -ENOMEM;
-> > > +		memcpy(&frag->rm, rec, sizeof(frag->rm));
-> > > +		list_add_tail(&frag->list, &refchk->fragments);
-> > 
-> > I'm making the assumption here that we're seeing records in the
-> > order they are in the rmap tree and that it's in increase startblock
-> > order, hence the list is ordered that way....
-> > 
-> > > +	}
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +/*
-> > > + * Given a bunch of rmap fragments, iterate through them, keeping
-> > > + * a running tally of the refcount.  If this ever deviates from
-> > > + * what we expect (which is the refcountbt's refcount minus the
-> > > + * number of extents that totally covered the refcountbt extent),
-> > > + * we have a refcountbt error.
-> > > + */
-> > > +STATIC void
-> > > +xfs_scrub_refcountbt_process_rmap_fragments(
-> > > +	struct xfs_scrub_refcnt_check	*refchk)
-> > > +{
-> > > +	struct list_head		worklist;
-> > > +	struct xfs_scrub_refcnt_frag	*frag;
-> > > +	struct xfs_scrub_refcnt_frag	*n;
-> > > +	xfs_agblock_t			bno;
-> > > +	xfs_agblock_t			rbno;
-> > > +	xfs_agblock_t			next_rbno;
-> > > +	xfs_nlink_t			nr;
-> > > +	xfs_nlink_t			target_nr;
-> > > +
-> > > +	target_nr = refchk->refcount - refchk->seen;
-> > > +	if (target_nr == 0)
-> > > +		return;
-> > > +
-> > > +	/*
-> > > +	 * There are (refchk->rc.rc_refcount - refchk->nr refcount)
-> > > +	 * references we haven't found yet.  Pull that many off the
-> > > +	 * fragment list and figure out where the smallest rmap ends
-> > > +	 * (and therefore the next rmap should start).  All the rmaps
-> > > +	 * we pull off should start at or before the beginning of the
-> > > +	 * refcount record's range.
-> > > +	 */
-> > > +	INIT_LIST_HEAD(&worklist);
-> > > +	rbno = NULLAGBLOCK;
-> > > +	nr = 1;
-> > > +
-> > > +	/* Find all the rmaps that start at or before the refc extent. */
-> > > +	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> > > +		if (frag->rm.rm_startblock > refchk->bno)
-> > > +			goto done;
-> > 
-> > .... and is where the code implies lowest to highest startblock
-> > ordering on the frag list.
-> > 
-> > > +		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> > > +		if (rbno > bno)
-> > > +			rbno = bno;
-> > 
-> > Can we put that check the other way around? we're looking for the
-> > shortest/smallest end block, so
-> > 
-> > 		if (bno < rbno)
-> > 			rbno = bno;
-> > 
-> > Makes a lot more sense to me.
-> 
-> Ok.
-> 
-> > 
-> > > +		list_del(&frag->list);
-> > > +		list_add_tail(&frag->list, &worklist);
-> > 
-> > list_move_tail()?
-> > 
-> > Ok, so we are moving fragments that start before the recount bno to
-> > the work list.
-> 
-> <nod>
-> 
-> > > +		if (nr == target_nr)
-> > > +			break;
-> > > +		nr++;
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * We should have found exactly $target_nr rmap fragments starting
-> > > +	 * at or before the refcount extent.
-> > > +	 */
-> > > +	if (nr != target_nr)
-> > > +		goto done;
-> > 
-> > ok. so on error we clean up and free the frag list and work list....
-> > 
-> > > +
-> > > +	while (!list_empty(&refchk->fragments)) {
-> > > +		/* Discard any fragments ending at rbno. */
-> > > +		nr = 0;
-> > > +		next_rbno = NULLAGBLOCK;
-> > > +		list_for_each_entry_safe(frag, n, &worklist, list) {
-> > 
-> > Ok, this needs to be clearer than it's walking the working set
-> > of fragments. I had to read this code several times before I worked
-> > out this is where the "working set" was being processed....
-> 
-> /* Walk the working set of rmap fragments... */
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ mm/filemap.c | 30 ++++++++++++++----------------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
 
-Correction: just update the comment to:
-/* Discard any fragments ending at rbno from the worklist. */
+diff --git a/mm/filemap.c b/mm/filemap.c
+index e6371b551de1..ed30d5310e50 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -112,30 +112,28 @@
+  *   ->tasklist_lock            (memory_failure, collect_procs_ao)
+  */
+ 
+-static void page_cache_tree_delete(struct address_space *mapping,
++static void page_cache_delete(struct address_space *mapping,
+ 				   struct page *page, void *shadow)
+ {
+-	int i, nr;
++	XA_STATE(xas, &mapping->pages, page->index);
++	unsigned int i, nr;
+ 
+-	/* hugetlb pages are represented by one entry in the radix tree */
++	mapping_set_update(&xas, mapping);
++
++	/* hugetlb pages are represented by a single entry in the xarray */
+ 	nr = PageHuge(page) ? 1 : hpage_nr_pages(page);
+ 
+ 	VM_BUG_ON_PAGE(!PageLocked(page), page);
+ 	VM_BUG_ON_PAGE(PageTail(page), page);
+ 	VM_BUG_ON_PAGE(nr != 1 && shadow, page);
+ 
+-	for (i = 0; i < nr; i++) {
+-		struct radix_tree_node *node;
+-		void **slot;
+-
+-		__radix_tree_lookup(&mapping->pages, page->index + i,
+-				    &node, &slot);
+-
+-		VM_BUG_ON_PAGE(!node && nr != 1, page);
+-
+-		radix_tree_clear_tags(&mapping->pages, node, slot);
+-		__radix_tree_replace(&mapping->pages, node, slot, shadow,
+-				workingset_lookup_update(mapping));
++	i = nr;
++repeat:
++	xas_store(&xas, shadow);
++	xas_init_tags(&xas);
++	if (--i) {
++		xas_next(&xas);
++		goto repeat;
+ 	}
+ 
+ 	page->mapping = NULL;
+@@ -235,7 +233,7 @@ void __delete_from_page_cache(struct page *page, void *shadow)
+ 	trace_mm_filemap_delete_from_page_cache(page);
+ 
+ 	unaccount_page_cache_page(mapping, page);
+-	page_cache_tree_delete(mapping, page, shadow);
++	page_cache_delete(mapping, page, shadow);
+ }
+ 
+ static void page_cache_free_page(struct address_space *mapping,
+-- 
+2.15.1
 
---D
-
-> 
-> > 
-> > > +			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> > > +			if (bno != rbno) {
-> > > +				if (next_rbno > bno)
-> > > +					next_rbno = bno;
-> > 
-> > Same comment here about being a next_rbno "smallest bno" variable.
-> 
-> <nod>
-> 
-> > > +				continue;
-> > > +			}
-> > > +			list_del(&frag->list);
-> > > +			kmem_free(frag);
-> > > +			nr++;
-> > > +		}
-> > > +
-> > > +		/* Empty list?  We're done. */
-> > > +		if (list_empty(&refchk->fragments))
-> > > +			break;
-> > > +
-> > > +		/* Try to add nr rmaps starting at rbno to the worklist. */
-> > > +		list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> > > +			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> > > +			if (frag->rm.rm_startblock != rbno)
-> > > +				goto done;
-> > 
-> > definitely assuming the frag list is ordered here :P
-> > 
-> > > +			list_del(&frag->list);
-> > > +			list_add_tail(&frag->list, &worklist);
-> > > +			if (next_rbno > bno)
-> > > +				next_rbno = bno;
-> > > +			nr--;
-> > > +			if (nr == 0)
-> > > +				break;
-> > > +		}
-> > 
-> > Ok, so if we get here with nr > 0, then we must have emptied the
-> > fragment list onto the work list, right? At this point, the outer
-> > loop will terminate. Don't we need to run the worklist processing
-> > loop one last time?
-> 
-> Nope.  Throughout xfs_scrub_refcountbt_process_rmap_fragments, we're
-> checking that the number of rmaps for a given refcount extent (i.e.
-> target_nr) remains the same.  nr is the number of rmaps we discarded
-> from the worklist at the top of the loop, so if we can't add the exact
-> same number of rmaps back to the worklist then we know that the refcount
-> is wrong.
-> 
-> So there /is/ a bug here, and the bug is that we need "if (nr) break;"
-> because we don't need to process more of the loop, we already know the
-> refcountbt is broken.
-> 
-> > > +		rbno = next_rbno;
-> > > +	}
-> > 
-> > .....
-> > > +/* Use the rmap entries covering this extent to verify the refcount. */
-> > > +STATIC void
-> > > +xfs_scrub_refcountbt_xref_rmap(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	xfs_agblock_t			bno,
-> > > +	xfs_extlen_t			len,
-> > > +	xfs_nlink_t			refcount)
-> > > +{
-> > > +	struct xfs_scrub_refcnt_check	refchk = {
-> > > +		.sc = sc,
-> > > +		.bno = bno,
-> > > +		.len = len,
-> > > +		.refcount = refcount,
-> > > +		.seen = 0,
-> > > +	};
-> > > +	struct xfs_rmap_irec		low;
-> > > +	struct xfs_rmap_irec		high;
-> > > +	struct xfs_scrub_refcnt_frag	*frag;
-> > > +	struct xfs_scrub_refcnt_frag	*n;
-> > > +	int				error;
-> > > +
-> > > +	if (!sc->sa.rmap_cur)
-> > > +		return;
-> > > +
-> > > +	/* Cross-reference with the rmapbt to confirm the refcount. */
-> > > +	memset(&low, 0, sizeof(low));
-> > > +	low.rm_startblock = bno;
-> > > +	memset(&high, 0xFF, sizeof(high));
-> > > +	high.rm_startblock = bno + len - 1;
-> > 
-> > This range query init feels like a familiar pattern now. Helper
-> > function (separate patch)?
-> 
-> Yeah, these can all get cleaned up at the end of the series.
-> 
-> > ....
-> > 
-> > > +/* Make sure we have as many refc blocks as the rmap says. */
-> > > +STATIC void
-> > > +xfs_scrub_refcount_xref_rmap(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	struct xfs_owner_info		*oinfo,
-> > > +	xfs_filblks_t			cow_blocks)
-> > > +{
-> > > +	xfs_extlen_t			refcbt_blocks = 0;
-> > > +	xfs_filblks_t			blocks;
-> > > +	int				error;
-> > > +
-> > > +	/* Check that we saw as many refcbt blocks as the rmap knows about. */
-> > > +	error = xfs_btree_count_blocks(sc->sa.refc_cur, &refcbt_blocks);
-> > > +	if (!xfs_scrub_btree_process_error(sc, sc->sa.refc_cur, 0, &error))
-> > > +		return;
-> > > +	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-> > > +			&blocks);
-> > > +	if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur) &&
-> > > +	    blocks != refcbt_blocks)
-> > > +		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-> > > +
-> > > +	if (!sc->sa.rmap_cur)
-> > > +		return;
-> > > +
-> > > +	/* Check that we saw as many cow blocks as the rmap knows about. */
-> > > +	xfs_rmap_ag_owner(oinfo, XFS_RMAP_OWN_COW);
-> > > +	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-> > > +			&blocks);
-> > > +	if (xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur) &&
-> > > +	    blocks != cow_blocks)
-> > > +		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-> > 
-> > Bit of a landmine that this code changes the owner info structure
-> > that was passed in....
-> 
-> Will fix.
-> 
-> > > +}
-> > > +
-> > >  /* Scrub the refcount btree for some AG. */
-> > >  int
-> > >  xfs_scrub_refcountbt(
-> > >  	struct xfs_scrub_context	*sc)
-> > >  {
-> > >  	struct xfs_owner_info		oinfo;
-> > > +	xfs_agblock_t			cow_blocks = 0;
-> > > +	int				error;
-> > >  
-> > >  	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_REFC);
-> > > -	return xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
-> > > -			&oinfo, NULL);
-> > > +	error = xfs_scrub_btree(sc, sc->sa.refc_cur, xfs_scrub_refcountbt_rec,
-> > > +			&oinfo, &cow_blocks);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	if (sc->sa.rmap_cur)
-> > > +		xfs_scrub_refcount_xref_rmap(sc, &oinfo, cow_blocks);
-> > 
-> > .... because that's not obvious in this code here if we add anymore
-> > code after this call.
-> 
-> <nod>
-> 
-> > > +
-> > > +	return error;
-> > 
-> > error is zero here, so "return 0" instead?
-> 
-> Ok.
-> 
-> --D
-> 
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > 
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
