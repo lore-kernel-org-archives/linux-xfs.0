@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38601 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:57113 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753633AbeAQUWj (ORCPT
+        with ESMTP id S1753638AbeAQUWj (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:39 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 36/99] mm: Convert page migration to XArray
-Date: Wed, 17 Jan 2018 12:21:00 -0800
-Message-Id: <20180117202203.19756-37-willy@infradead.org>
+Subject: [PATCH v6 37/99] mm: Convert huge_memory to XArray
+Date: Wed, 17 Jan 2018 12:21:01 -0800
+Message-Id: <20180117202203.19756-38-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,131 +17,73 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
+Quite a straightforward conversion.
+
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- mm/migrate.c | 41 ++++++++++++++++-------------------------
- 1 file changed, 16 insertions(+), 25 deletions(-)
+ mm/huge_memory.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 75d19904dd9a..7122fec9b075 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -322,7 +322,7 @@ void __migration_entry_wait(struct mm_struct *mm, pte_t *ptep,
- 	page = migration_entry_to_page(entry);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index f71dd3e7d8cd..5c275295bbd3 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2379,7 +2379,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
+ 	if (PageAnon(head) && !PageSwapCache(head)) {
+ 		page_ref_inc(page_tail);
+ 	} else {
+-		/* Additional pin to radix tree */
++		/* Additional pin to page cache */
+ 		page_ref_add(page_tail, 2);
+ 	}
  
- 	/*
--	 * Once radix-tree replacement of page migration started, page_count
-+	 * Once page cache replacement of page migration started, page_count
- 	 * *must* be zero. And, we don't want to call wait_on_page_locked()
- 	 * against a page without get_page().
- 	 * So, we use get_page_unless_zero(), here. Even failed, page fault
-@@ -437,10 +437,10 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 		struct buffer_head *head, enum migrate_mode mode,
- 		int extra_count)
+@@ -2450,13 +2450,13 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	ClearPageCompound(head);
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
+-		/* Additional pin to radix tree of swap cache */
++		/* Additional pin to swap cache */
+ 		if (PageSwapCache(head))
+ 			page_ref_add(head, 2);
+ 		else
+ 			page_ref_inc(head);
+ 	} else {
+-		/* Additional pin to radix tree */
++		/* Additional pin to page cache */
+ 		page_ref_add(head, 2);
+ 		xa_unlock(&head->mapping->pages);
+ 	}
+@@ -2568,7 +2568,7 @@ bool can_split_huge_page(struct page *page, int *pextra_pins)
  {
-+	XA_STATE(xas, &mapping->pages, page_index(page));
- 	struct zone *oldzone, *newzone;
- 	int dirty;
- 	int expected_count = 1 + extra_count;
--	void **pslot;
+ 	int extra_pins;
  
- 	/*
- 	 * Device public or private pages have an extra refcount as they are
-@@ -466,21 +466,16 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 	oldzone = page_zone(page);
- 	newzone = page_zone(newpage);
+-	/* Additional pins from radix tree */
++	/* Additional pins from page cache */
+ 	if (PageAnon(page))
+ 		extra_pins = PageSwapCache(page) ? HPAGE_PMD_NR : 0;
+ 	else
+@@ -2664,17 +2664,14 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	spin_lock_irqsave(zone_lru_lock(page_zone(head)), flags);
  
--	xa_lock_irq(&mapping->pages);
--
--	pslot = radix_tree_lookup_slot(&mapping->pages,
-- 					page_index(page));
-+	xas_lock_irq(&xas);
+ 	if (mapping) {
+-		void **pslot;
++		XA_STATE(xas, &mapping->pages, page_index(head));
  
- 	expected_count += 1 + page_has_private(page);
--	if (page_count(page) != expected_count ||
--		radix_tree_deref_slot_protected(pslot,
--					&mapping->pages.xa_lock) != page) {
--		xa_unlock_irq(&mapping->pages);
-+	if (page_count(page) != expected_count || xas_load(&xas) != page) {
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
+-		xa_lock(&mapping->pages);
+-		pslot = radix_tree_lookup_slot(&mapping->pages,
+-				page_index(head));
+ 		/*
+-		 * Check if the head page is present in radix tree.
++		 * Check if the head page is present in page cache.
+ 		 * We assume all tail are present too, if head is there.
+ 		 */
+-		if (radix_tree_deref_slot_protected(pslot,
+-					&mapping->pages.xa_lock) != head)
++		xa_lock(&mapping->pages);
++		if (xas_load(&xas) != head)
+ 			goto fail;
  	}
  
- 	if (!page_ref_freeze(page, expected_count)) {
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
-@@ -494,7 +489,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 	if (mode == MIGRATE_ASYNC && head &&
- 			!buffer_migrate_lock_buffers(head, mode)) {
- 		page_ref_unfreeze(page, expected_count);
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
-@@ -522,7 +517,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 		SetPageDirty(newpage);
- 	}
- 
--	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
-+	xas_store(&xas, newpage);
- 
- 	/*
- 	 * Drop cache reference from old page by unfreezing
-@@ -531,7 +526,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 	 */
- 	page_ref_unfreeze(page, expected_count - 1);
- 
--	xa_unlock(&mapping->pages);
-+	xas_unlock(&xas);
- 	/* Leave irq disabled to prevent preemption while updating stats */
- 
- 	/*
-@@ -571,22 +566,18 @@ EXPORT_SYMBOL(migrate_page_move_mapping);
- int migrate_huge_page_move_mapping(struct address_space *mapping,
- 				   struct page *newpage, struct page *page)
- {
-+	XA_STATE(xas, &mapping->pages, page_index(page));
- 	int expected_count;
--	void **pslot;
--
--	xa_lock_irq(&mapping->pages);
--
--	pslot = radix_tree_lookup_slot(&mapping->pages, page_index(page));
- 
-+	xas_lock_irq(&xas);
- 	expected_count = 2 + page_has_private(page);
--	if (page_count(page) != expected_count ||
--		radix_tree_deref_slot_protected(pslot, &mapping->pages.xa_lock) != page) {
--		xa_unlock_irq(&mapping->pages);
-+	if (page_count(page) != expected_count || xas_load(&xas) != page) {
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
- 	if (!page_ref_freeze(page, expected_count)) {
--		xa_unlock_irq(&mapping->pages);
-+		xas_unlock_irq(&xas);
- 		return -EAGAIN;
- 	}
- 
-@@ -595,11 +586,11 @@ int migrate_huge_page_move_mapping(struct address_space *mapping,
- 
- 	get_page(newpage);
- 
--	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
-+	xas_store(&xas, newpage);
- 
- 	page_ref_unfreeze(page, expected_count - 1);
- 
--	xa_unlock_irq(&mapping->pages);
-+	xas_unlock_irq(&xas);
- 
- 	return MIGRATEPAGE_SUCCESS;
- }
 -- 
 2.15.1
 
