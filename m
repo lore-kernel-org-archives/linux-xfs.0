@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:37539 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:49537 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753463AbeAQUWc (ORCPT
+        with ESMTP id S1753462AbeAQUWc (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:32 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 17/99] xarray: Add MAINTAINERS entry
-Date: Wed, 17 Jan 2018 12:20:41 -0800
-Message-Id: <20180117202203.19756-18-willy@infradead.org>
+Subject: [PATCH v6 16/99] xarray: Add xas_create_range
+Date: Wed, 17 Jan 2018 12:20:40 -0800
+Message-Id: <20180117202203.19756-17-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,36 +17,61 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Add myself as XArray and IDR maintainer.
+This hopefully temporary function is useful for users who have not yet
+been converted to multi-index entries.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- MAINTAINERS | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ include/linux/xarray.h |  2 ++
+ lib/xarray.c           | 22 ++++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 18994806e441..55ae4c0b38d5 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -14893,6 +14893,18 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86/vdso
- S:	Maintained
- F:	arch/x86/entry/vdso/
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index 01ce313fc00e..acb6d02ff194 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -705,6 +705,8 @@ void xas_init_tags(const struct xa_state *);
+ bool xas_nomem(struct xa_state *, gfp_t);
+ void xas_pause(struct xa_state *);
  
-+XARRAY
-+M:	Matthew Wilcox <mawilcox@microsoft.com>
-+M:	Matthew Wilcox <willy@infradead.org>
-+L:	linux-fsdevel@vger.kernel.org
-+S:	Supported
-+F:	Documentation/core-api/xarray.rst
-+F:	lib/idr.c
-+F:	lib/xarray.c
-+F:	include/linux/idr.h
-+F:	include/linux/xarray.h
-+F:	tools/testing/radix-tree
++void xas_create_range(struct xa_state *, unsigned long max);
 +
- XC2028/3028 TUNER DRIVER
- M:	Mauro Carvalho Chehab <mchehab@s-opensource.com>
- M:	Mauro Carvalho Chehab <mchehab@kernel.org>
+ /**
+  * xas_reload() - Refetch an entry from the xarray.
+  * @xas: XArray operation state.
+diff --git a/lib/xarray.c b/lib/xarray.c
+index e8ece1fff9fd..c044373d6893 100644
+--- a/lib/xarray.c
++++ b/lib/xarray.c
+@@ -612,6 +612,28 @@ void *xas_create(struct xa_state *xas)
+ }
+ EXPORT_SYMBOL_GPL(xas_create);
+ 
++/**
++ * xas_create_range() - Ensure that stores to this range will succeed
++ * @xas: XArray operation state.
++ * @max: The highest index to create a slot for.
++ *
++ * Creates all of the slots in the range between the current position of
++ * @xas and @max.  This is for the benefit of users who have not yet been
++ * converted to multi-index entries.
++ *
++ * The implementation is naive.
++ */
++void xas_create_range(struct xa_state *xas, unsigned long max)
++{
++	XA_STATE(tmp, xas->xa, xas->xa_index);
++
++	do {
++		xas_create(&tmp);
++		xas_set(&tmp, tmp.xa_index + XA_CHUNK_SIZE);
++	} while (tmp.xa_index < max);
++}
++EXPORT_SYMBOL_GPL(xas_create_range);
++
+ static void store_siblings(struct xa_state *xas, void *entry, void *curr,
+ 				int *countp, int *valuesp)
+ {
 -- 
 2.15.1
 
