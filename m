@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33090 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753769AbeAQWFC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:05:02 -0500
-Subject: [PATCH 28/29] xfs_scrub: wire up repair ioctl
+Received: from aserp2120.oracle.com ([141.146.126.78]:57778 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753738AbeAQWFB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:05:01 -0500
+Subject: [PATCH 27/29] xfs_scrub: integrate services with systemd
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:04:50 -0800
-Message-ID: <151622669005.31925.1032846942610114371.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:04:43 -0800
+Message-ID: <151622668376.31925.11115543396206091025.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,362 +20,402 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create the mechanism we need to actually call the kernel's online repair
-functionality.  The interface will consume a repair description; the
-descriptor management will follow in the next patch.
+Create a systemd service unit so that we can run the online scrubber
+under systemd with (somewhat) appropriate containment.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/common.c    |   12 +++++
- scrub/common.h    |    6 ++
- scrub/phase1.c    |   15 ++++++
- scrub/phase2.c    |    1 
- scrub/phase3.c    |    1 
- scrub/phase5.c    |    1 
- scrub/scrub.c     |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/scrub.h     |   20 ++++++++
- scrub/xfs_scrub.h |    2 +
- 9 files changed, 192 insertions(+)
+ .gitignore                       |    4 +++
+ configure.ac                     |   15 +++++++++++
+ include/builddefs.in             |    3 ++
+ scrub/Makefile                   |   32 ++++++++++++++++++++++-
+ scrub/xfs_scrub.c                |   25 ++++++++++++++++++
+ scrub/xfs_scrub@.service.in      |   18 +++++++++++++
+ scrub/xfs_scrub_all.cron.in      |    2 +
+ scrub/xfs_scrub_all.in           |   53 ++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub_all.service.in   |    8 ++++++
+ scrub/xfs_scrub_all.timer        |   11 ++++++++
+ scrub/xfs_scrub_fail             |   26 +++++++++++++++++++
+ scrub/xfs_scrub_fail@.service.in |   10 +++++++
+ 12 files changed, 206 insertions(+), 1 deletion(-)
+ create mode 100644 scrub/xfs_scrub@.service.in
+ create mode 100644 scrub/xfs_scrub_all.cron.in
+ create mode 100644 scrub/xfs_scrub_all.service.in
+ create mode 100644 scrub/xfs_scrub_all.timer
+ create mode 100755 scrub/xfs_scrub_fail
+ create mode 100644 scrub/xfs_scrub_fail@.service.in
 
 
-diff --git a/scrub/common.c b/scrub/common.c
-index 18171d1..17c3699 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -59,7 +59,9 @@ xfs_scrub_excessive_errors(
- static const char *err_str[] = {
- 	[S_ERROR]	= "Error",
- 	[S_WARN]	= "Warning",
-+	[S_REPAIR]	= "Repaired",
- 	[S_INFO]	= "Info",
-+	[S_PREEN]	= "Optimized",
- };
+diff --git a/.gitignore b/.gitignore
+index a3db640..d887451 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -69,6 +69,10 @@ cscope.*
+ /rtcp/xfs_rtcp
+ /spaceman/xfs_spaceman
+ /scrub/xfs_scrub
++/scrub/xfs_scrub@.service
++/scrub/xfs_scrub_all
++/scrub/xfs_scrub_all.service
++/scrub/xfs_scrub_fail@.service
  
- /* If stream is a tty, clear to end of line to clean up progress bar. */
-@@ -93,6 +95,11 @@ __str_out(
- 		stream = stdout;
+ # generated crc files
+ /libxfs/crc32selftest
+diff --git a/configure.ac b/configure.ac
+index bb032e5..f7840db 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -121,6 +121,21 @@ esac
+ AC_SUBST([root_sbindir])
+ AC_SUBST([root_libdir])
  
- 	pthread_mutex_lock(&ctx->lock);
++# Where do systemd services go?
++pkg_systemdsystemunitdir="$(pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)"
++case "${pkg_systemdsystemunitdir}" in
++"")
++	systemdsystemunitdir=""
++	have_systemd=no
++	;;
++*)
++	systemdsystemunitdir="${pkg_systemdsystemunitdir}"
++	have_systemd=yes
++	;;
++esac
++AC_SUBST([have_systemd])
++AC_SUBST([systemdsystemunitdir])
 +
-+	/* We only want to hear about optimizing when in debug/verbose mode. */
-+	if (level == S_PREEN && !debug && !verbose)
-+		goto out_record;
+ # Find localized files.  Don't descend into any "dot directories"
+ # (like .git or .pc from quilt).  Strangely, the "-print" argument
+ # to "find" is required, to avoid including such directories in the
+diff --git a/include/builddefs.in b/include/builddefs.in
+index d44faf9..4b4bf41 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -128,6 +128,9 @@ HAVE_FSTATAT = @have_fstatat@
+ HAVE_SG_IO = @have_sg_io@
+ HAVE_HDIO_GETGEO = @have_hdio_getgeo@
+ 
++HAVE_SYSTEMD = @have_systemd@
++SYSTEMDSYSTEMUNITDIR = @systemdsystemunitdir@
 +
- 	fprintf(stream, "%s%s: %s: ", stream_start(stream), _(err_str[level]),
- 			descr);
- 	if (error) {
-@@ -109,12 +116,17 @@ __str_out(
- 	if (stream == stdout)
- 		fflush(stream);
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
  
-+out_record:
- 	if (error)      /* A syscall failed */
- 		ctx->runtime_errors++;
- 	else if (level == S_ERROR)
- 		ctx->errors_found++;
- 	else if (level == S_WARN)
- 		ctx->warnings_found++;
-+	else if (level == S_REPAIR)
-+		ctx->repairs++;
-+	else if (level == S_PREEN)
-+		ctx->preens++;
- 
- 	pthread_mutex_unlock(&ctx->lock);
- }
-diff --git a/scrub/common.h b/scrub/common.h
-index 29b4332..287bd4d 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -32,7 +32,9 @@ bool xfs_scrub_excessive_errors(struct scrub_ctx *ctx);
- enum error_level {
- 	S_ERROR	= 0,
- 	S_WARN,
-+	S_REPAIR,
- 	S_INFO,
-+	S_PREEN,
- };
- 
- void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
-@@ -46,6 +48,10 @@ void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
- 	__str_out(ctx, str, S_WARN,	0,	__FILE__, __LINE__, __VA_ARGS__)
- #define str_info(ctx, str, ...) \
- 	__str_out(ctx, str, S_INFO,	0,	__FILE__, __LINE__, __VA_ARGS__)
-+#define record_repair(ctx, str, ...) \
-+	__str_out(ctx, str, S_REPAIR,	0,	__FILE__, __LINE__, __VA_ARGS__)
-+#define record_preen(ctx, str, ...) \
-+	__str_out(ctx, str, S_PREEN,	0,	__FILE__, __LINE__, __VA_ARGS__)
- 
- #define dbg_printf(fmt, ...) \
- 	do {if (debug > 1) {printf(fmt, __VA_ARGS__);}} while (0)
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index d7a321f..3a2fbd7 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -176,6 +176,21 @@ _("Does not appear to be an XFS filesystem!"));
- 	    !xfs_can_scrub_parent(ctx))
- 		return false;
- 
-+	/* Do we have kernel-assisted metadata repair? */
-+	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
-+		if (ctx->mode == SCRUB_MODE_PREEN) {
-+			/* w/o repair, demote preen to dry run. */
-+			if (debug || verbose)
-+				str_info(ctx, ctx->mntpoint,
-+_("Metadata repairing not supported; demoting to scan mode.")
-+						);
-+			ctx->mode = SCRUB_MODE_DRY_RUN;
-+		} else {
-+			/* Repair mode w/o repair; abort. */
-+			return false;
-+		}
-+	}
+diff --git a/scrub/Makefile b/scrub/Makefile
+index ca6dab0..597b2eb 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -15,6 +15,16 @@ LTCOMMAND = xfs_scrub
+ INSTALL_SCRUB = install-scrub
+ XFS_SCRUB_ALL_PROG = xfs_scrub_all
+ XFS_SCRUB_ARGS = -b -n
++ifeq ($(HAVE_SYSTEMD),yes)
++INSTALL_SCRUB += install-systemd
++SYSTEMDSERVICES = xfs_scrub@.service xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
++endif
++CRONSERVICES = xfs_scrub_all.cron
++CROND_DIR = /etc/cron.d
 +
- 	/* Go find the XFS devices if we have a usable fsmap. */
- 	fs_table_initialise(0, NULL, 0, NULL);
- 	errno = 0;
-diff --git a/scrub/phase2.c b/scrub/phase2.c
-index e8eb1ca..32e2752 100644
---- a/scrub/phase2.c
-+++ b/scrub/phase2.c
-@@ -24,6 +24,7 @@
- #include <sys/stat.h>
- #include <sys/statvfs.h>
- #include "xfs.h"
-+#include "list.h"
- #include "path.h"
- #include "workqueue.h"
- #include "xfs_scrub.h"
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-index 43697c6..f4117b0 100644
---- a/scrub/phase3.c
-+++ b/scrub/phase3.c
-@@ -24,6 +24,7 @@
- #include <sys/stat.h>
- #include <sys/statvfs.h>
- #include "xfs.h"
-+#include "list.h"
- #include "path.h"
- #include "workqueue.h"
- #include "xfs_scrub.h"
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index fc3308b..703b279 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -29,6 +29,7 @@
- #endif
- #include "xfs.h"
- #include "handle.h"
-+#include "list.h"
- #include "path.h"
- #include "workqueue.h"
- #include "xfs_scrub.h"
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index bc4eab4..171b9b7 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -28,6 +28,7 @@
- #include <sys/statvfs.h>
- #include "xfs.h"
- #include "xfs_fs.h"
-+#include "list.h"
- #include "path.h"
- #include "xfs_scrub.h"
- #include "common.h"
-@@ -561,10 +562,15 @@ __xfs_scrub_test(
- 	bool				repair)
++# Disable all the crontabs for now
++CROND_DIR = $(PKG_LIB_DIR)/$(PKG_NAME)
++
+ endif	# scrub_prereqs
+ 
+ HFILES = \
+@@ -84,7 +94,8 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
+ LCFLAGS += -DHAVE_HDIO_GETGEO
+ endif
+ 
+-default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
++default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(SYSTEMDSERVICES) \
++	$(CRONSERVICES)
+ 
+ xfs_scrub_all: xfs_scrub_all.in
+ 	@echo "    [SED]    $@"
+@@ -98,10 +109,29 @@ include $(BUILDRULES)
+ 
+ install: $(INSTALL_SCRUB)
+ 
++%.service: %.service.in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
++		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
++		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
++		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
++
++%.cron: %.cron.in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" < $< > $@
++
++install-systemd: default
++	$(INSTALL) -m 755 -d $(SYSTEMDSYSTEMUNITDIR)
++	$(INSTALL) -m 644 $(SYSTEMDSERVICES) $(SYSTEMDSYSTEMUNITDIR)
++	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/$(PKG_NAME)
++	$(INSTALL) -m 755 xfs_scrub_fail $(PKG_LIB_DIR)/$(PKG_NAME)
++
+ install-scrub: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
+ 	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
++	$(INSTALL) -m 755 -d $(CROND_DIR)
++	$(INSTALL) -m 644 $(CRONSERVICES) $(CROND_DIR)
+ 
+ install-dev:
+ 
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index baf8760..a8d0927 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -154,6 +154,12 @@ bool				want_fstrim = true;
+ bool				stderr_isatty;
+ bool				stdout_isatty;
+ 
++/*
++ * If we are running as a service, we need to be careful about what
++ * error codes we return to the calling process.
++ */
++static bool			is_service;
++
+ static void __attribute__((noreturn))
+ usage(void)
  {
- 	struct xfs_scrub_metadata	meta = {0};
-+	static bool			injected;
- 	int				error;
+@@ -617,6 +623,9 @@ _("Only one of the options -n or -y may be specified.\n"));
+ 	if (stdout_isatty && !progress_fp)
+ 		progress_fp = fdopen(1, "w+");
  
- 	if (debug_tweak_on("XFS_SCRUB_NO_KERNEL"))
- 		return false;
-+	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
-+		str_error(ctx, "XFS_SCRUB_FORCE_REPAIR", "Not supported.");
-+		return false;
++	if (getenv("SERVICE_MODE"))
++		is_service = true;
++
+ 	/* Find the mount record for the passed-in argument. */
+ 	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
+ 		fprintf(stderr,
+@@ -717,5 +726,21 @@ _("%s: %llu warnings found.\n"),
+ 	free(ctx.blkdev);
+ 	free(ctx.mntpoint);
+ 
++	/*
++	 * If we're running as a service, bump return code up by 150 to
++	 * avoid conflicting with (sysvinit) service return codes.
++	 */
++	if (is_service) {
++		/*
++		 * journald queries /proc as part of taking in log
++		 * messages; it uses this information to associate the
++		 * message with systemd units, etc.  This races with
++		 * process exit, so delay that a couple of seconds so
++		 * that we capture the summary outputs in the job log.
++		 */
++		sleep(2);
++		if (ret)
++			ret += 150;
 +	}
- 
- 	meta.sm_type = type;
- 	if (repair)
-@@ -646,3 +652,131 @@ xfs_can_scrub_parent(
- {
- 	return __xfs_scrub_test(ctx, XFS_SCRUB_TYPE_PARENT, false);
+ 	return ret;
  }
+diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
+new file mode 100644
+index 0000000..6b6992d
+--- /dev/null
++++ b/scrub/xfs_scrub@.service.in
+@@ -0,0 +1,18 @@
++[Unit]
++Description=Online XFS Metadata Check for %I
++OnFailure=xfs_scrub_fail@%i.service
 +
-+bool
-+xfs_can_repair(
-+	struct scrub_ctx	*ctx)
-+{
-+	return __xfs_scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, true);
-+}
-+
-+/* General repair routines. */
-+
-+/* Repair some metadata. */
-+enum check_outcome
-+xfs_repair_metadata(
-+	struct scrub_ctx		*ctx,
-+	int				fd,
-+	struct repair_item		*ri,
-+	unsigned int			repair_flags)
-+{
-+	char				buf[DESCR_BUFSZ];
-+	struct xfs_scrub_metadata	meta = { 0 };
-+	struct xfs_scrub_metadata	oldm;
-+	int				error;
-+
-+	assert(ri->type < XFS_SCRUB_TYPE_NR);
-+	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
-+	meta.sm_type = ri->type;
-+	meta.sm_flags = ri->flags | XFS_SCRUB_IFLAG_REPAIR;
-+	switch (scrubbers[ri->type].type) {
-+	case ST_AGHEADER:
-+	case ST_PERAG:
-+		meta.sm_agno = ri->agno;
-+		break;
-+	case ST_INODE:
-+		meta.sm_ino = ri->ino;
-+		meta.sm_gen = ri->gen;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	/*
-+	 * If this is a preen operation but we're only repairing
-+	 * critical items, defer the preening until later.
-+	 */
-+	if (!needs_repair(&meta) && (repair_flags & XRM_REPAIR_ONLY))
-+		return CHECK_RETRY;
-+
-+	memcpy(&oldm, &meta, sizeof(oldm));
-+	format_scrub_descr(buf, DESCR_BUFSZ, &meta, &scrubbers[meta.sm_type]);
-+
-+	if (needs_repair(&meta))
-+		str_info(ctx, buf, _("Attempting repair."));
-+	else if (debug || verbose)
-+		str_info(ctx, buf, _("Attempting optimization."));
-+
-+	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
-+	/*
-+	 * If the caller doesn't want us to complain, tell the caller to
-+	 * requeue the repair for later and don't say a thing.
-+	 */
-+	if (!(repair_flags & XRM_NOFIX_COMPLAIN) &&
-+	    (error || needs_repair(&meta)))
-+		return CHECK_RETRY;
-+	if (error) {
-+		switch (errno) {
-+		case EDEADLOCK:
-+		case EBUSY:
-+			/* Filesystem is busy, try again later. */
-+			if (debug || verbose)
-+				str_info(ctx, buf,
-+_("Filesystem is busy, deferring repair."));
-+			return CHECK_RETRY;
-+		case ESHUTDOWN:
-+			/* Filesystem is already shut down, abort. */
-+			str_error(ctx, buf,
-+_("Filesystem is shut down, aborting."));
-+			return CHECK_ABORT;
-+		case ENOTTY:
-+		case EOPNOTSUPP:
-+			/*
-+			 * If we forced repairs, don't complain if kernel
-+			 * doesn't know how to fix.
-+			 */
-+			if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
-+				return CHECK_DONE;
-+			/* fall through */
-+		case EINVAL:
-+			/* Kernel doesn't know how to repair this? */
-+			str_error(ctx, buf,
-+_("Don't know how to fix; offline repair required."));
-+			return CHECK_DONE;
-+		case EROFS:
-+			/* Read-only filesystem, can't fix. */
-+			if (verbose || debug || needs_repair(&oldm))
-+				str_info(ctx, buf,
-+_("Read-only filesystem; cannot make changes."));
-+			return CHECK_DONE;
-+		case ENOENT:
-+			/* Metadata not present, just skip it. */
-+			return CHECK_DONE;
-+		case ENOMEM:
-+		case ENOSPC:
-+			/* Don't care if preen fails due to low resources. */
-+			if (is_unoptimized(&oldm) && !needs_repair(&oldm))
-+				return CHECK_DONE;
-+			/* fall through */
-+		default:
-+			/* Operational error. */
-+			str_errno(ctx, buf);
-+			return CHECK_DONE;
-+		}
-+	}
-+	if (repair_flags & XRM_NOFIX_COMPLAIN)
-+		xfs_scrub_warn_incomplete_scrub(ctx, buf, &meta);
-+	if (needs_repair(&meta)) {
-+		/* Still broken, try again or fix offline. */
-+		if (repair_flags & XRM_NOFIX_COMPLAIN)
-+			str_error(ctx, buf,
-+_("Repair unsuccessful; offline repair required."));
-+	} else {
-+		/* Clean operation, no corruption detected. */
-+		if (needs_repair(&oldm))
-+			record_repair(ctx, buf, _("Repairs successful."));
-+		else
-+			record_preen(ctx, buf, _("Optimization successful."));
-+	}
-+	return CHECK_DONE;
-+}
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 0b454df..1c44fba 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -41,6 +41,7 @@ bool xfs_can_scrub_dir(struct scrub_ctx *ctx);
- bool xfs_can_scrub_attr(struct scrub_ctx *ctx);
- bool xfs_can_scrub_symlink(struct scrub_ctx *ctx);
- bool xfs_can_scrub_parent(struct scrub_ctx *ctx);
-+bool xfs_can_repair(struct scrub_ctx *ctx);
++[Service]
++Type=oneshot
++WorkingDirectory=%I
++PrivateNetwork=true
++ProtectSystem=full
++ProtectHome=read-only
++PrivateTmp=yes
++AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
++NoNewPrivileges=yes
++User=nobody
++IOSchedulingClass=idle
++CPUSchedulingPolicy=idle
++Environment=SERVICE_MODE=1
++ExecStart=@sbindir@/xfs_scrub @scrub_args@ %I
+diff --git a/scrub/xfs_scrub_all.cron.in b/scrub/xfs_scrub_all.cron.in
+new file mode 100644
+index 0000000..ec82236
+--- /dev/null
++++ b/scrub/xfs_scrub_all.cron.in
+@@ -0,0 +1,2 @@
++SERVICE_MODE=1
++10 3 * * 0 root test -e /run/systemd/system || @sbindir@/xfs_scrub_all
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index 7738644..27cdc32 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -25,10 +25,19 @@ import json
+ import threading
+ import time
+ import sys
++import os
  
- bool xfs_scrub_inode_fields(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
- 		int fd);
-@@ -59,4 +60,23 @@ bool xfs_scrub_symlink(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
- bool xfs_scrub_parent(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
- 		int fd);
+ retcode = 0
+ terminate = False
  
-+/* Repair parameters are the scrub inputs and retry count. */
-+struct repair_item {
-+	struct list_head	list;
-+	__u64			ino;
-+	__u32			type;
-+	__u32			flags;
-+	__u32			gen;
-+	__u32			agno;
-+};
++def DEVNULL():
++	'''Return /dev/null in subprocess writable format.'''
++	try:
++		from subprocess import DEVNULL
++		return DEVNULL
++	except ImportError:
++		return open(os.devnull, 'wb')
 +
-+/* Only perform repairs; leave optimization-only actions for later. */
-+#define XRM_REPAIR_ONLY		(1U << 0)
+ def find_mounts():
+ 	'''Map mountpoints to physical disks.'''
+ 
+@@ -55,6 +64,13 @@ def find_mounts():
+ 				fs[mnt] = set([lastdisk])
+ 	return fs
+ 
++def kill_systemd(unit, proc):
++	'''Kill systemd unit.'''
++	proc.terminate()
++	cmd=['systemctl', 'stop', unit]
++	x = subprocess.Popen(cmd)
++	x.wait()
 +
-+/* Complain if still broken even after fix. */
-+#define XRM_NOFIX_COMPLAIN	(1U << 1)
+ def run_killable(cmd, stdout, killfuncs, kill_fn):
+ 	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
+ 	try:
+@@ -81,6 +97,19 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+ 		if terminate:
+ 			return
+ 
++		# Try it the systemd way
++		cmd=['systemctl', 'start', 'xfs_scrub@%s' % mnt]
++		ret = run_killable(cmd, DEVNULL(), killfuncs, \
++				lambda proc: kill_systemd('xfs_scrub@%s' % mnt, proc))
++		if ret == 0 or ret == 1:
++			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
++			sys.stdout.flush()
++			retcode |= ret
++			return
 +
-+enum check_outcome xfs_repair_metadata(struct scrub_ctx *ctx, int fd,
-+		struct repair_item *ri, unsigned int repair_flags);
++		if terminate:
++			return
 +
- #endif /* XFS_SCRUB_SCRUB_H_ */
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 16cd1aa..8407885 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -95,6 +95,8 @@ struct scrub_ctx {
- 	unsigned long long	inodes_checked;
- 	unsigned long long	bytes_checked;
- 	unsigned long long	naming_warnings;
-+	unsigned long long	repairs;
-+	unsigned long long	preens;
- 	bool			need_repair;
- 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
- };
+ 		# Invoke xfs_scrub manually
+ 		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
+ 		ret = run_killable(cmd, None, killfuncs, \
+@@ -112,6 +141,17 @@ def main():
+ 
+ 	fs = find_mounts()
+ 
++	# Tail the journal if we ourselves aren't a service...
++	journalthread = None
++	if 'SERVICE_MODE' not in os.environ:
++		try:
++			cmd=['journalctl', '--no-pager', '-q', '-S', 'now', \
++					'-f', '-u', 'xfs_scrub@*', '-o', \
++					'cat']
++			journalthread = subprocess.Popen(cmd)
++		except:
++			pass
++
+ 	# Schedule scrub jobs...
+ 	running_devs = set()
+ 	killfuncs = set()
+@@ -148,6 +188,19 @@ def main():
+ 			fs = []
+ 		cond.release()
+ 
++	if journalthread is not None:
++		journalthread.terminate()
++
++	# journald queries /proc as part of taking in log
++	# messages; it uses this information to associate the
++	# message with systemd units, etc.  This races with
++	# process exit, so delay that a couple of seconds so
++	# that we capture the summary outputs in the job log.
++	if 'SERVICE_MODE' in os.environ:
++		time.sleep(2)
++		if retcode:
++			retcode += 150
++
+ 	sys.exit(retcode)
+ 
+ if __name__ == '__main__':
+diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
+new file mode 100644
+index 0000000..683804e
+--- /dev/null
++++ b/scrub/xfs_scrub_all.service.in
+@@ -0,0 +1,8 @@
++[Unit]
++Description=Online XFS Metadata Check for All Filesystems
++ConditionACPower=true
++
++[Service]
++Type=oneshot
++Environment=SERVICE_MODE=1
++ExecStart=@sbindir@/xfs_scrub_all
+diff --git a/scrub/xfs_scrub_all.timer b/scrub/xfs_scrub_all.timer
+new file mode 100644
+index 0000000..2e4a33b
+--- /dev/null
++++ b/scrub/xfs_scrub_all.timer
+@@ -0,0 +1,11 @@
++[Unit]
++Description=Periodic XFS Online Metadata Check for All Filesystems
++
++[Timer]
++# Run on Sunday at 3:10am, to avoid running afoul of DST changes
++OnCalendar=Sun *-*-* 03:10:00
++RandomizedDelaySec=60
++Persistent=true
++
++[Install]
++WantedBy=timers.target
+diff --git a/scrub/xfs_scrub_fail b/scrub/xfs_scrub_fail
+new file mode 100755
+index 0000000..36dd50e
+--- /dev/null
++++ b/scrub/xfs_scrub_fail
+@@ -0,0 +1,26 @@
++#!/bin/bash
++
++# Email logs of failed xfs_scrub unit runs
++
++mailer=/usr/sbin/sendmail
++recipient="$1"
++test -z "${recipient}" && exit 0
++mntpoint="$2"
++test -z "${mntpoint}" && exit 0
++hostname="$(hostname -f 2>/dev/null)"
++test -z "${hostname}" && hostname="${HOSTNAME}"
++if [ ! -x "${mailer}" ]; then
++	echo "${mailer}: Mailer program not found."
++	exit 1
++fi
++
++(cat << ENDL
++To: $1
++From: <xfs_scrub@${hostname}>
++Subject: xfs_scrub failure on ${mntpoint}
++
++So sorry, the automatic xfs_scrub of ${mntpoint} on ${hostname} failed.
++
++A log of what happened follows:
++ENDL
++systemctl status --full --lines 4294967295 "xfs_scrub@${mntpoint}") | "${mailer}" -t -i
+diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
+new file mode 100644
+index 0000000..785f881
+--- /dev/null
++++ b/scrub/xfs_scrub_fail@.service.in
+@@ -0,0 +1,10 @@
++[Unit]
++Description=Online XFS Metadata Check Failure Reporting for %I
++
++[Service]
++Type=oneshot
++Environment=EMAIL_ADDR=root
++ExecStart=@pkg_lib_dir@/@pkg_name@/xfs_scrub_fail "${EMAIL_ADDR}" %I
++User=mail
++Group=mail
++SupplementaryGroups=systemd-journal
 
