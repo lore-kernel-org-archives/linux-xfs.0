@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:49537 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:56191 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753462AbeAQUWc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:32 -0500
+        with ESMTP id S1753394AbeAQUWb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:31 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 16/99] xarray: Add xas_create_range
-Date: Wed, 17 Jan 2018 12:20:40 -0800
-Message-Id: <20180117202203.19756-17-willy@infradead.org>
+Subject: [PATCH v6 14/99] xarray: Add xa_destroy
+Date: Wed, 17 Jan 2018 12:20:38 -0800
+Message-Id: <20180117202203.19756-15-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,60 +17,63 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This hopefully temporary function is useful for users who have not yet
-been converted to multi-index entries.
+This function frees all the internal memory allocated to the xarray
+and reinitialises it to be empty.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h |  2 ++
- lib/xarray.c           | 22 ++++++++++++++++++++++
- 2 files changed, 24 insertions(+)
+ include/linux/xarray.h |  1 +
+ lib/xarray.c           | 26 ++++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+)
 
 diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index 01ce313fc00e..acb6d02ff194 100644
+index d79fd48e4957..d106b2fe4cec 100644
 --- a/include/linux/xarray.h
 +++ b/include/linux/xarray.h
-@@ -705,6 +705,8 @@ void xas_init_tags(const struct xa_state *);
- bool xas_nomem(struct xa_state *, gfp_t);
- void xas_pause(struct xa_state *);
+@@ -221,6 +221,7 @@ void *xa_find_after(struct xarray *xa, unsigned long *index,
+ 		unsigned long max, xa_tag_t) __attribute__((nonnull(2)));
+ unsigned int xa_extract(struct xarray *, void **dst, unsigned long start,
+ 		unsigned long max, unsigned int n, xa_tag_t);
++void xa_destroy(struct xarray *);
  
-+void xas_create_range(struct xa_state *, unsigned long max);
-+
  /**
-  * xas_reload() - Refetch an entry from the xarray.
-  * @xas: XArray operation state.
+  * xa_init() - Initialise an empty XArray.
 diff --git a/lib/xarray.c b/lib/xarray.c
-index e8ece1fff9fd..c044373d6893 100644
+index be276618f81b..af81d4bf9ae1 100644
 --- a/lib/xarray.c
 +++ b/lib/xarray.c
-@@ -612,6 +612,28 @@ void *xas_create(struct xa_state *xas)
+@@ -1448,6 +1448,32 @@ unsigned int xa_extract(struct xarray *xa, void **dst, unsigned long start,
  }
- EXPORT_SYMBOL_GPL(xas_create);
+ EXPORT_SYMBOL(xa_extract);
  
 +/**
-+ * xas_create_range() - Ensure that stores to this range will succeed
-+ * @xas: XArray operation state.
-+ * @max: The highest index to create a slot for.
++ * xa_destroy() - Free all internal data structures.
++ * @xa: XArray.
 + *
-+ * Creates all of the slots in the range between the current position of
-+ * @xas and @max.  This is for the benefit of users who have not yet been
-+ * converted to multi-index entries.
-+ *
-+ * The implementation is naive.
++ * After calling this function, the XArray is empty and has freed all memory
++ * allocated for its internal data structures.  You are responsible for
++ * freeing the objects referenced by the XArray.
 + */
-+void xas_create_range(struct xa_state *xas, unsigned long max)
++void xa_destroy(struct xarray *xa)
 +{
-+	XA_STATE(tmp, xas->xa, xas->xa_index);
++	XA_STATE(xas, xa, 0);
++	unsigned long flags;
++	void *entry;
 +
-+	do {
-+		xas_create(&tmp);
-+		xas_set(&tmp, tmp.xa_index + XA_CHUNK_SIZE);
-+	} while (tmp.xa_index < max);
++	xas.xa_node = NULL;
++	xas_lock_irqsave(&xas, flags);
++	entry = xa_head_locked(xa);
++	RCU_INIT_POINTER(xa->xa_head, NULL);
++	xas_init_tags(&xas);
++	/* lockdep checks we're still holding the lock in xas_free_nodes() */
++	if (xa_is_node(entry))
++		xas_free_nodes(&xas, xa_to_node(entry));
++	xas_unlock_irqrestore(&xas, flags);
 +}
-+EXPORT_SYMBOL_GPL(xas_create_range);
++EXPORT_SYMBOL(xa_destroy);
 +
- static void store_siblings(struct xa_state *xas, void *entry, void *curr,
- 				int *countp, int *valuesp)
+ #ifdef XA_DEBUG
+ void xa_dump_node(const struct xa_node *node)
  {
 -- 
 2.15.1
