@@ -1,80 +1,236 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51266 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:51472 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbeAUFdv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jan 2018 00:33:51 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0L5XkYi073385
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:33:51 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2fmkeur2p3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:33:51 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5XoLu029361
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:33:50 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5XoF4003673
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:33:50 GMT
-Subject: [PATCH 0/6] xfs: reflink fixes
+        with ESMTP id S1753808AbeAQWGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:23 -0500
+Subject: [PATCH 15/29] xfs_scrub: scan inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 20 Jan 2018 21:33:49 -0800
-Message-ID: <151651282961.28390.17944517354130397779.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:03:26 -0800
+Message-ID: <151622660686.31925.10397397403579649789.stgit@magnolia>
+In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
+References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Running generic/232 with quotas and reflink demonstrated that there was
-something wrong with the way we did quota accounting -- on an otherwise
-idle system, fs-wide du block count numbers didn't match the quota
-reports.  I started digging into why the quota accounting was wrong, and
-the following are the results of my bug hunt.
+Scan all the inodes in the system for problems.
 
-The first patch teaches the reflink code to break layout leases before
-commencing the block remapping work.  This time we avoid the "looping
-trying to get a lock" that Christoph complained about, in favor of
-dropping both locks and retrying if we can't cleanly break the layouts
-without waiting.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/Makefile    |    1 
+ scrub/phase3.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    1 
+ scrub/xfs_scrub.h |    2 +
+ 4 files changed, 156 insertions(+)
+ create mode 100644 scrub/phase3.c
 
-The second patch changes the source file locking (if src != dest) during
-a reflink operation to take the shared locks when possible.  The only
-thing changing in the source file is the setting of the reflink iflag,
-for which we will still take ILOCK_EXCL.  The net result of this is
-less lock contention during fsstress and a 30% lower runtime, not that
-anyone cares about fsstress benchmarking. :)
 
-Patch three ensure that we attach dquots to inodes before we start
-reflinking their blocks.  This could lead to quota undercharging; an
-fstest to check this will be sent separately.
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 30dbe54..e0d15d8 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -35,6 +35,7 @@ fscounters.c \
+ inodes.c \
+ phase1.c \
+ phase2.c \
++phase3.c \
+ scrub.c \
+ spacemap.c \
+ xfs_scrub.c
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+new file mode 100644
+index 0000000..b3fc510
+--- /dev/null
++++ b/scrub/phase3.c
+@@ -0,0 +1,152 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "path.h"
++#include "workqueue.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "counter.h"
++#include "inodes.h"
++#include "scrub.h"
++
++/* Phase 3: Scan all inodes. */
++
++/*
++ * Run a per-file metadata scanner.  We use the ino/gen interface to
++ * ensure that the inode we're checking matches what the inode scan
++ * told us to look at.
++ */
++static bool
++xfs_scrub_fd(
++	struct scrub_ctx	*ctx,
++	bool			(*fn)(struct scrub_ctx *, uint64_t,
++				      uint32_t, int),
++	struct xfs_bstat	*bs)
++{
++	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt_fd);
++}
++
++struct scrub_inode_ctx {
++	struct ptcounter	*icount;
++	bool			moveon;
++};
++
++/* Verify the contents, xattrs, and extent maps of an inode. */
++static int
++xfs_scrub_inode(
++	struct scrub_ctx	*ctx,
++	struct xfs_handle	*handle,
++	struct xfs_bstat	*bstat,
++	void			*arg)
++{
++	struct scrub_inode_ctx	*ictx = arg;
++	struct ptcounter	*icount = ictx->icount;
++	bool			moveon = true;
++	int			fd = -1;
++
++	background_sleep();
++
++	/* Try to open the inode to pin it. */
++	if (S_ISREG(bstat->bs_mode)) {
++		fd = xfs_open_handle(handle);
++		/* Stale inode means we scan the whole cluster again. */
++		if (fd < 0 && errno == ESTALE)
++			return ESTALE;
++	}
++
++	/* Scrub the inode. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat);
++	if (!moveon)
++		goto out;
++
++	/* Scrub all block mappings. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat);
++	if (!moveon)
++		goto out;
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat);
++	if (!moveon)
++		goto out;
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat);
++	if (!moveon)
++		goto out;
++
++	if (S_ISLNK(bstat->bs_mode)) {
++		/* Check symlink contents. */
++		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino,
++				bstat->bs_gen, ctx->mnt_fd);
++	} else if (S_ISDIR(bstat->bs_mode)) {
++		/* Check the directory entries. */
++		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat);
++	}
++	if (!moveon)
++		goto out;
++
++	/* Check all the extended attributes. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat);
++	if (!moveon)
++		goto out;
++
++	/* Check parent pointers. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat);
++	if (!moveon)
++		goto out;
++
++out:
++	ptcounter_add(icount, 1);
++	if (fd >= 0)
++		close(fd);
++	if (!moveon)
++		ictx->moveon = false;
++	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
++}
++
++/* Verify all the inodes in a filesystem. */
++bool
++xfs_scan_inodes(
++	struct scrub_ctx	*ctx)
++{
++	struct scrub_inode_ctx	ictx;
++	bool			ret;
++
++	ictx.moveon = true;
++	ictx.icount = ptcounter_init(scrub_nproc(ctx));
++	if (!ictx.icount) {
++		str_error(ctx, ctx->mntpoint, _("Could not create counter."));
++		return false;
++	}
++
++	ret = xfs_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
++	if (!ret)
++		ictx.moveon = false;
++	if (!ictx.moveon)
++		goto free;
++	xfs_scrub_report_preen_triggers(ctx);
++	ctx->inodes_checked = ptcounter_value(ictx.icount);
++
++free:
++	ptcounter_free(ictx.icount);
++	return ictx.moveon;
++}
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 2755d97..ffb7c16 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -366,6 +366,7 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Scan all inodes."),
++			.fn = xfs_scan_inodes,
+ 		},
+ 		{
+ 			.descr = _("Defer filesystem repairs."),
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 7802101..462b590 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -86,6 +86,7 @@ struct scrub_ctx {
+ 	unsigned long long	runtime_errors;
+ 	unsigned long long	errors_found;
+ 	unsigned long long	warnings_found;
++	unsigned long long	inodes_checked;
+ 	bool			need_repair;
+ 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+ };
+@@ -95,5 +96,6 @@ void xfs_shutdown_fs(struct scrub_ctx *ctx);
+ bool xfs_cleanup_fs(struct scrub_ctx *ctx);
+ bool xfs_setup_fs(struct scrub_ctx *ctx);
+ bool xfs_scan_metadata(struct scrub_ctx *ctx);
++bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
-Patch four reorganizes the copy on write quota updating code to reflect
-how the CoW fork works now.  In short, the CoW fork is entirely in
-memory, so we can only use the in-memory quota reservation counters for
-all CoW blocks; the accounting only becomes permanent if we remap an
-extent into the data fork.
-
-Patch five creates a separate i_cow_blocks counter to track all the CoW
-blocks assigned to a file, which makes changing a file's uid/gid/prjid
-easier, makes reporting cow blocks via stat easy, and enables various
-cleanups.
-
-Patch six fixes a serious potential corruption problem with the cow
-extent allocation -- when we allocate into the CoW fork with the cow
-extent size hint set, the allocator enlarges the allocation request to
-try to hit alignment goals.  However, if the allocated extent does not
-actually fulfill any of the requested range, we send a garbage
-zero-length extent back to the iomap code (which also doesn't notice),
-and the write lands at the startblock of the garbage extent.  The fix is
-to detect that we didn't fill the entire requested range and fix up the
-returned mapping so that we always fill the first block of the
-requested allocation.
-
---D
