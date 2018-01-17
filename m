@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58573 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:52301 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754014AbeAQUXG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:06 -0500
+        with ESMTP id S1753888AbeAQUW5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:57 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 96/99] dma-debug: Convert to XArray
-Date: Wed, 17 Jan 2018 12:22:00 -0800
-Message-Id: <20180117202203.19756-97-willy@infradead.org>
+Subject: [PATCH v6 72/99] xfs: Convert xfs dquot to XArray
+Date: Wed, 17 Jan 2018 12:21:36 -0800
+Message-Id: <20180117202203.19756-73-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,218 +17,267 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is an unusual way to use the xarray tags.  If any other users
-come up, we can add an xas_get_tags() / xas_set_tags() API, but until
-then I don't want to encourage this kind of abuse.
+This is a pretty straight-forward conversion.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- lib/dma-debug.c | 105 +++++++++++++++++++++++++-------------------------------
- 1 file changed, 46 insertions(+), 59 deletions(-)
+ fs/xfs/xfs_dquot.c | 38 +++++++++++++++++++++-----------------
+ fs/xfs/xfs_qm.c    | 36 ++++++++++++++++++------------------
+ fs/xfs/xfs_qm.h    | 18 +++++++++---------
+ 3 files changed, 48 insertions(+), 44 deletions(-)
 
-diff --git a/lib/dma-debug.c b/lib/dma-debug.c
-index fb4af570ce04..965b3837d060 100644
---- a/lib/dma-debug.c
-+++ b/lib/dma-debug.c
-@@ -22,7 +22,6 @@
- #include <linux/dma-mapping.h>
- #include <linux/sched/task.h>
- #include <linux/stacktrace.h>
--#include <linux/radix-tree.h>
- #include <linux/dma-debug.h>
- #include <linux/spinlock.h>
- #include <linux/vmalloc.h>
-@@ -30,6 +29,7 @@
- #include <linux/uaccess.h>
- #include <linux/export.h>
- #include <linux/device.h>
-+#include <linux/xarray.h>
- #include <linux/types.h>
- #include <linux/sched.h>
- #include <linux/ctype.h>
-@@ -465,9 +465,8 @@ EXPORT_SYMBOL(debug_dma_dump_mappings);
-  * At any time debug_dma_assert_idle() can be called to trigger a
-  * warning if any cachelines in the given page are in the active set.
-  */
--static RADIX_TREE(dma_active_cacheline, GFP_NOWAIT);
--static DEFINE_SPINLOCK(radix_lock);
--#define ACTIVE_CACHELINE_MAX_OVERLAP ((1 << RADIX_TREE_MAX_TAGS) - 1)
-+static DEFINE_XARRAY_FLAGS(dma_active_cacheline, XA_FLAGS_LOCK_IRQ);
-+#define ACTIVE_CACHELINE_MAX_OVERLAP ((1 << XA_MAX_TAGS) - 1)
- #define CACHELINE_PER_PAGE_SHIFT (PAGE_SHIFT - L1_CACHE_SHIFT)
- #define CACHELINES_PER_PAGE (1 << CACHELINE_PER_PAGE_SHIFT)
- 
-@@ -477,37 +476,40 @@ static phys_addr_t to_cacheline_number(struct dma_debug_entry *entry)
- 		(entry->offset >> L1_CACHE_SHIFT);
- }
- 
--static int active_cacheline_read_overlap(phys_addr_t cln)
-+static unsigned int active_cacheline_read_overlap(struct xa_state *xas)
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e2a466df5dd1..c6832db23ca8 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -44,7 +44,7 @@
+  * Lock order:
+  *
+  * ip->i_lock
+- *   qi->qi_tree_lock
++ *   qi->qi_xa_lock
+  *     dquot->q_qlock (xfs_dqlock() and friends)
+  *       dquot->q_flush (xfs_dqflock() and friends)
+  *       qi->qi_lru_lock
+@@ -752,8 +752,8 @@ xfs_qm_dqget(
+ 	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
  {
--	int overlap = 0, i;
-+	unsigned int tags = 0;
-+	xa_tag_t tag;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+-	struct xfs_dquot	*dqp;
++	struct xarray		*xa = xfs_dquot_xa(qi, type);
++	struct xfs_dquot	*dqp, *duplicate;
+ 	int			error;
  
--	for (i = RADIX_TREE_MAX_TAGS - 1; i >= 0; i--)
--		if (radix_tree_tag_get(&dma_active_cacheline, cln, i))
--			overlap |= 1 << i;
--	return overlap;
-+	for (tag = 0; tag < XA_MAX_TAGS; tag++)
-+		if (xas_get_tag(xas, tag))
-+			tags |= 1U << tag;
-+
-+	return tags;
- }
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -772,23 +772,24 @@ xfs_qm_dqget(
+ 	}
  
--static int active_cacheline_set_overlap(phys_addr_t cln, int overlap)
-+static int active_cacheline_set_overlap(struct xa_state *xas, int overlap)
- {
--	int i;
-+	xa_tag_t tag;
+ restart:
+-	mutex_lock(&qi->qi_tree_lock);
+-	dqp = radix_tree_lookup(tree, id);
++	mutex_lock(&qi->qi_xa_lock);
++	dqp = xa_load(xa, id);
++found:
+ 	if (dqp) {
+ 		xfs_dqlock(dqp);
+ 		if (dqp->dq_flags & XFS_DQ_FREEING) {
+ 			xfs_dqunlock(dqp);
+-			mutex_unlock(&qi->qi_tree_lock);
++			mutex_unlock(&qi->qi_xa_lock);
+ 			trace_xfs_dqget_freeing(dqp);
+ 			delay(1);
+ 			goto restart;
+ 		}
  
- 	if (overlap > ACTIVE_CACHELINE_MAX_OVERLAP || overlap < 0)
- 		return overlap;
+-		/* uninit / unused quota found in radix tree, keep looking  */
++		/* uninit / unused quota found, keep looking  */
+ 		if (flags & XFS_QMOPT_DQNEXT) {
+ 			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+ 				xfs_dqunlock(dqp);
+-				mutex_unlock(&qi->qi_tree_lock);
++				mutex_unlock(&qi->qi_xa_lock);
+ 				error = xfs_dq_get_next_id(mp, type, &id);
+ 				if (error)
+ 					return error;
+@@ -797,14 +798,14 @@ xfs_qm_dqget(
+ 		}
  
--	for (i = RADIX_TREE_MAX_TAGS - 1; i >= 0; i--)
--		if (overlap & 1 << i)
--			radix_tree_tag_set(&dma_active_cacheline, cln, i);
-+	for (tag = 0; tag < XA_MAX_TAGS; tag++) {
-+		if (overlap & (1U << tag))
-+			xas_set_tag(xas, tag);
- 		else
--			radix_tree_tag_clear(&dma_active_cacheline, cln, i);
-+			xas_clear_tag(xas, tag);
-+	}
+ 		dqp->q_nrefs++;
+-		mutex_unlock(&qi->qi_tree_lock);
++		mutex_unlock(&qi->qi_xa_lock);
  
- 	return overlap;
- }
- 
--static void active_cacheline_inc_overlap(phys_addr_t cln)
-+static void active_cacheline_inc_overlap(struct xa_state *xas)
- {
--	int overlap = active_cacheline_read_overlap(cln);
-+	int overlap = active_cacheline_read_overlap(xas);
- 
--	overlap = active_cacheline_set_overlap(cln, ++overlap);
-+	overlap = active_cacheline_set_overlap(xas, ++overlap);
- 
- 	/* If we overflowed the overlap counter then we're potentially
- 	 * leaking dma-mappings.  Otherwise, if maps and unmaps are
-@@ -517,21 +519,22 @@ static void active_cacheline_inc_overlap(phys_addr_t cln)
- 	 */
- 	WARN_ONCE(overlap > ACTIVE_CACHELINE_MAX_OVERLAP,
- 		  "DMA-API: exceeded %d overlapping mappings of cacheline %pa\n",
--		  ACTIVE_CACHELINE_MAX_OVERLAP, &cln);
-+		  ACTIVE_CACHELINE_MAX_OVERLAP, &xas->xa_index);
- }
- 
--static int active_cacheline_dec_overlap(phys_addr_t cln)
-+static int active_cacheline_dec_overlap(struct xa_state *xas)
- {
--	int overlap = active_cacheline_read_overlap(cln);
-+	int overlap = active_cacheline_read_overlap(xas);
- 
--	return active_cacheline_set_overlap(cln, --overlap);
-+	return active_cacheline_set_overlap(xas, --overlap);
- }
- 
- static int active_cacheline_insert(struct dma_debug_entry *entry)
- {
- 	phys_addr_t cln = to_cacheline_number(entry);
-+	XA_STATE(xas, &dma_active_cacheline, cln);
- 	unsigned long flags;
--	int rc;
-+	struct dma_debug_entry *exists;
- 
- 	/* If the device is not writing memory then we don't have any
- 	 * concerns about the cpu consuming stale data.  This mitigates
-@@ -540,32 +543,32 @@ static int active_cacheline_insert(struct dma_debug_entry *entry)
- 	if (entry->direction == DMA_TO_DEVICE)
+ 		trace_xfs_dqget_hit(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dqcachehits);
+ 		*O_dqpp = dqp;
  		return 0;
+ 	}
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
  
--	spin_lock_irqsave(&radix_lock, flags);
--	rc = radix_tree_insert(&dma_active_cacheline, cln, entry);
--	if (rc == -EEXIST)
--		active_cacheline_inc_overlap(cln);
--	spin_unlock_irqrestore(&radix_lock, flags);
-+	xas_lock_irqsave(&xas, flags);
-+	exists = xas_create(&xas);
-+	if (exists)
-+		active_cacheline_inc_overlap(&xas);
-+	else
-+		xas_store(&xas, entry);
-+	xas_unlock_irqrestore(&xas, flags);
+ 	/*
+@@ -854,20 +855,23 @@ xfs_qm_dqget(
+ 		}
+ 	}
  
--	return rc;
-+	return xas_error(&xas);
- }
+-	mutex_lock(&qi->qi_tree_lock);
+-	error = radix_tree_insert(tree, id, dqp);
+-	if (unlikely(error)) {
+-		WARN_ON(error != -EEXIST);
++	mutex_lock(&qi->qi_xa_lock);
++	duplicate = xa_cmpxchg(xa, id, NULL, dqp, GFP_NOFS);
++	if (unlikely(duplicate)) {
++		if (xa_is_err(duplicate)) {
++			mutex_unlock(&qi->qi_xa_lock);
++			return xa_err(duplicate);
++		}
  
- static void active_cacheline_remove(struct dma_debug_entry *entry)
+ 		/*
+ 		 * Duplicate found. Just throw away the new dquot and start
+ 		 * over.
+ 		 */
+-		mutex_unlock(&qi->qi_tree_lock);
+ 		trace_xfs_dqget_dup(dqp);
+ 		xfs_qm_dqdestroy(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
+-		goto restart;
++		dqp = duplicate;
++		goto found;
+ 	}
+ 
+ 	/*
+@@ -877,7 +881,7 @@ xfs_qm_dqget(
+ 	dqp->q_nrefs = 1;
+ 
+ 	qi->qi_dquots++;
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 
+ 	/* If we are asked to find next active id, keep looking */
+ 	if (flags & XFS_QMOPT_DQNEXT) {
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index b897b11afb2c..000b207762d6 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -67,7 +67,7 @@ xfs_qm_dquot_walk(
+ 	void			*data)
  {
- 	phys_addr_t cln = to_cacheline_number(entry);
-+	XA_STATE(xas, &dma_active_cacheline, cln);
- 	unsigned long flags;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
++	struct xarray		*xa = xfs_dquot_xa(qi, type);
+ 	uint32_t		next_index;
+ 	int			last_error = 0;
+ 	int			skipped;
+@@ -83,11 +83,11 @@ xfs_qm_dquot_walk(
+ 		int		error = 0;
+ 		int		i;
  
- 	/* ...mirror the insert case */
- 	if (entry->direction == DMA_TO_DEVICE)
- 		return;
+-		mutex_lock(&qi->qi_tree_lock);
+-		nr_found = radix_tree_gang_lookup(tree, (void **)batch,
+-					next_index, XFS_DQ_LOOKUP_BATCH);
++		mutex_lock(&qi->qi_xa_lock);
++		nr_found = xa_extract(xa, (void **)batch, next_index,
++				ULONG_MAX, XFS_DQ_LOOKUP_BATCH, XA_PRESENT);
+ 		if (!nr_found) {
+-			mutex_unlock(&qi->qi_tree_lock);
++			mutex_unlock(&qi->qi_xa_lock);
+ 			break;
+ 		}
  
--	spin_lock_irqsave(&radix_lock, flags);
--	/* since we are counting overlaps the final put of the
--	 * cacheline will occur when the overlap count is 0.
--	 * active_cacheline_dec_overlap() returns -1 in that case
--	 */
--	if (active_cacheline_dec_overlap(cln) < 0)
--		radix_tree_delete(&dma_active_cacheline, cln);
--	spin_unlock_irqrestore(&radix_lock, flags);
-+	xas_lock_irqsave(&xas, flags);
-+	xas_load(&xas);
-+	if (active_cacheline_dec_overlap(&xas) < 0)
-+		xas_store(&xas, NULL);
-+	xas_unlock_irqrestore(&xas, flags);
+@@ -105,7 +105,7 @@ xfs_qm_dquot_walk(
+ 				last_error = error;
+ 		}
+ 
+-		mutex_unlock(&qi->qi_tree_lock);
++		mutex_unlock(&qi->qi_xa_lock);
+ 
+ 		/* bail out if the filesystem is corrupted.  */
+ 		if (last_error == -EFSCORRUPTED) {
+@@ -178,8 +178,8 @@ xfs_qm_dqpurge(
+ 	xfs_dqfunlock(dqp);
+ 	xfs_dqunlock(dqp);
+ 
+-	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+-			  be32_to_cpu(dqp->q_core.d_id));
++	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
+ 	qi->qi_dquots--;
+ 
+ 	/*
+@@ -623,10 +623,10 @@ xfs_qm_init_quotainfo(
+ 	if (error)
+ 		goto out_free_lru;
+ 
+-	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
+-	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
+-	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
+-	mutex_init(&qinf->qi_tree_lock);
++	xa_init(&qinf->qi_uquota_xa);
++	xa_init(&qinf->qi_gquota_xa);
++	xa_init(&qinf->qi_pquota_xa);
++	mutex_init(&qinf->qi_xa_lock);
+ 
+ 	/* mutex used to serialize quotaoffs */
+ 	mutex_init(&qinf->qi_quotaofflock);
+@@ -704,7 +704,7 @@ xfs_qm_init_quotainfo(
+ 
+ out_free_inos:
+ 	mutex_destroy(&qinf->qi_quotaofflock);
+-	mutex_destroy(&qinf->qi_tree_lock);
++	mutex_destroy(&qinf->qi_xa_lock);
+ 	xfs_qm_destroy_quotainos(qinf);
+ out_free_lru:
+ 	list_lru_destroy(&qinf->qi_lru);
+@@ -731,7 +731,7 @@ xfs_qm_destroy_quotainfo(
+ 	unregister_shrinker(&qi->qi_shrinker);
+ 	list_lru_destroy(&qi->qi_lru);
+ 	xfs_qm_destroy_quotainos(qi);
+-	mutex_destroy(&qi->qi_tree_lock);
++	mutex_destroy(&qi->qi_xa_lock);
+ 	mutex_destroy(&qi->qi_quotaofflock);
+ 	kmem_free(qi);
+ 	mp->m_quotainfo = NULL;
+@@ -1620,12 +1620,12 @@ xfs_qm_dqfree_one(
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 
+-	mutex_lock(&qi->qi_tree_lock);
+-	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+-			  be32_to_cpu(dqp->q_core.d_id));
++	mutex_lock(&qi->qi_xa_lock);
++	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
+ 
+ 	qi->qi_dquots--;
+-	mutex_unlock(&qi->qi_tree_lock);
++	mutex_unlock(&qi->qi_xa_lock);
+ 
+ 	xfs_qm_dqdestroy(dqp);
  }
- 
- /**
-@@ -578,12 +581,8 @@ static void active_cacheline_remove(struct dma_debug_entry *entry)
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 2975a822e9f0..946f929f7bfb 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -67,10 +67,10 @@ struct xfs_def_quota {
+  * The mount structure keeps a pointer to this.
   */
- void debug_dma_assert_idle(struct page *page)
+ typedef struct xfs_quotainfo {
+-	struct radix_tree_root qi_uquota_tree;
+-	struct radix_tree_root qi_gquota_tree;
+-	struct radix_tree_root qi_pquota_tree;
+-	struct mutex qi_tree_lock;
++	struct xarray	qi_uquota_xa;
++	struct xarray	qi_gquota_xa;
++	struct xarray	qi_pquota_xa;
++	struct mutex	qi_xa_lock;
+ 	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
+ 	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+@@ -91,18 +91,18 @@ typedef struct xfs_quotainfo {
+ 	struct shrinker  qi_shrinker;
+ } xfs_quotainfo_t;
+ 
+-static inline struct radix_tree_root *
+-xfs_dquot_tree(
++static inline struct xarray *
++xfs_dquot_xa(
+ 	struct xfs_quotainfo	*qi,
+ 	int			type)
  {
--	static struct dma_debug_entry *ents[CACHELINES_PER_PAGE];
--	struct dma_debug_entry *entry = NULL;
--	void **results = (void **) &ents;
--	unsigned int nents, i;
--	unsigned long flags;
--	phys_addr_t cln;
-+	struct dma_debug_entry *entry;
-+	unsigned long cln;
- 
- 	if (dma_debug_disabled())
- 		return;
-@@ -591,21 +590,9 @@ void debug_dma_assert_idle(struct page *page)
- 	if (!page)
- 		return;
- 
--	cln = (phys_addr_t) page_to_pfn(page) << CACHELINE_PER_PAGE_SHIFT;
--	spin_lock_irqsave(&radix_lock, flags);
--	nents = radix_tree_gang_lookup(&dma_active_cacheline, results, cln,
--				       CACHELINES_PER_PAGE);
--	for (i = 0; i < nents; i++) {
--		phys_addr_t ent_cln = to_cacheline_number(ents[i]);
--
--		if (ent_cln == cln) {
--			entry = ents[i];
--			break;
--		} else if (ent_cln >= cln + CACHELINES_PER_PAGE)
--			break;
--	}
--	spin_unlock_irqrestore(&radix_lock, flags);
--
-+	cln = page_to_pfn(page) << CACHELINE_PER_PAGE_SHIFT;
-+	entry = xa_find(&dma_active_cacheline, &cln,
-+			cln + CACHELINES_PER_PAGE - 1, XA_PRESENT);
- 	if (!entry)
- 		return;
- 
+ 	switch (type) {
+ 	case XFS_DQ_USER:
+-		return &qi->qi_uquota_tree;
++		return &qi->qi_uquota_xa;
+ 	case XFS_DQ_GROUP:
+-		return &qi->qi_gquota_tree;
++		return &qi->qi_gquota_xa;
+ 	case XFS_DQ_PROJ:
+-		return &qi->qi_pquota_tree;
++		return &qi->qi_pquota_xa;
+ 	default:
+ 		ASSERT(0);
+ 	}
 -- 
 2.15.1
 
