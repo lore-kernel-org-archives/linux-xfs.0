@@ -1,107 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41376 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752625AbeAQMzi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 Jan 2018 07:55:38 -0500
-Date: Wed, 17 Jan 2018 07:55:37 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 1/5] xfs: check sb_agblocks and sb_agblklog when
- validating superblock
-Message-ID: <20180117125535.GB37072@bfoster.bfoster>
-References: <151579463950.8694.320025813242574491.stgit@magnolia>
- <151579464601.8694.5478076755339350941.stgit@magnolia>
- <20180117012022.GC25805@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180117012022.GC25805@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:52045 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753901AbeAQUW5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:57 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v6 74/99] usb: Convert xhci-mem to XArray
+Date: Wed, 17 Jan 2018 12:21:38 -0800
+Message-Id: <20180117202203.19756-75-willy@infradead.org>
+In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
+References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-On Tue, Jan 16, 2018 at 05:20:22PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Currently, we don't check sb_agblocks or sb_agblklog when we validate
-> the superblock, which means that we can fuzz garbage values into those
-> values and the mount succeeds.  This leads to all sorts of UBSAN
-> warnings in xfs/350 since we can then coerce other parts of xfs into
-> shifting by ridiculously large values.
-> 
-> Once we've validated agblocks, make sure the agcount makes sense.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v3: also check that dblocks/agcount/agblocks make sense
-> v2: simplify ag min/max size definitions
-> ---
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+The XArray API is a slightly better fit for xhci_insert_segment_mapping()
+than the radix tree API was.
 
->  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
->  fs/xfs/libxfs/xfs_sb.c |   14 ++++++++++++++
->  2 files changed, 21 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index fc4386a..1de8555 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
->  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
->  
-> +/*
-> + * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
-> + * 16MB or larger than 1TB.
-> + */
-> +#define XFS_MIN_AG_BYTES	(1ULL << 24)	/* 16 MB */
-> +#define XFS_MAX_AG_BYTES	(1ULL << 40)	/* 1 TB */
-> +
->  /* keep the maximum size under 2^31 by a small amount */
->  #define XFS_MAX_LOG_BYTES \
->  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 08e44a0..e2b82d7 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -119,6 +119,9 @@ xfs_mount_validate_sb(
->  	bool		check_inprogress,
->  	bool		check_version)
->  {
-> +	u32		agcount = 0;
-> +	u32		rem;
-> +
->  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
->  		xfs_warn(mp, "bad magic number");
->  		return -EWRONGFS;
-> @@ -229,6 +232,13 @@ xfs_mount_validate_sb(
->  		return -EINVAL;
->  	}
->  
-> +	/* Compute agcount for this number of dblocks and agblocks */
-> +	if (sbp->sb_agblocks) {
-> +		agcount = div_u64_rem(sbp->sb_dblocks, sbp->sb_agblocks, &rem);
-> +		if (rem)
-> +			agcount++;
-> +	}
-> +
->  	/*
->  	 * More sanity checking.  Most of these were stolen directly from
->  	 * xfs_repair.
-> @@ -253,6 +263,10 @@ xfs_mount_validate_sb(
->  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
->  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
->  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
-> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_MIN_AG_BYTES	||
-> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_MAX_AG_BYTES	||
-> +	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
-> +	    agcount == 0 || agcount != sbp->sb_agcount			||
->  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
->  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
->  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ drivers/usb/host/xhci-mem.c | 68 +++++++++++++++++++--------------------------
+ drivers/usb/host/xhci.h     |  6 ++--
+ 2 files changed, 32 insertions(+), 42 deletions(-)
+
+diff --git a/drivers/usb/host/xhci-mem.c b/drivers/usb/host/xhci-mem.c
+index 3a29b32a3bd0..a2e15a9abc30 100644
+--- a/drivers/usb/host/xhci-mem.c
++++ b/drivers/usb/host/xhci-mem.c
+@@ -149,70 +149,60 @@ static void xhci_link_rings(struct xhci_hcd *xhci, struct xhci_ring *ring,
+ }
+ 
+ /*
+- * We need a radix tree for mapping physical addresses of TRBs to which stream
+- * ID they belong to.  We need to do this because the host controller won't tell
++ * We need to map physical addresses of TRBs to the stream ID they belong to.
++ * We need to do this because the host controller won't tell
+  * us which stream ring the TRB came from.  We could store the stream ID in an
+  * event data TRB, but that doesn't help us for the cancellation case, since the
+  * endpoint may stop before it reaches that event data TRB.
+  *
+- * The radix tree maps the upper portion of the TRB DMA address to a ring
++ * The xarray maps the upper portion of the TRB DMA address to a ring
+  * segment that has the same upper portion of DMA addresses.  For example, say I
+  * have segments of size 1KB, that are always 1KB aligned.  A segment may
+  * start at 0x10c91000 and end at 0x10c913f0.  If I use the upper 10 bits, the
+- * key to the stream ID is 0x43244.  I can use the DMA address of the TRB to
+- * pass the radix tree a key to get the right stream ID:
++ * index of the stream ID is 0x43244.  I can use the DMA address of the TRB as
++ * the xarray index to get the right stream ID:
+  *
+  *	0x10c90fff >> 10 = 0x43243
+  *	0x10c912c0 >> 10 = 0x43244
+  *	0x10c91400 >> 10 = 0x43245
+  *
+  * Obviously, only those TRBs with DMA addresses that are within the segment
+- * will make the radix tree return the stream ID for that ring.
++ * will make the xarray return the stream ID for that ring.
+  *
+- * Caveats for the radix tree:
++ * Caveats for the xarray:
+  *
+- * The radix tree uses an unsigned long as a key pair.  On 32-bit systems, an
++ * The xarray uses an unsigned long for the index.  On 32-bit systems, an
+  * unsigned long will be 32-bits; on a 64-bit system an unsigned long will be
+  * 64-bits.  Since we only request 32-bit DMA addresses, we can use that as the
+- * key on 32-bit or 64-bit systems (it would also be fine if we asked for 64-bit
+- * PCI DMA addresses on a 64-bit system).  There might be a problem on 32-bit
+- * extended systems (where the DMA address can be bigger than 32-bits),
++ * index on 32-bit or 64-bit systems (it would also be fine if we asked for
++ * 64-bit PCI DMA addresses on a 64-bit system).  There might be a problem on
++ * 32-bit extended systems (where the DMA address can be bigger than 32-bits),
+  * if we allow the PCI dma mask to be bigger than 32-bits.  So don't do that.
+  */
+-static int xhci_insert_segment_mapping(struct radix_tree_root *trb_address_map,
++
++static unsigned long trb_index(dma_addr_t dma)
++{
++	return (unsigned long)(dma >> TRB_SEGMENT_SHIFT);
++}
++
++static int xhci_insert_segment_mapping(struct xarray *trb_address_map,
+ 		struct xhci_ring *ring,
+ 		struct xhci_segment *seg,
+-		gfp_t mem_flags)
++		gfp_t gfp)
+ {
+-	unsigned long key;
+-	int ret;
+-
+-	key = (unsigned long)(seg->dma >> TRB_SEGMENT_SHIFT);
+ 	/* Skip any segments that were already added. */
+-	if (radix_tree_lookup(trb_address_map, key))
+-		return 0;
+-
+-	ret = radix_tree_maybe_preload(mem_flags);
+-	if (ret)
+-		return ret;
+-	ret = radix_tree_insert(trb_address_map,
+-			key, ring);
+-	radix_tree_preload_end();
+-	return ret;
++	return xa_err(xa_cmpxchg(trb_address_map, trb_index(seg->dma), NULL,
++								ring, gfp));
+ }
+ 
+-static void xhci_remove_segment_mapping(struct radix_tree_root *trb_address_map,
++static void xhci_remove_segment_mapping(struct xarray *trb_address_map,
+ 		struct xhci_segment *seg)
+ {
+-	unsigned long key;
+-
+-	key = (unsigned long)(seg->dma >> TRB_SEGMENT_SHIFT);
+-	if (radix_tree_lookup(trb_address_map, key))
+-		radix_tree_delete(trb_address_map, key);
++	xa_erase(trb_address_map, trb_index(seg->dma));
+ }
+ 
+ static int xhci_update_stream_segment_mapping(
+-		struct radix_tree_root *trb_address_map,
++		struct xarray *trb_address_map,
+ 		struct xhci_ring *ring,
+ 		struct xhci_segment *first_seg,
+ 		struct xhci_segment *last_seg,
+@@ -574,8 +564,8 @@ struct xhci_ring *xhci_dma_to_transfer_ring(
+ 		u64 address)
+ {
+ 	if (ep->ep_state & EP_HAS_STREAMS)
+-		return radix_tree_lookup(&ep->stream_info->trb_address_map,
+-				address >> TRB_SEGMENT_SHIFT);
++		return xa_load(&ep->stream_info->trb_address_map,
++				trb_index(address));
+ 	return ep->ring;
+ }
+ 
+@@ -654,10 +644,10 @@ struct xhci_stream_info *xhci_alloc_stream_info(struct xhci_hcd *xhci,
+ 	if (!stream_info->free_streams_command)
+ 		goto cleanup_ctx;
+ 
+-	INIT_RADIX_TREE(&stream_info->trb_address_map, GFP_ATOMIC);
++	xa_init(&stream_info->trb_address_map);
+ 
+ 	/* Allocate rings for all the streams that the driver will use,
+-	 * and add their segment DMA addresses to the radix tree.
++	 * and add their segment DMA addresses to the map.
+ 	 * Stream 0 is reserved.
+ 	 */
+ 
+@@ -2376,7 +2366,7 @@ int xhci_mem_init(struct xhci_hcd *xhci, gfp_t flags)
+ 	 * Initialize the ring segment pool.  The ring must be a contiguous
+ 	 * structure comprised of TRBs.  The TRBs must be 16 byte aligned,
+ 	 * however, the command ring segment needs 64-byte aligned segments
+-	 * and our use of dma addresses in the trb_address_map radix tree needs
++	 * and our use of dma addresses in the trb_address_map xarray needs
+ 	 * TRB_SEGMENT_SIZE alignment, so we pick the greater alignment need.
+ 	 */
+ 	xhci->segment_pool = dma_pool_create("xHCI ring segments", dev,
+diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
+index 054ce74524af..e8208a3eee3c 100644
+--- a/drivers/usb/host/xhci.h
++++ b/drivers/usb/host/xhci.h
+@@ -15,7 +15,7 @@
+ #include <linux/usb.h>
+ #include <linux/timer.h>
+ #include <linux/kernel.h>
+-#include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/usb/hcd.h>
+ #include <linux/io-64-nonatomic-lo-hi.h>
+ 
+@@ -837,7 +837,7 @@ struct xhci_stream_info {
+ 	unsigned int			num_stream_ctxs;
+ 	dma_addr_t			ctx_array_dma;
+ 	/* For mapping physical TRB addresses to segments in stream rings */
+-	struct radix_tree_root		trb_address_map;
++	struct xarray			trb_address_map;
+ 	struct xhci_command		*free_streams_command;
+ };
+ 
+@@ -1584,7 +1584,7 @@ struct xhci_ring {
+ 	unsigned int		bounce_buf_len;
+ 	enum xhci_ring_type	type;
+ 	bool			last_td_was_short;
+-	struct radix_tree_root	*trb_address_map;
++	struct xarray		*trb_address_map;
+ };
+ 
+ struct xhci_erst_entry {
+-- 
+2.15.1
+
