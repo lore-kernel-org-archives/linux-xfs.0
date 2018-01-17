@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57673 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:60913 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754009AbeAQUXF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:05 -0500
+        with ESMTP id S1753148AbeAQUXE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:04 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 92/99] f2fs: Convert pids radix tree to XArray
-Date: Wed, 17 Jan 2018 12:21:56 -0800
-Message-Id: <20180117202203.19756-93-willy@infradead.org>
+Subject: [PATCH v6 91/99] btrfs: Convert name_cache to XArray
+Date: Wed, 17 Jan 2018 12:21:55 -0800
+Message-Id: <20180117202203.19756-92-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,135 +17,94 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-The XArray API works out rather well for this user.
+This is a very straightforward conversion.  The handling of collisions
+in the namecache could be better handled with an hlist, but that's a
+patch for another day.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/f2fs/super.c |  2 --
- fs/f2fs/trace.c | 60 ++++-----------------------------------------------------
- fs/f2fs/trace.h |  2 --
- 3 files changed, 4 insertions(+), 60 deletions(-)
+ fs/btrfs/send.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
-index 708155d9c2e4..d608edffe69e 100644
---- a/fs/f2fs/super.c
-+++ b/fs/f2fs/super.c
-@@ -2831,8 +2831,6 @@ static int __init init_f2fs_fs(void)
+diff --git a/fs/btrfs/send.c b/fs/btrfs/send.c
+index 20d3300bd268..3891a8e958fa 100644
+--- a/fs/btrfs/send.c
++++ b/fs/btrfs/send.c
+@@ -23,7 +23,7 @@
+ #include <linux/mount.h>
+ #include <linux/xattr.h>
+ #include <linux/posix_acl_xattr.h>
+-#include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/vmalloc.h>
+ #include <linux/string.h>
+ #include <linux/compat.h>
+@@ -118,7 +118,7 @@ struct send_ctx {
+ 	struct list_head new_refs;
+ 	struct list_head deleted_refs;
+ 
+-	struct radix_tree_root name_cache;
++	struct xarray name_cache;
+ 	struct list_head name_cache_list;
+ 	int name_cache_size;
+ 
+@@ -2021,8 +2021,7 @@ static int name_cache_insert(struct send_ctx *sctx,
+ 	int ret = 0;
+ 	struct list_head *nce_head;
+ 
+-	nce_head = radix_tree_lookup(&sctx->name_cache,
+-			(unsigned long)nce->ino);
++	nce_head = xa_load(&sctx->name_cache, (unsigned long)nce->ino);
+ 	if (!nce_head) {
+ 		nce_head = kmalloc(sizeof(*nce_head), GFP_KERNEL);
+ 		if (!nce_head) {
+@@ -2031,7 +2030,8 @@ static int name_cache_insert(struct send_ctx *sctx,
+ 		}
+ 		INIT_LIST_HEAD(nce_head);
+ 
+-		ret = radix_tree_insert(&sctx->name_cache, nce->ino, nce_head);
++		ret = xa_insert(&sctx->name_cache, nce->ino, nce_head,
++								GFP_KERNEL);
+ 		if (ret < 0) {
+ 			kfree(nce_head);
+ 			kfree(nce);
+@@ -2050,8 +2050,7 @@ static void name_cache_delete(struct send_ctx *sctx,
  {
- 	int err;
+ 	struct list_head *nce_head;
  
--	f2fs_build_trace_ios();
--
- 	err = init_inodecache();
- 	if (err)
- 		goto fail;
-diff --git a/fs/f2fs/trace.c b/fs/f2fs/trace.c
-index bccbbf2616d2..f316a42c547f 100644
---- a/fs/f2fs/trace.c
-+++ b/fs/f2fs/trace.c
-@@ -16,8 +16,7 @@
- #include "f2fs.h"
- #include "trace.h"
- 
--static RADIX_TREE(pids, GFP_ATOMIC);
--static spinlock_t pids_lock;
-+static DEFINE_XARRAY(pids);
- static struct last_io_info last_io;
- 
- static inline void __print_last_io(void)
-@@ -57,28 +56,13 @@ void f2fs_trace_pid(struct page *page)
- {
- 	struct inode *inode = page->mapping->host;
- 	pid_t pid = task_pid_nr(current);
--	void *p;
- 
- 	set_page_private(page, (unsigned long)pid);
- 
--	if (radix_tree_preload(GFP_NOFS))
--		return;
--
--	spin_lock(&pids_lock);
--	p = radix_tree_lookup(&pids, pid);
--	if (p == current)
--		goto out;
--	if (p)
--		radix_tree_delete(&pids, pid);
--
--	f2fs_radix_tree_insert(&pids, pid, current);
--
--	trace_printk("%3x:%3x %4x %-16s\n",
-+	if (xa_store(&pids, pid, current, GFP_NOFS) != current)
-+		trace_printk("%3x:%3x %4x %-16s\n",
- 			MAJOR(inode->i_sb->s_dev), MINOR(inode->i_sb->s_dev),
- 			pid, current->comm);
--out:
--	spin_unlock(&pids_lock);
--	radix_tree_preload_end();
+-	nce_head = radix_tree_lookup(&sctx->name_cache,
+-			(unsigned long)nce->ino);
++	nce_head = xa_load(&sctx->name_cache, (unsigned long)nce->ino);
+ 	if (!nce_head) {
+ 		btrfs_err(sctx->send_root->fs_info,
+ 	      "name_cache_delete lookup failed ino %llu cache size %d, leaking memory",
+@@ -2066,7 +2065,7 @@ static void name_cache_delete(struct send_ctx *sctx,
+ 	 * We may not get to the final release of nce_head if the lookup fails
+ 	 */
+ 	if (nce_head && list_empty(nce_head)) {
+-		radix_tree_delete(&sctx->name_cache, (unsigned long)nce->ino);
++		xa_erase(&sctx->name_cache, (unsigned long)nce->ino);
+ 		kfree(nce_head);
+ 	}
  }
+@@ -2077,7 +2076,7 @@ static struct name_cache_entry *name_cache_search(struct send_ctx *sctx,
+ 	struct list_head *nce_head;
+ 	struct name_cache_entry *cur;
  
- void f2fs_trace_ios(struct f2fs_io_info *fio, int flush)
-@@ -120,43 +104,7 @@ void f2fs_trace_ios(struct f2fs_io_info *fio, int flush)
- 	return;
- }
+-	nce_head = radix_tree_lookup(&sctx->name_cache, (unsigned long)ino);
++	nce_head = xa_load(&sctx->name_cache, (unsigned long)ino);
+ 	if (!nce_head)
+ 		return NULL;
  
--void f2fs_build_trace_ios(void)
--{
--	spin_lock_init(&pids_lock);
--}
--
--#define PIDVEC_SIZE	128
--static unsigned int gang_lookup_pids(pid_t *results, unsigned long first_index,
--							unsigned int max_items)
--{
--	struct radix_tree_iter iter;
--	void **slot;
--	unsigned int ret = 0;
--
--	if (unlikely(!max_items))
--		return 0;
--
--	radix_tree_for_each_slot(slot, &pids, &iter, first_index) {
--		results[ret] = iter.index;
--		if (++ret == max_items)
--			break;
--	}
--	return ret;
--}
--
- void f2fs_destroy_trace_ios(void)
- {
--	pid_t pid[PIDVEC_SIZE];
--	pid_t next_pid = 0;
--	unsigned int found;
--
--	spin_lock(&pids_lock);
--	while ((found = gang_lookup_pids(pid, next_pid, PIDVEC_SIZE))) {
--		unsigned idx;
--
--		next_pid = pid[found - 1] + 1;
--		for (idx = 0; idx < found; idx++)
--			radix_tree_delete(&pids, pid[idx]);
--	}
--	spin_unlock(&pids_lock);
-+	xa_destroy(&pids);
- }
-diff --git a/fs/f2fs/trace.h b/fs/f2fs/trace.h
-index 67db24ac1e85..157e4564e48b 100644
---- a/fs/f2fs/trace.h
-+++ b/fs/f2fs/trace.h
-@@ -34,12 +34,10 @@ struct last_io_info {
+@@ -6526,7 +6525,7 @@ long btrfs_ioctl_send(struct file *mnt_file, struct btrfs_ioctl_send_args *arg)
  
- extern void f2fs_trace_pid(struct page *);
- extern void f2fs_trace_ios(struct f2fs_io_info *, int);
--extern void f2fs_build_trace_ios(void);
- extern void f2fs_destroy_trace_ios(void);
- #else
- #define f2fs_trace_pid(p)
- #define f2fs_trace_ios(i, n)
--#define f2fs_build_trace_ios()
- #define f2fs_destroy_trace_ios()
+ 	INIT_LIST_HEAD(&sctx->new_refs);
+ 	INIT_LIST_HEAD(&sctx->deleted_refs);
+-	INIT_RADIX_TREE(&sctx->name_cache, GFP_KERNEL);
++	xa_init(&sctx->name_cache);
+ 	INIT_LIST_HEAD(&sctx->name_cache_list);
  
- #endif
+ 	sctx->flags = arg->flags;
 -- 
 2.15.1
 
