@@ -1,104 +1,212 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:34774 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932766AbeAKUUc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jan 2018 15:20:32 -0500
-Date: Thu, 11 Jan 2018 12:20:26 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:45276 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752925AbeAQWCc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:02:32 -0500
+Subject: [PATCH 02/29] xfs_scrub: common error handling
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] libxfs: manage xfs_buf_zone count within cache
-Message-ID: <20180111202026.GG5602@magnolia>
-References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
- <1515699458-6925-7-git-send-email-sandeen@sandeen.net>
+Date: Wed, 17 Jan 2018 14:02:04 -0800
+Message-ID: <151622652410.31925.6550652823903639327.stgit@magnolia>
+In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
+References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1515699458-6925-7-git-send-email-sandeen@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 01:37:36PM -0600, Eric Sandeen wrote:
-> Fake up the xfs_buf_zone allocated count a bit to account
-> for buffers freed to and allocated from cache.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
->  libxfs/rdwr.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 474e5eb..c5ffd4d 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -665,6 +665,7 @@ __libxfs_getbufr(int blen)
->  				free(bp->b_maps);
->  			bp->b_maps = NULL;
->  		}
-> +		xfs_buf_zone->allocated++;
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm confused.  kmem_zone_zalloc increments zone->allocated and
-kmem_zone_free decrements it.  Now we're messing with ->allocated
-ourselves, which means that buffers that have ended up on
-xfs_buf_freelist are still allocated (according to the heap) but the
-zone accounting thinks the buffer is freed?
+Standardize how we record and report errors.
 
-<goes away, reviews the next patch, comes back>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/common.c    |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/common.h    |   30 ++++++++++++++++++
+ scrub/xfs_scrub.c |    5 +++
+ scrub/xfs_scrub.h |   11 +++++++
+ 4 files changed, 133 insertions(+)
 
-The next patch has xfs_buf_freelist frees the buffer directly and
-bypassing kmem_zone_free.  So I wonder, if you change the next patch to
-call kmem_zone_free and kill this patch, won't the accounting work out?
 
-(xfs buf zone allocated == 0)
+diff --git a/scrub/common.c b/scrub/common.c
+index 0a58c16..8137881 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -17,4 +17,91 @@
+  * along with this program; if not, write the Free Software Foundation,
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
++#include <stdio.h>
++#include <pthread.h>
++#include <stdbool.h>
++#include "platform_defs.h"
++#include "xfs.h"
++#include "xfs_scrub.h"
+ #include "common.h"
++
++/*
++ * Reporting Status to the Console
++ *
++ * We aim for a roughly standard reporting format -- the severity of the
++ * status being reported, a textual description of the object being
++ * reported, and whatever the status happens to be.
++ *
++ * Errors are the most severe and reflect filesystem corruption.
++ * Warnings indicate that something is amiss and needs the attention of
++ * the administrator, but does not constitute a corruption.  Information
++ * is merely advisory.
++ */
++
++/* Too many errors? Bail out. */
++bool
++xfs_scrub_excessive_errors(
++	struct scrub_ctx	*ctx)
++{
++	bool			ret;
++
++	pthread_mutex_lock(&ctx->lock);
++	ret = ctx->max_errors > 0 && ctx->errors_found >= ctx->max_errors;
++	pthread_mutex_unlock(&ctx->lock);
++
++	return ret;
++}
++
++static const char *err_str[] = {
++	[S_ERROR]	= "Error",
++	[S_WARN]	= "Warning",
++	[S_INFO]	= "Info",
++};
++
++/* Print a warning string and some warning text. */
++void
++__str_out(
++	struct scrub_ctx	*ctx,
++	const char		*descr,
++	enum error_level	level,
++	int			error,
++	const char		*file,
++	int			line,
++	const char		*format,
++	...)
++{
++	FILE			*stream = stderr;
++	va_list			args;
++	char			buf[DESCR_BUFSZ];
++
++	/* print strerror or format of choice but not both */
++	assert(!(error && format));
++
++	if (level >= S_INFO)
++		stream = stdout;
++
++	pthread_mutex_lock(&ctx->lock);
++	fprintf(stream, "%s: %s: ", _(err_str[level]), descr);
++	if (error) {
++		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
++	} else {
++		va_start(args, format);
++		vfprintf(stream, format, args);
++		va_end(args);
++	}
++
++	if (debug)
++		fprintf(stream, _(" (%s line %d)"), file, line);
++	fprintf(stream, "\n");
++	if (stream == stdout)
++		fflush(stream);
++
++	if (error)      /* A syscall failed */
++		ctx->runtime_errors++;
++	else if (level == S_ERROR)
++		ctx->errors_found++;
++	else if (level == S_WARN)
++		ctx->warnings_found++;
++
++	pthread_mutex_unlock(&ctx->lock);
++}
+diff --git a/scrub/common.h b/scrub/common.h
+index 1082296..b383767 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -20,4 +20,34 @@
+ #ifndef XFS_SCRUB_COMMON_H_
+ #define XFS_SCRUB_COMMON_H_
+ 
++/*
++ * When reporting a defective metadata object to the console, this
++ * is the size of the buffer to use to store the description of that
++ * item.
++ */
++#define DESCR_BUFSZ	256
++
++bool xfs_scrub_excessive_errors(struct scrub_ctx *ctx);
++
++enum error_level {
++	S_ERROR	= 0,
++	S_WARN,
++	S_INFO,
++};
++
++void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
++	       int error, const char *file, int line, const char *format, ...);
++
++#define str_errno(ctx, str) \
++	__str_out(ctx, str, S_ERROR,	errno,	__FILE__, __LINE__, NULL)
++#define str_error(ctx, str, ...) \
++	__str_out(ctx, str, S_ERROR,	0,	__FILE__, __LINE__, __VA_ARGS__)
++#define str_warn(ctx, str, ...) \
++	__str_out(ctx, str, S_WARN,	0,	__FILE__, __LINE__, __VA_ARGS__)
++#define str_info(ctx, str, ...) \
++	__str_out(ctx, str, S_INFO,	0,	__FILE__, __LINE__, __VA_ARGS__)
++
++#define dbg_printf(fmt, ...) \
++	do {if (debug > 1) {printf(fmt, __VA_ARGS__);}} while (0)
++
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index a4b9c71..6ed7bf6 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -18,6 +18,8 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+  */
+ #include <stdio.h>
++#include <pthread.h>
++#include <stdbool.h>
+ #include "xfs_scrub.h"
+ 
+ /*
+@@ -99,6 +101,9 @@
+ /* Program name; needed for libfrog error reports. */
+ char				*progname = "xfs_scrub";
+ 
++/* Debug level; higher values mean more verbosity. */
++unsigned int			debug;
++
+ int
+ main(
+ 	int			argc,
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index ff9c24d..811bc2d 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -20,4 +20,15 @@
+ #ifndef XFS_SCRUB_XFS_SCRUB_H_
+ #define XFS_SCRUB_XFS_SCRUB_H_
+ 
++extern unsigned int		debug;
++
++struct scrub_ctx {
++	/* Mutable scrub state; use lock. */
++	pthread_mutex_t		lock;
++	unsigned long long	max_errors;
++	unsigned long long	runtime_errors;
++	unsigned long long	errors_found;
++	unsigned long long	warnings_found;
++};
++
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
-bp = _zone_alloc()
-xfs_buf_zone->allocated++
-
-...do stuff with buffer...
-
-xfs_buf_relse(bp)
-list_add(bp, xfs_buf_freelist)
-
-...buffer still allocated, xfs_buf_zone->allocated == 1...
-
-libxfs_bcache_free()
-_zone_free(bp)
-xfs_buf_zone->allocated--
-
-...exit program, and:
-xfs_buf_zone->allocated == 0
-
-I think killing this patch and teaching the next one to kmem_zone_free
-the buffer works, right?  Or am I missing some subtlety here, in which
-case said subtlety needs comments.
-
---D
-
->  	} else
->  		bp = kmem_zone_zalloc(xfs_buf_zone, 0);
->  	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
-> @@ -1245,6 +1246,7 @@ libxfs_brelse(
->  			"releasing dirty buffer to free list!");
->  
->  	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
-> +	xfs_buf_zone->allocated--;
->  	list_add(&bp->b_node.cn_mru, &xfs_buf_freelist.cm_list);
->  	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
->  }
-> @@ -1268,6 +1270,7 @@ libxfs_bulkrelse(
->  	}
->  
->  	pthread_mutex_lock(&xfs_buf_freelist.cm_mutex);
-> +	xfs_buf_zone->allocated -= count;
->  	list_splice(list, &xfs_buf_freelist.cm_list);
->  	pthread_mutex_unlock(&xfs_buf_freelist.cm_mutex);
->  
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
