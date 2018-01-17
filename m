@@ -1,337 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60864 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753638AbeAQWEZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:04:25 -0500
-Subject: [PATCH 22/29] xfs_scrub: optionally use SCSI READ VERIFY commands
- to scrub data blocks on disk
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:04:11 -0800
-Message-ID: <151622665104.31925.15517964243951932773.stgit@magnolia>
-In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
-References: <151622651142.31925.4179778330985746435.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:41376 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752625AbeAQMzi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 17 Jan 2018 07:55:38 -0500
+Date: Wed, 17 Jan 2018 07:55:37 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3 1/5] xfs: check sb_agblocks and sb_agblklog when
+ validating superblock
+Message-ID: <20180117125535.GB37072@bfoster.bfoster>
+References: <151579463950.8694.320025813242574491.stgit@magnolia>
+ <151579464601.8694.5478076755339350941.stgit@magnolia>
+ <20180117012022.GC25805@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180117012022.GC25805@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 16, 2018 at 05:20:22PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Currently, we don't check sb_agblocks or sb_agblklog when we validate
+> the superblock, which means that we can fuzz garbage values into those
+> values and the mount succeeds.  This leads to all sorts of UBSAN
+> warnings in xfs/350 since we can then coerce other parts of xfs into
+> shifting by ridiculously large values.
+> 
+> Once we've validated agblocks, make sure the agcount makes sense.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v3: also check that dblocks/agcount/agblocks make sense
+> v2: simplify ag min/max size definitions
+> ---
 
-If we sense that we're talking to a raw SCSI disk, use the SCSI READ
-VERIFY command to ask the disk to verify a disk internally.  This can
-sharply reduce the runtime of the data block verification phase on
-devices whose internal bandwidth exceeds their link bandwidth.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- configure.ac          |    2 +
- include/builddefs.in  |    2 +
- m4/package_libcdev.m4 |   30 ++++++++++
- scrub/Makefile        |    8 +++
- scrub/disk.c          |  146 +++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/disk.h          |    1 
- 6 files changed, 188 insertions(+), 1 deletion(-)
-
-
-diff --git a/configure.ac b/configure.ac
-index 8eda010..bb032e5 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -172,6 +172,8 @@ AC_PACKAGE_WANT_UNINORM_H
- AC_HAVE_U8NORMALIZE
- AC_HAVE_OPENAT
- AC_HAVE_FSTATAT
-+AC_HAVE_SG_IO
-+AC_HAVE_HDIO_GETGEO
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 2f8d33f..d44faf9 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -125,6 +125,8 @@ HAVE_LIBATTR = @have_libattr@
- HAVE_U8NORMALIZE = @have_u8normalize@
- HAVE_OPENAT = @have_openat@
- HAVE_FSTATAT = @have_fstatat@
-+HAVE_SG_IO = @have_sg_io@
-+HAVE_HDIO_GETGEO = @have_hdio_getgeo@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index e0abc12..9258c27 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -390,3 +390,33 @@ AC_DEFUN([AC_HAVE_FSTATAT],
-        #include <unistd.h>])
-     AC_SUBST(have_fstatat)
-   ])
-+
-+#
-+# Check if we have the SG_IO ioctl
-+#
-+AC_DEFUN([AC_HAVE_SG_IO],
-+  [ AC_MSG_CHECKING([for struct sg_io_hdr ])
-+    AC_TRY_COMPILE([#include <scsi/sg.h>],
-+    [
-+         struct sg_io_hdr hdr;
-+         ioctl(0, SG_IO, &hdr);
-+    ], have_sg_io=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_sg_io)
-+  ])
-+
-+#
-+# Check if we have the HDIO_GETGEO ioctl
-+#
-+AC_DEFUN([AC_HAVE_HDIO_GETGEO],
-+  [ AC_MSG_CHECKING([for struct hd_geometry ])
-+    AC_TRY_COMPILE([#include <linux/hdreg.h>],
-+    [
-+         struct hd_geometry hdr;
-+         ioctl(0, HDIO_GETGEO, &hdr);
-+    ], have_hdio_getgeo=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_hdio_getgeo)
-+  ])
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 4b70efa..1fb6e84 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -70,6 +70,14 @@ CFILES += unicrash.c
- LCFLAGS += -DHAVE_U8NORMALIZE
- endif
- 
-+ifeq ($(HAVE_SG_IO),yes)
-+LCFLAGS += -DHAVE_SG_IO
-+endif
-+
-+ifeq ($(HAVE_HDIO_GETGEO),yes)
-+LCFLAGS += -DHAVE_HDIO_GETGEO
-+endif
-+
- default: depend $(LTCOMMAND)
- 
- phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
-diff --git a/scrub/disk.c b/scrub/disk.c
-index e36ed6b..e12175c 100644
---- a/scrub/disk.c
-+++ b/scrub/disk.c
-@@ -29,12 +29,19 @@
- #include <sys/statvfs.h>
- #include <sys/vfs.h>
- #include <linux/fs.h>
-+#ifdef HAVE_SG_IO
-+# include <scsi/sg.h>
-+#endif
-+#ifdef HAVE_HDIO_GETGEO
-+# include <linux/hdreg.h>
-+#endif
- #include "platform_defs.h"
- #include "libfrog.h"
- #include "xfs.h"
- #include "path.h"
- #include "xfs_fs.h"
- #include "xfs_scrub.h"
-+#include "common.h"
- #include "disk.h"
- 
- #ifndef BLKROTATIONAL
-@@ -94,12 +101,119 @@ disk_heads(
- 	return __disk_heads(disk);
- }
- 
-+/*
-+ * Execute a SCSI VERIFY(16) to verify disk contents.
-+ * For devices that support this command, this can sharply reduce the
-+ * runtime of the data block verification phase if the storage device's
-+ * internal bandwidth exceeds its link bandwidth.  However, it only
-+ * works if we're talking to a raw SCSI device, and only if we trust the
-+ * firmware.
-+ */
-+#ifdef HAVE_SG_IO
-+# define SENSE_BUF_LEN		64
-+# define VERIFY16_CMDLEN	16
-+# define VERIFY16_CMD		0x8F
-+
-+# ifndef SG_FLAG_Q_AT_TAIL
-+#  define SG_FLAG_Q_AT_TAIL	0x10
-+# endif
-+static int
-+disk_scsi_verify(
-+	struct disk		*disk,
-+	uint64_t		startblock, /* lba */
-+	uint64_t		blockcount) /* lba */
-+{
-+	struct sg_io_hdr	iohdr;
-+	unsigned char		cdb[VERIFY16_CMDLEN];
-+	unsigned char		sense[SENSE_BUF_LEN];
-+	uint64_t		llba;
-+	uint64_t		veri_len = blockcount;
-+	int			error;
-+
-+	assert(!debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"));
-+
-+	llba = startblock + (disk->d_start >> BBSHIFT);
-+
-+	/* Borrowed from sg_verify */
-+	cdb[0] = VERIFY16_CMD;
-+	cdb[1] = 0; /* skip PI, DPO, and byte check. */
-+	cdb[2] = (llba >> 56) & 0xff;
-+	cdb[3] = (llba >> 48) & 0xff;
-+	cdb[4] = (llba >> 40) & 0xff;
-+	cdb[5] = (llba >> 32) & 0xff;
-+	cdb[6] = (llba >> 24) & 0xff;
-+	cdb[7] = (llba >> 16) & 0xff;
-+	cdb[8] = (llba >> 8) & 0xff;
-+	cdb[9] = llba & 0xff;
-+	cdb[10] = (veri_len >> 24) & 0xff;
-+	cdb[11] = (veri_len >> 16) & 0xff;
-+	cdb[12] = (veri_len >> 8) & 0xff;
-+	cdb[13] = veri_len & 0xff;
-+	cdb[14] = 0;
-+	cdb[15] = 0;
-+	memset(sense, 0, SENSE_BUF_LEN);
-+
-+	/* v3 SG_IO */
-+	memset(&iohdr, 0, sizeof(iohdr));
-+	iohdr.interface_id = 'S';
-+	iohdr.dxfer_direction = SG_DXFER_NONE;
-+	iohdr.cmdp = cdb;
-+	iohdr.cmd_len = VERIFY16_CMDLEN;
-+	iohdr.sbp = sense;
-+	iohdr.mx_sb_len = SENSE_BUF_LEN;
-+	iohdr.flags |= SG_FLAG_Q_AT_TAIL;
-+	iohdr.timeout = 30000; /* 30s */
-+
-+	error = ioctl(disk->d_fd, SG_IO, &iohdr);
-+	if (error)
-+		return error;
-+
-+	dbg_printf("VERIFY(16) fd %d lba %"PRIu64" len %"PRIu64" info %x "
-+			"status %d masked %d msg %d host %d driver %d "
-+			"duration %d resid %d\n",
-+			disk->d_fd, startblock, blockcount, iohdr.info,
-+			iohdr.status, iohdr.masked_status, iohdr.msg_status,
-+			iohdr.host_status, iohdr.driver_status, iohdr.duration,
-+			iohdr.resid);
-+
-+	if (iohdr.info & SG_INFO_CHECK) {
-+		dbg_printf("status: msg %x host %x driver %x\n",
-+				iohdr.msg_status, iohdr.host_status,
-+				iohdr.driver_status);
-+		errno = EIO;
-+		return -1;
-+	}
-+
-+	return error;
-+}
-+#else
-+# define disk_scsi_verify(...)		(ENOTTY)
-+#endif /* HAVE_SG_IO */
-+
-+/* Test the availability of the kernel scrub ioctl. */
-+static bool
-+disk_can_scsi_verify(
-+	struct disk		*disk)
-+{
-+	int			error;
-+
-+	if (debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"))
-+		return false;
-+
-+	error = disk_scsi_verify(disk, 0, 1);
-+	return error == 0;
-+}
-+
- /* Open a disk device and discover its geometry. */
- struct disk *
- disk_open(
- 	const char		*pathname)
- {
-+#ifdef HAVE_HDIO_GETGEO
-+	struct hd_geometry	bdgeo;
-+#endif
- 	struct disk		*disk;
-+	bool			suspicious_disk = false;
- 	int			lba_sz;
- 	int			error;
- 
-@@ -130,13 +244,34 @@ disk_open(
- 		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
- 		if (error)
- 			disk->d_blksize = 0;
--		disk->d_start = 0;
-+#ifdef HAVE_HDIO_GETGEO
-+		error = ioctl(disk->d_fd, HDIO_GETGEO, &bdgeo);
-+		if (!error) {
-+			/*
-+			 * dm devices will pass through ioctls, which means
-+			 * we can't use SCSI VERIFY unless the start is 0.
-+			 * Most dm devices don't set geometry (unlike scsi
-+			 * and nvme) so use a zeroed out CHS to screen them
-+			 * out.
-+			 */
-+			if (bdgeo.start != 0 &&
-+			    (unsigned long long)bdgeo.heads * bdgeo.sectors *
-+					bdgeo.sectors == 0)
-+				suspicious_disk = true;
-+			disk->d_start = bdgeo.start << BBSHIFT;
-+		} else
-+#endif
-+			disk->d_start = 0;
- 	} else {
- 		disk->d_size = disk->d_sb.st_size;
- 		disk->d_blksize = disk->d_sb.st_blksize;
- 		disk->d_start = 0;
- 	}
- 
-+	/* Can we issue SCSI VERIFY? */
-+	if (!suspicious_disk && disk_can_scsi_verify(disk))
-+		disk->d_flags |= DISK_FLAG_SCSI_VERIFY;
-+
- 	return disk;
- out_close:
- 	close(disk->d_fd);
-@@ -159,6 +294,10 @@ disk_close(
- 	return error;
- }
- 
-+#define BTOLBAT(d, bytes)	((uint64_t)(bytes) >> (d)->d_lbalog)
-+#define LBASIZE(d)		(1ULL << (d)->d_lbalog)
-+#define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
-+
- /* Read-verify an extent of a disk device. */
- ssize_t
- disk_read_verify(
-@@ -167,5 +306,10 @@ disk_read_verify(
- 	uint64_t		start,
- 	uint64_t		length)
- {
-+	/* Convert to logical block size. */
-+	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
-+		return disk_scsi_verify(disk, BTOLBAT(disk, start),
-+				BTOLBA(disk, length));
-+
- 	return pread(disk->d_fd, buf, length, start);
- }
-diff --git a/scrub/disk.h b/scrub/disk.h
-index 834678e..8a00144 100644
---- a/scrub/disk.h
-+++ b/scrub/disk.h
-@@ -20,6 +20,7 @@
- #ifndef XFS_SCRUB_DISK_H_
- #define XFS_SCRUB_DISK_H_
- 
-+#define DISK_FLAG_SCSI_VERIFY	0x1
- struct disk {
- 	struct stat	d_sb;
- 	int		d_fd;
-
+>  fs/xfs/libxfs/xfs_fs.h |    7 +++++++
+>  fs/xfs/libxfs/xfs_sb.c |   14 ++++++++++++++
+>  2 files changed, 21 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index fc4386a..1de8555 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -233,6 +233,13 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
+>  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
+>  
+> +/*
+> + * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
+> + * 16MB or larger than 1TB.
+> + */
+> +#define XFS_MIN_AG_BYTES	(1ULL << 24)	/* 16 MB */
+> +#define XFS_MAX_AG_BYTES	(1ULL << 40)	/* 1 TB */
+> +
+>  /* keep the maximum size under 2^31 by a small amount */
+>  #define XFS_MAX_LOG_BYTES \
+>  	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 08e44a0..e2b82d7 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -119,6 +119,9 @@ xfs_mount_validate_sb(
+>  	bool		check_inprogress,
+>  	bool		check_version)
+>  {
+> +	u32		agcount = 0;
+> +	u32		rem;
+> +
+>  	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+>  		xfs_warn(mp, "bad magic number");
+>  		return -EWRONGFS;
+> @@ -229,6 +232,13 @@ xfs_mount_validate_sb(
+>  		return -EINVAL;
+>  	}
+>  
+> +	/* Compute agcount for this number of dblocks and agblocks */
+> +	if (sbp->sb_agblocks) {
+> +		agcount = div_u64_rem(sbp->sb_dblocks, sbp->sb_agblocks, &rem);
+> +		if (rem)
+> +			agcount++;
+> +	}
+> +
+>  	/*
+>  	 * More sanity checking.  Most of these were stolen directly from
+>  	 * xfs_repair.
+> @@ -253,6 +263,10 @@ xfs_mount_validate_sb(
+>  	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+>  	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
+>  	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_MIN_AG_BYTES	||
+> +	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_MAX_AG_BYTES	||
+> +	    sbp->sb_agblklog != xfs_highbit32(sbp->sb_agblocks - 1) + 1	||
+> +	    agcount == 0 || agcount != sbp->sb_agcount			||
+>  	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+>  	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
