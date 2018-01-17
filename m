@@ -1,183 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46752 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752625AbeAQM4f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 Jan 2018 07:56:35 -0500
-Date: Wed, 17 Jan 2018 07:56:31 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: recheck reflink / dirty page status before
- freeing CoW reservations
-Message-ID: <20180117125631.GC37072@bfoster.bfoster>
-References: <20180110220336.GU5602@magnolia>
- <20180117011842.GB25805@magnolia>
+Received: from mail-yw0-f172.google.com ([209.85.161.172]:36010 "EHLO
+        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751253AbeAQEFT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 23:05:19 -0500
+Received: by mail-yw0-f172.google.com with SMTP id q6so3458637ywg.3
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jan 2018 20:05:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180117011842.GB25805@magnolia>
+In-Reply-To: <CA+0CQ21tLBLFfnn_ngY-arVzXAOyZU1XSuDu9RAjAo6VfK2PoA@mail.gmail.com>
+References: <CA+0CQ21AhCGcBdNo5RY4Q=oakNQO1S_jgHU2f-BdG-fL71ZyFw@mail.gmail.com>
+ <20180116075541.GO5602@magnolia> <CA+0CQ21tLBLFfnn_ngY-arVzXAOyZU1XSuDu9RAjAo6VfK2PoA@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 17 Jan 2018 06:05:17 +0200
+Message-ID: <CAOQ4uxgKonrPQLSaxhL5ok=NEVT9XAatTab4BsQt9tA7gNBJ2g@mail.gmail.com>
+Subject: Re: Reproducible XFS filesystem artifacts
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Eryu Guan <eguan@redhat.com>
+To: Philipp Schrader <philipp@peloton-tech.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Austin Schuh <austin@peloton-tech.com>, Alison Chaiken <alison@peloton-tech.com>, Theodore Tso <tytso@mit.edu>
 
-On Tue, Jan 16, 2018 at 05:18:42PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Eryu Guan reported seeing occasional hangs when running generic/269 with
-> a new fsstress that supports clonerange/deduperange.  The cause of this
-> hang is an infinite loop when we convert the CoW fork extents from
-> unwritten to real just prior to writing the pages out; the infinite
-> loop happens because there's nothing in the CoW fork to convert, and so
-> it spins forever.
-> 
-> The fundamental issue here is that when we go to perform these CoW fork
-> conversions, we're supposed to have an extent waiting for us, but the
-> low space CoW reaper has snuck in and blown them away!  There are four
-> conditions that can dissuade the reaper from touching our file -- no
-> reflink iflag; dirty page cache; writeback in progress; or directio in
-> progress.  We check the four conditions prior to taking the locks, but
-> we neglect to recheck them once we have the locks, which is how we end
-> up whacking the writeback that's in progress.
-> 
-> Therefore, refactor the four checks into a helper function and call it
-> once again once we have the locks to make sure we really want to reap
-> the inode.  While we're at it, add an ASSERT for this weird condition so
-> that we'll fail noisily if we ever screw this up again.
-> 
-> Reported-by: Eryu Guan <eguan@redhat.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Tested-by: Eryu Guan <eguan@redhat.com>
-> ---
-> v2: improve comments, minor refactors suggested by Brian Foster
-> ---
+On Wed, Jan 17, 2018 at 2:52 AM, Philipp Schrader
+<philipp@peloton-tech.com> wrote:
+>> > I've not had much luck digging into the XFS spec to see prove that the
+>> > ctime is different, but I'm pretty certain. When I mount the images, I
+>> > can see that ctime is different:
+>> > $ stat -c %x,%y,%z,%n /mnt/{a,b}/log/syslog
+>> > 2017-12-28 11:26:53.552000096 -0800,1969-12-31 16:00:00.000000000
+>> > -0800,2017-12-28 11:28:50.524000060 -0800,/mnt/a/log/syslog
+>> > 2017-12-28 10:46:38.739999913 -0800,1969-12-31 16:00:00.000000000
+>> > -0800,2017-12-28 10:48:17.180000049 -0800,/mnt/b/log/syslog
+>> >
+>> > As far as I can tell, there are no mount options to null out the ctime
+>> > fields. (As an aside I'm curious as to the reason for this).
+>>
+>> Correct, there's (afaict) no userspace interface to change ctime, since
+>> it reflects the last time the inode metadata was updated by the kernel.
+>>
+>> > Is there a tool that lets me null out ctime fields on a XFS filesystem
+>> > image
+>>
+>> None that I know of.
+>>
+>> > Or maybe is there a library that lets me traverse the file
+>> > system and set the fields to zero manually?
+>>
+>> Not really, other than messing up the image with the debugger.
+>
+> Which debugger are you talking about? Do you mean xfs_db? I was really
+> hoping to avoid that :)
+>
+>>
+>> > Does what I'm asking make sense? I feel like I'm not the first person
+>> > to tackle this, but I haven't been lucky with finding anything to
+>> > address this.
+>>
+>> I'm not sure I understand the use case for exactly reproducible filesystem
+>> images (as opposed to the stuff inside said fs), can you tell us more?
+>
+> For some background, these images serve as read-only root file system
+> images on vehicles. During the initial install or during a system
+> update, new images get written to the disks. This uses a process
+> equivalent to using dd(1).
+>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+So I'm curious. Why xfs and fat and not, say, squashfs?
+https://reproducible-builds.org/events/athens2015/system-images/
 
->  fs/xfs/libxfs/xfs_bmap.c |   10 +++++++
->  fs/xfs/xfs_icache.c      |   63 +++++++++++++++++++++++++++++++---------------
->  2 files changed, 51 insertions(+), 22 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index a01cef4..3567db6 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4311,8 +4311,16 @@ xfs_bmapi_write(
->  	while (bno < end && n < *nmap) {
->  		bool			need_alloc = false, wasdelay = false;
->  
-> -		/* in hole or beyoned EOF? */
-> +		/* in hole or beyond EOF? */
->  		if (eof || bma.got.br_startoff > bno) {
-> +			/*
-> +			 * CoW fork conversions should /never/ hit EOF or
-> +			 * holes.  There should always be something for us
-> +			 * to work on.
-> +			 */
-> +			ASSERT(!((flags & XFS_BMAPI_CONVERT) &&
-> +			         (flags & XFS_BMAPI_COWFORK)));
-> +
->  			if (flags & XFS_BMAPI_DELALLOC) {
->  				/*
->  				 * For the COW fork we can reasonably get a
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 1f84562..76df647 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1655,28 +1655,15 @@ xfs_inode_clear_eofblocks_tag(
->  }
->  
->  /*
-> - * Automatic CoW Reservation Freeing
-> - *
-> - * These functions automatically garbage collect leftover CoW reservations
-> - * that were made on behalf of a cowextsize hint when we start to run out
-> - * of quota or when the reservations sit around for too long.  If the file
-> - * has dirty pages or is undergoing writeback, its CoW reservations will
-> - * be retained.
-> - *
-> - * The actual garbage collection piggybacks off the same code that runs
-> - * the speculative EOF preallocation garbage collector.
-> + * Set ourselves up to free CoW blocks from this file.  If it's already clean
-> + * then we can bail out quickly, but otherwise we must back off if the file
-> + * is undergoing some kind of write.
->   */
-> -STATIC int
-> -xfs_inode_free_cowblocks(
-> +static bool
-> +xfs_prep_free_cowblocks(
->  	struct xfs_inode	*ip,
-> -	int			flags,
-> -	void			*args)
-> +	struct xfs_ifork	*ifp)
->  {
-> -	int ret;
-> -	struct xfs_eofblocks *eofb = args;
-> -	int match;
-> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> -
->  	/*
->  	 * Just clear the tag if we have an empty cow fork or none at all. It's
->  	 * possible the inode was fully unshared since it was originally tagged.
-> @@ -1684,7 +1671,7 @@ xfs_inode_free_cowblocks(
->  	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
->  		trace_xfs_inode_free_cowblocks_invalid(ip);
->  		xfs_inode_clear_cowblocks_tag(ip);
-> -		return 0;
-> +		return false;
->  	}
->  
->  	/*
-> @@ -1695,6 +1682,35 @@ xfs_inode_free_cowblocks(
->  	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
->  	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
->  	    atomic_read(&VFS_I(ip)->i_dio_count))
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
-> +/*
-> + * Automatic CoW Reservation Freeing
-> + *
-> + * These functions automatically garbage collect leftover CoW reservations
-> + * that were made on behalf of a cowextsize hint when we start to run out
-> + * of quota or when the reservations sit around for too long.  If the file
-> + * has dirty pages or is undergoing writeback, its CoW reservations will
-> + * be retained.
-> + *
-> + * The actual garbage collection piggybacks off the same code that runs
-> + * the speculative EOF preallocation garbage collector.
-> + */
-> +STATIC int
-> +xfs_inode_free_cowblocks(
-> +	struct xfs_inode	*ip,
-> +	int			flags,
-> +	void			*args)
-> +{
-> +	struct xfs_eofblocks	*eofb = args;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> +	int			match;
-> +	int			ret = 0;
-> +
-> +	if (!xfs_prep_free_cowblocks(ip, ifp))
->  		return 0;
->  
->  	if (eofb) {
-> @@ -1715,7 +1731,12 @@ xfs_inode_free_cowblocks(
->  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
->  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
->  
-> -	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
-> +	/*
-> +	 * Check again, nobody else should be able to dirty blocks or change
-> +	 * the reflink iflag now that we have the first two locks held.
-> +	 */
-> +	if (xfs_prep_free_cowblocks(ip, ifp))
-> +		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
->  
->  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
->  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+A quick glance at mksquashfs --help suggests its a much better
+tool for the job (e.g. -fstime secs), not to mention that squashfs
+is optimized for the read-only root file system distribution use case.
+
+Another example of read-only root file system distributed over the
+air to a few billion devices is ext4 on Android.
+I'm not sure if Android build system cares about reproducible
+system image, but I know it used to create the "system" image with
+a home brewed tool called make_ext4fs which creates a well
+"packed" fs. This means that fs takes the minimal space it can take
+from a given set of files. mkfs.ext4 was not designed for the use
+case of creating a file system with 0% free space.
+
+I remember Ted saying that he is happy Google moved away
+from from make_ext4fs (although it probably still lives on vendor
+builds), but I wonder is the Android build system replacement for
+creating a "packed" ext4 image?
+
+I added Ted to CC for his inputs, but I suggest that you add
+linux-fsdevel to CC for a larger diversity of inputs.
+
+That is not to suggest that you should not use xfs. You probably
+have your reasons for it, but whatever was already done by
+others for other fs (e.g. e2image -Qa) may be the way to go
+for xfs. xfs_copy would be the first tool I would look into extending
+for your use case.
+
+Cheers,
+Amir.
