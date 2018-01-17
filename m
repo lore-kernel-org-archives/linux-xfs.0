@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57520 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:57564 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752578AbeAQWEi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:04:38 -0500
-Subject: [PATCH 24/29] xfs_scrub: fstrim the free areas if there are no
- errors on the filesystem
+        with ESMTP id S1753655AbeAQWEm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:04:42 -0500
+Subject: [PATCH 26/29] xfs_scrub: create a script to scrub all xfs
+ filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:04:23 -0800
-Message-ID: <151622666351.31925.965697907866962064.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:04:36 -0800
+Message-ID: <151622667631.31925.11174902796898138735.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,255 +21,289 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If the filesystem scan comes out clean or fixes all the problems, call
-fstrim to clean out the free areas (if it's an ssd/thinp/whatever).
+Create an xfs_scrub_all command to find all XFS filesystems
+and run an online scrub against them all.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man8/xfs_scrub.8 |    3 ++
- scrub/Makefile       |    1 +
- scrub/phase4.c       |   79 ++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/vfs.c          |   23 +++++++++++++++
- scrub/vfs.h          |    2 +
- scrub/xfs_scrub.c    |   22 +++++++++++++-
- scrub/xfs_scrub.h    |    3 ++
- 7 files changed, 131 insertions(+), 2 deletions(-)
- create mode 100644 scrub/phase4.c
+ debian/control           |    3 +
+ debian/rules             |    1 
+ man/man8/xfs_scrub_all.8 |   32 ++++++++++
+ scrub/Makefile           |   15 ++++
+ scrub/xfs_scrub_all.in   |  154 ++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 201 insertions(+), 4 deletions(-)
+ create mode 100644 man/man8/xfs_scrub_all.8
+ create mode 100644 scrub/xfs_scrub_all.in
 
 
-diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
-index c9df7d6..b6e1560 100644
---- a/man/man8/xfs_scrub.8
-+++ b/man/man8/xfs_scrub.8
-@@ -63,6 +63,9 @@ If
- is given, no action is taken if errors are found; this is the default
- behavior.
- .TP
-+.B \-k
-+Do not call FITRIM on the free space.
+diff --git a/debian/control b/debian/control
+index 36d1bd8..801744b 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,12 +3,13 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libunistring-dev
++Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libunistring-dev, dh-python
+ Standards-Version: 3.9.1
+ Homepage: https://xfs.wiki.kernel.org/
+ 
+ Package: xfsprogs
+ Depends: ${shlibs:Depends}, ${misc:Depends}
++Recommends: ${python3:Depends}, util-linux
+ Provides: fsck-backend
+ Suggests: xfsdump, acl, attr, quota
+ Breaks: xfsdump (<< 3.0.0)
+diff --git a/debian/rules b/debian/rules
+index baefdba..abb794e 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -76,6 +76,7 @@ binary-arch: checkroot built
+ 	$(pkgdi)  $(MAKE) -C debian install-d-i
+ 	$(pkgme)  $(MAKE) dist
+ 	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
++	dh_python3
+ 	dh_installdocs
+ 	dh_installchangelogs
+ 	dh_strip
+diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
+new file mode 100644
+index 0000000..5e1420b
+--- /dev/null
++++ b/man/man8/xfs_scrub_all.8
+@@ -0,0 +1,32 @@
++.TH xfs_scrub_all 8
++.SH NAME
++xfs_scrub_all \- scrub all mounted XFS filesystems
++.SH SYNOPSIS
++.B xfs_scrub_all
++.SH DESCRIPTION
++.B xfs_scrub_all
++attempts to read and check all the metadata on all mounted XFS filesystems.
++The online scrub is performed via the
++.B xfs_scrub
++tool, either by running it directly or by using systemd to start it
++in a restricted fashion.
++Mounted filesystems are mapped to physical storage devices so that scrub
++operations can be run in parallel so long as no two scrubbers access
++the same device simultaneously.
++.SH EXIT CODE
++The exit code returned by
++.B xfs_scrub_all
++is the sum of the following conditions:
++.br
++\	0\	\-\ No errors
++.br
++\	4\	\-\ File system errors left uncorrected
++.br
++\	8\	\-\ Operational error
++.br
++\	16\	\-\ Usage or syntax error
 +.TP
- .BI \-m " file"
- Search this file for mounted filesystems instead of /etc/mtab.
- .TP
++These are the same error codes returned by xfs_scrub.
++.br
++.SH SEE ALSO
++.BR xfs_scrub (8).
 diff --git a/scrub/Makefile b/scrub/Makefile
-index fd26624..91f99ff 100644
+index 39abdf6..ca6dab0 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -41,6 +41,7 @@ inodes.c \
- phase1.c \
- phase2.c \
- phase3.c \
-+phase4.c \
- phase5.c \
- phase6.c \
- phase7.c \
-diff --git a/scrub/phase4.c b/scrub/phase4.c
+@@ -13,6 +13,8 @@ SCRUB_PREREQS=$(PKG_PLATFORM)$(HAVE_OPENAT)$(HAVE_FSTATAT)
+ ifeq ($(SCRUB_PREREQS),linuxyesyes)
+ LTCOMMAND = xfs_scrub
+ INSTALL_SCRUB = install-scrub
++XFS_SCRUB_ALL_PROG = xfs_scrub_all
++XFS_SCRUB_ARGS = -b -n
+ endif	# scrub_prereqs
+ 
+ HFILES = \
+@@ -82,17 +84,24 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
+ LCFLAGS += -DHAVE_HDIO_GETGEO
+ endif
+ 
+-default: depend $(LTCOMMAND)
++default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
++
++xfs_scrub_all: xfs_scrub_all.in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
++		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
++	$(Q)chmod a+x $@
+ 
+ phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
+ 
+ include $(BUILDRULES)
+ 
+-install: default $(INSTALL_SCRUB)
++install: $(INSTALL_SCRUB)
+ 
+-install-scrub:
++install-scrub: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
++	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
+ 
+ install-dev:
+ 
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
 new file mode 100644
-index 0000000..31211f6
+index 0000000..7738644
 --- /dev/null
-+++ b/scrub/phase4.c
-@@ -0,0 +1,79 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <dirent.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/statvfs.h>
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "list.h"
-+#include "path.h"
-+#include "workqueue.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "scrub.h"
-+#include "vfs.h"
++++ b/scrub/xfs_scrub_all.in
+@@ -0,0 +1,154 @@
++#!/usr/bin/env python3
 +
-+/* Phase 4: Repair filesystem. */
++# Run online scrubbers in parallel, but avoid thrashing.
++#
++# Copyright (C) 2018 Oracle.  All rights reserved.
++#
++# Author: Darrick J. Wong <darrick.wong@oracle.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 +
-+/* Process all the action items. */
-+static bool
-+xfs_process_action_items(
-+	struct scrub_ctx		*ctx)
-+{
-+	bool				moveon = true;
++import subprocess
++import json
++import threading
++import time
++import sys
 +
-+	pthread_mutex_lock(&ctx->lock);
-+	if (moveon && ctx->errors_found == 0 && want_fstrim)
-+		fstrim(ctx);
-+	pthread_mutex_unlock(&ctx->lock);
++retcode = 0
++terminate = False
 +
-+	return moveon;
-+}
++def find_mounts():
++	'''Map mountpoints to physical disks.'''
 +
-+/* Fix everything that needs fixing. */
-+bool
-+xfs_repair_fs(
-+	struct scrub_ctx		*ctx)
-+{
-+	return xfs_process_action_items(ctx);
-+}
++	fs = {}
++	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
++	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
++	result.wait()
++	if result.returncode != 0:
++		return fs
++	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
++	output = ' '.join(sarray)
++	bdevdata = json.loads(output)
++	# The lsblk output had better be in disks-then-partitions order
++	for bdev in bdevdata['blockdevices']:
++		if bdev['type'] in ('disk', 'loop'):
++			lastdisk = bdev['kname']
++		if bdev['fstype'] == 'xfs':
++			mnt = bdev['mountpoint']
++			if mnt is None:
++				continue
++			if mnt in fs:
++				fs[mnt].add(lastdisk)
++			else:
++				fs[mnt] = set([lastdisk])
++	return fs
 +
-+/* Run the optimize-only phase if there are no errors. */
-+bool
-+xfs_optimize_fs(
-+	struct scrub_ctx	*ctx)
-+{
-+	/*
-+	 * In preen mode, corruptions are immediately recorded as errors,
-+	 * so if there are any corruptions on the filesystem errors_found
-+	 * will be non-zero and we won't do anything.
-+	 */
-+	if (ctx->errors_found) {
-+		str_info(ctx, ctx->mntpoint,
-+_("Errors found, please re-run with -y."));
-+		return true;
-+	}
++def run_killable(cmd, stdout, killfuncs, kill_fn):
++	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
++	try:
++		proc = subprocess.Popen(cmd, stdout = stdout)
++		real_kill_fn = lambda: kill_fn(proc)
++		killfuncs.add(real_kill_fn)
++		proc.wait()
++		try:
++			killfuncs.remove(real_kill_fn)
++		except:
++			pass
++		return proc.returncode
++	except:
++		return -1
 +
-+	return xfs_process_action_items(ctx);
-+}
-diff --git a/scrub/vfs.c b/scrub/vfs.c
-index 3c0c2f3..e3c8e62 100644
---- a/scrub/vfs.c
-+++ b/scrub/vfs.c
-@@ -223,3 +223,26 @@ _("Could not queue directory scan work."));
- 	free(sftd);
- 	return false;
- }
++def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
++	'''Run a scrub process.'''
++	global retcode, terminate
 +
-+#ifndef FITRIM
-+struct fstrim_range {
-+	__u64 start;
-+	__u64 len;
-+	__u64 minlen;
-+};
-+#define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
-+#endif
++	print("Scrubbing %s..." % mnt)
++	sys.stdout.flush()
 +
-+/* Call FITRIM to trim all the unused space in a filesystem. */
-+void
-+fstrim(
-+	struct scrub_ctx	*ctx)
-+{
-+	struct fstrim_range	range = {0};
-+	int			error;
++	try:
++		if terminate:
++			return
 +
-+	range.len = ULLONG_MAX;
-+	error = ioctl(ctx->mnt_fd, FITRIM, &range);
-+	if (error && errno != EOPNOTSUPP && errno != ENOTTY)
-+		perror(_("fstrim"));
-+}
-diff --git a/scrub/vfs.h b/scrub/vfs.h
-index 100eb18..3305159 100644
---- a/scrub/vfs.h
-+++ b/scrub/vfs.h
-@@ -28,4 +28,6 @@ typedef bool (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
- bool scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
- 		scan_fs_tree_dirent_fn dirent_fn, void *arg);
- 
-+void fstrim(struct scrub_ctx *ctx);
++		# Invoke xfs_scrub manually
++		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
++		ret = run_killable(cmd, None, killfuncs, \
++				lambda proc: proc.terminate())
++		if ret >= 0:
++			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
++			sys.stdout.flush()
++			retcode |= ret
++			return
 +
- #endif /* XFS_SCRUB_VFS_H_ */
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 1c0ea87..437dcd7 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -146,6 +146,9 @@ static bool			scrub_data;
- /* Size of a memory page. */
- long				page_size;
- 
-+/* Should we FSTRIM after a successful run? */
-+bool				want_fstrim = true;
++		if terminate:
++			return
 +
- static void __attribute__((noreturn))
- usage(void)
- {
-@@ -155,6 +158,7 @@ usage(void)
- 	fprintf(stderr, _("  -a count     Stop after this many errors are found.\n"));
- 	fprintf(stderr, _("  -b           Background mode.\n"));
- 	fprintf(stderr, _("  -e behavior  What to do if errors are found.\n"));
-+	fprintf(stderr, _("  -k           Do not FITRIM the free space.\n"));
- 	fprintf(stderr, _("  -m path      Path to /etc/mtab.\n"));
- 	fprintf(stderr, _("  -n           Dry run.  Do not modify anything.\n"));
- 	fprintf(stderr, _("  -T           Display timing/usage information.\n"));
-@@ -402,8 +406,19 @@ run_scrub_phases(
- 	/* Run all phases of the scrub tool. */
- 	for (phase = 1, sp = phases; sp->fn; sp++, phase++) {
- 		/* Turn on certain phases if user said to. */
--		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data)
-+		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data) {
- 			sp->fn = xfs_scan_blocks;
-+		} else if (sp->fn == REPAIR_DUMMY_FN) {
-+			if (ctx->mode == SCRUB_MODE_PREEN) {
-+				sp->descr = _("Optimize filesystem.");
-+				sp->fn = xfs_optimize_fs;
-+				sp->must_run = true;
-+			} else if (ctx->mode == SCRUB_MODE_REPAIR) {
-+				sp->descr = _("Repair filesystem.");
-+				sp->fn = xfs_repair_fs;
-+				sp->must_run = true;
-+			}
-+		}
- 
- 		/* Skip certain phases unless they're turned on. */
- 		if (sp->fn == REPAIR_DUMMY_FN ||
-@@ -463,7 +478,7 @@ main(
- 	pthread_mutex_init(&ctx.lock, NULL);
- 	ctx.mode = SCRUB_MODE_DEFAULT;
- 	ctx.error_action = ERRORS_CONTINUE;
--	while ((c = getopt(argc, argv, "a:bde:m:nTvxVy")) != EOF) {
-+	while ((c = getopt(argc, argv, "a:bde:km:nTvxVy")) != EOF) {
- 		switch (c) {
- 		case 'a':
- 			ctx.max_errors = cvt_u64(optarg, 10);
-@@ -491,6 +506,9 @@ main(
- 				usage();
- 			}
- 			break;
-+		case 'k':
-+			want_fstrim = false;
-+			break;
- 		case 'm':
- 			mtab = optarg;
- 			break;
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 91f4577..47d63de 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -28,6 +28,7 @@ extern unsigned int		debug;
- extern int			nproc;
- extern bool			verbose;
- extern long			page_size;
-+extern bool			want_fstrim;
- 
- enum scrub_mode {
- 	SCRUB_MODE_DRY_RUN,
-@@ -105,5 +106,7 @@ bool xfs_scan_inodes(struct scrub_ctx *ctx);
- bool xfs_scan_connections(struct scrub_ctx *ctx);
- bool xfs_scan_blocks(struct scrub_ctx *ctx);
- bool xfs_scan_summary(struct scrub_ctx *ctx);
-+bool xfs_repair_fs(struct scrub_ctx *ctx);
-+bool xfs_optimize_fs(struct scrub_ctx *ctx);
- 
- #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
++		print("Unable to start scrub tool.")
++		sys.stdout.flush()
++	finally:
++		running_devs -= mntdevs
++		cond.acquire()
++		cond.notify()
++		cond.release()
++
++def main():
++	'''Find mounts, schedule scrub runs.'''
++	def thr(mnt, devs):
++		a = (mnt, cond, running_devs, devs, killfuncs)
++		thr = threading.Thread(target = run_scrub, args = a)
++		thr.start()
++	global retcode, terminate
++
++	fs = find_mounts()
++
++	# Schedule scrub jobs...
++	running_devs = set()
++	killfuncs = set()
++	cond = threading.Condition()
++	while len(fs) > 0:
++		if len(running_devs) == 0:
++			mnt, devs = fs.popitem()
++			running_devs.update(devs)
++			thr(mnt, devs)
++		poppers = set()
++		for mnt in fs:
++			devs = fs[mnt]
++			can_run = True
++			for dev in devs:
++				if dev in running_devs:
++					can_run = False
++					break
++			if can_run:
++				running_devs.update(devs)
++				poppers.add(mnt)
++				thr(mnt, devs)
++		for p in poppers:
++			fs.pop(p)
++		cond.acquire()
++		try:
++			cond.wait()
++		except KeyboardInterrupt:
++			terminate = True
++			print("Terminating...")
++			sys.stdout.flush()
++			while len(killfuncs) > 0:
++				fn = killfuncs.pop()
++				fn()
++			fs = []
++		cond.release()
++
++	sys.exit(retcode)
++
++if __name__ == '__main__':
++	main()
 
