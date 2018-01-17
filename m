@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52301 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:59791 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753888AbeAQUW5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:57 -0500
+        with ESMTP id S1753843AbeAQUWz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:55 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 72/99] xfs: Convert xfs dquot to XArray
-Date: Wed, 17 Jan 2018 12:21:36 -0800
-Message-Id: <20180117202203.19756-73-willy@infradead.org>
+Subject: [PATCH v6 69/99] brd: Convert to XArray
+Date: Wed, 17 Jan 2018 12:21:33 -0800
+Message-Id: <20180117202203.19756-70-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,267 +17,176 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is a pretty straight-forward conversion.
+Convert brd_pages from a radix tree to an XArray.  Simpler and smaller
+code; in particular another user of radix_tree_preload is eliminated.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/xfs/xfs_dquot.c | 38 +++++++++++++++++++++-----------------
- fs/xfs/xfs_qm.c    | 36 ++++++++++++++++++------------------
- fs/xfs/xfs_qm.h    | 18 +++++++++---------
- 3 files changed, 48 insertions(+), 44 deletions(-)
+ drivers/block/brd.c | 93 ++++++++++++++++-------------------------------------
+ 1 file changed, 28 insertions(+), 65 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index e2a466df5dd1..c6832db23ca8 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -44,7 +44,7 @@
-  * Lock order:
-  *
-  * ip->i_lock
-- *   qi->qi_tree_lock
-+ *   qi->qi_xa_lock
-  *     dquot->q_qlock (xfs_dqlock() and friends)
-  *       dquot->q_flush (xfs_dqflock() and friends)
-  *       qi->qi_lru_lock
-@@ -752,8 +752,8 @@ xfs_qm_dqget(
- 	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
- {
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
--	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
--	struct xfs_dquot	*dqp;
-+	struct xarray		*xa = xfs_dquot_xa(qi, type);
-+	struct xfs_dquot	*dqp, *duplicate;
- 	int			error;
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index 8028a3a7e7fd..59a1af7aaa79 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -17,7 +17,7 @@
+ #include <linux/bio.h>
+ #include <linux/highmem.h>
+ #include <linux/mutex.h>
+-#include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/fs.h>
+ #include <linux/slab.h>
+ #include <linux/backing-dev.h>
+@@ -29,9 +29,9 @@
+ #define PAGE_SECTORS		(1 << PAGE_SECTORS_SHIFT)
  
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-@@ -772,23 +772,24 @@ xfs_qm_dqget(
- 	}
- 
- restart:
--	mutex_lock(&qi->qi_tree_lock);
--	dqp = radix_tree_lookup(tree, id);
-+	mutex_lock(&qi->qi_xa_lock);
-+	dqp = xa_load(xa, id);
-+found:
- 	if (dqp) {
- 		xfs_dqlock(dqp);
- 		if (dqp->dq_flags & XFS_DQ_FREEING) {
- 			xfs_dqunlock(dqp);
--			mutex_unlock(&qi->qi_tree_lock);
-+			mutex_unlock(&qi->qi_xa_lock);
- 			trace_xfs_dqget_freeing(dqp);
- 			delay(1);
- 			goto restart;
- 		}
- 
--		/* uninit / unused quota found in radix tree, keep looking  */
-+		/* uninit / unused quota found, keep looking  */
- 		if (flags & XFS_QMOPT_DQNEXT) {
- 			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
- 				xfs_dqunlock(dqp);
--				mutex_unlock(&qi->qi_tree_lock);
-+				mutex_unlock(&qi->qi_xa_lock);
- 				error = xfs_dq_get_next_id(mp, type, &id);
- 				if (error)
- 					return error;
-@@ -797,14 +798,14 @@ xfs_qm_dqget(
- 		}
- 
- 		dqp->q_nrefs++;
--		mutex_unlock(&qi->qi_tree_lock);
-+		mutex_unlock(&qi->qi_xa_lock);
- 
- 		trace_xfs_dqget_hit(dqp);
- 		XFS_STATS_INC(mp, xs_qm_dqcachehits);
- 		*O_dqpp = dqp;
- 		return 0;
- 	}
--	mutex_unlock(&qi->qi_tree_lock);
-+	mutex_unlock(&qi->qi_xa_lock);
- 	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
- 
- 	/*
-@@ -854,20 +855,23 @@ xfs_qm_dqget(
- 		}
- 	}
- 
--	mutex_lock(&qi->qi_tree_lock);
--	error = radix_tree_insert(tree, id, dqp);
--	if (unlikely(error)) {
--		WARN_ON(error != -EEXIST);
-+	mutex_lock(&qi->qi_xa_lock);
-+	duplicate = xa_cmpxchg(xa, id, NULL, dqp, GFP_NOFS);
-+	if (unlikely(duplicate)) {
-+		if (xa_is_err(duplicate)) {
-+			mutex_unlock(&qi->qi_xa_lock);
-+			return xa_err(duplicate);
-+		}
- 
- 		/*
- 		 * Duplicate found. Just throw away the new dquot and start
- 		 * over.
- 		 */
--		mutex_unlock(&qi->qi_tree_lock);
- 		trace_xfs_dqget_dup(dqp);
- 		xfs_qm_dqdestroy(dqp);
- 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
--		goto restart;
-+		dqp = duplicate;
-+		goto found;
- 	}
- 
- 	/*
-@@ -877,7 +881,7 @@ xfs_qm_dqget(
- 	dqp->q_nrefs = 1;
- 
- 	qi->qi_dquots++;
--	mutex_unlock(&qi->qi_tree_lock);
-+	mutex_unlock(&qi->qi_xa_lock);
- 
- 	/* If we are asked to find next active id, keep looking */
- 	if (flags & XFS_QMOPT_DQNEXT) {
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index b897b11afb2c..000b207762d6 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -67,7 +67,7 @@ xfs_qm_dquot_walk(
- 	void			*data)
- {
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
--	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
-+	struct xarray		*xa = xfs_dquot_xa(qi, type);
- 	uint32_t		next_index;
- 	int			last_error = 0;
- 	int			skipped;
-@@ -83,11 +83,11 @@ xfs_qm_dquot_walk(
- 		int		error = 0;
- 		int		i;
- 
--		mutex_lock(&qi->qi_tree_lock);
--		nr_found = radix_tree_gang_lookup(tree, (void **)batch,
--					next_index, XFS_DQ_LOOKUP_BATCH);
-+		mutex_lock(&qi->qi_xa_lock);
-+		nr_found = xa_extract(xa, (void **)batch, next_index,
-+				ULONG_MAX, XFS_DQ_LOOKUP_BATCH, XA_PRESENT);
- 		if (!nr_found) {
--			mutex_unlock(&qi->qi_tree_lock);
-+			mutex_unlock(&qi->qi_xa_lock);
- 			break;
- 		}
- 
-@@ -105,7 +105,7 @@ xfs_qm_dquot_walk(
- 				last_error = error;
- 		}
- 
--		mutex_unlock(&qi->qi_tree_lock);
-+		mutex_unlock(&qi->qi_xa_lock);
- 
- 		/* bail out if the filesystem is corrupted.  */
- 		if (last_error == -EFSCORRUPTED) {
-@@ -178,8 +178,8 @@ xfs_qm_dqpurge(
- 	xfs_dqfunlock(dqp);
- 	xfs_dqunlock(dqp);
- 
--	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
--			  be32_to_cpu(dqp->q_core.d_id));
-+	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
-+			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
- 	qi->qi_dquots--;
- 
- 	/*
-@@ -623,10 +623,10 @@ xfs_qm_init_quotainfo(
- 	if (error)
- 		goto out_free_lru;
- 
--	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
--	mutex_init(&qinf->qi_tree_lock);
-+	xa_init(&qinf->qi_uquota_xa);
-+	xa_init(&qinf->qi_gquota_xa);
-+	xa_init(&qinf->qi_pquota_xa);
-+	mutex_init(&qinf->qi_xa_lock);
- 
- 	/* mutex used to serialize quotaoffs */
- 	mutex_init(&qinf->qi_quotaofflock);
-@@ -704,7 +704,7 @@ xfs_qm_init_quotainfo(
- 
- out_free_inos:
- 	mutex_destroy(&qinf->qi_quotaofflock);
--	mutex_destroy(&qinf->qi_tree_lock);
-+	mutex_destroy(&qinf->qi_xa_lock);
- 	xfs_qm_destroy_quotainos(qinf);
- out_free_lru:
- 	list_lru_destroy(&qinf->qi_lru);
-@@ -731,7 +731,7 @@ xfs_qm_destroy_quotainfo(
- 	unregister_shrinker(&qi->qi_shrinker);
- 	list_lru_destroy(&qi->qi_lru);
- 	xfs_qm_destroy_quotainos(qi);
--	mutex_destroy(&qi->qi_tree_lock);
-+	mutex_destroy(&qi->qi_xa_lock);
- 	mutex_destroy(&qi->qi_quotaofflock);
- 	kmem_free(qi);
- 	mp->m_quotainfo = NULL;
-@@ -1620,12 +1620,12 @@ xfs_qm_dqfree_one(
- 	struct xfs_mount	*mp = dqp->q_mount;
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
- 
--	mutex_lock(&qi->qi_tree_lock);
--	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
--			  be32_to_cpu(dqp->q_core.d_id));
-+	mutex_lock(&qi->qi_xa_lock);
-+	xa_store(xfs_dquot_xa(qi, dqp->q_core.d_flags),
-+			  be32_to_cpu(dqp->q_core.d_id), NULL, GFP_NOWAIT);
- 
- 	qi->qi_dquots--;
--	mutex_unlock(&qi->qi_tree_lock);
-+	mutex_unlock(&qi->qi_xa_lock);
- 
- 	xfs_qm_dqdestroy(dqp);
- }
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 2975a822e9f0..946f929f7bfb 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -67,10 +67,10 @@ struct xfs_def_quota {
-  * The mount structure keeps a pointer to this.
+ /*
+- * Each block ramdisk device has a radix_tree brd_pages of pages that stores
+- * the pages containing the block device's contents. A brd page's ->index is
+- * its offset in PAGE_SIZE units. This is similar to, but in no way connected
++ * Each block ramdisk device has an xarray brd_pages that stores the pages
++ * containing the block device's contents. A brd page's ->index is its
++ * offset in PAGE_SIZE units. This is similar to, but in no way connected
+  * with, the kernel's pagecache or buffer cache (which sit above our block
+  * device).
   */
- typedef struct xfs_quotainfo {
--	struct radix_tree_root qi_uquota_tree;
--	struct radix_tree_root qi_gquota_tree;
--	struct radix_tree_root qi_pquota_tree;
--	struct mutex qi_tree_lock;
-+	struct xarray	qi_uquota_xa;
-+	struct xarray	qi_gquota_xa;
-+	struct xarray	qi_pquota_xa;
-+	struct mutex	qi_xa_lock;
- 	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
- 	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
- 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
-@@ -91,18 +91,18 @@ typedef struct xfs_quotainfo {
- 	struct shrinker  qi_shrinker;
- } xfs_quotainfo_t;
+@@ -41,13 +41,7 @@ struct brd_device {
+ 	struct request_queue	*brd_queue;
+ 	struct gendisk		*brd_disk;
+ 	struct list_head	brd_list;
+-
+-	/*
+-	 * Backing store of pages and lock to protect it. This is the contents
+-	 * of the block device.
+-	 */
+-	spinlock_t		brd_lock;
+-	struct radix_tree_root	brd_pages;
++	struct xarray		brd_pages;
+ };
  
--static inline struct radix_tree_root *
--xfs_dquot_tree(
-+static inline struct xarray *
-+xfs_dquot_xa(
- 	struct xfs_quotainfo	*qi,
- 	int			type)
+ /*
+@@ -62,17 +56,9 @@ static struct page *brd_lookup_page(struct brd_device *brd, sector_t sector)
+ 	 * The page lifetime is protected by the fact that we have opened the
+ 	 * device node -- brd pages will never be deleted under us, so we
+ 	 * don't need any further locking or refcounting.
+-	 *
+-	 * This is strictly true for the radix-tree nodes as well (ie. we
+-	 * don't actually need the rcu_read_lock()), however that is not a
+-	 * documented feature of the radix-tree API so it is better to be
+-	 * safe here (we don't have total exclusion from radix tree updates
+-	 * here, only deletes).
+ 	 */
+-	rcu_read_lock();
+ 	idx = sector >> PAGE_SECTORS_SHIFT; /* sector to page index */
+-	page = radix_tree_lookup(&brd->brd_pages, idx);
+-	rcu_read_unlock();
++	page = xa_load(&brd->brd_pages, idx);
+ 
+ 	BUG_ON(page && page->index != idx);
+ 
+@@ -87,7 +73,7 @@ static struct page *brd_lookup_page(struct brd_device *brd, sector_t sector)
+ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
  {
- 	switch (type) {
- 	case XFS_DQ_USER:
--		return &qi->qi_uquota_tree;
-+		return &qi->qi_uquota_xa;
- 	case XFS_DQ_GROUP:
--		return &qi->qi_gquota_tree;
-+		return &qi->qi_gquota_xa;
- 	case XFS_DQ_PROJ:
--		return &qi->qi_pquota_tree;
-+		return &qi->qi_pquota_xa;
- 	default:
- 		ASSERT(0);
+ 	pgoff_t idx;
+-	struct page *page;
++	struct page *curr, *page;
+ 	gfp_t gfp_flags;
+ 
+ 	page = brd_lookup_page(brd, sector);
+@@ -108,62 +94,40 @@ static struct page *brd_insert_page(struct brd_device *brd, sector_t sector)
+ 	if (!page)
+ 		return NULL;
+ 
+-	if (radix_tree_preload(GFP_NOIO)) {
+-		__free_page(page);
+-		return NULL;
+-	}
+-
+-	spin_lock(&brd->brd_lock);
+ 	idx = sector >> PAGE_SECTORS_SHIFT;
+ 	page->index = idx;
+-	if (radix_tree_insert(&brd->brd_pages, idx, page)) {
++	curr = xa_cmpxchg(&brd->brd_pages, idx, NULL, page, GFP_NOIO);
++	if (curr) {
+ 		__free_page(page);
+-		page = radix_tree_lookup(&brd->brd_pages, idx);
+-		BUG_ON(!page);
+-		BUG_ON(page->index != idx);
++		if (xa_err(curr)) {
++			page = NULL;
++		} else {
++			page = curr;
++			BUG_ON(!page);
++			BUG_ON(page->index != idx);
++		}
  	}
+-	spin_unlock(&brd->brd_lock);
+-
+-	radix_tree_preload_end();
+ 
+ 	return page;
+ }
+ 
+ /*
+- * Free all backing store pages and radix tree. This must only be called when
++ * Free all backing store pages and xarray.  This must only be called when
+  * there are no other users of the device.
+  */
+-#define FREE_BATCH 16
+ static void brd_free_pages(struct brd_device *brd)
+ {
+-	unsigned long pos = 0;
+-	struct page *pages[FREE_BATCH];
+-	int nr_pages;
+-
+-	do {
+-		int i;
+-
+-		nr_pages = radix_tree_gang_lookup(&brd->brd_pages,
+-				(void **)pages, pos, FREE_BATCH);
+-
+-		for (i = 0; i < nr_pages; i++) {
+-			void *ret;
+-
+-			BUG_ON(pages[i]->index < pos);
+-			pos = pages[i]->index;
+-			ret = radix_tree_delete(&brd->brd_pages, pos);
+-			BUG_ON(!ret || ret != pages[i]);
+-			__free_page(pages[i]);
+-		}
+-
+-		pos++;
++	XA_STATE(xas, &brd->brd_pages, 0);
++	struct page *page;
+ 
+-		/*
+-		 * This assumes radix_tree_gang_lookup always returns as
+-		 * many pages as possible. If the radix-tree code changes,
+-		 * so will this have to.
+-		 */
+-	} while (nr_pages == FREE_BATCH);
++	/* lockdep can't know there are no other users */
++	xas_lock(&xas);
++	xas_for_each(&xas, page, ULONG_MAX) {
++		BUG_ON(page->index != xas.xa_index);
++		__free_page(page);
++		xas_store(&xas, NULL);
++	}
++	xas_unlock(&xas);
+ }
+ 
+ /*
+@@ -373,8 +337,7 @@ static struct brd_device *brd_alloc(int i)
+ 	if (!brd)
+ 		goto out;
+ 	brd->brd_number		= i;
+-	spin_lock_init(&brd->brd_lock);
+-	INIT_RADIX_TREE(&brd->brd_pages, GFP_ATOMIC);
++	xa_init(&brd->brd_pages);
+ 
+ 	brd->brd_queue = blk_alloc_queue(GFP_KERNEL);
+ 	if (!brd->brd_queue)
 -- 
 2.15.1
 
