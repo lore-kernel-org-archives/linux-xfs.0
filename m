@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59625 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:57333 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752719AbeAQUW1 (ORCPT
+        with ESMTP id S1752698AbeAQUW1 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:27 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 03/99] xarray: Replace exceptional entries
-Date: Wed, 17 Jan 2018 12:20:27 -0800
-Message-Id: <20180117202203.19756-4-willy@infradead.org>
+Subject: [PATCH v6 02/99] page cache: Use xa_lock
+Date: Wed, 17 Jan 2018 12:20:26 -0800
+Message-Id: <20180117202203.19756-3-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,1436 +17,2461 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Introduce xarray value entries to replace the radix tree exceptional
-entry code.  This is a slight change in encoding to allow the use of an
-extra bit (we can now store BITS_PER_LONG - 1 bits in a value entry).
-It is also a change in emphasis; exceptional entries are intimidating
-and different.  As the comment explains, you can choose to store values
-or pointers in the xarray and they are both first-class citizens.
+Remove the address_space ->tree_lock and use the xa_lock newly added to
+the radix_tree_root.  Rename the address_space ->page_tree to ->pages,
+since we don't really care that it's a tree.  Take the opportunity to
+rearrange the elements of address_space to pack them better on 64-bit,
+and make the comments more useful.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- arch/powerpc/include/asm/book3s/64/pgtable.h    |   4 +-
- arch/powerpc/include/asm/nohash/64/pgtable.h    |   4 +-
- drivers/gpu/drm/i915/i915_gem.c                 |  17 ++--
- drivers/staging/lustre/lustre/mdc/mdc_request.c |   2 +-
+ Documentation/cgroup-v1/memory.txt              |   2 +-
+ Documentation/vm/page_migration                 |  14 +--
+ arch/arm/include/asm/cacheflush.h               |   6 +-
+ arch/nios2/include/asm/cacheflush.h             |   6 +-
+ arch/parisc/include/asm/cacheflush.h            |   6 +-
+ drivers/staging/lustre/lustre/llite/glimpse.c   |   2 +-
+ drivers/staging/lustre/lustre/mdc/mdc_request.c |   8 +-
+ fs/afs/write.c                                  |   9 +-
  fs/btrfs/compression.c                          |   2 +-
- fs/btrfs/inode.c                                |   4 +-
- fs/dax.c                                        | 107 ++++++++++++------------
- fs/proc/task_mmu.c                              |   2 +-
- include/linux/fs.h                              |  48 +++++++----
- include/linux/radix-tree.h                      |  36 ++------
- include/linux/swapops.h                         |  19 ++---
- include/linux/xarray.h                          |  51 +++++++++++
- lib/idr.c                                       |  63 ++++++--------
- lib/radix-tree.c                                |  21 ++---
- mm/filemap.c                                    |  10 +--
- mm/khugepaged.c                                 |   2 +-
- mm/madvise.c                                    |   2 +-
- mm/memcontrol.c                                 |   2 +-
- mm/mincore.c                                    |   2 +-
+ fs/btrfs/extent_io.c                            |  16 +--
+ fs/btrfs/inode.c                                |   2 +-
+ fs/buffer.c                                     |  13 ++-
+ fs/cifs/file.c                                  |   9 +-
+ fs/dax.c                                        | 123 ++++++++++++------------
+ fs/f2fs/data.c                                  |   6 +-
+ fs/f2fs/dir.c                                   |   6 +-
+ fs/f2fs/inline.c                                |   6 +-
+ fs/f2fs/node.c                                  |   8 +-
+ fs/fs-writeback.c                               |  20 ++--
+ fs/inode.c                                      |  11 +--
+ fs/nilfs2/btnode.c                              |  20 ++--
+ fs/nilfs2/page.c                                |  22 ++---
+ include/linux/backing-dev.h                     |  12 +--
+ include/linux/fs.h                              |  17 ++--
+ include/linux/mm.h                              |   2 +-
+ include/linux/pagemap.h                         |   4 +-
+ mm/filemap.c                                    |  84 ++++++++--------
+ mm/huge_memory.c                                |  10 +-
+ mm/khugepaged.c                                 |  49 +++++-----
+ mm/memcontrol.c                                 |   4 +-
+ mm/migrate.c                                    |  32 +++---
+ mm/page-writeback.c                             |  42 ++++----
  mm/readahead.c                                  |   2 +-
- mm/shmem.c                                      |  10 +--
- mm/swap.c                                       |   2 +-
- mm/truncate.c                                   |  12 +--
- mm/workingset.c                                 |  12 ++-
- tools/testing/radix-tree/idr-test.c             |   6 +-
- tools/testing/radix-tree/linux/radix-tree.h     |   1 +
- tools/testing/radix-tree/multiorder.c           |  47 +++++------
- tools/testing/radix-tree/test.c                 |   2 +-
- 28 files changed, 256 insertions(+), 236 deletions(-)
+ mm/rmap.c                                       |   4 +-
+ mm/shmem.c                                      |  60 ++++++------
+ mm/swap_state.c                                 |  17 ++--
+ mm/truncate.c                                   |  22 ++---
+ mm/vmscan.c                                     |  12 +--
+ mm/workingset.c                                 |  22 ++---
+ 39 files changed, 344 insertions(+), 368 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/book3s/64/pgtable.h b/arch/powerpc/include/asm/book3s/64/pgtable.h
-index 44697817ccc6..5025c26f1acd 100644
---- a/arch/powerpc/include/asm/book3s/64/pgtable.h
-+++ b/arch/powerpc/include/asm/book3s/64/pgtable.h
-@@ -649,9 +649,7 @@ static inline bool pte_user(pte_t pte)
- 	BUILD_BUG_ON(_PAGE_HPTEFLAGS & (0x1f << _PAGE_BIT_SWAP_TYPE)); \
- 	BUILD_BUG_ON(_PAGE_HPTEFLAGS & _PAGE_SWP_SOFT_DIRTY);	\
- 	} while (0)
--/*
-- * on pte we don't need handle RADIX_TREE_EXCEPTIONAL_SHIFT;
-- */
-+
- #define SWP_TYPE_BITS 5
- #define __swp_type(x)		(((x).val >> _PAGE_BIT_SWAP_TYPE) \
- 				& ((1UL << SWP_TYPE_BITS) - 1))
-diff --git a/arch/powerpc/include/asm/nohash/64/pgtable.h b/arch/powerpc/include/asm/nohash/64/pgtable.h
-index abddf5830ad5..f711773568d7 100644
---- a/arch/powerpc/include/asm/nohash/64/pgtable.h
-+++ b/arch/powerpc/include/asm/nohash/64/pgtable.h
-@@ -329,9 +329,7 @@ static inline void __ptep_set_access_flags(struct mm_struct *mm,
- 	 */							\
- 	BUILD_BUG_ON(_PAGE_HPTEFLAGS & (0x1f << _PAGE_BIT_SWAP_TYPE)); \
- 	} while (0)
--/*
-- * on pte we don't need handle RADIX_TREE_EXCEPTIONAL_SHIFT;
-- */
-+
- #define SWP_TYPE_BITS 5
- #define __swp_type(x)		(((x).val >> _PAGE_BIT_SWAP_TYPE) \
- 				& ((1UL << SWP_TYPE_BITS) - 1))
-diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
-index 5cfba89ed586..25ce7bcf9988 100644
---- a/drivers/gpu/drm/i915/i915_gem.c
-+++ b/drivers/gpu/drm/i915/i915_gem.c
-@@ -5369,7 +5369,8 @@ i915_gem_object_get_sg(struct drm_i915_gem_object *obj,
- 	count = __sg_page_count(sg);
+diff --git a/Documentation/cgroup-v1/memory.txt b/Documentation/cgroup-v1/memory.txt
+index cefb63639070..f0ba3fc6f2d8 100644
+--- a/Documentation/cgroup-v1/memory.txt
++++ b/Documentation/cgroup-v1/memory.txt
+@@ -262,7 +262,7 @@ When oom event notifier is registered, event will be delivered.
+ 2.6 Locking
  
- 	while (idx + count <= n) {
--		unsigned long exception, i;
-+		void *entry;
-+		unsigned long i;
- 		int ret;
+    lock_page_cgroup()/unlock_page_cgroup() should not be called under
+-   mapping->tree_lock.
++   the mapping's xa_lock.
  
- 		/* If we cannot allocate and insert this entry, or the
-@@ -5384,12 +5385,9 @@ i915_gem_object_get_sg(struct drm_i915_gem_object *obj,
- 		if (ret && ret != -EEXIST)
- 			goto scan;
+    Other lock order is following:
+    PG_locked.
+diff --git a/Documentation/vm/page_migration b/Documentation/vm/page_migration
+index 0478ae2ad44a..faf849596a85 100644
+--- a/Documentation/vm/page_migration
++++ b/Documentation/vm/page_migration
+@@ -90,7 +90,7 @@ Steps:
  
--		exception =
--			RADIX_TREE_EXCEPTIONAL_ENTRY |
--			idx << RADIX_TREE_EXCEPTIONAL_SHIFT;
-+		entry = xa_mk_value(idx);
- 		for (i = 1; i < count; i++) {
--			ret = radix_tree_insert(&iter->radix, idx + i,
--						(void *)exception);
-+			ret = radix_tree_insert(&iter->radix, idx + i, entry);
- 			if (ret && ret != -EEXIST)
- 				goto scan;
- 		}
-@@ -5427,15 +5425,14 @@ i915_gem_object_get_sg(struct drm_i915_gem_object *obj,
- 	GEM_BUG_ON(!sg);
+ 1. Lock the page to be migrated
  
- 	/* If this index is in the middle of multi-page sg entry,
--	 * the radixtree will contain an exceptional entry that points
-+	 * the radix tree will contain a value entry that points
- 	 * to the start of that range. We will return the pointer to
- 	 * the base page and the offset of this page within the
- 	 * sg entry's range.
- 	 */
- 	*offset = 0;
--	if (unlikely(radix_tree_exception(sg))) {
--		unsigned long base =
--			(unsigned long)sg >> RADIX_TREE_EXCEPTIONAL_SHIFT;
-+	if (unlikely(xa_is_value(sg))) {
-+		unsigned long base = xa_to_value(sg);
+-2. Insure that writeback is complete.
++2. Ensure that writeback is complete.
  
- 		sg = radix_tree_lookup(&iter->radix, base);
- 		GEM_BUG_ON(!sg);
+ 3. Lock the new page that we want to move to. It is locked so that accesses to
+    this (not yet uptodate) page immediately lock while the move is in progress.
+@@ -100,8 +100,8 @@ Steps:
+    mapcount is not zero then we do not migrate the page. All user space
+    processes that attempt to access the page will now wait on the page lock.
+ 
+-5. The radix tree lock is taken. This will cause all processes trying
+-   to access the page via the mapping to block on the radix tree spinlock.
++5. The address space xa_lock is taken. This will cause all processes trying
++   to access the page via the mapping to block on the spinlock.
+ 
+ 6. The refcount of the page is examined and we back out if references remain
+    otherwise we know that we are the only one referencing this page.
+@@ -114,12 +114,12 @@ Steps:
+ 
+ 9. The radix tree is changed to point to the new page.
+ 
+-10. The reference count of the old page is dropped because the radix tree
++10. The reference count of the old page is dropped because the address space
+     reference is gone. A reference to the new page is established because
+-    the new page is referenced to by the radix tree.
++    the new page is referenced by the address space.
+ 
+-11. The radix tree lock is dropped. With that lookups in the mapping
+-    become possible again. Processes will move from spinning on the tree_lock
++11. The address space xa_lock is dropped. With that lookups in the mapping
++    become possible again. Processes will move from spinning on the xa_lock
+     to sleeping on the locked new page.
+ 
+ 12. The page contents are copied to the new page.
+diff --git a/arch/arm/include/asm/cacheflush.h b/arch/arm/include/asm/cacheflush.h
+index 74504b154256..f4ead9a74b7d 100644
+--- a/arch/arm/include/asm/cacheflush.h
++++ b/arch/arm/include/asm/cacheflush.h
+@@ -318,10 +318,8 @@ static inline void flush_anon_page(struct vm_area_struct *vma,
+ #define ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE
+ extern void flush_kernel_dcache_page(struct page *);
+ 
+-#define flush_dcache_mmap_lock(mapping) \
+-	spin_lock_irq(&(mapping)->tree_lock)
+-#define flush_dcache_mmap_unlock(mapping) \
+-	spin_unlock_irq(&(mapping)->tree_lock)
++#define flush_dcache_mmap_lock(mapping)		xa_lock_irq(&mapping->pages)
++#define flush_dcache_mmap_unlock(mapping)	xa_unlock_irq(&mapping->pages)
+ 
+ #define flush_icache_user_range(vma,page,addr,len) \
+ 	flush_dcache_page(page)
+diff --git a/arch/nios2/include/asm/cacheflush.h b/arch/nios2/include/asm/cacheflush.h
+index 55e383c173f7..7a6eda381964 100644
+--- a/arch/nios2/include/asm/cacheflush.h
++++ b/arch/nios2/include/asm/cacheflush.h
+@@ -46,9 +46,7 @@ extern void copy_from_user_page(struct vm_area_struct *vma, struct page *page,
+ extern void flush_dcache_range(unsigned long start, unsigned long end);
+ extern void invalidate_dcache_range(unsigned long start, unsigned long end);
+ 
+-#define flush_dcache_mmap_lock(mapping) \
+-	spin_lock_irq(&(mapping)->tree_lock)
+-#define flush_dcache_mmap_unlock(mapping) \
+-	spin_unlock_irq(&(mapping)->tree_lock)
++#define flush_dcache_mmap_lock(mapping)		xa_lock_irq(&mapping->pages)
++#define flush_dcache_mmap_unlock(mapping)	xa_unlock_irq(&mapping->pages)
+ 
+ #endif /* _ASM_NIOS2_CACHEFLUSH_H */
+diff --git a/arch/parisc/include/asm/cacheflush.h b/arch/parisc/include/asm/cacheflush.h
+index 3742508cc534..b772dd320118 100644
+--- a/arch/parisc/include/asm/cacheflush.h
++++ b/arch/parisc/include/asm/cacheflush.h
+@@ -54,10 +54,8 @@ void invalidate_kernel_vmap_range(void *vaddr, int size);
+ #define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE 1
+ extern void flush_dcache_page(struct page *page);
+ 
+-#define flush_dcache_mmap_lock(mapping) \
+-	spin_lock_irq(&(mapping)->tree_lock)
+-#define flush_dcache_mmap_unlock(mapping) \
+-	spin_unlock_irq(&(mapping)->tree_lock)
++#define flush_dcache_mmap_lock(mapping)		xa_lock_irq(&mapping->pages)
++#define flush_dcache_mmap_unlock(mapping)	xa_unlock_irq(&mapping->pages)
+ 
+ #define flush_icache_page(vma,page)	do { 		\
+ 	flush_kernel_dcache_page(page);			\
+diff --git a/drivers/staging/lustre/lustre/llite/glimpse.c b/drivers/staging/lustre/lustre/llite/glimpse.c
+index c43ac574274c..5f2843da911c 100644
+--- a/drivers/staging/lustre/lustre/llite/glimpse.c
++++ b/drivers/staging/lustre/lustre/llite/glimpse.c
+@@ -69,7 +69,7 @@ blkcnt_t dirty_cnt(struct inode *inode)
+ 	void	      *results[1];
+ 
+ 	if (inode->i_mapping)
+-		cnt += radix_tree_gang_lookup_tag(&inode->i_mapping->page_tree,
++		cnt += radix_tree_gang_lookup_tag(&inode->i_mapping->pages,
+ 						  results, 0, 1,
+ 						  PAGECACHE_TAG_DIRTY);
+ 	if (cnt == 0 && atomic_read(&vob->vob_mmap_cnt) > 0)
 diff --git a/drivers/staging/lustre/lustre/mdc/mdc_request.c b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-index 45dcf9f958d4..2ec79a6b17da 100644
+index 03e55bca4ada..45dcf9f958d4 100644
 --- a/drivers/staging/lustre/lustre/mdc/mdc_request.c
 +++ b/drivers/staging/lustre/lustre/mdc/mdc_request.c
-@@ -940,7 +940,7 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
- 	xa_lock_irq(&mapping->pages);
- 	found = radix_tree_gang_lookup(&mapping->pages,
+@@ -937,14 +937,14 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
+ 	struct page *page;
+ 	int found;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
+-	found = radix_tree_gang_lookup(&mapping->page_tree,
++	xa_lock_irq(&mapping->pages);
++	found = radix_tree_gang_lookup(&mapping->pages,
  				       (void **)&page, offset, 1);
--	if (found > 0 && !radix_tree_exceptional_entry(page)) {
-+	if (found > 0 && !xa_is_value(page)) {
+ 	if (found > 0 && !radix_tree_exceptional_entry(page)) {
  		struct lu_dirpage *dp;
  
  		get_page(page);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		/*
+ 		 * In contrast to find_lock_page() we are sure that directory
+ 		 * page cannot be truncated (while DLM lock is held) and,
+@@ -992,7 +992,7 @@ static struct page *mdc_page_locate(struct address_space *mapping, __u64 *hash,
+ 			page = ERR_PTR(-EIO);
+ 		}
+ 	} else {
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		page = NULL;
+ 	}
+ 	return page;
+diff --git a/fs/afs/write.c b/fs/afs/write.c
+index 9370e2feb999..603d2ce48dbb 100644
+--- a/fs/afs/write.c
++++ b/fs/afs/write.c
+@@ -570,10 +570,11 @@ static int afs_writepages_region(struct address_space *mapping,
+ 
+ 		_debug("wback %lx", page->index);
+ 
+-		/* at this point we hold neither mapping->tree_lock nor lock on
+-		 * the page itself: the page may be truncated or invalidated
+-		 * (changing page->mapping to NULL), or even swizzled back from
+-		 * swapper_space to tmpfs file mapping
++		/*
++		 * at this point we hold neither the xa_lock nor the
++		 * page lock: the page may be truncated or invalidated
++		 * (changing page->mapping to NULL), or even swizzled
++		 * back from swapper_space to tmpfs file mapping
+ 		 */
+ 		ret = lock_page_killable(page);
+ 		if (ret < 0) {
 diff --git a/fs/btrfs/compression.c b/fs/btrfs/compression.c
-index 280717b26224..e687d06cd97c 100644
+index 5982c8a71f02..280717b26224 100644
 --- a/fs/btrfs/compression.c
 +++ b/fs/btrfs/compression.c
-@@ -452,7 +452,7 @@ static noinline int add_ra_bio_pages(struct inode *inode,
+@@ -450,7 +450,7 @@ static noinline int add_ra_bio_pages(struct inode *inode,
+ 			break;
+ 
  		rcu_read_lock();
- 		page = radix_tree_lookup(&mapping->pages, pg_index);
+-		page = radix_tree_lookup(&mapping->page_tree, pg_index);
++		page = radix_tree_lookup(&mapping->pages, pg_index);
  		rcu_read_unlock();
--		if (page && !radix_tree_exceptional_entry(page)) {
-+		if (page && !xa_is_value(page)) {
+ 		if (page && !radix_tree_exceptional_entry(page)) {
  			misses++;
- 			if (misses > 4)
- 				break;
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index 012d63870b99..22948f4febe7 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -3966,11 +3966,11 @@ static int extent_write_cache_pages(struct address_space *mapping,
+ 
+ 			done_index = page->index;
+ 			/*
+-			 * At this point we hold neither mapping->tree_lock nor
+-			 * lock on the page itself: the page may be truncated or
+-			 * invalidated (changing page->mapping to NULL), or even
+-			 * swizzled back from swapper_space to tmpfs file
+-			 * mapping
++			 * At this point we hold neither the xa_lock nor
++			 * the page lock: the page may be truncated or
++			 * invalidated (changing page->mapping to NULL),
++			 * or even swizzled back from swapper_space to
++			 * tmpfs file mapping
+ 			 */
+ 			if (!trylock_page(page)) {
+ 				flush_fn(data);
+@@ -5196,13 +5196,13 @@ void clear_extent_buffer_dirty(struct extent_buffer *eb)
+ 		WARN_ON(!PagePrivate(page));
+ 
+ 		clear_page_dirty_for_io(page);
+-		spin_lock_irq(&page->mapping->tree_lock);
++		xa_lock_irq(&page->mapping->pages);
+ 		if (!PageDirty(page)) {
+-			radix_tree_tag_clear(&page->mapping->page_tree,
++			radix_tree_tag_clear(&page->mapping->pages,
+ 						page_index(page),
+ 						PAGECACHE_TAG_DIRTY);
+ 		}
+-		spin_unlock_irq(&page->mapping->tree_lock);
++		xa_unlock_irq(&page->mapping->pages);
+ 		ClearPageError(page);
+ 		unlock_page(page);
+ 	}
 diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 712ae1dd572b..dbdb5bf6bca1 100644
+index e1a7f3cb5be9..712ae1dd572b 100644
 --- a/fs/btrfs/inode.c
 +++ b/fs/btrfs/inode.c
-@@ -7578,8 +7578,8 @@ bool btrfs_page_exists_in_range(struct inode *inode, loff_t start, loff_t end)
- 			}
- 			/*
- 			 * Otherwise, shmem/tmpfs must be storing a swap entry
--			 * here as an exceptional entry: so return it without
--			 * attempting to raise page count.
-+			 * here so return it without attempting to raise page
-+			 * count.
- 			 */
- 			page = NULL;
- 			break; /* TODO: Is this relevant for this use case? */
+@@ -7543,7 +7543,7 @@ noinline int can_nocow_extent(struct inode *inode, u64 offset, u64 *len,
+ 
+ bool btrfs_page_exists_in_range(struct inode *inode, loff_t start, loff_t end)
+ {
+-	struct radix_tree_root *root = &inode->i_mapping->page_tree;
++	struct radix_tree_root *root = &inode->i_mapping->pages;
+ 	bool found = false;
+ 	void **pagep = NULL;
+ 	struct page *page = NULL;
+diff --git a/fs/buffer.c b/fs/buffer.c
+index fd894c2ae284..1a6ae530156b 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -192,10 +192,9 @@ EXPORT_SYMBOL(end_buffer_write_sync);
+  * we get exclusion from try_to_free_buffers with the blockdev mapping's
+  * private_lock.
+  *
+- * Hack idea: for the blockdev mapping, i_bufferlist_lock contention
++ * Hack idea: for the blockdev mapping, private_lock contention
+  * may be quite high.  This code could TryLock the page, and if that
+- * succeeds, there is no need to take private_lock. (But if
+- * private_lock is contended then so is mapping->tree_lock).
++ * succeeds, there is no need to take private_lock.
+  */
+ static struct buffer_head *
+ __find_get_block_slow(struct block_device *bdev, sector_t block)
+@@ -606,14 +605,14 @@ void __set_page_dirty(struct page *page, struct address_space *mapping,
+ {
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(&mapping->tree_lock, flags);
++	xa_lock_irqsave(&mapping->pages, flags);
+ 	if (page->mapping) {	/* Race with truncate? */
+ 		WARN_ON_ONCE(warn && !PageUptodate(page));
+ 		account_page_dirtied(page, mapping);
+-		radix_tree_tag_set(&mapping->page_tree,
++		radix_tree_tag_set(&mapping->pages,
+ 				page_index(page), PAGECACHE_TAG_DIRTY);
+ 	}
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
+ }
+ EXPORT_SYMBOL_GPL(__set_page_dirty);
+ 
+@@ -1102,7 +1101,7 @@ __getblk_slow(struct block_device *bdev, sector_t block,
+  * inode list.
+  *
+  * mark_buffer_dirty() is atomic.  It takes bh->b_page->mapping->private_lock,
+- * mapping->tree_lock and mapping->host->i_lock.
++ * mapping xa_lock and mapping->host->i_lock.
+  */
+ void mark_buffer_dirty(struct buffer_head *bh)
+ {
+diff --git a/fs/cifs/file.c b/fs/cifs/file.c
+index df9f682708c6..ca724217cc38 100644
+--- a/fs/cifs/file.c
++++ b/fs/cifs/file.c
+@@ -1987,11 +1987,10 @@ wdata_prepare_pages(struct cifs_writedata *wdata, unsigned int found_pages,
+ 	for (i = 0; i < found_pages; i++) {
+ 		page = wdata->pages[i];
+ 		/*
+-		 * At this point we hold neither mapping->tree_lock nor
+-		 * lock on the page itself: the page may be truncated or
+-		 * invalidated (changing page->mapping to NULL), or even
+-		 * swizzled back from swapper_space to tmpfs file
+-		 * mapping
++		 * At this point we hold neither the xa_lock nor the
++		 * page lock: the page may be truncated or invalidated
++		 * (changing page->mapping to NULL), or even swizzled
++		 * back from swapper_space to tmpfs file mapping
+ 		 */
+ 
+ 		if (nr_pages == 0)
 diff --git a/fs/dax.c b/fs/dax.c
-index 0f3844bcf881..5097a606da1a 100644
+index 95981591977a..0f3844bcf881 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -58,57 +58,57 @@ static int __init init_dax_wait_table(void)
- fs_initcall(init_dax_wait_table);
+@@ -158,11 +158,9 @@ static int wake_exceptional_entry_func(wait_queue_entry_t *wait, unsigned int mo
+ }
  
  /*
-- * We use lowest available bit in exceptional entry for locking, one bit for
-- * the entry size (PMD) and two more to tell us if the entry is a zero page or
-- * an empty entry that is just used for locking.  In total four special bits.
-+ * DAX pagecache entries use XArray value entries so they can't be mistaken
-+ * for pages.  We use one bit for locking, one bit for the entry size (PMD)
-+ * and two more to tell us if the entry is a zero page or an empty entry that
-+ * is just used for locking.  In total four special bits.
-  *
-  * If the PMD bit isn't set the entry has size PAGE_SIZE, and if the ZERO_PAGE
-  * and EMPTY bits aren't set the entry is a normal DAX entry with a filesystem
-  * block allocation.
+- * We do not necessarily hold the mapping->tree_lock when we call this
+- * function so it is possible that 'entry' is no longer a valid item in the
+- * radix tree.  This is okay because all we really need to do is to find the
+- * correct waitqueue where tasks might be waiting for that old 'entry' and
+- * wake them.
++ * @entry may no longer be the entry at the index in the mapping.
++ * The important information it's conveying is whether the entry at
++ * this index used to be a PMD entry.
   */
--#define RADIX_DAX_SHIFT		(RADIX_TREE_EXCEPTIONAL_SHIFT + 4)
--#define RADIX_DAX_ENTRY_LOCK	(1 << RADIX_TREE_EXCEPTIONAL_SHIFT)
--#define RADIX_DAX_PMD		(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 1))
--#define RADIX_DAX_ZERO_PAGE	(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
--#define RADIX_DAX_EMPTY		(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
-+#define DAX_SHIFT	(4)
-+#define DAX_ENTRY_LOCK	(1UL << 0)
-+#define DAX_PMD		(1UL << 1)
-+#define DAX_ZERO_PAGE	(1UL << 2)
-+#define DAX_EMPTY	(1UL << 3)
+ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+ 		pgoff_t index, void *entry, bool wake_all)
+@@ -174,7 +172,7 @@ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
  
- static unsigned long dax_radix_sector(void *entry)
- {
--	return (unsigned long)entry >> RADIX_DAX_SHIFT;
-+	return xa_to_value(entry) >> DAX_SHIFT;
- }
- 
- static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
- {
--	return (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | flags |
--			((unsigned long)sector << RADIX_DAX_SHIFT) |
--			RADIX_DAX_ENTRY_LOCK);
-+	return xa_mk_value(flags | ((unsigned long)sector << DAX_SHIFT) |
-+			DAX_ENTRY_LOCK);
- }
- 
- static unsigned int dax_radix_order(void *entry)
- {
--	if ((unsigned long)entry & RADIX_DAX_PMD)
-+	if (xa_to_value(entry) & DAX_PMD)
- 		return PMD_SHIFT - PAGE_SHIFT;
- 	return 0;
- }
- 
- static int dax_is_pmd_entry(void *entry)
- {
--	return (unsigned long)entry & RADIX_DAX_PMD;
-+	return xa_to_value(entry) & DAX_PMD;
- }
- 
- static int dax_is_pte_entry(void *entry)
- {
--	return !((unsigned long)entry & RADIX_DAX_PMD);
-+	return !(xa_to_value(entry) & DAX_PMD);
- }
- 
- static int dax_is_zero_entry(void *entry)
- {
--	return (unsigned long)entry & RADIX_DAX_ZERO_PAGE;
-+	return xa_to_value(entry) & DAX_ZERO_PAGE;
- }
- 
- static int dax_is_empty_entry(void *entry)
- {
--	return (unsigned long)entry & RADIX_DAX_EMPTY;
-+	return xa_to_value(entry) & DAX_EMPTY;
+ 	/*
+ 	 * Checking for locked entry and prepare_to_wait_exclusive() happens
+-	 * under mapping->tree_lock, ditto for entry handling in our callers.
++	 * under xa_lock, ditto for entry handling in our callers.
+ 	 * So at this point all tasks that could have seen our entry locked
+ 	 * must be in the waitqueue and the following check will see them.
+ 	 */
+@@ -183,41 +181,38 @@ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
  }
  
  /*
-@@ -185,9 +185,9 @@ static void dax_wake_mapping_entry_waiter(struct address_space *mapping,
+- * Check whether the given slot is locked. The function must be called with
+- * mapping->tree_lock held
++ * Check whether the given slot is locked.  Must be called with xa_lock held.
   */
  static inline int slot_locked(struct address_space *mapping, void **slot)
  {
--	unsigned long entry = (unsigned long)
--		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock);
--	return entry & RADIX_DAX_ENTRY_LOCK;
-+	unsigned long entry = xa_to_value(
-+		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
-+	return entry & DAX_ENTRY_LOCK;
+ 	unsigned long entry = (unsigned long)
+-		radix_tree_deref_slot_protected(slot, &mapping->tree_lock);
++		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock);
+ 	return entry & RADIX_DAX_ENTRY_LOCK;
  }
  
  /*
-@@ -195,12 +195,11 @@ static inline int slot_locked(struct address_space *mapping, void **slot)
+- * Mark the given slot is locked. The function must be called with
+- * mapping->tree_lock held
++ * Mark the given slot as locked.  Must be called with xa_lock held.
   */
  static inline void *lock_slot(struct address_space *mapping, void **slot)
  {
--	unsigned long entry = (unsigned long)
--		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock);
--
--	entry |= RADIX_DAX_ENTRY_LOCK;
--	radix_tree_replace_slot(&mapping->pages, slot, (void *)entry);
--	return (void *)entry;
-+	unsigned long v = xa_to_value(
-+		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
-+	void *entry = xa_mk_value(v | DAX_ENTRY_LOCK);
-+	radix_tree_replace_slot(&mapping->pages, slot, entry);
-+	return entry;
+ 	unsigned long entry = (unsigned long)
+-		radix_tree_deref_slot_protected(slot, &mapping->tree_lock);
++		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock);
+ 
+ 	entry |= RADIX_DAX_ENTRY_LOCK;
+-	radix_tree_replace_slot(&mapping->page_tree, slot, (void *)entry);
++	radix_tree_replace_slot(&mapping->pages, slot, (void *)entry);
+ 	return (void *)entry;
  }
  
  /*
-@@ -208,17 +207,16 @@ static inline void *lock_slot(struct address_space *mapping, void **slot)
+- * Mark the given slot is unlocked. The function must be called with
+- * mapping->tree_lock held
++ * Mark the given slot as unlocked.  Must be called with xa_lock held.
   */
  static inline void *unlock_slot(struct address_space *mapping, void **slot)
  {
--	unsigned long entry = (unsigned long)
--		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock);
--
--	entry &= ~(unsigned long)RADIX_DAX_ENTRY_LOCK;
--	radix_tree_replace_slot(&mapping->pages, slot, (void *)entry);
--	return (void *)entry;
-+	unsigned long v = xa_to_value(
-+		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock));
-+	void *entry = xa_mk_value(v & ~DAX_ENTRY_LOCK);
-+	radix_tree_replace_slot(&mapping->pages, slot, entry);
-+	return entry;
+ 	unsigned long entry = (unsigned long)
+-		radix_tree_deref_slot_protected(slot, &mapping->tree_lock);
++		radix_tree_deref_slot_protected(slot, &mapping->pages.xa_lock);
+ 
+ 	entry &= ~(unsigned long)RADIX_DAX_ENTRY_LOCK;
+-	radix_tree_replace_slot(&mapping->page_tree, slot, (void *)entry);
++	radix_tree_replace_slot(&mapping->pages, slot, (void *)entry);
+ 	return (void *)entry;
  }
  
- /*
-  * Lookup entry in radix tree, wait for it to become unlocked if it is
-- * exceptional entry and return it. The caller must call
-+ * a DAX entry and return it. The caller must call
-  * put_unlocked_mapping_entry() when he decided not to lock the entry or
+@@ -228,7 +223,7 @@ static inline void *unlock_slot(struct address_space *mapping, void **slot)
   * put_locked_mapping_entry() when he locked the entry and now wants to
   * unlock it.
-@@ -239,7 +237,7 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
- 		entry = __radix_tree_lookup(&mapping->pages, index, NULL,
+  *
+- * The function must be called with mapping->tree_lock held.
++ * Must be called with xa_lock held.
+  */
+ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ 					pgoff_t index, void ***slotp)
+@@ -241,7 +236,7 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ 	ewait.wait.func = wake_exceptional_entry_func;
+ 
+ 	for (;;) {
+-		entry = __radix_tree_lookup(&mapping->page_tree, index, NULL,
++		entry = __radix_tree_lookup(&mapping->pages, index, NULL,
  					  &slot);
  		if (!entry ||
--		    WARN_ON_ONCE(!radix_tree_exceptional_entry(entry)) ||
-+		    WARN_ON_ONCE(!xa_is_value(entry)) ||
- 		    !slot_locked(mapping, slot)) {
- 			if (slotp)
- 				*slotp = slot;
-@@ -263,7 +261,7 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
- 
- 	xa_lock_irq(&mapping->pages);
- 	entry = __radix_tree_lookup(&mapping->pages, index, NULL, &slot);
--	if (WARN_ON_ONCE(!entry || !radix_tree_exceptional_entry(entry) ||
-+	if (WARN_ON_ONCE(!entry || !xa_is_value(entry) ||
- 			 !slot_locked(mapping, slot))) {
- 		xa_unlock_irq(&mapping->pages);
- 		return;
-@@ -294,12 +292,11 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
+ 		    WARN_ON_ONCE(!radix_tree_exceptional_entry(entry)) ||
+@@ -254,10 +249,10 @@ static void *get_unlocked_mapping_entry(struct address_space *mapping,
+ 		wq = dax_entry_waitqueue(mapping, index, entry, &ewait.key);
+ 		prepare_to_wait_exclusive(wq, &ewait.wait,
+ 					  TASK_UNINTERRUPTIBLE);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		schedule();
+ 		finish_wait(wq, &ewait.wait);
+-		spin_lock_irq(&mapping->tree_lock);
++		xa_lock_irq(&mapping->pages);
+ 	}
  }
  
- /*
-- * Find radix tree entry at given index. If it points to an exceptional entry,
-- * return it with the radix tree entry locked. If the radix tree doesn't
-- * contain given index, create an empty exceptional entry for the index and
-- * return with it locked.
-+ * Find radix tree entry at given index. If it is a DAX entry, return it
-+ * with the radix tree entry locked. If the radix tree doesn't contain the
-+ * given index, create an empty entry for the index and return with it locked.
-  *
-- * When requesting an entry with size RADIX_DAX_PMD, grab_mapping_entry() will
-+ * When requesting an entry with size DAX_PMD, grab_mapping_entry() will
-  * either return that locked entry or will return an error.  This error will
-  * happen if there are any 4k entries within the 2MiB range that we are
-  * requesting.
-@@ -329,13 +326,13 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 	xa_lock_irq(&mapping->pages);
+@@ -266,15 +261,15 @@ static void dax_unlock_mapping_entry(struct address_space *mapping,
+ {
+ 	void *entry, **slot;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
+-	entry = __radix_tree_lookup(&mapping->page_tree, index, NULL, &slot);
++	xa_lock_irq(&mapping->pages);
++	entry = __radix_tree_lookup(&mapping->pages, index, NULL, &slot);
+ 	if (WARN_ON_ONCE(!entry || !radix_tree_exceptional_entry(entry) ||
+ 			 !slot_locked(mapping, slot))) {
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		return;
+ 	}
+ 	unlock_slot(mapping, slot);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+ }
+ 
+@@ -331,7 +326,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 	void *entry, **slot;
+ 
+ restart:
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
  	entry = get_unlocked_mapping_entry(mapping, index, &slot);
  
--	if (WARN_ON_ONCE(entry && !radix_tree_exceptional_entry(entry))) {
-+	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
- 		entry = ERR_PTR(-EIO);
- 		goto out_unlock;
- 	}
- 
- 	if (entry) {
--		if (size_flag & RADIX_DAX_PMD) {
-+		if (size_flag & DAX_PMD) {
- 			if (dax_is_pte_entry(entry)) {
- 				put_unlocked_mapping_entry(mapping, index,
- 						entry);
-@@ -405,7 +402,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 					true);
+ 	if (WARN_ON_ONCE(entry && !radix_tree_exceptional_entry(entry))) {
+@@ -363,12 +358,12 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		if (pmd_downgrade) {
+ 			/*
+ 			 * Make sure 'entry' remains valid while we drop
+-			 * mapping->tree_lock.
++			 * xa_lock.
+ 			 */
+ 			entry = lock_slot(mapping, slot);
  		}
  
--		entry = dax_radix_locked_entry(0, size_flag | RADIX_DAX_EMPTY);
-+		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		/*
+ 		 * Besides huge zero pages the only other thing that gets
+ 		 * downgraded are empty entries which don't need to be
+@@ -385,26 +380,26 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 				put_locked_mapping_entry(mapping, index);
+ 			return ERR_PTR(err);
+ 		}
+-		spin_lock_irq(&mapping->tree_lock);
++		xa_lock_irq(&mapping->pages);
  
- 		err = __radix_tree_insert(&mapping->pages, index,
+ 		if (!entry) {
+ 			/*
+-			 * We needed to drop the page_tree lock while calling
++			 * We needed to drop the pages lock while calling
+ 			 * radix_tree_preload() and we didn't have an entry to
+ 			 * lock.  See if another thread inserted an entry at
+ 			 * our index during this time.
+ 			 */
+-			entry = __radix_tree_lookup(&mapping->page_tree, index,
++			entry = __radix_tree_lookup(&mapping->pages, index,
+ 					NULL, &slot);
+ 			if (entry) {
+ 				radix_tree_preload_end();
+-				spin_unlock_irq(&mapping->tree_lock);
++				xa_unlock_irq(&mapping->pages);
+ 				goto restart;
+ 			}
+ 		}
+ 
+ 		if (pmd_downgrade) {
+-			radix_tree_delete(&mapping->page_tree, index);
++			radix_tree_delete(&mapping->pages, index);
+ 			mapping->nrexceptional--;
+ 			dax_wake_mapping_entry_waiter(mapping, index, entry,
+ 					true);
+@@ -412,11 +407,11 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 
+ 		entry = dax_radix_locked_entry(0, size_flag | RADIX_DAX_EMPTY);
+ 
+-		err = __radix_tree_insert(&mapping->page_tree, index,
++		err = __radix_tree_insert(&mapping->pages, index,
  				dax_radix_order(entry), entry);
-@@ -442,7 +439,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 
- 	xa_lock_irq(&mapping->pages);
- 	entry = get_unlocked_mapping_entry(mapping, index, NULL);
--	if (!entry || WARN_ON_ONCE(!radix_tree_exceptional_entry(entry)))
-+	if (!entry || WARN_ON_ONCE(!xa_is_value(entry)))
- 		goto out;
- 	if (!trunc &&
- 	    (radix_tree_tag_get(pages, index, PAGECACHE_TAG_DIRTY) ||
-@@ -457,8 +454,8 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	return ret;
- }
- /*
-- * Delete exceptional DAX entry at @index from @mapping. Wait for radix tree
-- * entry to get unlocked before deleting it.
-+ * Delete DAX entry at @index from @mapping.  Wait for it
-+ * to be unlocked before deleting it.
-  */
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index)
- {
-@@ -468,7 +465,7 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index)
- 	 * This gets called from truncate / punch_hole path. As such, the caller
- 	 * must hold locks protecting against concurrent modifications of the
- 	 * radix tree (usually fs-private i_mmap_sem for writing). Since the
--	 * caller has seen exceptional entry for this index, we better find it
-+	 * caller has seen a DAX entry for this index, we better find it
- 	 * at that index as well...
- 	 */
- 	WARN_ON_ONCE(!ret);
-@@ -476,7 +473,7 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index)
- }
- 
- /*
-- * Invalidate exceptional DAX entry if it is clean.
-+ * Invalidate DAX entry if it is clean.
-  */
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index)
-@@ -530,7 +527,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 	if (dirty)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
- 
--	if (dax_is_zero_entry(entry) && !(flags & RADIX_DAX_ZERO_PAGE)) {
-+	if (dax_is_zero_entry(entry) && !(flags & DAX_ZERO_PAGE)) {
- 		/* we are replacing a zero page with block mapping */
- 		if (dax_is_pmd_entry(entry))
- 			unmap_mapping_range(mapping,
-@@ -669,13 +666,13 @@ static int dax_writeback_one(struct block_device *bdev,
- 	 * A page got tagged dirty in DAX mapping? Something is seriously
- 	 * wrong.
- 	 */
--	if (WARN_ON(!radix_tree_exceptional_entry(entry)))
-+	if (WARN_ON(!xa_is_value(entry)))
- 		return -EIO;
- 
- 	xa_lock_irq(&mapping->pages);
- 	entry2 = get_unlocked_mapping_entry(mapping, index, &slot);
- 	/* Entry got punched out / reallocated? */
--	if (!entry2 || WARN_ON_ONCE(!radix_tree_exceptional_entry(entry2)))
-+	if (!entry2 || WARN_ON_ONCE(!xa_is_value(entry2)))
- 		goto put_unlocked;
- 	/*
- 	 * Entry got reallocated elsewhere? No need to writeback. We have to
-@@ -881,7 +878,7 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
+ 		radix_tree_preload_end();
+ 		if (err) {
+-			spin_unlock_irq(&mapping->tree_lock);
++			xa_unlock_irq(&mapping->pages);
+ 			/*
+ 			 * Our insertion of a DAX entry failed, most likely
+ 			 * because we were inserting a PMD entry and it
+@@ -429,12 +424,12 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		}
+ 		/* Good, we have inserted empty locked entry into the tree. */
+ 		mapping->nrexceptional++;
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		return entry;
  	}
- 
- 	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, 0,
--			RADIX_DAX_ZERO_PAGE, false);
-+			DAX_ZERO_PAGE, false);
- 	if (IS_ERR(entry2)) {
- 		ret = VM_FAULT_SIGBUS;
- 		goto out;
-@@ -1287,7 +1284,7 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
- 		goto fallback;
- 
- 	ret = dax_insert_mapping_entry(mapping, vmf, entry, 0,
--			RADIX_DAX_PMD | RADIX_DAX_ZERO_PAGE, false);
-+			DAX_PMD | DAX_ZERO_PAGE, false);
- 	if (IS_ERR(ret))
- 		goto fallback;
- 
-@@ -1372,7 +1369,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	 * is already in the tree, for instance), it will return -EEXIST and
- 	 * we just fall back to 4k entries.
- 	 */
--	entry = grab_mapping_entry(mapping, pgoff, RADIX_DAX_PMD);
-+	entry = grab_mapping_entry(mapping, pgoff, DAX_PMD);
- 	if (IS_ERR(entry))
- 		goto fallback;
- 
-@@ -1411,7 +1408,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 
- 		entry = dax_insert_mapping_entry(mapping, vmf, entry,
- 						dax_iomap_sector(&iomap, pos),
--						RADIX_DAX_PMD, write && !sync);
-+						DAX_PMD, write && !sync);
- 		if (IS_ERR(entry))
- 			goto finish_iomap;
- 
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 339e4c1c044d..fadc6dbe17d6 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -553,7 +553,7 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,
- 		if (!page)
- 			return;
- 
--		if (radix_tree_exceptional_entry(page))
-+		if (xa_is_value(page))
- 			mss->swap += PAGE_SIZE;
- 		else
- 			put_page(page);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c07169cfb44a..e4345c13e237 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -389,23 +389,41 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
- 				loff_t pos, unsigned len, unsigned copied,
- 				struct page *page, void *fsdata);
- 
-+/**
-+ * struct address_space - Contents of a cachable, mappable object
-+ *
-+ * @host: Owner, either the inode or the block_device
-+ * @pages: Cached pages
-+ * @gfp_mask: Memory allocation flags to use for allocating pages
-+ * @i_mmap_writable: count VM_SHARED mappings
-+ * @i_mmap: tree of private and shared mappings
-+ * @i_mmap_rwsem: Protects @i_mmap and @i_mmap_writable
-+ * @nrpages: Number of total pages, protected by pages.xa_lock
-+ * @nrexceptional: Shadow or DAX entries, protected by pages.xa_lock
-+ * @writeback_index: writeback starts here
-+ * @a_ops: methods
-+ * @flags: Error bits and flags (AS_*)
-+ * @wb_err: The most recent error which has occurred
-+ * @private_lock: For use by the owner of the address_space
-+ * @private_list: For use by the owner of the address space
-+ * @private_data: For use by the owner of the address space
-+ */
- struct address_space {
--	struct inode		*host;		/* owner: inode, block_device */
--	struct radix_tree_root	pages;		/* cached pages */
--	gfp_t			gfp_mask;	/* for allocating pages */
--	atomic_t		i_mmap_writable;/* count VM_SHARED mappings */
--	struct rb_root_cached	i_mmap;		/* tree of private and shared mappings */
--	struct rw_semaphore	i_mmap_rwsem;	/* protect tree, count, list */
--	/* Protected by pages.xa_lock */
--	unsigned long		nrpages;	/* number of total pages */
--	unsigned long		nrexceptional;	/* shadow or DAX entries */
--	pgoff_t			writeback_index;/* writeback starts here */
--	const struct address_space_operations *a_ops;	/* methods */
--	unsigned long		flags;		/* error bits */
-+	struct inode		*host;
-+	struct radix_tree_root	pages;
-+	gfp_t			gfp_mask;
-+	atomic_t		i_mmap_writable;
-+	struct rb_root_cached	i_mmap;
-+	struct rw_semaphore	i_mmap_rwsem;
-+	unsigned long		nrpages;
-+	unsigned long		nrexceptional;
-+	pgoff_t			writeback_index;
-+	const struct address_space_operations *a_ops;
-+	unsigned long		flags;
- 	errseq_t		wb_err;
--	spinlock_t		private_lock;	/* for use by the address_space */
--	struct list_head	private_list;	/* ditto */
--	void			*private_data;	/* ditto */
-+	spinlock_t		private_lock;
-+	struct list_head	private_list;
-+	void			*private_data;
- } __attribute__((aligned(sizeof(long)))) __randomize_layout;
- 	/*
- 	 * On most architectures that alignment is already the case; but
-diff --git a/include/linux/radix-tree.h b/include/linux/radix-tree.h
-index 34149e8b5f73..87f35fe00e55 100644
---- a/include/linux/radix-tree.h
-+++ b/include/linux/radix-tree.h
-@@ -28,34 +28,26 @@
- #include <linux/rcupdate.h>
- #include <linux/spinlock.h>
- #include <linux/types.h>
-+#include <linux/xarray.h>
- 
- /*
-  * The bottom two bits of the slot determine how the remaining bits in the
-  * slot are interpreted:
-  *
-  * 00 - data pointer
-- * 01 - internal entry
-- * 10 - exceptional entry
-- * 11 - this bit combination is currently unused/reserved
-+ * 10 - internal entry
-+ * x1 - value entry
-  *
-  * The internal entry may be a pointer to the next level in the tree, a
-  * sibling entry, or an indicator that the entry in this slot has been moved
-  * to another location in the tree and the lookup should be restarted.  While
-  * NULL fits the 'data pointer' pattern, it means that there is no entry in
-  * the tree for this index (no matter what level of the tree it is found at).
-- * This means that you cannot store NULL in the tree as a value for the index.
-+ * This means that storing a NULL entry in the tree is the same as deleting
-+ * the entry from the tree.
-  */
- #define RADIX_TREE_ENTRY_MASK		3UL
--#define RADIX_TREE_INTERNAL_NODE	1UL
--
--/*
-- * Most users of the radix tree store pointers but shmem/tmpfs stores swap
-- * entries in the same tree.  They are marked as exceptional entries to
-- * distinguish them from pointers to struct page.
-- * EXCEPTIONAL_ENTRY tests the bit, EXCEPTIONAL_SHIFT shifts content past it.
-- */
--#define RADIX_TREE_EXCEPTIONAL_ENTRY	2
--#define RADIX_TREE_EXCEPTIONAL_SHIFT	2
-+#define RADIX_TREE_INTERNAL_NODE	2UL
- 
- static inline bool radix_tree_is_internal_node(void *ptr)
- {
-@@ -83,11 +75,10 @@ static inline bool radix_tree_is_internal_node(void *ptr)
- 
- /*
-  * @count is the count of every non-NULL element in the ->slots array
-- * whether that is an exceptional entry, a retry entry, a user pointer,
-+ * whether that is a data entry, a retry entry, a user pointer,
-  * a sibling entry or a pointer to the next level of the tree.
-  * @exceptional is the count of every element in ->slots which is
-- * either radix_tree_exceptional_entry() or is a sibling entry for an
-- * exceptional entry.
-+ * either a data entry or a sibling entry for data.
-  */
- struct radix_tree_node {
- 	unsigned char	shift;		/* Bits remaining in each slot */
-@@ -268,17 +259,6 @@ static inline int radix_tree_deref_retry(void *arg)
- 	return unlikely(radix_tree_is_internal_node(arg));
- }
- 
--/**
-- * radix_tree_exceptional_entry	- radix_tree_deref_slot gave exceptional entry?
-- * @arg:	value returned by radix_tree_deref_slot
-- * Returns:	0 if well-aligned pointer, non-0 if exceptional entry.
-- */
--static inline int radix_tree_exceptional_entry(void *arg)
--{
--	/* Not unlikely because radix_tree_exception often tested first */
--	return (unsigned long)arg & RADIX_TREE_EXCEPTIONAL_ENTRY;
--}
--
- /**
-  * radix_tree_exception	- radix_tree_deref_slot returned either exception?
-  * @arg:	value returned by radix_tree_deref_slot
-diff --git a/include/linux/swapops.h b/include/linux/swapops.h
-index 9c5a2628d6ce..5e93c7b500da 100644
---- a/include/linux/swapops.h
-+++ b/include/linux/swapops.h
-@@ -17,9 +17,8 @@
-  *
-  * swp_entry_t's are *never* stored anywhere in their arch-dependent format.
-  */
--#define SWP_TYPE_SHIFT(e)	((sizeof(e.val) * 8) - \
--			(MAX_SWAPFILES_SHIFT + RADIX_TREE_EXCEPTIONAL_SHIFT))
--#define SWP_OFFSET_MASK(e)	((1UL << SWP_TYPE_SHIFT(e)) - 1)
-+#define SWP_TYPE_SHIFT	(BITS_PER_XA_VALUE - MAX_SWAPFILES_SHIFT)
-+#define SWP_OFFSET_MASK	((1UL << SWP_TYPE_SHIFT) - 1)
- 
- /*
-  * Store a type+offset into a swp_entry_t in an arch-independent format
-@@ -28,8 +27,7 @@ static inline swp_entry_t swp_entry(unsigned long type, pgoff_t offset)
- {
- 	swp_entry_t ret;
- 
--	ret.val = (type << SWP_TYPE_SHIFT(ret)) |
--			(offset & SWP_OFFSET_MASK(ret));
-+	ret.val = (type << SWP_TYPE_SHIFT) | (offset & SWP_OFFSET_MASK);
- 	return ret;
- }
- 
-@@ -39,7 +37,7 @@ static inline swp_entry_t swp_entry(unsigned long type, pgoff_t offset)
-  */
- static inline unsigned swp_type(swp_entry_t entry)
- {
--	return (entry.val >> SWP_TYPE_SHIFT(entry));
-+	return (entry.val >> SWP_TYPE_SHIFT);
- }
- 
- /*
-@@ -48,7 +46,7 @@ static inline unsigned swp_type(swp_entry_t entry)
-  */
- static inline pgoff_t swp_offset(swp_entry_t entry)
- {
--	return entry.val & SWP_OFFSET_MASK(entry);
-+	return entry.val & SWP_OFFSET_MASK;
- }
- 
- #ifdef CONFIG_MMU
-@@ -89,16 +87,13 @@ static inline swp_entry_t radix_to_swp_entry(void *arg)
- {
- 	swp_entry_t entry;
- 
--	entry.val = (unsigned long)arg >> RADIX_TREE_EXCEPTIONAL_SHIFT;
-+	entry.val = xa_to_value(arg);
+ 	entry = lock_slot(mapping, slot);
+  out_unlock:
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
  	return entry;
  }
  
- static inline void *swp_to_radix_entry(swp_entry_t entry)
+@@ -443,22 +438,22 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
  {
--	unsigned long value;
--
--	value = entry.val << RADIX_TREE_EXCEPTIONAL_SHIFT;
--	return (void *)(value | RADIX_TREE_EXCEPTIONAL_ENTRY);
-+	return xa_mk_value(entry.val);
+ 	int ret = 0;
+ 	void *entry;
+-	struct radix_tree_root *page_tree = &mapping->page_tree;
++	struct radix_tree_root *pages = &mapping->pages;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	entry = get_unlocked_mapping_entry(mapping, index, NULL);
+ 	if (!entry || WARN_ON_ONCE(!radix_tree_exceptional_entry(entry)))
+ 		goto out;
+ 	if (!trunc &&
+-	    (radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_DIRTY) ||
+-	     radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE)))
++	    (radix_tree_tag_get(pages, index, PAGECACHE_TAG_DIRTY) ||
++	     radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
+-	radix_tree_delete(page_tree, index);
++	radix_tree_delete(pages, index);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+ out:
+ 	put_unlocked_mapping_entry(mapping, index, entry);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	return ret;
+ }
+ /*
+@@ -528,7 +523,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 				      void *entry, sector_t sector,
+ 				      unsigned long flags, bool dirty)
+ {
+-	struct radix_tree_root *page_tree = &mapping->page_tree;
++	struct radix_tree_root *pages = &mapping->pages;
+ 	void *new_entry;
+ 	pgoff_t index = vmf->pgoff;
+ 
+@@ -546,7 +541,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 					PAGE_SIZE, 0);
+ 	}
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	new_entry = dax_radix_locked_entry(sector, flags);
+ 
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+@@ -562,17 +557,17 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 		void **slot;
+ 		void *ret;
+ 
+-		ret = __radix_tree_lookup(page_tree, index, &node, &slot);
++		ret = __radix_tree_lookup(pages, index, &node, &slot);
+ 		WARN_ON_ONCE(ret != entry);
+-		__radix_tree_replace(page_tree, node, slot,
++		__radix_tree_replace(pages, node, slot,
+ 				     new_entry, NULL);
+ 		entry = new_entry;
+ 	}
+ 
+ 	if (dirty)
+-		radix_tree_tag_set(page_tree, index, PAGECACHE_TAG_DIRTY);
++		radix_tree_tag_set(pages, index, PAGECACHE_TAG_DIRTY);
+ 
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	return entry;
  }
  
- #if IS_ENABLED(CONFIG_DEVICE_PRIVATE)
-diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index 2dfc8006fe64..1aa4ff0c19b6 100644
---- a/include/linux/xarray.h
-+++ b/include/linux/xarray.h
-@@ -5,9 +5,60 @@
-  * eXtensible Arrays
-  * Copyright (c) 2017 Microsoft Corporation
-  * Author: Matthew Wilcox <mawilcox@microsoft.com>
-+ *
-+ * See Documentation/core-api/xarray.rst for how to use the XArray.
-  */
- 
-+#include <linux/bug.h>
- #include <linux/spinlock.h>
-+#include <linux/types.h>
-+
-+/*
-+ * The bottom two bits of the entry determine how the XArray interprets
-+ * the contents:
-+ *
-+ * 00: Pointer entry
-+ * 10: Internal entry
-+ * x1: Value entry
-+ *
-+ * Attempting to store internal entries in the XArray is a bug.
-+ */
-+
-+#define BITS_PER_XA_VALUE	(BITS_PER_LONG - 1)
-+
-+/**
-+ * xa_mk_value() - Create an XArray entry from an integer.
-+ * @v: Value to store in XArray.
-+ *
-+ * Return: An entry suitable for storing in the XArray.
-+ */
-+static inline void *xa_mk_value(unsigned long v)
-+{
-+	WARN_ON((long)v < 0);
-+	return (void *)((v << 1) | 1);
-+}
-+
-+/**
-+ * xa_to_value() - Get value stored in an XArray entry.
-+ * @entry: XArray entry.
-+ *
-+ * Return: The value stored in the XArray entry.
-+ */
-+static inline unsigned long xa_to_value(const void *entry)
-+{
-+	return (unsigned long)entry >> 1;
-+}
-+
-+/**
-+ * xa_is_value() - Determine if an entry is a value.
-+ * @entry: XArray entry.
-+ *
-+ * Return: True if the entry is a value, false if it is a pointer.
-+ */
-+static inline bool xa_is_value(const void *entry)
-+{
-+	return (unsigned long)entry & 1;
-+}
- 
- #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
- #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
-diff --git a/lib/idr.c b/lib/idr.c
-index 2cd9429e11e3..48c53890adc0 100644
---- a/lib/idr.c
-+++ b/lib/idr.c
-@@ -3,6 +3,7 @@
- #include <linux/idr.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
-+#include <linux/xarray.h>
- 
- DEFINE_PER_CPU(struct ida_bitmap *, ida_bitmap);
- static DEFINE_SPINLOCK(simple_ida_lock);
-@@ -273,11 +274,8 @@ EXPORT_SYMBOL(idr_replace);
-  * by the number of bits in the leaf bitmap before doing a radix tree lookup.
-  *
-  * As an optimisation, if there are only a few low bits set in any given
-- * leaf, instead of allocating a 128-byte bitmap, we use the 'exceptional
-- * entry' functionality of the radix tree to store BITS_PER_LONG - 2 bits
-- * directly in the entry.  By being really tricksy, we could store
-- * BITS_PER_LONG - 1 bits, but there're diminishing returns after optimising
-- * for 0-3 allocated IDs.
-+ * leaf, instead of allocating a 128-byte bitmap, we store the bits
-+ * directly in the entry.
-  *
-  * We allow the radix tree 'exceptional' count to get out of date.  Nothing
-  * in the IDA nor the radix tree code checks it.  If it becomes important
-@@ -319,12 +317,11 @@ int ida_get_new_above(struct ida *ida, int start, int *id)
- 	struct radix_tree_iter iter;
- 	struct ida_bitmap *bitmap;
- 	unsigned long index;
--	unsigned bit, ebit;
-+	unsigned bit;
- 	int new;
- 
- 	index = start / IDA_BITMAP_BITS;
- 	bit = start % IDA_BITMAP_BITS;
--	ebit = bit + RADIX_TREE_EXCEPTIONAL_SHIFT;
- 
- 	slot = radix_tree_iter_init(&iter, index);
- 	for (;;) {
-@@ -339,26 +336,25 @@ int ida_get_new_above(struct ida *ida, int start, int *id)
- 				return PTR_ERR(slot);
- 			}
- 		}
--		if (iter.index > index) {
-+		if (iter.index > index)
- 			bit = 0;
--			ebit = RADIX_TREE_EXCEPTIONAL_SHIFT;
--		}
- 		new = iter.index * IDA_BITMAP_BITS;
- 		bitmap = rcu_dereference_raw(*slot);
--		if (radix_tree_exception(bitmap)) {
--			unsigned long tmp = (unsigned long)bitmap;
--			ebit = find_next_zero_bit(&tmp, BITS_PER_LONG, ebit);
--			if (ebit < BITS_PER_LONG) {
--				tmp |= 1UL << ebit;
--				rcu_assign_pointer(*slot, (void *)tmp);
--				*id = new + ebit - RADIX_TREE_EXCEPTIONAL_SHIFT;
-+		if (xa_is_value(bitmap)) {
-+			unsigned long tmp = xa_to_value(bitmap);
-+			int vbit = find_next_zero_bit(&tmp, BITS_PER_XA_VALUE,
-+							bit);
-+			if (vbit < BITS_PER_XA_VALUE) {
-+				tmp |= 1UL << vbit;
-+				rcu_assign_pointer(*slot, xa_mk_value(tmp));
-+				*id = new + vbit;
- 				return 0;
- 			}
- 			bitmap = this_cpu_xchg(ida_bitmap, NULL);
- 			if (!bitmap)
- 				return -EAGAIN;
- 			memset(bitmap, 0, sizeof(*bitmap));
--			bitmap->bitmap[0] = tmp >> RADIX_TREE_EXCEPTIONAL_SHIFT;
-+			bitmap->bitmap[0] = tmp;
- 			rcu_assign_pointer(*slot, bitmap);
- 		}
- 
-@@ -379,19 +375,15 @@ int ida_get_new_above(struct ida *ida, int start, int *id)
- 			new += bit;
- 			if (new < 0)
- 				return -ENOSPC;
--			if (ebit < BITS_PER_LONG) {
--				bitmap = (void *)((1UL << ebit) |
--						RADIX_TREE_EXCEPTIONAL_ENTRY);
--				radix_tree_iter_replace(root, &iter, slot,
--						bitmap);
--				*id = new;
--				return 0;
-+			if (bit < BITS_PER_XA_VALUE) {
-+				bitmap = xa_mk_value(1UL << bit);
-+			} else {
-+				bitmap = this_cpu_xchg(ida_bitmap, NULL);
-+				if (!bitmap)
-+					return -EAGAIN;
-+				memset(bitmap, 0, sizeof(*bitmap));
-+				__set_bit(bit, bitmap->bitmap);
- 			}
--			bitmap = this_cpu_xchg(ida_bitmap, NULL);
--			if (!bitmap)
--				return -EAGAIN;
--			memset(bitmap, 0, sizeof(*bitmap));
--			__set_bit(bit, bitmap->bitmap);
- 			radix_tree_iter_replace(root, &iter, slot, bitmap);
- 		}
- 
-@@ -422,9 +414,9 @@ void ida_remove(struct ida *ida, int id)
- 		goto err;
- 
- 	bitmap = rcu_dereference_raw(*slot);
--	if (radix_tree_exception(bitmap)) {
-+	if (xa_is_value(bitmap)) {
- 		btmp = (unsigned long *)slot;
--		offset += RADIX_TREE_EXCEPTIONAL_SHIFT;
-+		offset += 1; /* Intimate knowledge of the xa_data encoding */
- 		if (offset >= BITS_PER_LONG)
- 			goto err;
- 	} else {
-@@ -435,9 +427,8 @@ void ida_remove(struct ida *ida, int id)
- 
- 	__clear_bit(offset, btmp);
- 	radix_tree_iter_tag_set(&ida->ida_rt, &iter, IDR_FREE);
--	if (radix_tree_exception(bitmap)) {
--		if (rcu_dereference_raw(*slot) ==
--					(void *)RADIX_TREE_EXCEPTIONAL_ENTRY)
-+	if (xa_is_value(bitmap)) {
-+		if (xa_to_value(rcu_dereference_raw(*slot)) == 0)
- 			radix_tree_iter_delete(&ida->ida_rt, &iter, slot);
- 	} else if (bitmap_empty(btmp, IDA_BITMAP_BITS)) {
- 		kfree(bitmap);
-@@ -465,7 +456,7 @@ void ida_destroy(struct ida *ida)
- 
- 	radix_tree_for_each_slot(slot, &ida->ida_rt, &iter, 0) {
- 		struct ida_bitmap *bitmap = rcu_dereference_raw(*slot);
--		if (!radix_tree_exception(bitmap))
-+		if (!xa_is_value(bitmap))
- 			kfree(bitmap);
- 		radix_tree_iter_delete(&ida->ida_rt, &iter, slot);
- 	}
-diff --git a/lib/radix-tree.c b/lib/radix-tree.c
-index 8428cc8af3fc..012e4869f99b 100644
---- a/lib/radix-tree.c
-+++ b/lib/radix-tree.c
-@@ -339,14 +339,12 @@ static void dump_ida_node(void *entry, unsigned long index)
- 		for (i = 0; i < RADIX_TREE_MAP_SIZE; i++)
- 			dump_ida_node(node->slots[i],
- 					index | (i << node->shift));
--	} else if (radix_tree_exceptional_entry(entry)) {
-+	} else if (xa_is_value(entry)) {
- 		pr_debug("ida excp: %p offset %d indices %lu-%lu data %lx\n",
- 				entry, (int)(index & RADIX_TREE_MAP_MASK),
- 				index * IDA_BITMAP_BITS,
--				index * IDA_BITMAP_BITS + BITS_PER_LONG -
--					RADIX_TREE_EXCEPTIONAL_SHIFT,
--				(unsigned long)entry >>
--					RADIX_TREE_EXCEPTIONAL_SHIFT);
-+				index * IDA_BITMAP_BITS + BITS_PER_XA_VALUE,
-+				xa_to_value(entry));
- 	} else {
- 		struct ida_bitmap *bitmap = entry;
- 
-@@ -655,7 +653,7 @@ static int radix_tree_extend(struct radix_tree_root *root, gfp_t gfp,
- 		BUG_ON(shift > BITS_PER_LONG);
- 		if (radix_tree_is_internal_node(entry)) {
- 			entry_to_node(entry)->parent = node;
--		} else if (radix_tree_exceptional_entry(entry)) {
-+		} else if (xa_is_value(entry)) {
- 			/* Moving an exceptional root->rnode to a node */
- 			node->exceptional = 1;
- 		}
-@@ -946,12 +944,12 @@ static inline int insert_entries(struct radix_tree_node *node,
- 					!is_sibling_entry(node, old) &&
- 					(old != RADIX_TREE_RETRY))
- 			radix_tree_free_nodes(old);
--		if (radix_tree_exceptional_entry(old))
-+		if (xa_is_value(old))
- 			node->exceptional--;
- 	}
- 	if (node) {
- 		node->count += n;
--		if (radix_tree_exceptional_entry(item))
-+		if (xa_is_value(item))
- 			node->exceptional += n;
- 	}
- 	return n;
-@@ -965,7 +963,7 @@ static inline int insert_entries(struct radix_tree_node *node,
- 	rcu_assign_pointer(*slot, item);
- 	if (node) {
- 		node->count++;
--		if (radix_tree_exceptional_entry(item))
-+		if (xa_is_value(item))
- 			node->exceptional++;
- 	}
- 	return 1;
-@@ -1182,8 +1180,7 @@ void __radix_tree_replace(struct radix_tree_root *root,
- 			  radix_tree_update_node_t update_node)
+@@ -662,7 +657,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 		struct dax_device *dax_dev, struct address_space *mapping,
+ 		pgoff_t index, void *entry)
  {
- 	void *old = rcu_dereference_raw(*slot);
--	int exceptional = !!radix_tree_exceptional_entry(item) -
--				!!radix_tree_exceptional_entry(old);
-+	int exceptional = !!xa_is_value(item) - !!xa_is_value(old);
- 	int count = calculate_count(root, node, slot, item, old);
+-	struct radix_tree_root *page_tree = &mapping->page_tree;
++	struct radix_tree_root *pages = &mapping->pages;
+ 	void *entry2, **slot, *kaddr;
+ 	long ret = 0, id;
+ 	sector_t sector;
+@@ -677,7 +672,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	if (WARN_ON(!radix_tree_exceptional_entry(entry)))
+ 		return -EIO;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	entry2 = get_unlocked_mapping_entry(mapping, index, &slot);
+ 	/* Entry got punched out / reallocated? */
+ 	if (!entry2 || WARN_ON_ONCE(!radix_tree_exceptional_entry(entry2)))
+@@ -696,7 +691,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	}
+ 
+ 	/* Another fsync thread may have already written back this entry */
+-	if (!radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE))
++	if (!radix_tree_tag_get(pages, index, PAGECACHE_TAG_TOWRITE))
+ 		goto put_unlocked;
+ 	/* Lock the entry to serialize with page faults */
+ 	entry = lock_slot(mapping, slot);
+@@ -704,11 +699,11 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	 * We can clear the tag now but we have to be careful so that concurrent
+ 	 * dax_writeback_one() calls for the same index cannot finish before we
+ 	 * actually flush the caches. This is achieved as the calls will look
+-	 * at the entry only under tree_lock and once they do that they will
++	 * at the entry only under xa_lock and once they do that they will
+ 	 * see the entry locked and wait for it to unlock.
+ 	 */
+-	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_TOWRITE);
+-	spin_unlock_irq(&mapping->tree_lock);
++	radix_tree_tag_clear(pages, index, PAGECACHE_TAG_TOWRITE);
++	xa_unlock_irq(&mapping->pages);
  
  	/*
-@@ -1986,7 +1983,7 @@ static bool __radix_tree_delete(struct radix_tree_root *root,
- 				struct radix_tree_node *node, void __rcu **slot)
- {
- 	void *old = rcu_dereference_raw(*slot);
--	int exceptional = radix_tree_exceptional_entry(old) ? -1 : 0;
-+	int exceptional = xa_is_value(old) ? -1 : 0;
- 	unsigned offset = get_slot_offset(node, slot);
- 	int tag;
+ 	 * Even if dax_writeback_mapping_range() was given a wbc->range_start
+@@ -726,7 +721,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 		goto dax_unlock;
  
-diff --git a/mm/filemap.c b/mm/filemap.c
-index e9172cefeb36..309be963140c 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -128,7 +128,7 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 	/*
+-	 * dax_direct_access() may sleep, so cannot hold tree_lock over
++	 * dax_direct_access() may sleep, so cannot hold xa_lock over
+ 	 * its invocation.
+ 	 */
+ 	ret = dax_direct_access(dax_dev, pgoff, size / PAGE_SIZE, &kaddr, &pfn);
+@@ -746,9 +741,9 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	 * the pfn mappings are writeprotected and fault waits for mapping
+ 	 * entry lock.
+ 	 */
+-	spin_lock_irq(&mapping->tree_lock);
+-	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_DIRTY);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
++	radix_tree_tag_clear(pages, index, PAGECACHE_TAG_DIRTY);
++	xa_unlock_irq(&mapping->pages);
+ 	trace_dax_writeback_one(mapping->host, index, size >> PAGE_SHIFT);
+  dax_unlock:
+ 	dax_read_unlock(id);
+@@ -757,7 +752,7 @@ static int dax_writeback_one(struct block_device *bdev,
  
- 		p = radix_tree_deref_slot_protected(slot,
- 						    &mapping->pages.xa_lock);
--		if (!radix_tree_exceptional_entry(p))
-+		if (!xa_is_value(p))
- 			return -EEXIST;
+  put_unlocked:
+ 	put_unlocked_mapping_entry(mapping, index, entry2);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	return ret;
+ }
  
- 		mapping->nrexceptional--;
-@@ -337,7 +337,7 @@ page_cache_tree_delete_batch(struct address_space *mapping,
- 			break;
- 		page = radix_tree_deref_slot_protected(slot,
- 						       &mapping->pages.xa_lock);
--		if (radix_tree_exceptional_entry(page))
-+		if (xa_is_value(page))
- 			continue;
- 		if (!tail_pages) {
- 			/*
-@@ -1356,7 +1356,7 @@ pgoff_t page_cache_next_hole(struct address_space *mapping,
- 		struct page *page;
+@@ -1528,21 +1523,21 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
+ 	pgoff_t index = vmf->pgoff;
+ 	int vmf_ret, error;
  
- 		page = radix_tree_lookup(&mapping->pages, index);
--		if (!page || radix_tree_exceptional_entry(page))
-+		if (!page || xa_is_value(page))
- 			break;
- 		index++;
- 		if (index == 0)
-@@ -1397,7 +1397,7 @@ pgoff_t page_cache_prev_hole(struct address_space *mapping,
- 		struct page *page;
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	entry = get_unlocked_mapping_entry(mapping, index, &slot);
+ 	/* Did we race with someone splitting entry or so? */
+ 	if (!entry ||
+ 	    (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
+ 	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
+ 		put_unlocked_mapping_entry(mapping, index, entry);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
+ 						      VM_FAULT_NOPAGE);
+ 		return VM_FAULT_NOPAGE;
+ 	}
+-	radix_tree_tag_set(&mapping->page_tree, index, PAGECACHE_TAG_DIRTY);
++	radix_tree_tag_set(&mapping->pages, index, PAGECACHE_TAG_DIRTY);
+ 	entry = lock_slot(mapping, slot);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	switch (pe_size) {
+ 	case PE_SIZE_PTE:
+ 		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
+diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+index 516fa0d3ff9c..8f51ac47b77f 100644
+--- a/fs/f2fs/data.c
++++ b/fs/f2fs/data.c
+@@ -2172,12 +2172,12 @@ void f2fs_set_page_dirty_nobuffers(struct page *page)
+ 	SetPageDirty(page);
+ 	spin_unlock(&mapping->private_lock);
  
- 		page = radix_tree_lookup(&mapping->pages, index);
--		if (!page || radix_tree_exceptional_entry(page))
-+		if (!page || xa_is_value(page))
- 			break;
- 		index--;
- 		if (index == ULONG_MAX)
-@@ -1540,7 +1540,7 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t offset,
+-	spin_lock_irqsave(&mapping->tree_lock, flags);
++	xa_lock_irqsave(&mapping->pages, flags);
+ 	WARN_ON_ONCE(!PageUptodate(page));
+ 	account_page_dirtied(page, mapping);
+-	radix_tree_tag_set(&mapping->page_tree,
++	radix_tree_tag_set(&mapping->pages,
+ 			page_index(page), PAGECACHE_TAG_DIRTY);
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
+ 	unlock_page_memcg(page);
  
- repeat:
- 	page = find_get_entry(mapping, offset);
--	if (radix_tree_exceptional_entry(page))
-+	if (xa_is_value(page))
- 		page = NULL;
- 	if (!page)
- 		goto no_page;
-diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-index cb4d199bf328..55ade70c33bb 100644
---- a/mm/khugepaged.c
-+++ b/mm/khugepaged.c
-@@ -1363,7 +1363,7 @@ static void collapse_shmem(struct mm_struct *mm,
+ 	__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+diff --git a/fs/f2fs/dir.c b/fs/f2fs/dir.c
+index 2d98d877c09d..b5515ea6bb2f 100644
+--- a/fs/f2fs/dir.c
++++ b/fs/f2fs/dir.c
+@@ -739,10 +739,10 @@ void f2fs_delete_entry(struct f2fs_dir_entry *dentry, struct page *page,
  
- 		page = radix_tree_deref_slot_protected(slot,
- 				&mapping->pages.xa_lock);
--		if (radix_tree_exceptional_entry(page) || !PageUptodate(page)) {
-+		if (xa_is_value(page) || !PageUptodate(page)) {
- 			xa_unlock_irq(&mapping->pages);
- 			/* swap in or instantiate fallocated page */
- 			if (shmem_getpage(mapping->host, index, &page,
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 751e97aa2210..83f8a1a8e6b5 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -251,7 +251,7 @@ static void force_shm_swapin_readahead(struct vm_area_struct *vma,
- 		index = ((start - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
+ 	if (bit_pos == NR_DENTRY_IN_BLOCK &&
+ 			!truncate_hole(dir, page->index, page->index + 1)) {
+-		spin_lock_irqsave(&mapping->tree_lock, flags);
+-		radix_tree_tag_clear(&mapping->page_tree, page_index(page),
++		xa_lock_irqsave(&mapping->pages, flags);
++		radix_tree_tag_clear(&mapping->pages, page_index(page),
+ 				     PAGECACHE_TAG_DIRTY);
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
  
- 		page = find_get_entry(mapping, index);
--		if (!radix_tree_exceptional_entry(page)) {
-+		if (!xa_is_value(page)) {
- 			if (page)
- 				put_page(page);
- 			continue;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1d4acb7f33e9..f25ef5367fe7 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4526,7 +4526,7 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
- 	/* shmem/tmpfs may report page out on swap: account for that too. */
- 	if (shmem_mapping(mapping)) {
- 		page = find_get_entry(mapping, pgoff);
--		if (radix_tree_exceptional_entry(page)) {
-+		if (xa_is_value(page)) {
- 			swp_entry_t swp = radix_to_swp_entry(page);
- 			if (do_memsw_account())
- 				*entry = swp;
-diff --git a/mm/mincore.c b/mm/mincore.c
-index fc37afe226e6..4985965aa20a 100644
---- a/mm/mincore.c
-+++ b/mm/mincore.c
-@@ -66,7 +66,7 @@ static unsigned char mincore_page(struct address_space *mapping, pgoff_t pgoff)
- 		 * shmem/tmpfs may return swap: account for swapcache
- 		 * page too.
- 		 */
--		if (radix_tree_exceptional_entry(page)) {
-+		if (xa_is_value(page)) {
- 			swp_entry_t swp = radix_to_swp_entry(page);
- 			page = find_get_page(swap_address_space(swp),
- 					     swp_offset(swp));
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 514188fd2489..4851f002605f 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -177,7 +177,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
- 		rcu_read_lock();
- 		page = radix_tree_lookup(&mapping->pages, page_offset);
- 		rcu_read_unlock();
--		if (page && !radix_tree_exceptional_entry(page))
-+		if (page && !xa_is_value(page))
- 			continue;
+ 		clear_page_dirty_for_io(page);
+ 		ClearPagePrivate(page);
+diff --git a/fs/f2fs/inline.c b/fs/f2fs/inline.c
+index 90e38d8ea688..7858b8e15f33 100644
+--- a/fs/f2fs/inline.c
++++ b/fs/f2fs/inline.c
+@@ -226,10 +226,10 @@ int f2fs_write_inline_data(struct inode *inode, struct page *page)
+ 	kunmap_atomic(src_addr);
+ 	set_page_dirty(dn.inode_page);
  
- 		page = __page_cache_alloc(gfp_mask);
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 9b1766e7c8cf..c5731bb954a1 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -690,7 +690,7 @@ unsigned long shmem_partial_swap_usage(struct address_space *mapping,
- 			continue;
+-	spin_lock_irqsave(&mapping->tree_lock, flags);
+-	radix_tree_tag_clear(&mapping->page_tree, page_index(page),
++	xa_lock_irqsave(&mapping->pages, flags);
++	radix_tree_tag_clear(&mapping->pages, page_index(page),
+ 			     PAGECACHE_TAG_DIRTY);
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
+ 
+ 	set_inode_flag(inode, FI_APPEND_WRITE);
+ 	set_inode_flag(inode, FI_DATA_EXIST);
+diff --git a/fs/f2fs/node.c b/fs/f2fs/node.c
+index d3322752426f..6b64a3009d55 100644
+--- a/fs/f2fs/node.c
++++ b/fs/f2fs/node.c
+@@ -91,11 +91,11 @@ static void clear_node_page_dirty(struct page *page)
+ 	unsigned int long flags;
+ 
+ 	if (PageDirty(page)) {
+-		spin_lock_irqsave(&mapping->tree_lock, flags);
+-		radix_tree_tag_clear(&mapping->page_tree,
++		xa_lock_irqsave(&mapping->pages, flags);
++		radix_tree_tag_clear(&mapping->pages,
+ 				page_index(page),
+ 				PAGECACHE_TAG_DIRTY);
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
+ 
+ 		clear_page_dirty_for_io(page);
+ 		dec_page_count(F2FS_M_SB(mapping), F2FS_DIRTY_NODES);
+@@ -1143,7 +1143,7 @@ void ra_node_page(struct f2fs_sb_info *sbi, nid_t nid)
+ 	f2fs_bug_on(sbi, check_nid_range(sbi, nid));
+ 
+ 	rcu_read_lock();
+-	apage = radix_tree_lookup(&NODE_MAPPING(sbi)->page_tree, nid);
++	apage = radix_tree_lookup(&NODE_MAPPING(sbi)->pages, nid);
+ 	rcu_read_unlock();
+ 	if (apage)
+ 		return;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index cea4836385b7..e2c1ca667d9a 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -347,9 +347,9 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 	 * By the time control reaches here, RCU grace period has passed
+ 	 * since I_WB_SWITCH assertion and all wb stat update transactions
+ 	 * between unlocked_inode_to_wb_begin/end() are guaranteed to be
+-	 * synchronizing against mapping->tree_lock.
++	 * synchronizing against xa_lock.
+ 	 *
+-	 * Grabbing old_wb->list_lock, inode->i_lock and mapping->tree_lock
++	 * Grabbing old_wb->list_lock, inode->i_lock and xa_lock
+ 	 * gives us exclusion against all wb related operations on @inode
+ 	 * including IO list manipulations and stat updates.
+ 	 */
+@@ -361,7 +361,7 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 		spin_lock_nested(&old_wb->list_lock, SINGLE_DEPTH_NESTING);
+ 	}
+ 	spin_lock(&inode->i_lock);
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 
+ 	/*
+ 	 * Once I_FREEING is visible under i_lock, the eviction path owns
+@@ -373,22 +373,22 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 	/*
+ 	 * Count and transfer stats.  Note that PAGECACHE_TAG_DIRTY points
+ 	 * to possibly dirty pages while PAGECACHE_TAG_WRITEBACK points to
+-	 * pages actually under underwriteback.
++	 * pages actually under writeback.
+ 	 */
+-	radix_tree_for_each_tagged(slot, &mapping->page_tree, &iter, 0,
++	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
+ 				   PAGECACHE_TAG_DIRTY) {
+ 		struct page *page = radix_tree_deref_slot_protected(slot,
+-							&mapping->tree_lock);
++						&mapping->pages.xa_lock);
+ 		if (likely(page) && PageDirty(page)) {
+ 			dec_wb_stat(old_wb, WB_RECLAIMABLE);
+ 			inc_wb_stat(new_wb, WB_RECLAIMABLE);
  		}
- 
--		if (radix_tree_exceptional_entry(page))
-+		if (xa_is_value(page))
- 			swapped++;
- 
- 		if (need_resched()) {
-@@ -805,7 +805,7 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
- 			if (index >= end)
- 				break;
- 
--			if (radix_tree_exceptional_entry(page)) {
-+			if (xa_is_value(page)) {
- 				if (unfalloc)
- 					continue;
- 				nr_swaps_freed += !shmem_free_swap(mapping,
-@@ -902,7 +902,7 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
- 			if (index >= end)
- 				break;
- 
--			if (radix_tree_exceptional_entry(page)) {
-+			if (xa_is_value(page)) {
- 				if (unfalloc)
- 					continue;
- 				if (shmem_free_swap(mapping, index, page)) {
-@@ -1614,7 +1614,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- repeat:
- 	swap.val = 0;
- 	page = find_lock_entry(mapping, index);
--	if (radix_tree_exceptional_entry(page)) {
-+	if (xa_is_value(page)) {
- 		swap = radix_to_swp_entry(page);
- 		page = NULL;
  	}
-@@ -2547,7 +2547,7 @@ static pgoff_t shmem_seek_hole_data(struct address_space *mapping,
- 				index = indices[i];
- 			}
- 			page = pvec.pages[i];
--			if (page && !radix_tree_exceptional_entry(page)) {
-+			if (page && !xa_is_value(page)) {
- 				if (!PageUptodate(page))
- 					page = NULL;
- 			}
-diff --git a/mm/swap.c b/mm/swap.c
-index 38e1b6374a97..8d7773cb2c3f 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -953,7 +953,7 @@ void pagevec_remove_exceptionals(struct pagevec *pvec)
  
- 	for (i = 0, j = 0; i < pagevec_count(pvec); i++) {
- 		struct page *page = pvec->pages[i];
--		if (!radix_tree_exceptional_entry(page))
-+		if (!xa_is_value(page))
- 			pvec->pages[j++] = page;
- 	}
- 	pvec->nr = j;
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 094158f2e447..69bb743dd7e5 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -70,7 +70,7 @@ static void truncate_exceptional_pvec_entries(struct address_space *mapping,
+-	radix_tree_for_each_tagged(slot, &mapping->page_tree, &iter, 0,
++	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, 0,
+ 				   PAGECACHE_TAG_WRITEBACK) {
+ 		struct page *page = radix_tree_deref_slot_protected(slot,
+-							&mapping->tree_lock);
++						&mapping->pages.xa_lock);
+ 		if (likely(page)) {
+ 			WARN_ON_ONCE(!PageWriteback(page));
+ 			dec_wb_stat(old_wb, WB_WRITEBACK);
+@@ -430,7 +430,7 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ 	 */
+ 	smp_store_release(&inode->i_state, inode->i_state & ~I_WB_SWITCH);
+ 
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	spin_unlock(&inode->i_lock);
+ 	spin_unlock(&new_wb->list_lock);
+ 	spin_unlock(&old_wb->list_lock);
+@@ -507,7 +507,7 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+ 	/*
+ 	 * In addition to synchronizing among switchers, I_WB_SWITCH tells
+ 	 * the RCU protected stat update paths to grab the mapping's
+-	 * tree_lock so that stat transfer can synchronize against them.
++	 * xa_lock so that stat transfer can synchronize against them.
+ 	 * Let's continue after I_WB_SWITCH is guaranteed to be visible.
+ 	 */
+ 	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
+diff --git a/fs/inode.c b/fs/inode.c
+index 03102d6ef044..c7b00573c10d 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -348,8 +348,7 @@ EXPORT_SYMBOL(inc_nlink);
+ void address_space_init_once(struct address_space *mapping)
+ {
+ 	memset(mapping, 0, sizeof(*mapping));
+-	INIT_RADIX_TREE(&mapping->page_tree, GFP_ATOMIC | __GFP_ACCOUNT);
+-	spin_lock_init(&mapping->tree_lock);
++	INIT_RADIX_TREE(&mapping->pages, GFP_ATOMIC | __GFP_ACCOUNT);
+ 	init_rwsem(&mapping->i_mmap_rwsem);
+ 	INIT_LIST_HEAD(&mapping->private_list);
+ 	spin_lock_init(&mapping->private_lock);
+@@ -499,14 +498,14 @@ void clear_inode(struct inode *inode)
+ {
+ 	might_sleep();
+ 	/*
+-	 * We have to cycle tree_lock here because reclaim can be still in the
++	 * We have to cycle the xa_lock here because reclaim can be in the
+ 	 * process of removing the last page (in __delete_from_page_cache())
+-	 * and we must not free mapping under it.
++	 * and we must not free the mapping under it.
+ 	 */
+-	spin_lock_irq(&inode->i_data.tree_lock);
++	xa_lock_irq(&inode->i_data.pages);
+ 	BUG_ON(inode->i_data.nrpages);
+ 	BUG_ON(inode->i_data.nrexceptional);
+-	spin_unlock_irq(&inode->i_data.tree_lock);
++	xa_unlock_irq(&inode->i_data.pages);
+ 	BUG_ON(!list_empty(&inode->i_data.private_list));
+ 	BUG_ON(!(inode->i_state & I_FREEING));
+ 	BUG_ON(inode->i_state & I_CLEAR);
+diff --git a/fs/nilfs2/btnode.c b/fs/nilfs2/btnode.c
+index c21e0b4454a6..9e2a00207436 100644
+--- a/fs/nilfs2/btnode.c
++++ b/fs/nilfs2/btnode.c
+@@ -193,9 +193,9 @@ int nilfs_btnode_prepare_change_key(struct address_space *btnc,
+ 				       (unsigned long long)oldkey,
+ 				       (unsigned long long)newkey);
+ 
+-		spin_lock_irq(&btnc->tree_lock);
+-		err = radix_tree_insert(&btnc->page_tree, newkey, obh->b_page);
+-		spin_unlock_irq(&btnc->tree_lock);
++		xa_lock_irq(&btnc->pages);
++		err = radix_tree_insert(&btnc->pages, newkey, obh->b_page);
++		xa_unlock_irq(&btnc->pages);
+ 		/*
+ 		 * Note: page->index will not change to newkey until
+ 		 * nilfs_btnode_commit_change_key() will be called.
+@@ -251,11 +251,11 @@ void nilfs_btnode_commit_change_key(struct address_space *btnc,
+ 				       (unsigned long long)newkey);
+ 		mark_buffer_dirty(obh);
+ 
+-		spin_lock_irq(&btnc->tree_lock);
+-		radix_tree_delete(&btnc->page_tree, oldkey);
+-		radix_tree_tag_set(&btnc->page_tree, newkey,
++		xa_lock_irq(&btnc->pages);
++		radix_tree_delete(&btnc->pages, oldkey);
++		radix_tree_tag_set(&btnc->pages, newkey,
+ 				   PAGECACHE_TAG_DIRTY);
+-		spin_unlock_irq(&btnc->tree_lock);
++		xa_unlock_irq(&btnc->pages);
+ 
+ 		opage->index = obh->b_blocknr = newkey;
+ 		unlock_page(opage);
+@@ -283,9 +283,9 @@ void nilfs_btnode_abort_change_key(struct address_space *btnc,
  		return;
  
- 	for (j = 0; j < pagevec_count(pvec); j++)
--		if (radix_tree_exceptional_entry(pvec->pages[j]))
-+		if (xa_is_value(pvec->pages[j]))
- 			break;
+ 	if (nbh == NULL) {	/* blocksize == pagesize */
+-		spin_lock_irq(&btnc->tree_lock);
+-		radix_tree_delete(&btnc->page_tree, newkey);
+-		spin_unlock_irq(&btnc->tree_lock);
++		xa_lock_irq(&btnc->pages);
++		radix_tree_delete(&btnc->pages, newkey);
++		xa_unlock_irq(&btnc->pages);
+ 		unlock_page(ctxt->bh->b_page);
+ 	} else
+ 		brelse(nbh);
+diff --git a/fs/nilfs2/page.c b/fs/nilfs2/page.c
+index 68241512d7c1..1c6703efde9e 100644
+--- a/fs/nilfs2/page.c
++++ b/fs/nilfs2/page.c
+@@ -331,15 +331,15 @@ void nilfs_copy_back_pages(struct address_space *dmap,
+ 			struct page *page2;
  
- 	if (j == pagevec_count(pvec))
-@@ -85,7 +85,7 @@ static void truncate_exceptional_pvec_entries(struct address_space *mapping,
- 		struct page *page = pvec->pages[i];
- 		pgoff_t index = indices[i];
+ 			/* move the page to the destination cache */
+-			spin_lock_irq(&smap->tree_lock);
+-			page2 = radix_tree_delete(&smap->page_tree, offset);
++			xa_lock_irq(&smap->pages);
++			page2 = radix_tree_delete(&smap->pages, offset);
+ 			WARN_ON(page2 != page);
  
--		if (!radix_tree_exceptional_entry(page)) {
-+		if (!xa_is_value(page)) {
- 			pvec->pages[j++] = page;
- 			continue;
- 		}
-@@ -351,7 +351,7 @@ void truncate_inode_pages_range(struct address_space *mapping,
- 			if (index >= end)
- 				break;
+ 			smap->nrpages--;
+-			spin_unlock_irq(&smap->tree_lock);
++			xa_unlock_irq(&smap->pages);
  
--			if (radix_tree_exceptional_entry(page))
-+			if (xa_is_value(page))
- 				continue;
- 
- 			if (!trylock_page(page))
-@@ -446,7 +446,7 @@ void truncate_inode_pages_range(struct address_space *mapping,
- 				break;
+-			spin_lock_irq(&dmap->tree_lock);
+-			err = radix_tree_insert(&dmap->page_tree, offset, page);
++			xa_lock_irq(&dmap->pages);
++			err = radix_tree_insert(&dmap->pages, offset, page);
+ 			if (unlikely(err < 0)) {
+ 				WARN_ON(err == -EEXIST);
+ 				page->mapping = NULL;
+@@ -348,11 +348,11 @@ void nilfs_copy_back_pages(struct address_space *dmap,
+ 				page->mapping = dmap;
+ 				dmap->nrpages++;
+ 				if (PageDirty(page))
+-					radix_tree_tag_set(&dmap->page_tree,
++					radix_tree_tag_set(&dmap->pages,
+ 							   offset,
+ 							   PAGECACHE_TAG_DIRTY);
  			}
- 
--			if (radix_tree_exceptional_entry(page))
-+			if (xa_is_value(page))
- 				continue;
- 
- 			lock_page(page);
-@@ -565,7 +565,7 @@ unsigned long invalidate_mapping_pages(struct address_space *mapping,
- 			if (index > end)
- 				break;
- 
--			if (radix_tree_exceptional_entry(page)) {
-+			if (xa_is_value(page)) {
- 				invalidate_exceptional_entry(mapping, index,
- 							     page);
- 				continue;
-@@ -696,7 +696,7 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
- 			if (index > end)
- 				break;
- 
--			if (radix_tree_exceptional_entry(page)) {
-+			if (xa_is_value(page)) {
- 				if (!invalidate_exceptional_entry2(mapping,
- 								   index, page))
- 					ret = -EBUSY;
-diff --git a/mm/workingset.c b/mm/workingset.c
-index 3cb3586181e6..3afeb84720f4 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -155,8 +155,8 @@
-  * refault distance will immediately activate the refaulting page.
-  */
- 
--#define EVICTION_SHIFT	(RADIX_TREE_EXCEPTIONAL_ENTRY + \
--			 NODES_SHIFT +	\
-+#define EVICTION_SHIFT	((BITS_PER_LONG - BITS_PER_XA_VALUE) +	\
-+			 NODES_SHIFT +				\
- 			 MEM_CGROUP_ID_SHIFT)
- #define EVICTION_MASK	(~0UL >> EVICTION_SHIFT)
- 
-@@ -175,18 +175,16 @@ static void *pack_shadow(int memcgid, pg_data_t *pgdat, unsigned long eviction)
- 	eviction >>= bucket_order;
- 	eviction = (eviction << MEM_CGROUP_ID_SHIFT) | memcgid;
- 	eviction = (eviction << NODES_SHIFT) | pgdat->node_id;
--	eviction = (eviction << RADIX_TREE_EXCEPTIONAL_SHIFT);
- 
--	return (void *)(eviction | RADIX_TREE_EXCEPTIONAL_ENTRY);
-+	return xa_mk_value(eviction);
- }
- 
- static void unpack_shadow(void *shadow, int *memcgidp, pg_data_t **pgdat,
- 			  unsigned long *evictionp)
- {
--	unsigned long entry = (unsigned long)shadow;
-+	unsigned long entry = xa_to_value(shadow);
- 	int memcgid, nid;
- 
--	entry >>= RADIX_TREE_EXCEPTIONAL_SHIFT;
- 	nid = entry & ((1UL << NODES_SHIFT) - 1);
- 	entry >>= NODES_SHIFT;
- 	memcgid = entry & ((1UL << MEM_CGROUP_ID_SHIFT) - 1);
-@@ -453,7 +451,7 @@ static enum lru_status shadow_lru_isolate(struct list_head *item,
- 		goto out_invalid;
- 	for (i = 0; i < RADIX_TREE_MAP_SIZE; i++) {
- 		if (node->slots[i]) {
--			if (WARN_ON_ONCE(!radix_tree_exceptional_entry(node->slots[i])))
-+			if (WARN_ON_ONCE(!xa_is_value(node->slots[i])))
- 				goto out_invalid;
- 			if (WARN_ON_ONCE(!node->exceptional))
- 				goto out_invalid;
-diff --git a/tools/testing/radix-tree/idr-test.c b/tools/testing/radix-tree/idr-test.c
-index 193450b29bf0..7499319e85f8 100644
---- a/tools/testing/radix-tree/idr-test.c
-+++ b/tools/testing/radix-tree/idr-test.c
-@@ -19,7 +19,7 @@
- 
- #include "test.h"
- 
--#define DUMMY_PTR	((void *)0x12)
-+#define DUMMY_PTR	((void *)0x10)
- 
- int item_idr_free(int id, void *p, void *data)
- {
-@@ -320,11 +320,11 @@ void ida_check_conv(void)
- 	for (i = 0; i < 1000000; i++) {
- 		int err = ida_get_new(&ida, &id);
- 		if (err == -EAGAIN) {
--			assert((i % IDA_BITMAP_BITS) == (BITS_PER_LONG - 2));
-+			assert((i % IDA_BITMAP_BITS) == (BITS_PER_LONG - 1));
- 			assert(ida_pre_get(&ida, GFP_KERNEL));
- 			err = ida_get_new(&ida, &id);
- 		} else {
--			assert((i % IDA_BITMAP_BITS) != (BITS_PER_LONG - 2));
-+			assert((i % IDA_BITMAP_BITS) != (BITS_PER_LONG - 1));
+-			spin_unlock_irq(&dmap->tree_lock);
++			xa_unlock_irq(&dmap->pages);
  		}
- 		assert(!err);
- 		assert(id == i);
-diff --git a/tools/testing/radix-tree/linux/radix-tree.h b/tools/testing/radix-tree/linux/radix-tree.h
-index 36fb716d5557..40c9671ee365 100644
---- a/tools/testing/radix-tree/linux/radix-tree.h
-+++ b/tools/testing/radix-tree/linux/radix-tree.h
-@@ -5,6 +5,7 @@
- #include "generated/map-shift.h"
- #include "linux/bug.h"
- #include "../../../../include/linux/radix-tree.h"
-+#include <linux/xarray.h>
+ 		unlock_page(page);
+ 	}
+@@ -474,15 +474,15 @@ int __nilfs_clear_page_dirty(struct page *page)
+ 	struct address_space *mapping = page->mapping;
  
- extern int kmalloc_verbose;
- extern int test_verbose;
-diff --git a/tools/testing/radix-tree/multiorder.c b/tools/testing/radix-tree/multiorder.c
-index 59245b3d587c..684e76f79f4a 100644
---- a/tools/testing/radix-tree/multiorder.c
-+++ b/tools/testing/radix-tree/multiorder.c
-@@ -38,12 +38,11 @@ static void __multiorder_tag_test(int index, int order)
+ 	if (mapping) {
+-		spin_lock_irq(&mapping->tree_lock);
++		xa_lock_irq(&mapping->pages);
+ 		if (test_bit(PG_dirty, &page->flags)) {
+-			radix_tree_tag_clear(&mapping->page_tree,
++			radix_tree_tag_clear(&mapping->pages,
+ 					     page_index(page),
+ 					     PAGECACHE_TAG_DIRTY);
+-			spin_unlock_irq(&mapping->tree_lock);
++			xa_unlock_irq(&mapping->pages);
+ 			return clear_page_dirty_for_io(page);
+ 		}
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		return 0;
+ 	}
+ 	return TestClearPageDirty(page);
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 3e4ce54d84ab..3df0d20e23f3 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -329,7 +329,7 @@ static inline bool inode_to_wb_is_valid(struct inode *inode)
+  * @inode: inode of interest
+  *
+  * Returns the wb @inode is currently associated with.  The caller must be
+- * holding either @inode->i_lock, @inode->i_mapping->tree_lock, or the
++ * holding either @inode->i_lock, @inode->i_mapping->pages.xa_lock, or the
+  * associated wb's list_lock.
+  */
+ static inline struct bdi_writeback *inode_to_wb(const struct inode *inode)
+@@ -337,7 +337,7 @@ static inline struct bdi_writeback *inode_to_wb(const struct inode *inode)
+ #ifdef CONFIG_LOCKDEP
+ 	WARN_ON_ONCE(debug_locks &&
+ 		     (!lockdep_is_held(&inode->i_lock) &&
+-		      !lockdep_is_held(&inode->i_mapping->tree_lock) &&
++		      !lockdep_is_held(&inode->i_mapping->pages.xa_lock) &&
+ 		      !lockdep_is_held(&inode->i_wb->list_lock)));
+ #endif
+ 	return inode->i_wb;
+@@ -349,7 +349,7 @@ static inline struct bdi_writeback *inode_to_wb(const struct inode *inode)
+  * @lockedp: temp bool output param, to be passed to the end function
+  *
+  * The caller wants to access the wb associated with @inode but isn't
+- * holding inode->i_lock, mapping->tree_lock or wb->list_lock.  This
++ * holding inode->i_lock, mapping->pages.xa_lock or wb->list_lock.  This
+  * function determines the wb associated with @inode and ensures that the
+  * association doesn't change until the transaction is finished with
+  * unlocked_inode_to_wb_end().
+@@ -370,10 +370,10 @@ unlocked_inode_to_wb_begin(struct inode *inode, bool *lockedp)
+ 	*lockedp = smp_load_acquire(&inode->i_state) & I_WB_SWITCH;
+ 
+ 	if (unlikely(*lockedp))
+-		spin_lock_irq(&inode->i_mapping->tree_lock);
++		xa_lock_irq(&inode->i_mapping->pages);
  
  	/*
- 	 * Verify we get collisions for covered indices.  We try and fail to
--	 * insert an exceptional entry so we don't leak memory via
-+	 * insert a data entry so we don't leak memory via
- 	 * item_insert_order().
+-	 * Protected by either !I_WB_SWITCH + rcu_read_lock() or tree_lock.
++	 * Protected by either !I_WB_SWITCH + rcu_read_lock() or xa_lock.
+ 	 * inode_to_wb() will bark.  Deref directly.
  	 */
- 	for_each_index(i, base, order) {
--		err = __radix_tree_insert(&tree, i, order,
--				(void *)(0xA0 | RADIX_TREE_EXCEPTIONAL_ENTRY));
-+		err = __radix_tree_insert(&tree, i, order, xa_mk_value(0xA0));
- 		assert(err == -EEXIST);
- 	}
- 
-@@ -379,8 +378,8 @@ static void multiorder_join1(unsigned long index,
- }
- 
- /*
-- * Check that the accounting of exceptional entries is handled correctly
-- * by joining an exceptional entry to a normal pointer.
-+ * Check that the accounting of inline data entries is handled correctly
-+ * by joining a data entry to a normal pointer.
-  */
- static void multiorder_join2(unsigned order1, unsigned order2)
+ 	return inode->i_wb;
+@@ -387,7 +387,7 @@ unlocked_inode_to_wb_begin(struct inode *inode, bool *lockedp)
+ static inline void unlocked_inode_to_wb_end(struct inode *inode, bool locked)
  {
-@@ -390,9 +389,9 @@ static void multiorder_join2(unsigned order1, unsigned order2)
- 	void *item2;
+ 	if (unlikely(locked))
+-		spin_unlock_irq(&inode->i_mapping->tree_lock);
++		xa_unlock_irq(&inode->i_mapping->pages);
  
- 	item_insert_order(&tree, 0, order2);
--	radix_tree_insert(&tree, 1 << order2, (void *)0x12UL);
-+	radix_tree_insert(&tree, 1 << order2, xa_mk_value(5));
- 	item2 = __radix_tree_lookup(&tree, 1 << order2, &node, NULL);
--	assert(item2 == (void *)0x12UL);
-+	assert(item2 == xa_mk_value(5));
- 	assert(node->exceptional == 1);
+ 	rcu_read_unlock();
+ }
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 511fbaabf624..c07169cfb44a 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -13,6 +13,7 @@
+ #include <linux/list_lru.h>
+ #include <linux/llist.h>
+ #include <linux/radix-tree.h>
++#include <linux/xarray.h>
+ #include <linux/rbtree.h>
+ #include <linux/init.h>
+ #include <linux/pid.h>
+@@ -390,23 +391,21 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
  
- 	item2 = radix_tree_lookup(&tree, 0);
-@@ -406,7 +405,7 @@ static void multiorder_join2(unsigned order1, unsigned order2)
+ struct address_space {
+ 	struct inode		*host;		/* owner: inode, block_device */
+-	struct radix_tree_root	page_tree;	/* radix tree of all pages */
+-	spinlock_t		tree_lock;	/* and lock protecting it */
++	struct radix_tree_root	pages;		/* cached pages */
++	gfp_t			gfp_mask;	/* for allocating pages */
+ 	atomic_t		i_mmap_writable;/* count VM_SHARED mappings */
+ 	struct rb_root_cached	i_mmap;		/* tree of private and shared mappings */
+ 	struct rw_semaphore	i_mmap_rwsem;	/* protect tree, count, list */
+-	/* Protected by tree_lock together with the radix tree */
++	/* Protected by pages.xa_lock */
+ 	unsigned long		nrpages;	/* number of total pages */
+-	/* number of shadow or DAX exceptional entries */
+-	unsigned long		nrexceptional;
++	unsigned long		nrexceptional;	/* shadow or DAX entries */
+ 	pgoff_t			writeback_index;/* writeback starts here */
+ 	const struct address_space_operations *a_ops;	/* methods */
+ 	unsigned long		flags;		/* error bits */
++	errseq_t		wb_err;
+ 	spinlock_t		private_lock;	/* for use by the address_space */
+-	gfp_t			gfp_mask;	/* implicit gfp mask for allocations */
+-	struct list_head	private_list;	/* for use by the address_space */
++	struct list_head	private_list;	/* ditto */
+ 	void			*private_data;	/* ditto */
+-	errseq_t		wb_err;
+ } __attribute__((aligned(sizeof(long)))) __randomize_layout;
+ 	/*
+ 	 * On most architectures that alignment is already the case; but
+@@ -1977,7 +1976,7 @@ static inline void init_sync_kiocb(struct kiocb *kiocb, struct file *filp)
+  *
+  * I_WB_SWITCH		Cgroup bdi_writeback switching in progress.  Used to
+  *			synchronize competing switching instances and to tell
+- *			wb stat updates to grab mapping->tree_lock.  See
++ *			wb stat updates to grab mapping->pages.xa_lock.  See
+  *			inode_switch_wb_work_fn() for details.
+  *
+  * I_OVL_INUSE		Used by overlayfs to get exclusive ownership on upper
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 96b1932380e9..fe1ee4313add 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -738,7 +738,7 @@ int finish_mkwrite_fault(struct vm_fault *vmf);
+  * refcount. The each user mapping also has a reference to the page.
+  *
+  * The pagecache pages are stored in a per-mapping radix tree, which is
+- * rooted at mapping->page_tree, and indexed by offset.
++ * rooted at mapping->pages, and indexed by offset.
+  * Where 2.4 and early 2.6 kernels kept dirty/clean pages in per-address_space
+  * lists, we instead now tag pages as dirty/writeback in the radix tree.
+  *
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 34ce3ebf97d5..80a6149152d4 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -144,7 +144,7 @@ void release_pages(struct page **pages, int nr);
+  * 3. check the page is still in pagecache (if no, goto 1)
+  *
+  * Remove-side that cares about stability of _refcount (eg. reclaim) has the
+- * following (with tree_lock held for write):
++ * following (with pages.xa_lock held):
+  * A. atomically check refcount is correct and set it to 0 (atomic_cmpxchg)
+  * B. remove page from pagecache
+  * C. free the page
+@@ -157,7 +157,7 @@ void release_pages(struct page **pages, int nr);
+  *
+  * It is possible that between 1 and 2, the page is removed then the exact same
+  * page is inserted into the same position in pagecache. That's OK: the
+- * old find_get_page using tree_lock could equally have run before or after
++ * old find_get_page using a lock could equally have run before or after
+  * such a re-insertion, depending on order that locks are granted.
+  *
+  * Lookups racing against pagecache insertion isn't a big problem: either 1
+diff --git a/mm/filemap.c b/mm/filemap.c
+index ee83baaf855d..e9172cefeb36 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -67,7 +67,7 @@
+  *  ->i_mmap_rwsem		(truncate_pagecache)
+  *    ->private_lock		(__free_pte->__set_page_dirty_buffers)
+  *      ->swap_lock		(exclusive_swap_page, others)
+- *        ->mapping->tree_lock
++ *        ->mapping->pages.xa_lock
+  *
+  *  ->i_mutex
+  *    ->i_mmap_rwsem		(truncate->unmap_mapping_range)
+@@ -75,7 +75,7 @@
+  *  ->mmap_sem
+  *    ->i_mmap_rwsem
+  *      ->page_table_lock or pte_lock	(various, mainly in memory.c)
+- *        ->mapping->tree_lock	(arch-dependent flush_dcache_mmap_lock)
++ *        ->mapping->pages.xa_lock	(arch-dependent flush_dcache_mmap_lock)
+  *
+  *  ->mmap_sem
+  *    ->lock_page		(access_process_vm)
+@@ -85,7 +85,7 @@
+  *
+  *  bdi->wb.list_lock
+  *    sb_lock			(fs/fs-writeback.c)
+- *    ->mapping->tree_lock	(__sync_single_inode)
++ *    ->mapping->pages.xa_lock	(__sync_single_inode)
+  *
+  *  ->i_mmap_rwsem
+  *    ->anon_vma.lock		(vma_adjust)
+@@ -96,11 +96,11 @@
+  *  ->page_table_lock or pte_lock
+  *    ->swap_lock		(try_to_unmap_one)
+  *    ->private_lock		(try_to_unmap_one)
+- *    ->tree_lock		(try_to_unmap_one)
++ *    ->pages.xa_lock		(try_to_unmap_one)
+  *    ->zone_lru_lock(zone)	(follow_page->mark_page_accessed)
+  *    ->zone_lru_lock(zone)	(check_pte_range->isolate_lru_page)
+  *    ->private_lock		(page_remove_rmap->set_page_dirty)
+- *    ->tree_lock		(page_remove_rmap->set_page_dirty)
++ *    ->pages.xa_lock		(page_remove_rmap->set_page_dirty)
+  *    bdi.wb->list_lock		(page_remove_rmap->set_page_dirty)
+  *    ->inode->i_lock		(page_remove_rmap->set_page_dirty)
+  *    ->memcg->move_lock	(page_remove_rmap->lock_page_memcg)
+@@ -119,14 +119,15 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 	void **slot;
+ 	int error;
+ 
+-	error = __radix_tree_create(&mapping->page_tree, page->index, 0,
++	error = __radix_tree_create(&mapping->pages, page->index, 0,
+ 				    &node, &slot);
+ 	if (error)
+ 		return error;
+ 	if (*slot) {
+ 		void *p;
+ 
+-		p = radix_tree_deref_slot_protected(slot, &mapping->tree_lock);
++		p = radix_tree_deref_slot_protected(slot,
++						    &mapping->pages.xa_lock);
+ 		if (!radix_tree_exceptional_entry(p))
+ 			return -EEXIST;
+ 
+@@ -134,7 +135,7 @@ static int page_cache_tree_insert(struct address_space *mapping,
+ 		if (shadowp)
+ 			*shadowp = p;
+ 	}
+-	__radix_tree_replace(&mapping->page_tree, node, slot, page,
++	__radix_tree_replace(&mapping->pages, node, slot, page,
+ 			     workingset_lookup_update(mapping));
+ 	mapping->nrpages++;
+ 	return 0;
+@@ -156,13 +157,13 @@ static void page_cache_tree_delete(struct address_space *mapping,
+ 		struct radix_tree_node *node;
+ 		void **slot;
+ 
+-		__radix_tree_lookup(&mapping->page_tree, page->index + i,
++		__radix_tree_lookup(&mapping->pages, page->index + i,
+ 				    &node, &slot);
+ 
+ 		VM_BUG_ON_PAGE(!node && nr != 1, page);
+ 
+-		radix_tree_clear_tags(&mapping->page_tree, node, slot);
+-		__radix_tree_replace(&mapping->page_tree, node, slot, shadow,
++		radix_tree_clear_tags(&mapping->pages, node, slot);
++		__radix_tree_replace(&mapping->pages, node, slot, shadow,
+ 				workingset_lookup_update(mapping));
+ 	}
+ 
+@@ -254,7 +255,7 @@ static void unaccount_page_cache_page(struct address_space *mapping,
+ /*
+  * Delete a page from the page cache and free it. Caller has to make
+  * sure the page is locked and that nobody else uses it - or that usage
+- * is safe.  The caller must hold the mapping's tree_lock.
++ * is safe.  The caller must hold the xa_lock.
+  */
+ void __delete_from_page_cache(struct page *page, void *shadow)
+ {
+@@ -297,9 +298,9 @@ void delete_from_page_cache(struct page *page)
+ 	unsigned long flags;
+ 
+ 	BUG_ON(!PageLocked(page));
+-	spin_lock_irqsave(&mapping->tree_lock, flags);
++	xa_lock_irqsave(&mapping->pages, flags);
+ 	__delete_from_page_cache(page, NULL);
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
+ 
+ 	page_cache_free_page(mapping, page);
+ }
+@@ -310,14 +311,14 @@ EXPORT_SYMBOL(delete_from_page_cache);
+  * @mapping: the mapping to which pages belong
+  * @pvec: pagevec with pages to delete
+  *
+- * The function walks over mapping->page_tree and removes pages passed in @pvec
+- * from the radix tree. The function expects @pvec to be sorted by page index.
+- * It tolerates holes in @pvec (radix tree entries at those indices are not
++ * The function walks over mapping->pages and removes pages passed in @pvec
++ * from the mapping. The function expects @pvec to be sorted by page index.
++ * It tolerates holes in @pvec (mapping entries at those indices are not
+  * modified). The function expects only THP head pages to be present in the
+- * @pvec and takes care to delete all corresponding tail pages from the radix
+- * tree as well.
++ * @pvec and takes care to delete all corresponding tail pages from the
++ * mapping as well.
+  *
+- * The function expects mapping->tree_lock to be held.
++ * The function expects xa_lock to be held.
+  */
+ static void
+ page_cache_tree_delete_batch(struct address_space *mapping,
+@@ -331,11 +332,11 @@ page_cache_tree_delete_batch(struct address_space *mapping,
+ 	pgoff_t start;
+ 
+ 	start = pvec->pages[0]->index;
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter, start) {
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+ 		if (i >= pagevec_count(pvec) && !tail_pages)
+ 			break;
+ 		page = radix_tree_deref_slot_protected(slot,
+-						       &mapping->tree_lock);
++						       &mapping->pages.xa_lock);
+ 		if (radix_tree_exceptional_entry(page))
+ 			continue;
+ 		if (!tail_pages) {
+@@ -358,8 +359,8 @@ page_cache_tree_delete_batch(struct address_space *mapping,
+ 		} else {
+ 			tail_pages--;
+ 		}
+-		radix_tree_clear_tags(&mapping->page_tree, iter.node, slot);
+-		__radix_tree_replace(&mapping->page_tree, iter.node, slot, NULL,
++		radix_tree_clear_tags(&mapping->pages, iter.node, slot);
++		__radix_tree_replace(&mapping->pages, iter.node, slot, NULL,
+ 				workingset_lookup_update(mapping));
+ 		total_pages++;
+ 	}
+@@ -375,14 +376,14 @@ void delete_from_page_cache_batch(struct address_space *mapping,
+ 	if (!pagevec_count(pvec))
+ 		return;
+ 
+-	spin_lock_irqsave(&mapping->tree_lock, flags);
++	xa_lock_irqsave(&mapping->pages, flags);
+ 	for (i = 0; i < pagevec_count(pvec); i++) {
+ 		trace_mm_filemap_delete_from_page_cache(pvec->pages[i]);
+ 
+ 		unaccount_page_cache_page(mapping, pvec->pages[i]);
+ 	}
+ 	page_cache_tree_delete_batch(mapping, pvec);
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
+ 
+ 	for (i = 0; i < pagevec_count(pvec); i++)
+ 		page_cache_free_page(mapping, pvec->pages[i]);
+@@ -799,7 +800,7 @@ int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask)
+ 		new->mapping = mapping;
+ 		new->index = offset;
+ 
+-		spin_lock_irqsave(&mapping->tree_lock, flags);
++		xa_lock_irqsave(&mapping->pages, flags);
+ 		__delete_from_page_cache(old, NULL);
+ 		error = page_cache_tree_insert(mapping, new, NULL);
+ 		BUG_ON(error);
+@@ -811,7 +812,7 @@ int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask)
+ 			__inc_node_page_state(new, NR_FILE_PAGES);
+ 		if (PageSwapBacked(new))
+ 			__inc_node_page_state(new, NR_SHMEM);
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
+ 		mem_cgroup_migrate(old, new);
+ 		radix_tree_preload_end();
+ 		if (freepage)
+@@ -853,7 +854,7 @@ static int __add_to_page_cache_locked(struct page *page,
+ 	page->mapping = mapping;
+ 	page->index = offset;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	error = page_cache_tree_insert(mapping, page, shadowp);
+ 	radix_tree_preload_end();
+ 	if (unlikely(error))
+@@ -862,7 +863,7 @@ static int __add_to_page_cache_locked(struct page *page,
+ 	/* hugetlb pages do not participate in page cache accounting. */
+ 	if (!huge)
+ 		__inc_node_page_state(page, NR_FILE_PAGES);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	if (!huge)
+ 		mem_cgroup_commit_charge(page, memcg, false, false);
+ 	trace_mm_filemap_add_to_page_cache(page);
+@@ -870,7 +871,7 @@ static int __add_to_page_cache_locked(struct page *page,
+ err_insert:
+ 	page->mapping = NULL;
+ 	/* Leave page->index set: truncation relies upon it */
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	if (!huge)
+ 		mem_cgroup_cancel_charge(page, memcg, false);
+ 	put_page(page);
+@@ -1354,7 +1355,7 @@ pgoff_t page_cache_next_hole(struct address_space *mapping,
+ 	for (i = 0; i < max_scan; i++) {
+ 		struct page *page;
+ 
+-		page = radix_tree_lookup(&mapping->page_tree, index);
++		page = radix_tree_lookup(&mapping->pages, index);
+ 		if (!page || radix_tree_exceptional_entry(page))
+ 			break;
+ 		index++;
+@@ -1395,7 +1396,7 @@ pgoff_t page_cache_prev_hole(struct address_space *mapping,
+ 	for (i = 0; i < max_scan; i++) {
+ 		struct page *page;
+ 
+-		page = radix_tree_lookup(&mapping->page_tree, index);
++		page = radix_tree_lookup(&mapping->pages, index);
+ 		if (!page || radix_tree_exceptional_entry(page))
+ 			break;
+ 		index--;
+@@ -1428,7 +1429,7 @@ struct page *find_get_entry(struct address_space *mapping, pgoff_t offset)
+ 	rcu_read_lock();
+ repeat:
+ 	page = NULL;
+-	pagep = radix_tree_lookup_slot(&mapping->page_tree, offset);
++	pagep = radix_tree_lookup_slot(&mapping->pages, offset);
+ 	if (pagep) {
+ 		page = radix_tree_deref_slot(pagep);
+ 		if (unlikely(!page))
+@@ -1634,7 +1635,7 @@ unsigned find_get_entries(struct address_space *mapping,
+ 		return 0;
+ 
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter, start) {
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+ 		struct page *head, *page;
+ repeat:
+ 		page = radix_tree_deref_slot(slot);
+@@ -1711,7 +1712,7 @@ unsigned find_get_pages_range(struct address_space *mapping, pgoff_t *start,
+ 		return 0;
+ 
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter, *start) {
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, *start) {
+ 		struct page *head, *page;
+ 
+ 		if (iter.index > end)
+@@ -1796,7 +1797,7 @@ unsigned find_get_pages_contig(struct address_space *mapping, pgoff_t index,
+ 		return 0;
+ 
+ 	rcu_read_lock();
+-	radix_tree_for_each_contig(slot, &mapping->page_tree, &iter, index) {
++	radix_tree_for_each_contig(slot, &mapping->pages, &iter, index) {
+ 		struct page *head, *page;
+ repeat:
+ 		page = radix_tree_deref_slot(slot);
+@@ -1876,8 +1877,7 @@ unsigned find_get_pages_range_tag(struct address_space *mapping, pgoff_t *index,
+ 		return 0;
+ 
+ 	rcu_read_lock();
+-	radix_tree_for_each_tagged(slot, &mapping->page_tree,
+-				   &iter, *index, tag) {
++	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, *index, tag) {
+ 		struct page *head, *page;
+ 
+ 		if (iter.index > end)
+@@ -1970,8 +1970,7 @@ unsigned find_get_entries_tag(struct address_space *mapping, pgoff_t start,
+ 		return 0;
+ 
+ 	rcu_read_lock();
+-	radix_tree_for_each_tagged(slot, &mapping->page_tree,
+-				   &iter, start, tag) {
++	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, start, tag) {
+ 		struct page *head, *page;
+ repeat:
+ 		page = radix_tree_deref_slot(slot);
+@@ -2625,8 +2624,7 @@ void filemap_map_pages(struct vm_fault *vmf,
+ 	struct page *head, *page;
+ 
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter,
+-			start_pgoff) {
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start_pgoff) {
+ 		if (iter.index > end_pgoff)
+ 			break;
+ repeat:
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 0e7ded98d114..f71dd3e7d8cd 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2458,7 +2458,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	} else {
+ 		/* Additional pin to radix tree */
+ 		page_ref_add(head, 2);
+-		spin_unlock(&head->mapping->tree_lock);
++		xa_unlock(&head->mapping->pages);
+ 	}
+ 
+ 	spin_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
+@@ -2666,15 +2666,15 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	if (mapping) {
+ 		void **pslot;
+ 
+-		spin_lock(&mapping->tree_lock);
+-		pslot = radix_tree_lookup_slot(&mapping->page_tree,
++		xa_lock(&mapping->pages);
++		pslot = radix_tree_lookup_slot(&mapping->pages,
+ 				page_index(head));
+ 		/*
+ 		 * Check if the head page is present in radix tree.
+ 		 * We assume all tail are present too, if head is there.
+ 		 */
+ 		if (radix_tree_deref_slot_protected(pslot,
+-					&mapping->tree_lock) != head)
++					&mapping->pages.xa_lock) != head)
+ 			goto fail;
+ 	}
+ 
+@@ -2708,7 +2708,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 		}
+ 		spin_unlock(&pgdata->split_queue_lock);
+ fail:		if (mapping)
+-			spin_unlock(&mapping->tree_lock);
++			xa_unlock(&mapping->pages);
+ 		spin_unlock_irqrestore(zone_lru_lock(page_zone(head)), flags);
+ 		unfreeze_page(head);
+ 		ret = -EBUSY;
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index ea4ff259b671..cb4d199bf328 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1339,8 +1339,8 @@ static void collapse_shmem(struct mm_struct *mm,
+ 	 */
+ 
+ 	index = start;
+-	spin_lock_irq(&mapping->tree_lock);
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter, start) {
++	xa_lock_irq(&mapping->pages);
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+ 		int n = min(iter.index, end) - index;
+ 
+ 		/*
+@@ -1353,7 +1353,7 @@ static void collapse_shmem(struct mm_struct *mm,
+ 		}
+ 		nr_none += n;
+ 		for (; index < min(iter.index, end); index++) {
+-			radix_tree_insert(&mapping->page_tree, index,
++			radix_tree_insert(&mapping->pages, index,
+ 					new_page + (index % HPAGE_PMD_NR));
+ 		}
+ 
+@@ -1362,16 +1362,16 @@ static void collapse_shmem(struct mm_struct *mm,
+ 			break;
+ 
+ 		page = radix_tree_deref_slot_protected(slot,
+-				&mapping->tree_lock);
++				&mapping->pages.xa_lock);
+ 		if (radix_tree_exceptional_entry(page) || !PageUptodate(page)) {
+-			spin_unlock_irq(&mapping->tree_lock);
++			xa_unlock_irq(&mapping->pages);
+ 			/* swap in or instantiate fallocated page */
+ 			if (shmem_getpage(mapping->host, index, &page,
+ 						SGP_NOHUGE)) {
+ 				result = SCAN_FAIL;
+ 				goto tree_unlocked;
+ 			}
+-			spin_lock_irq(&mapping->tree_lock);
++			xa_lock_irq(&mapping->pages);
+ 		} else if (trylock_page(page)) {
+ 			get_page(page);
+ 		} else {
+@@ -1380,7 +1380,7 @@ static void collapse_shmem(struct mm_struct *mm,
+ 		}
+ 
+ 		/*
+-		 * The page must be locked, so we can drop the tree_lock
++		 * The page must be locked, so we can drop the xa_lock
+ 		 * without racing with truncate.
+ 		 */
+ 		VM_BUG_ON_PAGE(!PageLocked(page), page);
+@@ -1391,7 +1391,7 @@ static void collapse_shmem(struct mm_struct *mm,
+ 			result = SCAN_TRUNCATED;
+ 			goto out_unlock;
+ 		}
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 
+ 		if (isolate_lru_page(page)) {
+ 			result = SCAN_DEL_PAGE_LRU;
+@@ -1402,11 +1402,11 @@ static void collapse_shmem(struct mm_struct *mm,
+ 			unmap_mapping_range(mapping, index << PAGE_SHIFT,
+ 					PAGE_SIZE, 0);
+ 
+-		spin_lock_irq(&mapping->tree_lock);
++		xa_lock_irq(&mapping->pages);
+ 
+-		slot = radix_tree_lookup_slot(&mapping->page_tree, index);
++		slot = radix_tree_lookup_slot(&mapping->pages, index);
+ 		VM_BUG_ON_PAGE(page != radix_tree_deref_slot_protected(slot,
+-					&mapping->tree_lock), page);
++					&mapping->pages.xa_lock), page);
+ 		VM_BUG_ON_PAGE(page_mapped(page), page);
+ 
+ 		/*
+@@ -1427,14 +1427,14 @@ static void collapse_shmem(struct mm_struct *mm,
+ 		list_add_tail(&page->lru, &pagelist);
+ 
+ 		/* Finally, replace with the new page. */
+-		radix_tree_replace_slot(&mapping->page_tree, slot,
++		radix_tree_replace_slot(&mapping->pages, slot,
+ 				new_page + (index % HPAGE_PMD_NR));
+ 
+ 		slot = radix_tree_iter_resume(slot, &iter);
+ 		index++;
+ 		continue;
+ out_lru:
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		putback_lru_page(page);
+ out_isolate_failed:
+ 		unlock_page(page);
+@@ -1460,14 +1460,14 @@ static void collapse_shmem(struct mm_struct *mm,
+ 		}
+ 
+ 		for (; index < end; index++) {
+-			radix_tree_insert(&mapping->page_tree, index,
++			radix_tree_insert(&mapping->pages, index,
+ 					new_page + (index % HPAGE_PMD_NR));
+ 		}
+ 		nr_none += n;
+ 	}
+ 
+ tree_locked:
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ tree_unlocked:
+ 
+ 	if (result == SCAN_SUCCEED) {
+@@ -1516,9 +1516,8 @@ static void collapse_shmem(struct mm_struct *mm,
+ 	} else {
+ 		/* Something went wrong: rollback changes to the radix-tree */
+ 		shmem_uncharge(mapping->host, nr_none);
+-		spin_lock_irq(&mapping->tree_lock);
+-		radix_tree_for_each_slot(slot, &mapping->page_tree, &iter,
+-				start) {
++		xa_lock_irq(&mapping->pages);
++		radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+ 			if (iter.index >= end)
+ 				break;
+ 			page = list_first_entry_or_null(&pagelist,
+@@ -1528,8 +1527,7 @@ static void collapse_shmem(struct mm_struct *mm,
+ 					break;
+ 				nr_none--;
+ 				/* Put holes back where they were */
+-				radix_tree_delete(&mapping->page_tree,
+-						  iter.index);
++				radix_tree_delete(&mapping->pages, iter.index);
+ 				continue;
+ 			}
+ 
+@@ -1538,16 +1536,15 @@ static void collapse_shmem(struct mm_struct *mm,
+ 			/* Unfreeze the page. */
+ 			list_del(&page->lru);
+ 			page_ref_unfreeze(page, 2);
+-			radix_tree_replace_slot(&mapping->page_tree,
+-						slot, page);
++			radix_tree_replace_slot(&mapping->pages, slot, page);
+ 			slot = radix_tree_iter_resume(slot, &iter);
+-			spin_unlock_irq(&mapping->tree_lock);
++			xa_unlock_irq(&mapping->pages);
+ 			putback_lru_page(page);
+ 			unlock_page(page);
+-			spin_lock_irq(&mapping->tree_lock);
++			xa_lock_irq(&mapping->pages);
+ 		}
+ 		VM_BUG_ON(nr_none);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 
+ 		/* Unfreeze new_page, caller would take care about freeing it */
+ 		page_ref_unfreeze(new_page, 1);
+@@ -1575,7 +1572,7 @@ static void khugepaged_scan_shmem(struct mm_struct *mm,
+ 	swap = 0;
+ 	memset(khugepaged_node_load, 0, sizeof(khugepaged_node_load));
+ 	rcu_read_lock();
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter, start) {
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+ 		if (iter.index >= start + HPAGE_PMD_NR)
+ 			break;
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ac2ffd5e02b9..1d4acb7f33e9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6034,9 +6034,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 
+ 	/*
+ 	 * Interrupts should be disabled here because the caller holds the
+-	 * mapping->tree_lock lock which is taken with interrupts-off. It is
++	 * mapping->pages xa_lock which is taken with interrupts-off. It is
+ 	 * important here to have the interrupts disabled because it is the
+-	 * only synchronisation we have for udpating the per-CPU variables.
++	 * only synchronisation we have for updating the per-CPU variables.
+ 	 */
+ 	VM_BUG_ON(!irqs_disabled());
+ 	mem_cgroup_charge_statistics(memcg, page, PageTransHuge(page),
+diff --git a/mm/migrate.c b/mm/migrate.c
+index 4d0be47a322a..75d19904dd9a 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -466,20 +466,21 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 	oldzone = page_zone(page);
+ 	newzone = page_zone(newpage);
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 
+-	pslot = radix_tree_lookup_slot(&mapping->page_tree,
++	pslot = radix_tree_lookup_slot(&mapping->pages,
+  					page_index(page));
+ 
+ 	expected_count += 1 + page_has_private(page);
+ 	if (page_count(page) != expected_count ||
+-		radix_tree_deref_slot_protected(pslot, &mapping->tree_lock) != page) {
+-		spin_unlock_irq(&mapping->tree_lock);
++		radix_tree_deref_slot_protected(pslot,
++					&mapping->pages.xa_lock) != page) {
++		xa_unlock_irq(&mapping->pages);
+ 		return -EAGAIN;
+ 	}
+ 
+ 	if (!page_ref_freeze(page, expected_count)) {
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -493,7 +494,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 	if (mode == MIGRATE_ASYNC && head &&
+ 			!buffer_migrate_lock_buffers(head, mode)) {
+ 		page_ref_unfreeze(page, expected_count);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -521,7 +522,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 		SetPageDirty(newpage);
+ 	}
+ 
+-	radix_tree_replace_slot(&mapping->page_tree, pslot, newpage);
++	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
+ 
+ 	/*
+ 	 * Drop cache reference from old page by unfreezing
+@@ -530,7 +531,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 	 */
+ 	page_ref_unfreeze(page, expected_count - 1);
+ 
+-	spin_unlock(&mapping->tree_lock);
++	xa_unlock(&mapping->pages);
+ 	/* Leave irq disabled to prevent preemption while updating stats */
+ 
+ 	/*
+@@ -573,20 +574,19 @@ int migrate_huge_page_move_mapping(struct address_space *mapping,
+ 	int expected_count;
+ 	void **pslot;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 
+-	pslot = radix_tree_lookup_slot(&mapping->page_tree,
+-					page_index(page));
++	pslot = radix_tree_lookup_slot(&mapping->pages, page_index(page));
+ 
+ 	expected_count = 2 + page_has_private(page);
+ 	if (page_count(page) != expected_count ||
+-		radix_tree_deref_slot_protected(pslot, &mapping->tree_lock) != page) {
+-		spin_unlock_irq(&mapping->tree_lock);
++		radix_tree_deref_slot_protected(pslot, &mapping->pages.xa_lock) != page) {
++		xa_unlock_irq(&mapping->pages);
+ 		return -EAGAIN;
+ 	}
+ 
+ 	if (!page_ref_freeze(page, expected_count)) {
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		return -EAGAIN;
+ 	}
+ 
+@@ -595,11 +595,11 @@ int migrate_huge_page_move_mapping(struct address_space *mapping,
+ 
+ 	get_page(newpage);
+ 
+-	radix_tree_replace_slot(&mapping->page_tree, pslot, newpage);
++	radix_tree_replace_slot(&mapping->pages, pslot, newpage);
+ 
+ 	page_ref_unfreeze(page, expected_count - 1);
+ 
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 
+ 	return MIGRATEPAGE_SUCCESS;
+ }
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 586f31261c83..588ce729d199 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2099,7 +2099,7 @@ void __init page_writeback_init(void)
+  * so that it can tag pages faster than a dirtying process can create them).
+  */
+ /*
+- * We tag pages in batches of WRITEBACK_TAG_BATCH to reduce tree_lock latency.
++ * We tag pages in batches of WRITEBACK_TAG_BATCH to reduce xa_lock latency.
+  */
+ void tag_pages_for_writeback(struct address_space *mapping,
+ 			     pgoff_t start, pgoff_t end)
+@@ -2109,22 +2109,22 @@ void tag_pages_for_writeback(struct address_space *mapping,
+ 	struct radix_tree_iter iter;
+ 	void **slot;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
+-	radix_tree_for_each_tagged(slot, &mapping->page_tree, &iter, start,
++	xa_lock_irq(&mapping->pages);
++	radix_tree_for_each_tagged(slot, &mapping->pages, &iter, start,
+ 							PAGECACHE_TAG_DIRTY) {
+ 		if (iter.index > end)
+ 			break;
+-		radix_tree_iter_tag_set(&mapping->page_tree, &iter,
++		radix_tree_iter_tag_set(&mapping->pages, &iter,
+ 							PAGECACHE_TAG_TOWRITE);
+ 		tagged++;
+ 		if ((tagged % WRITEBACK_TAG_BATCH) != 0)
+ 			continue;
+ 		slot = radix_tree_iter_resume(slot, &iter);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		cond_resched();
+-		spin_lock_irq(&mapping->tree_lock);
++		xa_lock_irq(&mapping->pages);
+ 	}
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ }
+ EXPORT_SYMBOL(tag_pages_for_writeback);
+ 
+@@ -2467,13 +2467,13 @@ int __set_page_dirty_nobuffers(struct page *page)
+ 			return 1;
+ 		}
+ 
+-		spin_lock_irqsave(&mapping->tree_lock, flags);
++		xa_lock_irqsave(&mapping->pages, flags);
+ 		BUG_ON(page_mapping(page) != mapping);
+ 		WARN_ON_ONCE(!PagePrivate(page) && !PageUptodate(page));
+ 		account_page_dirtied(page, mapping);
+-		radix_tree_tag_set(&mapping->page_tree, page_index(page),
++		radix_tree_tag_set(&mapping->pages, page_index(page),
+ 				   PAGECACHE_TAG_DIRTY);
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
+ 		unlock_page_memcg(page);
+ 
+ 		if (mapping->host) {
+@@ -2718,11 +2718,10 @@ int test_clear_page_writeback(struct page *page)
+ 		struct backing_dev_info *bdi = inode_to_bdi(inode);
+ 		unsigned long flags;
+ 
+-		spin_lock_irqsave(&mapping->tree_lock, flags);
++		xa_lock_irqsave(&mapping->pages, flags);
+ 		ret = TestClearPageWriteback(page);
+ 		if (ret) {
+-			radix_tree_tag_clear(&mapping->page_tree,
+-						page_index(page),
++			radix_tree_tag_clear(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+ 			if (bdi_cap_account_writeback(bdi)) {
+ 				struct bdi_writeback *wb = inode_to_wb(inode);
+@@ -2736,7 +2735,7 @@ int test_clear_page_writeback(struct page *page)
+ 						     PAGECACHE_TAG_WRITEBACK))
+ 			sb_clear_inode_writeback(mapping->host);
+ 
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
+ 	} else {
+ 		ret = TestClearPageWriteback(page);
+ 	}
+@@ -2766,7 +2765,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+ 		struct backing_dev_info *bdi = inode_to_bdi(inode);
+ 		unsigned long flags;
+ 
+-		spin_lock_irqsave(&mapping->tree_lock, flags);
++		xa_lock_irqsave(&mapping->pages, flags);
+ 		ret = TestSetPageWriteback(page);
+ 		if (!ret) {
+ 			bool on_wblist;
+@@ -2774,8 +2773,7 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+ 			on_wblist = mapping_tagged(mapping,
+ 						   PAGECACHE_TAG_WRITEBACK);
+ 
+-			radix_tree_tag_set(&mapping->page_tree,
+-						page_index(page),
++			radix_tree_tag_set(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+ 			if (bdi_cap_account_writeback(bdi))
+ 				inc_wb_stat(inode_to_wb(inode), WB_WRITEBACK);
+@@ -2789,14 +2787,12 @@ int __test_set_page_writeback(struct page *page, bool keep_write)
+ 				sb_mark_inode_writeback(mapping->host);
+ 		}
+ 		if (!PageDirty(page))
+-			radix_tree_tag_clear(&mapping->page_tree,
+-						page_index(page),
++			radix_tree_tag_clear(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_DIRTY);
+ 		if (!keep_write)
+-			radix_tree_tag_clear(&mapping->page_tree,
+-						page_index(page),
++			radix_tree_tag_clear(&mapping->pages, page_index(page),
+ 						PAGECACHE_TAG_TOWRITE);
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
+ 	} else {
+ 		ret = TestSetPageWriteback(page);
+ 	}
+@@ -2816,7 +2812,7 @@ EXPORT_SYMBOL(__test_set_page_writeback);
+  */
+ int mapping_tagged(struct address_space *mapping, int tag)
+ {
+-	return radix_tree_tagged(&mapping->page_tree, tag);
++	return radix_tree_tagged(&mapping->pages, tag);
+ }
+ EXPORT_SYMBOL(mapping_tagged);
+ 
+diff --git a/mm/readahead.c b/mm/readahead.c
+index c4ca70239233..514188fd2489 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -175,7 +175,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 			break;
+ 
+ 		rcu_read_lock();
+-		page = radix_tree_lookup(&mapping->page_tree, page_offset);
++		page = radix_tree_lookup(&mapping->pages, page_offset);
+ 		rcu_read_unlock();
+ 		if (page && !radix_tree_exceptional_entry(page))
+ 			continue;
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 47db27f8049e..87c1ca0cf1a3 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -32,11 +32,11 @@
+  *                 mmlist_lock (in mmput, drain_mmlist and others)
+  *                 mapping->private_lock (in __set_page_dirty_buffers)
+  *                   mem_cgroup_{begin,end}_page_stat (memcg->move_lock)
+- *                     mapping->tree_lock (widely used)
++ *                     mapping->pages.xa_lock (widely used)
+  *                 inode->i_lock (in set_page_dirty's __mark_inode_dirty)
+  *                 bdi.wb->list_lock (in set_page_dirty's __mark_inode_dirty)
+  *                   sb_lock (within inode_lock in fs/fs-writeback.c)
+- *                   mapping->tree_lock (widely used, in set_page_dirty,
++ *                   mapping->pages.xa_lock (widely used, in set_page_dirty,
+  *                             in arch-dependent flush_dcache_mmap_lock,
+  *                             within bdi.wb->list_lock in __sync_single_inode)
+  *
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 7fbe67be86fa..9b1766e7c8cf 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -332,12 +332,12 @@ static int shmem_radix_tree_replace(struct address_space *mapping,
+ 
+ 	VM_BUG_ON(!expected);
+ 	VM_BUG_ON(!replacement);
+-	item = __radix_tree_lookup(&mapping->page_tree, index, &node, &pslot);
++	item = __radix_tree_lookup(&mapping->pages, index, &node, &pslot);
+ 	if (!item)
+ 		return -ENOENT;
+ 	if (item != expected)
+ 		return -ENOENT;
+-	__radix_tree_replace(&mapping->page_tree, node, pslot,
++	__radix_tree_replace(&mapping->pages, node, pslot,
+ 			     replacement, NULL);
+ 	return 0;
+ }
+@@ -355,7 +355,7 @@ static bool shmem_confirm_swap(struct address_space *mapping,
+ 	void *item;
+ 
+ 	rcu_read_lock();
+-	item = radix_tree_lookup(&mapping->page_tree, index);
++	item = radix_tree_lookup(&mapping->pages, index);
+ 	rcu_read_unlock();
+ 	return item == swp_to_radix_entry(swap);
+ }
+@@ -581,14 +581,14 @@ static int shmem_add_to_page_cache(struct page *page,
+ 	page->mapping = mapping;
+ 	page->index = index;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	if (PageTransHuge(page)) {
+ 		void __rcu **results;
+ 		pgoff_t idx;
+ 		int i;
+ 
+ 		error = 0;
+-		if (radix_tree_gang_lookup_slot(&mapping->page_tree,
++		if (radix_tree_gang_lookup_slot(&mapping->pages,
+ 					&results, &idx, index, 1) &&
+ 				idx < index + HPAGE_PMD_NR) {
+ 			error = -EEXIST;
+@@ -596,14 +596,14 @@ static int shmem_add_to_page_cache(struct page *page,
+ 
+ 		if (!error) {
+ 			for (i = 0; i < HPAGE_PMD_NR; i++) {
+-				error = radix_tree_insert(&mapping->page_tree,
++				error = radix_tree_insert(&mapping->pages,
+ 						index + i, page + i);
+ 				VM_BUG_ON(error);
+ 			}
+ 			count_vm_event(THP_FILE_ALLOC);
+ 		}
+ 	} else if (!expected) {
+-		error = radix_tree_insert(&mapping->page_tree, index, page);
++		error = radix_tree_insert(&mapping->pages, index, page);
+ 	} else {
+ 		error = shmem_radix_tree_replace(mapping, index, expected,
+ 								 page);
+@@ -615,10 +615,10 @@ static int shmem_add_to_page_cache(struct page *page,
+ 			__inc_node_page_state(page, NR_SHMEM_THPS);
+ 		__mod_node_page_state(page_pgdat(page), NR_FILE_PAGES, nr);
+ 		__mod_node_page_state(page_pgdat(page), NR_SHMEM, nr);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 	} else {
+ 		page->mapping = NULL;
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 		page_ref_sub(page, nr);
+ 	}
+ 	return error;
+@@ -634,13 +634,13 @@ static void shmem_delete_from_page_cache(struct page *page, void *radswap)
+ 
+ 	VM_BUG_ON_PAGE(PageCompound(page), page);
+ 
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	error = shmem_radix_tree_replace(mapping, page->index, page, radswap);
+ 	page->mapping = NULL;
+ 	mapping->nrpages--;
+ 	__dec_node_page_state(page, NR_FILE_PAGES);
+ 	__dec_node_page_state(page, NR_SHMEM);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
+ 	put_page(page);
+ 	BUG_ON(error);
+ }
+@@ -653,9 +653,9 @@ static int shmem_free_swap(struct address_space *mapping,
+ {
+ 	void *old;
+ 
+-	spin_lock_irq(&mapping->tree_lock);
+-	old = radix_tree_delete_item(&mapping->page_tree, index, radswap);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
++	old = radix_tree_delete_item(&mapping->pages, index, radswap);
++	xa_unlock_irq(&mapping->pages);
+ 	if (old != radswap)
+ 		return -ENOENT;
+ 	free_swap_and_cache(radix_to_swp_entry(radswap));
+@@ -666,7 +666,7 @@ static int shmem_free_swap(struct address_space *mapping,
+  * Determine (in bytes) how many of the shmem object's pages mapped by the
+  * given offsets are swapped out.
+  *
+- * This is safe to call without i_mutex or mapping->tree_lock thanks to RCU,
++ * This is safe to call without i_mutex or mapping->pages.xa_lock thanks to RCU,
+  * as long as the inode doesn't go away and racy results are not a problem.
+  */
+ unsigned long shmem_partial_swap_usage(struct address_space *mapping,
+@@ -679,7 +679,7 @@ unsigned long shmem_partial_swap_usage(struct address_space *mapping,
+ 
+ 	rcu_read_lock();
+ 
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter, start) {
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+ 		if (iter.index >= end)
+ 			break;
+ 
+@@ -708,7 +708,7 @@ unsigned long shmem_partial_swap_usage(struct address_space *mapping,
+  * Determine (in bytes) how many of the shmem object's pages mapped by the
+  * given vma is swapped out.
+  *
+- * This is safe to call without i_mutex or mapping->tree_lock thanks to RCU,
++ * This is safe to call without i_mutex or mapping->pages.xa_lock thanks to RCU,
+  * as long as the inode doesn't go away and racy results are not a problem.
+  */
+ unsigned long shmem_swap_usage(struct vm_area_struct *vma)
+@@ -1123,7 +1123,7 @@ static int shmem_unuse_inode(struct shmem_inode_info *info,
+ 	int error = 0;
+ 
+ 	radswap = swp_to_radix_entry(swap);
+-	index = find_swap_entry(&mapping->page_tree, radswap);
++	index = find_swap_entry(&mapping->pages, radswap);
+ 	if (index == -1)
+ 		return -EAGAIN;	/* tell shmem_unuse we found nothing */
+ 
+@@ -1436,7 +1436,7 @@ static struct page *shmem_alloc_hugepage(gfp_t gfp,
+ 
+ 	hindex = round_down(index, HPAGE_PMD_NR);
+ 	rcu_read_lock();
+-	if (radix_tree_gang_lookup_slot(&mapping->page_tree, &results, &idx,
++	if (radix_tree_gang_lookup_slot(&mapping->pages, &results, &idx,
+ 				hindex, 1) && idx < hindex + HPAGE_PMD_NR) {
+ 		rcu_read_unlock();
+ 		return NULL;
+@@ -1549,14 +1549,14 @@ static int shmem_replace_page(struct page **pagep, gfp_t gfp,
+ 	 * Our caller will very soon move newpage out of swapcache, but it's
+ 	 * a nice clean interface for us to replace oldpage by newpage there.
+ 	 */
+-	spin_lock_irq(&swap_mapping->tree_lock);
++	xa_lock_irq(&swap_mapping->pages);
+ 	error = shmem_radix_tree_replace(swap_mapping, swap_index, oldpage,
+ 								   newpage);
+ 	if (!error) {
+ 		__inc_node_page_state(newpage, NR_FILE_PAGES);
+ 		__dec_node_page_state(oldpage, NR_FILE_PAGES);
+ 	}
+-	spin_unlock_irq(&swap_mapping->tree_lock);
++	xa_unlock_irq(&swap_mapping->pages);
+ 
+ 	if (unlikely(error)) {
+ 		/*
+@@ -2622,7 +2622,7 @@ static void shmem_tag_pins(struct address_space *mapping)
+ 	start = 0;
+ 	rcu_read_lock();
+ 
+-	radix_tree_for_each_slot(slot, &mapping->page_tree, &iter, start) {
++	radix_tree_for_each_slot(slot, &mapping->pages, &iter, start) {
+ 		page = radix_tree_deref_slot(slot);
+ 		if (!page || radix_tree_exception(page)) {
+ 			if (radix_tree_deref_retry(page)) {
+@@ -2630,10 +2630,10 @@ static void shmem_tag_pins(struct address_space *mapping)
+ 				continue;
+ 			}
+ 		} else if (page_count(page) - page_mapcount(page) > 1) {
+-			spin_lock_irq(&mapping->tree_lock);
+-			radix_tree_tag_set(&mapping->page_tree, iter.index,
++			xa_lock_irq(&mapping->pages);
++			radix_tree_tag_set(&mapping->pages, iter.index,
+ 					   SHMEM_TAG_PINNED);
+-			spin_unlock_irq(&mapping->tree_lock);
++			xa_unlock_irq(&mapping->pages);
+ 		}
+ 
+ 		if (need_resched()) {
+@@ -2665,7 +2665,7 @@ static int shmem_wait_for_pins(struct address_space *mapping)
+ 
+ 	error = 0;
+ 	for (scan = 0; scan <= LAST_SCAN; scan++) {
+-		if (!radix_tree_tagged(&mapping->page_tree, SHMEM_TAG_PINNED))
++		if (!radix_tree_tagged(&mapping->pages, SHMEM_TAG_PINNED))
+ 			break;
+ 
+ 		if (!scan)
+@@ -2675,7 +2675,7 @@ static int shmem_wait_for_pins(struct address_space *mapping)
+ 
+ 		start = 0;
+ 		rcu_read_lock();
+-		radix_tree_for_each_tagged(slot, &mapping->page_tree, &iter,
++		radix_tree_for_each_tagged(slot, &mapping->pages, &iter,
+ 					   start, SHMEM_TAG_PINNED) {
+ 
+ 			page = radix_tree_deref_slot(slot);
+@@ -2701,10 +2701,10 @@ static int shmem_wait_for_pins(struct address_space *mapping)
+ 				error = -EBUSY;
+ 			}
+ 
+-			spin_lock_irq(&mapping->tree_lock);
+-			radix_tree_tag_clear(&mapping->page_tree,
++			xa_lock_irq(&mapping->pages);
++			radix_tree_tag_clear(&mapping->pages,
+ 					     iter.index, SHMEM_TAG_PINNED);
+-			spin_unlock_irq(&mapping->tree_lock);
++			xa_unlock_irq(&mapping->pages);
+ continue_resched:
+ 			if (need_resched()) {
+ 				slot = radix_tree_iter_resume(slot, &iter);
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 39ae7cfad90f..3f95e8fc4cb2 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -124,10 +124,10 @@ int __add_to_swap_cache(struct page *page, swp_entry_t entry)
+ 	SetPageSwapCache(page);
+ 
+ 	address_space = swap_address_space(entry);
+-	spin_lock_irq(&address_space->tree_lock);
++	xa_lock_irq(&address_space->pages);
+ 	for (i = 0; i < nr; i++) {
+ 		set_page_private(page + i, entry.val + i);
+-		error = radix_tree_insert(&address_space->page_tree,
++		error = radix_tree_insert(&address_space->pages,
+ 					  idx + i, page + i);
+ 		if (unlikely(error))
+ 			break;
+@@ -145,13 +145,13 @@ int __add_to_swap_cache(struct page *page, swp_entry_t entry)
+ 		VM_BUG_ON(error == -EEXIST);
+ 		set_page_private(page + i, 0UL);
+ 		while (i--) {
+-			radix_tree_delete(&address_space->page_tree, idx + i);
++			radix_tree_delete(&address_space->pages, idx + i);
+ 			set_page_private(page + i, 0UL);
+ 		}
+ 		ClearPageSwapCache(page);
+ 		page_ref_sub(page, nr);
+ 	}
+-	spin_unlock_irq(&address_space->tree_lock);
++	xa_unlock_irq(&address_space->pages);
+ 
+ 	return error;
+ }
+@@ -188,7 +188,7 @@ void __delete_from_swap_cache(struct page *page)
+ 	address_space = swap_address_space(entry);
+ 	idx = swp_offset(entry);
+ 	for (i = 0; i < nr; i++) {
+-		radix_tree_delete(&address_space->page_tree, idx + i);
++		radix_tree_delete(&address_space->pages, idx + i);
+ 		set_page_private(page + i, 0);
+ 	}
+ 	ClearPageSwapCache(page);
+@@ -272,9 +272,9 @@ void delete_from_swap_cache(struct page *page)
+ 	entry.val = page_private(page);
+ 
+ 	address_space = swap_address_space(entry);
+-	spin_lock_irq(&address_space->tree_lock);
++	xa_lock_irq(&address_space->pages);
+ 	__delete_from_swap_cache(page);
+-	spin_unlock_irq(&address_space->tree_lock);
++	xa_unlock_irq(&address_space->pages);
+ 
+ 	put_swap_page(page, entry);
+ 	page_ref_sub(page, hpage_nr_pages(page));
+@@ -612,12 +612,11 @@ int init_swap_address_space(unsigned int type, unsigned long nr_pages)
+ 		return -ENOMEM;
+ 	for (i = 0; i < nr; i++) {
+ 		space = spaces + i;
+-		INIT_RADIX_TREE(&space->page_tree, GFP_ATOMIC|__GFP_NOWARN);
++		INIT_RADIX_TREE(&space->pages, GFP_ATOMIC|__GFP_NOWARN);
+ 		atomic_set(&space->i_mmap_writable, 0);
+ 		space->a_ops = &swap_aops;
+ 		/* swap cache doesn't use writeback related tags */
+ 		mapping_set_no_writeback_tags(space);
+-		spin_lock_init(&space->tree_lock);
+ 	}
+ 	nr_swapper_spaces[type] = nr;
+ 	rcu_assign_pointer(swapper_spaces[type], spaces);
+diff --git a/mm/truncate.c b/mm/truncate.c
+index e4b4cf0f4070..094158f2e447 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -36,11 +36,11 @@ static inline void __clear_shadow_entry(struct address_space *mapping,
+ 	struct radix_tree_node *node;
+ 	void **slot;
+ 
+-	if (!__radix_tree_lookup(&mapping->page_tree, index, &node, &slot))
++	if (!__radix_tree_lookup(&mapping->pages, index, &node, &slot))
+ 		return;
+ 	if (*slot != entry)
+ 		return;
+-	__radix_tree_replace(&mapping->page_tree, node, slot, NULL,
++	__radix_tree_replace(&mapping->pages, node, slot, NULL,
+ 			     workingset_update_node);
+ 	mapping->nrexceptional--;
+ }
+@@ -48,9 +48,9 @@ static inline void __clear_shadow_entry(struct address_space *mapping,
+ static void clear_shadow_entry(struct address_space *mapping, pgoff_t index,
+ 			       void *entry)
+ {
+-	spin_lock_irq(&mapping->tree_lock);
++	xa_lock_irq(&mapping->pages);
+ 	__clear_shadow_entry(mapping, index, entry);
+-	spin_unlock_irq(&mapping->tree_lock);
++	xa_unlock_irq(&mapping->pages);
  }
  
  /*
-- * This test revealed an accounting bug for exceptional entries at one point.
-+ * This test revealed an accounting bug for inline data entries at one point.
-  * Nodes were being freed back into the pool with an elevated exception count
-  * by radix_tree_join() and then radix_tree_split() was failing to zero the
-  * count of exceptional entries.
-@@ -420,16 +419,16 @@ static void multiorder_join3(unsigned int order)
- 	unsigned long i;
+@@ -79,7 +79,7 @@ static void truncate_exceptional_pvec_entries(struct address_space *mapping,
+ 	dax = dax_mapping(mapping);
+ 	lock = !dax && indices[j] < end;
+ 	if (lock)
+-		spin_lock_irq(&mapping->tree_lock);
++		xa_lock_irq(&mapping->pages);
  
- 	for (i = 0; i < (1 << order); i++) {
--		radix_tree_insert(&tree, i, (void *)0x12UL);
-+		radix_tree_insert(&tree, i, xa_mk_value(5));
+ 	for (i = j; i < pagevec_count(pvec); i++) {
+ 		struct page *page = pvec->pages[i];
+@@ -102,7 +102,7 @@ static void truncate_exceptional_pvec_entries(struct address_space *mapping,
  	}
  
--	radix_tree_join(&tree, 0, order, (void *)0x16UL);
-+	radix_tree_join(&tree, 0, order, xa_mk_value(7));
- 	rcu_barrier();
+ 	if (lock)
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_unlock_irq(&mapping->pages);
+ 	pvec->nr = j;
+ }
  
- 	radix_tree_split(&tree, 0, 0);
+@@ -522,8 +522,8 @@ void truncate_inode_pages_final(struct address_space *mapping)
+ 		 * modification that does not see AS_EXITING is
+ 		 * completed before starting the final truncate.
+ 		 */
+-		spin_lock_irq(&mapping->tree_lock);
+-		spin_unlock_irq(&mapping->tree_lock);
++		xa_lock_irq(&mapping->pages);
++		xa_unlock_irq(&mapping->pages);
  
- 	radix_tree_for_each_slot(slot, &tree, &iter, 0) {
--		radix_tree_iter_replace(&tree, &iter, slot, (void *)0x12UL);
-+		radix_tree_iter_replace(&tree, &iter, slot, xa_mk_value(5));
+ 		truncate_inode_pages(mapping, 0);
  	}
+@@ -631,13 +631,13 @@ invalidate_complete_page2(struct address_space *mapping, struct page *page)
+ 	if (page_has_private(page) && !try_to_release_page(page, GFP_KERNEL))
+ 		return 0;
  
- 	__radix_tree_lookup(&tree, 0, &node, NULL);
-@@ -516,10 +515,10 @@ static void __multiorder_split2(int old_order, int new_order)
- 	struct radix_tree_node *node;
- 	void *item;
+-	spin_lock_irqsave(&mapping->tree_lock, flags);
++	xa_lock_irqsave(&mapping->pages, flags);
+ 	if (PageDirty(page))
+ 		goto failed;
  
--	__radix_tree_insert(&tree, 0, old_order, (void *)0x12);
-+	__radix_tree_insert(&tree, 0, old_order, xa_mk_value(5));
+ 	BUG_ON(page_has_private(page));
+ 	__delete_from_page_cache(page, NULL);
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
  
- 	item = __radix_tree_lookup(&tree, 0, &node, NULL);
--	assert(item == (void *)0x12);
-+	assert(item == xa_mk_value(5));
- 	assert(node->exceptional > 0);
+ 	if (mapping->a_ops->freepage)
+ 		mapping->a_ops->freepage(page);
+@@ -645,7 +645,7 @@ invalidate_complete_page2(struct address_space *mapping, struct page *page)
+ 	put_page(page);	/* pagecache ref */
+ 	return 1;
+ failed:
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
+ 	return 0;
+ }
  
- 	radix_tree_split(&tree, 0, new_order);
-@@ -529,7 +528,7 @@ static void __multiorder_split2(int old_order, int new_order)
- 	}
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 47d5ced51f2d..2fa675a2db31 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -677,7 +677,7 @@ static int __remove_mapping(struct address_space *mapping, struct page *page,
+ 	BUG_ON(!PageLocked(page));
+ 	BUG_ON(mapping != page_mapping(page));
  
- 	item = __radix_tree_lookup(&tree, 0, &node, NULL);
--	assert(item != (void *)0x12);
-+	assert(item != xa_mk_value(5));
- 	assert(node->exceptional == 0);
+-	spin_lock_irqsave(&mapping->tree_lock, flags);
++	xa_lock_irqsave(&mapping->pages, flags);
+ 	/*
+ 	 * The non racy check for a busy page.
+ 	 *
+@@ -701,7 +701,7 @@ static int __remove_mapping(struct address_space *mapping, struct page *page,
+ 	 * load is not satisfied before that of page->_refcount.
+ 	 *
+ 	 * Note that if SetPageDirty is always performed via set_page_dirty,
+-	 * and thus under tree_lock, then this ordering is not required.
++	 * and thus under xa_lock, then this ordering is not required.
+ 	 */
+ 	if (unlikely(PageTransHuge(page)) && PageSwapCache(page))
+ 		refcount = 1 + HPAGE_PMD_NR;
+@@ -719,7 +719,7 @@ static int __remove_mapping(struct address_space *mapping, struct page *page,
+ 		swp_entry_t swap = { .val = page_private(page) };
+ 		mem_cgroup_swapout(page, swap);
+ 		__delete_from_swap_cache(page);
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
+ 		put_swap_page(page, swap);
+ 	} else {
+ 		void (*freepage)(struct page *);
+@@ -740,13 +740,13 @@ static int __remove_mapping(struct address_space *mapping, struct page *page,
+ 		 * only page cache pages found in these are zero pages
+ 		 * covering holes, and because we don't want to mix DAX
+ 		 * exceptional entries and shadow exceptional entries in the
+-		 * same page_tree.
++		 * same address_space.
+ 		 */
+ 		if (reclaimed && page_is_file_cache(page) &&
+ 		    !mapping_exiting(mapping) && !dax_mapping(mapping))
+ 			shadow = workingset_eviction(mapping, page);
+ 		__delete_from_page_cache(page, shadow);
+-		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		xa_unlock_irqrestore(&mapping->pages, flags);
  
- 	item_kill_tree(&tree);
-@@ -543,40 +542,40 @@ static void __multiorder_split3(int old_order, int new_order)
- 	struct radix_tree_node *node;
- 	void *item;
+ 		if (freepage != NULL)
+ 			freepage(page);
+@@ -755,7 +755,7 @@ static int __remove_mapping(struct address_space *mapping, struct page *page,
+ 	return 1;
  
--	__radix_tree_insert(&tree, 0, old_order, (void *)0x12);
-+	__radix_tree_insert(&tree, 0, old_order, xa_mk_value(5));
+ cannot_free:
+-	spin_unlock_irqrestore(&mapping->tree_lock, flags);
++	xa_unlock_irqrestore(&mapping->pages, flags);
+ 	return 0;
+ }
  
- 	item = __radix_tree_lookup(&tree, 0, &node, NULL);
--	assert(item == (void *)0x12);
-+	assert(item == xa_mk_value(5));
- 	assert(node->exceptional > 0);
+diff --git a/mm/workingset.c b/mm/workingset.c
+index b7d616a3bbbe..3cb3586181e6 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -202,7 +202,7 @@ static void unpack_shadow(void *shadow, int *memcgidp, pg_data_t **pgdat,
+  * @mapping: address space the page was backing
+  * @page: the page being evicted
+  *
+- * Returns a shadow entry to be stored in @mapping->page_tree in place
++ * Returns a shadow entry to be stored in @mapping->pages in place
+  * of the evicted @page so that a later refault can be detected.
+  */
+ void *workingset_eviction(struct address_space *mapping, struct page *page)
+@@ -348,7 +348,7 @@ void workingset_update_node(struct radix_tree_node *node)
+ 	 *
+ 	 * Avoid acquiring the list_lru lock when the nodes are
+ 	 * already where they should be. The list_empty() test is safe
+-	 * as node->private_list is protected by &mapping->tree_lock.
++	 * as node->private_list is protected by mapping->pages.xa_lock.
+ 	 */
+ 	if (node->count && node->count == node->exceptional) {
+ 		if (list_empty(&node->private_list))
+@@ -366,7 +366,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ 	unsigned long nodes;
+ 	unsigned long cache;
  
- 	radix_tree_split(&tree, 0, new_order);
- 	radix_tree_for_each_slot(slot, &tree, &iter, 0) {
--		radix_tree_iter_replace(&tree, &iter, slot, (void *)0x16);
-+		radix_tree_iter_replace(&tree, &iter, slot, xa_mk_value(7));
- 	}
+-	/* list_lru lock nests inside IRQ-safe mapping->tree_lock */
++	/* list_lru lock nests inside IRQ-safe mapping->pages.xa_lock */
+ 	local_irq_disable();
+ 	nodes = list_lru_shrink_count(&shadow_nodes, sc);
+ 	local_irq_enable();
+@@ -419,21 +419,21 @@ static enum lru_status shadow_lru_isolate(struct list_head *item,
  
- 	item = __radix_tree_lookup(&tree, 0, &node, NULL);
--	assert(item == (void *)0x16);
-+	assert(item == xa_mk_value(7));
- 	assert(node->exceptional > 0);
+ 	/*
+ 	 * Page cache insertions and deletions synchroneously maintain
+-	 * the shadow node LRU under the mapping->tree_lock and the
++	 * the shadow node LRU under the mapping->pages.xa_lock and the
+ 	 * lru_lock.  Because the page cache tree is emptied before
+ 	 * the inode can be destroyed, holding the lru_lock pins any
+ 	 * address_space that has radix tree nodes on the LRU.
+ 	 *
+-	 * We can then safely transition to the mapping->tree_lock to
++	 * We can then safely transition to the mapping->pages.xa_lock to
+ 	 * pin only the address_space of the particular node we want
+ 	 * to reclaim, take the node off-LRU, and drop the lru_lock.
+ 	 */
  
- 	item_kill_tree(&tree);
+ 	node = container_of(item, struct radix_tree_node, private_list);
+-	mapping = container_of(node->root, struct address_space, page_tree);
++	mapping = container_of(node->root, struct address_space, pages);
  
--	__radix_tree_insert(&tree, 0, old_order, (void *)0x12);
-+	__radix_tree_insert(&tree, 0, old_order, xa_mk_value(5));
+ 	/* Coming from the list, invert the lock order */
+-	if (!spin_trylock(&mapping->tree_lock)) {
++	if (!xa_trylock(&mapping->pages)) {
+ 		spin_unlock(lru_lock);
+ 		ret = LRU_RETRY;
+ 		goto out;
+@@ -468,11 +468,11 @@ static enum lru_status shadow_lru_isolate(struct list_head *item,
+ 	if (WARN_ON_ONCE(node->exceptional))
+ 		goto out_invalid;
+ 	inc_lruvec_page_state(virt_to_page(node), WORKINGSET_NODERECLAIM);
+-	__radix_tree_delete_node(&mapping->page_tree, node,
++	__radix_tree_delete_node(&mapping->pages, node,
+ 				 workingset_lookup_update(mapping));
  
- 	item = __radix_tree_lookup(&tree, 0, &node, NULL);
--	assert(item == (void *)0x12);
-+	assert(item == xa_mk_value(5));
- 	assert(node->exceptional > 0);
+ out_invalid:
+-	spin_unlock(&mapping->tree_lock);
++	xa_unlock(&mapping->pages);
+ 	ret = LRU_REMOVED_RETRY;
+ out:
+ 	local_irq_enable();
+@@ -487,7 +487,7 @@ static unsigned long scan_shadow_nodes(struct shrinker *shrinker,
+ {
+ 	unsigned long ret;
  
- 	radix_tree_split(&tree, 0, new_order);
- 	radix_tree_for_each_slot(slot, &tree, &iter, 0) {
- 		if (iter.index == (1 << new_order))
- 			radix_tree_iter_replace(&tree, &iter, slot,
--						(void *)0x16);
-+						xa_mk_value(7));
- 		else
- 			radix_tree_iter_replace(&tree, &iter, slot, NULL);
- 	}
+-	/* list_lru lock nests inside IRQ-safe mapping->tree_lock */
++	/* list_lru lock nests inside IRQ-safe mapping->pages.xa_lock */
+ 	local_irq_disable();
+ 	ret = list_lru_shrink_walk(&shadow_nodes, sc, shadow_lru_isolate, NULL);
+ 	local_irq_enable();
+@@ -503,7 +503,7 @@ static struct shrinker workingset_shadow_shrinker = {
  
- 	item = __radix_tree_lookup(&tree, 1 << new_order, &node, NULL);
--	assert(item == (void *)0x16);
-+	assert(item == xa_mk_value(7));
- 	assert(node->count == node->exceptional);
- 	do {
- 		node = node->parent;
-@@ -609,13 +608,13 @@ static void multiorder_account(void)
- 
- 	item_insert_order(&tree, 0, 5);
- 
--	__radix_tree_insert(&tree, 1 << 5, 5, (void *)0x12);
-+	__radix_tree_insert(&tree, 1 << 5, 5, xa_mk_value(5));
- 	__radix_tree_lookup(&tree, 0, &node, NULL);
- 	assert(node->count == node->exceptional * 2);
- 	radix_tree_delete(&tree, 1 << 5);
- 	assert(node->exceptional == 0);
- 
--	__radix_tree_insert(&tree, 1 << 5, 5, (void *)0x12);
-+	__radix_tree_insert(&tree, 1 << 5, 5, xa_mk_value(5));
- 	__radix_tree_lookup(&tree, 1 << 5, &node, &slot);
- 	assert(node->count == node->exceptional * 2);
- 	__radix_tree_replace(&tree, node, slot, NULL, NULL);
-diff --git a/tools/testing/radix-tree/test.c b/tools/testing/radix-tree/test.c
-index 5978ab1f403d..0d69c49177c6 100644
---- a/tools/testing/radix-tree/test.c
-+++ b/tools/testing/radix-tree/test.c
-@@ -276,7 +276,7 @@ void item_kill_tree(struct radix_tree_root *root)
- 	int nfound;
- 
- 	radix_tree_for_each_slot(slot, root, &iter, 0) {
--		if (radix_tree_exceptional_entry(*slot))
-+		if (xa_is_value(*slot))
- 			radix_tree_delete(root, iter.index);
- 	}
+ /*
+  * Our list_lru->lock is IRQ-safe as it nests inside the IRQ-safe
+- * mapping->tree_lock.
++ * mapping->pages.xa_lock.
+  */
+ static struct lock_class_key shadow_nodes_key;
  
 -- 
 2.15.1
