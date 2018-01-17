@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:58287 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:38559 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753361AbeAQUWb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:31 -0500
+        with ESMTP id S1753151AbeAQUWa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:30 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 13/99] xarray: Add xa_extract
-Date: Wed, 17 Jan 2018 12:20:37 -0800
-Message-Id: <20180117202203.19756-14-willy@infradead.org>
+Subject: [PATCH v6 11/99] xarray: Add xa_cmpxchg and xa_insert
+Date: Wed, 17 Jan 2018 12:20:35 -0800
+Message-Id: <20180117202203.19756-12-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,120 +17,210 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This function combines the functionality of radix_tree_gang_lookup() and
-radix_tree_gang_lookup_tagged().  It extracts entries matching the
-specified filter into a normal array.
+Like cmpxchg(), xa_cmpxchg will only store to the index if the current
+entry matches the old entry.  It returns the current entry, which is
+usually more useful than the errno returned by radix_tree_insert().
+For the users who really only want the errno, the xa_insert() wrapper
+provides a more convenient calling convention.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/xarray.h |  2 ++
- lib/xarray.c           | 80 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+)
+ include/linux/xarray.h                 | 56 ++++++++++++++++++++++++++++
+ lib/xarray.c                           | 68 ++++++++++++++++++++++++++++++++++
+ tools/testing/radix-tree/xarray-test.c | 10 +++++
+ 3 files changed, 134 insertions(+)
 
 diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-index fcd7ef68933a..d79fd48e4957 100644
+index 139b1c1fd022..fc9ab3b13e60 100644
 --- a/include/linux/xarray.h
 +++ b/include/linux/xarray.h
-@@ -219,6 +219,8 @@ void *xa_find(struct xarray *xa, unsigned long *index,
- 		unsigned long max, xa_tag_t) __attribute__((nonnull(2)));
- void *xa_find_after(struct xarray *xa, unsigned long *index,
- 		unsigned long max, xa_tag_t) __attribute__((nonnull(2)));
-+unsigned int xa_extract(struct xarray *, void **dst, unsigned long start,
-+		unsigned long max, unsigned int n, xa_tag_t);
+@@ -210,6 +210,8 @@ struct xarray {
+ void xa_init_flags(struct xarray *, gfp_t flags);
+ void *xa_load(struct xarray *, unsigned long index);
+ void *xa_store(struct xarray *, unsigned long index, void *entry, gfp_t);
++void *xa_cmpxchg(struct xarray *, unsigned long index,
++			void *old, void *entry, gfp_t);
+ bool xa_get_tag(struct xarray *, unsigned long index, xa_tag_t);
+ void xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
+ void xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
+@@ -264,6 +266,32 @@ static inline bool xa_tagged(const struct xarray *xa, xa_tag_t tag)
+ 	return xa->xa_flags & XA_FLAGS_TAG(tag);
+ }
  
- /**
-  * xa_init() - Initialise an empty XArray.
++/**
++ * xa_insert() - Store this entry in the XArray unless another entry is
++ *			already present.
++ * @xa: XArray.
++ * @index: Index into array.
++ * @entry: New entry.
++ * @gfp: Memory allocation flags.
++ *
++ * If you would rather see the existing entry in the array, use xa_cmpxchg().
++ * This function is for users who don't care what the entry is, only that
++ * one is present.
++ *
++ * Return: -EEXIST if another entry was present, 0 if the store succeeded,
++ * or another negative errno if a different error happened (eg -ENOMEM).
++ */
++static inline int xa_insert(struct xarray *xa, unsigned long index,
++		void *entry, gfp_t gfp)
++{
++	void *curr = xa_cmpxchg(xa, index, NULL, entry, gfp);
++	if (!curr)
++		return 0;
++	if (xa_is_err(curr))
++		return xa_err(curr);
++	return -EEXIST;
++}
++
+ #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
+ #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
+ #define xa_unlock(xa)		spin_unlock(&(xa)->xa_lock)
+@@ -283,9 +311,37 @@ static inline bool xa_tagged(const struct xarray *xa, xa_tag_t tag)
+  */
+ void *__xa_erase(struct xarray *, unsigned long index);
+ void *__xa_store(struct xarray *, unsigned long index, void *entry, gfp_t);
++void *__xa_cmpxchg(struct xarray *, unsigned long index, void *old,
++		void *entry, gfp_t);
+ void __xa_set_tag(struct xarray *, unsigned long index, xa_tag_t);
+ void __xa_clear_tag(struct xarray *, unsigned long index, xa_tag_t);
+ 
++/**
++ * __xa_insert() - Store this entry in the XArray unless another entry is
++ *			already present.
++ * @xa: XArray.
++ * @index: Index into array.
++ * @entry: New entry.
++ * @gfp: Memory allocation flags.
++ *
++ * If you would rather see the existing entry in the array, use __xa_cmpxchg().
++ * This function is for users who don't care what the entry is, only that
++ * one is present.
++ *
++ * Return: -EEXIST if another entry was present, 0 if the store succeeded,
++ * or another negative errno if a different error happened (eg -ENOMEM).
++ */
++static inline int __xa_insert(struct xarray *xa, unsigned long index,
++		void *entry, gfp_t gfp)
++{
++	void *curr = __xa_cmpxchg(xa, index, NULL, entry, gfp);
++	if (!curr)
++		return 0;
++	if (xa_is_err(curr))
++		return xa_err(curr);
++	return -EEXIST;
++}
++
+ /* Everything below here is the Advanced API.  Proceed with caution. */
+ 
+ /*
 diff --git a/lib/xarray.c b/lib/xarray.c
-index 3e6be0a07525..be276618f81b 100644
+index 45b70e622bf1..d925a98fb9b8 100644
 --- a/lib/xarray.c
 +++ b/lib/xarray.c
-@@ -1368,6 +1368,86 @@ void *xa_find_after(struct xarray *xa, unsigned long *indexp,
+@@ -928,6 +928,74 @@ void *__xa_store(struct xarray *xa, unsigned long index, void *entry, gfp_t gfp)
  }
- EXPORT_SYMBOL(xa_find_after);
+ EXPORT_SYMBOL(__xa_store);
  
-+static unsigned int xas_extract_present(struct xa_state *xas, void **dst,
-+			unsigned long max, unsigned int n)
++/**
++ * xa_cmpxchg() - Conditionally replace an entry in the XArray.
++ * @xa: XArray.
++ * @index: Index into array.
++ * @old: Old value to test against.
++ * @entry: New value to place in array.
++ * @gfp: Memory allocation flags.
++ *
++ * If the entry at @index is the same as @old, replace it with @entry.
++ * If the return value is equal to @old, then the exchange was successful.
++ *
++ * Return: The old value at this index or xa_err() if an error happened.
++ */
++void *xa_cmpxchg(struct xarray *xa, unsigned long index,
++			void *old, void *entry, gfp_t gfp)
 +{
-+	void *entry;
-+	unsigned int i = 0;
++	XA_STATE(xas, xa, index);
++	void *curr;
 +
-+	rcu_read_lock();
-+	xas_for_each(xas, entry, max) {
-+		if (xas_retry(xas, entry))
-+			continue;
-+		dst[i++] = entry;
-+		if (i == n)
-+			break;
-+	}
-+	rcu_read_unlock();
++	if (WARN_ON_ONCE(xa_is_internal(entry)))
++		return XA_ERROR(-EINVAL);
 +
-+	return i;
++	do {
++		xas_lock(&xas);
++		curr = xas_load(&xas);
++		if (curr == old)
++			xas_store(&xas, entry);
++		xas_unlock(&xas);
++	} while (xas_nomem(&xas, gfp));
++
++	return xas_result(&xas, curr);
 +}
-+
-+static unsigned int xas_extract_tag(struct xa_state *xas, void **dst,
-+			unsigned long max, unsigned int n, xa_tag_t tag)
-+{
-+	void *entry;
-+	unsigned int i = 0;
-+
-+	rcu_read_lock();
-+	xas_for_each_tag(xas, entry, max, tag) {
-+		if (xas_retry(xas, entry))
-+			continue;
-+		dst[i++] = entry;
-+		if (i == n)
-+			break;
-+	}
-+	rcu_read_unlock();
-+
-+	return i;
-+}
++EXPORT_SYMBOL(xa_cmpxchg);
 +
 +/**
-+ * xa_extract() - Copy selected entries from the XArray into a normal array.
-+ * @xa: The source XArray to copy from.
-+ * @dst: The buffer to copy entries into.
-+ * @start: The first index in the XArray eligible to be selected.
-+ * @max: The last index in the XArray eligible to be selected.
-+ * @n: The maximum number of entries to copy.
-+ * @filter: Selection criterion.
++ * __xa_cmpxchg() - Store this entry in the XArray.
++ * @xa: XArray.
++ * @index: Index into array.
++ * @old: Old value to test against.
++ * @entry: New entry.
++ * @gfp: Memory allocation flags.
 + *
-+ * Copies up to @n entries that match @filter from the XArray.  The
-+ * copied entries will have indices between @start and @max, inclusive.
++ * You must already be holding the xa_lock when calling this function.
++ * It will drop the lock if needed to allocate memory, and then reacquire
++ * it afterwards.
 + *
-+ * The @filter may be an XArray tag value, in which case entries which are
-+ * tagged with that tag will be copied.  It may also be %XA_PRESENT, in
-+ * which case non-NULL entries will be copied.
 + *
-+ * This function uses the RCU lock to protect itself.  That means that the
-+ * entries returned may not represent a snapshot of the XArray at a moment
-+ * in time.  For example, if index 5 is stored to, then index 10 is stored to,
-+ * calling xa_extract() may return the old contents of index 5 and the
-+ * new contents of index 10.  Indices not modified while this function is
-+ * running will not be skipped.
-+ *
-+ * If you need stronger guarantees, holding the xa_lock across calls to this
-+ * function will prevent concurrent modification.
-+ *
-+ * Return: The number of entries copied.
++ * Return: The old entry at this index or xa_err() if an error happened.
 + */
-+unsigned int xa_extract(struct xarray *xa, void **dst, unsigned long start,
-+			unsigned long max, unsigned int n, xa_tag_t filter)
++void *__xa_cmpxchg(struct xarray *xa, unsigned long index,
++			void *old, void *entry, gfp_t gfp)
 +{
-+	XA_STATE(xas, xa, start);
++	XA_STATE(xas, xa, index);
++	void *curr;
 +
-+	if (!n)
-+		return 0;
++	if (WARN_ON_ONCE(xa_is_internal(entry)))
++		return XA_ERROR(-EINVAL);
 +
-+	if ((__force unsigned int)filter < XA_MAX_TAGS)
-+		return xas_extract_tag(&xas, dst, max, n, filter);
-+	return xas_extract_present(&xas, dst, max, n);
++	do {
++		curr = xas_load(&xas);
++		if (curr == old)
++			xas_store(&xas, entry);
++	} while (__xas_nomem(&xas, gfp));
++
++	return xas_result(&xas, curr);
 +}
-+EXPORT_SYMBOL(xa_extract);
++EXPORT_SYMBOL(__xa_cmpxchg);
 +
- #ifdef XA_DEBUG
- void xa_dump_node(const struct xa_node *node)
+ /**
+  * __xa_set_tag() - Set this tag on this entry while locked.
+  * @xa: XArray.
+diff --git a/tools/testing/radix-tree/xarray-test.c b/tools/testing/radix-tree/xarray-test.c
+index 5defd0b9f85c..d6a969d999d9 100644
+--- a/tools/testing/radix-tree/xarray-test.c
++++ b/tools/testing/radix-tree/xarray-test.c
+@@ -84,6 +84,15 @@ void check_xa_shrink(struct xarray *xa)
+ 	assert(xa_load(xa, 0) == xa_mk_value(0));
+ }
+ 
++void check_cmpxchg(struct xarray *xa)
++{
++	assert(xa_empty(xa));
++	assert(!xa_store(xa, 12345678, xa_mk_value(12345678), GFP_KERNEL));
++	assert(!xa_cmpxchg(xa, 5, xa_mk_value(5), NULL, GFP_KERNEL));
++	assert(xa_erase(xa, 12345678) == xa_mk_value(12345678));
++	assert(xa_empty(xa));
++}
++
+ void check_multi_store(struct xarray *xa)
  {
+ 	unsigned long i, j, k;
+@@ -149,6 +158,7 @@ void xarray_checks(void)
+ 	check_xa_shrink(&array);
+ 	item_kill_tree(&array);
+ 
++	check_cmpxchg(&array);
+ 	check_multi_store(&array);
+ 	item_kill_tree(&array);
+ }
 -- 
 2.15.1
 
