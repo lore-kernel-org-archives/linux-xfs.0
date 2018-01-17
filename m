@@ -1,105 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55522 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751783AbeAPWvj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 17:51:39 -0500
-Date: Tue, 16 Jan 2018 14:51:27 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: cancel tx on xfs_defer_finish() error during xattr
- set/remove
-Message-ID: <20180116225127.GX5602@magnolia>
-References: <20180116194537.34451-1-bfoster@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32018 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750796AbeAQAwc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 19:52:32 -0500
+Date: Wed, 17 Jan 2018 11:52:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 17/21] xfs: cross-reference reverse-mapping btree
+Message-ID: <20180117005230.GF6304@dastard>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
+ <151398987679.18741.2129470901020229164.stgit@magnolia>
+ <20180116232502.GB5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180116194537.34451-1-bfoster@redhat.com>
+In-Reply-To: <20180116232502.GB5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Chris Dunlop <chris@onthe.net.au>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 16, 2018 at 02:45:37PM -0500, Brian Foster wrote:
-> Chris Dunlop reports a problem where an xattr operation fails,
-> reports the following error to syslog and hangs during unmount:
+On Tue, Jan 16, 2018 at 03:25:02PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
->  ================================================
->  [ BUG: lock held when returning to user space! ]
->  ...
->  ------------------------------------------------
->  <PID> is leaving the kernel with locks still held!
->  1 lock held by <PID>:
->   #0:  (sb_internal){......}, at: [<ffffffffa07692a3>] xfs_trans_alloc+0xe3/0x130 [xfs]
+> When scrubbing various btrees, we should cross-reference the records
+> with the reverse mapping btree and ensure that traversing the btree
+> finds the same number of blocks that the rmapbt thinks are owned by
+> that btree.
 > 
-> The failure/shutdown occurs during deferred ops processing which
-> leads to an error return from xfs_defer_finish() via
-> xfs_attr_leaf_addname(). While the root cause of the failure is
-> unknown corruption, the cause of the subsequent BUG above and
-> unmount hang is failure to cancel the transaction before returning
-> to userspace.
-> 
-> The transaction is not cancelled because the out_defer_cancel error
-> handling paths in the xfs_attr_[leaf|node]_[add|remove]name()
-> functions clear args.trans without releasing the transaction. The
-> callers therefore lose the reference to the transaction and fail to
-> cancel it.
-> 
-> Since xfs_attr_[set|remove]() always cancel args.trans when != NULL
-> and xfs_defer_finish()->...->xfs_trans_roll() should always return
-> with a valid transaction, update the leaf/node xattr functions to
-> not reset args.trans in the error path responsible for cancelling
-> deferred ops.
-> 
-> Reported-by: Chris Dunlop <chris@onthe.net.au>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-Looks ok, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index a76914db72ef..ce4a34a2751d 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -717,7 +717,6 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
->  	return error;
->  out_defer_cancel:
->  	xfs_defer_cancel(args->dfops);
-> -	args->trans = NULL;
->  	return error;
->  }
->  
-> @@ -770,7 +769,6 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
->  	return 0;
->  out_defer_cancel:
->  	xfs_defer_cancel(args->dfops);
-> -	args->trans = NULL;
->  	return error;
->  }
->  
-> @@ -1045,7 +1043,6 @@ xfs_attr_node_addname(xfs_da_args_t *args)
->  	return retval;
->  out_defer_cancel:
->  	xfs_defer_cancel(args->dfops);
-> -	args->trans = NULL;
->  	goto out;
->  }
->  
-> @@ -1186,7 +1183,6 @@ xfs_attr_node_removename(xfs_da_args_t *args)
->  	return error;
->  out_defer_cancel:
->  	xfs_defer_cancel(args->dfops);
-> -	args->trans = NULL;
->  	goto out;
->  }
->  
-> -- 
-> 2.13.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> v3: fix indenting and standardize helper naming, refactor helpers per dave's suggestion
+> v2: streamline scrubber arguments, remove stack allocated objects
+> ---
+
+Looks ok.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
