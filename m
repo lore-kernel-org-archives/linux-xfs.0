@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56838 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:56956 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753872AbeAQWDh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:03:37 -0500
-Subject: [PATCH 16/29] xfs_scrub: check directory connectivity
+        with ESMTP id S1753764AbeAQWDu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:03:50 -0500
+Subject: [PATCH 17/29] xfs_scrub: warn about suspicious characters in
+ directory/xattr names
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:33 -0800
-Message-ID: <151622661310.31925.10254288208119496968.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:03:39 -0800
+Message-ID: <151622661928.31925.6396423689806325799.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,161 +21,440 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Opening directories by file handle will cause the kernel to perform
-parent lookups all the way to the root directory.  Take advantage of
-this to ensure that directories actually connect to the root.  Some
-day we'll have parent pointers and can make this more comprehensive.
+Look for control characters and punctuation that interfere with shell
+globbing in directory entry names and extended attribute key names.
+Technically these aren't filesystem corruptions because names are
+arbitrary sequences of bytes, but they've been known to cause problems
+in the Unix environment so warn if we see them.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile    |    1 +
- scrub/phase5.c    |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.c |    1 +
- scrub/xfs_scrub.h |    1 +
- 4 files changed, 104 insertions(+)
- create mode 100644 scrub/phase5.c
+ configure.ac         |    2 +
+ debian/control       |    2 -
+ include/builddefs.in |    1 
+ m4/Makefile          |    1 
+ m4/package_attr.m4   |   23 ++++++
+ scrub/Makefile       |    6 ++
+ scrub/common.c       |   54 ++++++++++++++
+ scrub/common.h       |    4 +
+ scrub/phase5.c       |  192 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.h    |    1 
+ 10 files changed, 285 insertions(+), 1 deletion(-)
+ create mode 100644 m4/package_attr.m4
 
 
+diff --git a/configure.ac b/configure.ac
+index 796a91b..e2e3f66 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -166,6 +166,8 @@ AC_HAVE_STATFS_FLAGS
+ AC_HAVE_MAP_SYNC
+ AC_HAVE_DEVMAPPER
+ AC_HAVE_MALLINFO
++AC_PACKAGE_WANT_ATTRIBUTES_H
++AC_HAVE_LIBATTR
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/debian/control b/debian/control
+index f5980b2..f664a6b 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,7 +3,7 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev
++Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev
+ Standards-Version: 3.9.1
+ Homepage: https://xfs.wiki.kernel.org/
+ 
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 28cf0d8..cc1b7e2 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -120,6 +120,7 @@ HAVE_STATFS_FLAGS = @have_statfs_flags@
+ HAVE_MAP_SYNC = @have_map_sync@
+ HAVE_DEVMAPPER = @have_devmapper@
+ HAVE_MALLINFO = @have_mallinfo@
++HAVE_LIBATTR = @have_libattr@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/m4/Makefile b/m4/Makefile
+index 77f2edd..d5f1d2f 100644
+--- a/m4/Makefile
++++ b/m4/Makefile
+@@ -17,6 +17,7 @@ LSRCFILES = \
+ 	package_blkid.m4 \
+ 	package_devmapper.m4 \
+ 	package_globals.m4 \
++	package_attr.m4 \
+ 	package_libcdev.m4 \
+ 	package_pthread.m4 \
+ 	package_sanitizer.m4 \
+diff --git a/m4/package_attr.m4 b/m4/package_attr.m4
+new file mode 100644
+index 0000000..4324923
+--- /dev/null
++++ b/m4/package_attr.m4
+@@ -0,0 +1,23 @@
++AC_DEFUN([AC_PACKAGE_WANT_ATTRIBUTES_H],
++  [
++    AC_CHECK_HEADERS(attr/attributes.h)
++  ])
++
++#
++# Check if we have a ATTR_ROOT flag and libattr structures
++#
++AC_DEFUN([AC_HAVE_LIBATTR],
++  [ AC_MSG_CHECKING([for struct attrlist_cursor])
++    AC_TRY_COMPILE([
++#include <sys/types.h>
++#include <attr/attributes.h>
++       ], [
++struct attrlist_cursor *cur;
++struct attrlist *list;
++struct attrlist_ent *ent;
++int flags = ATTR_ROOT;
++       ], have_libattr=yes
++          AC_MSG_RESULT(yes),
++          AC_MSG_RESULT(no))
++    AC_SUBST(have_libattr)
++  ])
 diff --git a/scrub/Makefile b/scrub/Makefile
-index e0d15d8..adb868e 100644
+index adb868e..67ac6af 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -36,6 +36,7 @@ inodes.c \
- phase1.c \
- phase2.c \
- phase3.c \
-+phase5.c \
- scrub.c \
- spacemap.c \
- xfs_scrub.c
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-new file mode 100644
-index 0000000..0b161e3
---- /dev/null
-+++ b/scrub/phase5.c
-@@ -0,0 +1,101 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/statvfs.h>
-+#include "xfs.h"
-+#include "path.h"
-+#include "workqueue.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "inodes.h"
-+#include "scrub.h"
+@@ -53,8 +53,14 @@ ifeq ($(HAVE_SYNCFS),yes)
+ LCFLAGS += -DHAVE_SYNCFS
+ endif
+ 
++ifeq ($(HAVE_LIBATTR),yes)
++LCFLAGS += -DHAVE_LIBATTR
++endif
 +
-+/* Phase 5: Check directory connectivity. */
+ default: depend $(LTCOMMAND)
+ 
++phase5.o: $(TOPDIR)/include/builddefs
++
+ include $(BUILDRULES)
+ 
+ install: default $(INSTALL_SCRUB)
+diff --git a/scrub/common.c b/scrub/common.c
+index 81869e4..5e2d7c6 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -285,3 +285,57 @@ background_sleep(void)
+ 	tv.tv_nsec = time % 1000000;
+ 	nanosleep(&tv, NULL);
+ }
 +
 +/*
-+ * Verify the connectivity of the directory tree.
-+ * We know that the kernel's open-by-handle function will try to reconnect
-+ * parents of an opened directory, so we'll accept that as sufficient.
++ * Return the input string with non-printing bytes escaped.
++ * Caller must free the buffer.
 + */
-+static int
-+xfs_scrub_connections(
-+	struct scrub_ctx	*ctx,
-+	struct xfs_handle	*handle,
-+	struct xfs_bstat	*bstat,
-+	void			*arg)
++char *
++string_escape(
++	const char		*in)
 +{
-+	bool			*pmoveon = arg;
-+	char			descr[DESCR_BUFSZ];
-+	bool			moveon = true;
-+	xfs_agnumber_t		agno;
-+	xfs_agino_t		agino;
-+	int			fd = -1;
++	char			*str;
++	const char		*p;
++	char			*q;
++	int			x;
 +
-+	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
-+	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-+	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
-+			(uint64_t)bstat->bs_ino, agno, agino);
-+	background_sleep();
-+
-+	/* Open the dir, let the kernel try to reconnect it to the root. */
-+	if (S_ISDIR(bstat->bs_mode)) {
-+		fd = xfs_open_handle(handle);
-+		if (fd < 0) {
-+			if (errno == ESTALE)
-+				return ESTALE;
-+			str_errno(ctx, descr);
-+			goto out;
++	str = malloc(strlen(in) * 4);
++	if (!str)
++		return NULL;
++	for (p = in, q = str; *p != '\0'; p++) {
++		if (isprint(*p)) {
++			*q = *p;
++			q++;
++		} else {
++			x = sprintf(q, "\\x%02x", *p);
++			q += x;
 +		}
 +	}
-+
-+out:
-+	if (fd >= 0)
-+		close(fd);
-+	if (!moveon)
-+		*pmoveon = false;
-+	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
++	*q = '\0';
++	return str;
 +}
 +
-+/* Check directory connectivity. */
++/*
++ * Record another naming warning, and decide if it's worth
++ * complaining about.
++ */
 +bool
-+xfs_scan_connections(
++should_warn_about_name(
 +	struct scrub_ctx	*ctx)
 +{
-+	bool			moveon = true;
-+	bool			ret;
++	bool			whine;
++	bool			res;
 +
-+	if (ctx->errors_found) {
++	pthread_mutex_lock(&ctx->lock);
++	ctx->naming_warnings++;
++	whine = ctx->naming_warnings == TOO_MANY_NAME_WARNINGS;
++	res = ctx->naming_warnings < TOO_MANY_NAME_WARNINGS;
++	pthread_mutex_unlock(&ctx->lock);
++
++	if (whine && !(debug || verbose))
 +		str_info(ctx, ctx->mntpoint,
-+_("Filesystem has errors, skipping connectivity checks."));
++_("More than %u naming warnings, shutting up."),
++				TOO_MANY_NAME_WARNINGS);
++
++	return debug || verbose || res;
++}
+diff --git a/scrub/common.h b/scrub/common.h
+index 96fc870..336fc40 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -74,5 +74,9 @@ static inline int syncfs(int fd)
+ 
+ bool find_mountpoint(char *mtab, struct scrub_ctx *ctx);
+ void background_sleep(void);
++char *string_escape(const char *in);
++
++#define TOO_MANY_NAME_WARNINGS	10000
++bool should_warn_about_name(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 0b161e3..98d30f8 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -20,10 +20,15 @@
+ #include <stdio.h>
+ #include <stdint.h>
+ #include <stdbool.h>
++#include <dirent.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <sys/statvfs.h>
++#ifdef HAVE_LIBATTR
++# include <attr/attributes.h>
++#endif
+ #include "xfs.h"
++#include "handle.h"
+ #include "path.h"
+ #include "workqueue.h"
+ #include "xfs_scrub.h"
+@@ -34,6 +39,181 @@
+ /* Phase 5: Check directory connectivity. */
+ 
+ /*
++ * Warn about problematic bytes in a directory/attribute name.  That means
++ * terminal control characters and escape sequences, since that could be used
++ * to do something naughty to the user's computer and/or break scripts.  XFS
++ * doesn't consider any byte sequence invalid, so don't flag these as errors.
++ */
++static bool
++xfs_scrub_check_name(
++	struct scrub_ctx	*ctx,
++	const char		*descr,
++	const char		*namedescr,
++	const char		*name)
++{
++	const char		*p;
++	bool			bad = false;
++	char			*errname;
++
++	/* Complain about zero length names. */
++	if (*name == '\0' && should_warn_about_name(ctx)) {
++		str_warn(ctx, descr, _("Zero length name found."));
 +		return true;
 +	}
 +
-+	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
-+	if (!ret)
-+		moveon = false;
-+	if (!moveon)
-+		return false;
-+	xfs_scrub_report_preen_triggers(ctx);
++	/* control characters */
++	for (p = name; *p; p++) {
++		if ((*p >= 1 && *p <= 31) || *p == 127) {
++			bad = true;
++			break;
++		}
++	}
++
++	if (bad && should_warn_about_name(ctx)) {
++		errname = string_escape(name);
++		if (!errname) {
++			str_errno(ctx, descr);
++			return false;
++		}
++		str_info(ctx, descr,
++_("Control character found in %s name \"%s\"."),
++				namedescr, errname);
++		free(errname);
++	}
++
 +	return true;
 +}
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index ffb7c16..af7fdac 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -374,6 +374,7 @@ run_scrub_phases(
- 		},
- 		{
- 			.descr = _("Check directory tree."),
-+			.fn = xfs_scan_connections,
- 		},
- 		{
- 			.descr = _("Verify data file integrity."),
++
++/*
++ * Iterate a directory looking for filenames with problematic
++ * characters.
++ */
++static bool
++xfs_scrub_scan_dirents(
++	struct scrub_ctx	*ctx,
++	const char		*descr,
++	int			*fd)
++{
++	DIR			*dir;
++	struct dirent		*dentry;
++	bool			moveon = true;
++
++	dir = fdopendir(*fd);
++	if (!dir) {
++		str_errno(ctx, descr);
++		goto out;
++	}
++	*fd = -1; /* closedir will close *fd for us */
++
++	dentry = readdir(dir);
++	while (dentry) {
++		moveon = xfs_scrub_check_name(ctx, descr, _("directory"),
++				dentry->d_name);
++		if (!moveon)
++			break;
++		dentry = readdir(dir);
++	}
++
++	closedir(dir);
++out:
++	return moveon;
++}
++
++#ifdef HAVE_LIBATTR
++/* Routines to scan all of an inode's xattrs for name problems. */
++struct xfs_attr_ns {
++	int			flags;
++	const char		*name;
++};
++
++static const struct xfs_attr_ns attr_ns[] = {
++	{0,			"user"},
++	{ATTR_ROOT,		"system"},
++	{ATTR_SECURE,		"secure"},
++	{0, NULL},
++};
++
++/*
++ * Check all the xattr names in a particular namespace of a file handle
++ * for Unicode normalization problems or collisions.
++ */
++static bool
++xfs_scrub_scan_fhandle_namespace_xattrs(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	struct xfs_handle		*handle,
++	const struct xfs_attr_ns	*attr_ns)
++{
++	struct attrlist_cursor		cur;
++	char				attrbuf[XFS_XATTR_LIST_MAX];
++	char				keybuf[NAME_MAX + 1];
++	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
++	struct attrlist_ent		*ent;
++	bool				moveon = true;
++	int				i;
++	int				error;
++
++	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
++	memset(&cur, 0, sizeof(cur));
++	memset(keybuf, 0, NAME_MAX + 1);
++	error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
++			XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
++	while (!error) {
++		/* Examine the xattrs. */
++		for (i = 0; i < attrlist->al_count; i++) {
++			ent = ATTR_ENTRY(attrlist, i);
++			snprintf(keybuf, NAME_MAX, "%s.%s", attr_ns->name,
++					ent->a_name);
++			moveon = xfs_scrub_check_name(ctx, descr,
++					_("extended attribute"), keybuf);
++			if (!moveon)
++				goto out;
++		}
++
++		if (!attrlist->al_more)
++			break;
++		error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
++				XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
++	}
++	if (error && errno != ESTALE)
++		str_errno(ctx, descr);
++out:
++	return moveon;
++}
++
++/*
++ * Check all the xattr names in all the xattr namespaces for problematic
++ * characters.
++ */
++static bool
++xfs_scrub_scan_fhandle_xattrs(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	struct xfs_handle		*handle)
++{
++	const struct xfs_attr_ns	*ns;
++	bool				moveon = true;
++
++	for (ns = attr_ns; ns->name; ns++) {
++		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, descr,
++				handle, ns);
++		if (!moveon)
++			break;
++	}
++	return moveon;
++}
++#else
++static inline bool
++xfs_scrub_scan_fhandle_xattrs(
++	struct scrub_ctx	*ctx,
++	const char		*descr,
++	struct xfs_handle	*handle)
++{
++	return true;
++}
++#endif /* HAVE_LIBATTR */
++
++/*
+  * Verify the connectivity of the directory tree.
+  * We know that the kernel's open-by-handle function will try to reconnect
+  * parents of an opened directory, so we'll accept that as sufficient.
+@@ -58,6 +238,11 @@ xfs_scrub_connections(
+ 			(uint64_t)bstat->bs_ino, agno, agino);
+ 	background_sleep();
+ 
++        /* Warn about naming problems in xattrs. */
++        moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle);
++        if (!moveon)
++                goto out;
++
+ 	/* Open the dir, let the kernel try to reconnect it to the root. */
+ 	if (S_ISDIR(bstat->bs_mode)) {
+ 		fd = xfs_open_handle(handle);
+@@ -69,6 +254,13 @@ xfs_scrub_connections(
+ 		}
+ 	}
+ 
++        /* Warn about naming problems in the directory entries. */
++        if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
++                moveon = xfs_scrub_scan_dirents(ctx, descr, &fd);
++                if (!moveon)
++                        goto out;
++        }
++
+ out:
+ 	if (fd >= 0)
+ 		close(fd);
 diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 462b590..fd7d7aa 100644
+index fd7d7aa..0aef76b 100644
 --- a/scrub/xfs_scrub.h
 +++ b/scrub/xfs_scrub.h
-@@ -97,5 +97,6 @@ bool xfs_cleanup_fs(struct scrub_ctx *ctx);
- bool xfs_setup_fs(struct scrub_ctx *ctx);
- bool xfs_scan_metadata(struct scrub_ctx *ctx);
- bool xfs_scan_inodes(struct scrub_ctx *ctx);
-+bool xfs_scan_connections(struct scrub_ctx *ctx);
- 
- #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
+@@ -87,6 +87,7 @@ struct scrub_ctx {
+ 	unsigned long long	errors_found;
+ 	unsigned long long	warnings_found;
+ 	unsigned long long	inodes_checked;
++	unsigned long long	naming_warnings;
+ 	bool			need_repair;
+ 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+ };
 
