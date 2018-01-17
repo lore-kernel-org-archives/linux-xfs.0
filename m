@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59679 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58573 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753889AbeAQUXA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:00 -0500
+        with ESMTP id S1754014AbeAQUXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:06 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 80/99] blk-ioc: Convert to XArray
-Date: Wed, 17 Jan 2018 12:21:44 -0800
-Message-Id: <20180117202203.19756-81-willy@infradead.org>
+Subject: [PATCH v6 96/99] dma-debug: Convert to XArray
+Date: Wed, 17 Jan 2018 12:22:00 -0800
+Message-Id: <20180117202203.19756-97-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,113 +17,217 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-Skip converting the lock to use xa_lock; I think this code can live with
-the double-locking.
+This is an unusual way to use the xarray tags.  If any other users
+come up, we can add an xas_get_tags() / xas_set_tags() API, but until
+then I don't want to encourage this kind of abuse.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- block/blk-ioc.c           | 13 +++++++------
- include/linux/iocontext.h |  6 +++---
- 2 files changed, 10 insertions(+), 9 deletions(-)
+ lib/dma-debug.c | 105 +++++++++++++++++++++++++-------------------------------
+ 1 file changed, 46 insertions(+), 59 deletions(-)
 
-diff --git a/block/blk-ioc.c b/block/blk-ioc.c
-index f23311e4b201..baf83c8ac503 100644
---- a/block/blk-ioc.c
-+++ b/block/blk-ioc.c
-@@ -68,7 +68,7 @@ static void ioc_destroy_icq(struct io_cq *icq)
+diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+index fb4af570ce04..965b3837d060 100644
+--- a/lib/dma-debug.c
++++ b/lib/dma-debug.c
+@@ -22,7 +22,6 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/sched/task.h>
+ #include <linux/stacktrace.h>
+-#include <linux/radix-tree.h>
+ #include <linux/dma-debug.h>
+ #include <linux/spinlock.h>
+ #include <linux/vmalloc.h>
+@@ -30,6 +29,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/export.h>
+ #include <linux/device.h>
++#include <linux/xarray.h>
+ #include <linux/types.h>
+ #include <linux/sched.h>
+ #include <linux/ctype.h>
+@@ -465,9 +465,8 @@ EXPORT_SYMBOL(debug_dma_dump_mappings);
+  * At any time debug_dma_assert_idle() can be called to trigger a
+  * warning if any cachelines in the given page are in the active set.
+  */
+-static RADIX_TREE(dma_active_cacheline, GFP_NOWAIT);
+-static DEFINE_SPINLOCK(radix_lock);
+-#define ACTIVE_CACHELINE_MAX_OVERLAP ((1 << RADIX_TREE_MAX_TAGS) - 1)
++static DEFINE_XARRAY_FLAGS(dma_active_cacheline, XA_FLAGS_LOCK_IRQ);
++#define ACTIVE_CACHELINE_MAX_OVERLAP ((1 << XA_MAX_TAGS) - 1)
+ #define CACHELINE_PER_PAGE_SHIFT (PAGE_SHIFT - L1_CACHE_SHIFT)
+ #define CACHELINES_PER_PAGE (1 << CACHELINE_PER_PAGE_SHIFT)
  
- 	lockdep_assert_held(&ioc->lock);
- 
--	radix_tree_delete(&ioc->icq_tree, icq->q->id);
-+	xa_erase(&ioc->icq_array, icq->q->id);
- 	hlist_del_init(&icq->ioc_node);
- 	list_del_init(&icq->q_node);
- 
-@@ -278,7 +278,7 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_flags, int node)
- 	atomic_set(&ioc->nr_tasks, 1);
- 	atomic_set(&ioc->active_ref, 1);
- 	spin_lock_init(&ioc->lock);
--	INIT_RADIX_TREE(&ioc->icq_tree, GFP_ATOMIC | __GFP_HIGH);
-+	xa_init_flags(&ioc->icq_array, XA_FLAGS_LOCK_IRQ);
- 	INIT_HLIST_HEAD(&ioc->icq_list);
- 	INIT_WORK(&ioc->release_work, ioc_release_fn);
- 
-@@ -363,7 +363,7 @@ struct io_cq *ioc_lookup_icq(struct io_context *ioc, struct request_queue *q)
- 	if (icq && icq->q == q)
- 		goto out;
- 
--	icq = radix_tree_lookup(&ioc->icq_tree, q->id);
-+	icq = xa_load(&ioc->icq_array, q->id);
- 	if (icq && icq->q == q)
- 		rcu_assign_pointer(ioc->icq_hint, icq);	/* allowed to race */
- 	else
-@@ -398,7 +398,7 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
- 	if (!icq)
- 		return NULL;
- 
--	if (radix_tree_maybe_preload(gfp_mask) < 0) {
-+	if (xa_reserve(&ioc->icq_array, q->id, gfp_mask)) {
- 		kmem_cache_free(et->icq_cache, icq);
- 		return NULL;
- 	}
-@@ -412,7 +412,8 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
- 	spin_lock_irq(q->queue_lock);
- 	spin_lock(&ioc->lock);
- 
--	if (likely(!radix_tree_insert(&ioc->icq_tree, q->id, icq))) {
-+	if (likely(!xa_store(&ioc->icq_array, q->id, icq,
-+						GFP_ATOMIC | __GFP_HIGH))) {
- 		hlist_add_head(&icq->ioc_node, &ioc->icq_list);
- 		list_add(&icq->q_node, &q->icq_list);
- 		if (et->uses_mq && et->ops.mq.init_icq)
-@@ -421,6 +422,7 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
- 			et->ops.sq.elevator_init_icq_fn(icq);
- 	} else {
- 		kmem_cache_free(et->icq_cache, icq);
-+		xa_erase(&ioc->icq_array, q->id);
- 		icq = ioc_lookup_icq(ioc, q);
- 		if (!icq)
- 			printk(KERN_ERR "cfq: icq link failed!\n");
-@@ -428,7 +430,6 @@ struct io_cq *ioc_create_icq(struct io_context *ioc, struct request_queue *q,
- 
- 	spin_unlock(&ioc->lock);
- 	spin_unlock_irq(q->queue_lock);
--	radix_tree_preload_end();
- 	return icq;
+@@ -477,37 +476,40 @@ static phys_addr_t to_cacheline_number(struct dma_debug_entry *entry)
+ 		(entry->offset >> L1_CACHE_SHIFT);
  }
  
-diff --git a/include/linux/iocontext.h b/include/linux/iocontext.h
-index dba15ca8e60b..e16224f70084 100644
---- a/include/linux/iocontext.h
-+++ b/include/linux/iocontext.h
-@@ -2,9 +2,9 @@
- #ifndef IOCONTEXT_H
- #define IOCONTEXT_H
+-static int active_cacheline_read_overlap(phys_addr_t cln)
++static unsigned int active_cacheline_read_overlap(struct xa_state *xas)
+ {
+-	int overlap = 0, i;
++	unsigned int tags = 0;
++	xa_tag_t tag;
  
--#include <linux/radix-tree.h>
- #include <linux/rcupdate.h>
- #include <linux/workqueue.h>
-+#include <linux/xarray.h>
+-	for (i = RADIX_TREE_MAX_TAGS - 1; i >= 0; i--)
+-		if (radix_tree_tag_get(&dma_active_cacheline, cln, i))
+-			overlap |= 1 << i;
+-	return overlap;
++	for (tag = 0; tag < XA_MAX_TAGS; tag++)
++		if (xas_get_tag(xas, tag))
++			tags |= 1U << tag;
++
++	return tags;
+ }
  
- enum {
- 	ICQ_EXITED		= 1 << 2,
-@@ -56,7 +56,7 @@ enum {
-  * - ioc->icq_list and icq->ioc_node are protected by ioc lock.
-  *   q->icq_list and icq->q_node by q lock.
-  *
-- * - ioc->icq_tree and ioc->icq_hint are protected by ioc lock, while icq
-+ * - ioc->icq_array and ioc->icq_hint are protected by ioc lock, while icq
-  *   itself is protected by q lock.  However, both the indexes and icq
-  *   itself are also RCU managed and lookup can be performed holding only
-  *   the q lock.
-@@ -111,7 +111,7 @@ struct io_context {
- 	int nr_batch_requests;     /* Number of requests left in the batch */
- 	unsigned long last_waited; /* Time last woken after wait for request */
+-static int active_cacheline_set_overlap(phys_addr_t cln, int overlap)
++static int active_cacheline_set_overlap(struct xa_state *xas, int overlap)
+ {
+-	int i;
++	xa_tag_t tag;
  
--	struct radix_tree_root	icq_tree;
-+	struct xarray		icq_array;
- 	struct io_cq __rcu	*icq_hint;
- 	struct hlist_head	icq_list;
+ 	if (overlap > ACTIVE_CACHELINE_MAX_OVERLAP || overlap < 0)
+ 		return overlap;
+ 
+-	for (i = RADIX_TREE_MAX_TAGS - 1; i >= 0; i--)
+-		if (overlap & 1 << i)
+-			radix_tree_tag_set(&dma_active_cacheline, cln, i);
++	for (tag = 0; tag < XA_MAX_TAGS; tag++) {
++		if (overlap & (1U << tag))
++			xas_set_tag(xas, tag);
+ 		else
+-			radix_tree_tag_clear(&dma_active_cacheline, cln, i);
++			xas_clear_tag(xas, tag);
++	}
+ 
+ 	return overlap;
+ }
+ 
+-static void active_cacheline_inc_overlap(phys_addr_t cln)
++static void active_cacheline_inc_overlap(struct xa_state *xas)
+ {
+-	int overlap = active_cacheline_read_overlap(cln);
++	int overlap = active_cacheline_read_overlap(xas);
+ 
+-	overlap = active_cacheline_set_overlap(cln, ++overlap);
++	overlap = active_cacheline_set_overlap(xas, ++overlap);
+ 
+ 	/* If we overflowed the overlap counter then we're potentially
+ 	 * leaking dma-mappings.  Otherwise, if maps and unmaps are
+@@ -517,21 +519,22 @@ static void active_cacheline_inc_overlap(phys_addr_t cln)
+ 	 */
+ 	WARN_ONCE(overlap > ACTIVE_CACHELINE_MAX_OVERLAP,
+ 		  "DMA-API: exceeded %d overlapping mappings of cacheline %pa\n",
+-		  ACTIVE_CACHELINE_MAX_OVERLAP, &cln);
++		  ACTIVE_CACHELINE_MAX_OVERLAP, &xas->xa_index);
+ }
+ 
+-static int active_cacheline_dec_overlap(phys_addr_t cln)
++static int active_cacheline_dec_overlap(struct xa_state *xas)
+ {
+-	int overlap = active_cacheline_read_overlap(cln);
++	int overlap = active_cacheline_read_overlap(xas);
+ 
+-	return active_cacheline_set_overlap(cln, --overlap);
++	return active_cacheline_set_overlap(xas, --overlap);
+ }
+ 
+ static int active_cacheline_insert(struct dma_debug_entry *entry)
+ {
+ 	phys_addr_t cln = to_cacheline_number(entry);
++	XA_STATE(xas, &dma_active_cacheline, cln);
+ 	unsigned long flags;
+-	int rc;
++	struct dma_debug_entry *exists;
+ 
+ 	/* If the device is not writing memory then we don't have any
+ 	 * concerns about the cpu consuming stale data.  This mitigates
+@@ -540,32 +543,32 @@ static int active_cacheline_insert(struct dma_debug_entry *entry)
+ 	if (entry->direction == DMA_TO_DEVICE)
+ 		return 0;
+ 
+-	spin_lock_irqsave(&radix_lock, flags);
+-	rc = radix_tree_insert(&dma_active_cacheline, cln, entry);
+-	if (rc == -EEXIST)
+-		active_cacheline_inc_overlap(cln);
+-	spin_unlock_irqrestore(&radix_lock, flags);
++	xas_lock_irqsave(&xas, flags);
++	exists = xas_create(&xas);
++	if (exists)
++		active_cacheline_inc_overlap(&xas);
++	else
++		xas_store(&xas, entry);
++	xas_unlock_irqrestore(&xas, flags);
+ 
+-	return rc;
++	return xas_error(&xas);
+ }
+ 
+ static void active_cacheline_remove(struct dma_debug_entry *entry)
+ {
+ 	phys_addr_t cln = to_cacheline_number(entry);
++	XA_STATE(xas, &dma_active_cacheline, cln);
+ 	unsigned long flags;
+ 
+ 	/* ...mirror the insert case */
+ 	if (entry->direction == DMA_TO_DEVICE)
+ 		return;
+ 
+-	spin_lock_irqsave(&radix_lock, flags);
+-	/* since we are counting overlaps the final put of the
+-	 * cacheline will occur when the overlap count is 0.
+-	 * active_cacheline_dec_overlap() returns -1 in that case
+-	 */
+-	if (active_cacheline_dec_overlap(cln) < 0)
+-		radix_tree_delete(&dma_active_cacheline, cln);
+-	spin_unlock_irqrestore(&radix_lock, flags);
++	xas_lock_irqsave(&xas, flags);
++	xas_load(&xas);
++	if (active_cacheline_dec_overlap(&xas) < 0)
++		xas_store(&xas, NULL);
++	xas_unlock_irqrestore(&xas, flags);
+ }
+ 
+ /**
+@@ -578,12 +581,8 @@ static void active_cacheline_remove(struct dma_debug_entry *entry)
+  */
+ void debug_dma_assert_idle(struct page *page)
+ {
+-	static struct dma_debug_entry *ents[CACHELINES_PER_PAGE];
+-	struct dma_debug_entry *entry = NULL;
+-	void **results = (void **) &ents;
+-	unsigned int nents, i;
+-	unsigned long flags;
+-	phys_addr_t cln;
++	struct dma_debug_entry *entry;
++	unsigned long cln;
+ 
+ 	if (dma_debug_disabled())
+ 		return;
+@@ -591,21 +590,9 @@ void debug_dma_assert_idle(struct page *page)
+ 	if (!page)
+ 		return;
+ 
+-	cln = (phys_addr_t) page_to_pfn(page) << CACHELINE_PER_PAGE_SHIFT;
+-	spin_lock_irqsave(&radix_lock, flags);
+-	nents = radix_tree_gang_lookup(&dma_active_cacheline, results, cln,
+-				       CACHELINES_PER_PAGE);
+-	for (i = 0; i < nents; i++) {
+-		phys_addr_t ent_cln = to_cacheline_number(ents[i]);
+-
+-		if (ent_cln == cln) {
+-			entry = ents[i];
+-			break;
+-		} else if (ent_cln >= cln + CACHELINES_PER_PAGE)
+-			break;
+-	}
+-	spin_unlock_irqrestore(&radix_lock, flags);
+-
++	cln = page_to_pfn(page) << CACHELINE_PER_PAGE_SHIFT;
++	entry = xa_find(&dma_active_cacheline, &cln,
++			cln + CACHELINES_PER_PAGE - 1, XA_PRESENT);
+ 	if (!entry)
+ 		return;
  
 -- 
 2.15.1
