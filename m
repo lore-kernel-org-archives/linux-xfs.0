@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50184 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:51084 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753195AbeAQWGA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:00 -0500
-Subject: [PATCH 07/29] xfs_scrub: find XFS filesystem geometry
+        with ESMTP id S1753595AbeAQWGI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:08 -0500
+Subject: [PATCH 23/29] xfs_scrub: check summary counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:02:36 -0800
-Message-ID: <151622655617.31925.5381912856964812594.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:04:17 -0800
+Message-ID: <151622665724.31925.3307246357832235274.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,174 +20,88 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Discover the geometry of the XFS filesystem that we've been told to
-scan, and set up some common functions that will be used by the
-scrub phases.
+Make sure the filesystem summary counters are somewhat close to what
+we can find by scanning the filesystem.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile    |    5 +
- scrub/common.c    |   72 +++++++++++++++++
- scrub/common.h    |   10 ++
- scrub/disk.c      |    3 +
- scrub/phase1.c    |  223 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.c |   35 ++++++++
- scrub/xfs_scrub.h |   29 +++++++
- 7 files changed, 376 insertions(+), 1 deletion(-)
- create mode 100644 scrub/phase1.c
+ scrub/Makefile    |    1 
+ scrub/common.c    |   28 ++++++
+ scrub/common.h    |    4 +
+ scrub/phase7.c    |  266 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    3 -
+ scrub/xfs_scrub.h |    1 
+ 6 files changed, 302 insertions(+), 1 deletion(-)
+ create mode 100644 scrub/phase7.c
 
 
 diff --git a/scrub/Makefile b/scrub/Makefile
-index c3a9986..5239dae 100644
+index 1fb6e84..fd26624 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -23,6 +23,7 @@ xfs_scrub.h
- CFILES = \
- common.c \
- disk.c \
-+phase1.c \
- xfs_scrub.c
- 
- LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
-@@ -33,6 +34,10 @@ ifeq ($(HAVE_MALLINFO),yes)
- LCFLAGS += -DHAVE_MALLINFO
- endif
- 
-+ifeq ($(HAVE_SYNCFS),yes)
-+LCFLAGS += -DHAVE_SYNCFS
-+endif
-+
- default: depend $(LTCOMMAND)
- 
- include $(BUILDRULES)
+@@ -43,6 +43,7 @@ phase2.c \
+ phase3.c \
+ phase5.c \
+ phase6.c \
++phase7.c \
+ read_verify.c \
+ scrub.c \
+ spacemap.c \
 diff --git a/scrub/common.c b/scrub/common.c
-index 05bb89b..e9ebb04 100644
+index 5e2d7c6..c4fb339 100644
 --- a/scrub/common.c
 +++ b/scrub/common.c
-@@ -20,8 +20,11 @@
- #include <stdio.h>
- #include <pthread.h>
- #include <stdbool.h>
-+#include <sys/statvfs.h>
- #include "platform_defs.h"
- #include "xfs.h"
-+#include "xfs_fs.h"
-+#include "path.h"
- #include "xfs_scrub.h"
- #include "common.h"
+@@ -339,3 +339,31 @@ _("More than %u naming warnings, shutting up."),
  
-@@ -194,3 +197,72 @@ scrub_nproc_workqueue(
- 		x = 0;
- 	return x;
+ 	return debug || verbose || res;
  }
 +
-+/*
-+ * Check if the argument is either the device name or mountpoint of a mounted
-+ * filesystem.
-+ */
-+#define MNTTYPE_XFS	"xfs"
-+static bool
-+find_mountpoint_check(
-+	struct stat		*sb,
-+	struct mntent		*t)
++/* Decide if a value is within +/- (n/d) of a desired value. */
++bool
++within_range(
++	struct scrub_ctx	*ctx,
++	unsigned long long	value,
++	unsigned long long	desired,
++	unsigned long long	abs_threshold,
++	unsigned int		n,
++	unsigned int		d,
++	const char		*descr)
 +{
-+	struct stat		ms;
++	assert(n < d);
 +
-+	if (S_ISDIR(sb->st_mode)) {		/* mount point */
-+		if (stat(t->mnt_dir, &ms) < 0)
-+			return false;
-+		if (sb->st_ino != ms.st_ino)
-+			return false;
-+		if (sb->st_dev != ms.st_dev)
-+			return false;
-+		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
-+			return NULL;
-+	} else {				/* device */
-+		if (stat(t->mnt_fsname, &ms) < 0)
-+			return false;
-+		if (sb->st_rdev != ms.st_rdev)
-+			return false;
-+		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
-+			return NULL;
-+		/*
-+		 * Make sure the mountpoint given by mtab is accessible
-+		 * before using it.
-+		 */
-+		if (stat(t->mnt_dir, &ms) < 0)
-+			return false;
-+	}
++	/* Don't complain if difference does not exceed an absolute value. */
++	if (value < desired && desired - value < abs_threshold)
++		return true;
++	if (value > desired && value - desired < abs_threshold)
++		return true;
++
++	/* Complain if the difference exceeds a certain percentage. */
++	if (value < desired * (d - n) / d)
++		return false;
++	if (value > desired * (d + n) / d)
++		return false;
 +
 +	return true;
 +}
-+
-+/* Check that our alleged mountpoint is in mtab */
-+bool
-+find_mountpoint(
-+	char			*mtab,
-+	struct scrub_ctx	*ctx)
-+{
-+	struct mntent_cursor	cursor;
-+	struct mntent		*t = NULL;
-+	bool			found = false;
-+
-+	if (platform_mntent_open(&cursor, mtab) != 0) {
-+		fprintf(stderr, "Error: can't get mntent entries.\n");
-+		exit(1);
-+	}
-+
-+	while ((t = platform_mntent_next(&cursor)) != NULL) {
-+		/*
-+		 * Keep jotting down matching mount details; newer mounts are
-+		 * towards the end of the file (hopefully).
-+		 */
-+		if (find_mountpoint_check(&ctx->mnt_sb, t)) {
-+			ctx->mntpoint = strdup(t->mnt_dir);
-+			ctx->blkdev = strdup(t->mnt_fsname);
-+			found = true;
-+		}
-+	}
-+	platform_mntent_close(&cursor);
-+	return found;
-+}
 diff --git a/scrub/common.h b/scrub/common.h
-index 4779dbd..3af63fb 100644
+index 336fc40..29b4332 100644
 --- a/scrub/common.h
 +++ b/scrub/common.h
-@@ -64,4 +64,14 @@ double auto_units(unsigned long long number, char **units);
- unsigned int scrub_nproc(struct scrub_ctx *ctx);
- unsigned int scrub_nproc_workqueue(struct scrub_ctx *ctx);
+@@ -79,4 +79,8 @@ char *string_escape(const char *in);
+ #define TOO_MANY_NAME_WARNINGS	10000
+ bool should_warn_about_name(struct scrub_ctx *ctx);
  
-+#ifndef HAVE_SYNCFS
-+static inline int syncfs(int fd)
-+{
-+	sync();
-+	return 0;
-+}
-+#endif
-+
-+bool find_mountpoint(char *mtab, struct scrub_ctx *ctx);
++bool within_range(struct scrub_ctx *ctx, unsigned long long value,
++		unsigned long long desired, unsigned long long abs_threshold,
++		unsigned int n, unsigned int d, const char *descr);
 +
  #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/disk.c b/scrub/disk.c
-index fe9dff7..e36ed6b 100644
---- a/scrub/disk.c
-+++ b/scrub/disk.c
-@@ -31,6 +31,9 @@
- #include <linux/fs.h>
- #include "platform_defs.h"
- #include "libfrog.h"
-+#include "xfs.h"
-+#include "path.h"
-+#include "xfs_fs.h"
- #include "xfs_scrub.h"
- #include "disk.h"
- 
-diff --git a/scrub/phase1.c b/scrub/phase1.c
+diff --git a/scrub/phase7.c b/scrub/phase7.c
 new file mode 100644
-index 0000000..65409d3
+index 0000000..460ca8a
 --- /dev/null
-+++ b/scrub/phase1.c
-@@ -0,0 +1,223 @@
++++ b/scrub/phase7.c
+@@ -0,0 +1,266 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -208,360 +122,282 @@ index 0000000..65409d3
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
 +#include <stdio.h>
-+#include <mntent.h>
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/time.h>
-+#include <sys/resource.h>
-+#include <sys/statvfs.h>
-+#include <sys/vfs.h>
-+#include <fcntl.h>
-+#include <dirent.h>
 +#include <stdint.h>
 +#include <stdbool.h>
-+#include <pthread.h>
-+#include <errno.h>
-+#include <linux/fs.h>
-+#include "libfrog.h"
-+#include "workqueue.h"
-+#include "input.h"
++#include <stdlib.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "xfs_fs.h"
 +#include "path.h"
-+#include "handle.h"
-+#include "bitops.h"
-+#include "xfs_arch.h"
-+#include "xfs_format.h"
-+#include "avl64.h"
-+#include "list.h"
++#include "ptvar.h"
 +#include "xfs_scrub.h"
 +#include "common.h"
-+#include "disk.h"
++#include "fscounters.h"
++#include "spacemap.h"
 +
-+/* Phase 1: Find filesystem geometry (and clean up after) */
++/* Phase 7: Check summary counters. */
 +
-+/* Shut down the filesystem. */
-+void
-+xfs_shutdown_fs(
-+	struct scrub_ctx		*ctx)
++struct xfs_summary_counts {
++	unsigned long long	dbytes;		/* data dev bytes */
++	unsigned long long	rbytes;		/* rt dev bytes */
++	unsigned long long	next_phys;	/* next phys bytes we see? */
++	unsigned long long	agbytes;	/* freespace bytes */
++};
++
++/* Record block usage. */
++static bool
++xfs_record_block_summary(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	struct fsmap			*fsmap,
++	void				*arg)
 +{
-+	int				flag;
++	struct xfs_summary_counts	*counts;
++	unsigned long long		len;
 +
-+	flag = XFS_FSOP_GOING_FLAGS_LOGFLUSH;
-+	str_info(ctx, ctx->mntpoint, _("Shutting down filesystem!"));
-+	if (ioctl(ctx->mnt_fd, XFS_IOC_GOINGDOWN, &flag))
-+		str_errno(ctx, ctx->mntpoint);
-+}
++	counts = ptvar_get((struct ptvar *)arg);
++	if (fsmap->fmr_device == ctx->fsinfo.fs_logdev)
++		return true;
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_FREE)
++		return true;
 +
-+/* Clean up the XFS-specific state data. */
-+bool
-+xfs_cleanup_fs(
-+	struct scrub_ctx	*ctx)
-+{
-+	if (ctx->fshandle)
-+		free_handle(ctx->fshandle, ctx->fshandle_len);
-+	if (ctx->rtdev)
-+		disk_close(ctx->rtdev);
-+	if (ctx->logdev)
-+		disk_close(ctx->logdev);
-+	if (ctx->datadev)
-+		disk_close(ctx->datadev);
-+	fshandle_destroy();
-+	close(ctx->mnt_fd);
-+	fs_table_destroy();
++	len = fsmap->fmr_length;
++
++	/* freesp btrees live in free space, need to adjust counters later. */
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_AG) {
++		counts->agbytes += fsmap->fmr_length;
++	}
++	if (fsmap->fmr_device == ctx->fsinfo.fs_rtdev) {
++		/* Count realtime extents. */
++		counts->rbytes += len;
++	} else {
++		/* Count datadev extents. */
++		if (counts->next_phys >= fsmap->fmr_physical + len)
++			return true;
++		else if (counts->next_phys > fsmap->fmr_physical)
++			len = counts->next_phys - fsmap->fmr_physical;
++		counts->dbytes += len;
++		counts->next_phys = fsmap->fmr_physical + fsmap->fmr_length;
++	}
 +
 +	return true;
 +}
 +
++/* Add all the summaries in the per-thread counter */
++static bool
++xfs_add_summaries(
++	struct ptvar			*ptv,
++	void				*data,
++	void				*arg)
++{
++	struct xfs_summary_counts	*total = arg;
++	struct xfs_summary_counts	*item = data;
++
++	total->dbytes += item->dbytes;
++	total->rbytes += item->rbytes;
++	total->agbytes += item->agbytes;
++	return true;
++}
++
 +/*
-+ * Bind to the mountpoint, read the XFS geometry, bind to the block devices.
-+ * Anything we've already built will be cleaned up by xfs_cleanup_fs.
++ * Count all inodes and blocks in the filesystem as told by GETFSMAP and
++ * BULKSTAT, and compare that to summary counters.  Since this is a live
++ * filesystem we'll be content if the summary counts are within 10% of
++ * what we observed.
 + */
 +bool
-+xfs_setup_fs(
++xfs_scan_summary(
 +	struct scrub_ctx		*ctx)
 +{
-+	struct fs_path			*fsp;
++	struct xfs_summary_counts	totalcount = {0};
++	struct ptvar			*ptvar;
++	unsigned long long		used_data;
++	unsigned long long		used_rt;
++	unsigned long long		used_files;
++	unsigned long long		stat_data;
++	unsigned long long		stat_rt;
++	uint64_t			counted_inodes = 0;
++	unsigned long long		absdiff;
++	unsigned long long		d_blocks;
++	unsigned long long		d_bfree;
++	unsigned long long		r_blocks;
++	unsigned long long		r_bfree;
++	unsigned long long		f_files;
++	unsigned long long		f_free;
++	bool				moveon;
++	bool				complain;
 +	int				error;
 +
-+	/*
-+	 * Open the directory with O_NOATIME.  For mountpoints owned
-+	 * by root, this should be sufficient to ensure that we have
-+	 * CAP_SYS_ADMIN, which we probably need to do anything fancy
-+	 * with the (XFS driver) kernel.
-+	 */
-+	ctx->mnt_fd = open(ctx->mntpoint, O_RDONLY | O_NOATIME | O_DIRECTORY);
-+	if (ctx->mnt_fd < 0) {
-+		if (errno == EPERM)
-+			str_info(ctx, ctx->mntpoint,
-+_("Must be root to run scrub."));
-+		else
-+			str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+
-+	error = fstat(ctx->mnt_fd, &ctx->mnt_sb);
-+	if (error) {
-+		str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+	error = fstatvfs(ctx->mnt_fd, &ctx->mnt_sv);
-+	if (error) {
-+		str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+	error = fstatfs(ctx->mnt_fd, &ctx->mnt_sf);
-+	if (error) {
-+		str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+
-+	ctx->nr_io_threads = nproc;
-+	if (verbose) {
-+		fprintf(stdout, _("%s: using %d threads to scrub.\n"),
-+				ctx->mntpoint, scrub_nproc(ctx));
-+		fflush(stdout);
-+	}
-+
-+	if (!platform_test_xfs_fd(ctx->mnt_fd)) {
-+		str_error(ctx, ctx->mntpoint,
-+_("Does not appear to be an XFS filesystem!"));
-+		return false;
-+	}
-+
-+	/*
-+	 * Flush everything out to disk before we start checking.
-+	 * This seems to reduce the incidence of stale file handle
-+	 * errors when we open things by handle.
-+	 */
++	/* Flush everything out to disk before we start counting. */
 +	error = syncfs(ctx->mnt_fd);
 +	if (error) {
 +		str_errno(ctx, ctx->mntpoint);
 +		return false;
 +	}
 +
-+	/* Retrieve XFS geometry. */
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSGEOMETRY, &ctx->geo);
-+	if (error) {
++	ptvar = ptvar_init(scrub_nproc(ctx), sizeof(struct xfs_summary_counts));
++	if (!ptvar) {
 +		str_errno(ctx, ctx->mntpoint);
 +		return false;
 +	}
 +
-+	ctx->agblklog = log2_roundup(ctx->geo.agblocks);
-+	ctx->blocklog = highbit32(ctx->geo.blocksize);
-+	ctx->inodelog = highbit32(ctx->geo.inodesize);
-+	ctx->inopblog = ctx->blocklog - ctx->inodelog;
++	/* Use fsmap to count blocks. */
++	moveon = xfs_scan_all_spacemaps(ctx, xfs_record_block_summary, ptvar);
++	if (!moveon)
++		goto out_free;
++	moveon = ptvar_foreach(ptvar, xfs_add_summaries, &totalcount);
++	if (!moveon)
++		goto out_free;
++	ptvar_free(ptvar);
 +
-+	error = path_to_fshandle(ctx->mntpoint, &ctx->fshandle,
-+			&ctx->fshandle_len);
-+	if (error) {
-+		perror(_("getting fshandle"));
-+		return false;
-+	}
++	/* Scan the whole fs. */
++	moveon = xfs_count_all_inodes(ctx, &counted_inodes);
++	if (!moveon)
++		goto out;
 +
-+	/* Go find the XFS devices if we have a usable fsmap. */
-+	fs_table_initialise(0, NULL, 0, NULL);
-+	errno = 0;
-+	fsp = fs_table_lookup(ctx->mntpoint, FS_MOUNT_POINT);
-+	if (!fsp) {
-+		str_error(ctx, ctx->mntpoint,
-+_("Unable to find XFS information."));
-+		return false;
-+	}
-+	memcpy(&ctx->fsinfo, fsp, sizeof(struct fs_path));
++	moveon = xfs_scan_estimate_blocks(ctx, &d_blocks, &d_bfree, &r_blocks,
++			&r_bfree, &f_files, &f_free);
++	if (!moveon)
++		return moveon;
 +
-+	/* Did we find the log and rt devices, if they're present? */
-+	if (ctx->geo.logstart == 0 && ctx->fsinfo.fs_log == NULL) {
-+		str_error(ctx, ctx->mntpoint,
-+_("Unable to find log device path."));
-+		return false;
-+	}
-+	if (ctx->geo.rtblocks && ctx->fsinfo.fs_rt == NULL) {
-+		str_error(ctx, ctx->mntpoint,
-+_("Unable to find realtime device path."));
-+		return false;
-+	}
++	/*
++	 * If we counted blocks with fsmap, then dblocks includes
++	 * blocks for the AGFL and the freespace/rmap btrees.  The
++	 * filesystem treats them as "free", but since we scanned
++	 * them, we'll consider them used.
++	 */
++	d_bfree -= totalcount.agbytes >> ctx->blocklog;
 +
-+	/* Open the raw devices. */
-+	ctx->datadev = disk_open(ctx->fsinfo.fs_name);
-+	if (error) {
-+		str_errno(ctx, ctx->fsinfo.fs_name);
-+		return false;
-+	}
++	/* Report on what we found. */
++	used_data = (d_blocks - d_bfree) << ctx->blocklog;
++	used_rt = (r_blocks - r_bfree) << ctx->blocklog;
++	used_files = f_files - f_free;
++	stat_data = totalcount.dbytes;
++	stat_rt = totalcount.rbytes;
 +
-+	if (ctx->fsinfo.fs_log) {
-+		ctx->logdev = disk_open(ctx->fsinfo.fs_log);
-+		if (error) {
-+			str_errno(ctx, ctx->fsinfo.fs_name);
-+			return false;
++	/*
++	 * Complain if the counts are off by more than 10% unless
++	 * the inaccuracy is less than 32MB worth of blocks or 100 inodes.
++	 */
++	absdiff = 1ULL << 25;
++	complain = verbose;
++	complain |= !within_range(ctx, stat_data, used_data, absdiff, 1, 10,
++			_("data blocks"));
++	complain |= !within_range(ctx, stat_rt, used_rt, absdiff, 1, 10,
++			_("realtime blocks"));
++	complain |= !within_range(ctx, counted_inodes, used_files, 100, 1, 10,
++			_("inodes"));
++
++	if (complain) {
++		double		d, r, i;
++		char		*du, *ru, *iu;
++
++		if (used_rt || stat_rt) {
++			d = auto_space_units(used_data, &du);
++			r = auto_space_units(used_rt, &ru);
++			i = auto_units(used_files, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s realtime data used;  %.2f%s inodes used.\n"),
++					d, du, r, ru, i, iu);
++			d = auto_space_units(stat_data, &du);
++			r = auto_space_units(stat_rt, &ru);
++			i = auto_units(counted_inodes, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s realtime data found; %.2f%s inodes found.\n"),
++					d, du, r, ru, i, iu);
++		} else {
++			d = auto_space_units(used_data, &du);
++			i = auto_units(used_files, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s inodes used.\n"),
++					d, du, i, iu);
++			d = auto_space_units(stat_data, &du);
++			i = auto_units(counted_inodes, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s inodes found.\n"),
++					d, du, i, iu);
 +		}
-+	}
-+	if (ctx->fsinfo.fs_rt) {
-+		ctx->rtdev = disk_open(ctx->fsinfo.fs_rt);
-+		if (error) {
-+			str_errno(ctx, ctx->fsinfo.fs_name);
-+			return false;
-+		}
++		fflush(stdout);
 +	}
 +
 +	/*
-+	 * Everything's set up, which means any failures recorded after
-+	 * this point are most probably corruption errors (as opposed to
-+	 * purely setup errors).
++	 * Complain if the checked inode counts are off, which
++	 * implies an incomplete check.
 +	 */
-+	ctx->need_repair = true;
-+	return true;
++	if (verbose ||
++	    !within_range(ctx, counted_inodes, ctx->inodes_checked, 100, 1, 10,
++			_("checked inodes"))) {
++		double		i1, i2;
++		char		*i1u, *i2u;
++
++		i1 = auto_units(counted_inodes, &i1u);
++		i2 = auto_units(ctx->inodes_checked, &i2u);
++		fprintf(stdout,
++_("%.1f%s inodes counted; %.1f%s inodes checked.\n"),
++				i1, i1u, i2, i2u);
++		fflush(stdout);
++	}
++
++	/*
++	 * Complain if the checked block counts are off, which
++	 * implies an incomplete check.
++	 */
++	if (ctx->bytes_checked &&
++	    (verbose ||
++	     !within_range(ctx, used_data + used_rt,
++			ctx->bytes_checked, absdiff, 1, 10,
++			_("verified blocks")))) {
++		double		b1, b2;
++		char		*b1u, *b2u;
++
++		b1 = auto_space_units(used_data + used_rt, &b1u);
++		b2 = auto_space_units(ctx->bytes_checked, &b2u);
++		fprintf(stdout,
++_("%.1f%s data counted; %.1f%s data verified.\n"),
++				b1, b1u, b2, b2u);
++		fflush(stdout);
++	}
++
++	moveon = true;
++
++out:
++	return moveon;
++out_free:
++	ptvar_free(ptvar);
++	return moveon;
 +}
 diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 3feee98..c3ad82f 100644
+index e43930f..1c0ea87 100644
 --- a/scrub/xfs_scrub.c
 +++ b/scrub/xfs_scrub.c
-@@ -23,9 +23,12 @@
- #include <stdlib.h>
- #include <sys/time.h>
- #include <sys/resource.h>
-+#include <sys/statvfs.h>
- #include "platform_defs.h"
- #include "xfs.h"
-+#include "xfs_fs.h"
- #include "input.h"
-+#include "path.h"
- #include "xfs_scrub.h"
- #include "common.h"
- 
-@@ -354,6 +357,8 @@ run_scrub_phases(
- 	{
+@@ -383,6 +383,8 @@ run_scrub_phases(
+ 		},
  		{
- 			.descr = _("Find filesystem geometry."),
-+			.fn = xfs_setup_fs,
+ 			.descr = _("Check summary counters."),
++			.fn = xfs_scan_summary,
 +			.must_run = true,
  		},
  		{
- 			.descr = _("Check internal metadata."),
-@@ -435,6 +440,7 @@ main(
- 	struct phase_rusage	all_pi;
- 	unsigned long long	total_errors;
- 	bool			moveon = true;
-+	bool			ismnt;
+ 			NULL
+@@ -452,7 +454,6 @@ main(
  	int			ret = 0;
  
  	fprintf(stdout, "EXPERIMENTAL xfs_scrub program in use! Use at your own risk!\n");
-@@ -533,6 +539,15 @@ _("Only one of the options -n or -y may be specified.\n"));
+-	return 4;
  
- 	ctx.mntpoint = strdup(argv[optind]);
- 
-+	/* Find the mount record for the passed-in argument. */
-+	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
-+		fprintf(stderr,
-+			_("%s: could not stat: %s: %s\n"),
-+			progname, argv[optind], strerror(errno));
-+		ret |= 8;
-+		goto out;
-+	}
-+
- 	/*
- 	 * If the user did not specify an explicit mount table, try to use
- 	 * /proc/mounts if it is available, else /etc/mtab.  We prefer
-@@ -552,6 +567,15 @@ _("Only one of the options -n or -y may be specified.\n"));
- 	if (!moveon)
- 		goto out;
- 
-+	ismnt = find_mountpoint(mtab, &ctx);
-+	if (!ismnt) {
-+		fprintf(stderr,
-+_("%s: Not a XFS mount point or block device.\n"),
-+			ctx.mntpoint);
-+		ret |= 8;
-+		goto out;
-+	}
-+
- 	/* How many CPUs? */
- 	nproc = sysconf(_SC_NPROCESSORS_ONLN);
- 	if (nproc < 1)
-@@ -578,6 +602,11 @@ _("Only one of the options -n or -y may be specified.\n"));
- 	if (debug_tweak_on("XFS_SCRUB_FORCE_ERROR"))
- 		str_error(&ctx, ctx.mntpoint, _("Injecting error."));
- 
-+	/* Clean up scan data. */
-+	moveon = xfs_cleanup_fs(&ctx);
-+	if (!moveon)
-+		ret |= 8;
-+
- out:
- 	total_errors = ctx.errors_found + ctx.runtime_errors;
- 	if (ctx.need_repair)
-@@ -595,13 +624,17 @@ _("%s: %llu errors found.%s\n"),
- 		fprintf(stderr,
- _("%s: %llu warnings found.\n"),
- 			ctx.mntpoint, ctx.warnings_found);
--	if (ctx.errors_found)
-+	if (ctx.errors_found) {
-+		if (ctx.error_action == ERRORS_SHUTDOWN)
-+			xfs_shutdown_fs(&ctx);
- 		ret |= 1;
-+	}
- 	if (ctx.warnings_found)
- 		ret |= 2;
- 	if (ctx.runtime_errors)
- 		ret |= 4;
- 	phase_end(&all_pi, 0);
-+	free(ctx.blkdev);
- 	free(ctx.mntpoint);
- 
- 	return ret;
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
 diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 6d9f0c1..914490a 100644
+index 997bedd..91f4577 100644
 --- a/scrub/xfs_scrub.h
 +++ b/scrub/xfs_scrub.h
-@@ -48,15 +48,38 @@ struct scrub_ctx {
- 	char			*mntpoint;
- 	char			*blkdev;
+@@ -104,5 +104,6 @@ bool xfs_scan_metadata(struct scrub_ctx *ctx);
+ bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ bool xfs_scan_connections(struct scrub_ctx *ctx);
+ bool xfs_scan_blocks(struct scrub_ctx *ctx);
++bool xfs_scan_summary(struct scrub_ctx *ctx);
  
-+	/* Mountpoint info */
-+	struct stat		mnt_sb;
-+	struct statvfs		mnt_sv;
-+	struct statfs		mnt_sf;
-+
-+	/* Open block devices */
-+	struct disk		*datadev;
-+	struct disk		*logdev;
-+	struct disk		*rtdev;
-+
- 	/* What does the user want us to do? */
- 	enum scrub_mode		mode;
- 
- 	/* How does the user want us to react to errors? */
- 	enum error_action	error_action;
- 
-+	/* fd to filesystem mount point */
-+	int			mnt_fd;
-+
- 	/* Number of threads for metadata scrubbing */
- 	unsigned int		nr_io_threads;
- 
-+	/* XFS specific geometry */
-+	struct xfs_fsop_geom	geo;
-+	struct fs_path		fsinfo;
-+	unsigned int		agblklog;
-+	unsigned int		blocklog;
-+	unsigned int		inodelog;
-+	unsigned int		inopblog;
-+	void			*fshandle;
-+	size_t			fshandle_len;
-+
- 	/* Mutable scrub state; use lock. */
- 	pthread_mutex_t		lock;
- 	unsigned long long	max_errors;
-@@ -64,6 +87,12 @@ struct scrub_ctx {
- 	unsigned long long	errors_found;
- 	unsigned long long	warnings_found;
- 	bool			need_repair;
-+	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
- };
- 
-+/* Phase helper functions */
-+void xfs_shutdown_fs(struct scrub_ctx *ctx);
-+bool xfs_cleanup_fs(struct scrub_ctx *ctx);
-+bool xfs_setup_fs(struct scrub_ctx *ctx);
-+
  #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
