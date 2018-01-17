@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46109 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54585 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753764AbeAQUWw (ORCPT
+        with ESMTP id S1753750AbeAQUWw (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:52 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 63/99] dax: Convert dax_insert_mapping_entry to XArray
-Date: Wed, 17 Jan 2018 12:21:27 -0800
-Message-Id: <20180117202203.19756-64-willy@infradead.org>
+Subject: [PATCH v6 62/99] dax: Convert dax_insert_pfn_mkwrite to XArray
+Date: Wed, 17 Jan 2018 12:21:26 -0800
+Message-Id: <20180117202203.19756-63-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -19,59 +19,39 @@ From: Matthew Wilcox <mawilcox@microsoft.com>
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- fs/dax.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+ fs/dax.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index e6b25ef112f2..494e8fb7a98f 100644
+index b66b8c896ed8..e6b25ef112f2 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -498,9 +498,9 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 				      void *entry, sector_t sector,
- 				      unsigned long flags, bool dirty)
- {
--	struct radix_tree_root *pages = &mapping->pages;
- 	void *new_entry;
- 	pgoff_t index = vmf->pgoff;
-+	XA_STATE(xas, &mapping->pages, index);
- 
- 	if (dirty)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-@@ -516,7 +516,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 					PAGE_SIZE, 0);
- 	}
+@@ -1497,21 +1497,21 @@ static int dax_insert_pfn_mkwrite(struct vm_fault *vmf,
+ 	void *entry;
+ 	int vmf_ret, error;
  
 -	xa_lock_irq(&mapping->pages);
 +	xas_lock_irq(&xas);
- 	new_entry = dax_radix_locked_entry(sector, flags);
- 
- 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
-@@ -528,21 +528,15 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 		 * existing entry is a PMD, we will just leave the PMD in the
- 		 * tree and dirty it if necessary.
- 		 */
--		struct radix_tree_node *node;
--		void **slot;
--		void *ret;
--
--		ret = __radix_tree_lookup(pages, index, &node, &slot);
--		WARN_ON_ONCE(ret != entry);
--		__radix_tree_replace(pages, node, slot,
--				     new_entry, NULL);
-+		void *prev = xas_store(&xas, new_entry);
-+		WARN_ON_ONCE(prev != entry);
- 		entry = new_entry;
+ 	entry = get_unlocked_mapping_entry(&xas);
+ 	/* Did we race with someone splitting entry or so? */
+ 	if (!entry ||
+ 	    (pe_size == PE_SIZE_PTE && !dax_is_pte_entry(entry)) ||
+ 	    (pe_size == PE_SIZE_PMD && !dax_is_pmd_entry(entry))) {
+ 		put_unlocked_mapping_entry(&xas, entry);
+-		xa_unlock_irq(&mapping->pages);
++		xas_unlock_irq(&xas);
+ 		trace_dax_insert_pfn_mkwrite_no_entry(mapping->host, vmf,
+ 						      VM_FAULT_NOPAGE);
+ 		return VM_FAULT_NOPAGE;
  	}
- 
- 	if (dirty)
--		radix_tree_tag_set(pages, index, PAGECACHE_TAG_DIRTY);
-+		xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
- 
+-	radix_tree_tag_set(&mapping->pages, index, PAGECACHE_TAG_DIRTY);
++	xas_set_tag(&xas, PAGECACHE_TAG_DIRTY);
+ 	entry = lock_slot(&xas);
 -	xa_unlock_irq(&mapping->pages);
 +	xas_unlock_irq(&xas);
- 	return entry;
- }
- 
+ 	switch (pe_size) {
+ 	case PE_SIZE_PTE:
+ 		error = vm_insert_mixed_mkwrite(vmf->vma, vmf->address, pfn);
 -- 
 2.15.1
 
