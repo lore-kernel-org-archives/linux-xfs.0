@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:59602 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750931AbeAQWCd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:02:33 -0500
-Subject: [PATCH 05/29] xfs_scrub: figure out how many threads we're going to
- need
+Received: from aserp2120.oracle.com ([141.146.126.78]:56168 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750931AbeAQWCk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:02:40 -0500
+Subject: [PATCH 04/29] xfs_scrub: dispatch the various phases of the scrub
+ program
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:02:23 -0800
-Message-ID: <151622654338.31925.18035935005863380268.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:02:16 -0800
+Message-ID: <151622653693.31925.14708874821387064399.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,75 +21,489 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create the plumbing to figure out how many threads we're going to want
-to do all of our scrubbing.
+Create the dispatching routines that we'll use to call out to each
+separate phase of the program.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/common.c    |   26 ++++++++++++++++++++++++++
- scrub/common.h    |    2 ++
- scrub/xfs_scrub.h |    3 +++
- 3 files changed, 31 insertions(+)
+ configure.ac          |    1 
+ include/builddefs.in  |    1 
+ m4/package_libcdev.m4 |   18 +++
+ scrub/Makefile        |    4 +
+ scrub/common.c        |   63 +++++++++++
+ scrub/common.h        |    4 +
+ scrub/xfs_scrub.c     |  275 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 366 insertions(+)
 
 
+diff --git a/configure.ac b/configure.ac
+index f83d581..796a91b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -165,6 +165,7 @@ AC_HAVE_GETFSMAP
+ AC_HAVE_STATFS_FLAGS
+ AC_HAVE_MAP_SYNC
+ AC_HAVE_DEVMAPPER
++AC_HAVE_MALLINFO
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 9470703..28cf0d8 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -119,6 +119,7 @@ HAVE_GETFSMAP = @have_getfsmap@
+ HAVE_STATFS_FLAGS = @have_statfs_flags@
+ HAVE_MAP_SYNC = @have_map_sync@
+ HAVE_DEVMAPPER = @have_devmapper@
++HAVE_MALLINFO = @have_mallinfo@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 71cedc5..d3955f0 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -344,3 +344,21 @@ AC_DEFUN([AC_HAVE_MAP_SYNC],
+ 	AC_MSG_RESULT(no))
+     AC_SUBST(have_map_sync)
+   ])
++
++#
++# Check if we have a mallinfo libc call
++#
++AC_DEFUN([AC_HAVE_MALLINFO],
++  [ AC_MSG_CHECKING([for mallinfo ])
++    AC_TRY_COMPILE([
++#include <malloc.h>
++    ], [
++         struct mallinfo test;
++
++         test.arena = 0; test.hblkhd = 0; test.uordblks = 0; test.fordblks = 0;
++         test = mallinfo();
++    ], have_mallinfo=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_mallinfo)
++  ])
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 62cca3b..097ec84 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -27,6 +27,10 @@ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+ LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+ LLDFLAGS = -static
+ 
++ifeq ($(HAVE_MALLINFO),yes)
++LCFLAGS += -DHAVE_MALLINFO
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
 diff --git a/scrub/common.c b/scrub/common.c
-index 37ccd4a..05bb89b 100644
+index 8137881..37ccd4a 100644
 --- a/scrub/common.c
 +++ b/scrub/common.c
-@@ -168,3 +168,29 @@ auto_units(
- 	*units = "";
- 	return number;
+@@ -105,3 +105,66 @@ __str_out(
+ 
+ 	pthread_mutex_unlock(&ctx->lock);
  }
 +
-+/* How many threads to kick off? */
-+unsigned int
-+scrub_nproc(
-+	struct scrub_ctx	*ctx)
++double
++timeval_subtract(
++	struct timeval		*tv1,
++	struct timeval		*tv2)
 +{
-+	if (nr_threads)
-+		return nr_threads;
-+	return ctx->nr_io_threads;
++	return ((tv1->tv_sec - tv2->tv_sec) +
++		((float) (tv1->tv_usec - tv2->tv_usec)) / 1000000);
++}
++
++/* Produce human readable disk space output. */
++double
++auto_space_units(
++	unsigned long long	bytes,
++	char			**units)
++{
++	if (debug > 1)
++		goto no_prefix;
++	if (bytes > (1ULL << 40)) {
++		*units = "TiB";
++		return (double)bytes / (1ULL << 40);
++	} else if (bytes > (1ULL << 30)) {
++		*units = "GiB";
++		return (double)bytes / (1ULL << 30);
++	} else if (bytes > (1ULL << 20)) {
++		*units = "MiB";
++		return (double)bytes / (1ULL << 20);
++	} else if (bytes > (1ULL << 10)) {
++		*units = "KiB";
++		return (double)bytes / (1ULL << 10);
++	}
++
++no_prefix:
++	*units = "B";
++	return bytes;
++}
++
++/* Produce human readable discrete number output. */
++double
++auto_units(
++	unsigned long long	number,
++	char			**units)
++{
++	if (debug > 1)
++		goto no_prefix;
++	if (number > 1000000000000ULL) {
++		*units = "T";
++		return number / 1000000000000.0;
++	} else if (number > 1000000000ULL) {
++		*units = "G";
++		return number / 1000000000.0;
++	} else if (number > 1000000ULL) {
++		*units = "M";
++		return number / 1000000.0;
++	} else if (number > 1000ULL) {
++		*units = "K";
++		return number / 1000.0;
++	}
++
++no_prefix:
++	*units = "";
++	return number;
++}
+diff --git a/scrub/common.h b/scrub/common.h
+index 7a7e362..e26e0e8 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -58,4 +58,8 @@ debug_tweak_on(
+ 	return debug && getenv(name) != NULL;
+ }
+ 
++double timeval_subtract(struct timeval *tv1, struct timeval *tv2);
++double auto_space_units(unsigned long long kilobytes, char **units);
++double auto_units(unsigned long long number, char **units);
++
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 3ae1a08..3feee98 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -21,6 +21,8 @@
+ #include <pthread.h>
+ #include <stdbool.h>
+ #include <stdlib.h>
++#include <sys/time.h>
++#include <sys/resource.h>
+ #include "platform_defs.h"
+ #include "xfs.h"
+ #include "input.h"
+@@ -160,6 +162,267 @@ usage(void)
+ 	exit(16);
+ }
+ 
++#ifndef RUSAGE_BOTH
++# define RUSAGE_BOTH		(-2)
++#endif
++
++/* Get resource usage for ourselves and all children. */
++static int
++scrub_getrusage(
++	struct rusage		*usage)
++{
++	struct rusage		cusage;
++	int			err;
++
++	err = getrusage(RUSAGE_BOTH, usage);
++	if (!err)
++		return err;
++
++	err = getrusage(RUSAGE_SELF, usage);
++	if (err)
++		return err;
++
++	err = getrusage(RUSAGE_CHILDREN, &cusage);
++	if (err)
++		return err;
++
++	usage->ru_minflt += cusage.ru_minflt;
++	usage->ru_majflt += cusage.ru_majflt;
++	usage->ru_nswap += cusage.ru_nswap;
++	usage->ru_inblock += cusage.ru_inblock;
++	usage->ru_oublock += cusage.ru_oublock;
++	usage->ru_msgsnd += cusage.ru_msgsnd;
++	usage->ru_msgrcv += cusage.ru_msgrcv;
++	usage->ru_nsignals += cusage.ru_nsignals;
++	usage->ru_nvcsw += cusage.ru_nvcsw;
++	usage->ru_nivcsw += cusage.ru_nivcsw;
++	return 0;
 +}
 +
 +/*
-+ * How many threads to kick off for a workqueue?  If we only want one
-+ * thread, save ourselves the overhead and just run it in the main thread.
++ * Scrub Phase Dispatch
++ *
++ * The operations of the scrub program are split up into several
++ * different phases.  Each phase builds upon the metadata checked in the
++ * previous phase, which is to say that we may skip phase (X + 1) if our
++ * scans in phase (X) reveal corruption.  A phase may be skipped
++ * entirely.
 + */
-+unsigned int
-+scrub_nproc_workqueue(
++
++/* Resource usage for each phase. */
++struct phase_rusage {
++	struct rusage		ruse;
++	struct timeval		time;
++	unsigned long long	verified_bytes;
++	void			*brk_start;
++	const char		*descr;
++};
++
++/* Operations for each phase. */
++#define DATASCAN_DUMMY_FN	((void *)1)
++#define REPAIR_DUMMY_FN		((void *)2)
++struct phase_ops {
++	char		*descr;
++	bool		(*fn)(struct scrub_ctx *);
++	bool		must_run;
++};
++
++/* Start tracking resource usage for a phase. */
++static bool
++phase_start(
++	struct phase_rusage	*pi,
++	unsigned int		phase,
++	const char		*descr)
++{
++	int			error;
++
++	memset(pi, 0, sizeof(*pi));
++	error = scrub_getrusage(&pi->ruse);
++	if (error) {
++		perror(_("getrusage"));
++		return false;
++	}
++	pi->brk_start = sbrk(0);
++
++	error = gettimeofday(&pi->time, NULL);
++	if (error) {
++		perror(_("gettimeofday"));
++		return false;
++	}
++
++	pi->descr = descr;
++	if ((verbose || display_rusage) && descr) {
++		fprintf(stdout, _("Phase %u: %s\n"), phase, descr);
++		fflush(stdout);
++	}
++	return true;
++}
++
++/* Report usage stats. */
++static bool
++phase_end(
++	struct phase_rusage	*pi,
++	unsigned int		phase)
++{
++	struct rusage		ruse_now;
++#ifdef HAVE_MALLINFO
++	struct mallinfo		mall_now;
++#endif
++	struct timeval		time_now;
++	char			phasebuf[DESCR_BUFSZ];
++	double			dt;
++	unsigned long long	in, out;
++	unsigned long long	io;
++	double			i, o, t;
++	double			din, dout, dtot;
++	char			*iu, *ou, *tu, *dinu, *doutu, *dtotu;
++	int			error;
++
++	if (!display_rusage)
++		return true;
++
++	error = gettimeofday(&time_now, NULL);
++	if (error) {
++		perror(_("gettimeofday"));
++		return false;
++	}
++	dt = timeval_subtract(&time_now, &pi->time);
++
++	error = scrub_getrusage(&ruse_now);
++	if (error) {
++		perror(_("getrusage"));
++		return false;
++	}
++
++	if (phase)
++		snprintf(phasebuf, DESCR_BUFSZ, _("Phase %u: "), phase);
++	else
++		phasebuf[0] = 0;
++
++#define kbytes(x)	(((unsigned long)(x) + 1023) / 1024)
++#ifdef HAVE_MALLINFO
++
++	mall_now = mallinfo();
++	fprintf(stdout, _("%sMemory used: %luk/%luk (%luk/%luk), "),
++		phasebuf,
++		kbytes(mall_now.arena), kbytes(mall_now.hblkhd),
++		kbytes(mall_now.uordblks), kbytes(mall_now.fordblks));
++#else
++	fprintf(stdout, _("%sMemory used: %luk, "),
++		phasebuf,
++		(unsigned long) kbytes(((char *) sbrk(0)) -
++				       ((char *) pi->brk_start)));
++#endif
++#undef kbytes
++
++	fprintf(stdout, _("time: %5.2f/%5.2f/%5.2fs\n"),
++		timeval_subtract(&time_now, &pi->time),
++		timeval_subtract(&ruse_now.ru_utime, &pi->ruse.ru_utime),
++		timeval_subtract(&ruse_now.ru_stime, &pi->ruse.ru_stime));
++
++	/* I/O usage */
++	in =  ((unsigned long long)ruse_now.ru_inblock -
++			pi->ruse.ru_inblock) << BBSHIFT;
++	out = ((unsigned long long)ruse_now.ru_oublock -
++			pi->ruse.ru_oublock) << BBSHIFT;
++	io = in + out;
++	if (io) {
++		i = auto_space_units(in, &iu);
++		o = auto_space_units(out, &ou);
++		t = auto_space_units(io, &tu);
++		din = auto_space_units(in / dt, &dinu);
++		dout = auto_space_units(out / dt, &doutu);
++		dtot = auto_space_units(io / dt, &dtotu);
++		fprintf(stdout,
++_("%sI/O: %.1f%s in, %.1f%s out, %.1f%s tot\n"),
++			phasebuf, i, iu, o, ou, t, tu);
++		fprintf(stdout,
++_("%sI/O rate: %.1f%s/s in, %.1f%s/s out, %.1f%s/s tot\n"),
++			phasebuf, din, dinu, dout, doutu, dtot, dtotu);
++	}
++	fflush(stdout);
++
++	return true;
++}
++
++/* Run all the phases of the scrubber. */
++static bool
++run_scrub_phases(
 +	struct scrub_ctx	*ctx)
 +{
-+	unsigned int		x;
++	struct phase_ops phases[] =
++	{
++		{
++			.descr = _("Find filesystem geometry."),
++		},
++		{
++			.descr = _("Check internal metadata."),
++		},
++		{
++			.descr = _("Scan all inodes."),
++		},
++		{
++			.descr = _("Defer filesystem repairs."),
++			.fn = REPAIR_DUMMY_FN,
++		},
++		{
++			.descr = _("Check directory tree."),
++		},
++		{
++			.descr = _("Verify data file integrity."),
++			.fn = DATASCAN_DUMMY_FN,
++		},
++		{
++			.descr = _("Check summary counters."),
++		},
++		{
++			NULL
++		},
++	};
++	struct phase_rusage	pi;
++	struct phase_ops	*sp;
++	bool			moveon = true;
++	unsigned int		debug_phase = 0;
++	unsigned int		phase;
 +
-+	x = scrub_nproc(ctx);
-+	if (x == 1)
-+		x = 0;
-+	return x;
++	if (debug && debug_tweak_on("XFS_SCRUB_PHASE"))
++		debug_phase = atoi(getenv("XFS_SCRUB_PHASE"));
++
++	/* Run all phases of the scrub tool. */
++	for (phase = 1, sp = phases; sp->fn; sp++, phase++) {
++		/* Skip certain phases unless they're turned on. */
++		if (sp->fn == REPAIR_DUMMY_FN ||
++		    sp->fn == DATASCAN_DUMMY_FN)
++			continue;
++
++		/* Allow debug users to force a particular phase. */
++		if (debug_phase && phase != debug_phase && !sp->must_run)
++			continue;
++
++		/* Run this phase. */
++		moveon = phase_start(&pi, phase, sp->descr);
++		if (!moveon)
++			break;
++		moveon = sp->fn(ctx);
++		if (!moveon) {
++			str_info(ctx, ctx->mntpoint,
++_("Scrub aborted after phase %d."),
++					phase);
++			break;
++		}
++		moveon = phase_end(&pi, phase);
++		if (!moveon)
++			break;
++
++		/* Too many errors? */
++		moveon = !xfs_scrub_excessive_errors(ctx);
++		if (!moveon)
++			break;
++	}
++
++	return moveon;
 +}
-diff --git a/scrub/common.h b/scrub/common.h
-index e26e0e8..4779dbd 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -61,5 +61,7 @@ debug_tweak_on(
- double timeval_subtract(struct timeval *tv1, struct timeval *tv2);
- double auto_space_units(unsigned long long kilobytes, char **units);
- double auto_units(unsigned long long number, char **units);
-+unsigned int scrub_nproc(struct scrub_ctx *ctx);
-+unsigned int scrub_nproc_workqueue(struct scrub_ctx *ctx);
- 
- #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 51b8b7a..6d9f0c1 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -54,6 +54,9 @@ struct scrub_ctx {
- 	/* How does the user want us to react to errors? */
- 	enum error_action	error_action;
- 
-+	/* Number of threads for metadata scrubbing */
-+	unsigned int		nr_io_threads;
 +
- 	/* Mutable scrub state; use lock. */
- 	pthread_mutex_t		lock;
- 	unsigned long long	max_errors;
+ int
+ main(
+ 	int			argc,
+@@ -169,6 +432,7 @@ main(
+ 	char			*mtab = NULL;
+ 	char			*repairstr = "";
+ 	struct scrub_ctx	ctx = {0};
++	struct phase_rusage	all_pi;
+ 	unsigned long long	total_errors;
+ 	bool			moveon = true;
+ 	int			ret = 0;
+@@ -283,6 +547,11 @@ _("Only one of the options -n or -y may be specified.\n"));
+ 			mtab = _PATH_MOUNTED;
+ 	}
+ 
++	/* Initialize overall phase stats. */
++	moveon = phase_start(&all_pi, 0, NULL);
++	if (!moveon)
++		goto out;
++
+ 	/* How many CPUs? */
+ 	nproc = sysconf(_SC_NPROCESSORS_ONLN);
+ 	if (nproc < 1)
+@@ -298,6 +567,11 @@ _("Only one of the options -n or -y may be specified.\n"));
+ 	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
+ 		ctx.mode = SCRUB_MODE_REPAIR;
+ 
++	/* Scrub a filesystem. */
++	moveon = run_scrub_phases(&ctx);
++	if (!moveon)
++		ret |= 4;
++
+ 	if (xfs_scrub_excessive_errors(&ctx))
+ 		str_info(&ctx, ctx.mntpoint, _("Too many errors; aborting."));
+ 
+@@ -327,6 +601,7 @@ _("%s: %llu warnings found.\n"),
+ 		ret |= 2;
+ 	if (ctx.runtime_errors)
+ 		ret |= 4;
++	phase_end(&all_pi, 0);
+ 	free(ctx.mntpoint);
+ 
+ 	return ret;
 
