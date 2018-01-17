@@ -1,141 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51646 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750790AbeAPXwL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Jan 2018 18:52:11 -0500
-Subject: Re: [PATCH 18/27] xfs_scrub: warn about normalized Unicode name
- collisions
-References: <151520348769.2027.9860697266310422360.stgit@magnolia>
- <151520359869.2027.5097323049467056197.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0f946ab6-9e41-ede0-d09a-6bcbe3325117@sandeen.net>
-Date: Tue, 16 Jan 2018 17:52:10 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:33190 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754145AbeAQQlF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 11:41:05 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0HGbMmf045910
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2018 16:41:04 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2fj8ahrsuv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2018 16:41:04 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0HGf4P9007316
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2018 16:41:04 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0HGf4PU017863
+        for <linux-xfs@vger.kernel.org>; Wed, 17 Jan 2018 16:41:04 GMT
+Date: Wed, 17 Jan 2018 08:41:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: fix non-debug build compiler warnings
+Message-ID: <20180117164102.GE25805@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <151520359869.2027.5097323049467056197.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
+From: Darrick J. Wong <djwong@djwong.org>
 
-> +/* Print a warning string and whatever error is stored in errno. */
-> +void
-> +__str_errno_warn(
-> +	struct scrub_ctx	*ctx,
-> +	const char		*descr,
-> +	const char		*file,
-> +	int			line)
-> +{
-> +	char			buf[DESCR_BUFSZ];
-> +
-> +	pthread_mutex_lock(&ctx->lock);
-> +	fprintf(stderr, _("Warning: %s: %s."), descr,
-> +			strerror_r(errno, buf, DESCR_BUFSZ));
-> +	if (debug)
-> +		fprintf(stderr, _(" (%s line %d)"), file, line);
-> +	fprintf(stderr, "\n");
-> +	ctx->warnings_found++;
-> +	pthread_mutex_unlock(&ctx->lock);
-> +}
-> +
+Fix compiler warning on non-debug build
 
-Oh hello, unused-new-6th-printing-variant!  ;)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_dquot_item.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-It took a lot of careful peering at, and scrolling around, to figure
-out what all these different __str_ variants do.
-
-Can we collapse all these str_foo_bar things down into a function
-that makes logical choices based on what's passed in?  Here's what
-I was playing with, see if it actually implements what you want
-and if it's any better, and yeah, long lines sorry.
-
-common.h:
-
-void __str_out(struct scrub_ctx *, const char *descr, int level, int error,
-		const char *file, int line, const char *format, ...);
-
-#define S_ERROR	0
-#define S_WARN	1
-#define S_INFO	2
-
-#define str_errno(ctx, str)		__str_out(ctx, str, S_ERROR, errno, __FILE__, __LINE__, NULL)
-#define str_error(ctx, str, ...)	__str_out(ctx, str, S_ERROR, 0,     __FILE__, __LINE__, __VA_ARGS__)
-#define str_errno_warn(ctx, str)	__str_out(ctx, str, S_WARN,  errno, __FILE__, __LINE__, NULL)
-#define str_warn(ctx, str, ...)		__str_out(ctx, str, S_WARN,  0,     __FILE__, __LINE__, __VA_ARGS__)
-#define str_info(ctx, str, ...)		__str_out(ctx, str, S_INFO,  0,     __FILE__, __LINE__, __VA_ARGS__)
-
-/* note, could rationalize those names a bit, maybe must str_errno -> str_errno_error? */
-
-common.c:
-
-/* If stdout/stderr is a tty, clear to end of line to clean up progress bar. */
-static inline const char *str_start(FILE *stream)
-{
-	if (stream == stderr)
-		return stderr_isatty ? CLEAR_EOL : "";
-	else
-		return stdout_isatty ? CLEAR_EOL : "";
-}
-
-static const char *err_str[] = {
-        "Error",
-        "Warning",
-        "Info",
-};
-
-/* Print a warning string and some warning text. */
-void
-__str_out(
-	struct scrub_ctx	*ctx,
-	const char		*descr,
-	int			level,
-	int			error,
-	const char		*file,
-	int			line,
-	const char		*format,
-	...)
-{
-	FILE			*stream = stderr;
-	va_list			args;
-	char                    buf[DESCR_BUFSZ];
-
-	/* print strerror or format of choice but not both */
-	if (error && format)
-		abort();
-
-	if (level >= S_INFO)
-		stream = stdout;
-
-	pthread_mutex_lock(&ctx->lock);
-	if (errno)
-		fprintf(stream, _("%s%s: %s: %s."),
-				str_start(stream), err_str[level], descr,
-				strerror_r(errno, buf, DESCR_BUFSZ));
-	else {
-		fprintf(stream, _("%s%s: %s: "),
-				str_start(stream), err_str[level], descr);
-
-		va_start(args, format);
-		vfprintf(stream, format, args);
-		va_end(args);
-	}
-
-	if (debug)
-		fprintf(stream, _(" (%s line %d)"), file, line);
-	fprintf(stream, "\n");
-	if (stream == stdout)
-		fflush(stream);
-
-	if (errno)	/* A syscall failed */
-		ctx->runtime_errors++;
-	else if (level == S_ERROR)
-		ctx->errors_found++;
-	else if (level == S_WARN)
-		ctx->warnings_found++;
-
-	pthread_mutex_unlock(&ctx->lock);
-}
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index e564f11..51ee848 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -150,10 +150,7 @@ xfs_dquot_item_error(
+ 	struct xfs_log_item	*lip,
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_dquot	*dqp;
+-
+-	dqp = DQUOT_ITEM(lip)->qli_dquot;
+-	ASSERT(!completion_done(&dqp->q_flush));
++	ASSERT(!completion_done(&DQUOT_ITEM(lip)->qli_dquot->q_flush));
+ 	xfs_set_li_failed(lip, bp);
+ }
+ 
