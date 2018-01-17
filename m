@@ -1,142 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:16920 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751804AbeAPC5v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jan 2018 21:57:51 -0500
-Date: Tue, 16 Jan 2018 13:57:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 20/21] xfs: cross-reference the realtime bitmap
-Message-ID: <20180116025746.GF16421@dastard>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398989544.18741.8012375240764840486.stgit@magnolia>
- <20180109212609.GO5602@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:53974 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbeAQB2O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 20:28:14 -0500
+Date: Tue, 16 Jan 2018 17:18:42 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: recheck reflink / dirty page status before freeing
+ CoW reservations
+Message-ID: <20180117011842.GB25805@magnolia>
+References: <20180110220336.GU5602@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180109212609.GO5602@magnolia>
+In-Reply-To: <20180110220336.GU5602@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Eryu Guan <eguan@redhat.com>, Brian Foster <bfoster@redhat.com>
 
-On Tue, Jan 09, 2018 at 01:26:09PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> While we're scrubbing various btrees, cross-reference the records
-> with the other metadata.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: streamline scrubber arguments, remove stack allocated objects
-> ---
->  fs/xfs/libxfs/xfs_rtbitmap.c |   30 ++++++++++++++++++++++++++++++
->  fs/xfs/scrub/bmap.c          |    3 +++
->  fs/xfs/scrub/rtbitmap.c      |   20 ++++++++++++++++++++
->  fs/xfs/scrub/scrub.h         |    6 ++++++
->  fs/xfs/xfs_rtalloc.h         |    4 ++++
->  5 files changed, 63 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-> index 3fb29a5..a3f25a2 100644
-> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
-> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-> @@ -1097,3 +1097,33 @@ xfs_verify_rtbno(
->  {
->  	return rtbno < mp->m_sb.sb_rblocks;
->  }
-> +
-> +/* Is the given extent all free? */
-> +int
-> +xfs_rtalloc_extent_is_free(
-> +	struct xfs_mount		*mp,
-> +	struct xfs_trans		*tp,
-> +	xfs_rtblock_t			start,
-> +	xfs_rtblock_t			len,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-shouldn't that be a xfs_extlen_t?
+Eryu Guan reported seeing occasional hangs when running generic/269 with
+a new fsstress that supports clonerange/deduperange.  The cause of this
+hang is an infinite loop when we convert the CoW fork extents from
+unwritten to real just prior to writing the pages out; the infinite
+loop happens because there's nothing in the CoW fork to convert, and so
+it spins forever.
 
-> +	bool				*is_free)
-> +{
-> +	xfs_rtblock_t			end;
-> +	xfs_extlen_t			clen;
+The fundamental issue here is that when we go to perform these CoW fork
+conversions, we're supposed to have an extent waiting for us, but the
+low space CoW reaper has snuck in and blown them away!  There are four
+conditions that can dissuade the reaper from touching our file -- no
+reflink iflag; dirty page cache; writeback in progress; or directio in
+progress.  We check the four conditions prior to taking the locks, but
+we neglect to recheck them once we have the locks, which is how we end
+up whacking the writeback that's in progress.
 
-clen? Not sure what that is shorthand for.
+Therefore, refactor the four checks into a helper function and call it
+once again once we have the locks to make sure we really want to reap
+the inode.  While we're at it, add an ASSERT for this weird condition so
+that we'll fail noisily if we ever screw this up again.
 
+Reported-by: Eryu Guan <eguan@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Tested-by: Eryu Guan <eguan@redhat.com>
+---
+v2: improve comments, minor refactors suggested by Brian Foster
+---
+ fs/xfs/libxfs/xfs_bmap.c |   10 +++++++
+ fs/xfs/xfs_icache.c      |   63 +++++++++++++++++++++++++++++++---------------
+ 2 files changed, 51 insertions(+), 22 deletions(-)
 
-> +	int				matches;
-> +	int				error;
-> +
-> +	*is_free = false;
-> +	while (len) {
-> +		clen = len > ~0U ? ~0U : len;
-
-So we're checking for a len > UINT_MAX and clamping it here because
-the rt code uses 32 bit extent lengths internally? If we actually
-need 64 bit extent lengths, then isn't using UINT_MAX more obvious
-as to the purpose? i.e
-
-	if (len > UINT_MAX)
-		clen = UINT_MAX;
-	else
-		clen = len;
-
-> +		error = xfs_rtcheck_range(mp, tp, start, clen, 1, &end,
-> +				&matches);
-> +		if (error || !matches || end < start + clen)
-> +			return error;
-> +
-> +		len -= end - start;
-> +		start = end + 1;
-> +	}
-> +
-> +	*is_free = true;
-> +	return error;
-> +}
-> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index 5c34e025..2908a1b 100644
-> --- a/fs/xfs/scrub/bmap.c
-> +++ b/fs/xfs/scrub/bmap.c
-> @@ -278,6 +278,9 @@ xfs_scrub_bmap_rt_extent_xref(
->  {
->  	if (info->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
->  		return;
-> +
-> +	xfs_scrub_xref_not_rtfree(info->sc, irec->br_startblock,
-> +			irec->br_blockcount);
-
-So, irec->br_blockcount is a xfs_extlen, which is 32 bits....
-
->  }
->  
->  /* Cross-reference a single datadev extent record. */
-> diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-> index 6860d5d..1828b17 100644
-> --- a/fs/xfs/scrub/rtbitmap.c
-> +++ b/fs/xfs/scrub/rtbitmap.c
-> @@ -98,3 +98,23 @@ xfs_scrub_rtsummary(
->  	/* XXX: implement this some day */
->  	return -ENOENT;
->  }
-> +
-> +
-> +/* xref check that the extent is not free in the rtbitmap */
-> +void
-> +xfs_scrub_xref_not_rtfree(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_fsblock_t			fsbno,
-> +	xfs_fsblock_t			len)
-
-So we're quietly converting it to a 64 bit length here. ANd not even
-using xfs_rtblock_t as you'd expect for a realtime block...
-
-What caller needs/uses a 64 bit extent length? All the rt allocation
-code uses xfs_extlen_t for lengths, so I'm a bit confused as to why
-it's needed here.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index a01cef4..3567db6 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4311,8 +4311,16 @@ xfs_bmapi_write(
+ 	while (bno < end && n < *nmap) {
+ 		bool			need_alloc = false, wasdelay = false;
+ 
+-		/* in hole or beyoned EOF? */
++		/* in hole or beyond EOF? */
+ 		if (eof || bma.got.br_startoff > bno) {
++			/*
++			 * CoW fork conversions should /never/ hit EOF or
++			 * holes.  There should always be something for us
++			 * to work on.
++			 */
++			ASSERT(!((flags & XFS_BMAPI_CONVERT) &&
++			         (flags & XFS_BMAPI_COWFORK)));
++
+ 			if (flags & XFS_BMAPI_DELALLOC) {
+ 				/*
+ 				 * For the COW fork we can reasonably get a
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 1f84562..76df647 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1655,28 +1655,15 @@ xfs_inode_clear_eofblocks_tag(
+ }
+ 
+ /*
+- * Automatic CoW Reservation Freeing
+- *
+- * These functions automatically garbage collect leftover CoW reservations
+- * that were made on behalf of a cowextsize hint when we start to run out
+- * of quota or when the reservations sit around for too long.  If the file
+- * has dirty pages or is undergoing writeback, its CoW reservations will
+- * be retained.
+- *
+- * The actual garbage collection piggybacks off the same code that runs
+- * the speculative EOF preallocation garbage collector.
++ * Set ourselves up to free CoW blocks from this file.  If it's already clean
++ * then we can bail out quickly, but otherwise we must back off if the file
++ * is undergoing some kind of write.
+  */
+-STATIC int
+-xfs_inode_free_cowblocks(
++static bool
++xfs_prep_free_cowblocks(
+ 	struct xfs_inode	*ip,
+-	int			flags,
+-	void			*args)
++	struct xfs_ifork	*ifp)
+ {
+-	int ret;
+-	struct xfs_eofblocks *eofb = args;
+-	int match;
+-	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+-
+ 	/*
+ 	 * Just clear the tag if we have an empty cow fork or none at all. It's
+ 	 * possible the inode was fully unshared since it was originally tagged.
+@@ -1684,7 +1671,7 @@ xfs_inode_free_cowblocks(
+ 	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
+ 		trace_xfs_inode_free_cowblocks_invalid(ip);
+ 		xfs_inode_clear_cowblocks_tag(ip);
+-		return 0;
++		return false;
+ 	}
+ 
+ 	/*
+@@ -1695,6 +1682,35 @@ xfs_inode_free_cowblocks(
+ 	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY) ||
+ 	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_WRITEBACK) ||
+ 	    atomic_read(&VFS_I(ip)->i_dio_count))
++		return false;
++
++	return true;
++}
++
++/*
++ * Automatic CoW Reservation Freeing
++ *
++ * These functions automatically garbage collect leftover CoW reservations
++ * that were made on behalf of a cowextsize hint when we start to run out
++ * of quota or when the reservations sit around for too long.  If the file
++ * has dirty pages or is undergoing writeback, its CoW reservations will
++ * be retained.
++ *
++ * The actual garbage collection piggybacks off the same code that runs
++ * the speculative EOF preallocation garbage collector.
++ */
++STATIC int
++xfs_inode_free_cowblocks(
++	struct xfs_inode	*ip,
++	int			flags,
++	void			*args)
++{
++	struct xfs_eofblocks	*eofb = args;
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
++	int			match;
++	int			ret = 0;
++
++	if (!xfs_prep_free_cowblocks(ip, ifp))
+ 		return 0;
+ 
+ 	if (eofb) {
+@@ -1715,7 +1731,12 @@ xfs_inode_free_cowblocks(
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 
+-	ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
++	/*
++	 * Check again, nobody else should be able to dirty blocks or change
++	 * the reflink iflag now that we have the first two locks held.
++	 */
++	if (xfs_prep_free_cowblocks(ip, ifp))
++		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+ 
+ 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
