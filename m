@@ -1,62 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from resqmta-ch2-01v.sys.comcast.net ([69.252.207.33]:47808 "EHLO
-        resqmta-ch2-01v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753051AbeAQOqq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 09:46:46 -0500
-Date: Wed, 17 Jan 2018 08:46:41 -0600 (CST)
-From: Christopher Lameter <cl@linux.com>
-Subject: Re: kmem_cache_attr (was Re: [PATCH 04/36] usercopy: Prepare for
- usercopy whitelisting)
-In-Reply-To: <20180116210313.GA7791@bombadil.infradead.org>
-Message-ID: <alpine.DEB.2.20.1801170843550.12151@nuc-kabylake>
-References: <1515531365-37423-1-git-send-email-keescook@chromium.org> <1515531365-37423-5-git-send-email-keescook@chromium.org> <alpine.DEB.2.20.1801101219390.7926@nuc-kabylake> <20180114230719.GB32027@bombadil.infradead.org> <alpine.DEB.2.20.1801160913260.3908@nuc-kabylake>
- <20180116160525.GF30073@bombadil.infradead.org> <alpine.DEB.2.20.1801161049320.5162@nuc-kabylake> <20180116174315.GA10461@bombadil.infradead.org> <alpine.DEB.2.20.1801161205590.1771@nuc-kabylake> <alpine.DEB.2.20.1801161215500.2945@nuc-kabylake>
- <20180116210313.GA7791@bombadil.infradead.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:3229 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750885AbeAQGQA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 01:16:00 -0500
+Date: Wed, 17 Jan 2018 17:15:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Reproducible XFS filesystem artifacts
+Message-ID: <20180117061533.GJ6304@dastard>
+References: <CA+0CQ21AhCGcBdNo5RY4Q=oakNQO1S_jgHU2f-BdG-fL71ZyFw@mail.gmail.com>
+ <20180116075541.GO5602@magnolia>
+ <CA+0CQ21tLBLFfnn_ngY-arVzXAOyZU1XSuDu9RAjAo6VfK2PoA@mail.gmail.com>
+ <CAOQ4uxgKonrPQLSaxhL5ok=NEVT9XAatTab4BsQt9tA7gNBJ2g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgKonrPQLSaxhL5ok=NEVT9XAatTab4BsQt9tA7gNBJ2g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, David Windsor <dave@nullcore.net>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Andy Lutomirski <luto@kernel.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, Laura Abbott <labbott@redhat.com>, Mark Rutland <mark.rutland@arm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Christoffer Dall <christoffer.dall@linaro.org>, Dave Kleikamp <dave.kleikamp@oracle.com>, Jan Kara <jack@suse.cz>, Luis de Bethencourt <luisbg@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>, Rik van Riel <riel@redhat.com>, Matthew Garrett <mjg59@google.com>, linux-fsdevel@vger.kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, kernel-hardening@lists.openwall.com
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Philipp Schrader <philipp@peloton-tech.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Austin Schuh <austin@peloton-tech.com>, Alison Chaiken <alison@peloton-tech.com>, Theodore Tso <tytso@mit.edu>
 
-On Tue, 16 Jan 2018, Matthew Wilcox wrote:
+On Wed, Jan 17, 2018 at 06:05:17AM +0200, Amir Goldstein wrote:
+> On Wed, Jan 17, 2018 at 2:52 AM, Philipp Schrader
+> <philipp@peloton-tech.com> wrote:
+> >> > I've not had much luck digging into the XFS spec to see prove that the
+> >> > ctime is different, but I'm pretty certain. When I mount the images, I
+> >> > can see that ctime is different:
+> >> > $ stat -c %x,%y,%z,%n /mnt/{a,b}/log/syslog
+> >> > 2017-12-28 11:26:53.552000096 -0800,1969-12-31 16:00:00.000000000
+> >> > -0800,2017-12-28 11:28:50.524000060 -0800,/mnt/a/log/syslog
+> >> > 2017-12-28 10:46:38.739999913 -0800,1969-12-31 16:00:00.000000000
+> >> > -0800,2017-12-28 10:48:17.180000049 -0800,/mnt/b/log/syslog
+> >> >
+> >> > As far as I can tell, there are no mount options to null out the ctime
+> >> > fields. (As an aside I'm curious as to the reason for this).
+> >>
+> >> Correct, there's (afaict) no userspace interface to change ctime, since
+> >> it reflects the last time the inode metadata was updated by the kernel.
+> >>
+> >> > Is there a tool that lets me null out ctime fields on a XFS filesystem
+> >> > image
+> >>
+> >> None that I know of.
+> >>
+> >> > Or maybe is there a library that lets me traverse the file
+> >> > system and set the fields to zero manually?
+> >>
+> >> Not really, other than messing up the image with the debugger.
+> >
+> > Which debugger are you talking about? Do you mean xfs_db? I was really
+> > hoping to avoid that :)
 
-> On Tue, Jan 16, 2018 at 12:17:01PM -0600, Christopher Lameter wrote:
-> > Draft patch of how the data structs could change. kmem_cache_attr is read
-> > only.
->
-> Looks good.  Although I would add Kees' user feature:
+Yup, xfs_db is the only way you can write custom timestamps in XFS
+inodes in an OOB manner. But it's not scalable in any way :/
 
-Sure I tried to do this quickly so that the basic struct changes are
-visible.
+> >> > Does what I'm asking make sense? I feel like I'm not the first person
+> >> > to tackle this, but I haven't been lucky with finding anything to
+> >> > address this.
+> >>
+> >> I'm not sure I understand the use case for exactly reproducible filesystem
+> >> images (as opposed to the stuff inside said fs), can you tell us more?
+> >
+> > For some background, these images serve as read-only root file system
+> > images on vehicles. During the initial install or during a system
+> > update, new images get written to the disks. This uses a process
+> > equivalent to using dd(1).
 
-> And I'd start with
-> +struct kmem_cache *kmem_cache_create_attr(const kmem_cache_attr *);
->
-> leaving the old kmem_cache_create to kmalloc a kmem_cache_attr and
-> initialise it.
+[....]
 
-Well at some point we should convert the callers by putting the
-definitions into const kmem_cache_attr initializations. That way
-the callbacks function pointers are safe.
 
-> Can we also do something like this?
->
-> -#define KMEM_CACHE(__struct, __flags) kmem_cache_create(#__struct,\
-> -		sizeof(struct __struct), __alignof__(struct __struct),\
-> -		(__flags), NULL)
-> +#define KMEM_CACHE(__struct, __flags) ({				\
-> +	const struct kmem_cache_attr kca ## __stringify(__struct) = {	\
-> +		.name = #__struct,					\
-> +		.size = sizeof(struct __struct),			\
-> +		.align = __alignof__(struct __struct),			\
-> +		.flags = (__flags),					\
-> +	};								\
-> +	kmem_cache_create_attr(&kca ## __stringify(__struct));		\
-> +})
->
-> That way we won't need to convert any of those users.
+> That is not to suggest that you should not use xfs. You probably
+> have your reasons for it, but whatever was already done by
+> others for other fs (e.g. e2image -Qa) may be the way to go
+> for xfs. xfs_copy would be the first tool I would look into extending
+> for your use case.
 
-Yep thats what I was planning.
+Let's make sure we're all on the same page here.
 
+xfs_copy was written for efficient installation of XFS filesystem
+images. It doesn't store or copy unused space in it's packed
+filesystem image....
+
+What xfs_copy cannot do is modify filesystem metadata. IOWs, it can't
+solve the timestamp problem the reproducable build process needs
+fixed - it can only be used to optimise deployment of images, and
+that's not the problem that is being discussed here.
+
+Philipp, if you need bulk modification of all inodes in the
+filesystem, then the only tool we have that has the capability of
+doing this in an automated fashion is xfs_repair. It wouldn't take
+much modification to set all inode timestamps to a fixed timestamp
+(including the hidden ones that users can't see like crtime) and
+zero out other variable things like change counters.
+
+*However*
+
+Even with timestamp normalisation, there's still no absolute
+guarantee that two filesystems produced by different builds will be
+identical. The kernel can decide to write back two files in a
+different order (e.g. due to differences in memory pressure on the
+machine during the build), and that means they'll be allocated
+differently on disk. Or there could be races with background
+filesystem operations, resulting in an AG being locked when an
+allocation is attempted and so the data extent is allocated in the
+next available AG rather than the one local to the inode. And so on.
+Even minor kernel version differences can result in the filesystem
+images having different layouts.
+
+This is not an XFS specific issue, either. All kernel filesystem are
+susceptible to physical layout variance for one reason or another.
+The fundamental problem is that build system /cannot control the
+filesystem layout/, so even if the contents and user visible
+metadata are the same the filesystem images will still not be 100%
+identical on every build.
+
+IOWs, you're chasing a goal (100% reproducable filesystem images)
+that simply cannot be acheived via writing files through a
+kernel-based filesystem....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
