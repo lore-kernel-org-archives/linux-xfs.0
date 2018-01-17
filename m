@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51472 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:51502 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753808AbeAQWGX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:23 -0500
-Subject: [PATCH 15/29] xfs_scrub: scan inodes
+        with ESMTP id S1753808AbeAQWGZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:25 -0500
+Subject: [PATCH 13/29] xfs_scrub: scan filesystem and AG metadata
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:26 -0800
-Message-ID: <151622660686.31925.10397397403579649789.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:03:14 -0800
+Message-ID: <151622659440.31925.9409310697989741930.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,36 +20,36 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Scan all the inodes in the system for problems.
+Scrub the filesystem and per-AG metadata.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  scrub/Makefile    |    1 
- scrub/phase3.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/phase2.c    |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++
  scrub/xfs_scrub.c |    1 
- scrub/xfs_scrub.h |    2 +
- 4 files changed, 156 insertions(+)
- create mode 100644 scrub/phase3.c
+ scrub/xfs_scrub.h |    1 
+ 4 files changed, 136 insertions(+)
+ create mode 100644 scrub/phase2.c
 
 
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 30dbe54..e0d15d8 100644
+index 915b801..9edc933 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -35,6 +35,7 @@ fscounters.c \
+@@ -32,6 +32,7 @@ filemap.c \
+ fscounters.c \
  inodes.c \
  phase1.c \
- phase2.c \
-+phase3.c \
++phase2.c \
  scrub.c \
  spacemap.c \
  xfs_scrub.c
-diff --git a/scrub/phase3.c b/scrub/phase3.c
+diff --git a/scrub/phase2.c b/scrub/phase2.c
 new file mode 100644
-index 0000000..b3fc510
+index 0000000..153ae02
 --- /dev/null
-+++ b/scrub/phase3.c
-@@ -0,0 +1,152 @@
++++ b/scrub/phase2.c
+@@ -0,0 +1,133 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -80,157 +80,130 @@ index 0000000..b3fc510
 +#include "workqueue.h"
 +#include "xfs_scrub.h"
 +#include "common.h"
-+#include "counter.h"
-+#include "inodes.h"
 +#include "scrub.h"
 +
-+/* Phase 3: Scan all inodes. */
++/* Phase 2: Check internal metadata. */
 +
-+/*
-+ * Run a per-file metadata scanner.  We use the ino/gen interface to
-+ * ensure that the inode we're checking matches what the inode scan
-+ * told us to look at.
-+ */
-+static bool
-+xfs_scrub_fd(
-+	struct scrub_ctx	*ctx,
-+	bool			(*fn)(struct scrub_ctx *, uint64_t,
-+				      uint32_t, int),
-+	struct xfs_bstat	*bs)
++/* Scrub each AG's metadata btrees. */
++static void
++xfs_scan_ag_metadata(
++	struct workqueue		*wq,
++	xfs_agnumber_t			agno,
++	void				*arg)
 +{
-+	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt_fd);
++	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	bool				*pmoveon = arg;
++	bool				moveon;
++	char				descr[DESCR_BUFSZ];
++
++	snprintf(descr, DESCR_BUFSZ, _("AG %u"), agno);
++
++	/*
++	 * First we scrub and fix the AG headers, because we need
++	 * them to work well enough to check the AG btrees.
++	 */
++	moveon = xfs_scrub_ag_headers(ctx, agno);
++	if (!moveon)
++		goto err;
++
++	/* Now scrub the AG btrees. */
++	moveon = xfs_scrub_ag_metadata(ctx, agno);
++	if (!moveon)
++		goto err;
++
++	return;
++err:
++	*pmoveon = false;
 +}
 +
-+struct scrub_inode_ctx {
-+	struct ptcounter	*icount;
-+	bool			moveon;
-+};
-+
-+/* Verify the contents, xattrs, and extent maps of an inode. */
-+static int
-+xfs_scrub_inode(
-+	struct scrub_ctx	*ctx,
-+	struct xfs_handle	*handle,
-+	struct xfs_bstat	*bstat,
-+	void			*arg)
++/* Scrub whole-FS metadata btrees. */
++static void
++xfs_scan_fs_metadata(
++	struct workqueue		*wq,
++	xfs_agnumber_t			agno,
++	void				*arg)
 +{
-+	struct scrub_inode_ctx	*ictx = arg;
-+	struct ptcounter	*icount = ictx->icount;
-+	bool			moveon = true;
-+	int			fd = -1;
++	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	bool				*pmoveon = arg;
++	bool				moveon;
 +
-+	background_sleep();
-+
-+	/* Try to open the inode to pin it. */
-+	if (S_ISREG(bstat->bs_mode)) {
-+		fd = xfs_open_handle(handle);
-+		/* Stale inode means we scan the whole cluster again. */
-+		if (fd < 0 && errno == ESTALE)
-+			return ESTALE;
-+	}
-+
-+	/* Scrub the inode. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat);
++	moveon = xfs_scrub_fs_metadata(ctx);
 +	if (!moveon)
-+		goto out;
-+
-+	/* Scrub all block mappings. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat);
-+	if (!moveon)
-+		goto out;
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat);
-+	if (!moveon)
-+		goto out;
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat);
-+	if (!moveon)
-+		goto out;
-+
-+	if (S_ISLNK(bstat->bs_mode)) {
-+		/* Check symlink contents. */
-+		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino,
-+				bstat->bs_gen, ctx->mnt_fd);
-+	} else if (S_ISDIR(bstat->bs_mode)) {
-+		/* Check the directory entries. */
-+		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat);
-+	}
-+	if (!moveon)
-+		goto out;
-+
-+	/* Check all the extended attributes. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat);
-+	if (!moveon)
-+		goto out;
-+
-+	/* Check parent pointers. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat);
-+	if (!moveon)
-+		goto out;
-+
-+out:
-+	ptcounter_add(icount, 1);
-+	if (fd >= 0)
-+		close(fd);
-+	if (!moveon)
-+		ictx->moveon = false;
-+	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
++		*pmoveon = false;
 +}
 +
-+/* Verify all the inodes in a filesystem. */
++/* Scan all filesystem metadata. */
 +bool
-+xfs_scan_inodes(
++xfs_scan_metadata(
 +	struct scrub_ctx	*ctx)
 +{
-+	struct scrub_inode_ctx	ictx;
-+	bool			ret;
++	struct workqueue	wq;
++	xfs_agnumber_t		agno;
++	bool			moveon = true;
++	int			ret;
 +
-+	ictx.moveon = true;
-+	ictx.icount = ptcounter_init(scrub_nproc(ctx));
-+	if (!ictx.icount) {
-+		str_error(ctx, ctx->mntpoint, _("Could not create counter."));
++	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
++			scrub_nproc_workqueue(ctx));
++	if (ret) {
++		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
 +		return false;
 +	}
 +
-+	ret = xfs_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
-+	if (!ret)
-+		ictx.moveon = false;
-+	if (!ictx.moveon)
-+		goto free;
-+	xfs_scrub_report_preen_triggers(ctx);
-+	ctx->inodes_checked = ptcounter_value(ictx.icount);
++	/*
++	 * In case we ever use the primary super scrubber to perform fs
++	 * upgrades (followed by a full scrub), do that before we launch
++	 * anything else.
++	 */
++	moveon = xfs_scrub_primary_super(ctx);
++	if (!moveon)
++		return moveon;
 +
-+free:
-+	ptcounter_free(ictx.icount);
-+	return ictx.moveon;
++	for (agno = 0; moveon && agno < ctx->geo.agcount; agno++) {
++		ret = workqueue_add(&wq, xfs_scan_ag_metadata, agno, &moveon);
++		if (ret) {
++			moveon = false;
++			str_error(ctx, ctx->mntpoint,
++_("Could not queue AG %u scrub work."), agno);
++			goto out;
++		}
++	}
++
++	if (!moveon)
++		goto out;
++
++	ret = workqueue_add(&wq, xfs_scan_fs_metadata, 0, &moveon);
++	if (ret) {
++		moveon = false;
++		str_error(ctx, ctx->mntpoint,
++_("Could not queue filesystem scrub work."));
++		goto out;
++	}
++
++out:
++	workqueue_destroy(&wq);
++	return moveon;
 +}
 diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 2755d97..ffb7c16 100644
+index c3ad82f..2755d97 100644
 --- a/scrub/xfs_scrub.c
 +++ b/scrub/xfs_scrub.c
-@@ -366,6 +366,7 @@ run_scrub_phases(
+@@ -362,6 +362,7 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Check internal metadata."),
++			.fn = xfs_scan_metadata,
  		},
  		{
  			.descr = _("Scan all inodes."),
-+			.fn = xfs_scan_inodes,
- 		},
- 		{
- 			.descr = _("Defer filesystem repairs."),
 diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 7802101..462b590 100644
+index 914490a..7802101 100644
 --- a/scrub/xfs_scrub.h
 +++ b/scrub/xfs_scrub.h
-@@ -86,6 +86,7 @@ struct scrub_ctx {
- 	unsigned long long	runtime_errors;
- 	unsigned long long	errors_found;
- 	unsigned long long	warnings_found;
-+	unsigned long long	inodes_checked;
- 	bool			need_repair;
- 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
- };
-@@ -95,5 +96,6 @@ void xfs_shutdown_fs(struct scrub_ctx *ctx);
+@@ -94,5 +94,6 @@ struct scrub_ctx {
+ void xfs_shutdown_fs(struct scrub_ctx *ctx);
  bool xfs_cleanup_fs(struct scrub_ctx *ctx);
  bool xfs_setup_fs(struct scrub_ctx *ctx);
- bool xfs_scan_metadata(struct scrub_ctx *ctx);
-+bool xfs_scan_inodes(struct scrub_ctx *ctx);
++bool xfs_scan_metadata(struct scrub_ctx *ctx);
  
  #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
