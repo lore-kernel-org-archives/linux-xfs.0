@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:50471 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:54649 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753778AbeAQUWx (ORCPT
+        with ESMTP id S1753772AbeAQUWx (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:53 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 65/99] dax: Fix sparse warning
-Date: Wed, 17 Jan 2018 12:21:29 -0800
-Message-Id: <20180117202203.19756-66-willy@infradead.org>
+Subject: [PATCH v6 64/99] dax: Convert grab_mapping_entry to XArray
+Date: Wed, 17 Jan 2018 12:21:28 -0800
+Message-Id: <20180117202203.19756-65-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,83 +17,163 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-sparse doesn't know that follow_pte_pmd() conditionally acquires the ptl,
-because it's in a separate compilation unit.  Move follow_pte_pmd() to
-mm.h where sparse can see it.
-
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- include/linux/mm.h | 15 ++++++++++++++-
- mm/memory.c        | 16 +---------------
- 2 files changed, 15 insertions(+), 16 deletions(-)
+ fs/dax.c | 98 +++++++++++++++++-----------------------------------------------
+ 1 file changed, 26 insertions(+), 72 deletions(-)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index fe1ee4313add..9c384c486edf 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1314,7 +1314,7 @@ int copy_page_range(struct mm_struct *dst, struct mm_struct *src,
- 			struct vm_area_struct *vma);
- void unmap_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen, int even_cows);
--int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
- 			     unsigned long *start, unsigned long *end,
- 			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp);
- int follow_pfn(struct vm_area_struct *vma, unsigned long address,
-@@ -1324,6 +1324,19 @@ int follow_phys(struct vm_area_struct *vma, unsigned long address,
- int generic_access_phys(struct vm_area_struct *vma, unsigned long addr,
- 			void *buf, int len, int write);
+diff --git a/fs/dax.c b/fs/dax.c
+index 494e8fb7a98f..3eb0cf176d69 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -44,6 +44,7 @@
  
-+static inline int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+			     unsigned long *start, unsigned long *end,
-+			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
-+{
-+	int res;
-+
-+	/* (void) is needed to make gcc happy */
-+	(void) __cond_lock(*ptlp,
-+			   !(res = __follow_pte_pmd(mm, address, start, end,
-+						    ptepp, pmdpp, ptlp)));
-+	return res;
-+}
-+
- static inline void unmap_shared_mapping_range(struct address_space *mapping,
- 		loff_t const holebegin, loff_t const holelen)
- {
-diff --git a/mm/memory.c b/mm/memory.c
-index ca5674cbaff2..66184601ac03 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4201,7 +4201,7 @@ int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
- }
- #endif /* __PAGETABLE_PMD_FOLDED */
+ /* The 'colour' (ie low bits) within a PMD of a page offset.  */
+ #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
++#define PMD_ORDER	(PMD_SHIFT - PAGE_SHIFT)
  
--static int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
-+int __follow_pte_pmd(struct mm_struct *mm, unsigned long address,
- 			    unsigned long *start, unsigned long *end,
- 			    pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
- {
-@@ -4278,20 +4278,6 @@ static inline int follow_pte(struct mm_struct *mm, unsigned long address,
- 	return res;
+ static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
+ 
+@@ -89,10 +90,10 @@ static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
+ 			DAX_ENTRY_LOCK);
  }
  
--int follow_pte_pmd(struct mm_struct *mm, unsigned long address,
--			     unsigned long *start, unsigned long *end,
--			     pte_t **ptepp, pmd_t **pmdpp, spinlock_t **ptlp)
--{
--	int res;
+-static unsigned int dax_radix_order(void *entry)
++static unsigned int dax_entry_order(void *entry)
+ {
+ 	if (xa_to_value(entry) & DAX_PMD)
+-		return PMD_SHIFT - PAGE_SHIFT;
++		return PMD_ORDER;
+ 	return 0;
+ }
+ 
+@@ -299,10 +300,11 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ {
+ 	XA_STATE(xas, &mapping->pages, index);
+ 	bool pmd_downgrade = false; /* splitting 2MiB entry into 4k entries? */
+-	void *entry, **slot;
++	void *entry;
+ 
++	xas_set_order(&xas, index, size_flag ? PMD_ORDER : 0);
+ restart:
+-	xa_lock_irq(&mapping->pages);
++	xas_lock_irq(&xas);
+ 	entry = get_unlocked_mapping_entry(&xas);
+ 
+ 	if (WARN_ON_ONCE(entry && !xa_is_value(entry))) {
+@@ -326,84 +328,36 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		}
+ 	}
+ 
+-	/* No entry for given index? Make sure radix tree is big enough. */
+-	if (!entry || pmd_downgrade) {
+-		int err;
 -
--	/* (void) is needed to make gcc happy */
--	(void) __cond_lock(*ptlp,
--			   !(res = __follow_pte_pmd(mm, address, start, end,
--						    ptepp, pmdpp, ptlp)));
--	return res;
--}
--EXPORT_SYMBOL(follow_pte_pmd);
+-		if (pmd_downgrade) {
+-			/*
+-			 * Make sure 'entry' remains valid while we drop
+-			 * xa_lock.
+-			 */
+-			entry = lock_slot(&xas);
+-		}
 -
- /**
-  * follow_pfn - look up PFN at a user virtual address
-  * @vma: memory mapping
+-		xa_unlock_irq(&mapping->pages);
++	if (pmd_downgrade) {
++		entry = lock_slot(&xas);
+ 		/*
+ 		 * Besides huge zero pages the only other thing that gets
+ 		 * downgraded are empty entries which don't need to be
+ 		 * unmapped.
+ 		 */
+-		if (pmd_downgrade && dax_is_zero_entry(entry))
++		if (dax_is_zero_entry(entry)) {
++			xas_pause(&xas);
++			xas_unlock_irq(&xas);
+ 			unmap_mapping_range(mapping,
+ 				(index << PAGE_SHIFT) & PMD_MASK, PMD_SIZE, 0);
+-
+-		err = radix_tree_preload(
+-				mapping_gfp_mask(mapping) & ~__GFP_HIGHMEM);
+-		if (err) {
+-			if (pmd_downgrade)
+-				put_locked_mapping_entry(mapping, index);
+-			return ERR_PTR(err);
++			xas_lock_irq(&xas);
+ 		}
+-		xa_lock_irq(&mapping->pages);
+-
+-		if (!entry) {
+-			/*
+-			 * We needed to drop the pages lock while calling
+-			 * radix_tree_preload() and we didn't have an entry to
+-			 * lock.  See if another thread inserted an entry at
+-			 * our index during this time.
+-			 */
+-			entry = __radix_tree_lookup(&mapping->pages, index,
+-					NULL, &slot);
+-			if (entry) {
+-				radix_tree_preload_end();
+-				xa_unlock_irq(&mapping->pages);
+-				goto restart;
+-			}
+-		}
+-
+-		if (pmd_downgrade) {
+-			radix_tree_delete(&mapping->pages, index);
+-			mapping->nrexceptional--;
+-			dax_wake_entry(&xas, entry, true);
+-		}
+-
++		xas_store(&xas, NULL);
++		mapping->nrexceptional--;
++		dax_wake_entry(&xas, entry, true);
++	}
++	if (!entry || pmd_downgrade) {
+ 		entry = dax_radix_locked_entry(0, size_flag | DAX_EMPTY);
+-
+-		err = __radix_tree_insert(&mapping->pages, index,
+-				dax_radix_order(entry), entry);
+-		radix_tree_preload_end();
+-		if (err) {
+-			xa_unlock_irq(&mapping->pages);
+-			/*
+-			 * Our insertion of a DAX entry failed, most likely
+-			 * because we were inserting a PMD entry and it
+-			 * collided with a PTE sized entry at a different
+-			 * index in the PMD range.  We haven't inserted
+-			 * anything into the radix tree and have no waiters to
+-			 * wake.
+-			 */
+-			return ERR_PTR(err);
+-		}
+-		/* Good, we have inserted empty locked entry into the tree. */
+-		mapping->nrexceptional++;
+-		xa_unlock_irq(&mapping->pages);
+-		return entry;
++		xas_store(&xas, entry);
++		if (!xas_error(&xas))
++			mapping->nrexceptional++;
++	} else {
++		entry = lock_slot(&xas);
+ 	}
+-	entry = lock_slot(&xas);
+  out_unlock:
+-	xa_unlock_irq(&mapping->pages);
++	xas_unlock_irq(&xas);
++	if (xas_nomem(&xas, GFP_NOIO))
++		goto restart;
+ 	return entry;
+ }
+ 
+@@ -682,7 +636,7 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	 * worry about partial PMD writebacks.
+ 	 */
+ 	sector = dax_radix_sector(entry);
+-	size = PAGE_SIZE << dax_radix_order(entry);
++	size = PAGE_SIZE << dax_entry_order(entry);
+ 
+ 	id = dax_read_lock();
+ 	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
 -- 
 2.15.1
 
