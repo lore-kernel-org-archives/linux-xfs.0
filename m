@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60716 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753974AbeAQWEJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:04:09 -0500
-Subject: [PATCH 19/29] xfs_scrub: create a bitmap data structure
+Received: from aserp2120.oracle.com ([141.146.126.78]:56838 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753872AbeAQWDh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:03:37 -0500
+Subject: [PATCH 16/29] xfs_scrub: check directory connectivity
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:52 -0800
-Message-ID: <151622663206.31925.1035460905746398705.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:03:33 -0800
+Message-ID: <151622661310.31925.10254288208119496968.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,46 +20,39 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create an efficient tree-based bitmap data structure.  We will use this
-during the data block scan to record the LBAs of IO errors so that we
-can report broken files to userspace.
+Opening directories by file handle will cause the kernel to perform
+parent lookups all the way to the root directory.  Take advantage of
+this to ensure that directories actually connect to the root.  Some
+day we'll have parent pointers and can make this more comprehensive.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile |    2 
- scrub/bitmap.c |  410 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/bitmap.h |   38 +++++
- 3 files changed, 450 insertions(+)
- create mode 100644 scrub/bitmap.c
- create mode 100644 scrub/bitmap.h
+ scrub/Makefile    |    1 +
+ scrub/phase5.c    |  101 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    1 +
+ scrub/xfs_scrub.h |    1 +
+ 4 files changed, 104 insertions(+)
+ create mode 100644 scrub/phase5.c
 
 
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 858bc40..a9aaa99 100644
+index e0d15d8..adb868e 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -16,6 +16,7 @@ INSTALL_SCRUB = install-scrub
- endif	# scrub_prereqs
- 
- HFILES = \
-+bitmap.h \
- common.h \
- counter.h \
- disk.h \
-@@ -28,6 +29,7 @@ unicrash.h \
- xfs_scrub.h
- 
- CFILES = \
-+bitmap.c \
- common.c \
- counter.c \
- disk.c \
-diff --git a/scrub/bitmap.c b/scrub/bitmap.c
+@@ -36,6 +36,7 @@ inodes.c \
+ phase1.c \
+ phase2.c \
+ phase3.c \
++phase5.c \
+ scrub.c \
+ spacemap.c \
+ xfs_scrub.c
+diff --git a/scrub/phase5.c b/scrub/phase5.c
 new file mode 100644
-index 0000000..a88fd0e
+index 0000000..0b161e3
 --- /dev/null
-+++ b/scrub/bitmap.c
-@@ -0,0 +1,410 @@
++++ b/scrub/phase5.c
+@@ -0,0 +1,101 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -80,438 +73,108 @@ index 0000000..a88fd0e
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
 +#include <stdio.h>
-+#include <stdbool.h>
 +#include <stdint.h>
-+#include <stdlib.h>
-+#include <errno.h>
-+#include <assert.h>
-+#include <inttypes.h>
-+#include <pthread.h>
-+#include "platform_defs.h"
-+#include "avl64.h"
-+#include "list.h"
-+#include "bitmap.h"
++#include <stdbool.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "path.h"
++#include "workqueue.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "inodes.h"
++#include "scrub.h"
++
++/* Phase 5: Check directory connectivity. */
 +
 +/*
-+ * Space Efficient Bitmap
-+ *
-+ * Implements a space-efficient bitmap.  We use an AVL tree to manage
-+ * extent records that tell us which ranges are set; the bitmap key is
-+ * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
-+ * test, test and set) are supported, plus we can iterate set ranges.
++ * Verify the connectivity of the directory tree.
++ * We know that the kernel's open-by-handle function will try to reconnect
++ * parents of an opened directory, so we'll accept that as sufficient.
 + */
-+
-+#define avl_for_each_range_safe(pos, n, l, first, last) \
-+	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
-+			pos = n, n = pos ? pos->avl_nextino : NULL)
-+
-+#define avl_for_each_safe(tree, pos, n) \
-+	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
-+			pos != NULL; \
-+			pos = n, n = pos ? pos->avl_nextino : NULL)
-+
-+#define avl_for_each(tree, pos) \
-+	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
-+
-+struct bitmap_node {
-+	struct avl64node	btn_node;
-+	uint64_t		btn_start;
-+	uint64_t		btn_length;
-+};
-+
-+static uint64_t
-+extent_start(
-+	struct avl64node	*node)
-+{
-+	struct bitmap_node	*btn;
-+
-+	btn = container_of(node, struct bitmap_node, btn_node);
-+	return btn->btn_start;
-+}
-+
-+static uint64_t
-+extent_end(
-+	struct avl64node	*node)
-+{
-+	struct bitmap_node	*btn;
-+
-+	btn = container_of(node, struct bitmap_node, btn_node);
-+	return btn->btn_start + btn->btn_length;
-+}
-+
-+static struct avl64ops bitmap_ops = {
-+	extent_start,
-+	extent_end,
-+};
-+
-+/* Initialize a bitmap. */
-+bool
-+bitmap_init(
-+	struct bitmap		**bmapp)
-+{
-+	struct bitmap		*bmap;
-+
-+	bmap = calloc(1, sizeof(struct bitmap));
-+	if (!bmap)
-+		return false;
-+	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
-+	if (!bmap->bt_tree) {
-+		free(bmap);
-+		return false;
-+	}
-+
-+	pthread_mutex_init(&bmap->bt_lock, NULL);
-+	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
-+	*bmapp = bmap;
-+
-+	return true;
-+}
-+
-+/* Free a bitmap. */
-+void
-+bitmap_free(
-+	struct bitmap		**bmapp)
-+{
-+	struct bitmap		*bmap;
-+	struct avl64node	*node;
-+	struct avl64node	*n;
-+	struct bitmap_node	*ext;
-+
-+	bmap = *bmapp;
-+	avl_for_each_safe(bmap->bt_tree, node, n) {
-+		ext = container_of(node, struct bitmap_node, btn_node);
-+		free(ext);
-+	}
-+	free(bmap->bt_tree);
-+	*bmapp = NULL;
-+}
-+
-+/* Create a new bitmap extent node. */
-+static struct bitmap_node *
-+bitmap_node_init(
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct bitmap_node	*ext;
-+
-+	ext = malloc(sizeof(struct bitmap_node));
-+	if (!ext)
-+		return NULL;
-+
-+	ext->btn_node.avl_nextino = NULL;
-+	ext->btn_start = start;
-+	ext->btn_length = len;
-+
-+	return ext;
-+}
-+
-+/* Set a region of bits (locked). */
-+static bool
-+__bitmap_set(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct bitmap_node	*ext;
-+	uint64_t		new_start;
-+	uint64_t		new_length;
-+	struct avl64node	*node;
-+	bool			res = true;
-+
-+	/* Find any existing nodes adjacent or within that range. */
-+	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
-+			&firstn, &lastn);
-+
-+	/* Nothing, just insert a new extent. */
-+	if (firstn == NULL && lastn == NULL) {
-+		ext = bitmap_node_init(start, length);
-+		if (!ext)
-+			return false;
-+
-+		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+		if (node == NULL) {
-+			free(ext);
-+			errno = EEXIST;
-+			return false;
-+		}
-+
-+		return true;
-+	}
-+
-+	assert(firstn != NULL && lastn != NULL);
-+	new_start = start;
-+	new_length = length;
-+
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		ext = container_of(pos, struct bitmap_node, btn_node);
-+
-+		/* Bail if the new extent is contained within an old one. */
-+		if (ext->btn_start <= start &&
-+		    ext->btn_start + ext->btn_length >= start + length)
-+			return res;
-+
-+		/* Check for overlapping and adjacent extents. */
-+		if (ext->btn_start + ext->btn_length >= start ||
-+		    ext->btn_start <= start + length) {
-+			if (ext->btn_start < start) {
-+				new_start = ext->btn_start;
-+				new_length += ext->btn_length;
-+			}
-+
-+			if (ext->btn_start + ext->btn_length >
-+			    new_start + new_length)
-+				new_length = ext->btn_start + ext->btn_length -
-+						new_start;
-+
-+			avl64_delete(bmap->bt_tree, pos);
-+			free(ext);
-+		}
-+	}
-+
-+	ext = bitmap_node_init(new_start, new_length);
-+	if (!ext)
-+		return false;
-+
-+	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+	if (node == NULL) {
-+		free(ext);
-+		errno = EEXIST;
-+		return false;
-+	}
-+
-+	return res;
-+}
-+
-+/* Set a region of bits. */
-+bool
-+bitmap_set(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	bool			res;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	res = __bitmap_set(bmap, start, length);
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return res;
-+}
-+
-+#if 0	/* Unused, provided for completeness. */
-+/* Clear a region of bits. */
-+bool
-+bitmap_clear(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct bitmap_node	*ext;
-+	uint64_t		new_start;
-+	uint64_t		new_length;
-+	struct avl64node	*node;
-+	int			stat;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	/* Find any existing nodes over that range. */
-+	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
-+
-+	/* Nothing, we're done. */
-+	if (firstn == NULL && lastn == NULL) {
-+		pthread_mutex_unlock(&bmap->bt_lock);
-+		return true;
-+	}
-+
-+	assert(firstn != NULL && lastn != NULL);
-+
-+	/* Delete or truncate everything in sight. */
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		ext = container_of(pos, struct bitmap_node, btn_node);
-+
-+		stat = 0;
-+		if (ext->btn_start < start)
-+			stat |= 1;
-+		if (ext->btn_start + ext->btn_length > start + len)
-+			stat |= 2;
-+		switch (stat) {
-+		case 0:
-+			/* Extent totally within range; delete. */
-+			avl64_delete(bmap->bt_tree, pos);
-+			free(ext);
-+			break;
-+		case 1:
-+			/* Extent is left-adjacent; truncate. */
-+			ext->btn_length = start - ext->btn_start;
-+			break;
-+		case 2:
-+			/* Extent is right-adjacent; move it. */
-+			ext->btn_length = ext->btn_start + ext->btn_length -
-+					(start + len);
-+			ext->btn_start = start + len;
-+			break;
-+		case 3:
-+			/* Extent overlaps both ends. */
-+			ext->btn_length = start - ext->btn_start;
-+			new_start = start + len;
-+			new_length = ext->btn_start + ext->btn_length -
-+					new_start;
-+
-+			ext = bitmap_node_init(new_start, new_length);
-+			if (!ext)
-+				return false;
-+
-+			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+			if (node == NULL) {
-+				errno = EEXIST;
-+				return false;
-+			}
-+			break;
-+		}
-+	}
-+
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+	return true;
-+}
-+#endif
-+
-+#ifdef DEBUG
-+/* Iterate the set regions of this bitmap. */
-+bool
-+bitmap_iterate(
-+	struct bitmap		*bmap,
-+	bool			(*fn)(uint64_t, uint64_t, void *),
++static int
++xfs_scrub_connections(
++	struct scrub_ctx	*ctx,
++	struct xfs_handle	*handle,
++	struct xfs_bstat	*bstat,
 +	void			*arg)
 +{
-+	struct avl64node	*node;
-+	struct bitmap_node	*ext;
++	bool			*pmoveon = arg;
++	char			descr[DESCR_BUFSZ];
 +	bool			moveon = true;
++	xfs_agnumber_t		agno;
++	xfs_agino_t		agino;
++	int			fd = -1;
 +
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	avl_for_each(bmap->bt_tree, node) {
-+		ext = container_of(node, struct bitmap_node, btn_node);
-+		moveon = fn(ext->btn_start, ext->btn_length, arg);
-+		if (!moveon)
-+			break;
++	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
++	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
++	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
++			(uint64_t)bstat->bs_ino, agno, agino);
++	background_sleep();
++
++	/* Open the dir, let the kernel try to reconnect it to the root. */
++	if (S_ISDIR(bstat->bs_mode)) {
++		fd = xfs_open_handle(handle);
++		if (fd < 0) {
++			if (errno == ESTALE)
++				return ESTALE;
++			str_errno(ctx, descr);
++			goto out;
++		}
 +	}
-+	pthread_mutex_unlock(&bmap->bt_lock);
 +
-+	return moveon;
-+}
-+#endif
-+
-+/* Do any bitmap extents overlap the given one?  (locked) */
-+static bool
-+__bitmap_test(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+
-+	/* Find any existing nodes over that range. */
-+	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
-+
-+	return firstn != NULL && lastn != NULL;
++out:
++	if (fd >= 0)
++		close(fd);
++	if (!moveon)
++		*pmoveon = false;
++	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
 +}
 +
-+/* Is any part of this range set? */
++/* Check directory connectivity. */
 +bool
-+bitmap_test(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
++xfs_scan_connections(
++	struct scrub_ctx	*ctx)
 +{
-+	bool			res;
++	bool			moveon = true;
++	bool			ret;
 +
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	res = __bitmap_test(bmap, start, len);
-+	pthread_mutex_unlock(&bmap->bt_lock);
++	if (ctx->errors_found) {
++		str_info(ctx, ctx->mntpoint,
++_("Filesystem has errors, skipping connectivity checks."));
++		return true;
++	}
 +
-+	return res;
-+}
-+
-+/* Are none of the bits set? */
-+bool
-+bitmap_empty(
-+	struct bitmap		*bmap)
-+{
-+	return bmap->bt_tree->avl_firstino == NULL;
-+}
-+
-+#ifdef DEBUG
-+static bool
-+bitmap_dump_fn(
-+	uint64_t		startblock,
-+	uint64_t		blockcount,
-+	void			*arg)
-+{
-+	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
++	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
++	if (!ret)
++		moveon = false;
++	if (!moveon)
++		return false;
++	xfs_scrub_report_preen_triggers(ctx);
 +	return true;
 +}
-+
-+/* Dump bitmap. */
-+void
-+bitmap_dump(
-+	struct bitmap		*bmap)
-+{
-+	printf("BITMAP DUMP %p\n", bmap);
-+	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
-+	printf("BITMAP DUMP DONE\n");
-+}
-+#endif
-diff --git a/scrub/bitmap.h b/scrub/bitmap.h
-new file mode 100644
-index 0000000..e8dcd4f
---- /dev/null
-+++ b/scrub/bitmap.h
-@@ -0,0 +1,38 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_BITMAP_H_
-+#define XFS_SCRUB_BITMAP_H_
-+
-+struct bitmap {
-+	pthread_mutex_t		bt_lock;
-+	struct avl64tree_desc	*bt_tree;
-+};
-+
-+bool bitmap_init(struct bitmap **bmap);
-+void bitmap_free(struct bitmap **bmap);
-+bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
-+bool bitmap_iterate(struct bitmap *bmap,
-+		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
-+bool bitmap_test(struct bitmap *bmap, uint64_t start,
-+		uint64_t len);
-+bool bitmap_empty(struct bitmap *bmap);
-+void bitmap_dump(struct bitmap *bmap);
-+
-+#endif /* XFS_SCRUB_BITMAP_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index ffb7c16..af7fdac 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -374,6 +374,7 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Check directory tree."),
++			.fn = xfs_scan_connections,
+ 		},
+ 		{
+ 			.descr = _("Verify data file integrity."),
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 462b590..fd7d7aa 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -97,5 +97,6 @@ bool xfs_cleanup_fs(struct scrub_ctx *ctx);
+ bool xfs_setup_fs(struct scrub_ctx *ctx);
+ bool xfs_scan_metadata(struct scrub_ctx *ctx);
+ bool xfs_scan_inodes(struct scrub_ctx *ctx);
++bool xfs_scan_connections(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
