@@ -1,49 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:37937 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751662AbeAQAl1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 19:41:27 -0500
-Date: Wed, 17 Jan 2018 11:41:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 10/21] xfs: set up scrub cross-referencing helpers
-Message-ID: <20180117004123.GD6304@dastard>
-References: <151398977028.18741.12031215574014508438.stgit@magnolia>
- <151398983388.18741.9974351544672577036.stgit@magnolia>
- <20180105215451.GM5602@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180105215451.GM5602@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:50703 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754013AbeAQUXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:23:06 -0500
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v6 95/99] f2fs: Convert gclist.iroot to XArray
+Date: Wed, 17 Jan 2018 12:21:59 -0800
+Message-Id: <20180117202203.19756-96-willy@infradead.org>
+In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
+References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
 
-On Fri, Jan 05, 2018 at 01:54:51PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Create some helper functions that we'll use later to deal with problems
-> we might encounter while cross referencing metadata with other metadata.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Matthew Wilcox <mawilcox@microsoft.com>
 
-.....
+Straightforward conversion.
 
-> @@ -512,5 +558,6 @@ xfs_scrub_btree(
->  	}
->  
->  out:
-> +
->  	return error;
->  }
+Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ fs/f2fs/gc.c | 14 +++++++-------
+ fs/f2fs/gc.h |  2 +-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Stray whitespace.
-
-Much nicer than the first version. :)
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
+diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
+index aac1e02f75df..2b33068dc36b 100644
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -417,7 +417,7 @@ static struct inode *find_gc_inode(struct gc_inode_list *gc_list, nid_t ino)
+ {
+ 	struct inode_entry *ie;
+ 
+-	ie = radix_tree_lookup(&gc_list->iroot, ino);
++	ie = xa_load(&gc_list->iroot, ino);
+ 	if (ie)
+ 		return ie->inode;
+ 	return NULL;
+@@ -434,7 +434,7 @@ static void add_gc_inode(struct gc_inode_list *gc_list, struct inode *inode)
+ 	new_ie = f2fs_kmem_cache_alloc(inode_entry_slab, GFP_NOFS);
+ 	new_ie->inode = inode;
+ 
+-	f2fs_radix_tree_insert(&gc_list->iroot, inode->i_ino, new_ie);
++	xa_store(&gc_list->iroot, inode->i_ino, new_ie, GFP_NOFS);
+ 	list_add_tail(&new_ie->list, &gc_list->ilist);
+ }
+ 
+@@ -442,7 +442,7 @@ static void put_gc_inode(struct gc_inode_list *gc_list)
+ {
+ 	struct inode_entry *ie, *next_ie;
+ 	list_for_each_entry_safe(ie, next_ie, &gc_list->ilist, list) {
+-		radix_tree_delete(&gc_list->iroot, ie->inode->i_ino);
++		xa_erase(&gc_list->iroot, ie->inode->i_ino);
+ 		iput(ie->inode);
+ 		list_del(&ie->list);
+ 		kmem_cache_free(inode_entry_slab, ie);
+@@ -989,10 +989,10 @@ int f2fs_gc(struct f2fs_sb_info *sbi, bool sync,
+ 	int ret = 0;
+ 	struct cp_control cpc;
+ 	unsigned int init_segno = segno;
+-	struct gc_inode_list gc_list = {
+-		.ilist = LIST_HEAD_INIT(gc_list.ilist),
+-		.iroot = RADIX_TREE_INIT(gc_list.iroot, GFP_NOFS),
+-	};
++	struct gc_inode_list gc_list;
++
++	xa_init(&gc_list.iroot);
++	INIT_LIST_HEAD(&gc_list.ilist);
+ 
+ 	trace_f2fs_gc_begin(sbi->sb, sync, background,
+ 				get_pages(sbi, F2FS_DIRTY_NODES),
+diff --git a/fs/f2fs/gc.h b/fs/f2fs/gc.h
+index 9325191fab2d..769259b0a4f6 100644
+--- a/fs/f2fs/gc.h
++++ b/fs/f2fs/gc.h
+@@ -41,7 +41,7 @@ struct f2fs_gc_kthread {
+ 
+ struct gc_inode_list {
+ 	struct list_head ilist;
+-	struct radix_tree_root iroot;
++	struct xarray iroot;
+ };
+ 
+ /*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.15.1
+
