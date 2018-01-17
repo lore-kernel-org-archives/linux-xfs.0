@@ -1,244 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:33971 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753908AbeAQUW6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:58 -0500
-From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 75/99] md: Convert raid5-cache to XArray
-Date: Wed, 17 Jan 2018 12:21:39 -0800
-Message-Id: <20180117202203.19756-76-willy@infradead.org>
-In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
-References: <20180117202203.19756-1-willy@infradead.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:44940 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbeAQBLp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jan 2018 20:11:45 -0500
+Date: Tue, 16 Jan 2018 17:11:41 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 18/21] xfs: cross-reference the rmapbt data with the
+ refcountbt
+Message-ID: <20180117011141.GA25805@magnolia>
+References: <151398977028.18741.12031215574014508438.stgit@magnolia>
+ <151398988306.18741.8223158735554937583.stgit@magnolia>
+ <20180116232628.GC5602@magnolia>
+ <20180117010053.GG6304@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180117010053.GG6304@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Matthew Wilcox <mawilcox@microsoft.com>
+On Wed, Jan 17, 2018 at 12:00:54PM +1100, Dave Chinner wrote:
+> On Tue, Jan 16, 2018 at 03:26:28PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Cross reference the refcount data with the rmap data to check that the
+> > number of rmaps for a given block match the refcount of that block, and
+> > that CoW blocks (which are owned entirely by the refcountbt) are tracked
+> > as well.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v3: fix indenting and standardize helper naming, refactor helpers per dave'sr
+> >     suggestion and add clarifying comments
+> > v2: streamline scrubber arguments, remove stack allocated objects
+> > ---
+> >  fs/xfs/scrub/refcount.c |  340 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 338 insertions(+), 2 deletions(-)
+> 
+> One minor thing:
+> 
+> > +	while (!list_empty(&refchk->fragments)) {
+> > +		/* Discard any fragments ending at rbno from the worklist. */
+> > +		nr = 0;
+> > +		next_rbno = NULLAGBLOCK;
+> > +		list_for_each_entry_safe(frag, n, &worklist, list) {
+> > +			bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
+> > +			if (bno != rbno) {
+> > +				if (bno < next_rbno)
+> > +					next_rbno = bno;
+> > +				continue;
+> > +			}
+> > +			list_del(&frag->list);
+> > +			kmem_free(frag);
+> > +			nr++;
+> > +		}
+> > +
+> > +		/* Empty list?  We're done. */
+> > +		if (list_empty(&refchk->fragments))
+> > +			break;
+> 
+> We haven't modified the &refchk->fragments list since the check at
+> the start of the loop, so this seems redundant and could be removed?
 
-This is the first user of the radix tree I've converted which was
-storing numbers rather than pointers.  I'm fairly pleased with how
-well it came out.  There's less boiler-plate involved than there was
-with the radix tree, so that's a win.  It does use the advanced API,
-and I think that's a signal that there needs to be a separate API for
-using the XArray for only integers.
+Yes, I think so.
 
-Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
----
- drivers/md/raid5-cache.c | 119 ++++++++++++++++-------------------------------
- 1 file changed, 40 insertions(+), 79 deletions(-)
+> Other than that, I found this much easier to understand the second
+> time through. A bit of time for it to sink in and a few small
+> changes to logic and comments has done wonders :)
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-index 39f31f07ffe9..2c8ad0ed9b48 100644
---- a/drivers/md/raid5-cache.c
-+++ b/drivers/md/raid5-cache.c
-@@ -158,9 +158,8 @@ struct r5l_log {
- 	/* to disable write back during in degraded mode */
- 	struct work_struct disable_writeback_work;
- 
--	/* to for chunk_aligned_read in writeback mode, details below */
--	spinlock_t tree_lock;
--	struct radix_tree_root big_stripe_tree;
-+	/* for chunk_aligned_read in writeback mode, details below */
-+	struct xarray big_stripe;
- };
- 
- /*
-@@ -170,9 +169,8 @@ struct r5l_log {
-  * chunk contains 64 4kB-page, so this chunk contain 64 stripes). For
-  * chunk_aligned_read, these stripes are grouped into one "big_stripe".
-  * For each big_stripe, we count how many stripes of this big_stripe
-- * are in the write back cache. These data are tracked in a radix tree
-- * (big_stripe_tree). We use radix_tree item pointer as the counter.
-- * r5c_tree_index() is used to calculate keys for the radix tree.
-+ * are in the write back cache. This counter is tracked in an xarray
-+ * (big_stripe). r5c_index() is used to calculate the index.
-  *
-  * chunk_aligned_read() calls r5c_big_stripe_cached() to look up
-  * big_stripe of each chunk in the tree. If this big_stripe is in the
-@@ -180,9 +178,9 @@ struct r5l_log {
-  * rcu_read_lock().
-  *
-  * It is necessary to remember whether a stripe is counted in
-- * big_stripe_tree. Instead of adding new flag, we reuses existing flags:
-+ * big_stripe. Instead of adding new flag, we reuses existing flags:
-  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE. If either of these
-- * two flags are set, the stripe is counted in big_stripe_tree. This
-+ * two flags are set, the stripe is counted in big_stripe. This
-  * requires moving set_bit(STRIPE_R5C_PARTIAL_STRIPE) to
-  * r5c_try_caching_write(); and moving clear_bit of
-  * STRIPE_R5C_PARTIAL_STRIPE and STRIPE_R5C_FULL_STRIPE to
-@@ -190,23 +188,13 @@ struct r5l_log {
-  */
- 
- /*
-- * radix tree requests lowest 2 bits of data pointer to be 2b'00.
-- * So it is necessary to left shift the counter by 2 bits before using it
-- * as data pointer of the tree.
-- */
--#define R5C_RADIX_COUNT_SHIFT 2
--
--/*
-- * calculate key for big_stripe_tree
-+ * calculate key for big_stripe
-  *
-  * sect: align_bi->bi_iter.bi_sector or sh->sector
-  */
--static inline sector_t r5c_tree_index(struct r5conf *conf,
--				      sector_t sect)
-+static inline sector_t r5c_index(struct r5conf *conf, sector_t sect)
- {
--	sector_t offset;
--
--	offset = sector_div(sect, conf->chunk_sectors);
-+	sector_div(sect, conf->chunk_sectors);
- 	return sect;
- }
- 
-@@ -2646,10 +2634,6 @@ int r5c_try_caching_write(struct r5conf *conf,
- 	int i;
- 	struct r5dev *dev;
- 	int to_cache = 0;
--	void **pslot;
--	sector_t tree_index;
--	int ret;
--	uintptr_t refcount;
- 
- 	BUG_ON(!r5c_is_writeback(log));
- 
-@@ -2697,39 +2681,29 @@ int r5c_try_caching_write(struct r5conf *conf,
- 		}
- 	}
- 
--	/* if the stripe is not counted in big_stripe_tree, add it now */
-+	/* if the stripe is not counted in big_stripe, add it now */
- 	if (!test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) &&
- 	    !test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
--		tree_index = r5c_tree_index(conf, sh->sector);
--		spin_lock(&log->tree_lock);
--		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
--					       tree_index);
--		if (pslot) {
--			refcount = (uintptr_t)radix_tree_deref_slot_protected(
--				pslot, &log->tree_lock) >>
--				R5C_RADIX_COUNT_SHIFT;
--			radix_tree_replace_slot(
--				&log->big_stripe_tree, pslot,
--				(void *)((refcount + 1) << R5C_RADIX_COUNT_SHIFT));
--		} else {
--			/*
--			 * this radix_tree_insert can fail safely, so no
--			 * need to call radix_tree_preload()
--			 */
--			ret = radix_tree_insert(
--				&log->big_stripe_tree, tree_index,
--				(void *)(1 << R5C_RADIX_COUNT_SHIFT));
--			if (ret) {
--				spin_unlock(&log->tree_lock);
--				r5c_make_stripe_write_out(sh);
--				return -EAGAIN;
--			}
-+		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
-+		void *entry;
-+
-+		/* Caller would rather handle failures than supply GFP flags */
-+		xas_lock(&xas);
-+		entry = xas_create(&xas);
-+		if (entry)
-+			entry = xa_mk_value(xa_to_value(entry) + 1);
-+		else
-+			entry = xa_mk_value(1);
-+		xas_store(&xas, entry);
-+		xas_unlock(&xas);
-+		if (xas_error(&xas)) {
-+			r5c_make_stripe_write_out(sh);
-+			return -EAGAIN;
- 		}
--		spin_unlock(&log->tree_lock);
- 
- 		/*
- 		 * set STRIPE_R5C_PARTIAL_STRIPE, this shows the stripe is
--		 * counted in the radix tree
-+		 * counted in big_stripe
- 		 */
- 		set_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state);
- 		atomic_inc(&conf->r5c_cached_partial_stripes);
-@@ -2812,9 +2786,6 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 	struct r5l_log *log = conf->log;
- 	int i;
- 	int do_wakeup = 0;
--	sector_t tree_index;
--	void **pslot;
--	uintptr_t refcount;
- 
- 	if (!log || !test_bit(R5_InJournal, &sh->dev[sh->pd_idx].flags))
- 		return;
-@@ -2852,24 +2823,21 @@ void r5c_finish_stripe_write_out(struct r5conf *conf,
- 	atomic_dec(&log->stripe_in_journal_count);
- 	r5c_update_log_state(log);
- 
--	/* stop counting this stripe in big_stripe_tree */
-+	/* stop counting this stripe in big_stripe */
- 	if (test_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state) ||
- 	    test_bit(STRIPE_R5C_FULL_STRIPE, &sh->state)) {
--		tree_index = r5c_tree_index(conf, sh->sector);
--		spin_lock(&log->tree_lock);
--		pslot = radix_tree_lookup_slot(&log->big_stripe_tree,
--					       tree_index);
--		BUG_ON(pslot == NULL);
--		refcount = (uintptr_t)radix_tree_deref_slot_protected(
--			pslot, &log->tree_lock) >>
--			R5C_RADIX_COUNT_SHIFT;
--		if (refcount == 1)
--			radix_tree_delete(&log->big_stripe_tree, tree_index);
-+		XA_STATE(xas, &log->big_stripe, r5c_index(conf, sh->sector));
-+		void *entry;
-+
-+		xas_lock(&xas);
-+		entry = xas_load(&xas);
-+		BUG_ON(!entry);
-+		if (entry == xa_mk_value(1))
-+			entry = NULL;
- 		else
--			radix_tree_replace_slot(
--				&log->big_stripe_tree, pslot,
--				(void *)((refcount - 1) << R5C_RADIX_COUNT_SHIFT));
--		spin_unlock(&log->tree_lock);
-+			entry = xa_mk_value(xa_to_value(entry) - 1);
-+		xas_store(&xas, entry);
-+		xas_unlock(&xas);
- 	}
- 
- 	if (test_and_clear_bit(STRIPE_R5C_PARTIAL_STRIPE, &sh->state)) {
-@@ -2949,16 +2917,10 @@ int r5c_cache_data(struct r5l_log *log, struct stripe_head *sh)
- bool r5c_big_stripe_cached(struct r5conf *conf, sector_t sect)
- {
- 	struct r5l_log *log = conf->log;
--	sector_t tree_index;
--	void *slot;
- 
- 	if (!log)
- 		return false;
--
--	WARN_ON_ONCE(!rcu_read_lock_held());
--	tree_index = r5c_tree_index(conf, sect);
--	slot = radix_tree_lookup(&log->big_stripe_tree, tree_index);
--	return slot != NULL;
-+	return xa_load(&log->big_stripe, r5c_index(conf, sect)) != NULL;
- }
- 
- static int r5l_load_log(struct r5l_log *log)
-@@ -3112,8 +3074,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
- 	if (!log->meta_pool)
- 		goto out_mempool;
- 
--	spin_lock_init(&log->tree_lock);
--	INIT_RADIX_TREE(&log->big_stripe_tree, GFP_NOWAIT | __GFP_NOWARN);
-+	xa_init(&log->big_stripe);
- 
- 	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
- 						 log->rdev->mddev, "reclaim");
--- 
-2.15.1
+Hooray!  Thanks for the review!
 
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
