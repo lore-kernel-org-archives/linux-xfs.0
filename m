@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:34735 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:58411 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752969AbeAQUW2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:28 -0500
+        with ESMTP id S1752738AbeAQUW1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 15:22:27 -0500
 From: Matthew Wilcox <willy@infradead.org>
-Subject: [PATCH v6 07/99] xarray: Add documentation
-Date: Wed, 17 Jan 2018 12:20:31 -0800
-Message-Id: <20180117202203.19756-8-willy@infradead.org>
+Subject: [PATCH v6 04/99] xarray: Change definition of sibling entries
+Date: Wed, 17 Jan 2018 12:20:28 -0800
+Message-Id: <20180117202203.19756-5-willy@infradead.org>
 In-Reply-To: <20180117202203.19756-1-willy@infradead.org>
 References: <20180117202203.19756-1-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,395 +17,310 @@ Cc: Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@v
 
 From: Matthew Wilcox <mawilcox@microsoft.com>
 
-This is documentation on how to use the XArray, not details about its
-internal implementation.
+Instead of storing a pointer to the slot containing the canonical entry,
+store the offset of the slot.  Produces slightly more efficient code
+(~300 bytes) and simplifies the implementation.
 
 Signed-off-by: Matthew Wilcox <mawilcox@microsoft.com>
 ---
- Documentation/core-api/index.rst  |   1 +
- Documentation/core-api/xarray.rst | 361 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 362 insertions(+)
- create mode 100644 Documentation/core-api/xarray.rst
+ include/linux/xarray.h | 90 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/radix-tree.c       | 66 +++++++++++-------------------------
+ 2 files changed, 109 insertions(+), 47 deletions(-)
 
-diff --git a/Documentation/core-api/index.rst b/Documentation/core-api/index.rst
-index d5bbe035316d..eb16ba30aeb6 100644
---- a/Documentation/core-api/index.rst
-+++ b/Documentation/core-api/index.rst
-@@ -18,6 +18,7 @@ Core utilities
-    local_ops
-    workqueue
-    genericirq
-+   xarray
-    flexible-arrays
-    librs
-    genalloc
-diff --git a/Documentation/core-api/xarray.rst b/Documentation/core-api/xarray.rst
-new file mode 100644
-index 000000000000..914999c0bf3f
---- /dev/null
-+++ b/Documentation/core-api/xarray.rst
-@@ -0,0 +1,361 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
-+
-+======
-+XArray
-+======
-+
-+:Author: Matthew Wilcox
-+
-+Overview
-+========
-+
-+The XArray is an abstract data type which behaves like a very large array
-+of pointers.  It meets many of the same needs as a hash or a conventional
-+resizable array.  Unlike a hash, it allows you to sensibly go to the
-+next or previous entry in a cache-efficient manner.  In contrast to
-+a resizable array, there is no need for copying data or changing MMU
-+mappings in order to grow the array.  It is more memory-efficient,
-+parallelisable and cache friendly than a doubly-linked list.  It takes
-+advantage of RCU to perform lookups without locking.
-+
-+The XArray implementation is efficient when the indices used are densely
-+clustered; hashing the object and using the hash as the index will not
-+perform well.  The XArray is optimised for small indices, but still has
-+good performance with large indices.  If your index can be larger than
-+``ULONG_MAX`` then the XArray is not the data type for you.  The most
-+important user of the XArray is the page cache.
-+
-+A freshly-initialised XArray contains a ``NULL`` pointer at every index.
-+Each non-``NULL`` entry in the array has three bits associated with it
-+called tags.  Each tag may be set or cleared independently of the others.
-+You can iterate over entries which are tagged.
-+
-+Normal pointers may be stored in the XArray directly.  They must be 4-byte
-+aligned, which is true for any pointer returned from :c:func:`kmalloc` and
-+:c:func:`alloc_page`.  It isn't true for arbitrary user-space pointers,
-+nor for function pointers.  You can store pointers to statically allocated
-+objects, as long as those objects have an alignment of at least 4.
-+
-+You can also store integers between 0 and ``LONG_MAX`` in the XArray.
-+You must first convert it into an entry using :c:func:`xa_mk_value`.
-+When you retrieve an entry from the XArray, you can check whether it is
-+a value entry by calling :c:func:`xa_is_value`, and convert it back to
-+an integer by calling :c:func:`xa_to_value`.
-+
-+The XArray does not support storing :c:func:`IS_ERR` pointers as some
-+conflict with value entries or internal entries.
-+
-+An unusual feature of the XArray is the ability to create entries which
-+occupy a range of indices.  Once stored to, looking up any index in
-+the range will return the same entry as looking up any other index in
-+the range.  Setting a tag on one index will set it on all of them.
-+Storing to any index will store to all of them.  Multi-index entries can
-+be explicitly split into smaller entries, or storing ``NULL`` into any
-+entry will cause the XArray to forget about the range.
-+
-+Normal API
-+==========
-+
-+Start by initialising an XArray, either with :c:func:`DEFINE_XARRAY`
-+for statically allocated XArrays or :c:func:`xa_init` for dynamically
-+allocated ones.
-+
-+You can then set entries using :c:func:`xa_store` and get entries
-+using :c:func:`xa_load`.  xa_store will overwrite any entry with the
-+new entry and return the previous entry stored at that index.  You can
-+use :c:func:`xa_erase` instead of calling :c:func:`xa_store` with a
-+%NULL entry.  There is no difference between an entry that has never
-+been stored to and one that has most recently had ``NULL`` stored to it.
-+
-+You can conditionally replace an entry at an index by using
-+:c:func:`xa_cmpxchg`.  Like :c:func:`cmpxchg`, it will only succeed if
-+the entry at that index has the 'old' value.  It also returns the entry
-+which was at that index; if it returns the same entry which was passed as
-+'old', then :c:func:`xa_cmpxchg` succeeded.
-+
-+If you want to only store a new entry to an index if the current entry
-+at that index is ``NULL``, you can use :c:func:`xa_insert` which
-+returns ``-EEXIST`` if the entry is not empty.
-+
-+Calling :c:func:`xa_reserve` ensures that there is enough memory allocated
-+to store an entry at the specified index.  This is not normally needed,
-+but some users have a complicated locking scheme.
-+
-+You can enquire whether a tag is set on an entry by using
-+:c:func:`xa_get_tag`.  If the entry is not ``NULL``, you can set a tag
-+on it by using :c:func:`xa_set_tag` and remove the tag from an entry by
-+calling :c:func:`xa_clear_tag`.  You can ask whether any entry in the
-+XArray has a particular tag set by calling :c:func:`xa_tagged`.
-+
-+You can copy entries out of the XArray into a plain array by calling
-+:c:func:`xa_extract`.  Or you can iterate over the present entries in
-+the XArray by calling :c:func:`xa_for_each`.  You may prefer to use
-+:c:func:`xa_find` or :c:func:`xa_find_after` to move to the next present
-+entry in the XArray.
-+
-+Finally, you can remove all entries from an XArray by calling
-+:c:func:`xa_destroy`.  If the XArray entries are pointers, you may wish
-+to free the entries first.  You can do this by iterating over all present
-+entries in the XArray using the :c:func:`xa_for_each` iterator.
-+
-+Memory allocation
-+-----------------
-+
-+The :c:func:`xa_store`, :c:func:`xa_cmpxchg`, :c:func:`xa_reserve`
-+and :c:func:`xa_insert` functions take a gfp_t parameter in case
-+the XArray needs to allocate memory to store this entry.  If the entry
-+being stored is ``NULL``, no memory allocation needs to be performed,
-+and the GFP flags specified will be ignored.
-+
-+It is possible for no memory to be allocatable, particularly if you pass
-+a restrictive set of GFP flags.  In that case, the functions return a
-+special value which can be turned into an errno using :c:func:`xa_err`.
-+If you don't need to know exactly which error occurred, using
-+:c:func:`xa_is_err` is slightly more efficient.
-+
-+Locking
-+-------
-+
-+When using the Normal API, you do not have to worry about locking.
-+The XArray uses RCU and an internal spinlock to synchronise access:
-+
-+No lock needed:
-+ * :c:func:`xa_empty`
-+ * :c:func:`xa_tagged`
-+
-+Takes RCU read lock:
-+ * :c:func:`xa_load`
-+ * :c:func:`xa_for_each`
-+ * :c:func:`xa_find`
-+ * :c:func:`xa_find_after`
-+ * :c:func:`xa_extract`
-+ * :c:func:`xa_get_tag`
-+
-+Takes xa_lock internally:
-+ * :c:func:`xa_store`
-+ * :c:func:`xa_insert`
-+ * :c:func:`xa_erase`
-+ * :c:func:`xa_cmpxchg`
-+ * :c:func:`xa_reserve`
-+ * :c:func:`xa_destroy`
-+ * :c:func:`xa_set_tag`
-+ * :c:func:`xa_clear_tag`
-+
-+Assumes xa_lock held on entry:
-+ * :c:func:`__xa_store`
-+ * :c:func:`__xa_insert`
-+ * :c:func:`__xa_erase`
-+ * :c:func:`__xa_cmpxchg`
-+ * :c:func:`__xa_set_tag`
-+ * :c:func:`__xa_clear_tag`
-+
-+If you want to take advantage of the lock to protect the data structures
-+that you are storing in the XArray, you can call :c:func:`xa_lock`
-+before calling :c:func:`xa_load`, then take a reference count on the
-+object you have found before calling :c:func:`xa_unlock`.  This will
-+prevent stores from removing the object from the array between looking
-+up the object and incrementing the refcount.  You can also use RCU to
-+avoid dereferencing freed memory, but an explanation of that is beyond
-+the scope of this document.
-+
-+The XArray does not disable interrupts or softirqs while modifying
-+the array.  It is safe to read the XArray from interrupt or softirq
-+context as the RCU lock provides enough protection.
-+
-+If, for example, you want to store entries in the XArray in process
-+context and then erase them in softirq context, you can do that this way::
-+
-+    foo_init(struct foo *foo)
-+    {
-+        xa_init_flags(&foo->array, XA_FLAGS_LOCK_BH);
-+    }
-+
-+    foo_store(struct foo *foo, unsigned long index, void *entry)
-+    {
-+        xa_lock_bh(&foo->array);
-+        __xa_store(&foo->array, index, entry, GFP_KERNEL);
-+        foo->count++;
-+        xa_unlock_bh(&foo->array);
-+    }
-+
-+    /* foo_erase() is only called from softirq context */
-+    foo_erase(struct foo *foo, unsigned long index)
-+    {
-+        xa_erase(&foo->array, index);
-+    }
-+
-+If you are going to modify the XArray from interrupt or softirq context,
-+you need to initialise the array using :c:func:`xa_init_flags`, passing
-+``XA_FLAGS_LOCK_IRQ`` or ``XA_FLAGS_LOCK_BH``.
-+
-+The above example also shows a common pattern of wanting to extend the
-+coverage of the xa_lock on the store side to protect some statistics
-+associated with the array.
-+
-+Sharing the XArray with interrupt context is also possible, either
-+using :c:func:`xa_lock_irqsave` in both the interrupt handler and process
-+context, or :c:func:`xa_lock_irq` in process context and :c:func:`xa_lock`
-+in the interrupt handler.
-+
-+Sometimes you need to protect access to the XArray with a mutex because
-+that lock sits above another mutex in the locking hierarchy.  That does
-+not entitle you to use functions like :c:func:`__xa_erase` without taking
-+the xa_lock; the xa_lock is used for lockdep validation and will be used
-+for other purposes in the future.
-+
-+The :c:func:`__xa_set_tag` and :c:func:`__xa_clear_tag` functions are also
-+available for situations where you look up an entry and want to atomically
-+set or clear a tag.  It may be more efficient to use the advanced API
-+in this case, as it will save you from walking the tree twice.
-+
-+Advanced API
-+============
-+
-+The advanced API offers more flexibility and better performance at the
-+cost of an interface which can be harder to use and has fewer safeguards.
-+No locking is done for you by the advanced API, and you are required
-+to use the xa_lock while modifying the array.  You can choose whether
-+to use the xa_lock or the RCU lock while doing read-only operations on
-+the array.  You can mix advanced and normal operations on the same array;
-+indeed the normal API is implemented in terms of the advanced API.  The
-+advanced API is only available to modules with a GPL-compatible license.
-+
-+The advanced API is based around the xa_state.  This is an opaque data
-+structure which you declare on the stack using the :c:func:`XA_STATE`
-+macro.  This macro initialises the xa_state ready to start walking
-+around the XArray.  It is used as a cursor to maintain the position
-+in the XArray and let you compose various operations together without
-+having to restart from the top every time.
-+
-+The xa_state is also used to store errors.  You can call
-+:c:func:`xas_error` to retrieve the error.  All operations check whether
-+the xa_state is in an error state before proceeding, so there's no need
-+for you to check for an error after each call; you can make multiple
-+calls in succession and only check at a convenient point.  The only
-+errors currently generated by the xarray code itself are %ENOMEM and
-+%EINVAL, but it supports arbitrary errors in case you want to call
-+:c:func:`xas_set_err` yourself.
-+
-+If the xa_state is holding an %ENOMEM error, calling :c:func:`xas_nomem`
-+will attempt to allocate more memory using the specified gfp flags and
-+cache it in the xa_state for the next attempt.  The idea is that you take
-+the xa_lock, attempt the operation and drop the lock.  The operation
-+attempts to allocate memory while holding the lock, but it is more
-+likely to fail.  Once you have dropped the lock, :c:func:`xas_nomem`
-+can try harder to allocate more memory.  It will return ``true`` if it
-+is worth retrying the operation (i.e. that there was a memory error *and*
-+more memory was allocated).  If it has previously allocated memory, and
-+that memory wasn't used, and there is no error (or some error that isn't
-+%ENOMEM), then it will free the memory previously allocated.
-+
-+Internal Entries
-+----------------
-+
-+The XArray reserves some entries for its own purposes.  These are never
-+exposed through the normal API, but when using the advanced API, it's
-+possible to see them.  Usually the best way to handle them is to pass them
-+to :c:func:`xas_retry`, and retry the operation if it returns ``true``.
-+
-+.. flat-table::
-+   :widths: 1 1 6
-+
-+   * - Name
-+     - Test
-+     - Usage
-+
-+   * - Node
-+     - :c:func:`xa_is_node`
-+     - An XArray node.  Should never be visible; all functions should recurse
-+       into an XArray node.
-+
-+   * - Sibling
-+     - :c:func:`xa_is_sibling`
-+     - A non-canonical entry for a multi-index entry.  The value indicates
-+       which slot in this node has the canonical entry.
-+
-+   * - Retry
-+     - :c:func:`xa_is_retry`
-+     - This entry is currently being modified by a thread which has the
-+       xa_lock.  The node containing this entry may be freed at the end of
-+       this RCU period.  You should restart the lookup from the head of the
-+       array.
-+
-+Other internal entries may be added in the future.  As far as possible, they
-+will be handled by :c:func:`xas_retry`.
-+
-+Additional functionality
-+------------------------
-+
-+The :c:func:`xas_create` function ensures that there is somewhere in the
-+XArray to store an entry.  It will store ENOMEM in the xa_state if it
-+cannot allocate memory.  You do not normally need to call this function
-+yourself as it is called by :c:func:`xas_store`.
-+
-+You can use :c:func:`xas_init_tags` to reset the tags on an entry
-+to their default state.  This is usually all tags clear, unless the
-+XArray is marked with ``XA_FLAGS_TRACK_FREE``, in which case tag 0 is set
-+and all other tags are clear.  Replacing one entry with another using
-+:c:func:`xas_store` will not reset the tags on that entry; if you want
-+the tags reset, you should do that explicitly.
-+
-+The :c:func:`xas_load` will walk the xa_state as close to the entry
-+as it can.  If you know the xa_state has already been walked to the
-+entry and need to check that the entry hasn't changed, you can use
-+:c:func:`xas_reload` to save a function call.
-+
-+If you need to move to a different index in the XArray, call
-+:c:func:`xas_set`.  This reinitialises the cursor, which will generally
-+have the effect of making the next operation walk the cursor to the
-+desired spot in the tree.  If you want to move to the next or previous
-+index, call :c:func:`xas_next` or :c:func:`xas_prev`.  Setting the index
-+does not walk the cursor around the array so does not require a lock to
-+be held, while moving to the next or previous index does.
-+
-+You can create a multi-index entry by using :c:func:`xas_set_order`.
-+If a load or find operation finds a multi-index entry, the index in the
-+xa_state will be the one searched for, and not necessarily the
-+lowest or highest index used by the entry.
-+Currently the only supported multi-index entries supported are powers
-+of two, but there are two potential users of arbitrary ranges, so that
-+functionality may be added soon.
-+
-+You can search for the next present entry using :c:func:`xas_find`.  This
-+is the equivalent of both :c:func:`xa_find` and :c:func:`xa_find_after`;
-+if the cursor has been walked to an entry, then it will find the next
-+entry after the one currently referenced.  If not, it will return the
-+entry at the index of the xa_state.  Using :c:func:`xas_next_entry` to
-+move to the next present entry instead of :c:func:`xas_find` will save
-+a function call in the majority of cases at the expense of emitting more
-+inline code.
-+
-+The :c:func:`xas_find_tag` function is similar, returning the first tagged
-+entry after the entry referenced by the xa_state if it has already been
-+walked, and returning the entry at the index of the xa_state if it is
-+tagged, and the xa_state has not been walked.  The :c:func:`xas_next_tag`
-+function is the equivalent of :c:func:`xas_next_entry`.
-+
-+When iterating over a range of the XArray using :c:func:`xas_for_each`
-+or :c:func:`xas_for_each_tag`, it may be necessary to temporarily stop
-+the iteration.  The :c:func:`xas_pause` function exists for this purpose.
-+After you have done the necessary work and wish to resume, the xa_state
-+is in an appropriate state to continue the iteration after the entry
-+you last processed.  If you have interrupts disabled while iterating,
-+then it is good manners to pause the iteration and reenable interrupts
-+every ``XA_CHECK_SCHED`` entries.
-+
-+The :c:func:`xas_get_tag`, :c:func:`xas_set_tag` and
-+:c:func:`xas_clear_tag` functions require the xa_state cursor to have
-+been moved to the appropriate location in the xarray; they will do
-+nothing if you have called :c:func:`xas_pause` or :c:func:`xas_set`
-+immediately before.
-+
-+You can call :c:func:`xas_set_update` to have a callback function
-+called each time the XArray updates a node.  This is used by the page
-+cache workingset code to maintain its list of nodes which contain only
-+shadow entries.
-+
-+Functions and structures
-+========================
-+
-+.. kernel-doc:: include/linux/xarray.h
-+.. kernel-doc:: lib/xarray.c
+diff --git a/include/linux/xarray.h b/include/linux/xarray.h
+index 1aa4ff0c19b6..c308152fde7f 100644
+--- a/include/linux/xarray.h
++++ b/include/linux/xarray.h
+@@ -22,6 +22,12 @@
+  * x1: Value entry
+  *
+  * Attempting to store internal entries in the XArray is a bug.
++ *
++ * Most internal entries are pointers to the next node in the tree.
++ * The following internal entries have a special meaning:
++ *
++ * 0-62: Sibling entries
++ * 256: Retry entry
+  */
+ 
+ #define BITS_PER_XA_VALUE	(BITS_PER_LONG - 1)
+@@ -60,6 +66,39 @@ static inline bool xa_is_value(const void *entry)
+ 	return (unsigned long)entry & 1;
+ }
+ 
++/*
++ * xa_mk_internal() - Create an internal entry.
++ * @v: Value to turn into an internal entry.
++ *
++ * Return: An XArray internal entry corresponding to this value.
++ */
++static inline void *xa_mk_internal(unsigned long v)
++{
++	return (void *)((v << 2) | 2);
++}
++
++/*
++ * xa_to_internal() - Extract the value from an internal entry.
++ * @entry: XArray entry.
++ *
++ * Return: The value which was stored in the internal entry.
++ */
++static inline unsigned long xa_to_internal(const void *entry)
++{
++	return (unsigned long)entry >> 2;
++}
++
++/*
++ * xa_is_internal() - Is the entry an internal entry?
++ * @entry: XArray entry.
++ *
++ * Return: %true if the entry is an internal entry.
++ */
++static inline bool xa_is_internal(const void *entry)
++{
++	return ((unsigned long)entry & 3) == 2;
++}
++
+ #define xa_trylock(xa)		spin_trylock(&(xa)->xa_lock)
+ #define xa_lock(xa)		spin_lock(&(xa)->xa_lock)
+ #define xa_unlock(xa)		spin_unlock(&(xa)->xa_lock)
+@@ -72,4 +111,55 @@ static inline bool xa_is_value(const void *entry)
+ #define xa_unlock_irqrestore(xa, flags) \
+ 				spin_unlock_irqrestore(&(xa)->xa_lock, flags)
+ 
++/* Everything below here is the Advanced API.  Proceed with caution. */
++
++/*
++ * The xarray is constructed out of a set of 'chunks' of pointers.  Choosing
++ * the best chunk size requires some tradeoffs.  A power of two recommends
++ * itself so that we can walk the tree based purely on shifts and masks.
++ * Generally, the larger the better; as the number of slots per level of the
++ * tree increases, the less tall the tree needs to be.  But that needs to be
++ * balanced against the memory consumption of each node.  On a 64-bit system,
++ * xa_node is currently 576 bytes, and we get 7 of them per 4kB page.  If we
++ * doubled the number of slots per node, we'd get only 3 nodes per 4kB page.
++ */
++#ifndef XA_CHUNK_SHIFT
++#define XA_CHUNK_SHIFT		(CONFIG_BASE_SMALL ? 4 : 6)
++#endif
++#define XA_CHUNK_SIZE		(1UL << XA_CHUNK_SHIFT)
++#define XA_CHUNK_MASK		(XA_CHUNK_SIZE - 1)
++
++/* Private */
++static inline bool xa_is_node(const void *entry)
++{
++	return xa_is_internal(entry) && (unsigned long)entry > 4096;
++}
++
++/* Private */
++static inline void *xa_mk_sibling(unsigned int offset)
++{
++	return xa_mk_internal(offset);
++}
++
++/* Private */
++static inline unsigned long xa_to_sibling(const void *entry)
++{
++	return xa_to_internal(entry);
++}
++
++/**
++ * xa_is_sibling() - Is the entry a sibling entry?
++ * @entry: Entry retrieved from the XArray
++ *
++ * Return: %true if the entry is a sibling entry.
++ */
++static inline bool xa_is_sibling(const void *entry)
++{
++	return IS_ENABLED(CONFIG_RADIX_TREE_MULTIORDER) &&
++		xa_is_internal(entry) &&
++		(entry < xa_mk_sibling(XA_CHUNK_SIZE - 1));
++}
++
++#define XA_RETRY_ENTRY		xa_mk_internal(256)
++
+ #endif /* _LINUX_XARRAY_H */
+diff --git a/lib/radix-tree.c b/lib/radix-tree.c
+index 012e4869f99b..f16f63d15edc 100644
+--- a/lib/radix-tree.c
++++ b/lib/radix-tree.c
+@@ -37,6 +37,7 @@
+ #include <linux/rcupdate.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
++#include <linux/xarray.h>
+ 
+ 
+ /* Number of nodes in fully populated tree of given height */
+@@ -97,24 +98,7 @@ static inline void *node_to_entry(void *ptr)
+ 	return (void *)((unsigned long)ptr | RADIX_TREE_INTERNAL_NODE);
+ }
+ 
+-#define RADIX_TREE_RETRY	node_to_entry(NULL)
+-
+-#ifdef CONFIG_RADIX_TREE_MULTIORDER
+-/* Sibling slots point directly to another slot in the same node */
+-static inline
+-bool is_sibling_entry(const struct radix_tree_node *parent, void *node)
+-{
+-	void __rcu **ptr = node;
+-	return (parent->slots <= ptr) &&
+-			(ptr < parent->slots + RADIX_TREE_MAP_SIZE);
+-}
+-#else
+-static inline
+-bool is_sibling_entry(const struct radix_tree_node *parent, void *node)
+-{
+-	return false;
+-}
+-#endif
++#define RADIX_TREE_RETRY	XA_RETRY_ENTRY
+ 
+ static inline unsigned long
+ get_slot_offset(const struct radix_tree_node *parent, void __rcu **slot)
+@@ -128,16 +112,10 @@ static unsigned int radix_tree_descend(const struct radix_tree_node *parent,
+ 	unsigned int offset = (index >> parent->shift) & RADIX_TREE_MAP_MASK;
+ 	void __rcu **entry = rcu_dereference_raw(parent->slots[offset]);
+ 
+-#ifdef CONFIG_RADIX_TREE_MULTIORDER
+-	if (radix_tree_is_internal_node(entry)) {
+-		if (is_sibling_entry(parent, entry)) {
+-			void __rcu **sibentry;
+-			sibentry = (void __rcu **) entry_to_node(entry);
+-			offset = get_slot_offset(parent, sibentry);
+-			entry = rcu_dereference_raw(*sibentry);
+-		}
++	if (xa_is_sibling(entry)) {
++		offset = xa_to_sibling(entry);
++		entry = rcu_dereference_raw(parent->slots[offset]);
+ 	}
+-#endif
+ 
+ 	*nodep = (void *)entry;
+ 	return offset;
+@@ -299,10 +277,10 @@ static void dump_node(struct radix_tree_node *node, unsigned long index)
+ 		} else if (!radix_tree_is_internal_node(entry)) {
+ 			pr_debug("radix entry %p offset %ld indices %lu-%lu parent %p\n",
+ 					entry, i, first, last, node);
+-		} else if (is_sibling_entry(node, entry)) {
++		} else if (xa_is_sibling(entry)) {
+ 			pr_debug("radix sblng %p offset %ld indices %lu-%lu parent %p val %p\n",
+ 					entry, i, first, last, node,
+-					*(void **)entry_to_node(entry));
++					node->slots[xa_to_sibling(entry)]);
+ 		} else {
+ 			dump_node(entry_to_node(entry), first);
+ 		}
+@@ -872,8 +850,7 @@ static void radix_tree_free_nodes(struct radix_tree_node *node)
+ 
+ 	for (;;) {
+ 		void *entry = rcu_dereference_raw(child->slots[offset]);
+-		if (radix_tree_is_internal_node(entry) &&
+-					!is_sibling_entry(child, entry)) {
++		if (xa_is_node(entry)) {
+ 			child = entry_to_node(entry);
+ 			offset = 0;
+ 			continue;
+@@ -895,7 +872,7 @@ static void radix_tree_free_nodes(struct radix_tree_node *node)
+ static inline int insert_entries(struct radix_tree_node *node,
+ 		void __rcu **slot, void *item, unsigned order, bool replace)
+ {
+-	struct radix_tree_node *child;
++	void *sibling;
+ 	unsigned i, n, tag, offset, tags = 0;
+ 
+ 	if (node) {
+@@ -913,7 +890,7 @@ static inline int insert_entries(struct radix_tree_node *node,
+ 		offset = offset & ~(n - 1);
+ 		slot = &node->slots[offset];
+ 	}
+-	child = node_to_entry(slot);
++	sibling = xa_mk_sibling(offset);
+ 
+ 	for (i = 0; i < n; i++) {
+ 		if (slot[i]) {
+@@ -930,7 +907,7 @@ static inline int insert_entries(struct radix_tree_node *node,
+ 	for (i = 0; i < n; i++) {
+ 		struct radix_tree_node *old = rcu_dereference_raw(slot[i]);
+ 		if (i) {
+-			rcu_assign_pointer(slot[i], child);
++			rcu_assign_pointer(slot[i], sibling);
+ 			for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++)
+ 				if (tags & (1 << tag))
+ 					tag_clear(node, tag, offset + i);
+@@ -940,9 +917,7 @@ static inline int insert_entries(struct radix_tree_node *node,
+ 				if (tags & (1 << tag))
+ 					tag_set(node, tag, offset);
+ 		}
+-		if (radix_tree_is_internal_node(old) &&
+-					!is_sibling_entry(node, old) &&
+-					(old != RADIX_TREE_RETRY))
++		if (xa_is_node(old))
+ 			radix_tree_free_nodes(old);
+ 		if (xa_is_value(old))
+ 			node->exceptional--;
+@@ -1101,10 +1076,10 @@ static inline void replace_sibling_entries(struct radix_tree_node *node,
+ 				void __rcu **slot, int count, int exceptional)
+ {
+ #ifdef CONFIG_RADIX_TREE_MULTIORDER
+-	void *ptr = node_to_entry(slot);
+-	unsigned offset = get_slot_offset(node, slot) + 1;
++	unsigned offset = get_slot_offset(node, slot);
++	void *ptr = xa_mk_sibling(offset);
+ 
+-	while (offset < RADIX_TREE_MAP_SIZE) {
++	while (++offset < RADIX_TREE_MAP_SIZE) {
+ 		if (rcu_dereference_raw(node->slots[offset]) != ptr)
+ 			break;
+ 		if (count < 0) {
+@@ -1112,7 +1087,6 @@ static inline void replace_sibling_entries(struct radix_tree_node *node,
+ 			node->count--;
+ 		}
+ 		node->exceptional += exceptional;
+-		offset++;
+ 	}
+ #endif
+ }
+@@ -1311,8 +1285,7 @@ int radix_tree_split(struct radix_tree_root *root, unsigned long index,
+ 			tags |= 1 << tag;
+ 
+ 	for (end = offset + 1; end < RADIX_TREE_MAP_SIZE; end++) {
+-		if (!is_sibling_entry(parent,
+-				rcu_dereference_raw(parent->slots[end])))
++		if (!xa_is_sibling(rcu_dereference_raw(parent->slots[end])))
+ 			break;
+ 		for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++)
+ 			if (tags & (1 << tag))
+@@ -1608,11 +1581,9 @@ static void set_iter_tags(struct radix_tree_iter *iter,
+ static void __rcu **skip_siblings(struct radix_tree_node **nodep,
+ 			void __rcu **slot, struct radix_tree_iter *iter)
+ {
+-	void *sib = node_to_entry(slot - 1);
+-
+ 	while (iter->index < iter->next_index) {
+ 		*nodep = rcu_dereference_raw(*slot);
+-		if (*nodep && *nodep != sib)
++		if (*nodep && !xa_is_sibling(*nodep))
+ 			return slot;
+ 		slot++;
+ 		iter->index = __radix_tree_iter_add(iter, 1);
+@@ -1763,7 +1734,7 @@ void __rcu **radix_tree_next_chunk(const struct radix_tree_root *root,
+ 				while (++offset	< RADIX_TREE_MAP_SIZE) {
+ 					void *slot = rcu_dereference_raw(
+ 							node->slots[offset]);
+-					if (is_sibling_entry(node, slot))
++					if (xa_is_sibling(slot))
+ 						continue;
+ 					if (slot)
+ 						break;
+@@ -2282,6 +2253,7 @@ void __init radix_tree_init(void)
+ 
+ 	BUILD_BUG_ON(RADIX_TREE_MAX_TAGS + __GFP_BITS_SHIFT > 32);
+ 	BUILD_BUG_ON(GFP_ZONEMASK != (__force gfp_t)15);
++	BUILD_BUG_ON(XA_CHUNK_SIZE > 255);
+ 	radix_tree_node_cachep = kmem_cache_create("radix_tree_node",
+ 			sizeof(struct radix_tree_node), 0,
+ 			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
 -- 
 2.15.1
 
