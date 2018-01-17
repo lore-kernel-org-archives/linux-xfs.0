@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56956 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753764AbeAQWDu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:03:50 -0500
-Subject: [PATCH 17/29] xfs_scrub: warn about suspicious characters in
- directory/xattr names
+Received: from aserp2130.oracle.com ([141.146.126.79]:60864 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753638AbeAQWEZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:04:25 -0500
+Subject: [PATCH 22/29] xfs_scrub: optionally use SCSI READ VERIFY commands
+ to scrub data blocks on disk
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:39 -0800
-Message-ID: <151622661928.31925.6396423689806325799.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:04:11 -0800
+Message-ID: <151622665104.31925.15517964243951932773.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,440 +21,317 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Look for control characters and punctuation that interfere with shell
-globbing in directory entry names and extended attribute key names.
-Technically these aren't filesystem corruptions because names are
-arbitrary sequences of bytes, but they've been known to cause problems
-in the Unix environment so warn if we see them.
+If we sense that we're talking to a raw SCSI disk, use the SCSI READ
+VERIFY command to ask the disk to verify a disk internally.  This can
+sharply reduce the runtime of the data block verification phase on
+devices whose internal bandwidth exceeds their link bandwidth.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- configure.ac         |    2 +
- debian/control       |    2 -
- include/builddefs.in |    1 
- m4/Makefile          |    1 
- m4/package_attr.m4   |   23 ++++++
- scrub/Makefile       |    6 ++
- scrub/common.c       |   54 ++++++++++++++
- scrub/common.h       |    4 +
- scrub/phase5.c       |  192 ++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.h    |    1 
- 10 files changed, 285 insertions(+), 1 deletion(-)
- create mode 100644 m4/package_attr.m4
+ configure.ac          |    2 +
+ include/builddefs.in  |    2 +
+ m4/package_libcdev.m4 |   30 ++++++++++
+ scrub/Makefile        |    8 +++
+ scrub/disk.c          |  146 +++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/disk.h          |    1 
+ 6 files changed, 188 insertions(+), 1 deletion(-)
 
 
 diff --git a/configure.ac b/configure.ac
-index 796a91b..e2e3f66 100644
+index 8eda010..bb032e5 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -166,6 +166,8 @@ AC_HAVE_STATFS_FLAGS
- AC_HAVE_MAP_SYNC
- AC_HAVE_DEVMAPPER
- AC_HAVE_MALLINFO
-+AC_PACKAGE_WANT_ATTRIBUTES_H
-+AC_HAVE_LIBATTR
+@@ -172,6 +172,8 @@ AC_PACKAGE_WANT_UNINORM_H
+ AC_HAVE_U8NORMALIZE
+ AC_HAVE_OPENAT
+ AC_HAVE_FSTATAT
++AC_HAVE_SG_IO
++AC_HAVE_HDIO_GETGEO
  
  if test "$enable_blkid" = yes; then
  AC_HAVE_BLKID_TOPO
-diff --git a/debian/control b/debian/control
-index f5980b2..f664a6b 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev
- Standards-Version: 3.9.1
- Homepage: https://xfs.wiki.kernel.org/
- 
 diff --git a/include/builddefs.in b/include/builddefs.in
-index 28cf0d8..cc1b7e2 100644
+index 2f8d33f..d44faf9 100644
 --- a/include/builddefs.in
 +++ b/include/builddefs.in
-@@ -120,6 +120,7 @@ HAVE_STATFS_FLAGS = @have_statfs_flags@
- HAVE_MAP_SYNC = @have_map_sync@
- HAVE_DEVMAPPER = @have_devmapper@
- HAVE_MALLINFO = @have_mallinfo@
-+HAVE_LIBATTR = @have_libattr@
+@@ -125,6 +125,8 @@ HAVE_LIBATTR = @have_libattr@
+ HAVE_U8NORMALIZE = @have_u8normalize@
+ HAVE_OPENAT = @have_openat@
+ HAVE_FSTATAT = @have_fstatat@
++HAVE_SG_IO = @have_sg_io@
++HAVE_HDIO_GETGEO = @have_hdio_getgeo@
  
  GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
  #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/Makefile b/m4/Makefile
-index 77f2edd..d5f1d2f 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -17,6 +17,7 @@ LSRCFILES = \
- 	package_blkid.m4 \
- 	package_devmapper.m4 \
- 	package_globals.m4 \
-+	package_attr.m4 \
- 	package_libcdev.m4 \
- 	package_pthread.m4 \
- 	package_sanitizer.m4 \
-diff --git a/m4/package_attr.m4 b/m4/package_attr.m4
-new file mode 100644
-index 0000000..4324923
---- /dev/null
-+++ b/m4/package_attr.m4
-@@ -0,0 +1,23 @@
-+AC_DEFUN([AC_PACKAGE_WANT_ATTRIBUTES_H],
-+  [
-+    AC_CHECK_HEADERS(attr/attributes.h)
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index e0abc12..9258c27 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -390,3 +390,33 @@ AC_DEFUN([AC_HAVE_FSTATAT],
+        #include <unistd.h>])
+     AC_SUBST(have_fstatat)
+   ])
++
++#
++# Check if we have the SG_IO ioctl
++#
++AC_DEFUN([AC_HAVE_SG_IO],
++  [ AC_MSG_CHECKING([for struct sg_io_hdr ])
++    AC_TRY_COMPILE([#include <scsi/sg.h>],
++    [
++         struct sg_io_hdr hdr;
++         ioctl(0, SG_IO, &hdr);
++    ], have_sg_io=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_sg_io)
 +  ])
 +
 +#
-+# Check if we have a ATTR_ROOT flag and libattr structures
++# Check if we have the HDIO_GETGEO ioctl
 +#
-+AC_DEFUN([AC_HAVE_LIBATTR],
-+  [ AC_MSG_CHECKING([for struct attrlist_cursor])
-+    AC_TRY_COMPILE([
-+#include <sys/types.h>
-+#include <attr/attributes.h>
-+       ], [
-+struct attrlist_cursor *cur;
-+struct attrlist *list;
-+struct attrlist_ent *ent;
-+int flags = ATTR_ROOT;
-+       ], have_libattr=yes
-+          AC_MSG_RESULT(yes),
-+          AC_MSG_RESULT(no))
-+    AC_SUBST(have_libattr)
++AC_DEFUN([AC_HAVE_HDIO_GETGEO],
++  [ AC_MSG_CHECKING([for struct hd_geometry ])
++    AC_TRY_COMPILE([#include <linux/hdreg.h>],
++    [
++         struct hd_geometry hdr;
++         ioctl(0, HDIO_GETGEO, &hdr);
++    ], have_hdio_getgeo=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_hdio_getgeo)
 +  ])
 diff --git a/scrub/Makefile b/scrub/Makefile
-index adb868e..67ac6af 100644
+index 4b70efa..1fb6e84 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -53,8 +53,14 @@ ifeq ($(HAVE_SYNCFS),yes)
- LCFLAGS += -DHAVE_SYNCFS
+@@ -70,6 +70,14 @@ CFILES += unicrash.c
+ LCFLAGS += -DHAVE_U8NORMALIZE
  endif
  
-+ifeq ($(HAVE_LIBATTR),yes)
-+LCFLAGS += -DHAVE_LIBATTR
++ifeq ($(HAVE_SG_IO),yes)
++LCFLAGS += -DHAVE_SG_IO
++endif
++
++ifeq ($(HAVE_HDIO_GETGEO),yes)
++LCFLAGS += -DHAVE_HDIO_GETGEO
 +endif
 +
  default: depend $(LTCOMMAND)
  
-+phase5.o: $(TOPDIR)/include/builddefs
-+
- include $(BUILDRULES)
- 
- install: default $(INSTALL_SCRUB)
-diff --git a/scrub/common.c b/scrub/common.c
-index 81869e4..5e2d7c6 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -285,3 +285,57 @@ background_sleep(void)
- 	tv.tv_nsec = time % 1000000;
- 	nanosleep(&tv, NULL);
- }
-+
-+/*
-+ * Return the input string with non-printing bytes escaped.
-+ * Caller must free the buffer.
-+ */
-+char *
-+string_escape(
-+	const char		*in)
-+{
-+	char			*str;
-+	const char		*p;
-+	char			*q;
-+	int			x;
-+
-+	str = malloc(strlen(in) * 4);
-+	if (!str)
-+		return NULL;
-+	for (p = in, q = str; *p != '\0'; p++) {
-+		if (isprint(*p)) {
-+			*q = *p;
-+			q++;
-+		} else {
-+			x = sprintf(q, "\\x%02x", *p);
-+			q += x;
-+		}
-+	}
-+	*q = '\0';
-+	return str;
-+}
-+
-+/*
-+ * Record another naming warning, and decide if it's worth
-+ * complaining about.
-+ */
-+bool
-+should_warn_about_name(
-+	struct scrub_ctx	*ctx)
-+{
-+	bool			whine;
-+	bool			res;
-+
-+	pthread_mutex_lock(&ctx->lock);
-+	ctx->naming_warnings++;
-+	whine = ctx->naming_warnings == TOO_MANY_NAME_WARNINGS;
-+	res = ctx->naming_warnings < TOO_MANY_NAME_WARNINGS;
-+	pthread_mutex_unlock(&ctx->lock);
-+
-+	if (whine && !(debug || verbose))
-+		str_info(ctx, ctx->mntpoint,
-+_("More than %u naming warnings, shutting up."),
-+				TOO_MANY_NAME_WARNINGS);
-+
-+	return debug || verbose || res;
-+}
-diff --git a/scrub/common.h b/scrub/common.h
-index 96fc870..336fc40 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -74,5 +74,9 @@ static inline int syncfs(int fd)
- 
- bool find_mountpoint(char *mtab, struct scrub_ctx *ctx);
- void background_sleep(void);
-+char *string_escape(const char *in);
-+
-+#define TOO_MANY_NAME_WARNINGS	10000
-+bool should_warn_about_name(struct scrub_ctx *ctx);
- 
- #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 0b161e3..98d30f8 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -20,10 +20,15 @@
- #include <stdio.h>
- #include <stdint.h>
- #include <stdbool.h>
-+#include <dirent.h>
- #include <sys/types.h>
- #include <sys/stat.h>
+ phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
+diff --git a/scrub/disk.c b/scrub/disk.c
+index e36ed6b..e12175c 100644
+--- a/scrub/disk.c
++++ b/scrub/disk.c
+@@ -29,12 +29,19 @@
  #include <sys/statvfs.h>
-+#ifdef HAVE_LIBATTR
-+# include <attr/attributes.h>
+ #include <sys/vfs.h>
+ #include <linux/fs.h>
++#ifdef HAVE_SG_IO
++# include <scsi/sg.h>
 +#endif
++#ifdef HAVE_HDIO_GETGEO
++# include <linux/hdreg.h>
++#endif
+ #include "platform_defs.h"
+ #include "libfrog.h"
  #include "xfs.h"
-+#include "handle.h"
  #include "path.h"
- #include "workqueue.h"
+ #include "xfs_fs.h"
  #include "xfs_scrub.h"
-@@ -34,6 +39,181 @@
- /* Phase 5: Check directory connectivity. */
++#include "common.h"
+ #include "disk.h"
  
- /*
-+ * Warn about problematic bytes in a directory/attribute name.  That means
-+ * terminal control characters and escape sequences, since that could be used
-+ * to do something naughty to the user's computer and/or break scripts.  XFS
-+ * doesn't consider any byte sequence invalid, so don't flag these as errors.
-+ */
-+static bool
-+xfs_scrub_check_name(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	const char		*namedescr,
-+	const char		*name)
-+{
-+	const char		*p;
-+	bool			bad = false;
-+	char			*errname;
-+
-+	/* Complain about zero length names. */
-+	if (*name == '\0' && should_warn_about_name(ctx)) {
-+		str_warn(ctx, descr, _("Zero length name found."));
-+		return true;
-+	}
-+
-+	/* control characters */
-+	for (p = name; *p; p++) {
-+		if ((*p >= 1 && *p <= 31) || *p == 127) {
-+			bad = true;
-+			break;
-+		}
-+	}
-+
-+	if (bad && should_warn_about_name(ctx)) {
-+		errname = string_escape(name);
-+		if (!errname) {
-+			str_errno(ctx, descr);
-+			return false;
-+		}
-+		str_info(ctx, descr,
-+_("Control character found in %s name \"%s\"."),
-+				namedescr, errname);
-+		free(errname);
-+	}
-+
-+	return true;
-+}
-+
+ #ifndef BLKROTATIONAL
+@@ -94,12 +101,119 @@ disk_heads(
+ 	return __disk_heads(disk);
+ }
+ 
 +/*
-+ * Iterate a directory looking for filenames with problematic
-+ * characters.
++ * Execute a SCSI VERIFY(16) to verify disk contents.
++ * For devices that support this command, this can sharply reduce the
++ * runtime of the data block verification phase if the storage device's
++ * internal bandwidth exceeds its link bandwidth.  However, it only
++ * works if we're talking to a raw SCSI device, and only if we trust the
++ * firmware.
 + */
-+static bool
-+xfs_scrub_scan_dirents(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	int			*fd)
++#ifdef HAVE_SG_IO
++# define SENSE_BUF_LEN		64
++# define VERIFY16_CMDLEN	16
++# define VERIFY16_CMD		0x8F
++
++# ifndef SG_FLAG_Q_AT_TAIL
++#  define SG_FLAG_Q_AT_TAIL	0x10
++# endif
++static int
++disk_scsi_verify(
++	struct disk		*disk,
++	uint64_t		startblock, /* lba */
++	uint64_t		blockcount) /* lba */
 +{
-+	DIR			*dir;
-+	struct dirent		*dentry;
-+	bool			moveon = true;
++	struct sg_io_hdr	iohdr;
++	unsigned char		cdb[VERIFY16_CMDLEN];
++	unsigned char		sense[SENSE_BUF_LEN];
++	uint64_t		llba;
++	uint64_t		veri_len = blockcount;
++	int			error;
 +
-+	dir = fdopendir(*fd);
-+	if (!dir) {
-+		str_errno(ctx, descr);
-+		goto out;
++	assert(!debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"));
++
++	llba = startblock + (disk->d_start >> BBSHIFT);
++
++	/* Borrowed from sg_verify */
++	cdb[0] = VERIFY16_CMD;
++	cdb[1] = 0; /* skip PI, DPO, and byte check. */
++	cdb[2] = (llba >> 56) & 0xff;
++	cdb[3] = (llba >> 48) & 0xff;
++	cdb[4] = (llba >> 40) & 0xff;
++	cdb[5] = (llba >> 32) & 0xff;
++	cdb[6] = (llba >> 24) & 0xff;
++	cdb[7] = (llba >> 16) & 0xff;
++	cdb[8] = (llba >> 8) & 0xff;
++	cdb[9] = llba & 0xff;
++	cdb[10] = (veri_len >> 24) & 0xff;
++	cdb[11] = (veri_len >> 16) & 0xff;
++	cdb[12] = (veri_len >> 8) & 0xff;
++	cdb[13] = veri_len & 0xff;
++	cdb[14] = 0;
++	cdb[15] = 0;
++	memset(sense, 0, SENSE_BUF_LEN);
++
++	/* v3 SG_IO */
++	memset(&iohdr, 0, sizeof(iohdr));
++	iohdr.interface_id = 'S';
++	iohdr.dxfer_direction = SG_DXFER_NONE;
++	iohdr.cmdp = cdb;
++	iohdr.cmd_len = VERIFY16_CMDLEN;
++	iohdr.sbp = sense;
++	iohdr.mx_sb_len = SENSE_BUF_LEN;
++	iohdr.flags |= SG_FLAG_Q_AT_TAIL;
++	iohdr.timeout = 30000; /* 30s */
++
++	error = ioctl(disk->d_fd, SG_IO, &iohdr);
++	if (error)
++		return error;
++
++	dbg_printf("VERIFY(16) fd %d lba %"PRIu64" len %"PRIu64" info %x "
++			"status %d masked %d msg %d host %d driver %d "
++			"duration %d resid %d\n",
++			disk->d_fd, startblock, blockcount, iohdr.info,
++			iohdr.status, iohdr.masked_status, iohdr.msg_status,
++			iohdr.host_status, iohdr.driver_status, iohdr.duration,
++			iohdr.resid);
++
++	if (iohdr.info & SG_INFO_CHECK) {
++		dbg_printf("status: msg %x host %x driver %x\n",
++				iohdr.msg_status, iohdr.host_status,
++				iohdr.driver_status);
++		errno = EIO;
++		return -1;
 +	}
-+	*fd = -1; /* closedir will close *fd for us */
 +
-+	dentry = readdir(dir);
-+	while (dentry) {
-+		moveon = xfs_scrub_check_name(ctx, descr, _("directory"),
-+				dentry->d_name);
-+		if (!moveon)
-+			break;
-+		dentry = readdir(dir);
-+	}
-+
-+	closedir(dir);
-+out:
-+	return moveon;
-+}
-+
-+#ifdef HAVE_LIBATTR
-+/* Routines to scan all of an inode's xattrs for name problems. */
-+struct xfs_attr_ns {
-+	int			flags;
-+	const char		*name;
-+};
-+
-+static const struct xfs_attr_ns attr_ns[] = {
-+	{0,			"user"},
-+	{ATTR_ROOT,		"system"},
-+	{ATTR_SECURE,		"secure"},
-+	{0, NULL},
-+};
-+
-+/*
-+ * Check all the xattr names in a particular namespace of a file handle
-+ * for Unicode normalization problems or collisions.
-+ */
-+static bool
-+xfs_scrub_scan_fhandle_namespace_xattrs(
-+	struct scrub_ctx		*ctx,
-+	const char			*descr,
-+	struct xfs_handle		*handle,
-+	const struct xfs_attr_ns	*attr_ns)
-+{
-+	struct attrlist_cursor		cur;
-+	char				attrbuf[XFS_XATTR_LIST_MAX];
-+	char				keybuf[NAME_MAX + 1];
-+	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
-+	struct attrlist_ent		*ent;
-+	bool				moveon = true;
-+	int				i;
-+	int				error;
-+
-+	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
-+	memset(&cur, 0, sizeof(cur));
-+	memset(keybuf, 0, NAME_MAX + 1);
-+	error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
-+			XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
-+	while (!error) {
-+		/* Examine the xattrs. */
-+		for (i = 0; i < attrlist->al_count; i++) {
-+			ent = ATTR_ENTRY(attrlist, i);
-+			snprintf(keybuf, NAME_MAX, "%s.%s", attr_ns->name,
-+					ent->a_name);
-+			moveon = xfs_scrub_check_name(ctx, descr,
-+					_("extended attribute"), keybuf);
-+			if (!moveon)
-+				goto out;
-+		}
-+
-+		if (!attrlist->al_more)
-+			break;
-+		error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
-+				XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
-+	}
-+	if (error && errno != ESTALE)
-+		str_errno(ctx, descr);
-+out:
-+	return moveon;
-+}
-+
-+/*
-+ * Check all the xattr names in all the xattr namespaces for problematic
-+ * characters.
-+ */
-+static bool
-+xfs_scrub_scan_fhandle_xattrs(
-+	struct scrub_ctx		*ctx,
-+	const char			*descr,
-+	struct xfs_handle		*handle)
-+{
-+	const struct xfs_attr_ns	*ns;
-+	bool				moveon = true;
-+
-+	for (ns = attr_ns; ns->name; ns++) {
-+		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, descr,
-+				handle, ns);
-+		if (!moveon)
-+			break;
-+	}
-+	return moveon;
++	return error;
 +}
 +#else
-+static inline bool
-+xfs_scrub_scan_fhandle_xattrs(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	struct xfs_handle	*handle)
++# define disk_scsi_verify(...)		(ENOTTY)
++#endif /* HAVE_SG_IO */
++
++/* Test the availability of the kernel scrub ioctl. */
++static bool
++disk_can_scsi_verify(
++	struct disk		*disk)
 +{
-+	return true;
++	int			error;
++
++	if (debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"))
++		return false;
++
++	error = disk_scsi_verify(disk, 0, 1);
++	return error == 0;
 +}
-+#endif /* HAVE_LIBATTR */
 +
-+/*
-  * Verify the connectivity of the directory tree.
-  * We know that the kernel's open-by-handle function will try to reconnect
-  * parents of an opened directory, so we'll accept that as sufficient.
-@@ -58,6 +238,11 @@ xfs_scrub_connections(
- 			(uint64_t)bstat->bs_ino, agno, agino);
- 	background_sleep();
+ /* Open a disk device and discover its geometry. */
+ struct disk *
+ disk_open(
+ 	const char		*pathname)
+ {
++#ifdef HAVE_HDIO_GETGEO
++	struct hd_geometry	bdgeo;
++#endif
+ 	struct disk		*disk;
++	bool			suspicious_disk = false;
+ 	int			lba_sz;
+ 	int			error;
  
-+        /* Warn about naming problems in xattrs. */
-+        moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle);
-+        if (!moveon)
-+                goto out;
-+
- 	/* Open the dir, let the kernel try to reconnect it to the root. */
- 	if (S_ISDIR(bstat->bs_mode)) {
- 		fd = xfs_open_handle(handle);
-@@ -69,6 +254,13 @@ xfs_scrub_connections(
- 		}
+@@ -130,13 +244,34 @@ disk_open(
+ 		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
+ 		if (error)
+ 			disk->d_blksize = 0;
+-		disk->d_start = 0;
++#ifdef HAVE_HDIO_GETGEO
++		error = ioctl(disk->d_fd, HDIO_GETGEO, &bdgeo);
++		if (!error) {
++			/*
++			 * dm devices will pass through ioctls, which means
++			 * we can't use SCSI VERIFY unless the start is 0.
++			 * Most dm devices don't set geometry (unlike scsi
++			 * and nvme) so use a zeroed out CHS to screen them
++			 * out.
++			 */
++			if (bdgeo.start != 0 &&
++			    (unsigned long long)bdgeo.heads * bdgeo.sectors *
++					bdgeo.sectors == 0)
++				suspicious_disk = true;
++			disk->d_start = bdgeo.start << BBSHIFT;
++		} else
++#endif
++			disk->d_start = 0;
+ 	} else {
+ 		disk->d_size = disk->d_sb.st_size;
+ 		disk->d_blksize = disk->d_sb.st_blksize;
+ 		disk->d_start = 0;
  	}
  
-+        /* Warn about naming problems in the directory entries. */
-+        if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
-+                moveon = xfs_scrub_scan_dirents(ctx, descr, &fd);
-+                if (!moveon)
-+                        goto out;
-+        }
++	/* Can we issue SCSI VERIFY? */
++	if (!suspicious_disk && disk_can_scsi_verify(disk))
++		disk->d_flags |= DISK_FLAG_SCSI_VERIFY;
 +
- out:
- 	if (fd >= 0)
- 		close(fd);
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index fd7d7aa..0aef76b 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -87,6 +87,7 @@ struct scrub_ctx {
- 	unsigned long long	errors_found;
- 	unsigned long long	warnings_found;
- 	unsigned long long	inodes_checked;
-+	unsigned long long	naming_warnings;
- 	bool			need_repair;
- 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
- };
+ 	return disk;
+ out_close:
+ 	close(disk->d_fd);
+@@ -159,6 +294,10 @@ disk_close(
+ 	return error;
+ }
+ 
++#define BTOLBAT(d, bytes)	((uint64_t)(bytes) >> (d)->d_lbalog)
++#define LBASIZE(d)		(1ULL << (d)->d_lbalog)
++#define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
++
+ /* Read-verify an extent of a disk device. */
+ ssize_t
+ disk_read_verify(
+@@ -167,5 +306,10 @@ disk_read_verify(
+ 	uint64_t		start,
+ 	uint64_t		length)
+ {
++	/* Convert to logical block size. */
++	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
++		return disk_scsi_verify(disk, BTOLBAT(disk, start),
++				BTOLBA(disk, length));
++
+ 	return pread(disk->d_fd, buf, length, start);
+ }
+diff --git a/scrub/disk.h b/scrub/disk.h
+index 834678e..8a00144 100644
+--- a/scrub/disk.h
++++ b/scrub/disk.h
+@@ -20,6 +20,7 @@
+ #ifndef XFS_SCRUB_DISK_H_
+ #define XFS_SCRUB_DISK_H_
+ 
++#define DISK_FLAG_SCSI_VERIFY	0x1
+ struct disk {
+ 	struct stat	d_sb;
+ 	int		d_fd;
 
