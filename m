@@ -1,112 +1,272 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41126 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751057AbeAVOGb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Jan 2018 09:06:31 -0500
-Date: Mon, 22 Jan 2018 09:06:29 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/5] xfs: introduce 'fixed agfl' feature
-Message-ID: <20180122140629.GA26131@bfoster.bfoster>
-References: <151623403113.4727.2418454911805718650.stgit@magnolia>
- <151623404388.4727.13556729503051957189.stgit@magnolia>
- <20180118002940.GF25805@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:50182 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbeAQWGA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:00 -0500
+Subject: [PATCH 06/29] xfs_scrub: create an abstraction for a block device
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Jan 2018 14:02:29 -0800
+Message-ID: <151622654967.31925.8684235838391468951.stgit@magnolia>
+In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
+References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180118002940.GF25805@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jan 17, 2018 at 04:29:40PM -0800, Darrick J. Wong wrote:
-> On Wed, Jan 17, 2018 at 04:07:23PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Introduce a new rocompat flag "FIXED_AGFL" to indicate that we've
-> > scanned and verified that the AGFL does not hit the troublesome last
-> > element of the AGFL array, and update xfs_agfl_size to its new
-> > definition based on this feature.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h |    7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index bb42a11..3befc92f 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -464,6 +464,7 @@ xfs_sb_has_compat_feature(
-> >  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
-> >  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
-> >  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-> > +#define XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL (1 << 3)	/* fixed agfl */
-> 
-> (echoing comments made on irc by myself & Dave)
-> 
-> It suddenly occurred to me that we could do without this rocompat
-> feature if we simply don't allow wrapped AGFLs anymore.  As soon as
-> fllast points to that last agfl_bno slot, we simply move the whole list
-> back to the start of the agfl block (i.e. flfirst = 0) and relog the
-> whole agfl.  We still have problems if the admin mounts with an
-> unpatched kernel, gets the agfl to wrap, and then then moves to another
-> unpatched kernel, but at least the up-to-date kernels can just fix the
-> problem and move on.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Eh, I'm not a huge fan of modifying AGFL behavior to deal with a padding
-bug. It strikes me as overkill and undue risk (depending on how the code
-would have to look I suppose). 
+Create an abstraction to handle all of our low level disk operations.
+We'll eventually use it to bind to a fs mount point and block device.
 
-> I guess the nice thing about the rocompat feature is that the unpatched
-> kernels won't mount, instead of blowing up randomly some time in the
-> future and the user's antiquarian xfsprogs also refuses to touch it.
-> 
-> We could also only set the rocompat flag if we actually had to fix
-> something (vs. now where we always set it) though I wonder if that just
-> makes the "I reverted kernels and now it blew up wtf?!" even more
-> sporadic?  Hm.  Maybe we want that, since either is a rude awakening &
-> making the rude wakeup less frequent isn't a bad thing.
-> 
-> Ugh.  Maybe bikeshed now? :)
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/Makefile |    2 +
+ scrub/disk.c   |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/disk.h   |   39 +++++++++++++
+ 3 files changed, 209 insertions(+)
+ create mode 100644 scrub/disk.c
+ create mode 100644 scrub/disk.h
 
-Any reason we couldn't do something like force a read-only mount for
-affected filesystems with a notice/msg to run xfs_repair (I assume we've
-already backported fixes to repair/stable kernels to help prevent
-reoccurence of this..)? Then we'd at least only affect users who are
-affected by the problem, and IIUC it sounds like a corruption error is
-imminent for those particular users as it is.
 
-Brian
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 097ec84..c3a9986 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -17,10 +17,12 @@ endif	# scrub_prereqs
+ 
+ HFILES = \
+ common.h \
++disk.h \
+ xfs_scrub.h
+ 
+ CFILES = \
+ common.c \
++disk.c \
+ xfs_scrub.c
+ 
+ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+diff --git a/scrub/disk.c b/scrub/disk.c
+new file mode 100644
+index 0000000..fe9dff7
+--- /dev/null
++++ b/scrub/disk.c
+@@ -0,0 +1,168 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdint.h>
++#include <stdlib.h>
++#include <stdbool.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/ioctl.h>
++#include <sys/statvfs.h>
++#include <sys/vfs.h>
++#include <linux/fs.h>
++#include "platform_defs.h"
++#include "libfrog.h"
++#include "xfs_scrub.h"
++#include "disk.h"
++
++#ifndef BLKROTATIONAL
++# define BLKROTATIONAL	_IO(0x12, 126)
++#endif
++
++/*
++ * Disk Abstraction
++ *
++ * These routines help us to discover the geometry of a block device,
++ * estimate the amount of concurrent IOs that we can send to it, and
++ * abstract the process of performing read verification of disk blocks.
++ */
++
++/* Figure out how many disk heads are available. */
++static unsigned int
++__disk_heads(
++	struct disk		*disk)
++{
++	int			iomin;
++	int			ioopt;
++	unsigned short		rot;
++	int			error;
++
++	/* If it's not a block device, throw all the CPUs at it. */
++	if (!S_ISBLK(disk->d_sb.st_mode))
++		return nproc;
++
++	/* Non-rotational device?  Throw all the CPUs at the problem. */
++	rot = 1;
++	error = ioctl(disk->d_fd, BLKROTATIONAL, &rot);
++	if (error == 0 && rot == 0)
++		return nproc;
++
++	/*
++	 * Sometimes we can infer the number of devices from the
++	 * min/optimal IO sizes.
++	 */
++	iomin = ioopt = 0;
++	if (ioctl(disk->d_fd, BLKIOMIN, &iomin) == 0 &&
++	    ioctl(disk->d_fd, BLKIOOPT, &ioopt) == 0 &&
++	    iomin > 0 && ioopt > 0) {
++		return min(nproc, max(1, ioopt / iomin));
++	}
++
++	/* Rotating device?  I guess? */
++	return 2;
++}
++
++/* Figure out how many disk heads are available. */
++unsigned int
++disk_heads(
++	struct disk		*disk)
++{
++	if (nr_threads)
++		return nr_threads;
++	return __disk_heads(disk);
++}
++
++/* Open a disk device and discover its geometry. */
++struct disk *
++disk_open(
++	const char		*pathname)
++{
++	struct disk		*disk;
++	int			lba_sz;
++	int			error;
++
++	disk = calloc(1, sizeof(struct disk));
++	if (!disk)
++		return NULL;
++
++	disk->d_fd = open(pathname, O_RDONLY | O_DIRECT | O_NOATIME);
++	if (disk->d_fd < 0)
++		goto out_free;
++
++	/* Try to get LBA size. */
++	error = ioctl(disk->d_fd, BLKSSZGET, &lba_sz);
++	if (error)
++		lba_sz = 512;
++	disk->d_lbalog = log2_roundup(lba_sz);
++
++	/* Obtain disk's stat info. */
++	error = fstat(disk->d_fd, &disk->d_sb);
++	if (error)
++		goto out_close;
++
++	/* Determine bdev size, block size, and offset. */
++	if (S_ISBLK(disk->d_sb.st_mode)) {
++		error = ioctl(disk->d_fd, BLKGETSIZE64, &disk->d_size);
++		if (error)
++			disk->d_size = 0;
++		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
++		if (error)
++			disk->d_blksize = 0;
++		disk->d_start = 0;
++	} else {
++		disk->d_size = disk->d_sb.st_size;
++		disk->d_blksize = disk->d_sb.st_blksize;
++		disk->d_start = 0;
++	}
++
++	return disk;
++out_close:
++	close(disk->d_fd);
++out_free:
++	free(disk);
++	return NULL;
++}
++
++/* Close a disk device. */
++int
++disk_close(
++	struct disk		*disk)
++{
++	int			error = 0;
++
++	if (disk->d_fd >= 0)
++		error = close(disk->d_fd);
++	disk->d_fd = -1;
++	free(disk);
++	return error;
++}
++
++/* Read-verify an extent of a disk device. */
++ssize_t
++disk_read_verify(
++	struct disk		*disk,
++	void			*buf,
++	uint64_t		start,
++	uint64_t		length)
++{
++	return pread(disk->d_fd, buf, length, start);
++}
+diff --git a/scrub/disk.h b/scrub/disk.h
+new file mode 100644
+index 0000000..834678e
+--- /dev/null
++++ b/scrub/disk.h
+@@ -0,0 +1,39 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_DISK_H_
++#define XFS_SCRUB_DISK_H_
++
++struct disk {
++	struct stat	d_sb;
++	int		d_fd;
++	int		d_lbalog;
++	unsigned int	d_flags;
++	unsigned int	d_blksize;	/* bytes */
++	uint64_t	d_size;		/* bytes */
++	uint64_t	d_start;	/* bytes */
++};
++
++unsigned int disk_heads(struct disk *disk);
++struct disk *disk_open(const char *pathname);
++int disk_close(struct disk *disk);
++ssize_t disk_read_verify(struct disk *disk, void *buf, uint64_t startblock,
++		uint64_t blockcount);
++
++#endif /* XFS_SCRUB_DISK_H_ */
 
-> --D
-> 
-> >  #define XFS_SB_FEAT_RO_COMPAT_ALL \
-> >  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
-> >  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> > @@ -566,6 +567,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
-> >  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
-> >  }
-> >  
-> > +static inline bool xfs_sb_version_hasfixedagfl(struct xfs_sb *sbp)
-> > +{
-> > +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> > +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL);
-> > +}
-> > +
-> >  /*
-> >   * end of superblock version macros
-> >   */
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
