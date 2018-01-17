@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51366 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753808AbeAQWGQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:16 -0500
-Subject: [PATCH 14/29] xfs_scrub: thread-safe stats counter
+Received: from aserp2120.oracle.com ([141.146.126.78]:57520 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752578AbeAQWEi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:04:38 -0500
+Subject: [PATCH 24/29] xfs_scrub: fstrim the free areas if there are no
+ errors on the filesystem
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:20 -0800
-Message-ID: <151622660061.31925.16435310871598922204.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:04:23 -0800
+Message-ID: <151622666351.31925.965697907866962064.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,240 +21,54 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a threaded stats counter that we'll use to track scan progress.
-This includes things like how much of the disk blocks we've scanned,
-or later how much progress we've made in each phase.
+If the filesystem scan comes out clean or fixes all the problems, call
+fstrim to clean out the free areas (if it's an ssd/thinp/whatever).
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/ptvar.h  |   32 +++++++++++++
- libfrog/Makefile |    1 
- libfrog/ptvar.c  |  133 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/Makefile   |    2 +
- scrub/counter.c  |  104 ++++++++++++++++++++++++++++++++++++++++++
- scrub/counter.h  |   29 ++++++++++++
- 6 files changed, 301 insertions(+)
- create mode 100644 include/ptvar.h
- create mode 100644 libfrog/ptvar.c
- create mode 100644 scrub/counter.c
- create mode 100644 scrub/counter.h
+ man/man8/xfs_scrub.8 |    3 ++
+ scrub/Makefile       |    1 +
+ scrub/phase4.c       |   79 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/vfs.c          |   23 +++++++++++++++
+ scrub/vfs.h          |    2 +
+ scrub/xfs_scrub.c    |   22 +++++++++++++-
+ scrub/xfs_scrub.h    |    3 ++
+ 7 files changed, 131 insertions(+), 2 deletions(-)
+ create mode 100644 scrub/phase4.c
 
 
-diff --git a/include/ptvar.h b/include/ptvar.h
-new file mode 100644
-index 0000000..6308228
---- /dev/null
-+++ b/include/ptvar.h
-@@ -0,0 +1,32 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef LIBFROG_PERCPU_H_
-+#define LIBFROG_PERCPU_H_
-+
-+struct ptvar;
-+
-+typedef bool (*ptvar_iter_fn)(struct ptvar *ptv, void *data, void *foreach_arg);
-+
-+struct ptvar *ptvar_init(size_t nr, size_t size);
-+void ptvar_free(struct ptvar *ptv);
-+void *ptvar_get(struct ptvar *ptv);
-+bool ptvar_foreach(struct ptvar *ptv, ptvar_iter_fn fn, void *foreach_arg);
-+
-+#endif /* LIBFROG_PERCPU_H_ */
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 4c15605..230b08f 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -16,6 +16,7 @@ convert.c \
- list_sort.c \
- paths.c \
- projects.c \
-+ptvar.c \
- radix-tree.c \
- topology.c \
- util.c \
-diff --git a/libfrog/ptvar.c b/libfrog/ptvar.c
-new file mode 100644
-index 0000000..3654706
---- /dev/null
-+++ b/libfrog/ptvar.c
-@@ -0,0 +1,133 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <stdbool.h>
-+#include <string.h>
-+#include <assert.h>
-+#include <pthread.h>
-+#include <unistd.h>
-+#include "platform_defs.h"
-+#include "ptvar.h"
-+
-+/*
-+ * Per-thread Variables
-+ *
-+ * This data structure manages a lockless per-thread variable.  We
-+ * implement this by allocating an array of memory regions, and as each
-+ * thread tries to acquire its own region, we hand out the array
-+ * elements to each thread.  This way, each thread gets its own
-+ * cacheline and (after the first access) doesn't have to contend for a
-+ * lock for each access.
-+ */
-+struct ptvar {
-+	pthread_key_t	key;
-+	pthread_mutex_t	lock;
-+	size_t		nr_used;
-+	size_t		nr_counters;
-+	size_t		data_size;
-+	unsigned char	data[0];
-+};
-+#define PTVAR_SIZE(nr, sz) (sizeof(struct ptvar) + ((nr) * (size)))
-+
-+/* Initialize per-thread counter. */
-+struct ptvar *
-+ptvar_init(
-+	size_t		nr,
-+	size_t		size)
-+{
-+	struct ptvar	*ptv;
-+	int		ret;
-+
-+#ifdef _SC_LEVEL1_DCACHE_LINESIZE
-+	/* Try to prevent cache pingpong by aligning to cacheline size. */
-+	size = max(size, sysconf(_SC_LEVEL1_DCACHE_LINESIZE));
-+#endif
-+
-+	ptv = malloc(PTVAR_SIZE(nr, size));
-+	if (!ptv)
-+		return NULL;
-+	ptv->data_size = size;
-+	ptv->nr_counters = nr;
-+	ptv->nr_used = 0;
-+	memset(ptv->data, 0, nr * size);
-+	ret = pthread_mutex_init(&ptv->lock, NULL);
-+	if (ret)
-+		goto out;
-+	ret = pthread_key_create(&ptv->key, NULL);
-+	if (ret)
-+		goto out_mutex;
-+	return ptv;
-+
-+out_mutex:
-+	pthread_mutex_destroy(&ptv->lock);
-+out:
-+	free(ptv);
-+	return NULL;
-+}
-+
-+/* Free per-thread counter. */
-+void
-+ptvar_free(
-+	struct ptvar	*ptv)
-+{
-+	pthread_key_delete(ptv->key);
-+	pthread_mutex_destroy(&ptv->lock);
-+	free(ptv);
-+}
-+
-+/* Get a reference to this thread's variable. */
-+void *
-+ptvar_get(
-+	struct ptvar	*ptv)
-+{
-+	void		*p;
-+
-+	p = pthread_getspecific(ptv->key);
-+	if (!p) {
-+		pthread_mutex_lock(&ptv->lock);
-+		assert(ptv->nr_used < ptv->nr_counters);
-+		p = &ptv->data[(ptv->nr_used++) * ptv->data_size];
-+		pthread_setspecific(ptv->key, p);
-+		pthread_mutex_unlock(&ptv->lock);
-+	}
-+	return p;
-+}
-+
-+/* Iterate all of the per-thread variables. */
-+bool
-+ptvar_foreach(
-+	struct ptvar	*ptv,
-+	ptvar_iter_fn	fn,
-+	void		*foreach_arg)
-+{
-+	size_t		i;
-+	bool		ret = true;
-+
-+	pthread_mutex_lock(&ptv->lock);
-+	for (i = 0; i < ptv->nr_used; i++) {
-+		ret = fn(ptv, &ptv->data[i * ptv->data_size], foreach_arg);
-+		if (!ret)
-+			break;
-+	}
-+	pthread_mutex_unlock(&ptv->lock);
-+
-+	return ret;
-+}
+diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
+index c9df7d6..b6e1560 100644
+--- a/man/man8/xfs_scrub.8
++++ b/man/man8/xfs_scrub.8
+@@ -63,6 +63,9 @@ If
+ is given, no action is taken if errors are found; this is the default
+ behavior.
+ .TP
++.B \-k
++Do not call FITRIM on the free space.
++.TP
+ .BI \-m " file"
+ Search this file for mounted filesystems instead of /etc/mtab.
+ .TP
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 9edc933..30dbe54 100644
+index fd26624..91f99ff 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -17,6 +17,7 @@ endif	# scrub_prereqs
- 
- HFILES = \
- common.h \
-+counter.h \
- disk.h \
- filemap.h \
- fscounters.h \
-@@ -27,6 +28,7 @@ xfs_scrub.h
- 
- CFILES = \
- common.c \
-+counter.c \
- disk.c \
- filemap.c \
- fscounters.c \
-diff --git a/scrub/counter.c b/scrub/counter.c
+@@ -41,6 +41,7 @@ inodes.c \
+ phase1.c \
+ phase2.c \
+ phase3.c \
++phase4.c \
+ phase5.c \
+ phase6.c \
+ phase7.c \
+diff --git a/scrub/phase4.c b/scrub/phase4.c
 new file mode 100644
-index 0000000..ced3cf3
+index 0000000..31211f6
 --- /dev/null
-+++ b/scrub/counter.c
-@@ -0,0 +1,104 @@
++++ b/scrub/phase4.c
+@@ -0,0 +1,79 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -273,124 +88,188 @@ index 0000000..ced3cf3
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
++#include <stdio.h>
 +#include <stdint.h>
-+#include <stdlib.h>
 +#include <stdbool.h>
-+#include <string.h>
-+#include <assert.h>
-+#include <pthread.h>
-+#include "ptvar.h"
-+#include "counter.h"
++#include <dirent.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "list.h"
++#include "path.h"
++#include "workqueue.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "scrub.h"
++#include "vfs.h"
 +
-+/*
-+ * Per-Thread Counters
-+ *
-+ * This is a global counter object that uses per-thread counters to
-+ * count things without having to content for a single shared lock.
-+ * Provided we know the number of threads that will be accessing the
-+ * counter, each thread gets its own thread-specific counter variable.
-+ * Changing the value is fast, though retrieving the value is expensive
-+ * and approximate.
-+ */
-+struct ptcounter {
-+	struct ptvar	*var;
-+};
++/* Phase 4: Repair filesystem. */
 +
-+/* Initialize per-thread counter. */
-+struct ptcounter *
-+ptcounter_init(
-+	size_t			nr)
-+{
-+	struct ptcounter	*p;
-+
-+	p = malloc(sizeof(struct ptcounter));
-+	if (!p)
-+		return NULL;
-+	p->var = ptvar_init(nr, sizeof(uint64_t));
-+	if (!p->var) {
-+		free(p);
-+		return NULL;
-+	}
-+	return p;
-+}
-+
-+/* Free per-thread counter. */
-+void
-+ptcounter_free(
-+	struct ptcounter	*ptc)
-+{
-+	ptvar_free(ptc->var);
-+	free(ptc);
-+}
-+
-+/* Add a quantity to the counter. */
-+void
-+ptcounter_add(
-+	struct ptcounter	*ptc,
-+	int64_t			nr)
-+{
-+	uint64_t		*p;
-+
-+	p = ptvar_get(ptc->var);
-+	*p += nr;
-+}
-+
++/* Process all the action items. */
 +static bool
-+ptcounter_val_helper(
-+	struct ptvar		*ptv,
-+	void			*data,
-+	void			*foreach_arg)
++xfs_process_action_items(
++	struct scrub_ctx		*ctx)
 +{
-+	uint64_t		*sum = foreach_arg;
-+	uint64_t		*count = data;
++	bool				moveon = true;
 +
-+	*sum += *count;
-+	return true;
++	pthread_mutex_lock(&ctx->lock);
++	if (moveon && ctx->errors_found == 0 && want_fstrim)
++		fstrim(ctx);
++	pthread_mutex_unlock(&ctx->lock);
++
++	return moveon;
 +}
 +
-+/* Return the approximate value of this counter. */
-+uint64_t
-+ptcounter_value(
-+	struct ptcounter	*ptc)
++/* Fix everything that needs fixing. */
++bool
++xfs_repair_fs(
++	struct scrub_ctx		*ctx)
 +{
-+	uint64_t		sum = 0;
-+
-+	ptvar_foreach(ptc->var, ptcounter_val_helper, &sum);
-+	return sum;
++	return xfs_process_action_items(ctx);
 +}
-diff --git a/scrub/counter.h b/scrub/counter.h
-new file mode 100644
-index 0000000..2aac795
---- /dev/null
-+++ b/scrub/counter.h
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_COUNTER_H_
-+#define XFS_SCRUB_COUNTER_H_
 +
-+struct ptcounter;
-+struct ptcounter *ptcounter_init(size_t nr);
-+void ptcounter_free(struct ptcounter *ptc);
-+void ptcounter_add(struct ptcounter *ptc, int64_t nr);
-+uint64_t ptcounter_value(struct ptcounter *ptc);
++/* Run the optimize-only phase if there are no errors. */
++bool
++xfs_optimize_fs(
++	struct scrub_ctx	*ctx)
++{
++	/*
++	 * In preen mode, corruptions are immediately recorded as errors,
++	 * so if there are any corruptions on the filesystem errors_found
++	 * will be non-zero and we won't do anything.
++	 */
++	if (ctx->errors_found) {
++		str_info(ctx, ctx->mntpoint,
++_("Errors found, please re-run with -y."));
++		return true;
++	}
 +
-+#endif /* XFS_SCRUB_COUNTER_H_ */
++	return xfs_process_action_items(ctx);
++}
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index 3c0c2f3..e3c8e62 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -223,3 +223,26 @@ _("Could not queue directory scan work."));
+ 	free(sftd);
+ 	return false;
+ }
++
++#ifndef FITRIM
++struct fstrim_range {
++	__u64 start;
++	__u64 len;
++	__u64 minlen;
++};
++#define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
++#endif
++
++/* Call FITRIM to trim all the unused space in a filesystem. */
++void
++fstrim(
++	struct scrub_ctx	*ctx)
++{
++	struct fstrim_range	range = {0};
++	int			error;
++
++	range.len = ULLONG_MAX;
++	error = ioctl(ctx->mnt_fd, FITRIM, &range);
++	if (error && errno != EOPNOTSUPP && errno != ENOTTY)
++		perror(_("fstrim"));
++}
+diff --git a/scrub/vfs.h b/scrub/vfs.h
+index 100eb18..3305159 100644
+--- a/scrub/vfs.h
++++ b/scrub/vfs.h
+@@ -28,4 +28,6 @@ typedef bool (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
+ bool scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
+ 		scan_fs_tree_dirent_fn dirent_fn, void *arg);
+ 
++void fstrim(struct scrub_ctx *ctx);
++
+ #endif /* XFS_SCRUB_VFS_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 1c0ea87..437dcd7 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -146,6 +146,9 @@ static bool			scrub_data;
+ /* Size of a memory page. */
+ long				page_size;
+ 
++/* Should we FSTRIM after a successful run? */
++bool				want_fstrim = true;
++
+ static void __attribute__((noreturn))
+ usage(void)
+ {
+@@ -155,6 +158,7 @@ usage(void)
+ 	fprintf(stderr, _("  -a count     Stop after this many errors are found.\n"));
+ 	fprintf(stderr, _("  -b           Background mode.\n"));
+ 	fprintf(stderr, _("  -e behavior  What to do if errors are found.\n"));
++	fprintf(stderr, _("  -k           Do not FITRIM the free space.\n"));
+ 	fprintf(stderr, _("  -m path      Path to /etc/mtab.\n"));
+ 	fprintf(stderr, _("  -n           Dry run.  Do not modify anything.\n"));
+ 	fprintf(stderr, _("  -T           Display timing/usage information.\n"));
+@@ -402,8 +406,19 @@ run_scrub_phases(
+ 	/* Run all phases of the scrub tool. */
+ 	for (phase = 1, sp = phases; sp->fn; sp++, phase++) {
+ 		/* Turn on certain phases if user said to. */
+-		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data)
++		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data) {
+ 			sp->fn = xfs_scan_blocks;
++		} else if (sp->fn == REPAIR_DUMMY_FN) {
++			if (ctx->mode == SCRUB_MODE_PREEN) {
++				sp->descr = _("Optimize filesystem.");
++				sp->fn = xfs_optimize_fs;
++				sp->must_run = true;
++			} else if (ctx->mode == SCRUB_MODE_REPAIR) {
++				sp->descr = _("Repair filesystem.");
++				sp->fn = xfs_repair_fs;
++				sp->must_run = true;
++			}
++		}
+ 
+ 		/* Skip certain phases unless they're turned on. */
+ 		if (sp->fn == REPAIR_DUMMY_FN ||
+@@ -463,7 +478,7 @@ main(
+ 	pthread_mutex_init(&ctx.lock, NULL);
+ 	ctx.mode = SCRUB_MODE_DEFAULT;
+ 	ctx.error_action = ERRORS_CONTINUE;
+-	while ((c = getopt(argc, argv, "a:bde:m:nTvxVy")) != EOF) {
++	while ((c = getopt(argc, argv, "a:bde:km:nTvxVy")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			ctx.max_errors = cvt_u64(optarg, 10);
+@@ -491,6 +506,9 @@ main(
+ 				usage();
+ 			}
+ 			break;
++		case 'k':
++			want_fstrim = false;
++			break;
+ 		case 'm':
+ 			mtab = optarg;
+ 			break;
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 91f4577..47d63de 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -28,6 +28,7 @@ extern unsigned int		debug;
+ extern int			nproc;
+ extern bool			verbose;
+ extern long			page_size;
++extern bool			want_fstrim;
+ 
+ enum scrub_mode {
+ 	SCRUB_MODE_DRY_RUN,
+@@ -105,5 +106,7 @@ bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ bool xfs_scan_connections(struct scrub_ctx *ctx);
+ bool xfs_scan_blocks(struct scrub_ctx *ctx);
+ bool xfs_scan_summary(struct scrub_ctx *ctx);
++bool xfs_repair_fs(struct scrub_ctx *ctx);
++bool xfs_optimize_fs(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
