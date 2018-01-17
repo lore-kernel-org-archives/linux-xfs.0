@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51310 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:51448 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753833AbeAQWGN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:13 -0500
-Subject: [PATCH 11/29] xfs_scrub: filesystem counter collection functions
+        with ESMTP id S1753808AbeAQWGU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:20 -0500
+Subject: [PATCH 09/29] xfs_scrub: add space map iteration functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:03:01 -0800
-Message-ID: <151622658143.31925.1161903428256130980.stgit@magnolia>
+Date: Wed, 17 Jan 2018 14:02:48 -0800
+Message-ID: <151622656889.31925.879269279267730470.stgit@magnolia>
 In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
 References: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,45 +20,45 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a couple of helper functions to estimate the inode and block
-counters on the filesystem.
+These helpers enable userspace to iterate all the space map information
+in a filesystem.  The iteration function uses GETFSMAP.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile     |    2 
- scrub/fscounters.c |  212 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/fscounters.h |   29 +++++++
- 3 files changed, 243 insertions(+)
- create mode 100644 scrub/fscounters.c
- create mode 100644 scrub/fscounters.h
+ scrub/Makefile   |    2 
+ scrub/spacemap.c |  256 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/spacemap.h |   31 +++++++
+ 3 files changed, 289 insertions(+)
+ create mode 100644 scrub/spacemap.c
+ create mode 100644 scrub/spacemap.h
 
 
 diff --git a/scrub/Makefile b/scrub/Makefile
-index a3534e6..5397339 100644
+index 4d1c908..24e0c44 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
 @@ -19,6 +19,7 @@ HFILES = \
  common.h \
  disk.h \
- filemap.h \
-+fscounters.h \
  inodes.h \
- spacemap.h \
++spacemap.h \
  xfs_scrub.h
-@@ -27,6 +28,7 @@ CFILES = \
- common.c \
+ 
+ CFILES = \
+@@ -26,6 +27,7 @@ common.c \
  disk.c \
- filemap.c \
-+fscounters.c \
  inodes.c \
  phase1.c \
- spacemap.c \
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
++spacemap.c \
+ xfs_scrub.c
+ 
+ LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+diff --git a/scrub/spacemap.c b/scrub/spacemap.c
 new file mode 100644
-index 0000000..4294bf3
+index 0000000..2dc6e2b
 --- /dev/null
-+++ b/scrub/fscounters.c
-@@ -0,0 +1,212 @@
++++ b/scrub/spacemap.c
+@@ -0,0 +1,256 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -81,202 +81,246 @@ index 0000000..4294bf3
 +#include <stdio.h>
 +#include <stdbool.h>
 +#include <stdint.h>
-+#include <stdlib.h>
++#include <string.h>
++#include <pthread.h>
 +#include <sys/statvfs.h>
-+#include "platform_defs.h"
-+#include "xfs.h"
-+#include "xfs_arch.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "path.h"
 +#include "workqueue.h"
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "path.h"
 +#include "xfs_scrub.h"
 +#include "common.h"
-+#include "fscounters.h"
++#include "spacemap.h"
 +
 +/*
-+ * Filesystem counter collection routines.  We can count the number of
-+ * inodes in the filesystem, and we can estimate the block counters.
++ * Filesystem space map iterators.
++ *
++ * Logically, we call GETFSMAP to fetch a set of space map records and
++ * call a function to iterate over the records.  However, that's not
++ * what actually happens -- the work is split into separate items, with
++ * each AG, the realtime device, and the log device getting their own
++ * work items.  For an XFS with a realtime device and an external log,
++ * this means that we can have up to ($agcount + 2) threads running at
++ * once.
++ *
++ * This comes into play if we want to have per-workitem memory.  Maybe.
++ * XXX: do we really need all that ?
 + */
 +
-+/* Count the number of inodes in the filesystem. */
++#define FSMAP_NR	65536
 +
-+/* INUMBERS wrapper routines. */
-+struct xfs_count_inodes {
-+	bool			moveon;
-+	uint64_t		counters[0];
-+};
-+
-+/*
-+ * Count the number of inodes.  Use INUMBERS to figure out how many inodes
-+ * exist in the filesystem, assuming we've already scrubbed that.
-+ */
-+static bool
-+xfs_count_inodes_range(
++/* Iterate all the fs block mappings between the two keys. */
++bool
++xfs_iterate_fsmap(
 +	struct scrub_ctx	*ctx,
 +	const char		*descr,
-+	uint64_t		first_ino,
-+	uint64_t		last_ino,
-+	uint64_t		*count)
++	struct fsmap		*keys,
++	xfs_fsmap_iter_fn	fn,
++	void			*arg)
 +{
-+	struct xfs_fsop_bulkreq	igrpreq = {0};
-+	struct xfs_inogrp	inogrp;
-+	__u64			igrp_ino;
-+	uint64_t		nr = 0;
-+	__s32			igrplen = 0;
++	struct fsmap_head	*head;
++	struct fsmap		*p;
++	bool			moveon = true;
++	int			i;
 +	int			error;
 +
-+	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
-+	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
-+
-+	igrpreq.lastip  = &igrp_ino;
-+	igrpreq.icount  = 1;
-+	igrpreq.ubuffer = &inogrp;
-+	igrpreq.ocount  = &igrplen;
-+
-+	igrp_ino = first_ino;
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	while (!error && igrplen && inogrp.xi_startino < last_ino) {
-+		nr += inogrp.xi_alloccount;
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	}
-+
-+	if (error) {
++	head = malloc(fsmap_sizeof(FSMAP_NR));
++	if (!head) {
 +		str_errno(ctx, descr);
 +		return false;
 +	}
 +
-+	*count = nr;
-+	return true;
++	memset(head, 0, sizeof(*head));
++	memcpy(head->fmh_keys, keys, sizeof(struct fsmap) * 2);
++	head->fmh_count = FSMAP_NR;
++
++	while ((error = ioctl(ctx->mnt_fd, FS_IOC_GETFSMAP, head)) == 0) {
++		for (i = 0, p = head->fmh_recs;
++		     i < head->fmh_entries;
++		     i++, p++) {
++			moveon = fn(ctx, descr, p, arg);
++			if (!moveon)
++				goto out;
++			if (xfs_scrub_excessive_errors(ctx)) {
++				moveon = false;
++				goto out;
++			}
++		}
++
++		if (head->fmh_entries == 0)
++			break;
++		p = &head->fmh_recs[head->fmh_entries - 1];
++		if (p->fmr_flags & FMR_OF_LAST)
++			break;
++		fsmap_advance(head);
++	}
++
++	if (error) {
++		str_errno(ctx, descr);
++		moveon = false;
++	}
++out:
++	free(head);
++	return moveon;
 +}
 +
-+/* Scan all the inodes in an AG. */
++/* GETFSMAP wrappers routines. */
++struct xfs_scan_blocks {
++	xfs_fsmap_iter_fn	fn;
++	void			*arg;
++	bool			moveon;
++};
++
++/* Iterate all the reverse mappings of an AG. */
 +static void
-+xfs_count_ag_inodes(
++xfs_scan_ag_blocks(
 +	struct workqueue	*wq,
 +	xfs_agnumber_t		agno,
 +	void			*arg)
 +{
-+	struct xfs_count_inodes	*ci = arg;
 +	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	struct xfs_scan_blocks	*sbx = arg;
 +	char			descr[DESCR_BUFSZ];
-+	uint64_t		ag_ino;
-+	uint64_t		next_ag_ino;
++	struct fsmap		keys[2];
++	off64_t			bperag;
 +	bool			moveon;
 +
-+	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
++	bperag = (off64_t)ctx->geo.agblocks *
++		 (off64_t)ctx->geo.blocksize;
++
++	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u fsmap"),
 +				major(ctx->fsinfo.fs_datadev),
 +				minor(ctx->fsinfo.fs_datadev),
 +				agno);
 +
-+	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
-+	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
++	memset(keys, 0, sizeof(struct fsmap) * 2);
++	keys->fmr_device = ctx->fsinfo.fs_datadev;
++	keys->fmr_physical = agno * bperag;
++	(keys + 1)->fmr_device = ctx->fsinfo.fs_datadev;
++	(keys + 1)->fmr_physical = ((agno + 1) * bperag) - 1;
++	(keys + 1)->fmr_owner = ULLONG_MAX;
++	(keys + 1)->fmr_offset = ULLONG_MAX;
++	(keys + 1)->fmr_flags = UINT_MAX;
 +
-+	moveon = xfs_count_inodes_range(ctx, descr, ag_ino, next_ag_ino - 1,
-+			&ci->counters[agno]);
++	moveon = xfs_iterate_fsmap(ctx, descr, keys, sbx->fn, sbx->arg);
 +	if (!moveon)
-+		ci->moveon = false;
++		sbx->moveon = false;
 +}
 +
-+/* Count all the inodes in a filesystem. */
-+bool
-+xfs_count_all_inodes(
++/* Iterate all the reverse mappings of a standalone device. */
++static void
++xfs_scan_dev_blocks(
 +	struct scrub_ctx	*ctx,
-+	uint64_t		*count)
++	int			idx,
++	dev_t			dev,
++	struct xfs_scan_blocks	*sbx)
 +{
-+	struct xfs_count_inodes	*ci;
-+	xfs_agnumber_t		agno;
-+	struct workqueue	wq;
++	struct fsmap		keys[2];
++	char			descr[DESCR_BUFSZ];
 +	bool			moveon;
++
++	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d fsmap"),
++			major(dev), minor(dev));
++
++	memset(keys, 0, sizeof(struct fsmap) * 2);
++	keys->fmr_device = dev;
++	(keys + 1)->fmr_device = dev;
++	(keys + 1)->fmr_physical = ULLONG_MAX;
++	(keys + 1)->fmr_owner = ULLONG_MAX;
++	(keys + 1)->fmr_offset = ULLONG_MAX;
++	(keys + 1)->fmr_flags = UINT_MAX;
++
++	moveon = xfs_iterate_fsmap(ctx, descr, keys, sbx->fn, sbx->arg);
++	if (!moveon)
++		sbx->moveon = false;
++}
++
++/* Iterate all the reverse mappings of the realtime device. */
++static void
++xfs_scan_rt_blocks(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++
++	xfs_scan_dev_blocks(ctx, agno, ctx->fsinfo.fs_rtdev, arg);
++}
++
++/* Iterate all the reverse mappings of the log device. */
++static void
++xfs_scan_log_blocks(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++
++	xfs_scan_dev_blocks(ctx, agno, ctx->fsinfo.fs_logdev, arg);
++}
++
++/* Scan all the blocks in a filesystem. */
++bool
++xfs_scan_all_spacemaps(
++	struct scrub_ctx	*ctx,
++	xfs_fsmap_iter_fn	fn,
++	void			*arg)
++{
++	struct workqueue	wq;
++	struct xfs_scan_blocks	sbx;
++	xfs_agnumber_t		agno;
 +	int			ret;
 +
-+	ci = calloc(1, sizeof(struct xfs_count_inodes) +
-+			(ctx->geo.agcount * sizeof(uint64_t)));
-+	if (!ci)
-+		return false;
-+	ci->moveon = true;
++	sbx.moveon = true;
++	sbx.fn = fn;
++	sbx.arg = arg;
 +
 +	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
 +			scrub_nproc_workqueue(ctx));
 +	if (ret) {
-+		moveon = false;
 +		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
-+		goto out_free;
++		return false;
++	}
++	if (ctx->fsinfo.fs_rt) {
++		ret = workqueue_add(&wq, xfs_scan_rt_blocks,
++				ctx->geo.agcount + 1, &sbx);
++		if (ret) {
++			sbx.moveon = false;
++			str_error(ctx, ctx->mntpoint,
++_("Could not queue rtdev fsmap work."));
++			goto out;
++		}
++	}
++	if (ctx->fsinfo.fs_log) {
++		ret = workqueue_add(&wq, xfs_scan_log_blocks,
++				ctx->geo.agcount + 2, &sbx);
++		if (ret) {
++			sbx.moveon = false;
++			str_error(ctx, ctx->mntpoint,
++_("Could not queue logdev fsmap work."));
++			goto out;
++		}
 +	}
 +	for (agno = 0; agno < ctx->geo.agcount; agno++) {
-+		ret = workqueue_add(&wq, xfs_count_ag_inodes, agno, ci);
++		ret = workqueue_add(&wq, xfs_scan_ag_blocks, agno, &sbx);
 +		if (ret) {
-+			moveon = false;
++			sbx.moveon = false;
 +			str_error(ctx, ctx->mntpoint,
-+_("Could not queue AG %u icount work."), agno);
++_("Could not queue AG %u fsmap work."), agno);
 +			break;
 +		}
 +	}
++out:
 +	workqueue_destroy(&wq);
 +
-+	for (agno = 0; agno < ctx->geo.agcount; agno++)
-+		*count += ci->counters[agno];
-+	moveon = ci->moveon;
-+
-+out_free:
-+	free(ci);
-+	return moveon;
++	return sbx.moveon;
 +}
-+
-+/* Estimate the number of blocks and inodes in the filesystem. */
-+bool
-+xfs_scan_estimate_blocks(
-+	struct scrub_ctx		*ctx,
-+	unsigned long long		*d_blocks,
-+	unsigned long long		*d_bfree,
-+	unsigned long long		*r_blocks,
-+	unsigned long long		*r_bfree,
-+	unsigned long long		*f_files,
-+	unsigned long long		*f_free)
-+{
-+	struct xfs_fsop_counts		fc;
-+	struct xfs_fsop_resblks		rb;
-+	struct statvfs			sfs;
-+	int				error;
-+
-+	/* Grab the fstatvfs counters, since it has to report accurately. */
-+	error = fstatvfs(ctx->mnt_fd, &sfs);
-+	if (error) {
-+		str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+
-+	/* Fetch the filesystem counters. */
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSCOUNTS, &fc);
-+	if (error) {
-+		str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+
-+	/*
-+	 * XFS reserves some blocks to prevent hard ENOSPC, so add those
-+	 * blocks back to the free data counts.
-+	 */
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_GET_RESBLKS, &rb);
-+	if (error)
-+		str_errno(ctx, ctx->mntpoint);
-+	sfs.f_bfree += rb.resblks_avail;
-+
-+	*d_blocks = sfs.f_blocks + (ctx->geo.logstart ? ctx->geo.logblocks : 0);
-+	*d_bfree = sfs.f_bfree;
-+	*r_blocks = ctx->geo.rtblocks;
-+	*r_bfree = fc.freertx;
-+	*f_files = sfs.f_files;
-+	*f_free = sfs.f_ffree;
-+
-+	return true;
-+}
-diff --git a/scrub/fscounters.h b/scrub/fscounters.h
+diff --git a/scrub/spacemap.h b/scrub/spacemap.h
 new file mode 100644
-index 0000000..40a4c05
+index 0000000..9ee46f7
 --- /dev/null
-+++ b/scrub/fscounters.h
-@@ -0,0 +1,29 @@
++++ b/scrub/spacemap.h
+@@ -0,0 +1,31 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -296,14 +340,16 @@ index 0000000..40a4c05
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+#ifndef XFS_SCRUB_FSCOUNTERS_H_
-+#define XFS_SCRUB_FSCOUNTERS_H_
++#ifndef XFS_SCRUB_SPACEMAP_H_
++#define XFS_SCRUB_SPACEMAP_H_
 +
-+bool xfs_scan_estimate_blocks(struct scrub_ctx *ctx,
-+		unsigned long long *d_blocks, unsigned long long *d_bfree,
-+		unsigned long long *r_blocks, unsigned long long *r_bfree,
-+		unsigned long long *f_files, unsigned long long *f_free);
-+bool xfs_count_all_inodes(struct scrub_ctx *ctx, uint64_t *count);
++typedef bool (*xfs_fsmap_iter_fn)(struct scrub_ctx *ctx, const char *descr,
++		struct fsmap *fsr, void *arg);
 +
-+#endif /* XFS_SCRUB_FSCOUNTERS_H_ */
++bool xfs_iterate_fsmap(struct scrub_ctx *ctx, const char *descr,
++		struct fsmap *keys, xfs_fsmap_iter_fn fn, void *arg);
++bool xfs_scan_all_spacemaps(struct scrub_ctx *ctx, xfs_fsmap_iter_fn fn,
++		void *arg);
++
++#endif /* XFS_SCRUB_SPACEMAP_H_ */
 
