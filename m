@@ -1,87 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from auth-3.ukservers.net ([217.10.138.152]:54288 "EHLO
-        auth-3.ukservers.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751960AbeAMXEp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Jan 2018 18:04:45 -0500
-Subject: Re: Growing RAID10 with active XFS filesystem
-References: <20180108220139.GB16421@dastard>
- <5A548D31.4000002@youngman.org.uk> <20180109222523.GJ16421@dastard>
- <85f60b96-b2ca-be84-a7f6-380b545c3ac8@turmel.org>
- <20180111030723.GU16421@dastard> <5A58B901.7080609@youngman.org.uk>
- <20180112152538.2c4d8cd4@harpe.intellique.com>
- <5A58F5FB.7000101@youngman.org.uk>
- <09819eb5-b342-01ca-1b96-cf5395dcd2e2@hardwarefreak.org>
- <5fd3434f-0d25-7c64-fa1b-9ed33f18df9c@youngman.org.uk>
- <20180113224021.GX16421@dastard>
-From: Wols Lists <antlists@youngman.org.uk>
-Message-ID: <5A5A9088.102@youngman.org.uk>
-Date: Sat, 13 Jan 2018 23:04:40 +0000
+Received: from userp2130.oracle.com ([156.151.31.86]:45268 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750931AbeAQWCb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:02:31 -0500
+Subject: [PATCH v11.1 00/29] xfsprogs: online scrub/repair support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Jan 2018 14:01:51 -0800
+Message-ID: <151622651142.31925.4179778330985746435.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180113224021.GX16421@dastard>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.org>, Emmanuel Florac <eflorac@intellique.com>, linux-xfs@vger.kernel.org, linux-raid@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 13/01/18 22:40, Dave Chinner wrote:
-> On Sat, Jan 13, 2018 at 07:29:19PM +0000, Wol's lists wrote:
->> On 13/01/18 00:20, Stan Hoeppner wrote:
->>> It's not set in stone.  If the RAID geometry changes one can
->>> specify the new geometry at mount say in fstab.  New writes to the
->>> filesystem will obey the new specified geometry.
-> 
-> FWIW, I've been assuming in everything I've said that an admin
-> would use these mount options to ensure new data writes were
-> properly aligned after a reshape.
-> 
->> Does this then update the defaults, or do you need to specify the
->> new geometry every mount? Inquiring minds need to know :-)
-> 
-> If you're going to document it, then you should observe it's
-> behaviour yourself, right? You don't even need a MD/RAID device to
-> test it - just set su/sw manually on the mkfs command line, then
-> see what happens when you try to change them on subsequent mounts.
+Hi all,
 
-I suppose I could set up a VM ...
-> 
-> Anyway, start by reading Documentation/filesystems/xfs.txt or 'man 5
-> xfs' where the mount options are documented. That's answer most FAQs
-> on this subject.
-> 
-> 	"Typically the only time these mount options are necessary
-> 	if after an underlying RAID device has  had  it's  geometry
-> 	modified, such as adding a new disk to a RAID5 lun and
-> 	reshaping it."
+This is the eleventh revision (+ fixes suggested by Eric Sandeen) of a
+patchset that adds to XFS userland tools support for online metadata
+scrubbing and repair.  Since v10 I've rebased to the latest for-next,
+fixed some wonky error messages, and fixed a few minor problems I found
+via code inspection.  However, this patch series is more or less the
+same as v11.
 
-anthony@ashdown /usr/src $ man 5 xfs
-No entry for xfs in section 5 of the manual
-anthony@ashdown /usr/src $
+We start by creating the basic shell of the program that can do argument
+parsing and error reporting, create some abstractions for the XFS ioctls
+that we use to iterate and scrub metadata, and then tie together all the
+in-kernel scrubbing in separate scrub phases.
 
-> 
-> It should be pretty obvious from this that we know that people
-> reshape arrays and that we've have had the means to support it all
-> along. Despite this, we still don't recommend people administer
-> their RAID-based XFS storage in this manner....
-> 
-Note I described myself as *editor* of the raid wiki. Yes I'd love to
-play around with all this stuff, but I don't have the hardware, and my
-nice new system I was planning to do all this sort of stuff on won't
-POST. I've had that problem before, it's finding time to debug a new
-system in the face of family demands... and at present I don't have an
-xfs partition anywhere.
+Next, we move on to checking the directory tree for connectivity and
+naming problems and add the infrastructure to perform an (optional) scan
+of the in-use parts of the disk media.  We also implement a minimal
+preen -- if the fs checks out, we can try to run fstrim; and some basic
+progress reporting if the program is running interactively.
 
-Reading xfs.txt doesn't seem to answer the question, though. It sounds
-like it doesn't update the underlying defaults so it's required every
-mount (which is a safe assumption to make), but it could easily be read
-the other way, too.
+Finally, we add some wrapper scripts to schedule scrubs of all the
+mounted filesystems; and the necessary systemd / cron infrastructure
+that is needed to automatically scan everything once a week.  All of
+this is disabled by default.  The systemd integration allows us to give
+scrub exactly the privileges it needs while walling off the rest of the
+system.
 
-Thanks. I'll document it to the level I understand, make a mental note
-to go back and improve it (I try and do that all the time :-), and then
-when my new system is up and running, I'll be playing with that to see
-how things behave.
+If you're going to start using this mess, you probably ought to just
+pull from my git tree for xfsprogs[1].  This series relies on the
+libfrog patches sent earlier.  Kernel support will appear in 4.15.
 
-Cheers,
-Wol
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
