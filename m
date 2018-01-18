@@ -1,111 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40212 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbeAUFeA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jan 2018 00:34:00 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0L5VpXo191818
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:00 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2fmkhm029m-1
+Received: from userp2130.oracle.com ([156.151.31.86]:37178 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753895AbeARA3n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 19:29:43 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0I0NGV4046870
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:43 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2fjetj0fn0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:00 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5Xxef000529
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:42 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0I0TgXv008707
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:33:59 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5XwOD005059
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:33:58 GMT
-Subject: [PATCH 1/6] xfs: reflink should break pnfs leases before sharing
- blocks
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:42 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0I0TgRA014569
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:42 GMT
+Date: Wed, 17 Jan 2018 16:29:40 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 20 Jan 2018 21:33:55 -0800
-Message-ID: <151651283574.28390.7095577838603162643.stgit@magnolia>
-In-Reply-To: <151651282961.28390.17944517354130397779.stgit@magnolia>
-References: <151651282961.28390.17944517354130397779.stgit@magnolia>
+Subject: Re: [PATCH 2/5] xfs: introduce 'fixed agfl' feature
+Message-ID: <20180118002940.GF25805@magnolia>
+References: <151623403113.4727.2418454911805718650.stgit@magnolia>
+ <151623404388.4727.13556729503051957189.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151623404388.4727.13556729503051957189.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 17, 2018 at 04:07:23PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Introduce a new rocompat flag "FIXED_AGFL" to indicate that we've
+> scanned and verified that the AGFL does not hit the troublesome last
+> element of the AGFL array, and update xfs_agfl_size to its new
+> definition based on this feature.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |    7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index bb42a11..3befc92f 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -464,6 +464,7 @@ xfs_sb_has_compat_feature(
+>  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+>  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+> +#define XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL (1 << 3)	/* fixed agfl */
 
-Before we share blocks between files, we need to break the pnfs leases
-on the layout before we start slicing and dicing the block map.
+(echoing comments made on irc by myself & Dave)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_reflink.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 45 insertions(+), 1 deletion(-)
+It suddenly occurred to me that we could do without this rocompat
+feature if we simply don't allow wrapped AGFLs anymore.  As soon as
+fllast points to that last agfl_bno slot, we simply move the whole list
+back to the start of the agfl block (i.e. flfirst = 0) and relog the
+whole agfl.  We still have problems if the admin mounts with an
+unpatched kernel, gets the agfl to wrap, and then then moves to another
+unpatched kernel, but at least the up-to-date kernels can just fix the
+problem and move on.
 
+I guess the nice thing about the rocompat feature is that the unpatched
+kernels won't mount, instead of blowing up randomly some time in the
+future and the user's antiquarian xfsprogs also refuses to touch it.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 47aea2e..ce523dd 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1245,6 +1245,48 @@ xfs_reflink_remap_blocks(
- }
- 
- /*
-+ * Grab the exclusive iolock for a data copy from src to dest, making
-+ * sure to abide vfs locking order (lowest pointer value goes first) and
-+ * breaking the pnfs layout leases on dest before proceeding.
-+ */
-+static int
-+xfs_iolock_two_inodes_and_break_layout(
-+	struct inode		*src,
-+	struct inode		*dest)
-+{
-+	bool			src_first = src < dest;
-+	bool			src_last = src > dest;
-+	int			error;
-+
-+retry:
-+	if (src_first) {
-+		inode_lock(src);
-+		inode_lock_nested(dest, I_MUTEX_NONDIR2);
-+	} else {
-+		inode_lock(dest);
-+	}
-+
-+	error = break_layout(dest, false);
-+	if (error == -EWOULDBLOCK) {
-+		inode_unlock(dest);
-+		if (src_first)
-+			inode_unlock(src);
-+		error = break_layout(dest, true);
-+		if (error)
-+			return error;
-+		goto retry;
-+	} else if (error) {
-+		inode_unlock(dest);
-+		if (src_first)
-+			inode_unlock(src);
-+		return error;
-+	}
-+	if (src_last)
-+		inode_lock_nested(src, I_MUTEX_NONDIR2);
-+	return 0;
-+}
-+
-+/*
-  * Link a range of blocks from one file to another.
-  */
- int
-@@ -1274,7 +1316,9 @@ xfs_reflink_remap_range(
- 		return -EIO;
- 
- 	/* Lock both files against IO */
--	lock_two_nondirectories(inode_in, inode_out);
-+	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
-+	if (ret)
-+		return ret;
- 	if (same_inode)
- 		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
- 	else
+We could also only set the rocompat flag if we actually had to fix
+something (vs. now where we always set it) though I wonder if that just
+makes the "I reverted kernels and now it blew up wtf?!" even more
+sporadic?  Hm.  Maybe we want that, since either is a rude awakening &
+making the rude wakeup less frequent isn't a bad thing.
 
+Ugh.  Maybe bikeshed now? :)
+
+--D
+
+>  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+>  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> @@ -566,6 +567,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+>  }
+>  
+> +static inline bool xfs_sb_version_hasfixedagfl(struct xfs_sb *sbp)
+> +{
+> +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL);
+> +}
+> +
+>  /*
+>   * end of superblock version macros
+>   */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
