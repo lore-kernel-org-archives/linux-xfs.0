@@ -1,87 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57386 "EHLO mail.kernel.org"
+Received: from sandeen.net ([63.231.237.45]:45886 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932138AbeARWrI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Jan 2018 17:47:08 -0500
-Message-ID: <1516315623.3379.10.camel@kernel.org>
-Subject: Re: [PATCH v5 01/19] fs: new API for handling inode->i_version
-From: Jeff Layton <jlayton@kernel.org>
-Date: Thu, 18 Jan 2018 17:47:03 -0500
-In-Reply-To: <20180118213821.GA5299@fieldses.org>
-References: <20180109141059.25929-1-jlayton@kernel.org>
-         <20180109141059.25929-2-jlayton@kernel.org>
-         <20180118213821.GA5299@fieldses.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S932462AbeARXKN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Jan 2018 18:10:13 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id C9D42514E41
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 17:10:09 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] quick note on the xfsprogs v4.14.0 tag
+Message-ID: <22480a9c-5c69-5372-7bbf-a02ad996b703@sandeen.net>
+Date: Thu, 18 Jan 2018 17:10:10 -0600
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="rapl8SLr9ZAtro3EL5GyVIU0AYl8W15HZ"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, neilb@suse.de, jack@suse.de, linux-ext4@vger.kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com, linux-btrfs@vger.kernel.org, clm@fb.com, jbacik@fb.com, dsterba@suse.com, linux-integrity@vger.kernel.org, zohar@linux.vnet.ibm.com, dmitry.kasatkin@gmail.com, linux-afs@lists.infradead.org, dhowells@redhat.com, jaltman@auristor.com, krzk@kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, 2018-01-18 at 16:38 -0500, J. Bruce Fields wrote:
-> On Tue, Jan 09, 2018 at 09:10:41AM -0500, Jeff Layton wrote:
-> > --- /dev/null
-> > +++ b/include/linux/iversion.h
-> > @@ -0,0 +1,236 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> > +#ifndef _LINUX_IVERSION_H
-> > +#define _LINUX_IVERSION_H
-> > +
-> > +#include <linux/fs.h>
-> > +
-> > +/*
-> > + * The change attribute (i_version) is mandated by NFSv4 and is mostly for
-> > + * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
-> > + * appear different to observers if there was a change to the inode's data or
-> > + * metadata since it was last queried.
-> > + *
-> > + * Observers see the i_version as a 64-bit number that never changes.
-> 
-> I don't understand that sentence.
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--rapl8SLr9ZAtro3EL5GyVIU0AYl8W15HZ
+Content-Type: multipart/mixed; boundary="PQXFcljqXEo4iCnPeCRUihdNM7p0mPNJx";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <22480a9c-5c69-5372-7bbf-a02ad996b703@sandeen.net>
+Subject: [ANNOUNCE] quick note on the xfsprogs v4.14.0 tag
 
-That's because it's utter nonsense. I noticed that the other day and
-fixed it in my tree. It now reads:
+--PQXFcljqXEo4iCnPeCRUihdNM7p0mPNJx
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-* Observers see the i_version as a 64-bit number that never decreases.
+Hello dear XFS users:
 
-> > If it
-> > + * remains the same since it was last checked, then nothing has changed in the
-> > + * inode. If it's different then something has changed. Observers cannot infer
-> > + * anything about the nature or magnitude of the changes from the value, only
-> > + * that the inode has changed in some fashion.
-> 
-> As we've discussed before, there may be brief windows where the first
-> two statements aren't quite correct.  I think that would be worth a
-> mention if we can keep it concise.  Maybe add something like this?:
-> 
-> 	It may be impractical for filesystems to keep i_version updates
-> 	atomic with respect to the changes that cause them.  They
-> 	should, however, guarantee that i_version updates are never
-> 	visible before the changes that caused them.  Also, i_version
-> 	updates should never be delayed longer than it takes the
-> 	original change to reach disk.
+tl;dr: everything is fine.  No action is needed.
 
-That makes sense. I added it in pretty much verbatim. I think we mostly
-follow the latter should already.
+Just a heads up that I had mis-tagged v4.14.0 in git when I did the
+release; it was an inconsequential mistake - long story, but
+checking out v4.14.0 /did/ get you the proper codebase, just
+not the top commit on the master branch at the time of release.
 
-> Or maybe those details are best left to documentation on the relevant
-> parts of the api below (maybe inode_maybe_inc_iversion?).
-> 
-> I dunno if it's also worth mentioning that nfsd doesn't actually use the
-> raw i_version--it mixes it with ctime to prevent i_version reuse after
-> reboot.  Presumably that doesn't matter to IMA since it doesn't compare
-> i_version across reboots.
-> 
+So for posterity, I'm making it clear that I've moved the v4.14.0
+tag to the proper commit.  There is no functional change, and
+the tarballs at=20
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/
+will remain unmodified.
 
-I think I won't document that here. nfsd is a consumer of i_version.
-What it does with it is sort of its own business. Might be good to have
-a comment blurb in the nfsd code about it though.
+the auto-generated snapshot tarball at
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/snapshot/xfsprogs-=
+dev-4.14.0.tar.gz
+did get regenerated by the kernel.org infra, with an identical
+resulting md5sum.
 
-> The documentation here is all very helpful, thanks.
+So when you do a git pull and see:
 
-Thanks for all of the suggestions so far!
--- 
-Jeff Layton <jlayton@kernel.org>
+ * [new tag]         v4.14.0    -> v4.14.0
+
+that's why.
+
+Thanks,
+-Eric
+
+
+--PQXFcljqXEo4iCnPeCRUihdNM7p0mPNJx--
+
+--rapl8SLr9ZAtro3EL5GyVIU0AYl8W15HZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlphKVQACgkQIK4WkuE9
+3uA3lw//YVUsqadW7XNLnyNg+ro/k1z1hqEiDqImWUaTPgKByqy86OAdGOnnaBp7
+qbDWvZrtrJ9eX9IjjpVQ+mFUZTVTkmqqFoqF7MIN6zI6eWmWOOqM2baJzGhD10SK
+xLSa/4cowYhnyZnPkWauIaC5OM4OdlFIj4jrsB7ZwOrHLUVFNAPnkXc54eC+om/k
+JzeUe4I1254VMcABs2oGqJr3U50rB3yq0RI0tD3IL5MnxGfPdzyT/9eKgCzKxON7
+h9KaqhB1+TqQIg8OSqm4Hsu78YzStYwc4M/dW4vfqxbyat5Wy05Ba7IY6Pzxq13G
+x4jwljGxl14y1j+n8m6y2TQ63gruWP6wcU+oB04EQXvxYVwWbyABkFO3IW2rJK9Z
+SU2FSipvl+5BCPfEUM7Vu3a9vtBusYJEzp/BCzqZt0hFCE9Q/wcJtoSPPguC05bt
+ERAjGhqr8r1MrC53xhCEplW8C3K/rQpJ3r9g4iUENmABHHoxvDTQzSTv5PMglGG1
+dl5a4gug0f4+jQN9rOPD3Ap0gvdkwOMiWTvKsou6GTA46iJGVvUy7PANkfeps3cy
+ioLrsPmYk4VGVO6wfObeIo2ZNgVvLgU68TrYvxOI1vA0BYWjCJavxL6ttuRSQbCz
+l6HTqSZW3rbFmNlKz5OvinQuiWMeOMVTjO90TmGVgzs45uWdmjU=
+=8Dkh
+-----END PGP SIGNATURE-----
+
+--rapl8SLr9ZAtro3EL5GyVIU0AYl8W15HZ--
