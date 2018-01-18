@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41138 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753377AbeARHmi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jan 2018 02:42:38 -0500
-Subject: [PATCH 1/2] xfs: reflink should break pnfs leases before sharing
- blocks
+Received: from aserp2130.oracle.com ([141.146.126.79]:49694 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754736AbeARHmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jan 2018 02:42:43 -0500
+Subject: [PATCH 2/2] xfs: try to unshare extents before granting pnfs leases
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 23:42:33 -0800
-Message-ID: <151626135332.25794.4917048406130796904.stgit@magnolia>
+Date: Wed, 17 Jan 2018 23:42:39 -0800
+Message-ID: <151626135947.25794.13152244142083119314.stgit@magnolia>
 In-Reply-To: <151626134674.25794.7913544634631149739.stgit@magnolia>
 References: <151626134674.25794.7913544634631149739.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,63 +20,96 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Before we share blocks between files, we need to break the pnfs leases
-on the layout before we start slicing and dicing the block map.
+Try to unshare an extent before granting a lease to pnfs; if this isn't
+possible, then bail out.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_reflink.c |   32 +++++++++++++++++++++++++++++++-
- 1 file changed, 31 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_pnfs.c |   32 ++++++++++++++++++++++++--------
+ 1 file changed, 24 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index da5c490..a701336 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1249,6 +1249,34 @@ xfs_reflink_remap_blocks(
- }
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index aa6c5c1..a76140d 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -19,6 +19,7 @@
+ #include "xfs_shared.h"
+ #include "xfs_bit.h"
+ #include "xfs_pnfs.h"
++#include "xfs_reflink.h"
  
  /*
-+ * Grab the exclusive iolock for a data copy from in to out, making sure to
-+ * break the pnfs layout leases on out before proceeding.
-+ */
-+static int
-+xfs_iolock_two_inodes_and_break_layout(
-+	struct inode		*inode_in,
-+	struct inode		*inode_out)
-+{
-+	uint			iolock = XFS_IOLOCK_EXCL;
-+	int			error;
-+
-+	if (inode_in < inode_out) {
-+		inode_lock(inode_in);
-+		inode_lock_nested(inode_out, I_MUTEX_NONDIR2);
-+	} else {
-+		inode_lock(inode_out);
-+	}
-+	error = xfs_break_layouts(inode_out, &iolock);
-+	if (error) {
-+		inode_unlock(inode_in);
-+		return error;
-+	}
-+	if (inode_in > inode_out)
-+		inode_lock_nested(inode_in, I_MUTEX_NONDIR2);
-+	return 0;
-+}
-+
-+/*
-  * Link a range of blocks from one file to another.
-  */
- int
-@@ -1278,7 +1306,9 @@ xfs_reflink_remap_range(
- 		return -EIO;
+  * Ensure that we do not have any outstanding pNFS layouts that can be used by
+@@ -110,13 +111,6 @@ xfs_fs_map_blocks(
+ 		return -ENXIO;
  
- 	/* Lock both files against IO */
--	lock_two_nondirectories(inode_in, inode_out);
-+	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
-+	if (ret)
-+		return ret;
- 	if (same_inode)
- 		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
- 	else
+ 	/*
+-	 * The pNFS block layout spec actually supports reflink like
+-	 * functionality, but the Linux pNFS server doesn't implement it yet.
+-	 */
+-	if (xfs_is_reflink_inode(ip))
+-		return -ENXIO;
+-
+-	/*
+ 	 * Lock out any other I/O before we flush and invalidate the pagecache,
+ 	 * and then hand out a layout to the remote system.  This is very
+ 	 * similar to direct I/O, except that the synchronization is much more
+@@ -125,6 +119,14 @@ xfs_fs_map_blocks(
+ 	 */
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 
++	/* Try to unshare the blocks if we want write access */
++	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
++	if (write) {
++		error = xfs_reflink_unshare(ip, offset, length);
++		if (error)
++			goto out_unlock;
++	}
++
+ 	error = -EINVAL;
+ 	limit = mp->m_super->s_maxbytes;
+ 	if (!write)
+@@ -140,7 +142,7 @@ xfs_fs_map_blocks(
+ 		goto out_unlock;
+ 	error = invalidate_inode_pages2(inode->i_mapping);
+ 	if (WARN_ON_ONCE(error))
+-		return error;
++		goto out_unlock;
+ 
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + length);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+@@ -176,18 +178,32 @@ xfs_fs_map_blocks(
+ 			 * present even after a server crash.
+ 			 */
+ 			flags |= XFS_PREALLOC_SET | XFS_PREALLOC_SYNC;
++		} else {
++			bool	shared, trimmed;
++
++			/* Make sure the extent really isn't shared. */
++			error = xfs_reflink_trim_around_shared(ip, &imap,
++					&shared, &trimmed);
++			if (error)
++				goto out_unlock;
++			if (shared || trimmed) {
++				error = -ENXIO;
++				goto out_unlock;
++			}
+ 		}
+ 
+ 		error = xfs_update_prealloc_flags(ip, flags);
+ 		if (error)
+ 			goto out_unlock;
+ 	}
++	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 
+ 	xfs_bmbt_to_iomap(ip, iomap, &imap);
+ 	*device_generation = mp->m_generation;
+ 	return error;
+ out_unlock:
++	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	return error;
+ }
 
