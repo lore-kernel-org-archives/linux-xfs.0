@@ -1,104 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37178 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753895AbeARA3n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 19:29:43 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0I0NGV4046870
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:43 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2fjetj0fn0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:42 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0I0TgXv008707
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:42 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0I0TgRA014569
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:29:42 GMT
-Date: Wed, 17 Jan 2018 16:29:40 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/5] xfs: introduce 'fixed agfl' feature
-Message-ID: <20180118002940.GF25805@magnolia>
-References: <151623403113.4727.2418454911805718650.stgit@magnolia>
- <151623404388.4727.13556729503051957189.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:41418 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754976AbeART75 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Jan 2018 14:59:57 -0500
+Date: Thu, 18 Jan 2018 14:59:55 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs_repair: couldn't map inode 2089979520, err = 117
+Message-ID: <20180118195954.GC56446@bfoster.bfoster>
+References: <alpine.DEB.2.21.9.1801172204210.14759@trent.utfs.org>
+ <20180118183636.GB56446@bfoster.bfoster>
+ <20180118185546.GI25805@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151623404388.4727.13556729503051957189.stgit@magnolia>
+In-Reply-To: <20180118185546.GI25805@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christian Kujau <lists@nerdbynature.de>, linux-xfs@vger.kernel.org
 
-On Wed, Jan 17, 2018 at 04:07:23PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 18, 2018 at 10:55:46AM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 18, 2018 at 01:36:37PM -0500, Brian Foster wrote:
+> > On Wed, Jan 17, 2018 at 10:27:19PM -0800, Christian Kujau wrote:
+> > > Hi,
+> > > 
+> > > after a(nother) power outage this disk enclosure (containing two seperate 
+> > > disks, connected via USB) was acting up and while one of the disks seems 
+> > > to have died, the other one still works and no more hardware errors are 
+> > > reported for the enclosure or the disk.
+> > > 
+> > > The XFS file system on this disk can be mounted (!) and data can be read, 
+> > > but an xfs_repair fails to complete: http://nerdbynature.de/bits/4.14/xfs/
+> > > 
+> > > I have (compressed) xfs_metadump images available if anyone is interested.
+> > > 
+> > > A timeline of events:
+> > > 
+> > >  * disk enclosure[0] connected to a Raspbery Pi (aarch64)
+> > >  * power failure, and possible power spike after power came back
+> > >  * RPI and disk enclosure disconnected from power.
+> > >  * disk enclosure connected to an x86-64 machine with lots of RAM
+> > >  * xfs_repair (Fedora 27, xfsprogs-4.12) attempted, but the disk enclosure
+> > >    was still trying to handle the other (failing) disk and the repair
+> > >    failed after some USB resets.
+> > >  * failed disk was removed from the enclosure, no more hardware errors 
+> > >    since, but still xfs_repair is unable to complete.
+> > > 
+> > > After a chat on #xfs, Eric and Dave remarked:
+> > > 
+> > > > error 117 means the inode is corrupted; probably shouldn't be at that 
+> > > > stage, probably indicates a repair bug? just looking at the first few 
+> > > > errors
+> > > > bad magic # 0x49414233 in btbno block 28/134141
+> > > > bad magic # 0x46494233 in btcnt block 30/870600
+> > > > the first magic is IAB3 the 2nd is FIB3 those are magic numbers for
+> > > > xfs, but not for the type of block it thought it was checking
+> > > 
+> > > ...and also:
+> > > 
+> > > > cross linked btrees does tend to indicate something went badly wrong
+> > > > at the hardware level
+> > > 
+> > > So, with all that (failed xfs_repair runs that were interrupted by 
+> > > hardware faults and also possibly flaky USB controller[0]) - has anybody 
+> > > an idea on how to convince xfs_repair to still clean up this mess? Or is 
+> > > there no other way than to restore from backup?
+> > > 
+> > 
+> > After looking at one of Christian's metadumps, it looks like this is a
+> > possible regression as of the inline directory fork verification bits. I
+> > don't have the full cause, but xfs_repair explodes due to the parent
+> > inode validation in xfs_iformat_fork -> xfs_dir2_sf_verify() when
+> > processing directory inode 2089979520. A quick test without the verifier
+> > allows repair to complete.
+> > 
+> > Christian, for the time being I suppose you could try a slightly older
+> > xfs_repair and see if that gets you anywhere. v4.10 or so appears to not
+> > include the associated commits.
 > 
-> Introduce a new rocompat flag "FIXED_AGFL" to indicate that we've
-> scanned and verified that the AGFL does not hit the troublesome last
-> element of the AGFL array, and update xfs_agfl_size to its new
-> definition based on this feature.
+> Ahhhurrgh.  Yes, right now xfsprogs is rather inflexible about the
+> verifiers -- the directory repairer decides that it can simply reset the
+> parent pointer, but then libxfs_iget & friends barf because the sf
+> directory verifier fails, and there's no way to turn that off.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_format.h |    7 +++++++
->  1 file changed, 7 insertions(+)
+> Well, there /is/ a way -- refactor the sf verifiers such that they're
+> (optionally) called by _iget so that repair can load the inode w/o
+> verifiers, make the corrections, and write everything back out.  That
+> refactoring will appear in Linux 4.16, so I imagine xfs_repair 4.16 will
+> get back on track with that.
 > 
+
+Ah, right. I thought this whole problem sounded familiar and hadn't
+quite been able to put my finger on it yet. I recall some of the
+discussion around refactoring those bits for verification flexibility in
+userspace. It looks like that stuff just hasn't made it into userspace
+yet.. thanks!
+
+Brian
+
+> FWIW I think a reasonable reproducer is running xfs/384 with:
 > 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index bb42a11..3befc92f 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -464,6 +464,7 @@ xfs_sb_has_compat_feature(
->  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
->  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
->  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-> +#define XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL (1 << 3)	/* fixed agfl */
-
-(echoing comments made on irc by myself & Dave)
-
-It suddenly occurred to me that we could do without this rocompat
-feature if we simply don't allow wrapped AGFLs anymore.  As soon as
-fllast points to that last agfl_bno slot, we simply move the whole list
-back to the start of the agfl block (i.e. flfirst = 0) and relog the
-whole agfl.  We still have problems if the admin mounts with an
-unpatched kernel, gets the agfl to wrap, and then then moves to another
-unpatched kernel, but at least the up-to-date kernels can just fix the
-problem and move on.
-
-I guess the nice thing about the rocompat feature is that the unpatched
-kernels won't mount, instead of blowing up randomly some time in the
-future and the user's antiquarian xfsprogs also refuses to touch it.
-
-We could also only set the rocompat flag if we actually had to fix
-something (vs. now where we always set it) though I wonder if that just
-makes the "I reverted kernels and now it blew up wtf?!" even more
-sporadic?  Hm.  Maybe we want that, since either is a rude awakening &
-making the rude wakeup less frequent isn't a bad thing.
-
-Ugh.  Maybe bikeshed now? :)
-
---D
-
->  #define XFS_SB_FEAT_RO_COMPAT_ALL \
->  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
->  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> @@ -566,6 +567,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
->  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
->  }
->  
-> +static inline bool xfs_sb_version_hasfixedagfl(struct xfs_sb *sbp)
-> +{
-> +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL);
-> +}
-> +
->  /*
->   * end of superblock version macros
->   */
+> SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
+> SCRATCH_XFS_LIST_FUZZ_VERBS=random
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> set in the environment (assumes v5 filesystem, etc.)
+> 
+> In the meantime, yeah, what Brian said.
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > Thanks,
+> > > Christian.
+> > > 
+> > > [0] When the disk enclosure is connected to the Raspberry Pi 3, the kernel 
+> > >     usually recognizes it as follows:
+> > > 
+> > > usb 1-1.4: new high-speed USB device number 4 using dwc2
+> > > usb 1-1.4: New USB device found, idVendor=7825, idProduct=a2a8
+> > > usb 1-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+> > > usb 1-1.4: Product: ElitePro Dual U3FW
+> > > usb 1-1.4: Manufacturer: OWC
+> > > usb 1-1.4: SerialNumber: DB9876543211160
+> > > usb 1-1.4: The driver for the USB controller dwc2_hsotg does not support scatter-gather which is
+> > > usb 1-1.4: required by the UAS driver. Please try an other USB controller if you wish to use UAS.
+> > > usb 1-1.4: The driver for the USB controller dwc2_hsotg does not support scatter-gather which is
+> > > usb 1-1.4: required by the UAS driver. Please try an other USB controller if you wish to use UAS.
+> > > usb-storage 1-1.4:1.0: USB Mass Storage device detected
+> > > scsi host0: usb-storage 1-1.4:1.0
+> > > scsi 0:0:0:0: Direct-Access     ElitePro Dual U3FW-1      0006 PQ: 0 ANSI: 6
+> > > scsi 0:0:0:1: Direct-Access     ElitePro Dual U3FW-2      0006 PQ: 0 ANSI: 6
+> > > sd 0:0:0:0: Attached scsi generic sg0 type 0
+> > > sd 0:0:0:0: [sda] Very big device. Trying to use READ CAPACITY(16).
+> > > sd 0:0:0:0: [sda] 7814037168 512-byte logical blocks: (4.00 TB/3.64 TiB)
+> > > sd 0:0:0:0: [sda] Write Protect is off
+> > > sd 0:0:0:0: [sda] Mode Sense: 47 00 10 08
+> > > sd 0:0:0:0: [sda] No Caching mode page found
+> > > sd 0:0:0:0: [sda] Assuming drive cache: write through
+> > > sd 0:0:0:0: [sda] Very big device. Trying to use READ CAPACITY(16).
+> > > [...] 
+> > > 
+> > > 
+> > > -- 
+> > > BOFH excuse #449:
+> > > 
+> > > greenpeace free'd the mallocs
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
