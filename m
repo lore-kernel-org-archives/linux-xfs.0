@@ -1,121 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:59632 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751080AbeAWIrh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 03:47:37 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0N8klIM186404
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 08:47:36 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2fp1hbg2fs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 08:47:36 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0N8gZkx030426
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 08:42:36 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0N8gZ35010248
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 08:42:35 GMT
-From: Shan Hai <shan.hai@oracle.com>
-Subject: [PATCH 1/1] xfs: bmap code cleanup
-Date: Tue, 23 Jan 2018 16:42:24 +0800
-Message-Id: <1516696944-11996-1-git-send-email-shan.hai@oracle.com>
+Received: from trent.utfs.org ([94.185.90.103]:33716 "EHLO trent.utfs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750948AbeARG1V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Jan 2018 01:27:21 -0500
+Received: from localhost (localhost [IPv6:::1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by trent.utfs.org (Postfix) with ESMTPS id 539445FE8B
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 07:27:19 +0100 (CET)
+Date: Wed, 17 Jan 2018 22:27:19 -0800 (PST)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: xfs_repair: couldn't map inode 2089979520, err = 117
+Message-ID: <alpine.DEB.2.21.9.1801172204210.14759@trent.utfs.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Remove the extent size hint and realtime inode relevant code from
-the xfs_bmapi_reserve_delalloc since it is not called on the inode
-with extent size hint set or on a realtime inode.
+Hi,
 
-Signed-off-by: Shan Hai <shan.hai@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 32 ++++++++------------------------
- 1 file changed, 8 insertions(+), 24 deletions(-)
+after a(nother) power outage this disk enclosure (containing two seperate 
+disks, connected via USB) was acting up and while one of the disks seems 
+to have died, the other one still works and no more hardware errors are 
+reported for the enclosure or the disk.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 1bddbba6b80c..8b4ab1932b58 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3876,8 +3876,6 @@ xfs_bmapi_reserve_delalloc(
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
- 	xfs_extlen_t		alen;
- 	xfs_extlen_t		indlen;
--	char			rt = XFS_IS_REALTIME_INODE(ip);
--	xfs_extlen_t		extsz;
- 	int			error;
- 	xfs_fileoff_t		aoff = off;
- 
-@@ -3892,31 +3890,25 @@ xfs_bmapi_reserve_delalloc(
- 		prealloc = alen - len;
- 
- 	/* Figure out the extent size, adjust alen */
--	if (whichfork == XFS_COW_FORK)
--		extsz = xfs_get_cowextsz_hint(ip);
--	else
--		extsz = xfs_get_extsz_hint(ip);
--	if (extsz) {
-+	if (whichfork == XFS_COW_FORK) {
- 		struct xfs_bmbt_irec	prev;
-+		xfs_extlen_t extsz = xfs_get_cowextsz_hint(ip);
- 
- 		if (!xfs_iext_peek_prev_extent(ifp, icur, &prev))
- 			prev.br_startoff = NULLFILEOFF;
- 
--		error = xfs_bmap_extsize_align(mp, got, &prev, extsz, rt, eof,
-+		error = xfs_bmap_extsize_align(mp, got, &prev, extsz, 0, eof,
- 					       1, 0, &aoff, &alen);
- 		ASSERT(!error);
- 	}
- 
--	if (rt)
--		extsz = alen / mp->m_sb.sb_rextsize;
--
- 	/*
- 	 * Make a transaction-less quota reservation for delayed allocation
- 	 * blocks.  This number gets adjusted later.  We return if we haven't
- 	 * allocated blocks already inside this loop.
- 	 */
- 	error = xfs_trans_reserve_quota_nblks(NULL, ip, (long)alen, 0,
--			rt ? XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS);
-+						XFS_QMOPT_RES_REGBLKS);
- 	if (error)
- 		return error;
- 
-@@ -3927,12 +3919,7 @@ xfs_bmapi_reserve_delalloc(
- 	indlen = (xfs_extlen_t)xfs_bmap_worst_indlen(ip, alen);
- 	ASSERT(indlen > 0);
- 
--	if (rt) {
--		error = xfs_mod_frextents(mp, -((int64_t)extsz));
--	} else {
--		error = xfs_mod_fdblocks(mp, -((int64_t)alen), false);
--	}
--
-+	error = xfs_mod_fdblocks(mp, -((int64_t)alen), false);
- 	if (error)
- 		goto out_unreserve_quota;
- 
-@@ -3963,14 +3950,11 @@ xfs_bmapi_reserve_delalloc(
- 	return 0;
- 
- out_unreserve_blocks:
--	if (rt)
--		xfs_mod_frextents(mp, extsz);
--	else
--		xfs_mod_fdblocks(mp, alen, false);
-+	xfs_mod_fdblocks(mp, alen, false);
- out_unreserve_quota:
- 	if (XFS_IS_QUOTA_ON(mp))
--		xfs_trans_unreserve_quota_nblks(NULL, ip, (long)alen, 0, rt ?
--				XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS);
-+		xfs_trans_unreserve_quota_nblks(NULL, ip, (long)alen, 0,
-+						XFS_QMOPT_RES_REGBLKS);
- 	return error;
- }
- 
+The XFS file system on this disk can be mounted (!) and data can be read, 
+but an xfs_repair fails to complete: http://nerdbynature.de/bits/4.14/xfs/
+
+I have (compressed) xfs_metadump images available if anyone is interested.
+
+A timeline of events:
+
+ * disk enclosure[0] connected to a Raspbery Pi (aarch64)
+ * power failure, and possible power spike after power came back
+ * RPI and disk enclosure disconnected from power.
+ * disk enclosure connected to an x86-64 machine with lots of RAM
+ * xfs_repair (Fedora 27, xfsprogs-4.12) attempted, but the disk enclosure
+   was still trying to handle the other (failing) disk and the repair
+   failed after some USB resets.
+ * failed disk was removed from the enclosure, no more hardware errors 
+   since, but still xfs_repair is unable to complete.
+
+After a chat on #xfs, Eric and Dave remarked:
+
+> error 117 means the inode is corrupted; probably shouldn't be at that 
+> stage, probably indicates a repair bug? just looking at the first few 
+> errors
+> bad magic # 0x49414233 in btbno block 28/134141
+> bad magic # 0x46494233 in btcnt block 30/870600
+> the first magic is IAB3 the 2nd is FIB3 those are magic numbers for
+> xfs, but not for the type of block it thought it was checking
+
+...and also:
+
+> cross linked btrees does tend to indicate something went badly wrong
+> at the hardware level
+
+So, with all that (failed xfs_repair runs that were interrupted by 
+hardware faults and also possibly flaky USB controller[0]) - has anybody 
+an idea on how to convince xfs_repair to still clean up this mess? Or is 
+there no other way than to restore from backup?
+
+Thanks,
+Christian.
+
+[0] When the disk enclosure is connected to the Raspberry Pi 3, the kernel 
+    usually recognizes it as follows:
+
+usb 1-1.4: new high-speed USB device number 4 using dwc2
+usb 1-1.4: New USB device found, idVendor=7825, idProduct=a2a8
+usb 1-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+usb 1-1.4: Product: ElitePro Dual U3FW
+usb 1-1.4: Manufacturer: OWC
+usb 1-1.4: SerialNumber: DB9876543211160
+usb 1-1.4: The driver for the USB controller dwc2_hsotg does not support scatter-gather which is
+usb 1-1.4: required by the UAS driver. Please try an other USB controller if you wish to use UAS.
+usb 1-1.4: The driver for the USB controller dwc2_hsotg does not support scatter-gather which is
+usb 1-1.4: required by the UAS driver. Please try an other USB controller if you wish to use UAS.
+usb-storage 1-1.4:1.0: USB Mass Storage device detected
+scsi host0: usb-storage 1-1.4:1.0
+scsi 0:0:0:0: Direct-Access     ElitePro Dual U3FW-1      0006 PQ: 0 ANSI: 6
+scsi 0:0:0:1: Direct-Access     ElitePro Dual U3FW-2      0006 PQ: 0 ANSI: 6
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sd 0:0:0:0: [sda] Very big device. Trying to use READ CAPACITY(16).
+sd 0:0:0:0: [sda] 7814037168 512-byte logical blocks: (4.00 TB/3.64 TiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 47 00 10 08
+sd 0:0:0:0: [sda] No Caching mode page found
+sd 0:0:0:0: [sda] Assuming drive cache: write through
+sd 0:0:0:0: [sda] Very big device. Trying to use READ CAPACITY(16).
+[...] 
+
+
 -- 
-2.14.1
+BOFH excuse #449:
 
+greenpeace free'd the mallocs
