@@ -1,35 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52005 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932357AbeARRCM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jan 2018 12:02:12 -0500
-Date: Thu, 18 Jan 2018 09:02:11 -0800
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v6 00/99] XArray version 6
-Message-ID: <20180118170211.GB23800@bombadil.infradead.org>
-References: <20180117202203.19756-1-willy@infradead.org>
- <20180118160749.GP13726@twin.jikos.cz>
- <20180118164843.GA23800@bombadil.infradead.org>
- <20180118165612.GS13726@twin.jikos.cz>
+Received: from userp2120.oracle.com ([156.151.31.85]:48110 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932357AbeARRDB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jan 2018 12:03:01 -0500
+Date: Thu, 18 Jan 2018 09:02:55 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs: try to unshare extents before granting pnfs
+ leases
+Message-ID: <20180118170255.GH25805@magnolia>
+References: <151626134674.25794.7913544634631149739.stgit@magnolia>
+ <151626135947.25794.13152244142083119314.stgit@magnolia>
+ <20180118141513.GA22992@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180118165612.GS13726@twin.jikos.cz>
+In-Reply-To: <20180118141513.GA22992@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: dsterba@suse.cz, linux-kernel@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-nilfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-usb@vger.kernel.org, Bjorn Andersson <bjorn.andersson@linaro.org>, Stefano Stabellini <sstabellini@kernel.org>, iommu@lists.linux-foundation.org, linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org, intel-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, linux-sh@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 18, 2018 at 05:56:12PM +0100, David Sterba wrote:
-> On Thu, Jan 18, 2018 at 08:48:43AM -0800, Matthew Wilcox wrote:
-> > Thank you!  I shall attempt to debug.  Was this with a btrfs root
-> > filesystem?  I'm most suspicious of those patches right now, since they've
-> > received next to no testing.  I'm going to put together a smaller patchset
-> > which just does the page cache conversion and nothing else in the hope
-> > that we can get that merged this year.
+On Thu, Jan 18, 2018 at 03:15:13PM +0100, Christoph Hellwig wrote:
+> On Wed, Jan 17, 2018 at 11:42:39PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Try to unshare an extent before granting a lease to pnfs; if this isn't
+> > possible, then bail out.
 > 
-> No, the root is ext3 and there was no btrfs filesytem mounted at the
-> time.
+> 
+> I don't like this at all.  The block and scsi layout protocols actually
+> have support for reflinks, someone just needs to implement it..
+> 
+> But until that is implemented I'd rather fail getting a layout than
+> starting a potentially very long running unshare.
 
-Found it; I was missing a prerequisite patch.  New (smaller) patch series
-coming soon.
+Fair enough, I'll dump this one.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
