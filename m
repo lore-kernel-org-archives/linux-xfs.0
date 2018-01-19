@@ -1,85 +1,298 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54224 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38106 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751548AbeASIHz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Jan 2018 03:07:55 -0500
-Date: Fri, 19 Jan 2018 16:07:53 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v4 2/3] xfs/realtime: Default rtinherit=1, add
- _require_no_rtinherit function
-Message-ID: <20180119080753.GY3102@eguan.usersys.redhat.com>
-References: <20180112041619.540900-1-rwareing@fb.com>
- <20180112041619.540900-3-rwareing@fb.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180112041619.540900-3-rwareing@fb.com>
+        id S1753841AbeASOJD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Jan 2018 09:09:03 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5C9A87853C
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2018 14:09:03 +0000 (UTC)
+Received: from odin.usersys.redhat.com (unknown [10.40.205.133])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C27F25D6B7
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Jan 2018 14:09:02 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 1/4] Get rid of xfs_buf_log_item_t typedef
+Date: Fri, 19 Jan 2018 15:08:44 +0100
+Message-Id: <20180119140847.22934-2-cmaiolino@redhat.com>
+In-Reply-To: <20180119140847.22934-1-cmaiolino@redhat.com>
+References: <20180119140847.22934-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: fstests@vger.kernel.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 08:16:18PM -0800, Richard Wareing wrote:
-> To better exercise the data path code of realtime subvolumes, we will
-> set rtinherit=1 during mkfs calls.  For tests which this is not desired
-> we introduce a _require_no_rtinherit function to opt out of this
-> behavior.
-> 
-> Signed-off-by: Richard Wareing <rwareing@fb.com>
+Take advantage of the rework on xfs_buf log items list, to get rid of
+ths typedef for xfs_buf_log_item.
 
-BTW, generic/256 triggered xfs shutdown with rtdev enabled and
-MKFS_OPTIONS="-d rtinherit".
+This patch also fix some indentation alignment issues found along the way.
 
-Thanks,
-Eryu
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c  | 40 ++++++++++++++++----------------
+ fs/xfs/xfs_buf_item.h  |  6 ++---
+ fs/xfs/xfs_trans_buf.c | 62 +++++++++++++++++++++++++++-----------------------
+ 3 files changed, 56 insertions(+), 52 deletions(-)
 
-[59132.903870] XFS (vda6): _xfs_buf_find: Block out of range: block 0xc00000003fff0, EOFS 0x300000
-[59132.904675] WARNING: CPU: 3 PID: 1199 at fs/xfs/xfs_buf.c:590 _xfs_buf_find+0x3e8/0x520 [xfs]
-[59132.905352] Modules linked in: xfs dm_delay dm_thin_pool dm_persistent_data dm_bio_prison sd_mod sg dm_snapshot dm_bufio dm_flakey loop dm_mod ip6t_rpfilter ipt_REJECT nf_reject_ipv4 ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack libcrc32c iptable_mangle iptable_security iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter sunrpc btrfs xor zstd_decompress zstd_compress xxhash raid6_pq i2c_piix4 i2c_core virtio_balloon joydev pcspkr ip_tables ext4 mbcache jbd2 ata_generic pata_acpi virtio_net virtio_blk ata_piix libata virtio_pci virtio_ring virtio
-[59132.905607]  serio_raw floppy [last unloaded: scsi_debug]
-[59132.905607] CPU: 3 PID: 1199 Comm: xfs_io Tainted: G        W        4.15.0-rc6 #28
-[59132.905607] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
-[59132.905607] RIP: 0010:_xfs_buf_find+0x3e8/0x520 [xfs]
-[59132.905607] RSP: 0018:ffff9eb8c1d83718 EFLAGS: 00010246
-[59132.905607] RAX: 0000000000000000 RBX: ffff9eb8c1d83878 RCX: 0000000000000000
-[59132.905607] RDX: ffff9eb8c1d83638 RSI: 000000000000000a RDI: ffffffffc0758ebb
-[59132.905607] RBP: 0000000000000001 R08: 0000000000000000 R09: 0000000000000021
-[59132.905607] R10: 0000000000000000 R11: 000000000000000a R12: ffff93846fb19b40
-[59132.905607] R13: ffff93846fb19b40 R14: 0000000000000001 R15: ffff9eb8c1d83878
-[59132.905607] FS:  00007f8cb01ea740(0000) GS:ffff93849fd80000(0000) knlGS:0000000000000000
-[59132.905607] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[59132.905607] CR2: 00007f8caf9eefb8 CR3: 0000000215749000 CR4: 00000000000006e0
-[59132.905607] Call Trace:
-[59132.905607]  ? _cond_resched+0x15/0x30
-[59132.905607]  xfs_buf_get_map+0x23/0x260 [xfs]
-[59132.905607]  xfs_buf_read_map+0x29/0x180 [xfs]
-[59132.905607]  xfs_trans_read_buf_map+0xec/0x300 [xfs]
-[59132.905607]  xfs_rtbuf_get+0xf5/0x130 [xfs]
-[59132.905607]  xfs_rtcheck_range+0x10a/0x300 [xfs]
-[59132.905607]  xfs_rtallocate_extent_block+0x137/0x240 [xfs]
-[59132.905607]  xfs_rtallocate_extent_near+0x287/0x390 [xfs]
-[59132.905607]  ? up+0x12/0x46
-[59132.905607]  ? xfs_buf_rele+0x5b/0x390 [xfs]
-[59132.905607]  xfs_rtallocate_extent+0x121/0x1b0 [xfs]
-[59132.905607]  xfs_bmap_rtalloc+0x180/0x2b0 [xfs]
-[59132.905607]  xfs_bmapi_write+0x5dc/0xce0 [xfs]
-[59132.905607]  ? lookup_fast+0xcb/0x2b0
-[59132.905607]  xfs_alloc_file_space+0x15a/0x3a0 [xfs]
-[59132.905607]  ? account_entity_enqueue+0xc5/0xf0
-[59132.905607]  xfs_file_fallocate+0x1e2/0x330 [xfs]
-[59132.905607]  ? check_preempt_curr+0x74/0xa0
-[59132.905607]  ? wake_up_new_task+0x1c4/0x280
-[59132.905607]  vfs_fallocate+0x151/0x270
-[59132.905607]  SyS_fallocate+0x3f/0x60
-[59132.905607]  do_syscall_64+0x61/0x1a0
-[59132.905607]  entry_SYSCALL64_slow_path+0x25/0x25
-[59132.905607] RIP: 0033:0x7f8cafae47e0
-[59132.905607] RSP: 002b:00007ffd3ad5eb50 EFLAGS: 00000293 ORIG_RAX: 000000000000011d
-[59132.905607] RAX: ffffffffffffffda RBX: 000000000000011d RCX: 00007f8cafae47e0
-[59132.905607] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000003
-[59132.905607] RBP: 0000000001111130 R08: 0000000000000000 R09: 00000000011123e2
-[59132.905607] R10: 0000000010000000 R11: 0000000000000293 R12: 0000000000000000
-[59132.905607] R13: 00000000011127c0 R14: 0000000000000001 R15: 0000000000000000
-[59132.905607] Code: 48 89 de ff d0 49 8b 45 00 48 85 c0 75 e5 e9 57 ff ff ff 48 89 c1 48 c7 c2 c0 56 75 c0 48 c7 c6 80 c7 75 c0 31 c0 e8 68 89 01 00 <0f> ff 31 c0 e9 74 ff ff ff 39 ca 0f 82 56 fe ff ff 48 8b 4c 24
-[59132.905607] ---[ end trace 2525be156b26eb0c ]---
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index e0a0af0946f2..8afcfa3ed976 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -61,14 +61,14 @@ xfs_buf_log_format_size(
+  */
+ STATIC void
+ xfs_buf_item_size_segment(
+-	struct xfs_buf_log_item	*bip,
+-	struct xfs_buf_log_format *blfp,
+-	int			*nvecs,
+-	int			*nbytes)
++	struct xfs_buf_log_item		*bip,
++	struct xfs_buf_log_format	*blfp,
++	int				*nvecs,
++	int				*nbytes)
+ {
+-	struct xfs_buf		*bp = bip->bli_buf;
+-	int			next_bit;
+-	int			last_bit;
++	struct xfs_buf			*bp = bip->bli_buf;
++	int				next_bit;
++	int				last_bit;
+ 
+ 	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+ 	if (last_bit == -1)
+@@ -218,12 +218,12 @@ xfs_buf_item_format_segment(
+ 	uint			offset,
+ 	struct xfs_buf_log_format *blfp)
+ {
+-	struct xfs_buf	*bp = bip->bli_buf;
+-	uint		base_size;
+-	int		first_bit;
+-	int		last_bit;
+-	int		next_bit;
+-	uint		nbits;
++	struct xfs_buf		*bp = bip->bli_buf;
++	uint			base_size;
++	int			first_bit;
++	int			last_bit;
++	int			next_bit;
++	uint			nbits;
+ 
+ 	/* copy the flags across from the base format item */
+ 	blfp->blf_flags = bip->__bli_format.blf_flags;
+@@ -406,10 +406,10 @@ xfs_buf_item_unpin(
+ 	int			remove)
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+-	xfs_buf_t	*bp = bip->bli_buf;
+-	struct xfs_ail	*ailp = lip->li_ailp;
+-	int		stale = bip->bli_flags & XFS_BLI_STALE;
+-	int		freed;
++	xfs_buf_t		*bp = bip->bli_buf;
++	struct xfs_ail		*ailp = lip->li_ailp;
++	int			stale = bip->bli_flags & XFS_BLI_STALE;
++	int			freed;
+ 
+ 	ASSERT(bp->b_fspriv == bip);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+@@ -880,7 +880,7 @@ xfs_buf_item_log_segment(
+  */
+ void
+ xfs_buf_item_log(
+-	xfs_buf_log_item_t	*bip,
++	struct xfs_buf_log_item	*bip,
+ 	uint			first,
+ 	uint			last)
+ {
+@@ -943,7 +943,7 @@ xfs_buf_item_dirty_format(
+ 
+ STATIC void
+ xfs_buf_item_free(
+-	xfs_buf_log_item_t	*bip)
++	struct xfs_buf_log_item	*bip)
+ {
+ 	xfs_buf_item_free_format(bip);
+ 	kmem_free(bip->bli_item.li_lv_shadow);
+@@ -961,7 +961,7 @@ void
+ xfs_buf_item_relse(
+ 	xfs_buf_t	*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	trace_xfs_buf_item_relse(bp, _RET_IP_);
+ 	ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 9690ce62c9a7..0febfbbf6ba9 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -50,7 +50,7 @@ struct xfs_buf_log_item;
+  * needed to log buffers.  It tracks how many times the lock has been
+  * locked, and which 128 byte chunks of the buffer are dirty.
+  */
+-typedef struct xfs_buf_log_item {
++struct xfs_buf_log_item {
+ 	xfs_log_item_t		bli_item;	/* common item structure */
+ 	struct xfs_buf		*bli_buf;	/* real buffer pointer */
+ 	unsigned int		bli_flags;	/* misc flags */
+@@ -59,11 +59,11 @@ typedef struct xfs_buf_log_item {
+ 	int			bli_format_count;	/* count of headers */
+ 	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
+ 	struct xfs_buf_log_format __bli_format;	/* embedded in-log header */
+-} xfs_buf_log_item_t;
++};
+ 
+ int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+ void	xfs_buf_item_relse(struct xfs_buf *);
+-void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
++void	xfs_buf_item_log(struct xfs_buf_log_item *, uint, uint);
+ bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
+ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ 			      void(*)(struct xfs_buf *, xfs_log_item_t *),
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 3ba7a96a8abd..74563cd2970c 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -139,7 +139,7 @@ xfs_trans_get_buf_map(
+ 	xfs_buf_flags_t		flags)
+ {
+ 	xfs_buf_t		*bp;
+-	xfs_buf_log_item_t	*bip;
++	struct xfs_buf_log_item	*bip;
+ 
+ 	if (!tp)
+ 		return xfs_buf_get_map(target, map, nmaps, flags);
+@@ -188,12 +188,13 @@ xfs_trans_get_buf_map(
+  * mount structure.
+  */
+ xfs_buf_t *
+-xfs_trans_getsb(xfs_trans_t	*tp,
+-		struct xfs_mount *mp,
+-		int		flags)
++xfs_trans_getsb(
++	xfs_trans_t		*tp,
++	struct xfs_mount	*mp,
++	int			flags)
+ {
+ 	xfs_buf_t		*bp;
+-	xfs_buf_log_item_t	*bip;
++	struct xfs_buf_log_item	*bip;
+ 
+ 	/*
+ 	 * Default to just trying to lock the superblock buffer
+@@ -352,10 +353,11 @@ xfs_trans_read_buf_map(
+  * brelse() call.
+  */
+ void
+-xfs_trans_brelse(xfs_trans_t	*tp,
+-		 xfs_buf_t	*bp)
++xfs_trans_brelse(
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp)
+ {
+-	xfs_buf_log_item_t	*bip;
++	struct xfs_buf_log_item	*bip;
+ 	int			freed;
+ 
+ 	/*
+@@ -456,10 +458,11 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+  */
+ /* ARGSUSED */
+ void
+-xfs_trans_bhold(xfs_trans_t	*tp,
+-		xfs_buf_t	*bp)
++xfs_trans_bhold(
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+@@ -476,10 +479,11 @@ xfs_trans_bhold(xfs_trans_t	*tp,
+  * for this transaction.
+  */
+ void
+-xfs_trans_bhold_release(xfs_trans_t	*tp,
+-			xfs_buf_t	*bp)
++xfs_trans_bhold_release(
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+@@ -600,10 +604,10 @@ xfs_trans_log_buf(
+  */
+ void
+ xfs_trans_binval(
+-	xfs_trans_t	*tp,
+-	xfs_buf_t	*bp)
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 	int			i;
+ 
+ 	ASSERT(bp->b_transp == tp);
+@@ -655,10 +659,10 @@ xfs_trans_binval(
+  */
+ void
+ xfs_trans_inode_buf(
+-	xfs_trans_t	*tp,
+-	xfs_buf_t	*bp)
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+@@ -679,10 +683,10 @@ xfs_trans_inode_buf(
+  */
+ void
+ xfs_trans_stale_inode_buf(
+-	xfs_trans_t	*tp,
+-	xfs_buf_t	*bp)
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+@@ -704,10 +708,10 @@ xfs_trans_stale_inode_buf(
+ /* ARGSUSED */
+ void
+ xfs_trans_inode_alloc_buf(
+-	xfs_trans_t	*tp,
+-	xfs_buf_t	*bp)
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp)
+ {
+-	xfs_buf_log_item_t	*bip = bp->b_fspriv;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+@@ -797,9 +801,9 @@ xfs_trans_buf_copy_type(
+ /* ARGSUSED */
+ void
+ xfs_trans_dquot_buf(
+-	xfs_trans_t	*tp,
+-	xfs_buf_t	*bp,
+-	uint		type)
++	xfs_trans_t		*tp,
++	xfs_buf_t		*bp,
++	uint			type)
+ {
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
+-- 
+2.14.3
+
