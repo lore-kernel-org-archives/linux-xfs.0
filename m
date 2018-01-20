@@ -1,96 +1,304 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46916 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750711AbeAUFeM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jan 2018 00:34:12 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0L5WjV3076740
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:12 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2fmkcy02tw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:12 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5YBOq021362
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:11 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5YAfO005084
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:10 GMT
-Subject: [PATCH 3/6] xfs: call xfs_qm_dqattach before performing reflink
- operations
+Received: from aserp2130.oracle.com ([141.146.126.79]:53496 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750974AbeATDdV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jan 2018 22:33:21 -0500
+Date: Fri, 19 Jan 2018 19:33:16 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 20 Jan 2018 21:34:10 -0800
-Message-ID: <151651284994.28390.7445163994259507169.stgit@magnolia>
-In-Reply-To: <151651282961.28390.17944517354130397779.stgit@magnolia>
-References: <151651282961.28390.17944517354130397779.stgit@magnolia>
+Subject: Re: [PATCH 1/4] Get rid of xfs_buf_log_item_t typedef
+Message-ID: <20180120033316.GL25805@magnolia>
+References: <20180119140847.22934-1-cmaiolino@redhat.com>
+ <20180119140847.22934-2-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180119140847.22934-2-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jan 19, 2018 at 03:08:44PM +0100, Carlos Maiolino wrote:
+> Take advantage of the rework on xfs_buf log items list, to get rid of
+> ths typedef for xfs_buf_log_item.
+> 
+> This patch also fix some indentation alignment issues found along the way.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Ensure that we've attached all the necessary dquots before performing
-reflink operations so that quota accounting is accurate.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_reflink.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 5d1ff5a..947d0637 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -54,6 +54,7 @@
- #include "xfs_rmap_btree.h"
- #include "xfs_sb.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_qm.h"
- 
- /*
-  * Copy on Write of Shared Blocks
-@@ -282,6 +283,10 @@ xfs_reflink_reserve_cow(
- 	 * tree.
- 	 */
- 
-+	error = xfs_qm_dqattach_locked(ip, 0);
-+	if (error)
-+		return error;
-+
- 	if (!xfs_iext_lookup_extent(ip, ifp, imap->br_startoff, &icur, &got))
- 		eof = true;
- 	if (!eof && got.br_startoff <= imap->br_startoff) {
-@@ -396,6 +401,10 @@ xfs_reflink_allocate_cow(
- 	ASSERT(xfs_is_reflink_inode(ip));
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 
-+	error = xfs_qm_dqattach_locked(ip, 0);
-+	if (error)
-+		return error;
-+
- 	/*
- 	 * Even if the extent is not shared we might have a preallocation for
- 	 * it in the COW fork.  If so use it.
-@@ -1356,6 +1365,14 @@ xfs_reflink_remap_range(
- 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
- 		goto out_unlock;
- 
-+	/* Attach dquots to both inodes */
-+	ret = xfs_qm_dqattach(src, 0);
-+	if (ret)
-+		goto out_unlock;
-+	ret = xfs_qm_dqattach(dest, 0);
-+	if (ret)
-+		goto out_unlock;
-+
- 	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
- 			&len, is_dedupe);
- 	if (ret <= 0)
-
+> ---
+>  fs/xfs/xfs_buf_item.c  | 40 ++++++++++++++++----------------
+>  fs/xfs/xfs_buf_item.h  |  6 ++---
+>  fs/xfs/xfs_trans_buf.c | 62 +++++++++++++++++++++++++++-----------------------
+>  3 files changed, 56 insertions(+), 52 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index e0a0af0946f2..8afcfa3ed976 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -61,14 +61,14 @@ xfs_buf_log_format_size(
+>   */
+>  STATIC void
+>  xfs_buf_item_size_segment(
+> -	struct xfs_buf_log_item	*bip,
+> -	struct xfs_buf_log_format *blfp,
+> -	int			*nvecs,
+> -	int			*nbytes)
+> +	struct xfs_buf_log_item		*bip,
+> +	struct xfs_buf_log_format	*blfp,
+> +	int				*nvecs,
+> +	int				*nbytes)
+>  {
+> -	struct xfs_buf		*bp = bip->bli_buf;
+> -	int			next_bit;
+> -	int			last_bit;
+> +	struct xfs_buf			*bp = bip->bli_buf;
+> +	int				next_bit;
+> +	int				last_bit;
+>  
+>  	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+>  	if (last_bit == -1)
+> @@ -218,12 +218,12 @@ xfs_buf_item_format_segment(
+>  	uint			offset,
+>  	struct xfs_buf_log_format *blfp)
+>  {
+> -	struct xfs_buf	*bp = bip->bli_buf;
+> -	uint		base_size;
+> -	int		first_bit;
+> -	int		last_bit;
+> -	int		next_bit;
+> -	uint		nbits;
+> +	struct xfs_buf		*bp = bip->bli_buf;
+> +	uint			base_size;
+> +	int			first_bit;
+> +	int			last_bit;
+> +	int			next_bit;
+> +	uint			nbits;
+>  
+>  	/* copy the flags across from the base format item */
+>  	blfp->blf_flags = bip->__bli_format.blf_flags;
+> @@ -406,10 +406,10 @@ xfs_buf_item_unpin(
+>  	int			remove)
+>  {
+>  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+> -	xfs_buf_t	*bp = bip->bli_buf;
+> -	struct xfs_ail	*ailp = lip->li_ailp;
+> -	int		stale = bip->bli_flags & XFS_BLI_STALE;
+> -	int		freed;
+> +	xfs_buf_t		*bp = bip->bli_buf;
+> +	struct xfs_ail		*ailp = lip->li_ailp;
+> +	int			stale = bip->bli_flags & XFS_BLI_STALE;
+> +	int			freed;
+>  
+>  	ASSERT(bp->b_fspriv == bip);
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+> @@ -880,7 +880,7 @@ xfs_buf_item_log_segment(
+>   */
+>  void
+>  xfs_buf_item_log(
+> -	xfs_buf_log_item_t	*bip,
+> +	struct xfs_buf_log_item	*bip,
+>  	uint			first,
+>  	uint			last)
+>  {
+> @@ -943,7 +943,7 @@ xfs_buf_item_dirty_format(
+>  
+>  STATIC void
+>  xfs_buf_item_free(
+> -	xfs_buf_log_item_t	*bip)
+> +	struct xfs_buf_log_item	*bip)
+>  {
+>  	xfs_buf_item_free_format(bip);
+>  	kmem_free(bip->bli_item.li_lv_shadow);
+> @@ -961,7 +961,7 @@ void
+>  xfs_buf_item_relse(
+>  	xfs_buf_t	*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	trace_xfs_buf_item_relse(bp, _RET_IP_);
+>  	ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
+> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+> index 9690ce62c9a7..0febfbbf6ba9 100644
+> --- a/fs/xfs/xfs_buf_item.h
+> +++ b/fs/xfs/xfs_buf_item.h
+> @@ -50,7 +50,7 @@ struct xfs_buf_log_item;
+>   * needed to log buffers.  It tracks how many times the lock has been
+>   * locked, and which 128 byte chunks of the buffer are dirty.
+>   */
+> -typedef struct xfs_buf_log_item {
+> +struct xfs_buf_log_item {
+>  	xfs_log_item_t		bli_item;	/* common item structure */
+>  	struct xfs_buf		*bli_buf;	/* real buffer pointer */
+>  	unsigned int		bli_flags;	/* misc flags */
+> @@ -59,11 +59,11 @@ typedef struct xfs_buf_log_item {
+>  	int			bli_format_count;	/* count of headers */
+>  	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
+>  	struct xfs_buf_log_format __bli_format;	/* embedded in-log header */
+> -} xfs_buf_log_item_t;
+> +};
+>  
+>  int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+>  void	xfs_buf_item_relse(struct xfs_buf *);
+> -void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
+> +void	xfs_buf_item_log(struct xfs_buf_log_item *, uint, uint);
+>  bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
+>  void	xfs_buf_attach_iodone(struct xfs_buf *,
+>  			      void(*)(struct xfs_buf *, xfs_log_item_t *),
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 3ba7a96a8abd..74563cd2970c 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -139,7 +139,7 @@ xfs_trans_get_buf_map(
+>  	xfs_buf_flags_t		flags)
+>  {
+>  	xfs_buf_t		*bp;
+> -	xfs_buf_log_item_t	*bip;
+> +	struct xfs_buf_log_item	*bip;
+>  
+>  	if (!tp)
+>  		return xfs_buf_get_map(target, map, nmaps, flags);
+> @@ -188,12 +188,13 @@ xfs_trans_get_buf_map(
+>   * mount structure.
+>   */
+>  xfs_buf_t *
+> -xfs_trans_getsb(xfs_trans_t	*tp,
+> -		struct xfs_mount *mp,
+> -		int		flags)
+> +xfs_trans_getsb(
+> +	xfs_trans_t		*tp,
+> +	struct xfs_mount	*mp,
+> +	int			flags)
+>  {
+>  	xfs_buf_t		*bp;
+> -	xfs_buf_log_item_t	*bip;
+> +	struct xfs_buf_log_item	*bip;
+>  
+>  	/*
+>  	 * Default to just trying to lock the superblock buffer
+> @@ -352,10 +353,11 @@ xfs_trans_read_buf_map(
+>   * brelse() call.
+>   */
+>  void
+> -xfs_trans_brelse(xfs_trans_t	*tp,
+> -		 xfs_buf_t	*bp)
+> +xfs_trans_brelse(
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip;
+> +	struct xfs_buf_log_item	*bip;
+>  	int			freed;
+>  
+>  	/*
+> @@ -456,10 +458,11 @@ xfs_trans_brelse(xfs_trans_t	*tp,
+>   */
+>  /* ARGSUSED */
+>  void
+> -xfs_trans_bhold(xfs_trans_t	*tp,
+> -		xfs_buf_t	*bp)
+> +xfs_trans_bhold(
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+> @@ -476,10 +479,11 @@ xfs_trans_bhold(xfs_trans_t	*tp,
+>   * for this transaction.
+>   */
+>  void
+> -xfs_trans_bhold_release(xfs_trans_t	*tp,
+> -			xfs_buf_t	*bp)
+> +xfs_trans_bhold_release(
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+> @@ -600,10 +604,10 @@ xfs_trans_log_buf(
+>   */
+>  void
+>  xfs_trans_binval(
+> -	xfs_trans_t	*tp,
+> -	xfs_buf_t	*bp)
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  	int			i;
+>  
+>  	ASSERT(bp->b_transp == tp);
+> @@ -655,10 +659,10 @@ xfs_trans_binval(
+>   */
+>  void
+>  xfs_trans_inode_buf(
+> -	xfs_trans_t	*tp,
+> -	xfs_buf_t	*bp)
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+> @@ -679,10 +683,10 @@ xfs_trans_inode_buf(
+>   */
+>  void
+>  xfs_trans_stale_inode_buf(
+> -	xfs_trans_t	*tp,
+> -	xfs_buf_t	*bp)
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+> @@ -704,10 +708,10 @@ xfs_trans_stale_inode_buf(
+>  /* ARGSUSED */
+>  void
+>  xfs_trans_inode_alloc_buf(
+> -	xfs_trans_t	*tp,
+> -	xfs_buf_t	*bp)
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+>  {
+> -	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+> @@ -797,9 +801,9 @@ xfs_trans_buf_copy_type(
+>  /* ARGSUSED */
+>  void
+>  xfs_trans_dquot_buf(
+> -	xfs_trans_t	*tp,
+> -	xfs_buf_t	*bp,
+> -	uint		type)
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp,
+> +	uint			type)
+>  {
+>  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
