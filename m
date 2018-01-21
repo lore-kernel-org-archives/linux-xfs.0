@@ -1,91 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:38966 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751116AbeAWIju (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 03:39:50 -0500
-Received: by mail-wr0-f195.google.com with SMTP id z48so11548336wrz.6
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 00:39:49 -0800 (PST)
-Date: Tue, 23 Jan 2018 09:39:46 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 0/4] Buffer's log item refactoring
-Message-ID: <20180123083946.3hmonxlsoihasj2n@odin.usersys.redhat.com>
-References: <20180119140847.22934-1-cmaiolino@redhat.com>
- <20180119214341.GK25805@magnolia>
- <20180120045437.GN6304@dastard>
- <20180122113950.s5w6r6c67tgojh7p@odin.usersys.redhat.com>
- <20180122214226.GN25805@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:55430 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750711AbeAUFea (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jan 2018 00:34:30 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0L5VvnX187649
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:29 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2fmka9r33e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:29 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5YTpn021639
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:29 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0L5YTYr004070
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:29 GMT
+Subject: [PATCH 6/6] xfs: fix up cowextsz allocation shortfalls
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 20 Jan 2018 21:34:28 -0800
+Message-ID: <151651286833.28390.18061950413407971894.stgit@magnolia>
+In-Reply-To: <151651282961.28390.17944517354130397779.stgit@magnolia>
+References: <151651282961.28390.17944517354130397779.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180122214226.GN25805@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 22, 2018 at 01:42:26PM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 22, 2018 at 12:39:50PM +0100, Carlos Maiolino wrote:
-> > On Sat, Jan 20, 2018 at 03:54:37PM +1100, Dave Chinner wrote:
-> > > On Fri, Jan 19, 2018 at 01:43:41PM -0800, Darrick J. Wong wrote:
-> > > > On Fri, Jan 19, 2018 at 03:08:43PM +0100, Carlos Maiolino wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > A few time ago Christoph suggested to use list_head API to handle buffer's
-> > > > > log_item_list.
-> > > > > 
-> > > > > This patchset aims to split the current bp->b_fspriv field into a specific field
-> > > > > to hold the xfs_buf_log_item, and another to hold the list of log items attached
-> > > > > to the buffer (3rd patch), and finally replace the singly linked list
-> > > > > implementation by the list_head infra-structure (4th patch).
-> > > > > 
-> > > > > The first two patches are just a typedef removal of xfs_buf_log_item_t and
-> > > > > xfs_buf_t, I did while studying how all the buffer I/O mechanism works, I
-> > > > > thought since we plan to get rid of the typedefs in future, this might be
-> > > > > useful.
-> > > > > 
-> > > > > I can rebase the 3rd and 4th patch on top of current xfs tree if the typedef
-> > > > > removal patches are useless, you guys call.
-> > > > 
-> > > > Typedef removal seems useful... is this series based atop current for-next?
-> > > 
-> > 
-> > It was rebased on xfs/for-next.
-> > 
-> > > The reason we haven't done this sort of thing in the past is that it
-> > > causes problems for people with work under development that touches
-> > > the same code. Changes like this have knock-on effects, and they are
-> > > not necessary for the changes to the li_bio_list that the last two
-> > > patches provide.
-> > > 
-> > > e.g. This is going to cause me pain, because I've got lots of
-> > > modifications to xfs_buf related code pending in my dev tree. A
-> > > quick glance shows a >50% hunk conflict rate across all the changes
-> > > in my tree, and that's just the kernel side.  It's hard enough to
-> > > rebase deep patch stacks correctly without having to deal with the
-> > > noise introduced by this sort of tree-wide code cleanup....
-> > > 
-> > > The historic process is that we remove typedefs as we go, and when
-> > > there are relatively few of them left we can do a sweep. The
-> > > xfs_buf_log_item_t is at that threshold (only about 10 uses left).
-> > > 
-> > > However, there's ~150 xfs_buf_t references across the kernel code
-> > > base, and there's another 175 across the xfsprogs code base of which
-> > > only 40 are in the shared libxfs code (i.e. ~300 unique xfs_buf_t
-> > > references). IMO it's still used in far to much code to do a sweep
-> > > like this without making a lot of otherwise unnecessary work for
-> > > others...
-> > >
-> > 
-> > Ok, so I'll drop the typedef patches, well, should I drop both of them or just
-> > the xfs_buf_t? Since the xfs_buf_log_item_t has very few usages now.
-> 
-> I think it's fine to drop only the xfs_buf_t cleanup and resend with
-> the other cleanups.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks, I'll do that and hopefully send the V2 today yet
+In xfs_bmap_btalloc, we try using the CoW extent size hint to force
+allocations to align (offset-wise) to cowextsz granularity to reduce CoW
+fragmentation.  This works fine until we cannot satisfy the allocation
+with enough blocks to cover the requested range and the alignment hints.
+If this happens, return an unaligned region because if we don't the
+extent trim functions cause us to return a zero-length extent to iomap,
+which iomap doesn't catch and thus blows up.
 
-Cheers
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/iomap.c               |    2 +-
+ fs/xfs/libxfs/xfs_bmap.c |   21 +++++++++++++++++++--
+ 2 files changed, 20 insertions(+), 3 deletions(-)
 
--- 
-Carlos
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index e5de772..aec35a0 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -63,7 +63,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
+ 	if (ret)
+ 		return ret;
+-	if (WARN_ON(iomap.offset > pos))
++	if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0))
+ 		return -EIO;
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index ad0dc56..e64a499 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3480,8 +3480,20 @@ xfs_bmap_btalloc_filestreams(
+ static void
+ xfs_bmap_btalloc_cow(
+ 	struct xfs_bmalloca	*ap,
+-	struct xfs_alloc_arg	*args)
++	struct xfs_alloc_arg	*args,
++	xfs_fileoff_t		orig_offset,
++	xfs_extlen_t		orig_length)
+ {
++	/*
++	 * If we didn't get enough blocks to satisfy the cowextsize
++	 * aligned request, break the alignment and return whatever we
++	 * got; it's the best we can do.
++	 */
++	if (ap->length <= orig_length)
++		ap->offset = orig_offset;
++	else if (ap->offset + ap->length < orig_offset + orig_length)
++		ap->offset = orig_offset + orig_length - ap->length;
++
+ 	/* Filling a previously reserved extent; nothing to do here. */
+ 	if (ap->wasdel)
+ 		return;
+@@ -3520,6 +3532,8 @@ xfs_bmap_btalloc(
+ 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+ 	xfs_agnumber_t	ag;
+ 	xfs_alloc_arg_t	args;
++	xfs_fileoff_t	orig_offset;
++	xfs_extlen_t	orig_length;
+ 	xfs_extlen_t	blen;
+ 	xfs_extlen_t	nextminlen = 0;
+ 	int		nullfb;		/* true if ap->firstblock isn't set */
+@@ -3529,6 +3543,8 @@ xfs_bmap_btalloc(
+ 	int		stripe_align;
+ 
+ 	ASSERT(ap->length);
++	orig_offset = ap->offset;
++	orig_length = ap->length;
+ 
+ 	mp = ap->ip->i_mount;
+ 
+@@ -3745,7 +3761,8 @@ xfs_bmap_btalloc(
+ 		ASSERT(nullfb || fb_agno <= args.agno);
+ 		ap->length = args.len;
+ 		if (ap->flags & XFS_BMAPI_COWFORK) {
+-			xfs_bmap_btalloc_cow(ap, &args);
++			xfs_bmap_btalloc_cow(ap, &args, orig_offset,
++					orig_length);
+ 		} else {
+ 			ap->ip->i_d.di_nblocks += args.len;
+ 			xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+
