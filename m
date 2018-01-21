@@ -1,146 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46410 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750757AbeASEjI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Jan 2018 23:39:08 -0500
-Date: Fri, 19 Jan 2018 12:39:06 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v4 2/3] xfs/realtime: Default rtinherit=1, add
- _require_no_rtinherit function
-Message-ID: <20180119043906.GW3102@eguan.usersys.redhat.com>
-References: <20180112041619.540900-1-rwareing@fb.com>
- <20180112041619.540900-3-rwareing@fb.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:46916 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750711AbeAUFeM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jan 2018 00:34:12 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0L5WjV3076740
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:12 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2fmkcy02tw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:12 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5YBOq021362
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:11 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0L5YAfO005084
+        for <linux-xfs@vger.kernel.org>; Sun, 21 Jan 2018 05:34:10 GMT
+Subject: [PATCH 3/6] xfs: call xfs_qm_dqattach before performing reflink
+ operations
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 20 Jan 2018 21:34:10 -0800
+Message-ID: <151651284994.28390.7445163994259507169.stgit@magnolia>
+In-Reply-To: <151651282961.28390.17944517354130397779.stgit@magnolia>
+References: <151651282961.28390.17944517354130397779.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180112041619.540900-3-rwareing@fb.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Richard Wareing <rwareing@fb.com>
-Cc: fstests@vger.kernel.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 11, 2018 at 08:16:18PM -0800, Richard Wareing wrote:
-> To better exercise the data path code of realtime subvolumes, we will
-> set rtinherit=1 during mkfs calls.  For tests which this is not desired
-> we introduce a _require_no_rtinherit function to opt out of this
-> behavior.
-> 
-> Signed-off-by: Richard Wareing <rwareing@fb.com>
-> ---
-> Changes since v3:
-> * XFS FS check in _require_no_rtinherit
-> * Fixed comment for _require_no_rtinherit to reflect (reworked) function
-> 
-> Changes since v2:
-> * Removed use of RT_INHERT, instead we now simply bail from the test.  Users
->   will have to create two separate configs for realtime one with rtinherit=1
->   in the mkfs options, one without and do separate runs to get full test
->   coverage.
-> * Added comments explaining reasons for _require_no_rtinherit declarations
-> 
-> Changes since v1:
-> * None
-> 
->  common/rc         | 10 ++++++++++
->  tests/generic/250 |  3 +++
->  tests/generic/252 |  3 +++
->  tests/generic/441 |  3 +++
->  tests/xfs/170     |  1 +
->  5 files changed, 20 insertions(+)
-> 
-> diff --git a/common/rc b/common/rc
-> index 76f9d69..cceabce 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -33,6 +33,16 @@ BC=$(which bc 2> /dev/null) || BC=
->  VALID_TEST_ID="[0-9]\{3\}"
->  VALID_TEST_NAME="$VALID_TEST_ID-\?[[:alnum:]-]*"
->  
-> +# Some tests are not relevant or functional when testing XFS realtime
-> +# subvolumes along with the rtinherit=1 mkfs option.  In these cases,
-> +# this test will opt-out of the test.
-> +_require_no_rtinherit()
-> +{
-> +  [ "$FSTYP" = "xfs" ] && echo "$MKFS_OPTIONS" | 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Trailing whitespace in above line :)
+Ensure that we've attached all the necessary dquots before performing
+reflink operations so that quota accounting is accurate.
 
-> +    egrep -q "rtinherit([^=]|=1)" && \
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_reflink.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-Hmm, this works with "-drtinherit=1" and "-drtinherit,<other opts>" but
-fails to detect the "-d rtinherit" case, because the regexp expects some
-character after "rtinherit". I think this change could fix it:
 
--   egrep -q "rtinherit([^=]|=1)" && \
-+   egrep -q "rtinherit([^=]|=1|$)" && \
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 5d1ff5a..947d0637 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -54,6 +54,7 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag_resv.h"
++#include "xfs_qm.h"
+ 
+ /*
+  * Copy on Write of Shared Blocks
+@@ -282,6 +283,10 @@ xfs_reflink_reserve_cow(
+ 	 * tree.
+ 	 */
+ 
++	error = xfs_qm_dqattach_locked(ip, 0);
++	if (error)
++		return error;
++
+ 	if (!xfs_iext_lookup_extent(ip, ifp, imap->br_startoff, &icur, &got))
+ 		eof = true;
+ 	if (!eof && got.br_startoff <= imap->br_startoff) {
+@@ -396,6 +401,10 @@ xfs_reflink_allocate_cow(
+ 	ASSERT(xfs_is_reflink_inode(ip));
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 
++	error = xfs_qm_dqattach_locked(ip, 0);
++	if (error)
++		return error;
++
+ 	/*
+ 	 * Even if the extent is not shared we might have a preallocation for
+ 	 * it in the COW fork.  If so use it.
+@@ -1356,6 +1365,14 @@ xfs_reflink_remap_range(
+ 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+ 		goto out_unlock;
+ 
++	/* Attach dquots to both inodes */
++	ret = xfs_qm_dqattach(src, 0);
++	if (ret)
++		goto out_unlock;
++	ret = xfs_qm_dqattach(dest, 0);
++	if (ret)
++		goto out_unlock;
++
+ 	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
+ 			&len, is_dedupe);
+ 	if (ret <= 0)
 
-If this looks ok to you, I can fix it on commit (along with the
-whitespace issue).
-
-Thanks,
-Eryu
-
-> +    _notrun "rtinherit mkfs option is not supported by this test."
-> +}
-> +
->  _require_math()
->  {
->  	if [ -z "$BC" ]; then
-> diff --git a/tests/generic/250 b/tests/generic/250
-> index 3c4fe6d..a8fd97e 100755
-> --- a/tests/generic/250
-> +++ b/tests/generic/250
-> @@ -48,6 +48,9 @@ _require_scratch
->  _require_dm_target error
->  _require_xfs_io_command "falloc"
->  _require_odirect
-> +# This test uses "dm" without taking into account the data could be on
-> +# realtime subvolume, thus the test will fail with rtinherit=1
-> +_require_no_rtinherit
->  
->  rm -f $seqres.full
->  
-> diff --git a/tests/generic/252 b/tests/generic/252
-> index ffedd56..b506d59 100755
-> --- a/tests/generic/252
-> +++ b/tests/generic/252
-> @@ -47,6 +47,9 @@ _supported_os Linux
->  _require_scratch
->  _require_dm_target error
->  _require_xfs_io_command "falloc"
-> +# This test uses "dm" without taking into account the data could be on
-> +# realtime subvolume, thus the test will fail with rtinherit=1
-> +_require_no_rtinherit
->  _require_aiodio "aiocp"
->  AIO_TEST="src/aio-dio-regress/aiocp"
->  
-> diff --git a/tests/generic/441 b/tests/generic/441
-> index 075d877..5fbfece 100755
-> --- a/tests/generic/441
-> +++ b/tests/generic/441
-> @@ -47,6 +47,9 @@ _cleanup()
->  # real QA test starts here
->  _supported_os Linux
->  _require_scratch
-> +# This test uses "dm" without taking into account the data could be on
-> +# realtime subvolume, thus the test will fail with rtinherit=1
-> +_require_no_rtinherit
->  
->  # Generally, we want to avoid journal errors on the extended testcase. Only
->  # unset the -s flag if we have a logdev
-> diff --git a/tests/xfs/170 b/tests/xfs/170
-> index c5ae8e4..6deef1b 100755
-> --- a/tests/xfs/170
-> +++ b/tests/xfs/170
-> @@ -50,6 +50,7 @@ _supported_fs xfs
->  _supported_os Linux
->  
->  _require_scratch
-> +_require_no_rtinherit
->  
->  _check_filestreams_support || _notrun "filestreams not available"
->  
-> -- 
-> 2.9.5
-> 
