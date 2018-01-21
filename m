@@ -1,272 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50182 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753031AbeAQWGA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:00 -0500
-Subject: [PATCH 06/29] xfs_scrub: create an abstraction for a block device
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:02:29 -0800
-Message-ID: <151622654967.31925.8684235838391468951.stgit@magnolia>
-In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
-References: <151622651142.31925.4179778330985746435.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail.kernel.org ([198.145.29.99]:48602 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750847AbeAUHYE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 21 Jan 2018 02:24:04 -0500
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH 1/2] fstests: move expunge test into a helper
+Date: Sat, 20 Jan 2018 23:24:00 -0800
+Message-Id: <20180121072401.1047-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Move the expunge test into a helper.
 
-Create an abstraction to handle all of our low level disk operations.
-We'll eventually use it to bind to a fs mount point and block device.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- scrub/Makefile |    2 +
- scrub/disk.c   |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/disk.h   |   39 +++++++++++++
- 3 files changed, 209 insertions(+)
- create mode 100644 scrub/disk.c
- create mode 100644 scrub/disk.h
+ check | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
-
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 097ec84..c3a9986 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -17,10 +17,12 @@ endif	# scrub_prereqs
+diff --git a/check b/check
+index f8db3cd6dfab..0ba71d5d2005 100755
+--- a/check
++++ b/check
+@@ -485,6 +485,18 @@ _check_filesystems()
+ 	fi
+ }
  
- HFILES = \
- common.h \
-+disk.h \
- xfs_scrub.h
++_expunge_test()
++{
++	TEST_ID="$1"
++	if [ -s $tmp.xlist ]; then
++		if grep $TEST_ID $tmp.xlist > /dev/null 2>&1 ; then
++			echo "       [expunged]"
++			return 1
++		fi
++	fi
++	return 0
++}
++
+ _prepare_test_list
  
- CFILES = \
- common.c \
-+disk.c \
- xfs_scrub.c
+ if $OPTIONS_HAVE_SECTIONS; then
+@@ -672,11 +684,9 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 		rm -f $seqres.out.bad
  
- LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
-diff --git a/scrub/disk.c b/scrub/disk.c
-new file mode 100644
-index 0000000..fe9dff7
---- /dev/null
-+++ b/scrub/disk.c
-@@ -0,0 +1,168 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <stdbool.h>
-+#include <unistd.h>
-+#include <fcntl.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/ioctl.h>
-+#include <sys/statvfs.h>
-+#include <sys/vfs.h>
-+#include <linux/fs.h>
-+#include "platform_defs.h"
-+#include "libfrog.h"
-+#include "xfs_scrub.h"
-+#include "disk.h"
-+
-+#ifndef BLKROTATIONAL
-+# define BLKROTATIONAL	_IO(0x12, 126)
-+#endif
-+
-+/*
-+ * Disk Abstraction
-+ *
-+ * These routines help us to discover the geometry of a block device,
-+ * estimate the amount of concurrent IOs that we can send to it, and
-+ * abstract the process of performing read verification of disk blocks.
-+ */
-+
-+/* Figure out how many disk heads are available. */
-+static unsigned int
-+__disk_heads(
-+	struct disk		*disk)
-+{
-+	int			iomin;
-+	int			ioopt;
-+	unsigned short		rot;
-+	int			error;
-+
-+	/* If it's not a block device, throw all the CPUs at it. */
-+	if (!S_ISBLK(disk->d_sb.st_mode))
-+		return nproc;
-+
-+	/* Non-rotational device?  Throw all the CPUs at the problem. */
-+	rot = 1;
-+	error = ioctl(disk->d_fd, BLKROTATIONAL, &rot);
-+	if (error == 0 && rot == 0)
-+		return nproc;
-+
-+	/*
-+	 * Sometimes we can infer the number of devices from the
-+	 * min/optimal IO sizes.
-+	 */
-+	iomin = ioopt = 0;
-+	if (ioctl(disk->d_fd, BLKIOMIN, &iomin) == 0 &&
-+	    ioctl(disk->d_fd, BLKIOOPT, &ioopt) == 0 &&
-+	    iomin > 0 && ioopt > 0) {
-+		return min(nproc, max(1, ioopt / iomin));
-+	}
-+
-+	/* Rotating device?  I guess? */
-+	return 2;
-+}
-+
-+/* Figure out how many disk heads are available. */
-+unsigned int
-+disk_heads(
-+	struct disk		*disk)
-+{
-+	if (nr_threads)
-+		return nr_threads;
-+	return __disk_heads(disk);
-+}
-+
-+/* Open a disk device and discover its geometry. */
-+struct disk *
-+disk_open(
-+	const char		*pathname)
-+{
-+	struct disk		*disk;
-+	int			lba_sz;
-+	int			error;
-+
-+	disk = calloc(1, sizeof(struct disk));
-+	if (!disk)
-+		return NULL;
-+
-+	disk->d_fd = open(pathname, O_RDONLY | O_DIRECT | O_NOATIME);
-+	if (disk->d_fd < 0)
-+		goto out_free;
-+
-+	/* Try to get LBA size. */
-+	error = ioctl(disk->d_fd, BLKSSZGET, &lba_sz);
-+	if (error)
-+		lba_sz = 512;
-+	disk->d_lbalog = log2_roundup(lba_sz);
-+
-+	/* Obtain disk's stat info. */
-+	error = fstat(disk->d_fd, &disk->d_sb);
-+	if (error)
-+		goto out_close;
-+
-+	/* Determine bdev size, block size, and offset. */
-+	if (S_ISBLK(disk->d_sb.st_mode)) {
-+		error = ioctl(disk->d_fd, BLKGETSIZE64, &disk->d_size);
-+		if (error)
-+			disk->d_size = 0;
-+		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
-+		if (error)
-+			disk->d_blksize = 0;
-+		disk->d_start = 0;
-+	} else {
-+		disk->d_size = disk->d_sb.st_size;
-+		disk->d_blksize = disk->d_sb.st_blksize;
-+		disk->d_start = 0;
-+	}
-+
-+	return disk;
-+out_close:
-+	close(disk->d_fd);
-+out_free:
-+	free(disk);
-+	return NULL;
-+}
-+
-+/* Close a disk device. */
-+int
-+disk_close(
-+	struct disk		*disk)
-+{
-+	int			error = 0;
-+
-+	if (disk->d_fd >= 0)
-+		error = close(disk->d_fd);
-+	disk->d_fd = -1;
-+	free(disk);
-+	return error;
-+}
-+
-+/* Read-verify an extent of a disk device. */
-+ssize_t
-+disk_read_verify(
-+	struct disk		*disk,
-+	void			*buf,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	return pread(disk->d_fd, buf, length, start);
-+}
-diff --git a/scrub/disk.h b/scrub/disk.h
-new file mode 100644
-index 0000000..834678e
---- /dev/null
-+++ b/scrub/disk.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_DISK_H_
-+#define XFS_SCRUB_DISK_H_
-+
-+struct disk {
-+	struct stat	d_sb;
-+	int		d_fd;
-+	int		d_lbalog;
-+	unsigned int	d_flags;
-+	unsigned int	d_blksize;	/* bytes */
-+	uint64_t	d_size;		/* bytes */
-+	uint64_t	d_start;	/* bytes */
-+};
-+
-+unsigned int disk_heads(struct disk *disk);
-+struct disk *disk_open(const char *pathname);
-+int disk_close(struct disk *disk);
-+ssize_t disk_read_verify(struct disk *disk, void *buf, uint64_t startblock,
-+		uint64_t blockcount);
-+
-+#endif /* XFS_SCRUB_DISK_H_ */
+ 		# check if we really should run it
+-		if [ -s $tmp.xlist ]; then
+-			if grep $seqnum $tmp.xlist > /dev/null 2>&1 ; then
+-				echo "       [expunged]"
+-				continue
+-			fi
++		_expunge_test $seqnum
++		if [ $? -eq 1 ]; then
++			continue
+ 		fi
+ 
+ 		# slashes now in names, sed barfs on them so use grep
+-- 
+2.15.0
 
