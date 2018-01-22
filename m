@@ -1,421 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57778 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753738AbeAQWFB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:05:01 -0500
-Subject: [PATCH 27/29] xfs_scrub: integrate services with systemd
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:04:43 -0800
-Message-ID: <151622668376.31925.11115543396206091025.stgit@magnolia>
-In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
-References: <151622651142.31925.4179778330985746435.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:41126 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751057AbeAVOGb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Jan 2018 09:06:31 -0500
+Date: Mon, 22 Jan 2018 09:06:29 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/5] xfs: introduce 'fixed agfl' feature
+Message-ID: <20180122140629.GA26131@bfoster.bfoster>
+References: <151623403113.4727.2418454911805718650.stgit@magnolia>
+ <151623404388.4727.13556729503051957189.stgit@magnolia>
+ <20180118002940.GF25805@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180118002940.GF25805@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 17, 2018 at 04:29:40PM -0800, Darrick J. Wong wrote:
+> On Wed, Jan 17, 2018 at 04:07:23PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Introduce a new rocompat flag "FIXED_AGFL" to indicate that we've
+> > scanned and verified that the AGFL does not hit the troublesome last
+> > element of the AGFL array, and update xfs_agfl_size to its new
+> > definition based on this feature.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_format.h |    7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index bb42a11..3befc92f 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -464,6 +464,7 @@ xfs_sb_has_compat_feature(
+> >  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+> >  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+> >  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+> > +#define XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL (1 << 3)	/* fixed agfl */
+> 
+> (echoing comments made on irc by myself & Dave)
+> 
+> It suddenly occurred to me that we could do without this rocompat
+> feature if we simply don't allow wrapped AGFLs anymore.  As soon as
+> fllast points to that last agfl_bno slot, we simply move the whole list
+> back to the start of the agfl block (i.e. flfirst = 0) and relog the
+> whole agfl.  We still have problems if the admin mounts with an
+> unpatched kernel, gets the agfl to wrap, and then then moves to another
+> unpatched kernel, but at least the up-to-date kernels can just fix the
+> problem and move on.
+> 
 
-Create a systemd service unit so that we can run the online scrubber
-under systemd with (somewhat) appropriate containment.
+Eh, I'm not a huge fan of modifying AGFL behavior to deal with a padding
+bug. It strikes me as overkill and undue risk (depending on how the code
+would have to look I suppose). 
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- .gitignore                       |    4 +++
- configure.ac                     |   15 +++++++++++
- include/builddefs.in             |    3 ++
- scrub/Makefile                   |   32 ++++++++++++++++++++++-
- scrub/xfs_scrub.c                |   25 ++++++++++++++++++
- scrub/xfs_scrub@.service.in      |   18 +++++++++++++
- scrub/xfs_scrub_all.cron.in      |    2 +
- scrub/xfs_scrub_all.in           |   53 ++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub_all.service.in   |    8 ++++++
- scrub/xfs_scrub_all.timer        |   11 ++++++++
- scrub/xfs_scrub_fail             |   26 +++++++++++++++++++
- scrub/xfs_scrub_fail@.service.in |   10 +++++++
- 12 files changed, 206 insertions(+), 1 deletion(-)
- create mode 100644 scrub/xfs_scrub@.service.in
- create mode 100644 scrub/xfs_scrub_all.cron.in
- create mode 100644 scrub/xfs_scrub_all.service.in
- create mode 100644 scrub/xfs_scrub_all.timer
- create mode 100755 scrub/xfs_scrub_fail
- create mode 100644 scrub/xfs_scrub_fail@.service.in
+> I guess the nice thing about the rocompat feature is that the unpatched
+> kernels won't mount, instead of blowing up randomly some time in the
+> future and the user's antiquarian xfsprogs also refuses to touch it.
+> 
+> We could also only set the rocompat flag if we actually had to fix
+> something (vs. now where we always set it) though I wonder if that just
+> makes the "I reverted kernels and now it blew up wtf?!" even more
+> sporadic?  Hm.  Maybe we want that, since either is a rude awakening &
+> making the rude wakeup less frequent isn't a bad thing.
+> 
+> Ugh.  Maybe bikeshed now? :)
+> 
 
+Any reason we couldn't do something like force a read-only mount for
+affected filesystems with a notice/msg to run xfs_repair (I assume we've
+already backported fixes to repair/stable kernels to help prevent
+reoccurence of this..)? Then we'd at least only affect users who are
+affected by the problem, and IIUC it sounds like a corruption error is
+imminent for those particular users as it is.
 
-diff --git a/.gitignore b/.gitignore
-index a3db640..d887451 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -69,6 +69,10 @@ cscope.*
- /rtcp/xfs_rtcp
- /spaceman/xfs_spaceman
- /scrub/xfs_scrub
-+/scrub/xfs_scrub@.service
-+/scrub/xfs_scrub_all
-+/scrub/xfs_scrub_all.service
-+/scrub/xfs_scrub_fail@.service
- 
- # generated crc files
- /libxfs/crc32selftest
-diff --git a/configure.ac b/configure.ac
-index bb032e5..f7840db 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -121,6 +121,21 @@ esac
- AC_SUBST([root_sbindir])
- AC_SUBST([root_libdir])
- 
-+# Where do systemd services go?
-+pkg_systemdsystemunitdir="$(pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)"
-+case "${pkg_systemdsystemunitdir}" in
-+"")
-+	systemdsystemunitdir=""
-+	have_systemd=no
-+	;;
-+*)
-+	systemdsystemunitdir="${pkg_systemdsystemunitdir}"
-+	have_systemd=yes
-+	;;
-+esac
-+AC_SUBST([have_systemd])
-+AC_SUBST([systemdsystemunitdir])
-+
- # Find localized files.  Don't descend into any "dot directories"
- # (like .git or .pc from quilt).  Strangely, the "-print" argument
- # to "find" is required, to avoid including such directories in the
-diff --git a/include/builddefs.in b/include/builddefs.in
-index d44faf9..4b4bf41 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -128,6 +128,9 @@ HAVE_FSTATAT = @have_fstatat@
- HAVE_SG_IO = @have_sg_io@
- HAVE_HDIO_GETGEO = @have_hdio_getgeo@
- 
-+HAVE_SYSTEMD = @have_systemd@
-+SYSTEMDSYSTEMUNITDIR = @systemdsystemunitdir@
-+
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
- 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index ca6dab0..597b2eb 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -15,6 +15,16 @@ LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
- XFS_SCRUB_ALL_PROG = xfs_scrub_all
- XFS_SCRUB_ARGS = -b -n
-+ifeq ($(HAVE_SYSTEMD),yes)
-+INSTALL_SCRUB += install-systemd
-+SYSTEMDSERVICES = xfs_scrub@.service xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
-+endif
-+CRONSERVICES = xfs_scrub_all.cron
-+CROND_DIR = /etc/cron.d
-+
-+# Disable all the crontabs for now
-+CROND_DIR = $(PKG_LIB_DIR)/$(PKG_NAME)
-+
- endif	# scrub_prereqs
- 
- HFILES = \
-@@ -84,7 +94,8 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
- LCFLAGS += -DHAVE_HDIO_GETGEO
- endif
- 
--default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
-+default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(SYSTEMDSERVICES) \
-+	$(CRONSERVICES)
- 
- xfs_scrub_all: xfs_scrub_all.in
- 	@echo "    [SED]    $@"
-@@ -98,10 +109,29 @@ include $(BUILDRULES)
- 
- install: $(INSTALL_SCRUB)
- 
-+%.service: %.service.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
-+		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
-+		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
-+
-+%.cron: %.cron.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" < $< > $@
-+
-+install-systemd: default
-+	$(INSTALL) -m 755 -d $(SYSTEMDSYSTEMUNITDIR)
-+	$(INSTALL) -m 644 $(SYSTEMDSERVICES) $(SYSTEMDSYSTEMUNITDIR)
-+	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/$(PKG_NAME)
-+	$(INSTALL) -m 755 xfs_scrub_fail $(PKG_LIB_DIR)/$(PKG_NAME)
-+
- install-scrub: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
- 	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
-+	$(INSTALL) -m 755 -d $(CROND_DIR)
-+	$(INSTALL) -m 644 $(CRONSERVICES) $(CROND_DIR)
- 
- install-dev:
- 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index baf8760..a8d0927 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -154,6 +154,12 @@ bool				want_fstrim = true;
- bool				stderr_isatty;
- bool				stdout_isatty;
- 
-+/*
-+ * If we are running as a service, we need to be careful about what
-+ * error codes we return to the calling process.
-+ */
-+static bool			is_service;
-+
- static void __attribute__((noreturn))
- usage(void)
- {
-@@ -617,6 +623,9 @@ _("Only one of the options -n or -y may be specified.\n"));
- 	if (stdout_isatty && !progress_fp)
- 		progress_fp = fdopen(1, "w+");
- 
-+	if (getenv("SERVICE_MODE"))
-+		is_service = true;
-+
- 	/* Find the mount record for the passed-in argument. */
- 	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
- 		fprintf(stderr,
-@@ -717,5 +726,21 @@ _("%s: %llu warnings found.\n"),
- 	free(ctx.blkdev);
- 	free(ctx.mntpoint);
- 
-+	/*
-+	 * If we're running as a service, bump return code up by 150 to
-+	 * avoid conflicting with (sysvinit) service return codes.
-+	 */
-+	if (is_service) {
-+		/*
-+		 * journald queries /proc as part of taking in log
-+		 * messages; it uses this information to associate the
-+		 * message with systemd units, etc.  This races with
-+		 * process exit, so delay that a couple of seconds so
-+		 * that we capture the summary outputs in the job log.
-+		 */
-+		sleep(2);
-+		if (ret)
-+			ret += 150;
-+	}
- 	return ret;
- }
-diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-new file mode 100644
-index 0000000..6b6992d
---- /dev/null
-+++ b/scrub/xfs_scrub@.service.in
-@@ -0,0 +1,18 @@
-+[Unit]
-+Description=Online XFS Metadata Check for %I
-+OnFailure=xfs_scrub_fail@%i.service
-+
-+[Service]
-+Type=oneshot
-+WorkingDirectory=%I
-+PrivateNetwork=true
-+ProtectSystem=full
-+ProtectHome=read-only
-+PrivateTmp=yes
-+AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-+NoNewPrivileges=yes
-+User=nobody
-+IOSchedulingClass=idle
-+CPUSchedulingPolicy=idle
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub @scrub_args@ %I
-diff --git a/scrub/xfs_scrub_all.cron.in b/scrub/xfs_scrub_all.cron.in
-new file mode 100644
-index 0000000..ec82236
---- /dev/null
-+++ b/scrub/xfs_scrub_all.cron.in
-@@ -0,0 +1,2 @@
-+SERVICE_MODE=1
-+10 3 * * 0 root test -e /run/systemd/system || @sbindir@/xfs_scrub_all
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 7738644..27cdc32 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -25,10 +25,19 @@ import json
- import threading
- import time
- import sys
-+import os
- 
- retcode = 0
- terminate = False
- 
-+def DEVNULL():
-+	'''Return /dev/null in subprocess writable format.'''
-+	try:
-+		from subprocess import DEVNULL
-+		return DEVNULL
-+	except ImportError:
-+		return open(os.devnull, 'wb')
-+
- def find_mounts():
- 	'''Map mountpoints to physical disks.'''
- 
-@@ -55,6 +64,13 @@ def find_mounts():
- 				fs[mnt] = set([lastdisk])
- 	return fs
- 
-+def kill_systemd(unit, proc):
-+	'''Kill systemd unit.'''
-+	proc.terminate()
-+	cmd=['systemctl', 'stop', unit]
-+	x = subprocess.Popen(cmd)
-+	x.wait()
-+
- def run_killable(cmd, stdout, killfuncs, kill_fn):
- 	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
- 	try:
-@@ -81,6 +97,19 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 		if terminate:
- 			return
- 
-+		# Try it the systemd way
-+		cmd=['systemctl', 'start', 'xfs_scrub@%s' % mnt]
-+		ret = run_killable(cmd, DEVNULL(), killfuncs, \
-+				lambda proc: kill_systemd('xfs_scrub@%s' % mnt, proc))
-+		if ret == 0 or ret == 1:
-+			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
-+			sys.stdout.flush()
-+			retcode |= ret
-+			return
-+
-+		if terminate:
-+			return
-+
- 		# Invoke xfs_scrub manually
- 		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
- 		ret = run_killable(cmd, None, killfuncs, \
-@@ -112,6 +141,17 @@ def main():
- 
- 	fs = find_mounts()
- 
-+	# Tail the journal if we ourselves aren't a service...
-+	journalthread = None
-+	if 'SERVICE_MODE' not in os.environ:
-+		try:
-+			cmd=['journalctl', '--no-pager', '-q', '-S', 'now', \
-+					'-f', '-u', 'xfs_scrub@*', '-o', \
-+					'cat']
-+			journalthread = subprocess.Popen(cmd)
-+		except:
-+			pass
-+
- 	# Schedule scrub jobs...
- 	running_devs = set()
- 	killfuncs = set()
-@@ -148,6 +188,19 @@ def main():
- 			fs = []
- 		cond.release()
- 
-+	if journalthread is not None:
-+		journalthread.terminate()
-+
-+	# journald queries /proc as part of taking in log
-+	# messages; it uses this information to associate the
-+	# message with systemd units, etc.  This races with
-+	# process exit, so delay that a couple of seconds so
-+	# that we capture the summary outputs in the job log.
-+	if 'SERVICE_MODE' in os.environ:
-+		time.sleep(2)
-+		if retcode:
-+			retcode += 150
-+
- 	sys.exit(retcode)
- 
- if __name__ == '__main__':
-diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
-new file mode 100644
-index 0000000..683804e
---- /dev/null
-+++ b/scrub/xfs_scrub_all.service.in
-@@ -0,0 +1,8 @@
-+[Unit]
-+Description=Online XFS Metadata Check for All Filesystems
-+ConditionACPower=true
-+
-+[Service]
-+Type=oneshot
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub_all
-diff --git a/scrub/xfs_scrub_all.timer b/scrub/xfs_scrub_all.timer
-new file mode 100644
-index 0000000..2e4a33b
---- /dev/null
-+++ b/scrub/xfs_scrub_all.timer
-@@ -0,0 +1,11 @@
-+[Unit]
-+Description=Periodic XFS Online Metadata Check for All Filesystems
-+
-+[Timer]
-+# Run on Sunday at 3:10am, to avoid running afoul of DST changes
-+OnCalendar=Sun *-*-* 03:10:00
-+RandomizedDelaySec=60
-+Persistent=true
-+
-+[Install]
-+WantedBy=timers.target
-diff --git a/scrub/xfs_scrub_fail b/scrub/xfs_scrub_fail
-new file mode 100755
-index 0000000..36dd50e
---- /dev/null
-+++ b/scrub/xfs_scrub_fail
-@@ -0,0 +1,26 @@
-+#!/bin/bash
-+
-+# Email logs of failed xfs_scrub unit runs
-+
-+mailer=/usr/sbin/sendmail
-+recipient="$1"
-+test -z "${recipient}" && exit 0
-+mntpoint="$2"
-+test -z "${mntpoint}" && exit 0
-+hostname="$(hostname -f 2>/dev/null)"
-+test -z "${hostname}" && hostname="${HOSTNAME}"
-+if [ ! -x "${mailer}" ]; then
-+	echo "${mailer}: Mailer program not found."
-+	exit 1
-+fi
-+
-+(cat << ENDL
-+To: $1
-+From: <xfs_scrub@${hostname}>
-+Subject: xfs_scrub failure on ${mntpoint}
-+
-+So sorry, the automatic xfs_scrub of ${mntpoint} on ${hostname} failed.
-+
-+A log of what happened follows:
-+ENDL
-+systemctl status --full --lines 4294967295 "xfs_scrub@${mntpoint}") | "${mailer}" -t -i
-diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
-new file mode 100644
-index 0000000..785f881
---- /dev/null
-+++ b/scrub/xfs_scrub_fail@.service.in
-@@ -0,0 +1,10 @@
-+[Unit]
-+Description=Online XFS Metadata Check Failure Reporting for %I
-+
-+[Service]
-+Type=oneshot
-+Environment=EMAIL_ADDR=root
-+ExecStart=@pkg_lib_dir@/@pkg_name@/xfs_scrub_fail "${EMAIL_ADDR}" %I
-+User=mail
-+Group=mail
-+SupplementaryGroups=systemd-journal
+Brian
 
+> --D
+> 
+> >  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+> >  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+> >  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> > @@ -566,6 +567,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+> >  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+> >  }
+> >  
+> > +static inline bool xfs_sb_version_hasfixedagfl(struct xfs_sb *sbp)
+> > +{
+> > +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> > +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL);
+> > +}
+> > +
+> >  /*
+> >   * end of superblock version macros
+> >   */
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
