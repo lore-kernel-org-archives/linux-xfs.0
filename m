@@ -1,63 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48602 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750847AbeAUHYE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 21 Jan 2018 02:24:04 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH 1/2] fstests: move expunge test into a helper
-Date: Sat, 20 Jan 2018 23:24:00 -0800
-Message-Id: <20180121072401.1047-1-mcgrof@kernel.org>
+Received: from mail-yb0-f176.google.com ([209.85.213.176]:44908 "EHLO
+        mail-yb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751189AbeAVU2x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jan 2018 15:28:53 -0500
+Received: by mail-yb0-f176.google.com with SMTP id z90so3743750ybh.11
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2018 12:28:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+0CQ228zZwk0XqR2a0fD49tbfZ=NHxsv=W=EScMU4u7Ng6F2w@mail.gmail.com>
+References: <CA+0CQ21AhCGcBdNo5RY4Q=oakNQO1S_jgHU2f-BdG-fL71ZyFw@mail.gmail.com>
+ <20180116075541.GO5602@magnolia> <CA+0CQ21tLBLFfnn_ngY-arVzXAOyZU1XSuDu9RAjAo6VfK2PoA@mail.gmail.com>
+ <CAOQ4uxgKonrPQLSaxhL5ok=NEVT9XAatTab4BsQt9tA7gNBJ2g@mail.gmail.com> <CA+0CQ228zZwk0XqR2a0fD49tbfZ=NHxsv=W=EScMU4u7Ng6F2w@mail.gmail.com>
+From: Austin Schuh <austin@peloton-tech.com>
+Date: Mon, 22 Jan 2018 12:28:32 -0800
+Message-ID: <CANGgnMb5JSxsSw725COJD3vcEZOdSt+RmJfKQVAVru4O-x-J9Q@mail.gmail.com>
+Subject: Re: Reproducible XFS filesystem artifacts
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Philipp Schrader <philipp@peloton-tech.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Alison Chaiken <alison@peloton-tech.com>, Theodore Tso <tytso@mit.edu>
 
-Move the expunge test into a helper.
+On Mon, Jan 22, 2018 at 11:45 AM, Philipp Schrader
+<philipp@peloton-tech.com> wrote:
+> On Tue, Jan 16, 2018 at 8:05 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+>> So I'm curious. Why xfs and fat and not, say, squashfs?
+>> https://reproducible-builds.org/events/athens2015/system-images/
+>
+> It's a good question. It's largely because of historical reasons
+> internally. We started with XFS on the first iteration of our product.
+> We fixed a few minor bugs and were overall really happy with
+> performance etc. Later down the line came the question of system
+> upgrades without breaking what we currently had. Anyway, so XFS is
+> where we're at today.
+>
+> That being said, for the future something like squashfs is definitely
+> a better choice. Thanks for the suggestion. I'll do more research on
+> that.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- check | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+Adding to the historical reasons list, we've got a lot of test time
+with XFS and CONFIG_PREEMPT_RT, and it's working well for us.  That's
+always very hard to quantify when making a decision whether or not to
+switch filesystems.
 
-diff --git a/check b/check
-index f8db3cd6dfab..0ba71d5d2005 100755
---- a/check
-+++ b/check
-@@ -485,6 +485,18 @@ _check_filesystems()
- 	fi
- }
- 
-+_expunge_test()
-+{
-+	TEST_ID="$1"
-+	if [ -s $tmp.xlist ]; then
-+		if grep $TEST_ID $tmp.xlist > /dev/null 2>&1 ; then
-+			echo "       [expunged]"
-+			return 1
-+		fi
-+	fi
-+	return 0
-+}
-+
- _prepare_test_list
- 
- if $OPTIONS_HAVE_SECTIONS; then
-@@ -672,11 +684,9 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 		rm -f $seqres.out.bad
- 
- 		# check if we really should run it
--		if [ -s $tmp.xlist ]; then
--			if grep $seqnum $tmp.xlist > /dev/null 2>&1 ; then
--				echo "       [expunged]"
--				continue
--			fi
-+		_expunge_test $seqnum
-+		if [ $? -eq 1 ]; then
-+			continue
- 		fi
- 
- 		# slashes now in names, sed barfs on them so use grep
--- 
-2.15.0
-
+Austin
