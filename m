@@ -1,80 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50578 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753208AbeARAHq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 19:07:46 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0I07Ttf036975
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:46 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2fjetj0dvw-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:49106 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751031AbeAVXZH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jan 2018 18:25:07 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0MNBrt8031488
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2018 23:25:06 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2fnrnag7dg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:46 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0I07jow013889
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2018 23:25:06 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0MNP5RB027921
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:45 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0I07jXu003506
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:45 GMT
-Subject: [PATCH 5/5] xfs: scrub should flag (and repair) unfixed agfls
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2018 23:25:05 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0MNP5qV007058
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jan 2018 23:25:05 GMT
+Date: Mon, 22 Jan 2018 15:25:04 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 16:07:43 -0800
-Message-ID: <151623406358.4727.1655021837392456302.stgit@magnolia>
-In-Reply-To: <151623403113.4727.2418454911805718650.stgit@magnolia>
-References: <151623403113.4727.2418454911805718650.stgit@magnolia>
+Subject: Re: [PATCH 0/6] xfs: reflink fixes
+Message-ID: <20180122232504.GO25805@magnolia>
+References: <151651282961.28390.17944517354130397779.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151651282961.28390.17944517354130397779.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Jan 20, 2018 at 09:33:49PM -0800, Darrick J. Wong wrote:
+> Hi all,
+> 
+> Running generic/232 with quotas and reflink demonstrated that there was
+> something wrong with the way we did quota accounting -- on an otherwise
+> idle system, fs-wide du block count numbers didn't match the quota
+> reports.  I started digging into why the quota accounting was wrong, and
+> the following are the results of my bug hunt.
 
-If somehow we let a fs with an unfixed agfl slip by, we should flag it
-and try to repair it.
+Well, I wasn't expecting 4.15 to be delayed again, but I guess it has.
+To disambiguate: this series is intended for 4.16, even though I already
+sent out the AGFL series tagged for 4.17.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/agheader.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+--D
 
-
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index fbd1744..d548656 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -160,8 +160,13 @@ xfs_scrub_superblock(
- 	__be16				vernum_mask;
- 
- 	agno = sc->sm->sm_agno;
--	if (agno == 0)
-+	if (agno == 0) {
-+		/* If we somehow don't have a fixed agfl, preen... */
-+		if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+		    !xfs_sb_version_hasfixedagfl(&mp->m_sb))
-+			xfs_scrub_block_set_preen(sc, mp->m_sb_bp);
- 		return 0;
-+	}
- 
- 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
- 		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-@@ -444,8 +449,13 @@ xfs_repair_superblock(
- 
- 	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
- 	agno = sc->sm->sm_agno;
--	if (agno == 0)
-+	if (agno == 0) {
-+		/* Try to fix the AGFLs if we don't have the feature set */
-+		if ((sc->sm->sm_flags & XFS_SCRUB_OFLAG_PREEN) &&
-+		    !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-+			return xfs_agf_fixup_freelist_counts(mp);
- 		return -EOPNOTSUPP;
-+	}
- 
- 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
- 		  XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-
+> The first patch teaches the reflink code to break layout leases before
+> commencing the block remapping work.  This time we avoid the "looping
+> trying to get a lock" that Christoph complained about, in favor of
+> dropping both locks and retrying if we can't cleanly break the layouts
+> without waiting.
+> 
+> The second patch changes the source file locking (if src != dest) during
+> a reflink operation to take the shared locks when possible.  The only
+> thing changing in the source file is the setting of the reflink iflag,
+> for which we will still take ILOCK_EXCL.  The net result of this is
+> less lock contention during fsstress and a 30% lower runtime, not that
+> anyone cares about fsstress benchmarking. :)
+> 
+> Patch three ensure that we attach dquots to inodes before we start
+> reflinking their blocks.  This could lead to quota undercharging; an
+> fstest to check this will be sent separately.
+> 
+> Patch four reorganizes the copy on write quota updating code to reflect
+> how the CoW fork works now.  In short, the CoW fork is entirely in
+> memory, so we can only use the in-memory quota reservation counters for
+> all CoW blocks; the accounting only becomes permanent if we remap an
+> extent into the data fork.
+> 
+> Patch five creates a separate i_cow_blocks counter to track all the CoW
+> blocks assigned to a file, which makes changing a file's uid/gid/prjid
+> easier, makes reporting cow blocks via stat easy, and enables various
+> cleanups.
+> 
+> Patch six fixes a serious potential corruption problem with the cow
+> extent allocation -- when we allocate into the CoW fork with the cow
+> extent size hint set, the allocator enlarges the allocation request to
+> try to hit alignment goals.  However, if the allocated extent does not
+> actually fulfill any of the requested range, we send a garbage
+> zero-length extent back to the iomap code (which also doesn't notice),
+> and the write lands at the startblock of the garbage extent.  The fix is
+> to detect that we didn't fill the entire requested range and fix up the
+> returned mapping so that we always fill the first block of the
+> requested allocation.
+> 
+> --D
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
