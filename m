@@ -1,54 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57158 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754575AbeARAHO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 19:07:14 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0I06vst165865
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:13 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2fjcsch4r4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:13 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0I07CD9010521
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:12 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0I07CBP017262
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jan 2018 00:07:12 GMT
-Subject: [RFC 0/5] xfs-4.17: fix v5 AGFL wrapping
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 16:07:11 -0800
-Message-ID: <151623403113.4727.2418454911805718650.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:54944 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751056AbeAWMFV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Jan 2018 07:05:21 -0500
+Date: Tue, 23 Jan 2018 07:05:20 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/6] xfs: reflink should break pnfs leases before sharing
+ blocks
+Message-ID: <20180123120519.GA31825@bfoster.bfoster>
+References: <151651282961.28390.17944517354130397779.stgit@magnolia>
+ <151651283574.28390.7095577838603162643.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151651283574.28390.7095577838603162643.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+On Sat, Jan 20, 2018 at 09:33:55PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Before we share blocks between files, we need to break the pnfs leases
+> on the layout before we start slicing and dicing the block map.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_reflink.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 45 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 47aea2e..ce523dd 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1245,6 +1245,48 @@ xfs_reflink_remap_blocks(
+>  }
+>  
+>  /*
+> + * Grab the exclusive iolock for a data copy from src to dest, making
+> + * sure to abide vfs locking order (lowest pointer value goes first) and
+> + * breaking the pnfs layout leases on dest before proceeding.
+> + */
+> +static int
+> +xfs_iolock_two_inodes_and_break_layout(
+> +	struct inode		*src,
+> +	struct inode		*dest)
+> +{
+> +	bool			src_first = src < dest;
+> +	bool			src_last = src > dest;
+> +	int			error;
+> +
+> +retry:
+> +	if (src_first) {
+> +		inode_lock(src);
+> +		inode_lock_nested(dest, I_MUTEX_NONDIR2);
+> +	} else {
+> +		inode_lock(dest);
+> +	}
+> +
+> +	error = break_layout(dest, false);
+> +	if (error == -EWOULDBLOCK) {
+> +		inode_unlock(dest);
+> +		if (src_first)
+> +			inode_unlock(src);
+> +		error = break_layout(dest, true);
+> +		if (error)
+> +			return error;
+> +		goto retry;
+> +	} else if (error) {
+> +		inode_unlock(dest);
+> +		if (src_first)
+> +			inode_unlock(src);
+> +		return error;
+> +	}
+> +	if (src_last)
+> +		inode_lock_nested(src, I_MUTEX_NONDIR2);
+> +	return 0;
+> +}
+> +
 
-Here's a bunch of patches fixing the AGFL padding problem once and for
-all.  When the v5 disk format was rolled out, the AGFL header definition
-had a different padding size on 32-bit vs 64-bit systems, with the
-result that XFS_AGFL_SIZE reports different maximum lengths depending on
-the compiler.  In Linux 4.5 we fixed the structure definition, but this
-has lead to sporadic corruption reports on filesystems that were
-unmounted with a pre-4.5 kernel and a wrapped AGFL and then remounted on
-a 4.5+ kernel.
+I'm not really familiar with the lease code so it's not clear to me, for
+example, why the loop is necessary here and whatnot. But it seems the
+above could be factored into a slightly more generic helper patterned
+after xfs_break_layouts(). For example, create an
+xfs_break_two_nondir_layouts() in xfs_pnfs.c with the exact same
+semantics/structure as the former, just replace the iolock calls with
+the lock/unlock_two_nondir() calls..?
 
-To deal with these corruption problems, we introduce a new ROCOMPAT
-feature bit to indicate that the AGFL has been scanned and guaranteed
-not to wrap.  We then amend the mounting code to find broken wrapping,
-fix the wrapping, and (unconditionally) set the new ROCOMPAT flag.  This
-totally blows since old kernels will no longer mount(!) the filesystem
-after we do this, so either we need to have a massive upstream/LTS
-kernel/xfsprogs flag day or find a less crappy solution.
+Brian
 
-No, this is NOT going into 4.16.
-
---D
+> +/*
+>   * Link a range of blocks from one file to another.
+>   */
+>  int
+> @@ -1274,7 +1316,9 @@ xfs_reflink_remap_range(
+>  		return -EIO;
+>  
+>  	/* Lock both files against IO */
+> -	lock_two_nondirectories(inode_in, inode_out);
+> +	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
+> +	if (ret)
+> +		return ret;
+>  	if (same_inode)
+>  		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
+>  	else
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
