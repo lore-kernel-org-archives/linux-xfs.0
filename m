@@ -1,100 +1,335 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40792 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751056AbeAWMF6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Jan 2018 07:05:58 -0500
-Date: Tue, 23 Jan 2018 07:05:57 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/6] xfs: call xfs_qm_dqattach before performing reflink
- operations
-Message-ID: <20180123120557.GC31825@bfoster.bfoster>
-References: <151651282961.28390.17944517354130397779.stgit@magnolia>
- <151651284994.28390.7445163994259507169.stgit@magnolia>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:37521 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751479AbeAWNFb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 08:05:31 -0500
+Received: by mail-wm0-f65.google.com with SMTP id v71so1772375wmv.2
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 05:05:30 -0800 (PST)
+Date: Tue, 23 Jan 2018 14:05:26 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 4/4] Use list_head infra-structure for buffer's log items
+ list
+Message-ID: <20180123130526.5pr7kjlgq5j2e4e7@odin.usersys.redhat.com>
+References: <20180119140847.22934-1-cmaiolino@redhat.com>
+ <20180119140847.22934-5-cmaiolino@redhat.com>
+ <b401788c-e6b4-0b0c-d9eb-042e93ce7bd4@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151651284994.28390.7445163994259507169.stgit@magnolia>
+In-Reply-To: <b401788c-e6b4-0b0c-d9eb-042e93ce7bd4@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Nikolay Borisov <nborisov@suse.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sat, Jan 20, 2018 at 09:34:10PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+> > @@ -1025,17 +1016,19 @@ xfs_buf_do_callbacks(
+> >  		lip->li_cb(bp, lip);
+> >  	}
+> >  
+> > -	while ((lip = bp->b_li_list) != NULL) {
+> > -		bp->b_li_list = lip->li_bio_list;
+> > -		ASSERT(lip->li_cb != NULL);
+> > +	while(!list_empty(&bp->b_li_list))
+> > +	{
 > 
-> Ensure that we've attached all the necessary dquots before performing
-> reflink operations so that quota accounting is accurate.
+> nit: Since you are iterating the list why not the canonical
+> list_for_each_entry_safe it will also obviate the need for
+> list_first_entry.
+
+Because the callback being called in lip->li_cb, can change the list internally,
+so, even list_for_each_entry_safe here is not really safe, because the "safe"
+pointer, can actually be gone before before the loop starts again
+(see xfs_iflush_done()).
+
+
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_reflink.c |   17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 5d1ff5a..947d0637 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -54,6 +54,7 @@
->  #include "xfs_rmap_btree.h"
->  #include "xfs_sb.h"
->  #include "xfs_ag_resv.h"
-> +#include "xfs_qm.h"
->  
->  /*
->   * Copy on Write of Shared Blocks
-> @@ -282,6 +283,10 @@ xfs_reflink_reserve_cow(
->  	 * tree.
->  	 */
->  
-> +	error = xfs_qm_dqattach_locked(ip, 0);
-> +	if (error)
-> +		return error;
-> +
+> > +		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
+> > +				       li_bio_list);
+> > +
+> >  		/*
+> > -		 * Clear the next pointer so we don't have any
+> > +		 * Remove the item from the list, so we don't have any
+> >  		 * confusion if the item is added to another buf.
+> >  		 * Don't touch the log item after calling its
+> >  		 * callback, because it could have freed itself.
+> >  		 */
+> > -		lip->li_bio_list = NULL;
+> > -		lip->li_cb(bp, lip);
+> > +		list_del_init(&lip->li_bio_list);
+> > +		lip->li_cb(bp,lip);
+> >  	}
+> >  }
+> >  
+> > @@ -1051,8 +1044,7 @@ STATIC void
+> >  xfs_buf_do_callbacks_fail(
+> >  	struct xfs_buf		*bp)
+> >  {
+> > -	struct xfs_log_item	*lip = bp->b_li_list;
+> > -	struct xfs_log_item	*next;
+> > +	struct xfs_log_item	*lip;
+> >  	struct xfs_ail		*ailp;
+> >  
+> >  	/*
+> > @@ -1060,14 +1052,16 @@ xfs_buf_do_callbacks_fail(
+> >  	 * and xfs_buf_iodone_callback_error, and they have no IO error
+> >  	 * callbacks. Check only for items in b_li_list.
+> >  	 */
+> > -	if (lip == NULL)
+> > +	if (list_empty(&bp->b_li_list)) {
+> >  		return;
+> > -	else
+> > +	} else {
+> > +		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
+> > +				       li_bio_list);
+> >  		ailp = lip->li_ailp;
+> > +	}
+> >  
+> >  	spin_lock(&ailp->xa_lock);
+> > -	for (; lip; lip = next) {
+> > -		next = lip->li_bio_list;
+> > +	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
+> >  		if (lip->li_ops->iop_error)
+> >  			lip->li_ops->iop_error(lip, bp);
+> >  	}
+> > @@ -1079,7 +1073,7 @@ xfs_buf_iodone_callback_error(
+> >  	struct xfs_buf		*bp)
+> >  {
+> >  	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> > -	struct xfs_log_item	*lip = bp->b_li_list;
+> > +	struct xfs_log_item	*lip;
+> >  	struct xfs_mount	*mp;
+> >  	static ulong		lasttime;
+> >  	static xfs_buftarg_t	*lasttarg;
+> > @@ -1089,7 +1083,8 @@ xfs_buf_iodone_callback_error(
+> >  	 * The failed buffer might not have a buf_log_item attached or the
+> >  	 * log_item list might be empty. Get the mp from the available xfs_log_item
+> >  	 */
+> > -	if (bip == NULL)
+> > +	if ((lip = list_first_entry_or_null(&bp->b_li_list, struct xfs_log_item,
+> > +					   li_bio_list)))
+> >  		mp = lip->li_mountp;
+> >  	else
+> >  		mp = bip->bli_item.li_mountp;
+> > @@ -1203,7 +1198,7 @@ xfs_buf_iodone_callbacks(
+> >  
+> >  	xfs_buf_do_callbacks(bp);
+> >  	bp->b_log_item = NULL;
+> > -	bp->b_li_list = NULL;
+> > +	list_del_init(&bp->b_li_list);
+> >  	bp->b_iodone = NULL;
+> >  	xfs_buf_ioend(bp);
+> >  }
+> > @@ -1248,10 +1243,9 @@ xfs_buf_iodone(
+> >  bool
+> >  xfs_buf_resubmit_failed_buffers(
+> >  	struct xfs_buf		*bp,
+> > -	struct xfs_log_item	*lip,
+> >  	struct list_head	*buffer_list)
+> >  {
+> > -	struct xfs_log_item	*next;
+> > +	struct xfs_log_item	*lip;
+> >  
+> >  	/*
+> >  	 * Clear XFS_LI_FAILED flag from all items before resubmit
+> > @@ -1259,10 +1253,8 @@ xfs_buf_resubmit_failed_buffers(
+> >  	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
+> >  	 * function already have it acquired
+> >  	 */
+> > -	for (; lip; lip = next) {
+> > -		next = lip->li_bio_list;
+> > +	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
+> >  		xfs_clear_li_failed(lip);
+> > -	}
+> >  
+> >  	/* Add this buffer back to the delayed write list */
+> >  	return xfs_buf_delwri_queue(bp, buffer_list);
+> > diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+> > index 0febfbbf6ba9..643f53dcfe51 100644
+> > --- a/fs/xfs/xfs_buf_item.h
+> > +++ b/fs/xfs/xfs_buf_item.h
+> > @@ -71,7 +71,6 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
+> >  void	xfs_buf_iodone_callbacks(struct xfs_buf *);
+> >  void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
+> >  bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
+> > -					struct xfs_log_item *,
+> >  					struct list_head *);
+> >  
+> >  extern kmem_zone_t	*xfs_buf_item_zone;
+> > diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> > index 664dea105e76..4a4539a4fad5 100644
+> > --- a/fs/xfs/xfs_dquot_item.c
+> > +++ b/fs/xfs/xfs_dquot_item.c
+> > @@ -179,7 +179,7 @@ xfs_qm_dquot_logitem_push(
+> >  		if (!xfs_buf_trylock(bp))
+> >  			return XFS_ITEM_LOCKED;
+> >  
+> > -		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
+> > +		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
+> >  			rval = XFS_ITEM_FLUSHING;
+> >  
+> >  		xfs_buf_unlock(bp);
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 0a4c2e48402f..8e26d3121be6 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -2214,7 +2214,7 @@ xfs_ifree_cluster(
+> >  	struct xfs_buf		*bp;
+> >  	xfs_inode_t		*ip;
+> >  	xfs_inode_log_item_t	*iip;
+> > -	xfs_log_item_t		*lip;
+> > +	struct xfs_log_item	*lip;
+> >  	struct xfs_perag	*pag;
+> >  	xfs_ino_t		inum;
+> >  
+> > @@ -2272,8 +2272,7 @@ xfs_ifree_cluster(
+> >  		 * stale first, we will not attempt to lock them in the loop
+> >  		 * below as the XFS_ISTALE flag will be set.
+> >  		 */
+> > -		lip = bp->b_li_list;
+> > -		while (lip) {
+> > +		list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
+> >  			if (lip->li_type == XFS_LI_INODE) {
+> >  				iip = (xfs_inode_log_item_t *)lip;
+> >  				ASSERT(iip->ili_logged == 1);
+> > @@ -2283,7 +2282,6 @@ xfs_ifree_cluster(
+> >  							&iip->ili_item.li_lsn);
+> >  				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
+> >  			}
+> > -			lip = lip->li_bio_list;
+> >  		}
+> >  
+> >  
+> > @@ -3649,7 +3647,7 @@ xfs_iflush_int(
+> >  	/* generate the checksum. */
+> >  	xfs_dinode_calc_crc(mp, dip);
+> >  
+> > -	ASSERT(bp->b_li_list != NULL);
+> > +	ASSERT(!list_empty(&bp->b_li_list));
+> >  	ASSERT(bp->b_iodone != NULL);
+> >  	return 0;
+> >  
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index 993736032b4b..ddfc2c80af5e 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -521,7 +521,7 @@ xfs_inode_item_push(
+> >  		if (!xfs_buf_trylock(bp))
+> >  			return XFS_ITEM_LOCKED;
+> >  
+> > -		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
+> > +		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
+> >  			rval = XFS_ITEM_FLUSHING;
+> >  
+> >  		xfs_buf_unlock(bp);
+> > @@ -712,37 +712,23 @@ xfs_iflush_done(
+> >  	struct xfs_log_item	*lip)
+> >  {
+> >  	struct xfs_inode_log_item *iip;
+> > -	struct xfs_log_item	*blip;
+> > -	struct xfs_log_item	*next;
+> > -	struct xfs_log_item	*prev;
+> > +	struct xfs_log_item	*blip, *n;
+> >  	struct xfs_ail		*ailp = lip->li_ailp;
+> >  	int			need_ail = 0;
+> > +	LIST_HEAD(tmp);
+> >  
+> >  	/*
+> >  	 * Scan the buffer IO completions for other inodes being completed and
+> >  	 * attach them to the current inode log item.
+> >  	 */
+> > -	blip = bp->b_li_list;
+> > -	prev = NULL;
+> > -	while (blip != NULL) {
+> > -		if (blip->li_cb != xfs_iflush_done) {
+> > -			prev = blip;
+> > -			blip = blip->li_bio_list;
+> > -			continue;
+> > -		}
+> >  
+> > -		/* remove from list */
+> > -		next = blip->li_bio_list;
+> > -		if (!prev) {
+> > -			bp->b_li_list = next;
+> > -		} else {
+> > -			prev->li_bio_list = next;
+> > -		}
+> > +	list_add_tail(&lip->li_bio_list, &tmp);
+> >  
+> > -		/* add to current list */
+> > -		blip->li_bio_list = lip->li_bio_list;
+> > -		lip->li_bio_list = blip;
+> > +	list_for_each_entry_safe(blip, n, &bp->b_li_list, li_bio_list) {
+> > +		if (lip->li_cb != xfs_iflush_done)
+> > +			continue;
+> >  
+> > +		list_move_tail(&blip->li_bio_list, &tmp);
+> >  		/*
+> >  		 * while we have the item, do the unlocked check for needing
+> >  		 * the AIL lock.
+> > @@ -751,8 +737,6 @@ xfs_iflush_done(
+> >  		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
+> >  		    (blip->li_flags & XFS_LI_FAILED))
+> >  			need_ail++;
+> > -
+> > -		blip = next;
+> >  	}
+> >  
+> >  	/* make sure we capture the state of the initial inode. */
+> > @@ -775,7 +759,7 @@ xfs_iflush_done(
+> >  
+> >  		/* this is an opencoded batch version of xfs_trans_ail_delete */
+> >  		spin_lock(&ailp->xa_lock);
+> > -		for (blip = lip; blip; blip = blip->li_bio_list) {
+> > +		list_for_each_entry(blip, &tmp, li_bio_list) {
+> >  			if (INODE_ITEM(blip)->ili_logged &&
+> >  			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
+> >  				mlip_changed |= xfs_ail_delete_one(ailp, blip);
+> > @@ -801,15 +785,14 @@ xfs_iflush_done(
+> >  	 * ili_last_fields bits now that we know that the data corresponding to
+> >  	 * them is safely on disk.
+> >  	 */
+> > -	for (blip = lip; blip; blip = next) {
+> > -		next = blip->li_bio_list;
+> > -		blip->li_bio_list = NULL;
+> > -
+> > +	list_for_each_entry_safe(blip, n, &tmp, li_bio_list) {
+> > +		list_del_init(&blip->li_bio_list);
+> >  		iip = INODE_ITEM(blip);
+> >  		iip->ili_logged = 0;
+> >  		iip->ili_last_fields = 0;
+> >  		xfs_ifunlock(iip->ili_inode);
+> >  	}
+> > +	list_del(&tmp);
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index 861c84e1f674..1b5082aeb538 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -1047,6 +1047,7 @@ xfs_log_item_init(
+> >  
+> >  	INIT_LIST_HEAD(&item->li_ail);
+> >  	INIT_LIST_HEAD(&item->li_cil);
+> > +	INIT_LIST_HEAD(&item->li_bio_list);
+> >  }
+> >  
+> >  /*
+> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > index 571fe499a48f..950cb9b4e36e 100644
+> > --- a/fs/xfs/xfs_trans.h
+> > +++ b/fs/xfs/xfs_trans.h
+> > @@ -50,7 +50,7 @@ typedef struct xfs_log_item {
+> >  	uint				li_type;	/* item type */
+> >  	uint				li_flags;	/* misc flags */
+> >  	struct xfs_buf			*li_buf;	/* real buffer pointer */
+> > -	struct xfs_log_item		*li_bio_list;	/* buffer item list */
+> > +	struct list_head		li_bio_list;	/* buffer item list */
+> >  	void				(*li_cb)(struct xfs_buf *,
+> >  						 struct xfs_log_item *);
+> >  							/* buffer item iodone */
+> > 
 
-The same call exists further down in the function. Was the intent to
-move it? I suspect we don't need it twice, at least.
-
->  	if (!xfs_iext_lookup_extent(ip, ifp, imap->br_startoff, &icur, &got))
->  		eof = true;
->  	if (!eof && got.br_startoff <= imap->br_startoff) {
-> @@ -396,6 +401,10 @@ xfs_reflink_allocate_cow(
->  	ASSERT(xfs_is_reflink_inode(ip));
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
->  
-> +	error = xfs_qm_dqattach_locked(ip, 0);
-> +	if (error)
-> +		return error;
-> +
-
-Similar pattern here, but for this one the assert above suggests we
-could have the shared lock. xfs_qm_dqattach_locked() looks like it
-expects the exclusive lock (and that's what it looks like the second
-call deals with). Hm?
-
-Brian
-
->  	/*
->  	 * Even if the extent is not shared we might have a preallocation for
->  	 * it in the COW fork.  If so use it.
-> @@ -1356,6 +1365,14 @@ xfs_reflink_remap_range(
->  	if (IS_DAX(inode_in) || IS_DAX(inode_out))
->  		goto out_unlock;
->  
-> +	/* Attach dquots to both inodes */
-> +	ret = xfs_qm_dqattach(src, 0);
-> +	if (ret)
-> +		goto out_unlock;
-> +	ret = xfs_qm_dqattach(dest, 0);
-> +	if (ret)
-> +		goto out_unlock;
-> +
->  	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
->  			&len, is_dedupe);
->  	if (ret <= 0)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Carlos
