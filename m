@@ -1,168 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46238 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751547AbeAWSXK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 13:23:10 -0500
-Date: Tue, 23 Jan 2018 10:23:05 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:47188 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752291AbeAWS1m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 13:27:42 -0500
+Date: Tue, 23 Jan 2018 10:27:37 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/6] xfs: only grab shared inode locks for source file
- during reflink
-Message-ID: <20180123182305.GQ25805@magnolia>
+Subject: Re: [PATCH 3/6] xfs: call xfs_qm_dqattach before performing reflink
+ operations
+Message-ID: <20180123182737.GR25805@magnolia>
 References: <151651282961.28390.17944517354130397779.stgit@magnolia>
- <151651284391.28390.6456958202076195269.stgit@magnolia>
- <20180123120533.GB31825@bfoster.bfoster>
+ <151651284994.28390.7445163994259507169.stgit@magnolia>
+ <20180123120557.GC31825@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180123120533.GB31825@bfoster.bfoster>
+In-Reply-To: <20180123120557.GC31825@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 23, 2018 at 07:05:34AM -0500, Brian Foster wrote:
-> On Sat, Jan 20, 2018 at 09:34:03PM -0800, Darrick J. Wong wrote:
+On Tue, Jan 23, 2018 at 07:05:57AM -0500, Brian Foster wrote:
+> On Sat, Jan 20, 2018 at 09:34:10PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Reflink and dedupe operations remap blocks from a source file into a
-> > destination file.  The destination file needs exclusive locks on all
-> > levels because we're updating its block map, but the source file isn't
-> > undergoing any block map changes so we can use a shared lock.
+> > Ensure that we've attached all the necessary dquots before performing
+> > reflink operations so that quota accounting is accurate.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/xfs_reflink.c |   50 +++++++++++++++++++++++++++++++++++++-------------
-> >  1 file changed, 37 insertions(+), 13 deletions(-)
+> >  fs/xfs/xfs_reflink.c |   17 +++++++++++++++++
+> >  1 file changed, 17 insertions(+)
 > > 
 > > 
 > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index ce523dd..5d1ff5a 100644
+> > index 5d1ff5a..947d0637 100644
 > > --- a/fs/xfs/xfs_reflink.c
 > > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1202,13 +1202,16 @@ xfs_reflink_remap_blocks(
+> > @@ -54,6 +54,7 @@
+> >  #include "xfs_rmap_btree.h"
+> >  #include "xfs_sb.h"
+> >  #include "xfs_ag_resv.h"
+> > +#include "xfs_qm.h"
 > >  
-> >  	/* drange = (destoff, destoff + len); srange = (srcoff, srcoff + len) */
-> >  	while (len) {
-> > +		uint		lock_mode;
-> > +
-> >  		trace_xfs_reflink_remap_blocks_loop(src, srcoff, len,
-> >  				dest, destoff);
-> > +
-> >  		/* Read extent from the source file */
-> >  		nimaps = 1;
-> > -		xfs_ilock(src, XFS_ILOCK_EXCL);
-> > +		lock_mode = xfs_ilock_data_map_shared(src);
-> >  		error = xfs_bmapi_read(src, srcoff, len, &imap, &nimaps, 0);
-> > -		xfs_iunlock(src, XFS_ILOCK_EXCL);
-> > +		xfs_iunlock(src, lock_mode);
-> >  		if (error)
-> >  			goto err;
-> >  		ASSERT(nimaps == 1);
-> > @@ -1260,7 +1263,7 @@ xfs_iolock_two_inodes_and_break_layout(
+> >  /*
+> >   * Copy on Write of Shared Blocks
+> > @@ -282,6 +283,10 @@ xfs_reflink_reserve_cow(
+> >  	 * tree.
+> >  	 */
 > >  
-> >  retry:
-> >  	if (src_first) {
-> > -		inode_lock(src);
-> > +		inode_lock_shared(src);
-> 
-> Hm, I guess this could make my comment on the previous patch more
-> difficult. Oh well.
-
-Yeah, there's nowhere else in the xfs code where we do this (read lock
-one file, write lock another), afaict.
-
-> >  		inode_lock_nested(dest, I_MUTEX_NONDIR2);
-> >  	} else {
-> >  		inode_lock(dest);
-> > @@ -1270,7 +1273,7 @@ xfs_iolock_two_inodes_and_break_layout(
-> >  	if (error == -EWOULDBLOCK) {
-> >  		inode_unlock(dest);
-> >  		if (src_first)
-> > -			inode_unlock(src);
-> > +			inode_unlock_shared(src);
-> >  		error = break_layout(dest, true);
-> >  		if (error)
-> >  			return error;
-> > @@ -1278,14 +1281,36 @@ xfs_iolock_two_inodes_and_break_layout(
-> >  	} else if (error) {
-> >  		inode_unlock(dest);
-> >  		if (src_first)
-> > -			inode_unlock(src);
-> > +			inode_unlock_shared(src);
-> >  		return error;
-> >  	}
-> >  	if (src_last)
-> > -		inode_lock_nested(src, I_MUTEX_NONDIR2);
-> > +		down_read_nested(&src->i_rwsem, I_MUTEX_NONDIR2);
-> >  	return 0;
-> >  }
-> >  
-> > +static void
-> > +xfs_reflink_mmaplock_two(
-> > +	struct xfs_inode	*src,
-> > +	struct xfs_inode	*dest)
-> > +{
-> > +	int			i = 0;
-> > +
-> > +	if (src->i_ino == dest->i_ino) {
-> > +		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
-> > +		return;
-> > +	}
-> > +
-> > +	if (src->i_ino < dest->i_ino) {
-> > +		xfs_ilock(src, XFS_MMAPLOCK_SHARED);
-> > +		i++;
-> > +	}
-> > +	xfs_ilock(dest, XFS_MMAPLOCK_EXCL + (i << XFS_MMAPLOCK_SHIFT));
-> > +	i++;
-> > +	if (src->i_ino > dest->i_ino)
-> > +		xfs_ilock(src, XFS_MMAPLOCK_SHARED + (i << XFS_MMAPLOCK_SHIFT));
-> > +}
+> > +	error = xfs_qm_dqattach_locked(ip, 0);
+> > +	if (error)
+> > +		return error;
 > > +
 > 
-> I am kind of wondering if this one could be replaced with a refactor of
-> xfs_lock_two_inodes() to take two sets of lock flags (then create a
-> wrapper to preserve the current signature that just passes the same set
-> of flags for both inodes).
+> The same call exists further down in the function. Was the intent to
+> move it? I suspect we don't need it twice, at least.
 
-Yes, I'll do that.
+Drat, I don't know why either of these are there, I think I got paste-happy?
+
+OH, yuck, this is the debug patch from an earlier revision.  The only
+dqattach we actually need is...
+
+> >  	if (!xfs_iext_lookup_extent(ip, ifp, imap->br_startoff, &icur, &got))
+> >  		eof = true;
+> >  	if (!eof && got.br_startoff <= imap->br_startoff) {
+> > @@ -396,6 +401,10 @@ xfs_reflink_allocate_cow(
+> >  	ASSERT(xfs_is_reflink_inode(ip));
+> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+> >  
+> > +	error = xfs_qm_dqattach_locked(ip, 0);
+> > +	if (error)
+> > +		return error;
+> > +
+> 
+> Similar pattern here, but for this one the assert above suggests we
+> could have the shared lock. xfs_qm_dqattach_locked() looks like it
+> expects the exclusive lock (and that's what it looks like the second
+> call deals with). Hm?
+> 
+> Brian
+> 
+> >  	/*
+> >  	 * Even if the extent is not shared we might have a preallocation for
+> >  	 * it in the COW fork.  If so use it.
+> > @@ -1356,6 +1365,14 @@ xfs_reflink_remap_range(
+> >  	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+> >  		goto out_unlock;
+> >  
+> > +	/* Attach dquots to both inodes */
+> > +	ret = xfs_qm_dqattach(src, 0);
+> > +	if (ret)
+> > +		goto out_unlock;
+> > +	ret = xfs_qm_dqattach(dest, 0);
+
+...this one, because we're not changing the src file's block allocations,
+but we /are/ forgetting to ensure they're attached to dest.
+
+Sorry for the noise, I'll send out the proper patch later today.
 
 --D
 
-> Brian
-> 
-> >  /*
-> >   * Link a range of blocks from one file to another.
-> >   */
-> > @@ -1319,10 +1344,7 @@ xfs_reflink_remap_range(
-> >  	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
-> >  	if (ret)
-> >  		return ret;
-> > -	if (same_inode)
-> > -		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
-> > -	else
-> > -		xfs_lock_two_inodes(src, dest, XFS_MMAPLOCK_EXCL);
-> > +	xfs_reflink_mmaplock_two(src, dest);
-> >  
-> >  	/* Check file eligibility and prepare for block sharing. */
-> >  	ret = -EINVAL;
-> > @@ -1385,10 +1407,12 @@ xfs_reflink_remap_range(
-> >  			is_dedupe);
-> >  
-> >  out_unlock:
-> > -	xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
-> > +	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-> > +	if (!same_inode)
-> > +		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
-> > +	inode_unlock(inode_out);
-> >  	if (!same_inode)
-> > -		xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-> > -	unlock_two_nondirectories(inode_in, inode_out);
-> > +		inode_unlock_shared(inode_in);
-> >  	if (ret)
-> >  		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
-> >  	return ret;
+> > +	if (ret)
+> > +		goto out_unlock;
+> > +
+> >  	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
+> >  			&len, is_dedupe);
+> >  	if (ret <= 0)
 > > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
