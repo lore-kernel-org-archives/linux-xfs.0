@@ -1,111 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:17020
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751321AbeA2LfC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 06:35:02 -0500
-Date: Mon, 29 Jan 2018 22:35:56 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from mail-wr0-f179.google.com ([209.85.128.179]:43971 "EHLO
+        mail-wr0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752302AbeAWPpo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 10:45:44 -0500
+Received: by mail-wr0-f179.google.com with SMTP id t16so1042138wrc.10
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 07:45:43 -0800 (PST)
 Subject: Re: xfs_extent_busy_flush vs. aio
-Message-ID: <20180129113556.fd4y3t5yupeqtn5t@destitution>
-References: <20180123152852.GA32478@bfoster.bfoster>
- <509e33df-4f76-2937-0425-98c26b3a1207@scylladb.com>
- <20180123161120.GC32478@bfoster.bfoster>
- <5f67219e-e48b-a954-69d4-318268645377@scylladb.com>
- <20180123164718.GE32478@bfoster.bfoster>
- <e1229a02-33ea-e5d5-d66f-36fa553a3393@scylladb.com>
- <20180123173902.GF32478@bfoster.bfoster>
- <f4751375-0710-cec8-ac6d-1f9546bba1ce@scylladb.com>
- <20180125130830.GD43198@bfoster.bfoster>
- <dd148ae0-fe9b-b5b6-5b03-05f0894ce969@scylladb.com>
+References: <dde543cc-6641-c5ee-3385-520ef4ca821e@scylladb.com>
+ <20180123152852.GA32478@bfoster.bfoster>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <509e33df-4f76-2937-0425-98c26b3a1207@scylladb.com>
+Date: Tue, 23 Jan 2018 17:45:39 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <20180123152852.GA32478@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <dd148ae0-fe9b-b5b6-5b03-05f0894ce969@scylladb.com>
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 29, 2018 at 11:40:27AM +0200, Avi Kivity wrote:
-> 
-> 
-> On 01/25/2018 03:08 PM, Brian Foster wrote:
-> > On Thu, Jan 25, 2018 at 10:50:40AM +0200, Avi Kivity wrote:
-> > > On 01/23/2018 07:39 PM, Brian Foster wrote:
-> > > > Yeah, could be.. perhaps the issue is that despite the large amount of
-> > > > total free space, the free space is too fragmented to satisfy a
-> > > > particular allocation request..?
-> > >     from      to extents  blocks    pct
-> > >        1       1    2702    2702   0.00
-> > >        2       3     690    1547   0.00
-> > >        4       7     115     568   0.00
-> > >        8      15      60     634   0.00
-> > >       16      31      63    1457   0.00
-> > >       32      63     102    4751   0.00
-> > >       64     127    7940  895365   0.19
-> > >      128     255   49680 12422100   2.67
-> > >      256     511    1025  417078   0.09
-> > >      512    1023    4170 3660771   0.79
-> > >     1024    2047    2168 3503054   0.75
-> > >     2048    4095    2567 7729442   1.66
-> > >     4096    8191    8688 59394413  12.76
-> > >     8192   16383     310 3100186   0.67
-> > >    16384   32767     112 2339935   0.50
-> > >    32768   65535      35 1381122   0.30
-> > >    65536  131071       8  651391   0.14
-> > >   131072  262143       2  344196   0.07
-> > >   524288 1048575       4 2909925   0.62
-> > > 1048576 2097151       3 3550680   0.76
-> > > 4194304 8388607      10 82497658  17.72
-> > > 8388608 16777215      10 158022653  33.94
-> > > 16777216 24567552       5 122778062  26.37
-> > > total free extents 80469
-> > > total free blocks 465609690
-> > > average free extent size 5786.2
-> > > 
-> > > Looks like plenty of free large extents, with most of the free space
-> > > completely, unfragmented.
-> > > 
-> > Indeed..
 
-You need to look at each AG, not the overall summary. You could have
-a suboptimal AG hidden in amongst that (e.g. near ENOSPC) and it's
-that one AG that is causing all your problems.
 
-There's many reasons this can happen, but the most common is the
-working files in a directory (or subset of directories in the same
-AG) have a combined space usage of larger than an AG ....
+On 01/23/2018 05:28 PM, Brian Foster wrote:
+> On Tue, Jan 23, 2018 at 04:57:03PM +0200, Avi Kivity wrote:
+>> I'm seeing the equivalent[*] of xfs_extent_busy_flush() sleeping in my
+>> beautiful io_submit() calls.
+>>
+>>
+>> Questions:
+>>
+>>  Â - Is it correct that RWF_NOWAIT will not detect the condition that led to
+>> the log being forced?
+>>
+>>  Â - If so, can it be fixed?
+>>
+>>  Â - Can I do something to reduce the odds of this occurring? larger logs,
+>> more logs, flush more often, resurrect extinct species and sacrifice them to
+>> the xfs gods?
+>>
+>>  Â - Can an xfs developer do something? For example, make it RWF_NOWAIT
+>> friendly (if the answer to the first question was "correct")
+>>
+> So RWF_NOWAIT eventually works its way to IOMAP_NOWAIT, which looks like
+> it skips any write call that would require allocation in
+> xfs_file_iomap_begin(). The busy flush should only happen in the block
+> allocation path, so something is missing here. Do you have a backtrace
+> for the log force you're seeing?
+>
+>
 
-> > > Lots of 16MB-32MB extents, too. 32MB is our allocation hint size, could have
-> > > something to do with it.
-> > > 
-> > Most likely. Based on this, it's hard to say for certain why you'd be
-> > running into allocation latency caused by busy extents.
+Here's a trace. It's from a kernel that lacks RWF_NOWAIT.
 
-One of only two reasons:
+ Â 0xffffffff816ab231 : __schedule+0x531/0x9b0 [kernel]
+ Â 0xffffffff816ab6d9 : schedule+0x29/0x70 [kernel]
+ Â 0xffffffff816a90e9 : schedule_timeout+0x239/0x2c0 [kernel]
+ Â 0xffffffff816aba8d : wait_for_completion+0xfd/0x140 [kernel]
+ Â 0xffffffff810ab41d : flush_work+0xfd/0x190 [kernel]
+ Â 0xffffffffc00ddb3a : xlog_cil_force_lsn+0x8a/0x210 [xfs]
+ Â 0xffffffffc00dbbf5 : _xfs_log_force+0x85/0x2c0 [xfs]
+ Â 0xffffffffc00dbe5c : xfs_log_force+0x2c/0x70 [xfs]
+ Â 0xffffffffc0078f60 : xfs_alloc_ag_vextent_size+0x250/0x630 [xfs]
+ Â 0xffffffffc0079ed5 : xfs_alloc_ag_vextent+0xe5/0x150 [xfs]
+ Â 0xffffffffc007abc6 : xfs_alloc_vextent+0x446/0x5f0 [xfs]
+ Â 0xffffffffc008b123 : xfs_bmap_btalloc+0x3f3/0x780 [xfs]
+ Â 0xffffffffc008b4be : xfs_bmap_alloc+0xe/0x10 [xfs]
+ Â 0xffffffffc008bef9 : xfs_bmapi_write+0x499/0xab0 [xfs]
+ Â 0xffffffffc00c6ec8 : xfs_iomap_write_direct+0x1b8/0x390 [xfs]
 
-	1. the AG has a large enough free space, but they are all
-	marked busy (i.e. just been freed), or
-
-	2. The extent selected has had the busy range trimmed out of
-	it and it's now less than the minimum extent length
-	requested.
-
-Both cases imply that we're allocating extents that have been very
-recently freed, and that implies there is no other suitable non-busy
-free space in the AG. Hence the need to look at the per-AG freespace
-pattern rather than the global summary.
-
-Also, it's worth dumping the freespace via xfs_spaceman as it walks
-the in memory trees rather than the on-disk trees and so is properly
-coherent with operations in progress. (i.e. xfs_spaceman -c "freesp
-..." /mntpt)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
