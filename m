@@ -1,359 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:48962 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751979AbeAWSL0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 13:11:26 -0500
-Date: Tue, 23 Jan 2018 10:10:21 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:42688 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751721AbeAWSTp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 13:19:45 -0500
+Date: Tue, 23 Jan 2018 10:19:41 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/4] Use list_head infra-structure for buffer's log items
- list
-Message-ID: <20180123181021.GD9723@magnolia>
-References: <20180119140847.22934-1-cmaiolino@redhat.com>
- <20180119140847.22934-5-cmaiolino@redhat.com>
- <b401788c-e6b4-0b0c-d9eb-042e93ce7bd4@suse.com>
- <20180123130526.5pr7kjlgq5j2e4e7@odin.usersys.redhat.com>
- <e28ab86e-dad7-2310-b0d4-51e113835f18@suse.com>
+Subject: Re: [PATCH 1/6] xfs: reflink should break pnfs leases before sharing
+ blocks
+Message-ID: <20180123181941.GP25805@magnolia>
+References: <151651282961.28390.17944517354130397779.stgit@magnolia>
+ <151651283574.28390.7095577838603162643.stgit@magnolia>
+ <20180123120519.GA31825@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e28ab86e-dad7-2310-b0d4-51e113835f18@suse.com>
+In-Reply-To: <20180123120519.GA31825@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 23, 2018 at 04:55:43PM +0200, Nikolay Borisov wrote:
-> 
-> 
-> On 23.01.2018 15:05, Carlos Maiolino wrote:
-> >>> @@ -1025,17 +1016,19 @@ xfs_buf_do_callbacks(
-> >>>  		lip->li_cb(bp, lip);
-> >>>  	}
-> >>>  
-> >>> -	while ((lip = bp->b_li_list) != NULL) {
-> >>> -		bp->b_li_list = lip->li_bio_list;
-> >>> -		ASSERT(lip->li_cb != NULL);
-> >>> +	while(!list_empty(&bp->b_li_list))
-> >>> +	{
-> >>
-> >> nit: Since you are iterating the list why not the canonical
-> >> list_for_each_entry_safe it will also obviate the need for
-> >> list_first_entry.
+On Tue, Jan 23, 2018 at 07:05:20AM -0500, Brian Foster wrote:
+> On Sat, Jan 20, 2018 at 09:33:55PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Because the callback being called in lip->li_cb, can change the list internally,
-> > so, even list_for_each_entry_safe here is not really safe, because the "safe"
-> > pointer, can actually be gone before before the loop starts again
-> > (see xfs_iflush_done()).
+> > Before we share blocks between files, we need to break the pnfs leases
+> > on the layout before we start slicing and dicing the block map.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_reflink.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 45 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 47aea2e..ce523dd 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -1245,6 +1245,48 @@ xfs_reflink_remap_blocks(
+> >  }
+> >  
+> >  /*
+> > + * Grab the exclusive iolock for a data copy from src to dest, making
+> > + * sure to abide vfs locking order (lowest pointer value goes first) and
+> > + * breaking the pnfs layout leases on dest before proceeding.
+> > + */
+> > +static int
+> > +xfs_iolock_two_inodes_and_break_layout(
+> > +	struct inode		*src,
+> > +	struct inode		*dest)
+> > +{
+> > +	bool			src_first = src < dest;
+> > +	bool			src_last = src > dest;
+> > +	int			error;
+> > +
+> > +retry:
+> > +	if (src_first) {
+> > +		inode_lock(src);
+> > +		inode_lock_nested(dest, I_MUTEX_NONDIR2);
+> > +	} else {
+> > +		inode_lock(dest);
+> > +	}
+> > +
+> > +	error = break_layout(dest, false);
+> > +	if (error == -EWOULDBLOCK) {
+> > +		inode_unlock(dest);
+> > +		if (src_first)
+> > +			inode_unlock(src);
+> > +		error = break_layout(dest, true);
+> > +		if (error)
+> > +			return error;
+> > +		goto retry;
+> > +	} else if (error) {
+> > +		inode_unlock(dest);
+> > +		if (src_first)
+> > +			inode_unlock(src);
+> > +		return error;
+> > +	}
+> > +	if (src_last)
+> > +		inode_lock_nested(src, I_MUTEX_NONDIR2);
+> > +	return 0;
+> > +}
+> > +
 > 
-> But you invoke del_init before calling the callback, _safe suffix in
-> list_for_each_entry just means it's safe to call list deletion functions
-> without compromising list iteration.
+> I'm not really familiar with the lease code so it's not clear to me, for
+> example, why the loop is necessary here and whatnot.
 
-If I'm reading the inode item code correctly, xfs_iflush_done will skip
-ahead in the list to find and process all inode items attached to the
-buffer that just completed, which means that the 'n' argument to
-list_for_each_entry_safe could be deleted by the time we finish the call
-to li_cb, hence the while (!list_empty()) business.  The list might be
-totally empty.
+Christoph objected to the original version of this patch grabbing
+IOLOCK_EXCL (or any lock) and then spinning on a break-unlock-break-lock
+loop trying to break the leases on dest.  I didn't see anything obvious
+that could stall in break_layout for a long time, but the fact that it
+has a 'wait' parameter strongly implies that something in that path
+could sleep.
 
-The comment above xfs_buf_do_callbacks states that callbacks are allowed
-to play games like this (batch processing of iodone items) for the sake
-of reducing ail lock contention, so while the above construction looks
-funny, it seems to be the only way to accomodate this behavior.
+> But it seems the above could be factored into a slightly more generic
+> helper patterned after xfs_break_layouts(). For example, create an
+> xfs_break_two_nondir_layouts() in xfs_pnfs.c with the exact same
+> semantics/structure as the former, just replace the iolock calls with
+> the lock/unlock_two_nondir() calls..?
+
+The awkward part of this patch is that we really only need a function
+like this to do things like reflink (read from one file, write to
+another) so that's why it's in xfs_reflink.c... but I'll move on to the
+next patch for more of a reply. :)
 
 --D
 
+> Brian
+> 
+> > +/*
+> >   * Link a range of blocks from one file to another.
+> >   */
+> >  int
+> > @@ -1274,7 +1316,9 @@ xfs_reflink_remap_range(
+> >  		return -EIO;
+> >  
+> >  	/* Lock both files against IO */
+> > -	lock_two_nondirectories(inode_in, inode_out);
+> > +	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
+> > +	if (ret)
+> > +		return ret;
+> >  	if (same_inode)
+> >  		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
+> >  	else
 > > 
-> > 
-> >>
-> >>> +		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
-> >>> +				       li_bio_list);
-> >>> +
-> >>>  		/*
-> >>> -		 * Clear the next pointer so we don't have any
-> >>> +		 * Remove the item from the list, so we don't have any
-> >>>  		 * confusion if the item is added to another buf.
-> >>>  		 * Don't touch the log item after calling its
-> >>>  		 * callback, because it could have freed itself.
-> >>>  		 */
-> >>> -		lip->li_bio_list = NULL;
-> >>> -		lip->li_cb(bp, lip);
-> >>> +		list_del_init(&lip->li_bio_list);
-> >>> +		lip->li_cb(bp,lip);
-> >>>  	}
-> >>>  }
-> >>>  
-> >>> @@ -1051,8 +1044,7 @@ STATIC void
-> >>>  xfs_buf_do_callbacks_fail(
-> >>>  	struct xfs_buf		*bp)
-> >>>  {
-> >>> -	struct xfs_log_item	*lip = bp->b_li_list;
-> >>> -	struct xfs_log_item	*next;
-> >>> +	struct xfs_log_item	*lip;
-> >>>  	struct xfs_ail		*ailp;
-> >>>  
-> >>>  	/*
-> >>> @@ -1060,14 +1052,16 @@ xfs_buf_do_callbacks_fail(
-> >>>  	 * and xfs_buf_iodone_callback_error, and they have no IO error
-> >>>  	 * callbacks. Check only for items in b_li_list.
-> >>>  	 */
-> >>> -	if (lip == NULL)
-> >>> +	if (list_empty(&bp->b_li_list)) {
-> >>>  		return;
-> >>> -	else
-> >>> +	} else {
-> >>> +		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
-> >>> +				       li_bio_list);
-> >>>  		ailp = lip->li_ailp;
-> >>> +	}
-> >>>  
-> >>>  	spin_lock(&ailp->xa_lock);
-> >>> -	for (; lip; lip = next) {
-> >>> -		next = lip->li_bio_list;
-> >>> +	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
-> >>>  		if (lip->li_ops->iop_error)
-> >>>  			lip->li_ops->iop_error(lip, bp);
-> >>>  	}
-> >>> @@ -1079,7 +1073,7 @@ xfs_buf_iodone_callback_error(
-> >>>  	struct xfs_buf		*bp)
-> >>>  {
-> >>>  	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> >>> -	struct xfs_log_item	*lip = bp->b_li_list;
-> >>> +	struct xfs_log_item	*lip;
-> >>>  	struct xfs_mount	*mp;
-> >>>  	static ulong		lasttime;
-> >>>  	static xfs_buftarg_t	*lasttarg;
-> >>> @@ -1089,7 +1083,8 @@ xfs_buf_iodone_callback_error(
-> >>>  	 * The failed buffer might not have a buf_log_item attached or the
-> >>>  	 * log_item list might be empty. Get the mp from the available xfs_log_item
-> >>>  	 */
-> >>> -	if (bip == NULL)
-> >>> +	if ((lip = list_first_entry_or_null(&bp->b_li_list, struct xfs_log_item,
-> >>> +					   li_bio_list)))
-> >>>  		mp = lip->li_mountp;
-> >>>  	else
-> >>>  		mp = bip->bli_item.li_mountp;
-> >>> @@ -1203,7 +1198,7 @@ xfs_buf_iodone_callbacks(
-> >>>  
-> >>>  	xfs_buf_do_callbacks(bp);
-> >>>  	bp->b_log_item = NULL;
-> >>> -	bp->b_li_list = NULL;
-> >>> +	list_del_init(&bp->b_li_list);
-> >>>  	bp->b_iodone = NULL;
-> >>>  	xfs_buf_ioend(bp);
-> >>>  }
-> >>> @@ -1248,10 +1243,9 @@ xfs_buf_iodone(
-> >>>  bool
-> >>>  xfs_buf_resubmit_failed_buffers(
-> >>>  	struct xfs_buf		*bp,
-> >>> -	struct xfs_log_item	*lip,
-> >>>  	struct list_head	*buffer_list)
-> >>>  {
-> >>> -	struct xfs_log_item	*next;
-> >>> +	struct xfs_log_item	*lip;
-> >>>  
-> >>>  	/*
-> >>>  	 * Clear XFS_LI_FAILED flag from all items before resubmit
-> >>> @@ -1259,10 +1253,8 @@ xfs_buf_resubmit_failed_buffers(
-> >>>  	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
-> >>>  	 * function already have it acquired
-> >>>  	 */
-> >>> -	for (; lip; lip = next) {
-> >>> -		next = lip->li_bio_list;
-> >>> +	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
-> >>>  		xfs_clear_li_failed(lip);
-> >>> -	}
-> >>>  
-> >>>  	/* Add this buffer back to the delayed write list */
-> >>>  	return xfs_buf_delwri_queue(bp, buffer_list);
-> >>> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-> >>> index 0febfbbf6ba9..643f53dcfe51 100644
-> >>> --- a/fs/xfs/xfs_buf_item.h
-> >>> +++ b/fs/xfs/xfs_buf_item.h
-> >>> @@ -71,7 +71,6 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
-> >>>  void	xfs_buf_iodone_callbacks(struct xfs_buf *);
-> >>>  void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
-> >>>  bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
-> >>> -					struct xfs_log_item *,
-> >>>  					struct list_head *);
-> >>>  
-> >>>  extern kmem_zone_t	*xfs_buf_item_zone;
-> >>> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-> >>> index 664dea105e76..4a4539a4fad5 100644
-> >>> --- a/fs/xfs/xfs_dquot_item.c
-> >>> +++ b/fs/xfs/xfs_dquot_item.c
-> >>> @@ -179,7 +179,7 @@ xfs_qm_dquot_logitem_push(
-> >>>  		if (!xfs_buf_trylock(bp))
-> >>>  			return XFS_ITEM_LOCKED;
-> >>>  
-> >>> -		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-> >>> +		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
-> >>>  			rval = XFS_ITEM_FLUSHING;
-> >>>  
-> >>>  		xfs_buf_unlock(bp);
-> >>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> >>> index 0a4c2e48402f..8e26d3121be6 100644
-> >>> --- a/fs/xfs/xfs_inode.c
-> >>> +++ b/fs/xfs/xfs_inode.c
-> >>> @@ -2214,7 +2214,7 @@ xfs_ifree_cluster(
-> >>>  	struct xfs_buf		*bp;
-> >>>  	xfs_inode_t		*ip;
-> >>>  	xfs_inode_log_item_t	*iip;
-> >>> -	xfs_log_item_t		*lip;
-> >>> +	struct xfs_log_item	*lip;
-> >>>  	struct xfs_perag	*pag;
-> >>>  	xfs_ino_t		inum;
-> >>>  
-> >>> @@ -2272,8 +2272,7 @@ xfs_ifree_cluster(
-> >>>  		 * stale first, we will not attempt to lock them in the loop
-> >>>  		 * below as the XFS_ISTALE flag will be set.
-> >>>  		 */
-> >>> -		lip = bp->b_li_list;
-> >>> -		while (lip) {
-> >>> +		list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
-> >>>  			if (lip->li_type == XFS_LI_INODE) {
-> >>>  				iip = (xfs_inode_log_item_t *)lip;
-> >>>  				ASSERT(iip->ili_logged == 1);
-> >>> @@ -2283,7 +2282,6 @@ xfs_ifree_cluster(
-> >>>  							&iip->ili_item.li_lsn);
-> >>>  				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
-> >>>  			}
-> >>> -			lip = lip->li_bio_list;
-> >>>  		}
-> >>>  
-> >>>  
-> >>> @@ -3649,7 +3647,7 @@ xfs_iflush_int(
-> >>>  	/* generate the checksum. */
-> >>>  	xfs_dinode_calc_crc(mp, dip);
-> >>>  
-> >>> -	ASSERT(bp->b_li_list != NULL);
-> >>> +	ASSERT(!list_empty(&bp->b_li_list));
-> >>>  	ASSERT(bp->b_iodone != NULL);
-> >>>  	return 0;
-> >>>  
-> >>> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> >>> index 993736032b4b..ddfc2c80af5e 100644
-> >>> --- a/fs/xfs/xfs_inode_item.c
-> >>> +++ b/fs/xfs/xfs_inode_item.c
-> >>> @@ -521,7 +521,7 @@ xfs_inode_item_push(
-> >>>  		if (!xfs_buf_trylock(bp))
-> >>>  			return XFS_ITEM_LOCKED;
-> >>>  
-> >>> -		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
-> >>> +		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
-> >>>  			rval = XFS_ITEM_FLUSHING;
-> >>>  
-> >>>  		xfs_buf_unlock(bp);
-> >>> @@ -712,37 +712,23 @@ xfs_iflush_done(
-> >>>  	struct xfs_log_item	*lip)
-> >>>  {
-> >>>  	struct xfs_inode_log_item *iip;
-> >>> -	struct xfs_log_item	*blip;
-> >>> -	struct xfs_log_item	*next;
-> >>> -	struct xfs_log_item	*prev;
-> >>> +	struct xfs_log_item	*blip, *n;
-> >>>  	struct xfs_ail		*ailp = lip->li_ailp;
-> >>>  	int			need_ail = 0;
-> >>> +	LIST_HEAD(tmp);
-> >>>  
-> >>>  	/*
-> >>>  	 * Scan the buffer IO completions for other inodes being completed and
-> >>>  	 * attach them to the current inode log item.
-> >>>  	 */
-> >>> -	blip = bp->b_li_list;
-> >>> -	prev = NULL;
-> >>> -	while (blip != NULL) {
-> >>> -		if (blip->li_cb != xfs_iflush_done) {
-> >>> -			prev = blip;
-> >>> -			blip = blip->li_bio_list;
-> >>> -			continue;
-> >>> -		}
-> >>>  
-> >>> -		/* remove from list */
-> >>> -		next = blip->li_bio_list;
-> >>> -		if (!prev) {
-> >>> -			bp->b_li_list = next;
-> >>> -		} else {
-> >>> -			prev->li_bio_list = next;
-> >>> -		}
-> >>> +	list_add_tail(&lip->li_bio_list, &tmp);
-> >>>  
-> >>> -		/* add to current list */
-> >>> -		blip->li_bio_list = lip->li_bio_list;
-> >>> -		lip->li_bio_list = blip;
-> >>> +	list_for_each_entry_safe(blip, n, &bp->b_li_list, li_bio_list) {
-> >>> +		if (lip->li_cb != xfs_iflush_done)
-> >>> +			continue;
-> >>>  
-> >>> +		list_move_tail(&blip->li_bio_list, &tmp);
-> >>>  		/*
-> >>>  		 * while we have the item, do the unlocked check for needing
-> >>>  		 * the AIL lock.
-> >>> @@ -751,8 +737,6 @@ xfs_iflush_done(
-> >>>  		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
-> >>>  		    (blip->li_flags & XFS_LI_FAILED))
-> >>>  			need_ail++;
-> >>> -
-> >>> -		blip = next;
-> >>>  	}
-> >>>  
-> >>>  	/* make sure we capture the state of the initial inode. */
-> >>> @@ -775,7 +759,7 @@ xfs_iflush_done(
-> >>>  
-> >>>  		/* this is an opencoded batch version of xfs_trans_ail_delete */
-> >>>  		spin_lock(&ailp->xa_lock);
-> >>> -		for (blip = lip; blip; blip = blip->li_bio_list) {
-> >>> +		list_for_each_entry(blip, &tmp, li_bio_list) {
-> >>>  			if (INODE_ITEM(blip)->ili_logged &&
-> >>>  			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
-> >>>  				mlip_changed |= xfs_ail_delete_one(ailp, blip);
-> >>> @@ -801,15 +785,14 @@ xfs_iflush_done(
-> >>>  	 * ili_last_fields bits now that we know that the data corresponding to
-> >>>  	 * them is safely on disk.
-> >>>  	 */
-> >>> -	for (blip = lip; blip; blip = next) {
-> >>> -		next = blip->li_bio_list;
-> >>> -		blip->li_bio_list = NULL;
-> >>> -
-> >>> +	list_for_each_entry_safe(blip, n, &tmp, li_bio_list) {
-> >>> +		list_del_init(&blip->li_bio_list);
-> >>>  		iip = INODE_ITEM(blip);
-> >>>  		iip->ili_logged = 0;
-> >>>  		iip->ili_last_fields = 0;
-> >>>  		xfs_ifunlock(iip->ili_inode);
-> >>>  	}
-> >>> +	list_del(&tmp);
-> >>>  }
-> >>>  
-> >>>  /*
-> >>> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> >>> index 861c84e1f674..1b5082aeb538 100644
-> >>> --- a/fs/xfs/xfs_log.c
-> >>> +++ b/fs/xfs/xfs_log.c
-> >>> @@ -1047,6 +1047,7 @@ xfs_log_item_init(
-> >>>  
-> >>>  	INIT_LIST_HEAD(&item->li_ail);
-> >>>  	INIT_LIST_HEAD(&item->li_cil);
-> >>> +	INIT_LIST_HEAD(&item->li_bio_list);
-> >>>  }
-> >>>  
-> >>>  /*
-> >>> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> >>> index 571fe499a48f..950cb9b4e36e 100644
-> >>> --- a/fs/xfs/xfs_trans.h
-> >>> +++ b/fs/xfs/xfs_trans.h
-> >>> @@ -50,7 +50,7 @@ typedef struct xfs_log_item {
-> >>>  	uint				li_type;	/* item type */
-> >>>  	uint				li_flags;	/* misc flags */
-> >>>  	struct xfs_buf			*li_buf;	/* real buffer pointer */
-> >>> -	struct xfs_log_item		*li_bio_list;	/* buffer item list */
-> >>> +	struct list_head		li_bio_list;	/* buffer item list */
-> >>>  	void				(*li_cb)(struct xfs_buf *,
-> >>>  						 struct xfs_log_item *);
-> >>>  							/* buffer item iodone */
-> >>>
-> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
