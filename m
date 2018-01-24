@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53792 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53278 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965097AbeAXSoU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S965096AbeAXSoU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Wed, 24 Jan 2018 13:44:20 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7E0F7300AA7
+        by mx1.redhat.com (Postfix) with ESMTPS id 16C678B104
         for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:20 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 61E445D6A8
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:20 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id ED5085D728
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:19 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFCv2 6/9] xfs: defer frees from common inode allocation paths
-Date: Wed, 24 Jan 2018 13:44:15 -0500
-Message-Id: <20180124184418.40403-7-bfoster@redhat.com>
+Subject: [RFCv2 4/9] xfs: defer agfl block frees from deferred ops processing context
+Date: Wed, 24 Jan 2018 13:44:13 -0500
+Message-Id: <20180124184418.40403-5-bfoster@redhat.com>
 In-Reply-To: <20180124184418.40403-1-bfoster@redhat.com>
 References: <20180124184418.40403-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,51 +22,58 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Inode allocation can require block allocation for physical inode
-chunk allocation, inode btree record insertion, and/or directory
-block allocation for entry insertion. Any of these block allocation
-requests can require AGFL fixups prior to the actual allocation.
-Update the common file creation transacions to defer AGFL frees from
-these contexts to avoid too much log reservation consumption
-per-transaction.
+Now that AGFL block frees can be deferred when dfops is carried
+through to the allocator via the transaction, we want to start
+deferring AGFL block frees from the contexts that are known to
+stress existing log reservations.
 
-Since these transactions are already passed down through the btree
-cursors and da_args structure, this simply requires to attach dfops
-to the transaction. Note that this covers tr_create, tr_mkdir and
-tr_symlink. Other transactions such as tr_create_tmpfile do not
-already make use of deferred operations and so are left alone for
-the time being.
+The first such context is deferred operation processing itself. This
+primarily targets deferred extent frees (such as file extents and
+inode chunks), but in doing so covers all allocation operations that
+occur in deferred operation processing context.
+
+Update xfs_defer_finish() to set and reset ->t_dfops across the
+finish sequence. This means that any AGFL block frees due to
+allocation events result in the addition of new EFIs to the dfops
+rather than being processed immediately. xfs_defer_finish() rolls
+the transaction at least once more to process the frees of the AGFL
+blocks back to the allocation btrees and returns once the AGFL is
+rectified.
+
+XXX: cache/reset old_dfops rather than NULL?
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_inode.c   | 1 +
- fs/xfs/xfs_symlink.c | 1 +
- 2 files changed, 2 insertions(+)
+ fs/xfs/libxfs/xfs_defer.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4c4a2fa3ad11..924dbd5a1b40 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1187,6 +1187,7 @@ xfs_create(
- 	unlock_dp_on_error = true;
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 087fea02c389..de71d292b9f3 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -357,6 +357,14 @@ xfs_defer_finish(
  
- 	xfs_defer_init(&dfops, &first_block);
-+	tp->t_dfops = &dfops;
+ 	trace_xfs_defer_finish((*tp)->t_mountp, dop);
  
- 	/*
- 	 * Reserve disk quota and the inode.
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 2e9e793a8f9d..8be021228266 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -259,6 +259,7 @@ xfs_symlink(
- 	 * bmapi or the directory create code.
- 	 */
- 	xfs_defer_init(&dfops, &first_block);
-+	tp->t_dfops = &dfops;
++	/*
++	 * Attach dfops to the transaction during deferred ops processing. This
++	 * causes calls into the allocator to defer AGFL block frees. The
++	 * pointer is set to NULL before we return.
++	 */
++	ASSERT(!(*tp)->t_dfops || ((*tp)->t_dfops == dop));
++	(*tp)->t_dfops = dop;
++
+ 	/* Until we run out of pending work to finish... */
+ 	while (xfs_defer_has_unfinished_work(dop)) {
+ 		/* Log intents for work items sitting in the intake. */
+@@ -428,6 +436,7 @@ xfs_defer_finish(
+ 	}
  
- 	/*
- 	 * Allocate an inode for the symlink.
+ out:
++	(*tp)->t_dfops = NULL;
+ 	if (error)
+ 		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
+ 	else
 -- 
 2.13.6
 
