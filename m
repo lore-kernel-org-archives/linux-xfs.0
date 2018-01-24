@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44010 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53792 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965101AbeAXSoU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S965097AbeAXSoU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Wed, 24 Jan 2018 13:44:20 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8E61266C7D
+        by mx1.redhat.com (Postfix) with ESMTPS id 7E0F7300AA7
         for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:20 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6A4D05D728
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 61E445D6A8
         for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:20 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFCv2 9/9] xfs: add extra log count for transactions that defer agfl frees
-Date: Wed, 24 Jan 2018 13:44:18 -0500
-Message-Id: <20180124184418.40403-10-bfoster@redhat.com>
+Subject: [RFCv2 6/9] xfs: defer frees from common inode allocation paths
+Date: Wed, 24 Jan 2018 13:44:15 -0500
+Message-Id: <20180124184418.40403-7-bfoster@redhat.com>
 In-Reply-To: <20180124184418.40403-1-bfoster@redhat.com>
 References: <20180124184418.40403-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,78 +22,51 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Now that AGFL frees are deferred from particular contexts, the
-associated transactions may require an increased number of
-transaction rolls during deferred operation processing. Update the
-log counts to prevent these additional rolls from blocking on
-reservation regrant.
+Inode allocation can require block allocation for physical inode
+chunk allocation, inode btree record insertion, and/or directory
+block allocation for entry insertion. Any of these block allocation
+requests can require AGFL fixups prior to the actual allocation.
+Update the common file creation transacions to defer AGFL frees from
+these contexts to avoid too much log reservation consumption
+per-transaction.
 
-XXX: This patch is currently a no-op as XFS_AGFL_LOG_COUNT is set to
-zero. Initially it was 1, but testing has shown a couple issues:
+Since these transactions are already passed down through the btree
+cursors and da_args structure, this simply requires to attach dfops
+to the transaction. Note that this covers tr_create, tr_mkdir and
+tr_symlink. Other transactions such as tr_create_tmpfile do not
+already make use of deferred operations and so are left alone for
+the time being.
 
-- The increase in number of regrants due to deferred AGFL block frees
-appears to be minimal on the workloads examined so far.
-- Increasing the logcount of certain larger transactions (e.g.,
-tr_rename and some of the other directory ops) can increase the max
-transaction reservation and have side effects like increasing the
-minimum required log size at mkfs time.
-
-Based on the above and the reasoning that deferred AGFL block frees
-are a subset of all AGFL fixup operations (only frees), which in
-turn are a subset of allocations (typically those that involve btree
-shape changes), I think that it's probably overkill to increase
-the logcount of any existing transactions at the moment. That
-doesn't preclude from doing so in the future, of course.
-
-I'm including this patch for reference and discussion purposes for
-the RFC. I'm open to running more/different tests and/or considering
-subsets of transactions, though I would prefer any change be backed
-by a test that demonstrates the cost of deferring AGFL frees and
-benefit of increasing the logcount of the associated transaction(s)
-and workload. I've simply not been able to do that with enough
-clarity to justify a change so far.
-
-Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_trans_resv.h | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_inode.c   | 1 +
+ fs/xfs/xfs_symlink.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-index b7e5357d060a..05fdcef07216 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.h
-+++ b/fs/xfs/libxfs/xfs_trans_resv.h
-@@ -82,20 +82,23 @@ struct xfs_trans_resv {
- 	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 4c4a2fa3ad11..924dbd5a1b40 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1187,6 +1187,7 @@ xfs_create(
+ 	unlock_dp_on_error = true;
  
- /*
-- * Various log count values.
-+ * Various log count values. The AGFL count is a sub-component that covers
-+ * additional tx rolls due to AGFL fixups (for transactions that defer AGFL
-+ * block frees).
-  */
-+#define	XFS_AGFL_LOG_COUNT		0 /* for agfl fixups */
- #define	XFS_DEFAULT_LOG_COUNT		1
- #define	XFS_DEFAULT_PERM_LOG_COUNT	2
- #define	XFS_ITRUNCATE_LOG_COUNT		2
- #define	XFS_ITRUNCATE_LOG_COUNT_REFLINK	8
--#define XFS_INACTIVE_LOG_COUNT		2
--#define	XFS_CREATE_LOG_COUNT		2
-+#define	XFS_INACTIVE_LOG_COUNT		(2 + XFS_AGFL_LOG_COUNT)
-+#define	XFS_CREATE_LOG_COUNT		(2 + XFS_AGFL_LOG_COUNT)
- #define	XFS_CREATE_TMPFILE_LOG_COUNT	2
--#define	XFS_MKDIR_LOG_COUNT		3
--#define	XFS_SYMLINK_LOG_COUNT		3
--#define	XFS_REMOVE_LOG_COUNT		2
--#define	XFS_LINK_LOG_COUNT		2
--#define	XFS_RENAME_LOG_COUNT		2
-+#define	XFS_MKDIR_LOG_COUNT		(3 + XFS_AGFL_LOG_COUNT)
-+#define	XFS_SYMLINK_LOG_COUNT		(3 + XFS_AGFL_LOG_COUNT)
-+#define	XFS_REMOVE_LOG_COUNT		(2 + XFS_AGFL_LOG_COUNT)
-+#define	XFS_LINK_LOG_COUNT		(2 + XFS_AGFL_LOG_COUNT)
-+#define	XFS_RENAME_LOG_COUNT		(2 + XFS_AGFL_LOG_COUNT)
- #define	XFS_WRITE_LOG_COUNT		2
- #define	XFS_WRITE_LOG_COUNT_REFLINK	8
- #define	XFS_ADDAFORK_LOG_COUNT		2
+ 	xfs_defer_init(&dfops, &first_block);
++	tp->t_dfops = &dfops;
+ 
+ 	/*
+ 	 * Reserve disk quota and the inode.
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 2e9e793a8f9d..8be021228266 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -259,6 +259,7 @@ xfs_symlink(
+ 	 * bmapi or the directory create code.
+ 	 */
+ 	xfs_defer_init(&dfops, &first_block);
++	tp->t_dfops = &dfops;
+ 
+ 	/*
+ 	 * Allocate an inode for the symlink.
 -- 
 2.13.6
 
