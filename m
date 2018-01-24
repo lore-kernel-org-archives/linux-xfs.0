@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52116 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932239AbeAXXxW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jan 2018 18:53:22 -0500
-Subject: [PATCH 0/5] xfstests: fixes and reflink quota tests
+Received: from aserp2130.oracle.com ([141.146.126.79]:59960 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932239AbeAXXx1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jan 2018 18:53:27 -0500
+Subject: [PATCH 1/5] common/rc: report kmemleak errors
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 24 Jan 2018 15:53:17 -0800
-Message-ID: <151683799705.17051.9987269343206294671.stgit@magnolia>
+Date: Wed, 24 Jan 2018 15:53:23 -0800
+Message-ID: <151683800323.17051.11972737619843691666.stgit@magnolia>
+In-Reply-To: <151683799705.17051.9987269343206294671.stgit@magnolia>
+References: <151683799705.17051.9987269343206294671.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,11 +18,106 @@ List-Id: xfs
 To: eguan@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This series contains the kmemleak checks for xfstests, a bunch of minor
-fixes to existing tests, and some new tests that check quota accounting
-regressions in xfs.  The quota accounting tests will fail until the
-series "xfs: reflink/scrub/quota fixes" goes into 4.16.
+If kmemleak is enabled, scan and report memory leaks after every test.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ check     |    2 ++
+ common/rc |   60 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 62 insertions(+)
+
+
+diff --git a/check b/check
+index 9868d22..b7b3d57 100755
+--- a/check
++++ b/check
+@@ -499,6 +499,7 @@ _check_filesystems()
+ 	fi
+ }
+ 
++_init_kmemleak
+ _prepare_test_list
+ 
+ if $OPTIONS_HAVE_SECTIONS; then
+@@ -795,6 +796,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 		    n_try=`expr $n_try + 1`
+ 		    _check_filesystems
+ 		    _check_dmesg || err=true
++		    _check_kmemleak || err=true
+ 		fi
+ 
+ 	    fi
+diff --git a/common/rc b/common/rc
+index 880555c..0d0def7 100644
+--- a/common/rc
++++ b/common/rc
+@@ -3452,6 +3452,66 @@ _check_dmesg()
+ 	fi
+ }
+ 
++# capture the kmemleak report
++_capture_kmemleak()
++{
++	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
++	local _leak_file="$1"
++
++	# Tell the kernel to scan for memory leaks.  Apparently the write
++	# returns before the scan is complete, so do it twice in the hopes
++	# that twice is enough to capture all the leaks.
++	echo "scan" > "${_kern_knob}"
++	cat "${_kern_knob}" > /dev/null
++	echo "scan" > "${_kern_knob}"
++	cat "${_kern_knob}" > "${_leak_file}.tmp"
++	if [ -s "${_leak_file}.tmp" ]; then
++		cat > "${_leak_file}" << ENDL
++EXPERIMENTAL kmemleak reported some memory leaks!  Due to the way kmemleak
++works, the leak might be from an earlier test, or something totally unrelated.
++ENDL
++		cat "${_leak_file}.tmp" >> "${_leak_file}"
++		rm -rf "${_leak_file}.tmp"
++	fi
++	echo "clear" > "${_kern_knob}"
++}
++
++# set up kmemleak
++_init_kmemleak()
++{
++	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
++
++	if [ ! -w "${_kern_knob}" ]; then
++		return 0
++	fi
++
++	# Disable the automatic scan so that we can control it completely,
++	# then dump all the leaks recorded so far.
++	echo "scan=off" > "${_kern_knob}"
++	_capture_kmemleak /dev/null
++}
++
++# check kmemleak log
++_check_kmemleak()
++{
++	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
++	local _leak_file="${seqres}.kmemleak"
++
++	if [ ! -w "${_kern_knob}" ]; then
++		return 0
++	fi
++
++	# Capture and report any leaks
++	_capture_kmemleak "${_leak_file}"
++	if [ -s "${_leak_file}" ]; then
++		_dump_err "_check_kmemleak: something found in kmemleak (see ${_leak_file})"
++		return 1
++	else
++		rm -f "${_leak_file}"
++		return 0
++	fi
++}
++
+ # don't check dmesg log after test
+ _disable_dmesg_check()
+ {
+
