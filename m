@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36342 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53290 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965091AbeAXSoU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S965103AbeAXSoU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Wed, 24 Jan 2018 13:44:20 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EE19C5C9CC
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:19 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id A51B58BD20
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:20 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D1C2C60A9D
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:19 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 67F82600CC
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 18:44:20 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFCv2 2/9] xfs: allow attach of dfops to transaction
-Date: Wed, 24 Jan 2018 13:44:11 -0500
-Message-Id: <20180124184418.40403-3-bfoster@redhat.com>
+Subject: [RFCv2 8/9] xfs: add a runtime stat for extra transaction log regrants
+Date: Wed, 24 Jan 2018 13:44:17 -0500
+Message-Id: <20180124184418.40403-9-bfoster@redhat.com>
 In-Reply-To: <20180124184418.40403-1-bfoster@redhat.com>
 References: <20180124184418.40403-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,78 +22,60 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-xfs_defer_ops is a separate data structure from the xfs_trans data
-structure. The former is typically allocated on the stack and
-completed/processed before the associated thread returns outside of
-the scope that defines the structure.
+Add a runtime stat to track the number of regrants that occur that
+were not satisfied by the initial transaction reservation (i.e.,
+->tr_logcount), regardless of whether blocking for reservation was
+required. The purpose of this stat is to help shed some light on how
+certain transaction changes may affect runtime behavior. For example,
+deferring AGFL block frees can cause an additional transaction rolls
+in cases where it is enabled. The regrant stat helps track how this
+behavior affects workloads and to consider whether to update
+transaction reservation counts.
 
-While this currently works fine, there are many places where
-xfs_dfops has to be plumbed through deep callchains and/or subsystem
-data structures (e.g., struct xfs_da_args) to other contexts. Since
-deferred operations cannot be processed without a transaction, the
-scope of xfs_defer_ops is essentially a subset of that of a
-transaction. Further, an upcoming enhancement to defer AGFL block
-frees requires to plumb xfs_defer_ops through yet another context
-(struct xfs_alloc_arg) that already carries a transaction.
-
-Rather than continue to pass dfops around independently, support the
-ability to optionally carry an xfs_defer_ops structure in the
-transaction itself. This facilitates the addition of deferred AGFL
-block free behavior from selective contexts and incremental
-clean up of other callchains to set/use the transaction reference
-rather than plumb the dfops through explicitly.
-
-Note that this patch does not change behavior nor dictate any
-changes to how dfops structs are allocated (on the stack) and so all
-existing rules apply. Changes to how dfops are allocated can be
-considered once all paths are converted and thus would use a
-consistent allocation pattern.
+Update the tail pushing section of the stats structure with the new
+field since it already includes a couple other logspace-related
+stats. Add the new stat at the end to minimize compatibility issues
+with any stats-parsing scripts, etc. that may exist out in the wild.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trans.c | 7 ++++---
- fs/xfs/xfs_trans.h | 1 +
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log.c   | 1 +
+ fs/xfs/xfs_stats.h | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 86f92df32c42..50ee39faf64e 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -94,11 +94,11 @@ xfs_trans_free(
-  * blocks.  Locks and log items, however, are no inherited.  They must
-  * be added to the new transaction explicitly.
-  */
--STATIC xfs_trans_t *
-+STATIC struct xfs_trans *
- xfs_trans_dup(
--	xfs_trans_t	*tp)
-+	struct xfs_trans	*tp)
- {
--	xfs_trans_t	*ntp;
-+	struct xfs_trans	*ntp;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index c1f266c34af7..0efe2af7e4fe 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -399,6 +399,7 @@ xfs_log_regrant(
+ 		return 0;
  
- 	ntp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
+ 	trace_xfs_log_regrant(log, tic);
++	XFS_STATS_INC(mp, xs_regrant_logspace);
  
-@@ -124,6 +124,7 @@ xfs_trans_dup(
- 	ntp->t_rtx_res = tp->t_rtx_res - tp->t_rtx_res_used;
- 	tp->t_rtx_res = tp->t_rtx_res_used;
- 	ntp->t_pflags = tp->t_pflags;
-+	ntp->t_dfops = tp->t_dfops;
- 
- 	xfs_trans_dup_dqinfo(tp, ntp);
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 815b53d20e26..d3e0599a4ce9 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -111,6 +111,7 @@ typedef struct xfs_trans {
- 	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
- 	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
- 	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
-+	struct xfs_defer_ops	*t_dfops;	/* deferred ops reference */
- 	unsigned int		t_flags;	/* misc flags */
- 	int64_t			t_icount_delta;	/* superblock icount change */
- 	int64_t			t_ifree_delta;	/* superblock ifree change */
+ 	error = xlog_grant_head_check(log, &log->l_write_head, tic,
+ 				      &need_bytes);
+diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+index f64d0ae345c4..76c6c099b65e 100644
+--- a/fs/xfs/xfs_stats.h
++++ b/fs/xfs/xfs_stats.h
+@@ -99,7 +99,7 @@ struct __xfsstats {
+ 	uint32_t		xs_log_noiclogs;
+ 	uint32_t		xs_log_force;
+ 	uint32_t		xs_log_force_sleep;
+-# define XFSSTAT_END_TAIL_PUSHING	(XFSSTAT_END_LOG_OPS+10)
++# define XFSSTAT_END_TAIL_PUSHING	(XFSSTAT_END_LOG_OPS+11)
+ 	uint32_t		xs_try_logspace;
+ 	uint32_t		xs_sleep_logspace;
+ 	uint32_t		xs_push_ail;
+@@ -110,6 +110,7 @@ struct __xfsstats {
+ 	uint32_t		xs_push_ail_flushing;
+ 	uint32_t		xs_push_ail_restarts;
+ 	uint32_t		xs_push_ail_flush;
++	uint32_t		xs_regrant_logspace;
+ # define XFSSTAT_END_WRITE_CONVERT	(XFSSTAT_END_TAIL_PUSHING+2)
+ 	uint32_t		xs_xstrat_quick;
+ 	uint32_t		xs_xstrat_split;
 -- 
 2.13.6
 
