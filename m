@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:59960 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:60110 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932239AbeAXXx1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jan 2018 18:53:27 -0500
-Subject: [PATCH 1/5] common/rc: report kmemleak errors
+        with ESMTP id S932251AbeAXXxe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jan 2018 18:53:34 -0500
+Subject: [PATCH 2/5] xfs/122: fix xfs header ordering problems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 24 Jan 2018 15:53:23 -0800
-Message-ID: <151683800323.17051.11972737619843691666.stgit@magnolia>
+Date: Wed, 24 Jan 2018 15:53:29 -0800
+Message-ID: <151683800942.17051.13963517513340805990.stgit@magnolia>
 In-Reply-To: <151683799705.17051.9987269343206294671.stgit@magnolia>
 References: <151683799705.17051.9987269343206294671.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,104 +20,32 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If kmemleak is enabled, scan and report memory leaks after every test.
+XFS headers are supposed to be included in a certain order so that
+inline functions actually compile correctly.  For the most part the
+shell feeds us the files in an order that works, but with the addition
+of the xfs_dir2_dirblock_bytes function this doesn't always work now.
+Therefore, explicitly #include the headers in the required order.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- check     |    2 ++
- common/rc |   60 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 62 insertions(+)
+ tests/xfs/122 |    5 +++++
+ 1 file changed, 5 insertions(+)
 
 
-diff --git a/check b/check
-index 9868d22..b7b3d57 100755
---- a/check
-+++ b/check
-@@ -499,6 +499,7 @@ _check_filesystems()
- 	fi
- }
- 
-+_init_kmemleak
- _prepare_test_list
- 
- if $OPTIONS_HAVE_SECTIONS; then
-@@ -795,6 +796,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
- 		    n_try=`expr $n_try + 1`
- 		    _check_filesystems
- 		    _check_dmesg || err=true
-+		    _check_kmemleak || err=true
- 		fi
- 
- 	    fi
-diff --git a/common/rc b/common/rc
-index 880555c..0d0def7 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3452,6 +3452,66 @@ _check_dmesg()
- 	fi
- }
- 
-+# capture the kmemleak report
-+_capture_kmemleak()
-+{
-+	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local _leak_file="$1"
-+
-+	# Tell the kernel to scan for memory leaks.  Apparently the write
-+	# returns before the scan is complete, so do it twice in the hopes
-+	# that twice is enough to capture all the leaks.
-+	echo "scan" > "${_kern_knob}"
-+	cat "${_kern_knob}" > /dev/null
-+	echo "scan" > "${_kern_knob}"
-+	cat "${_kern_knob}" > "${_leak_file}.tmp"
-+	if [ -s "${_leak_file}.tmp" ]; then
-+		cat > "${_leak_file}" << ENDL
-+EXPERIMENTAL kmemleak reported some memory leaks!  Due to the way kmemleak
-+works, the leak might be from an earlier test, or something totally unrelated.
-+ENDL
-+		cat "${_leak_file}.tmp" >> "${_leak_file}"
-+		rm -rf "${_leak_file}.tmp"
-+	fi
-+	echo "clear" > "${_kern_knob}"
-+}
-+
-+# set up kmemleak
-+_init_kmemleak()
-+{
-+	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-+
-+	if [ ! -w "${_kern_knob}" ]; then
-+		return 0
-+	fi
-+
-+	# Disable the automatic scan so that we can control it completely,
-+	# then dump all the leaks recorded so far.
-+	echo "scan=off" > "${_kern_knob}"
-+	_capture_kmemleak /dev/null
-+}
-+
-+# check kmemleak log
-+_check_kmemleak()
-+{
-+	local _kern_knob="${DEBUGFS_MNT}/kmemleak"
-+	local _leak_file="${seqres}.kmemleak"
-+
-+	if [ ! -w "${_kern_knob}" ]; then
-+		return 0
-+	fi
-+
-+	# Capture and report any leaks
-+	_capture_kmemleak "${_leak_file}"
-+	if [ -s "${_leak_file}" ]; then
-+		_dump_err "_check_kmemleak: something found in kmemleak (see ${_leak_file})"
-+		return 1
-+	else
-+		rm -f "${_leak_file}"
-+		return 0
-+	fi
-+}
-+
- # don't check dmesg log after test
- _disable_dmesg_check()
- {
+diff --git a/tests/xfs/122 b/tests/xfs/122
+index 671a77b..d836670 100755
+--- a/tests/xfs/122
++++ b/tests/xfs/122
+@@ -79,6 +79,11 @@ cat >$cprog <<EOF
+ #define _GNU_SOURCE
+ #include <stdio.h>
+ EOF
++# Certain headers must be included in a certain order...
++for hdr in xfs.h xfs_types.h xfs_fs.h xfs_arch.h xfs_format.h; do
++	test -e "/usr/include/xfs/$hdr" && echo "#include <xfs/$hdr>" >> $cprog
++done
++# ...but be sure to pull in any new headers that might show up.
+ for hdr in /usr/include/xfs/xfs*.h; do
+ 	echo "#include <$(echo "$hdr" | sed -e 's|/usr/include/||g')>" >> $cprog
+ done
 
