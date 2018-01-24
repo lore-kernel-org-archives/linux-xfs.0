@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41636 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52880 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932491AbeAXIrp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Jan 2018 03:47:45 -0500
+        id S932553AbeAXIrr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Jan 2018 03:47:47 -0500
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 65DC937EEA
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 08:47:45 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id A229C80467
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 08:47:46 +0000 (UTC)
 Received: from odin.usersys.redhat.com (ovpn-204-234.brq.redhat.com [10.40.204.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4106D17277
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 08:47:44 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DBAF217277
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 08:47:45 +0000 (UTC)
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/3] Split buffer's b_fspriv field
-Date: Wed, 24 Jan 2018 09:47:35 +0100
-Message-Id: <20180124084736.17411-3-cmaiolino@redhat.com>
+Subject: [PATCH 3/3] Use list_head infra-structure for buffer's log items list
+Date: Wed, 24 Jan 2018 09:47:36 +0100
+Message-Id: <20180124084736.17411-4-cmaiolino@redhat.com>
 In-Reply-To: <20180124084736.17411-1-cmaiolino@redhat.com>
 References: <20180124084736.17411-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,752 +22,411 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-By splitting the b_fspriv field into two different fields (b_log_item
-and b_li_list). It's possible to get rid of an old ABI workaround, by
-using the new b_log_item field to store xfs_buf_log_item separated from
-the log items attached to the buffer, which will be linked in the new
-b_li_list field.
+Now that buffer's b_fspriv has been split, just replace the current
+singly linked list of xfs_log_items, by the list_head infrastructure.
 
-This way, there is no more need to reorder the log items list to place
-the buf_log_item at the beginning of the list, simplifying a bit the
-logic to handle buffer IO.
-
-This also opens the possibility to change buffer's log items list into a
-proper list_head.
-
-b_log_item field is still defined as a void *, because it is still used
-by the log buffers to store xlog_in_core structures, and there is no
-need to add an extra field on xfs_buf just for xlog_in_core.
+Also, remove the xfs_log_item argument from xfs_buf_resubmit_failed_buffers(),
+there is no need for this argument, once the log items can be walked
+through the list_head in the buffer.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c          |  8 ++--
- fs/xfs/libxfs/xfs_attr_leaf.c      |  2 +-
- fs/xfs/libxfs/xfs_btree.c          |  4 +-
- fs/xfs/libxfs/xfs_da_btree.c       |  2 +-
- fs/xfs/libxfs/xfs_dir2_block.c     |  2 +-
- fs/xfs/libxfs/xfs_dir2_data.c      |  2 +-
- fs/xfs/libxfs/xfs_dir2_leaf.c      |  2 +-
- fs/xfs/libxfs/xfs_dir2_node.c      |  2 +-
- fs/xfs/libxfs/xfs_ialloc.c         |  4 +-
- fs/xfs/libxfs/xfs_sb.c             |  2 +-
- fs/xfs/libxfs/xfs_symlink_remote.c |  2 +-
- fs/xfs/xfs_buf.h                   |  3 +-
- fs/xfs/xfs_buf_item.c              | 89 +++++++++++++++++++++++---------------
- fs/xfs/xfs_inode.c                 |  4 +-
- fs/xfs/xfs_inode_item.c            |  4 +-
- fs/xfs/xfs_log.c                   |  8 ++--
- fs/xfs/xfs_log_recover.c           |  6 +--
- fs/xfs/xfs_trans_buf.c             | 48 ++++++++++----------
- 18 files changed, 108 insertions(+), 86 deletions(-)
+ fs/xfs/xfs_buf.c        |  1 +
+ fs/xfs/xfs_buf.h        |  2 +-
+ fs/xfs/xfs_buf_item.c   | 64 +++++++++++++++++++++----------------------------
+ fs/xfs/xfs_buf_item.h   |  1 -
+ fs/xfs/xfs_dquot_item.c |  2 +-
+ fs/xfs/xfs_inode.c      |  8 +++----
+ fs/xfs/xfs_inode_item.c | 41 ++++++++++---------------------
+ fs/xfs/xfs_log.c        |  1 +
+ fs/xfs/xfs_trans.h      |  2 +-
+ 9 files changed, 47 insertions(+), 75 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 6883a7668de6..c02781a4c091 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -590,8 +590,8 @@ static void
- xfs_agfl_write_verify(
- 	struct xfs_buf	*bp)
- {
--	struct xfs_mount *mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	xfs_failaddr_t		fa;
- 
- 	/* no verification of non-crc AGFLs */
-@@ -2487,8 +2487,8 @@ static void
- xfs_agf_write_verify(
- 	struct xfs_buf	*bp)
- {
--	struct xfs_mount *mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	xfs_failaddr_t		fa;
- 
- 	fa = xfs_agf_verify(bp);
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index efe5f8acbd45..2135b8e67dcc 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -309,7 +309,7 @@ xfs_attr3_leaf_write_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_attr3_leaf_hdr *hdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
- 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 567cff5ed511..79ee4a1951d1 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -273,7 +273,7 @@ xfs_btree_lblock_calc_crc(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	if (!xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
- 		return;
-@@ -311,7 +311,7 @@ xfs_btree_sblock_calc_crc(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	if (!xfs_sb_version_hascrc(&bp->b_target->bt_mount->m_sb))
- 		return;
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index cf07585b9d83..ea187b4a7991 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -182,7 +182,7 @@ xfs_da3_node_write_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index fe951fa1a583..2da86a394bcf 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -103,7 +103,7 @@ xfs_dir3_block_write_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-index a1e30c751c00..920279485275 100644
---- a/fs/xfs/libxfs/xfs_dir2_data.c
-+++ b/fs/xfs/libxfs/xfs_dir2_data.c
-@@ -320,7 +320,7 @@ xfs_dir3_data_write_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index a7ad649398c7..d7e630f41f9c 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -208,7 +208,7 @@ __write_verify(
- 	uint16_t	magic)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_dir3_leaf_hdr *hdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index bb893ae02696..239d97a64296 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -141,7 +141,7 @@ xfs_dir3_free_write_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
- 	xfs_failaddr_t		fa;
- 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 3625d1da7462..0e2cf5f0be1f 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2557,8 +2557,8 @@ static void
- xfs_agi_write_verify(
- 	struct xfs_buf	*bp)
- {
--	struct xfs_mount *mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	xfs_failaddr_t		fa;
- 
- 	fa = xfs_agi_verify(bp);
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index e0c826403c6a..46af6aa60a8e 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -688,7 +688,7 @@ xfs_sb_write_verify(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	int			error;
- 
- 	error = xfs_sb_verify(bp, false);
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-index 091e3cf0868f..5ef5f354587e 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.c
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-@@ -149,7 +149,7 @@ xfs_symlink_write_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	xfs_failaddr_t		fa;
- 
- 	/* no verification of non-crc buffers */
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 0820c1ccf97c..d1da2ee9e6db 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -236,6 +236,7 @@ _xfs_buf_alloc(
+ 	init_completion(&bp->b_iowait);
+ 	INIT_LIST_HEAD(&bp->b_lru);
+ 	INIT_LIST_HEAD(&bp->b_list);
++	INIT_LIST_HEAD(&bp->b_li_list);
+ 	sema_init(&bp->b_sema, 0); /* held, no waiters */
+ 	spin_lock_init(&bp->b_lock);
+ 	XB_SET_OWNER(bp);
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 5b5b4861c729..6fcba7536d7e 100644
+index 6fcba7536d7e..2f4c91452861 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -176,7 +176,8 @@ typedef struct xfs_buf {
- 	struct workqueue_struct	*b_ioend_wq;	/* I/O completion wq */
+@@ -177,7 +177,7 @@ typedef struct xfs_buf {
  	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
  	struct completion	b_iowait;	/* queue for I/O waiters */
--	void			*b_fspriv;
-+	void			*b_log_item;
-+	struct xfs_log_item	*b_li_list;
+ 	void			*b_log_item;
+-	struct xfs_log_item	*b_li_list;
++	struct list_head	b_li_list;	/* Log items list head */
  	struct xfs_trans	*b_transp;
  	struct page		**b_pages;	/* array of page pointers */
  	struct page		*b_page_array[XB_PAGES]; /* inline pages */
 diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 8afcfa3ed976..b27ef1fc5538 100644
+index b27ef1fc5538..4713d3c8e715 100644
 --- a/fs/xfs/xfs_buf_item.c
 +++ b/fs/xfs/xfs_buf_item.c
-@@ -411,7 +411,7 @@ xfs_buf_item_unpin(
- 	int			stale = bip->bli_flags & XFS_BLI_STALE;
- 	int			freed;
- 
--	ASSERT(bp->b_fspriv == bip);
-+	ASSERT(bp->b_log_item == bip);
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 
- 	trace_xfs_buf_item_unpin(bip);
-@@ -456,13 +456,14 @@ xfs_buf_item_unpin(
- 		 */
+@@ -457,7 +457,7 @@ xfs_buf_item_unpin(
  		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
  			xfs_buf_do_callbacks(bp);
--			bp->b_fspriv = NULL;
-+			bp->b_log_item = NULL;
-+			bp->b_li_list = NULL;
+ 			bp->b_log_item = NULL;
+-			bp->b_li_list = NULL;
++			list_del_init(&bp->b_li_list);
  			bp->b_iodone = NULL;
  		} else {
  			spin_lock(&ailp->xa_lock);
- 			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_LOG_IO_ERROR);
- 			xfs_buf_item_relse(bp);
--			ASSERT(bp->b_fspriv == NULL);
-+			ASSERT(bp->b_log_item == NULL);
- 		}
- 		xfs_buf_relse(bp);
- 	} else if (freed && remove) {
-@@ -722,18 +723,15 @@ xfs_buf_item_free_format(
- 
- /*
-  * Allocate a new buf log item to go with the given buffer.
-- * Set the buffer's b_fsprivate field to point to the new
-- * buf log item.  If there are other item's attached to the
-- * buffer (see xfs_buf_attach_iodone() below), then put the
-- * buf log item at the front.
-+ * Set the buffer's b_log_item field to point to the new
-+ * buf log item.
-  */
- int
- xfs_buf_item_init(
- 	struct xfs_buf	*bp,
- 	struct xfs_mount *mp)
- {
--	struct xfs_log_item	*lip = bp->b_fspriv;
--	struct xfs_buf_log_item	*bip;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	int			chunks;
- 	int			map_size;
- 	int			error;
-@@ -741,13 +739,14 @@ xfs_buf_item_init(
- 
- 	/*
- 	 * Check to see if there is already a buf log item for
--	 * this buffer.  If there is, it is guaranteed to be
--	 * the first.  If we do already have one, there is
-+	 * this buffer. If we do already have one, there is
- 	 * nothing to do here so return.
- 	 */
- 	ASSERT(bp->b_target->bt_mount == mp);
--	if (lip != NULL && lip->li_type == XFS_LI_BUF)
-+	if (bip != NULL) {
-+		ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
- 		return 0;
-+	}
- 
- 	bip = kmem_zone_zalloc(xfs_buf_item_zone, KM_SLEEP);
- 	xfs_log_item_init(mp, &bip->bli_item, XFS_LI_BUF, &xfs_buf_item_ops);
-@@ -781,13 +780,7 @@ xfs_buf_item_init(
- 		bip->bli_formats[i].blf_map_size = map_size;
- 	}
- 
--	/*
--	 * Put the buf item into the list of items attached to the
--	 * buffer at the front.
--	 */
--	if (bp->b_fspriv)
--		bip->bli_item.li_bio_list = bp->b_fspriv;
--	bp->b_fspriv = bip;
-+	bp->b_log_item = bip;
- 	xfs_buf_hold(bp);
- 	return 0;
- }
-@@ -961,13 +954,14 @@ void
- xfs_buf_item_relse(
+@@ -955,13 +955,12 @@ xfs_buf_item_relse(
  	xfs_buf_t	*bp)
  {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
-+	struct xfs_log_item	*lip = bp->b_li_list;
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+-	struct xfs_log_item	*lip = bp->b_li_list;
  
  	trace_xfs_buf_item_relse(bp, _RET_IP_);
  	ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
  
--	bp->b_fspriv = bip->bli_item.li_bio_list;
--	if (bp->b_fspriv == NULL)
-+	bp->b_log_item = NULL;
-+	if (lip == NULL)
+ 	bp->b_log_item = NULL;
+-	if (lip == NULL)
++	if (list_empty(&bp->b_li_list))
  		bp->b_iodone = NULL;
  
  	xfs_buf_rele(bp);
-@@ -980,9 +974,7 @@ xfs_buf_item_relse(
-  * to be called when the buffer's I/O completes.  If it is not set
-  * already, set the buffer's b_iodone() routine to be
-  * xfs_buf_iodone_callbacks() and link the log item into the list of
-- * items rooted at b_fsprivate.  Items are always added as the second
-- * entry in the list if there is a first, because the buf item code
-- * assumes that the buf log item is first.
-+ * items rooted at b_li_list.
-  */
- void
- xfs_buf_attach_iodone(
-@@ -995,12 +987,12 @@ xfs_buf_attach_iodone(
+@@ -982,18 +981,10 @@ xfs_buf_attach_iodone(
+ 	void		(*cb)(xfs_buf_t *, xfs_log_item_t *),
+ 	xfs_log_item_t	*lip)
+ {
+-	xfs_log_item_t	*head_lip;
+-
  	ASSERT(xfs_buf_islocked(bp));
  
  	lip->li_cb = cb;
--	head_lip = bp->b_fspriv;
-+	head_lip = bp->b_li_list;
- 	if (head_lip) {
- 		lip->li_bio_list = head_lip->li_bio_list;
- 		head_lip->li_bio_list = lip;
- 	} else {
--		bp->b_fspriv = lip;
-+		bp->b_li_list = lip;
- 	}
+-	head_lip = bp->b_li_list;
+-	if (head_lip) {
+-		lip->li_bio_list = head_lip->li_bio_list;
+-		head_lip->li_bio_list = lip;
+-	} else {
+-		bp->b_li_list = lip;
+-	}
++	list_add_tail(&lip->li_bio_list, &bp->b_li_list);
  
  	ASSERT(bp->b_iodone == NULL ||
-@@ -1024,10 +1016,17 @@ STATIC void
- xfs_buf_do_callbacks(
- 	struct xfs_buf		*bp)
- {
-+	struct xfs_buf_log_item *blip = bp->b_log_item;
- 	struct xfs_log_item	*lip;
+ 	       bp->b_iodone == xfs_buf_iodone_callbacks);
+@@ -1003,12 +994,12 @@ xfs_buf_attach_iodone(
+ /*
+  * We can have many callbacks on a buffer. Running the callbacks individually
+  * can cause a lot of contention on the AIL lock, so we allow for a single
+- * callback to be able to scan the remaining lip->li_bio_list for other items
+- * of the same type and callback to be processed in the first call.
++ * callback to be able to scan the remaining items in bp->b_li_list for other
++ * items of the same type and callback to be processed in the first call.
+  *
+  * As a result, the loop walking the callback list below will also modify the
+  * list. it removes the first item from the list and then runs the callback.
+- * The loop then restarts from the new head of the list. This allows the
++ * The loop then restarts from the new first item int the list. This allows the
+  * callback to scan and modify the list attached to the buffer and we don't
+  * have to care about maintaining a next item pointer.
+  */
+@@ -1025,16 +1016,17 @@ xfs_buf_do_callbacks(
+ 		lip->li_cb(bp, lip);
+ 	}
  
--	while ((lip = bp->b_fspriv) != NULL) {
--		bp->b_fspriv = lip->li_bio_list;
-+	/* If there is a buf_log_item attached, run its callback */
-+	if (blip) {
-+		lip = &blip->bli_item;
-+		lip->li_cb(bp, lip);
-+	}
+-	while ((lip = bp->b_li_list) != NULL) {
+-		bp->b_li_list = lip->li_bio_list;
+-		ASSERT(lip->li_cb != NULL);
++	while (!list_empty(&bp->b_li_list)) {
++		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
++				       li_bio_list);
 +
-+	while ((lip = bp->b_li_list) != NULL) {
-+		bp->b_li_list = lip->li_bio_list;
- 		ASSERT(lip->li_cb != NULL);
  		/*
- 		 * Clear the next pointer so we don't have any
-@@ -1052,9 +1051,19 @@ STATIC void
+-		 * Clear the next pointer so we don't have any
++		 * Remove the item from the list, so we don't have any
+ 		 * confusion if the item is added to another buf.
+ 		 * Don't touch the log item after calling its
+ 		 * callback, because it could have freed itself.
+ 		 */
+-		lip->li_bio_list = NULL;
++		list_del_init(&lip->li_bio_list);
+ 		lip->li_cb(bp, lip);
+ 	}
+ }
+@@ -1051,8 +1043,7 @@ STATIC void
  xfs_buf_do_callbacks_fail(
  	struct xfs_buf		*bp)
  {
-+	struct xfs_log_item	*lip = bp->b_li_list;
- 	struct xfs_log_item	*next;
--	struct xfs_log_item	*lip = bp->b_fspriv;
--	struct xfs_ail		*ailp = lip->li_ailp;
-+	struct xfs_ail		*ailp;
-+
-+	/*
-+	 * Buffer log item errors are handled directly by xfs_buf_item_push()
-+	 * and xfs_buf_iodone_callback_error, and they have no IO error
-+	 * callbacks. Check only for items in b_li_list.
-+	 */
-+	if (lip == NULL)
-+		return;
-+	else
-+		ailp = lip->li_ailp;
+-	struct xfs_log_item	*lip = bp->b_li_list;
+-	struct xfs_log_item	*next;
++	struct xfs_log_item	*lip;
+ 	struct xfs_ail		*ailp;
+ 
+ 	/*
+@@ -1060,14 +1051,16 @@ xfs_buf_do_callbacks_fail(
+ 	 * and xfs_buf_iodone_callback_error, and they have no IO error
+ 	 * callbacks. Check only for items in b_li_list.
+ 	 */
+-	if (lip == NULL)
++	if (list_empty(&bp->b_li_list)) {
+ 		return;
+-	else
++	} else {
++		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
++				       li_bio_list);
+ 		ailp = lip->li_ailp;
++	}
  
  	spin_lock(&ailp->xa_lock);
- 	for (; lip; lip = next) {
-@@ -1069,12 +1078,23 @@ static bool
- xfs_buf_iodone_callback_error(
+-	for (; lip; lip = next) {
+-		next = lip->li_bio_list;
++	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
+ 		if (lip->li_ops->iop_error)
+ 			lip->li_ops->iop_error(lip, bp);
+ 	}
+@@ -1079,7 +1072,7 @@ xfs_buf_iodone_callback_error(
  	struct xfs_buf		*bp)
  {
--	struct xfs_log_item	*lip = bp->b_fspriv;
--	struct xfs_mount	*mp = lip->li_mountp;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
-+	struct xfs_log_item	*lip = bp->b_li_list;
-+	struct xfs_mount	*mp;
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+-	struct xfs_log_item	*lip = bp->b_li_list;
++	struct xfs_log_item	*lip;
+ 	struct xfs_mount	*mp;
  	static ulong		lasttime;
  	static xfs_buftarg_t	*lasttarg;
- 	struct xfs_error_cfg	*cfg;
- 
-+	/*
-+	 * The failed buffer might not have a buf_log_item attached or the
-+	 * log_item list might be empty. Get the mp from the available
-+	 * xfs_log_item
-+	 */
-+	if (bip == NULL)
-+		mp = lip->li_mountp;
-+	else
-+		mp = bip->bli_item.li_mountp;
+@@ -1090,10 +1083,10 @@ xfs_buf_iodone_callback_error(
+ 	 * log_item list might be empty. Get the mp from the available
+ 	 * xfs_log_item
+ 	 */
+-	if (bip == NULL)
+-		mp = lip->li_mountp;
+-	else
+-		mp = bip->bli_item.li_mountp;
++	lip = list_first_entry_or_null(&bp->b_li_list, struct xfs_log_item,
++				       li_bio_list);
 +
++	mp = lip ? lip->li_mountp : bip->bli_item.li_mountp;
+ 
  	/*
  	 * If we've already decided to shutdown the filesystem because of
- 	 * I/O errors, there's no point in giving this a retry.
-@@ -1183,7 +1203,8 @@ xfs_buf_iodone_callbacks(
- 	bp->b_first_retry_time = 0;
+@@ -1204,7 +1197,7 @@ xfs_buf_iodone_callbacks(
  
  	xfs_buf_do_callbacks(bp);
--	bp->b_fspriv = NULL;
-+	bp->b_log_item = NULL;
-+	bp->b_li_list = NULL;
+ 	bp->b_log_item = NULL;
+-	bp->b_li_list = NULL;
++	list_del_init(&bp->b_li_list);
  	bp->b_iodone = NULL;
  	xfs_buf_ioend(bp);
  }
+@@ -1249,10 +1242,9 @@ xfs_buf_iodone(
+ bool
+ xfs_buf_resubmit_failed_buffers(
+ 	struct xfs_buf		*bp,
+-	struct xfs_log_item	*lip,
+ 	struct list_head	*buffer_list)
+ {
+-	struct xfs_log_item	*next;
++	struct xfs_log_item	*lip;
+ 
+ 	/*
+ 	 * Clear XFS_LI_FAILED flag from all items before resubmit
+@@ -1260,10 +1252,8 @@ xfs_buf_resubmit_failed_buffers(
+ 	 * XFS_LI_FAILED set/clear is protected by xa_lock, caller  this
+ 	 * function already have it acquired
+ 	 */
+-	for (; lip; lip = next) {
+-		next = lip->li_bio_list;
++	list_for_each_entry(lip, &bp->b_li_list, li_bio_list)
+ 		xfs_clear_li_failed(lip);
+-	}
+ 
+ 	/* Add this buffer back to the delayed write list */
+ 	return xfs_buf_delwri_queue(bp, buffer_list);
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 0febfbbf6ba9..643f53dcfe51 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -71,7 +71,6 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ void	xfs_buf_iodone_callbacks(struct xfs_buf *);
+ void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
+ bool	xfs_buf_resubmit_failed_buffers(struct xfs_buf *,
+-					struct xfs_log_item *,
+ 					struct list_head *);
+ 
+ extern kmem_zone_t	*xfs_buf_item_zone;
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 51ee848a550e..96eaa6933709 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -176,7 +176,7 @@ xfs_qm_dquot_logitem_push(
+ 		if (!xfs_buf_trylock(bp))
+ 			return XFS_ITEM_LOCKED;
+ 
+-		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
++		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
+ 			rval = XFS_ITEM_FLUSHING;
+ 
+ 		xfs_buf_unlock(bp);
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c9e40d4fc939..8a3ff6343d91 100644
+index 8a3ff6343d91..c66effc8e7dd 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2272,7 +2272,7 @@ xfs_ifree_cluster(
+@@ -2214,7 +2214,7 @@ xfs_ifree_cluster(
+ 	xfs_buf_t		*bp;
+ 	xfs_inode_t		*ip;
+ 	xfs_inode_log_item_t	*iip;
+-	xfs_log_item_t		*lip;
++	struct xfs_log_item	*lip;
+ 	struct xfs_perag	*pag;
+ 	xfs_ino_t		inum;
+ 
+@@ -2272,8 +2272,7 @@ xfs_ifree_cluster(
  		 * stale first, we will not attempt to lock them in the loop
  		 * below as the XFS_ISTALE flag will be set.
  		 */
--		lip = bp->b_fspriv;
-+		lip = bp->b_li_list;
- 		while (lip) {
+-		lip = bp->b_li_list;
+-		while (lip) {
++		list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
  			if (lip->li_type == XFS_LI_INODE) {
  				iip = (xfs_inode_log_item_t *)lip;
-@@ -3649,7 +3649,7 @@ xfs_iflush_int(
+ 				ASSERT(iip->ili_logged == 1);
+@@ -2283,7 +2282,6 @@ xfs_ifree_cluster(
+ 							&iip->ili_item.li_lsn);
+ 				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
+ 			}
+-			lip = lip->li_bio_list;
+ 		}
+ 
+ 
+@@ -3649,7 +3647,7 @@ xfs_iflush_int(
  	/* generate the checksum. */
  	xfs_dinode_calc_crc(mp, dip);
  
--	ASSERT(bp->b_fspriv != NULL);
-+	ASSERT(bp->b_li_list != NULL);
+-	ASSERT(bp->b_li_list != NULL);
++	ASSERT(!list_empty(&bp->b_li_list));
  	ASSERT(bp->b_iodone != NULL);
  	return 0;
  
 diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 6ee5c3bf19ad..993736032b4b 100644
+index 993736032b4b..ddfc2c80af5e 100644
 --- a/fs/xfs/xfs_inode_item.c
 +++ b/fs/xfs/xfs_inode_item.c
-@@ -722,7 +722,7 @@ xfs_iflush_done(
+@@ -521,7 +521,7 @@ xfs_inode_item_push(
+ 		if (!xfs_buf_trylock(bp))
+ 			return XFS_ITEM_LOCKED;
+ 
+-		if (!xfs_buf_resubmit_failed_buffers(bp, lip, buffer_list))
++		if (!xfs_buf_resubmit_failed_buffers(bp, buffer_list))
+ 			rval = XFS_ITEM_FLUSHING;
+ 
+ 		xfs_buf_unlock(bp);
+@@ -712,37 +712,23 @@ xfs_iflush_done(
+ 	struct xfs_log_item	*lip)
+ {
+ 	struct xfs_inode_log_item *iip;
+-	struct xfs_log_item	*blip;
+-	struct xfs_log_item	*next;
+-	struct xfs_log_item	*prev;
++	struct xfs_log_item	*blip, *n;
+ 	struct xfs_ail		*ailp = lip->li_ailp;
+ 	int			need_ail = 0;
++	LIST_HEAD(tmp);
+ 
+ 	/*
  	 * Scan the buffer IO completions for other inodes being completed and
  	 * attach them to the current inode log item.
  	 */
--	blip = bp->b_fspriv;
-+	blip = bp->b_li_list;
- 	prev = NULL;
- 	while (blip != NULL) {
- 		if (blip->li_cb != xfs_iflush_done) {
-@@ -734,7 +734,7 @@ xfs_iflush_done(
- 		/* remove from list */
- 		next = blip->li_bio_list;
- 		if (!prev) {
--			bp->b_fspriv = next;
-+			bp->b_li_list = next;
- 		} else {
- 			prev->li_bio_list = next;
- 		}
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index c1f266c34af7..20483b654ef1 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1242,7 +1242,7 @@ xlog_space_left(
- static void
- xlog_iodone(xfs_buf_t *bp)
- {
--	struct xlog_in_core	*iclog = bp->b_fspriv;
-+	struct xlog_in_core	*iclog = bp->b_log_item;
- 	struct xlog		*l = iclog->ic_log;
- 	int			aborted = 0;
+-	blip = bp->b_li_list;
+-	prev = NULL;
+-	while (blip != NULL) {
+-		if (blip->li_cb != xfs_iflush_done) {
+-			prev = blip;
+-			blip = blip->li_bio_list;
+-			continue;
+-		}
  
-@@ -1773,7 +1773,7 @@ STATIC int
- xlog_bdstrat(
- 	struct xfs_buf		*bp)
- {
--	struct xlog_in_core	*iclog = bp->b_fspriv;
-+	struct xlog_in_core	*iclog = bp->b_log_item;
+-		/* remove from list */
+-		next = blip->li_bio_list;
+-		if (!prev) {
+-			bp->b_li_list = next;
+-		} else {
+-			prev->li_bio_list = next;
+-		}
++	list_add_tail(&lip->li_bio_list, &tmp);
  
- 	xfs_buf_lock(bp);
- 	if (iclog->ic_state & XLOG_STATE_IOERROR) {
-@@ -1919,7 +1919,7 @@ xlog_sync(
+-		/* add to current list */
+-		blip->li_bio_list = lip->li_bio_list;
+-		lip->li_bio_list = blip;
++	list_for_each_entry_safe(blip, n, &bp->b_li_list, li_bio_list) {
++		if (lip->li_cb != xfs_iflush_done)
++			continue;
+ 
++		list_move_tail(&blip->li_bio_list, &tmp);
+ 		/*
+ 		 * while we have the item, do the unlocked check for needing
+ 		 * the AIL lock.
+@@ -751,8 +737,6 @@ xfs_iflush_done(
+ 		if ((iip->ili_logged && blip->li_lsn == iip->ili_flush_lsn) ||
+ 		    (blip->li_flags & XFS_LI_FAILED))
+ 			need_ail++;
+-
+-		blip = next;
  	}
  
- 	bp->b_io_length = BTOBB(count);
--	bp->b_fspriv = iclog;
-+	bp->b_log_item = iclog;
- 	bp->b_flags &= ~XBF_FLUSH;
- 	bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
+ 	/* make sure we capture the state of the initial inode. */
+@@ -775,7 +759,7 @@ xfs_iflush_done(
  
-@@ -1958,7 +1958,7 @@ xlog_sync(
- 		XFS_BUF_SET_ADDR(bp, 0);	     /* logical 0 */
- 		xfs_buf_associate_memory(bp,
- 				(char *)&iclog->ic_header + count, split);
--		bp->b_fspriv = iclog;
-+		bp->b_log_item = iclog;
- 		bp->b_flags &= ~XBF_FLUSH;
- 		bp->b_flags |= (XBF_ASYNC | XBF_SYNCIO | XBF_WRITE | XBF_FUA);
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index d864380b6575..00240c9ee72e 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -400,9 +400,9 @@ xlog_recover_iodone(
- 	 * On v5 supers, a bli could be attached to update the metadata LSN.
- 	 * Clean it up.
+ 		/* this is an opencoded batch version of xfs_trans_ail_delete */
+ 		spin_lock(&ailp->xa_lock);
+-		for (blip = lip; blip; blip = blip->li_bio_list) {
++		list_for_each_entry(blip, &tmp, li_bio_list) {
+ 			if (INODE_ITEM(blip)->ili_logged &&
+ 			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
+ 				mlip_changed |= xfs_ail_delete_one(ailp, blip);
+@@ -801,15 +785,14 @@ xfs_iflush_done(
+ 	 * ili_last_fields bits now that we know that the data corresponding to
+ 	 * them is safely on disk.
  	 */
--	if (bp->b_fspriv)
-+	if (bp->b_log_item)
- 		xfs_buf_item_relse(bp);
--	ASSERT(bp->b_fspriv == NULL);
-+	ASSERT(bp->b_log_item == NULL);
- 
- 	bp->b_iodone = NULL;
- 	xfs_buf_ioend(bp);
-@@ -2630,7 +2630,7 @@ xlog_recover_validate_buf_type(
- 		ASSERT(!bp->b_iodone || bp->b_iodone == xlog_recover_iodone);
- 		bp->b_iodone = xlog_recover_iodone;
- 		xfs_buf_item_init(bp, mp);
--		bip = bp->b_fspriv;
-+		bip = bp->b_log_item;
- 		bip->bli_item.li_lsn = current_lsn;
+-	for (blip = lip; blip; blip = next) {
+-		next = blip->li_bio_list;
+-		blip->li_bio_list = NULL;
+-
++	list_for_each_entry_safe(blip, n, &tmp, li_bio_list) {
++		list_del_init(&blip->li_bio_list);
+ 		iip = INODE_ITEM(blip);
+ 		iip->ili_logged = 0;
+ 		iip->ili_last_fields = 0;
+ 		xfs_ifunlock(iip->ili_inode);
  	}
- }
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 74563cd2970c..653ce379d36b 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -82,12 +82,12 @@ _xfs_trans_bjoin(
- 	ASSERT(bp->b_transp == NULL);
- 
- 	/*
--	 * The xfs_buf_log_item pointer is stored in b_fsprivate.  If
-+	 * The xfs_buf_log_item pointer is stored in b_log_item.  If
- 	 * it doesn't have one yet, then allocate one and initialize it.
- 	 * The checks to see if one is there are in xfs_buf_item_init().
- 	 */
- 	xfs_buf_item_init(bp, tp->t_mountp);
--	bip = bp->b_fspriv;
-+	bip = bp->b_log_item;
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 	ASSERT(!(bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
- 	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
-@@ -118,7 +118,7 @@ xfs_trans_bjoin(
- 	struct xfs_buf		*bp)
- {
- 	_xfs_trans_bjoin(tp, bp, 0);
--	trace_xfs_trans_bjoin(bp->b_fspriv);
-+	trace_xfs_trans_bjoin(bp->b_log_item);
++	list_del(&tmp);
  }
  
  /*
-@@ -159,7 +159,7 @@ xfs_trans_get_buf_map(
- 		}
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 20483b654ef1..3e5ba1ecc080 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1047,6 +1047,7 @@ xfs_log_item_init(
  
- 		ASSERT(bp->b_transp == tp);
--		bip = bp->b_fspriv;
-+		bip = bp->b_log_item;
- 		ASSERT(bip != NULL);
- 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 		bip->bli_recur++;
-@@ -175,7 +175,7 @@ xfs_trans_get_buf_map(
- 	ASSERT(!bp->b_error);
- 
- 	_xfs_trans_bjoin(tp, bp, 1);
--	trace_xfs_trans_get_buf(bp->b_fspriv);
-+	trace_xfs_trans_get_buf(bp->b_log_item);
- 	return bp;
+ 	INIT_LIST_HEAD(&item->li_ail);
+ 	INIT_LIST_HEAD(&item->li_cil);
++	INIT_LIST_HEAD(&item->li_bio_list);
  }
  
-@@ -211,7 +211,7 @@ xfs_trans_getsb(
- 	 */
- 	bp = mp->m_sb_bp;
- 	if (bp->b_transp == tp) {
--		bip = bp->b_fspriv;
-+		bip = bp->b_log_item;
- 		ASSERT(bip != NULL);
- 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
- 		bip->bli_recur++;
-@@ -224,7 +224,7 @@ xfs_trans_getsb(
- 		return NULL;
- 
- 	_xfs_trans_bjoin(tp, bp, 1);
--	trace_xfs_trans_getsb(bp->b_fspriv);
-+	trace_xfs_trans_getsb(bp->b_log_item);
- 	return bp;
- }
- 
-@@ -267,7 +267,7 @@ xfs_trans_read_buf_map(
- 	if (bp) {
- 		ASSERT(xfs_buf_islocked(bp));
- 		ASSERT(bp->b_transp == tp);
--		ASSERT(bp->b_fspriv != NULL);
-+		ASSERT(bp->b_log_item != NULL);
- 		ASSERT(!bp->b_error);
- 		ASSERT(bp->b_flags & XBF_DONE);
- 
-@@ -280,7 +280,7 @@ xfs_trans_read_buf_map(
- 			return -EIO;
- 		}
- 
--		bip = bp->b_fspriv;
-+		bip = bp->b_log_item;
- 		bip->bli_recur++;
- 
- 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
-@@ -330,7 +330,7 @@ xfs_trans_read_buf_map(
- 
- 	if (tp) {
- 		_xfs_trans_bjoin(tp, bp, 1);
--		trace_xfs_trans_read_buf(bp->b_fspriv);
-+		trace_xfs_trans_read_buf(bp->b_log_item);
- 	}
- 	*bpp = bp;
- 	return 0;
-@@ -370,7 +370,7 @@ xfs_trans_brelse(
- 	}
- 
- 	ASSERT(bp->b_transp == tp);
--	bip = bp->b_fspriv;
-+	bip = bp->b_log_item;
- 	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 	ASSERT(!(bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
-@@ -462,7 +462,7 @@ xfs_trans_bhold(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
-@@ -483,7 +483,7 @@ xfs_trans_bhold_release(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
-@@ -504,7 +504,7 @@ xfs_trans_dirty_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
-@@ -561,7 +561,7 @@ xfs_trans_log_buf(
- 	uint			first,
- 	uint			last)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(first <= last && last < BBTOB(bp->b_length));
- 	ASSERT(!(bip->bli_flags & XFS_BLI_ORDERED));
-@@ -607,7 +607,7 @@ xfs_trans_binval(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 	int			i;
- 
- 	ASSERT(bp->b_transp == tp);
-@@ -662,7 +662,7 @@ xfs_trans_inode_buf(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
-@@ -686,7 +686,7 @@ xfs_trans_stale_inode_buf(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
-@@ -711,7 +711,7 @@ xfs_trans_inode_alloc_buf(
- 	xfs_trans_t		*tp,
- 	xfs_buf_t		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
-@@ -733,7 +733,7 @@ xfs_trans_ordered_buf(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
-@@ -763,7 +763,7 @@ xfs_trans_buf_set_type(
- 	struct xfs_buf		*bp,
- 	enum xfs_blft		type)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	if (!tp)
- 		return;
-@@ -780,8 +780,8 @@ xfs_trans_buf_copy_type(
- 	struct xfs_buf		*dst_bp,
- 	struct xfs_buf		*src_bp)
- {
--	struct xfs_buf_log_item	*sbip = src_bp->b_fspriv;
--	struct xfs_buf_log_item	*dbip = dst_bp->b_fspriv;
-+	struct xfs_buf_log_item	*sbip = src_bp->b_log_item;
-+	struct xfs_buf_log_item	*dbip = dst_bp->b_log_item;
- 	enum xfs_blft		type;
- 
- 	type = xfs_blft_from_flags(&sbip->__bli_format);
-@@ -805,7 +805,7 @@ xfs_trans_dquot_buf(
- 	xfs_buf_t		*bp,
- 	uint			type)
- {
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
- 
- 	ASSERT(type == XFS_BLF_UDQUOT_BUF ||
- 	       type == XFS_BLF_PDQUOT_BUF ||
+ /*
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 815b53d20e26..9d542dfe0052 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -50,7 +50,7 @@ typedef struct xfs_log_item {
+ 	uint				li_type;	/* item type */
+ 	uint				li_flags;	/* misc flags */
+ 	struct xfs_buf			*li_buf;	/* real buffer pointer */
+-	struct xfs_log_item		*li_bio_list;	/* buffer item list */
++	struct list_head		li_bio_list;	/* buffer item list */
+ 	void				(*li_cb)(struct xfs_buf *,
+ 						 struct xfs_log_item *);
+ 							/* buffer item iodone */
 -- 
 2.14.3
 
