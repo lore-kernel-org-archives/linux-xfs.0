@@ -1,425 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58098 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750922AbeACBlX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jan 2018 20:41:23 -0500
-Date: Tue, 2 Jan 2018 17:40:48 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCHv6 1/1] ima: re-introduce own integrity cache lock
-Message-ID: <20180103014048.GE5146@magnolia>
-References: <c73e7421902a60bd14c11e1201ba74470d7c782b.1512500794.git.dmitry.kasatkin@huawei.com>
- <CACE9dm-ws8TKEAzFbCoGdhdEuFLoLtz8dAuF8tor19wMx1pH=g@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:44508 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750994AbeAYTBU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Jan 2018 14:01:20 -0500
+Subject: [PATCH 4/8 V2] libxfs: use a memory zone for transactions
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+ <1515699458-6925-5-git-send-email-sandeen@sandeen.net>
+Message-ID: <e8515b2e-094b-3092-d82c-3394bd5d0ec5@sandeen.net>
+Date: Thu, 25 Jan 2018 13:01:19 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACE9dm-ws8TKEAzFbCoGdhdEuFLoLtz8dAuF8tor19wMx1pH=g@mail.gmail.com>
+In-Reply-To: <1515699458-6925-5-git-send-email-sandeen@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dmitry Kasatkin <dmitry.kasatkin@gmail.com>
-Cc: Mimi Zohar <zohar@linux.vnet.ibm.com>, linux-integrity <linux-integrity@vger.kernel.org>, linux-security-module <linux-security-module@vger.kernel.org>, Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>, Chris Mason <clm@fb.com>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Dmitry Kasatkin <dmitry.kasatkin@huawei.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-[might as well cc linux-xfs]
+In addition to more closely matching the kernel, this will
+help us catch any leaks from these allocations.
 
-On Thu, Dec 14, 2017 at 12:22:37AM +0200, Dmitry Kasatkin wrote:
-> Hi,
-> 
-> Could I ask FS maintainers to test IMA with this patch additionally
-> and provide ack/tested.
-> We tested but may be you have and some special testing.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Super-late to this party, but unless xfstests has automated tests to
-set up IMA on top of an existing filesystem then I most likely have no
-idea /how/ to test IMA.  I did a quick grep of xfstests git and I don't
-see anything IMA-related.
+V2: remove pointless NULL assignments
 
---D
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 302f088..7bde8b7 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -384,6 +384,7 @@ manage_zones(int release)
+ 	extern kmem_zone_t	*xfs_da_state_zone;
+ 	extern kmem_zone_t	*xfs_btree_cur_zone;
+ 	extern kmem_zone_t	*xfs_bmap_free_item_zone;
++	extern kmem_zone_t	*xfs_trans_zone;
+ 	extern kmem_zone_t	*xfs_log_item_desc_zone;
+ 	extern void		xfs_dir_startup();
+ 
+@@ -395,6 +396,7 @@ manage_zones(int release)
+ 		kmem_free(xfs_da_state_zone);
+ 		kmem_free(xfs_btree_cur_zone);
+ 		kmem_free(xfs_bmap_free_item_zone);
++		kmem_free(xfs_trans_zone);
+ 		kmem_free(xfs_log_item_desc_zone);
+ 		return;
+ 	}
+@@ -413,6 +415,8 @@ manage_zones(int release)
+ 	xfs_bmap_free_item_zone = kmem_zone_init(
+ 			sizeof(struct xfs_extent_free_item),
+ 			"xfs_bmap_free_item");
++	xfs_trans_zone = kmem_zone_init(
++			sizeof(struct xfs_trans), "xfs_trans");
+ 	xfs_log_item_desc_zone = kmem_zone_init(
+ 			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
+ 	xfs_dir_startup();
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 57ff3ea..a602eaa 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -36,6 +36,7 @@ static void xfs_trans_free_items(struct xfs_trans *tp);
+  * Simple transaction interface
+  */
+ 
++kmem_zone_t	*xfs_trans_zone;
+ kmem_zone_t	*xfs_log_item_desc_zone;
+ 
+ /*
+@@ -143,6 +144,17 @@ libxfs_trans_roll(
+ 	return 0;
+ }
+ 
++/*
++ * Free the transaction structure.  If there is more clean up
++ * to do when the structure is freed, add it here.
++ */
++static void
++xfs_trans_free(
++	struct xfs_trans	*tp)
++{
++	kmem_zone_free(xfs_trans_zone, tp);
++}
++
+ int
+ libxfs_trans_alloc(
+ 	struct xfs_mount	*mp,
+@@ -166,11 +178,8 @@ libxfs_trans_alloc(
+ 			return -ENOSPC;
+ 	}
+ 
+-	if ((ptr = calloc(sizeof(xfs_trans_t), 1)) == NULL) {
+-		fprintf(stderr, _("%s: xact calloc failed (%d bytes): %s\n"),
+-			progname, (int)sizeof(xfs_trans_t), strerror(errno));
+-		exit(1);
+-	}
++	ptr = kmem_zone_zalloc(xfs_trans_zone,
++		(flags & XFS_TRANS_NOFS) ? KM_NOFS : KM_SLEEP);
+ 	ptr->t_mountp = mp;
+ 	ptr->t_blk_res = blocks;
+ 	INIT_LIST_HEAD(&ptr->t_items);
+@@ -212,8 +221,7 @@ libxfs_trans_cancel(
+ #endif
+ 	if (tp != NULL) {
+ 		xfs_trans_free_items(tp);
+-		free(tp);
+-		tp = NULL;
++		xfs_trans_free(tp);
+ 	}
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "## cancelled transaction %p\n", otp);
+@@ -867,8 +875,7 @@ libxfs_trans_commit(
+ 		fprintf(stderr, "committed clean transaction %p\n", tp);
+ #endif
+ 		xfs_trans_free_items(tp);
+-		free(tp);
+-		tp = NULL;
++		xfs_trans_free(tp);
+ 		return 0;
+ 	}
+ 
+@@ -891,7 +898,6 @@ libxfs_trans_commit(
+ 	trans_committed(tp);
+ 
+ 	/* That's it for the transaction structure.  Free it. */
+-	free(tp);
+-	tp = NULL;
++	xfs_trans_free(tp);
+ 	return 0;
+ }
 
-> 
-> Thanks in advance,
-> Dmitry
-> 
-> On Tue, Dec 5, 2017 at 9:06 PM, Dmitry Kasatkin
-> <dmitry.kasatkin@gmail.com> wrote:
-> > The original design was discussed 3+ years ago, but was never completed/upstreamed.
-> > Based on the recent discussions with Linus
-> > https://patchwork.kernel.org/patch/9975919, I've rebased this patch.
-> >
-> > Before IMA appraisal was introduced, IMA was using own integrity cache
-> > lock along with i_mutex. process_measurement and ima_file_free took
-> > the iint->mutex first and then the i_mutex, while setxattr, chmod and
-> > chown took the locks in reverse order. To resolve the potential deadlock,
-> > i_mutex was moved to protect entire IMA functionality and the redundant
-> > iint->mutex was eliminated.
-> >
-> > Solution was based on the assumption that filesystem code does not take
-> > i_mutex further. But when file is opened with O_DIRECT flag, direct-io
-> > implementation takes i_mutex and produces deadlock. Furthermore, certain
-> > other filesystem operations, such as llseek, also take i_mutex.
-> >
-> > More recently some filesystems have replaced their filesystem specific
-> > lock with the global i_rwsem to read a file.  As a result, when IMA
-> > attempts to calculate the file hash, reading the file attempts to take
-> > the i_rwsem again.
-> >
-> > To resolve O_DIRECT related deadlock problem, this patch re-introduces
-> > iint->mutex. But to eliminate the original chmod() related deadlock
-> > problem, this patch eliminates the requirement for chmod hooks to take
-> > the iint->mutex by introducing additional atomic iint->attr_flags to
-> > indicate calling of the hooks. The allowed locking order is to take
-> > the iint->mutex first and then the i_rwsem.
-> >
-> > Original flags were cleared in chmod(), setxattr() or removwxattr() hooks
-> > and tested when file was closed or opened again. New atomic flags are set
-> > or cleared in those hooks and tested to clear iint->flags on close or on open.
-> >
-> > Atomic flags are following:
-> > * IMA_CHANGE_ATTR - indicates that chATTR() was called (chmod, chown, chgrp)
-> >   and file attributes have changed. On file open, it causes IMA to clear
-> >   iint->flags to re-evaluate policy and perform IMA functions again.
-> > * IMA_CHANGE_XATTR - indicates that setxattr or removexattr was called and
-> >   extended attributes have changed. On file open, it causes IMA to clear
-> >   iint->flags IMA_DONE_MASK to re-appraise.
-> > * IMA_UPDATE_XATTR - indicates that security.ima needs to be updated.
-> >   It is cleared if file policy changes and no update is needed.
-> > * IMA_DIGSIG - indicates that file security.ima has signature and file
-> >   security.ima must not update to file has on file close.
-> > * IMA_MUST_MEASURE - indicates the file is in the measurement policy.
-> >
-> > Changes in v6:
-> > * introduce the atomic flag IMA_MUST_MEASURE to indicate that a file is in
-> >   the measurement policy. It is used instead of the IMA_MEASURE (iint->flags)
-> >   to detect ToMToU violation and when iint->mutex is unlocked and behind inode
-> >   lock only (same as some other flags). Issue reported by Roberto Sassu.
-> >
-> > Changes in v5:
-> > * use of inode_lock() and inode_unlock()
-> >
-> > Changes in v4:
-> > * adoped to violation detection fixes
-> > * added IMA_UPDATE_XATTR flag to require xattr update on file close
-> >
-> > Changes in v3:
-> > * prevent signature removal with new locking
-> > * rename attr_flags to atomic_flags
-> >
-> > Changes in v2:
-> > * revert taking the i_mutex in integrity_inode_get() so that iint allocation
-> >   could be done with i_mutex taken
-> > * move taking the i_mutex from appraisal code to the process_measurement()
-> >
-> > Signed-off-by: Dmitry Kasatkin <dmitry.kasatkin@huawei.com>
-> > ---
-> >  security/integrity/iint.c             |  2 +
-> >  security/integrity/ima/ima_appraise.c | 27 +++++++-------
-> >  security/integrity/ima/ima_main.c     | 70 ++++++++++++++++++++++++-----------
-> >  security/integrity/integrity.h        | 18 ++++++---
-> >  4 files changed, 77 insertions(+), 40 deletions(-)
-> >
-> > diff --git a/security/integrity/iint.c b/security/integrity/iint.c
-> > index c84e058..d726ba23 100644
-> > --- a/security/integrity/iint.c
-> > +++ b/security/integrity/iint.c
-> > @@ -155,12 +155,14 @@ static void init_once(void *foo)
-> >         memset(iint, 0, sizeof(*iint));
-> >         iint->version = 0;
-> >         iint->flags = 0UL;
-> > +       iint->atomic_flags = 0;
-> >         iint->ima_file_status = INTEGRITY_UNKNOWN;
-> >         iint->ima_mmap_status = INTEGRITY_UNKNOWN;
-> >         iint->ima_bprm_status = INTEGRITY_UNKNOWN;
-> >         iint->ima_read_status = INTEGRITY_UNKNOWN;
-> >         iint->evm_status = INTEGRITY_UNKNOWN;
-> >         iint->measured_pcrs = 0;
-> > +       mutex_init(&iint->mutex);
-> >  }
-> >
-> >  static int __init integrity_iintcache_init(void)
-> > diff --git a/security/integrity/ima/ima_appraise.c b/security/integrity/ima/ima_appraise.c
-> > index 9a54c77..3fc96dbd 100644
-> > --- a/security/integrity/ima/ima_appraise.c
-> > +++ b/security/integrity/ima/ima_appraise.c
-> > @@ -251,6 +251,7 @@ int ima_appraise_measurement(enum ima_hooks func,
-> >                         status = INTEGRITY_FAIL;
-> >                         break;
-> >                 }
-> > +               clear_bit(IMA_DIGSIG, &iint->atomic_flags);
-> >                 if (xattr_len - sizeof(xattr_value->type) - hash_start >=
-> >                                 iint->ima_hash->length)
-> >                         /* xattr length may be longer. md5 hash in previous
-> > @@ -269,7 +270,7 @@ int ima_appraise_measurement(enum ima_hooks func,
-> >                 status = INTEGRITY_PASS;
-> >                 break;
-> >         case EVM_IMA_XATTR_DIGSIG:
-> > -               iint->flags |= IMA_DIGSIG;
-> > +               set_bit(IMA_DIGSIG, &iint->atomic_flags);
-> >                 rc = integrity_digsig_verify(INTEGRITY_KEYRING_IMA,
-> >                                              (const char *)xattr_value, rc,
-> >                                              iint->ima_hash->digest,
-> > @@ -320,14 +321,16 @@ void ima_update_xattr(struct integrity_iint_cache *iint, struct file *file)
-> >         int rc = 0;
-> >
-> >         /* do not collect and update hash for digital signatures */
-> > -       if (iint->flags & IMA_DIGSIG)
-> > +       if (test_bit(IMA_DIGSIG, &iint->atomic_flags))
-> >                 return;
-> >
-> >         rc = ima_collect_measurement(iint, file, NULL, 0, ima_hash_algo);
-> >         if (rc < 0)
-> >                 return;
-> >
-> > +       inode_lock(file_inode(file));
-> >         ima_fix_xattr(dentry, iint);
-> > +       inode_unlock(file_inode(file));
-> >  }
-> >
-> >  /**
-> > @@ -350,16 +353,14 @@ void ima_inode_post_setattr(struct dentry *dentry)
-> >                 return;
-> >
-> >         must_appraise = ima_must_appraise(inode, MAY_ACCESS, POST_SETATTR);
-> > +       if (!must_appraise)
-> > +               __vfs_removexattr(dentry, XATTR_NAME_IMA);
-> >         iint = integrity_iint_find(inode);
-> >         if (iint) {
-> > -               iint->flags &= ~(IMA_APPRAISE | IMA_APPRAISED |
-> > -                                IMA_APPRAISE_SUBMASK | IMA_APPRAISED_SUBMASK |
-> > -                                IMA_ACTION_RULE_FLAGS);
-> > -               if (must_appraise)
-> > -                       iint->flags |= IMA_APPRAISE;
-> > +               set_bit(IMA_CHANGE_ATTR, &iint->atomic_flags);
-> > +               if (!must_appraise)
-> > +                       clear_bit(IMA_UPDATE_XATTR, &iint->atomic_flags);
-> >         }
-> > -       if (!must_appraise)
-> > -               __vfs_removexattr(dentry, XATTR_NAME_IMA);
-> >  }
-> >
-> >  /*
-> > @@ -388,12 +389,12 @@ static void ima_reset_appraise_flags(struct inode *inode, int digsig)
-> >         iint = integrity_iint_find(inode);
-> >         if (!iint)
-> >                 return;
-> > -
-> > -       iint->flags &= ~IMA_DONE_MASK;
-> >         iint->measured_pcrs = 0;
-> > +       set_bit(IMA_CHANGE_XATTR, &iint->atomic_flags);
-> >         if (digsig)
-> > -               iint->flags |= IMA_DIGSIG;
-> > -       return;
-> > +               set_bit(IMA_DIGSIG, &iint->atomic_flags);
-> > +       else
-> > +               clear_bit(IMA_DIGSIG, &iint->atomic_flags);
-> >  }
-> >
-> >  int ima_inode_setxattr(struct dentry *dentry, const char *xattr_name,
-> > diff --git a/security/integrity/ima/ima_main.c b/security/integrity/ima/ima_main.c
-> > index 7706546..edf4e07 100644
-> > --- a/security/integrity/ima/ima_main.c
-> > +++ b/security/integrity/ima/ima_main.c
-> > @@ -96,10 +96,13 @@ static void ima_rdwr_violation_check(struct file *file,
-> >                         if (!iint)
-> >                                 iint = integrity_iint_find(inode);
-> >                         /* IMA_MEASURE is set from reader side */
-> > -                       if (iint && (iint->flags & IMA_MEASURE))
-> > +                       if (iint && test_bit(IMA_MUST_MEASURE,
-> > +                                               &iint->atomic_flags))
-> >                                 send_tomtou = true;
-> >                 }
-> >         } else {
-> > +               if (must_measure)
-> > +                       set_bit(IMA_MUST_MEASURE, &iint->atomic_flags);
-> >                 if ((atomic_read(&inode->i_writecount) > 0) && must_measure)
-> >                         send_writers = true;
-> >         }
-> > @@ -121,21 +124,24 @@ static void ima_check_last_writer(struct integrity_iint_cache *iint,
-> >                                   struct inode *inode, struct file *file)
-> >  {
-> >         fmode_t mode = file->f_mode;
-> > +       bool update;
-> >
-> >         if (!(mode & FMODE_WRITE))
-> >                 return;
-> >
-> > -       inode_lock(inode);
-> > +       mutex_lock(&iint->mutex);
-> >         if (atomic_read(&inode->i_writecount) == 1) {
-> > +               update = test_and_clear_bit(IMA_UPDATE_XATTR,
-> > +                                           &iint->atomic_flags);
-> >                 if ((iint->version != inode->i_version) ||
-> >                     (iint->flags & IMA_NEW_FILE)) {
-> >                         iint->flags &= ~(IMA_DONE_MASK | IMA_NEW_FILE);
-> >                         iint->measured_pcrs = 0;
-> > -                       if (iint->flags & IMA_APPRAISE)
-> > +                       if (update)
-> >                                 ima_update_xattr(iint, file);
-> >                 }
-> >         }
-> > -       inode_unlock(inode);
-> > +       mutex_unlock(&iint->mutex);
-> >  }
-> >
-> >  /**
-> > @@ -168,7 +174,7 @@ static int process_measurement(struct file *file, char *buf, loff_t size,
-> >         char *pathbuf = NULL;
-> >         char filename[NAME_MAX];
-> >         const char *pathname = NULL;
-> > -       int rc = -ENOMEM, action, must_appraise;
-> > +       int rc = 0, action, must_appraise = 0;
-> >         int pcr = CONFIG_IMA_MEASURE_PCR_IDX;
-> >         struct evm_ima_xattr_data *xattr_value = NULL;
-> >         int xattr_len = 0;
-> > @@ -199,17 +205,31 @@ static int process_measurement(struct file *file, char *buf, loff_t size,
-> >         if (action) {
-> >                 iint = integrity_inode_get(inode);
-> >                 if (!iint)
-> > -                       goto out;
-> > +                       rc = -ENOMEM;
-> >         }
-> >
-> > -       if (violation_check) {
-> > +       if (!rc && violation_check)
-> >                 ima_rdwr_violation_check(file, iint, action & IMA_MEASURE,
-> >                                          &pathbuf, &pathname);
-> > -               if (!action) {
-> > -                       rc = 0;
-> > -                       goto out_free;
-> > -               }
-> > -       }
-> > +
-> > +       inode_unlock(inode);
-> > +
-> > +       if (rc)
-> > +               goto out;
-> > +       if (!action)
-> > +               goto out;
-> > +
-> > +       mutex_lock(&iint->mutex);
-> > +
-> > +       if (test_and_clear_bit(IMA_CHANGE_ATTR, &iint->atomic_flags))
-> > +               /* reset appraisal flags if ima_inode_post_setattr was called */
-> > +               iint->flags &= ~(IMA_APPRAISE | IMA_APPRAISED |
-> > +                                IMA_APPRAISE_SUBMASK | IMA_APPRAISED_SUBMASK |
-> > +                                IMA_ACTION_FLAGS);
-> > +
-> > +       if (test_and_clear_bit(IMA_CHANGE_XATTR, &iint->atomic_flags))
-> > +               /* reset all flags if ima_inode_setxattr was called */
-> > +               iint->flags &= ~IMA_DONE_MASK;
-> >
-> >         /* Determine if already appraised/measured based on bitmask
-> >          * (IMA_MEASURE, IMA_MEASURED, IMA_XXXX_APPRAISE, IMA_XXXX_APPRAISED,
-> > @@ -227,7 +247,7 @@ static int process_measurement(struct file *file, char *buf, loff_t size,
-> >         if (!action) {
-> >                 if (must_appraise)
-> >                         rc = ima_get_cache_status(iint, func);
-> > -               goto out_digsig;
-> > +               goto out_locked;
-> >         }
-> >
-> >         template_desc = ima_template_desc_current();
-> > @@ -240,7 +260,7 @@ static int process_measurement(struct file *file, char *buf, loff_t size,
-> >
-> >         rc = ima_collect_measurement(iint, file, buf, size, hash_algo);
-> >         if (rc != 0 && rc != -EBADF && rc != -EINVAL)
-> > -               goto out_digsig;
-> > +               goto out_locked;
-> >
-> >         if (!pathbuf)   /* ima_rdwr_violation possibly pre-fetched */
-> >                 pathname = ima_d_path(&file->f_path, &pathbuf, filename);
-> > @@ -248,26 +268,32 @@ static int process_measurement(struct file *file, char *buf, loff_t size,
-> >         if (action & IMA_MEASURE)
-> >                 ima_store_measurement(iint, file, pathname,
-> >                                       xattr_value, xattr_len, pcr);
-> > -       if (rc == 0 && (action & IMA_APPRAISE_SUBMASK))
-> > +       if (rc == 0 && (action & IMA_APPRAISE_SUBMASK)) {
-> > +               inode_lock(inode);
-> >                 rc = ima_appraise_measurement(func, iint, file, pathname,
-> >                                               xattr_value, xattr_len, opened);
-> > +               inode_unlock(inode);
-> > +       }
-> >         if (action & IMA_AUDIT)
-> >                 ima_audit_measurement(iint, pathname);
-> >
-> >         if ((file->f_flags & O_DIRECT) && (iint->flags & IMA_PERMIT_DIRECTIO))
-> >                 rc = 0;
-> > -out_digsig:
-> > -       if ((mask & MAY_WRITE) && (iint->flags & IMA_DIGSIG) &&
-> > +out_locked:
-> > +       if ((mask & MAY_WRITE) && test_bit(IMA_DIGSIG, &iint->atomic_flags) &&
-> >              !(iint->flags & IMA_NEW_FILE))
-> >                 rc = -EACCES;
-> > +       mutex_unlock(&iint->mutex);
-> >         kfree(xattr_value);
-> > -out_free:
-> > +out:
-> >         if (pathbuf)
-> >                 __putname(pathbuf);
-> > -out:
-> > -       inode_unlock(inode);
-> > -       if ((rc && must_appraise) && (ima_appraise & IMA_APPRAISE_ENFORCE))
-> > -               return -EACCES;
-> > +       if (must_appraise) {
-> > +               if (rc && (ima_appraise & IMA_APPRAISE_ENFORCE))
-> > +                       return -EACCES;
-> > +               if (file->f_mode & FMODE_WRITE)
-> > +                       set_bit(IMA_UPDATE_XATTR, &iint->atomic_flags);
-> > +       }
-> >         return 0;
-> >  }
-> >
-> > diff --git a/security/integrity/integrity.h b/security/integrity/integrity.h
-> > index e324bf9..c64ea8f 100644
-> > --- a/security/integrity/integrity.h
-> > +++ b/security/integrity/integrity.h
-> > @@ -29,11 +29,10 @@
-> >  /* iint cache flags */
-> >  #define IMA_ACTION_FLAGS       0xff000000
-> >  #define IMA_ACTION_RULE_FLAGS  0x06000000
-> > -#define IMA_DIGSIG             0x01000000
-> > -#define IMA_DIGSIG_REQUIRED    0x02000000
-> > -#define IMA_PERMIT_DIRECTIO    0x04000000
-> > -#define IMA_NEW_FILE           0x08000000
-> > -#define EVM_IMMUTABLE_DIGSIG   0x10000000
-> > +#define IMA_DIGSIG_REQUIRED    0x01000000
-> > +#define IMA_PERMIT_DIRECTIO    0x02000000
-> > +#define IMA_NEW_FILE           0x04000000
-> > +#define EVM_IMMUTABLE_DIGSIG   0x08000000
-> >
-> >  #define IMA_DO_MASK            (IMA_MEASURE | IMA_APPRAISE | IMA_AUDIT | \
-> >                                  IMA_APPRAISE_SUBMASK)
-> > @@ -54,6 +53,13 @@
-> >  #define IMA_APPRAISED_SUBMASK  (IMA_FILE_APPRAISED | IMA_MMAP_APPRAISED | \
-> >                                  IMA_BPRM_APPRAISED | IMA_READ_APPRAISED)
-> >
-> > +/* iint cache atomic_flags */
-> > +#define IMA_CHANGE_XATTR       0
-> > +#define IMA_UPDATE_XATTR       1
-> > +#define IMA_CHANGE_ATTR                2
-> > +#define IMA_DIGSIG             3
-> > +#define IMA_MUST_MEASURE       4
-> > +
-> >  enum evm_ima_xattr_type {
-> >         IMA_XATTR_DIGEST = 0x01,
-> >         EVM_XATTR_HMAC,
-> > @@ -102,10 +108,12 @@ struct signature_v2_hdr {
-> >  /* integrity data associated with an inode */
-> >  struct integrity_iint_cache {
-> >         struct rb_node rb_node; /* rooted in integrity_iint_tree */
-> > +       struct mutex mutex;     /* protects: version, flags, digest */
-> >         struct inode *inode;    /* back pointer to inode in question */
-> >         u64 version;            /* track inode changes */
-> >         unsigned long flags;
-> >         unsigned long measured_pcrs;
-> > +       unsigned long atomic_flags;
-> >         enum integrity_status ima_file_status:4;
-> >         enum integrity_status ima_mmap_status:4;
-> >         enum integrity_status ima_bprm_status:4;
-> > --
-> > 2.7.4
-> >
-> 
-> 
-> 
-> -- 
-> Thanks,
-> Dmitry
