@@ -1,115 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:49694 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:39750 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754736AbeARHmn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jan 2018 02:42:43 -0500
-Subject: [PATCH 2/2] xfs: try to unshare extents before granting pnfs leases
+        with ESMTP id S1750734AbeAYF0z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 00:26:55 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0P5QsEB007672
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2018 05:26:54 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2fq92jr05f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2018 05:26:54 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0P5QpQw026571
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2018 05:26:51 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0P5Qnn7020768
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2018 05:26:50 GMT
+Date: Wed, 24 Jan 2018 21:26:47 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 23:42:39 -0800
-Message-ID: <151626135947.25794.13152244142083119314.stgit@magnolia>
-In-Reply-To: <151626134674.25794.7913544634631149739.stgit@magnolia>
-References: <151626134674.25794.7913544634631149739.stgit@magnolia>
+Subject: [PATCH 12/11] xfs: refactor quota code in xfs_bmap_btalloc
+Message-ID: <20180125052647.GF9068@magnolia>
+References: <151676027743.12349.3845769501491774512.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151676027743.12349.3845769501491774512.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@lst.de, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Try to unshare an extent before granting a lease to pnfs; if this isn't
-possible, then bail out.
+Since we now have a dedicated function for dealing with CoW allocation
+related quota updates in xfs_bmap_btalloc, we might as well refactor the
+data/attr fork quota update into its own function too.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_pnfs.c |   32 ++++++++++++++++++++++++--------
- 1 file changed, 24 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |   32 ++++++++++++++++++++------------
+ 1 file changed, 20 insertions(+), 12 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index aa6c5c1..a76140d 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -19,6 +19,7 @@
- #include "xfs_shared.h"
- #include "xfs_bit.h"
- #include "xfs_pnfs.h"
-+#include "xfs_reflink.h"
- 
- /*
-  * Ensure that we do not have any outstanding pNFS layouts that can be used by
-@@ -110,13 +111,6 @@ xfs_fs_map_blocks(
- 		return -ENXIO;
- 
- 	/*
--	 * The pNFS block layout spec actually supports reflink like
--	 * functionality, but the Linux pNFS server doesn't implement it yet.
--	 */
--	if (xfs_is_reflink_inode(ip))
--		return -ENXIO;
--
--	/*
- 	 * Lock out any other I/O before we flush and invalidate the pagecache,
- 	 * and then hand out a layout to the remote system.  This is very
- 	 * similar to direct I/O, except that the synchronization is much more
-@@ -125,6 +119,14 @@ xfs_fs_map_blocks(
- 	 */
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
-+	/* Try to unshare the blocks if we want write access */
-+	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+	if (write) {
-+		error = xfs_reflink_unshare(ip, offset, length);
-+		if (error)
-+			goto out_unlock;
-+	}
-+
- 	error = -EINVAL;
- 	limit = mp->m_super->s_maxbytes;
- 	if (!write)
-@@ -140,7 +142,7 @@ xfs_fs_map_blocks(
- 		goto out_unlock;
- 	error = invalidate_inode_pages2(inode->i_mapping);
- 	if (WARN_ON_ONCE(error))
--		return error;
-+		goto out_unlock;
- 
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + length);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-@@ -176,18 +178,32 @@ xfs_fs_map_blocks(
- 			 * present even after a server crash.
- 			 */
- 			flags |= XFS_PREALLOC_SET | XFS_PREALLOC_SYNC;
-+		} else {
-+			bool	shared, trimmed;
-+
-+			/* Make sure the extent really isn't shared. */
-+			error = xfs_reflink_trim_around_shared(ip, &imap,
-+					&shared, &trimmed);
-+			if (error)
-+				goto out_unlock;
-+			if (shared || trimmed) {
-+				error = -ENXIO;
-+				goto out_unlock;
-+			}
- 		}
- 
- 		error = xfs_update_prealloc_flags(ip, flags);
- 		if (error)
- 			goto out_unlock;
- 	}
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
- 	xfs_bmbt_to_iomap(ip, iomap, &imap);
- 	*device_generation = mp->m_generation;
- 	return error;
- out_unlock:
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 4144487..2d99b7a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3402,6 +3402,25 @@ xfs_bmap_btalloc_filestreams(
+ 	return 0;
  }
-
+ 
++/* Deal with data/attr fork accounting when we allocate a block. */
++static void
++xfs_bmap_btalloc_quota(
++	struct xfs_bmalloca	*ap,
++	struct xfs_alloc_arg	*args)
++{
++	ap->ip->i_d.di_nblocks += args.len;
++	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
++	if (ap->wasdel)
++		ap->ip->i_delayed_blks -= args.len;
++	/*
++	 * Adjust the disk quota also. This was reserved
++	 * earlier.
++	 */
++	xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
++		ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT : XFS_TRANS_DQ_BCOUNT,
++		(long) args.len);
++}
++
+ /* Deal with CoW fork accounting when we allocate a block. */
+ static void
+ xfs_bmap_btalloc_quota_cow(
+@@ -3679,18 +3698,7 @@ xfs_bmap_btalloc(
+ 			xfs_bmap_btalloc_quota_cow(ap, &args, orig_offset,
+ 					orig_length);
+ 		} else {
+-			ap->ip->i_d.di_nblocks += args.len;
+-			xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+-			if (ap->wasdel)
+-				ap->ip->i_delayed_blks -= args.len;
+-			/*
+-			 * Adjust the disk quota also. This was reserved
+-			 * earlier.
+-			 */
+-			xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
+-				ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT :
+-						XFS_TRANS_DQ_BCOUNT,
+-				(long) args.len);
++			xfs_bmap_btalloc_quota(ap, &args);
+ 		}
+ 	} else {
+ 		ap->blkno = NULLFSBLOCK;
