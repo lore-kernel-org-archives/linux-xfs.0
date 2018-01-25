@@ -1,173 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36476 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39764 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751428AbeAYNIc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Jan 2018 08:08:32 -0500
-Date: Thu, 25 Jan 2018 08:08:31 -0500
+        id S1751174AbeAYRbO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Jan 2018 12:31:14 -0500
+Date: Thu, 25 Jan 2018 12:31:12 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs_extent_busy_flush vs. aio
-Message-ID: <20180125130830.GD43198@bfoster.bfoster>
-References: <dde543cc-6641-c5ee-3385-520ef4ca821e@scylladb.com>
- <20180123152852.GA32478@bfoster.bfoster>
- <509e33df-4f76-2937-0425-98c26b3a1207@scylladb.com>
- <20180123161120.GC32478@bfoster.bfoster>
- <5f67219e-e48b-a954-69d4-318268645377@scylladb.com>
- <20180123164718.GE32478@bfoster.bfoster>
- <e1229a02-33ea-e5d5-d66f-36fa553a3393@scylladb.com>
- <20180123173902.GF32478@bfoster.bfoster>
- <f4751375-0710-cec8-ac6d-1f9546bba1ce@scylladb.com>
+Subject: Re: [PATCH 06/11] xfs: fix up cowextsz allocation shortfalls
+Message-ID: <20180125173111.GA44175@bfoster.bfoster>
+References: <151676027743.12349.3845769501491774512.stgit@magnolia>
+ <151676031559.12349.8327260913918740589.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f4751375-0710-cec8-ac6d-1f9546bba1ce@scylladb.com>
+In-Reply-To: <151676031559.12349.8327260913918740589.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 25, 2018 at 10:50:40AM +0200, Avi Kivity wrote:
-> On 01/23/2018 07:39 PM, Brian Foster wrote:
-> > On Tue, Jan 23, 2018 at 07:00:31PM +0200, Avi Kivity wrote:
-> > > 
-> > > On 01/23/2018 06:47 PM, Brian Foster wrote:
-> > > > On Tue, Jan 23, 2018 at 06:22:07PM +0200, Avi Kivity wrote:
-> > > > > On 01/23/2018 06:11 PM, Brian Foster wrote:
-> > > > > > On Tue, Jan 23, 2018 at 05:45:39PM +0200, Avi Kivity wrote:
-> > > > > > > On 01/23/2018 05:28 PM, Brian Foster wrote:
-> > > > > > > > On Tue, Jan 23, 2018 at 04:57:03PM +0200, Avi Kivity wrote:
-> > > > > > > > > I'm seeing the equivalent[*] of xfs_extent_busy_flush() sleeping in my
-> > > > > > > > > beautiful io_submit() calls.
-> > > > > > > > > 
-> > > > > > > > > 
-> > > > > > > > > Questions:
-> > > > > > > > > 
-> > > > > > > > >      - Is it correct that RWF_NOWAIT will not detect the condition that led to
-> > > > > > > > > the log being forced?
-> > > > > > > > > 
-> > > > > > > > >      - If so, can it be fixed?
-> > > > > > > > > 
-> > > > > > > > >      - Can I do something to reduce the odds of this occurring? larger logs,
-> > > > > > > > > more logs, flush more often, resurrect extinct species and sacrifice them to
-> > > > > > > > > the xfs gods?
-> > > > > > > > > 
-> > > > > > > > >      - Can an xfs developer do something? For example, make it RWF_NOWAIT
-> > > > > > > > > friendly (if the answer to the first question was "correct")
-> > > > > > > > > 
-> > > > > > > > So RWF_NOWAIT eventually works its way to IOMAP_NOWAIT, which looks like
-> > > > > > > > it skips any write call that would require allocation in
-> > > > > > > > xfs_file_iomap_begin(). The busy flush should only happen in the block
-> > > > > > > > allocation path, so something is missing here. Do you have a backtrace
-> > > > > > > > for the log force you're seeing?
-> > > > > > > > 
-> > > > > > > > 
-> > > > > > > Here's a trace. It's from a kernel that lacks RWF_NOWAIT.
-> > > > > > > 
-> > > > > > Oh, so the case below is roughly how I would have expected to hit the
-> > > > > > flush/wait without RWF_NOWAIT. The latter flag should prevent this, to
-> > > > > > answer your first question.
-> > > > > Thanks, that's very encouraging. We are exploring recommending upstream-ish
-> > > > > kernels to users and customers, given their relative stability these days
-> > > > > and aio-related improvements (not to mention the shame of having to admit to
-> > > > > running an old kernel when reporting a problem to an upstream list).
-> > > > > 
-> > > > > > For the follow up question, I think this should only occur when the fs
-> > > > > > is fairly low on free space. Is that the case here?
-> > > > > No:
-> > > > > 
-> > > > > /dev/md0        3.0T  1.2T  1.8T  40% /var/lib/scylla
-> > > > > 
-> > > > > 
-> > > > > > I'm not sure there's
-> > > > > > a specific metric, fwiw, but it's just a matter of attempting an (user
-> > > > > > data) allocation that only finds busy extents in the free space btrees
-> > > > > > and thus has to the force the log to satisfy the allocation.
-> > > > > What does "busy" mean here? recently freed so we want to force the log to
-> > > > > make sure the extent isn't doubly-allocated? (wild guess)
-> > > > > 
-> > > > Recently freed and the transaction that freed the blocks has not yet
-> > > > been persisted to the on-disk log. A subsequent attempt to allocate
-> > > > those blocks for user data waits for the transaction to commit to disk
-> > > > to ensure that the block is not written before the filesystem has
-> > > > persisted the fact that it has been freed. Otherwise, my understanding
-> > > > is that if the blocks are written to and the filesystem crashes before
-> > > > the previous free was persisted, we'd have allowed an overwrite of a
-> > > > still-used metadata block.
-> > > Understood, thanks.
-> > > 
-> > > > > >     I suppose
-> > > > > > running with more free space available would avoid this. I think running
-> > > > > > with less in-core log space could indirectly reduce extent busy time,
-> > > > > > but that may also have other performance ramifications and so is
-> > > > > > probably not a great idea.
-> > > > > At 60%, I hope low free space  is not a problem.
-> > > > > 
-> > > > Yeah, that seems strange. I wouldn't expect busy extents to be a problem
-> > > > with that much free space.
-> > > The workload creates new files, appends to them, lets them stew for a while,
-> > > then deletes them. Maybe something is preventing xfs from seeing non-busy
-> > > extents?
-> > > 
-> > Yeah, could be.. perhaps the issue is that despite the large amount of
-> > total free space, the free space is too fragmented to satisfy a
-> > particular allocation request..?
+On Tue, Jan 23, 2018 at 06:18:35PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
->    from      to extents  blocks    pct
->       1       1    2702    2702   0.00
->       2       3     690    1547   0.00
->       4       7     115     568   0.00
->       8      15      60     634   0.00
->      16      31      63    1457   0.00
->      32      63     102    4751   0.00
->      64     127    7940  895365   0.19
->     128     255   49680 12422100   2.67
->     256     511    1025  417078   0.09
->     512    1023    4170 3660771   0.79
->    1024    2047    2168 3503054   0.75
->    2048    4095    2567 7729442   1.66
->    4096    8191    8688 59394413  12.76
->    8192   16383     310 3100186   0.67
->   16384   32767     112 2339935   0.50
->   32768   65535      35 1381122   0.30
->   65536  131071       8  651391   0.14
->  131072  262143       2  344196   0.07
->  524288 1048575       4 2909925   0.62
-> 1048576 2097151       3 3550680   0.76
-> 4194304 8388607      10 82497658  17.72
-> 8388608 16777215      10 158022653  33.94
-> 16777216 24567552       5 122778062  26.37
-> total free extents 80469
-> total free blocks 465609690
-> average free extent size 5786.2
+> In xfs_bmap_btalloc, we try using the CoW extent size hint to force
+> allocations to align (offset-wise) to cowextsz granularity to reduce CoW
+> fragmentation.  This works fine until we cannot satisfy the allocation
+> with enough blocks to cover the requested range and the alignment hints.
+> If this happens, return an unaligned region because if we don't the
+> extent trim functions cause us to return a zero-length extent to iomap,
+> which iomap doesn't catch and thus blows up.
 > 
-> Looks like plenty of free large extents, with most of the free space
-> completely, unfragmented.
-> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Indeed..
+Hmm.. is this a direct I/O thing? The description of the problem had me
+wondering how we handle this with regard to dio and traditional extent
+size hints. It looks like we just return -ENOSPC if xfs_bmapi_write()
+doesn't return a mapping that covers the target range of the write (even
+if it apparently attempts to allocate part of the associated extent size
+hint range). E.g., see the nimaps == 0 check in
+xfs_iomap_write_direct() after we commit the transaction.
 
-> Lots of 16MB-32MB extents, too. 32MB is our allocation hint size, could have
-> something to do with it.
-> 
+In fact, it looks like just repeating the failed write could eventually
+succeed if the issue is that there is actually enough free space
+available to allocate the hint range up to where the write is targeted,
+just no long enough extent available to fill the extent size hint range
+in a single bmapi_write call. That behavior is a bit strange, I admit,
+but I'm wondering if we could do the same thing for the cow hint. Would
+a similar nimaps check in the xfs_bmapi_write() caller resolve the bug
+described here?
 
-Most likely. Based on this, it's hard to say for certain why you'd be
-running into allocation latency caused by busy extents. Does this
-filesystem use the '-o discard' mount option by any chance?
-
-I suppose it's possible that this was some kind of transient state, or
-perhaps only a small set of AGs are affected, etc. It's also possible
-this may have been improved in more recent kernels by Christoph's rework
-of some of that code. In any event, this would probably require a bit
-more runtime analysis to figure out where/why allocations are getting
-stalled as such. I'd probably start by looking at the xfs_extent_busy_*
-tracepoints (also note that if there's potentially something to be
-improved on here, it's more useful to do so against current upstream).
-
-Or you could just move to something that supports RWF_NOWAIT.. ;)
+If so and if we still care to actually change/fix the allocation
+behavior with regard to the hints, perhaps we could do that in a
+separate patch more generically for both hints..?
 
 Brian
 
+>  fs/iomap.c               |    2 +-
+>  fs/xfs/libxfs/xfs_bmap.c |   21 +++++++++++++++++++--
+>  2 files changed, 20 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index e5de772..aec35a0 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -63,7 +63,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
+>  	if (ret)
+>  		return ret;
+> -	if (WARN_ON(iomap.offset > pos))
+> +	if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0))
+>  		return -EIO;
+>  
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 93ce2c6..4ec1fdc5 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3480,8 +3480,20 @@ xfs_bmap_btalloc_filestreams(
+>  static void
+>  xfs_bmap_btalloc_cow(
+>  	struct xfs_bmalloca	*ap,
+> -	struct xfs_alloc_arg	*args)
+> +	struct xfs_alloc_arg	*args,
+> +	xfs_fileoff_t		orig_offset,
+> +	xfs_extlen_t		orig_length)
+>  {
+> +	/*
+> +	 * If we didn't get enough blocks to satisfy the cowextsize
+> +	 * aligned request, break the alignment and return whatever we
+> +	 * got; it's the best we can do.
+> +	 */
+> +	if (ap->length <= orig_length)
+> +		ap->offset = orig_offset;
+> +	else if (ap->offset + ap->length < orig_offset + orig_length)
+> +		ap->offset = orig_offset + orig_length - ap->length;
+> +
+>  	/* Filling a previously reserved extent; nothing to do here. */
+>  	if (ap->wasdel)
+>  		return;
+> @@ -3520,6 +3532,8 @@ xfs_bmap_btalloc(
+>  	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+>  	xfs_agnumber_t	ag;
+>  	xfs_alloc_arg_t	args;
+> +	xfs_fileoff_t	orig_offset;
+> +	xfs_extlen_t	orig_length;
+>  	xfs_extlen_t	blen;
+>  	xfs_extlen_t	nextminlen = 0;
+>  	int		nullfb;		/* true if ap->firstblock isn't set */
+> @@ -3529,6 +3543,8 @@ xfs_bmap_btalloc(
+>  	int		stripe_align;
+>  
+>  	ASSERT(ap->length);
+> +	orig_offset = ap->offset;
+> +	orig_length = ap->length;
+>  
+>  	mp = ap->ip->i_mount;
+>  
+> @@ -3745,7 +3761,8 @@ xfs_bmap_btalloc(
+>  		ASSERT(nullfb || fb_agno <= args.agno);
+>  		ap->length = args.len;
+>  		if (ap->flags & XFS_BMAPI_COWFORK) {
+> -			xfs_bmap_btalloc_cow(ap, &args);
+> +			xfs_bmap_btalloc_cow(ap, &args, orig_offset,
+> +					orig_length);
+>  		} else {
+>  			ap->ip->i_d.di_nblocks += args.len;
+>  			xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
