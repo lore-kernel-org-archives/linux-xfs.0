@@ -1,52 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f194.google.com ([209.85.213.194]:39340 "EHLO
-        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750913AbeA2LHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 06:07:38 -0500
+Received: from sandeen.net ([63.231.237.45]:49330 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751106AbeAYUBL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 25 Jan 2018 15:01:11 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 69D27170B45
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jan 2018 14:00:59 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] for-next updated to 50663dc
+Message-ID: <1e9b02d2-3a94-b444-1e11-80b7c6f2aba8@sandeen.net>
+Date: Thu, 25 Jan 2018 14:01:10 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180126214404.GE9068@magnolia>
-References: <1516952669-14769-1-git-send-email-amir73il@gmail.com> <20180126214404.GE9068@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 29 Jan 2018 13:07:36 +0200
-Message-ID: <CAOQ4uxgVaGgwio=538-PP4QuRbcny6q0_CAeV-9bQEWBaxv2gA@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="Otr16r16lzVXhaHneLosoA1YINcTiu3jB"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Jan 26, 2018 at 11:44 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Fri, Jan 26, 2018 at 09:44:29AM +0200, Amir Goldstein wrote:
->> Commit 66f364649d870 ("xfs: remove if_rdev") moved storing of rdev
->> value for special inodes to VFS inodes, but forgot to preserve the
->> value of i_rdev when recycling a reclaimable xfs_inode.
->>
->> This was detected by xfstest overlay/017 with inodex=on mount option
->> and xfs base fs. The test does a lookup of overlay chardev and blockdev
->> right after drop caches.
->>
->> Overlayfs inodes hold a reference on underlying xfs inodes when mount
->> option index=on is configured. If drop caches reclaim xfs inodes, before
->> it relclaims overlayfs inodes, that can sometimes leave a reclaimable xfs
->> inode and that test hits that case quite often.
->>
->> When that happens, the xfs inode cache remains broken (zere i_rdev)
->> until the next cycle mount or drop caches.
->>
->> Fixes: 66f364649d870 ("xfs: remove if_rdev")
->> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->
-> Looks ok,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--Otr16r16lzVXhaHneLosoA1YINcTiu3jB
+Content-Type: multipart/mixed; boundary="dex1093hCcuMiv2EKhvIvLop6ie9kcGtA";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <1e9b02d2-3a94-b444-1e11-80b7c6f2aba8@sandeen.net>
+Subject: [ANNOUNCE] for-next updated to 50663dc
 
-I recon that now we should now also strap:
-Cc: <stable@vger.kernel.org> #v4.15
+--dex1093hCcuMiv2EKhvIvLop6ie9kcGtA
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Can I assume, you'll add it on apply?
+Hi folks,
 
-Thanks,
-Amir.
+The for-next branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+Still working on scrub review, hoping to have that in the next
+point release.
+
+The new head of the for-next branch is commit:
+
+50663dc xfsprogs: update dead urls
+
+New Commits:
+
+Christoph Hellwig (2): (note these are merges from older kernelspace)
+      [38d096b] xfs: remove wrappers around b_fspriv
+      [cfc06b6] xfs: add a proper transaction pointer to struct xfs_buf
+
+Darrick J. Wong (1):
+      [50663dc] xfsprogs: update dead urls
+
+Eric Sandeen (5):
+      [2e2caf7] libxfs: remove unused buf_fsprivate3
+      [67d7227] libxfs: use a memory zone for transactions
+      [a1c5615] libxfs: use a memory zone for log items
+      [12f365e] xfs_logprint: fix v3 inode formatting
+      [d0ca5d8] xfs_copy: accept CRC version of ABTB_MAGIC in ASSERT
+
+
+Code Diffstat:
+
+ README                   |   2 +-
+ copy/xfs_copy.c          |   3 +-
+ debian/control           |   6 +--
+ debian/copyright         |   2 +-
+ debian/watch             |   2 +-
+ libxfs/init.c            |   4 ++
+ libxfs/libxfs_io.h       |  10 +---
+ libxfs/logitem.c         |   8 ++-
+ libxfs/trans.c           | 137 ++++++++++++++++++++++++-----------------=
+------
+ libxfs/util.c            |   2 +-
+ logprint/log_print_all.c |   2 +-
+ 11 files changed, 87 insertions(+), 91 deletions(-)
+
+
+--dex1093hCcuMiv2EKhvIvLop6ie9kcGtA--
+
+--Otr16r16lzVXhaHneLosoA1YINcTiu3jB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlpqN4YACgkQIK4WkuE9
+3uC9Fw/9HJXaDe5sU7LN+Hd6fDb0n18191NT9ZnzQhZZdkEFsVrnyUV0Hk4xMVci
+VzJeejwiqMR6L/AyMwq/YSTlYh4YVQOMc81bsWlOal7IvucfsXpiDclp4vteHb4Y
+gHmR8XvKPGgE/N8umhq3RX7bA9ROvO00TrL4b5R1XImPj0wtQLdx79fkg1S0IknJ
+YOVuFZ95kZZUn23I3bYe9Qsco1SZLA4e6SmKGH/5KHvipu2J+dwgHzvAp62FdDVc
+EY9BRV+oC3h757gi0mM7PoNhMNQZplgm6g4UGYN9Poodn0QN7JK3VjJxHdSPmhaf
+qXM1ujzWAwrj0wDXKQHHUuHr0/Q4CI3Y/i4+Ry7Hed2vgo8ncbV9YYjyEmX8O8sG
+V313qCxARpretN+vedny1Jfg96uS0Fxwh/pOgdX3iqalu01zXbLU6GKoUmLqzGfS
+wIaIKD82C95vTMbsLP2zb4lLlD95i6cxY9eMiKxul3ffxDxMGWEVOUdnLkur8sv0
+0eRgxrZ5PjjJANTEvQRA1wKGd/74+kBok+zLogY1FYGqnWIJjQdZ2V9jwg2XaH6o
+E+fpeVAluo360nv3GQAIe01+0LEgtmdL5G4XfR7Ef4enYoGfUQLti8h44qY0Csay
+u9+JEDRKc8F2701gAGH09cYvsf/hxnVGDiQlLatoiqBNj2n6gTY=
+=bNWz
+-----END PGP SIGNATURE-----
+
+--Otr16r16lzVXhaHneLosoA1YINcTiu3jB--
