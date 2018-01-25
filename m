@@ -1,88 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33716 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751224AbeAYVkD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 16:40:03 -0500
-Date: Thu, 25 Jan 2018 13:30:40 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:47284 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751181AbeAYVoQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 16:44:16 -0500
+Date: Thu, 25 Jan 2018 13:44:11 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC][PATCH] xfs: preserve i_rdev when recycling a reclaimable
- inode
-Message-ID: <20180125213040.GO9068@magnolia>
-References: <1516915298-8886-1-git-send-email-amir73il@gmail.com>
+Subject: Re: [PATCH 27/29] xfs_scrub: integrate services with systemd
+Message-ID: <20180125214411.GP9068@magnolia>
+References: <151622651142.31925.4179778330985746435.stgit@magnolia>
+ <151622668376.31925.11115543396206091025.stgit@magnolia>
+ <e517aefd-5ad0-4de6-6b8f-1911da22f464@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1516915298-8886-1-git-send-email-amir73il@gmail.com>
+In-Reply-To: <e517aefd-5ad0-4de6-6b8f-1911da22f464@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Eryu Guan <eguan@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Jan 25, 2018 at 11:21:38PM +0200, Amir Goldstein wrote:
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
+On Thu, Jan 25, 2018 at 03:21:25PM -0600, Eric Sandeen wrote:
+> On 1/17/18 4:04 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a systemd service unit so that we can run the online scrubber
+> > under systemd with (somewhat) appropriate containment.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Darrick,
+> <continue random review method>
 > 
-> This patch fixes a problem I am hitting consistenty with xfstest
-> overlay/017 with certain overlay mount options (index=on,nfs_export=off).
+> ...
 > 
-> I see that overlayfs looks up in underlying xfs and gets a chardev
-> or blockdev inode with non initialized i_rdev (these are not whiteout
-> inodes).
+> > +/*
+> > + * If we are running as a service, we need to be careful about what
+> > + * error codes we return to the calling process.
+> > + */
+> > +static bool			is_service;
+> > +
+> >  static void __attribute__((noreturn))
+> >  usage(void)
+> >  {
+> > @@ -617,6 +623,9 @@ _("Only one of the options -n or -y may be specified.\n"));
+> >  	if (stdout_isatty && !progress_fp)
+> >  		progress_fp = fdopen(1, "w+");
+> >  
+> > +	if (getenv("SERVICE_MODE"))
+> > +		is_service = true;
+> > +
+> >  	/* Find the mount record for the passed-in argument. */
+> >  	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
+> >  		fprintf(stderr,
+> > @@ -717,5 +726,21 @@ _("%s: %llu warnings found.\n"),
+> >  	free(ctx.blkdev);
+> >  	free(ctx.mntpoint);
+> >  
+> > +	/*
+> > +	 * If we're running as a service, bump return code up by 150 to
+> > +	 * avoid conflicting with (sysvinit) service return codes.
+> > +	 */
+> > +	if (is_service) {
+> > +		/*
+> > +		 * journald queries /proc as part of taking in log
+> > +		 * messages; it uses this information to associate the
+> > +		 * message with systemd units, etc.  This races with
+> > +		 * process exit, so delay that a couple of seconds so
+> > +		 * that we capture the summary outputs in the job log.
+> > +		 */
+> > +		sleep(2);
+> > +		if (ret)
+> > +			ret += 150;
+> > +	}
 > 
-> It takes a certain timing which happens in this test that does lookup
-> immediately after drop caches. The test causes a permanent error in
-> inode cache of xfs that is only fixed after another drop caches or
-> cycle mount.
-> 
-> So I am certain there is a problem and that this patch fixes the
-> problem, I'm just not sure this is the right fix and if it is, which
-> is the commit that it "Fixes".
+> Ok this seems batshit crazy, no offense.  I don't blame /you/ ;)  You pointed me
+> at  http://refspecs.linuxbase.org/LSB_2.0.1/LSB-PDA/LSB-PDA/iniscrptact.html
+> but it says that the /initscript/ should exit with specific codes, not that
+> the application it /calls/ should do so.
 
-We're basically reinitializing a VFS inode that was on its way to being
-reclaimed, which means that we don't xfs_iread.  We still have to
-reinitialize the vfs inode state (because we'd already torn that down),
-so we have to preserve all the vfs inode state that the xfs inode stores
-in the vfs inode.
+Yes.  At the moment, the systemd service calls xfs_scrub directly, hence
+it interprets the return code as an initscript error code.  So in theory
+we could create a wrapper script that does all the is_service junk, but
+now that's another weird little script to break.  On the plus side we'd
+contain the systemd workaround crap to some random wrapper in /usr/lib.
 
-Oh, right, hch moved if_rdev to i_rdev in 66f364649d870 ("xfs: remove
-if_rdev") but forgot the xfs_reinit_inode usage.  so that would be the
-commit that this fixes.  Doh.
+Ok, I'll think about it.
+
+> > If the status command is given, /the init script/ will return the following exit status codes. 
+> 
+> So maybe this is getting philosophical, if xfs_scrub detects corruption,
+> does that mean it "failed?"  Shouldn't we use your _fail script to interpret
+> the scrub errors, and then give an appropriate return value back to the thing that
+> called us?
+
+We want the xfs_scrub@ service to return a failure code so that systemd
+will notice the failure and start the xfs_scrub_fail@ fail service.
+This "fail service" doesn't receive the error code of the service that
+failed passed to it, so all it can do is rifle through the journal
+output for whatever xfs_scrub spat out and email it somewhere.
+
+Hm, yeah, all that crap doesn't need to be there for the non-systemd
+case.
+
+> Anyway, can't we do return code mangling as appropriate in the script(s)
+> that call xfs_scrub, vs. in the binary itself?  The above just seems really
+> odd and non-obvious to me.
+> 
+> I'll try to plow through more of the scripty stuff in a bit.
+
+Yeah.
 
 --D
 
 > 
 > Thanks,
-> Amir.
-> 
->  fs/xfs/xfs_icache.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 3861d61fb265..3ce946063ffe 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -295,6 +295,7 @@ xfs_reinit_inode(
->  	uint32_t	generation = inode->i_generation;
->  	uint64_t	version = inode->i_version;
->  	umode_t		mode = inode->i_mode;
-> +	dev_t		dev = inode->i_rdev;
->  
->  	error = inode_init_always(mp->m_super, inode);
->  
-> @@ -302,6 +303,7 @@ xfs_reinit_inode(
->  	inode->i_generation = generation;
->  	inode->i_version = version;
->  	inode->i_mode = mode;
-> +	inode->i_rdev = dev;
->  	return error;
->  }
->  
-> -- 
-> 2.7.4
-> 
+> -Eric
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
