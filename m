@@ -1,112 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55588 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750864AbeACTWF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jan 2018 14:22:05 -0500
-Date: Wed, 3 Jan 2018 11:22:00 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:45402 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751011AbeAYTWY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 14:22:24 -0500
+Date: Thu, 25 Jan 2018 11:22:21 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 9/8] xfs: find libxfs api violations
-Message-ID: <20180103192200.GA4854@magnolia>
-References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+Subject: Re: [PATCH 4/8 V2] libxfs: use a memory zone for transactions
+Message-ID: <20180125192221.GM9068@magnolia>
+References: <1515699458-6925-1-git-send-email-sandeen@sandeen.net>
+ <1515699458-6925-5-git-send-email-sandeen@sandeen.net>
+ <e8515b2e-094b-3092-d82c-3394bd5d0ec5@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151314499003.18893.8687182548758898133.stgit@magnolia>
+In-Reply-To: <e8515b2e-094b-3092-d82c-3394bd5d0ec5@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jan 25, 2018 at 01:01:19PM -0600, Eric Sandeen wrote:
+> In addition to more closely matching the kernel, this will
+> help us catch any leaks from these allocations.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-New test to run tools/find-api-violations.sh in xfsprogs.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/708     |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/708.out |    2 ++
- tests/xfs/group   |    1 +
- 3 files changed, 59 insertions(+)
- create mode 100755 tests/xfs/708
- create mode 100644 tests/xfs/708.out
-
-diff --git a/tests/xfs/708 b/tests/xfs/708
-new file mode 100755
-index 0000000..4877bcf
---- /dev/null
-+++ b/tests/xfs/708
-@@ -0,0 +1,56 @@
-+#! /bin/bash
-+# FS QA Test No. 708
-+#
-+# find-api-violations test
-+#
-+# The purpose of this test is ensure that the xfsprogs programs use the
-+# libxfs_ symbols (in libxfs-api-defs.h) instead of raw xfs_ functions.
-+# This is for the maintainers; it's not a functionality test.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle, Inc.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+[ -z "$WORKAREA" ] && \
-+	_notrun "Can't run find-api-violations.sh without WORKAREA set"
-+[ -f "$WORKAREA/tools/find-api-violations.sh" ] || \
-+	_notrun "Can't find find-api-violations.sh tool under \"$WORKAREA\""
-+
-+echo "Silence is golden."
-+
-+# Look for API usage problems.  Old versions of the script have an improperly
-+# specified grep pattern that is mistaken for a (broken) range specifier in
-+# LC_ALL=C, so use English instead.
-+(cd "$WORKAREA" ; LC_ALL="en_US.UTF-8" bash ./tools/find-api-violations.sh ) | tee -a $seqres.full
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/708.out b/tests/xfs/708.out
-new file mode 100644
-index 0000000..b40823e
---- /dev/null
-+++ b/tests/xfs/708.out
-@@ -0,0 +1,2 @@
-+QA output created by 708
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index d230060..e1b1582 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -434,3 +434,4 @@
- 434 auto quick clone fsr
- 435 auto quick clone
- 436 auto quick clone fsr
-+708 auto quick other
+> ---
+> 
+> V2: remove pointless NULL assignments
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 302f088..7bde8b7 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -384,6 +384,7 @@ manage_zones(int release)
+>  	extern kmem_zone_t	*xfs_da_state_zone;
+>  	extern kmem_zone_t	*xfs_btree_cur_zone;
+>  	extern kmem_zone_t	*xfs_bmap_free_item_zone;
+> +	extern kmem_zone_t	*xfs_trans_zone;
+>  	extern kmem_zone_t	*xfs_log_item_desc_zone;
+>  	extern void		xfs_dir_startup();
+>  
+> @@ -395,6 +396,7 @@ manage_zones(int release)
+>  		kmem_free(xfs_da_state_zone);
+>  		kmem_free(xfs_btree_cur_zone);
+>  		kmem_free(xfs_bmap_free_item_zone);
+> +		kmem_free(xfs_trans_zone);
+>  		kmem_free(xfs_log_item_desc_zone);
+>  		return;
+>  	}
+> @@ -413,6 +415,8 @@ manage_zones(int release)
+>  	xfs_bmap_free_item_zone = kmem_zone_init(
+>  			sizeof(struct xfs_extent_free_item),
+>  			"xfs_bmap_free_item");
+> +	xfs_trans_zone = kmem_zone_init(
+> +			sizeof(struct xfs_trans), "xfs_trans");
+>  	xfs_log_item_desc_zone = kmem_zone_init(
+>  			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
+>  	xfs_dir_startup();
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 57ff3ea..a602eaa 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -36,6 +36,7 @@ static void xfs_trans_free_items(struct xfs_trans *tp);
+>   * Simple transaction interface
+>   */
+>  
+> +kmem_zone_t	*xfs_trans_zone;
+>  kmem_zone_t	*xfs_log_item_desc_zone;
+>  
+>  /*
+> @@ -143,6 +144,17 @@ libxfs_trans_roll(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Free the transaction structure.  If there is more clean up
+> + * to do when the structure is freed, add it here.
+> + */
+> +static void
+> +xfs_trans_free(
+> +	struct xfs_trans	*tp)
+> +{
+> +	kmem_zone_free(xfs_trans_zone, tp);
+> +}
+> +
+>  int
+>  libxfs_trans_alloc(
+>  	struct xfs_mount	*mp,
+> @@ -166,11 +178,8 @@ libxfs_trans_alloc(
+>  			return -ENOSPC;
+>  	}
+>  
+> -	if ((ptr = calloc(sizeof(xfs_trans_t), 1)) == NULL) {
+> -		fprintf(stderr, _("%s: xact calloc failed (%d bytes): %s\n"),
+> -			progname, (int)sizeof(xfs_trans_t), strerror(errno));
+> -		exit(1);
+> -	}
+> +	ptr = kmem_zone_zalloc(xfs_trans_zone,
+> +		(flags & XFS_TRANS_NOFS) ? KM_NOFS : KM_SLEEP);
+>  	ptr->t_mountp = mp;
+>  	ptr->t_blk_res = blocks;
+>  	INIT_LIST_HEAD(&ptr->t_items);
+> @@ -212,8 +221,7 @@ libxfs_trans_cancel(
+>  #endif
+>  	if (tp != NULL) {
+>  		xfs_trans_free_items(tp);
+> -		free(tp);
+> -		tp = NULL;
+> +		xfs_trans_free(tp);
+>  	}
+>  #ifdef XACT_DEBUG
+>  	fprintf(stderr, "## cancelled transaction %p\n", otp);
+> @@ -867,8 +875,7 @@ libxfs_trans_commit(
+>  		fprintf(stderr, "committed clean transaction %p\n", tp);
+>  #endif
+>  		xfs_trans_free_items(tp);
+> -		free(tp);
+> -		tp = NULL;
+> +		xfs_trans_free(tp);
+>  		return 0;
+>  	}
+>  
+> @@ -891,7 +898,6 @@ libxfs_trans_commit(
+>  	trans_committed(tp);
+>  
+>  	/* That's it for the transaction structure.  Free it. */
+> -	free(tp);
+> -	tp = NULL;
+> +	xfs_trans_free(tp);
+>  	return 0;
+>  }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
