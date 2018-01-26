@@ -1,165 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53934 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751219AbeA3Ls5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 Jan 2018 06:48:57 -0500
-Date: Tue, 30 Jan 2018 06:48:56 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/7] xfs: treat CoW fork operations as delalloc for quota
- accounting
-Message-ID: <20180130114856.GA49413@bfoster.bfoster>
-References: <151701540938.3070.15043243007590700677.stgit@magnolia>
- <151701543454.3070.15432025661660161748.stgit@magnolia>
- <20180129122637.GA38852@bfoster.bfoster>
- <20180129230004.GJ9068@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:53350 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752420AbeAZSnN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 13:43:13 -0500
+Date: Fri, 26 Jan 2018 10:40:29 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 04/11] xfs: CoW fork operations should only update
+ quota reservations
+Message-ID: <20180126184029.GX9068@magnolia>
+References: <151676027743.12349.3845769501491774512.stgit@magnolia>
+ <151676030319.12349.11227408793644481553.stgit@magnolia>
+ <20180125012035.GE9068@magnolia>
+ <20180125130352.GB43198@bfoster.bfoster>
+ <20180125182003.GH9068@magnolia>
+ <20180126130215.GA47923@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180129230004.GJ9068@magnolia>
+In-Reply-To: <20180126130215.GA47923@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 29, 2018 at 03:00:04PM -0800, Darrick J. Wong wrote:
-> On Mon, Jan 29, 2018 at 07:26:38AM -0500, Brian Foster wrote:
-> > On Fri, Jan 26, 2018 at 05:10:34PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jan 26, 2018 at 08:02:16AM -0500, Brian Foster wrote:
+> On Thu, Jan 25, 2018 at 10:20:03AM -0800, Darrick J. Wong wrote:
+> > On Thu, Jan 25, 2018 at 08:03:53AM -0500, Brian Foster wrote:
+> > > On Wed, Jan 24, 2018 at 05:20:35PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Since the CoW fork only exists in memory, it is incorrect to update the
+> > > > on-disk quota block counts when we modify the CoW fork.  Unlike the data
+> > > > fork, even real extents in the CoW fork are only reservations (on-disk
+> > > > they're owned by the refcountbt) so they must not be tracked in the on
+> > > > disk quota info.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > > v2: make documentation more crisp and to the point
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_bmap.c |  118 ++++++++++++++++++++++++++++++++++++++++++----
+> > > >  fs/xfs/xfs_quota.h       |   14 ++++-
+> > > >  fs/xfs/xfs_reflink.c     |    8 ++-
+> > > >  3 files changed, 122 insertions(+), 18 deletions(-)
+> > > > 
+> ...
+> > > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > > > index 82abff6..e367351 100644
+> > > > --- a/fs/xfs/xfs_reflink.c
+> > > > +++ b/fs/xfs/xfs_reflink.c
+> > > > @@ -599,10 +599,6 @@ xfs_reflink_cancel_cow_blocks(
+> > > >  					del.br_startblock, del.br_blockcount,
+> > > >  					NULL);
+> > > >  
+> > > > -			/* Update quota accounting */
+> > > > -			xfs_trans_mod_dquot_byino(*tpp, ip, XFS_TRANS_DQ_BCOUNT,
+> > > > -					-(long)del.br_blockcount);
+> > > > -
+> > > >  			/* Roll the transaction */
+> > > >  			xfs_defer_ijoin(&dfops, ip);
+> > > >  			error = xfs_defer_finish(tpp, &dfops);
+> > > > @@ -795,6 +791,10 @@ xfs_reflink_end_cow(
+> > > >  		if (error)
+> > > >  			goto out_defer;
+> > > >  
+> > > > +		/* Charge this new data fork mapping to the on-disk quota. */
+> > > > +		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
+> > > > +				(long)del.br_blockcount);
+> > > > +
 > > > 
-> > > Since the CoW fork only exists in memory, it is incorrect to update the
-> > > on-disk quota block counts when we modify the CoW fork.  Unlike the data
-> > > fork, even real extents in the CoW fork are only delalloc-style
-> > > reservations (on-disk they're owned by the refcountbt) so they must not
-> > > be tracked in the on disk quota info.  Ensure the i_delayed_blks
-> > > accounting reflects this too.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
+> > > Should this technically be XFS_TRANS_DQ_DELBCOUNT? The blocks obviously
+> > > aren't delalloc and this transaction doesn't make a quota reservation so
+> > > I don't think it screws up accounting. But if the transaction did make a
+> > > quota reservation, it seems like this would account the extent against
+> > > the tx reservation where it instead should recognize that cow blocks
+> > > have already been reserved (which is essentially what DELBCOUNT means,
+> > > IIUC).
 > > 
-> > Patch doesn't apply.. I'm guessing because xfs_bmap_btalloc_accounting()
-> > doesn't exist. Is this series incomplete, or perhaps not consistent with
-> > for-next..?
-> 
-> Yeah, sorry, I think I forgot to send the middle patch when I sent this
-> series....
-> 
-> ...no, wait, "xfs: refactor accounting updates out of xfs_bmap_btalloc"
-> was already reviewed, so these last few patches were supposed to apply
-> atop that, and that went on top of for-next.
-> 
-
-Hmm.. I think I saw that a day or two ago, but then for-next moved
-forward/backward and when I tried to apply this series in full, the head
-of for-next was commit 75d4a13b ("xfs: fix non-debug build compiler
-warnings"), which is behind the original refactoring patch. :/
-
-Annnyways.. it looks like these are all merged now as of this morning,
-so moving on..
-
-Brian
-
-> --D
-> 
+> > Hmmm, there's a subtlety here -- we're opencoding what DELBCOUNT does,
+> > because the subsequent xfs_bmap_del_extent_cow unconditionally reduces
+> > the in-core reservation after we've mapped in the extent as if it had
+> > been accounted as a real extent all along.  But considering all the
+> > blather about how cow fork blocks are treated as incore reservations, it
+> > does look funny, doesn't it?
 > > 
-> > Brian
+> 
+> Ok.. I missed that the end/del cases were tied together, then reconfused
+> myself over the accounting in the end_cow() path (re: our irc chat
+> yesterday) when reassessing that bit. So to reset my brain, we have the
+> following with this current patch:
+> 
+> - cow reserve does a delalloc and in-core dquot reservation
+> - cow real alloc either skips dquot adjustment if wasdel, else reduces
+>   the quota res acquired by the transaction by the size of the alloc[1].
+>   Either way we leave around an in-core quota reservation as if the blocks
+>   remained delalloc.
+> - A cancel at this point simply kills the in-core dquot reservation
+>   along with the cow fork blocks.
+> - end_cow() unmaps the current data fork blocks and decrements
+>   associated real quota usage (tx), remaps the cow blocks and increments
+>   real quota usage (tx), then kills off the in-core dquot reservation.
+
+Correct.
+
+> [1] Would this even be necessary if we just acquired a delalloc like
+> reservation in xfs_reflink_allocate_cow() rather than associate the
+> reservation with the transaction in the first place (assuming we have
+> enough information to cover error handling, extent manipulations and
+> whatnot)?
+
+Originally cow did make da reservations even for direct writes, but
+Christoph thought that we could avoid the overhead of running through
+the cow fork an extra time by mapping directly to the cow fork.
+
+> When the tx commits, this essentially has the effect of applying the
+> bcount delta to both the on-disk dquot and the in-core res. The former
+> reflects the change in the file on-disk and the latter is rectified
+> because the field accounts for the current real usage plus outstanding
+> reservation. The original cowblocks res has been dropped directly, so
+> the bcount delta reflects the change to the data fork.
+
+<nod>
+
+> If we instead use delbcount in end_cow(), we're telling the transaction
+> to drop bcount by whatever old data fork blocks were removed and that
+> we've converted N delalloc (cow fork, actually) blocks that already had
+> in-core reservation. Therefore, transaction commit updates the on-disk
+> dquot just the same (-dataforkblocks + delallocblocks), but delbcount
+> blocks have already updated the in-core dquot res so the transaction has
+> nothing else to do there (and so we must also not remove that
+> reservation in del_cow()). This approach does seem like it requires a
+> bit less mental gymnastics to follow because it more closely resembles
+> delalloc quota accounting. ;)
+
+Yes, that's less brain muddling; last night's patchpile incorporates
+that.
+
+> Another thing that I'm not sure has been considered here is whether
+> doing the bcount delta in the transaction and dropping the cowblocks res
+> from the dquot directly leaves a race window where the quota can overrun
+> a limit. E.g., since the transaction has to up the in-core res in the
+> original example at commit time, is there anything that locks out
+> further external reservation from the dquot between the time the in-core
+> res is dropped and the transaction commits?
+
+Yes, that's a theoretical race (as in I've never seen it happen) that
+is fixed by using delbcount in end_cow.
+
+> > So perhaps the solution is to pass intent into xfs_bmap_del_extent_cow:
+> > if we're calling it from _end_cow then we want to hang on to the
+> > reservation so that delbcount can do its thing, but if we're calling
+> > from _cancel_cow then we're dumping the extent and reservation.
 > > 
-> > >  fs/xfs/libxfs/xfs_bmap.c |   32 ++++++++++++++++++++++++++++++--
-> > >  fs/xfs/xfs_reflink.c     |   15 +++++++++++----
-> > >  2 files changed, 41 insertions(+), 6 deletions(-)
+> 
+> Indeed. But since those are the only callers and we'd already update
+> delbcount from end_cow(), could we not just lift the del_cow() decrement
+> into the cancel_cow() function? FWIW, some extra comments around quota
+> manipulation in the reflink functions would also be useful for future
+> reference.
+
+Hm, yes, could do that too.
+
+TBH I had the moment of "doh, just call the quota unreserve in
+cancel_cow directly instead of at the end of del_extent_cow" right after
+I hit send. :(
+
+--D
+
+> Brian
+> 
+> > --D
+> > 
 > > > 
+> > > Other than that the code seems Ok to me.
 > > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > index 4582f55..cad21fd 100644
-> > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > @@ -3343,8 +3343,35 @@ xfs_bmap_btalloc_accounting(
-> > >  	struct xfs_bmalloca	*ap,
-> > >  	struct xfs_alloc_arg	*args)
-> > >  {
-> > > -	if (!(ap->flags & XFS_BMAPI_COWFORK))
-> > > -		ap->ip->i_d.di_nblocks += args->len;
-> > > +	if (ap->flags & XFS_BMAPI_COWFORK) {
-> > > +		/*
-> > > +		 * COW fork blocks are in-core only and thus are treated as
-> > > +		 * in-core quota reservation (like delalloc blocks) even when
-> > > +		 * converted to real blocks. The quota reservation is not
-> > > +		 * accounted to disk until blocks are remapped to the data
-> > > +		 * fork. So if these blocks were previously delalloc, we
-> > > +		 * already have quota reservation and there's nothing to do
-> > > +		 * yet.
-> > > +		 */
-> > > +		if (ap->wasdel)
-> > > +			return;
-> > > +
-> > > +		/*
-> > > +		 * Otherwise, we've allocated blocks in a hole. The transaction
-> > > +		 * has acquired in-core quota reservation for this extent.
-> > > +		 * Rather than account these as real blocks, however, we reduce
-> > > +		 * the transaction quota reservation based on the allocation.
-> > > +		 * This essentially transfers the transaction quota reservation
-> > > +		 * to that of a delalloc extent.
-> > > +		 */
-> > > +		ap->ip->i_delayed_blks += args->len;
-> > > +		xfs_trans_mod_dquot_byino(ap->tp, ap->ip, XFS_TRANS_DQ_RES_BLKS,
-> > > +				-(long)args->len);
-> > > +		return;
-> > > +	}
-> > > +
-> > > +	/* data/attr fork only */
-> > > +	ap->ip->i_d.di_nblocks += args->len;
-> > >  	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> > >  	if (ap->wasdel)
-> > >  		ap->ip->i_delayed_blks -= args->len;
-> > > @@ -4820,6 +4847,7 @@ xfs_bmap_del_extent_cow(
-> > >  		xfs_iext_insert(ip, icur, &new, state);
-> > >  		break;
-> > >  	}
-> > > +	ip->i_delayed_blks -= del->br_blockcount;
-> > >  }
-> > >  
-> > >  /*
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index 85a119e..c4f0aff 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -599,10 +599,6 @@ xfs_reflink_cancel_cow_blocks(
-> > >  					del.br_startblock, del.br_blockcount,
-> > >  					NULL);
-> > >  
-> > > -			/* Update quota accounting */
-> > > -			xfs_trans_mod_dquot_byino(*tpp, ip, XFS_TRANS_DQ_BCOUNT,
-> > > -					-(long)del.br_blockcount);
-> > > -
-> > >  			/* Roll the transaction */
-> > >  			xfs_defer_ijoin(&dfops, ip);
-> > >  			error = xfs_defer_finish(tpp, &dfops);
-> > > @@ -613,6 +609,13 @@ xfs_reflink_cancel_cow_blocks(
-> > >  
-> > >  			/* Remove the mapping from the CoW fork. */
-> > >  			xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> > > +
-> > > +			/* Remove the quota reservation */
-> > > +			error = xfs_trans_reserve_quota_nblks(NULL, ip,
-> > > +					-(long)del.br_blockcount, 0,
-> > > +					XFS_QMOPT_RES_REGBLKS);
-> > > +			if (error)
-> > > +				break;
-> > >  		} else {
-> > >  			/* Didn't do anything, push cursor back. */
-> > >  			xfs_iext_prev(ifp, &icur);
-> > > @@ -795,6 +798,10 @@ xfs_reflink_end_cow(
-> > >  		if (error)
-> > >  			goto out_defer;
-> > >  
-> > > +		/* Charge this new data fork mapping to the on-disk quota. */
-> > > +		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
-> > > +				(long)del.br_blockcount);
-> > > +
-> > >  		/* Remove the mapping from the CoW fork. */
-> > >  		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> > >  
+> > > Brian
 > > > 
+> > > >  		/* Remove the mapping from the CoW fork. */
+> > > >  		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+> > > >  
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > > > --
 > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > > the body of a message to majordomo@vger.kernel.org
