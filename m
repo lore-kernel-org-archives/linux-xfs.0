@@ -1,135 +1,541 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39764 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751174AbeAYRbO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Jan 2018 12:31:14 -0500
-Date: Thu, 25 Jan 2018 12:31:12 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/11] xfs: fix up cowextsz allocation shortfalls
-Message-ID: <20180125173111.GA44175@bfoster.bfoster>
-References: <151676027743.12349.3845769501491774512.stgit@magnolia>
- <151676031559.12349.8327260913918740589.stgit@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:47048 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751434AbeAZSQJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 13:16:09 -0500
+Date: Fri, 26 Jan 2018 10:15:59 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 27/29] xfs_scrub: integrate services with systemd
+Message-ID: <20180126181559.GV9068@magnolia>
+References: <151622651142.31925.4179778330985746435.stgit@magnolia>
+ <151622668376.31925.11115543396206091025.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151676031559.12349.8327260913918740589.stgit@magnolia>
+In-Reply-To: <151622668376.31925.11115543396206091025.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 23, 2018 at 06:18:35PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In xfs_bmap_btalloc, we try using the CoW extent size hint to force
-> allocations to align (offset-wise) to cowextsz granularity to reduce CoW
-> fragmentation.  This works fine until we cannot satisfy the allocation
-> with enough blocks to cover the requested range and the alignment hints.
-> If this happens, return an unaligned region because if we don't the
-> extent trim functions cause us to return a zero-length extent to iomap,
-> which iomap doesn't catch and thus blows up.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hmm.. is this a direct I/O thing? The description of the problem had me
-wondering how we handle this with regard to dio and traditional extent
-size hints. It looks like we just return -ENOSPC if xfs_bmapi_write()
-doesn't return a mapping that covers the target range of the write (even
-if it apparently attempts to allocate part of the associated extent size
-hint range). E.g., see the nimaps == 0 check in
-xfs_iomap_write_direct() after we commit the transaction.
+Create a systemd service unit so that we can run the online scrubber
+under systemd with (somewhat) appropriate containment.
 
-In fact, it looks like just repeating the failed write could eventually
-succeed if the issue is that there is actually enough free space
-available to allocate the hint range up to where the write is targeted,
-just no long enough extent available to fill the extent size hint range
-in a single bmapi_write call. That behavior is a bit strange, I admit,
-but I'm wondering if we could do the same thing for the cow hint. Would
-a similar nimaps check in the xfs_bmapi_write() caller resolve the bug
-described here?
+NOTE: The VERSION changes are due to a symbol collision between
+variables the pkgconfig autoconf macros use and our own thing.
 
-If so and if we still care to actually change/fix the allocation
-behavior with regard to the hints, perhaps we could do that in a
-separate patch more generically for both hints..?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ .gitignore                       |    4 ++
+ VERSION                          |    8 ++--
+ configure.ac                     |    2 +
+ include/builddefs.in             |    4 ++
+ m4/Makefile                      |    1 +
+ m4/package_globals.m4            |    4 +-
+ m4/package_services.m4           |   72 ++++++++++++++++++++++++++++++++++++++
+ release.sh                       |    2 +
+ scrub/Makefile                   |   36 ++++++++++++++++++-
+ scrub/xfs_scrub.c                |   17 +++++++++
+ scrub/xfs_scrub@.service.in      |   19 ++++++++++
+ scrub/xfs_scrub_all.cron.in      |    1 +
+ scrub/xfs_scrub_all.in           |   49 ++++++++++++++++++++++++++
+ scrub/xfs_scrub_all.service.in   |    9 +++++
+ scrub/xfs_scrub_all.timer        |   11 ++++++
+ scrub/xfs_scrub_fail             |   26 ++++++++++++++
+ scrub/xfs_scrub_fail@.service.in |   10 +++++
+ 17 files changed, 267 insertions(+), 8 deletions(-)
+ create mode 100644 m4/package_services.m4
+ create mode 100644 scrub/xfs_scrub@.service.in
+ create mode 100644 scrub/xfs_scrub_all.cron.in
+ create mode 100644 scrub/xfs_scrub_all.service.in
+ create mode 100644 scrub/xfs_scrub_all.timer
+ create mode 100755 scrub/xfs_scrub_fail
+ create mode 100644 scrub/xfs_scrub_fail@.service.in
 
-Brian
-
->  fs/iomap.c               |    2 +-
->  fs/xfs/libxfs/xfs_bmap.c |   21 +++++++++++++++++++--
->  2 files changed, 20 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index e5de772..aec35a0 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -63,7 +63,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
->  	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
->  	if (ret)
->  		return ret;
-> -	if (WARN_ON(iomap.offset > pos))
-> +	if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0))
->  		return -EIO;
->  
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 93ce2c6..4ec1fdc5 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3480,8 +3480,20 @@ xfs_bmap_btalloc_filestreams(
->  static void
->  xfs_bmap_btalloc_cow(
->  	struct xfs_bmalloca	*ap,
-> -	struct xfs_alloc_arg	*args)
-> +	struct xfs_alloc_arg	*args,
-> +	xfs_fileoff_t		orig_offset,
-> +	xfs_extlen_t		orig_length)
->  {
-> +	/*
-> +	 * If we didn't get enough blocks to satisfy the cowextsize
-> +	 * aligned request, break the alignment and return whatever we
-> +	 * got; it's the best we can do.
-> +	 */
-> +	if (ap->length <= orig_length)
-> +		ap->offset = orig_offset;
-> +	else if (ap->offset + ap->length < orig_offset + orig_length)
-> +		ap->offset = orig_offset + orig_length - ap->length;
-> +
->  	/* Filling a previously reserved extent; nothing to do here. */
->  	if (ap->wasdel)
->  		return;
-> @@ -3520,6 +3532,8 @@ xfs_bmap_btalloc(
->  	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
->  	xfs_agnumber_t	ag;
->  	xfs_alloc_arg_t	args;
-> +	xfs_fileoff_t	orig_offset;
-> +	xfs_extlen_t	orig_length;
->  	xfs_extlen_t	blen;
->  	xfs_extlen_t	nextminlen = 0;
->  	int		nullfb;		/* true if ap->firstblock isn't set */
-> @@ -3529,6 +3543,8 @@ xfs_bmap_btalloc(
->  	int		stripe_align;
->  
->  	ASSERT(ap->length);
-> +	orig_offset = ap->offset;
-> +	orig_length = ap->length;
->  
->  	mp = ap->ip->i_mount;
->  
-> @@ -3745,7 +3761,8 @@ xfs_bmap_btalloc(
->  		ASSERT(nullfb || fb_agno <= args.agno);
->  		ap->length = args.len;
->  		if (ap->flags & XFS_BMAPI_COWFORK) {
-> -			xfs_bmap_btalloc_cow(ap, &args);
-> +			xfs_bmap_btalloc_cow(ap, &args, orig_offset,
-> +					orig_length);
->  		} else {
->  			ap->ip->i_d.di_nblocks += args.len;
->  			xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/.gitignore b/.gitignore
+index a3db640..d887451 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -69,6 +69,10 @@ cscope.*
+ /rtcp/xfs_rtcp
+ /spaceman/xfs_spaceman
+ /scrub/xfs_scrub
++/scrub/xfs_scrub@.service
++/scrub/xfs_scrub_all
++/scrub/xfs_scrub_all.service
++/scrub/xfs_scrub_fail@.service
+ 
+ # generated crc files
+ /libxfs/crc32selftest
+diff --git a/VERSION b/VERSION
+index 01fda21..c724992 100644
+--- a/VERSION
++++ b/VERSION
+@@ -1,7 +1,7 @@
+ #
+ # This file is used by configure to get version information
+ #
+-PKG_MAJOR=4
+-PKG_MINOR=14
+-PKG_REVISION=0
+-PKG_BUILD=1
++XFS_PKG_MAJOR=4
++XFS_PKG_MINOR=14
++XFS_PKG_REVISION=0
++XFS_PKG_BUILD=1
+diff --git a/configure.ac b/configure.ac
+index bb032e5..b438165 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -174,6 +174,8 @@ AC_HAVE_OPENAT
+ AC_HAVE_FSTATAT
+ AC_HAVE_SG_IO
+ AC_HAVE_HDIO_GETGEO
++AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR
++AC_CONFIG_CROND_DIR
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index d44faf9..df76b2c 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -127,6 +127,10 @@ HAVE_OPENAT = @have_openat@
+ HAVE_FSTATAT = @have_fstatat@
+ HAVE_SG_IO = @have_sg_io@
+ HAVE_HDIO_GETGEO = @have_hdio_getgeo@
++HAVE_SYSTEMD = @have_systemd@
++SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
++HAVE_CROND = @have_crond@
++CROND_DIR = @crond_dir@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/m4/Makefile b/m4/Makefile
+index 61d617e..a6d11e9 100644
+--- a/m4/Makefile
++++ b/m4/Makefile
+@@ -21,6 +21,7 @@ LSRCFILES = \
+ 	package_libcdev.m4 \
+ 	package_pthread.m4 \
+ 	package_sanitizer.m4 \
++	package_services.m4 \
+ 	package_types.m4 \
+ 	package_unistring.m4 \
+ 	package_utilies.m4 \
+diff --git a/m4/package_globals.m4 b/m4/package_globals.m4
+index e469671..2ede859 100644
+--- a/m4/package_globals.m4
++++ b/m4/package_globals.m4
+@@ -11,9 +11,9 @@ AC_DEFUN([AC_PACKAGE_GLOBALS],
+     AC_PROG_CC
+ 
+     . ./VERSION
+-    pkg_version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
++    pkg_version=${XFS_PKG_MAJOR}.${XFS_PKG_MINOR}.${XFS_PKG_REVISION}
+     AC_SUBST(pkg_version)
+-    pkg_release=$PKG_BUILD
++    pkg_release=$XFS_PKG_BUILD
+     test -z "$BUILD_VERSION" || pkg_release="$BUILD_VERSION"
+     AC_SUBST(pkg_release)
+ 
+diff --git a/m4/package_services.m4 b/m4/package_services.m4
+new file mode 100644
+index 0000000..127d43c
+--- /dev/null
++++ b/m4/package_services.m4
+@@ -0,0 +1,72 @@
++#
++# Figure out where to put systemd service units
++#
++AC_DEFUN([AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR],
++[
++	AC_REQUIRE([PKG_PROG_PKG_CONFIG])
++	AC_ARG_WITH([systemd_unit_dir],
++	  [AS_HELP_STRING([--with-systemd-unit-dir@<:@=DIR@:>@],
++		[Install systemd system units into DIR.])],
++	  [],
++	  [with_systemd_unit_dir=yes])
++	AS_IF([test "x${with_systemd_unit_dir}" != "xno"],
++	  [
++		AS_IF([test "x${with_systemd_unit_dir}" = "xyes"],
++		  [
++			PKG_CHECK_MODULES([SYSTEMD], [systemd])
++			with_systemd_unit_dir="$(pkg-config --variable=systemdsystemunitdir systemd 2>/dev/null)"
++		  ])
++		AC_MSG_CHECKING([for systemd system unit dir])
++		systemd_system_unit_dir="${with_systemd_unit_dir}"
++		AS_IF([test -n "${systemd_system_unit_dir}"],
++		  [
++			AC_MSG_RESULT(${systemd_system_unit_dir})
++			have_systemd="yes"
++		  ],
++		  [
++			AC_MSG_RESULT(no)
++			have_systemd="no"
++		  ])
++	  ],
++	  [
++		have_systemd="disabled"
++	  ])
++	AC_SUBST(have_systemd)
++	AC_SUBST(systemd_system_unit_dir)
++])
++
++#
++# Figure out where to install crontabs
++#
++AC_DEFUN([AC_CONFIG_CROND_DIR],
++[
++	AC_ARG_WITH([crond_dir],
++	  [AS_HELP_STRING([--with-crond-dir@<:@=DIR@:>@],
++		[Install system crontabs into DIR.])],
++	  [],
++	  [with_crond_dir=yes])
++	AS_IF([test "x${with_crond_dir}" != "xno"],
++	  [
++		AS_IF([test "x${with_crond_dir}" = "xyes"],
++		  [
++			AS_IF([test -d "/etc/cron.d"],
++			  [with_crond_dir="/etc/cron.d"])
++		  ])
++		AC_MSG_CHECKING([for system crontab dir])
++		crond_dir="${with_crond_dir}"
++		AS_IF([test -n "${crond_dir}"],
++		  [
++			AC_MSG_RESULT(${crond_dir})
++			have_crond="yes"
++		  ],
++		  [
++			AC_MSG_RESULT(no)
++			have_crond="no"
++		  ])
++	  ],
++	  [
++		have_crond="disabled"
++	  ])
++	AC_SUBST(have_crond)
++	AC_SUBST(crond_dir)
++])
+diff --git a/release.sh b/release.sh
+index 577257a..3f7d2ee 100755
+--- a/release.sh
++++ b/release.sh
+@@ -11,7 +11,7 @@
+ 
+ . ./VERSION
+ 
+-version=${PKG_MAJOR}.${PKG_MINOR}.${PKG_REVISION}
++version=${XFS_PKG_MAJOR}.${XFS_PKG_MINOR}.${XFS_PKG_REVISION}
+ date=`date +"%-d %B %Y"`
+ 
+ echo "Cleaning up"
+diff --git a/scrub/Makefile b/scrub/Makefile
+index ca6dab0..0632794 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -15,6 +15,19 @@ LTCOMMAND = xfs_scrub
+ INSTALL_SCRUB = install-scrub
+ XFS_SCRUB_ALL_PROG = xfs_scrub_all
+ XFS_SCRUB_ARGS = -b -n
++ifeq ($(HAVE_SYSTEMD),yes)
++INSTALL_SCRUB += install-systemd
++SYSTEMD_SERVICES = xfs_scrub@.service xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
++OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
++endif
++ifeq ($(HAVE_CROND),yes)
++INSTALL_SCRUB += install-crond
++CRONTABS = xfs_scrub_all.cron
++OPTIONAL_TARGETS += $(CRONTABS)
++# Don't enable the crontab by default for now
++CROND_DIR = $(PKG_LIB_DIR)/$(PKG_NAME)
++endif
++
+ endif	# scrub_prereqs
+ 
+ HFILES = \
+@@ -84,7 +97,7 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
+ LCFLAGS += -DHAVE_HDIO_GETGEO
+ endif
+ 
+-default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
++default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
+ 
+ xfs_scrub_all: xfs_scrub_all.in
+ 	@echo "    [SED]    $@"
+@@ -98,6 +111,27 @@ include $(BUILDRULES)
+ 
+ install: $(INSTALL_SCRUB)
+ 
++%.service: %.service.in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
++		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
++		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
++		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
++
++%.cron: %.cron.in
++	@echo "    [SED]    $@"
++	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" < $< > $@
++
++install-systemd: default $(SYSTEMD_SERVICES)
++	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
++	$(INSTALL) -m 644 $(SYSTEMD_SERVICES) $(SYSTEMD_SYSTEM_UNIT_DIR)
++	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/$(PKG_NAME)
++	$(INSTALL) -m 755 xfs_scrub_fail $(PKG_LIB_DIR)/$(PKG_NAME)
++
++install-crond: default $(CRONTABS)
++	$(INSTALL) -m 755 -d $(CROND_DIR)
++	$(INSTALL) -m 644 $(CRONTABS) $(CROND_DIR)
++
+ install-scrub: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index baf8760..2469225 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -154,6 +154,12 @@ bool				want_fstrim = true;
+ bool				stderr_isatty;
+ bool				stdout_isatty;
+ 
++/*
++ * If we are running as a service, we need to be careful about what
++ * error codes we return to the calling process.
++ */
++static bool			is_service;
++
+ static void __attribute__((noreturn))
+ usage(void)
+ {
+@@ -617,6 +623,9 @@ _("Only one of the options -n or -y may be specified.\n"));
+ 	if (stdout_isatty && !progress_fp)
+ 		progress_fp = fdopen(1, "w+");
+ 
++	if (getenv("SERVICE_MODE"))
++		is_service = true;
++
+ 	/* Find the mount record for the passed-in argument. */
+ 	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
+ 		fprintf(stderr,
+@@ -717,5 +726,13 @@ _("%s: %llu warnings found.\n"),
+ 	free(ctx.blkdev);
+ 	free(ctx.mntpoint);
+ 
++	/*
++	 * If we're being run as a service, the return code must fit the
++	 * LSB init script action error guidelines, which is to say that
++	 * we compress all errors to 1 and log what actually happened.
++	 */
++	if (is_service && ret > 0)
++		return 1;
++
+ 	return ret;
+ }
+diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
+new file mode 100644
+index 0000000..a868a27
+--- /dev/null
++++ b/scrub/xfs_scrub@.service.in
+@@ -0,0 +1,19 @@
++[Unit]
++Description=Online XFS Metadata Check for %I
++OnFailure=xfs_scrub_fail@%i.service
++
++[Service]
++Type=oneshot
++WorkingDirectory=%I
++PrivateNetwork=true
++ProtectSystem=full
++ProtectHome=read-only
++PrivateTmp=yes
++AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
++NoNewPrivileges=yes
++User=nobody
++IOSchedulingClass=idle
++CPUSchedulingPolicy=idle
++Environment=SERVICE_MODE=1
++ExecStart=@sbindir@/xfs_scrub @scrub_args@ %I
++SyslogIdentifier=%N
+diff --git a/scrub/xfs_scrub_all.cron.in b/scrub/xfs_scrub_all.cron.in
+new file mode 100644
+index 0000000..3dea929
+--- /dev/null
++++ b/scrub/xfs_scrub_all.cron.in
+@@ -0,0 +1 @@
++10 3 * * 0 root test -e /run/systemd/system || @sbindir@/xfs_scrub_all
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index 7738644..0dbfd6c 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -25,10 +25,19 @@ import json
+ import threading
+ import time
+ import sys
++import os
+ 
+ retcode = 0
+ terminate = False
+ 
++def DEVNULL():
++	'''Return /dev/null in subprocess writable format.'''
++	try:
++		from subprocess import DEVNULL
++		return DEVNULL
++	except ImportError:
++		return open(os.devnull, 'wb')
++
+ def find_mounts():
+ 	'''Map mountpoints to physical disks.'''
+ 
+@@ -55,6 +64,13 @@ def find_mounts():
+ 				fs[mnt] = set([lastdisk])
+ 	return fs
+ 
++def kill_systemd(unit, proc):
++	'''Kill systemd unit.'''
++	proc.terminate()
++	cmd=['systemctl', 'stop', unit]
++	x = subprocess.Popen(cmd)
++	x.wait()
++
+ def run_killable(cmd, stdout, killfuncs, kill_fn):
+ 	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
+ 	try:
+@@ -81,6 +97,19 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+ 		if terminate:
+ 			return
+ 
++		# Try it the systemd way
++		cmd=['systemctl', 'start', 'xfs_scrub@%s' % mnt]
++		ret = run_killable(cmd, DEVNULL(), killfuncs, \
++				lambda proc: kill_systemd('xfs_scrub@%s' % mnt, proc))
++		if ret == 0 or ret == 1:
++			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
++			sys.stdout.flush()
++			retcode |= ret
++			return
++
++		if terminate:
++			return
++
+ 		# Invoke xfs_scrub manually
+ 		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
+ 		ret = run_killable(cmd, None, killfuncs, \
+@@ -112,6 +141,17 @@ def main():
+ 
+ 	fs = find_mounts()
+ 
++	# Tail the journal if we ourselves aren't a service...
++	journalthread = None
++	if 'SERVICE_MODE' not in os.environ:
++		try:
++			cmd=['journalctl', '--no-pager', '-q', '-S', 'now', \
++					'-f', '-t', 'xfs_scrub@*', '-o', \
++					'cat']
++			journalthread = subprocess.Popen(cmd)
++		except:
++			pass
++
+ 	# Schedule scrub jobs...
+ 	running_devs = set()
+ 	killfuncs = set()
+@@ -148,6 +188,15 @@ def main():
+ 			fs = []
+ 		cond.release()
+ 
++	if journalthread is not None:
++		journalthread.terminate()
++
++	# If we're being run as a service, the return code must fit the
++	# LSB init script action error guidelines, which is to say that
++	# we compress all errors to 1 and log what actually happened.
++	if 'SERVICE_MODE' in os.environ and retcode != 0:
++		retcode = 1
++
+ 	sys.exit(retcode)
+ 
+ if __name__ == '__main__':
+diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
+new file mode 100644
+index 0000000..2831691
+--- /dev/null
++++ b/scrub/xfs_scrub_all.service.in
+@@ -0,0 +1,9 @@
++[Unit]
++Description=Online XFS Metadata Check for All Filesystems
++ConditionACPower=true
++
++[Service]
++Type=oneshot
++Environment=SERVICE_MODE=1
++ExecStart=@sbindir@/xfs_scrub_all
++SyslogIdentifier=xfs_scrub_all
+diff --git a/scrub/xfs_scrub_all.timer b/scrub/xfs_scrub_all.timer
+new file mode 100644
+index 0000000..2e4a33b
+--- /dev/null
++++ b/scrub/xfs_scrub_all.timer
+@@ -0,0 +1,11 @@
++[Unit]
++Description=Periodic XFS Online Metadata Check for All Filesystems
++
++[Timer]
++# Run on Sunday at 3:10am, to avoid running afoul of DST changes
++OnCalendar=Sun *-*-* 03:10:00
++RandomizedDelaySec=60
++Persistent=true
++
++[Install]
++WantedBy=timers.target
+diff --git a/scrub/xfs_scrub_fail b/scrub/xfs_scrub_fail
+new file mode 100755
+index 0000000..36dd50e
+--- /dev/null
++++ b/scrub/xfs_scrub_fail
+@@ -0,0 +1,26 @@
++#!/bin/bash
++
++# Email logs of failed xfs_scrub unit runs
++
++mailer=/usr/sbin/sendmail
++recipient="$1"
++test -z "${recipient}" && exit 0
++mntpoint="$2"
++test -z "${mntpoint}" && exit 0
++hostname="$(hostname -f 2>/dev/null)"
++test -z "${hostname}" && hostname="${HOSTNAME}"
++if [ ! -x "${mailer}" ]; then
++	echo "${mailer}: Mailer program not found."
++	exit 1
++fi
++
++(cat << ENDL
++To: $1
++From: <xfs_scrub@${hostname}>
++Subject: xfs_scrub failure on ${mntpoint}
++
++So sorry, the automatic xfs_scrub of ${mntpoint} on ${hostname} failed.
++
++A log of what happened follows:
++ENDL
++systemctl status --full --lines 4294967295 "xfs_scrub@${mntpoint}") | "${mailer}" -t -i
+diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
+new file mode 100644
+index 0000000..785f881
+--- /dev/null
++++ b/scrub/xfs_scrub_fail@.service.in
+@@ -0,0 +1,10 @@
++[Unit]
++Description=Online XFS Metadata Check Failure Reporting for %I
++
++[Service]
++Type=oneshot
++Environment=EMAIL_ADDR=root
++ExecStart=@pkg_lib_dir@/@pkg_name@/xfs_scrub_fail "${EMAIL_ADDR}" %I
++User=mail
++Group=mail
++SupplementaryGroups=systemd-journal
