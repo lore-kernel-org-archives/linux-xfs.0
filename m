@@ -1,113 +1,256 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46358 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751897AbeAXCSF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 21:18:05 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0O27GAH066399
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 02:18:05 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2fpgyjg1ge-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 02:18:05 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0O2I5tP030001
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 02:18:05 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0O2I4Ra012150
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jan 2018 02:18:05 GMT
-Subject: [PATCH 01/11] xfs: reflink should break pnfs leases before sharing
- blocks
+Received: from aserp2120.oracle.com ([141.146.126.78]:56474 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752931AbeAZTIu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 14:08:50 -0500
+Date: Fri, 26 Jan 2018 11:08:41 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 23 Jan 2018 18:18:03 -0800
-Message-ID: <151676028366.12349.7219306586282315379.stgit@magnolia>
-In-Reply-To: <151676027743.12349.3845769501491774512.stgit@magnolia>
+Subject: Re: [PATCH 05/11] xfs: track CoW blocks separately in the inode
+Message-ID: <20180126190841.GA9068@magnolia>
 References: <151676027743.12349.3845769501491774512.stgit@magnolia>
+ <151676030942.12349.14467032190779795677.stgit@magnolia>
+ <20180125130644.GC43198@bfoster.bfoster>
+ <20180125192142.GL9068@magnolia>
+ <20180126130429.GB47923@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180126130429.GB47923@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jan 26, 2018 at 08:04:29AM -0500, Brian Foster wrote:
+> On Thu, Jan 25, 2018 at 11:21:42AM -0800, Darrick J. Wong wrote:
+> > On Thu, Jan 25, 2018 at 08:06:45AM -0500, Brian Foster wrote:
+> > > On Tue, Jan 23, 2018 at 06:18:29PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Track the number of blocks reserved in the CoW fork so that we can
+> > > > move the quota reservations whenever we chown, and don't account for
+> > > > CoW fork delalloc reservations in i_delayed_blks.  This should make
+> > > > chown work properly for quota reservations, enables us to fully
+> > > > account for real extents in the cow fork in the file stat info, and
+> > > > improves the post-eof scanning decisions because we're no longer
+> > > > confusing data fork delalloc extents with cow fork delalloc extents.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_bmap.c      |   16 ++++++++++++----
+> > > >  fs/xfs/libxfs/xfs_inode_buf.c |    1 +
+> > > >  fs/xfs/xfs_bmap_util.c        |    5 +++++
+> > > >  fs/xfs/xfs_icache.c           |    3 ++-
+> > > >  fs/xfs/xfs_inode.c            |   11 +++++------
+> > > >  fs/xfs/xfs_inode.h            |    1 +
+> > > >  fs/xfs/xfs_iops.c             |    3 ++-
+> > > >  fs/xfs/xfs_itable.c           |    3 ++-
+> > > >  fs/xfs/xfs_qm.c               |    2 +-
+> > > >  fs/xfs/xfs_reflink.c          |    4 ++--
+> > > >  fs/xfs/xfs_super.c            |    1 +
+> > > >  11 files changed, 34 insertions(+), 16 deletions(-)
+> > > > 
+> > > > 
+> > > ...
+> > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > > index 4a38cfc..a208825 100644
+> > > > --- a/fs/xfs/xfs_inode.c
+> > > > +++ b/fs/xfs/xfs_inode.c
+> > > ...
+> > > > @@ -1669,7 +1667,7 @@ xfs_release(
+> > > >  		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
+> > > >  		if (truncated) {
+> > > >  			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
+> > > > -			if (ip->i_delayed_blks > 0) {
+> > > > +			if (ip->i_delayed_blks > 0 || ip->i_cow_blocks > 0) {
+> > > >  				error = filemap_flush(VFS_I(ip)->i_mapping);
+> > > >  				if (error)
+> > > >  					return error;
+> > > 
+> > > Is having cowblocks really relevant to this hunk? I thought this was
+> > > purely a delalloc vs. file size thing, but I could be wrong. 
+> > 
+> > AFAICT, if we (1) use truncate to reduce a file's size, (2) write
+> > somewhere past eof, (3) make some delalloc reservations for the post-eof
+> > write, and (4) close the file, then this chunk flushes the dirty data to
+> > disk so that if we crash after the close() call returns, the file will
+> > still have all the data that was written out.  IOWs, this provides for
+> > flush-on-close after a file size reduction.
+> > 
+> 
+> I think it goes back to problems where those subsequent buffered writes
+> increase the file size again and the fs crashes before all data is
+> written out. E.g., the problem described by commit ba87ea699e ("[XFS]
+> Fix to prevent the notorious 'NULL files' problem after a crash."). It's
+> not totally clear to me whether that fixed the problem and this
+> particular hack is still needed.
 
-Before we share blocks between files, we need to break the pnfs leases
-on the layout before we start slicing and dicing the block map.
+Me neither.  It looks like deferring the size update until the write
+end_io would have closed this bug... but on the other hand maybe its
+function is more to avoid disappointing the people who expect flush on
+close behavior...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_reflink.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 47 insertions(+), 1 deletion(-)
+> FWIW, the flush code looks like it goes back to commit 7d4fb40ad7
+> ("[XFS] Start writeout earlier (on last close) ...").
+> 
+> > So I was thinking that if a write to a lower offset causes the creation
+> > of a speculative cow extent of some kind that extends past eof, we'd
+> > still want to flush the dirty data to disk on close even if there are no
+> > delalloc reservations in the data fork.
+> > 
+> 
+> This whole stanza still depends on a truncate in the first place
+> though..?
+> 
+> I guess I'm not necessarily against doing this, I just think we should
+> verify whether it's actually useful to prevent some kind of similar
+> crash-recovery problem it was intended to help mitigate. If not, then
+> we're subjecting ourselves to the tradeoff, which appears to be that
+> we'll initiate writeback of any file with cowblocks on close that has
+> been truncated.
+> 
+> Granted the truncate operation is probably infrequent with respect to
+> close() so it's probably not that big of a deal, but in the delalloc
 
+It's probably infrequent wrt cow-and-close, but "echo foo > existingfile"
+would trigger this for the regular da case.  I don't really mind
+dropping it either, aside from my sense of paranoia. :P
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 47aea2e..f89a725 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1245,6 +1245,50 @@ xfs_reflink_remap_blocks(
- }
- 
- /*
-+ * Grab the exclusive iolock for a data copy from src to dest, making
-+ * sure to abide vfs locking order (lowest pointer value goes first) and
-+ * breaking the pnfs layout leases on dest before proceeding.  The loop
-+ * is needed because we cannot call the blocking break_layout() with the
-+ * src iolock held, and therefore have to back out both locks.
-+ */
-+static int
-+xfs_iolock_two_inodes_and_break_layout(
-+	struct inode		*src,
-+	struct inode		*dest)
-+{
-+	bool			src_first = src < dest;
-+	bool			src_last = src > dest;
-+	int			error;
-+
-+retry:
-+	if (src_first) {
-+		inode_lock(src);
-+		inode_lock_nested(dest, I_MUTEX_NONDIR2);
-+	} else {
-+		inode_lock(dest);
-+	}
-+
-+	error = break_layout(dest, false);
-+	if (error == -EWOULDBLOCK) {
-+		inode_unlock(dest);
-+		if (src_first)
-+			inode_unlock(src);
-+		error = break_layout(dest, true);
-+		if (error)
-+			return error;
-+		goto retry;
-+	} else if (error) {
-+		inode_unlock(dest);
-+		if (src_first)
-+			inode_unlock(src);
-+		return error;
-+	}
-+	if (src_last)
-+		inode_lock_nested(src, I_MUTEX_NONDIR2);
-+	return 0;
-+}
-+
-+/*
-  * Link a range of blocks from one file to another.
-  */
- int
-@@ -1274,7 +1318,9 @@ xfs_reflink_remap_range(
- 		return -EIO;
- 
- 	/* Lock both files against IO */
--	lock_two_nondirectories(inode_in, inode_out);
-+	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
-+	if (ret)
-+		return ret;
- 	if (same_inode)
- 		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
- 	else
+> case a flush is at least generally expected to clear the file of delayed
+> allocation. It's my understanding that the same is not necessarily true
+> for cowblocks.. cow prealloc means blocks can sit around in the cow fork
+> for a while in anticipation of future copy-on-writes, right?
 
+Yes.
+
+--D
+
+> 
+> Brian
+> 
+> > Ofc now I see that xfs_file_iomap_begin_delay will create the data fork
+> > da reservation for a non-shared block even if a cow fork extent already
+> > exists (the write is promoted to cow), so perhaps this isn't strictly
+> > necessary... but adding a data fork da extent when there's already a cow
+> > fork extent seems like a (mostly harmless) bug to me.
+> > 
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > @@ -1909,7 +1907,8 @@ xfs_inactive(
+> > > >  
+> > > >  	if (S_ISREG(VFS_I(ip)->i_mode) &&
+> > > >  	    (ip->i_d.di_size != 0 || XFS_ISIZE(ip) != 0 ||
+> > > > -	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
+> > > > +	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0 ||
+> > > > +	     ip->i_cow_blocks > 0))
+> > > >  		truncate = 1;
+> > > >  
+> > > >  	error = xfs_qm_dqattach(ip, 0);
+> > > > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > > > index ff56486..6feee8a 100644
+> > > > --- a/fs/xfs/xfs_inode.h
+> > > > +++ b/fs/xfs/xfs_inode.h
+> > > > @@ -62,6 +62,7 @@ typedef struct xfs_inode {
+> > > >  	/* Miscellaneous state. */
+> > > >  	unsigned long		i_flags;	/* see defined flags below */
+> > > >  	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+> > > > +	unsigned int		i_cow_blocks;	/* count of cow fork blocks */
+> > > >  
+> > > >  	struct xfs_icdinode	i_d;		/* most of ondisk inode */
+> > > >  
+> > > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> > > > index 56475fc..6c3381c 100644
+> > > > --- a/fs/xfs/xfs_iops.c
+> > > > +++ b/fs/xfs/xfs_iops.c
+> > > > @@ -513,7 +513,8 @@ xfs_vn_getattr(
+> > > >  	stat->mtime = inode->i_mtime;
+> > > >  	stat->ctime = inode->i_ctime;
+> > > >  	stat->blocks =
+> > > > -		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
+> > > > +		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks +
+> > > > +				  ip->i_cow_blocks);
+> > > >  
+> > > >  	if (ip->i_d.di_version == 3) {
+> > > >  		if (request_mask & STATX_BTIME) {
+> > > > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> > > > index d583105..412d7eb 100644
+> > > > --- a/fs/xfs/xfs_itable.c
+> > > > +++ b/fs/xfs/xfs_itable.c
+> > > > @@ -122,7 +122,8 @@ xfs_bulkstat_one_int(
+> > > >  	case XFS_DINODE_FMT_BTREE:
+> > > >  		buf->bs_rdev = 0;
+> > > >  		buf->bs_blksize = mp->m_sb.sb_blocksize;
+> > > > -		buf->bs_blocks = dic->di_nblocks + ip->i_delayed_blks;
+> > > > +		buf->bs_blocks = dic->di_nblocks + ip->i_delayed_blks +
+> > > > +				 ip->i_cow_blocks;
+> > > >  		break;
+> > > >  	}
+> > > >  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> > > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > > > index 5b848f4..28f12f8 100644
+> > > > --- a/fs/xfs/xfs_qm.c
+> > > > +++ b/fs/xfs/xfs_qm.c
+> > > > @@ -1847,7 +1847,7 @@ xfs_qm_vop_chown_reserve(
+> > > >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+> > > >  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+> > > >  
+> > > > -	delblks = ip->i_delayed_blks;
+> > > > +	delblks = ip->i_delayed_blks + ip->i_cow_blocks;
+> > > >  	blkflags = XFS_IS_REALTIME_INODE(ip) ?
+> > > >  			XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS;
+> > > >  
+> > > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > > > index e367351..f875ea7 100644
+> > > > --- a/fs/xfs/xfs_reflink.c
+> > > > +++ b/fs/xfs/xfs_reflink.c
+> > > > @@ -619,7 +619,7 @@ xfs_reflink_cancel_cow_blocks(
+> > > >  	}
+> > > >  
+> > > >  	/* clear tag if cow fork is emptied */
+> > > > -	if (!ifp->if_bytes)
+> > > > +	if (ip->i_cow_blocks == 0)
+> > > >  		xfs_inode_clear_cowblocks_tag(ip);
+> > > >  
+> > > >  	return error;
+> > > > @@ -704,7 +704,7 @@ xfs_reflink_end_cow(
+> > > >  	trace_xfs_reflink_end_cow(ip, offset, count);
+> > > >  
+> > > >  	/* No COW extents?  That's easy! */
+> > > > -	if (ifp->if_bytes == 0)
+> > > > +	if (ip->i_cow_blocks == 0)
+> > > >  		return 0;
+> > > >  
+> > > >  	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+> > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > > index f3e0001..9d04cfb 100644
+> > > > --- a/fs/xfs/xfs_super.c
+> > > > +++ b/fs/xfs/xfs_super.c
+> > > > @@ -989,6 +989,7 @@ xfs_fs_destroy_inode(
+> > > >  	xfs_inactive(ip);
+> > > >  
+> > > >  	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+> > > > +	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_cow_blocks == 0);
+> > > >  	XFS_STATS_INC(ip->i_mount, vn_reclaim);
+> > > >  
+> > > >  	/*
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
