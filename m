@@ -1,289 +1,440 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50472 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751501AbeAZCTM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 21:19:12 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0Q2HQbp151225
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:19:11 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2fqu8f01vv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:19:09 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0Q257YB014737
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:05:08 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0Q257ni027314
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:05:07 GMT
-Subject: [PATCH 3/6] xfs: track CoW blocks separately in the inode
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Jan 2018 18:05:06 -0800
-Message-ID: <151693230662.7395.17437996000784460142.stgit@magnolia>
-In-Reply-To: <151693228803.7395.12526880865470882359.stgit@magnolia>
-References: <151693228803.7395.12526880865470882359.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:51186 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751235AbeAZGty (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Jan 2018 01:49:54 -0500
+Date: Fri, 26 Jan 2018 14:49:52 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 5/5] xfs: regression tests for reflink quota bugs
+Message-ID: <20180126064952.GL18267@eguan.usersys.redhat.com>
+References: <151683799705.17051.9987269343206294671.stgit@magnolia>
+ <151683802784.17051.11994070942067598698.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151683802784.17051.11994070942067598698.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 24, 2018 at 03:53:47PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add three tests to look for quota bugs in xfs reflink.  The first
+> test looks for problems when we have speculative cow reservations
+> in memory, we chown the file, but the reservations don't move to
+> the new owner.  The second test checks that we remembered to
+> dqattach the inodes before performing reflink operations; and the
+> third exercises reflink quota handling near enospc.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/xfs/904     |   93 ++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/904.out |   17 ++++++++
+>  tests/xfs/905     |   88 ++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/905.out |   13 ++++++
+>  tests/xfs/906     |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/906.out |    6 +++
+>  tests/xfs/group   |    3 +
+>  7 files changed, 331 insertions(+)
+>  create mode 100755 tests/xfs/904
+>  create mode 100644 tests/xfs/904.out
+>  create mode 100755 tests/xfs/905
+>  create mode 100644 tests/xfs/905.out
+>  create mode 100755 tests/xfs/906
+>  create mode 100644 tests/xfs/906.out
+> 
+> 
+> diff --git a/tests/xfs/904 b/tests/xfs/904
+> new file mode 100755
+> index 0000000..ef78f1a
+> --- /dev/null
+> +++ b/tests/xfs/904
+> @@ -0,0 +1,93 @@
+> +#! /bin/bash
+> +# FS QA Test No. 904
+> +#
+> +# Regression test for a quota accounting bug when changing the owner of
+> +# a file that has CoW reservations and no dirty pages.  The reservations
+> +# should shift over to the new owner, but they do not.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/reflink
+> +. ./common/quota
+> +. ./common/filter
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_quota
+> +_require_scratch_reflink
+> +_require_cp_reflink
+> +_require_user
+> +
+> +rm -f $seqres.full
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount "-o usrquota,grpquota" >> "$seqres.full" 2>&1
+> +
+> +echo "Create files"
+> +$XFS_IO_PROG -c "cowextsize 1m" $SCRATCH_MNT
 
-Track the number of blocks reserved in the CoW fork so that we can
-move the quota reservations whenever we chown, and don't account for
-CoW fork delalloc reservations in i_delayed_blks.  This should make
-chown work properly for quota reservations, enables us to fully
-account for real extents in the cow fork in the file stat info, and
-improves the post-eof scanning decisions because we're no longer
-confusing data fork delalloc extents with cow fork delalloc extents.
+Add comments on why we need this?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c      |   12 ++++++++++--
- fs/xfs/libxfs/xfs_inode_buf.c |    1 +
- fs/xfs/xfs_bmap_util.c        |    5 +++++
- fs/xfs/xfs_icache.c           |    3 ++-
- fs/xfs/xfs_inode.c            |   11 +++++------
- fs/xfs/xfs_inode.h            |    1 +
- fs/xfs/xfs_iops.c             |    3 ++-
- fs/xfs/xfs_itable.c           |    3 ++-
- fs/xfs/xfs_qm.c               |    2 +-
- fs/xfs/xfs_reflink.c          |    4 ++--
- fs/xfs/xfs_super.c            |    1 +
- 11 files changed, 32 insertions(+), 14 deletions(-)
+> +touch $SCRATCH_MNT/a $SCRATCH_MNT/force_fsgqa
+> +chown $qa_user $SCRATCH_MNT/a $SCRATCH_MNT/force_fsgqa
+> +_pwrite_byte 0x58 0 64k $SCRATCH_MNT/a >> $seqres.full
+> +$XFS_IO_PROG -c 'stat -r' $SCRATCH_MNT/a | grep stat.size >> $seqres.full
+> +_report_quota_blocks "-u $SCRATCH_MNT"
+> +
+> +echo "Reflink and CoW"
+> +_cp_reflink $SCRATCH_MNT/a $SCRATCH_MNT/b
+> +_pwrite_byte 0x59 0 64k $SCRATCH_MNT/a >> $seqres.full
+> +$XFS_IO_PROG -c 'stat -r' $SCRATCH_MNT/a | grep stat.size >> $seqres.full
+> +_report_quota_blocks "-u $SCRATCH_MNT"
+> +
+> +echo "Sync"
+> +sync
+> +_report_quota_blocks "-u $SCRATCH_MNT"
+> +
+> +echo "Chown and check quota"
+> +chown root $SCRATCH_MNT/a
+> +$XFS_IO_PROG -c 'stat -r' $SCRATCH_MNT/a | grep stat.size >> $seqres.full
+> +_report_quota_blocks "-u $SCRATCH_MNT"
+> +
+> +echo "Remount"
+> +_scratch_unmount
+> +_scratch_mount "-o usrquota,grpquota" >> "$seqres.full" 2>&1
+> +$XFS_IO_PROG -c 'stat -r' $SCRATCH_MNT/a | grep stat.size >> $seqres.full
+> +_report_quota_blocks "-u $SCRATCH_MNT"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/904.out b/tests/xfs/904.out
+> new file mode 100644
+> index 0000000..4c2f508
+> --- /dev/null
+> +++ b/tests/xfs/904.out
+> @@ -0,0 +1,17 @@
+> +QA output created by 904
+> +Format and mount
+> +Create files
+> +root 0 0 0
+> +fsgqa 64 0 0
+> +Reflink and CoW
+> +root 0 0 0
+> +fsgqa 1152 0 0
+> +Sync
+> +root 0 0 0
+> +fsgqa 1088 0 0
+> +Chown and check quota
+> +root 1024 0 0
+> +fsgqa 64 0 0
+> +Remount
+> +root 64 0 0
+> +fsgqa 64 0 0
+> diff --git a/tests/xfs/905 b/tests/xfs/905
+> new file mode 100755
+> index 0000000..a457c84
+> --- /dev/null
+> +++ b/tests/xfs/905
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# FS QA Test No. 905
+> +#
+> +# Regression test for a quota accounting bug when reflinking across EOF
+> +# of a file in which we forgot dq_attach.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/reflink
+> +. ./common/quota
+> +. ./common/filter
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_quota
+> +_require_scratch_reflink
+> +_require_cp_reflink
+> +_require_user
+> +
+> +rm -f $seqres.full
+> +
+> +check_quota() {
+> +	du_total="$(du -ksc $SCRATCH_MNT/a $SCRATCH_MNT/b | tail -n 1 | awk '{print $1}')"
+> +	qu_total="$(_report_quota_blocks "-u $SCRATCH_MNT" | grep $qa_user | awk '{print $2}')"
+> +	echo "du: $du_total; quota: $qu_total"
+> +}
+> +
+> +echo "Format and mount (noquota)"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount "-o noquota" >> $seqres.full 2>&1
+> +
+> +echo "Create files"
+> +_pwrite_byte 0x58 0 1m $SCRATCH_MNT/a >> $seqres.full
+> +_pwrite_byte 0x58 0 1m $SCRATCH_MNT/b >> $seqres.full
+> +chown $qa_user $SCRATCH_MNT/a $SCRATCH_MNT/b
+> +check_quota 2>&1 | _filter_scratch
+> +
+> +echo "Mount (usrquota) and check quota"
+> +_scratch_unmount
+> +_scratch_mount "-o usrquota,grpquota" >> "$seqres.full" 2>&1
+> +check_quota
+> +
+> +echo "Reflink and check quota again"
+> +_reflink_range $SCRATCH_MNT/a 256k $SCRATCH_MNT/b 384k 128k >> $seqres.full
+> +_reflink_range $SCRATCH_MNT/a 256k $SCRATCH_MNT/b 960k 128k >> $seqres.full
+> +check_quota
+> +
+> +echo "Force quotacheck"
+> +_check_quota_usage
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/905.out b/tests/xfs/905.out
+> new file mode 100644
+> index 0000000..fa95624
+> --- /dev/null
+> +++ b/tests/xfs/905.out
+> @@ -0,0 +1,13 @@
+> +QA output created by 905
+> +Format and mount (noquota)
+> +Create files
+> +repquota: Mountpoint (or device) SCRATCH_MNT not found or has no quota enabled.
+> +repquota: Not all specified mountpoints are using quota.
+> +du: 2048; quota: 
+> +Mount (usrquota) and check quota
+> +du: 2048; quota: 2048
+> +Reflink and check quota again
+> +du: 2112; quota: 2112
+> +Force quotacheck
+> +Comparing user usage
+> +Comparing group usage
+> diff --git a/tests/xfs/906 b/tests/xfs/906
+> new file mode 100755
+> index 0000000..17dcd2e
+> --- /dev/null
+> +++ b/tests/xfs/906
+> @@ -0,0 +1,111 @@
+> +#! /bin/bash
+> +# FS QA Test No. 906
+> +#
+> +# Force enable all XFS quotas, run fsstress until the fs runs out of
+> +# space, and make sure the quotas are still correct when we're done.
+> +# This is a general regression/stress test for numerous quota bugs with
+> +# reflink and copy on write.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/quota
+> +. ./common/filter
+> +. ./common/reflink
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_scratch_reflink
+> +_require_quota
+> +_require_command "$KILLALL_PROG" "killall"
+> +
+> +rm -f $seqres.full
+> +
+> +report_quota_blocks() {
+> +	$XFS_QUOTA_PROG -x -c "report $1" $SCRATCH_MNT | \
+> +			awk '{x += $2;} END { print(x); }'
+> +}
+> +
+> +compare_quota_to_du() {
+> +	test $1 -eq $2 || echo "$3 quota $2 blocks does not match du $1 blocks?"
+> +}
+> +
+> +# Make sure the user/group/project quota block counts match the du output.
+> +# This ensures that we did the quota accounting correctly and that we're
+> +# accurately reporting cow preallocation blocks in stat.
+> +check_quota_du_blocks() {
+> +	sync
+> +	$XFS_QUOTA_PROG -x -c 'report' $SCRATCH_MNT >> $seqres.full
+> +	du_rep=$(du -ks $SCRATCH_MNT | awk '{print $1}')
+> +	u_rep=$(report_quota_blocks -u)
+> +	g_rep=$(report_quota_blocks -g)
+> +	p_rep=$(report_quota_blocks -p)
+> +
+> +	compare_quota_to_du $du_rep $u_rep "user"
+> +	compare_quota_to_du $du_rep $g_rep "group"
+> +	compare_quota_to_du $du_rep $p_rep "project"
+> +}
+> +
+> +echo "Format and fsstress"
+> +
+> +_qmount_option "usrquota,grpquota,prjquota"
+> +_scratch_mkfs > $seqres.full 2>&1
 
+Do we need to limit the fs size? If we're running on a large SCRATCH_DEV
+test will run for longer time.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a59d5be..032befb 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3356,6 +3356,7 @@ xfs_bmap_btalloc_accounting(
- 		 * back to q_res_bcount when the transaction commits, so we
- 		 * must decrease qt_blk_res without decreasing q_res_bcount.
- 		 */
-+		ap->ip->i_cow_blocks += args->len;
- 		xfs_trans_mod_dquot_byino(ap->tp, ap->ip, XFS_TRANS_DQ_RES_BLKS,
- 				-(long)args->len);
- 		return;
-@@ -3954,7 +3955,10 @@ xfs_bmapi_reserve_delalloc(
- 		goto out_unreserve_blocks;
- 
- 
--	ip->i_delayed_blks += alen;
-+	if (whichfork == XFS_COW_FORK)
-+		ip->i_cow_blocks += alen;
-+	else
-+		ip->i_delayed_blks += alen;
- 
- 	got->br_startoff = aoff;
- 	got->br_startblock = nullstartblock(indlen);
-@@ -4694,7 +4698,10 @@ xfs_bmap_del_extent_delay(
- 			isrt ? XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS);
- 	if (error)
- 		return error;
--	ip->i_delayed_blks -= del->br_blockcount;
-+	if (whichfork == XFS_COW_FORK)
-+		ip->i_cow_blocks -= del->br_blockcount;
-+	else
-+		ip->i_delayed_blks -= del->br_blockcount;
- 
- 	if (got->br_startoff == del->br_startoff)
- 		state |= BMAP_LEFT_FILLING;
-@@ -4846,6 +4853,7 @@ xfs_bmap_del_extent_cow(
- 	}
- 
- 	/* Remove the quota reservation */
-+	ip->i_cow_blocks -= del->br_blockcount;
- 	if (!free_quotares)
- 		return;
- 	error = xfs_trans_reserve_quota_nblks(NULL, ip,
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index d7e7e58..d73ded3 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -622,6 +622,7 @@ xfs_iread(
- 
- 	ASSERT(ip->i_d.di_version >= 2);
- 	ip->i_delayed_blks = 0;
-+	ip->i_cow_blocks = 0;
- 
- 	/*
- 	 * Mark the buffer containing the inode as something to keep
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 6d37ab4..c572789 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1991,6 +1991,7 @@ xfs_swap_extents(
- 	/* Swap the cow forks. */
- 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
- 		xfs_extnum_t	extnum;
-+		unsigned int	cowblocks;
- 
- 		ASSERT(ip->i_cformat == XFS_DINODE_FMT_EXTENTS);
- 		ASSERT(tip->i_cformat == XFS_DINODE_FMT_EXTENTS);
-@@ -2011,6 +2012,10 @@ xfs_swap_extents(
- 			xfs_inode_set_cowblocks_tag(tip);
- 		else
- 			xfs_inode_clear_cowblocks_tag(tip);
-+
-+		cowblocks = tip->i_cow_blocks;
-+		tip->i_cow_blocks = ip->i_cow_blocks;
-+		ip->i_cow_blocks = cowblocks;
- 	}
- 
- 	xfs_trans_log_inode(tp, ip,  src_log_flags);
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 2da7a2e..1344206 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -80,6 +80,7 @@ xfs_inode_alloc(
- 	memset(&ip->i_df, 0, sizeof(xfs_ifork_t));
- 	ip->i_flags = 0;
- 	ip->i_delayed_blks = 0;
-+	ip->i_cow_blocks = 0;
- 	memset(&ip->i_d, 0, sizeof(ip->i_d));
- 
- 	return ip;
-@@ -1668,7 +1669,7 @@ xfs_prep_free_cowblocks(
- 	 * Just clear the tag if we have an empty cow fork or none at all. It's
- 	 * possible the inode was fully unshared since it was originally tagged.
- 	 */
--	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-+	if (!xfs_is_reflink_inode(ip) || ip->i_cow_blocks == 0) {
- 		trace_xfs_inode_free_cowblocks_invalid(ip);
- 		xfs_inode_clear_cowblocks_tag(ip);
- 		return false;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f8e8802..57ebc60 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1508,15 +1508,13 @@ xfs_itruncate_clear_reflink_flags(
- 	struct xfs_inode	*ip)
- {
- 	struct xfs_ifork	*dfork;
--	struct xfs_ifork	*cfork;
- 
- 	if (!xfs_is_reflink_inode(ip))
- 		return;
- 	dfork = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
--	cfork = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	if (dfork->if_bytes == 0 && cfork->if_bytes == 0)
-+	if (dfork->if_bytes == 0 && ip->i_cow_blocks == 0)
- 		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
--	if (cfork->if_bytes == 0)
-+	if (ip->i_cow_blocks == 0)
- 		xfs_inode_clear_cowblocks_tag(ip);
- }
- 
-@@ -1669,7 +1667,7 @@ xfs_release(
- 		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
- 		if (truncated) {
- 			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
--			if (ip->i_delayed_blks > 0) {
-+			if (ip->i_delayed_blks > 0 || ip->i_cow_blocks > 0) {
- 				error = filemap_flush(VFS_I(ip)->i_mapping);
- 				if (error)
- 					return error;
-@@ -1909,7 +1907,8 @@ xfs_inactive(
- 
- 	if (S_ISREG(VFS_I(ip)->i_mode) &&
- 	    (ip->i_d.di_size != 0 || XFS_ISIZE(ip) != 0 ||
--	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
-+	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0 ||
-+	     ip->i_cow_blocks > 0))
- 		truncate = 1;
- 
- 	error = xfs_qm_dqattach(ip, 0);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index ff56486..6feee8a 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -62,6 +62,7 @@ typedef struct xfs_inode {
- 	/* Miscellaneous state. */
- 	unsigned long		i_flags;	/* see defined flags below */
- 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
-+	unsigned int		i_cow_blocks;	/* count of cow fork blocks */
- 
- 	struct xfs_icdinode	i_d;		/* most of ondisk inode */
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 56475fc..6c3381c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -513,7 +513,8 @@ xfs_vn_getattr(
- 	stat->mtime = inode->i_mtime;
- 	stat->ctime = inode->i_ctime;
- 	stat->blocks =
--		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
-+		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks +
-+				  ip->i_cow_blocks);
- 
- 	if (ip->i_d.di_version == 3) {
- 		if (request_mask & STATX_BTIME) {
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index d583105..412d7eb 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -122,7 +122,8 @@ xfs_bulkstat_one_int(
- 	case XFS_DINODE_FMT_BTREE:
- 		buf->bs_rdev = 0;
- 		buf->bs_blksize = mp->m_sb.sb_blocksize;
--		buf->bs_blocks = dic->di_nblocks + ip->i_delayed_blks;
-+		buf->bs_blocks = dic->di_nblocks + ip->i_delayed_blks +
-+				 ip->i_cow_blocks;
- 		break;
- 	}
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 5b848f4..28f12f8 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1847,7 +1847,7 @@ xfs_qm_vop_chown_reserve(
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
- 
--	delblks = ip->i_delayed_blks;
-+	delblks = ip->i_delayed_blks + ip->i_cow_blocks;
- 	blkflags = XFS_IS_REALTIME_INODE(ip) ?
- 			XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS;
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 3644a08..9a6c545 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -619,7 +619,7 @@ xfs_reflink_cancel_cow_blocks(
- 	}
- 
- 	/* clear tag if cow fork is emptied */
--	if (!ifp->if_bytes)
-+	if (ip->i_cow_blocks == 0)
- 		xfs_inode_clear_cowblocks_tag(ip);
- 
- 	return error;
-@@ -704,7 +704,7 @@ xfs_reflink_end_cow(
- 	trace_xfs_reflink_end_cow(ip, offset, count);
- 
- 	/* No COW extents?  That's easy! */
--	if (ifp->if_bytes == 0)
-+	if (ip->i_cow_blocks == 0)
- 		return 0;
- 
- 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f3e0001..9d04cfb 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -989,6 +989,7 @@ xfs_fs_destroy_inode(
- 	xfs_inactive(ip);
- 
- 	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
-+	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_cow_blocks == 0);
- 	XFS_STATS_INC(ip->i_mount, vn_reclaim);
- 
- 	/*
+> +_scratch_mount >> $seqres.full 2>&1
 
+I'd check mount status here and _fail if mount failed, otherwise we may
+eat all space on underlying fs (usually rootfs).
+
+> +
+> +nr_cpus=$((LOAD_FACTOR * 4))
+> +nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
+> +$FSSTRESS_PROG $FSSTRESS_AVOID -w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
+> +
+> +echo "Check quota before remount"
+> +check_quota_du_blocks
+> +
+> +# Clear out all the preallocations before we quotacheck.
+> +# The count comparison in _check_quota_usage will be unhappy if we don't
+> +# manage to clean out all the cow preallocations before the remount.
+> +_scratch_unmount
+> +_scratch_mount
+> +
+> +# Make sure the usage doesn't change after quotacheck.
+> +echo "Check quota after remount"
+> +_check_quota_usage
+> +
+> +check_quota_du_blocks
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/906.out b/tests/xfs/906.out
+> new file mode 100644
+> index 0000000..201daf3
+> --- /dev/null
+> +++ b/tests/xfs/906.out
+> @@ -0,0 +1,6 @@
+> +QA output created by 906
+> +Format and fsstress
+> +Check quota before remount
+> +Check quota after remount
+> +Comparing user usage
+> +Comparing group usage
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index cf81451..aa8b49f 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -437,3 +437,6 @@
+>  437 auto quick other
+>  438 auto quick quota dangerous
+>  439 auto quick fuzzers log
+> +904 auto quick clone quota
+> +905 auto quick clone quota
+> +906 auto quick clone quota
+
+I think 906 can be a 'stress' test instead of 'quick'.
+
+Thanks,
+Eryu
