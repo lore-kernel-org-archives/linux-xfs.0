@@ -1,134 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34770 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751760AbeAZS1L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 13:27:11 -0500
-Date: Fri, 26 Jan 2018 10:26:28 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/11] xfs: reflink should break pnfs leases before
- sharing blocks
-Message-ID: <20180126182628.GW9068@magnolia>
-References: <151676027743.12349.3845769501491774512.stgit@magnolia>
- <151676028366.12349.7219306586282315379.stgit@magnolia>
- <20180126090652.GA29115@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42658 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752488AbeAZTY7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Jan 2018 14:24:59 -0500
+Date: Fri, 26 Jan 2018 14:24:57 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/6] xfs: don't screw up direct writes when freesp is
+ fragmented
+Message-ID: <20180126192457.GC26910@bfoster.bfoster>
+References: <151693228803.7395.12526880865470882359.stgit@magnolia>
+ <151693231279.7395.4392783659285038910.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180126090652.GA29115@infradead.org>
+In-Reply-To: <151693231279.7395.4392783659285038910.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 26, 2018 at 01:06:52AM -0800, Christoph Hellwig wrote:
-> On Tue, Jan 23, 2018 at 06:18:03PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Before we share blocks between files, we need to break the pnfs leases
-> > on the layout before we start slicing and dicing the block map.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_reflink.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 47 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 47aea2e..f89a725 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1245,6 +1245,50 @@ xfs_reflink_remap_blocks(
-> >  }
-> >  
-> >  /*
-> > + * Grab the exclusive iolock for a data copy from src to dest, making
-> > + * sure to abide vfs locking order (lowest pointer value goes first) and
-> > + * breaking the pnfs layout leases on dest before proceeding.  The loop
-> > + * is needed because we cannot call the blocking break_layout() with the
-> > + * src iolock held, and therefore have to back out both locks.
-> > + */
-> > +static int
-> > +xfs_iolock_two_inodes_and_break_layout(
-> > +	struct inode		*src,
-> > +	struct inode		*dest)
-> > +{
-> > +	bool			src_first = src < dest;
-> > +	bool			src_last = src > dest;
+On Thu, Jan 25, 2018 at 06:05:12PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I find the double predicates here highly confusing.
+> xfs_bmap_btalloc is given a range of file offset blocks that must be
+> allocated to some data/attr/cow fork.  If the fork has an extent size
+> hint associated with it, the request will be enlarged on both ends to
+> try to satisfy the alignment hint.  If free space is fragmentated,
+> sometimes we can allocate some blocks but not enough to fulfill any of
+> the requested range.  Since bmapi_allocate always trims the new extent
+> mapping to match the originally requested range, this results in
+> bmapi_write returning zero and no mapping.
 > 
-> Also the code doesn't seem to handle the src == dest case as
-> far as I can tell.
+> The consequences of this vary -- buffered writes will simply re-call
+> bmapi_write until it can satisfy at least one block from the original
+> request.  Direct IO overwrites notice nmaps == 0 and return -ENOSPC
+> through the dio mechanism out to userspace with the weird result that
+> writes fail even when we have enough space because the ENOSPC return
+> overrides any partial write status.  For direct CoW writes the situation
+> is disastrous because nobody notices us returning an invalid zero-length
+> wrong-offset mapping to iomap and the write goes off into space.
+> 
+> First of all, teach iomap and xfs_reflink_allocate_cow to check the
+> mappings being returned and bail out with ENOSPC if we can't get any
+> blocks.  Second of all, if free space is so fragmented we can't satisfy
+> even a single block of the original allocation request but did get a few
+> blocks, we should break the alignment hint in order to guarantee at
+> least some forward progress for the direct write.  If we return a short
+> allocation to iomap_apply it'll call back about the remaining blocks.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/iomap.c               |    2 +-
+>  fs/xfs/libxfs/xfs_bmap.c |   15 +++++++++++++++
+>  fs/xfs/xfs_reflink.c     |    6 ++++++
+>  3 files changed, 22 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index e5de772..aec35a0 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -63,7 +63,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
+>  	if (ret)
+>  		return ret;
+> -	if (WARN_ON(iomap.offset > pos))
+> +	if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0))
+>  		return -EIO;
+>  
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 032befb..1fb885c 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3386,6 +3386,8 @@ xfs_bmap_btalloc(
+>  	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+>  	xfs_agnumber_t	ag;
+>  	xfs_alloc_arg_t	args;
+> +	xfs_fileoff_t	orig_offset;
+> +	xfs_extlen_t	orig_length;
+>  	xfs_extlen_t	blen;
+>  	xfs_extlen_t	nextminlen = 0;
+>  	int		nullfb;		/* true if ap->firstblock isn't set */
+> @@ -3395,6 +3397,8 @@ xfs_bmap_btalloc(
+>  	int		stripe_align;
+>  
+>  	ASSERT(ap->length);
+> +	orig_offset = ap->offset;
+> +	orig_length = ap->length;
+>  
+>  	mp = ap->ip->i_mount;
+>  
+> @@ -3610,6 +3614,17 @@ xfs_bmap_btalloc(
+>  			*ap->firstblock = args.fsbno;
+>  		ASSERT(nullfb || fb_agno <= args.agno);
+>  		ap->length = args.len;
+> +		/*
+> +		 * If we didn't get enough blocks to fill even one block of
+> +		 * the original request, break the alignment and return
+> +		 * whatever we got; it's the best we can do.  Free space is
+> +		 * fragmented enough that we cannot honor the extent size
+> +		 * hints but we can still make some forward progress.
+> +		 */
+> +		if (ap->length <= orig_length)
+> +			ap->offset = orig_offset;
+> +		else if (ap->offset + ap->length < orig_offset + orig_length)
+> +			ap->offset = orig_offset + orig_length - ap->length;
 
-I guess they are confusing; when src == dest, src_first and src_last are
-both false.
+Ok, but do we really want to shift the extent placement for any
+allocation that is short? E.g., what if the allocation is short but
+still covers the target offset? ISTM there's a tradeoff here between
+filling the range asked for vs. following the heuristic in
+xfs_bmap_extsize_align(). Even if we do end up shifting to prioritize
+the target range, that doesn't seem to be what the comment describes by
+saying "... we didn't get enough blocks to fill even one block of the
+original request." :P
 
-> > +retry:
-> > +	if (src_first) {
-> > +		inode_lock(src);
-> > +		inode_lock_nested(dest, I_MUTEX_NONDIR2);
-> > +	} else {
-> > +		inode_lock(dest);
-> > +	}
-> 
-> Shouldn't this be replaced by a call to lock_two_nondirectories?
-> Even if that holds both locks over the noon-blocking break_layout
-> it makes things a lot simpler and only does an additional rountrip
-> for the layouts outstanding slow path.
-> 
-> > +	error = break_layout(dest, false);
-> > +	if (error == -EWOULDBLOCK) {
-> > +		inode_unlock(dest);
-> > +		if (src_first)
-> > +			inode_unlock(src);
-> 
-> unlock_two_nondirectories?
-> 
-> > +		error = break_layout(dest, true);
-> > +		if (error)
-> > +			return error;
-> > +		goto retry;
-> > +	} else if (error) {
-> 
-> no need for an else after a goto.
-> 
-> > +		inode_unlock(dest);
-> > +		if (src_first)
-> > +			inode_unlock(src);
-> 
-> unlock_two_nondirectories?
-> 
-> Also seems like this could be simplified to:
-> 
-> 	if (error) {
-> 		unlock_two_nondirectories()
-> 		if (error == -EWOULDBLOCK)
-> 			goto retry;
-> 		return error;
-> 	}
-> 
-> So I guess the whole thing could simply become something like:
-> 
-> retry:
-> 	lock_two_nondirectories(src, dest);
-> 	error = break_layout(dest, false);
-> 	if (error) {
-> 		unlock_two_nondirectories(src, dest);
-> 		if (error == -EWOULDBLOCK)
-> 			goto retry;
-> 		return error;
-> 	}
-> 
-> and could probably just be inlined into the caller..
+>  		xfs_bmap_btalloc_accounting(ap, &args);
+>  	} else {
+>  		ap->blkno = NULLFSBLOCK;
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 9a6c545..9eca8aa 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -464,6 +464,12 @@ xfs_reflink_allocate_cow(
+>  	error = xfs_trans_commit(tp);
+>  	if (error)
+>  		return error;
+> +	/*
+> +	 * Allocation succeeded but our request was not even partially
+> +	 * satisfied?  Bail out.
+> +	 */
+> +	if (nimaps == 0)
+> +		return -ENOSPC;
 
-Yeah, that's simpler... though at this point I'll have to put all this
-into a new series having already pushed to for-next.  :/
+I think this should probably be a separate patch. This part is a
+straightforward bug fix for a potentially critical issue (i.e., a no
+brainer). While not that much code, the change above is an enhancement
+with a bit more complexity to consider.
 
-(Sorry, kinda overburdened with this week)
+Brian
 
---D
-
+>  convert:
+>  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb,
+>  			&dfops);
+> 
+> --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
