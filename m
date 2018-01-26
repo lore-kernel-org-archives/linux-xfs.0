@@ -1,110 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50514 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758807AbeAIPzi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Jan 2018 10:55:38 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BED21356E1
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Jan 2018 15:55:38 +0000 (UTC)
-Date: Tue, 9 Jan 2018 10:55:37 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] db/print: bad character cause illegal memory access
-Message-ID: <20180109155536.GA888@bfoster.bfoster>
-References: <20180109062027.4570-1-zlang@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180109062027.4570-1-zlang@redhat.com>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:39517 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750730AbeAZHna (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 02:43:30 -0500
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
+Date: Fri, 26 Jan 2018 09:44:29 +0200
+Message-Id: <1516952669-14769-1-git-send-email-amir73il@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Jan 09, 2018 at 02:20:27PM +0800, Zorro Lang wrote:
-> xfs_db can print specified field values, likes:
->   # xfs_db -c "inode $inum" -c "print core.nblocks" $dev
-> 
-> But when we give it some bad chararcters, the 'print' command will
-> crash:
-> 
->   # xfs_db -r -c "inode 67211167" -c "print core.*" /dev/mapper/rhel-root
->   bad character in field *
->   *** Error in `xfs_db': free(): invalid pointer: 0x00007fa116e937b8 ***
->   ...
->   (crash messages)
->   ...
->   # xfs_db -r -c "inode 67211167" -c "print core.\"" /dev/mapper/rhel-root
->   missing closing quote
->   *** Error in `xfs_db': free(): invalid pointer: 0x00007f6e8e3c37b8 ***
->   ...
->   (crash messages)
->   ...
-> 
-> The reason is xfs_db call ftok_free() to free ftok_t list, but
-> flist_split() forgets to set the tail to NULL. That cause ftok_free()
-> trys to free illegal memory address.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
->  db/flist.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/db/flist.c b/db/flist.c
-> index e11acbfc..1a875b95 100644
-> --- a/db/flist.c
-> +++ b/db/flist.c
-> @@ -371,11 +371,14 @@ flist_split(
->  	v = xmalloc(sizeof(*v));
->  	v->tok = NULL;
->  	while (*s) {
-> +		v = xrealloc(v, (nv + 1) * sizeof(*v));
->  		/* need to add string handling */
->  		if (*s == '\"') {
->  			s++; /* skip first quote */
->  			if ((a = strrchr(s, '\"')) == NULL) {
->  				dbprintf(_("missing closing quote %s\n"), s);
-> +				v[nv].tok = NULL;
-> +				v[nv].tokty = TT_END;
->  				ftok_free(v);
->  				return NULL;
->  			}
-> @@ -393,19 +396,21 @@ flist_split(
->  			t = puncttypes[a - punctchars];
->  		} else {
->  			dbprintf(_("bad character in field %s\n"), s);
-> +			v[nv].tok = NULL;
-> +			v[nv].tokty = TT_END;
->  			ftok_free(v);
->  			return NULL;
->  		}
->  		a = xmalloc(l + 1);
->  		strncpy(a, s, l);
->  		a[l] = '\0';
-> -		v = xrealloc(v, (nv + 2) * sizeof(*v));
->  		v[nv].tok = a;
->  		v[nv].tokty = t;
->  		nv++;
->  		s += l + tailskip;
->  		tailskip = 0;
->  	}
-> +	v = xrealloc(v, (nv + 1) * sizeof(*v));
->  	v[nv].tok = NULL;
+Commit 66f364649d870 ("xfs: remove if_rdev") moved storing of rdev
+value for special inodes to VFS inodes, but forgot to preserve the
+value of i_rdev when recycling a reclaimable xfs_inode.
 
-Could we just move the above line into the loop (right after nv is
-bumped) to initialize .tok similar to the initial allocation before the
-loop?
+This was detected by xfstest overlay/017 with inodex=on mount option
+and xfs base fs. The test does a lookup of overlay chardev and blockdev
+right after drop caches.
 
-Brian
+Overlayfs inodes hold a reference on underlying xfs inodes when mount
+option index=on is configured. If drop caches reclaim xfs inodes, before
+it relclaims overlayfs inodes, that can sometimes leave a reclaimable xfs
+inode and that test hits that case quite often.
 
->  	v[nv].tokty = TT_END;
->  	return v;
-> -- 
-> 2.13.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When that happens, the xfs inode cache remains broken (zere i_rdev)
+until the next cycle mount or drop caches.
+
+Fixes: 66f364649d870 ("xfs: remove if_rdev")
+Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+---
+
+Darrick,
+
+You may want to rush this last minute v4.15 regression fix.
+
+Thanks,
+Amir.
+
+ fs/xfs/xfs_icache.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 3861d61fb265..3ce946063ffe 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -295,6 +295,7 @@ xfs_reinit_inode(
+ 	uint32_t	generation = inode->i_generation;
+ 	uint64_t	version = inode->i_version;
+ 	umode_t		mode = inode->i_mode;
++	dev_t		dev = inode->i_rdev;
+ 
+ 	error = inode_init_always(mp->m_super, inode);
+ 
+@@ -302,6 +303,7 @@ xfs_reinit_inode(
+ 	inode->i_generation = generation;
+ 	inode->i_version = version;
+ 	inode->i_mode = mode;
++	inode->i_rdev = dev;
+ 	return error;
+ }
+ 
+-- 
+2.7.4
+
