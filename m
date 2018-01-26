@@ -1,27 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47952 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751426AbeAZCPV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 21:15:21 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0Q2F4iD152761
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:15:21 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2fqucqr035-1
+Received: from userp2120.oracle.com ([156.151.31.85]:47160 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751443AbeAZCRg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 21:17:36 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0Q2HPLi151175
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:17:36 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2fqu8f00xa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:15:20 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:17:31 +0000
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w0Q25K7D015078
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0Q25ZtO029276
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:05:20 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0Q25KjR010707
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:05:20 GMT
-Subject: [PATCH 5/6] xfs: skip CoW writes past EOF when writeback races with
- truncate
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:05:35 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w0Q25YJk010835
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:05:34 GMT
+Subject: [PATCH 6/6] xfs: don't clobber inobt/finobt cursors when xref with
+ rmap
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Jan 2018 18:05:18 -0800
-Message-ID: <151693231885.7395.533058591055949677.stgit@magnolia>
+Date: Thu, 25 Jan 2018 18:05:25 -0800
+Message-ID: <151693232496.7395.4886935058204635001.stgit@magnolia>
 In-Reply-To: <151693228803.7395.12526880865470882359.stgit@magnolia>
 References: <151693228803.7395.12526880865470882359.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,46 +35,34 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Every so often we blow the ASSERT(type != XFS_IO_COW) in xfs_map_blocks
-when running fsstress, as we do in generic/269.  The cause of this is
-writeback racing with truncate -- writeback doesn't take the iolock, so
-truncate can sneak in to decrease i_size and truncate page cache while
-writeback is gathering buffer heads to schedule writeout.
-
-If we hit this race on a block that has a CoW mapping, we'll get a valid
-imap from the CoW fork but the reduced i_size trims the mapping to zero
-length (which makes it invalid), so we call xfs_map_blocks to try again.
-This doesn't do much anyway, since any mapping we get out of that will
-also be invalid, so we might as well skip the assert and just stop.
+Even if we can't use the inobt/finobt cursors to count the number of
+inode btree blocks, we are never allowed to clobber the cursor of the
+btree being checked, so don't do this.  Found by fuzzing level = ones
+in xfs/364.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ fs/xfs/scrub/ialloc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2e094c7..2ebc42e 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -390,6 +390,19 @@ xfs_map_blocks(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 21c850a..63ab3f9 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -391,12 +391,12 @@ xfs_scrub_iallocbt_xref_rmap_btreeblks(
  
-+	/*
-+	 * Apparently truncate can race with writeback since writeback doesn't
-+	 * take the iolock and truncate decreases the file size before it
-+	 * starts truncating the pages between new_size and old_size.
-+	 * Therefore, we can end up in the situation where writeback gets a
-+	 * CoW fork mapping but the truncate makes the mapping invalid and we
-+	 * end up in here trying to get a new mapping.  Bail out here so that
-+	 * we simply never get a valid mapping and so we drop the write
-+	 * altogether.  The page truncation will kill the contents anyway.
-+	 */
-+	if (type == XFS_IO_COW && offset > i_size_read(inode))
-+		return 0;
-+
- 	ASSERT(type != XFS_IO_COW);
- 	if (type == XFS_IO_UNWRITTEN)
- 		bmapi_flags |= XFS_BMAPI_IGSTATE;
+ 	/* Check that we saw as many inobt blocks as the rmap says. */
+ 	error = xfs_btree_count_blocks(sc->sa.ino_cur, &inobt_blocks);
+-	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.ino_cur))
++	if (!xfs_scrub_process_error(sc, 0, 0, &error))
+ 		return;
+ 
+ 	if (sc->sa.fino_cur) {
+ 		error = xfs_btree_count_blocks(sc->sa.fino_cur, &finobt_blocks);
+-		if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.fino_cur))
++		if (!xfs_scrub_process_error(sc, 0, 0, &error))
+ 			return;
+ 	}
+ 
 
