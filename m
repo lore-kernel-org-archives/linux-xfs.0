@@ -1,179 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43719 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42609 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751324AbeAZNG1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Jan 2018 08:06:27 -0500
-Date: Fri, 26 Jan 2018 08:06:25 -0500
+        id S1751531AbeAZNJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Jan 2018 08:09:15 -0500
+Date: Fri, 26 Jan 2018 08:02:16 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/11] xfs: fix up cowextsz allocation shortfalls
-Message-ID: <20180126130625.GC47923@bfoster.bfoster>
+Subject: Re: [PATCH v2 04/11] xfs: CoW fork operations should only update
+ quota reservations
+Message-ID: <20180126130215.GA47923@bfoster.bfoster>
 References: <151676027743.12349.3845769501491774512.stgit@magnolia>
- <151676031559.12349.8327260913918740589.stgit@magnolia>
- <20180125173111.GA44175@bfoster.bfoster>
- <20180125202033.GN9068@magnolia>
+ <151676030319.12349.11227408793644481553.stgit@magnolia>
+ <20180125012035.GE9068@magnolia>
+ <20180125130352.GB43198@bfoster.bfoster>
+ <20180125182003.GH9068@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180125202033.GN9068@magnolia>
+In-Reply-To: <20180125182003.GH9068@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jan 25, 2018 at 12:20:33PM -0800, Darrick J. Wong wrote:
-> On Thu, Jan 25, 2018 at 12:31:12PM -0500, Brian Foster wrote:
-> > On Tue, Jan 23, 2018 at 06:18:35PM -0800, Darrick J. Wong wrote:
+On Thu, Jan 25, 2018 at 10:20:03AM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 25, 2018 at 08:03:53AM -0500, Brian Foster wrote:
+> > On Wed, Jan 24, 2018 at 05:20:35PM -0800, Darrick J. Wong wrote:
 > > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > 
-> > > In xfs_bmap_btalloc, we try using the CoW extent size hint to force
-> > > allocations to align (offset-wise) to cowextsz granularity to reduce CoW
-> > > fragmentation.  This works fine until we cannot satisfy the allocation
-> > > with enough blocks to cover the requested range and the alignment hints.
-> > > If this happens, return an unaligned region because if we don't the
-> > > extent trim functions cause us to return a zero-length extent to iomap,
-> > > which iomap doesn't catch and thus blows up.
+> > > Since the CoW fork only exists in memory, it is incorrect to update the
+> > > on-disk quota block counts when we modify the CoW fork.  Unlike the data
+> > > fork, even real extents in the CoW fork are only reservations (on-disk
+> > > they're owned by the refcountbt) so they must not be tracked in the on
+> > > disk quota info.
 > > > 
 > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > > ---
+> > > v2: make documentation more crisp and to the point
+> > > ---
+> > >  fs/xfs/libxfs/xfs_bmap.c |  118 ++++++++++++++++++++++++++++++++++++++++++----
+> > >  fs/xfs/xfs_quota.h       |   14 ++++-
+> > >  fs/xfs/xfs_reflink.c     |    8 ++-
+> > >  3 files changed, 122 insertions(+), 18 deletions(-)
+> > > 
+...
+> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > > index 82abff6..e367351 100644
+> > > --- a/fs/xfs/xfs_reflink.c
+> > > +++ b/fs/xfs/xfs_reflink.c
+> > > @@ -599,10 +599,6 @@ xfs_reflink_cancel_cow_blocks(
+> > >  					del.br_startblock, del.br_blockcount,
+> > >  					NULL);
+> > >  
+> > > -			/* Update quota accounting */
+> > > -			xfs_trans_mod_dquot_byino(*tpp, ip, XFS_TRANS_DQ_BCOUNT,
+> > > -					-(long)del.br_blockcount);
+> > > -
+> > >  			/* Roll the transaction */
+> > >  			xfs_defer_ijoin(&dfops, ip);
+> > >  			error = xfs_defer_finish(tpp, &dfops);
+> > > @@ -795,6 +791,10 @@ xfs_reflink_end_cow(
+> > >  		if (error)
+> > >  			goto out_defer;
+> > >  
+> > > +		/* Charge this new data fork mapping to the on-disk quota. */
+> > > +		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
+> > > +				(long)del.br_blockcount);
+> > > +
 > > 
-> > Hmm.. is this a direct I/O thing? The description of the problem had me
+> > Should this technically be XFS_TRANS_DQ_DELBCOUNT? The blocks obviously
+> > aren't delalloc and this transaction doesn't make a quota reservation so
+> > I don't think it screws up accounting. But if the transaction did make a
+> > quota reservation, it seems like this would account the extent against
+> > the tx reservation where it instead should recognize that cow blocks
+> > have already been reserved (which is essentially what DELBCOUNT means,
+> > IIUC).
 > 
-> Yes.
-> 
-> > wondering how we handle this with regard to dio and traditional extent
-> > size hints. It looks like we just return -ENOSPC if xfs_bmapi_write()
-> > doesn't return a mapping that covers the target range of the write (even
-> > if it apparently attempts to allocate part of the associated extent size
-> > hint range). E.g., see the nimaps == 0 check in
-> > xfs_iomap_write_direct() after we commit the transaction.
-> 
-> I did take a look at that, and didn't like it.
-> 
-> There's enough free space to fill the dio write, but the free space
-> itself is very fragmented so we can't honor the hint.  We did however
-> manage to allocate /some/ blocks, so we might as well return what we got
-> and let the next iteration of the iomap_apply loop try to fill the rest
-> of the write request.  We already reserved enough space, so the write
-> should succeed totally, not return to userspace with either a short
-> write or ENOSPC just because free space is fragmented.
+> Hmmm, there's a subtlety here -- we're opencoding what DELBCOUNT does,
+> because the subsequent xfs_bmap_del_extent_cow unconditionally reduces
+> the in-core reservation after we've mapped in the extent as if it had
+> been accounted as a real extent all along.  But considering all the
+> blather about how cow fork blocks are treated as incore reservations, it
+> does look funny, doesn't it?
 > 
 
-I'm not following how a short write can necessarily be prevented, since
-space reservation doesn't guarantee contiguity and afaict we only make a
-single mapping call. I suppose the iomap level can loop, but that's
-outside of the context where blocks are reserved. Hm?
+Ok.. I missed that the end/del cases were tied together, then reconfused
+myself over the accounting in the end_cow() path (re: our irc chat
+yesterday) when reassessing that bit. So to reset my brain, we have the
+following with this current patch:
 
-But regardless, this behavior seems reasonable to me if we apply it
-consistently between cow fork hint behavior and traditional extent size
-hint behavior. They are both hints, after all. I do think an nimaps
-check might still be appropriate in that reflink code path simply to
-cover the case of unexpected behavior or a bug, rather than brace for
-whatever is going to happen if we continue to shuffle a bogus imap
-around.
+- cow reserve does a delalloc and in-core dquot reservation
+- cow real alloc either skips dquot adjustment if wasdel, else reduces
+  the quota res acquired by the transaction by the size of the alloc[1].
+  Either way we leave around an in-core quota reservation as if the blocks
+  remained delalloc.
+- A cancel at this point simply kills the in-core dquot reservation
+  along with the cow fork blocks.
+- end_cow() unmaps the current data fork blocks and decrements
+  associated real quota usage (tx), remaps the cow blocks and increments
+  real quota usage (tx), then kills off the in-core dquot reservation.
+
+[1] Would this even be necessary if we just acquired a delalloc like
+reservation in xfs_reflink_allocate_cow() rather than associate the
+reservation with the transaction in the first place (assuming we have
+enough information to cover error handling, extent manipulations and
+whatnot)?
+
+When the tx commits, this essentially has the effect of applying the
+bcount delta to both the on-disk dquot and the in-core res. The former
+reflects the change in the file on-disk and the latter is rectified
+because the field accounts for the current real usage plus outstanding
+reservation. The original cowblocks res has been dropped directly, so
+the bcount delta reflects the change to the data fork.
+
+If we instead use delbcount in end_cow(), we're telling the transaction
+to drop bcount by whatever old data fork blocks were removed and that
+we've converted N delalloc (cow fork, actually) blocks that already had
+in-core reservation. Therefore, transaction commit updates the on-disk
+dquot just the same (-dataforkblocks + delallocblocks), but delbcount
+blocks have already updated the in-core dquot res so the transaction has
+nothing else to do there (and so we must also not remove that
+reservation in del_cow()). This approach does seem like it requires a
+bit less mental gymnastics to follow because it more closely resembles
+delalloc quota accounting. ;)
+
+Another thing that I'm not sure has been considered here is whether
+doing the bcount delta in the transaction and dropping the cowblocks res
+from the dquot directly leaves a race window where the quota can overrun
+a limit. E.g., since the transaction has to up the in-core res in the
+original example at commit time, is there anything that locks out
+further external reservation from the dquot between the time the in-core
+res is dropped and the transaction commits?
+
+> So perhaps the solution is to pass intent into xfs_bmap_del_extent_cow:
+> if we're calling it from _end_cow then we want to hang on to the
+> reservation so that delbcount can do its thing, but if we're calling
+> from _cancel_cow then we're dumping the extent and reservation.
+> 
+
+Indeed. But since those are the only callers and we'd already update
+delbcount from end_cow(), could we not just lift the del_cow() decrement
+into the cancel_cow() function? FWIW, some extra comments around quota
+manipulation in the reflink functions would also be useful for future
+reference.
 
 Brian
 
-> (The other problem is that if we return ENOSPC out of iomap_begin, that
-> error code will bubble all the way back to userspace even if we /did/
-> write something, which means that even the programs that handle short
-> dio writes correctly will see that ENOSPC and bail out.  Goldwyn has
-> been trying to fix that braindamage for some time now.)
-> 
-> > In fact, it looks like just repeating the failed write could eventually
-> > succeed if the issue is that there is actually enough free space
-> > available to allocate the hint range up to where the write is targeted,
-> > just no long enough extent available to fill the extent size hint range
-> > in a single bmapi_write call. That behavior is a bit strange, I admit,
-> > but I'm wondering if we could do the same thing for the cow hint. Would
-> > a similar nimaps check in the xfs_bmapi_write() caller resolve the bug
-> > described here?
-> > 
-> > If so and if we still care to actually change/fix the allocation
-> > behavior with regard to the hints, perhaps we could do that in a
-> > separate patch more generically for both hints..?
-> 
-> I get the feeling we could apply this change to all the data fork
-> bmap_btalloc calls too.  I'll go study that in more depth.
-> 
 > --D
 > 
 > > 
+> > Other than that the code seems Ok to me.
+> > 
 > > Brian
 > > 
-> > >  fs/iomap.c               |    2 +-
-> > >  fs/xfs/libxfs/xfs_bmap.c |   21 +++++++++++++++++++--
-> > >  2 files changed, 20 insertions(+), 3 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/iomap.c b/fs/iomap.c
-> > > index e5de772..aec35a0 100644
-> > > --- a/fs/iomap.c
-> > > +++ b/fs/iomap.c
-> > > @@ -63,7 +63,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
-> > >  	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
-> > >  	if (ret)
-> > >  		return ret;
-> > > -	if (WARN_ON(iomap.offset > pos))
-> > > +	if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0))
-> > >  		return -EIO;
+> > >  		/* Remove the mapping from the CoW fork. */
+> > >  		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
 > > >  
-> > >  	/*
-> > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > index 93ce2c6..4ec1fdc5 100644
-> > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > @@ -3480,8 +3480,20 @@ xfs_bmap_btalloc_filestreams(
-> > >  static void
-> > >  xfs_bmap_btalloc_cow(
-> > >  	struct xfs_bmalloca	*ap,
-> > > -	struct xfs_alloc_arg	*args)
-> > > +	struct xfs_alloc_arg	*args,
-> > > +	xfs_fileoff_t		orig_offset,
-> > > +	xfs_extlen_t		orig_length)
-> > >  {
-> > > +	/*
-> > > +	 * If we didn't get enough blocks to satisfy the cowextsize
-> > > +	 * aligned request, break the alignment and return whatever we
-> > > +	 * got; it's the best we can do.
-> > > +	 */
-> > > +	if (ap->length <= orig_length)
-> > > +		ap->offset = orig_offset;
-> > > +	else if (ap->offset + ap->length < orig_offset + orig_length)
-> > > +		ap->offset = orig_offset + orig_length - ap->length;
-> > > +
-> > >  	/* Filling a previously reserved extent; nothing to do here. */
-> > >  	if (ap->wasdel)
-> > >  		return;
-> > > @@ -3520,6 +3532,8 @@ xfs_bmap_btalloc(
-> > >  	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
-> > >  	xfs_agnumber_t	ag;
-> > >  	xfs_alloc_arg_t	args;
-> > > +	xfs_fileoff_t	orig_offset;
-> > > +	xfs_extlen_t	orig_length;
-> > >  	xfs_extlen_t	blen;
-> > >  	xfs_extlen_t	nextminlen = 0;
-> > >  	int		nullfb;		/* true if ap->firstblock isn't set */
-> > > @@ -3529,6 +3543,8 @@ xfs_bmap_btalloc(
-> > >  	int		stripe_align;
-> > >  
-> > >  	ASSERT(ap->length);
-> > > +	orig_offset = ap->offset;
-> > > +	orig_length = ap->length;
-> > >  
-> > >  	mp = ap->ip->i_mount;
-> > >  
-> > > @@ -3745,7 +3761,8 @@ xfs_bmap_btalloc(
-> > >  		ASSERT(nullfb || fb_agno <= args.agno);
-> > >  		ap->length = args.len;
-> > >  		if (ap->flags & XFS_BMAPI_COWFORK) {
-> > > -			xfs_bmap_btalloc_cow(ap, &args);
-> > > +			xfs_bmap_btalloc_cow(ap, &args, orig_offset,
-> > > +					orig_length);
-> > >  		} else {
-> > >  			ap->ip->i_d.di_nblocks += args.len;
-> > >  			xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> > > 
 > > > --
 > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > > the body of a message to majordomo@vger.kernel.org
