@@ -1,118 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:35161 "EHLO
+Received: from bombadil.infradead.org ([65.50.211.133]:37779 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752490AbeAZJGx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 04:06:53 -0500
-Date: Fri, 26 Jan 2018 01:06:52 -0800
+        with ESMTP id S1751444AbeAZMHm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 07:07:42 -0500
+Date: Fri, 26 Jan 2018 04:07:41 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/11] xfs: reflink should break pnfs leases before
- sharing blocks
-Message-ID: <20180126090652.GA29115@infradead.org>
+Subject: Re: [PATCH 02/11] xfs: only grab shared inode locks for source file
+ during reflink
+Message-ID: <20180126120741.GA30851@infradead.org>
 References: <151676027743.12349.3845769501491774512.stgit@magnolia>
- <151676028366.12349.7219306586282315379.stgit@magnolia>
+ <151676028976.12349.5695190502888561177.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151676028366.12349.7219306586282315379.stgit@magnolia>
+In-Reply-To: <151676028976.12349.5695190502888561177.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jan 23, 2018 at 06:18:03PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Before we share blocks between files, we need to break the pnfs leases
-> on the layout before we start slicing and dicing the block map.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_reflink.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 47 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 47aea2e..f89a725 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1245,6 +1245,50 @@ xfs_reflink_remap_blocks(
+> +xfs_lock_two_inodes_separately(
+> +	struct xfs_inode	*ip0,
+> +	uint			ip0_mode,
+> +	struct xfs_inode	*ip1,
+> +	uint			ip1_mode)
+
+We only have 6 calls to xfs_lock_two_inodes in total, so just update
+the signature to take two modes and be done with it.
+
+Also how about mode1 and mode2 for the argument names?
+
+>  	lp = (xfs_log_item_t *)ip0->i_itemp;
+>  	if (lp && (lp->li_flags & XFS_LI_IN_AIL)) {
+> -		if (!xfs_ilock_nowait(ip1, xfs_lock_inumorder(lock_mode, 1))) {
+> -			xfs_iunlock(ip0, lock_mode);
+> +		if (!xfs_ilock_nowait(ip1, xfs_lock_inumorder(ip1_mode, 1))) {
+> +			xfs_iunlock(ip0, ip0_mode);
+>  			if ((++attempts % 5) == 0)
+>  				delay(1); /* Don't just spin the CPU */
+>  			goto again;
+>  		}
+>  	} else {
+> -		xfs_ilock(ip1, xfs_lock_inumorder(lock_mode, 1));
+> +		xfs_ilock(ip1, xfs_lock_inumorder(ip1_mode, 1));
+>  	}
 >  }
->  
->  /*
-> + * Grab the exclusive iolock for a data copy from src to dest, making
-> + * sure to abide vfs locking order (lowest pointer value goes first) and
-> + * breaking the pnfs layout leases on dest before proceeding.  The loop
-> + * is needed because we cannot call the blocking break_layout() with the
-> + * src iolock held, and therefore have to back out both locks.
-> + */
-> +static int
-> +xfs_iolock_two_inodes_and_break_layout(
-> +	struct inode		*src,
-> +	struct inode		*dest)
-> +{
-> +	bool			src_first = src < dest;
-> +	bool			src_last = src > dest;
 
-I find the double predicates here highly confusing.
+Not directly related to your patch, but the the nowait + retry
+mess must go away.
 
-Also the code doesn't seem to handle the src == dest case as
-far as I can tell.
+I think we need to move to the VFS locking conventions, that is
+based on ancestors for directories (see lock_rename) and otherwise
+based on the struct inode address as in lock_two_nondirectories.
 
-> +retry:
-> +	if (src_first) {
-> +		inode_lock(src);
-> +		inode_lock_nested(dest, I_MUTEX_NONDIR2);
-> +	} else {
-> +		inode_lock(dest);
-> +	}
+>       if (src_last)
+> -             inode_lock_nested(src, I_MUTEX_NONDIR2);
+> +             down_read_nested(&src->i_rwsem, I_MUTEX_NONDIR2);
 
-Shouldn't this be replaced by a call to lock_two_nondirectories?
-Even if that holds both locks over the noon-blocking break_layout
-it makes things a lot simpler and only does an additional rountrip
-for the layouts outstanding slow path.
-
-> +	error = break_layout(dest, false);
-> +	if (error == -EWOULDBLOCK) {
-> +		inode_unlock(dest);
-> +		if (src_first)
-> +			inode_unlock(src);
-
-unlock_two_nondirectories?
-
-> +		error = break_layout(dest, true);
-> +		if (error)
-> +			return error;
-> +		goto retry;
-> +	} else if (error) {
-
-no need for an else after a goto.
-
-> +		inode_unlock(dest);
-> +		if (src_first)
-> +			inode_unlock(src);
-
-unlock_two_nondirectories?
-
-Also seems like this could be simplified to:
-
-	if (error) {
-		unlock_two_nondirectories()
-		if (error == -EWOULDBLOCK)
-			goto retry;
-		return error;
-	}
-
-So I guess the whole thing could simply become something like:
-
-retry:
-	lock_two_nondirectories(src, dest);
-	error = break_layout(dest, false);
-	if (error) {
-		unlock_two_nondirectories(src, dest);
-		if (error == -EWOULDBLOCK)
-			goto retry;
-		return error;
-	}
-
-and could probably just be inlined into the caller..
+Why is this not using inode_lock_nested any more?
