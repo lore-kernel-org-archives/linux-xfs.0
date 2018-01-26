@@ -1,204 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36604 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752508AbeAZTUm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 14:20:42 -0500
-Date: Fri, 26 Jan 2018 11:20:38 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:34770 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751760AbeAZS1L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 13:27:11 -0500
+Date: Fri, 26 Jan 2018 10:26:28 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/6] xfs: CoW fork operations should only update quota
- reservations
-Message-ID: <20180126192038.GC9068@magnolia>
-References: <151693228803.7395.12526880865470882359.stgit@magnolia>
- <151693230033.7395.7231908899619118352.stgit@magnolia>
- <20180126190649.GB26910@bfoster.bfoster>
+Subject: Re: [PATCH 01/11] xfs: reflink should break pnfs leases before
+ sharing blocks
+Message-ID: <20180126182628.GW9068@magnolia>
+References: <151676027743.12349.3845769501491774512.stgit@magnolia>
+ <151676028366.12349.7219306586282315379.stgit@magnolia>
+ <20180126090652.GA29115@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180126190649.GB26910@bfoster.bfoster>
+In-Reply-To: <20180126090652.GA29115@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jan 26, 2018 at 02:06:49PM -0500, Brian Foster wrote:
-> On Thu, Jan 25, 2018 at 06:05:00PM -0800, Darrick J. Wong wrote:
+On Fri, Jan 26, 2018 at 01:06:52AM -0800, Christoph Hellwig wrote:
+> On Tue, Jan 23, 2018 at 06:18:03PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Since the CoW fork only exists in memory, it is incorrect to update the
-> > on-disk quota block counts when we modify the CoW fork.  Unlike the data
-> > fork, even real extents in the CoW fork are only reservations (on-disk
-> > they're owned by the refcountbt) so they must not be tracked in the on
-> > disk quota info.
+> > Before we share blocks between files, we need to break the pnfs leases
+> > on the layout before we start slicing and dicing the block map.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> 
-> Looks sane.. just a couple comments from my braindump on the previous
-> patch and a few comment suggestions that help me understand this better
-> (feel free to tweak, rewrite, etc.).
-> 
-> >  fs/xfs/libxfs/xfs_bmap.c |   33 ++++++++++++++++++++++++++++++---
-> >  fs/xfs/libxfs/xfs_bmap.h |    2 +-
-> >  fs/xfs/xfs_reflink.c     |   12 ++++++------
-> >  3 files changed, 37 insertions(+), 10 deletions(-)
+> >  fs/xfs/xfs_reflink.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 47 insertions(+), 1 deletion(-)
 > > 
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 6ad79ea..a59d5be 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3343,8 +3343,26 @@ xfs_bmap_btalloc_accounting(
-> >  	struct xfs_bmalloca	*ap,
-> >  	struct xfs_alloc_arg	*args)
-> >  {
-> > -	if (!(ap->flags & XFS_BMAPI_COWFORK))
-> > -		ap->ip->i_d.di_nblocks += args->len;
-> > +	if (ap->flags & XFS_BMAPI_COWFORK) {
-> 
-> /*
->  * COW fork blocks are in-core only and thus are treated as in-core
->  * quota reservation (like delalloc blocks) even when converted to real
->  * blocks. The quota reservation is not accounted to disk until blocks
->  * are remapped to the data fork. So if these blocks were previously
->  * delalloc, we already have quota reservation and there's nothing to do
->  * yet.
->  */
-
-Ok.
-
-> 
-> > +		/* Filling a previously reserved extent; nothing to do here. */
-> > +		if (ap->wasdel)
-> > +			return;
-> > +
-> > +		/*
-> > +		 * If we get here, we're filling a CoW hole with a real
-> > +		 * (non-delalloc) CoW extent having reserved enough blocks
-> > +		 * from both q_res_bcount and qt_blk_res to guarantee that we
-> > +		 * won't run out of space.  The unused qt_blk_res is given
-> > +		 * back to q_res_bcount when the transaction commits, so we
-> > +		 * must decrease qt_blk_res without decreasing q_res_bcount.
-> > +		 */
-> 
-> /*
->  * Otherwise, we've allocated blocks in a hole. The transaction has
->  * acquired in-core quota reservation for this extent. Rather than
->  * account these as real blocks, however, we reduce the transaction
->  * quota reservation based on the allocation. This essentially transfers
->  * the transaction quota reservation to that of a delalloc extent.
->  */
-
-Ok.
-
-> 
-> > +		xfs_trans_mod_dquot_byino(ap->tp, ap->ip, XFS_TRANS_DQ_RES_BLKS,
-> > +				-(long)args->len);
-> > +		return;
-> > +	}
-> > +
-> > +	/* data/attr fork only */
-> > +	ap->ip->i_d.di_nblocks += args->len;
-> >  	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> >  	if (ap->wasdel)
-> >  		ap->ip->i_delayed_blks -= args->len;
-> > @@ -4761,13 +4779,15 @@ xfs_bmap_del_extent_cow(
-> >  	struct xfs_inode	*ip,
-> >  	struct xfs_iext_cursor	*icur,
-> >  	struct xfs_bmbt_irec	*got,
-> > -	struct xfs_bmbt_irec	*del)
-> > +	struct xfs_bmbt_irec	*del,
-> > +	bool			free_quotares)
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> >  	struct xfs_bmbt_irec	new;
-> >  	xfs_fileoff_t		del_endoff, got_endoff;
-> >  	int			state = BMAP_COWFORK;
-> > +	int			error;
-> >  
-> >  	XFS_STATS_INC(mp, xs_del_exlist);
-> >  
-> > @@ -4824,6 +4844,13 @@ xfs_bmap_del_extent_cow(
-> >  		xfs_iext_insert(ip, icur, &new, state);
-> >  		break;
-> >  	}
-> > +
-> > +	/* Remove the quota reservation */
-> > +	if (!free_quotares)
-> > +		return;
-> > +	error = xfs_trans_reserve_quota_nblks(NULL, ip,
-> > +			-(long)del->br_blockcount, 0, XFS_QMOPT_RES_REGBLKS);
-> > +	ASSERT(error == 0);
-> 
-> Might as well pull this into the only free_quotares = true caller.
-
-Done.  Thx for the review!
-
---D
-
-> Brian
-> 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 47aea2e..f89a725 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -1245,6 +1245,50 @@ xfs_reflink_remap_blocks(
 > >  }
 > >  
 > >  /*
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> > index e36d757..e99f28f 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.h
-> > +++ b/fs/xfs/libxfs/xfs_bmap.h
-> > @@ -224,7 +224,7 @@ int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
-> >  		struct xfs_bmbt_irec *del);
-> >  void	xfs_bmap_del_extent_cow(struct xfs_inode *ip,
-> >  		struct xfs_iext_cursor *cur, struct xfs_bmbt_irec *got,
-> > -		struct xfs_bmbt_irec *del);
-> > +		struct xfs_bmbt_irec *del, bool free_quotares);
-> >  uint	xfs_default_attroffset(struct xfs_inode *ip);
-> >  int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
-> >  		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 82abff6..3644a08 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -599,10 +599,6 @@ xfs_reflink_cancel_cow_blocks(
-> >  					del.br_startblock, del.br_blockcount,
-> >  					NULL);
-> >  
-> > -			/* Update quota accounting */
-> > -			xfs_trans_mod_dquot_byino(*tpp, ip, XFS_TRANS_DQ_BCOUNT,
-> > -					-(long)del.br_blockcount);
-> > -
-> >  			/* Roll the transaction */
-> >  			xfs_defer_ijoin(&dfops, ip);
-> >  			error = xfs_defer_finish(tpp, &dfops);
-> > @@ -612,7 +608,7 @@ xfs_reflink_cancel_cow_blocks(
-> >  			}
-> >  
-> >  			/* Remove the mapping from the CoW fork. */
-> > -			xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> > +			xfs_bmap_del_extent_cow(ip, &icur, &got, &del, true);
-> >  		} else {
-> >  			/* Didn't do anything, push cursor back. */
-> >  			xfs_iext_prev(ifp, &icur);
-> > @@ -795,8 +791,12 @@ xfs_reflink_end_cow(
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> > +		/* Charge this new data fork mapping to the on-disk quota. */
-> > +		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
-> > +				(long)del.br_blockcount);
-> > +
-> >  		/* Remove the mapping from the CoW fork. */
-> > -		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> > +		xfs_bmap_del_extent_cow(ip, &icur, &got, &del, false);
-> >  
-> >  		xfs_defer_ijoin(&dfops, ip);
-> >  		error = xfs_defer_finish(&tp, &dfops);
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
+> > + * Grab the exclusive iolock for a data copy from src to dest, making
+> > + * sure to abide vfs locking order (lowest pointer value goes first) and
+> > + * breaking the pnfs layout leases on dest before proceeding.  The loop
+> > + * is needed because we cannot call the blocking break_layout() with the
+> > + * src iolock held, and therefore have to back out both locks.
+> > + */
+> > +static int
+> > +xfs_iolock_two_inodes_and_break_layout(
+> > +	struct inode		*src,
+> > +	struct inode		*dest)
+> > +{
+> > +	bool			src_first = src < dest;
+> > +	bool			src_last = src > dest;
+> 
+> I find the double predicates here highly confusing.
+> 
+> Also the code doesn't seem to handle the src == dest case as
+> far as I can tell.
+
+I guess they are confusing; when src == dest, src_first and src_last are
+both false.
+
+> > +retry:
+> > +	if (src_first) {
+> > +		inode_lock(src);
+> > +		inode_lock_nested(dest, I_MUTEX_NONDIR2);
+> > +	} else {
+> > +		inode_lock(dest);
+> > +	}
+> 
+> Shouldn't this be replaced by a call to lock_two_nondirectories?
+> Even if that holds both locks over the noon-blocking break_layout
+> it makes things a lot simpler and only does an additional rountrip
+> for the layouts outstanding slow path.
+> 
+> > +	error = break_layout(dest, false);
+> > +	if (error == -EWOULDBLOCK) {
+> > +		inode_unlock(dest);
+> > +		if (src_first)
+> > +			inode_unlock(src);
+> 
+> unlock_two_nondirectories?
+> 
+> > +		error = break_layout(dest, true);
+> > +		if (error)
+> > +			return error;
+> > +		goto retry;
+> > +	} else if (error) {
+> 
+> no need for an else after a goto.
+> 
+> > +		inode_unlock(dest);
+> > +		if (src_first)
+> > +			inode_unlock(src);
+> 
+> unlock_two_nondirectories?
+> 
+> Also seems like this could be simplified to:
+> 
+> 	if (error) {
+> 		unlock_two_nondirectories()
+> 		if (error == -EWOULDBLOCK)
+> 			goto retry;
+> 		return error;
+> 	}
+> 
+> So I guess the whole thing could simply become something like:
+> 
+> retry:
+> 	lock_two_nondirectories(src, dest);
+> 	error = break_layout(dest, false);
+> 	if (error) {
+> 		unlock_two_nondirectories(src, dest);
+> 		if (error == -EWOULDBLOCK)
+> 			goto retry;
+> 		return error;
+> 	}
+> 
+> and could probably just be inlined into the caller..
+
+Yeah, that's simpler... though at this point I'll have to put all this
+into a new series having already pushed to for-next.  :/
+
+(Sorry, kinda overburdened with this week)
+
+--D
+
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
