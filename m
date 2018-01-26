@@ -1,264 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51250 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753628AbeAQWGK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jan 2018 17:06:10 -0500
-Subject: [PATCH 10/29] xfs_scrub: add file space map iteration functions
+Received: from aserp2130.oracle.com ([141.146.126.79]:34278 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751426AbeAZCO4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 21:14:56 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w0Q2Eukp111720
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:14:56 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2fqucqg002-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:14:56 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w0Q24tWD027553
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:04:55 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w0Q24tGJ027269
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Jan 2018 02:04:55 GMT
+Subject: [PATCH 1/6] xfs: refactor accounting updates out of xfs_bmap_btalloc
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Jan 2018 14:02:55 -0800
-Message-ID: <151622657516.31925.2777669293111845868.stgit@magnolia>
-In-Reply-To: <151622651142.31925.4179778330985746435.stgit@magnolia>
-References: <151622651142.31925.4179778330985746435.stgit@magnolia>
+Date: Thu, 25 Jan 2018 18:04:54 -0800
+Message-ID: <151693229417.7395.1737479240326881862.stgit@magnolia>
+In-Reply-To: <151693228803.7395.12526880865470882359.stgit@magnolia>
+References: <151693228803.7395.12526880865470882359.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These helpers enable userspace to iterate all the space map information
-for a file.  The iteration function uses GETBMAPX.
+Move all the inode and quota accounting updates out of xfs_bmap_btalloc
+in preparation for fixing some quota accounting problems with copy on
+write.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile  |    2 +
- scrub/filemap.c |  157 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/filemap.h |   39 ++++++++++++++
- 3 files changed, 198 insertions(+)
- create mode 100644 scrub/filemap.c
- create mode 100644 scrub/filemap.h
+ fs/xfs/libxfs/xfs_bmap.c |   34 +++++++++++++++++++++-------------
+ 1 file changed, 21 insertions(+), 13 deletions(-)
 
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 24e0c44..a3534e6 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -18,6 +18,7 @@ endif	# scrub_prereqs
- HFILES = \
- common.h \
- disk.h \
-+filemap.h \
- inodes.h \
- spacemap.h \
- xfs_scrub.h
-@@ -25,6 +26,7 @@ xfs_scrub.h
- CFILES = \
- common.c \
- disk.c \
-+filemap.c \
- inodes.c \
- phase1.c \
- spacemap.c \
-diff --git a/scrub/filemap.c b/scrub/filemap.c
-new file mode 100644
-index 0000000..f42a6ba
---- /dev/null
-+++ b/scrub/filemap.c
-@@ -0,0 +1,157 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdbool.h>
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <string.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/statvfs.h>
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "path.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "filemap.h"
-+
-+/*
-+ * These routines provide a simple interface to query the block
-+ * mappings of the fork of a given inode via GETBMAPX and call a
-+ * function to iterate each mapping result.
-+ */
-+
-+#define BMAP_NR		2048
-+
-+/* Iterate all the extent block mappings between the key and fork end. */
-+bool
-+xfs_iterate_filemaps(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	int			fd,
-+	int			whichfork,
-+	struct xfs_bmap		*key,
-+	xfs_bmap_iter_fn	fn,
-+	void			*arg)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 0c9c9cd..6ad79ea 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3337,6 +3337,26 @@ xfs_bmap_btalloc_filestreams(
+ 	return 0;
+ }
+ 
++/* Update all inode and quota accounting for the allocation we just did. */
++static void
++xfs_bmap_btalloc_accounting(
++	struct xfs_bmalloca	*ap,
++	struct xfs_alloc_arg	*args)
 +{
-+	struct fsxattr		fsx;
-+	struct getbmapx		*map;
-+	struct getbmapx		*p;
-+	struct xfs_bmap		bmap;
-+	char			bmap_descr[DESCR_BUFSZ];
-+	bool			moveon = true;
-+	xfs_off_t		new_off;
-+	int			getxattr_type;
-+	int			i;
-+	int			error;
-+
-+	switch (whichfork) {
-+	case XFS_ATTR_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s attr"), descr);
-+		break;
-+	case XFS_COW_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s CoW"), descr);
-+		break;
-+	case XFS_DATA_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s data"), descr);
-+		break;
-+	default:
-+		abort();
-+	}
-+
-+	map = calloc(BMAP_NR, sizeof(struct getbmapx));
-+	if (!map) {
-+		str_errno(ctx, bmap_descr);
-+		return false;
-+	}
-+
-+	map->bmv_offset = BTOBB(key->bm_offset);
-+	map->bmv_block = BTOBB(key->bm_physical);
-+	if (key->bm_length == 0)
-+		map->bmv_length = ULLONG_MAX;
-+	else
-+		map->bmv_length = BTOBB(key->bm_length);
-+	map->bmv_count = BMAP_NR;
-+	map->bmv_iflags = BMV_IF_NO_DMAPI_READ | BMV_IF_PREALLOC |
-+			  BMV_IF_NO_HOLES;
-+	switch (whichfork) {
-+	case XFS_ATTR_FORK:
-+		getxattr_type = XFS_IOC_FSGETXATTRA;
-+		map->bmv_iflags |= BMV_IF_ATTRFORK;
-+		break;
-+	case XFS_COW_FORK:
-+		map->bmv_iflags |= BMV_IF_COWFORK;
-+		getxattr_type = FS_IOC_FSGETXATTR;
-+		break;
-+	case XFS_DATA_FORK:
-+		getxattr_type = FS_IOC_FSGETXATTR;
-+		break;
-+	default:
-+		abort();
-+	}
-+
-+	error = ioctl(fd, getxattr_type, &fsx);
-+	if (error < 0) {
-+		str_errno(ctx, bmap_descr);
-+		moveon = false;
-+		goto out;
-+	}
-+
-+	while ((error = ioctl(fd, XFS_IOC_GETBMAPX, map)) == 0) {
-+		for (i = 0, p = &map[i + 1]; i < map->bmv_entries; i++, p++) {
-+			bmap.bm_offset = BBTOB(p->bmv_offset);
-+			bmap.bm_physical = BBTOB(p->bmv_block);
-+			bmap.bm_length = BBTOB(p->bmv_length);
-+			bmap.bm_flags = p->bmv_oflags;
-+			moveon = fn(ctx, bmap_descr, fd, whichfork, &fsx,
-+					&bmap, arg);
-+			if (!moveon)
-+				goto out;
-+			if (xfs_scrub_excessive_errors(ctx)) {
-+				moveon = false;
-+				goto out;
-+			}
-+		}
-+
-+		if (map->bmv_entries == 0)
-+			break;
-+		p = map + map->bmv_entries;
-+		if (p->bmv_oflags & BMV_OF_LAST)
-+			break;
-+
-+		new_off = p->bmv_offset + p->bmv_length;
-+		map->bmv_length -= new_off - map->bmv_offset;
-+		map->bmv_offset = new_off;
-+	}
-+
++	if (!(ap->flags & XFS_BMAPI_COWFORK))
++		ap->ip->i_d.di_nblocks += args->len;
++	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
++	if (ap->wasdel)
++		ap->ip->i_delayed_blks -= args->len;
 +	/*
-+	 * Pre-reflink filesystems don't know about CoW forks, so don't
-+	 * be too surprised if it fails.
++	 * Adjust the disk quota also. This was reserved
++	 * earlier.
 +	 */
-+	if (whichfork == XFS_COW_FORK && error && errno == EINVAL)
-+		error = 0;
-+
-+	if (error)
-+		str_errno(ctx, bmap_descr);
-+out:
-+	free(map);
-+	return moveon;
++	xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
++		ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT : XFS_TRANS_DQ_BCOUNT,
++		(long) args->len);
 +}
-diff --git a/scrub/filemap.h b/scrub/filemap.h
-new file mode 100644
-index 0000000..30d53d0
---- /dev/null
-+++ b/scrub/filemap.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_FILEMAP_H_
-+#define XFS_SCRUB_FILEMAP_H_
 +
-+/* inode fork block mapping */
-+struct xfs_bmap {
-+	uint64_t	bm_offset;	/* file offset of segment in bytes */
-+	uint64_t	bm_physical;	/* physical starting byte  */
-+	uint64_t	bm_length;	/* length of segment, bytes */
-+	uint32_t	bm_flags;	/* output flags */
-+};
-+
-+typedef bool (*xfs_bmap_iter_fn)(struct scrub_ctx *ctx, const char *descr,
-+		int fd, int whichfork, struct fsxattr *fsx,
-+		struct xfs_bmap *bmap, void *arg);
-+
-+bool xfs_iterate_filemaps(struct scrub_ctx *ctx, const char *descr, int fd,
-+		int whichfork, struct xfs_bmap *key, xfs_bmap_iter_fn fn,
-+		void *arg);
-+
-+#endif /* XFS_SCRUB_FILEMAP_H_ */
+ STATIC int
+ xfs_bmap_btalloc(
+ 	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+@@ -3571,19 +3591,7 @@ xfs_bmap_btalloc(
+ 			*ap->firstblock = args.fsbno;
+ 		ASSERT(nullfb || fb_agno <= args.agno);
+ 		ap->length = args.len;
+-		if (!(ap->flags & XFS_BMAPI_COWFORK))
+-			ap->ip->i_d.di_nblocks += args.len;
+-		xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
+-		if (ap->wasdel)
+-			ap->ip->i_delayed_blks -= args.len;
+-		/*
+-		 * Adjust the disk quota also. This was reserved
+-		 * earlier.
+-		 */
+-		xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
+-			ap->wasdel ? XFS_TRANS_DQ_DELBCOUNT :
+-					XFS_TRANS_DQ_BCOUNT,
+-			(long) args.len);
++		xfs_bmap_btalloc_accounting(ap, &args);
+ 	} else {
+ 		ap->blkno = NULLFSBLOCK;
+ 		ap->length = 0;
 
