@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43640 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751896AbeA0BLF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 20:11:05 -0500
-Subject: [PATCH 6/7] xfs: check reflink allocation mappings
+Received: from aserp2120.oracle.com ([141.146.126.78]:52992 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751916AbeA0BLH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 20:11:07 -0500
+Subject: [PATCH 5/7] iomap: warn on zero-length mappings
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 26 Jan 2018 17:10:47 -0800
-Message-ID: <151701544692.3070.2203616562800060833.stgit@magnolia>
+Date: Fri, 26 Jan 2018 17:10:40 -0800
+Message-ID: <151701544071.3070.9611886870612110372.stgit@magnolia>
 In-Reply-To: <151701540938.3070.15043243007590700677.stgit@magnolia>
 References: <151701540938.3070.15043243007590700677.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,42 +16,32 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: hch@infradead.org, bfoster@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-There's a really bad bug in xfs_reflink_allocate_cow -- if bmapi_write
-can return a zero error code but no mappings.  This happens if there's
-an extent size hint (which causes allocation requests to be rounded to
-extsz granularity internally), but there wasn't a big enough chunk of
-free space to start filling at the extsz granularity and fill even one
-block of the range that we actually requested.
-
-In any case, if we got no mappings we can't possibly do anything useful
-with the contents of imap, so we must bail out with ENOSPC here.
+Don't let the iomap callback get away with feeding us a garbage zero
+length mapping -- there was a bug in xfs that resulted in those leaking
+out to hilarious effect.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_reflink.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/iomap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index c4f0aff..2702469 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -464,6 +464,13 @@ xfs_reflink_allocate_cow(
- 	error = xfs_trans_commit(tp);
- 	if (error)
- 		return error;
-+
-+	/*
-+	 * Allocation succeeded but the requested range was not even partially
-+	 * satisfied?  Bail out!
-+	 */
-+	if (nimaps == 0)
-+		return -ENOSPC;
- convert:
- 	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb,
- 			&dfops);
+diff --git a/fs/iomap.c b/fs/iomap.c
+index e5de772..aec35a0 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -63,7 +63,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
+ 	if (ret)
+ 		return ret;
+-	if (WARN_ON(iomap.offset > pos))
++	if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0))
+ 		return -EIO;
+ 
+ 	/*
 
