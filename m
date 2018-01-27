@@ -1,24 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40159 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751573AbeA0HfI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Jan 2018 02:35:08 -0500
-Date: Fri, 26 Jan 2018 23:35:06 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/7] xfs: check reflink allocation mappings
-Message-ID: <20180127073506.GF11515@infradead.org>
-References: <151701540938.3070.15043243007590700677.stgit@magnolia>
- <151701544692.3070.2203616562800060833.stgit@magnolia>
+Received: from mail-yb0-f178.google.com ([209.85.213.178]:39485 "EHLO
+        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752132AbeA0Ie0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Jan 2018 03:34:26 -0500
+Received: by mail-yb0-f178.google.com with SMTP id 65so1059305ybz.6
+        for <linux-xfs@vger.kernel.org>; Sat, 27 Jan 2018 00:34:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151701544692.3070.2203616562800060833.stgit@magnolia>
+In-Reply-To: <20180125055144.qztiqeakw4u3pvqf@destitution>
+References: <20180125055144.qztiqeakw4u3pvqf@destitution>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sat, 27 Jan 2018 10:34:25 +0200
+Message-ID: <CAOQ4uxiCN1yXFOs--pQhEczk8SyXX+-gk5QKF_2YO-VvvZ0sVw@mail.gmail.com>
+Subject: Re: [RFD] XFS: Subvolumes and snapshots....
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, bfoster@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Looks good,
+On Thu, Jan 25, 2018 at 7:51 AM, Dave Chinner <david@fromorbit.com> wrote:
+>
+> The video from my talk at LCA 2018 yesterday about the XFS subvolume and
+> snapshot support I'm working on has been uploaded and can be found
+> here:
+>
+> https://www.youtube.com/watch?v=wG8FUvSGROw
+>
+> I don't have the code in a reviewable form yet - there's still quite
+> a bit of work before I get to that point, but this is a good
+> introduction to how all the pieces will fit together....
+>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Very cool!
+
+Got any paper napkin design photo to share?
+
+What are the big unknowns at this point?
+
+Is the data part challenging because of no buffer cache for data?
+
+I suppose all subvolumes use the host fs journal?
+
+Not gonna share this master plan with fsdevel?
+
+Cheers,
+Amir.
