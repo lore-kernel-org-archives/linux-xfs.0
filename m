@@ -1,517 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42962 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbeAaDIp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:08:45 -0500
-Subject: [PATCH 19/29] xfs_scrub: create a bitmap data structure
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:08:32 -0800
-Message-ID: <151736811230.32164.14128593583786118625.stgit@magnolia>
-In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
-References: <151736799098.32164.15446216987522359103.stgit@magnolia>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:38465 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbeA2LoS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 06:44:18 -0500
+Received: by mail-wm0-f50.google.com with SMTP id 141so32898038wme.3
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2018 03:44:17 -0800 (PST)
+Subject: Re: xfs_extent_busy_flush vs. aio
+References: <20180123152852.GA32478@bfoster.bfoster>
+ <509e33df-4f76-2937-0425-98c26b3a1207@scylladb.com>
+ <20180123161120.GC32478@bfoster.bfoster>
+ <5f67219e-e48b-a954-69d4-318268645377@scylladb.com>
+ <20180123164718.GE32478@bfoster.bfoster>
+ <e1229a02-33ea-e5d5-d66f-36fa553a3393@scylladb.com>
+ <20180123173902.GF32478@bfoster.bfoster>
+ <f4751375-0710-cec8-ac6d-1f9546bba1ce@scylladb.com>
+ <20180125130830.GD43198@bfoster.bfoster>
+ <dd148ae0-fe9b-b5b6-5b03-05f0894ce969@scylladb.com>
+ <20180129113556.fd4y3t5yupeqtn5t@destitution>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <6eddde50-ad81-f2ce-c273-86442598a934@scylladb.com>
+Date: Mon, 29 Jan 2018 13:44:14 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180129113556.fd4y3t5yupeqtn5t@destitution>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Create an efficient tree-based bitmap data structure.  We will use this
-during the data block scan to record the LBAs of IO errors so that we
-can report broken files to userspace.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/Makefile |    2 
- scrub/bitmap.c |  410 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/bitmap.h |   38 +++++
- 3 files changed, 450 insertions(+)
- create mode 100644 scrub/bitmap.c
- create mode 100644 scrub/bitmap.h
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 858bc40..a9aaa99 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -16,6 +16,7 @@ INSTALL_SCRUB = install-scrub
- endif	# scrub_prereqs
- 
- HFILES = \
-+bitmap.h \
- common.h \
- counter.h \
- disk.h \
-@@ -28,6 +29,7 @@ unicrash.h \
- xfs_scrub.h
- 
- CFILES = \
-+bitmap.c \
- common.c \
- counter.c \
- disk.c \
-diff --git a/scrub/bitmap.c b/scrub/bitmap.c
-new file mode 100644
-index 0000000..a88fd0e
---- /dev/null
-+++ b/scrub/bitmap.c
-@@ -0,0 +1,410 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdbool.h>
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <errno.h>
-+#include <assert.h>
-+#include <inttypes.h>
-+#include <pthread.h>
-+#include "platform_defs.h"
-+#include "avl64.h"
-+#include "list.h"
-+#include "bitmap.h"
-+
-+/*
-+ * Space Efficient Bitmap
-+ *
-+ * Implements a space-efficient bitmap.  We use an AVL tree to manage
-+ * extent records that tell us which ranges are set; the bitmap key is
-+ * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
-+ * test, test and set) are supported, plus we can iterate set ranges.
-+ */
-+
-+#define avl_for_each_range_safe(pos, n, l, first, last) \
-+	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
-+			pos = n, n = pos ? pos->avl_nextino : NULL)
-+
-+#define avl_for_each_safe(tree, pos, n) \
-+	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
-+			pos != NULL; \
-+			pos = n, n = pos ? pos->avl_nextino : NULL)
-+
-+#define avl_for_each(tree, pos) \
-+	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
-+
-+struct bitmap_node {
-+	struct avl64node	btn_node;
-+	uint64_t		btn_start;
-+	uint64_t		btn_length;
-+};
-+
-+static uint64_t
-+extent_start(
-+	struct avl64node	*node)
-+{
-+	struct bitmap_node	*btn;
-+
-+	btn = container_of(node, struct bitmap_node, btn_node);
-+	return btn->btn_start;
-+}
-+
-+static uint64_t
-+extent_end(
-+	struct avl64node	*node)
-+{
-+	struct bitmap_node	*btn;
-+
-+	btn = container_of(node, struct bitmap_node, btn_node);
-+	return btn->btn_start + btn->btn_length;
-+}
-+
-+static struct avl64ops bitmap_ops = {
-+	extent_start,
-+	extent_end,
-+};
-+
-+/* Initialize a bitmap. */
-+bool
-+bitmap_init(
-+	struct bitmap		**bmapp)
-+{
-+	struct bitmap		*bmap;
-+
-+	bmap = calloc(1, sizeof(struct bitmap));
-+	if (!bmap)
-+		return false;
-+	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
-+	if (!bmap->bt_tree) {
-+		free(bmap);
-+		return false;
-+	}
-+
-+	pthread_mutex_init(&bmap->bt_lock, NULL);
-+	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
-+	*bmapp = bmap;
-+
-+	return true;
-+}
-+
-+/* Free a bitmap. */
-+void
-+bitmap_free(
-+	struct bitmap		**bmapp)
-+{
-+	struct bitmap		*bmap;
-+	struct avl64node	*node;
-+	struct avl64node	*n;
-+	struct bitmap_node	*ext;
-+
-+	bmap = *bmapp;
-+	avl_for_each_safe(bmap->bt_tree, node, n) {
-+		ext = container_of(node, struct bitmap_node, btn_node);
-+		free(ext);
-+	}
-+	free(bmap->bt_tree);
-+	*bmapp = NULL;
-+}
-+
-+/* Create a new bitmap extent node. */
-+static struct bitmap_node *
-+bitmap_node_init(
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct bitmap_node	*ext;
-+
-+	ext = malloc(sizeof(struct bitmap_node));
-+	if (!ext)
-+		return NULL;
-+
-+	ext->btn_node.avl_nextino = NULL;
-+	ext->btn_start = start;
-+	ext->btn_length = len;
-+
-+	return ext;
-+}
-+
-+/* Set a region of bits (locked). */
-+static bool
-+__bitmap_set(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct bitmap_node	*ext;
-+	uint64_t		new_start;
-+	uint64_t		new_length;
-+	struct avl64node	*node;
-+	bool			res = true;
-+
-+	/* Find any existing nodes adjacent or within that range. */
-+	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
-+			&firstn, &lastn);
-+
-+	/* Nothing, just insert a new extent. */
-+	if (firstn == NULL && lastn == NULL) {
-+		ext = bitmap_node_init(start, length);
-+		if (!ext)
-+			return false;
-+
-+		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+		if (node == NULL) {
-+			free(ext);
-+			errno = EEXIST;
-+			return false;
-+		}
-+
-+		return true;
-+	}
-+
-+	assert(firstn != NULL && lastn != NULL);
-+	new_start = start;
-+	new_length = length;
-+
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		ext = container_of(pos, struct bitmap_node, btn_node);
-+
-+		/* Bail if the new extent is contained within an old one. */
-+		if (ext->btn_start <= start &&
-+		    ext->btn_start + ext->btn_length >= start + length)
-+			return res;
-+
-+		/* Check for overlapping and adjacent extents. */
-+		if (ext->btn_start + ext->btn_length >= start ||
-+		    ext->btn_start <= start + length) {
-+			if (ext->btn_start < start) {
-+				new_start = ext->btn_start;
-+				new_length += ext->btn_length;
-+			}
-+
-+			if (ext->btn_start + ext->btn_length >
-+			    new_start + new_length)
-+				new_length = ext->btn_start + ext->btn_length -
-+						new_start;
-+
-+			avl64_delete(bmap->bt_tree, pos);
-+			free(ext);
-+		}
-+	}
-+
-+	ext = bitmap_node_init(new_start, new_length);
-+	if (!ext)
-+		return false;
-+
-+	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+	if (node == NULL) {
-+		free(ext);
-+		errno = EEXIST;
-+		return false;
-+	}
-+
-+	return res;
-+}
-+
-+/* Set a region of bits. */
-+bool
-+bitmap_set(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		length)
-+{
-+	bool			res;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	res = __bitmap_set(bmap, start, length);
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return res;
-+}
-+
-+#if 0	/* Unused, provided for completeness. */
-+/* Clear a region of bits. */
-+bool
-+bitmap_clear(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+	struct avl64node	*pos;
-+	struct avl64node	*n;
-+	struct avl64node	*l;
-+	struct bitmap_node	*ext;
-+	uint64_t		new_start;
-+	uint64_t		new_length;
-+	struct avl64node	*node;
-+	int			stat;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	/* Find any existing nodes over that range. */
-+	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
-+
-+	/* Nothing, we're done. */
-+	if (firstn == NULL && lastn == NULL) {
-+		pthread_mutex_unlock(&bmap->bt_lock);
-+		return true;
-+	}
-+
-+	assert(firstn != NULL && lastn != NULL);
-+
-+	/* Delete or truncate everything in sight. */
-+	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
-+		ext = container_of(pos, struct bitmap_node, btn_node);
-+
-+		stat = 0;
-+		if (ext->btn_start < start)
-+			stat |= 1;
-+		if (ext->btn_start + ext->btn_length > start + len)
-+			stat |= 2;
-+		switch (stat) {
-+		case 0:
-+			/* Extent totally within range; delete. */
-+			avl64_delete(bmap->bt_tree, pos);
-+			free(ext);
-+			break;
-+		case 1:
-+			/* Extent is left-adjacent; truncate. */
-+			ext->btn_length = start - ext->btn_start;
-+			break;
-+		case 2:
-+			/* Extent is right-adjacent; move it. */
-+			ext->btn_length = ext->btn_start + ext->btn_length -
-+					(start + len);
-+			ext->btn_start = start + len;
-+			break;
-+		case 3:
-+			/* Extent overlaps both ends. */
-+			ext->btn_length = start - ext->btn_start;
-+			new_start = start + len;
-+			new_length = ext->btn_start + ext->btn_length -
-+					new_start;
-+
-+			ext = bitmap_node_init(new_start, new_length);
-+			if (!ext)
-+				return false;
-+
-+			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
-+			if (node == NULL) {
-+				errno = EEXIST;
-+				return false;
-+			}
-+			break;
-+		}
-+	}
-+
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+	return true;
-+}
-+#endif
-+
-+#ifdef DEBUG
-+/* Iterate the set regions of this bitmap. */
-+bool
-+bitmap_iterate(
-+	struct bitmap		*bmap,
-+	bool			(*fn)(uint64_t, uint64_t, void *),
-+	void			*arg)
-+{
-+	struct avl64node	*node;
-+	struct bitmap_node	*ext;
-+	bool			moveon = true;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	avl_for_each(bmap->bt_tree, node) {
-+		ext = container_of(node, struct bitmap_node, btn_node);
-+		moveon = fn(ext->btn_start, ext->btn_length, arg);
-+		if (!moveon)
-+			break;
-+	}
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return moveon;
-+}
-+#endif
-+
-+/* Do any bitmap extents overlap the given one?  (locked) */
-+static bool
-+__bitmap_test(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	struct avl64node	*firstn;
-+	struct avl64node	*lastn;
-+
-+	/* Find any existing nodes over that range. */
-+	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
-+
-+	return firstn != NULL && lastn != NULL;
-+}
-+
-+/* Is any part of this range set? */
-+bool
-+bitmap_test(
-+	struct bitmap		*bmap,
-+	uint64_t		start,
-+	uint64_t		len)
-+{
-+	bool			res;
-+
-+	pthread_mutex_lock(&bmap->bt_lock);
-+	res = __bitmap_test(bmap, start, len);
-+	pthread_mutex_unlock(&bmap->bt_lock);
-+
-+	return res;
-+}
-+
-+/* Are none of the bits set? */
-+bool
-+bitmap_empty(
-+	struct bitmap		*bmap)
-+{
-+	return bmap->bt_tree->avl_firstino == NULL;
-+}
-+
-+#ifdef DEBUG
-+static bool
-+bitmap_dump_fn(
-+	uint64_t		startblock,
-+	uint64_t		blockcount,
-+	void			*arg)
-+{
-+	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
-+	return true;
-+}
-+
-+/* Dump bitmap. */
-+void
-+bitmap_dump(
-+	struct bitmap		*bmap)
-+{
-+	printf("BITMAP DUMP %p\n", bmap);
-+	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
-+	printf("BITMAP DUMP DONE\n");
-+}
-+#endif
-diff --git a/scrub/bitmap.h b/scrub/bitmap.h
-new file mode 100644
-index 0000000..e8dcd4f
---- /dev/null
-+++ b/scrub/bitmap.h
-@@ -0,0 +1,38 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_BITMAP_H_
-+#define XFS_SCRUB_BITMAP_H_
-+
-+struct bitmap {
-+	pthread_mutex_t		bt_lock;
-+	struct avl64tree_desc	*bt_tree;
-+};
-+
-+bool bitmap_init(struct bitmap **bmap);
-+void bitmap_free(struct bitmap **bmap);
-+bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
-+bool bitmap_iterate(struct bitmap *bmap,
-+		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
-+bool bitmap_test(struct bitmap *bmap, uint64_t start,
-+		uint64_t len);
-+bool bitmap_empty(struct bitmap *bmap);
-+void bitmap_dump(struct bitmap *bmap);
-+
-+#endif /* XFS_SCRUB_BITMAP_H_ */
+
+On 01/29/2018 01:35 PM, Dave Chinner wrote:
+> On Mon, Jan 29, 2018 at 11:40:27AM +0200, Avi Kivity wrote:
+>>
+>> On 01/25/2018 03:08 PM, Brian Foster wrote:
+>>> On Thu, Jan 25, 2018 at 10:50:40AM +0200, Avi Kivity wrote:
+>>>> On 01/23/2018 07:39 PM, Brian Foster wrote:
+>>>>> Yeah, could be.. perhaps the issue is that despite the large amount of
+>>>>> total free space, the free space is too fragmented to satisfy a
+>>>>> particular allocation request..?
+>>>>      from      to extents  blocks    pct
+>>>>         1       1    2702    2702   0.00
+>>>>         2       3     690    1547   0.00
+>>>>         4       7     115     568   0.00
+>>>>         8      15      60     634   0.00
+>>>>        16      31      63    1457   0.00
+>>>>        32      63     102    4751   0.00
+>>>>        64     127    7940  895365   0.19
+>>>>       128     255   49680 12422100   2.67
+>>>>       256     511    1025  417078   0.09
+>>>>       512    1023    4170 3660771   0.79
+>>>>      1024    2047    2168 3503054   0.75
+>>>>      2048    4095    2567 7729442   1.66
+>>>>      4096    8191    8688 59394413  12.76
+>>>>      8192   16383     310 3100186   0.67
+>>>>     16384   32767     112 2339935   0.50
+>>>>     32768   65535      35 1381122   0.30
+>>>>     65536  131071       8  651391   0.14
+>>>>    131072  262143       2  344196   0.07
+>>>>    524288 1048575       4 2909925   0.62
+>>>> 1048576 2097151       3 3550680   0.76
+>>>> 4194304 8388607      10 82497658  17.72
+>>>> 8388608 16777215      10 158022653  33.94
+>>>> 16777216 24567552       5 122778062  26.37
+>>>> total free extents 80469
+>>>> total free blocks 465609690
+>>>> average free extent size 5786.2
+>>>>
+>>>> Looks like plenty of free large extents, with most of the free space
+>>>> completely, unfragmented.
+>>>>
+>>> Indeed..
+> You need to look at each AG, not the overall summary. You could have
+> a suboptimal AG hidden in amongst that (e.g. near ENOSPC) and it's
+> that one AG that is causing all your problems.
+>
+> There's many reasons this can happen, but the most common is the
+> working files in a directory (or subset of directories in the same
+> AG) have a combined space usage of larger than an AG ....
+
+That's certainly possible, even likely (one huge directory with all of 
+the files).
+
+This layout is imposed on us by the compatibility gods. Is there a way 
+to tell XFS to change its policy of on-ag-per-directory?
+
+If not, then we'll have to find some workaround to the compatibility 
+problem.
+
+>
+>>>> Lots of 16MB-32MB extents, too. 32MB is our allocation hint size, could have
+>>>> something to do with it.
+>>>>
+>>> Most likely. Based on this, it's hard to say for certain why you'd be
+>>> running into allocation latency caused by busy extents.
+> One of only two reasons:
+>
+> 	1. the AG has a large enough free space, but they are all
+> 	marked busy (i.e. just been freed), or
+>
+> 	2. The extent selected has had the busy range trimmed out of
+> 	it and it's now less than the minimum extent length
+> 	requested.
+>
+> Both cases imply that we're allocating extents that have been very
+> recently freed, and that implies there is no other suitable non-busy
+> free space in the AG. Hence the need to look at the per-AG freespace
+> pattern rather than the global summary.
+>
+> Also, it's worth dumping the freespace via xfs_spaceman as it walks
+> the in memory trees rather than the on-disk trees and so is properly
+> coherent with operations in progress. (i.e. xfs_spaceman -c "freesp
+> ..." /mntpt)
+>
+
+That system has since been recycled, but we'll keep it in mind the next 
+time we see it. Also, we'll have to fix the one-huge-directory problem 
+for sure, one way or another.
+
+
 
