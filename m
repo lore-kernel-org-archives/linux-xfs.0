@@ -1,85 +1,184 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from trent.utfs.org ([94.185.90.103]:46286 "EHLO trent.utfs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750808AbeA2DW4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 28 Jan 2018 22:22:56 -0500
-Date: Sun, 28 Jan 2018 19:22:54 -0800 (PST)
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: xfs_repair: couldn't map inode 2089979520, err = 117
-In-Reply-To: <20180118185546.GI25805@magnolia>
-Message-ID: <alpine.DEB.2.21.9.1801281906451.2567@trent.utfs.org>
-References: <alpine.DEB.2.21.9.1801172204210.14759@trent.utfs.org> <20180118183636.GB56446@bfoster.bfoster> <20180118185546.GI25805@magnolia>
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:34003 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750913AbeA2Jkb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 04:40:31 -0500
+Received: by mail-wr0-f172.google.com with SMTP id 36so6406422wrh.1
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Jan 2018 01:40:30 -0800 (PST)
+Subject: Re: xfs_extent_busy_flush vs. aio
+References: <dde543cc-6641-c5ee-3385-520ef4ca821e@scylladb.com>
+ <20180123152852.GA32478@bfoster.bfoster>
+ <509e33df-4f76-2937-0425-98c26b3a1207@scylladb.com>
+ <20180123161120.GC32478@bfoster.bfoster>
+ <5f67219e-e48b-a954-69d4-318268645377@scylladb.com>
+ <20180123164718.GE32478@bfoster.bfoster>
+ <e1229a02-33ea-e5d5-d66f-36fa553a3393@scylladb.com>
+ <20180123173902.GF32478@bfoster.bfoster>
+ <f4751375-0710-cec8-ac6d-1f9546bba1ce@scylladb.com>
+ <20180125130830.GD43198@bfoster.bfoster>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <dd148ae0-fe9b-b5b6-5b03-05f0894ce969@scylladb.com>
+Date: Mon, 29 Jan 2018 11:40:27 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20180125130830.GD43198@bfoster.bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-
-On Thu, 18 Jan 2018, Darrick J. Wong wrote:
-> Ahhhurrgh.  Yes, right now xfsprogs is rather inflexible about the
-> verifiers -- the directory repairer decides that it can simply reset the
-> parent pointer, but then libxfs_iget & friends barf because the sf
-> directory verifier fails, and there's no way to turn that off.
-> 
-> Well, there /is/ a way -- refactor the sf verifiers such that they're
-> (optionally) called by _iget so that repair can load the inode w/o
-> verifiers, make the corrections, and write everything back out.  That
-> refactoring will appear in Linux 4.16, so I imagine xfs_repair 4.16 will
-> get back on track with that.
-> 
-> FWIW I think a reasonable reproducer is running xfs/384 with:
-> 
-> SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4
-> SCRATCH_XFS_LIST_FUZZ_VERBS=random
-
-While the file system could be repaired eventually with xfsprogs-v4.10, it 
-took me a while to find time to setup a VM and try to run xfs/384.
-
-I checked out djwong-xfs-linux/master and booted into a kernel with 
-CONFIG_XFS_ONLINE_SCRUB=y and also built djwong-xfsprogs-dev/djwong-devel 
-where xfs_scrub was available, and then:
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
 
-ubuntu0# export PATH=/opt/xfsprogs-dev/sbin:$PATH
-ubuntu0# export SCRATCH_XFS_LIST_METADATA_FIELDS=u3.sfdir3.hdr.parent.i4 SCRATCH_XFS_LIST_FUZZ_VERBS=random
-ubuntu0# ./check tests/xfs/384
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 ubuntu0 4.15.0-rc9-00001-g0d665e7b109d
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/vg0-lv1
-MOUNT_OPTIONS -- /dev/mapper/vg0-lv1 /mnt/scratch
 
-xfs/384  - output mismatch (see 
-/opt/xfstests/xfstests/results//xfs/384.out.bad)
-    --- tests/xfs/384.out       2018-01-19 17:10:21.382080009 -0800
-    +++ /opt/xfstests/xfstests/results//xfs/384.out.bad 2018-01-28 
-19:17:58.795130435 -0800
-    @@ -2,4 +2,8 @@
-     Format and populate
-     Find inline-format dir inode
-     Fuzz inline-format dir inode
-    +offline repair failed (1) with u3.sfdir3.hdr.parent.i4 = random.
-    +offline re-scrub (1) with u3.sfdir3.hdr.parent.i4 = random.
-    +online re-scrub (1) with u3.sfdir3.hdr.parent.i4 = random.
-    +re-repair failed (1) with u3.sfdir3.hdr.parent.i4 = random.
-    ...
-    (Run 'diff -u tests/xfs/384.out 
-/opt/xfstests/xfstests/results//xfs/384.out.bad'  to see the entire diff)
-_check_dmesg: something found in dmesg (see 
-/opt/xfstests/xfstests/results//xfs/384.dmesg)
-Ran: xfs/384
-Failures: xfs/384
-Failed 1 of 1 tests
+On 01/25/2018 03:08 PM, Brian Foster wrote:
+> On Thu, Jan 25, 2018 at 10:50:40AM +0200, Avi Kivity wrote:
+>> On 01/23/2018 07:39 PM, Brian Foster wrote:
+>>> On Tue, Jan 23, 2018 at 07:00:31PM +0200, Avi Kivity wrote:
+>>>> On 01/23/2018 06:47 PM, Brian Foster wrote:
+>>>>> On Tue, Jan 23, 2018 at 06:22:07PM +0200, Avi Kivity wrote:
+>>>>>> On 01/23/2018 06:11 PM, Brian Foster wrote:
+>>>>>>> On Tue, Jan 23, 2018 at 05:45:39PM +0200, Avi Kivity wrote:
+>>>>>>>> On 01/23/2018 05:28 PM, Brian Foster wrote:
+>>>>>>>>> On Tue, Jan 23, 2018 at 04:57:03PM +0200, Avi Kivity wrote:
+>>>>>>>>>> I'm seeing the equivalent[*] of xfs_extent_busy_flush() sleeping in my
+>>>>>>>>>> beautiful io_submit() calls.
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> Questions:
+>>>>>>>>>>
+>>>>>>>>>>       - Is it correct that RWF_NOWAIT will not detect the condition that led to
+>>>>>>>>>> the log being forced?
+>>>>>>>>>>
+>>>>>>>>>>       - If so, can it be fixed?
+>>>>>>>>>>
+>>>>>>>>>>       - Can I do something to reduce the odds of this occurring? larger logs,
+>>>>>>>>>> more logs, flush more often, resurrect extinct species and sacrifice them to
+>>>>>>>>>> the xfs gods?
+>>>>>>>>>>
+>>>>>>>>>>       - Can an xfs developer do something? For example, make it RWF_NOWAIT
+>>>>>>>>>> friendly (if the answer to the first question was "correct")
+>>>>>>>>>>
+>>>>>>>>> So RWF_NOWAIT eventually works its way to IOMAP_NOWAIT, which looks like
+>>>>>>>>> it skips any write call that would require allocation in
+>>>>>>>>> xfs_file_iomap_begin(). The busy flush should only happen in the block
+>>>>>>>>> allocation path, so something is missing here. Do you have a backtrace
+>>>>>>>>> for the log force you're seeing?
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>> Here's a trace. It's from a kernel that lacks RWF_NOWAIT.
+>>>>>>>>
+>>>>>>> Oh, so the case below is roughly how I would have expected to hit the
+>>>>>>> flush/wait without RWF_NOWAIT. The latter flag should prevent this, to
+>>>>>>> answer your first question.
+>>>>>> Thanks, that's very encouraging. We are exploring recommending upstream-ish
+>>>>>> kernels to users and customers, given their relative stability these days
+>>>>>> and aio-related improvements (not to mention the shame of having to admit to
+>>>>>> running an old kernel when reporting a problem to an upstream list).
+>>>>>>
+>>>>>>> For the follow up question, I think this should only occur when the fs
+>>>>>>> is fairly low on free space. Is that the case here?
+>>>>>> No:
+>>>>>>
+>>>>>> /dev/md0        3.0T  1.2T  1.8T  40% /var/lib/scylla
+>>>>>>
+>>>>>>
+>>>>>>> I'm not sure there's
+>>>>>>> a specific metric, fwiw, but it's just a matter of attempting an (user
+>>>>>>> data) allocation that only finds busy extents in the free space btrees
+>>>>>>> and thus has to the force the log to satisfy the allocation.
+>>>>>> What does "busy" mean here? recently freed so we want to force the log to
+>>>>>> make sure the extent isn't doubly-allocated? (wild guess)
+>>>>>>
+>>>>> Recently freed and the transaction that freed the blocks has not yet
+>>>>> been persisted to the on-disk log. A subsequent attempt to allocate
+>>>>> those blocks for user data waits for the transaction to commit to disk
+>>>>> to ensure that the block is not written before the filesystem has
+>>>>> persisted the fact that it has been freed. Otherwise, my understanding
+>>>>> is that if the blocks are written to and the filesystem crashes before
+>>>>> the previous free was persisted, we'd have allowed an overwrite of a
+>>>>> still-used metadata block.
+>>>> Understood, thanks.
+>>>>
+>>>>>>>      I suppose
+>>>>>>> running with more free space available would avoid this. I think running
+>>>>>>> with less in-core log space could indirectly reduce extent busy time,
+>>>>>>> but that may also have other performance ramifications and so is
+>>>>>>> probably not a great idea.
+>>>>>> At 60%, I hope low free space  is not a problem.
+>>>>>>
+>>>>> Yeah, that seems strange. I wouldn't expect busy extents to be a problem
+>>>>> with that much free space.
+>>>> The workload creates new files, appends to them, lets them stew for a while,
+>>>> then deletes them. Maybe something is preventing xfs from seeing non-busy
+>>>> extents?
+>>>>
+>>> Yeah, could be.. perhaps the issue is that despite the large amount of
+>>> total free space, the free space is too fragmented to satisfy a
+>>> particular allocation request..?
+>>     from      to extents  blocks    pct
+>>        1       1    2702    2702   0.00
+>>        2       3     690    1547   0.00
+>>        4       7     115     568   0.00
+>>        8      15      60     634   0.00
+>>       16      31      63    1457   0.00
+>>       32      63     102    4751   0.00
+>>       64     127    7940  895365   0.19
+>>      128     255   49680 12422100   2.67
+>>      256     511    1025  417078   0.09
+>>      512    1023    4170 3660771   0.79
+>>     1024    2047    2168 3503054   0.75
+>>     2048    4095    2567 7729442   1.66
+>>     4096    8191    8688 59394413  12.76
+>>     8192   16383     310 3100186   0.67
+>>    16384   32767     112 2339935   0.50
+>>    32768   65535      35 1381122   0.30
+>>    65536  131071       8  651391   0.14
+>>   131072  262143       2  344196   0.07
+>>   524288 1048575       4 2909925   0.62
+>> 1048576 2097151       3 3550680   0.76
+>> 4194304 8388607      10 82497658  17.72
+>> 8388608 16777215      10 158022653  33.94
+>> 16777216 24567552       5 122778062  26.37
+>> total free extents 80469
+>> total free blocks 465609690
+>> average free extent size 5786.2
+>>
+>> Looks like plenty of free large extents, with most of the free space
+>> completely, unfragmented.
+>>
+> Indeed..
+>
+>> Lots of 16MB-32MB extents, too. 32MB is our allocation hint size, could have
+>> something to do with it.
+>>
+> Most likely. Based on this, it's hard to say for certain why you'd be
+> running into allocation latency caused by busy extents. Does this
+> filesystem use the '-o discard' mount option by any chance?
 
+No. We'd love to but have had bad experience + strong recommendation 
+from this list not to use it.
 
-   If this means anything to you, I've put the result files here:
-   http://nerdbynature.de/bits/4.14/xfs/
+> I suppose it's possible that this was some kind of transient state, or
+> perhaps only a small set of AGs are affected, etc. It's also possible
+> this may have been improved in more recent kernels by Christoph's rework
+> of some of that code. In any event, this would probably require a bit
+> more runtime analysis to figure out where/why allocations are getting
+> stalled as such. I'd probably start by looking at the xfs_extent_busy_*
+> tracepoints (also note that if there's potentially something to be
+> improved on here, it's more useful to do so against current upstream).
+>
+> Or you could just move to something that supports RWF_NOWAIT.. ;)
+>
 
+NOWAIT only helps with blocking, not high CPU usage. Even if we moved it 
+to another thread, it would still take the same time (but granted, our 
+important thread could still do work, sharing the core with the one 
+doing the allocation).
 
-Thanks,
-Christian.
--- 
-BOFH excuse #209:
+Regardless, we are recommending to our users and customers to move to 
+NOWAIT kernels, but of course some are justifiable cautious. Upstream 
+kernels are now quite stable, so enterprise distribution kernels don't 
+provide the same value they used to.
 
-Only people with names beginning with 'A' are getting mail this week (a la Microsoft)
