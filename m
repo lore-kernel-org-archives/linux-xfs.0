@@ -1,44 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:39190 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751956AbeAWO5H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jan 2018 09:57:07 -0500
-Received: by mail-wm0-f48.google.com with SMTP id b21so2460846wme.4
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jan 2018 06:57:07 -0800 (PST)
-From: Avi Kivity <avi@scylladb.com>
-Subject: xfs_extent_busy_flush vs. aio
-Message-ID: <dde543cc-6641-c5ee-3385-520ef4ca821e@scylladb.com>
-Date: Tue, 23 Jan 2018 16:57:03 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Received: from mx2.suse.de ([195.135.220.15]:44320 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751933AbeA2O5x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 29 Jan 2018 09:57:53 -0500
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: [PATCH 2/2] xfs: remove assert to check bytes returned
+Date: Mon, 29 Jan 2018 08:57:41 -0600
+Message-Id: <20180129145741.29486-2-rgoldwyn@suse.de>
+In-Reply-To: <20180129145741.29486-1-rgoldwyn@suse.de>
+References: <20180129145741.29486-1-rgoldwyn@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, axboe@kernel.dk, ak@linux.intel.com, Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-I'm seeing the equivalent[*] of xfs_extent_busy_flush() sleeping in my 
-beautiful io_submit() calls.
+From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
+Since we can return less than count in case of partial direct
+writes, remove the ASSERT.
 
-Questions:
+Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Acked-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_file.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-  - Is it correct that RWF_NOWAIT will not detect the condition that led 
-to the log being forced?
-
-  - If so, can it be fixed?
-
-  - Can I do something to reduce the odds of this occurring? larger 
-logs, more logs, flush more often, resurrect extinct species and 
-sacrifice them to the xfs gods?
-
-  - Can an xfs developer do something? For example, make it RWF_NOWAIT 
-friendly (if the answer to the first question was "correct")
-
-
-[*] equivalent, because I'm actually looking at an older kernel that 
-lacks this function. But I'm moderately confident that the xfs_log_force 
-I'm seeing was transformed into xfs_extent_busy_flush by 
-ebf55872616c7d4754db5a318591a72a8d5e6896
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8601275cc5e6..8fc4dbf66910 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -590,12 +590,6 @@ xfs_file_dio_aio_write(
+ 	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
+ out:
+ 	xfs_iunlock(ip, iolock);
+-
+-	/*
+-	 * No fallback to buffered IO on errors for XFS, direct IO will either
+-	 * complete fully or fail.
+-	 */
+-	ASSERT(ret < 0 || ret == count);
+ 	return ret;
+ }
+ 
+-- 
+2.16.1
 
