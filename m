@@ -1,209 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50514 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbeAaDH7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:07:59 -0500
-Subject: [PATCH 13/29] xfs_scrub: scan filesystem and AG metadata
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:07:55 -0800
-Message-ID: <151736807504.32164.2967214856691885931.stgit@magnolia>
-In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
-References: <151736799098.32164.15446216987522359103.stgit@magnolia>
+Received: from mail-it0-f41.google.com ([209.85.214.41]:33606 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751574AbeA2Vut (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 16:50:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <1517228795.5965.24.camel@redhat.com>
+References: <1517228795.5965.24.camel@redhat.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 29 Jan 2018 13:50:47 -0800
+Message-ID: <CA+55aFxXg8JprOwfm0qCm4VkkM8cPM38YMvpkf3gBJq3bSJwPw@mail.gmail.com>
+Subject: Re: [GIT PULL] inode->i_version rework for v4.16
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: open list <linux-kernel@vger.kernel.org>, "<linux-fsdevel@vger.kernel.org>" <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs <linux-xfs@vger.kernel.org>, "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jan 29, 2018 at 4:26 AM, Jeff Layton <jlayton@redhat.com> wrote:
+>
+> This pile of patches is a rework of the inode->i_version field. We have
+> traditionally incremented that field on every inode data or metadata
+> change. Typically this increment needs to be logged on disk even when
+> nothing else has changed, which is rather expensive.
 
-Scrub the filesystem and per-AG metadata.
+Hmm. I have pulled this, but it is really really broken in one place,
+to the degree that I always went "no, I won't pull this garbage".
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/Makefile    |    1 
- scrub/phase2.c    |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.c |    1 
- scrub/xfs_scrub.h |    1 
- 4 files changed, 136 insertions(+)
- create mode 100644 scrub/phase2.c
+But the breakage is potential, not actual, and can be fixed trivially,
+so I'll let it slide - but I do require it to be fixed. And I require
+people to *think* about it.
 
+So what's to horribly horribly wrong?
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 915b801..9edc933 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -32,6 +32,7 @@ filemap.c \
- fscounters.c \
- inodes.c \
- phase1.c \
-+phase2.c \
- scrub.c \
- spacemap.c \
- xfs_scrub.c
-diff --git a/scrub/phase2.c b/scrub/phase2.c
-new file mode 100644
-index 0000000..153ae02
---- /dev/null
-+++ b/scrub/phase2.c
-@@ -0,0 +1,133 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/statvfs.h>
-+#include "xfs.h"
-+#include "path.h"
-+#include "workqueue.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "scrub.h"
-+
-+/* Phase 2: Check internal metadata. */
-+
-+/* Scrub each AG's metadata btrees. */
-+static void
-+xfs_scan_ag_metadata(
-+	struct workqueue		*wq,
-+	xfs_agnumber_t			agno,
-+	void				*arg)
-+{
-+	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	bool				*pmoveon = arg;
-+	bool				moveon;
-+	char				descr[DESCR_BUFSZ];
-+
-+	snprintf(descr, DESCR_BUFSZ, _("AG %u"), agno);
-+
-+	/*
-+	 * First we scrub and fix the AG headers, because we need
-+	 * them to work well enough to check the AG btrees.
-+	 */
-+	moveon = xfs_scrub_ag_headers(ctx, agno);
-+	if (!moveon)
-+		goto err;
-+
-+	/* Now scrub the AG btrees. */
-+	moveon = xfs_scrub_ag_metadata(ctx, agno);
-+	if (!moveon)
-+		goto err;
-+
-+	return;
-+err:
-+	*pmoveon = false;
-+}
-+
-+/* Scrub whole-FS metadata btrees. */
-+static void
-+xfs_scan_fs_metadata(
-+	struct workqueue		*wq,
-+	xfs_agnumber_t			agno,
-+	void				*arg)
-+{
-+	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	bool				*pmoveon = arg;
-+	bool				moveon;
-+
-+	moveon = xfs_scrub_fs_metadata(ctx);
-+	if (!moveon)
-+		*pmoveon = false;
-+}
-+
-+/* Scan all filesystem metadata. */
-+bool
-+xfs_scan_metadata(
-+	struct scrub_ctx	*ctx)
-+{
-+	struct workqueue	wq;
-+	xfs_agnumber_t		agno;
-+	bool			moveon = true;
-+	int			ret;
-+
-+	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
-+			scrub_nproc_workqueue(ctx));
-+	if (ret) {
-+		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
-+		return false;
-+	}
-+
-+	/*
-+	 * In case we ever use the primary super scrubber to perform fs
-+	 * upgrades (followed by a full scrub), do that before we launch
-+	 * anything else.
-+	 */
-+	moveon = xfs_scrub_primary_super(ctx);
-+	if (!moveon)
-+		return moveon;
-+
-+	for (agno = 0; moveon && agno < ctx->geo.agcount; agno++) {
-+		ret = workqueue_add(&wq, xfs_scan_ag_metadata, agno, &moveon);
-+		if (ret) {
-+			moveon = false;
-+			str_error(ctx, ctx->mntpoint,
-+_("Could not queue AG %u scrub work."), agno);
-+			goto out;
-+		}
-+	}
-+
-+	if (!moveon)
-+		goto out;
-+
-+	ret = workqueue_add(&wq, xfs_scan_fs_metadata, 0, &moveon);
-+	if (ret) {
-+		moveon = false;
-+		str_error(ctx, ctx->mntpoint,
-+_("Could not queue filesystem scrub work."));
-+		goto out;
-+	}
-+
-+out:
-+	workqueue_destroy(&wq);
-+	return moveon;
-+}
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 577e0b2..4c32dd7 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -368,6 +368,7 @@ run_scrub_phases(
- 		},
- 		{
- 			.descr = _("Check internal metadata."),
-+			.fn = xfs_scan_metadata,
- 		},
- 		{
- 			.descr = _("Scan all inodes."),
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 914490a..7802101 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -94,5 +94,6 @@ struct scrub_ctx {
- void xfs_shutdown_fs(struct scrub_ctx *ctx);
- bool xfs_cleanup_fs(struct scrub_ctx *ctx);
- bool xfs_setup_fs(struct scrub_ctx *ctx);
-+bool xfs_scan_metadata(struct scrub_ctx *ctx);
- 
- #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
+The inode_cmp_iversion{+raw}() functions are pure and utter crap.
 
+Why?
+
+You say that they return 0/negative/positive, but they do so in a
+completely broken manner. They return that ternary value as the
+sequence number difference in a 's64', which means that if you
+actually care about that ternary value, and do the *sane* thing that
+the kernel-doc of the function implies is the right thing, you would
+do
+
+    int cmp = inode_cmp_iversion(inode, old);
+
+    if (cmp < 0 ...
+
+and as a result you get code that looks sane, but that doesn't
+actually *WORK* right.
+
+To make it even worse, it will actually work in practice by accident
+in 99.99999% of all cases, so now you have
+
+ (a) subtly buggy code
+ (b) that looks fine
+ (c) and that works in testing
+
+which is just about the worst possible case for any code. The
+interface is simply garbage that encourages bugs.
+
+And the bug wouldn't be in the user, the bug would be in this code you
+just sent me. The interface is simply wrong.
+
+So this absolutely needs to be fixed. I see two fixes:
+
+ - just return a boolean. That's all that any current user actually
+wants, so the ternary value seems pointless.
+
+ - make it return an 'int', and not just any int, but -1/0/1. That way
+there is no worry about uses, and if somebody *really* cares about the
+ternary value, they can now use a "switch" statement to get it
+(alternatively, make it return an enum, but whatever).
+
+That "ternary" function that has 18446744069414584320 incorrect return
+values really is unacceptable.
+
+                Linus
