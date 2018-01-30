@@ -1,63 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54006 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752200AbeA3Dif (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 22:38:35 -0500
-Date: Mon, 29 Jan 2018 19:38:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 4/2] mkfs: don't crash on dswidth overflow
-Message-ID: <20180130033830.GL9068@magnolia>
-References: <151692412532.32390.5360363880930671862.stgit@magnolia>
+Received: from imap.thunk.org ([74.207.234.97]:44560 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751444AbeA3QIh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Jan 2018 11:08:37 -0500
+Date: Tue, 30 Jan 2018 10:15:43 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [GIT PULL] inode->i_version rework for v4.16
+Message-ID: <20180130151543.GB8351@thunk.org>
+References: <1517228795.5965.24.camel@redhat.com>
+ <CA+55aFxXg8JprOwfm0qCm4VkkM8cPM38YMvpkf3gBJq3bSJwPw@mail.gmail.com>
+ <1517313948.3658.8.camel@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151692412532.32390.5360363880930671862.stgit@magnolia>
+In-Reply-To: <1517313948.3658.8.camel@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Layton <jlayton@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, "<linux-fsdevel@vger.kernel.org>" <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs <linux-xfs@vger.kernel.org>, "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 30, 2018 at 07:05:48AM -0500, Jeff Layton wrote:
+> 
+> I want to make sure I understand what's actually broken here thoug. Is
+> it only broken when the two values are more than 2**63 apart, or is
+> there something else more fundamentally wrong here?
 
-I ran mkfs.xfs -d su=1048576,sw=$((18 * 1048576)), forgetting that sw
-takes a multiple of su (unlike swidth which takes any space unit).  I
-was surprised when we hit a floating point exception, which I traced
-back to an integer overflow when we calculate swidth from dsw.
+The other problem is that returning a s64 (or a u64) is extremely
+inefficient on a 32-bit platform.  So in general, it's better to avoid
+returning a 64-bit type unless it's really necessary....
 
-So, do the 64-bit multiplication so we can detect the overflow and
-complain about it.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- mkfs/xfs_mkfs.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 5f1ac9f..7c9d148 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2211,6 +2211,7 @@ calc_stripe_factors(
- 	struct cli_params	*cli,
- 	struct fs_topology	*ft)
- {
-+	long long int	big_dswidth;
- 	int		dsunit = 0;
- 	int		dswidth = 0;
- 	int		lsunit = 0;
-@@ -2251,7 +2252,14 @@ _("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
- 		}
- 
- 		dsunit  = (int)BTOBBT(dsu);
--		dswidth = dsunit * dsw;
-+		big_dswidth = (long long int)dsunit * dsw;
-+		if (big_dswidth > INT_MAX) {
-+			fprintf(stderr,
-+_("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
-+				big_dswidth, dsunit);
-+			usage();
-+		}
-+		dswidth = big_dswidth;
- 	}
- 
- 	if (dsunit && (dswidth % dsunit != 0)) {
+						- Ted
