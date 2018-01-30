@@ -1,69 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:49232 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752314AbeA3DjZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 22:39:25 -0500
-Date: Mon, 29 Jan 2018 19:39:22 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 6/2] mkfs: always explain why numeric inputs are invalid
-Message-ID: <20180130033922.GN9068@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:46184 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752076AbeA3DyO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 29 Jan 2018 22:54:14 -0500
+Subject: Re: [PATCH 4/2] mkfs: don't crash on dswidth overflow
 References: <151692412532.32390.5360363880930671862.stgit@magnolia>
+ <20180130033830.GL9068@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <2f86d3e5-1ac4-9138-2847-1dfc3161719e@redhat.com>
+Date: Mon, 29 Jan 2018 21:54:13 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151692412532.32390.5360363880930671862.stgit@magnolia>
+In-Reply-To: <20180130033830.GL9068@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 1/29/18 9:38 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> I ran mkfs.xfs -d su=1048576,sw=$((18 * 1048576)), forgetting that sw
+> takes a multiple of su (unlike swidth which takes any space unit).  I
+> was surprised when we hit a floating point exception, which I traced
+> back to an integer overflow when we calculate swidth from dsw.
+> 
+> So, do the 64-bit multiplication so we can detect the overflow and
+> complain about it.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Always explain why invalid numeric inputs are not valid, and in a
-complete sentence since that's what illegal_optio() sets us up for.
+Looks fine (if not a bit of a mouthful) ;)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- mkfs/xfs_mkfs.c |   14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 6285b24..f527476 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1269,7 +1269,7 @@ illegal_option(
- 	fprintf(stderr,
- 		_("Invalid value %s for -%c %s option. %s\n"),
- 		value, opts->name, opts->subopts[index],
--		reason ? reason : "");
-+		reason);
- 	usage();
- }
- 
-@@ -1360,18 +1360,20 @@ getnum(
- 
- 		c = strtoll(str, &str_end, 0);
- 		if (c == 0 && str_end == str)
--			illegal_option(str, opts, index, NULL);
-+			illegal_option(str, opts, index,
-+					_("Value not recognized as number."));
- 		if (*str_end != '\0')
--			illegal_option(str, opts, index, NULL);
-+			illegal_option(str, opts, index,
-+					_("Unit suffixes are not allowed."));
- 	}
- 
- 	/* Validity check the result. */
- 	if (c < sp->minval)
--		illegal_option(str, opts, index, _("value is too small"));
-+		illegal_option(str, opts, index, _("Value is too small."));
- 	else if (c > sp->maxval)
--		illegal_option(str, opts, index, _("value is too large"));
-+		illegal_option(str, opts, index, _("Value is too large."));
- 	if (sp->is_power_2 && !ispow2(c))
--		illegal_option(str, opts, index, _("value must be a power of 2"));
-+		illegal_option(str, opts, index, _("Value must be a power of 2."));
- 	return c;
- }
- 
+> ---
+>  mkfs/xfs_mkfs.c |   10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 5f1ac9f..7c9d148 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2211,6 +2211,7 @@ calc_stripe_factors(
+>  	struct cli_params	*cli,
+>  	struct fs_topology	*ft)
+>  {
+> +	long long int	big_dswidth;
+>  	int		dsunit = 0;
+>  	int		dswidth = 0;
+>  	int		lsunit = 0;
+> @@ -2251,7 +2252,14 @@ _("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
+>  		}
+>  
+>  		dsunit  = (int)BTOBBT(dsu);
+> -		dswidth = dsunit * dsw;
+> +		big_dswidth = (long long int)dsunit * dsw;
+> +		if (big_dswidth > INT_MAX) {
+> +			fprintf(stderr,
+> +_("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
+> +				big_dswidth, dsunit);
+> +			usage();
+> +		}
+> +		dswidth = big_dswidth;
+>  	}
+>  
+>  	if (dsunit && (dswidth % dsunit != 0)) {
+> 
+
