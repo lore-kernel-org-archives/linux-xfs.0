@@ -1,74 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57190 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752602AbeA3EN7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 29 Jan 2018 23:13:59 -0500
-Subject: [PATCH 7/2] mkfs: more sunit/swidth sanity checking
-References: <151692412532.32390.5360363880930671862.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1c6697a8-3e71-31b5-e07d-375eb766f85c@sandeen.net>
-Date: Mon, 29 Jan 2018 22:13:58 -0600
-MIME-Version: 1.0
-In-Reply-To: <151692412532.32390.5360363880930671862.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:42397 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751434AbeA3MFv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 07:05:51 -0500
+Received: by mail-qk0-f175.google.com with SMTP id k201so9742748qke.9
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jan 2018 04:05:51 -0800 (PST)
+Message-ID: <1517313948.3658.8.camel@redhat.com>
+Subject: Re: [GIT PULL] inode->i_version rework for v4.16
+From: Jeff Layton <jlayton@redhat.com>
+Date: Tue, 30 Jan 2018 07:05:48 -0500
+In-Reply-To: <CA+55aFxXg8JprOwfm0qCm4VkkM8cPM38YMvpkf3gBJq3bSJwPw@mail.gmail.com>
+References: <1517228795.5965.24.camel@redhat.com>
+         <CA+55aFxXg8JprOwfm0qCm4VkkM8cPM38YMvpkf3gBJq3bSJwPw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: open list <linux-kernel@vger.kernel.org>, "<linux-fsdevel@vger.kernel.org>" <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs <linux-xfs@vger.kernel.org>, "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-This fixes 2 issues with stripe geometry validation.
+On Mon, 2018-01-29 at 13:50 -0800, Linus Torvalds wrote:
+> On Mon, Jan 29, 2018 at 4:26 AM, Jeff Layton <jlayton@redhat.com> wrote:
+> > 
+> > This pile of patches is a rework of the inode->i_version field. We have
+> > traditionally incremented that field on every inode data or metadata
+> > change. Typically this increment needs to be logged on disk even when
+> > nothing else has changed, which is rather expensive.
+> 
+> Hmm. I have pulled this, but it is really really broken in one place,
+> to the degree that I always went "no, I won't pull this garbage".
+> 
+> But the breakage is potential, not actual, and can be fixed trivially,
+> so I'll let it slide - but I do require it to be fixed. And I require
+> people to *think* about it.
+> 
+> So what's to horribly horribly wrong?
+> 
+> The inode_cmp_iversion{+raw}() functions are pure and utter crap.
+> 
+> Why?
+> 
+> You say that they return 0/negative/positive, but they do so in a
+> completely broken manner. They return that ternary value as the
+> sequence number difference in a 's64', which means that if you
+> actually care about that ternary value, and do the *sane* thing that
+> the kernel-doc of the function implies is the right thing, you would
+> do
+> 
+>     int cmp = inode_cmp_iversion(inode, old);
+> 
+>     if (cmp < 0 ...
+> 
+> and as a result you get code that looks sane, but that doesn't
+> actually *WORK* right.
+> 
 
-# mkfs.xfs -d sunit=64,swidth=0 ...
-both data sunit and data swidth options must be specified
+My intent here was to have this handle wraparound using the same sort of
+method that the time_before/time_after macros do. Obviously, I didn't
+document that well.
 
-But I did specify it, I specified 0!
+I want to make sure I understand what's actually broken here thoug. Is
+it only broken when the two values are more than 2**63 apart, or is
+there something else more fundamentally wrong here?
 
-So use cli_opt_set() to detect that it was specified.
+> To make it even worse, it will actually work in practice by accident
+> in 99.99999% of all cases, so now you have
+> 
+>  (a) subtly buggy code
+>  (b) that looks fine
+>  (c) and that works in testing
+> 
+> which is just about the worst possible case for any code. The
+> interface is simply garbage that encourages bugs.
+> 
+> And the bug wouldn't be in the user, the bug would be in this code you
+> just sent me. The interface is simply wrong.
+> 
+> So this absolutely needs to be fixed. I see two fixes:
+> 
+>  - just return a boolean. That's all that any current user actually
+> wants, so the ternary value seems pointless.
+> 
+>  - make it return an 'int', and not just any int, but -1/0/1. That way
+> there is no worry about uses, and if somebody *really* cares about the
+> ternary value, they can now use a "switch" statement to get it
+> (alternatively, make it return an enum, but whatever).
+> 
+> That "ternary" function that has 18446744069414584320 incorrect return
+> values really is unacceptable.
+> 
 
-But we can't allow the above configuration (in fact it causes
-a % 0 later in mkfs), so catch it in the "swidth must be a
-multiple of sunit" test a bit further down.
+I think I'll just make it return a boolean value like you suggested
+first. I'll send a patch to fix it once I've done some basic testing
+with it.
 
-(sunit=0,swidth=0 /is/ valid, it's used to override disk
-geometry if desired.)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-don't mind my mkfs patch series hijacking! ;)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f527476..219b209 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2233,7 +2233,7 @@ calc_stripe_factors(
- 		dsw = cli->dsw;
- 
- 	/* data sunit/swidth options */
--	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
-+	if (cli_opt_set(&dopts, D_SUNIT) != cli_opt_set(&dopts, D_SWIDTH)) {
- 		fprintf(stderr,
- _("both data sunit and data swidth options must be specified\n"));
- 		usage();
-@@ -2241,7 +2241,7 @@ _("both data sunit and data swidth options must be specified\n"));
- 
- 	/* convert dsu/dsw to dsunit/dswidth and use them from now on */
- 	if (dsu || dsw) {
--		if ((dsu && !dsw) || (!dsu && dsw)) {
-+		if (cli_opt_set(&dopts, D_SU) != cli_opt_set(&dopts, D_SW)) {
- 			fprintf(stderr,
- _("both data su and data sw options must be specified\n"));
- 			usage();
-@@ -2264,7 +2264,7 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
- 		dswidth = big_dswidth;
- 	}
- 
--	if (dsunit && (dswidth % dsunit != 0)) {
-+	if (dsunit && (!dswidth || (dswidth % dsunit != 0))) {
- 		fprintf(stderr,
- _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
- 			dswidth, dsunit);
-
+Many thanks,
+--
+Jeff Layton <jlayton@redhat.com>
