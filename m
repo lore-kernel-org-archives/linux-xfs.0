@@ -1,236 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58828 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:49232 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751647AbeAaDIL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:08:11 -0500
-Subject: [PATCH 15/29] xfs_scrub: scan inodes
+        with ESMTP id S1752314AbeA3DjZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 22:39:25 -0500
+Date: Mon, 29 Jan 2018 19:39:22 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:08:07 -0800
-Message-ID: <151736808735.32164.12551189639292943964.stgit@magnolia>
-In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
-References: <151736799098.32164.15446216987522359103.stgit@magnolia>
+Subject: [PATCH 6/2] mkfs: always explain why numeric inputs are invalid
+Message-ID: <20180130033922.GN9068@magnolia>
+References: <151692412532.32390.5360363880930671862.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151692412532.32390.5360363880930671862.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Scan all the inodes in the system for problems.
+Always explain why invalid numeric inputs are not valid, and in a
+complete sentence since that's what illegal_optio() sets us up for.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile    |    1 
- scrub/phase3.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.c |    1 
- scrub/xfs_scrub.h |    2 +
- 4 files changed, 156 insertions(+)
- create mode 100644 scrub/phase3.c
+ mkfs/xfs_mkfs.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 30dbe54..e0d15d8 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -35,6 +35,7 @@ fscounters.c \
- inodes.c \
- phase1.c \
- phase2.c \
-+phase3.c \
- scrub.c \
- spacemap.c \
- xfs_scrub.c
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-new file mode 100644
-index 0000000..b3fc510
---- /dev/null
-+++ b/scrub/phase3.c
-@@ -0,0 +1,152 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdint.h>
-+#include <stdbool.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/statvfs.h>
-+#include "xfs.h"
-+#include "path.h"
-+#include "workqueue.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "counter.h"
-+#include "inodes.h"
-+#include "scrub.h"
-+
-+/* Phase 3: Scan all inodes. */
-+
-+/*
-+ * Run a per-file metadata scanner.  We use the ino/gen interface to
-+ * ensure that the inode we're checking matches what the inode scan
-+ * told us to look at.
-+ */
-+static bool
-+xfs_scrub_fd(
-+	struct scrub_ctx	*ctx,
-+	bool			(*fn)(struct scrub_ctx *, uint64_t,
-+				      uint32_t, int),
-+	struct xfs_bstat	*bs)
-+{
-+	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt_fd);
-+}
-+
-+struct scrub_inode_ctx {
-+	struct ptcounter	*icount;
-+	bool			moveon;
-+};
-+
-+/* Verify the contents, xattrs, and extent maps of an inode. */
-+static int
-+xfs_scrub_inode(
-+	struct scrub_ctx	*ctx,
-+	struct xfs_handle	*handle,
-+	struct xfs_bstat	*bstat,
-+	void			*arg)
-+{
-+	struct scrub_inode_ctx	*ictx = arg;
-+	struct ptcounter	*icount = ictx->icount;
-+	bool			moveon = true;
-+	int			fd = -1;
-+
-+	background_sleep();
-+
-+	/* Try to open the inode to pin it. */
-+	if (S_ISREG(bstat->bs_mode)) {
-+		fd = xfs_open_handle(handle);
-+		/* Stale inode means we scan the whole cluster again. */
-+		if (fd < 0 && errno == ESTALE)
-+			return ESTALE;
-+	}
-+
-+	/* Scrub the inode. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat);
-+	if (!moveon)
-+		goto out;
-+
-+	/* Scrub all block mappings. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat);
-+	if (!moveon)
-+		goto out;
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat);
-+	if (!moveon)
-+		goto out;
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat);
-+	if (!moveon)
-+		goto out;
-+
-+	if (S_ISLNK(bstat->bs_mode)) {
-+		/* Check symlink contents. */
-+		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino,
-+				bstat->bs_gen, ctx->mnt_fd);
-+	} else if (S_ISDIR(bstat->bs_mode)) {
-+		/* Check the directory entries. */
-+		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat);
-+	}
-+	if (!moveon)
-+		goto out;
-+
-+	/* Check all the extended attributes. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat);
-+	if (!moveon)
-+		goto out;
-+
-+	/* Check parent pointers. */
-+	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat);
-+	if (!moveon)
-+		goto out;
-+
-+out:
-+	ptcounter_add(icount, 1);
-+	if (fd >= 0)
-+		close(fd);
-+	if (!moveon)
-+		ictx->moveon = false;
-+	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
-+}
-+
-+/* Verify all the inodes in a filesystem. */
-+bool
-+xfs_scan_inodes(
-+	struct scrub_ctx	*ctx)
-+{
-+	struct scrub_inode_ctx	ictx;
-+	bool			ret;
-+
-+	ictx.moveon = true;
-+	ictx.icount = ptcounter_init(scrub_nproc(ctx));
-+	if (!ictx.icount) {
-+		str_error(ctx, ctx->mntpoint, _("Could not create counter."));
-+		return false;
-+	}
-+
-+	ret = xfs_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
-+	if (!ret)
-+		ictx.moveon = false;
-+	if (!ictx.moveon)
-+		goto free;
-+	xfs_scrub_report_preen_triggers(ctx);
-+	ctx->inodes_checked = ptcounter_value(ictx.icount);
-+
-+free:
-+	ptcounter_free(ictx.icount);
-+	return ictx.moveon;
-+}
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 4c32dd7..be809fc 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -372,6 +372,7 @@ run_scrub_phases(
- 		},
- 		{
- 			.descr = _("Scan all inodes."),
-+			.fn = xfs_scan_inodes,
- 		},
- 		{
- 			.descr = _("Defer filesystem repairs."),
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 7802101..462b590 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -86,6 +86,7 @@ struct scrub_ctx {
- 	unsigned long long	runtime_errors;
- 	unsigned long long	errors_found;
- 	unsigned long long	warnings_found;
-+	unsigned long long	inodes_checked;
- 	bool			need_repair;
- 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
- };
-@@ -95,5 +96,6 @@ void xfs_shutdown_fs(struct scrub_ctx *ctx);
- bool xfs_cleanup_fs(struct scrub_ctx *ctx);
- bool xfs_setup_fs(struct scrub_ctx *ctx);
- bool xfs_scan_metadata(struct scrub_ctx *ctx);
-+bool xfs_scan_inodes(struct scrub_ctx *ctx);
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 6285b24..f527476 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1269,7 +1269,7 @@ illegal_option(
+ 	fprintf(stderr,
+ 		_("Invalid value %s for -%c %s option. %s\n"),
+ 		value, opts->name, opts->subopts[index],
+-		reason ? reason : "");
++		reason);
+ 	usage();
+ }
  
- #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
-
+@@ -1360,18 +1360,20 @@ getnum(
+ 
+ 		c = strtoll(str, &str_end, 0);
+ 		if (c == 0 && str_end == str)
+-			illegal_option(str, opts, index, NULL);
++			illegal_option(str, opts, index,
++					_("Value not recognized as number."));
+ 		if (*str_end != '\0')
+-			illegal_option(str, opts, index, NULL);
++			illegal_option(str, opts, index,
++					_("Unit suffixes are not allowed."));
+ 	}
+ 
+ 	/* Validity check the result. */
+ 	if (c < sp->minval)
+-		illegal_option(str, opts, index, _("value is too small"));
++		illegal_option(str, opts, index, _("Value is too small."));
+ 	else if (c > sp->maxval)
+-		illegal_option(str, opts, index, _("value is too large"));
++		illegal_option(str, opts, index, _("Value is too large."));
+ 	if (sp->is_power_2 && !ispow2(c))
+-		illegal_option(str, opts, index, _("value must be a power of 2"));
++		illegal_option(str, opts, index, _("Value must be a power of 2."));
+ 	return c;
+ }
+ 
