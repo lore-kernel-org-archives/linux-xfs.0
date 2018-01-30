@@ -1,83 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60404 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752544AbeA3Qso (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 11:48:44 -0500
-Date: Tue, 30 Jan 2018 08:48:38 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/2] mkfs: more sunit/swidth sanity checking
-Message-ID: <20180130164838.GA4849@magnolia>
-References: <151692412532.32390.5360363880930671862.stgit@magnolia>
- <1c6697a8-3e71-31b5-e07d-375eb766f85c@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1c6697a8-3e71-31b5-e07d-375eb766f85c@sandeen.net>
+Received: from mail.kernel.org ([198.145.29.99]:58788 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751714AbeA3Rb3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Jan 2018 12:31:29 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH] iversion: make inode_cmp_iversion{+raw} return bool instead of s64
+Date: Tue, 30 Jan 2018 12:31:26 -0500
+Message-Id: <20180130173126.2806-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: viro@zeniv.linux.org.uk, tytso@mit.edu, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-integrity@vger.kernel.org, linux-xfs@vger.kernel.org, akpm@linux-foundation.org, linux-btrfs@vger.kernel.org
 
-On Mon, Jan 29, 2018 at 10:13:58PM -0600, Eric Sandeen wrote:
-> This fixes 2 issues with stripe geometry validation.
-> 
-> # mkfs.xfs -d sunit=64,swidth=0 ...
-> both data sunit and data swidth options must be specified
-> 
-> But I did specify it, I specified 0!
-> 
-> So use cli_opt_set() to detect that it was specified.
-> 
-> But we can't allow the above configuration (in fact it causes
-> a % 0 later in mkfs), so catch it in the "swidth must be a
-> multiple of sunit" test a bit further down.
-> 
-> (sunit=0,swidth=0 /is/ valid, it's used to override disk
-> geometry if desired.)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Jeff Layton <jlayton@redhat.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+As Linus points out:
 
-> ---
-> 
-> don't mind my mkfs patch series hijacking! ;)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index f527476..219b209 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2233,7 +2233,7 @@ calc_stripe_factors(
->  		dsw = cli->dsw;
->  
->  	/* data sunit/swidth options */
-> -	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
-> +	if (cli_opt_set(&dopts, D_SUNIT) != cli_opt_set(&dopts, D_SWIDTH)) {
->  		fprintf(stderr,
->  _("both data sunit and data swidth options must be specified\n"));
->  		usage();
-> @@ -2241,7 +2241,7 @@ _("both data sunit and data swidth options must be specified\n"));
->  
->  	/* convert dsu/dsw to dsunit/dswidth and use them from now on */
->  	if (dsu || dsw) {
-> -		if ((dsu && !dsw) || (!dsu && dsw)) {
-> +		if (cli_opt_set(&dopts, D_SU) != cli_opt_set(&dopts, D_SW)) {
->  			fprintf(stderr,
->  _("both data su and data sw options must be specified\n"));
->  			usage();
-> @@ -2264,7 +2264,7 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
->  		dswidth = big_dswidth;
->  	}
->  
-> -	if (dsunit && (dswidth % dsunit != 0)) {
-> +	if (dsunit && (!dswidth || (dswidth % dsunit != 0))) {
->  		fprintf(stderr,
->  _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
->  			dswidth, dsunit);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    The inode_cmp_iversion{+raw}() functions are pure and utter crap.
+
+    Why?
+
+    You say that they return 0/negative/positive, but they do so in a
+    completely broken manner. They return that ternary value as the
+    sequence number difference in a 's64', which means that if you
+    actually care about that ternary value, and do the *sane* thing that
+    the kernel-doc of the function implies is the right thing, you would
+    do
+
+        int cmp = inode_cmp_iversion(inode, old);
+        if (cmp < 0 ...
+
+    and as a result you get code that looks sane, but that doesn't
+    actually *WORK* right.
+
+Since none of the callers actually care about the ternary value here,
+convert the inode_cmp_iversion{+raw} functions to just return a boolean
+value (false for matching, true for non-matching).
+
+This matches the existing use of these functions just fine, and makes it
+simple to convert them to return a ternary value in the future if we
+grow callers that need it.
+
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ include/linux/iversion.h | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+index 858463fca249..ace32775c5f0 100644
+--- a/include/linux/iversion.h
++++ b/include/linux/iversion.h
+@@ -309,13 +309,13 @@ inode_query_iversion(struct inode *inode)
+  * @inode: inode to check
+  * @old: old value to check against its i_version
+  *
+- * Compare the current raw i_version counter with a previous one. Returns 0 if
+- * they are the same or non-zero if they are different.
++ * Compare the current raw i_version counter with a previous one. Returns false
++ * if they are the same or true if they are different.
+  */
+-static inline s64
++static inline bool
+ inode_cmp_iversion_raw(const struct inode *inode, u64 old)
+ {
+-	return (s64)inode_peek_iversion_raw(inode) - (s64)old;
++	return inode_peek_iversion_raw(inode) != old;
+ }
+ 
+ /**
+@@ -323,19 +323,17 @@ inode_cmp_iversion_raw(const struct inode *inode, u64 old)
+  * @inode: inode to check
+  * @old: old value to check against its i_version
+  *
+- * Compare an i_version counter with a previous one. Returns 0 if they are
+- * the same, a positive value if the one in the inode appears newer than @old,
+- * and a negative value if @old appears to be newer than the one in the
+- * inode.
++ * Compare an i_version counter with a previous one. Returns false if they are
++ * the same, and true if they are different.
+  *
+  * Note that we don't need to set the QUERIED flag in this case, as the value
+  * in the inode is not being recorded for later use.
+  */
+ 
+-static inline s64
++static inline bool
+ inode_cmp_iversion(const struct inode *inode, u64 old)
+ {
+-	return (s64)(inode_peek_iversion_raw(inode) & ~I_VERSION_QUERIED) -
+-	       (s64)(old << I_VERSION_QUERIED_SHIFT);
++	return (inode_peek_iversion_raw(inode) & ~I_VERSION_QUERIED) !=
++			(old << I_VERSION_QUERIED_SHIFT);
+ }
+ #endif
+-- 
+2.14.3
+
