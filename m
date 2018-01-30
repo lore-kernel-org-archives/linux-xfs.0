@@ -1,101 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53416 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751916AbeA0BL0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Jan 2018 20:11:26 -0500
-Subject: [PATCH 7/7] xfs: don't screw up direct writes when freesp is
- fragmented
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 26 Jan 2018 17:10:53 -0800
-Message-ID: <151701545313.3070.9752957895549047286.stgit@magnolia>
-In-Reply-To: <151701540938.3070.15043243007590700677.stgit@magnolia>
-References: <151701540938.3070.15043243007590700677.stgit@magnolia>
+Received: from mail-io0-f178.google.com ([209.85.223.178]:43670 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753379AbeA3Qg6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 11:36:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <1517313948.3658.8.camel@redhat.com>
+References: <1517228795.5965.24.camel@redhat.com> <CA+55aFxXg8JprOwfm0qCm4VkkM8cPM38YMvpkf3gBJq3bSJwPw@mail.gmail.com>
+ <1517313948.3658.8.camel@redhat.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 30 Jan 2018 08:36:56 -0800
+Message-ID: <CA+55aFwD-=YNXQTOSNZE9SQwsin=ay56GOt4gekYe1U0qPeksQ@mail.gmail.com>
+Subject: Re: [GIT PULL] inode->i_version rework for v4.16
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, bfoster@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Jeff Layton <jlayton@redhat.com>
+Cc: open list <linux-kernel@vger.kernel.org>, "<linux-fsdevel@vger.kernel.org>" <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs <linux-xfs@vger.kernel.org>, "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jan 30, 2018 at 4:05 AM, Jeff Layton <jlayton@redhat.com> wrote:
+>
+> My intent here was to have this handle wraparound using the same sort of
+> method that the time_before/time_after macros do. Obviously, I didn't
+> document that well.
 
-xfs_bmap_btalloc is given a range of file offset blocks that must be
-allocated to some data/attr/cow fork.  If the fork has an extent size
-hint associated with it, the request will be enlarged on both ends to
-try to satisfy the alignment hint.  If free space is fragmentated,
-sometimes we can allocate some blocks but not enough to fulfill any of
-the requested range.  Since bmapi_allocate always trims the new extent
-mapping to match the originally requested range, this results in
-bmapi_write returning zero and no mapping.
+Oh, the intent was clear. The implementation was wrong.
 
-The consequences of this vary -- buffered writes will simply re-call
-bmapi_write until it can satisfy at least one block from the original
-request.  Direct IO overwrites notice nmaps == 0 and return -ENOSPC
-through the dio mechanism out to userspace with the weird result that
-writes fail even when we have enough space because the ENOSPC return
-overrides any partial write status.  For direct CoW writes the situation
-was disastrous because nobody notices us returning an invalid zero-length
-wrong-offset mapping to iomap and the write goes off into space.
+Note that "time_before()" returns a _boolean_.
 
-Therefore, if free space is so fragmented that we managed to allocate
-some space but not enough to map into even a single block of the
-original allocation request range, we should break the alignment hint in
-order to guarantee at least some forward progress for the direct write.
-If we return a short allocation to iomap_apply it'll call back about the
-remaining blocks.
+So yes, the time comparison functions do a 64-bit subtraction, exactly
+like yours do. BUT THEY DO NOT RETURN THAT DIFFERENCE. They test the
+sign in 64 bits and return that boolean single-bit value.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_bmap.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+> I want to make sure I understand what's actually broken here thoug. Is
+> it only broken when the two values are more than 2**63 apart, or is
+> there something else more fundamentally wrong here?
 
+There's something fundamentally wrong. The _intent_ is to allow
+numbers up to 2**63 apart, but if somebody does that
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index cad21fd..35660e9 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3390,6 +3390,8 @@ xfs_bmap_btalloc(
- 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
- 	xfs_agnumber_t	ag;
- 	xfs_alloc_arg_t	args;
-+	xfs_fileoff_t	orig_offset;
-+	xfs_extlen_t	orig_length;
- 	xfs_extlen_t	blen;
- 	xfs_extlen_t	nextminlen = 0;
- 	int		nullfb;		/* true if ap->firstblock isn't set */
-@@ -3399,6 +3401,8 @@ xfs_bmap_btalloc(
- 	int		stripe_align;
- 
- 	ASSERT(ap->length);
-+	orig_offset = ap->offset;
-+	orig_length = ap->length;
- 
- 	mp = ap->ip->i_mount;
- 
-@@ -3614,6 +3618,22 @@ xfs_bmap_btalloc(
- 			*ap->firstblock = args.fsbno;
- 		ASSERT(nullfb || fb_agno <= args.agno);
- 		ap->length = args.len;
-+		/*
-+		 * If the extent size hint is active, we tried to round the
-+		 * caller's allocation request offset down to extsz and the
-+		 * length up to another extsz boundary.  If we found a free
-+		 * extent we mapped it in starting at this new offset.  If the
-+		 * newly mapped space isn't long enough to cover the entire
-+		 * range of offsets that was originally requested, move the
-+		 * mapping up so that we can fill as much of the caller's
-+		 * original request as possible.  Free space is apparently
-+		 * very fragmented so we're unlikely to be able to satisfy the
-+		 * hints anyway.
-+		 */
-+		if (ap->length <= orig_length)
-+			ap->offset = orig_offset;
-+		else if (ap->offset + ap->length < orig_offset + orig_length)
-+			ap->offset = orig_offset + orig_length - ap->length;
- 		xfs_bmap_btalloc_accounting(ap, &args);
- 	} else {
- 		ap->blkno = NULLFSBLOCK;
+     int cmp = inode_cmp_iversion(inode, old);
 
+     if (cmp < 0 ...
+
+then it actually only ever tests numbers 2**31 apart, because the high
+32 bits will have been thrown away when the 64-bit difference is cast
+to "int".
+
+And what used to be a sign bit (in 64 bits) no longer exists, and the
+above tests the *new* sign bit that is bit #31, not #63.
+
+So you are a factor of four billion off.
+
+And while 2**63 is a big number and perfectly ok for a filesystem
+event difference, a difference of 2**31 is a "this can actually
+happen".
+
+Yes, even 2**31 is still a big difference, and it will take a very
+unusual situation, and quite a long time to trigger: something that
+does a thousand filesystem ops per second will not see the problem for
+24 days. So you'll never see it in a test. But 24 days happens in real
+life..
+
+That's why you need to do the comparison against zero inside the
+actual helper functions like the time comparisons do. Because if you
+return the 64-bit difference, it will be trivially lost, and the code
+will _look_ right, but not work right.
+
+The fact that you didn't even seem to see the problem in my example
+calling sequence just proves that point.
+
+                   Linus
