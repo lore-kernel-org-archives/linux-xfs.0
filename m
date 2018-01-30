@@ -1,80 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:33606 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751574AbeA2Vut (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 16:50:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <1517228795.5965.24.camel@redhat.com>
-References: <1517228795.5965.24.camel@redhat.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 29 Jan 2018 13:50:47 -0800
-Message-ID: <CA+55aFxXg8JprOwfm0qCm4VkkM8cPM38YMvpkf3gBJq3bSJwPw@mail.gmail.com>
-Subject: Re: [GIT PULL] inode->i_version rework for v4.16
+Received: from mail.kernel.org ([198.145.29.99]:56506 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752321AbeA3Tm7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Jan 2018 14:42:59 -0500
+Message-ID: <1517341375.3658.12.camel@kernel.org>
+Subject: Re: [PATCH] iversion: make inode_cmp_iversion{+raw} return bool
+ instead of s64
+From: Jeff Layton <jlayton@kernel.org>
+Date: Tue, 30 Jan 2018 14:42:55 -0500
+In-Reply-To: <1517334602.5412.3.camel@primarydata.com>
+References: <20180130173126.2806-1-jlayton@kernel.org>
+         <1517334602.5412.3.camel@primarydata.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@redhat.com>
-Cc: open list <linux-kernel@vger.kernel.org>, "<linux-fsdevel@vger.kernel.org>" <linux-fsdevel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, xfs <linux-xfs@vger.kernel.org>, "open list:NFS, SUNRPC, AND..." <linux-nfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Trond Myklebust <trondmy@primarydata.com>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>
+Cc: "linux-integrity@vger.kernel.org" <linux-integrity@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>
 
-On Mon, Jan 29, 2018 at 4:26 AM, Jeff Layton <jlayton@redhat.com> wrote:
->
-> This pile of patches is a rework of the inode->i_version field. We have
-> traditionally incremented that field on every inode data or metadata
-> change. Typically this increment needs to be logged on disk even when
-> nothing else has changed, which is rather expensive.
+On Tue, 2018-01-30 at 17:50 +0000, Trond Myklebust wrote:
+> On Tue, 2018-01-30 at 12:31 -0500, Jeff Layton wrote:
+> > From: Jeff Layton <jlayton@redhat.com>
+> > 
+> > As Linus points out:
+> > 
+> >     The inode_cmp_iversion{+raw}() functions are pure and utter crap.
+> > 
+> >     Why?
+> > 
+> >     You say that they return 0/negative/positive, but they do so in a
+> >     completely broken manner. They return that ternary value as the
+> >     sequence number difference in a 's64', which means that if you
+> >     actually care about that ternary value, and do the *sane* thing
+> > that
+> >     the kernel-doc of the function implies is the right thing, you
+> > would
+> >     do
+> > 
+> >         int cmp = inode_cmp_iversion(inode, old);
+> >         if (cmp < 0 ...
+> > 
+> >     and as a result you get code that looks sane, but that doesn't
+> >     actually *WORK* right.
+> > 
+> > Since none of the callers actually care about the ternary value here,
+> > convert the inode_cmp_iversion{+raw} functions to just return a
+> > boolean
+> > value (false for matching, true for non-matching).
+> > 
+> > This matches the existing use of these functions just fine, and makes
+> > it
+> > simple to convert them to return a ternary value in the future if we
+> > grow callers that need it.
+> > 
+> > Signed-off-by: Jeff Layton <jlayton@redhat.com>
+> > ---
+> >  include/linux/iversion.h | 20 +++++++++-----------
+> >  1 file changed, 9 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+> > index 858463fca249..ace32775c5f0 100644
+> > --- a/include/linux/iversion.h
+> > +++ b/include/linux/iversion.h
+> > @@ -309,13 +309,13 @@ inode_query_iversion(struct inode *inode)
+> >   * @inode: inode to check
+> >   * @old: old value to check against its i_version
+> >   *
+> > - * Compare the current raw i_version counter with a previous one.
+> > Returns 0 if
+> > - * they are the same or non-zero if they are different.
+> > + * Compare the current raw i_version counter with a previous one.
+> > Returns false
+> > + * if they are the same or true if they are different.
+> >   */
+> > -static inline s64
+> > +static inline bool
+> >  inode_cmp_iversion_raw(const struct inode *inode, u64 old)
+> >  {
+> > -	return (s64)inode_peek_iversion_raw(inode) - (s64)old;
+> > +	return inode_peek_iversion_raw(inode) != old;
+> >  }
+> >  
+> >  /**
+> > @@ -323,19 +323,17 @@ inode_cmp_iversion_raw(const struct inode
+> > *inode, u64 old)
+> >   * @inode: inode to check
+> >   * @old: old value to check against its i_version
+> >   *
+> > - * Compare an i_version counter with a previous one. Returns 0 if
+> > they are
+> > - * the same, a positive value if the one in the inode appears newer
+> > than @old,
+> > - * and a negative value if @old appears to be newer than the one in
+> > the
+> > - * inode.
+> > + * Compare an i_version counter with a previous one. Returns false
+> > if they are
+> > + * the same, and true if they are different.
+> >   *
+> >   * Note that we don't need to set the QUERIED flag in this case, as
+> > the value
+> >   * in the inode is not being recorded for later use.
+> >   */
+> >  
+> > -static inline s64
+> > +static inline bool
+> >  inode_cmp_iversion(const struct inode *inode, u64 old)
+> >  {
+> > -	return (s64)(inode_peek_iversion_raw(inode) &
+> > ~I_VERSION_QUERIED) -
+> > -	       (s64)(old << I_VERSION_QUERIED_SHIFT);
+> > +	return (inode_peek_iversion_raw(inode) & ~I_VERSION_QUERIED)
+> > !=
+> > +			(old << I_VERSION_QUERIED_SHIFT);
+> >  }
+> 
+> Is there any reason why this couldn't just use inode_peek_iversion()
+> instead of having to both mask the output from
+> inode_peek_iversion_raw() and shift 'old'?
 
-Hmm. I have pulled this, but it is really really broken in one place,
-to the degree that I always went "no, I won't pull this garbage".
-
-But the breakage is potential, not actual, and can be fixed trivially,
-so I'll let it slide - but I do require it to be fixed. And I require
-people to *think* about it.
-
-So what's to horribly horribly wrong?
-
-The inode_cmp_iversion{+raw}() functions are pure and utter crap.
-
-Why?
-
-You say that they return 0/negative/positive, but they do so in a
-completely broken manner. They return that ternary value as the
-sequence number difference in a 's64', which means that if you
-actually care about that ternary value, and do the *sane* thing that
-the kernel-doc of the function implies is the right thing, you would
-do
-
-    int cmp = inode_cmp_iversion(inode, old);
-
-    if (cmp < 0 ...
-
-and as a result you get code that looks sane, but that doesn't
-actually *WORK* right.
-
-To make it even worse, it will actually work in practice by accident
-in 99.99999% of all cases, so now you have
-
- (a) subtly buggy code
- (b) that looks fine
- (c) and that works in testing
-
-which is just about the worst possible case for any code. The
-interface is simply garbage that encourages bugs.
-
-And the bug wouldn't be in the user, the bug would be in this code you
-just sent me. The interface is simply wrong.
-
-So this absolutely needs to be fixed. I see two fixes:
-
- - just return a boolean. That's all that any current user actually
-wants, so the ternary value seems pointless.
-
- - make it return an 'int', and not just any int, but -1/0/1. That way
-there is no worry about uses, and if somebody *really* cares about the
-ternary value, they can now use a "switch" statement to get it
-(alternatively, make it return an enum, but whatever).
-
-That "ternary" function that has 18446744069414584320 incorrect return
-values really is unacceptable.
-
-                Linus
+None at all. I'll send a v2.
+-- 
+Jeff Layton <jlayton@kernel.org>
