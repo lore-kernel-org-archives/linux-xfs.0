@@ -1,99 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58788 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751714AbeA3Rb3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 Jan 2018 12:31:29 -0500
-From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH] iversion: make inode_cmp_iversion{+raw} return bool instead of s64
-Date: Tue, 30 Jan 2018 12:31:26 -0500
-Message-Id: <20180130173126.2806-1-jlayton@kernel.org>
+Received: from us-smtp-delivery-194.mimecast.com ([63.128.21.194]:44139 "EHLO
+        us-smtp-delivery-194.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753135AbeA3RuN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 12:50:13 -0500
+From: Trond Myklebust <trondmy@primarydata.com>
+Subject: Re: [PATCH] iversion: make inode_cmp_iversion{+raw} return bool
+ instead of s64
+Date: Tue, 30 Jan 2018 17:50:05 +0000
+Message-ID: <1517334602.5412.3.camel@primarydata.com>
+References: <20180130173126.2806-1-jlayton@kernel.org>
+In-Reply-To: <20180130173126.2806-1-jlayton@kernel.org>
+Content-Language: en-US
+Content-ID: <6F12B7751C335D4FA7B237A168CAC232@namprd11.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: viro@zeniv.linux.org.uk, tytso@mit.edu, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-integrity@vger.kernel.org, linux-xfs@vger.kernel.org, akpm@linux-foundation.org, linux-btrfs@vger.kernel.org
+To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "jlayton@kernel.org" <jlayton@kernel.org>
+Cc: "linux-integrity@vger.kernel.org" <linux-integrity@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>
 
-From: Jeff Layton <jlayton@redhat.com>
-
-As Linus points out:
-
-    The inode_cmp_iversion{+raw}() functions are pure and utter crap.
-
-    Why?
-
-    You say that they return 0/negative/positive, but they do so in a
-    completely broken manner. They return that ternary value as the
-    sequence number difference in a 's64', which means that if you
-    actually care about that ternary value, and do the *sane* thing that
-    the kernel-doc of the function implies is the right thing, you would
-    do
-
-        int cmp = inode_cmp_iversion(inode, old);
-        if (cmp < 0 ...
-
-    and as a result you get code that looks sane, but that doesn't
-    actually *WORK* right.
-
-Since none of the callers actually care about the ternary value here,
-convert the inode_cmp_iversion{+raw} functions to just return a boolean
-value (false for matching, true for non-matching).
-
-This matches the existing use of these functions just fine, and makes it
-simple to convert them to return a ternary value in the future if we
-grow callers that need it.
-
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
----
- include/linux/iversion.h | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
-
-diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-index 858463fca249..ace32775c5f0 100644
---- a/include/linux/iversion.h
-+++ b/include/linux/iversion.h
-@@ -309,13 +309,13 @@ inode_query_iversion(struct inode *inode)
-  * @inode: inode to check
-  * @old: old value to check against its i_version
-  *
-- * Compare the current raw i_version counter with a previous one. Returns 0 if
-- * they are the same or non-zero if they are different.
-+ * Compare the current raw i_version counter with a previous one. Returns false
-+ * if they are the same or true if they are different.
-  */
--static inline s64
-+static inline bool
- inode_cmp_iversion_raw(const struct inode *inode, u64 old)
- {
--	return (s64)inode_peek_iversion_raw(inode) - (s64)old;
-+	return inode_peek_iversion_raw(inode) != old;
- }
- 
- /**
-@@ -323,19 +323,17 @@ inode_cmp_iversion_raw(const struct inode *inode, u64 old)
-  * @inode: inode to check
-  * @old: old value to check against its i_version
-  *
-- * Compare an i_version counter with a previous one. Returns 0 if they are
-- * the same, a positive value if the one in the inode appears newer than @old,
-- * and a negative value if @old appears to be newer than the one in the
-- * inode.
-+ * Compare an i_version counter with a previous one. Returns false if they are
-+ * the same, and true if they are different.
-  *
-  * Note that we don't need to set the QUERIED flag in this case, as the value
-  * in the inode is not being recorded for later use.
-  */
- 
--static inline s64
-+static inline bool
- inode_cmp_iversion(const struct inode *inode, u64 old)
- {
--	return (s64)(inode_peek_iversion_raw(inode) & ~I_VERSION_QUERIED) -
--	       (s64)(old << I_VERSION_QUERIED_SHIFT);
-+	return (inode_peek_iversion_raw(inode) & ~I_VERSION_QUERIED) !=
-+			(old << I_VERSION_QUERIED_SHIFT);
- }
- #endif
--- 
-2.14.3
+T24gVHVlLCAyMDE4LTAxLTMwIGF0IDEyOjMxIC0wNTAwLCBKZWZmIExheXRvbiB3cm90ZToNCj4g
+RnJvbTogSmVmZiBMYXl0b24gPGpsYXl0b25AcmVkaGF0LmNvbT4NCj4gDQo+IEFzIExpbnVzIHBv
+aW50cyBvdXQ6DQo+IA0KPiAgICAgVGhlIGlub2RlX2NtcF9pdmVyc2lvbnsrcmF3fSgpIGZ1bmN0
+aW9ucyBhcmUgcHVyZSBhbmQgdXR0ZXIgY3JhcC4NCj4gDQo+ICAgICBXaHk/DQo+IA0KPiAgICAg
+WW91IHNheSB0aGF0IHRoZXkgcmV0dXJuIDAvbmVnYXRpdmUvcG9zaXRpdmUsIGJ1dCB0aGV5IGRv
+IHNvIGluIGENCj4gICAgIGNvbXBsZXRlbHkgYnJva2VuIG1hbm5lci4gVGhleSByZXR1cm4gdGhh
+dCB0ZXJuYXJ5IHZhbHVlIGFzIHRoZQ0KPiAgICAgc2VxdWVuY2UgbnVtYmVyIGRpZmZlcmVuY2Ug
+aW4gYSAnczY0Jywgd2hpY2ggbWVhbnMgdGhhdCBpZiB5b3UNCj4gICAgIGFjdHVhbGx5IGNhcmUg
+YWJvdXQgdGhhdCB0ZXJuYXJ5IHZhbHVlLCBhbmQgZG8gdGhlICpzYW5lKiB0aGluZw0KPiB0aGF0
+DQo+ICAgICB0aGUga2VybmVsLWRvYyBvZiB0aGUgZnVuY3Rpb24gaW1wbGllcyBpcyB0aGUgcmln
+aHQgdGhpbmcsIHlvdQ0KPiB3b3VsZA0KPiAgICAgZG8NCj4gDQo+ICAgICAgICAgaW50IGNtcCA9
+IGlub2RlX2NtcF9pdmVyc2lvbihpbm9kZSwgb2xkKTsNCj4gICAgICAgICBpZiAoY21wIDwgMCAu
+Li4NCj4gDQo+ICAgICBhbmQgYXMgYSByZXN1bHQgeW91IGdldCBjb2RlIHRoYXQgbG9va3Mgc2Fu
+ZSwgYnV0IHRoYXQgZG9lc24ndA0KPiAgICAgYWN0dWFsbHkgKldPUksqIHJpZ2h0Lg0KPiANCj4g
+U2luY2Ugbm9uZSBvZiB0aGUgY2FsbGVycyBhY3R1YWxseSBjYXJlIGFib3V0IHRoZSB0ZXJuYXJ5
+IHZhbHVlIGhlcmUsDQo+IGNvbnZlcnQgdGhlIGlub2RlX2NtcF9pdmVyc2lvbnsrcmF3fSBmdW5j
+dGlvbnMgdG8ganVzdCByZXR1cm4gYQ0KPiBib29sZWFuDQo+IHZhbHVlIChmYWxzZSBmb3IgbWF0
+Y2hpbmcsIHRydWUgZm9yIG5vbi1tYXRjaGluZykuDQo+IA0KPiBUaGlzIG1hdGNoZXMgdGhlIGV4
+aXN0aW5nIHVzZSBvZiB0aGVzZSBmdW5jdGlvbnMganVzdCBmaW5lLCBhbmQgbWFrZXMNCj4gaXQN
+Cj4gc2ltcGxlIHRvIGNvbnZlcnQgdGhlbSB0byByZXR1cm4gYSB0ZXJuYXJ5IHZhbHVlIGluIHRo
+ZSBmdXR1cmUgaWYgd2UNCj4gZ3JvdyBjYWxsZXJzIHRoYXQgbmVlZCBpdC4NCj4gDQo+IFNpZ25l
+ZC1vZmYtYnk6IEplZmYgTGF5dG9uIDxqbGF5dG9uQHJlZGhhdC5jb20+DQo+IC0tLQ0KPiAgaW5j
+bHVkZS9saW51eC9pdmVyc2lvbi5oIHwgMjAgKysrKysrKysrLS0tLS0tLS0tLS0NCj4gIDEgZmls
+ZSBjaGFuZ2VkLCA5IGluc2VydGlvbnMoKyksIDExIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAt
+LWdpdCBhL2luY2x1ZGUvbGludXgvaXZlcnNpb24uaCBiL2luY2x1ZGUvbGludXgvaXZlcnNpb24u
+aA0KPiBpbmRleCA4NTg0NjNmY2EyNDkuLmFjZTMyNzc1YzVmMCAxMDA2NDQNCj4gLS0tIGEvaW5j
+bHVkZS9saW51eC9pdmVyc2lvbi5oDQo+ICsrKyBiL2luY2x1ZGUvbGludXgvaXZlcnNpb24uaA0K
+PiBAQCAtMzA5LDEzICszMDksMTMgQEAgaW5vZGVfcXVlcnlfaXZlcnNpb24oc3RydWN0IGlub2Rl
+ICppbm9kZSkNCj4gICAqIEBpbm9kZTogaW5vZGUgdG8gY2hlY2sNCj4gICAqIEBvbGQ6IG9sZCB2
+YWx1ZSB0byBjaGVjayBhZ2FpbnN0IGl0cyBpX3ZlcnNpb24NCj4gICAqDQo+IC0gKiBDb21wYXJl
+IHRoZSBjdXJyZW50IHJhdyBpX3ZlcnNpb24gY291bnRlciB3aXRoIGEgcHJldmlvdXMgb25lLg0K
+PiBSZXR1cm5zIDAgaWYNCj4gLSAqIHRoZXkgYXJlIHRoZSBzYW1lIG9yIG5vbi16ZXJvIGlmIHRo
+ZXkgYXJlIGRpZmZlcmVudC4NCj4gKyAqIENvbXBhcmUgdGhlIGN1cnJlbnQgcmF3IGlfdmVyc2lv
+biBjb3VudGVyIHdpdGggYSBwcmV2aW91cyBvbmUuDQo+IFJldHVybnMgZmFsc2UNCj4gKyAqIGlm
+IHRoZXkgYXJlIHRoZSBzYW1lIG9yIHRydWUgaWYgdGhleSBhcmUgZGlmZmVyZW50Lg0KPiAgICov
+DQo+IC1zdGF0aWMgaW5saW5lIHM2NA0KPiArc3RhdGljIGlubGluZSBib29sDQo+ICBpbm9kZV9j
+bXBfaXZlcnNpb25fcmF3KGNvbnN0IHN0cnVjdCBpbm9kZSAqaW5vZGUsIHU2NCBvbGQpDQo+ICB7
+DQo+IC0JcmV0dXJuIChzNjQpaW5vZGVfcGVla19pdmVyc2lvbl9yYXcoaW5vZGUpIC0gKHM2NClv
+bGQ7DQo+ICsJcmV0dXJuIGlub2RlX3BlZWtfaXZlcnNpb25fcmF3KGlub2RlKSAhPSBvbGQ7DQo+
+ICB9DQo+ICANCj4gIC8qKg0KPiBAQCAtMzIzLDE5ICszMjMsMTcgQEAgaW5vZGVfY21wX2l2ZXJz
+aW9uX3Jhdyhjb25zdCBzdHJ1Y3QgaW5vZGUNCj4gKmlub2RlLCB1NjQgb2xkKQ0KPiAgICogQGlu
+b2RlOiBpbm9kZSB0byBjaGVjaw0KPiAgICogQG9sZDogb2xkIHZhbHVlIHRvIGNoZWNrIGFnYWlu
+c3QgaXRzIGlfdmVyc2lvbg0KPiAgICoNCj4gLSAqIENvbXBhcmUgYW4gaV92ZXJzaW9uIGNvdW50
+ZXIgd2l0aCBhIHByZXZpb3VzIG9uZS4gUmV0dXJucyAwIGlmDQo+IHRoZXkgYXJlDQo+IC0gKiB0
+aGUgc2FtZSwgYSBwb3NpdGl2ZSB2YWx1ZSBpZiB0aGUgb25lIGluIHRoZSBpbm9kZSBhcHBlYXJz
+IG5ld2VyDQo+IHRoYW4gQG9sZCwNCj4gLSAqIGFuZCBhIG5lZ2F0aXZlIHZhbHVlIGlmIEBvbGQg
+YXBwZWFycyB0byBiZSBuZXdlciB0aGFuIHRoZSBvbmUgaW4NCj4gdGhlDQo+IC0gKiBpbm9kZS4N
+Cj4gKyAqIENvbXBhcmUgYW4gaV92ZXJzaW9uIGNvdW50ZXIgd2l0aCBhIHByZXZpb3VzIG9uZS4g
+UmV0dXJucyBmYWxzZQ0KPiBpZiB0aGV5IGFyZQ0KPiArICogdGhlIHNhbWUsIGFuZCB0cnVlIGlm
+IHRoZXkgYXJlIGRpZmZlcmVudC4NCj4gICAqDQo+ICAgKiBOb3RlIHRoYXQgd2UgZG9uJ3QgbmVl
+ZCB0byBzZXQgdGhlIFFVRVJJRUQgZmxhZyBpbiB0aGlzIGNhc2UsIGFzDQo+IHRoZSB2YWx1ZQ0K
+PiAgICogaW4gdGhlIGlub2RlIGlzIG5vdCBiZWluZyByZWNvcmRlZCBmb3IgbGF0ZXIgdXNlLg0K
+PiAgICovDQo+ICANCj4gLXN0YXRpYyBpbmxpbmUgczY0DQo+ICtzdGF0aWMgaW5saW5lIGJvb2wN
+Cj4gIGlub2RlX2NtcF9pdmVyc2lvbihjb25zdCBzdHJ1Y3QgaW5vZGUgKmlub2RlLCB1NjQgb2xk
+KQ0KPiAgew0KPiAtCXJldHVybiAoczY0KShpbm9kZV9wZWVrX2l2ZXJzaW9uX3Jhdyhpbm9kZSkg
+Jg0KPiB+SV9WRVJTSU9OX1FVRVJJRUQpIC0NCj4gLQkgICAgICAgKHM2NCkob2xkIDw8IElfVkVS
+U0lPTl9RVUVSSUVEX1NISUZUKTsNCj4gKwlyZXR1cm4gKGlub2RlX3BlZWtfaXZlcnNpb25fcmF3
+KGlub2RlKSAmIH5JX1ZFUlNJT05fUVVFUklFRCkNCj4gIT0NCj4gKwkJCShvbGQgPDwgSV9WRVJT
+SU9OX1FVRVJJRURfU0hJRlQpOw0KPiAgfQ0KDQpJcyB0aGVyZSBhbnkgcmVhc29uIHdoeSB0aGlz
+IGNvdWxkbid0IGp1c3QgdXNlIGlub2RlX3BlZWtfaXZlcnNpb24oKQ0KaW5zdGVhZCBvZiBoYXZp
+bmcgdG8gYm90aCBtYXNrIHRoZSBvdXRwdXQgZnJvbQ0KaW5vZGVfcGVla19pdmVyc2lvbl9yYXco
+KSBhbmQgc2hpZnQgJ29sZCc/DQoNCj4gICNlbmRpZg0KLS0gDQpUcm9uZCBNeWtsZWJ1c3QNCkxp
+bnV4IE5GUyBjbGllbnQgbWFpbnRhaW5lciwgUHJpbWFyeURhdGENCnRyb25kLm15a2xlYnVzdEBw
+cmltYXJ5ZGF0YS5jb20NCg==
 
