@@ -1,129 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39586 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbeBAEoX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 23:44:23 -0500
-Date: Wed, 31 Jan 2018 20:44:19 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fall back to vmalloc when allocation log vector
- buffers
-Message-ID: <20180201044419.GN4849@magnolia>
-References: <20180201013959.829-1-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180201013959.829-1-david@fromorbit.com>
+Received: from mail.kernel.org ([198.145.29.99]:60198 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753049AbeA3UcZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Jan 2018 15:32:25 -0500
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v2] iversion: make inode_cmp_iversion{+raw} return bool instead of s64
+Date: Tue, 30 Jan 2018 15:32:21 -0500
+Message-Id: <20180130203221.29310-1-jlayton@kernel.org>
+In-Reply-To: <20180130173126.2806-1-jlayton@kernel.org>
+References: <20180130173126.2806-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-nfs@vger.kernel.org, linux-ext4@vger.kernel.org, tytso@mit.edu, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-integrity@vger.kernel.org, trondmy@primarydata.com
 
-On Thu, Feb 01, 2018 at 12:39:59PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When using large directory blocks, we regularly see memory
-> allocations of >64k being made for the shadow log vector buffer.
-> When we are under memory pressure, kmalloc() may not be able to find
-> contiguous memory chunks large enough to satisfy these allocations
-> easily, and if memory is fragmented we can potentially stall here.
-> 
-> TO avoid this problem, switch the log vector buffer allocation to
-> use kmem_alloc_large(). This will allow failed allocations to fall
-> back to vmalloc and so remove the dependency on large contiguous
-> regions of memory being available. This should prevent slowdowns
-> and potential stalls when memory is low and/or fragmented.
+From: Jeff Layton <jlayton@redhat.com>
 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/kmem.c        | 6 +++---
->  fs/xfs/kmem.h        | 8 +++++++-
->  fs/xfs/xfs_log_cil.c | 2 +-
->  3 files changed, 11 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> index 393b6849aeb3..7bace03dc9dc 100644
-> --- a/fs/xfs/kmem.c
-> +++ b/fs/xfs/kmem.c
-> @@ -46,13 +46,13 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
->  }
->  
->  void *
-> -kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-> +kmem_alloc_large(size_t size, xfs_km_flags_t flags)
->  {
->  	unsigned nofs_flag = 0;
->  	void	*ptr;
->  	gfp_t	lflags;
->  
-> -	ptr = kmem_zalloc(size, flags | KM_MAYFAIL);
-> +	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
->  	if (ptr)
->  		return ptr;
->  
-> @@ -67,7 +67,7 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
->  		nofs_flag = memalloc_nofs_save();
->  
->  	lflags = kmem_flags_convert(flags);
-> -	ptr = __vmalloc(size, lflags | __GFP_ZERO, PAGE_KERNEL);
-> +	ptr = __vmalloc(size, lflags, PAGE_KERNEL);
->  
->  	if (flags & KM_NOFS)
->  		memalloc_nofs_restore(nofs_flag);
-> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-> index 4b87472f35bc..6023b594ead7 100644
-> --- a/fs/xfs/kmem.h
-> +++ b/fs/xfs/kmem.h
-> @@ -71,7 +71,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
->  }
->  
->  extern void *kmem_alloc(size_t, xfs_km_flags_t);
-> -extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
-> +extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
->  extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
->  static inline void  kmem_free(const void *ptr)
->  {
-> @@ -85,6 +85,12 @@ kmem_zalloc(size_t size, xfs_km_flags_t flags)
->  	return kmem_alloc(size, flags | KM_ZERO);
->  }
->  
-> +static inline void *
-> +kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-> +{
-> +	return kmem_alloc_large(size, flags | KM_ZERO);
-> +}
-> +
->  /*
->   * Zone interfaces
->   */
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 43aa42a3a5d3..61ab5c0a4c45 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -202,7 +202,7 @@ xlog_cil_alloc_shadow_bufs(
->  			 */
->  			kmem_free(lip->li_lv_shadow);
->  
-> -			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
-> +			lv = kmem_alloc_large(buf_size, KM_SLEEP|KM_NOFS);
+As Linus points out:
 
-"KM_SLEEP | KM_NOFS", will fix it on the way in.
+    The inode_cmp_iversion{+raw}() functions are pure and utter crap.
 
-I wonder about expanding the uses of vmalloc space, but otoh stalling
-the log seems like a worse idea...
+    Why?
 
-Looks ok enough to give it a spin,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+    You say that they return 0/negative/positive, but they do so in a
+    completely broken manner. They return that ternary value as the
+    sequence number difference in a 's64', which means that if you
+    actually care about that ternary value, and do the *sane* thing that
+    the kernel-doc of the function implies is the right thing, you would
+    do
 
---D
+        int cmp = inode_cmp_iversion(inode, old);
+        if (cmp < 0 ...
 
->  			memset(lv, 0, xlog_cil_iovec_space(niovecs));
->  
->  			lv->lv_item = lip;
-> -- 
-> 2.15.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    and as a result you get code that looks sane, but that doesn't
+    actually *WORK* right.
+
+Since none of the callers actually care about the ternary value here,
+convert the inode_cmp_iversion{+raw} functions to just return a boolean
+value (false for matching, true for non-matching).
+
+This matches the existing use of these functions just fine, and makes it
+simple to convert them to return a ternary value in the future if we
+grow callers that need it.
+
+With this change we can also reimplement inode_cmp_iversion in a simpler
+way using inode_peek_iversion.
+
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
+---
+ include/linux/iversion.h | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
+
+diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+index 858463fca249..3d2fd06495ec 100644
+--- a/include/linux/iversion.h
++++ b/include/linux/iversion.h
+@@ -309,13 +309,13 @@ inode_query_iversion(struct inode *inode)
+  * @inode: inode to check
+  * @old: old value to check against its i_version
+  *
+- * Compare the current raw i_version counter with a previous one. Returns 0 if
+- * they are the same or non-zero if they are different.
++ * Compare the current raw i_version counter with a previous one. Returns false
++ * if they are the same or true if they are different.
+  */
+-static inline s64
++static inline bool
+ inode_cmp_iversion_raw(const struct inode *inode, u64 old)
+ {
+-	return (s64)inode_peek_iversion_raw(inode) - (s64)old;
++	return inode_peek_iversion_raw(inode) != old;
+ }
+ 
+ /**
+@@ -323,19 +323,15 @@ inode_cmp_iversion_raw(const struct inode *inode, u64 old)
+  * @inode: inode to check
+  * @old: old value to check against its i_version
+  *
+- * Compare an i_version counter with a previous one. Returns 0 if they are
+- * the same, a positive value if the one in the inode appears newer than @old,
+- * and a negative value if @old appears to be newer than the one in the
+- * inode.
++ * Compare an i_version counter with a previous one. Returns false if they are
++ * the same, and true if they are different.
+  *
+  * Note that we don't need to set the QUERIED flag in this case, as the value
+  * in the inode is not being recorded for later use.
+  */
+-
+-static inline s64
++static inline bool
+ inode_cmp_iversion(const struct inode *inode, u64 old)
+ {
+-	return (s64)(inode_peek_iversion_raw(inode) & ~I_VERSION_QUERIED) -
+-	       (s64)(old << I_VERSION_QUERIED_SHIFT);
++	return inode_peek_iversion(inode) != old;
+ }
+ #endif
+-- 
+2.14.3
+
