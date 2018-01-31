@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50148 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751618AbeAaDHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:07:38 -0500
-Subject: [PATCH 10/29] xfs_scrub: add file space map iteration functions
+Received: from aserp2120.oracle.com ([141.146.126.78]:38080 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751678AbeAaDJF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:09:05 -0500
+Subject: [PATCH 22/29] xfs_scrub: optionally use SCSI READ VERIFY commands
+ to scrub data blocks on disk
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:07:34 -0800
-Message-ID: <151736805426.32164.15442199859848742709.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:09:02 -0800
+Message-ID: <151736814195.32164.6038040528301208411.stgit@magnolia>
 In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
 References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,245 +21,317 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These helpers enable userspace to iterate all the space map information
-for a file.  The iteration function uses GETBMAPX.
+If we sense that we're talking to a raw SCSI disk, use the SCSI READ
+VERIFY command to ask the disk to verify a disk internally.  This can
+sharply reduce the runtime of the data block verification phase on
+devices whose internal bandwidth exceeds their link bandwidth.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile  |    2 +
- scrub/filemap.c |  157 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/filemap.h |   39 ++++++++++++++
- 3 files changed, 198 insertions(+)
- create mode 100644 scrub/filemap.c
- create mode 100644 scrub/filemap.h
+ configure.ac          |    2 +
+ include/builddefs.in  |    2 +
+ m4/package_libcdev.m4 |   30 ++++++++++
+ scrub/Makefile        |    8 +++
+ scrub/disk.c          |  146 +++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/disk.h          |    1 
+ 6 files changed, 188 insertions(+), 1 deletion(-)
 
 
+diff --git a/configure.ac b/configure.ac
+index 8eda010..bb032e5 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -172,6 +172,8 @@ AC_PACKAGE_WANT_UNINORM_H
+ AC_HAVE_U8NORMALIZE
+ AC_HAVE_OPENAT
+ AC_HAVE_FSTATAT
++AC_HAVE_SG_IO
++AC_HAVE_HDIO_GETGEO
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 2f8d33f..d44faf9 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -125,6 +125,8 @@ HAVE_LIBATTR = @have_libattr@
+ HAVE_U8NORMALIZE = @have_u8normalize@
+ HAVE_OPENAT = @have_openat@
+ HAVE_FSTATAT = @have_fstatat@
++HAVE_SG_IO = @have_sg_io@
++HAVE_HDIO_GETGEO = @have_hdio_getgeo@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index e0abc12..9258c27 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -390,3 +390,33 @@ AC_DEFUN([AC_HAVE_FSTATAT],
+        #include <unistd.h>])
+     AC_SUBST(have_fstatat)
+   ])
++
++#
++# Check if we have the SG_IO ioctl
++#
++AC_DEFUN([AC_HAVE_SG_IO],
++  [ AC_MSG_CHECKING([for struct sg_io_hdr ])
++    AC_TRY_COMPILE([#include <scsi/sg.h>],
++    [
++         struct sg_io_hdr hdr;
++         ioctl(0, SG_IO, &hdr);
++    ], have_sg_io=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_sg_io)
++  ])
++
++#
++# Check if we have the HDIO_GETGEO ioctl
++#
++AC_DEFUN([AC_HAVE_HDIO_GETGEO],
++  [ AC_MSG_CHECKING([for struct hd_geometry ])
++    AC_TRY_COMPILE([#include <linux/hdreg.h>],
++    [
++         struct hd_geometry hdr;
++         ioctl(0, HDIO_GETGEO, &hdr);
++    ], have_hdio_getgeo=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_hdio_getgeo)
++  ])
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 24e0c44..a3534e6 100644
+index 4b70efa..1fb6e84 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -18,6 +18,7 @@ endif	# scrub_prereqs
- HFILES = \
- common.h \
- disk.h \
-+filemap.h \
- inodes.h \
- spacemap.h \
- xfs_scrub.h
-@@ -25,6 +26,7 @@ xfs_scrub.h
- CFILES = \
- common.c \
- disk.c \
-+filemap.c \
- inodes.c \
- phase1.c \
- spacemap.c \
-diff --git a/scrub/filemap.c b/scrub/filemap.c
-new file mode 100644
-index 0000000..f42a6ba
---- /dev/null
-+++ b/scrub/filemap.c
-@@ -0,0 +1,157 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include <stdio.h>
-+#include <stdbool.h>
-+#include <stdint.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <string.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/statvfs.h>
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "path.h"
-+#include "xfs_scrub.h"
+@@ -70,6 +70,14 @@ CFILES += unicrash.c
+ LCFLAGS += -DHAVE_U8NORMALIZE
+ endif
+ 
++ifeq ($(HAVE_SG_IO),yes)
++LCFLAGS += -DHAVE_SG_IO
++endif
++
++ifeq ($(HAVE_HDIO_GETGEO),yes)
++LCFLAGS += -DHAVE_HDIO_GETGEO
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
+diff --git a/scrub/disk.c b/scrub/disk.c
+index e36ed6b..e12175c 100644
+--- a/scrub/disk.c
++++ b/scrub/disk.c
+@@ -29,12 +29,19 @@
+ #include <sys/statvfs.h>
+ #include <sys/vfs.h>
+ #include <linux/fs.h>
++#ifdef HAVE_SG_IO
++# include <scsi/sg.h>
++#endif
++#ifdef HAVE_HDIO_GETGEO
++# include <linux/hdreg.h>
++#endif
+ #include "platform_defs.h"
+ #include "libfrog.h"
+ #include "xfs.h"
+ #include "path.h"
+ #include "xfs_fs.h"
+ #include "xfs_scrub.h"
 +#include "common.h"
-+#include "filemap.h"
-+
+ #include "disk.h"
+ 
+ #ifndef BLKROTATIONAL
+@@ -94,12 +101,119 @@ disk_heads(
+ 	return __disk_heads(disk);
+ }
+ 
 +/*
-+ * These routines provide a simple interface to query the block
-+ * mappings of the fork of a given inode via GETBMAPX and call a
-+ * function to iterate each mapping result.
++ * Execute a SCSI VERIFY(16) to verify disk contents.
++ * For devices that support this command, this can sharply reduce the
++ * runtime of the data block verification phase if the storage device's
++ * internal bandwidth exceeds its link bandwidth.  However, it only
++ * works if we're talking to a raw SCSI device, and only if we trust the
++ * firmware.
 + */
++#ifdef HAVE_SG_IO
++# define SENSE_BUF_LEN		64
++# define VERIFY16_CMDLEN	16
++# define VERIFY16_CMD		0x8F
 +
-+#define BMAP_NR		2048
-+
-+/* Iterate all the extent block mappings between the key and fork end. */
-+bool
-+xfs_iterate_filemaps(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	int			fd,
-+	int			whichfork,
-+	struct xfs_bmap		*key,
-+	xfs_bmap_iter_fn	fn,
-+	void			*arg)
++# ifndef SG_FLAG_Q_AT_TAIL
++#  define SG_FLAG_Q_AT_TAIL	0x10
++# endif
++static int
++disk_scsi_verify(
++	struct disk		*disk,
++	uint64_t		startblock, /* lba */
++	uint64_t		blockcount) /* lba */
 +{
-+	struct fsxattr		fsx;
-+	struct getbmapx		*map;
-+	struct getbmapx		*p;
-+	struct xfs_bmap		bmap;
-+	char			bmap_descr[DESCR_BUFSZ];
-+	bool			moveon = true;
-+	xfs_off_t		new_off;
-+	int			getxattr_type;
-+	int			i;
++	struct sg_io_hdr	iohdr;
++	unsigned char		cdb[VERIFY16_CMDLEN];
++	unsigned char		sense[SENSE_BUF_LEN];
++	uint64_t		llba;
++	uint64_t		veri_len = blockcount;
 +	int			error;
 +
-+	switch (whichfork) {
-+	case XFS_ATTR_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s attr"), descr);
-+		break;
-+	case XFS_COW_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s CoW"), descr);
-+		break;
-+	case XFS_DATA_FORK:
-+		snprintf(bmap_descr, DESCR_BUFSZ, _("%s data"), descr);
-+		break;
-+	default:
-+		abort();
-+	}
++	assert(!debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"));
 +
-+	map = calloc(BMAP_NR, sizeof(struct getbmapx));
-+	if (!map) {
-+		str_errno(ctx, bmap_descr);
-+		return false;
-+	}
++	llba = startblock + (disk->d_start >> BBSHIFT);
 +
-+	map->bmv_offset = BTOBB(key->bm_offset);
-+	map->bmv_block = BTOBB(key->bm_physical);
-+	if (key->bm_length == 0)
-+		map->bmv_length = ULLONG_MAX;
-+	else
-+		map->bmv_length = BTOBB(key->bm_length);
-+	map->bmv_count = BMAP_NR;
-+	map->bmv_iflags = BMV_IF_NO_DMAPI_READ | BMV_IF_PREALLOC |
-+			  BMV_IF_NO_HOLES;
-+	switch (whichfork) {
-+	case XFS_ATTR_FORK:
-+		getxattr_type = XFS_IOC_FSGETXATTRA;
-+		map->bmv_iflags |= BMV_IF_ATTRFORK;
-+		break;
-+	case XFS_COW_FORK:
-+		map->bmv_iflags |= BMV_IF_COWFORK;
-+		getxattr_type = FS_IOC_FSGETXATTR;
-+		break;
-+	case XFS_DATA_FORK:
-+		getxattr_type = FS_IOC_FSGETXATTR;
-+		break;
-+	default:
-+		abort();
-+	}
++	/* Borrowed from sg_verify */
++	cdb[0] = VERIFY16_CMD;
++	cdb[1] = 0; /* skip PI, DPO, and byte check. */
++	cdb[2] = (llba >> 56) & 0xff;
++	cdb[3] = (llba >> 48) & 0xff;
++	cdb[4] = (llba >> 40) & 0xff;
++	cdb[5] = (llba >> 32) & 0xff;
++	cdb[6] = (llba >> 24) & 0xff;
++	cdb[7] = (llba >> 16) & 0xff;
++	cdb[8] = (llba >> 8) & 0xff;
++	cdb[9] = llba & 0xff;
++	cdb[10] = (veri_len >> 24) & 0xff;
++	cdb[11] = (veri_len >> 16) & 0xff;
++	cdb[12] = (veri_len >> 8) & 0xff;
++	cdb[13] = veri_len & 0xff;
++	cdb[14] = 0;
++	cdb[15] = 0;
++	memset(sense, 0, SENSE_BUF_LEN);
 +
-+	error = ioctl(fd, getxattr_type, &fsx);
-+	if (error < 0) {
-+		str_errno(ctx, bmap_descr);
-+		moveon = false;
-+		goto out;
-+	}
++	/* v3 SG_IO */
++	memset(&iohdr, 0, sizeof(iohdr));
++	iohdr.interface_id = 'S';
++	iohdr.dxfer_direction = SG_DXFER_NONE;
++	iohdr.cmdp = cdb;
++	iohdr.cmd_len = VERIFY16_CMDLEN;
++	iohdr.sbp = sense;
++	iohdr.mx_sb_len = SENSE_BUF_LEN;
++	iohdr.flags |= SG_FLAG_Q_AT_TAIL;
++	iohdr.timeout = 30000; /* 30s */
 +
-+	while ((error = ioctl(fd, XFS_IOC_GETBMAPX, map)) == 0) {
-+		for (i = 0, p = &map[i + 1]; i < map->bmv_entries; i++, p++) {
-+			bmap.bm_offset = BBTOB(p->bmv_offset);
-+			bmap.bm_physical = BBTOB(p->bmv_block);
-+			bmap.bm_length = BBTOB(p->bmv_length);
-+			bmap.bm_flags = p->bmv_oflags;
-+			moveon = fn(ctx, bmap_descr, fd, whichfork, &fsx,
-+					&bmap, arg);
-+			if (!moveon)
-+				goto out;
-+			if (xfs_scrub_excessive_errors(ctx)) {
-+				moveon = false;
-+				goto out;
-+			}
-+		}
-+
-+		if (map->bmv_entries == 0)
-+			break;
-+		p = map + map->bmv_entries;
-+		if (p->bmv_oflags & BMV_OF_LAST)
-+			break;
-+
-+		new_off = p->bmv_offset + p->bmv_length;
-+		map->bmv_length -= new_off - map->bmv_offset;
-+		map->bmv_offset = new_off;
-+	}
-+
-+	/*
-+	 * Pre-reflink filesystems don't know about CoW forks, so don't
-+	 * be too surprised if it fails.
-+	 */
-+	if (whichfork == XFS_COW_FORK && error && errno == EINVAL)
-+		error = 0;
-+
++	error = ioctl(disk->d_fd, SG_IO, &iohdr);
 +	if (error)
-+		str_errno(ctx, bmap_descr);
-+out:
-+	free(map);
-+	return moveon;
++		return error;
++
++	dbg_printf("VERIFY(16) fd %d lba %"PRIu64" len %"PRIu64" info %x "
++			"status %d masked %d msg %d host %d driver %d "
++			"duration %d resid %d\n",
++			disk->d_fd, startblock, blockcount, iohdr.info,
++			iohdr.status, iohdr.masked_status, iohdr.msg_status,
++			iohdr.host_status, iohdr.driver_status, iohdr.duration,
++			iohdr.resid);
++
++	if (iohdr.info & SG_INFO_CHECK) {
++		dbg_printf("status: msg %x host %x driver %x\n",
++				iohdr.msg_status, iohdr.host_status,
++				iohdr.driver_status);
++		errno = EIO;
++		return -1;
++	}
++
++	return error;
 +}
-diff --git a/scrub/filemap.h b/scrub/filemap.h
-new file mode 100644
-index 0000000..30d53d0
---- /dev/null
-+++ b/scrub/filemap.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_FILEMAP_H_
-+#define XFS_SCRUB_FILEMAP_H_
++#else
++# define disk_scsi_verify(...)		(ENOTTY)
++#endif /* HAVE_SG_IO */
 +
-+/* inode fork block mapping */
-+struct xfs_bmap {
-+	uint64_t	bm_offset;	/* file offset of segment in bytes */
-+	uint64_t	bm_physical;	/* physical starting byte  */
-+	uint64_t	bm_length;	/* length of segment, bytes */
-+	uint32_t	bm_flags;	/* output flags */
-+};
++/* Test the availability of the kernel scrub ioctl. */
++static bool
++disk_can_scsi_verify(
++	struct disk		*disk)
++{
++	int			error;
 +
-+typedef bool (*xfs_bmap_iter_fn)(struct scrub_ctx *ctx, const char *descr,
-+		int fd, int whichfork, struct fsxattr *fsx,
-+		struct xfs_bmap *bmap, void *arg);
++	if (debug_tweak_on("XFS_SCRUB_NO_SCSI_VERIFY"))
++		return false;
 +
-+bool xfs_iterate_filemaps(struct scrub_ctx *ctx, const char *descr, int fd,
-+		int whichfork, struct xfs_bmap *key, xfs_bmap_iter_fn fn,
-+		void *arg);
++	error = disk_scsi_verify(disk, 0, 1);
++	return error == 0;
++}
 +
-+#endif /* XFS_SCRUB_FILEMAP_H_ */
+ /* Open a disk device and discover its geometry. */
+ struct disk *
+ disk_open(
+ 	const char		*pathname)
+ {
++#ifdef HAVE_HDIO_GETGEO
++	struct hd_geometry	bdgeo;
++#endif
+ 	struct disk		*disk;
++	bool			suspicious_disk = false;
+ 	int			lba_sz;
+ 	int			error;
+ 
+@@ -130,13 +244,34 @@ disk_open(
+ 		error = ioctl(disk->d_fd, BLKBSZGET, &disk->d_blksize);
+ 		if (error)
+ 			disk->d_blksize = 0;
+-		disk->d_start = 0;
++#ifdef HAVE_HDIO_GETGEO
++		error = ioctl(disk->d_fd, HDIO_GETGEO, &bdgeo);
++		if (!error) {
++			/*
++			 * dm devices will pass through ioctls, which means
++			 * we can't use SCSI VERIFY unless the start is 0.
++			 * Most dm devices don't set geometry (unlike scsi
++			 * and nvme) so use a zeroed out CHS to screen them
++			 * out.
++			 */
++			if (bdgeo.start != 0 &&
++			    (unsigned long long)bdgeo.heads * bdgeo.sectors *
++					bdgeo.sectors == 0)
++				suspicious_disk = true;
++			disk->d_start = bdgeo.start << BBSHIFT;
++		} else
++#endif
++			disk->d_start = 0;
+ 	} else {
+ 		disk->d_size = disk->d_sb.st_size;
+ 		disk->d_blksize = disk->d_sb.st_blksize;
+ 		disk->d_start = 0;
+ 	}
+ 
++	/* Can we issue SCSI VERIFY? */
++	if (!suspicious_disk && disk_can_scsi_verify(disk))
++		disk->d_flags |= DISK_FLAG_SCSI_VERIFY;
++
+ 	return disk;
+ out_close:
+ 	close(disk->d_fd);
+@@ -159,6 +294,10 @@ disk_close(
+ 	return error;
+ }
+ 
++#define BTOLBAT(d, bytes)	((uint64_t)(bytes) >> (d)->d_lbalog)
++#define LBASIZE(d)		(1ULL << (d)->d_lbalog)
++#define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
++
+ /* Read-verify an extent of a disk device. */
+ ssize_t
+ disk_read_verify(
+@@ -167,5 +306,10 @@ disk_read_verify(
+ 	uint64_t		start,
+ 	uint64_t		length)
+ {
++	/* Convert to logical block size. */
++	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
++		return disk_scsi_verify(disk, BTOLBAT(disk, start),
++				BTOLBA(disk, length));
++
+ 	return pread(disk->d_fd, buf, length, start);
+ }
+diff --git a/scrub/disk.h b/scrub/disk.h
+index 834678e..8a00144 100644
+--- a/scrub/disk.h
++++ b/scrub/disk.h
+@@ -20,6 +20,7 @@
+ #ifndef XFS_SCRUB_DISK_H_
+ #define XFS_SCRUB_DISK_H_
+ 
++#define DISK_FLAG_SCSI_VERIFY	0x1
+ struct disk {
+ 	struct stat	d_sb;
+ 	int		d_fd;
 
