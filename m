@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57310 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751842AbeAaDGz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:06:55 -0500
-Subject: [PATCH 03/29] xfs_scrub: set up command line argument parsing
+Received: from aserp2120.oracle.com ([141.146.126.78]:36150 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751716AbeAaDHo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:07:44 -0500
+Subject: [PATCH 11/29] xfs_scrub: filesystem counter collection functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:06:49 -0800
-Message-ID: <151736800970.32164.11444797715744265945.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:07:40 -0800
+Message-ID: <151736806046.32164.4762967576335037141.stgit@magnolia>
 In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
 References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,340 +20,290 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Parse command line options in order to set up the context in which we
-will scrub the filesystem.
+Add a couple of helper functions to estimate the inode and block
+counters on the filesystem.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/common.h    |    8 ++
- scrub/xfs_scrub.c |  227 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.h |   32 +++++++
- 3 files changed, 266 insertions(+), 1 deletion(-)
+ scrub/Makefile     |    2 
+ scrub/fscounters.c |  212 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/fscounters.h |   29 +++++++
+ 3 files changed, 243 insertions(+)
+ create mode 100644 scrub/fscounters.c
+ create mode 100644 scrub/fscounters.h
 
 
-diff --git a/scrub/common.h b/scrub/common.h
-index b383767..7a7e362 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -50,4 +50,12 @@ void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
- #define dbg_printf(fmt, ...) \
- 	do {if (debug > 1) {printf(fmt, __VA_ARGS__);}} while (0)
- 
-+/* Is this debug tweak enabled? */
-+static inline bool
-+debug_tweak_on(
-+	const char		*name)
-+{
-+	return debug && getenv(name) != NULL;
-+}
-+
- #endif /* XFS_SCRUB_COMMON_H_ */
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 6ed7bf6..8af640c 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -20,7 +20,12 @@
- #include <stdio.h>
- #include <pthread.h>
- #include <stdbool.h>
+diff --git a/scrub/Makefile b/scrub/Makefile
+index a3534e6..5397339 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -19,6 +19,7 @@ HFILES = \
+ common.h \
+ disk.h \
+ filemap.h \
++fscounters.h \
+ inodes.h \
+ spacemap.h \
+ xfs_scrub.h
+@@ -27,6 +28,7 @@ CFILES = \
+ common.c \
+ disk.c \
+ filemap.c \
++fscounters.c \
+ inodes.c \
+ phase1.c \
+ spacemap.c \
+diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+new file mode 100644
+index 0000000..4294bf3
+--- /dev/null
++++ b/scrub/fscounters.c
+@@ -0,0 +1,212 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdbool.h>
++#include <stdint.h>
 +#include <stdlib.h>
++#include <sys/statvfs.h>
 +#include "platform_defs.h"
 +#include "xfs.h"
-+#include "input.h"
- #include "xfs_scrub.h"
++#include "xfs_arch.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "path.h"
++#include "workqueue.h"
++#include "xfs_scrub.h"
 +#include "common.h"
- 
- /*
-  * XFS Online Metadata Scrub (and Repair)
-@@ -98,17 +103,237 @@
-  * thorough the scrub was.
-  */
- 
++#include "fscounters.h"
++
 +/*
-+ * Known debug tweaks (pass -d and set the environment variable):
-+ * XFS_SCRUB_FORCE_ERROR	-- pretend all metadata is corrupt
-+ * XFS_SCRUB_FORCE_REPAIR	-- repair all metadata even if it's ok
-+ * XFS_SCRUB_NO_KERNEL		-- pretend there is no kernel ioctl
-+ * XFS_SCRUB_NO_SCSI_VERIFY	-- disable SCSI VERIFY (if present)
-+ * XFS_SCRUB_PHASE		-- run only this scrub phase
-+ * XFS_SCRUB_THREADS		-- start exactly this number of threads
++ * Filesystem counter collection routines.  We can count the number of
++ * inodes in the filesystem, and we can estimate the block counters.
 + */
 +
- /* Program name; needed for libfrog error reports. */
- char				*progname = "xfs_scrub";
- 
- /* Debug level; higher values mean more verbosity. */
- unsigned int			debug;
- 
-+/* Display resource usage at the end of each phase? */
-+static bool			display_rusage;
++/* Count the number of inodes in the filesystem. */
 +
-+/* Background mode; higher values insert more pauses between scrub calls. */
-+unsigned int			bg_mode;
++/* INUMBERS wrapper routines. */
++struct xfs_count_inodes {
++	bool			moveon;
++	uint64_t		counters[0];
++};
 +
-+/* Maximum number of processors available to us. */
-+int				nproc;
-+
-+/* Number of threads we're allowed to use. */
-+unsigned int			nr_threads;
-+
-+/* Verbosity; higher values print more information. */
-+bool				verbose;
-+
-+/* Should we scrub the data blocks? */
-+static bool			scrub_data;
-+
-+/* Size of a memory page. */
-+long				page_size;
-+
-+#define SCRUB_RET_SUCCESS	(0)	/* no problems left behind */
-+#define SCRUB_RET_CORRUPT	(1)	/* corruption remains on fs */
-+#define SCRUB_RET_UNOPTIMIZED	(2)	/* fs could be optimized */
-+#define SCRUB_RET_OPERROR	(4)	/* operational problems */
-+#define SCRUB_RET_SYNTAX	(8)	/* cmdline args rejected */
-+
-+static void __attribute__((noreturn))
-+usage(void)
++/*
++ * Count the number of inodes.  Use INUMBERS to figure out how many inodes
++ * exist in the filesystem, assuming we've already scrubbed that.
++ */
++static bool
++xfs_count_inodes_range(
++	struct scrub_ctx	*ctx,
++	const char		*descr,
++	uint64_t		first_ino,
++	uint64_t		last_ino,
++	uint64_t		*count)
 +{
-+	fprintf(stderr, _("Usage: %s [OPTIONS] mountpoint | device\n"), progname);
-+	fprintf(stderr, "\n");
-+	fprintf(stderr, _("Options:\n"));
-+	fprintf(stderr, _("  -a count     Stop after this many errors are found.\n"));
-+	fprintf(stderr, _("  -b           Background mode.\n"));
-+	fprintf(stderr, _("  -e behavior  What to do if errors are found.\n"));
-+	fprintf(stderr, _("  -m path      Path to /etc/mtab.\n"));
-+	fprintf(stderr, _("  -n           Dry run.  Do not modify anything.\n"));
-+	fprintf(stderr, _("  -T           Display timing/usage information.\n"));
-+	fprintf(stderr, _("  -v           Verbose output.\n"));
-+	fprintf(stderr, _("  -V           Print version.\n"));
-+	fprintf(stderr, _("  -x           Scrub file data too.\n"));
-+	fprintf(stderr, _("  -y           Repair all errors.\n"));
++	struct xfs_fsop_bulkreq	igrpreq = {0};
++	struct xfs_inogrp	inogrp;
++	__u64			igrp_ino;
++	uint64_t		nr = 0;
++	__s32			igrplen = 0;
++	int			error;
 +
-+	exit(SCRUB_RET_SYNTAX);
++	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
++	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
++
++	igrpreq.lastip  = &igrp_ino;
++	igrpreq.icount  = 1;
++	igrpreq.ubuffer = &inogrp;
++	igrpreq.ocount  = &igrplen;
++
++	igrp_ino = first_ino;
++	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
++	while (!error && igrplen && inogrp.xi_startino < last_ino) {
++		nr += inogrp.xi_alloccount;
++		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
++	}
++
++	if (error) {
++		str_errno(ctx, descr);
++		return false;
++	}
++
++	*count = nr;
++	return true;
 +}
 +
- int
- main(
- 	int			argc,
- 	char			**argv)
- {
-+	struct scrub_ctx	ctx = {0};
-+	char			*mtab = NULL;
-+	char			*repairstr = "";
-+	unsigned long long	total_errors;
-+	bool			moveon = true;
-+	int			c;
-+	int			ret = SCRUB_RET_SUCCESS;
++/* Scan all the inodes in an AG. */
++static void
++xfs_count_ag_inodes(
++	struct workqueue	*wq,
++	xfs_agnumber_t		agno,
++	void			*arg)
++{
++	struct xfs_count_inodes	*ci = arg;
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	char			descr[DESCR_BUFSZ];
++	uint64_t		ag_ino;
++	uint64_t		next_ag_ino;
++	bool			moveon;
 +
- 	fprintf(stdout, "EXPERIMENTAL xfs_scrub program in use! Use at your own risk!\n");
--	return 4;
-+	return SCRUB_RET_OPERROR;
++	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
++				major(ctx->fsinfo.fs_datadev),
++				minor(ctx->fsinfo.fs_datadev),
++				agno);
 +
-+	progname = basename(argv[0]);
-+	setlocale(LC_ALL, "");
-+	bindtextdomain(PACKAGE, LOCALEDIR);
-+	textdomain(PACKAGE);
++	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
++	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
 +
-+	pthread_mutex_init(&ctx.lock, NULL);
-+	ctx.mode = SCRUB_MODE_DEFAULT;
-+	ctx.error_action = ERRORS_CONTINUE;
-+	while ((c = getopt(argc, argv, "a:bde:m:nTvxVy")) != EOF) {
-+		switch (c) {
-+		case 'a':
-+			ctx.max_errors = cvt_u64(optarg, 10);
-+			if (errno) {
-+				perror(optarg);
-+				usage();
-+			}
++	moveon = xfs_count_inodes_range(ctx, descr, ag_ino, next_ag_ino - 1,
++			&ci->counters[agno]);
++	if (!moveon)
++		ci->moveon = false;
++}
++
++/* Count all the inodes in a filesystem. */
++bool
++xfs_count_all_inodes(
++	struct scrub_ctx	*ctx,
++	uint64_t		*count)
++{
++	struct xfs_count_inodes	*ci;
++	xfs_agnumber_t		agno;
++	struct workqueue	wq;
++	bool			moveon;
++	int			ret;
++
++	ci = calloc(1, sizeof(struct xfs_count_inodes) +
++			(ctx->geo.agcount * sizeof(uint64_t)));
++	if (!ci)
++		return false;
++	ci->moveon = true;
++
++	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
++			scrub_nproc_workqueue(ctx));
++	if (ret) {
++		moveon = false;
++		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		goto out_free;
++	}
++	for (agno = 0; agno < ctx->geo.agcount; agno++) {
++		ret = workqueue_add(&wq, xfs_count_ag_inodes, agno, ci);
++		if (ret) {
++			moveon = false;
++			str_error(ctx, ctx->mntpoint,
++_("Could not queue AG %u icount work."), agno);
 +			break;
-+		case 'b':
-+			nr_threads = 1;
-+			bg_mode++;
-+			break;
-+		case 'd':
-+			debug++;
-+			break;
-+		case 'e':
-+			if (!strcmp("continue", optarg))
-+				ctx.error_action = ERRORS_CONTINUE;
-+			else if (!strcmp("shutdown", optarg))
-+				ctx.error_action = ERRORS_SHUTDOWN;
-+			else {
-+				fprintf(stderr,
-+	_("Unknown error behavior \"%s\".\n"),
-+						optarg);
-+				usage();
-+			}
-+			break;
-+		case 'm':
-+			mtab = optarg;
-+			break;
-+		case 'n':
-+			if (ctx.mode != SCRUB_MODE_DEFAULT) {
-+				fprintf(stderr,
-+_("Only one of the options -n or -y may be specified.\n"));
-+				usage();
-+			}
-+			ctx.mode = SCRUB_MODE_DRY_RUN;
-+			break;
-+		case 'T':
-+			display_rusage = true;
-+			break;
-+		case 'v':
-+			verbose = true;
-+			break;
-+		case 'V':
-+			fprintf(stdout, _("%s version %s\n"), progname,
-+					VERSION);
-+			fflush(stdout);
-+			return SCRUB_RET_SUCCESS;
-+		case 'x':
-+			scrub_data = true;
-+			break;
-+		case 'y':
-+			if (ctx.mode != SCRUB_MODE_DEFAULT) {
-+				fprintf(stderr,
-+_("Only one of the options -n or -y may be specified.\n"));
-+				usage();
-+			}
-+			ctx.mode = SCRUB_MODE_REPAIR;
-+			break;
-+		case '?':
-+			/* fall through */
-+		default:
-+			usage();
 +		}
 +	}
++	workqueue_destroy(&wq);
 +
-+	/* Override thread count if debugger */
-+	if (debug_tweak_on("XFS_SCRUB_THREADS")) {
-+		unsigned int	x;
++	for (agno = 0; agno < ctx->geo.agcount; agno++)
++		*count += ci->counters[agno];
++	moveon = ci->moveon;
 +
-+		x = cvt_u32(getenv("XFS_SCRUB_THREADS"), 10);
-+		if (errno) {
-+			perror("nr_threads");
-+			usage();
-+		}
-+		nr_threads = x;
++out_free:
++	free(ci);
++	return moveon;
++}
++
++/* Estimate the number of blocks and inodes in the filesystem. */
++bool
++xfs_scan_estimate_blocks(
++	struct scrub_ctx		*ctx,
++	unsigned long long		*d_blocks,
++	unsigned long long		*d_bfree,
++	unsigned long long		*r_blocks,
++	unsigned long long		*r_bfree,
++	unsigned long long		*f_files,
++	unsigned long long		*f_free)
++{
++	struct xfs_fsop_counts		fc;
++	struct xfs_fsop_resblks		rb;
++	struct statvfs			sfs;
++	int				error;
++
++	/* Grab the fstatvfs counters, since it has to report accurately. */
++	error = fstatvfs(ctx->mnt_fd, &sfs);
++	if (error) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
 +	}
 +
-+	if (optind != argc - 1)
-+		usage();
-+
-+	ctx.mntpoint = strdup(argv[optind]);
++	/* Fetch the filesystem counters. */
++	error = ioctl(ctx->mnt_fd, XFS_IOC_FSCOUNTS, &fc);
++	if (error) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
 +
 +	/*
-+	 * If the user did not specify an explicit mount table, try to use
-+	 * /proc/mounts if it is available, else /etc/mtab.  We prefer
-+	 * /proc/mounts because it is kernel controlled, while /etc/mtab
-+	 * may contain garbage that userspace tools like pam_mounts wrote
-+	 * into it.
++	 * XFS reserves some blocks to prevent hard ENOSPC, so add those
++	 * blocks back to the free data counts.
 +	 */
-+	if (!mtab) {
-+		if (access(_PATH_PROC_MOUNTS, R_OK) == 0)
-+			mtab = _PATH_PROC_MOUNTS;
-+		else
-+			mtab = _PATH_MOUNTED;
-+	}
++	error = ioctl(ctx->mnt_fd, XFS_IOC_GET_RESBLKS, &rb);
++	if (error)
++		str_errno(ctx, ctx->mntpoint);
++	sfs.f_bfree += rb.resblks_avail;
 +
-+	/* How many CPUs? */
-+	nproc = sysconf(_SC_NPROCESSORS_ONLN);
-+	if (nproc < 1)
-+		nproc = 1;
++	*d_blocks = sfs.f_blocks + (ctx->geo.logstart ? ctx->geo.logblocks : 0);
++	*d_bfree = sfs.f_bfree;
++	*r_blocks = ctx->geo.rtblocks;
++	*r_bfree = fc.freertx;
++	*f_files = sfs.f_files;
++	*f_free = sfs.f_ffree;
 +
-+	/* Set up a page-aligned buffer for read verification. */
-+	page_size = sysconf(_SC_PAGESIZE);
-+	if (page_size < 0) {
-+		str_errno(&ctx, ctx.mntpoint);
-+		goto out;
-+	}
++	return true;
++}
+diff --git a/scrub/fscounters.h b/scrub/fscounters.h
+new file mode 100644
+index 0000000..40a4c05
+--- /dev/null
++++ b/scrub/fscounters.h
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_FSCOUNTERS_H_
++#define XFS_SCRUB_FSCOUNTERS_H_
 +
-+	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
-+		ctx.mode = SCRUB_MODE_REPAIR;
++bool xfs_scan_estimate_blocks(struct scrub_ctx *ctx,
++		unsigned long long *d_blocks, unsigned long long *d_bfree,
++		unsigned long long *r_blocks, unsigned long long *r_bfree,
++		unsigned long long *f_files, unsigned long long *f_free);
++bool xfs_count_all_inodes(struct scrub_ctx *ctx, uint64_t *count);
 +
-+	if (xfs_scrub_excessive_errors(&ctx))
-+		str_info(&ctx, ctx.mntpoint, _("Too many errors; aborting."));
-+
-+	if (debug_tweak_on("XFS_SCRUB_FORCE_ERROR"))
-+		str_error(&ctx, ctx.mntpoint, _("Injecting error."));
-+
-+out:
-+	total_errors = ctx.errors_found + ctx.runtime_errors;
-+	if (ctx.need_repair)
-+		repairstr = _("  Unmount and run xfs_repair.");
-+	if (total_errors && ctx.warnings_found)
-+		fprintf(stderr,
-+_("%s: %llu errors and %llu warnings found.%s\n"),
-+			ctx.mntpoint, total_errors, ctx.warnings_found,
-+			repairstr);
-+	else if (total_errors && ctx.warnings_found == 0)
-+		fprintf(stderr,
-+_("%s: %llu errors found.%s\n"),
-+			ctx.mntpoint, total_errors, repairstr);
-+	else if (total_errors == 0 && ctx.warnings_found)
-+		fprintf(stderr,
-+_("%s: %llu warnings found.\n"),
-+			ctx.mntpoint, ctx.warnings_found);
-+	if (ctx.errors_found)
-+		ret |= SCRUB_RET_CORRUPT;
-+	if (ctx.warnings_found)
-+		ret |= SCRUB_RET_UNOPTIMIZED;
-+	if (ctx.runtime_errors)
-+		ret |= SCRUB_RET_OPERROR;
-+	free(ctx.mntpoint);
-+
-+	return ret;
- }
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 811bc2d..51b8b7a 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -20,15 +20,47 @@
- #ifndef XFS_SCRUB_XFS_SCRUB_H_
- #define XFS_SCRUB_XFS_SCRUB_H_
- 
-+#define _PATH_PROC_MOUNTS	"/proc/mounts"
-+
-+extern unsigned int		nr_threads;
-+extern unsigned int		bg_mode;
- extern unsigned int		debug;
-+extern int			nproc;
-+extern bool			verbose;
-+extern long			page_size;
-+
-+enum scrub_mode {
-+	SCRUB_MODE_DRY_RUN,
-+	SCRUB_MODE_PREEN,
-+	SCRUB_MODE_REPAIR,
-+};
-+#define SCRUB_MODE_DEFAULT			SCRUB_MODE_PREEN
-+
-+enum error_action {
-+	ERRORS_CONTINUE,
-+	ERRORS_SHUTDOWN,
-+};
- 
- struct scrub_ctx {
-+	/* Immutable scrub state. */
-+
-+	/* Strings we need for presentation */
-+	char			*mntpoint;
-+	char			*blkdev;
-+
-+	/* What does the user want us to do? */
-+	enum scrub_mode		mode;
-+
-+	/* How does the user want us to react to errors? */
-+	enum error_action	error_action;
-+
- 	/* Mutable scrub state; use lock. */
- 	pthread_mutex_t		lock;
- 	unsigned long long	max_errors;
- 	unsigned long long	runtime_errors;
- 	unsigned long long	errors_found;
- 	unsigned long long	warnings_found;
-+	bool			need_repair;
- };
- 
- #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
++#endif /* XFS_SCRUB_FSCOUNTERS_H_ */
 
