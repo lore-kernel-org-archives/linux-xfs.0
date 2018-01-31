@@ -1,12 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34704 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752470AbeAaDGf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:06:35 -0500
-Subject: [PATCH v11.2 00/29] xfsprogs: online scrub/repair support
+Received: from aserp2130.oracle.com ([141.146.126.79]:57586 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752356AbeAaDHG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:07:06 -0500
+Subject: [PATCH 05/29] xfs_scrub: figure out how many threads we're going to
+ need
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:06:31 -0800
-Message-ID: <151736799098.32164.15446216987522359103.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:07:03 -0800
+Message-ID: <151736802334.32164.12902010477527372642.stgit@magnolia>
+In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
+References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,38 +19,77 @@ List-Id: xfs
 To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This is the eleventh revision (+ more fixes suggested by Eric Sandeen) of a
-patchset that adds to XFS userland tools support for online metadata scrubbing
-and repair.  Since v10 I've rebased to the latest for-next, fixed some wonky
-error messages, and fixed a few minor problems I found via code inspection.
-This patch series is more or less the same as a couple of weeks ago.
+Create the plumbing to figure out how many threads we're going to want
+to do all of our scrubbing.
 
-We start by creating the basic shell of the program that can do argument
-parsing and error reporting, create some abstractions for the XFS ioctls that
-we use to iterate and scrub metadata, and then tie together all the in-kernel
-scrubbing in separate scrub phases.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/common.c    |   26 ++++++++++++++++++++++++++
+ scrub/common.h    |    2 ++
+ scrub/xfs_scrub.h |    3 +++
+ 3 files changed, 31 insertions(+)
 
-Next, we move on to checking the directory tree for connectivity and naming
-problems and add the infrastructure to perform an (optional) scan of the
-in-use parts of the disk media.  We also implement a minimal preen -- if the
-fs checks out, we can try to run fstrim; and some basic progress reporting if
-the program is running interactively.
 
-Finally, we add some wrapper scripts to schedule scrubs of all the mounted
-filesystems; and the necessary systemd / cron infrastructure that is needed to
-automatically scan everything once a week.  All of this is disabled by
-default.  The systemd integration allows us to give scrub exactly the
-privileges it needs while walling off the rest of the system.
+diff --git a/scrub/common.c b/scrub/common.c
+index 37ccd4a..05bb89b 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -168,3 +168,29 @@ auto_units(
+ 	*units = "";
+ 	return number;
+ }
++
++/* How many threads to kick off? */
++unsigned int
++scrub_nproc(
++	struct scrub_ctx	*ctx)
++{
++	if (nr_threads)
++		return nr_threads;
++	return ctx->nr_io_threads;
++}
++
++/*
++ * How many threads to kick off for a workqueue?  If we only want one
++ * thread, save ourselves the overhead and just run it in the main thread.
++ */
++unsigned int
++scrub_nproc_workqueue(
++	struct scrub_ctx	*ctx)
++{
++	unsigned int		x;
++
++	x = scrub_nproc(ctx);
++	if (x == 1)
++		x = 0;
++	return x;
++}
+diff --git a/scrub/common.h b/scrub/common.h
+index e26e0e8..4779dbd 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -61,5 +61,7 @@ debug_tweak_on(
+ double timeval_subtract(struct timeval *tv1, struct timeval *tv2);
+ double auto_space_units(unsigned long long kilobytes, char **units);
+ double auto_units(unsigned long long number, char **units);
++unsigned int scrub_nproc(struct scrub_ctx *ctx);
++unsigned int scrub_nproc_workqueue(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 51b8b7a..6d9f0c1 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -54,6 +54,9 @@ struct scrub_ctx {
+ 	/* How does the user want us to react to errors? */
+ 	enum error_action	error_action;
+ 
++	/* Number of threads for metadata scrubbing */
++	unsigned int		nr_io_threads;
++
+ 	/* Mutable scrub state; use lock. */
+ 	pthread_mutex_t		lock;
+ 	unsigned long long	max_errors;
 
-If you're going to start using this mess, you probably ought to just pull from
-my git tree for xfsprogs[1].  This series relies on the libfrog patches sent
-earlier.  Kernel support appeared in 4.15 and will become substantially more
-robust in 4.16.
-
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
