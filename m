@@ -1,148 +1,377 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48730 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752414AbdLHDj0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Dec 2017 22:39:26 -0500
-Subject: [PATCH 2/5] xfs: hold xfs_buf locked between shortform->leaf
- conversion and the addition of an attribute
+Received: from userp2120.oracle.com ([156.151.31.85]:44254 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752544AbeAaDJo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:09:44 -0500
+Subject: [PATCH 28/29] xfs_scrub: wire up repair ioctl
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 07 Dec 2017 19:39:17 -0800
-Message-ID: <151270435780.12194.12104112724436317104.stgit@magnolia>
-In-Reply-To: <151270433736.12194.14709247629624139846.stgit@magnolia>
-References: <151270433736.12194.14709247629624139846.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:09:39 -0800
+Message-ID: <151736817940.32164.16979915543351450047.stgit@magnolia>
+In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
+References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, libor.klepac@bcom.cz, bfoster@redhat.com, alex@zadarastorage.com, david@fromorbit.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The new attribute leaf buffer is not held locked across the transaction
-roll between the shortform->leaf modification and the addition of the
-new entry.  As a result, the attribute buffer modification being made is
-not atomic from an operational perspective.  Hence the AIL push can grab
-it in the transient state of "just created" after the initial
-transaction is rolled, because the buffer has been released.  This leads
-to xfs_attr3_leaf_verify() asserting that hdr.count is zero, treating
-this as in-memory corruption, and shutting down the filesystem.
+Create the mechanism we need to actually call the kernel's online repair
+functionality.  The interface will consume a repair description; the
+descriptor management will follow in the next patch.
 
-Darrick ported the original patch to 4.15 and reworked it use the
-xfs_defer_bjoin helper and hold/join the buffer correctly across the
-second transaction roll.
-
-Signed-off-by: Alex Lyakas <alex@zadarastorage.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      |   20 +++++++++++++++-----
- fs/xfs/libxfs/xfs_attr_leaf.c |    9 ++++++---
- fs/xfs/libxfs/xfs_attr_leaf.h |    3 ++-
- 3 files changed, 23 insertions(+), 9 deletions(-)
+ scrub/common.c    |   12 +++++
+ scrub/common.h    |    6 ++
+ scrub/phase1.c    |   11 ++++
+ scrub/phase2.c    |    1 
+ scrub/phase3.c    |    1 
+ scrub/phase5.c    |    1 
+ scrub/scrub.c     |  134 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/scrub.h     |   20 ++++++++
+ scrub/xfs_scrub.h |    2 +
+ 9 files changed, 188 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 6249c92..a76914d 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -212,6 +212,7 @@ xfs_attr_set(
- 	int			flags)
- {
- 	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_buf		*leaf_bp = NULL;
- 	struct xfs_da_args	args;
- 	struct xfs_defer_ops	dfops;
- 	struct xfs_trans_res	tres;
-@@ -327,9 +328,16 @@ xfs_attr_set(
- 		 * GROT: another possible req'mt for a double-split btree op.
- 		 */
- 		xfs_defer_init(args.dfops, args.firstblock);
--		error = xfs_attr_shortform_to_leaf(&args);
-+		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
- 		if (error)
- 			goto out_defer_cancel;
-+		/*
-+		 * Prevent the leaf buffer from being unlocked so that a
-+		 * concurrent AIL push cannot grab the half-baked leaf
-+		 * buffer and run into problems with the write verifier.
-+		 */
-+		xfs_trans_bhold(args.trans, leaf_bp);
-+		xfs_defer_bjoin(args.dfops, leaf_bp);
- 		xfs_defer_ijoin(args.dfops, dp);
- 		error = xfs_defer_finish(&args.trans, args.dfops);
- 		if (error)
-@@ -337,13 +345,14 @@ xfs_attr_set(
+diff --git a/scrub/common.c b/scrub/common.c
+index 18171d1..17c3699 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -59,7 +59,9 @@ xfs_scrub_excessive_errors(
+ static const char *err_str[] = {
+ 	[S_ERROR]	= "Error",
+ 	[S_WARN]	= "Warning",
++	[S_REPAIR]	= "Repaired",
+ 	[S_INFO]	= "Info",
++	[S_PREEN]	= "Optimized",
+ };
  
- 		/*
- 		 * Commit the leaf transformation.  We'll need another (linked)
--		 * transaction to add the new attribute to the leaf.
-+		 * transaction to add the new attribute to the leaf, which
-+		 * means that we have to hold & join the leaf buffer here too.
- 		 */
--
- 		error = xfs_trans_roll_inode(&args.trans, dp);
- 		if (error)
- 			goto out;
--
-+		xfs_trans_bjoin(args.trans, leaf_bp);
-+		leaf_bp = NULL;
- 	}
+ /* If stream is a tty, clear to end of line to clean up progress bar. */
+@@ -93,6 +95,11 @@ __str_out(
+ 		stream = stdout;
  
- 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-@@ -374,8 +383,9 @@ xfs_attr_set(
+ 	pthread_mutex_lock(&ctx->lock);
++
++	/* We only want to hear about optimizing when in debug/verbose mode. */
++	if (level == S_PREEN && !debug && !verbose)
++		goto out_record;
++
+ 	fprintf(stream, "%s%s: %s: ", stream_start(stream), _(err_str[level]),
+ 			descr);
+ 	if (error) {
+@@ -109,12 +116,17 @@ __str_out(
+ 	if (stream == stdout)
+ 		fflush(stream);
  
- out_defer_cancel:
- 	xfs_defer_cancel(&dfops);
--	args.trans = NULL;
- out:
-+	if (leaf_bp)
-+		xfs_trans_brelse(args.trans, leaf_bp);
- 	if (args.trans)
- 		xfs_trans_cancel(args.trans);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 53cc8b9..601eaa3 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -735,10 +735,13 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
++out_record:
+ 	if (error)      /* A syscall failed */
+ 		ctx->runtime_errors++;
+ 	else if (level == S_ERROR)
+ 		ctx->errors_found++;
+ 	else if (level == S_WARN)
+ 		ctx->warnings_found++;
++	else if (level == S_REPAIR)
++		ctx->repairs++;
++	else if (level == S_PREEN)
++		ctx->preens++;
+ 
+ 	pthread_mutex_unlock(&ctx->lock);
  }
+diff --git a/scrub/common.h b/scrub/common.h
+index 29b4332..287bd4d 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -32,7 +32,9 @@ bool xfs_scrub_excessive_errors(struct scrub_ctx *ctx);
+ enum error_level {
+ 	S_ERROR	= 0,
+ 	S_WARN,
++	S_REPAIR,
+ 	S_INFO,
++	S_PREEN,
+ };
  
- /*
-- * Convert from using the shortform to the leaf.
-+ * Convert from using the shortform to the leaf.  On success, return the
-+ * buffer so that we can keep it locked until we're totally done with it.
-  */
- int
--xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
-+xfs_attr_shortform_to_leaf(
-+	struct xfs_da_args	*args,
-+	struct xfs_buf		**leaf_bp)
- {
- 	xfs_inode_t *dp;
- 	xfs_attr_shortform_t *sf;
-@@ -818,7 +821,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- 		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+ void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
+@@ -46,6 +48,10 @@ void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
+ 	__str_out(ctx, str, S_WARN,	0,	__FILE__, __LINE__, __VA_ARGS__)
+ #define str_info(ctx, str, ...) \
+ 	__str_out(ctx, str, S_INFO,	0,	__FILE__, __LINE__, __VA_ARGS__)
++#define record_repair(ctx, str, ...) \
++	__str_out(ctx, str, S_REPAIR,	0,	__FILE__, __LINE__, __VA_ARGS__)
++#define record_preen(ctx, str, ...) \
++	__str_out(ctx, str, S_PREEN,	0,	__FILE__, __LINE__, __VA_ARGS__)
+ 
+ #define dbg_printf(fmt, ...) \
+ 	do {if (debug > 1) {printf(fmt, __VA_ARGS__);}} while (0)
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 6b986dd..547767b 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -179,6 +179,17 @@ _("Kernel metadata scrubbing facility is required."));
+ 		return false;
  	}
- 	error = 0;
--
-+	*leaf_bp = bp;
- out:
- 	kmem_free(tmpbuffer);
- 	return error;
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index f7dda0c..894124e 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -48,7 +48,8 @@ void	xfs_attr_shortform_create(struct xfs_da_args *args);
- void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
- int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
- int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
--int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args);
-+int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
-+			struct xfs_buf **leaf_bp);
- int	xfs_attr_shortform_remove(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
- int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+ 
++	/* Do we need kernel-assisted metadata repair? */
++	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
++		if (ctx->mode == SCRUB_MODE_PREEN)
++			str_error(ctx, ctx->mntpoint,
++_("Kernel metadata optimization facility is required."));
++		else
++			str_error(ctx, ctx->mntpoint,
++_("Kernel metadata repair facility is required."));
++		return false;
++	}
++
+ 	/* Go find the XFS devices if we have a usable fsmap. */
+ 	fs_table_initialise(0, NULL, 0, NULL);
+ 	errno = 0;
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index e8eb1ca..32e2752 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -24,6 +24,7 @@
+ #include <sys/stat.h>
+ #include <sys/statvfs.h>
+ #include "xfs.h"
++#include "list.h"
+ #include "path.h"
+ #include "workqueue.h"
+ #include "xfs_scrub.h"
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 43697c6..f4117b0 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -24,6 +24,7 @@
+ #include <sys/stat.h>
+ #include <sys/statvfs.h>
+ #include "xfs.h"
++#include "list.h"
+ #include "path.h"
+ #include "workqueue.h"
+ #include "xfs_scrub.h"
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index fc3308b..703b279 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -29,6 +29,7 @@
+ #endif
+ #include "xfs.h"
+ #include "handle.h"
++#include "list.h"
+ #include "path.h"
+ #include "workqueue.h"
+ #include "xfs_scrub.h"
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index c4b7694..0dbe11c 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -28,6 +28,7 @@
+ #include <sys/statvfs.h>
+ #include "xfs.h"
+ #include "xfs_fs.h"
++#include "list.h"
+ #include "path.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+@@ -561,10 +562,15 @@ __xfs_scrub_test(
+ 	bool				repair)
+ {
+ 	struct xfs_scrub_metadata	meta = {0};
++	static bool			injected;
+ 	int				error;
+ 
+ 	if (debug_tweak_on("XFS_SCRUB_NO_KERNEL"))
+ 		return false;
++	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
++		str_error(ctx, "XFS_SCRUB_FORCE_REPAIR", "Not supported.");
++		return false;
++	}
+ 
+ 	meta.sm_type = type;
+ 	if (repair)
+@@ -647,3 +653,131 @@ xfs_can_scrub_parent(
+ {
+ 	return __xfs_scrub_test(ctx, XFS_SCRUB_TYPE_PARENT, false);
+ }
++
++bool
++xfs_can_repair(
++	struct scrub_ctx	*ctx)
++{
++	return __xfs_scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, true);
++}
++
++/* General repair routines. */
++
++/* Repair some metadata. */
++enum check_outcome
++xfs_repair_metadata(
++	struct scrub_ctx		*ctx,
++	int				fd,
++	struct repair_item		*ri,
++	unsigned int			repair_flags)
++{
++	char				buf[DESCR_BUFSZ];
++	struct xfs_scrub_metadata	meta = { 0 };
++	struct xfs_scrub_metadata	oldm;
++	int				error;
++
++	assert(ri->type < XFS_SCRUB_TYPE_NR);
++	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
++	meta.sm_type = ri->type;
++	meta.sm_flags = ri->flags | XFS_SCRUB_IFLAG_REPAIR;
++	switch (scrubbers[ri->type].type) {
++	case ST_AGHEADER:
++	case ST_PERAG:
++		meta.sm_agno = ri->agno;
++		break;
++	case ST_INODE:
++		meta.sm_ino = ri->ino;
++		meta.sm_gen = ri->gen;
++		break;
++	default:
++		break;
++	}
++
++	/*
++	 * If this is a preen operation but we're only repairing
++	 * critical items, defer the preening until later.
++	 */
++	if (!needs_repair(&meta) && (repair_flags & XRM_REPAIR_ONLY))
++		return CHECK_RETRY;
++
++	memcpy(&oldm, &meta, sizeof(oldm));
++	format_scrub_descr(buf, DESCR_BUFSZ, &meta, &scrubbers[meta.sm_type]);
++
++	if (needs_repair(&meta))
++		str_info(ctx, buf, _("Attempting repair."));
++	else if (debug || verbose)
++		str_info(ctx, buf, _("Attempting optimization."));
++
++	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
++	/*
++	 * If the caller doesn't want us to complain, tell the caller to
++	 * requeue the repair for later and don't say a thing.
++	 */
++	if (!(repair_flags & XRM_NOFIX_COMPLAIN) &&
++	    (error || needs_repair(&meta)))
++		return CHECK_RETRY;
++	if (error) {
++		switch (errno) {
++		case EDEADLOCK:
++		case EBUSY:
++			/* Filesystem is busy, try again later. */
++			if (debug || verbose)
++				str_info(ctx, buf,
++_("Filesystem is busy, deferring repair."));
++			return CHECK_RETRY;
++		case ESHUTDOWN:
++			/* Filesystem is already shut down, abort. */
++			str_error(ctx, buf,
++_("Filesystem is shut down, aborting."));
++			return CHECK_ABORT;
++		case ENOTTY:
++		case EOPNOTSUPP:
++			/*
++			 * If we forced repairs, don't complain if kernel
++			 * doesn't know how to fix.
++			 */
++			if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
++				return CHECK_DONE;
++			/* fall through */
++		case EINVAL:
++			/* Kernel doesn't know how to repair this? */
++			str_error(ctx, buf,
++_("Don't know how to fix; offline repair required."));
++			return CHECK_DONE;
++		case EROFS:
++			/* Read-only filesystem, can't fix. */
++			if (verbose || debug || needs_repair(&oldm))
++				str_info(ctx, buf,
++_("Read-only filesystem; cannot make changes."));
++			return CHECK_DONE;
++		case ENOENT:
++			/* Metadata not present, just skip it. */
++			return CHECK_DONE;
++		case ENOMEM:
++		case ENOSPC:
++			/* Don't care if preen fails due to low resources. */
++			if (is_unoptimized(&oldm) && !needs_repair(&oldm))
++				return CHECK_DONE;
++			/* fall through */
++		default:
++			/* Operational error. */
++			str_errno(ctx, buf);
++			return CHECK_DONE;
++		}
++	}
++	if (repair_flags & XRM_NOFIX_COMPLAIN)
++		xfs_scrub_warn_incomplete_scrub(ctx, buf, &meta);
++	if (needs_repair(&meta)) {
++		/* Still broken, try again or fix offline. */
++		if (repair_flags & XRM_NOFIX_COMPLAIN)
++			str_error(ctx, buf,
++_("Repair unsuccessful; offline repair required."));
++	} else {
++		/* Clean operation, no corruption detected. */
++		if (needs_repair(&oldm))
++			record_repair(ctx, buf, _("Repairs successful."));
++		else
++			record_preen(ctx, buf, _("Optimization successful."));
++	}
++	return CHECK_DONE;
++}
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 0b454df..1c44fba 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -41,6 +41,7 @@ bool xfs_can_scrub_dir(struct scrub_ctx *ctx);
+ bool xfs_can_scrub_attr(struct scrub_ctx *ctx);
+ bool xfs_can_scrub_symlink(struct scrub_ctx *ctx);
+ bool xfs_can_scrub_parent(struct scrub_ctx *ctx);
++bool xfs_can_repair(struct scrub_ctx *ctx);
+ 
+ bool xfs_scrub_inode_fields(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		int fd);
+@@ -59,4 +60,23 @@ bool xfs_scrub_symlink(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ bool xfs_scrub_parent(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		int fd);
+ 
++/* Repair parameters are the scrub inputs and retry count. */
++struct repair_item {
++	struct list_head	list;
++	__u64			ino;
++	__u32			type;
++	__u32			flags;
++	__u32			gen;
++	__u32			agno;
++};
++
++/* Only perform repairs; leave optimization-only actions for later. */
++#define XRM_REPAIR_ONLY		(1U << 0)
++
++/* Complain if still broken even after fix. */
++#define XRM_NOFIX_COMPLAIN	(1U << 1)
++
++enum check_outcome xfs_repair_metadata(struct scrub_ctx *ctx, int fd,
++		struct repair_item *ri, unsigned int repair_flags);
++
+ #endif /* XFS_SCRUB_SCRUB_H_ */
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 16cd1aa..8407885 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -95,6 +95,8 @@ struct scrub_ctx {
+ 	unsigned long long	inodes_checked;
+ 	unsigned long long	bytes_checked;
+ 	unsigned long long	naming_warnings;
++	unsigned long long	repairs;
++	unsigned long long	preens;
+ 	bool			need_repair;
+ 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+ };
 
