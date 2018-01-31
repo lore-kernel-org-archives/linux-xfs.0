@@ -1,72 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:48520 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753635AbeAaQkK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jan 2018 11:40:10 -0500
-Date: Wed, 31 Jan 2018 11:40:09 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] Parent pointer future use cases
-Message-ID: <20180131164009.GA3814@fieldses.org>
-References: <588cad68-78eb-88de-49c3-716330b70cd5@oracle.com>
- <CAOQ4uxhYrpY=POeATvh6GOJLNEwDrsQhvAKvyZzwcUQXGwLvDA@mail.gmail.com>
- <20180131153025.GB15812@fieldses.org>
- <CAOQ4uxjfhQ2_rdHswRFU+oshusV0YuqVvM5spO_uqOS2=xJifQ@mail.gmail.com>
+Received: from mail-it0-f68.google.com ([209.85.214.68]:52957 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753270AbeAaQqm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 11:46:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjfhQ2_rdHswRFU+oshusV0YuqVvM5spO_uqOS2=xJifQ@mail.gmail.com>
+In-Reply-To: <1517401762.3612.0.camel@kernel.org>
+References: <20180130173126.2806-1-jlayton@kernel.org> <20180130203221.29310-1-jlayton@kernel.org>
+ <CA+55aFw5Xf4V-BF1JK+SpjXnmrgeMe-k0wLaFc_=6ojbhfWEtQ@mail.gmail.com> <1517401762.3612.0.camel@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 31 Jan 2018 08:46:41 -0800
+Message-ID: <CA+55aFxB6og=iRkRchiOrr8EW2=jgb_i4nUiPsvEa+8F64APxA@mail.gmail.com>
+Subject: Re: [PATCH v2] iversion: make inode_cmp_iversion{+raw} return bool
+ instead of s64
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Layton <jlayton@poochiereds.net>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Trond Myklebust <trondmy@primarydata.com>
 
-On Wed, Jan 31, 2018 at 06:09:43PM +0200, Amir Goldstein wrote:
-> On Wed, Jan 31, 2018 at 5:30 PM, J. Bruce Fields <bfields@fieldses.org> wrote:
-> > On Wed, Jan 31, 2018 at 09:34:52AM +0200, Amir Goldstein wrote:
-> >> If filesystem were to provide a parents iterator interface, something like:
-> >> get_acceptable_parent(child, acceptable, context)
-> >> then xfs could iterate inode parents and call the nfsd_acceptable() callback.
-> >> For filesystems that support get_acceptable_parent(), there is no need to
-> >> encode a 'connectable' non unique file handle.
-> >>
-> >> I am not sure how much of a problem the 'subtree_check' and non-unique
-> >> file handle is for nfsd (CC nfsd folks for that), but I know I can make good use
-> >> of that in overlayfs, as well as with an optimized get_name() implementation.
-> >
-> > I hate subtree-checking and wish people would just stop trying to export
-> > subtrees.
-> >
-> > That said, anything that makes it less painful is probably good.
-> >
-> > And, yes, the fact that filehandles can change when a file is renamed
-> > across directories can be a problem for people using subtree checking.
-> >
-> 
-> Let's talk about your feeling about 'subtree_check' ...
-> 
-> I hate security in general and wish that users would let us develop cool
-> stuff and stop worrying so much about their hopeless quest for secure
-> systems ;-)
+On Wed, Jan 31, 2018 at 4:29 AM, Jeff Layton <jlayton@kernel.org> wrote:
+>
+> Do you mind just taking it directly? I don't have anything else queued
+> up for this cycle.
 
-I wasn't clear.  I agree that we need subtree-checking as long as we
-allow exports of subtrees.  What I dislike is exporting subtrees in the
-first place.  If you only export entire superblocks, enforcement of
-export access becomes much simpler and more reliable.
+Done.
 
-> The question is: is the interface I proposed going to be adequate for
-> 'subtree_check' requirement. Meaning, with current 'subtree_check'
-> implementation, the decoded dentry is guarantied to have the same
-> parent that was used for encoding the non-dir, although it does not
-> guaranty to get the exact same alias. With the interface I proposed
-> get_acceptable_parent() could decode an alias that is not even
-> under the original parent directory. Do you see that as a problem?
+I wonder if "false for same, true for different" calling convention
+makes much sense, but it matches the old "0 for same" so obviously
+makes for a smaller diff.
 
-That happens in the non-subtree-check case.  Filehandles really identify
-inodes, not dentries.  We map them to dentries because we need to, but
-the choice is fairly arbitrary.  As long as we're able to enforce
-subtree_check, we're fine.  Iterating through the list of parents until
-we find one that's under the export root sounds like it should
-accomplish that.
+If it ever ends up confusing people, maybe the sense of that function
+should be reversed, and the name changed to something like
+"same_inode_version()" or something.
 
---b.
+But at least for now the situation seems ok to me,
+
+            Linus
