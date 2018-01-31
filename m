@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52792 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752535AbeAaDJo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:09:44 -0500
-Subject: [PATCH 27/29] xfs_scrub: integrate services with systemd
+Received: from aserp2120.oracle.com ([141.146.126.78]:39144 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752167AbeAaDJw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:09:52 -0500
+Subject: [PATCH 29/29] xfs_scrub: schedule and manage optimizations/repairs
+ to the filesystem
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:09:33 -0800
-Message-ID: <151736817316.32164.953271653758103738.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:09:45 -0800
+Message-ID: <151736818563.32164.5708637085584646793.stgit@magnolia>
 In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
 References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,510 +21,1238 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a systemd service unit so that we can run the online scrubber
-under systemd with (somewhat) appropriate containment.
+Teach xfs_scrub to remember scrub requests that failed (or indicated
+that optimization is a possibility) as action items.  Depending on the
+circumstances, certain items are acted upon immediately (e.g. metadata
+that needs to be healthy in order to finish the scan, or files that are
+already open) or deferred until later.  Expand the repair phase to
+deal with the deferred actions.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .gitignore                       |    4 ++
- configure.ac                     |    2 +
- debian/postinst                  |    3 ++
- include/builddefs.in             |    4 ++
- m4/Makefile                      |    1 +
- m4/package_services.m4           |   73 ++++++++++++++++++++++++++++++++++++++
- scrub/Makefile                   |   36 ++++++++++++++++++-
- scrub/xfs_scrub.c                |   32 +++++++++++++++++
- scrub/xfs_scrub@.service.in      |   19 ++++++++++
- scrub/xfs_scrub_all.cron.in      |    1 +
- scrub/xfs_scrub_all.in           |   49 ++++++++++++++++++++++++++
- scrub/xfs_scrub_all.service.in   |    9 +++++
- scrub/xfs_scrub_all.timer        |   11 ++++++
- scrub/xfs_scrub_fail             |   26 ++++++++++++++
- scrub/xfs_scrub_fail@.service.in |   10 +++++
- 15 files changed, 279 insertions(+), 1 deletion(-)
- create mode 100644 m4/package_services.m4
- create mode 100644 scrub/xfs_scrub@.service.in
- create mode 100644 scrub/xfs_scrub_all.cron.in
- create mode 100644 scrub/xfs_scrub_all.service.in
- create mode 100644 scrub/xfs_scrub_all.timer
- create mode 100755 scrub/xfs_scrub_fail
- create mode 100644 scrub/xfs_scrub_fail@.service.in
+ man/man8/xfs_scrub.8 |   27 ++++-
+ scrub/Makefile       |    2 
+ scrub/phase1.c       |    7 +
+ scrub/phase2.c       |   59 +++++++++-
+ scrub/phase3.c       |   42 +++++--
+ scrub/phase4.c       |   76 ++++++++++++-
+ scrub/repair.c       |  298 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/repair.h       |   55 +++++++++
+ scrub/scrub.c        |  123 +++++++++++++++------
+ scrub/scrub.h        |   36 ++++--
+ scrub/xfs_scrub.c    |   22 ++++
+ scrub/xfs_scrub.h    |    1 
+ 12 files changed, 676 insertions(+), 72 deletions(-)
+ create mode 100644 scrub/repair.c
+ create mode 100644 scrub/repair.h
 
 
-diff --git a/.gitignore b/.gitignore
-index a3db640..d887451 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -69,6 +69,10 @@ cscope.*
- /rtcp/xfs_rtcp
- /spaceman/xfs_spaceman
- /scrub/xfs_scrub
-+/scrub/xfs_scrub@.service
-+/scrub/xfs_scrub_all
-+/scrub/xfs_scrub_all.service
-+/scrub/xfs_scrub_fail@.service
- 
- # generated crc files
- /libxfs/crc32selftest
-diff --git a/configure.ac b/configure.ac
-index bb032e5..b438165 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -174,6 +174,8 @@ AC_HAVE_OPENAT
- AC_HAVE_FSTATAT
- AC_HAVE_SG_IO
- AC_HAVE_HDIO_GETGEO
-+AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR
-+AC_CONFIG_CROND_DIR
- 
- if test "$enable_blkid" = yes; then
- AC_HAVE_BLKID_TOPO
-diff --git a/debian/postinst b/debian/postinst
-index d11c8d9..11693a6 100644
---- a/debian/postinst
-+++ b/debian/postinst
-@@ -8,6 +8,9 @@ case "${1}" in
- 		then
- 			update-initramfs -u
- 		fi
-+		if [ -x /bin/systemctl ]; then
-+			/bin/systemctl daemon-reload
-+		fi
- 		;;
- 
- 	abort-upgrade|abort-remove|abort-deconfigure)
-diff --git a/include/builddefs.in b/include/builddefs.in
-index d44faf9..df76b2c 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -127,6 +127,10 @@ HAVE_OPENAT = @have_openat@
- HAVE_FSTATAT = @have_fstatat@
- HAVE_SG_IO = @have_sg_io@
- HAVE_HDIO_GETGEO = @have_hdio_getgeo@
-+HAVE_SYSTEMD = @have_systemd@
-+SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
-+HAVE_CROND = @have_crond@
-+CROND_DIR = @crond_dir@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
-diff --git a/m4/Makefile b/m4/Makefile
-index 61d617e..a6d11e9 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -21,6 +21,7 @@ LSRCFILES = \
- 	package_libcdev.m4 \
- 	package_pthread.m4 \
- 	package_sanitizer.m4 \
-+	package_services.m4 \
- 	package_types.m4 \
- 	package_unistring.m4 \
- 	package_utilies.m4 \
-diff --git a/m4/package_services.m4 b/m4/package_services.m4
-new file mode 100644
-index 0000000..61b693c
---- /dev/null
-+++ b/m4/package_services.m4
-@@ -0,0 +1,73 @@
-+#
-+# Figure out where to put systemd service units
-+#
-+AC_DEFUN([AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR],
-+[
-+	AC_REQUIRE([PKG_PROG_PKG_CONFIG])
-+	AC_ARG_WITH([systemd_unit_dir],
-+	  [AS_HELP_STRING([--with-systemd-unit-dir@<:@=DIR@:>@],
-+		[Install systemd system units into DIR.])],
-+	  [],
-+	  [with_systemd_unit_dir=yes])
-+	AS_IF([test "x${with_systemd_unit_dir}" != "xno"],
-+	  [
-+		AS_IF([test "x${with_systemd_unit_dir}" = "xyes"],
-+		  [
-+			PKG_CHECK_MODULES([SYSTEMD], [systemd])
-+			m4_pattern_allow([^PKG_(MAJOR|MINOR|BUILD|REVISION)$])
-+			with_systemd_unit_dir="$($PKG_CONFIG --variable=systemdsystemunitdir systemd 2>/dev/null)"
-+		  ])
-+		AC_MSG_CHECKING([for systemd system unit dir])
-+		systemd_system_unit_dir="${with_systemd_unit_dir}"
-+		AS_IF([test -n "${systemd_system_unit_dir}"],
-+		  [
-+			AC_MSG_RESULT(${systemd_system_unit_dir})
-+			have_systemd="yes"
-+		  ],
-+		  [
-+			AC_MSG_RESULT(no)
-+			have_systemd="no"
-+		  ])
-+	  ],
-+	  [
-+		have_systemd="disabled"
-+	  ])
-+	AC_SUBST(have_systemd)
-+	AC_SUBST(systemd_system_unit_dir)
-+])
-+
-+#
-+# Figure out where to install crontabs
-+#
-+AC_DEFUN([AC_CONFIG_CROND_DIR],
-+[
-+	AC_ARG_WITH([crond_dir],
-+	  [AS_HELP_STRING([--with-crond-dir@<:@=DIR@:>@],
-+		[Install system crontabs into DIR.])],
-+	  [],
-+	  [with_crond_dir=yes])
-+	AS_IF([test "x${with_crond_dir}" != "xno"],
-+	  [
-+		AS_IF([test "x${with_crond_dir}" = "xyes"],
-+		  [
-+			AS_IF([test -d "/etc/cron.d"],
-+			  [with_crond_dir="/etc/cron.d"])
-+		  ])
-+		AC_MSG_CHECKING([for system crontab dir])
-+		crond_dir="${with_crond_dir}"
-+		AS_IF([test -n "${crond_dir}"],
-+		  [
-+			AC_MSG_RESULT(${crond_dir})
-+			have_crond="yes"
-+		  ],
-+		  [
-+			AC_MSG_RESULT(no)
-+			have_crond="no"
-+		  ])
-+	  ],
-+	  [
-+		have_crond="disabled"
-+	  ])
-+	AC_SUBST(have_crond)
-+	AC_SUBST(crond_dir)
-+])
+diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
+index 4c394a5..ce5d876 100644
+--- a/man/man8/xfs_scrub.8
++++ b/man/man8/xfs_scrub.8
+@@ -114,9 +114,27 @@ Instructing the underlying storage to discard unused extents via the
+ .B FITRIM
+ ioctl.
+ .SH REPAIRS
+-This program currently does not support making any repairs.
+-Corruptions can only be fixed by unmounting the filesystem and running
+-.BR xfs_repair (8).
++Repairs are performed by calling into the kernel.
++This limits the scope of repair activities to rebuilding primary data
++structures from secondary data structures, or secondary structures from
++primary structures.
++The existence of secondary data structures may require features that can
++only be turned on from
++.BR mkfs.xfs (8).
++If errors cannot be repaired, the filesystem must be
++unmounted and
++.BR xfs_repair (8)
++run.
++Repairs supported by the kernel include, but are not limited to:
++.IP \[bu] 2
++Reconstructing extent allocation data from the reverse mapping data.
++.IP \[bu]
++Reconstructing reverse mapping data from primary extent allocation data.
++.IP \[bu]
++Scheduling a quotacheck for the next mount.
++.PP
++If corrupt metadata is successfully repaired, this program will log that
++a repair has succeeded instead of a corruption report.
+ .SH EXIT CODE
+ The exit code returned by
+ .B xfs_scrub
+@@ -140,8 +158,5 @@ This program takes advantage of in-kernel scrubbing to verify a given
+ data structure with locks held and can keep the filesystem busy for a
+ long time.
+ The kernel must be new enough to support the SCRUB_METADATA ioctl.
+-.PP
+-If errors are found and cannot be repaired, the filesystem must be
+-unmounted and repaired.
+ .SH SEE ALSO
+ .BR xfs_repair (8).
 diff --git a/scrub/Makefile b/scrub/Makefile
-index ca6dab0..0632794 100644
+index 0632794..8075732 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -15,6 +15,19 @@ LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
- XFS_SCRUB_ALL_PROG = xfs_scrub_all
- XFS_SCRUB_ARGS = -b -n
-+ifeq ($(HAVE_SYSTEMD),yes)
-+INSTALL_SCRUB += install-systemd
-+SYSTEMD_SERVICES = xfs_scrub@.service xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
-+OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
-+endif
-+ifeq ($(HAVE_CROND),yes)
-+INSTALL_SCRUB += install-crond
-+CRONTABS = xfs_scrub_all.cron
-+OPTIONAL_TARGETS += $(CRONTABS)
-+# Don't enable the crontab by default for now
-+CROND_DIR = $(PKG_LIB_DIR)/$(PKG_NAME)
-+endif
-+
- endif	# scrub_prereqs
+@@ -40,6 +40,7 @@ fscounters.h \
+ inodes.h \
+ progress.h \
+ read_verify.h \
++repair.h \
+ scrub.h \
+ spacemap.h \
+ unicrash.h \
+@@ -63,6 +64,7 @@ phase6.c \
+ phase7.c \
+ progress.c \
+ read_verify.c \
++repair.c \
+ scrub.c \
+ spacemap.c \
+ vfs.c \
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 547767b..80931e3 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -47,6 +47,7 @@
+ #include "common.h"
+ #include "disk.h"
+ #include "scrub.h"
++#include "repair.h"
  
- HFILES = \
-@@ -84,7 +97,7 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
- LCFLAGS += -DHAVE_HDIO_GETGEO
- endif
+ /* Phase 1: Find filesystem geometry (and clean up after) */
  
--default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
-+default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
+@@ -68,6 +69,7 @@ bool
+ xfs_cleanup_fs(
+ 	struct scrub_ctx	*ctx)
+ {
++	xfs_action_lists_free(&ctx->action_lists);
+ 	if (ctx->fshandle)
+ 		free_handle(ctx->fshandle, ctx->fshandle_len);
+ 	if (ctx->rtdev)
+@@ -157,6 +159,11 @@ _("Does not appear to be an XFS filesystem!"));
+ 		return false;
+ 	}
  
- xfs_scrub_all: xfs_scrub_all.in
- 	@echo "    [SED]    $@"
-@@ -98,6 +111,27 @@ include $(BUILDRULES)
- 
- install: $(INSTALL_SCRUB)
- 
-+%.service: %.service.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" \
-+		   -e "s|@pkg_lib_dir@|$(PKG_LIB_DIR)|g" \
-+		   -e "s|@pkg_name@|$(PKG_NAME)|g" < $< > $@
-+
-+%.cron: %.cron.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" < $< > $@
-+
-+install-systemd: default $(SYSTEMD_SERVICES)
-+	$(INSTALL) -m 755 -d $(SYSTEMD_SYSTEM_UNIT_DIR)
-+	$(INSTALL) -m 644 $(SYSTEMD_SERVICES) $(SYSTEMD_SYSTEM_UNIT_DIR)
-+	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/$(PKG_NAME)
-+	$(INSTALL) -m 755 xfs_scrub_fail $(PKG_LIB_DIR)/$(PKG_NAME)
-+
-+install-crond: default $(CRONTABS)
-+	$(INSTALL) -m 755 -d $(CROND_DIR)
-+	$(INSTALL) -m 644 $(CRONTABS) $(CROND_DIR)
-+
- install-scrub: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 47e1381..5ab557d 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -118,6 +118,10 @@
-  * XFS_SCRUB_NO_SCSI_VERIFY	-- disable SCSI VERIFY (if present)
-  * XFS_SCRUB_PHASE		-- run only this scrub phase
-  * XFS_SCRUB_THREADS		-- start exactly this number of threads
-+ *
-+ * Available even in non-debug mode:
-+ * SERVICE_MODE			-- compress all error codes to 1 for LSB
-+ *				   service action compliance
-  */
- 
- /* Program name; needed for libfrog error reports. */
-@@ -154,6 +158,12 @@ bool				want_fstrim = true;
- bool				stderr_isatty;
- bool				stdout_isatty;
- 
-+/*
-+ * If we are running as a service, we need to be careful about what
-+ * error codes we return to the calling process.
-+ */
-+static bool			is_service;
-+
- #define SCRUB_RET_SUCCESS	(0)	/* no problems left behind */
- #define SCRUB_RET_CORRUPT	(1)	/* corruption remains on fs */
- #define SCRUB_RET_UNOPTIMIZED	(2)	/* fs could be optimized */
-@@ -624,6 +634,9 @@ _("Only one of the options -n or -y may be specified.\n"));
- 	if (stdout_isatty && !progress_fp)
- 		progress_fp = fdopen(1, "w+");
- 
-+	if (getenv("SERVICE_MODE"))
-+		is_service = true;
-+
- 	/* Find the mount record for the passed-in argument. */
- 	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
- 		fprintf(stderr,
-@@ -729,5 +742,24 @@ _("%s: %llu warnings found.\n"),
- 	free(ctx.blkdev);
- 	free(ctx.mntpoint);
- 
-+	/*
-+	 * If we're being run as a service, the return code must fit the LSB
-+	 * init script action error guidelines, which is to say that we
-+	 * compress all errors to 1 ("generic or unspecified error", LSB 5.0
-+	 * section 22.2) and hope the admin will scan the log for what
-+	 * actually happened.
-+	 *
-+	 * We have to sleep 2 seconds here because journald uses the pid to
-+	 * connect our log messages to the systemd service.  This is critical
-+	 * for capturing all the log messages if the scrub fails, because the
-+	 * fail service uses the service name to gather log messages for the
-+	 * error report.
-+	 */
-+	if (is_service) {
-+		sleep(2);
-+		if (ret != SCRUB_RET_SUCCESS)
-+			return 1;
++	if (!xfs_action_lists_alloc(ctx->geo.agcount, &ctx->action_lists)) {
++		str_error(ctx, ctx->mntpoint, _("Not enough memory."));
++		return false;
 +	}
 +
- 	return ret;
+ 	ctx->agblklog = log2_roundup(ctx->geo.agblocks);
+ 	ctx->blocklog = highbit32(ctx->geo.blocksize);
+ 	ctx->inodelog = highbit32(ctx->geo.inodesize);
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index 32e2752..c6a5a26 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -30,6 +30,7 @@
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "scrub.h"
++#include "repair.h"
+ 
+ /* Phase 2: Check internal metadata. */
+ 
+@@ -42,24 +43,65 @@ xfs_scan_ag_metadata(
+ {
+ 	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	bool				*pmoveon = arg;
++	struct xfs_action_list		alist;
++	struct xfs_action_list		immediate_alist;
++	unsigned long long		broken_primaries;
++	unsigned long long		broken_secondaries;
+ 	bool				moveon;
+ 	char				descr[DESCR_BUFSZ];
+ 
++	xfs_action_list_init(&alist);
++	xfs_action_list_init(&immediate_alist);
+ 	snprintf(descr, DESCR_BUFSZ, _("AG %u"), agno);
+ 
+ 	/*
+ 	 * First we scrub and fix the AG headers, because we need
+ 	 * them to work well enough to check the AG btrees.
+ 	 */
+-	moveon = xfs_scrub_ag_headers(ctx, agno);
++	moveon = xfs_scrub_ag_headers(ctx, agno, &alist);
++	if (!moveon)
++		goto err;
++
++	/* Repair header damage. */
++	moveon = xfs_action_list_process_or_defer(ctx, agno, &alist);
+ 	if (!moveon)
+ 		goto err;
+ 
+ 	/* Now scrub the AG btrees. */
+-	moveon = xfs_scrub_ag_metadata(ctx, agno);
++	moveon = xfs_scrub_ag_metadata(ctx, agno, &alist);
++	if (!moveon)
++		goto err;
++
++	/*
++	 * Figure out if we need to perform early fixing.  The only
++	 * reason we need to do this is if the inobt is broken, which
++	 * prevents phase 3 (inode scan) from running.  We can rebuild
++	 * the inobt from rmapbt data, but if the rmapbt is broken even
++	 * at this early phase then we are sunk.
++	 */
++	broken_secondaries = 0;
++	broken_primaries = 0;
++	xfs_action_list_find_mustfix(&alist, &immediate_alist,
++			&broken_primaries, &broken_secondaries);
++	if (broken_secondaries && !debug_tweak_on("XFS_SCRUB_FORCE_REPAIR")) {
++		if (broken_primaries)
++			str_info(ctx, descr,
++_("Corrupt primary and secondary block mapping metadata."));
++		else
++			str_info(ctx, descr,
++_("Corrupt secondary block mapping metadata."));
++		str_info(ctx, descr,
++_("Filesystem might not be repairable."));
++	}
++
++	/* Repair (inode) btree damage. */
++	moveon = xfs_action_list_process_or_defer(ctx, agno, &immediate_alist);
+ 	if (!moveon)
+ 		goto err;
+ 
++	/* Everything else gets fixed during phase 4. */
++	xfs_action_list_defer(ctx, agno, &alist);
++
+ 	return;
+ err:
+ 	*pmoveon = false;
+@@ -74,11 +116,15 @@ xfs_scan_fs_metadata(
+ {
+ 	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	bool				*pmoveon = arg;
++	struct xfs_action_list		alist;
+ 	bool				moveon;
+ 
+-	moveon = xfs_scrub_fs_metadata(ctx);
++	xfs_action_list_init(&alist);
++	moveon = xfs_scrub_fs_metadata(ctx, &alist);
+ 	if (!moveon)
+ 		*pmoveon = false;
++
++	xfs_action_list_defer(ctx, agno, &alist);
  }
-diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
+ 
+ /* Scan all filesystem metadata. */
+@@ -86,6 +132,7 @@ bool
+ xfs_scan_metadata(
+ 	struct scrub_ctx	*ctx)
+ {
++	struct xfs_action_list	alist;
+ 	struct workqueue	wq;
+ 	xfs_agnumber_t		agno;
+ 	bool			moveon = true;
+@@ -103,7 +150,11 @@ xfs_scan_metadata(
+ 	 * upgrades (followed by a full scrub), do that before we launch
+ 	 * anything else.
+ 	 */
+-	moveon = xfs_scrub_primary_super(ctx);
++	xfs_action_list_init(&alist);
++	moveon = xfs_scrub_primary_super(ctx, &alist);
++	if (!moveon)
++		return moveon;
++	moveon = xfs_action_list_process_or_defer(ctx, 0, &alist);
+ 	if (!moveon)
+ 		return moveon;
+ 
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index f4117b0..fdf7d5a 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -33,6 +33,7 @@
+ #include "inodes.h"
+ #include "progress.h"
+ #include "scrub.h"
++#include "repair.h"
+ 
+ /* Phase 3: Scan all inodes. */
+ 
+@@ -45,10 +46,11 @@ static bool
+ xfs_scrub_fd(
+ 	struct scrub_ctx	*ctx,
+ 	bool			(*fn)(struct scrub_ctx *, uint64_t,
+-				      uint32_t, int),
+-	struct xfs_bstat	*bs)
++				      uint32_t, int, struct xfs_action_list *),
++	struct xfs_bstat	*bs,
++	struct xfs_action_list	*alist)
+ {
+-	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt_fd);
++	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt_fd, alist);
+ }
+ 
+ struct scrub_inode_ctx {
+@@ -64,11 +66,15 @@ xfs_scrub_inode(
+ 	struct xfs_bstat	*bstat,
+ 	void			*arg)
+ {
++	struct xfs_action_list	alist;
+ 	struct scrub_inode_ctx	*ictx = arg;
+ 	struct ptcounter	*icount = ictx->icount;
++	xfs_agnumber_t		agno;
+ 	bool			moveon = true;
+ 	int			fd = -1;
+ 
++	xfs_action_list_init(&alist);
++	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
+ 	background_sleep();
+ 
+ 	/* Try to open the inode to pin it. */
+@@ -80,45 +86,59 @@ xfs_scrub_inode(
+ 	}
+ 
+ 	/* Scrub the inode. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat);
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat, &alist);
++	if (!moveon)
++		goto out;
++
++	moveon = xfs_action_list_process_or_defer(ctx, agno, &alist);
+ 	if (!moveon)
+ 		goto out;
+ 
+ 	/* Scrub all block mappings. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat);
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat, &alist);
+ 	if (!moveon)
+ 		goto out;
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat);
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat, &alist);
+ 	if (!moveon)
+ 		goto out;
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat);
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat, &alist);
++	if (!moveon)
++		goto out;
++
++	moveon = xfs_action_list_process_or_defer(ctx, agno, &alist);
+ 	if (!moveon)
+ 		goto out;
+ 
+ 	if (S_ISLNK(bstat->bs_mode)) {
+ 		/* Check symlink contents. */
+ 		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino,
+-				bstat->bs_gen, ctx->mnt_fd);
++				bstat->bs_gen, ctx->mnt_fd, &alist);
+ 	} else if (S_ISDIR(bstat->bs_mode)) {
+ 		/* Check the directory entries. */
+-		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat);
++		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat, &alist);
+ 	}
+ 	if (!moveon)
+ 		goto out;
+ 
+ 	/* Check all the extended attributes. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat);
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat, &alist);
+ 	if (!moveon)
+ 		goto out;
+ 
+ 	/* Check parent pointers. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat);
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat, &alist);
++	if (!moveon)
++		goto out;
++
++	/* Try to repair the file while it's open. */
++	moveon = xfs_action_list_process_or_defer(ctx, agno, &alist);
+ 	if (!moveon)
+ 		goto out;
+ 
+ out:
+ 	ptcounter_add(icount, 1);
+ 	progress_add(1);
++	xfs_action_list_defer(ctx, agno, &alist);
+ 	if (fd >= 0)
+ 		close(fd);
+ 	if (!moveon)
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 3100d75..c7fcc50 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -33,16 +33,82 @@
+ #include "common.h"
+ #include "progress.h"
+ #include "scrub.h"
++#include "repair.h"
+ #include "vfs.h"
+ 
+ /* Phase 4: Repair filesystem. */
+ 
++/* Fix all the problems in our per-AG list. */
++static void
++xfs_repair_ag(
++	struct workqueue		*wq,
++	xfs_agnumber_t			agno,
++	void				*priv)
++{
++	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
++	bool				*pmoveon = priv;
++	struct xfs_action_list		*alist;
++	size_t				unfixed;
++	size_t				new_unfixed;
++	unsigned int			flags = 0;
++	bool				moveon;
++
++	alist = &ctx->action_lists[agno];
++	unfixed = xfs_action_list_length(alist);
++
++	/* Repair anything broken until we fail to make progress. */
++	do {
++		moveon = xfs_action_list_process(ctx, ctx->mnt_fd, alist, flags);
++		if (!moveon) {
++			*pmoveon = false;
++			return;
++		}
++		new_unfixed = xfs_action_list_length(alist);
++		if (new_unfixed == unfixed)
++			break;
++		unfixed = new_unfixed;
++	} while (unfixed > 0 && *pmoveon);
++
++	if (!*pmoveon)
++		return;
++
++	/* Try once more, but this time complain if we can't fix things. */
++	flags |= ALP_NOFIX_COMPLAIN;
++	moveon = xfs_action_list_process(ctx, ctx->mnt_fd, alist, flags);
++	if (!moveon)
++		*pmoveon = false;
++}
++
+ /* Process all the action items. */
+ static bool
+ xfs_process_action_items(
+ 	struct scrub_ctx		*ctx)
+ {
++	struct workqueue		wq;
++	xfs_agnumber_t			agno;
+ 	bool				moveon = true;
++	int				ret;
++
++	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
++			scrub_nproc_workqueue(ctx));
++	if (ret) {
++		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		return false;
++	}
++	for (agno = 0; agno < ctx->geo.agcount; agno++) {
++		if (xfs_action_list_length(&ctx->action_lists[agno]) > 0) {
++			ret = workqueue_add(&wq, xfs_repair_ag, agno, &moveon);
++			if (ret) {
++				moveon = false;
++				str_error(ctx, ctx->mntpoint,
++_("Could not queue repair work."));
++				break;
++			}
++		}
++		if (!moveon)
++			break;
++	}
++	workqueue_destroy(&wq);
+ 
+ 	pthread_mutex_lock(&ctx->lock);
+ 	if (moveon && ctx->errors_found == 0 && want_fstrim) {
+@@ -89,8 +155,14 @@ xfs_estimate_repair_work(
+ 	unsigned int		*nr_threads,
+ 	int			*rshift)
+ {
+-	*items = 1;
+-	*nr_threads = 1;
++	xfs_agnumber_t		agno;
++	size_t			need_fixing = 0;
++
++	for (agno = 0; agno < ctx->geo.agcount; agno++)
++		need_fixing += xfs_action_list_length(&ctx->action_lists[agno]);
++	need_fixing++;
++	*items = need_fixing;
++	*nr_threads = scrub_nproc(ctx) + 1;
+ 	*rshift = 0;
+ 	return true;
+ }
+diff --git a/scrub/repair.c b/scrub/repair.c
 new file mode 100644
-index 0000000..a868a27
+index 0000000..ff43296
 --- /dev/null
-+++ b/scrub/xfs_scrub@.service.in
-@@ -0,0 +1,19 @@
-+[Unit]
-+Description=Online XFS Metadata Check for %I
-+OnFailure=xfs_scrub_fail@%i.service
++++ b/scrub/repair.c
+@@ -0,0 +1,298 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <stdlib.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "list.h"
++#include "path.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "scrub.h"
++#include "repair.h"
 +
-+[Service]
-+Type=oneshot
-+WorkingDirectory=%I
-+PrivateNetwork=true
-+ProtectSystem=full
-+ProtectHome=read-only
-+PrivateTmp=yes
-+AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-+NoNewPrivileges=yes
-+User=nobody
-+IOSchedulingClass=idle
-+CPUSchedulingPolicy=idle
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub @scrub_args@ %I
-+SyslogIdentifier=%N
-diff --git a/scrub/xfs_scrub_all.cron.in b/scrub/xfs_scrub_all.cron.in
++/*
++ * Prioritize action items in order of how long we can wait.
++ * 0 = do it now, 10000 = do it later.
++ *
++ * To minimize the amount of repair work, we want to prioritize metadata
++ * objects by perceived corruptness.  If CORRUPT is set, the fields are
++ * just plain bad; try fixing that first.  Otherwise if XCORRUPT is set,
++ * the fields could be bad, but the xref data could also be bad; we'll
++ * try fixing that next.  Finally, if XFAIL is set, some other metadata
++ * structure failed validation during xref, so we'll recheck this
++ * metadata last since it was probably fine.
++ *
++ * For metadata that lie in the critical path of checking other metadata
++ * (superblock, AG{F,I,FL}, inobt) we scrub and fix those things before
++ * we even get to handling their dependencies, so things should progress
++ * in order.
++ */
++
++/* Sort action items in severity order. */
++static int
++PRIO(
++	struct action_item	*aitem,
++	int			order)
++{
++	if (aitem->flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return order;
++	else if (aitem->flags & XFS_SCRUB_OFLAG_XCORRUPT)
++		return 100 + order;
++	else if (aitem->flags & XFS_SCRUB_OFLAG_XFAIL)
++		return 200 + order;
++	else if (aitem->flags & XFS_SCRUB_OFLAG_PREEN)
++		return 300 + order;
++	abort();
++}
++
++/* Sort the repair items in dependency order. */
++static int
++xfs_action_item_priority(
++	struct action_item	*aitem)
++{
++	switch (aitem->type) {
++	case XFS_SCRUB_TYPE_SB:
++	case XFS_SCRUB_TYPE_AGF:
++	case XFS_SCRUB_TYPE_AGFL:
++	case XFS_SCRUB_TYPE_AGI:
++	case XFS_SCRUB_TYPE_BNOBT:
++	case XFS_SCRUB_TYPE_CNTBT:
++	case XFS_SCRUB_TYPE_INOBT:
++	case XFS_SCRUB_TYPE_FINOBT:
++	case XFS_SCRUB_TYPE_REFCNTBT:
++	case XFS_SCRUB_TYPE_RMAPBT:
++	case XFS_SCRUB_TYPE_INODE:
++	case XFS_SCRUB_TYPE_BMBTD:
++	case XFS_SCRUB_TYPE_BMBTA:
++	case XFS_SCRUB_TYPE_BMBTC:
++		return PRIO(aitem, aitem->type - 1);
++	case XFS_SCRUB_TYPE_DIR:
++	case XFS_SCRUB_TYPE_XATTR:
++	case XFS_SCRUB_TYPE_SYMLINK:
++	case XFS_SCRUB_TYPE_PARENT:
++		return PRIO(aitem, XFS_SCRUB_TYPE_DIR);
++	case XFS_SCRUB_TYPE_RTBITMAP:
++	case XFS_SCRUB_TYPE_RTSUM:
++		return PRIO(aitem, XFS_SCRUB_TYPE_RTBITMAP);
++	case XFS_SCRUB_TYPE_UQUOTA:
++	case XFS_SCRUB_TYPE_GQUOTA:
++	case XFS_SCRUB_TYPE_PQUOTA:
++		return PRIO(aitem, XFS_SCRUB_TYPE_UQUOTA);
++	}
++	abort();
++}
++
++/* Make sure that btrees get repaired before headers. */
++static int
++xfs_action_item_compare(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct action_item		*ra;
++	struct action_item		*rb;
++
++	ra = container_of(a, struct action_item, list);
++	rb = container_of(b, struct action_item, list);
++
++	return xfs_action_item_priority(ra) - xfs_action_item_priority(rb);
++}
++
++/*
++ * Figure out which AG metadata must be fixed before we can move on
++ * to the inode scan.
++ */
++void
++xfs_action_list_find_mustfix(
++	struct xfs_action_list		*alist,
++	struct xfs_action_list		*immediate_alist,
++	unsigned long long		*broken_primaries,
++	unsigned long long		*broken_secondaries)
++{
++	struct action_item		*n;
++	struct action_item		*aitem;
++
++	list_for_each_entry_safe(aitem, n, &alist->list, list) {
++		switch (aitem->type) {
++		case XFS_SCRUB_TYPE_RMAPBT:
++			(*broken_secondaries)++;
++			break;
++		case XFS_SCRUB_TYPE_FINOBT:
++		case XFS_SCRUB_TYPE_INOBT:
++			alist->nr--;
++			list_move_tail(&aitem->list, &immediate_alist->list);
++			immediate_alist->nr++;
++			/* fall through */
++		case XFS_SCRUB_TYPE_BNOBT:
++		case XFS_SCRUB_TYPE_CNTBT:
++		case XFS_SCRUB_TYPE_REFCNTBT:
++			(*broken_primaries)++;
++			break;
++		default:
++			abort();
++			break;
++		}
++	}
++}
++
++/* Allocate a certain number of repair lists for the scrub context. */
++bool
++xfs_action_lists_alloc(
++	size_t				nr,
++	struct xfs_action_list		**listsp)
++{
++	struct xfs_action_list		*lists;
++	xfs_agnumber_t			agno;
++
++	lists = calloc(nr, sizeof(struct xfs_action_list));
++	if (!lists)
++		return false;
++
++	for (agno = 0; agno < nr; agno++)
++		xfs_action_list_init(&lists[agno]);
++	*listsp = lists;
++
++	return true;
++}
++
++/* Free the repair lists. */
++void
++xfs_action_lists_free(
++	struct xfs_action_list		**listsp)
++{
++	free(*listsp);
++	*listsp = NULL;
++}
++
++/* Initialize repair list */
++void
++xfs_action_list_init(
++	struct xfs_action_list		*alist)
++{
++	INIT_LIST_HEAD(&alist->list);
++	alist->nr = 0;
++	alist->sorted = false;
++}
++
++/* Number of repairs in this list. */
++size_t
++xfs_action_list_length(
++	struct xfs_action_list		*alist)
++{
++	return alist->nr;
++};
++
++/* Add to the list of repairs. */
++void
++xfs_action_list_add(
++	struct xfs_action_list		*alist,
++	struct action_item		*aitem)
++{
++	list_add_tail(&aitem->list, &alist->list);
++	alist->nr++;
++	alist->sorted = false;
++}
++
++/* Splice two repair lists. */
++void
++xfs_action_list_splice(
++	struct xfs_action_list		*dest,
++	struct xfs_action_list		*src)
++{
++	if (src->nr == 0)
++		return;
++
++	list_splice_tail_init(&src->list, &dest->list);
++	dest->nr += src->nr;
++	src->nr = 0;
++	dest->sorted = false;
++}
++
++/* Repair everything on this list. */
++bool
++xfs_action_list_process(
++	struct scrub_ctx		*ctx,
++	int				fd,
++	struct xfs_action_list		*alist,
++	unsigned int			repair_flags)
++{
++	struct action_item		*aitem;
++	struct action_item		*n;
++	enum check_outcome		fix;
++
++	if (!alist->sorted) {
++		list_sort(NULL, &alist->list, xfs_action_item_compare);
++		alist->sorted = true;
++	}
++
++	list_for_each_entry_safe(aitem, n, &alist->list, list) {
++		fix = xfs_repair_metadata(ctx, fd, aitem, repair_flags);
++		switch (fix) {
++		case CHECK_DONE:
++			alist->nr--;
++			list_del(&aitem->list);
++			free(aitem);
++			continue;
++		case CHECK_ABORT:
++			return false;
++		case CHECK_RETRY:
++			continue;
++		case CHECK_REPAIR:
++			abort();
++		}
++	}
++
++	return !xfs_scrub_excessive_errors(ctx);
++}
++
++/* Defer all the repairs until phase 4. */
++void
++xfs_action_list_defer(
++	struct scrub_ctx		*ctx,
++	xfs_agnumber_t			agno,
++	struct xfs_action_list		*alist)
++{
++	ASSERT(agno < ctx->geo.agcount);
++
++	xfs_action_list_splice(&ctx->action_lists[agno], alist);
++}
++
++/* Run actions now and defer unfinished items for later. */
++bool
++xfs_action_list_process_or_defer(
++	struct scrub_ctx		*ctx,
++	xfs_agnumber_t			agno,
++	struct xfs_action_list		*alist)
++{
++	bool				moveon;
++
++	moveon = xfs_action_list_process(ctx, ctx->mnt_fd, alist, ALP_REPAIR_ONLY);
++	if (!moveon)
++		return moveon;
++
++	xfs_action_list_defer(ctx, agno, alist);
++	return true;
++}
+diff --git a/scrub/repair.h b/scrub/repair.h
 new file mode 100644
-index 0000000..3dea929
+index 0000000..ded6f20
 --- /dev/null
-+++ b/scrub/xfs_scrub_all.cron.in
-@@ -0,0 +1 @@
-+10 3 * * 0 root test -e /run/systemd/system || @sbindir@/xfs_scrub_all
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 7738644..fff05da 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -25,10 +25,19 @@ import json
- import threading
- import time
- import sys
-+import os
++++ b/scrub/repair.h
+@@ -0,0 +1,55 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef XFS_SCRUB_REPAIR_H_
++#define XFS_SCRUB_REPAIR_H_
++
++struct xfs_action_list {
++	struct list_head	list;
++	size_t			nr;
++	bool			sorted;
++};
++
++bool xfs_action_lists_alloc(size_t nr, struct xfs_action_list **listsp);
++void xfs_action_lists_free(struct xfs_action_list **listsp);
++
++void xfs_action_list_init(struct xfs_action_list *alist);
++size_t xfs_action_list_length(struct xfs_action_list *alist);
++void xfs_action_list_add(struct xfs_action_list *dest,
++		struct action_item *item);
++void xfs_action_list_splice(struct xfs_action_list *dest,
++		struct xfs_action_list *src);
++
++void xfs_action_list_find_mustfix(struct xfs_action_list *actions,
++		struct xfs_action_list *immediate_alist,
++		unsigned long long *broken_primaries,
++		unsigned long long *broken_secondaries);
++
++/* Passed through to xfs_repair_metadata() */
++#define ALP_REPAIR_ONLY	(XRM_REPAIR_ONLY)
++#define ALP_NOFIX_COMPLAIN	(XRM_NOFIX_COMPLAIN)
++
++bool xfs_action_list_process(struct scrub_ctx *ctx, int fd,
++		struct xfs_action_list *alist, unsigned int repair_flags);
++void xfs_action_list_defer(struct scrub_ctx *ctx, xfs_agnumber_t agno,
++		struct xfs_action_list *alist);
++bool xfs_action_list_process_or_defer(struct scrub_ctx *ctx, xfs_agnumber_t agno,
++		struct xfs_action_list *alist);
++
++#endif /* XFS_SCRUB_REPAIR_H_ */
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 0dbe11c..e61efa3 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -35,6 +35,7 @@
+ #include "progress.h"
+ #include "scrub.h"
+ #include "xfs_errortag.h"
++#include "repair.h"
  
- retcode = 0
- terminate = False
+ /* Online scrub and repair wrappers. */
  
-+def DEVNULL():
-+	'''Return /dev/null in subprocess writable format.'''
-+	try:
-+		from subprocess import DEVNULL
-+		return DEVNULL
-+	except ImportError:
-+		return open(os.devnull, 'wb')
-+
- def find_mounts():
- 	'''Map mountpoints to physical disks.'''
+@@ -321,12 +322,47 @@ _("Optimizations of %s are possible."), scrubbers[i].name);
+ 	}
+ }
  
-@@ -55,6 +64,13 @@ def find_mounts():
- 				fs[mnt] = set([lastdisk])
- 	return fs
++/* Save a scrub context for later repairs. */
++bool
++xfs_scrub_save_repair(
++	struct scrub_ctx		*ctx,
++	struct xfs_action_list		*alist,
++	struct xfs_scrub_metadata	*meta)
++{
++	struct action_item		*aitem;
++
++	/* Schedule this item for later repairs. */
++	aitem = malloc(sizeof(struct action_item));
++	if (!aitem) {
++		str_errno(ctx, _("repair list"));
++		return false;
++	}
++	aitem->type = meta->sm_type;
++	aitem->flags = meta->sm_flags;
++	switch (scrubbers[meta->sm_type].type) {
++	case ST_AGHEADER:
++	case ST_PERAG:
++		aitem->agno = meta->sm_agno;
++		break;
++	case ST_INODE:
++		aitem->ino = meta->sm_ino;
++		aitem->gen = meta->sm_gen;
++		break;
++	default:
++		break;
++	}
++
++	xfs_action_list_add(alist, aitem);
++	return true;
++}
++
+ /* Scrub metadata, saving corruption reports for later. */
+ static bool
+ xfs_scrub_metadata(
+ 	struct scrub_ctx		*ctx,
+ 	enum scrub_type			scrub_type,
+-	xfs_agnumber_t			agno)
++	xfs_agnumber_t			agno,
++	struct xfs_action_list		*alist)
+ {
+ 	struct xfs_scrub_metadata	meta = {0};
+ 	const struct scrub_descr	*sc;
+@@ -350,6 +386,8 @@ xfs_scrub_metadata(
+ 		case CHECK_ABORT:
+ 			return false;
+ 		case CHECK_REPAIR:
++			if (!xfs_scrub_save_repair(ctx, alist, &meta))
++				return false;
+ 			/* fall through */
+ 		case CHECK_DONE:
+ 			continue;
+@@ -369,7 +407,8 @@ xfs_scrub_metadata(
+  */
+ bool
+ xfs_scrub_primary_super(
+-	struct scrub_ctx		*ctx)
++	struct scrub_ctx		*ctx,
++	struct xfs_action_list		*alist)
+ {
+ 	struct xfs_scrub_metadata	meta = {
+ 		.sm_type = XFS_SCRUB_TYPE_SB,
+@@ -382,6 +421,8 @@ xfs_scrub_primary_super(
+ 	case CHECK_ABORT:
+ 		return false;
+ 	case CHECK_REPAIR:
++		if (!xfs_scrub_save_repair(ctx, alist, &meta))
++			return false;
+ 		/* fall through */
+ 	case CHECK_DONE:
+ 		return true;
+@@ -397,26 +438,29 @@ xfs_scrub_primary_super(
+ bool
+ xfs_scrub_ag_headers(
+ 	struct scrub_ctx		*ctx,
+-	xfs_agnumber_t			agno)
++	xfs_agnumber_t			agno,
++	struct xfs_action_list		*alist)
+ {
+-	return xfs_scrub_metadata(ctx, ST_AGHEADER, agno);
++	return xfs_scrub_metadata(ctx, ST_AGHEADER, agno, alist);
+ }
  
-+def kill_systemd(unit, proc):
-+	'''Kill systemd unit.'''
-+	proc.terminate()
-+	cmd=['systemctl', 'stop', unit]
-+	x = subprocess.Popen(cmd)
-+	x.wait()
-+
- def run_killable(cmd, stdout, killfuncs, kill_fn):
- 	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
- 	try:
-@@ -81,6 +97,19 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 		if terminate:
- 			return
+ /* Scrub each AG's metadata btrees. */
+ bool
+ xfs_scrub_ag_metadata(
+ 	struct scrub_ctx		*ctx,
+-	xfs_agnumber_t			agno)
++	xfs_agnumber_t			agno,
++	struct xfs_action_list		*alist)
+ {
+-	return xfs_scrub_metadata(ctx, ST_PERAG, agno);
++	return xfs_scrub_metadata(ctx, ST_PERAG, agno, alist);
+ }
  
-+		# Try it the systemd way
-+		cmd=['systemctl', 'start', 'xfs_scrub@%s' % mnt]
-+		ret = run_killable(cmd, DEVNULL(), killfuncs, \
-+				lambda proc: kill_systemd('xfs_scrub@%s' % mnt, proc))
-+		if ret == 0 or ret == 1:
-+			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
-+			sys.stdout.flush()
-+			retcode |= ret
-+			return
-+
-+		if terminate:
-+			return
-+
- 		# Invoke xfs_scrub manually
- 		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
- 		ret = run_killable(cmd, None, killfuncs, \
-@@ -112,6 +141,17 @@ def main():
+ /* Scrub whole-FS metadata btrees. */
+ bool
+ xfs_scrub_fs_metadata(
+-	struct scrub_ctx		*ctx)
++	struct scrub_ctx		*ctx,
++	struct xfs_action_list		*alist)
+ {
+-	return xfs_scrub_metadata(ctx, ST_FS, 0);
++	return xfs_scrub_metadata(ctx, ST_FS, 0, alist);
+ }
  
- 	fs = find_mounts()
+ /* How many items do we have to check? */
+@@ -452,7 +496,8 @@ __xfs_scrub_file(
+ 	uint64_t			ino,
+ 	uint32_t			gen,
+ 	int				fd,
+-	unsigned int			type)
++	unsigned int			type,
++	struct xfs_action_list		*alist)
+ {
+ 	struct xfs_scrub_metadata	meta = {0};
+ 	enum check_outcome		fix;
+@@ -471,7 +516,7 @@ __xfs_scrub_file(
+ 	if (fix == CHECK_DONE)
+ 		return true;
  
-+	# Tail the journal if we ourselves aren't a service...
-+	journalthread = None
-+	if 'SERVICE_MODE' not in os.environ:
-+		try:
-+			cmd=['journalctl', '--no-pager', '-q', '-S', 'now', \
-+					'-f', '-u', 'xfs_scrub@*', '-o', \
-+					'cat']
-+			journalthread = subprocess.Popen(cmd)
-+		except:
-+			pass
-+
- 	# Schedule scrub jobs...
- 	running_devs = set()
- 	killfuncs = set()
-@@ -148,6 +188,15 @@ def main():
- 			fs = []
- 		cond.release()
+-	return true;
++	return xfs_scrub_save_repair(ctx, alist, &meta);
+ }
  
-+	if journalthread is not None:
-+		journalthread.terminate()
-+
-+	# See the service mode comments in xfs_scrub.c for why we do this.
-+	if 'SERVICE_MODE' in os.environ:
-+		time.sleep(2)
-+		if retcode != 0:
-+			retcode = 1
-+
- 	sys.exit(retcode)
+ bool
+@@ -479,9 +524,10 @@ xfs_scrub_inode_fields(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_INODE);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_INODE, alist);
+ }
  
- if __name__ == '__main__':
-diff --git a/scrub/xfs_scrub_all.service.in b/scrub/xfs_scrub_all.service.in
-new file mode 100644
-index 0000000..2831691
---- /dev/null
-+++ b/scrub/xfs_scrub_all.service.in
-@@ -0,0 +1,9 @@
-+[Unit]
-+Description=Online XFS Metadata Check for All Filesystems
-+ConditionACPower=true
+ bool
+@@ -489,9 +535,10 @@ xfs_scrub_data_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTD);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTD, alist);
+ }
+ 
+ bool
+@@ -499,9 +546,10 @@ xfs_scrub_attr_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTA);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTA, alist);
+ }
+ 
+ bool
+@@ -509,9 +557,10 @@ xfs_scrub_cow_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTC);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTC, alist);
+ }
+ 
+ bool
+@@ -519,9 +568,10 @@ xfs_scrub_dir(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_DIR);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_DIR, alist);
+ }
+ 
+ bool
+@@ -529,9 +579,10 @@ xfs_scrub_attr(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_XATTR);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_XATTR, alist);
+ }
+ 
+ bool
+@@ -539,9 +590,10 @@ xfs_scrub_symlink(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_SYMLINK);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_SYMLINK, alist);
+ }
+ 
+ bool
+@@ -549,9 +601,10 @@ xfs_scrub_parent(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd)
++	int			fd,
++	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_PARENT);
++	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_PARENT, alist);
+ }
+ 
+ /* Test the availability of a kernel scrub command. */
+@@ -668,7 +721,7 @@ enum check_outcome
+ xfs_repair_metadata(
+ 	struct scrub_ctx		*ctx,
+ 	int				fd,
+-	struct repair_item		*ri,
++	struct action_item		*aitem,
+ 	unsigned int			repair_flags)
+ {
+ 	char				buf[DESCR_BUFSZ];
+@@ -676,18 +729,18 @@ xfs_repair_metadata(
+ 	struct xfs_scrub_metadata	oldm;
+ 	int				error;
+ 
+-	assert(ri->type < XFS_SCRUB_TYPE_NR);
++	assert(aitem->type < XFS_SCRUB_TYPE_NR);
+ 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
+-	meta.sm_type = ri->type;
+-	meta.sm_flags = ri->flags | XFS_SCRUB_IFLAG_REPAIR;
+-	switch (scrubbers[ri->type].type) {
++	meta.sm_type = aitem->type;
++	meta.sm_flags = aitem->flags | XFS_SCRUB_IFLAG_REPAIR;
++	switch (scrubbers[aitem->type].type) {
+ 	case ST_AGHEADER:
+ 	case ST_PERAG:
+-		meta.sm_agno = ri->agno;
++		meta.sm_agno = aitem->agno;
+ 		break;
+ 	case ST_INODE:
+-		meta.sm_ino = ri->ino;
+-		meta.sm_gen = ri->gen;
++		meta.sm_ino = aitem->ino;
++		meta.sm_gen = aitem->gen;
+ 		break;
+ 	default:
+ 		break;
+@@ -769,7 +822,7 @@ _("Read-only filesystem; cannot make changes."));
+ 		xfs_scrub_warn_incomplete_scrub(ctx, buf, &meta);
+ 	if (needs_repair(&meta)) {
+ 		/* Still broken, try again or fix offline. */
+-		if (repair_flags & XRM_NOFIX_COMPLAIN)
++		if ((repair_flags & XRM_NOFIX_COMPLAIN) || debug)
+ 			str_error(ctx, buf,
+ _("Repair unsuccessful; offline repair required."));
+ 	} else {
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 1c44fba..a719571 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -28,11 +28,19 @@ enum check_outcome {
+ 	CHECK_RETRY,	/* repair failed, try again later */
+ };
+ 
++struct action_item;
 +
-+[Service]
-+Type=oneshot
-+Environment=SERVICE_MODE=1
-+ExecStart=@sbindir@/xfs_scrub_all
-+SyslogIdentifier=xfs_scrub_all
-diff --git a/scrub/xfs_scrub_all.timer b/scrub/xfs_scrub_all.timer
-new file mode 100644
-index 0000000..2e4a33b
---- /dev/null
-+++ b/scrub/xfs_scrub_all.timer
-@@ -0,0 +1,11 @@
-+[Unit]
-+Description=Periodic XFS Online Metadata Check for All Filesystems
+ void xfs_scrub_report_preen_triggers(struct scrub_ctx *ctx);
+-bool xfs_scrub_primary_super(struct scrub_ctx *ctx);
+-bool xfs_scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno);
+-bool xfs_scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno);
+-bool xfs_scrub_fs_metadata(struct scrub_ctx *ctx);
++bool xfs_scrub_primary_super(struct scrub_ctx *ctx,
++		struct xfs_action_list *alist);
++bool xfs_scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
++		struct xfs_action_list *alist);
++bool xfs_scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
++		struct xfs_action_list *alist);
++bool xfs_scrub_fs_metadata(struct scrub_ctx *ctx,
++		struct xfs_action_list *alist);
++enum check_outcome xfs_repair_metadata(struct scrub_ctx *ctx, int fd,
++		struct action_item *aitem, unsigned int flags);
+ 
+ bool xfs_can_scrub_fs_metadata(struct scrub_ctx *ctx);
+ bool xfs_can_scrub_inode(struct scrub_ctx *ctx);
+@@ -44,24 +52,24 @@ bool xfs_can_scrub_parent(struct scrub_ctx *ctx);
+ bool xfs_can_repair(struct scrub_ctx *ctx);
+ 
+ bool xfs_scrub_inode_fields(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ bool xfs_scrub_data_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ bool xfs_scrub_attr_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ bool xfs_scrub_cow_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ bool xfs_scrub_dir(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ bool xfs_scrub_attr(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ bool xfs_scrub_symlink(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ bool xfs_scrub_parent(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd);
++		int fd, struct xfs_action_list *alist);
+ 
+ /* Repair parameters are the scrub inputs and retry count. */
+-struct repair_item {
++struct action_item {
+ 	struct list_head	list;
+ 	__u64			ino;
+ 	__u32			type;
+@@ -77,6 +85,6 @@ struct repair_item {
+ #define XRM_NOFIX_COMPLAIN	(1U << 1)
+ 
+ enum check_outcome xfs_repair_metadata(struct scrub_ctx *ctx, int fd,
+-		struct repair_item *ri, unsigned int repair_flags);
++		struct action_item *aitem, unsigned int repair_flags);
+ 
+ #endif /* XFS_SCRUB_SCRUB_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 5ab557d..c83f4a2 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -88,6 +88,15 @@
+  * the previous two phases are retried here; if there are uncorrectable
+  * errors, xfs_scrub stops here.
+  *
++ * To perform the actual repairs (or optimizations), we iterate all the
++ * items on the per-AG action item list and ask the kernel to repair
++ * them.  Items which are successfully repaired are removed from the
++ * list.  If an item is not acted upon successfully (or the kernel asks us
++ * to try again), we retry the actions until there is nothing left to
++ * fix or we fail to make forward progress.  In that event, the
++ * unfinished items are recorded as errors.  If there are no errors at
++ * this point, we call FSTRIM on the filesystem.
++ *
+  * The next phase is the "check directory tree" phase.  In this phase,
+  * every directory is opened (via file handle) to confirm that each
+  * directory is connected to the root.  Directory entries are checked
+@@ -711,6 +720,19 @@ _("%s: Not a XFS mount point or block device.\n"),
+ 		ctx.runtime_errors++;
+ 
+ out:
++	if (ctx.repairs && ctx.preens)
++		fprintf(stdout,
++_("%s: %llu repairs and %llu optimizations made.\n"),
++			ctx.mntpoint, ctx.repairs, ctx.preens);
++	else if (ctx.repairs && ctx.preens == 0)
++		fprintf(stdout,
++_("%s: %llu repairs made.\n"),
++			ctx.mntpoint, ctx.repairs);
++	else if (ctx.repairs == 0 && ctx.preens)
++		fprintf(stdout,
++_("%s: %llu optimizations made.\n"),
++			ctx.mntpoint, ctx.preens);
 +
-+[Timer]
-+# Run on Sunday at 3:10am, to avoid running afoul of DST changes
-+OnCalendar=Sun *-*-* 03:10:00
-+RandomizedDelaySec=60
-+Persistent=true
-+
-+[Install]
-+WantedBy=timers.target
-diff --git a/scrub/xfs_scrub_fail b/scrub/xfs_scrub_fail
-new file mode 100755
-index 0000000..36dd50e
---- /dev/null
-+++ b/scrub/xfs_scrub_fail
-@@ -0,0 +1,26 @@
-+#!/bin/bash
-+
-+# Email logs of failed xfs_scrub unit runs
-+
-+mailer=/usr/sbin/sendmail
-+recipient="$1"
-+test -z "${recipient}" && exit 0
-+mntpoint="$2"
-+test -z "${mntpoint}" && exit 0
-+hostname="$(hostname -f 2>/dev/null)"
-+test -z "${hostname}" && hostname="${HOSTNAME}"
-+if [ ! -x "${mailer}" ]; then
-+	echo "${mailer}: Mailer program not found."
-+	exit 1
-+fi
-+
-+(cat << ENDL
-+To: $1
-+From: <xfs_scrub@${hostname}>
-+Subject: xfs_scrub failure on ${mntpoint}
-+
-+So sorry, the automatic xfs_scrub of ${mntpoint} on ${hostname} failed.
-+
-+A log of what happened follows:
-+ENDL
-+systemctl status --full --lines 4294967295 "xfs_scrub@${mntpoint}") | "${mailer}" -t -i
-diff --git a/scrub/xfs_scrub_fail@.service.in b/scrub/xfs_scrub_fail@.service.in
-new file mode 100644
-index 0000000..785f881
---- /dev/null
-+++ b/scrub/xfs_scrub_fail@.service.in
-@@ -0,0 +1,10 @@
-+[Unit]
-+Description=Online XFS Metadata Check Failure Reporting for %I
-+
-+[Service]
-+Type=oneshot
-+Environment=EMAIL_ADDR=root
-+ExecStart=@pkg_lib_dir@/@pkg_name@/xfs_scrub_fail "${EMAIL_ADDR}" %I
-+User=mail
-+Group=mail
-+SupplementaryGroups=systemd-journal
+ 	total_errors = ctx.errors_found + ctx.runtime_errors;
+ 	if (ctx.need_repair)
+ 		repairstr = _("  Unmount and run xfs_repair.");
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 8407885..8c75f69 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -88,6 +88,7 @@ struct scrub_ctx {
+ 
+ 	/* Mutable scrub state; use lock. */
+ 	pthread_mutex_t		lock;
++	struct xfs_action_list	*action_lists;
+ 	unsigned long long	max_errors;
+ 	unsigned long long	runtime_errors;
+ 	unsigned long long	errors_found;
 
