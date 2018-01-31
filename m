@@ -1,157 +1,236 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35420 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752258AbeA3Cty (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jan 2018 21:49:54 -0500
-Date: Mon, 29 Jan 2018 15:00:04 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:58828 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751647AbeAaDIL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:08:11 -0500
+Subject: [PATCH 15/29] xfs_scrub: scan inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/7] xfs: treat CoW fork operations as delalloc for quota
- accounting
-Message-ID: <20180129230004.GJ9068@magnolia>
-References: <151701540938.3070.15043243007590700677.stgit@magnolia>
- <151701543454.3070.15432025661660161748.stgit@magnolia>
- <20180129122637.GA38852@bfoster.bfoster>
+Date: Tue, 30 Jan 2018 19:08:07 -0800
+Message-ID: <151736808735.32164.12551189639292943964.stgit@magnolia>
+In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
+References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180129122637.GA38852@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: hch@infradead.org, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 29, 2018 at 07:26:38AM -0500, Brian Foster wrote:
-> On Fri, Jan 26, 2018 at 05:10:34PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Since the CoW fork only exists in memory, it is incorrect to update the
-> > on-disk quota block counts when we modify the CoW fork.  Unlike the data
-> > fork, even real extents in the CoW fork are only delalloc-style
-> > reservations (on-disk they're owned by the refcountbt) so they must not
-> > be tracked in the on disk quota info.  Ensure the i_delayed_blks
-> > accounting reflects this too.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> Patch doesn't apply.. I'm guessing because xfs_bmap_btalloc_accounting()
-> doesn't exist. Is this series incomplete, or perhaps not consistent with
-> for-next..?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yeah, sorry, I think I forgot to send the middle patch when I sent this
-series....
+Scan all the inodes in the system for problems.
 
-...no, wait, "xfs: refactor accounting updates out of xfs_bmap_btalloc"
-was already reviewed, so these last few patches were supposed to apply
-atop that, and that went on top of for-next.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/Makefile    |    1 
+ scrub/phase3.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    1 
+ scrub/xfs_scrub.h |    2 +
+ 4 files changed, 156 insertions(+)
+ create mode 100644 scrub/phase3.c
 
---D
 
-> 
-> Brian
-> 
-> >  fs/xfs/libxfs/xfs_bmap.c |   32 ++++++++++++++++++++++++++++++--
-> >  fs/xfs/xfs_reflink.c     |   15 +++++++++++----
-> >  2 files changed, 41 insertions(+), 6 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 4582f55..cad21fd 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3343,8 +3343,35 @@ xfs_bmap_btalloc_accounting(
-> >  	struct xfs_bmalloca	*ap,
-> >  	struct xfs_alloc_arg	*args)
-> >  {
-> > -	if (!(ap->flags & XFS_BMAPI_COWFORK))
-> > -		ap->ip->i_d.di_nblocks += args->len;
-> > +	if (ap->flags & XFS_BMAPI_COWFORK) {
-> > +		/*
-> > +		 * COW fork blocks are in-core only and thus are treated as
-> > +		 * in-core quota reservation (like delalloc blocks) even when
-> > +		 * converted to real blocks. The quota reservation is not
-> > +		 * accounted to disk until blocks are remapped to the data
-> > +		 * fork. So if these blocks were previously delalloc, we
-> > +		 * already have quota reservation and there's nothing to do
-> > +		 * yet.
-> > +		 */
-> > +		if (ap->wasdel)
-> > +			return;
-> > +
-> > +		/*
-> > +		 * Otherwise, we've allocated blocks in a hole. The transaction
-> > +		 * has acquired in-core quota reservation for this extent.
-> > +		 * Rather than account these as real blocks, however, we reduce
-> > +		 * the transaction quota reservation based on the allocation.
-> > +		 * This essentially transfers the transaction quota reservation
-> > +		 * to that of a delalloc extent.
-> > +		 */
-> > +		ap->ip->i_delayed_blks += args->len;
-> > +		xfs_trans_mod_dquot_byino(ap->tp, ap->ip, XFS_TRANS_DQ_RES_BLKS,
-> > +				-(long)args->len);
-> > +		return;
-> > +	}
-> > +
-> > +	/* data/attr fork only */
-> > +	ap->ip->i_d.di_nblocks += args->len;
-> >  	xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-> >  	if (ap->wasdel)
-> >  		ap->ip->i_delayed_blks -= args->len;
-> > @@ -4820,6 +4847,7 @@ xfs_bmap_del_extent_cow(
-> >  		xfs_iext_insert(ip, icur, &new, state);
-> >  		break;
-> >  	}
-> > +	ip->i_delayed_blks -= del->br_blockcount;
-> >  }
-> >  
-> >  /*
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 85a119e..c4f0aff 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -599,10 +599,6 @@ xfs_reflink_cancel_cow_blocks(
-> >  					del.br_startblock, del.br_blockcount,
-> >  					NULL);
-> >  
-> > -			/* Update quota accounting */
-> > -			xfs_trans_mod_dquot_byino(*tpp, ip, XFS_TRANS_DQ_BCOUNT,
-> > -					-(long)del.br_blockcount);
-> > -
-> >  			/* Roll the transaction */
-> >  			xfs_defer_ijoin(&dfops, ip);
-> >  			error = xfs_defer_finish(tpp, &dfops);
-> > @@ -613,6 +609,13 @@ xfs_reflink_cancel_cow_blocks(
-> >  
-> >  			/* Remove the mapping from the CoW fork. */
-> >  			xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> > +
-> > +			/* Remove the quota reservation */
-> > +			error = xfs_trans_reserve_quota_nblks(NULL, ip,
-> > +					-(long)del.br_blockcount, 0,
-> > +					XFS_QMOPT_RES_REGBLKS);
-> > +			if (error)
-> > +				break;
-> >  		} else {
-> >  			/* Didn't do anything, push cursor back. */
-> >  			xfs_iext_prev(ifp, &icur);
-> > @@ -795,6 +798,10 @@ xfs_reflink_end_cow(
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> > +		/* Charge this new data fork mapping to the on-disk quota. */
-> > +		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_DELBCOUNT,
-> > +				(long)del.br_blockcount);
-> > +
-> >  		/* Remove the mapping from the CoW fork. */
-> >  		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> >  
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 30dbe54..e0d15d8 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -35,6 +35,7 @@ fscounters.c \
+ inodes.c \
+ phase1.c \
+ phase2.c \
++phase3.c \
+ scrub.c \
+ spacemap.c \
+ xfs_scrub.c
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+new file mode 100644
+index 0000000..b3fc510
+--- /dev/null
++++ b/scrub/phase3.c
+@@ -0,0 +1,152 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "path.h"
++#include "workqueue.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "counter.h"
++#include "inodes.h"
++#include "scrub.h"
++
++/* Phase 3: Scan all inodes. */
++
++/*
++ * Run a per-file metadata scanner.  We use the ino/gen interface to
++ * ensure that the inode we're checking matches what the inode scan
++ * told us to look at.
++ */
++static bool
++xfs_scrub_fd(
++	struct scrub_ctx	*ctx,
++	bool			(*fn)(struct scrub_ctx *, uint64_t,
++				      uint32_t, int),
++	struct xfs_bstat	*bs)
++{
++	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt_fd);
++}
++
++struct scrub_inode_ctx {
++	struct ptcounter	*icount;
++	bool			moveon;
++};
++
++/* Verify the contents, xattrs, and extent maps of an inode. */
++static int
++xfs_scrub_inode(
++	struct scrub_ctx	*ctx,
++	struct xfs_handle	*handle,
++	struct xfs_bstat	*bstat,
++	void			*arg)
++{
++	struct scrub_inode_ctx	*ictx = arg;
++	struct ptcounter	*icount = ictx->icount;
++	bool			moveon = true;
++	int			fd = -1;
++
++	background_sleep();
++
++	/* Try to open the inode to pin it. */
++	if (S_ISREG(bstat->bs_mode)) {
++		fd = xfs_open_handle(handle);
++		/* Stale inode means we scan the whole cluster again. */
++		if (fd < 0 && errno == ESTALE)
++			return ESTALE;
++	}
++
++	/* Scrub the inode. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat);
++	if (!moveon)
++		goto out;
++
++	/* Scrub all block mappings. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat);
++	if (!moveon)
++		goto out;
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat);
++	if (!moveon)
++		goto out;
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat);
++	if (!moveon)
++		goto out;
++
++	if (S_ISLNK(bstat->bs_mode)) {
++		/* Check symlink contents. */
++		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino,
++				bstat->bs_gen, ctx->mnt_fd);
++	} else if (S_ISDIR(bstat->bs_mode)) {
++		/* Check the directory entries. */
++		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat);
++	}
++	if (!moveon)
++		goto out;
++
++	/* Check all the extended attributes. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat);
++	if (!moveon)
++		goto out;
++
++	/* Check parent pointers. */
++	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat);
++	if (!moveon)
++		goto out;
++
++out:
++	ptcounter_add(icount, 1);
++	if (fd >= 0)
++		close(fd);
++	if (!moveon)
++		ictx->moveon = false;
++	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
++}
++
++/* Verify all the inodes in a filesystem. */
++bool
++xfs_scan_inodes(
++	struct scrub_ctx	*ctx)
++{
++	struct scrub_inode_ctx	ictx;
++	bool			ret;
++
++	ictx.moveon = true;
++	ictx.icount = ptcounter_init(scrub_nproc(ctx));
++	if (!ictx.icount) {
++		str_error(ctx, ctx->mntpoint, _("Could not create counter."));
++		return false;
++	}
++
++	ret = xfs_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
++	if (!ret)
++		ictx.moveon = false;
++	if (!ictx.moveon)
++		goto free;
++	xfs_scrub_report_preen_triggers(ctx);
++	ctx->inodes_checked = ptcounter_value(ictx.icount);
++
++free:
++	ptcounter_free(ictx.icount);
++	return ictx.moveon;
++}
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 4c32dd7..be809fc 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -372,6 +372,7 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Scan all inodes."),
++			.fn = xfs_scan_inodes,
+ 		},
+ 		{
+ 			.descr = _("Defer filesystem repairs."),
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 7802101..462b590 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -86,6 +86,7 @@ struct scrub_ctx {
+ 	unsigned long long	runtime_errors;
+ 	unsigned long long	errors_found;
+ 	unsigned long long	warnings_found;
++	unsigned long long	inodes_checked;
+ 	bool			need_repair;
+ 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+ };
+@@ -95,5 +96,6 @@ void xfs_shutdown_fs(struct scrub_ctx *ctx);
+ bool xfs_cleanup_fs(struct scrub_ctx *ctx);
+ bool xfs_setup_fs(struct scrub_ctx *ctx);
+ bool xfs_scan_metadata(struct scrub_ctx *ctx);
++bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
+
