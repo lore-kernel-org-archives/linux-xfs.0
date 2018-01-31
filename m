@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36150 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:38376 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751716AbeAaDHo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:07:44 -0500
-Subject: [PATCH 11/29] xfs_scrub: filesystem counter collection functions
+        with ESMTP id S1751716AbeAaDJT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:09:19 -0500
+Subject: [PATCH 24/29] xfs_scrub: fstrim the free areas if there are no
+ errors on the filesystem
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:07:40 -0800
-Message-ID: <151736806046.32164.4762967576335037141.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:09:14 -0800
+Message-ID: <151736815437.32164.12988576947993941031.stgit@magnolia>
 In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
 References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,45 +21,54 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a couple of helper functions to estimate the inode and block
-counters on the filesystem.
+If the filesystem scan comes out clean or fixes all the problems, call
+fstrim to clean out the free areas (if it's an ssd/thinp/whatever).
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile     |    2 
- scrub/fscounters.c |  212 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/fscounters.h |   29 +++++++
- 3 files changed, 243 insertions(+)
- create mode 100644 scrub/fscounters.c
- create mode 100644 scrub/fscounters.h
+ man/man8/xfs_scrub.8 |    3 ++
+ scrub/Makefile       |    1 +
+ scrub/phase4.c       |   79 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/vfs.c          |   23 +++++++++++++++
+ scrub/vfs.h          |    2 +
+ scrub/xfs_scrub.c    |   22 +++++++++++++-
+ scrub/xfs_scrub.h    |    3 ++
+ 7 files changed, 131 insertions(+), 2 deletions(-)
+ create mode 100644 scrub/phase4.c
 
 
+diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
+index c9df7d6..b6e1560 100644
+--- a/man/man8/xfs_scrub.8
++++ b/man/man8/xfs_scrub.8
+@@ -63,6 +63,9 @@ If
+ is given, no action is taken if errors are found; this is the default
+ behavior.
+ .TP
++.B \-k
++Do not call FITRIM on the free space.
++.TP
+ .BI \-m " file"
+ Search this file for mounted filesystems instead of /etc/mtab.
+ .TP
 diff --git a/scrub/Makefile b/scrub/Makefile
-index a3534e6..5397339 100644
+index fd26624..91f99ff 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -19,6 +19,7 @@ HFILES = \
- common.h \
- disk.h \
- filemap.h \
-+fscounters.h \
- inodes.h \
- spacemap.h \
- xfs_scrub.h
-@@ -27,6 +28,7 @@ CFILES = \
- common.c \
- disk.c \
- filemap.c \
-+fscounters.c \
- inodes.c \
+@@ -41,6 +41,7 @@ inodes.c \
  phase1.c \
- spacemap.c \
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+ phase2.c \
+ phase3.c \
++phase4.c \
+ phase5.c \
+ phase6.c \
+ phase7.c \
+diff --git a/scrub/phase4.c b/scrub/phase4.c
 new file mode 100644
-index 0000000..4294bf3
+index 0000000..31211f6
 --- /dev/null
-+++ b/scrub/fscounters.c
-@@ -0,0 +1,212 @@
++++ b/scrub/phase4.c
+@@ -0,0 +1,79 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -79,231 +89,187 @@ index 0000000..4294bf3
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
 +#include <stdio.h>
-+#include <stdbool.h>
 +#include <stdint.h>
-+#include <stdlib.h>
++#include <stdbool.h>
++#include <dirent.h>
++#include <sys/types.h>
++#include <sys/stat.h>
 +#include <sys/statvfs.h>
-+#include "platform_defs.h"
 +#include "xfs.h"
-+#include "xfs_arch.h"
 +#include "xfs_fs.h"
-+#include "xfs_format.h"
++#include "list.h"
 +#include "path.h"
 +#include "workqueue.h"
 +#include "xfs_scrub.h"
 +#include "common.h"
-+#include "fscounters.h"
++#include "scrub.h"
++#include "vfs.h"
 +
-+/*
-+ * Filesystem counter collection routines.  We can count the number of
-+ * inodes in the filesystem, and we can estimate the block counters.
-+ */
++/* Phase 4: Repair filesystem. */
 +
-+/* Count the number of inodes in the filesystem. */
-+
-+/* INUMBERS wrapper routines. */
-+struct xfs_count_inodes {
-+	bool			moveon;
-+	uint64_t		counters[0];
-+};
-+
-+/*
-+ * Count the number of inodes.  Use INUMBERS to figure out how many inodes
-+ * exist in the filesystem, assuming we've already scrubbed that.
-+ */
++/* Process all the action items. */
 +static bool
-+xfs_count_inodes_range(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	uint64_t		first_ino,
-+	uint64_t		last_ino,
-+	uint64_t		*count)
++xfs_process_action_items(
++	struct scrub_ctx		*ctx)
 +{
-+	struct xfs_fsop_bulkreq	igrpreq = {0};
-+	struct xfs_inogrp	inogrp;
-+	__u64			igrp_ino;
-+	uint64_t		nr = 0;
-+	__s32			igrplen = 0;
-+	int			error;
++	bool				moveon = true;
 +
-+	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
-+	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
++	pthread_mutex_lock(&ctx->lock);
++	if (moveon && ctx->errors_found == 0 && want_fstrim)
++		fstrim(ctx);
++	pthread_mutex_unlock(&ctx->lock);
 +
-+	igrpreq.lastip  = &igrp_ino;
-+	igrpreq.icount  = 1;
-+	igrpreq.ubuffer = &inogrp;
-+	igrpreq.ocount  = &igrplen;
-+
-+	igrp_ino = first_ino;
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	while (!error && igrplen && inogrp.xi_startino < last_ino) {
-+		nr += inogrp.xi_alloccount;
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	}
-+
-+	if (error) {
-+		str_errno(ctx, descr);
-+		return false;
-+	}
-+
-+	*count = nr;
-+	return true;
-+}
-+
-+/* Scan all the inodes in an AG. */
-+static void
-+xfs_count_ag_inodes(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
-+{
-+	struct xfs_count_inodes	*ci = arg;
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	char			descr[DESCR_BUFSZ];
-+	uint64_t		ag_ino;
-+	uint64_t		next_ag_ino;
-+	bool			moveon;
-+
-+	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
-+				major(ctx->fsinfo.fs_datadev),
-+				minor(ctx->fsinfo.fs_datadev),
-+				agno);
-+
-+	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
-+	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
-+
-+	moveon = xfs_count_inodes_range(ctx, descr, ag_ino, next_ag_ino - 1,
-+			&ci->counters[agno]);
-+	if (!moveon)
-+		ci->moveon = false;
-+}
-+
-+/* Count all the inodes in a filesystem. */
-+bool
-+xfs_count_all_inodes(
-+	struct scrub_ctx	*ctx,
-+	uint64_t		*count)
-+{
-+	struct xfs_count_inodes	*ci;
-+	xfs_agnumber_t		agno;
-+	struct workqueue	wq;
-+	bool			moveon;
-+	int			ret;
-+
-+	ci = calloc(1, sizeof(struct xfs_count_inodes) +
-+			(ctx->geo.agcount * sizeof(uint64_t)));
-+	if (!ci)
-+		return false;
-+	ci->moveon = true;
-+
-+	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
-+			scrub_nproc_workqueue(ctx));
-+	if (ret) {
-+		moveon = false;
-+		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
-+		goto out_free;
-+	}
-+	for (agno = 0; agno < ctx->geo.agcount; agno++) {
-+		ret = workqueue_add(&wq, xfs_count_ag_inodes, agno, ci);
-+		if (ret) {
-+			moveon = false;
-+			str_error(ctx, ctx->mntpoint,
-+_("Could not queue AG %u icount work."), agno);
-+			break;
-+		}
-+	}
-+	workqueue_destroy(&wq);
-+
-+	for (agno = 0; agno < ctx->geo.agcount; agno++)
-+		*count += ci->counters[agno];
-+	moveon = ci->moveon;
-+
-+out_free:
-+	free(ci);
 +	return moveon;
 +}
 +
-+/* Estimate the number of blocks and inodes in the filesystem. */
++/* Fix everything that needs fixing. */
 +bool
-+xfs_scan_estimate_blocks(
-+	struct scrub_ctx		*ctx,
-+	unsigned long long		*d_blocks,
-+	unsigned long long		*d_bfree,
-+	unsigned long long		*r_blocks,
-+	unsigned long long		*r_bfree,
-+	unsigned long long		*f_files,
-+	unsigned long long		*f_free)
++xfs_repair_fs(
++	struct scrub_ctx		*ctx)
 +{
-+	struct xfs_fsop_counts		fc;
-+	struct xfs_fsop_resblks		rb;
-+	struct statvfs			sfs;
-+	int				error;
-+
-+	/* Grab the fstatvfs counters, since it has to report accurately. */
-+	error = fstatvfs(ctx->mnt_fd, &sfs);
-+	if (error) {
-+		str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+
-+	/* Fetch the filesystem counters. */
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSCOUNTS, &fc);
-+	if (error) {
-+		str_errno(ctx, ctx->mntpoint);
-+		return false;
-+	}
-+
-+	/*
-+	 * XFS reserves some blocks to prevent hard ENOSPC, so add those
-+	 * blocks back to the free data counts.
-+	 */
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_GET_RESBLKS, &rb);
-+	if (error)
-+		str_errno(ctx, ctx->mntpoint);
-+	sfs.f_bfree += rb.resblks_avail;
-+
-+	*d_blocks = sfs.f_blocks + (ctx->geo.logstart ? ctx->geo.logblocks : 0);
-+	*d_bfree = sfs.f_bfree;
-+	*r_blocks = ctx->geo.rtblocks;
-+	*r_bfree = fc.freertx;
-+	*f_files = sfs.f_files;
-+	*f_free = sfs.f_ffree;
-+
-+	return true;
++	return xfs_process_action_items(ctx);
 +}
-diff --git a/scrub/fscounters.h b/scrub/fscounters.h
-new file mode 100644
-index 0000000..40a4c05
---- /dev/null
-+++ b/scrub/fscounters.h
-@@ -0,0 +1,29 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef XFS_SCRUB_FSCOUNTERS_H_
-+#define XFS_SCRUB_FSCOUNTERS_H_
 +
-+bool xfs_scan_estimate_blocks(struct scrub_ctx *ctx,
-+		unsigned long long *d_blocks, unsigned long long *d_bfree,
-+		unsigned long long *r_blocks, unsigned long long *r_bfree,
-+		unsigned long long *f_files, unsigned long long *f_free);
-+bool xfs_count_all_inodes(struct scrub_ctx *ctx, uint64_t *count);
++/* Run the optimize-only phase if there are no errors. */
++bool
++xfs_optimize_fs(
++	struct scrub_ctx	*ctx)
++{
++	/*
++	 * In preen mode, corruptions are immediately recorded as errors,
++	 * so if there are any corruptions on the filesystem errors_found
++	 * will be non-zero and we won't do anything.
++	 */
++	if (ctx->errors_found) {
++		str_info(ctx, ctx->mntpoint,
++_("Errors found, please re-run with -y."));
++		return true;
++	}
 +
-+#endif /* XFS_SCRUB_FSCOUNTERS_H_ */
++	return xfs_process_action_items(ctx);
++}
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index 3c0c2f3..e3c8e62 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -223,3 +223,26 @@ _("Could not queue directory scan work."));
+ 	free(sftd);
+ 	return false;
+ }
++
++#ifndef FITRIM
++struct fstrim_range {
++	__u64 start;
++	__u64 len;
++	__u64 minlen;
++};
++#define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
++#endif
++
++/* Call FITRIM to trim all the unused space in a filesystem. */
++void
++fstrim(
++	struct scrub_ctx	*ctx)
++{
++	struct fstrim_range	range = {0};
++	int			error;
++
++	range.len = ULLONG_MAX;
++	error = ioctl(ctx->mnt_fd, FITRIM, &range);
++	if (error && errno != EOPNOTSUPP && errno != ENOTTY)
++		perror(_("fstrim"));
++}
+diff --git a/scrub/vfs.h b/scrub/vfs.h
+index 100eb18..3305159 100644
+--- a/scrub/vfs.h
++++ b/scrub/vfs.h
+@@ -28,4 +28,6 @@ typedef bool (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
+ bool scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
+ 		scan_fs_tree_dirent_fn dirent_fn, void *arg);
+ 
++void fstrim(struct scrub_ctx *ctx);
++
+ #endif /* XFS_SCRUB_VFS_H_ */
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index f6f5f0d..85fd893 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -146,6 +146,9 @@ static bool			scrub_data;
+ /* Size of a memory page. */
+ long				page_size;
+ 
++/* Should we FSTRIM after a successful run? */
++bool				want_fstrim = true;
++
+ #define SCRUB_RET_SUCCESS	(0)	/* no problems left behind */
+ #define SCRUB_RET_CORRUPT	(1)	/* corruption remains on fs */
+ #define SCRUB_RET_UNOPTIMIZED	(2)	/* fs could be optimized */
+@@ -161,6 +164,7 @@ usage(void)
+ 	fprintf(stderr, _("  -a count     Stop after this many errors are found.\n"));
+ 	fprintf(stderr, _("  -b           Background mode.\n"));
+ 	fprintf(stderr, _("  -e behavior  What to do if errors are found.\n"));
++	fprintf(stderr, _("  -k           Do not FITRIM the free space.\n"));
+ 	fprintf(stderr, _("  -m path      Path to /etc/mtab.\n"));
+ 	fprintf(stderr, _("  -n           Dry run.  Do not modify anything.\n"));
+ 	fprintf(stderr, _("  -T           Display timing/usage information.\n"));
+@@ -408,8 +412,19 @@ run_scrub_phases(
+ 	/* Run all phases of the scrub tool. */
+ 	for (phase = 1, sp = phases; sp->fn; sp++, phase++) {
+ 		/* Turn on certain phases if user said to. */
+-		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data)
++		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data) {
+ 			sp->fn = xfs_scan_blocks;
++		} else if (sp->fn == REPAIR_DUMMY_FN) {
++			if (ctx->mode == SCRUB_MODE_PREEN) {
++				sp->descr = _("Optimize filesystem.");
++				sp->fn = xfs_optimize_fs;
++				sp->must_run = true;
++			} else if (ctx->mode == SCRUB_MODE_REPAIR) {
++				sp->descr = _("Repair filesystem.");
++				sp->fn = xfs_repair_fs;
++				sp->must_run = true;
++			}
++		}
+ 
+ 		/* Skip certain phases unless they're turned on. */
+ 		if (sp->fn == REPAIR_DUMMY_FN ||
+@@ -469,7 +484,7 @@ main(
+ 	pthread_mutex_init(&ctx.lock, NULL);
+ 	ctx.mode = SCRUB_MODE_DEFAULT;
+ 	ctx.error_action = ERRORS_CONTINUE;
+-	while ((c = getopt(argc, argv, "a:bde:m:nTvxVy")) != EOF) {
++	while ((c = getopt(argc, argv, "a:bde:km:nTvxVy")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			ctx.max_errors = cvt_u64(optarg, 10);
+@@ -497,6 +512,9 @@ main(
+ 				usage();
+ 			}
+ 			break;
++		case 'k':
++			want_fstrim = false;
++			break;
+ 		case 'm':
+ 			mtab = optarg;
+ 			break;
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 91f4577..47d63de 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -28,6 +28,7 @@ extern unsigned int		debug;
+ extern int			nproc;
+ extern bool			verbose;
+ extern long			page_size;
++extern bool			want_fstrim;
+ 
+ enum scrub_mode {
+ 	SCRUB_MODE_DRY_RUN,
+@@ -105,5 +106,7 @@ bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ bool xfs_scan_connections(struct scrub_ctx *ctx);
+ bool xfs_scan_blocks(struct scrub_ctx *ctx);
+ bool xfs_scan_summary(struct scrub_ctx *ctx);
++bool xfs_repair_fs(struct scrub_ctx *ctx);
++bool xfs_optimize_fs(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
