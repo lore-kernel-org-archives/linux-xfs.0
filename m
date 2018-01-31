@@ -1,39 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:52957 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753270AbeAaQqm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 11:46:42 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:46182 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752618AbeAaRtS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 12:49:18 -0500
+Date: Wed, 31 Jan 2018 09:49:13 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: remove experimental tag for reverse mapping
+Message-ID: <20180131174913.GE4849@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <1517401762.3612.0.camel@kernel.org>
-References: <20180130173126.2806-1-jlayton@kernel.org> <20180130203221.29310-1-jlayton@kernel.org>
- <CA+55aFw5Xf4V-BF1JK+SpjXnmrgeMe-k0wLaFc_=6ojbhfWEtQ@mail.gmail.com> <1517401762.3612.0.camel@kernel.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 31 Jan 2018 08:46:41 -0800
-Message-ID: <CA+55aFxB6og=iRkRchiOrr8EW2=jgb_i4nUiPsvEa+8F64APxA@mail.gmail.com>
-Subject: Re: [PATCH v2] iversion: make inode_cmp_iversion{+raw} return bool
- instead of s64
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Trond Myklebust <trondmy@primarydata.com>
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
 
-On Wed, Jan 31, 2018 at 4:29 AM, Jeff Layton <jlayton@kernel.org> wrote:
->
-> Do you mind just taking it directly? I don't have anything else queued
-> up for this cycle.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Done.
+Reverse mapping has had a while to soak, so remove the experimental tag.
+Now that we've landed space metadata cross-referencing in scrub, the
+feature actually has a purpose.
 
-I wonder if "false for same, true for different" calling convention
-makes much sense, but it matches the old "0 for same" so obviously
-makes for a smaller diff.
+Reject rmap filesystems with an rt device until the code to support it
+is actually implemented.
 
-If it ever ends up confusing people, maybe the sense of that function
-should be reversed, and the name changed to something like
-"same_inode_version()" or something.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_super.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-But at least for now the situation seems ok to me,
-
-            Linus
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f3e0001..f436eec 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1684,12 +1684,10 @@ xfs_fs_fill_super(
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+ 		if (mp->m_sb.sb_rblocks) {
+ 			xfs_alert(mp,
+-	"EXPERIMENTAL reverse mapping btree not compatible with realtime device!");
++	"reverse mapping btree not compatible with realtime device!");
+ 			error = -EINVAL;
+ 			goto out_filestream_unmount;
+ 		}
+-		xfs_alert(mp,
+-	"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
+ 	}
+ 
+ 	error = xfs_mountfs(mp);
