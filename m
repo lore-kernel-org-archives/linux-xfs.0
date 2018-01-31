@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33126 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751336AbeAYXsz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jan 2018 18:48:55 -0500
-Subject: [PATCH 1/2] xfs_db: print transaction reservation type information
+Received: from aserp2120.oracle.com ([141.146.126.78]:38232 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751678AbeAaDJN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:09:13 -0500
+Subject: [PATCH 23/29] xfs_scrub: check summary counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 25 Jan 2018 15:48:51 -0800
-Message-ID: <151692413147.32390.2307082169293314955.stgit@magnolia>
-In-Reply-To: <151692412532.32390.5360363880930671862.stgit@magnolia>
-References: <151692412532.32390.5360363880930671862.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:09:08 -0800
+Message-ID: <151736814815.32164.12798277934758395767.stgit@magnolia>
+In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
+References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -20,118 +20,384 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a new xfs_db command to print the transaction reservation info for
-a given filesystem.  This will make it easier to compare the calculations
-made by the kernel and xfsprogs in case there is a discrepancy.
+Make sure the filesystem summary counters are somewhat close to what
+we can find by scanning the filesystem.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/command.c             |    1 +
- db/logformat.c           |   59 ++++++++++++++++++++++++++++++++++++++++++++++
- db/logformat.h           |    1 +
- libxfs/libxfs_api_defs.h |    2 +-
- 4 files changed, 62 insertions(+), 1 deletion(-)
+ scrub/Makefile    |    1 
+ scrub/common.c    |   28 ++++++
+ scrub/common.h    |    4 +
+ scrub/phase7.c    |  266 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/xfs_scrub.c |    3 -
+ scrub/xfs_scrub.h |    1 
+ 6 files changed, 302 insertions(+), 1 deletion(-)
+ create mode 100644 scrub/phase7.c
 
 
-diff --git a/db/command.c b/db/command.c
-index 5ff3c4f..12ae5b7 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -138,6 +138,7 @@ init_commands(void)
- 	hash_init();
- 	inode_init();
- 	input_init();
-+	logres_init();
- 	logformat_init();
- 	io_init();
- 	metadump_init();
-diff --git a/db/logformat.c b/db/logformat.c
-index 70097bc..b290bd3 100644
---- a/db/logformat.c
-+++ b/db/logformat.c
-@@ -147,3 +147,62 @@ logformat_init(void)
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 1fb6e84..fd26624 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -43,6 +43,7 @@ phase2.c \
+ phase3.c \
+ phase5.c \
+ phase6.c \
++phase7.c \
+ read_verify.c \
+ scrub.c \
+ spacemap.c \
+diff --git a/scrub/common.c b/scrub/common.c
+index 5e2d7c6..c4fb339 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -339,3 +339,31 @@ _("More than %u naming warnings, shutting up."),
  
- 	add_command(&logformat_cmd);
+ 	return debug || verbose || res;
  }
 +
-+static void
-+print_logres(
-+	int			i,
-+	struct xfs_trans_res	*res)
++/* Decide if a value is within +/- (n/d) of a desired value. */
++bool
++within_range(
++	struct scrub_ctx	*ctx,
++	unsigned long long	value,
++	unsigned long long	desired,
++	unsigned long long	abs_threshold,
++	unsigned int		n,
++	unsigned int		d,
++	const char		*descr)
 +{
-+	dbprintf(_("type %d logres %u logcount %d flags 0x%x\n"),
-+		i, res->tr_logres, res->tr_logcount, res->tr_logflags);
++	assert(n < d);
++
++	/* Don't complain if difference does not exceed an absolute value. */
++	if (value < desired && desired - value < abs_threshold)
++		return true;
++	if (value > desired && value - desired < abs_threshold)
++		return true;
++
++	/* Complain if the difference exceeds a certain percentage. */
++	if (value < desired * (d - n) / d)
++		return false;
++	if (value > desired * (d + n) / d)
++		return false;
++
++	return true;
 +}
+diff --git a/scrub/common.h b/scrub/common.h
+index 336fc40..29b4332 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -79,4 +79,8 @@ char *string_escape(const char *in);
+ #define TOO_MANY_NAME_WARNINGS	10000
+ bool should_warn_about_name(struct scrub_ctx *ctx);
+ 
++bool within_range(struct scrub_ctx *ctx, unsigned long long value,
++		unsigned long long desired, unsigned long long abs_threshold,
++		unsigned int n, unsigned int d, const char *descr);
 +
-+int
-+logres_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct xfs_trans_res	resv;
-+	struct xfs_trans_res	*res;
-+	struct xfs_trans_res	*end_res;
-+	int			i;
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/phase7.c b/scrub/phase7.c
+new file mode 100644
+index 0000000..460ca8a
+--- /dev/null
++++ b/scrub/phase7.c
+@@ -0,0 +1,266 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include <stdio.h>
++#include <stdint.h>
++#include <stdbool.h>
++#include <stdlib.h>
++#include <sys/statvfs.h>
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "path.h"
++#include "ptvar.h"
++#include "xfs_scrub.h"
++#include "common.h"
++#include "fscounters.h"
++#include "spacemap.h"
 +
-+	res = (struct xfs_trans_res *)M_RES(mp);
-+	end_res = (struct xfs_trans_res *)(M_RES(mp) + 1);
-+	for (i = 0; res < end_res; i++, res++)
-+		print_logres(i, res);
-+	libxfs_log_get_max_trans_res(mp, &resv);
-+	print_logres(-1, &resv);
++/* Phase 7: Check summary counters. */
 +
-+	return 0;
-+}
-+
-+static void
-+logres_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" The 'logres' command prints information about all log reservation types.\n"
-+" This includes the reservation space, the intended transaction roll count,\n"
-+" and the reservation flags, if any.\n"
-+"\n"
-+	));
-+}
-+
-+static const struct cmdinfo logres_cmd = {
-+	.name =		"logres",
-+	.altname =	NULL,
-+	.cfunc =	logres_f,
-+	.argmin =	0,
-+	.argmax =	0,
-+	.canpush =	0,
-+	.args =		NULL,
-+	.oneline =	N_("dump log reservations"),
-+	.help =		logres_help,
++struct xfs_summary_counts {
++	unsigned long long	dbytes;		/* data dev bytes */
++	unsigned long long	rbytes;		/* rt dev bytes */
++	unsigned long long	next_phys;	/* next phys bytes we see? */
++	unsigned long long	agbytes;	/* freespace bytes */
 +};
 +
-+void
-+logres_init(void)
++/* Record block usage. */
++static bool
++xfs_record_block_summary(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	struct fsmap			*fsmap,
++	void				*arg)
 +{
-+	add_command(&logres_cmd);
++	struct xfs_summary_counts	*counts;
++	unsigned long long		len;
++
++	counts = ptvar_get((struct ptvar *)arg);
++	if (fsmap->fmr_device == ctx->fsinfo.fs_logdev)
++		return true;
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_FREE)
++		return true;
++
++	len = fsmap->fmr_length;
++
++	/* freesp btrees live in free space, need to adjust counters later. */
++	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
++	    fsmap->fmr_owner == XFS_FMR_OWN_AG) {
++		counts->agbytes += fsmap->fmr_length;
++	}
++	if (fsmap->fmr_device == ctx->fsinfo.fs_rtdev) {
++		/* Count realtime extents. */
++		counts->rbytes += len;
++	} else {
++		/* Count datadev extents. */
++		if (counts->next_phys >= fsmap->fmr_physical + len)
++			return true;
++		else if (counts->next_phys > fsmap->fmr_physical)
++			len = counts->next_phys - fsmap->fmr_physical;
++		counts->dbytes += len;
++		counts->next_phys = fsmap->fmr_physical + fsmap->fmr_length;
++	}
++
++	return true;
 +}
-diff --git a/db/logformat.h b/db/logformat.h
-index f9763ee..60396c0 100644
---- a/db/logformat.h
-+++ b/db/logformat.h
-@@ -17,3 +17,4 @@
-  */
++
++/* Add all the summaries in the per-thread counter */
++static bool
++xfs_add_summaries(
++	struct ptvar			*ptv,
++	void				*data,
++	void				*arg)
++{
++	struct xfs_summary_counts	*total = arg;
++	struct xfs_summary_counts	*item = data;
++
++	total->dbytes += item->dbytes;
++	total->rbytes += item->rbytes;
++	total->agbytes += item->agbytes;
++	return true;
++}
++
++/*
++ * Count all inodes and blocks in the filesystem as told by GETFSMAP and
++ * BULKSTAT, and compare that to summary counters.  Since this is a live
++ * filesystem we'll be content if the summary counts are within 10% of
++ * what we observed.
++ */
++bool
++xfs_scan_summary(
++	struct scrub_ctx		*ctx)
++{
++	struct xfs_summary_counts	totalcount = {0};
++	struct ptvar			*ptvar;
++	unsigned long long		used_data;
++	unsigned long long		used_rt;
++	unsigned long long		used_files;
++	unsigned long long		stat_data;
++	unsigned long long		stat_rt;
++	uint64_t			counted_inodes = 0;
++	unsigned long long		absdiff;
++	unsigned long long		d_blocks;
++	unsigned long long		d_bfree;
++	unsigned long long		r_blocks;
++	unsigned long long		r_bfree;
++	unsigned long long		f_files;
++	unsigned long long		f_free;
++	bool				moveon;
++	bool				complain;
++	int				error;
++
++	/* Flush everything out to disk before we start counting. */
++	error = syncfs(ctx->mnt_fd);
++	if (error) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	ptvar = ptvar_init(scrub_nproc(ctx), sizeof(struct xfs_summary_counts));
++	if (!ptvar) {
++		str_errno(ctx, ctx->mntpoint);
++		return false;
++	}
++
++	/* Use fsmap to count blocks. */
++	moveon = xfs_scan_all_spacemaps(ctx, xfs_record_block_summary, ptvar);
++	if (!moveon)
++		goto out_free;
++	moveon = ptvar_foreach(ptvar, xfs_add_summaries, &totalcount);
++	if (!moveon)
++		goto out_free;
++	ptvar_free(ptvar);
++
++	/* Scan the whole fs. */
++	moveon = xfs_count_all_inodes(ctx, &counted_inodes);
++	if (!moveon)
++		goto out;
++
++	moveon = xfs_scan_estimate_blocks(ctx, &d_blocks, &d_bfree, &r_blocks,
++			&r_bfree, &f_files, &f_free);
++	if (!moveon)
++		return moveon;
++
++	/*
++	 * If we counted blocks with fsmap, then dblocks includes
++	 * blocks for the AGFL and the freespace/rmap btrees.  The
++	 * filesystem treats them as "free", but since we scanned
++	 * them, we'll consider them used.
++	 */
++	d_bfree -= totalcount.agbytes >> ctx->blocklog;
++
++	/* Report on what we found. */
++	used_data = (d_blocks - d_bfree) << ctx->blocklog;
++	used_rt = (r_blocks - r_bfree) << ctx->blocklog;
++	used_files = f_files - f_free;
++	stat_data = totalcount.dbytes;
++	stat_rt = totalcount.rbytes;
++
++	/*
++	 * Complain if the counts are off by more than 10% unless
++	 * the inaccuracy is less than 32MB worth of blocks or 100 inodes.
++	 */
++	absdiff = 1ULL << 25;
++	complain = verbose;
++	complain |= !within_range(ctx, stat_data, used_data, absdiff, 1, 10,
++			_("data blocks"));
++	complain |= !within_range(ctx, stat_rt, used_rt, absdiff, 1, 10,
++			_("realtime blocks"));
++	complain |= !within_range(ctx, counted_inodes, used_files, 100, 1, 10,
++			_("inodes"));
++
++	if (complain) {
++		double		d, r, i;
++		char		*du, *ru, *iu;
++
++		if (used_rt || stat_rt) {
++			d = auto_space_units(used_data, &du);
++			r = auto_space_units(used_rt, &ru);
++			i = auto_units(used_files, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s realtime data used;  %.2f%s inodes used.\n"),
++					d, du, r, ru, i, iu);
++			d = auto_space_units(stat_data, &du);
++			r = auto_space_units(stat_rt, &ru);
++			i = auto_units(counted_inodes, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s realtime data found; %.2f%s inodes found.\n"),
++					d, du, r, ru, i, iu);
++		} else {
++			d = auto_space_units(used_data, &du);
++			i = auto_units(used_files, &iu);
++			fprintf(stdout,
++_("%.1f%s data used;  %.1f%s inodes used.\n"),
++					d, du, i, iu);
++			d = auto_space_units(stat_data, &du);
++			i = auto_units(counted_inodes, &iu);
++			fprintf(stdout,
++_("%.1f%s data found; %.1f%s inodes found.\n"),
++					d, du, i, iu);
++		}
++		fflush(stdout);
++	}
++
++	/*
++	 * Complain if the checked inode counts are off, which
++	 * implies an incomplete check.
++	 */
++	if (verbose ||
++	    !within_range(ctx, counted_inodes, ctx->inodes_checked, 100, 1, 10,
++			_("checked inodes"))) {
++		double		i1, i2;
++		char		*i1u, *i2u;
++
++		i1 = auto_units(counted_inodes, &i1u);
++		i2 = auto_units(ctx->inodes_checked, &i2u);
++		fprintf(stdout,
++_("%.1f%s inodes counted; %.1f%s inodes checked.\n"),
++				i1, i1u, i2, i2u);
++		fflush(stdout);
++	}
++
++	/*
++	 * Complain if the checked block counts are off, which
++	 * implies an incomplete check.
++	 */
++	if (ctx->bytes_checked &&
++	    (verbose ||
++	     !within_range(ctx, used_data + used_rt,
++			ctx->bytes_checked, absdiff, 1, 10,
++			_("verified blocks")))) {
++		double		b1, b2;
++		char		*b1u, *b2u;
++
++		b1 = auto_space_units(used_data + used_rt, &b1u);
++		b2 = auto_space_units(ctx->bytes_checked, &b2u);
++		fprintf(stdout,
++_("%.1f%s data counted; %.1f%s data verified.\n"),
++				b1, b1u, b2, b2u);
++		fflush(stdout);
++	}
++
++	moveon = true;
++
++out:
++	return moveon;
++out_free:
++	ptvar_free(ptvar);
++	return moveon;
++}
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 296b492..f6f5f0d 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -389,6 +389,8 @@ run_scrub_phases(
+ 		},
+ 		{
+ 			.descr = _("Check summary counters."),
++			.fn = xfs_scan_summary,
++			.must_run = true,
+ 		},
+ 		{
+ 			NULL
+@@ -458,7 +460,6 @@ main(
+ 	int			ret = SCRUB_RET_SUCCESS;
  
- void logformat_init(void);
-+void logres_init(void);
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index d2ab02a..5d56340 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -60,7 +60,7 @@
- #define xfs_trans_roll			libxfs_trans_roll
- #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
- #define xfs_trans_resv_calc		libxfs_trans_resv_calc
--
-+#define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
- #define xfs_attr_get			libxfs_attr_get
- #define xfs_attr_set			libxfs_attr_set
- #define xfs_attr_remove			libxfs_attr_remove
+ 	fprintf(stdout, "EXPERIMENTAL xfs_scrub program in use! Use at your own risk!\n");
+-	return SCRUB_RET_OPERROR;
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 997bedd..91f4577 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -104,5 +104,6 @@ bool xfs_scan_metadata(struct scrub_ctx *ctx);
+ bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ bool xfs_scan_connections(struct scrub_ctx *ctx);
+ bool xfs_scan_blocks(struct scrub_ctx *ctx);
++bool xfs_scan_summary(struct scrub_ctx *ctx);
+ 
+ #endif /* XFS_SCRUB_XFS_SCRUB_H_ */
 
