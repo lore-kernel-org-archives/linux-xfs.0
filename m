@@ -1,77 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45792 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbeAaSq5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 13:46:57 -0500
-Date: Wed, 31 Jan 2018 10:46:53 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:38820 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751326AbeAaS6w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 13:58:52 -0500
+Date: Wed, 31 Jan 2018 10:58:43 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] Parent pointer future use cases
-Message-ID: <20180131184653.GA4841@magnolia>
+Message-ID: <20180131185843.GB4841@magnolia>
 References: <588cad68-78eb-88de-49c3-716330b70cd5@oracle.com>
+ <CAOQ4uxhYrpY=POeATvh6GOJLNEwDrsQhvAKvyZzwcUQXGwLvDA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <588cad68-78eb-88de-49c3-716330b70cd5@oracle.com>
+In-Reply-To: <CAOQ4uxhYrpY=POeATvh6GOJLNEwDrsQhvAKvyZzwcUQXGwLvDA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, lsf-pc@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@poochiereds.net>
 
-On Tue, Jan 30, 2018 at 08:56:07PM -0700, Allison Henderson wrote:
-> Hi everyone!
+On Wed, Jan 31, 2018 at 09:34:52AM +0200, Amir Goldstein wrote:
+> On Wed, Jan 31, 2018 at 5:56 AM, Allison Henderson
+> <allison.henderson@oracle.com> wrote:
+> > Hi everyone!
+> >
 > 
-> Recently I have been working towards adding a new parent pointer patch set
-> to xfs.  Briefly summarized, goal of the feature is to enable an application
-> to quickly derive an inodes path from the mount point by storing information
-> about the inodes parent(s) in an extended attribute.  Currently, I am aware
-> of the intent to use the feature as part of an online scrub and repair
-> feature.
+> Hi Allison!
+> 
+> > Recently I have been working towards adding a new parent pointer patch set
+> > to xfs.  Briefly summarized, goal of the feature is to enable an application
+> > to quickly derive an inodes path from the mount point by storing information
+> > about the inodes parent(s) in an extended attribute.  Currently, I am aware
+> > of the intent to use the feature as part of an online scrub and repair
+> > feature.  Looking forward however, I would like to know about any other
+> > future coding intents that might make use of this feature.  For example,
+> > optimizing file system shrink or exportfs operations?  Are there certain
+> > interfaces or test cases that would be helpful to have?
+> 
+> Parent pointers are going to be useful for exportfs reconnect operations.
+> 
+> The interesting test cases are decoding of directory file handles with
+> cold inode cache, where the decoded file handle is of a directory that
+> is nested inside a deep and wide directory tree.
+> 
+> Similarly, decoding a 'connectable' non-dir file handle for nfs export
+> of type 'subtree_check' also requires reconnecting the parent dir.
+> 
+> As far as I can tell, there are two relevant interfaces that could be improved
+> by parent pointers.
+> 
+> 1. get_parent()+get_name()
+> These methods are used to get subdir's name in parent dir.
+> get_name() is not currently implemented in xfs.
+> get_name() has a default implementation of linear search on parent
+> directory entries.
+> parent pointers could improve this implementation from O(# parent entries)
+> to O(# parent xattrs), without the need to change the interface.
+> I advocated storing directory parent pointer also with a constant key (without
+> parent inode and offset), so that get_name() could be improved to O(1).
 
-The online fs check use case is that we iterate every inode in the
-filesystem from start to finish via file handles, and if we find some
-damage it would be much more helpful to be able to report the file path
-to userspace (e.g. "/foo/bar/file is corrupt" vs. "inode 325325 is
-corrupt").
+I'm not sure what you mean by 'constant key' -- how can you have a
+parent pointer without storing the parent inode?  Files can have
+multiple directory parents, so I don't see how that would work in the
+general case.
 
-A second use is for xfs_repair and/or online fs repair -- instead of
-dumping files orphaned by a destroyed directory in lost+found, we have
-the possibility of rebuilding that directory by scanning all the inodes
-to see which ones have parent pointers to the broken directory and then
-rebuilding it from there.  Easy enough to do in xfs_repair, but will be
-significantly more challenging to do it in the kernel <cough>.
+ATM the current proposal for xfs is to store this xattr in the system
+namespace:
 
-The third use I can think of relates to past years' discussion of head
-de-pop and pmem badblocks -- given a range of defective storage, we can
-cross reference that with the reverse mapping to figure out which
-(inode, offset) are affected, and try to use parent pointers to turn the
-inode numbers into file paths.  We can also figure out if metadata is
-affected and start a rebuild operation (though obviously if the rmap
-data is affected then we're toast).
+(parent_ino, parent_gen, parent_offset) -> dirent name
 
-> Looking forward however, I would like to know about any other
-> future coding intents that might make use of this feature.  For example,
-> optimizing file system shrink or exportfs operations?  Are there certain
+We need the long key to identify each parent pointer uniquely, and also
+so that we can reconstruct directories.  Most files only have one
+parent, so hopefully the performance will not be too awful, excepting
+those hardlink farm backup systems.
 
-Not sure it'll help for fs shrink, but clearly the exportfs part of the
-discussion has taken off. :)
+> 2. fh_to_parent()+get_name()
+> These methods are used to get a non-dir name in parent dir.
+> fh_to_parent() is implemented in xfs only if file handle was encoded as
+> 'connectable' (FILEID_INO32_GEN_PARENT).
+> The problem with 'connectable' file handles from nfsd perspective is that
+> are not unique in some filesystems (xfs included).
+> With parent pointers, there is a potential to implement 'connectable' and
+> unique file handles, but that requires improving the interface.
+> 
+> If filesystem were to provide a parents iterator interface, something like:
+> get_acceptable_parent(child, acceptable, context)
+> then xfs could iterate inode parents and call the nfsd_acceptable() callback.
+> For filesystems that support get_acceptable_parent(), there is no need to
+> encode a 'connectable' non unique file handle.
 
-> interfaces or test cases that would be helpful to have?  I know the patch
-> set has had a complicated history, so ideally being aware of how folks may
-> go about using it may help to construct test cases to route out flaws sooner
-> rather than later.
-
-I posted a userspace ioctl interface strawman here, implementing use
-case #1 from above:
-https://marc.info/?l=linux-xfs&m=151270557232472&w=2
-
-Basic parent pointer iteration and path construction are provided in
-userspace, bolted atop the in-kernel parent pointer iterator that
-behaves similarly to the existing xfs file-handle attribute iterator.
+I think that could be done without too much effort.
 
 --D
 
+> I am not sure how much of a problem the 'subtree_check' and non-unique
+> file handle is for nfsd (CC nfsd folks for that), but I know I can make good use
+> of that in overlayfs, as well as with an optimized get_name() implementation.
 > 
-> Thank you!
-> 
-> Allison Henderson
+> Cheers,
+> Amir.
