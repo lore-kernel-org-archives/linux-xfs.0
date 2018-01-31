@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57982 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752322AbeAaDH0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:07:26 -0500
-Subject: [PATCH 08/29] xfs_scrub: add inode iteration functions
+Received: from userp2120.oracle.com ([156.151.31.85]:42962 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751968AbeAaDIp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jan 2018 22:08:45 -0500
+Subject: [PATCH 19/29] xfs_scrub: create a bitmap data structure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Jan 2018 19:07:21 -0800
-Message-ID: <151736804193.32164.6788880219481922529.stgit@magnolia>
+Date: Tue, 30 Jan 2018 19:08:32 -0800
+Message-ID: <151736811230.32164.14128593583786118625.stgit@magnolia>
 In-Reply-To: <151736799098.32164.15446216987522359103.stgit@magnolia>
 References: <151736799098.32164.15446216987522359103.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,45 +20,46 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These helpers enable userspace to count or iterate all inodes in a
-filesystem.  The counting function uses INUMBERS, while the inode
-iterator uses INUMBERS and BULKSTAT to iterate over every inode that
-should be in the filesystem.
+Create an efficient tree-based bitmap data structure.  We will use this
+during the data block scan to record the LBAs of IO errors so that we
+can report broken files to userspace.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  scrub/Makefile |    2 
- scrub/inodes.c |  297 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/inodes.h |   32 ++++++
- 3 files changed, 331 insertions(+)
- create mode 100644 scrub/inodes.c
- create mode 100644 scrub/inodes.h
+ scrub/bitmap.c |  410 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/bitmap.h |   38 +++++
+ 3 files changed, 450 insertions(+)
+ create mode 100644 scrub/bitmap.c
+ create mode 100644 scrub/bitmap.h
 
 
 diff --git a/scrub/Makefile b/scrub/Makefile
-index 5239dae..4d1c908 100644
+index 858bc40..a9aaa99 100644
 --- a/scrub/Makefile
 +++ b/scrub/Makefile
-@@ -18,11 +18,13 @@ endif	# scrub_prereqs
+@@ -16,6 +16,7 @@ INSTALL_SCRUB = install-scrub
+ endif	# scrub_prereqs
+ 
  HFILES = \
++bitmap.h \
  common.h \
+ counter.h \
  disk.h \
-+inodes.h \
+@@ -28,6 +29,7 @@ unicrash.h \
  xfs_scrub.h
  
  CFILES = \
++bitmap.c \
  common.c \
+ counter.c \
  disk.c \
-+inodes.c \
- phase1.c \
- xfs_scrub.c
- 
-diff --git a/scrub/inodes.c b/scrub/inodes.c
+diff --git a/scrub/bitmap.c b/scrub/bitmap.c
 new file mode 100644
-index 0000000..23ec704
+index 0000000..a88fd0e
 --- /dev/null
-+++ b/scrub/inodes.c
-@@ -0,0 +1,297 @@
++++ b/scrub/bitmap.c
+@@ -0,0 +1,410 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -82,286 +83,399 @@ index 0000000..23ec704
 +#include <stdbool.h>
 +#include <stdint.h>
 +#include <stdlib.h>
++#include <errno.h>
++#include <assert.h>
++#include <inttypes.h>
 +#include <pthread.h>
-+#include <sys/statvfs.h>
 +#include "platform_defs.h"
-+#include "xfs.h"
-+#include "xfs_arch.h"
-+#include "xfs_format.h"
-+#include "handle.h"
-+#include "path.h"
-+#include "workqueue.h"
-+#include "xfs_scrub.h"
-+#include "common.h"
-+#include "inodes.h"
++#include "avl64.h"
++#include "list.h"
++#include "bitmap.h"
 +
 +/*
-+ * Iterate a range of inodes.
++ * Space Efficient Bitmap
 + *
-+ * This is a little more involved than repeatedly asking BULKSTAT for a
-+ * buffer's worth of stat data for some number of inodes.  We want to scan as
-+ * many of the inodes that the inobt thinks there are, including the ones that
-+ * are broken, but if we ask for n inodes starting at x, it'll skip the bad
-+ * ones and fill from beyond the range (x + n).
-+ *
-+ * Therefore, we ask INUMBERS to return one inobt chunk's worth of inode
-+ * bitmap information.  Then we try to BULKSTAT only the inodes that were
-+ * present in that chunk, and compare what we got against what INUMBERS said
-+ * was there.  If there's a mismatch, we know that we have an inode that fails
-+ * the verifiers but we can inject the bulkstat information to force the scrub
-+ * code to deal with the broken inodes.
-+ *
-+ * If the iteration function returns ESTALE, that means that the inode has
-+ * been deleted and possibly recreated since the BULKSTAT call.  We wil
-+ * refresh the stat information and try again up to 30 times before reporting
-+ * the staleness as an error.
++ * Implements a space-efficient bitmap.  We use an AVL tree to manage
++ * extent records that tell us which ranges are set; the bitmap key is
++ * an arbitrary uint64_t.  The usual bitmap operations (set, clear,
++ * test, test and set) are supported, plus we can iterate set ranges.
 + */
 +
-+/*
-+ * Did we get exactly the inodes we expected?  If not, load them one at a
-+ * time (or fake it) into the bulkstat data.
-+ */
-+static void
-+xfs_iterate_inodes_range_check(
-+	struct scrub_ctx	*ctx,
-+	struct xfs_inogrp	*inogrp,
-+	struct xfs_bstat	*bstat)
-+{
-+	struct xfs_fsop_bulkreq	onereq = {0};
-+	struct xfs_bstat	*bs;
-+	__u64			oneino;
-+	__s32			onelen = 0;
-+	int			i;
-+	int			error;
++#define avl_for_each_range_safe(pos, n, l, first, last) \
++	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
++			pos = n, n = pos ? pos->avl_nextino : NULL)
 +
-+	onereq.lastip  = &oneino;
-+	onereq.icount  = 1;
-+	onereq.ocount  = &onelen;
++#define avl_for_each_safe(tree, pos, n) \
++	for (pos = (tree)->avl_firstino, n = pos ? pos->avl_nextino : NULL; \
++			pos != NULL; \
++			pos = n, n = pos ? pos->avl_nextino : NULL)
 +
-+	for (i = 0, bs = bstat; i < XFS_INODES_PER_CHUNK; i++) {
-+		if (!(inogrp->xi_allocmask & (1ULL << i)))
-+			continue;
-+		if (bs->bs_ino == inogrp->xi_startino + i) {
-+			bs++;
-+			continue;
-+		}
++#define avl_for_each(tree, pos) \
++	for (pos = (tree)->avl_firstino; pos != NULL; pos = pos->avl_nextino)
 +
-+		/* Load the one inode. */
-+		oneino = inogrp->xi_startino + i;
-+		onereq.ubuffer = bs;
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT_SINGLE,
-+				&onereq);
-+		if (error || bs->bs_ino != inogrp->xi_startino + i) {
-+			memset(bs, 0, sizeof(struct xfs_bstat));
-+			bs->bs_ino = inogrp->xi_startino + i;
-+			bs->bs_blksize = ctx->mnt_sv.f_frsize;
-+		}
-+		bs++;
-+	}
-+}
-+
-+/*
-+ * Call into the filesystem for inode/bulkstat information and call our
-+ * iterator function.  We'll try to fill the bulkstat information in batches,
-+ * but we also can detect iget failures.
-+ */
-+static bool
-+xfs_iterate_inodes_range(
-+	struct scrub_ctx	*ctx,
-+	const char		*descr,
-+	void			*fshandle,
-+	uint64_t		first_ino,
-+	uint64_t		last_ino,
-+	xfs_inode_iter_fn	fn,
-+	void			*arg)
-+{
-+	struct xfs_fsop_bulkreq	igrpreq = {0};
-+	struct xfs_fsop_bulkreq	bulkreq = {0};
-+	struct xfs_handle	handle;
-+	struct xfs_inogrp	inogrp;
-+	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
-+	char			idescr[DESCR_BUFSZ];
-+	char			buf[DESCR_BUFSZ];
-+	struct xfs_bstat	*bs;
-+	__u64			igrp_ino;
-+	__u64			ino;
-+	__s32			bulklen = 0;
-+	__s32			igrplen = 0;
-+	bool			moveon = true;
-+	int			i;
-+	int			error;
-+	int			stale_count = 0;
-+
-+
-+	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
-+	bulkreq.lastip  = &ino;
-+	bulkreq.icount  = XFS_INODES_PER_CHUNK;
-+	bulkreq.ubuffer = &bstat;
-+	bulkreq.ocount  = &bulklen;
-+
-+	igrpreq.lastip  = &igrp_ino;
-+	igrpreq.icount  = 1;
-+	igrpreq.ubuffer = &inogrp;
-+	igrpreq.ocount  = &igrplen;
-+
-+	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
-+	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
-+			sizeof(handle.ha_fid.fid_len);
-+	handle.ha_fid.fid_pad = 0;
-+
-+	/* Find the inode chunk & alloc mask */
-+	igrp_ino = first_ino;
-+	error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	while (!error && igrplen) {
-+		/* Load the inodes. */
-+		ino = inogrp.xi_startino - 1;
-+		bulkreq.icount = inogrp.xi_alloccount;
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT, &bulkreq);
-+		if (error)
-+			str_warn(ctx, descr, "%s", strerror_r(errno,
-+						buf, DESCR_BUFSZ));
-+
-+		xfs_iterate_inodes_range_check(ctx, &inogrp, bstat);
-+
-+		/* Iterate all the inodes. */
-+		for (i = 0, bs = bstat; i < inogrp.xi_alloccount; i++, bs++) {
-+			if (bs->bs_ino > last_ino)
-+				goto out;
-+
-+			handle.ha_fid.fid_ino = bs->bs_ino;
-+			handle.ha_fid.fid_gen = bs->bs_gen;
-+			error = fn(ctx, &handle, bs, arg);
-+			switch (error) {
-+			case 0:
-+				break;
-+			case ESTALE:
-+				stale_count++;
-+				if (stale_count < 30) {
-+					igrp_ino = inogrp.xi_startino;
-+					goto igrp_retry;
-+				}
-+				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
-+						(uint64_t)bs->bs_ino);
-+				str_warn(ctx, idescr, "%s", strerror_r(error,
-+						buf, DESCR_BUFSZ));
-+				break;
-+			case XFS_ITERATE_INODES_ABORT:
-+				error = 0;
-+				/* fall thru */
-+			default:
-+				moveon = false;
-+				errno = error;
-+				goto err;
-+			}
-+			if (xfs_scrub_excessive_errors(ctx)) {
-+				moveon = false;
-+				goto out;
-+			}
-+		}
-+
-+		stale_count = 0;
-+igrp_retry:
-+		error = ioctl(ctx->mnt_fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	}
-+
-+err:
-+	if (error) {
-+		str_errno(ctx, descr);
-+		moveon = false;
-+	}
-+out:
-+	return moveon;
-+}
-+
-+/* BULKSTAT wrapper routines. */
-+struct xfs_scan_inodes {
-+	xfs_inode_iter_fn	fn;
-+	void			*arg;
-+	bool			moveon;
++struct bitmap_node {
++	struct avl64node	btn_node;
++	uint64_t		btn_start;
++	uint64_t		btn_length;
 +};
 +
-+/* Scan all the inodes in an AG. */
-+static void
-+xfs_scan_ag_inodes(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
++static uint64_t
++extent_start(
++	struct avl64node	*node)
 +{
-+	struct xfs_scan_inodes	*si = arg;
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	char			descr[DESCR_BUFSZ];
-+	uint64_t		ag_ino;
-+	uint64_t		next_ag_ino;
-+	bool			moveon;
++	struct bitmap_node	*btn;
 +
-+	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
-+				major(ctx->fsinfo.fs_datadev),
-+				minor(ctx->fsinfo.fs_datadev),
-+				agno);
-+
-+	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
-+	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
-+
-+	moveon = xfs_iterate_inodes_range(ctx, descr, ctx->fshandle, ag_ino,
-+			next_ag_ino - 1, si->fn, si->arg);
-+	if (!moveon)
-+		si->moveon = false;
++	btn = container_of(node, struct bitmap_node, btn_node);
++	return btn->btn_start;
 +}
 +
-+/* Scan all the inodes in a filesystem. */
-+bool
-+xfs_scan_all_inodes(
-+	struct scrub_ctx	*ctx,
-+	xfs_inode_iter_fn	fn,
-+	void			*arg)
++static uint64_t
++extent_end(
++	struct avl64node	*node)
 +{
-+	struct xfs_scan_inodes	si;
-+	xfs_agnumber_t		agno;
-+	struct workqueue	wq;
-+	int			ret;
++	struct bitmap_node	*btn;
 +
-+	si.moveon = true;
-+	si.fn = fn;
-+	si.arg = arg;
++	btn = container_of(node, struct bitmap_node, btn_node);
++	return btn->btn_start + btn->btn_length;
++}
 +
-+	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
-+			scrub_nproc_workqueue(ctx));
-+	if (ret) {
-+		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++static struct avl64ops bitmap_ops = {
++	extent_start,
++	extent_end,
++};
++
++/* Initialize a bitmap. */
++bool
++bitmap_init(
++	struct bitmap		**bmapp)
++{
++	struct bitmap		*bmap;
++
++	bmap = calloc(1, sizeof(struct bitmap));
++	if (!bmap)
++		return false;
++	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
++	if (!bmap->bt_tree) {
++		free(bmap);
 +		return false;
 +	}
 +
-+	for (agno = 0; agno < ctx->geo.agcount; agno++) {
-+		ret = workqueue_add(&wq, xfs_scan_ag_inodes, agno, &si);
-+		if (ret) {
-+			si.moveon = false;
-+			str_error(ctx, ctx->mntpoint,
-+_("Could not queue AG %u bulkstat work."), agno);
++	pthread_mutex_init(&bmap->bt_lock, NULL);
++	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
++	*bmapp = bmap;
++
++	return true;
++}
++
++/* Free a bitmap. */
++void
++bitmap_free(
++	struct bitmap		**bmapp)
++{
++	struct bitmap		*bmap;
++	struct avl64node	*node;
++	struct avl64node	*n;
++	struct bitmap_node	*ext;
++
++	bmap = *bmapp;
++	avl_for_each_safe(bmap->bt_tree, node, n) {
++		ext = container_of(node, struct bitmap_node, btn_node);
++		free(ext);
++	}
++	free(bmap->bt_tree);
++	*bmapp = NULL;
++}
++
++/* Create a new bitmap extent node. */
++static struct bitmap_node *
++bitmap_node_init(
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct bitmap_node	*ext;
++
++	ext = malloc(sizeof(struct bitmap_node));
++	if (!ext)
++		return NULL;
++
++	ext->btn_node.avl_nextino = NULL;
++	ext->btn_start = start;
++	ext->btn_length = len;
++
++	return ext;
++}
++
++/* Set a region of bits (locked). */
++static bool
++__bitmap_set(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		length)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++	struct avl64node	*pos;
++	struct avl64node	*n;
++	struct avl64node	*l;
++	struct bitmap_node	*ext;
++	uint64_t		new_start;
++	uint64_t		new_length;
++	struct avl64node	*node;
++	bool			res = true;
++
++	/* Find any existing nodes adjacent or within that range. */
++	avl64_findranges(bmap->bt_tree, start - 1, start + length + 1,
++			&firstn, &lastn);
++
++	/* Nothing, just insert a new extent. */
++	if (firstn == NULL && lastn == NULL) {
++		ext = bitmap_node_init(start, length);
++		if (!ext)
++			return false;
++
++		node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++		if (node == NULL) {
++			free(ext);
++			errno = EEXIST;
++			return false;
++		}
++
++		return true;
++	}
++
++	assert(firstn != NULL && lastn != NULL);
++	new_start = start;
++	new_length = length;
++
++	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
++		ext = container_of(pos, struct bitmap_node, btn_node);
++
++		/* Bail if the new extent is contained within an old one. */
++		if (ext->btn_start <= start &&
++		    ext->btn_start + ext->btn_length >= start + length)
++			return res;
++
++		/* Check for overlapping and adjacent extents. */
++		if (ext->btn_start + ext->btn_length >= start ||
++		    ext->btn_start <= start + length) {
++			if (ext->btn_start < start) {
++				new_start = ext->btn_start;
++				new_length += ext->btn_length;
++			}
++
++			if (ext->btn_start + ext->btn_length >
++			    new_start + new_length)
++				new_length = ext->btn_start + ext->btn_length -
++						new_start;
++
++			avl64_delete(bmap->bt_tree, pos);
++			free(ext);
++		}
++	}
++
++	ext = bitmap_node_init(new_start, new_length);
++	if (!ext)
++		return false;
++
++	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++	if (node == NULL) {
++		free(ext);
++		errno = EEXIST;
++		return false;
++	}
++
++	return res;
++}
++
++/* Set a region of bits. */
++bool
++bitmap_set(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		length)
++{
++	bool			res;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	res = __bitmap_set(bmap, start, length);
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return res;
++}
++
++#if 0	/* Unused, provided for completeness. */
++/* Clear a region of bits. */
++bool
++bitmap_clear(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++	struct avl64node	*pos;
++	struct avl64node	*n;
++	struct avl64node	*l;
++	struct bitmap_node	*ext;
++	uint64_t		new_start;
++	uint64_t		new_length;
++	struct avl64node	*node;
++	int			stat;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	/* Find any existing nodes over that range. */
++	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
++
++	/* Nothing, we're done. */
++	if (firstn == NULL && lastn == NULL) {
++		pthread_mutex_unlock(&bmap->bt_lock);
++		return true;
++	}
++
++	assert(firstn != NULL && lastn != NULL);
++
++	/* Delete or truncate everything in sight. */
++	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
++		ext = container_of(pos, struct bitmap_node, btn_node);
++
++		stat = 0;
++		if (ext->btn_start < start)
++			stat |= 1;
++		if (ext->btn_start + ext->btn_length > start + len)
++			stat |= 2;
++		switch (stat) {
++		case 0:
++			/* Extent totally within range; delete. */
++			avl64_delete(bmap->bt_tree, pos);
++			free(ext);
++			break;
++		case 1:
++			/* Extent is left-adjacent; truncate. */
++			ext->btn_length = start - ext->btn_start;
++			break;
++		case 2:
++			/* Extent is right-adjacent; move it. */
++			ext->btn_length = ext->btn_start + ext->btn_length -
++					(start + len);
++			ext->btn_start = start + len;
++			break;
++		case 3:
++			/* Extent overlaps both ends. */
++			ext->btn_length = start - ext->btn_start;
++			new_start = start + len;
++			new_length = ext->btn_start + ext->btn_length -
++					new_start;
++
++			ext = bitmap_node_init(new_start, new_length);
++			if (!ext)
++				return false;
++
++			node = avl64_insert(bmap->bt_tree, &ext->btn_node);
++			if (node == NULL) {
++				errno = EEXIST;
++				return false;
++			}
 +			break;
 +		}
 +	}
 +
-+	workqueue_destroy(&wq);
-+
-+	return si.moveon;
++	pthread_mutex_unlock(&bmap->bt_lock);
++	return true;
 +}
++#endif
 +
-+/*
-+ * Open a file by handle, or return a negative error code.
-+ */
-+int
-+xfs_open_handle(
-+	struct xfs_handle	*handle)
++#ifdef DEBUG
++/* Iterate the set regions of this bitmap. */
++bool
++bitmap_iterate(
++	struct bitmap		*bmap,
++	bool			(*fn)(uint64_t, uint64_t, void *),
++	void			*arg)
 +{
-+	return open_by_fshandle(handle, sizeof(*handle),
-+			O_RDONLY | O_NOATIME | O_NOFOLLOW | O_NOCTTY);
++	struct avl64node	*node;
++	struct bitmap_node	*ext;
++	bool			moveon = true;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	avl_for_each(bmap->bt_tree, node) {
++		ext = container_of(node, struct bitmap_node, btn_node);
++		moveon = fn(ext->btn_start, ext->btn_length, arg);
++		if (!moveon)
++			break;
++	}
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return moveon;
 +}
-diff --git a/scrub/inodes.h b/scrub/inodes.h
++#endif
++
++/* Do any bitmap extents overlap the given one?  (locked) */
++static bool
++__bitmap_test(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	struct avl64node	*firstn;
++	struct avl64node	*lastn;
++
++	/* Find any existing nodes over that range. */
++	avl64_findranges(bmap->bt_tree, start, start + len, &firstn, &lastn);
++
++	return firstn != NULL && lastn != NULL;
++}
++
++/* Is any part of this range set? */
++bool
++bitmap_test(
++	struct bitmap		*bmap,
++	uint64_t		start,
++	uint64_t		len)
++{
++	bool			res;
++
++	pthread_mutex_lock(&bmap->bt_lock);
++	res = __bitmap_test(bmap, start, len);
++	pthread_mutex_unlock(&bmap->bt_lock);
++
++	return res;
++}
++
++/* Are none of the bits set? */
++bool
++bitmap_empty(
++	struct bitmap		*bmap)
++{
++	return bmap->bt_tree->avl_firstino == NULL;
++}
++
++#ifdef DEBUG
++static bool
++bitmap_dump_fn(
++	uint64_t		startblock,
++	uint64_t		blockcount,
++	void			*arg)
++{
++	printf("%"PRIu64":%"PRIu64"\n", startblock, blockcount);
++	return true;
++}
++
++/* Dump bitmap. */
++void
++bitmap_dump(
++	struct bitmap		*bmap)
++{
++	printf("BITMAP DUMP %p\n", bmap);
++	bitmap_iterate(bmap, bitmap_dump_fn, NULL);
++	printf("BITMAP DUMP DONE\n");
++}
++#endif
+diff --git a/scrub/bitmap.h b/scrub/bitmap.h
 new file mode 100644
-index 0000000..693cb05
+index 0000000..e8dcd4f
 --- /dev/null
-+++ b/scrub/inodes.h
-@@ -0,0 +1,32 @@
++++ b/scrub/bitmap.h
+@@ -0,0 +1,38 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -381,17 +495,23 @@ index 0000000..693cb05
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+#ifndef XFS_SCRUB_INODES_H_
-+#define XFS_SCRUB_INODES_H_
++#ifndef XFS_SCRUB_BITMAP_H_
++#define XFS_SCRUB_BITMAP_H_
 +
-+typedef int (*xfs_inode_iter_fn)(struct scrub_ctx *ctx,
-+		struct xfs_handle *handle, struct xfs_bstat *bs, void *arg);
++struct bitmap {
++	pthread_mutex_t		bt_lock;
++	struct avl64tree_desc	*bt_tree;
++};
 +
-+#define XFS_ITERATE_INODES_ABORT	(-1)
-+bool xfs_scan_all_inodes(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
-+		void *arg);
++bool bitmap_init(struct bitmap **bmap);
++void bitmap_free(struct bitmap **bmap);
++bool bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
++bool bitmap_iterate(struct bitmap *bmap,
++		bool (*fn)(uint64_t, uint64_t, void *), void *arg);
++bool bitmap_test(struct bitmap *bmap, uint64_t start,
++		uint64_t len);
++bool bitmap_empty(struct bitmap *bmap);
++void bitmap_dump(struct bitmap *bmap);
 +
-+int xfs_open_handle(struct xfs_handle *handle);
-+
-+#endif /* XFS_SCRUB_INODES_H_ */
++#endif /* XFS_SCRUB_BITMAP_H_ */
 
