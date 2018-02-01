@@ -1,53 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:44619 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751909AbeBALbh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 06:31:37 -0500
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:45424 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbeBAOeY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 09:34:24 -0500
+Received: by mail-qk0-f173.google.com with SMTP id z12so19581131qkf.12
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Feb 2018 06:34:24 -0800 (PST)
+Date: Thu, 1 Feb 2018 09:34:22 -0500
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: [LSF/MM TOPIC] File system memory management topics
+Message-ID: <20180201143422.phir5f2wwv6udnqe@destiny>
 MIME-Version: 1.0
-In-Reply-To: <1517480584-4588-1-git-send-email-geert@linux-m68k.org>
-References: <1517480584-4588-1-git-send-email-geert@linux-m68k.org>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 1 Feb 2018 12:31:36 +0100
-Message-ID: <CAK8P3a1N-Yh65y6bEb+d7DwVOqB8ee=T1gM1cc7k6=cg1c3Jtw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Add missing braces around xfs_scrub_agfl_info initializer
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: lsf-pc@lists.linux-foundation.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org
 
-On Thu, Feb 1, 2018 at 11:23 AM, Geert Uytterhoeven
-<geert@linux-m68k.org> wrote:
-> With gcc-4.1.2:
->
->     fs/xfs/scrub/agheader.c: In function =E2=80=98xfs_scrub_agfl=E2=80=99=
-:
->     fs/xfs/scrub/agheader.c:770: warning: missing braces around initializ=
-er
->     fs/xfs/scrub/agheader.c:770: warning: (near initialization for =E2=80=
-=98sai.oinfo=E2=80=99)
->
-> The first member of struct xfs_scrub_agfl_info is no longer an integral
-> type, but a struct.  Add the missing curly braces to fix this.
+Hello,
 
-I suspect gcc-4.5 is affected as well, but not 4.6+
+I've been lazily working through various mm related issues with file systems for
+the last couple of years and would like to talk about current progress and work
+thats left to be done.  Some of the topics I want to cover are
 
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -767,7 +767,7 @@ int
->  xfs_scrub_agfl(
->         struct xfs_scrub_context        *sc)
->  {
-> -       struct xfs_scrub_agfl_info      sai =3D { 0 };
-> +       struct xfs_scrub_agfl_info      sai =3D { { 0 } };
->         struct xfs_agf                  *agf;
+* Metadata tracking, writeback, and reclaim
+* Smarter fs cache shrinking
+* Non-page size block size handling
 
-Looks ok to me, but
+Dave please tell me you are going to be there this year?  It's going to be
+completely useless for me to talk about this stuff if you aren't in the room.
+These are all big topics in and of themselves so if we just need to get you, me,
+Jan, and some poor MM guy locked in a room with a couple of bottles of liquor
+until we figure it out then that's fine.
 
-        struct xfs_scrub_agfl_info      sai =3D { };
+I'm hoping to have the metadata tracking stuff fixed up and at least mergable by
+LSF, but there's still stuff to be added to that infrastructure later on, and
+the other topics we need to agree on a direction.  Thanks,
 
-might be slightly better in case the first member changes again.
-
-     Arnd
+Josef
