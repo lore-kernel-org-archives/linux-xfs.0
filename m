@@ -1,233 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54598 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751976AbeBAWsA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 17:48:00 -0500
-Date: Thu, 1 Feb 2018 14:46:51 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2 1/2] dax: change bdev_dax_supported() to take a
- block_device as input
-Message-ID: <20180201224651.GV4849@magnolia>
-References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
+Received: from sandeen.net ([63.231.237.45]:52856 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751677AbeBAUuU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Feb 2018 15:50:20 -0500
+Subject: Re: [PATCH] xfs_mdrestore: Don't restore over a dump file
+References: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3c874559-f69f-c2c0-fb40-4c40621dd58b@sandeen.net>
+Date: Thu, 1 Feb 2018 14:50:19 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
+To: Marco A Benatto <marco.antonio.780@gmail.com>, linux-xfs@vger.kernel.org
 
-On Thu, Feb 01, 2018 at 01:32:59PM -0700, Dave Jiang wrote:
-> This is in preparation to support DAX for realtime device on XFS.
-> bdev_dax_supported() will be taking a block_device as input instead of
-> a superblock. The only place a super_block is used in this function is
-> providing the id for debug outputs. Also __bdev_dax_supported()
-> will be removed since it just directly calls bdev_dax_supported()
-> and is not reference by any other code.
+On 2/1/18 2:37 PM, Marco A Benatto wrote:
+> Currently, if the user switch source and target parameters
+> position, xfs_mdrestore truncates the dumpfile before abort
+> the execution.
 > 
-> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> This patch checks the target parameter and if XFS_MD_MAGIC is
+> found, it aborts execution and leave dump file intact.
+
+Yeah, I think this is a good idea.  It's pretty unforgiving
+to get it wrong and destroy your metadump in the process.
+
+(though tbh I usually get a compressed dump, and
+# bzcat dumpfile.bz2 | xfs_mdrestore - target
+works quite well and is more foolproof)
+
+So, despite the fact that I already talked with you about
+this a bit online, I think my subconscious was working on
+it in the meantime.  What you've got is generally ok, but
+I wonder if the goal is to detect switched arguments, if
+it might be simpler to first validate the given source, and
+stop if it's not a metadump file.  We've already got that in
+place, and it'd just be a question of checking the header
+unconditionally, something like this, which just moves some
+of the existing stuff work of the conditional:
+
+        xfs_metablock_t         mb;
+
+
+        /* validate that our source file is really a metadump */
+        if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+                fatal("error reading from source file: %s\n", strerror(errno));
+
+        if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
+                fatal("specified source file is not a metadata dump\n");
+
+        if (show_info) {
+                if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
+                        printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
+                        argv[optind],
+                        mb.mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
+                        mb.mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
+                        mb.mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
+                } else {
+                        printf("%s: no informational flags present\n",
+                                argv[optind]);
+                }
+
+                if (argc - optind == 1)
+                        exit(0);
+        }
+
+        /* Go back to the beginning for the restore function */
+        fseek(src_f, 0L, SEEK_SET);
+
+It's not explicitly checking the target, but it would probably serve
+the same purpose with fewer lines of new code.  Either is ok with me,
+really.  Any thoughts?
+
+Thanks,
+-Eric
+
+
+> 
+> Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
 > ---
->  drivers/dax/super.c |   33 ++++++++++++++++-----------------
->  fs/ext2/super.c     |    2 +-
->  fs/ext4/super.c     |    2 +-
->  fs/xfs/xfs_ioctl.c  |    2 +-
->  fs/xfs/xfs_super.c  |    2 +-
->  include/linux/dax.h |    8 ++------
->  6 files changed, 22 insertions(+), 27 deletions(-)
+>  mdrestore/xfs_mdrestore.c | 16 +++++++++++++++-
+>  1 file changed, 15 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 473af694ad1c..3bdf6787b6df 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -70,11 +70,10 @@ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
->  	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
->  }
->  EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-> -#endif
->  
->  /**
-> - * __bdev_dax_supported() - Check if the device supports dax for filesystem
-> - * @sb: The superblock of the device
-> + * bdev_dax_supported() - Check if the device supports dax for filesystem
-> + * @sb: The block_device of the device
->   * @blocksize: The block size of the device
->   *
->   * This is a library function for filesystems to check if the block device
-> @@ -82,9 +81,8 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
->   *
->   * Return: negative errno if unsupported, 0 if supported.
->   */
-> -int __bdev_dax_supported(struct super_block *sb, int blocksize)
-> +int bdev_dax_supported(struct block_device *bdev, int blocksize)
-
-Looking ahead to filesystems that can span multiple dax devices, perhaps
-it would be better to be able topass in the bdev that we want to check?
-
-int bdev_dax_supported(sb, bdev, blocksize)
-{
-	/* same tests we do today... */
-}
-
-int sb_dax_supported(sb, blocksize)
-{
-	return bdev_dax_supported(sb, sb->s_bdev, blocksize);
-}
-
-That way a single bdev filesystem (ext4) can retain the same api it uses
-today, and two-bdev filesystems (xfs) can specify which bdev to check.
-
-(Continuing review in the next patch...)
-
---D
-
+> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+> index c49c13a..b4bf7b4 100644
+> --- a/mdrestore/xfs_mdrestore.c
+> +++ b/mdrestore/xfs_mdrestore.c
+> @@ -205,7 +205,7 @@ main(
+>  	int 		argc,
+>  	char 		**argv)
 >  {
-> -	struct block_device *bdev = sb->s_bdev;
->  	struct dax_device *dax_dev;
->  	pgoff_t pgoff;
->  	int err, id;
-> @@ -93,22 +91,22 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
->  	long len;
+> -	FILE		*src_f;
+> +	FILE		*src_f, *dst_f;
+>  	int		dst_fd;
+>  	int		c;
+>  	int		open_flags;
+> @@ -277,6 +277,7 @@ main(
 >  
->  	if (blocksize != PAGE_SIZE) {
-> -		pr_debug("VFS (%s): error: unsupported blocksize for dax\n",
-> -				sb->s_id);
-> +		pr_debug("bdev (%d:%d): error: unsupported blocksize for dax\n",
-> +				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
->  		return -EINVAL;
->  	}
+>  	optind++;
 >  
->  	err = bdev_dax_pgoff(bdev, 0, PAGE_SIZE, &pgoff);
->  	if (err) {
-> -		pr_debug("VFS (%s): error: unaligned partition for dax\n",
-> -				sb->s_id);
-> +		pr_debug("bdev (%d:%d): error: unaligned partition for dax\n",
-> +				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
->  		return err;
->  	}
->  
->  	dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
->  	if (!dax_dev) {
-> -		pr_debug("VFS (%s): error: device does not support dax\n",
-> -				sb->s_id);
-> +		pr_debug("bdev (%d:%d): error: device does not support dax\n",
-> +				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
->  		return -EOPNOTSUPP;
->  	}
->  
-> @@ -119,8 +117,8 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
->  	put_dax(dax_dev);
->  
->  	if (len < 1) {
-> -		pr_debug("VFS (%s): error: dax access failed (%ld)\n",
-> -				sb->s_id, len);
-> +		pr_debug("bdev (%d:%d): error: dax access failed (%ld)\n",
-> +				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev), len);
->  		return len < 0 ? len : -EIO;
->  	}
->  
-> @@ -128,15 +126,16 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
->  			|| pfn_t_devmap(pfn))
->  		/* pass */;
->  	else {
-> -		pr_debug("VFS (%s): error: dax support not enabled\n",
-> -				sb->s_id);
-> +		pr_debug("bdev (%d:%d): error: dax support not enabled\n",
-> +				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
->  		return -EOPNOTSUPP;
->  	}
->  
->  	return 0;
->  }
-> -EXPORT_SYMBOL_GPL(__bdev_dax_supported);
-> -#endif
-> +EXPORT_SYMBOL_GPL(bdev_dax_supported);
-> +#endif /* CONFIG_FS_DAX */
-> +#endif /* CONFIG_BLOCK */
->  
->  enum dax_device_flags {
->  	/* !alive + rcu grace period == no new operations / mappings */
-> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-> index 38f9222606ee..a0de090b18d5 100644
-> --- a/fs/ext2/super.c
-> +++ b/fs/ext2/super.c
-> @@ -958,7 +958,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
->  	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
->  
->  	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
-> -		err = bdev_dax_supported(sb, blocksize);
-> +		err = bdev_dax_supported(sb->s_bdev, blocksize);
->  		if (err) {
->  			ext2_msg(sb, KERN_ERR,
->  				"DAX unsupported by block device. Turning off DAX.");
-> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> index 18873ea89e08..7ebc8d5cab8c 100644
-> --- a/fs/ext4/super.c
-> +++ b/fs/ext4/super.c
-> @@ -3712,7 +3712,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
->  					" that may contain inline data");
->  			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
->  		}
-> -		err = bdev_dax_supported(sb, blocksize);
-> +		err = bdev_dax_supported(sb->s_bdev, blocksize);
->  		if (err) {
->  			ext4_msg(sb, KERN_ERR,
->  				"DAX unsupported by block device. Turning off DAX.");
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 20dc65fef6a4..5fd4d50eb1c6 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1102,7 +1102,7 @@ xfs_ioctl_setattr_dax_invalidate(
->  	if (fa->fsx_xflags & FS_XFLAG_DAX) {
->  		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
->  			return -EINVAL;
-> -		if (bdev_dax_supported(sb, sb->s_blocksize) < 0)
-> +		if (bdev_dax_supported(sb->s_bdev, sb->s_blocksize) < 0)
->  			return -EINVAL;
->  	}
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 1dacccc367f8..e8a687232614 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1652,7 +1652,7 @@ xfs_fs_fill_super(
->  		xfs_warn(mp,
->  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
->  
-> -		error = bdev_dax_supported(sb, sb->s_blocksize);
-> +		error = bdev_dax_supported(sb->s_bdev, sb->s_blocksize);
->  		if (error) {
->  			xfs_alert(mp,
->  			"DAX unsupported by block device. Turning off DAX.");
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 5258346c558c..a31a7e3f929b 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -40,11 +40,7 @@ static inline void put_dax(struct dax_device *dax_dev)
->  
->  int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
->  #if IS_ENABLED(CONFIG_FS_DAX)
-> -int __bdev_dax_supported(struct super_block *sb, int blocksize);
-> -static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
-> -{
-> -	return __bdev_dax_supported(sb, blocksize);
-> -}
-> +int bdev_dax_supported(struct block_device *bdev, int blocksize);
->  
->  static inline struct dax_device *fs_dax_get_by_host(const char *host)
->  {
-> @@ -58,7 +54,7 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
->  
->  struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
->  #else
-> -static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
-> +static inline int bdev_dax_supported(struct block_device *bdev, int blocksize)
->  {
->  	return -EOPNOTSUPP;
->  }
+> +
+>  	/* check and open target */
+>  	open_flags = O_RDWR;
+>  	is_target_file = 0;
+> @@ -285,6 +286,19 @@ main(
+>  		open_flags |= O_CREAT;
+>  		is_target_file = 1;
+>  	} else if (S_ISREG(statbuf.st_mode))  {
+> +		xfs_metablock_t mb;
+> +
+> +		dst_f = fopen(argv[optind], "rb");
+> +		if (dst_f == NULL)
+> +			fatal("cannot open target\n");
+> +
+> +		if (fread(&mb, sizeof(mb), 1, dst_f) == 1) {
+> +			if (be32_to_cpu(mb.mb_magic) == XFS_MD_MAGIC)
+> +				fatal("target file is a xfs_metadump. switched arguments?\n");
+> +		}
+> +
+> +		fclose(dst_f);
+> +
+>  		open_flags |= O_TRUNC;
+>  		is_target_file = 1;
+>  	} else  {
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
