@@ -1,212 +1,287 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40322 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753339AbeBFXTZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Feb 2018 18:19:25 -0500
-Date: Tue, 6 Feb 2018 15:19:15 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
-Message-ID: <20180206231915.GA26233@magnolia>
-References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
- <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
- <20180201234413.idd27uqzqbg54ddk@destitution>
- <20180202004332.GZ4849@magnolia>
- <d267ed33-950e-a5c5-73ce-36da6c940513@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d267ed33-950e-a5c5-73ce-36da6c940513@intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:12843 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751378AbeBAGmJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 01:42:09 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eh8ZR-0005Cs-4X
+        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.90)
+        (envelope-from <david@fromorbit.com>)
+        id 1eh8ZR-00024Y-3L
+        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/7] xfs: separate secondary sb update in growfs
+Date: Thu,  1 Feb 2018 17:42:01 +1100
+Message-Id: <20180201064202.7174-7-david@fromorbit.com>
+In-Reply-To: <20180201064202.7174-1-david@fromorbit.com>
+References: <20180201064202.7174-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Feb 06, 2018 at 03:32:00PM -0700, Dave Jiang wrote:
-> On 02/01/2018 05:43 PM, Darrick J. Wong wrote:
-> > On Fri, Feb 02, 2018 at 10:44:13AM +1100, Dave Chinner wrote:
-> >> On Thu, Feb 01, 2018 at 01:33:05PM -0700, Dave Jiang wrote:
-> >>> When using realtime device (rtdev) with xfs where the data device is not
-> >>> DAX capable, two issues arise. One is when data device is not DAX but the
-> >>> realtime device is DAX capable, we currently disable DAX.
-> >>> After passing this check, we are also not marking the inode as DAX capable.
-> >>> This change will allow DAX enabled if the data device or the realtime
-> >>> device is DAX capable. S_DAX will be marked for the inode if the file is
-> >>> residing on a DAX capable device. This will prevent the case of rtdev is not
-> >>> DAX and data device is DAX to create realtime files.
-> >>
-> >> I'm confused by this description. I'm not sure what is broken, nor
-> >> what you are trying to fix.
-> >>
-> >> I think what you want to do is enable DAX on RT devices separately
-> >> to the data device and vice versa?
-> >>
-> >> i.e. is this what you are trying to acheive?
-> >>
-> >> datadev dax	rtdev dax		DAX enabled on
-> >> -----------     ---------		--------------
-> >> no		no			neither
-> >> yes		no			datadev
-> >> no		yes			rtdev
-> >> yes		yes			both
-> >>
-> >>
-> >>>
-> >>> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> >>> Reported-by: Darrick Wong <darrick.wong@oracle.com>
-> >>> ---
-> >>>  fs/xfs/xfs_iops.c  |    3 ++-
-> >>>  fs/xfs/xfs_super.c |    9 ++++++++-
-> >>>  2 files changed, 10 insertions(+), 2 deletions(-)
-> >>>
-> >>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> >>> index 56475fcd76f2..ab352c325301 100644
-> >>> --- a/fs/xfs/xfs_iops.c
-> >>> +++ b/fs/xfs/xfs_iops.c
-> >>> @@ -1204,7 +1204,8 @@ xfs_diflags_to_iflags(
-> >>>  	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
-> >>>  	    !xfs_is_reflink_inode(ip) &&
-> >>>  	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
-> >>> -	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-> >>> +	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX) &&
-> >>> +	    blk_queue_dax(bdev_get_queue(inode->i_sb->s_bdev)))
-> >>
-> >> This does not discriminate between the rtdev or the data dev. This
-> >> needs to call xfs_find_bdev_for_inode() to get the right device
-> >> for the inode config.
-> >>
-> >> Further, if we add or remove the RT flag to the inode at a later
-> >> point in time (e.g. via ioctl) we also need to re-evaluate the S_DAX
-> >> flag at that point in time.
-> > 
-> > Ah, right, I'd missed that subtlety in my earlier replies.  Ok, add
-> > another patch to this series to reevaluate S_DAX when we change the RT
-> > flag.
-> > 
-> >> Which brings me to the real problem here: dynamically changing the
-> >> S_DAX flag is racy, dangerous and broken. It's not clear that this
-> >> should be allowed at all as the inode may have already been mmap()d
-> >> by the time the ioctl is called to set/clear the rt file state.
->
-> > Agreed that this is a mess.  Either this needs to get fixed in the dax
-> > code, or we need to decide that we're not going to support reconfiguring
-> > the dax flag at all, except possibly for empty files (similar to how we
-> > restrict changes to the rt flag).
-> 
-> Does this mean we should add a check in xfs_ioctl_setattr_xflags() to
-> reject removing of realtime flag if S_DAX is set on the inode until the
-> dynamic change issue is sorted out?
+From: Dave Chinner <dchinner@redhat.com>
 
-Well, I /was/ tiptoeing around this while trying to take care of the
-other 4.16 stuff, but now that I'm done with merge window stuff I'll let
-loose. :)
+This happens after all the transactions to update the superblock
+occur, and errors need to be handled slightly differently. Seperate
+out the code into it's own function, and clean up the error goto
+stack in the core growfs code as it is now much simpler.
 
-The last time I paid much attention to DAX was the thread "re-enable XFS
-per-inode DAX"[1] last September.  Motivating me to merge anything else
-into DAX involves convincing me that we (mm, fs, dax developers) have
-some kind of agreement about what we want the user-visible interfaces to
-DAX to look like.  Namely:
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_fsops.c | 154 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 87 insertions(+), 67 deletions(-)
 
-0. On what level do we allow users / administrators to control usage of
-the dax paths?  Can the hardware convey enough detail to the kernel that
-the kernel can make a reasonable decision on its own whether buffered or
-dax io make more sense?  If so, can we please just have that?  If not,
-why?
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 5c844e540320..113be7dbdc81 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -401,9 +401,8 @@ xfs_growfs_data_private(
+ {
+ 	xfs_agf_t		*agf;
+ 	xfs_agi_t		*agi;
+-	xfs_agnumber_t		agno;
+ 	xfs_buf_t		*bp;
+-	int			error, saved_error = 0;
++	int			error;
+ 	xfs_agnumber_t		nagcount;
+ 	xfs_agnumber_t		nagimax = 0;
+ 	xfs_rfsblock_t		nb, nb_mod;
+@@ -475,12 +474,12 @@ xfs_growfs_data_private(
+ 		error = xfs_grow_ag_headers(mp, &id);
+ 		if (error) {
+ 			xfs_buf_delwri_cancel(&id.buffer_list);
+-			goto error0;
++			goto out_trans_cancel;
+ 		}
+ 	}
+ 	error = xfs_buf_delwri_submit(&id.buffer_list);
+ 	if (error)
+-		goto error0;
++		goto out_trans_cancel;
+ 
+ 	xfs_trans_agblocks_delta(tp, id.nfree);
+ 
+@@ -494,22 +493,23 @@ xfs_growfs_data_private(
+ 		 * Change the agi length.
+ 		 */
+ 		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+-		if (error) {
+-			goto error0;
+-		}
++		if (error)
++			goto out_trans_cancel;
++
+ 		ASSERT(bp);
+ 		agi = XFS_BUF_TO_AGI(bp);
+ 		be32_add_cpu(&agi->agi_length, new);
+ 		ASSERT(nagcount == oagcount ||
+ 		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+ 		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
++
+ 		/*
+ 		 * Change agf length.
+ 		 */
+ 		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+-		if (error) {
+-			goto error0;
+-		}
++		if (error)
++			goto out_trans_cancel;
++
+ 		ASSERT(bp);
+ 		agf = XFS_BUF_TO_AGF(bp);
+ 		be32_add_cpu(&agf->agf_length, new);
+@@ -529,13 +529,13 @@ xfs_growfs_data_private(
+ 				be32_to_cpu(agf->agf_length) - new,
+ 				new, &oinfo);
+ 		if (error)
+-			goto error0;
++			goto out_trans_cancel;
+ 		error = xfs_free_extent(tp,
+ 				XFS_AGB_TO_FSB(mp, id.agno,
+ 					be32_to_cpu(agf->agf_length) - new),
+ 				new, &oinfo, XFS_AG_RESV_NONE);
+ 		if (error)
+-			goto error0;
++			goto out_trans_cancel;
+ 	}
+ 
+ 	/*
+@@ -572,16 +572,79 @@ xfs_growfs_data_private(
+ 		error = xfs_ag_resv_free(pag);
+ 		xfs_perag_put(pag);
+ 		if (error)
+-			goto out;
++			return error;
+ 	}
+ 
+ 	/* Reserve AG metadata blocks. */
+-	error = xfs_fs_reserve_ag_blocks(mp);
+-	if (error && error != -ENOSPC)
+-		goto out;
++	return xfs_fs_reserve_ag_blocks(mp);
++
++out_trans_cancel:
++	xfs_trans_cancel(tp);
++	return error;
++}
++
++static int
++xfs_growfs_log_private(
++	xfs_mount_t		*mp,	/* mount point for filesystem */
++	xfs_growfs_log_t	*in)	/* growfs log input struct */
++{
++	xfs_extlen_t		nb;
++
++	nb = in->newblocks;
++	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
++		return -EINVAL;
++	if (nb == mp->m_sb.sb_logblocks &&
++	    in->isint == (mp->m_sb.sb_logstart != 0))
++		return -EINVAL;
++	/*
++	 * Moving the log is hard, need new interfaces to sync
++	 * the log first, hold off all activity while moving it.
++	 * Can have shorter or longer log in the same space,
++	 * or transform internal to external log or vice versa.
++	 */
++	return -ENOSYS;
++}
++
++static int
++xfs_growfs_imaxpct(
++	struct xfs_mount	*mp,
++	__u32			imaxpct)
++{
++	struct xfs_trans	*tp;
++	int			dpct;
++	int			error;
++
++	if (imaxpct > 100)
++		return -EINVAL;
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
++			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
++	if (error)
++		return error;
++
++	dpct = imaxpct - mp->m_sb.sb_imax_pct;
++	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
++	xfs_trans_set_sync(tp);
++	return xfs_trans_commit(tp);
++}
++
++/*
++ * After a grow operation, we need to update all the secondary superblocks
++ * to match the new state of the primary. Read/init the superblocks and update
++ * them appropriately.
++ */
++static int
++xfs_growfs_update_superblocks(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		oagcount)
++{
++	struct xfs_buf		*bp;
++	xfs_agnumber_t		agno;
++	int			saved_error = 0;
++	int			error = 0;
+ 
+ 	/* update secondary superblocks. */
+-	for (agno = 1; agno < nagcount; agno++) {
++	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+ 		error = 0;
+ 		/*
+ 		 * new secondary superblocks need to be zeroed, not read from
+@@ -631,57 +694,7 @@ xfs_growfs_data_private(
+ 		}
+ 	}
+ 
+- out:
+ 	return saved_error ? saved_error : error;
+-
+- error0:
+-	xfs_trans_cancel(tp);
+-	return error;
+-}
+-
+-static int
+-xfs_growfs_log_private(
+-	xfs_mount_t		*mp,	/* mount point for filesystem */
+-	xfs_growfs_log_t	*in)	/* growfs log input struct */
+-{
+-	xfs_extlen_t		nb;
+-
+-	nb = in->newblocks;
+-	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
+-		return -EINVAL;
+-	if (nb == mp->m_sb.sb_logblocks &&
+-	    in->isint == (mp->m_sb.sb_logstart != 0))
+-		return -EINVAL;
+-	/*
+-	 * Moving the log is hard, need new interfaces to sync
+-	 * the log first, hold off all activity while moving it.
+-	 * Can have shorter or longer log in the same space,
+-	 * or transform internal to external log or vice versa.
+-	 */
+-	return -ENOSYS;
+-}
+-
+-static int
+-xfs_growfs_imaxpct(
+-	struct xfs_mount	*mp,
+-	__u32			imaxpct)
+-{
+-	struct xfs_trans	*tp;
+-	int64_t			dpct;
+-	int			error;
+-
+-	if (imaxpct > 100)
+-		return -EINVAL;
+-
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+-			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+-	if (error)
+-		return error;
+-
+-	dpct = (int64_t)imaxpct - mp->m_sb.sb_imax_pct;
+-	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+-	xfs_trans_set_sync(tp);
+-	return xfs_trans_commit(tp);
+ }
+ 
+ /*
+@@ -694,6 +707,7 @@ xfs_growfs_data(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_growfs_data	*in)
+ {
++	xfs_agnumber_t		oagcount;
+ 	int			error = 0;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -708,6 +722,7 @@ xfs_growfs_data(
+ 			goto out_error;
+ 	}
+ 
++	oagcount = mp->m_sb.sb_agcount;
+ 	error = xfs_growfs_data_private(mp, in);
+ 	if (error)
+ 		goto out_error;
+@@ -722,6 +737,11 @@ xfs_growfs_data(
+ 	} else
+ 		mp->m_maxicount = 0;
+ 
++	/*
++	 * Update secondary superblocks now the physical grow has completed
++	 */
++	error = xfs_growfs_update_superblocks(mp, oagcount);
++
+ out_error:
+ 	/*
+ 	 * Increment the generation unconditionally, the error could be from
+-- 
+2.15.1
 
-1. If we want to let users override whatever decision the kernel makes,
-how should we do this?  One mount option that applies to everything,
-like ext4?  Inheritable inode flags, like xfs?  Do we have one to force
-it on even if the kernel doesn't want to?  Do we have another to force
-it off even if the kernel wants to?  Do we even want to go down this
-path?  Can we get away with making the answer to Q0 "yes" and then see
-if anyone actually complains about not having fine-grained control?
-
-2. Under what conditions can we support dynamic changing of S_DAX on
-inodes at runtime?  Will this switching work at any time?  Only for
-files that are open but not mmap'd?  Only for files that are empty?
-
-3. The MAP_SYNC support that was merged into 4.15 -- is this sufficient
-to allow this fsyncless clflush business that everyone seems to want?
-
-4. Can someone please fix the XFS iomap_begin function to handle CoW
-properly?  I think it's a simple matter of allocate blocks, memcpy, and
-remap, though I don't know how to do that. ;)
-
-5. Do we test any of this stuff?
-
-The thread from last September left off with promises to go define what
-interface and behaviors we are providing to userspace, but afaict none
-of that ever happened?  If we don't resolve these questions before LSF
-then I think what's needed is to lock everyone in a room to hash all
-this out. :P
-
---D
-
-PS: My personal inclination is {yes, get rid of all that until someone
-complains, i think so but haven't tested it, ???, i sure hope so}.
-
-[1] https://marc.info/?l=linux-xfs&m=150638135225793&w=2
-
-> 
-> > 
-> >> IOWs, right now we cannot support mixed DAX mode filesystems because
-> >> the generic DAX code does not support dynamic changing of the DAX
-> >> flag on an inode and so checking the block device state here is
-> >> irrelevant....
-> >>
-> >>>  		inode->i_flags |= S_DAX;
-> >>>  }
-> >>>  
-> >>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> >>> index e8a687232614..5ac478924dce 100644
-> >>> --- a/fs/xfs/xfs_super.c
-> >>> +++ b/fs/xfs/xfs_super.c
-> >>> @@ -1649,11 +1649,18 @@ xfs_fs_fill_super(
-> >>>  		sb->s_flags |= SB_I_VERSION;
-> >>>  
-> >>>  	if (mp->m_flags & XFS_MOUNT_DAX) {
-> >>> +		bool rtdev_is_dax = false;
-> >>> +
-> >>>  		xfs_warn(mp,
-> >>>  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
-> >>>  
-> >>> +		if (mp->m_rtdev_targp->bt_daxdev)
-> >>> +			if (bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
-> >>> +					      sb->s_blocksize) == 0)
-> >>> +				rtdev_is_dax = true;
-> >>
-> >> .... as this code here needs to turn off DAX here if any device
-> >> in the filesystem doesn't support DAX....
-> > 
-> > I think it'd be useful to be able to have a pmem rt device even if the
-> > data device doesn't support it.  Or rather, I have a few clients who
-> > have expressed interest in this sort of configuration.
-> > 
-> > --D
-> > 
-> >>
-> >>
-> >> FWIW, the logic in the code is terrible (not your fault, Dave).
-> >> The logic reads
-> >>
-> >> 	if (NOT bdev_dax_supported(rtdev)) then
-> >> 		rtdev supports DAX
-> >>
-> >> That also needs fixing - we're checking something that has a boolean
-> >> return state (yes or no) and so it should define them in a way that
-> >> makes the caller logic read cleanly....
-> >>
-> >> Cheers,
-> >>
-> >> Dave.
-> >> -- 
-> >> Dave Chinner
-> >> david@fromorbit.com
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
