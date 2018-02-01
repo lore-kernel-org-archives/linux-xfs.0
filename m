@@ -1,106 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49894 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751464AbeAaUaY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jan 2018 15:30:24 -0500
-Subject: Re: [PATCH v2 27/29] xfs_scrub: integrate services with systemd
-References: <151736799098.32164.15446216987522359103.stgit@magnolia>
- <151736817316.32164.953271653758103738.stgit@magnolia>
- <20180131064100.GC4849@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a2d8f4f5-dc78-b350-bcc2-a4f00abca9ad@sandeen.net>
-Date: Wed, 31 Jan 2018 14:30:22 -0600
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:42333 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932141AbeBACAQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 21:00:16 -0500
+Date: Thu, 1 Feb 2018 13:01:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [LSF/MM TOPIC] Virtual block address space mapping
+Message-ID: <20180201020109.bfrbyr3jgcrukyfj@destitution>
+References: <20180129100834.rhpgnz5572zxmqep@destitution>
+ <20180131212501.GE4841@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180131064100.GC4849@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180131212501.GE4841@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 1/31/18 12:41 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jan 31, 2018 at 01:25:01PM -0800, Darrick J. Wong wrote:
+> On Mon, Jan 29, 2018 at 09:08:34PM +1100, Dave Chinner wrote:
+> > Hi Folks,
+> > 
+> > I want to talk about virtual block address space abstractions for
+> > the kernel. This is the layer I've added to the IO stack to provide
+> > cloneable subvolumes in XFS, and it's really a generic abstraction
+> > the stack should provide, not be something hidden inside a
+> > filesystem.
+> > 
+> > Note: this is *not* a block device interface. That's the mistake
+> > we've made previously when trying to more closely integrate
+> > filesystems and block devices.  Filesystems sit on a block address
+> > space but the current stack does not allow the address space to be
+> > separated from the block device.  This means a block based
+> > filesystem can only sit on a block device.  By separating the
+> > address space from block device and replacing it with a mapping
+> > interface we can break the fs-on-bdev requirement and add
+> > functionality that isn't currently possible.
+> > 
+> > There are two parts; first is to modify the filesystem to use a
+> > virtual block address space, and the second is to implement a
+> > virtual block address space provider. The provider is responsible
+> > for snapshot/cloning subvolumes, so the provider really needs to be
+> > a block device or filesystem that supports COW (dm-thinp,
+> > btrfs, XFS, etc).
 > 
-> Create a systemd service unit so that we can run the online scrubber
-> under systemd with (somewhat) appropriate containment.
+> Since I've not seen your code, what happens for the xfs that's written to
+> a raw disk?  Same bdev/buftarg mechanism we use now?
+
+Same.
+
+> > I've implemented both sides on XFS to provide the capability for an
+> > XFS filesystem to host XFS subvolumes. however, this is an abstract
+> > interface and so if someone modifies ext4 to use a virtual block
+> > address space, then XFS will be able to host cloneable ext4
+> > subvolumes, too. :P
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: fix some of the debian packaging weirdness, kudos to Nathan Scott!
+> How hard is it to retrofit an existing bdev fs to use a virtual block
+> address space?
 
-Er, hang on:
+Somewhat difficult, because the space cookies need to be plumbed
+through to the IO routines. XFS has it's own data and metadata IO
+pathways, so it's likely to be much easier to do this for than a
+filesystem using generic writeback infrastructure....
 
-checking for SYSTEMD... configure: error: Package requirements (systemd) were not met:
-
-now systemd is a /build/ requirement for xfsprogs?  nope nope. :)
-
-This is only used for unit file install targets, right?  If systemd
-is missing, surely those install targets should just be skipped.
-
-Looks like the Makefile DTRT, but the stuff in m4/ should be non-fatal?
-
-(I can't tell what makes this fatal ... I think its' fatal?
-
-> checking for SYSTEMD... configure: error: Package requirements (systemd) were not met:
+> > The core API is a mapping and allocation interface based on the
+> > iomap infrastructure we already use for the pNFS file layout and
+> > fs/iomap.c. In fact, the whole mapping and two-phase write algorithm
+> > is very similar to Christoph's export ops - we may even be able to
+> > merge the two APIs depending on how pNFS ends up handing CoW
+> > operations.
 > 
-> No package 'systemd' found
+> Hm, how /is/ that supposed to happen? :)
+
+Not sure - I'm waiting for Christoph to tell us. :)
+
+> I would surmise that pre-cow would work[1] albeit slowly.  It sorta
+> looks like Christoph is working[2] on this for pnfs.  Looking at 2.4.5,
+> we preallocate all the cow staging extents, hand the client the old maps
+> to read from and the new maps to write to, the client deals with the
+> actual copy-write, and finally when the client commits then we can do
+> the usual remapping business.
 > 
-> Consider adjusting the PKG_CONFIG_PATH environment variable if you
-> installed software in a non-standard prefix.
-> 
-> Alternatively, you may set the environment variables SYSTEMD_CFLAGS
-> and SYSTEMD_LIBS to avoid the need to call pkg-config.
-> See the pkg-config man page for more details.
-> 
-> # echo $?
-> 1
+> (Yeah, that is much less nasty than my naïve approach.)
 
-looks fatal.)
+Yup, and that's pretty much what I'm doing. The subvolume already
+has the modified data in it's cache, so when the subvol IO path
+tries to remap the IO range, the underlying FS does the COW
+allocation and indicates that it needs to run a commit operation on
+IO completion. On completion, the subvol runs a ->commit(off, len,
+VBAS_T_COW) operation and the underlying fs does the final
+remapping.  A similar process is used to deal with preallocated
+regions in the underlying file (remap returns IOMAP_UNWRITTEN,
+subvol calls ->commit(VBAS_T_UNWRITTEN) on IO completion).
 
-...
+This means that the subvolume looks just like direct IO to the
+underlying host filesystem - the XFS VBAS host implementation is
+just a thin wrapper around existing internal iomap interfaces.
 
+I'm working on cleaning it up for an initial patch posting so people
+can get a better idea of how it currently works....
 
-> diff --git a/scrub/Makefile b/scrub/Makefile
-> index ca6dab0..0632794 100644
-> --- a/scrub/Makefile
-> +++ b/scrub/Makefile
-> @@ -15,6 +15,19 @@ LTCOMMAND = xfs_scrub
->  INSTALL_SCRUB = install-scrub
->  XFS_SCRUB_ALL_PROG = xfs_scrub_all
->  XFS_SCRUB_ARGS = -b -n
-> +ifeq ($(HAVE_SYSTEMD),yes)
-> +INSTALL_SCRUB += install-systemd
-> +SYSTEMD_SERVICES = xfs_scrub@.service xfs_scrub_all.service xfs_scrub_all.timer xfs_scrub_fail@.service
-> +OPTIONAL_TARGETS += $(SYSTEMD_SERVICES)
-> +endif
-> +ifeq ($(HAVE_CROND),yes)
-> +INSTALL_SCRUB += install-crond
-> +CRONTABS = xfs_scrub_all.cron
-> +OPTIONAL_TARGETS += $(CRONTABS)
-> +# Don't enable the crontab by default for now
-> +CROND_DIR = $(PKG_LIB_DIR)/$(PKG_NAME)
-> +endif
+Cheers,
 
-Wouldn't an else if arrangement make more sense?  Why would we install both?
-I'd have expected "Install systemd if available, else install
-crond if available, else don't install anything." 
-... and then the cron job can stop checking for systemd too:
-
-> diff --git a/scrub/xfs_scrub_all.cron.in b/scrub/xfs_scrub_all.cron.in
-> new file mode 100644
-> index 0000000..3dea929
-> --- /dev/null
-> +++ b/scrub/xfs_scrub_all.cron.in
-> @@ -0,0 +1 @@
-> +10 3 * * 0 root test -e /run/systemd/system || @sbindir@/xfs_scrub_all
-> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-
-
-unless I'm missing something?
-
-
-Thanks,
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
