@@ -1,423 +1,696 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57758 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752107AbeBAWbn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Feb 2018 17:31:43 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AB73961476
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Feb 2018 22:31:43 +0000 (UTC)
-Date: Thu, 1 Feb 2018 17:31:39 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC] xfs: change agfl perag res into an rmapbt-based
- reservation
-Message-ID: <20180201223139.GB32709@bfoster.bfoster>
-References: <20180131145901.17053-1-bfoster@redhat.com>
- <20180201220226.GC9528@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180201220226.GC9528@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:12843 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751119AbeBAGmL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 01:42:11 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eh8ZR-0005Cp-1y
+        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.90)
+        (envelope-from <david@fromorbit.com>)
+        id 1eh8ZR-00024P-0m
+        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 3/7] xfs: factor ag btree reoot block initialisation
+Date: Thu,  1 Feb 2018 17:41:58 +1100
+Message-Id: <20180201064202.7174-4-david@fromorbit.com>
+In-Reply-To: <20180201064202.7174-1-david@fromorbit.com>
+References: <20180201064202.7174-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Feb 01, 2018 at 04:02:26PM -0600, Bill O'Donnell wrote:
-> On Wed, Jan 31, 2018 at 09:59:01AM -0500, Brian Foster wrote:
-> > The agfl perag metadata reservation reserves blocks for the reverse
-> > mapping btree (rmapbt). Since the rmapbt uses blocks from the agfl
-> > and perag accounting is updated as blocks are allocated from the
-> > allocation btrees, the reservation actually accounts blocks as they
-> > are allocated to (or freed from) the agfl rather than the rmapbt
-> > itself.
-> > 
-> > While this works for blocks that are eventually used for the rmapbt,
-> > not all agfl blocks are destined for the rmapbt. Blocks that are
-> > allocated to the agfl (and thus "reserved" for the rmapbt) but then
-> > used by another structure leads to a growing inconsistency over time
-> > between the runtime tracking of rmapbt usage vs. actual rmapbt
-> > usage. Since the runtime tracking thinks all agfl blocks are rmapbt
-> > blocks, it essentially believes that less future reservation is
-> > required to satisfy the rmapbt than what is actually necessary.
-> > 
-> > The inconsistency can be rectified across mount cycles because the
-> > perag reservation is initialized based on the actual rmapbt usage at
-> > mount time. The problem, however, is that the excessive drain of the
-> > reservation at runtime opens a window to allocate blocks for other
-> > purposes that might be expected to be reserved for the rmapbt on a
-> > subsequent mount. This problem can be demonstrated by a simple test
-> > that runs an allocation workload to consume agfl blocks over time
-> > and then observe the difference in the agfl reservation requirement
-> > across an unmount/mount cycle:
-> > 
-> >   mount ...: xfs_ag_resv_init: ... resv 3193 ask 3194 len 3194
-> >   ...
-> >   ...      : xfs_ag_resv_alloc_extent: ... resv 2957 ask 3194 len 1
-> >   umount...: xfs_ag_resv_free: ... resv 2956 ask 3194 len 0
-> >   mount ...: xfs_ag_resv_init: ... resv 3052 ask 3194 len 3194
-> > 
-> > As the above tracepoints show, the agfl reservation requirement
-> > reduces from 3194 blocks to 2956 blocks as the workload runs.
-> > Without any other changes in the filesystem, the same reservation
-> > requirement jumps to 3052 blocks over a umount/mount cycle.
-> > 
-> > To address this inconsistency, update the AGFL reservation to
-> > account blocks used for the rmapbt only rather than all blocks
-> > filled into the agfl. This patch makes several high-level changes
-> > toward that end:
-> > 
-> > 1.) Rename ->pag_agfl_resv to ->pag_rmapbt_resv and ssociate a new
-> >     XFS_AG_RESV_RMAPBT type with the perag reservation.
-> > 2.) Invoke XFS_AG_RESV_RMAPBT accounting from actual rmapbt block
-> >     allocations.
-> > 3.) Repurpose XFS_AG_RESV_AGFL to act as a no-op for the perag res.
-> >     accounting code to correctly handle agfl allocations.
-> 
-> Since there are 3 high-level changes, perhaps it would make sense to
-> split this into 3 separate patches? If that's feasible, it would
-> definitely help me to grok it. ;)
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-Heh.. Yeah, I thought a bit about how to do this more incrementally as I
-was hacking it up and couldn't think of a clear approach at the time.
-Since a good portion of this patch is actually just renaming the agfl
-reservation type, I suppose I could just separate the rename from the
-logic change and hopefully clarify the latter in the process.
+Cookie cutter code, easily factored.
 
-That would split this in two patches (changes 2 and 3 above are too
-intertwined to split, I think): one for the agfl -> rmapbt rename and a
-second to move the rmapbt accounting (and reintroduce a "new" agfl no-op
-type). I could also factor out the tracepoint fixup, but that's a
-trivial hunk either way. I'll give that a shot..
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_fsops.c | 493 +++++++++++++++++++++++++++++------------------------
+ 1 file changed, 271 insertions(+), 222 deletions(-)
 
-Brian
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index d9e08d8cf9ac..44eac79e0b49 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -71,46 +71,146 @@ xfs_growfs_get_hdr_buf(
+ 	return bp;
+ }
+ 
++struct aghdr_init_data {
++	/* per ag data */
++	xfs_agblock_t		agno;
++	xfs_extlen_t		agsize;
++	struct list_head	buffer_list;
++	xfs_rfsblock_t		nfree;
++
++	/* per header data */
++	xfs_daddr_t		daddr;
++	size_t			numblks;
++	xfs_btnum_t		type;
++	int			numrecs;
++};
++
+ /*
+- * Write new AG headers to disk. Non-transactional, but written
+- * synchronously so they are completed prior to the growfs transaction
+- * being logged.
++ * Generic btree root block init function
+  */
+-static int
+-xfs_grow_ag_headers(
++static void
++xfs_btroot_init(
+ 	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno,
+-	xfs_extlen_t		agsize,
+-	xfs_rfsblock_t		*nfree,
+-	struct list_head	*buffer_list)
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	xfs_btree_init_block(mp, bp, id->type, 0, id->numrecs, id->agno, 0);
++}
++
++/*
++ * Alloc btree root block init functions
++ */
++static void
++xfs_bnoroot_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
+ {
+-	struct xfs_agf		*agf;
+-	struct xfs_agi		*agi;
+-	struct xfs_agfl		*agfl;
+-	__be32			*agfl_bno;
+ 	xfs_alloc_rec_t		*arec;
+-	struct xfs_buf		*bp;
+-	int			bucket;
+-	xfs_extlen_t		tmpsize;
+-	int			error = 0;
++
++	xfs_btree_init_block(mp, bp, id->type, 0, id->numrecs, id->agno, 0);
++	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
++	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
++	arec->ar_blockcount = cpu_to_be32(id->agsize -
++					  be32_to_cpu(arec->ar_startblock));
++}
++
++static void
++xfs_cntroot_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	xfs_alloc_rec_t		*arec;
++
++	xfs_btree_init_block(mp, bp, id->type, 0, id->numrecs, id->agno, 0);
++	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
++	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
++	arec->ar_blockcount = cpu_to_be32(id->agsize -
++					  be32_to_cpu(arec->ar_startblock));
++	id->nfree += be32_to_cpu(arec->ar_blockcount);
++}
++
++/*
++ * Reverse map root block init
++ */
++static void
++xfs_rmaproot_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
++	struct xfs_rmap_rec	*rrec;
++
++	xfs_btree_init_block(mp, bp, id->type, 0, id->numrecs, id->agno, 0);
+ 
+ 	/*
+-	 * AG freespace header block
++	 * mark the AG header regions as static metadata The BNO
++	 * btree block is the first block after the headers, so
++	 * it's location defines the size of region the static
++	 * metadata consumes.
++	 *
++	 * Note: unlike mkfs, we never have to account for log
++	 * space when growing the data regions
+ 	 */
+-	bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0,
+-			&xfs_agf_buf_ops);
+-	if (!bp) {
+-		error = -ENOMEM;
+-		goto out_error;
++	rrec = XFS_RMAP_REC_ADDR(block, 1);
++	rrec->rm_startblock = 0;
++	rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
++	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
++	rrec->rm_offset = 0;
++	be16_add_cpu(&block->bb_numrecs, 1);
++
++	/* account freespace btree root blocks */
++	rrec = XFS_RMAP_REC_ADDR(block, 2);
++	rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
++	rrec->rm_blockcount = cpu_to_be32(2);
++	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
++	rrec->rm_offset = 0;
++	be16_add_cpu(&block->bb_numrecs, 1);
++
++	/* account inode btree root blocks */
++	rrec = XFS_RMAP_REC_ADDR(block, 3);
++	rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
++	rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
++					  XFS_IBT_BLOCK(mp));
++	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
++	rrec->rm_offset = 0;
++	be16_add_cpu(&block->bb_numrecs, 1);
++
++	/* account for rmap btree root */
++	rrec = XFS_RMAP_REC_ADDR(block, 4);
++	rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
++	rrec->rm_blockcount = cpu_to_be32(1);
++	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
++	rrec->rm_offset = 0;
++	be16_add_cpu(&block->bb_numrecs, 1);
++
++	/* account for refc btree root */
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		rrec = XFS_RMAP_REC_ADDR(block, 5);
++		rrec->rm_startblock = cpu_to_be32(xfs_refc_block(mp));
++		rrec->rm_blockcount = cpu_to_be32(1);
++		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
++		rrec->rm_offset = 0;
++		be16_add_cpu(&block->bb_numrecs, 1);
+ 	}
++}
++
++
++static void
++xfs_agfblock_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	struct xfs_agf		*agf = XFS_BUF_TO_AGF(bp);
++	xfs_extlen_t		tmpsize;
+ 
+-	agf = XFS_BUF_TO_AGF(bp);
+ 	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+ 	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+-	agf->agf_seqno = cpu_to_be32(agno);
+-	agf->agf_length = cpu_to_be32(agsize);
++	agf->agf_seqno = cpu_to_be32(id->agno);
++	agf->agf_length = cpu_to_be32(id->agsize);
+ 	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+ 	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+ 	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+@@ -125,7 +225,7 @@ xfs_grow_ag_headers(
+ 	agf->agf_flfirst = cpu_to_be32(1);
+ 	agf->agf_fllast = 0;
+ 	agf->agf_flcount = 0;
+-	tmpsize = agsize - mp->m_ag_prealloc_blocks;
++	tmpsize = id->agsize - mp->m_ag_prealloc_blocks;
+ 	agf->agf_freeblks = cpu_to_be32(tmpsize);
+ 	agf->agf_longest = cpu_to_be32(tmpsize);
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+@@ -136,52 +236,42 @@ xfs_grow_ag_headers(
+ 		agf->agf_refcount_level = cpu_to_be32(1);
+ 		agf->agf_refcount_blocks = cpu_to_be32(1);
+ 	}
+-	xfs_buf_delwri_queue(bp, buffer_list);
+-	xfs_buf_relse(bp);
++}
+ 
+-	/*
+-	 * AG freelist header block
+-	 */
+-	bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0,
+-			&xfs_agfl_buf_ops);
+-	if (!bp) {
+-		error = -ENOMEM;
+-		goto out_error;
+-	}
++static void
++xfs_agflblock_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	struct xfs_agfl		*agfl = XFS_BUF_TO_AGFL(bp);
++	__be32			*agfl_bno;
++	int			bucket;
+ 
+-	agfl = XFS_BUF_TO_AGFL(bp);
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+-		agfl->agfl_seqno = cpu_to_be32(agno);
++		agfl->agfl_seqno = cpu_to_be32(id->agno);
+ 		uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+ 	}
+ 
+ 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+ 	for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
+ 		agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
++}
+ 
+-	xfs_buf_delwri_queue(bp, buffer_list);
+-	xfs_buf_relse(bp);
+-
+-	/*
+-	 * AG inode header block
+-	 */
+-	bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0,
+-			&xfs_agi_buf_ops);
+-	if (!bp) {
+-		error = -ENOMEM;
+-		goto out_error;
+-	}
++static void
++xfs_agiblock_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	struct xfs_agi		*agi = XFS_BUF_TO_AGI(bp);
++	int			bucket;
+ 
+-	agi = XFS_BUF_TO_AGI(bp);
+ 	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+ 	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+-	agi->agi_seqno = cpu_to_be32(agno);
+-	agi->agi_length = cpu_to_be32(agsize);
++	agi->agi_seqno = cpu_to_be32(id->agno);
++	agi->agi_length = cpu_to_be32(id->agsize);
+ 	agi->agi_count = 0;
+ 	agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+ 	agi->agi_level = cpu_to_be32(1);
+@@ -196,180 +286,139 @@ xfs_grow_ag_headers(
+ 	}
+ 	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+ 		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
++}
+ 
+-	xfs_buf_delwri_queue(bp, buffer_list);
+-	xfs_buf_relse(bp);
+-
+-	/*
+-	 * BNO btree root block
+-	 */
+-	bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+-			BTOBB(mp->m_sb.sb_blocksize), 0,
+-			&xfs_allocbt_buf_ops);
++static int
++xfs_growfs_init_aghdr(
++	struct xfs_mount	*mp,
++	struct aghdr_init_data	*id,
++	void			(*work)(struct xfs_mount *, struct xfs_buf *,
++					struct aghdr_init_data *),
++	const struct xfs_buf_ops *ops)
+ 
+-	if (!bp) {
+-		error = -ENOMEM;
+-		goto out_error;
+-	}
++{
++	struct xfs_buf		*bp;
+ 
+-	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
++	bp = xfs_growfs_get_hdr_buf(mp, id->daddr, id->numblks, 0, ops);
++	if (!bp)
++		return -ENOMEM;
+ 
+-	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+-	arec->ar_blockcount = cpu_to_be32(
+-		agsize - be32_to_cpu(arec->ar_startblock));
++	(*work)(mp, bp, id);
+ 
+-	xfs_buf_delwri_queue(bp, buffer_list);
++	xfs_buf_delwri_queue(bp, &id->buffer_list);
+ 	xfs_buf_relse(bp);
++	return 0;
++}
+ 
+-	/*
+-	 * CNT btree root block
+-	 */
+-	bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+-			BTOBB(mp->m_sb.sb_blocksize), 0,
+-			&xfs_allocbt_buf_ops);
+-	if (!bp) {
+-		error = -ENOMEM;
+-		goto out_error;
+-	}
+-
+-	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
++/*
++ * Write new AG headers to disk. Non-transactional, but written
++ * synchronously so they are completed prior to the growfs transaction
++ * being logged.
++ */
++static int
++xfs_grow_ag_headers(
++	struct xfs_mount	*mp,
++	struct aghdr_init_data	*id)
+ 
+-	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+-	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+-	arec->ar_blockcount = cpu_to_be32(
+-		agsize - be32_to_cpu(arec->ar_startblock));
+-	*nfree += be32_to_cpu(arec->ar_blockcount);
++{
++	int			error = 0;
+ 
+-	xfs_buf_delwri_queue(bp, buffer_list);
+-	xfs_buf_relse(bp);
++	/* AG freespace header block */
++	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp));
++	id->numblks = XFS_FSS_TO_BB(mp, 1);
++	error = xfs_growfs_init_aghdr(mp, id, xfs_agfblock_init,
++					&xfs_agf_buf_ops);
++	if (error)
++		goto out_error;
+ 
+-	/* RMAP btree root block */
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+-		struct xfs_rmap_rec	*rrec;
+-		struct xfs_btree_block	*block;
+-
+-		bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+-			BTOBB(mp->m_sb.sb_blocksize), 0,
+-			&xfs_rmapbt_buf_ops);
+-		if (!bp) {
+-			error = -ENOMEM;
+-			goto out_error;
+-		}
++	/* AG freelist header block */
++	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp));
++	id->numblks = XFS_FSS_TO_BB(mp, 1);
++	error = xfs_growfs_init_aghdr(mp, id, xfs_agflblock_init,
++					&xfs_agfl_buf_ops);
++	if (error)
++		goto out_error;
+ 
+-		xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
+-					agno, 0);
+-		block = XFS_BUF_TO_BLOCK(bp);
++	/* AG inode header block */
++	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp));
++	id->numblks = XFS_FSS_TO_BB(mp, 1);
++	error = xfs_growfs_init_aghdr(mp, id, xfs_agiblock_init,
++					&xfs_agi_buf_ops);
++	if (error)
++		goto out_error;
+ 
+ 
+-		/*
+-		 * mark the AG header regions as static metadata The BNO
+-		 * btree block is the first block after the headers, so
+-		 * it's location defines the size of region the static
+-		 * metadata consumes.
+-		 *
+-		 * Note: unlike mkfs, we never have to account for log
+-		 * space when growing the data regions
+-		 */
+-		rrec = XFS_RMAP_REC_ADDR(block, 1);
+-		rrec->rm_startblock = 0;
+-		rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
+-
+-		/* account freespace btree root blocks */
+-		rrec = XFS_RMAP_REC_ADDR(block, 2);
+-		rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+-		rrec->rm_blockcount = cpu_to_be32(2);
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
++	/* BNO btree root block */
++	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp));
++	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
++	id->type = XFS_BTNUM_BNO;
++	id->numrecs = 1;
++	error = xfs_growfs_init_aghdr(mp, id, xfs_bnoroot_init,
++				   &xfs_allocbt_buf_ops);
++	if (error)
++		goto out_error;
+ 
+-		/* account inode btree root blocks */
+-		rrec = XFS_RMAP_REC_ADDR(block, 3);
+-		rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+-		rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+-						XFS_IBT_BLOCK(mp));
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
+ 
+-		/* account for rmap btree root */
+-		rrec = XFS_RMAP_REC_ADDR(block, 4);
+-		rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+-		rrec->rm_blockcount = cpu_to_be32(1);
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
++	/* CNT btree root block */
++	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp));
++	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
++	id->type = XFS_BTNUM_CNT;
++	id->numrecs = 1;
++	error = xfs_growfs_init_aghdr(mp, id, xfs_cntroot_init,
++				   &xfs_allocbt_buf_ops);
++	if (error)
++		goto out_error;
+ 
+-		/* account for refc btree root */
+-		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+-			rrec = XFS_RMAP_REC_ADDR(block, 5);
+-			rrec->rm_startblock = cpu_to_be32(xfs_refc_block(mp));
+-			rrec->rm_blockcount = cpu_to_be32(1);
+-			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+-			rrec->rm_offset = 0;
+-			be16_add_cpu(&block->bb_numrecs, 1);
+-		}
++	/* RMAP btree root block */
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp));
++		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
++		id->type = XFS_BTNUM_RMAP;
++		id->numrecs = 0;
++		error = xfs_growfs_init_aghdr(mp, id, xfs_rmaproot_init,
++					   &xfs_rmapbt_buf_ops);
++		if (error)
++			goto out_error;
+ 
+-		xfs_buf_delwri_queue(bp, buffer_list);
+-		xfs_buf_relse(bp);
+ 	}
+ 
+-	/*
+-	 * INO btree root block
+-	 */
+-	bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+-			BTOBB(mp->m_sb.sb_blocksize), 0,
+-			&xfs_inobt_buf_ops);
+-	if (!bp) {
+-		error = -ENOMEM;
++	/* INO btree root block */
++	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp));
++	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
++	id->type = XFS_BTNUM_INO;
++	id->numrecs = 0;
++	error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
++				   &xfs_inobt_buf_ops);
++	if (error)
+ 		goto out_error;
+-	}
+ 
+-	xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+-	xfs_buf_delwri_queue(bp, buffer_list);
+-	xfs_buf_relse(bp);
+ 
+ 	/*
+ 	 * FINO btree root block
+ 	 */
+ 	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+-		bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
+-			BTOBB(mp->m_sb.sb_blocksize), 0,
+-			&xfs_inobt_buf_ops);
+-		if (!bp) {
+-			error = -ENOMEM;
++		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp));
++		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
++		id->type = XFS_BTNUM_FINO;
++		id->numrecs = 0;
++		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
++					   &xfs_inobt_buf_ops);
++		if (error)
+ 			goto out_error;
+-		}
+-
+-		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO, 0, 0, agno, 0);
+-		xfs_buf_delwri_queue(bp, buffer_list);
+-		xfs_buf_relse(bp);
+ 	}
+ 
+ 	/*
+ 	 * refcount btree root block
+ 	 */
+ 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+-		bp = xfs_growfs_get_hdr_buf(mp,
+-			XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
+-			BTOBB(mp->m_sb.sb_blocksize), 0,
+-			&xfs_refcountbt_buf_ops);
+-		if (!bp) {
+-			error = -ENOMEM;
++		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp));
++		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
++		id->type = XFS_BTNUM_REFC;
++		id->numrecs = 0;
++		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
++					   &xfs_refcountbt_buf_ops);
++		if (error)
+ 			goto out_error;
+-		}
+-
+-		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC, 0, 0, agno, 0);
+-		xfs_buf_delwri_queue(bp, buffer_list);
+-		xfs_buf_relse(bp);
+ 	}
+ 
+ out_error:
+@@ -384,7 +433,6 @@ xfs_growfs_data_private(
+ 	xfs_agf_t		*agf;
+ 	xfs_agi_t		*agi;
+ 	xfs_agnumber_t		agno;
+-	xfs_extlen_t		agsize;
+ 	xfs_buf_t		*bp;
+ 	int			dpct;
+ 	int			error, saved_error = 0;
+@@ -392,11 +440,11 @@ xfs_growfs_data_private(
+ 	xfs_agnumber_t		nagimax = 0;
+ 	xfs_rfsblock_t		nb, nb_mod;
+ 	xfs_rfsblock_t		new;
+-	xfs_rfsblock_t		nfree;
+ 	xfs_agnumber_t		oagcount;
+ 	int			pct;
+ 	xfs_trans_t		*tp;
+ 	LIST_HEAD		(buffer_list);
++	struct aghdr_init_data	id = {};
+ 
+ 	nb = in->newblocks;
+ 	pct = in->imaxpct;
+@@ -448,27 +496,28 @@ xfs_growfs_data_private(
+ 	 * list to write, we can cancel the entire list without having written
+ 	 * anything.
+ 	 */
+-	nfree = 0;
+-	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
+-
+-		if (agno == nagcount - 1)
+-			agsize = nb -
+-				(agno * (xfs_rfsblock_t)mp->m_sb.sb_agblocks);
++	INIT_LIST_HEAD(&id.buffer_list);
++	for (id.agno = nagcount - 1;
++	     id.agno >= oagcount;
++	     id.agno--, new -= id.agsize) {
++
++		if (id.agno == nagcount - 1)
++			id.agsize = nb -
++				(id.agno * (xfs_rfsblock_t)mp->m_sb.sb_agblocks);
+ 		else
+-			agsize = mp->m_sb.sb_agblocks;
++			id.agsize = mp->m_sb.sb_agblocks;
+ 
+-		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree,
+-					    &buffer_list);
++		error = xfs_grow_ag_headers(mp, &id);
+ 		if (error) {
+-			xfs_buf_delwri_cancel(&buffer_list);
++			xfs_buf_delwri_cancel(&id.buffer_list);
+ 			goto error0;
+ 		}
+ 	}
+-	error = xfs_buf_delwri_submit(&buffer_list);
++	error = xfs_buf_delwri_submit(&id.buffer_list);
+ 	if (error)
+ 		goto error0;
+ 
+-	xfs_trans_agblocks_delta(tp, nfree);
++	xfs_trans_agblocks_delta(tp, id.nfree);
+ 
+ 	/*
+ 	 * There are new blocks in the old last a.g.
+@@ -479,7 +528,7 @@ xfs_growfs_data_private(
+ 		/*
+ 		 * Change the agi length.
+ 		 */
+-		error = xfs_ialloc_read_agi(mp, tp, agno, &bp);
++		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+ 		if (error) {
+ 			goto error0;
+ 		}
+@@ -492,7 +541,7 @@ xfs_growfs_data_private(
+ 		/*
+ 		 * Change agf length.
+ 		 */
+-		error = xfs_alloc_read_agf(mp, tp, agno, 0, &bp);
++		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+ 		if (error) {
+ 			goto error0;
+ 		}
+@@ -511,13 +560,13 @@ xfs_growfs_data_private(
+ 		 * this doesn't actually exist in the rmap btree.
+ 		 */
+ 		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
+-		error = xfs_rmap_free(tp, bp, agno,
++		error = xfs_rmap_free(tp, bp, id.agno,
+ 				be32_to_cpu(agf->agf_length) - new,
+ 				new, &oinfo);
+ 		if (error)
+ 			goto error0;
+ 		error = xfs_free_extent(tp,
+-				XFS_AGB_TO_FSB(mp, agno,
++				XFS_AGB_TO_FSB(mp, id.agno,
+ 					be32_to_cpu(agf->agf_length) - new),
+ 				new, &oinfo, XFS_AG_RESV_NONE);
+ 		if (error)
+@@ -534,8 +583,8 @@ xfs_growfs_data_private(
+ 	if (nb > mp->m_sb.sb_dblocks)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS,
+ 				 nb - mp->m_sb.sb_dblocks);
+-	if (nfree)
+-		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, nfree);
++	if (id.nfree)
++		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+ 	if (dpct)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+ 	xfs_trans_set_sync(tp);
+@@ -562,7 +611,7 @@ xfs_growfs_data_private(
+ 	if (new) {
+ 		struct xfs_perag	*pag;
+ 
+-		pag = xfs_perag_get(mp, agno);
++		pag = xfs_perag_get(mp, id.agno);
+ 		error = xfs_ag_resv_free(pag);
+ 		xfs_perag_put(pag);
+ 		if (error)
+-- 
+2.15.1
 
-> > 
-> > This last change is required because agfl blocks are tracked as
-> > "free" blocks throughout their lifetime. The agfl fixup code
-> > therefore needs a way to tell the btree-based allocator to not make
-> > free space accounting changes for blocks that are being allocated to
-> > fill into the agfl.
-> > 
-> > Altogether, these changes ensure that the runtime rmapbt reservation
-> > accounting remains consistent with actual rmapbt block usage and
-> > reduce the risk of leaving the rmapbt reservation underfilled.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > This is RFC for the moment because I have reproduced a one-off
-> > sb_fdblocks inconsistency during xfstests. Unfortunately, I have not
-> > been able to reproduce that problem after several rmapbt/reflink enabled
-> > cycles so far.
-> > 
-> > It's not yet clear to me if this is a bug in this patch or not, so more
-> > testing is required at minimum. I'm sending this out for thoughts in the
-> > meantime.
-> > 
-> > Brian
-> > 
-> >  fs/xfs/libxfs/xfs_ag_resv.c    | 39 ++++++++++++++++++++++-----------------
-> >  fs/xfs/libxfs/xfs_ag_resv.h    | 31 +++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_alloc.c      | 14 +++-----------
-> >  fs/xfs/libxfs/xfs_rmap_btree.c |  4 ++++
-> >  fs/xfs/xfs_mount.h             |  9 +++++----
-> >  fs/xfs/xfs_reflink.c           |  2 +-
-> >  6 files changed, 66 insertions(+), 33 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> > index 2291f4224e24..1945202426c4 100644
-> > --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> > +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> > @@ -95,13 +95,13 @@ xfs_ag_resv_critical(
-> >  
-> >  	switch (type) {
-> >  	case XFS_AG_RESV_METADATA:
-> > -		avail = pag->pagf_freeblks - pag->pag_agfl_resv.ar_reserved;
-> > +		avail = pag->pagf_freeblks - pag->pag_rmapbt_resv.ar_reserved;
-> >  		orig = pag->pag_meta_resv.ar_asked;
-> >  		break;
-> > -	case XFS_AG_RESV_AGFL:
-> > +	case XFS_AG_RESV_RMAPBT:
-> >  		avail = pag->pagf_freeblks + pag->pagf_flcount -
-> >  			pag->pag_meta_resv.ar_reserved;
-> > -		orig = pag->pag_agfl_resv.ar_asked;
-> > +		orig = pag->pag_rmapbt_resv.ar_asked;
-> >  		break;
-> >  	default:
-> >  		ASSERT(0);
-> > @@ -126,10 +126,10 @@ xfs_ag_resv_needed(
-> >  {
-> >  	xfs_extlen_t			len;
-> >  
-> > -	len = pag->pag_meta_resv.ar_reserved + pag->pag_agfl_resv.ar_reserved;
-> > +	len = pag->pag_meta_resv.ar_reserved + pag->pag_rmapbt_resv.ar_reserved;
-> >  	switch (type) {
-> >  	case XFS_AG_RESV_METADATA:
-> > -	case XFS_AG_RESV_AGFL:
-> > +	case XFS_AG_RESV_RMAPBT:
-> >  		len -= xfs_perag_resv(pag, type)->ar_reserved;
-> >  		break;
-> >  	case XFS_AG_RESV_NONE:
-> > @@ -160,10 +160,11 @@ __xfs_ag_resv_free(
-> >  	if (pag->pag_agno == 0)
-> >  		pag->pag_mount->m_ag_max_usable += resv->ar_asked;
-> >  	/*
-> > -	 * AGFL blocks are always considered "free", so whatever
-> > -	 * was reserved at mount time must be given back at umount.
-> > +	 * RMAPBT blocks come from the AGFL and AGFL blocks are always
-> > +	 * considered "free", so whatever was reserved at mount time must be
-> > +	 * given back at umount.
-> >  	 */
-> > -	if (type == XFS_AG_RESV_AGFL)
-> > +	if (type == XFS_AG_RESV_RMAPBT)
-> >  		oldresv = resv->ar_orig_reserved;
-> >  	else
-> >  		oldresv = resv->ar_reserved;
-> > @@ -185,7 +186,7 @@ xfs_ag_resv_free(
-> >  	int				error;
-> >  	int				err2;
-> >  
-> > -	error = __xfs_ag_resv_free(pag, XFS_AG_RESV_AGFL);
-> > +	error = __xfs_ag_resv_free(pag, XFS_AG_RESV_RMAPBT);
-> >  	err2 = __xfs_ag_resv_free(pag, XFS_AG_RESV_METADATA);
-> >  	if (err2 && !error)
-> >  		error = err2;
-> > @@ -284,15 +285,15 @@ xfs_ag_resv_init(
-> >  		}
-> >  	}
-> >  
-> > -	/* Create the AGFL metadata reservation */
-> > -	if (pag->pag_agfl_resv.ar_asked == 0) {
-> > +	/* Create the RMAPBT metadata reservation */
-> > +	if (pag->pag_rmapbt_resv.ar_asked == 0) {
-> >  		ask = used = 0;
-> >  
-> >  		error = xfs_rmapbt_calc_reserves(mp, agno, &ask, &used);
-> >  		if (error)
-> >  			goto out;
-> >  
-> > -		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_AGFL, ask, used);
-> > +		error = __xfs_ag_resv_init(pag, XFS_AG_RESV_RMAPBT, ask, used);
-> >  		if (error)
-> >  			goto out;
-> >  	}
-> > @@ -304,7 +305,7 @@ xfs_ag_resv_init(
-> >  		return error;
-> >  
-> >  	ASSERT(xfs_perag_resv(pag, XFS_AG_RESV_METADATA)->ar_reserved +
-> > -	       xfs_perag_resv(pag, XFS_AG_RESV_AGFL)->ar_reserved <=
-> > +	       xfs_perag_resv(pag, XFS_AG_RESV_RMAPBT)->ar_reserved <=
-> >  	       pag->pagf_freeblks + pag->pagf_flcount);
-> >  #endif
-> >  out:
-> > @@ -325,8 +326,10 @@ xfs_ag_resv_alloc_extent(
-> >  	trace_xfs_ag_resv_alloc_extent(pag, type, args->len);
-> >  
-> >  	switch (type) {
-> > -	case XFS_AG_RESV_METADATA:
-> >  	case XFS_AG_RESV_AGFL:
-> > +		return;
-> > +	case XFS_AG_RESV_RMAPBT:
-> > +	case XFS_AG_RESV_METADATA:
-> >  		resv = xfs_perag_resv(pag, type);
-> >  		break;
-> >  	default:
-> > @@ -341,7 +344,7 @@ xfs_ag_resv_alloc_extent(
-> >  
-> >  	len = min_t(xfs_extlen_t, args->len, resv->ar_reserved);
-> >  	resv->ar_reserved -= len;
-> > -	if (type == XFS_AG_RESV_AGFL)
-> > +	if (type == XFS_AG_RESV_RMAPBT)
-> >  		return;
-> >  	/* Allocations of reserved blocks only need on-disk sb updates... */
-> >  	xfs_trans_mod_sb(args->tp, XFS_TRANS_SB_RES_FDBLOCKS, -(int64_t)len);
-> > @@ -365,8 +368,10 @@ xfs_ag_resv_free_extent(
-> >  	trace_xfs_ag_resv_free_extent(pag, type, len);
-> >  
-> >  	switch (type) {
-> > -	case XFS_AG_RESV_METADATA:
-> >  	case XFS_AG_RESV_AGFL:
-> > +		return;
-> > +	case XFS_AG_RESV_RMAPBT:
-> > +	case XFS_AG_RESV_METADATA:
-> >  		resv = xfs_perag_resv(pag, type);
-> >  		break;
-> >  	default:
-> > @@ -379,7 +384,7 @@ xfs_ag_resv_free_extent(
-> >  
-> >  	leftover = min_t(xfs_extlen_t, len, resv->ar_asked - resv->ar_reserved);
-> >  	resv->ar_reserved += leftover;
-> > -	if (type == XFS_AG_RESV_AGFL)
-> > +	if (type == XFS_AG_RESV_RMAPBT)
-> >  		return;
-> >  	/* Freeing into the reserved pool only requires on-disk update... */
-> >  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_RES_FDBLOCKS, len);
-> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-> > index 8d6c687deef3..938f2f96c5e8 100644
-> > --- a/fs/xfs/libxfs/xfs_ag_resv.h
-> > +++ b/fs/xfs/libxfs/xfs_ag_resv.h
-> > @@ -32,4 +32,35 @@ void xfs_ag_resv_alloc_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
-> >  void xfs_ag_resv_free_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
-> >  		struct xfs_trans *tp, xfs_extlen_t len);
-> >  
-> > +/*
-> > + * RMAPBT reservation accounting wrappers. Since rmapbt blocks are sourced from
-> > + * the AGFL, they are allocated one at a time and the reservation updates don't
-> > + * require a transaction.
-> > + */
-> > +static inline void
-> > +xfs_ag_resv_rmapbt_alloc(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agnumber_t		agno)
-> > +{
-> > +	struct xfs_alloc_arg	args = {0};
-> > +	struct xfs_perag	*pag;
-> > +
-> > +	args.len = 1;
-> > +	pag = xfs_perag_get(mp, agno);
-> > +	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
-> > +	xfs_perag_put(pag);
-> > +}
-> > +
-> > +static inline void
-> > +xfs_ag_resv_rmapbt_free(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agnumber_t		agno)
-> > +{
-> > +	struct xfs_perag	*pag;
-> > +
-> > +	pag = xfs_perag_get(mp, agno);
-> > +	xfs_ag_resv_free_extent(pag, XFS_AG_RESV_RMAPBT, NULL, 1);
-> > +	xfs_perag_put(pag);
-> > +}
-> > +
-> >  #endif	/* __XFS_AG_RESV_H__ */
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index c02781a4c091..8c401efb2d74 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -1564,7 +1564,6 @@ xfs_alloc_ag_vextent_small(
-> >  	int		*stat)	/* status: 0-freelist, 1-normal/none */
-> >  {
-> >  	struct xfs_owner_info	oinfo;
-> > -	struct xfs_perag	*pag;
-> >  	int		error;
-> >  	xfs_agblock_t	fbno;
-> >  	xfs_extlen_t	flen;
-> > @@ -1616,18 +1615,13 @@ xfs_alloc_ag_vextent_small(
-> >  			/*
-> >  			 * If we're feeding an AGFL block to something that
-> >  			 * doesn't live in the free space, we need to clear
-> > -			 * out the OWN_AG rmap and add the block back to
-> > -			 * the AGFL per-AG reservation.
-> > +			 * out the OWN_AG rmap.
-> >  			 */
-> >  			xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-> >  			error = xfs_rmap_free(args->tp, args->agbp, args->agno,
-> >  					fbno, 1, &oinfo);
-> >  			if (error)
-> >  				goto error0;
-> > -			pag = xfs_perag_get(args->mp, args->agno);
-> > -			xfs_ag_resv_free_extent(pag, XFS_AG_RESV_AGFL,
-> > -					args->tp, 1);
-> > -			xfs_perag_put(pag);
-> >  
-> >  			*stat = 0;
-> >  			return 0;
-> > @@ -1911,14 +1905,12 @@ xfs_free_ag_extent(
-> >  	XFS_STATS_INC(mp, xs_freex);
-> >  	XFS_STATS_ADD(mp, xs_freeb, len);
-> >  
-> > -	trace_xfs_free_extent(mp, agno, bno, len, type == XFS_AG_RESV_AGFL,
-> > -			haveleft, haveright);
-> > +	trace_xfs_free_extent(mp, agno, bno, len, type, haveleft, haveright);
-> >  
-> >  	return 0;
-> >  
-> >   error0:
-> > -	trace_xfs_free_extent(mp, agno, bno, len, type == XFS_AG_RESV_AGFL,
-> > -			-1, -1);
-> > +	trace_xfs_free_extent(mp, agno, bno, len, type, -1, -1);
-> >  	if (bno_cur)
-> >  		xfs_btree_del_cursor(bno_cur, XFS_BTREE_ERROR);
-> >  	if (cnt_cur)
-> > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-> > index e829c3e489ea..8560091554e0 100644
-> > --- a/fs/xfs/libxfs/xfs_rmap_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-> > @@ -130,6 +130,8 @@ xfs_rmapbt_alloc_block(
-> >  	be32_add_cpu(&agf->agf_rmap_blocks, 1);
-> >  	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
-> >  
-> > +	xfs_ag_resv_rmapbt_alloc(cur->bc_mp, cur->bc_private.a.agno);
-> > +
-> >  	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-> >  	*stat = 1;
-> >  	return 0;
-> > @@ -158,6 +160,8 @@ xfs_rmapbt_free_block(
-> >  			      XFS_EXTENT_BUSY_SKIP_DISCARD);
-> >  	xfs_trans_agbtree_delta(cur->bc_tp, -1);
-> >  
-> > +	xfs_ag_resv_rmapbt_free(cur->bc_mp, cur->bc_private.a.agno);
-> > +
-> >  	return 0;
-> >  }
-> >  
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index e0792d036be2..f659045507fb 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -327,6 +327,7 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
-> >  enum xfs_ag_resv_type {
-> >  	XFS_AG_RESV_NONE = 0,
-> >  	XFS_AG_RESV_METADATA,
-> > +	XFS_AG_RESV_RMAPBT,
-> >  	XFS_AG_RESV_AGFL,
-> >  };
-> >  
-> > @@ -391,8 +392,8 @@ typedef struct xfs_perag {
-> >  
-> >  	/* Blocks reserved for all kinds of metadata. */
-> >  	struct xfs_ag_resv	pag_meta_resv;
-> > -	/* Blocks reserved for just AGFL-based metadata. */
-> > -	struct xfs_ag_resv	pag_agfl_resv;
-> > +	/* Blocks reserved for the reverse mapping btree. */
-> > +	struct xfs_ag_resv	pag_rmapbt_resv;
-> >  
-> >  	/* reference count */
-> >  	uint8_t			pagf_refcount_level;
-> > @@ -406,8 +407,8 @@ xfs_perag_resv(
-> >  	switch (type) {
-> >  	case XFS_AG_RESV_METADATA:
-> >  		return &pag->pag_meta_resv;
-> > -	case XFS_AG_RESV_AGFL:
-> > -		return &pag->pag_agfl_resv;
-> > +	case XFS_AG_RESV_RMAPBT:
-> > +		return &pag->pag_rmapbt_resv;
-> >  	default:
-> >  		return NULL;
-> >  	}
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 270246943a06..832df6f49ba1 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1061,7 +1061,7 @@ xfs_reflink_ag_has_free_space(
-> >  		return 0;
-> >  
-> >  	pag = xfs_perag_get(mp, agno);
-> > -	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_AGFL) ||
-> > +	if (xfs_ag_resv_critical(pag, XFS_AG_RESV_RMAPBT) ||
-> >  	    xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA))
-> >  		error = -ENOSPC;
-> >  	xfs_perag_put(pag);
-> > -- 
-> > 2.13.6
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
