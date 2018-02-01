@@ -1,56 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37208 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752840AbeAaRza (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jan 2018 12:55:30 -0500
-Message-ID: <1517421324.32569.15.camel@kernel.org>
-Subject: Re: [PATCH v2] iversion: make inode_cmp_iversion{+raw} return bool
- instead of s64
-From: Jeff Layton <jlayton@kernel.org>
-Date: Wed, 31 Jan 2018 12:55:24 -0500
-In-Reply-To: <CA+55aFxB6og=iRkRchiOrr8EW2=jgb_i4nUiPsvEa+8F64APxA@mail.gmail.com>
-References: <20180130173126.2806-1-jlayton@kernel.org>
-         <20180130203221.29310-1-jlayton@kernel.org>
-         <CA+55aFw5Xf4V-BF1JK+SpjXnmrgeMe-k0wLaFc_=6ojbhfWEtQ@mail.gmail.com>
-         <1517401762.3612.0.camel@kernel.org>
-         <CA+55aFxB6og=iRkRchiOrr8EW2=jgb_i4nUiPsvEa+8F64APxA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:36450
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754559AbeBABkC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 20:40:02 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eh3r5-0004wl-NI
+        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 12:39:59 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.90)
+        (envelope-from <david@fromorbit.com>)
+        id 1eh3r5-0000E7-MC
+        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 12:39:59 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fall back to vmalloc when allocation log vector buffers
+Date: Thu,  1 Feb 2018 12:39:59 +1100
+Message-Id: <20180201013959.829-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, linux-xfs <linux-xfs@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, linux-integrity <linux-integrity@vger.kernel.org>, Trond Myklebust <trondmy@primarydata.com>, GoffredoBaroncelli <kreijack@libero.it>
+To: linux-xfs@vger.kernel.org
 
-On Wed, 2018-01-31 at 08:46 -0800, Linus Torvalds wrote:
-> On Wed, Jan 31, 2018 at 4:29 AM, Jeff Layton <jlayton@kernel.org> wrote:
-> > 
-> > Do you mind just taking it directly? I don't have anything else queued
-> > up for this cycle.
-> 
-> Done.
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-Thanks...and also many thanks for spotting the original issue. I agree
-that this makes it much harder for the callers to get things wrong (and
-is probably much more efficient on some arches, as Ted pointed out).
+When using large directory blocks, we regularly see memory
+allocations of >64k being made for the shadow log vector buffer.
+When we are under memory pressure, kmalloc() may not be able to find
+contiguous memory chunks large enough to satisfy these allocations
+easily, and if memory is fragmented we can potentially stall here.
 
-> I wonder if "false for same, true for different" calling convention
-> makes much sense, but it matches the old "0 for same" so obviously
-> makes for a smaller diff.
-> 
-> If it ever ends up confusing people, maybe the sense of that function
-> should be reversed, and the name changed to something like
-> "same_inode_version()" or something.
-> 
-> But at least for now the situation seems ok to me,
-> 
+TO avoid this problem, switch the log vector buffer allocation to
+use kmem_alloc_large(). This will allow failed allocations to fall
+back to vmalloc and so remove the dependency on large contiguous
+regions of memory being available. This should prevent slowdowns
+and potential stalls when memory is low and/or fragmented.
 
-G. Baroncelli suggested changing the name too, so maybe we should just
-go ahead and do it. Let me think on what the best approach is and I may
-try to send another patch or PR before the end of the merge window.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/kmem.c        | 6 +++---
+ fs/xfs/kmem.h        | 8 +++++++-
+ fs/xfs/xfs_log_cil.c | 2 +-
+ 3 files changed, 11 insertions(+), 5 deletions(-)
 
-Cheers,
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 393b6849aeb3..7bace03dc9dc 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -46,13 +46,13 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ }
+ 
+ void *
+-kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
++kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+ {
+ 	unsigned nofs_flag = 0;
+ 	void	*ptr;
+ 	gfp_t	lflags;
+ 
+-	ptr = kmem_zalloc(size, flags | KM_MAYFAIL);
++	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
+ 	if (ptr)
+ 		return ptr;
+ 
+@@ -67,7 +67,7 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+ 		nofs_flag = memalloc_nofs_save();
+ 
+ 	lflags = kmem_flags_convert(flags);
+-	ptr = __vmalloc(size, lflags | __GFP_ZERO, PAGE_KERNEL);
++	ptr = __vmalloc(size, lflags, PAGE_KERNEL);
+ 
+ 	if (flags & KM_NOFS)
+ 		memalloc_nofs_restore(nofs_flag);
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index 4b87472f35bc..6023b594ead7 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -71,7 +71,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ }
+ 
+ extern void *kmem_alloc(size_t, xfs_km_flags_t);
+-extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
++extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
+ extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
+ static inline void  kmem_free(const void *ptr)
+ {
+@@ -85,6 +85,12 @@ kmem_zalloc(size_t size, xfs_km_flags_t flags)
+ 	return kmem_alloc(size, flags | KM_ZERO);
+ }
+ 
++static inline void *
++kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
++{
++	return kmem_alloc_large(size, flags | KM_ZERO);
++}
++
+ /*
+  * Zone interfaces
+  */
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 43aa42a3a5d3..61ab5c0a4c45 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -202,7 +202,7 @@ xlog_cil_alloc_shadow_bufs(
+ 			 */
+ 			kmem_free(lip->li_lv_shadow);
+ 
+-			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
++			lv = kmem_alloc_large(buf_size, KM_SLEEP|KM_NOFS);
+ 			memset(lv, 0, xlog_cil_iovec_space(niovecs));
+ 
+ 			lv->lv_item = lip;
 -- 
-Jeff Layton <jlayton@kernel.org>
+2.15.1
+
