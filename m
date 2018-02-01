@@ -1,174 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38862 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751567AbeBAWkA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Feb 2018 17:40:00 -0500
-Subject: Re: [PATCH] xfs_mdrestore: Don't restore over a dump file
-References: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
- <3c874559-f69f-c2c0-fb40-4c40621dd58b@sandeen.net>
- <20180201222804.GU4849@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2fa49e30-aed9-a023-ea8e-1d2e4907e7b9@sandeen.net>
-Date: Thu, 1 Feb 2018 16:39:59 -0600
+Received: from userp2120.oracle.com ([156.151.31.85]:41478 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751012AbeBAWRz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 17:17:55 -0500
+Date: Thu, 1 Feb 2018 14:17:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 31/29 v2] xfs_scrub: handle scrub-only kernels more
+ helpfully
+Message-ID: <20180201221748.GT4849@magnolia>
+References: <151736799098.32164.15446216987522359103.stgit@magnolia>
+ <20180131173016.GD4849@magnolia>
+ <313224b9-67b0-cd94-fca5-a862761b2b02@sandeen.net>
+ <8b77b774-5f60-2236-ab23-b591417e79a9@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20180201222804.GU4849@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8b77b774-5f60-2236-ab23-b591417e79a9@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Marco A Benatto <marco.antonio.780@gmail.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On 2/1/18 4:28 PM, Darrick J. Wong wrote:
-> On Thu, Feb 01, 2018 at 02:50:19PM -0600, Eric Sandeen wrote:
->> On 2/1/18 2:37 PM, Marco A Benatto wrote:
->>> Currently, if the user switch source and target parameters
->>> position, xfs_mdrestore truncates the dumpfile before abort
->>> the execution.
->>>
->>> This patch checks the target parameter and if XFS_MD_MAGIC is
->>> found, it aborts execution and leave dump file intact.
->>
->> Yeah, I think this is a good idea.  It's pretty unforgiving
->> to get it wrong and destroy your metadump in the process.
->>
->> (though tbh I usually get a compressed dump, and
->> # bzcat dumpfile.bz2 | xfs_mdrestore - target
->> works quite well and is more foolproof)
->>
->> So, despite the fact that I already talked with you about
->> this a bit online, I think my subconscious was working on
->> it in the meantime.  What you've got is generally ok, but
->> I wonder if the goal is to detect switched arguments, if
->> it might be simpler to first validate the given source, and
->> stop if it's not a metadump file.  We've already got that in
->> place, and it'd just be a question of checking the header
->> unconditionally, something like this, which just moves some
->> of the existing stuff work of the conditional:
->>
->>         xfs_metablock_t         mb;
->>
->>
->>         /* validate that our source file is really a metadump */
->>         if (fread(&mb, sizeof(mb), 1, src_f) != 1)
->>                 fatal("error reading from source file: %s\n", strerror(errno));
->>
->>         if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
->>                 fatal("specified source file is not a metadata dump\n");
->>
->>         if (show_info) {
->>                 if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
->>                         printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
->>                         argv[optind],
->>                         mb.mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
->>                         mb.mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
->>                         mb.mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
->>                 } else {
->>                         printf("%s: no informational flags present\n",
->>                                 argv[optind]);
->>                 }
->>
->>                 if (argc - optind == 1)
->>                         exit(0);
->>         }
->>
->>         /* Go back to the beginning for the restore function */
->>         fseek(src_f, 0L, SEEK_SET);
+On Thu, Feb 01, 2018 at 03:46:20PM -0600, Eric Sandeen wrote:
 > 
-> So now you got /me/ looking at mdrestore and wondering, if the metadump
-> source is a pipe (as in your example above), won't this seek fail?  We
-> already read the metadump super from the stream, so we can't seek
-> backwards and read it again:
 > 
-> # cat foo.md | xfs_mdrestore -i - /dev/sda
-> -: not obfuscated, clean log, full metadata blocks
-> xfs_mdrestore: specified file is not a metadata dump
+> If xfs_scrub is run today against a 4.15 kernel, it fails with
 > 
-> Not to mention xfs_mdrestore --help doesn't tell you there's an -i
-> option.
-
-<there is no --help> ;)
-
-Neato!
-
-> Also, we already /do/ check that the source actually has a metadump
-> header, the problem is that we open the destination O_TRUNC before we
-> read the header and so if the target was a file, *poof* it's empty.
-
-hhmm yeah.
-
-> I think we'll need to fix both of those problems.  Maybe we solve it by
-> opening src_f, checking the magic, optionally printing the metadump
-> info, and then passing both src_f and the header into perform_restore?
+> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+> Error: /home: Kernel metadata optimization facility is required.
+> Info: /home: Scrub aborted after phase 1.
+> /home: 2 errors found.
 > 
-> Separate patch, though.
-
-right, and make perform_restore know that we're already past the first
-header block, right.  Simply moving the first fread out of perform_restore
-would do the trick.  Would need to pass the read metablock into the
-restore function.
-
-yeah that makes sense.
-
->> It's not explicitly checking the target, but it would probably serve
->> the same purpose with fewer lines of new code.  Either is ok with me,
->> really.  Any thoughts?
->>
->> Thanks,
->> -Eric
->>
->>
->>>
->>> Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
->>> ---
->>>  mdrestore/xfs_mdrestore.c | 16 +++++++++++++++-
->>>  1 file changed, 15 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
->>> index c49c13a..b4bf7b4 100644
->>> --- a/mdrestore/xfs_mdrestore.c
->>> +++ b/mdrestore/xfs_mdrestore.c
->>> @@ -205,7 +205,7 @@ main(
->>>  	int 		argc,
->>>  	char 		**argv)
->>>  {
->>> -	FILE		*src_f;
->>> +	FILE		*src_f, *dst_f;
->>>  	int		dst_fd;
->>>  	int		c;
->>>  	int		open_flags;
->>> @@ -277,6 +277,7 @@ main(
->>>  
->>>  	optind++;
->>>  
->>> +
->>>  	/* check and open target */
->>>  	open_flags = O_RDWR;
->>>  	is_target_file = 0;
->>> @@ -285,6 +286,19 @@ main(
->>>  		open_flags |= O_CREAT;
->>>  		is_target_file = 1;
->>>  	} else if (S_ISREG(statbuf.st_mode))  {
->>> +		xfs_metablock_t mb;
+> Be a bit kinder to the user and suggest a path forward.  By the
+> time we fail for missing preen or repair functionality, we do
+> know that scrub is available, so suggest it.
 > 
-> dst_f could be declared here, right?
+> Further, rather than stating what is required, state what was not
+> found ... we're failing, so state what was missing, vs. what is
+> required - seems a bit more definitive.
 > 
->>> +
->>> +		dst_f = fopen(argv[optind], "rb");
->>> +		if (dst_f == NULL)
->>> +			fatal("cannot open target\n");
->>> +
->>> +		if (fread(&mb, sizeof(mb), 1, dst_f) == 1) {
->>> +			if (be32_to_cpu(mb.mb_magic) == XFS_MD_MAGIC)
->>> +				fatal("target file is a xfs_metadump. switched arguments?\n");
->>> +		}
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+> ---
 > 
-> if (fread(&mb, sizeof(mb), 1, dst_f) == 1 &&
->     mb.mb_magic == cpu_to_be32(XFS_MD_MAGIC))
-> 	fatal("...");
-
-*nod*
-
--Eric
+> V2: change verbiage to make it more better and not not not confusing.
+> 
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index 547767b..9128429 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -175,7 +175,7 @@ _("Does not appear to be an XFS filesystem!"));
+>  	    !xfs_can_scrub_attr(ctx) || !xfs_can_scrub_symlink(ctx) ||
+>  	    !xfs_can_scrub_parent(ctx)) {
+>  		str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata scrubbing facility is required."));
+> +_("Kernel metadata scrubbing facility is not available."));
+>  		return false;
+>  	}
+>  
+> @@ -183,10 +183,10 @@ _("Kernel metadata scrubbing facility is required."));
+>  	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
+>  		if (ctx->mode == SCRUB_MODE_PREEN)
+>  			str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata optimization facility is required."));
+> +_("Kernel metadata optimization facility is not available.  Use -n to scrub."));
+>  		else
+>  			str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata repair facility is required."));
+> +_("Kernel metadata repair facility is not available.  Use -n to scrub."));
+>  		return false;
+>  	}
+>  
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
