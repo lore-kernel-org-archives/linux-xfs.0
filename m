@@ -1,77 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36374 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754981AbeBAUhv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 15:37:51 -0500
-Received: by mail-qk0-f195.google.com with SMTP id d21so21169800qkj.3
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Feb 2018 12:37:51 -0800 (PST)
-Received: from testarossa.localdomain ([191.177.187.140])
-        by smtp.googlemail.com with ESMTPSA id n20sm303020qka.47.2018.02.01.12.37.48
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 01 Feb 2018 12:37:49 -0800 (PST)
-From: Marco A Benatto <marco.antonio.780@gmail.com>
-Subject: [PATCH] xfs_mdrestore: Don't restore over a dump file
-Date: Thu,  1 Feb 2018 18:37:43 -0200
-Message-Id: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50288 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751974AbeBAVtK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Feb 2018 16:49:10 -0500
+Date: Thu, 1 Feb 2018 15:49:03 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH 31/29 v2] xfs_scrub: handle scrub-only kernels more
+ helpfully
+Message-ID: <20180201214903.GA9528@redhat.com>
+References: <151736799098.32164.15446216987522359103.stgit@magnolia>
+ <20180131173016.GD4849@magnolia>
+ <313224b9-67b0-cd94-fca5-a862761b2b02@sandeen.net>
+ <8b77b774-5f60-2236-ab23-b591417e79a9@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8b77b774-5f60-2236-ab23-b591417e79a9@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-Currently, if the user switch source and target parameters
-position, xfs_mdrestore truncates the dumpfile before abort
-the execution.
+On Thu, Feb 01, 2018 at 03:46:20PM -0600, Eric Sandeen wrote:
+> 
+> 
+> If xfs_scrub is run today against a 4.15 kernel, it fails with
+> 
+> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+> Error: /home: Kernel metadata optimization facility is required.
+> Info: /home: Scrub aborted after phase 1.
+> /home: 2 errors found.
+> 
+> Be a bit kinder to the user and suggest a path forward.  By the
+> time we fail for missing preen or repair functionality, we do
+> know that scrub is available, so suggest it.
+> 
+> Further, rather than stating what is required, state what was not
+> found ... we're failing, so state what was missing, vs. what is
+> required - seems a bit more definitive.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-This patch checks the target parameter and if XFS_MD_MAGIC is
-found, it aborts execution and leave dump file intact.
+looks good.
 
-Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
----
- mdrestore/xfs_mdrestore.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index c49c13a..b4bf7b4 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -205,7 +205,7 @@ main(
- 	int 		argc,
- 	char 		**argv)
- {
--	FILE		*src_f;
-+	FILE		*src_f, *dst_f;
- 	int		dst_fd;
- 	int		c;
- 	int		open_flags;
-@@ -277,6 +277,7 @@ main(
- 
- 	optind++;
- 
-+
- 	/* check and open target */
- 	open_flags = O_RDWR;
- 	is_target_file = 0;
-@@ -285,6 +286,19 @@ main(
- 		open_flags |= O_CREAT;
- 		is_target_file = 1;
- 	} else if (S_ISREG(statbuf.st_mode))  {
-+		xfs_metablock_t mb;
-+
-+		dst_f = fopen(argv[optind], "rb");
-+		if (dst_f == NULL)
-+			fatal("cannot open target\n");
-+
-+		if (fread(&mb, sizeof(mb), 1, dst_f) == 1) {
-+			if (be32_to_cpu(mb.mb_magic) == XFS_MD_MAGIC)
-+				fatal("target file is a xfs_metadump. switched arguments?\n");
-+		}
-+
-+		fclose(dst_f);
-+
- 		open_flags |= O_TRUNC;
- 		is_target_file = 1;
- 	} else  {
--- 
-1.8.3.1
-
+> ---
+> 
+> V2: change verbiage to make it more better and not not not confusing.
+> 
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index 547767b..9128429 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -175,7 +175,7 @@ _("Does not appear to be an XFS filesystem!"));
+>  	    !xfs_can_scrub_attr(ctx) || !xfs_can_scrub_symlink(ctx) ||
+>  	    !xfs_can_scrub_parent(ctx)) {
+>  		str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata scrubbing facility is required."));
+> +_("Kernel metadata scrubbing facility is not available."));
+>  		return false;
+>  	}
+>  
+> @@ -183,10 +183,10 @@ _("Kernel metadata scrubbing facility is required."));
+>  	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
+>  		if (ctx->mode == SCRUB_MODE_PREEN)
+>  			str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata optimization facility is required."));
+> +_("Kernel metadata optimization facility is not available.  Use -n to scrub."));
+>  		else
+>  			str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata repair facility is required."));
+> +_("Kernel metadata repair facility is not available.  Use -n to scrub."));
+>  		return false;
+>  	}
+>  
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
