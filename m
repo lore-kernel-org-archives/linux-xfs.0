@@ -1,158 +1,312 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:34244 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751674AbeBAXXC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 18:23:02 -0500
-Date: Thu, 1 Feb 2018 15:22:58 -0800
+Received: from userp2120.oracle.com ([156.151.31.85]:58176 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751450AbeBAX2p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 18:28:45 -0500
+Date: Thu, 1 Feb 2018 15:28:39 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: byte range buffer dirty region tracking
-Message-ID: <20180201232258.GW4849@magnolia>
-References: <20180201010514.30233-1-david@fromorbit.com>
- <20180201051128.GO4849@magnolia>
- <20180201081452.gaavuhnxafoafunm@destitution>
- <20180201203526.GR4849@magnolia>
- <20180201231647.qsiq6vnmllqc32le@destitution>
+Subject: Re: [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
+Message-ID: <20180201232839.GX4849@magnolia>
+References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
+ <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180201231647.qsiq6vnmllqc32le@destitution>
+In-Reply-To: <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Jiang <dave.jiang@intel.com>
+Cc: linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
 
-On Fri, Feb 02, 2018 at 10:16:47AM +1100, Dave Chinner wrote:
-> On Thu, Feb 01, 2018 at 12:35:26PM -0800, Darrick J. Wong wrote:
-> > On Thu, Feb 01, 2018 at 07:14:52PM +1100, Dave Chinner wrote:
-> > > On Wed, Jan 31, 2018 at 09:11:28PM -0800, Darrick J. Wong wrote:
-> > > > On Thu, Feb 01, 2018 at 12:05:14PM +1100, Dave Chinner wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > One of the biggest performance problems with large directory block
-> > > > > sizes is the CPU overhead in maintaining the buffer log item direty
-> > > > > region bitmap.  The bit manipulations and buffer region mapping
-> > > > > calls are right at the top of the profiles when running tests on 64k
-> > > > > directory buffers:
-> > > .....
-> > > > > ---
-> > > > >  fs/xfs/xfs_buf.c      |   2 +
-> > > > >  fs/xfs/xfs_buf_item.c | 431 +++++++++++++++++++++++++-------------------------
-> > > > >  fs/xfs/xfs_buf_item.h |  19 +++
-> > > > >  3 files changed, 238 insertions(+), 214 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > > > > index d1da2ee9e6db..7621fabeb505 100644
-> > > > > --- a/fs/xfs/xfs_buf.c
-> > > > > +++ b/fs/xfs/xfs_buf.c
-> > > > > @@ -1583,6 +1583,8 @@ xfs_buf_iomove(
-> > > > >  		page = bp->b_pages[page_index];
-> > > > >  		csize = min_t(size_t, PAGE_SIZE - page_offset,
-> > > > >  				      BBTOB(bp->b_io_length) - boff);
-> > > > > +		if (boff + csize > bend)
-> > > > > +			csize = bend - boff;
-> > > > 
-> > > > How often does csize exceed bend?
-> > > 
-> > > /me checks notes when the patch was written a couple of years ago
-> > > 
-> > > Rarely. I didn't record the exact cause because it was a memory
-> > > corruption bug that showed up long after the cause was gone.
-> > > Reading between the lines, I think was a case where bsize was a
-> > > single chunk (128 bytes), boff was 256 (third chunk in the buffer)
-> > > b_io_length was 512 bytes and a page offset of ~512 bytes.
-> > > 
-> > > That means csize was coming out at 256 bytes, but we only wanted 128
-> > > bytes to be copied. In most cases this didn't cause a problem
-> > > because there was more space in the log iovec buffer being copied
-> > > into, but occasionally it would be the last copy into the
-> > > logvec buffer and that would overrun the user buffer and corrupt
-> > > memory.
-> > > 
-> > > Essentially we are trying to copy from boff to bend, there's
-> > > nothing in the loop to clamp the copy size to bend, and that's
-> > > what this is doing. I can separate it out into another patch if you
-> > > want - I'd completely forgotten this was in the patch because I've
-> > > been running this patch in my tree for a long time now without
-> > > really looking at it...
-> > 
-> > I don't know if this needs to be a separate patch, but it seems like the
-> > upper levels shouldn't be sending us overlong lengths?  So either we
-> > need to go find the ones that do and fix them to dtrt, possibly leaving
-> > an assert here for "hey someone screwed up but we're fixing it"
-> > analysis.
-> 
-> It was probably caused by a bug in the original range->bitmap
-> conversion code I'd written, not by any of the external code. I'll
-> add an assert into the code, but also leave the clamping so that
-> production systems don't go bad if there's some other bug in the
-> code that triggers it.
-> 
-> > > > > +	ASSERT(bip->bli_range[0].last != 0);
-> > > > > +	if (bip->bli_range[0].last == 0) {
-> > > > > +		/* clean! */
-> > > > > +		ASSERT(bip->bli_range[0].first == 0);
-> > > > 
-> > > > Hm, so given that the firsts are initialized to UINT_MAX, this only
-> > > > happens if the first (only?) range we log is ... (0, 0) ?
-> > > 
-> > > Yeah, basically it catches code that should not be logging buffers
-> > > because there is no dirty range in the buffer.
-> > > 
-> > > > Mildly confused about what these asserts are going after, since the
-> > > > first one implies that this shouldn't happen anyway.
-> > > 
-> > > If first is after last, then we've really screwed up because we've
-> > > got a dirty buffer with an invalid range. I can't recall seeing
-> > > either of these asserts fire, but we still need the check for clean
-> > > buffer ranges/ screwups in production code. maybe there's a better
-> > > way to do this?
-> > 
-> > I only came up with:
-> > 
-> > /*
-> >  * If the first bli_range has a last of 0, we've been fed a clean
-> >  * buffer.  This shouldn't happen but we'll be paranoid and check
-> >  * anyway.
-> >  */
-> > if (bip->bli_range[0].last == 0) {
-> > 	ASSERT(0);
-> > 	ASSERT(bip->bli_range[0].first == 0);
-> > 	return;
-> > }
-> 
-> Yup, that's a bit cleaner, I'll change it over.
-> 
-> > FWIW I also ran straight into this when I applied it for giggles and ran
-> > xfstests -g quick (generic/001 blew up):
-> 
-> I must have screwed up the forward port worse than usual - the
-> conflicts with the xfs_buf_log_item typedef removal were pretty
-> extensive.
+> [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
 
-Ah, sorry about that.  I'd thought it was just the xfs_buf rename. :/
+"[PATCH v2 2/2]" to distinguish the version number from the patch number
+more explicitly.
 
-> > [   31.909228] ================================================================================
-> > [   31.911258] BUG: unable to handle kernel NULL pointer dereference at 00000000000000a0
-> > [   31.912375] IP: xfs_buf_item_init+0x33/0x350 [xfs]
+On Thu, Feb 01, 2018 at 01:33:05PM -0700, Dave Jiang wrote:
+> When using realtime device (rtdev) with xfs where the data device is not
+> DAX capable, two issues arise. One is when data device is not DAX but the
+> realtime device is DAX capable, we currently disable DAX.
+> After passing this check, we are also not marking the inode as DAX capable.
+> This change will allow DAX enabled if the data device or the realtime
+> device is DAX capable. S_DAX will be marked for the inode if the file is
+> residing on a DAX capable device. This will prevent the case of rtdev is not
+> DAX and data device is DAX to create realtime files.
 > 
-> Hmmmm - I'm seeing that on my subvol smoke test script but not
-> elsewhere. I've been looking through the subvol code to try to find
-> this, maybe it's not the subvol code.  What mkfs parameters where
-> you using?
-
-mkfs.xfs -m rmapbt=1,reflink=1 -i sparse=1 /dev/pmem0
-
---D
-
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> Reported-by: Darrick Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_iops.c  |    3 ++-
+>  fs/xfs/xfs_super.c |    9 ++++++++-
+>  2 files changed, 10 insertions(+), 2 deletions(-)
 > 
-> Cheers,
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 56475fcd76f2..ab352c325301 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1204,7 +1204,8 @@ xfs_diflags_to_iflags(
+>  	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
+>  	    !xfs_is_reflink_inode(ip) &&
+>  	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
+> -	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
+> +	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX) &&
+> +	    blk_queue_dax(bdev_get_queue(inode->i_sb->s_bdev)))
+
+inode->i_sb->s_bdev is the data device bdev, so if the inode is a
+realtime file, we're checking the wrong device for daxiness, I think.
+
+Maybe this whole ugly switch statement should get turned into a helper
+function?
+
+xfs_ioctl_setattr_dax_invalidate needs to pick the right bdev to check.
+
+>  		inode->i_flags |= S_DAX;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index e8a687232614..5ac478924dce 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1649,11 +1649,18 @@ xfs_fs_fill_super(
+>  		sb->s_flags |= SB_I_VERSION;
+>  
+>  	if (mp->m_flags & XFS_MOUNT_DAX) {
+> +		bool rtdev_is_dax = false;
+> +
+>  		xfs_warn(mp,
+>  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+>  
+> +		if (mp->m_rtdev_targp->bt_daxdev)
+> +			if (bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
+> +					      sb->s_blocksize) == 0)
+> +				rtdev_is_dax = true;
+> +
+>  		error = bdev_dax_supported(sb->s_bdev, sb->s_blocksize);
+> -		if (error) {
+> +		if (error && !rtdev_is_dax) {
+>  			xfs_alert(mp,
+>  			"DAX unsupported by block device. Turning off DAX.");
+>  			mp->m_flags &= ~XFS_MOUNT_DAX;
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Does the following patch fix everything for you?
+
+(Note that we can't switch S_DAX on a running fs so you have to remount
+the whole fs after setting the dax flag...)
+
+--D
+
+--------------------
+
+fs: allow per-device dax status checking for filesystems
+
+Refactor __bdev_dax_supported into a sb_dax_supported helper for
+single-bdev filesystems and a regular bdev_dax_supported that takes a
+bdev parameter.  This enables multi-device filesystems like xfs to check
+that a dax device can work for the particular filesystem.  Once that's
+in place, actually fix all the parts of XFS where we need to be able to
+distinguish between datadev and rtdev.
+
+This patch fixes the problem where we screw up the dax support checking
+in xfs if the datadev and rtdev have different dax capabilities.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ drivers/dax/super.c |    9 +++++----
+ fs/ext2/super.c     |    2 +-
+ fs/ext4/super.c     |    2 +-
+ fs/xfs/xfs_ioctl.c  |    3 ++-
+ fs/xfs/xfs_iops.c   |   30 +++++++++++++++++++++++++-----
+ fs/xfs/xfs_super.c  |   11 +++++++++--
+ include/linux/dax.h |   16 ++++++++++++----
+ 7 files changed, 55 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 3ec8046..c4db84f 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -72,8 +72,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+ #endif
+ 
+ /**
+- * __bdev_dax_supported() - Check if the device supports dax for filesystem
++ * bdev_dax_supported() - Check if the device supports dax for filesystem
+  * @sb: The superblock of the device
++ * @bdev: block device to check
+  * @blocksize: The block size of the device
+  *
+  * This is a library function for filesystems to check if the block device
+@@ -81,9 +82,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+  *
+  * Return: negative errno if unsupported, 0 if supported.
+  */
+-int __bdev_dax_supported(struct super_block *sb, int blocksize)
++int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
++		       int blocksize)
+ {
+-	struct block_device *bdev = sb->s_bdev;
+ 	struct dax_device *dax_dev;
+ 	pgoff_t pgoff;
+ 	int err, id;
+@@ -125,7 +126,7 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(__bdev_dax_supported);
++EXPORT_SYMBOL_GPL(bdev_dax_supported);
+ #endif
+ 
+ enum dax_device_flags {
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 7646818..6556993 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -958,7 +958,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ 	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
+ 
+ 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
+-		err = bdev_dax_supported(sb, blocksize);
++		err = sb_dax_supported(sb, blocksize);
+ 		if (err)
+ 			goto failed_mount;
+ 	}
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 7c46693..804a2d6 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -3712,7 +3712,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ 					" that may contain inline data");
+ 			goto failed_mount;
+ 		}
+-		err = bdev_dax_supported(sb, blocksize);
++		err = sb_dax_supported(sb, blocksize);
+ 		if (err)
+ 			goto failed_mount;
+ 	}
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89fb1eb..277355f 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1103,7 +1103,8 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+ 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+ 			return -EINVAL;
+-		if (bdev_dax_supported(sb, sb->s_blocksize) < 0)
++		if (bdev_dax_supported(sb, xfs_find_bdev_for_inode(VFS_I(ip)),
++				sb->s_blocksize) < 0)
+ 			return -EINVAL;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 56475fc..66cd61c 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1182,6 +1182,30 @@ static const struct inode_operations xfs_inline_symlink_inode_operations = {
+ 	.update_time		= xfs_vn_update_time,
+ };
+ 
++/* Figure out if this file actually supports DAX. */
++static bool
++xfs_inode_supports_dax(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	/* Only supported on non-reflinked files. */
++	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
++		return false;
++
++	/* DAX mount option or DAX iflag must be set. */
++	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
++	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
++		return false;
++
++	/* Block size must match page size */
++	if (mp->m_sb.sb_blocksize != PAGE_SIZE)
++		return false;
++
++	/* Device has to support DAX too. */
++	return xfs_find_daxdev_for_inode(VFS_I(ip)) != NULL;
++}
++
+ STATIC void
+ xfs_diflags_to_iflags(
+ 	struct inode		*inode,
+@@ -1200,11 +1224,7 @@ xfs_diflags_to_iflags(
+ 		inode->i_flags |= S_SYNC;
+ 	if (flags & XFS_DIFLAG_NOATIME)
+ 		inode->i_flags |= S_NOATIME;
+-	if (S_ISREG(inode->i_mode) &&
+-	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
+-	    !xfs_is_reflink_inode(ip) &&
+-	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
+-	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
++	if (xfs_inode_supports_dax(ip))
+ 		inode->i_flags |= S_DAX;
+ }
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 6f1b917..c115bc7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1692,11 +1692,18 @@ xfs_fs_fill_super(
+ 		sb->s_flags |= SB_I_VERSION;
+ 
+ 	if (mp->m_flags & XFS_MOUNT_DAX) {
++		int	error2 = 0;
++
+ 		xfs_warn(mp,
+ 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+ 
+-		error = bdev_dax_supported(sb, sb->s_blocksize);
+-		if (error) {
++		error = bdev_dax_supported(sb, mp->m_ddev_targp->bt_bdev,
++				sb->s_blocksize);
++		if (mp->m_rtdev_targp)
++			error2 = bdev_dax_supported(sb,
++					mp->m_rtdev_targp->bt_bdev,
++					sb->s_blocksize);
++		if (error && error2) {
+ 			xfs_alert(mp,
+ 			"DAX unsupported by block device. Turning off DAX.");
+ 			mp->m_flags &= ~XFS_MOUNT_DAX;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 5258346..1107a98 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -40,10 +40,11 @@ static inline void put_dax(struct dax_device *dax_dev)
+ 
+ int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
+ #if IS_ENABLED(CONFIG_FS_DAX)
+-int __bdev_dax_supported(struct super_block *sb, int blocksize);
+-static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
++int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
++		       int blocksize);
++static inline int sb_dax_supported(struct super_block *sb, int blocksize)
+ {
+-	return __bdev_dax_supported(sb, blocksize);
++	return bdev_dax_supported(sb, sb->s_bdev, blocksize);
+ }
+ 
+ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+@@ -58,7 +59,14 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
+ 
+ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
+ #else
+-static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
++static inline int bdev_dax_supported(struct super_block *sb,
++				     struct block_device *bdev,
++				     int blocksize)
++{
++	return -EOPNOTSUPP;
++}
++
++static inline int sb_dax_supported(struct super_block *sb, int blocksize)
+ {
+ 	return -EOPNOTSUPP;
+ }
