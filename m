@@ -1,130 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52856 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751677AbeBAUuU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Feb 2018 15:50:20 -0500
-Subject: Re: [PATCH] xfs_mdrestore: Don't restore over a dump file
-References: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <3c874559-f69f-c2c0-fb40-4c40621dd58b@sandeen.net>
-Date: Thu, 1 Feb 2018 14:50:19 -0600
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:16813 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751378AbeBAXTb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 18:19:31 -0500
+Date: Fri, 2 Feb 2018 10:16:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: byte range buffer dirty region tracking
+Message-ID: <20180201231647.qsiq6vnmllqc32le@destitution>
+References: <20180201010514.30233-1-david@fromorbit.com>
+ <20180201051128.GO4849@magnolia>
+ <20180201081452.gaavuhnxafoafunm@destitution>
+ <20180201203526.GR4849@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180201203526.GR4849@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco A Benatto <marco.antonio.780@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/1/18 2:37 PM, Marco A Benatto wrote:
-> Currently, if the user switch source and target parameters
-> position, xfs_mdrestore truncates the dumpfile before abort
-> the execution.
+On Thu, Feb 01, 2018 at 12:35:26PM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 01, 2018 at 07:14:52PM +1100, Dave Chinner wrote:
+> > On Wed, Jan 31, 2018 at 09:11:28PM -0800, Darrick J. Wong wrote:
+> > > On Thu, Feb 01, 2018 at 12:05:14PM +1100, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > One of the biggest performance problems with large directory block
+> > > > sizes is the CPU overhead in maintaining the buffer log item direty
+> > > > region bitmap.  The bit manipulations and buffer region mapping
+> > > > calls are right at the top of the profiles when running tests on 64k
+> > > > directory buffers:
+> > .....
+> > > > ---
+> > > >  fs/xfs/xfs_buf.c      |   2 +
+> > > >  fs/xfs/xfs_buf_item.c | 431 +++++++++++++++++++++++++-------------------------
+> > > >  fs/xfs/xfs_buf_item.h |  19 +++
+> > > >  3 files changed, 238 insertions(+), 214 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > > index d1da2ee9e6db..7621fabeb505 100644
+> > > > --- a/fs/xfs/xfs_buf.c
+> > > > +++ b/fs/xfs/xfs_buf.c
+> > > > @@ -1583,6 +1583,8 @@ xfs_buf_iomove(
+> > > >  		page = bp->b_pages[page_index];
+> > > >  		csize = min_t(size_t, PAGE_SIZE - page_offset,
+> > > >  				      BBTOB(bp->b_io_length) - boff);
+> > > > +		if (boff + csize > bend)
+> > > > +			csize = bend - boff;
+> > > 
+> > > How often does csize exceed bend?
+> > 
+> > /me checks notes when the patch was written a couple of years ago
+> > 
+> > Rarely. I didn't record the exact cause because it was a memory
+> > corruption bug that showed up long after the cause was gone.
+> > Reading between the lines, I think was a case where bsize was a
+> > single chunk (128 bytes), boff was 256 (third chunk in the buffer)
+> > b_io_length was 512 bytes and a page offset of ~512 bytes.
+> > 
+> > That means csize was coming out at 256 bytes, but we only wanted 128
+> > bytes to be copied. In most cases this didn't cause a problem
+> > because there was more space in the log iovec buffer being copied
+> > into, but occasionally it would be the last copy into the
+> > logvec buffer and that would overrun the user buffer and corrupt
+> > memory.
+> > 
+> > Essentially we are trying to copy from boff to bend, there's
+> > nothing in the loop to clamp the copy size to bend, and that's
+> > what this is doing. I can separate it out into another patch if you
+> > want - I'd completely forgotten this was in the patch because I've
+> > been running this patch in my tree for a long time now without
+> > really looking at it...
 > 
-> This patch checks the target parameter and if XFS_MD_MAGIC is
-> found, it aborts execution and leave dump file intact.
+> I don't know if this needs to be a separate patch, but it seems like the
+> upper levels shouldn't be sending us overlong lengths?  So either we
+> need to go find the ones that do and fix them to dtrt, possibly leaving
+> an assert here for "hey someone screwed up but we're fixing it"
+> analysis.
 
-Yeah, I think this is a good idea.  It's pretty unforgiving
-to get it wrong and destroy your metadump in the process.
+It was probably caused by a bug in the original range->bitmap
+conversion code I'd written, not by any of the external code. I'll
+add an assert into the code, but also leave the clamping so that
+production systems don't go bad if there's some other bug in the
+code that triggers it.
 
-(though tbh I usually get a compressed dump, and
-# bzcat dumpfile.bz2 | xfs_mdrestore - target
-works quite well and is more foolproof)
-
-So, despite the fact that I already talked with you about
-this a bit online, I think my subconscious was working on
-it in the meantime.  What you've got is generally ok, but
-I wonder if the goal is to detect switched arguments, if
-it might be simpler to first validate the given source, and
-stop if it's not a metadump file.  We've already got that in
-place, and it'd just be a question of checking the header
-unconditionally, something like this, which just moves some
-of the existing stuff work of the conditional:
-
-        xfs_metablock_t         mb;
-
-
-        /* validate that our source file is really a metadump */
-        if (fread(&mb, sizeof(mb), 1, src_f) != 1)
-                fatal("error reading from source file: %s\n", strerror(errno));
-
-        if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
-                fatal("specified source file is not a metadata dump\n");
-
-        if (show_info) {
-                if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
-                        printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
-                        argv[optind],
-                        mb.mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
-                        mb.mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
-                        mb.mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
-                } else {
-                        printf("%s: no informational flags present\n",
-                                argv[optind]);
-                }
-
-                if (argc - optind == 1)
-                        exit(0);
-        }
-
-        /* Go back to the beginning for the restore function */
-        fseek(src_f, 0L, SEEK_SET);
-
-It's not explicitly checking the target, but it would probably serve
-the same purpose with fewer lines of new code.  Either is ok with me,
-really.  Any thoughts?
-
-Thanks,
--Eric
-
-
+> > > > +	ASSERT(bip->bli_range[0].last != 0);
+> > > > +	if (bip->bli_range[0].last == 0) {
+> > > > +		/* clean! */
+> > > > +		ASSERT(bip->bli_range[0].first == 0);
+> > > 
+> > > Hm, so given that the firsts are initialized to UINT_MAX, this only
+> > > happens if the first (only?) range we log is ... (0, 0) ?
+> > 
+> > Yeah, basically it catches code that should not be logging buffers
+> > because there is no dirty range in the buffer.
+> > 
+> > > Mildly confused about what these asserts are going after, since the
+> > > first one implies that this shouldn't happen anyway.
+> > 
+> > If first is after last, then we've really screwed up because we've
+> > got a dirty buffer with an invalid range. I can't recall seeing
+> > either of these asserts fire, but we still need the check for clean
+> > buffer ranges/ screwups in production code. maybe there's a better
+> > way to do this?
 > 
-> Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
-> ---
->  mdrestore/xfs_mdrestore.c | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
+> I only came up with:
 > 
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index c49c13a..b4bf7b4 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -205,7 +205,7 @@ main(
->  	int 		argc,
->  	char 		**argv)
->  {
-> -	FILE		*src_f;
-> +	FILE		*src_f, *dst_f;
->  	int		dst_fd;
->  	int		c;
->  	int		open_flags;
-> @@ -277,6 +277,7 @@ main(
->  
->  	optind++;
->  
-> +
->  	/* check and open target */
->  	open_flags = O_RDWR;
->  	is_target_file = 0;
-> @@ -285,6 +286,19 @@ main(
->  		open_flags |= O_CREAT;
->  		is_target_file = 1;
->  	} else if (S_ISREG(statbuf.st_mode))  {
-> +		xfs_metablock_t mb;
-> +
-> +		dst_f = fopen(argv[optind], "rb");
-> +		if (dst_f == NULL)
-> +			fatal("cannot open target\n");
-> +
-> +		if (fread(&mb, sizeof(mb), 1, dst_f) == 1) {
-> +			if (be32_to_cpu(mb.mb_magic) == XFS_MD_MAGIC)
-> +				fatal("target file is a xfs_metadump. switched arguments?\n");
-> +		}
-> +
-> +		fclose(dst_f);
-> +
->  		open_flags |= O_TRUNC;
->  		is_target_file = 1;
->  	} else  {
-> 
+> /*
+>  * If the first bli_range has a last of 0, we've been fed a clean
+>  * buffer.  This shouldn't happen but we'll be paranoid and check
+>  * anyway.
+>  */
+> if (bip->bli_range[0].last == 0) {
+> 	ASSERT(0);
+> 	ASSERT(bip->bli_range[0].first == 0);
+> 	return;
+> }
+
+Yup, that's a bit cleaner, I'll change it over.
+
+> FWIW I also ran straight into this when I applied it for giggles and ran
+> xfstests -g quick (generic/001 blew up):
+
+I must have screwed up the forward port worse than usual - the
+conflicts with the xfs_buf_log_item typedef removal were pretty
+extensive.
+
+> [   31.909228] ================================================================================
+> [   31.911258] BUG: unable to handle kernel NULL pointer dereference at 00000000000000a0
+> [   31.912375] IP: xfs_buf_item_init+0x33/0x350 [xfs]
+
+Hmmmm - I'm seeing that on my subvol smoke test script but not
+elsewhere. I've been looking through the subvol code to try to find
+this, maybe it's not the subvol code.  What mkfs parameters where
+you using?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
