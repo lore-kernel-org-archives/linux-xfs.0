@@ -1,75 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:34138 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755058AbeBAUdG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Feb 2018 15:33:06 -0500
-Subject: [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
-From: Dave Jiang <dave.jiang@intel.com>
-Date: Thu, 01 Feb 2018 13:33:05 -0700
-Message-ID: <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
-In-Reply-To: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
-References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:34396 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751450AbeBAVLt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 16:11:49 -0500
+Date: Thu, 1 Feb 2018 13:11:44 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 31/29] xfs_scrub: handle scrub-only kernels more helpfully
+Message-ID: <20180201211144.GS4849@magnolia>
+References: <151736799098.32164.15446216987522359103.stgit@magnolia>
+ <20180131173016.GD4849@magnolia>
+ <313224b9-67b0-cd94-fca5-a862761b2b02@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <313224b9-67b0-cd94-fca5-a862761b2b02@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-When using realtime device (rtdev) with xfs where the data device is not
-DAX capable, two issues arise. One is when data device is not DAX but the
-realtime device is DAX capable, we currently disable DAX.
-After passing this check, we are also not marking the inode as DAX capable.
-This change will allow DAX enabled if the data device or the realtime
-device is DAX capable. S_DAX will be marked for the inode if the file is
-residing on a DAX capable device. This will prevent the case of rtdev is not
-DAX and data device is DAX to create realtime files.
+On Thu, Feb 01, 2018 at 02:33:30PM -0600, Eric Sandeen wrote:
+> If xfs_scrub is run today against a 4.15 kernel, it fails with
+> 
+> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+> Error: /home: Kernel metadata optimization facility is required.
+> Info: /home: Scrub aborted after phase 1.
+> /home: 2 errors found.
+> 
+> Be a bit kinder to the user and suggest a path forward.  By the
+> time we fail for missing preen or repair functionality, we do
+> know that scrub is available, so suggest it.
+> 
+> Further, rather than stating what is required, state what was not
+> found ... we're failing, so state what was missing, vs. what is
+> required - seems a bit more definitive.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index 547767b..e78ac7d 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -175,7 +175,7 @@ _("Does not appear to be an XFS filesystem!"));
+>  	    !xfs_can_scrub_attr(ctx) || !xfs_can_scrub_symlink(ctx) ||
+>  	    !xfs_can_scrub_parent(ctx)) {
+>  		str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata scrubbing facility is required."));
+> +_("Kernel metadata scrubbing facility not available."));
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Reported-by: Darrick Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_iops.c  |    3 ++-
- fs/xfs/xfs_super.c |    9 ++++++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+"is not available"?
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 56475fcd76f2..ab352c325301 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1204,7 +1204,8 @@ xfs_diflags_to_iflags(
- 	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
- 	    !xfs_is_reflink_inode(ip) &&
- 	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
--	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-+	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX) &&
-+	    blk_queue_dax(bdev_get_queue(inode->i_sb->s_bdev)))
- 		inode->i_flags |= S_DAX;
- }
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e8a687232614..5ac478924dce 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1649,11 +1649,18 @@ xfs_fs_fill_super(
- 		sb->s_flags |= SB_I_VERSION;
- 
- 	if (mp->m_flags & XFS_MOUNT_DAX) {
-+		bool rtdev_is_dax = false;
-+
- 		xfs_warn(mp,
- 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
- 
-+		if (mp->m_rtdev_targp->bt_daxdev)
-+			if (bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
-+					      sb->s_blocksize) == 0)
-+				rtdev_is_dax = true;
-+
- 		error = bdev_dax_supported(sb->s_bdev, sb->s_blocksize);
--		if (error) {
-+		if (error && !rtdev_is_dax) {
- 			xfs_alert(mp,
- 			"DAX unsupported by block device. Turning off DAX.");
- 			mp->m_flags &= ~XFS_MOUNT_DAX;
+>  		return false;
+>  	}
+>  
+> @@ -183,10 +183,10 @@ _("Kernel metadata scrubbing facility is required."));
+>  	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
+>  		if (ctx->mode == SCRUB_MODE_PREEN)
+>  			str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata optimization facility is required."));
+> +_("Kernel metadata optimization facility not available.  Please use -n."));
 
+I approve of s/is required/is not available/, but I have trouble with
+the bare suggestion of running with -n.  We're telling users that the
+strategy they asked for (e.g. -y) is not available, so the only
+realistic option is to choose a different strategy (i.e. -n).  I don't
+want them to get the impression that -n is some magic fixit for -y not
+working (but maybe sysadmins are smarter than that?)
+
+"Kernel metadata repair faciility not available.  You can request a
+metadata check with -n."
+
+>  		else
+>  			str_error(ctx, ctx->mntpoint,
+> -_("Kernel metadata repair facility is required."));
+> +_("Kernel metadata repair facility not not available. Please use -n."));
+
+not not available?  So it is? :)
+
+--D
+
+>  		return false;
+>  	}
+>  
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
