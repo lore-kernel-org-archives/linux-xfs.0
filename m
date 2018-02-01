@@ -1,237 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:12849 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751445AbeBAGmK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 01:42:10 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh8ZR-0005Cq-2o
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.90)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh8ZR-00024S-1e
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/7] xfs: turn ag header initialisation into a table driven operation
-Date: Thu,  1 Feb 2018 17:41:59 +1100
-Message-Id: <20180201064202.7174-5-david@fromorbit.com>
-In-Reply-To: <20180201064202.7174-1-david@fromorbit.com>
-References: <20180201064202.7174-1-david@fromorbit.com>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:36374 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754981AbeBAUhv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 15:37:51 -0500
+Received: by mail-qk0-f195.google.com with SMTP id d21so21169800qkj.3
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Feb 2018 12:37:51 -0800 (PST)
+Received: from testarossa.localdomain ([191.177.187.140])
+        by smtp.googlemail.com with ESMTPSA id n20sm303020qka.47.2018.02.01.12.37.48
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 01 Feb 2018 12:37:49 -0800 (PST)
+From: Marco A Benatto <marco.antonio.780@gmail.com>
+Subject: [PATCH] xfs_mdrestore: Don't restore over a dump file
+Date: Thu,  1 Feb 2018 18:37:43 -0200
+Message-Id: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Currently, if the user switch source and target parameters
+position, xfs_mdrestore truncates the dumpfile before abort
+the execution.
 
-There's still more cookie cutter code in setting up each AG header.
-Separate all the variables into a simple structure and iterate a
-table of header definitions to initialise everything.
+This patch checks the target parameter and if XFS_MD_MAGIC is
+found, it aborts execution and leave dump file intact.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
 ---
- fs/xfs/xfs_fsops.c | 163 ++++++++++++++++++++++-------------------------------
- 1 file changed, 66 insertions(+), 97 deletions(-)
+ mdrestore/xfs_mdrestore.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 44eac79e0b49..94650b7d517e 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -288,12 +288,13 @@ xfs_agiblock_init(
- 		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
- }
- 
-+typedef void (*aghdr_init_work_f)(struct xfs_mount *mp, struct xfs_buf *bp,
-+				  struct aghdr_init_data *id);
- static int
- xfs_growfs_init_aghdr(
- 	struct xfs_mount	*mp,
- 	struct aghdr_init_data	*id,
--	void			(*work)(struct xfs_mount *, struct xfs_buf *,
--					struct aghdr_init_data *),
-+	aghdr_init_work_f	work,
- 	const struct xfs_buf_ops *ops)
- 
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index c49c13a..b4bf7b4 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -205,7 +205,7 @@ main(
+ 	int 		argc,
+ 	char 		**argv)
  {
-@@ -310,6 +311,16 @@ xfs_growfs_init_aghdr(
- 	return 0;
- }
+-	FILE		*src_f;
++	FILE		*src_f, *dst_f;
+ 	int		dst_fd;
+ 	int		c;
+ 	int		open_flags;
+@@ -277,6 +277,7 @@ main(
  
-+struct xfs_aghdr_grow_data {
-+	xfs_daddr_t		daddr;
-+	size_t			numblks;
-+	const struct xfs_buf_ops *ops;
-+	aghdr_init_work_f	work;
-+	xfs_btnum_t		type;
-+	int			numrecs;
-+	bool			need_init;
-+};
+ 	optind++;
+ 
 +
- /*
-  * Write new AG headers to disk. Non-transactional, but written
-  * synchronously so they are completed prior to the growfs transaction
-@@ -321,107 +332,65 @@ xfs_grow_ag_headers(
- 	struct aghdr_init_data	*id)
- 
- {
-+	struct xfs_aghdr_grow_data aghdr_data[] = {
-+		/* AGF */
-+		{ XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), &xfs_agf_buf_ops,
-+		  &xfs_agfblock_init, 0, 0, true },
-+		/* AGFL */
-+		{ XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), &xfs_agfl_buf_ops,
-+		  &xfs_agflblock_init, 0, 0, true },
-+		/* AGI */
-+		{ XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), &xfs_agi_buf_ops,
-+		  &xfs_agiblock_init, 0, 0, true },
-+		/* BNO root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_allocbt_buf_ops,
-+		  &xfs_bnoroot_init, XFS_BTNUM_BNO, 1, true },
-+		/* CNT root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_allocbt_buf_ops,
-+		  &xfs_cntroot_init, XFS_BTNUM_CNT, 1, true },
-+		/* INO root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_inobt_buf_ops,
-+		  &xfs_btroot_init, XFS_BTNUM_INO, 0, true },
-+		/* FINO root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_inobt_buf_ops,
-+		  &xfs_btroot_init, XFS_BTNUM_FINO, 0,
-+		  xfs_sb_version_hasfinobt(&mp->m_sb) },
-+		/* RMAP root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_rmapbt_buf_ops,
-+		  &xfs_rmaproot_init, XFS_BTNUM_RMAP, 0,
-+		  xfs_sb_version_hasrmapbt(&mp->m_sb) },
-+		/* REFC root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_refcountbt_buf_ops,
-+		  &xfs_btroot_init, XFS_BTNUM_REFC, 0,
-+		  xfs_sb_version_hasreflink(&mp->m_sb) },
-+		/* NULL terminating block */
-+		{ XFS_BUF_DADDR_NULL, 0, NULL, NULL, 0, 0, false },
-+	};
-+	struct  xfs_aghdr_grow_data *dp;
- 	int			error = 0;
- 
--	/* AG freespace header block */
--	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp));
--	id->numblks = XFS_FSS_TO_BB(mp, 1);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_agfblock_init,
--					&xfs_agf_buf_ops);
--	if (error)
--		goto out_error;
--
--	/* AG freelist header block */
--	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp));
--	id->numblks = XFS_FSS_TO_BB(mp, 1);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_agflblock_init,
--					&xfs_agfl_buf_ops);
--	if (error)
--		goto out_error;
--
--	/* AG inode header block */
--	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp));
--	id->numblks = XFS_FSS_TO_BB(mp, 1);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_agiblock_init,
--					&xfs_agi_buf_ops);
--	if (error)
--		goto out_error;
--
--
--	/* BNO btree root block */
--	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp));
--	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--	id->type = XFS_BTNUM_BNO;
--	id->numrecs = 1;
--	error = xfs_growfs_init_aghdr(mp, id, xfs_bnoroot_init,
--				   &xfs_allocbt_buf_ops);
--	if (error)
--		goto out_error;
--
--
--	/* CNT btree root block */
--	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp));
--	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--	id->type = XFS_BTNUM_CNT;
--	id->numrecs = 1;
--	error = xfs_growfs_init_aghdr(mp, id, xfs_cntroot_init,
--				   &xfs_allocbt_buf_ops);
--	if (error)
--		goto out_error;
--
--	/* RMAP btree root block */
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
--		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp));
--		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--		id->type = XFS_BTNUM_RMAP;
--		id->numrecs = 0;
--		error = xfs_growfs_init_aghdr(mp, id, xfs_rmaproot_init,
--					   &xfs_rmapbt_buf_ops);
--		if (error)
--			goto out_error;
--
--	}
--
--	/* INO btree root block */
--	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp));
--	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--	id->type = XFS_BTNUM_INO;
--	id->numrecs = 0;
--	error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
--				   &xfs_inobt_buf_ops);
--	if (error)
--		goto out_error;
--
--
--	/*
--	 * FINO btree root block
--	 */
--	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
--		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp));
--		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--		id->type = XFS_BTNUM_FINO;
--		id->numrecs = 0;
--		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
--					   &xfs_inobt_buf_ops);
--		if (error)
--			goto out_error;
--	}
-+	for (dp = &aghdr_data[0]; dp->daddr != XFS_BUF_DADDR_NULL; dp++) {
-+		if (!dp->need_init)
-+			continue;
- 
--	/*
--	 * refcount btree root block
--	 */
--	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
--		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp));
--		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--		id->type = XFS_BTNUM_REFC;
--		id->numrecs = 0;
--		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
--					   &xfs_refcountbt_buf_ops);
-+		id->daddr = dp->daddr;
-+		id->numblks = dp->numblks;
-+		id->numrecs = dp->numrecs;
-+		id->type = dp->type;
-+		error = xfs_growfs_init_aghdr(mp, id, dp->work, dp->ops);
- 		if (error)
--			goto out_error;
-+			break;
- 	}
- 
--out_error:
- 	return error;
- }
- 
+ 	/* check and open target */
+ 	open_flags = O_RDWR;
+ 	is_target_file = 0;
+@@ -285,6 +286,19 @@ main(
+ 		open_flags |= O_CREAT;
+ 		is_target_file = 1;
+ 	} else if (S_ISREG(statbuf.st_mode))  {
++		xfs_metablock_t mb;
++
++		dst_f = fopen(argv[optind], "rb");
++		if (dst_f == NULL)
++			fatal("cannot open target\n");
++
++		if (fread(&mb, sizeof(mb), 1, dst_f) == 1) {
++			if (be32_to_cpu(mb.mb_magic) == XFS_MD_MAGIC)
++				fatal("target file is a xfs_metadump. switched arguments?\n");
++		}
++
++		fclose(dst_f);
++
+ 		open_flags |= O_TRUNC;
+ 		is_target_file = 1;
+ 	} else  {
 -- 
-2.15.1
+1.8.3.1
 
