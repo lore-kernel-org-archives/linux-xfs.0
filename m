@@ -1,122 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:26613 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:55536 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751815AbeBAXnu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 18:43:50 -0500
-Date: Fri, 2 Feb 2018 10:44:13 +1100
+        by vger.kernel.org with ESMTP id S1751710AbeBAXyz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 18:54:55 -0500
+Date: Fri, 2 Feb 2018 10:55:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
-Message-ID: <20180201234413.idd27uqzqbg54ddk@destitution>
-References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
- <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
+Subject: Re: [PATCH] xfs: byte range buffer dirty region tracking
+Message-ID: <20180201235548.7hmuu6ws5cxouzee@destitution>
+References: <20180201010514.30233-1-david@fromorbit.com>
+ <20180201051128.GO4849@magnolia>
+ <20180201081452.gaavuhnxafoafunm@destitution>
+ <20180201203526.GR4849@magnolia>
+ <20180201231647.qsiq6vnmllqc32le@destitution>
+ <20180201232258.GW4849@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <20180201232258.GW4849@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 01, 2018 at 01:33:05PM -0700, Dave Jiang wrote:
-> When using realtime device (rtdev) with xfs where the data device is not
-> DAX capable, two issues arise. One is when data device is not DAX but the
-> realtime device is DAX capable, we currently disable DAX.
-> After passing this check, we are also not marking the inode as DAX capable.
-> This change will allow DAX enabled if the data device or the realtime
-> device is DAX capable. S_DAX will be marked for the inode if the file is
-> residing on a DAX capable device. This will prevent the case of rtdev is not
-> DAX and data device is DAX to create realtime files.
-
-I'm confused by this description. I'm not sure what is broken, nor
-what you are trying to fix.
-
-I think what you want to do is enable DAX on RT devices separately
-to the data device and vice versa?
-
-i.e. is this what you are trying to acheive?
-
-datadev dax	rtdev dax		DAX enabled on
------------     ---------		--------------
-no		no			neither
-yes		no			datadev
-no		yes			rtdev
-yes		yes			both
-
-
+On Thu, Feb 01, 2018 at 03:22:58PM -0800, Darrick J. Wong wrote:
+> On Fri, Feb 02, 2018 at 10:16:47AM +1100, Dave Chinner wrote:
+> > On Thu, Feb 01, 2018 at 12:35:26PM -0800, Darrick J. Wong wrote:
+> > > FWIW I also ran straight into this when I applied it for giggles and ran
+> > > xfstests -g quick (generic/001 blew up):
+> > 
+> > I must have screwed up the forward port worse than usual - the
+> > conflicts with the xfs_buf_log_item typedef removal were pretty
+> > extensive.
 > 
-> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> Reported-by: Darrick Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_iops.c  |    3 ++-
->  fs/xfs/xfs_super.c |    9 ++++++++-
->  2 files changed, 10 insertions(+), 2 deletions(-)
+> Ah, sorry about that.  I'd thought it was just the xfs_buf rename. :/
+
+Not your fault at all, Darrick!
+
+I only complained about the xfs_buf typedef because it would cause
+merge problems for ~80% of the patches in my current dev tree. This
+was the only patch that the xfs_buf_log_item typedef removal
+affected - more were affected by the trivial b_fspriv to b_log_item
+changeover - and I figured that pain was worth it to get rid of
+another typedef....
+
+> > > [   31.909228] ================================================================================
+> > > [   31.911258] BUG: unable to handle kernel NULL pointer dereference at 00000000000000a0
+> > > [   31.912375] IP: xfs_buf_item_init+0x33/0x350 [xfs]
+> > 
+> > Hmmmm - I'm seeing that on my subvol smoke test script but not
+> > elsewhere. I've been looking through the subvol code to try to find
+> > this, maybe it's not the subvol code.  What mkfs parameters where
+> > you using?
 > 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 56475fcd76f2..ab352c325301 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1204,7 +1204,8 @@ xfs_diflags_to_iflags(
->  	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
->  	    !xfs_is_reflink_inode(ip) &&
->  	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
-> -	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-> +	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX) &&
-> +	    blk_queue_dax(bdev_get_queue(inode->i_sb->s_bdev)))
+> mkfs.xfs -m rmapbt=1,reflink=1 -i sparse=1 /dev/pmem0
 
-This does not discriminate between the rtdev or the data dev. This
-needs to call xfs_find_bdev_for_inode() to get the right device
-for the inode config.
-
-Further, if we add or remove the RT flag to the inode at a later
-point in time (e.g. via ioctl) we also need to re-evaluate the S_DAX
-flag at that point in time.
-
-Which brings me to the real problem here: dynamically changing the
-S_DAX flag is racy, dangerous and broken. It's not clear that this
-should be allowed at all as the inode may have already been mmap()d
-by the time the ioctl is called to set/clear the rt file state.
-
-IOWs, right now we cannot support mixed DAX mode filesystems because
-the generic DAX code does not support dynamic changing of the DAX
-flag on an inode and so checking the block device state here is
-irrelevant....
-
->  		inode->i_flags |= S_DAX;
->  }
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index e8a687232614..5ac478924dce 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1649,11 +1649,18 @@ xfs_fs_fill_super(
->  		sb->s_flags |= SB_I_VERSION;
->  
->  	if (mp->m_flags & XFS_MOUNT_DAX) {
-> +		bool rtdev_is_dax = false;
-> +
->  		xfs_warn(mp,
->  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
->  
-> +		if (mp->m_rtdev_targp->bt_daxdev)
-> +			if (bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
-> +					      sb->s_blocksize) == 0)
-> +				rtdev_is_dax = true;
-
-.... as this code here needs to turn off DAX here if any device
-in the filesystem doesn't support DAX....
-
-
-FWIW, the logic in the code is terrible (not your fault, Dave).
-The logic reads
-
-	if (NOT bdev_dax_supported(rtdev)) then
-		rtdev supports DAX
-
-That also needs fixing - we're checking something that has a boolean
-return state (yes or no) and so it should define them in a way that
-makes the caller logic read cleanly....
+OK, nothing unusual, though I haven't been using sparse=1 recently.
+I'll get onto it....
 
 Cheers,
 
