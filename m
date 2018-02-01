@@ -1,34 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:49426 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752720AbeBACXc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jan 2018 21:23:32 -0500
-Date: Wed, 31 Jan 2018 21:23:32 -0500
-Subject: Re: [LSF/MM TOPIC] Virtual block address space mapping
-Message-ID: <20180201022332.GD3814@fieldses.org>
-References: <20180129100834.rhpgnz5572zxmqep@destitution>
+Received: from aserp2130.oracle.com ([141.146.126.79]:39586 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751190AbeBAEoX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 23:44:23 -0500
+Date: Wed, 31 Jan 2018 20:44:19 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fall back to vmalloc when allocation log vector
+ buffers
+Message-ID: <20180201044419.GN4849@magnolia>
+References: <20180201013959.829-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180129100834.rhpgnz5572zxmqep@destitution>
-From: bfields@fieldses.org (J. Bruce Fields)
+In-Reply-To: <20180201013959.829-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jan 29, 2018 at 09:08:34PM +1100, Dave Chinner wrote:
-> I've implemented both sides on XFS to provide the capability for an
-> XFS filesystem to host XFS subvolumes. however, this is an abstract
-> interface and so if someone modifies ext4 to use a virtual block
-> address space, then XFS will be able to host cloneable ext4
-> subvolumes, too. :P
+On Thu, Feb 01, 2018 at 12:39:59PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When using large directory blocks, we regularly see memory
+> allocations of >64k being made for the shadow log vector buffer.
+> When we are under memory pressure, kmalloc() may not be able to find
+> contiguous memory chunks large enough to satisfy these allocations
+> easily, and if memory is fragmented we can potentially stall here.
+> 
+> TO avoid this problem, switch the log vector buffer allocation to
+> use kmem_alloc_large(). This will allow failed allocations to fall
+> back to vmalloc and so remove the dependency on large contiguous
+> regions of memory being available. This should prevent slowdowns
+> and potential stalls when memory is low and/or fragmented.
 
-This sounds really interesting.
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/kmem.c        | 6 +++---
+>  fs/xfs/kmem.h        | 8 +++++++-
+>  fs/xfs/xfs_log_cil.c | 2 +-
+>  3 files changed, 11 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index 393b6849aeb3..7bace03dc9dc 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -46,13 +46,13 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+>  }
+>  
+>  void *
+> -kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+> +kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+>  {
+>  	unsigned nofs_flag = 0;
+>  	void	*ptr;
+>  	gfp_t	lflags;
+>  
+> -	ptr = kmem_zalloc(size, flags | KM_MAYFAIL);
+> +	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
+>  	if (ptr)
+>  		return ptr;
+>  
+> @@ -67,7 +67,7 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+>  		nofs_flag = memalloc_nofs_save();
+>  
+>  	lflags = kmem_flags_convert(flags);
+> -	ptr = __vmalloc(size, lflags | __GFP_ZERO, PAGE_KERNEL);
+> +	ptr = __vmalloc(size, lflags, PAGE_KERNEL);
+>  
+>  	if (flags & KM_NOFS)
+>  		memalloc_nofs_restore(nofs_flag);
+> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> index 4b87472f35bc..6023b594ead7 100644
+> --- a/fs/xfs/kmem.h
+> +++ b/fs/xfs/kmem.h
+> @@ -71,7 +71,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+>  }
+>  
+>  extern void *kmem_alloc(size_t, xfs_km_flags_t);
+> -extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
+> +extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
+>  extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
+>  static inline void  kmem_free(const void *ptr)
+>  {
+> @@ -85,6 +85,12 @@ kmem_zalloc(size_t size, xfs_km_flags_t flags)
+>  	return kmem_alloc(size, flags | KM_ZERO);
+>  }
+>  
+> +static inline void *
+> +kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+> +{
+> +	return kmem_alloc_large(size, flags | KM_ZERO);
+> +}
+> +
+>  /*
+>   * Zone interfaces
+>   */
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 43aa42a3a5d3..61ab5c0a4c45 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -202,7 +202,7 @@ xlog_cil_alloc_shadow_bufs(
+>  			 */
+>  			kmem_free(lip->li_lv_shadow);
+>  
+> -			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
+> +			lv = kmem_alloc_large(buf_size, KM_SLEEP|KM_NOFS);
 
-Would it be possible to write up a brief summary of your current
-interface?  Even if it's not completely correct it might be a useful
-starting point.
+"KM_SLEEP | KM_NOFS", will fix it on the way in.
 
---b.
+I wonder about expanding the uses of vmalloc space, but otoh stalling
+the log seems like a worse idea...
+
+Looks ok enough to give it a spin,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+>  			memset(lv, 0, xlog_cil_iovec_space(niovecs));
+>  
+>  			lv->lv_item = lip;
+> -- 
+> 2.15.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
