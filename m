@@ -1,65 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtprelay0224.hostedemail.com ([216.40.44.224]:49869 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751783AbeBARYQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 12:24:16 -0500
-Message-ID: <1517505852.7489.38.camel@perches.com>
-Subject: Re: [PATCH] xfs: Add missing braces around xfs_scrub_agfl_info
- initializer
-From: Joe Perches <joe@perches.com>
-Date: Thu, 01 Feb 2018 09:24:12 -0800
-In-Reply-To: <20180201170826.GP4849@magnolia>
-References: <1517480584-4588-1-git-send-email-geert@linux-m68k.org>
-         <CAK8P3a1N-Yh65y6bEb+d7DwVOqB8ee=T1gM1cc7k6=cg1c3Jtw@mail.gmail.com>
-         <20180201170826.GP4849@magnolia>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from userp2120.oracle.com ([156.151.31.85]:35472 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752960AbeBASRg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 13:17:36 -0500
+Date: Thu, 1 Feb 2018 10:17:31 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs_scrub: log operational messages when interactive
+Message-ID: <20180201181731.GQ4849@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, 2018-02-01 at 09:08 -0800, Darrick J. Wong wrote:
-> On Thu, Feb 01, 2018 at 12:31:36PM +0100, Arnd Bergmann wrote:
-> > On Thu, Feb 1, 2018 at 11:23 AM, Geert Uytterhoeven
-> > <geert@linux-m68k.org> wrote:
-> > > With gcc-4.1.2:
-> > > 
-> > >     fs/xfs/scrub/agheader.c: In function ‘xfs_scrub_agfl’:
-> > >     fs/xfs/scrub/agheader.c:770: warning: missing braces around initializer
-> > >     fs/xfs/scrub/agheader.c:770: warning: (near initialization for ‘sai.oinfo’)
-> > > 
-> > > The first member of struct xfs_scrub_agfl_info is no longer an integral
-> > > type, but a struct.  Add the missing curly braces to fix this.
-> > 
-> > I suspect gcc-4.5 is affected as well, but not 4.6+
-> > 
-> > > --- a/fs/xfs/scrub/agheader.c
-> > > +++ b/fs/xfs/scrub/agheader.c
-> > > @@ -767,7 +767,7 @@ int
-> > >  xfs_scrub_agfl(
-> > >         struct xfs_scrub_context        *sc)
-> > >  {
-> > > -       struct xfs_scrub_agfl_info      sai = { 0 };
-> > > +       struct xfs_scrub_agfl_info      sai = { { 0 } };
-> > >         struct xfs_agf                  *agf;
-> > 
-> > Looks ok to me, but
-> > 
-> >         struct xfs_scrub_agfl_info      sai = { };
-> > 
-> > might be slightly better in case the first member changes again.
-> 
-> Frankly I'd rather see it changed to memset(&sai, 0, sizeof(sai)); and
-> stop having to field all these gcc warnings that vary depending on
-> compiler version...
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-trivia:
+Record the output of an interactive session in the system log so that
+future support requests can get a better picture of what happened.
 
-memset should also be preferred if the structure
-could be copied to userspace as the "= {}" is not
-guaranteed to zero any possible padding or member
-alignment holes.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/common.c |   37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
+diff --git a/scrub/common.c b/scrub/common.c
+index 18171d1..7af7677 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -21,6 +21,7 @@
+ #include <pthread.h>
+ #include <stdbool.h>
+ #include <sys/statvfs.h>
++#include <syslog.h>
+ #include "platform_defs.h"
+ #include "xfs.h"
+ #include "xfs_fs.h"
+@@ -29,6 +30,8 @@
+ #include "common.h"
+ #include "progress.h"
+ 
++extern char		*progname;
++
+ /*
+  * Reporting Status to the Console
+  *
+@@ -62,6 +65,12 @@ static const char *err_str[] = {
+ 	[S_INFO]	= "Info",
+ };
+ 
++static int log_level[] = {
++	[S_ERROR]	= LOG_ERR,
++	[S_WARN]	= LOG_WARNING,
++	[S_INFO]	= LOG_INFO,
++};
++
+ /* If stream is a tty, clear to end of line to clean up progress bar. */
+ static inline const char *stream_start(FILE *stream)
+ {
+@@ -71,6 +80,8 @@ static inline const char *stream_start(FILE *stream)
+ }
+ 
+ /* Print a warning string and some warning text. */
++#define LOG_BUFSZ	4096
++#define LOGNAME_BUFSZ	256
+ void
+ __str_out(
+ 	struct scrub_ctx	*ctx,
+@@ -103,6 +114,32 @@ __str_out(
+ 		va_end(args);
+ 	}
+ 
++	/* If we're running interactively, log the message to syslog too. */
++	if (isatty(fileno(stdin))) {
++		char	logname[LOGNAME_BUFSZ];
++
++		snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname,
++				ctx->mntpoint);
++		openlog(logname, LOG_PID, LOG_DAEMON);
++
++		if (error) {
++			syslog(LOG_ERR, "%s: %s: %s.",
++					_(err_str[level]), descr,
++					strerror_r(error, buf, DESCR_BUFSZ));
++		} else {
++			char	buf[LOG_BUFSZ];
++			int	sz;
++
++			sz = snprintf(buf, LOG_BUFSZ, "%s: %s: ",
++					_(err_str[level]), descr);
++			va_start(args, format);
++			vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
++			va_end(args);
++			syslog(log_level[level], "%s", buf);
++		}
++		closelog();
++	}
++
+ 	if (debug)
+ 		fprintf(stream, _(" (%s line %d)"), file, line);
+ 	fprintf(stream, "\n");
