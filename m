@@ -1,298 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50970 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750983AbeAaGk3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 01:40:29 -0500
-Date: Tue, 30 Jan 2018 22:40:23 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 26/29] xfs_scrub: create a script to scrub all xfs
- filesystems
-Message-ID: <20180131064023.GB4849@magnolia>
-References: <151736799098.32164.15446216987522359103.stgit@magnolia>
- <151736816697.32164.15291014200209941355.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:59386 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750978AbeBAFUW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 00:20:22 -0500
+Date: Thu, 1 Feb 2018 16:21:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [LSF/MM TOPIC] Virtual block address space mapping
+Message-ID: <20180201052103.v6vpeg2ndfm2diti@destitution>
+References: <20180129100834.rhpgnz5572zxmqep@destitution>
+ <20180201022332.GD3814@fieldses.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151736816697.32164.15291014200209941355.stgit@magnolia>
+In-Reply-To: <20180201022332.GD3814@fieldses.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_scrub: create a script to scrub all xfs filesystems
+On Wed, Jan 31, 2018 at 09:23:32PM -0500, J. Bruce Fields wrote:
+> On Mon, Jan 29, 2018 at 09:08:34PM +1100, Dave Chinner wrote:
+> > I've implemented both sides on XFS to provide the capability for an
+> > XFS filesystem to host XFS subvolumes. however, this is an abstract
+> > interface and so if someone modifies ext4 to use a virtual block
+> > address space, then XFS will be able to host cloneable ext4
+> > subvolumes, too. :P
+> 
+> This sounds really interesting.
+> 
+> Would it be possible to write up a brief summary of your current
+> interface?  Even if it's not completely correct it might be a useful
+> starting point.
 
-Create an xfs_scrub_all command to find all XFS filesystems
-and run an online scrub against them all.
+I almost did this, but decided i wouldn't because I haven't finished
+data IO path remapping suuport for XFS yet. But, seeing as you
+asked, I've attached the header that contains the API as it stands
+below. It's intermingled with bits of the XFs implementation, and it
+still has the original name I gave it when I first started ("block
+space").
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix some of the debian packaging weirdness, kudos to Nathan Scott!
----
- debian/control           |    4 +
- man/man8/xfs_scrub_all.8 |   32 ++++++++++
- scrub/Makefile           |   15 ++++
- scrub/xfs_scrub_all.in   |  154 ++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 200 insertions(+), 5 deletions(-)
- create mode 100644 man/man8/xfs_scrub_all.8
- create mode 100644 scrub/xfs_scrub_all.in
+The difference between the "map" and "allocate" ops are that "map"
+does a read only mapping and may return holes. "allocate" is a write
+mapping and will fill holes and requires to have reserved space held
+in a blkspc cookie...
 
-diff --git a/debian/control b/debian/control
-index 36d1bd8..a833571 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,12 +3,12 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libunistring-dev
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libunistring-dev, dh-python
- Standards-Version: 3.9.1
- Homepage: https://xfs.wiki.kernel.org/
- 
- Package: xfsprogs
--Depends: ${shlibs:Depends}, ${misc:Depends}
-+Depends: ${shlibs:Depends}, ${misc:Depends}, python3:any
- Provides: fsck-backend
- Suggests: xfsdump, acl, attr, quota
- Breaks: xfsdump (<< 3.0.0)
-diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
-new file mode 100644
-index 0000000..5e1420b
---- /dev/null
-+++ b/man/man8/xfs_scrub_all.8
-@@ -0,0 +1,32 @@
-+.TH xfs_scrub_all 8
-+.SH NAME
-+xfs_scrub_all \- scrub all mounted XFS filesystems
-+.SH SYNOPSIS
-+.B xfs_scrub_all
-+.SH DESCRIPTION
-+.B xfs_scrub_all
-+attempts to read and check all the metadata on all mounted XFS filesystems.
-+The online scrub is performed via the
-+.B xfs_scrub
-+tool, either by running it directly or by using systemd to start it
-+in a restricted fashion.
-+Mounted filesystems are mapped to physical storage devices so that scrub
-+operations can be run in parallel so long as no two scrubbers access
-+the same device simultaneously.
-+.SH EXIT CODE
-+The exit code returned by
-+.B xfs_scrub_all
-+is the sum of the following conditions:
-+.br
-+\	0\	\-\ No errors
-+.br
-+\	4\	\-\ File system errors left uncorrected
-+.br
-+\	8\	\-\ Operational error
-+.br
-+\	16\	\-\ Usage or syntax error
-+.TP
-+These are the same error codes returned by xfs_scrub.
-+.br
-+.SH SEE ALSO
-+.BR xfs_scrub (8).
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 39abdf6..ca6dab0 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -13,6 +13,8 @@ SCRUB_PREREQS=$(PKG_PLATFORM)$(HAVE_OPENAT)$(HAVE_FSTATAT)
- ifeq ($(SCRUB_PREREQS),linuxyesyes)
- LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
-+XFS_SCRUB_ALL_PROG = xfs_scrub_all
-+XFS_SCRUB_ARGS = -b -n
- endif	# scrub_prereqs
- 
- HFILES = \
-@@ -82,17 +84,24 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
- LCFLAGS += -DHAVE_HDIO_GETGEO
- endif
- 
--default: depend $(LTCOMMAND)
-+default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG)
-+
-+xfs_scrub_all: xfs_scrub_all.in
-+	@echo "    [SED]    $@"
-+	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
-+	$(Q)chmod a+x $@
- 
- phase5.o unicrash.o xfs.o: $(TOPDIR)/include/builddefs
- 
- include $(BUILDRULES)
- 
--install: default $(INSTALL_SCRUB)
-+install: $(INSTALL_SCRUB)
- 
--install-scrub:
-+install-scrub: default
- 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
-+	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_ROOT_SBIN_DIR)
- 
- install-dev:
- 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-new file mode 100644
-index 0000000..7738644
---- /dev/null
-+++ b/scrub/xfs_scrub_all.in
-@@ -0,0 +1,154 @@
-+#!/usr/bin/env python3
-+
-+# Run online scrubbers in parallel, but avoid thrashing.
-+#
-+# Copyright (C) 2018 Oracle.  All rights reserved.
-+#
-+# Author: Darrick J. Wong <darrick.wong@oracle.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License
-+# as published by the Free Software Foundation; either version 2
-+# of the License, or (at your option) any later version.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+
-+import subprocess
-+import json
-+import threading
-+import time
-+import sys
-+
-+retcode = 0
-+terminate = False
-+
-+def find_mounts():
-+	'''Map mountpoints to physical disks.'''
-+
-+	fs = {}
-+	cmd=['lsblk', '-o', 'KNAME,TYPE,FSTYPE,MOUNTPOINT', '-J']
-+	result = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-+	result.wait()
-+	if result.returncode != 0:
-+		return fs
-+	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
-+	output = ' '.join(sarray)
-+	bdevdata = json.loads(output)
-+	# The lsblk output had better be in disks-then-partitions order
-+	for bdev in bdevdata['blockdevices']:
-+		if bdev['type'] in ('disk', 'loop'):
-+			lastdisk = bdev['kname']
-+		if bdev['fstype'] == 'xfs':
-+			mnt = bdev['mountpoint']
-+			if mnt is None:
-+				continue
-+			if mnt in fs:
-+				fs[mnt].add(lastdisk)
-+			else:
-+				fs[mnt] = set([lastdisk])
-+	return fs
-+
-+def run_killable(cmd, stdout, killfuncs, kill_fn):
-+	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
-+	try:
-+		proc = subprocess.Popen(cmd, stdout = stdout)
-+		real_kill_fn = lambda: kill_fn(proc)
-+		killfuncs.add(real_kill_fn)
-+		proc.wait()
-+		try:
-+			killfuncs.remove(real_kill_fn)
-+		except:
-+			pass
-+		return proc.returncode
-+	except:
-+		return -1
-+
-+def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
-+	'''Run a scrub process.'''
-+	global retcode, terminate
-+
-+	print("Scrubbing %s..." % mnt)
-+	sys.stdout.flush()
-+
-+	try:
-+		if terminate:
-+			return
-+
-+		# Invoke xfs_scrub manually
-+		cmd=['@sbindir@/xfs_scrub', '@scrub_args@', mnt]
-+		ret = run_killable(cmd, None, killfuncs, \
-+				lambda proc: proc.terminate())
-+		if ret >= 0:
-+			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
-+			sys.stdout.flush()
-+			retcode |= ret
-+			return
-+
-+		if terminate:
-+			return
-+
-+		print("Unable to start scrub tool.")
-+		sys.stdout.flush()
-+	finally:
-+		running_devs -= mntdevs
-+		cond.acquire()
-+		cond.notify()
-+		cond.release()
-+
-+def main():
-+	'''Find mounts, schedule scrub runs.'''
-+	def thr(mnt, devs):
-+		a = (mnt, cond, running_devs, devs, killfuncs)
-+		thr = threading.Thread(target = run_scrub, args = a)
-+		thr.start()
-+	global retcode, terminate
-+
-+	fs = find_mounts()
-+
-+	# Schedule scrub jobs...
-+	running_devs = set()
-+	killfuncs = set()
-+	cond = threading.Condition()
-+	while len(fs) > 0:
-+		if len(running_devs) == 0:
-+			mnt, devs = fs.popitem()
-+			running_devs.update(devs)
-+			thr(mnt, devs)
-+		poppers = set()
-+		for mnt in fs:
-+			devs = fs[mnt]
-+			can_run = True
-+			for dev in devs:
-+				if dev in running_devs:
-+					can_run = False
-+					break
-+			if can_run:
-+				running_devs.update(devs)
-+				poppers.add(mnt)
-+				thr(mnt, devs)
-+		for p in poppers:
-+			fs.pop(p)
-+		cond.acquire()
-+		try:
-+			cond.wait()
-+		except KeyboardInterrupt:
-+			terminate = True
-+			print("Terminating...")
-+			sys.stdout.flush()
-+			while len(killfuncs) > 0:
-+				fn = killfuncs.pop()
-+				fn()
-+			fs = []
-+		cond.release()
-+
-+	sys.exit(retcode)
-+
-+if __name__ == '__main__':
-+	main()
+i.e. use "map" for a read IO, "allocate w\ cookie" for a write IO.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+
+/* SPDX-License-Identifier: GPL-2.0 */
+/* Copyright (c) 2017 Red Hat, Inc. All rights reserved. */
+
+#ifndef __XFS_REMAP_H
+#define __XFS_REMAP_H	1
+
+struct xfs_buf;
+struct xfs_inode;
+struct iomap;
+struct blkspsc_ops;
+
+struct blkspc_host {
+	void			*priv;	/* host private data */
+	struct block_device	*bdev;	/* target device */
+	const struct blkspc_ops	*ops;
+};
+
+struct blkspc_cookie {
+	refcount_t	ref;
+	bool		cancelled;		/* no longer usable */
+	struct blkspc_host *host;		/* backpointer to owner */
+	void		*priv;			/* blkdev private data */
+};
+
+struct blkspc_ops {
+	struct blkspc_cookie * (*reserve)(struct blkspc_host *bsh,
+					  u32 alloc_count, u32 block_size);
+	int	(*unreserve)(struct blkspc_cookie *bsc);
+	int	(*allocate)(struct blkspc_cookie *bsc, loff_t offset, loff_t count,
+			    struct iomap *iomap);
+	int	(*commit)(struct blkspc_cookie *bsc, loff_t offset,
+			  loff_t count, int type);
+	int	(*map)(struct blkspc_host *bsh, loff_t offset, loff_t count,
+			    struct iomap *iomap);
+};
+
+enum {
+	BS_TYPE_COW,
+	BS_TYPE_UNWRITTEN,
+};
+
+static inline struct blkspc_cookie *
+blkspc_cookie_get(
+	struct blkspc_cookie	*bsc)
+{
+	trace_printk("blkspc_cookie_get %p %d", bsc, refcount_read(&bsc->ref));
+	if (bsc->cancelled)
+		return NULL;
+	if (!refcount_inc_not_zero(&bsc->ref))
+		return NULL;
+	return bsc;
+}
+
+static inline void
+blkspc_cookie_put(
+	struct blkspc_cookie	*bsc)
+{
+	trace_printk("blkspc_cookie_put %p %d", bsc, refcount_read(&bsc->ref));
+	if (!refcount_dec_and_test(&bsc->ref))
+		return;
+	/* last ref, return unused reservation */
+	bsc->host->ops->unreserve(bsc);
+	kmem_free(bsc);
+}
+
+static inline void
+blkspc_cookie_cancel(
+	struct blkspc_cookie	*bsc)
+{
+	bsc->cancelled = true;
+}
+
+/*
+ * XXX: need a generic init function
+ */
+struct blkspc_host *
+	xfs_blkspc_init(struct xfs_inode *host_ip, struct block_device *bdev);
+void	xfs_blkspc_destroy(struct blkspc_host *bsh);
+
+int	xfs_buf_remap_iodone(struct xfs_buf *bp);
+int	xfs_buf_remap(struct xfs_buf *bp, struct blkspc_cookie *bsc);
+
+#endif /* __XFS_REMAP_H */
