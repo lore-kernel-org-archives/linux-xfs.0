@@ -1,115 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:36450
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754559AbeBABkC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 20:40:02 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh3r5-0004wl-NI
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 12:39:59 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.90)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh3r5-0000E7-MC
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 12:39:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fall back to vmalloc when allocation log vector buffers
-Date: Thu,  1 Feb 2018 12:39:59 +1100
-Message-Id: <20180201013959.829-1-david@fromorbit.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:57270 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932104AbeBAA5L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jan 2018 19:57:11 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w110qbpk025290
+        for <linux-xfs@vger.kernel.org>; Thu, 1 Feb 2018 00:57:11 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2fuqf3889k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Feb 2018 00:57:10 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w110vAG2022728
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 1 Feb 2018 00:57:10 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w110vAYE012513
+        for <linux-xfs@vger.kernel.org>; Thu, 1 Feb 2018 00:57:10 GMT
+Date: Wed, 31 Jan 2018 16:57:09 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: don't allow reflink + realtime filesystems
+Message-ID: <20180201005709.GM4849@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When using large directory blocks, we regularly see memory
-allocations of >64k being made for the shadow log vector buffer.
-When we are under memory pressure, kmalloc() may not be able to find
-contiguous memory chunks large enough to satisfy these allocations
-easily, and if memory is fragmented we can potentially stall here.
+We don't support realtime filesystems with reflink either, so fail
+those mounts.
 
-TO avoid this problem, switch the log vector buffer allocation to
-use kmem_alloc_large(). This will allow failed allocations to fall
-back to vmalloc and so remove the dependency on large contiguous
-regions of memory being available. This should prevent slowdowns
-and potential stalls when memory is low and/or fragmented.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/kmem.c        | 6 +++---
- fs/xfs/kmem.h        | 8 +++++++-
- fs/xfs/xfs_log_cil.c | 2 +-
- 3 files changed, 11 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_super.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 393b6849aeb3..7bace03dc9dc 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -46,13 +46,13 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- }
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a83a9f0..7aba628 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1684,6 +1684,13 @@ xfs_fs_fill_super(
+ 		}
+ 	}
  
- void *
--kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-+kmem_alloc_large(size_t size, xfs_km_flags_t flags)
- {
- 	unsigned nofs_flag = 0;
- 	void	*ptr;
- 	gfp_t	lflags;
- 
--	ptr = kmem_zalloc(size, flags | KM_MAYFAIL);
-+	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
- 	if (ptr)
- 		return ptr;
- 
-@@ -67,7 +67,7 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- 		nofs_flag = memalloc_nofs_save();
- 
- 	lflags = kmem_flags_convert(flags);
--	ptr = __vmalloc(size, lflags | __GFP_ZERO, PAGE_KERNEL);
-+	ptr = __vmalloc(size, lflags, PAGE_KERNEL);
- 
- 	if (flags & KM_NOFS)
- 		memalloc_nofs_restore(nofs_flag);
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 4b87472f35bc..6023b594ead7 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -71,7 +71,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
- }
- 
- extern void *kmem_alloc(size_t, xfs_km_flags_t);
--extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
-+extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
- extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
- static inline void  kmem_free(const void *ptr)
- {
-@@ -85,6 +85,12 @@ kmem_zalloc(size_t size, xfs_km_flags_t flags)
- 	return kmem_alloc(size, flags | KM_ZERO);
- }
- 
-+static inline void *
-+kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
-+{
-+	return kmem_alloc_large(size, flags | KM_ZERO);
-+}
++	if (xfs_sb_version_hasreflink(&mp->m_sb) && mp->m_sb.sb_rblocks) {
++		xfs_alert(mp,
++	"reflink not compatible with realtime device!");
++		error = -EINVAL;
++		goto out_filestream_unmount;
++	}
 +
- /*
-  * Zone interfaces
-  */
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 43aa42a3a5d3..61ab5c0a4c45 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -202,7 +202,7 @@ xlog_cil_alloc_shadow_bufs(
- 			 */
- 			kmem_free(lip->li_lv_shadow);
- 
--			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
-+			lv = kmem_alloc_large(buf_size, KM_SLEEP|KM_NOFS);
- 			memset(lv, 0, xlog_cil_iovec_space(niovecs));
- 
- 			lv->lv_item = lip;
--- 
-2.15.1
-
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb) && mp->m_sb.sb_rblocks) {
+ 		xfs_alert(mp,
+ 	"reverse mapping btree not compatible with realtime device!");
