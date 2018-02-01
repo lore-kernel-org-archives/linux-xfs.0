@@ -1,41 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:45424 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751581AbeBAOeY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 09:34:24 -0500
-Received: by mail-qk0-f173.google.com with SMTP id z12so19581131qkf.12
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Feb 2018 06:34:24 -0800 (PST)
-Date: Thu, 1 Feb 2018 09:34:22 -0500
-From: Josef Bacik <josef@toxicpanda.com>
-Subject: [LSF/MM TOPIC] File system memory management topics
-Message-ID: <20180201143422.phir5f2wwv6udnqe@destiny>
+Received: from aserp2120.oracle.com ([141.146.126.78]:55000 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751967AbeBARId (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 12:08:33 -0500
+Date: Thu, 1 Feb 2018 09:08:26 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: Add missing braces around xfs_scrub_agfl_info
+ initializer
+Message-ID: <20180201170826.GP4849@magnolia>
+References: <1517480584-4588-1-git-send-email-geert@linux-m68k.org>
+ <CAK8P3a1N-Yh65y6bEb+d7DwVOqB8ee=T1gM1cc7k6=cg1c3Jtw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAK8P3a1N-Yh65y6bEb+d7DwVOqB8ee=T1gM1cc7k6=cg1c3Jtw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: lsf-pc@lists.linux-foundation.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hello,
+On Thu, Feb 01, 2018 at 12:31:36PM +0100, Arnd Bergmann wrote:
+> On Thu, Feb 1, 2018 at 11:23 AM, Geert Uytterhoeven
+> <geert@linux-m68k.org> wrote:
+> > With gcc-4.1.2:
+> >
+> >     fs/xfs/scrub/agheader.c: In function ‘xfs_scrub_agfl’:
+> >     fs/xfs/scrub/agheader.c:770: warning: missing braces around initializer
+> >     fs/xfs/scrub/agheader.c:770: warning: (near initialization for ‘sai.oinfo’)
+> >
+> > The first member of struct xfs_scrub_agfl_info is no longer an integral
+> > type, but a struct.  Add the missing curly braces to fix this.
+> 
+> I suspect gcc-4.5 is affected as well, but not 4.6+
+> 
+> > --- a/fs/xfs/scrub/agheader.c
+> > +++ b/fs/xfs/scrub/agheader.c
+> > @@ -767,7 +767,7 @@ int
+> >  xfs_scrub_agfl(
+> >         struct xfs_scrub_context        *sc)
+> >  {
+> > -       struct xfs_scrub_agfl_info      sai = { 0 };
+> > +       struct xfs_scrub_agfl_info      sai = { { 0 } };
+> >         struct xfs_agf                  *agf;
+> 
+> Looks ok to me, but
+> 
+>         struct xfs_scrub_agfl_info      sai = { };
+> 
+> might be slightly better in case the first member changes again.
 
-I've been lazily working through various mm related issues with file systems for
-the last couple of years and would like to talk about current progress and work
-thats left to be done.  Some of the topics I want to cover are
+Frankly I'd rather see it changed to memset(&sai, 0, sizeof(sai)); and
+stop having to field all these gcc warnings that vary depending on
+compiler version...
 
-* Metadata tracking, writeback, and reclaim
-* Smarter fs cache shrinking
-* Non-page size block size handling
+--D
 
-Dave please tell me you are going to be there this year?  It's going to be
-completely useless for me to talk about this stuff if you aren't in the room.
-These are all big topics in and of themselves so if we just need to get you, me,
-Jan, and some poor MM guy locked in a room with a couple of bottles of liquor
-until we figure it out then that's fine.
-
-I'm hoping to have the metadata tracking stuff fixed up and at least mergable by
-LSF, but there's still stuff to be added to that infrastructure later on, and
-the other topics we need to agree on a direction.  Thanks,
-
-Josef
+> 
+>      Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
