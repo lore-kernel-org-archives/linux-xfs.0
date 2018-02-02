@@ -1,28 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59866 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750990AbeBEXWT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 18:22:19 -0500
-Subject: [PATCH 0/7] xfsprogs: 4.15 rollup pt. 5
+Received: from userp2120.oracle.com ([156.151.31.85]:46814 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752951AbeBBRr5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Feb 2018 12:47:57 -0500
+Date: Fri, 2 Feb 2018 09:47:33 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 05 Feb 2018 15:22:14 -0800
-Message-ID: <151787293446.3743.11110014829952400444.stgit@magnolia>
+Subject: Re: [PATCH] xfs: don't allow DAX on reflink filesystems
+Message-ID: <20180202174733.GA4849@magnolia>
+References: <20180131222324.GH4849@magnolia>
+ <20180202095131.GB17952@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180202095131.GB17952@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
 
-Hi all,
+On Fri, Feb 02, 2018 at 01:51:31AM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 31, 2018 at 02:23:24PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Now that reflink is no longer experimental, reject attempts to mount
+> > with DAX until that whole mess gets sorted out.
+> 
+> Didn't I send exactly the same patch about a week ago?
 
-A bunch of scrub fixes here -- disable syslog if we're debugging the program,
-tidying up the scrub manpage to avoid mentioning things that it doesn't yet
-know how to do, removing preen mode to bring the command line usage in line
-with xfs_repair, fixing complaints about the report that gets printed at the
-end, and reclassifying how a lot of runtime errors get logged so that the
-return status reflects this.
+I haven't received any such patch (but Oracle mail has been dropping and
+delaying mail recently) and marc.info doesn't bring up anything relevant
+for a search of 'DAX' and 'Hellwig'. :/
 
 --D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
