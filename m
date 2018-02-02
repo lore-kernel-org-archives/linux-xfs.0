@@ -1,79 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44486 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750795AbeBBK5A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Feb 2018 05:57:00 -0500
-Date: Fri, 2 Feb 2018 05:56:59 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: byte range buffer dirty region tracking
-Message-ID: <20180202105659.GA34911@bfoster.bfoster>
-References: <20180201010514.30233-1-david@fromorbit.com>
- <20180201051128.GO4849@magnolia>
- <20180201081452.gaavuhnxafoafunm@destitution>
- <20180201203526.GR4849@magnolia>
- <20180201231647.qsiq6vnmllqc32le@destitution>
- <20180201232258.GW4849@magnolia>
- <20180201235548.7hmuu6ws5cxouzee@destitution>
+Received: from bombadil.infradead.org ([65.50.211.133]:48423 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751625AbeBBJvc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Feb 2018 04:51:32 -0500
+Date: Fri, 2 Feb 2018 01:51:31 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: don't allow DAX on reflink filesystems
+Message-ID: <20180202095131.GB17952@infradead.org>
+References: <20180131222324.GH4849@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180201235548.7hmuu6ws5cxouzee@destitution>
+In-Reply-To: <20180131222324.GH4849@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
 
-On Fri, Feb 02, 2018 at 10:55:48AM +1100, Dave Chinner wrote:
-> On Thu, Feb 01, 2018 at 03:22:58PM -0800, Darrick J. Wong wrote:
-> > On Fri, Feb 02, 2018 at 10:16:47AM +1100, Dave Chinner wrote:
-> > > On Thu, Feb 01, 2018 at 12:35:26PM -0800, Darrick J. Wong wrote:
-> > > > FWIW I also ran straight into this when I applied it for giggles and ran
-> > > > xfstests -g quick (generic/001 blew up):
-> > > 
-> > > I must have screwed up the forward port worse than usual - the
-> > > conflicts with the xfs_buf_log_item typedef removal were pretty
-> > > extensive.
-> > 
-> > Ah, sorry about that.  I'd thought it was just the xfs_buf rename. :/
+On Wed, Jan 31, 2018 at 02:23:24PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Not your fault at all, Darrick!
-> 
-> I only complained about the xfs_buf typedef because it would cause
-> merge problems for ~80% of the patches in my current dev tree. This
-> was the only patch that the xfs_buf_log_item typedef removal
-> affected - more were affected by the trivial b_fspriv to b_log_item
-> changeover - and I figured that pain was worth it to get rid of
-> another typedef....
-> 
-> > > > [   31.909228] ================================================================================
-> > > > [   31.911258] BUG: unable to handle kernel NULL pointer dereference at 00000000000000a0
-> > > > [   31.912375] IP: xfs_buf_item_init+0x33/0x350 [xfs]
-> > > 
-> > > Hmmmm - I'm seeing that on my subvol smoke test script but not
-> > > elsewhere. I've been looking through the subvol code to try to find
-> > > this, maybe it's not the subvol code.  What mkfs parameters where
-> > > you using?
-> > 
-> > mkfs.xfs -m rmapbt=1,reflink=1 -i sparse=1 /dev/pmem0
-> 
-> OK, nothing unusual, though I haven't been using sparse=1 recently.
-> I'll get onto it....
-> 
+> Now that reflink is no longer experimental, reject attempts to mount
+> with DAX until that whole mess gets sorted out.
 
-See xfs_buf_item_init() with this patch applied to for-next. bip can be
-NULL until allocated a few lines below attempting to initialize the
-bip->bli_range fields...
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Didn't I send exactly the same patch about a week ago?
