@@ -1,53 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42672 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751544AbeBBVge (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Feb 2018 16:36:34 -0500
-Received: from [10.0.0.4] (erlite [10.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9F3E811704
-        for <linux-xfs@vger.kernel.org>; Fri,  2 Feb 2018 15:36:11 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: xfs_scrub: call for testing
-Message-ID: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
-Date: Fri, 2 Feb 2018 15:36:33 -0600
+Received: from userp2120.oracle.com ([156.151.31.85]:51874 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751544AbeBBVgc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Feb 2018 16:36:32 -0500
+Subject: [PATCH 1/4] mkfs: don't create realtime filesystems with reflink
+ enabled
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 02 Feb 2018 13:36:27 -0800
+Message-ID: <151760738718.29371.2619485698764869314.stgit@magnolia>
+In-Reply-To: <151760738102.29371.13542858379823064383.stgit@magnolia>
+References: <151760738102.29371.13542858379823064383.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hey all - 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Darrick's done a great job with landing the xfs_scrub code in
-upstream kernel v4.15, and now merged on the for-next branch of
-xfsprogs to be released in xfsprogs-4.15.0.
+We don't support reflink on the realtime device, so don't let people
+create such things.
 
-As with any big new body of code, there might be some rough
-edges despite best efforts.  It'd be great to have people do
-some testing at this semi-early stage.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/xfs_mkfs.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-The 10,000ft overview is that the new xfs_scrub command can
-/validate/ a lot of what's on disk while the filesystem
-is mounted; and the ability to repair will come in the future.
 
-For now, with the 4.15 kernel, functionality is limited to
-"scrubbing" meaning that it will simply check for consistency;
-in 4.15 there is no facility to repair or optimize/preen the
-filesystem.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 219b209..b20e3d6 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2025,6 +2025,13 @@ _("cowextsize not supported without reflink support\n"));
+ 		usage();
+ 	}
+ 
++	if (cli->sb_feat.reflink && cli->xi->rtname) {
++		fprintf(stderr,
++_("reflink not supported with realtime devices\n"));
++		usage();
++		cli->sb_feat.reflink = false;
++	}
++
+ 	if (cli->sb_feat.rmapbt && cli->xi->rtname) {
+ 		fprintf(stderr,
+ _("rmapbt not supported with realtime devices\n"));
 
-I'd really value feedback on scrub as it stand at this point -
-Is the documentation clear?  Is the output correct?  Do the
-tool's arguments make sense?  Does it segfault?  Does it
-find real errors?  Does it crash your kernel? Does it
-eat your data?
-
-(haha no it won't eat your data)
-((haha no can't promise that with 100% certainty))
-
-Thanks,
--Eric
