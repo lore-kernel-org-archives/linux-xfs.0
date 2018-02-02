@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47688 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751544AbeBBVgh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Feb 2018 16:36:37 -0500
-Subject: [PATCH 2/4] xfs_scrub: close dir_fd if we don't get a DIR pointer
+Received: from aserp2130.oracle.com ([141.146.126.79]:38158 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751544AbeBBVgo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Feb 2018 16:36:44 -0500
+Subject: [PATCH 3/4] xfs_scrub: kill dead code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 02 Feb 2018 13:36:33 -0800
-Message-ID: <151760739333.29371.879810257810332609.stgit@magnolia>
+Date: Fri, 02 Feb 2018 13:36:39 -0800
+Message-ID: <151760739949.29371.1187587453029792957.stgit@magnolia>
 In-Reply-To: <151760738102.29371.13542858379823064383.stgit@magnolia>
 References: <151760738102.29371.13542858379823064383.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,33 +20,26 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If we don't get a directory pointer, close dir_fd before jumping out.
+We can't reach the return mess at the bottom of __xfs_scrub_test so get
+rid of it.
 
-Fixes-coverity-id: 1428799
+Fixes-coverity-id: 1428798
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/vfs.c |    2 ++
- 1 file changed, 2 insertions(+)
+ scrub/scrub.c |    1 -
+ 1 file changed, 1 deletion(-)
 
 
-diff --git a/scrub/vfs.c b/scrub/vfs.c
-index e3c8e62..573a2d0 100644
---- a/scrub/vfs.c
-+++ b/scrub/vfs.c
-@@ -88,6 +88,7 @@ scan_fs_dir(
- 	/* Caller-specific directory checks. */
- 	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
- 		sft->moveon = false;
-+		close(dir_fd);
- 		goto out;
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 0dbe11c..6abca2a 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -602,7 +602,6 @@ _("Kernel %s %s facility not detected."),
+ 		str_info(ctx, ctx->mntpoint, "%s", strerror(errno));
+ 		return true;
  	}
+-	return error == 0 || (error && errno != EOPNOTSUPP && errno != ENOTTY);
+ }
  
-@@ -95,6 +96,7 @@ scan_fs_dir(
- 	dir = fdopendir(dir_fd);
- 	if (!dir) {
- 		str_errno(ctx, sftd->path);
-+		close(dir_fd);
- 		goto out;
- 	}
- 	rewinddir(dir);
+ bool
 
