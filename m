@@ -1,75 +1,173 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:37554 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751916AbeBEAjJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Feb 2018 19:39:09 -0500
-Date: Mon, 5 Feb 2018 11:40:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fall back to vmalloc when allocation log vector
- buffers
-Message-ID: <20180205004001.anj4ias3tc55naok@destitution>
-References: <20180201013959.829-1-david@fromorbit.com>
- <20180201044419.GN4849@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:52624 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752438AbeBCRcY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Feb 2018 12:32:24 -0500
+Date: Sat, 3 Feb 2018 09:32:19 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_mdrestore: Don't rewind source file stream
+Message-ID: <20180203173219.GE4849@magnolia>
+References: <20180202202729.GC4849@magnolia>
+ <1517663796-89208-1-git-send-email-marco.antonio.780@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180201044419.GN4849@magnolia>
+In-Reply-To: <1517663796-89208-1-git-send-email-marco.antonio.780@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Marco A Benatto <marco.antonio.780@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jan 31, 2018 at 08:44:19PM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 01, 2018 at 12:39:59PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When using large directory blocks, we regularly see memory
-> > allocations of >64k being made for the shadow log vector buffer.
-> > When we are under memory pressure, kmalloc() may not be able to find
-> > contiguous memory chunks large enough to satisfy these allocations
-> > easily, and if memory is fragmented we can potentially stall here.
-> > 
-> > TO avoid this problem, switch the log vector buffer allocation to
-> > use kmem_alloc_large(). This will allow failed allocations to fall
-> > back to vmalloc and so remove the dependency on large contiguous
-> > regions of memory being available. This should prevent slowdowns
-> > and potential stalls when memory is low and/or fragmented.
+On Sat, Feb 03, 2018 at 11:16:36AM -0200, Marco A Benatto wrote:
+> Today, xfs_mdrestore from stdin will fail if the -i flag is
+> specified, because it attempts to rewind the stream after
+> the initial read of the metablock.  This fails, and
+> results in an abort with "specified file is not a metadata
+> dump."
 > 
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-.....
-> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > index 43aa42a3a5d3..61ab5c0a4c45 100644
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -202,7 +202,7 @@ xlog_cil_alloc_shadow_bufs(
-> >  			 */
-> >  			kmem_free(lip->li_lv_shadow);
-> >  
-> > -			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
-> > +			lv = kmem_alloc_large(buf_size, KM_SLEEP|KM_NOFS);
+> Read the metablock exactly once in main(), validate the magic,
+> print informational flags if requested, and then pass it to
+> perform_restore() which will then continue the restore process.
 > 
-> "KM_SLEEP | KM_NOFS", will fix it on the way in.
+> Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
+> ---
+>  mdrestore/xfs_mdrestore.c | 55 +++++++++++++++++++++++------------------------
+>  1 file changed, 27 insertions(+), 28 deletions(-)
+> 
+> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+> index 0bb4ac8..3db740d 100644
+> --- a/mdrestore/xfs_mdrestore.c
+> +++ b/mdrestore/xfs_mdrestore.c
+> @@ -51,35 +51,34 @@ print_progress(const char *fmt, ...)
+>  	progress_since_warning = 1;
+>  }
+>  
+> +/*
+> + * perform_restore() -- do the actual work to restore the metadump 
+> + *
+> + * @src_f: A FILE pointer to the source metadump
+> + * @dst_fd: the file descriptor for the target file
+> + * @is_target_file: designates whether the target is a regular file
+> + * @mbp: pointer to metadump's first xfs_metablock, read and verified by the caller
+> + *  
+> + * src_f should be positioned just past a read the previously validated metablock
+> + */
+>  static void
+>  perform_restore(
+>  	FILE			*src_f,
+>  	int			dst_fd,
+> -	int			is_target_file)
+> +	int			is_target_file,
+> +	const struct xfs_metablock	*mbp)
+>  {
+> -	xfs_metablock_t 	*metablock;	/* header + index + blocks */
+> +	struct xfs_metablock 	*metablock, tmb;	/* header + index + blocks */
+>  	__be64			*block_index;
+>  	char			*block_buffer;
+>  	int			block_size;
+>  	int			max_indices;
+>  	int			cur_index;
+>  	int			mb_count;
+> -	xfs_metablock_t		tmb;
+>  	xfs_sb_t		sb;
+>  	int64_t			bytes_read;
+>  
+> -	/*
+> -	 * read in first blocks (superblock 0), set "inprogress" flag for it,
+> -	 * read in the rest of the file, and if complete, clear SB 0's
+> -	 * "inprogress flag"
+> -	 */
+> -
+> -	if (fread(&tmb, sizeof(tmb), 1, src_f) != 1)
+> -		fatal("error reading from file: %s\n", strerror(errno));
+> -
+> -	if (be32_to_cpu(tmb.mb_magic) != XFS_MD_MAGIC)
+> -		fatal("specified file is not a metadata dump\n");
+> -
+> +	tmb = *mbp;
+>  	block_size = 1 << tmb.mb_blocklog;
 
-*nod*
+Why not avoid the structure copy and dereference the pointer directly?
 
-> I wonder about expanding the uses of vmalloc space, but otoh stalling
-> the log seems like a worse idea...
+block_size = 1 << mbp->mb_blocklog;
 
-We'll only see this happen when memory is really low and/or
-fragmented, so i don't think it's a problem at all. I could trigger
-warnings without this patch - they disappear with this patch and the
-system seemed more responsive under equivalent loading. That's
-entirely subjective, but it's so hard to consistently drive the
-system into the severe memory shortages and reclaim failures that
-trigger this problem that's the best I was able to do...
+etc.
 
-> Looks ok enough to give it a spin,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>  	max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
+>  
+> @@ -211,6 +210,7 @@ main(
+>  	int		open_flags;
+>  	struct stat	statbuf;
+>  	int		is_target_file;
+> +	xfs_metablock_t		mb;
 
-Thanks!
+struct xfs_metablock	mb;
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+>  
+>  	progname = basename(argv[0]);
+>  
+> @@ -237,7 +237,12 @@ main(
+>  	if (!show_info && argc - optind != 2)
+>  		usage();
+>  
+> -	/* open source */
+> +	/*
+> +	 * open source and test if this really is a dump. The first metadump block
+> +	 * will be passed to perform_restore() which will continue to read the
+> +	 * file from this point. This avoids rewind the stream, which causes
+> +	 * restore to fail when source was being read from stdin.
+> + 	 */
+>  	if (strcmp(argv[optind], "-") == 0) {
+>  		src_f = stdin;
+>  		if (isatty(fileno(stdin)))
+> @@ -248,15 +253,12 @@ main(
+>  			fatal("cannot open source dump file\n");
+>  	}
+>  
+> -	if (show_info) {
+> -		xfs_metablock_t		mb;
+> -
+> -		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+> -			fatal("error reading from file: %s\n", strerror(errno));
+> -
+> -		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
+> -			fatal("specified file is not a metadata dump\n");
+> +	if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+> +		fatal("error reading from file: %s\n", strerror(errno));
+> +	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
+> +		fatal("specified file is not a metadata dump\n");
+>  
+> +	if (show_info) {
+>  		if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
+>  			printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
+>  			argv[optind],
+> @@ -270,9 +272,6 @@ main(
+>  
+>  		if (argc - optind == 1)
+>  			exit(0);
+> -
+> -		/* Go back to the beginning for the restore function */
+> -		fseek(src_f, 0L, SEEK_SET);
+>  	}
+>  
+>  	optind++;
+> @@ -301,7 +300,7 @@ main(
+>  	if (dst_fd < 0)
+>  		fatal("couldn't open target \"%s\"\n", argv[optind]);
+>  
+> -	perform_restore(src_f, dst_fd, is_target_file);
+> +	perform_restore(src_f, dst_fd, is_target_file, &mb);
+>  
+>  	close(dst_fd);
+>  	if (src_f != stdin)
+> -- 
+> 1.8.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
