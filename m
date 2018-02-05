@@ -1,79 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:59221 "EHLO mail1.g1.pair.com"
+Received: from sandeen.net ([63.231.237.45]:54466 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753017AbeBEPKr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Feb 2018 10:10:47 -0500
-Date: Mon, 5 Feb 2018 16:10:49 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: xfs_scrub: call for testing
-Message-ID: <20180205161049.7e22aa09@harpe.intellique.com>
-In-Reply-To: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
-References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
+        id S1752582AbeBERV3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Feb 2018 12:21:29 -0500
+Subject: Re: [PATCH 5/4] xfs_io: fix copy_file_range symbol name collision
+References: <151760738102.29371.13542858379823064383.stgit@magnolia>
+ <20180205165041.GH4849@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4741071e-ea87-192f-e9b0-36fc9502aa86@sandeen.net>
+Date: Mon, 5 Feb 2018 11:21:27 -0600
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/+6plJK5jh1m6GAfvCkCIR7y"; protocol="application/pgp-signature"
+In-Reply-To: <20180205165041.GH4849@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, fredrik@crux.nu
 
---Sig_/+6plJK5jh1m6GAfvCkCIR7y
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-Le Fri, 2 Feb 2018 15:36:33 -0600
-Eric Sandeen <sandeen@sandeen.net> =C3=A9crivait:
 
-> I'd really value feedback on scrub as it stand at this point -
-> Is the documentation clear?  Is the output correct?  Do the
-> tool's arguments make sense?  Does it segfault?  Does it
-> find real errors?  Does it crash your kernel? Does it
-> eat your data?
+On 2/5/18 10:50 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> glibc 2.27 has a copy_file_range wrapper, so we need to change our
+> internal function out of the way to avoid compiler warnings.
+> 
+> Reported-by: fredrik@crux.nu
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Wouldn't it be better to remove the parts about repairing the
-filesystem in the documentation? The man page states that it *can't*
-repair the filesystem, but nonetheless explains under which
-circumstances it *won't* be able to repair (in some theoretical future
-version with repair capabilities, I suppose). Ditto with the -n and -y
-option, I suppose they're both basically noop at the moment? That's
-quite unclear what it actually does.
+Ok, sure.  Yay namespace.
 
-Regarding FITRIM for flash storage, I think most people refers to it as
-"TRIM", not the ioctl name FITRIM. Using "TRIM" would probably be more
-understandable IMO.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Because I'm such a funny boy, I just wanted to see what happens when
-running xfs_scrub on an unsupported kernel. On both a 4.14.x and a
-3.18.x it seems about right:
-
-root@bareos16:~# ./xfs_scrub /mnt/raid/
-EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-Error: /mnt/raid: Kernel metadata scrubbing facility is not available.
-Info: /mnt/raid: Scrub aborted after phase 1.
-/mnt/raid: 2 errors found.
-
-I don't have any system running 4.15 to test its effects, but I'll do
-as soon as possible.
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_/+6plJK5jh1m6GAfvCkCIR7y
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlp4c/oACgkQX3jQXNUicVarbgCfQqFH5yAI8Xzk22pkpPVwQBow
-Vf4AoMXZ5/wH2BSi4om1sw41XncUmvxo
-=jBpS
------END PGP SIGNATURE-----
-
---Sig_/+6plJK5jh1m6GAfvCkCIR7y--
+> ---
+>  io/copy_file_range.c |   11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index d1dfc5a..99fba20 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -42,13 +42,18 @@ copy_range_help(void)
+>  "));
+>  }
+>  
+> +/*
+> + * Issue a raw copy_file_range syscall; for our test program we don't want the
+> + * glibc buffered copy fallback.
+> + */
+>  static loff_t
+> -copy_file_range(int fd, loff_t *src, loff_t *dst, size_t len)
+> +copy_file_range_cmd(int fd, loff_t *src, loff_t *dst, size_t len)
+>  {
+>  	loff_t ret;
+>  
+>  	do {
+> -		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst, len, 0);
+> +		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst,
+> +				len, 0);
+>  		if (ret == -1) {
+>  			perror("copy_range");
+>  			return errno;
+> @@ -130,7 +135,7 @@ copy_range_f(int argc, char **argv)
+>  		copy_dst_truncate();
+>  	}
+>  
+> -	ret = copy_file_range(fd, &src, &dst, len);
+> +	ret = copy_file_range_cmd(fd, &src, &dst, len);
+>  	close(fd);
+>  	return ret;
+>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
