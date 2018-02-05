@@ -1,90 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35320 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751844AbeBAVyy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Feb 2018 16:54:54 -0500
-Date: Thu, 1 Feb 2018 15:54:52 -0600
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_mdrestore: Don't restore over a dump file
-Message-ID: <20180201215452.GB9528@redhat.com>
-References: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:37554 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751916AbeBEAjJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Feb 2018 19:39:09 -0500
+Date: Mon, 5 Feb 2018 11:40:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fall back to vmalloc when allocation log vector
+ buffers
+Message-ID: <20180205004001.anj4ias3tc55naok@destitution>
+References: <20180201013959.829-1-david@fromorbit.com>
+ <20180201044419.GN4849@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1517517463-99951-1-git-send-email-marco.antonio.780@gmail.com>
+In-Reply-To: <20180201044419.GN4849@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco A Benatto <marco.antonio.780@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 01, 2018 at 06:37:43PM -0200, Marco A Benatto wrote:
-> Currently, if the user switch source and target parameters
-> position, xfs_mdrestore truncates the dumpfile before abort
-> the execution.
+On Wed, Jan 31, 2018 at 08:44:19PM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 01, 2018 at 12:39:59PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > When using large directory blocks, we regularly see memory
+> > allocations of >64k being made for the shadow log vector buffer.
+> > When we are under memory pressure, kmalloc() may not be able to find
+> > contiguous memory chunks large enough to satisfy these allocations
+> > easily, and if memory is fragmented we can potentially stall here.
+> > 
+> > TO avoid this problem, switch the log vector buffer allocation to
+> > use kmem_alloc_large(). This will allow failed allocations to fall
+> > back to vmalloc and so remove the dependency on large contiguous
+> > regions of memory being available. This should prevent slowdowns
+> > and potential stalls when memory is low and/or fragmented.
 > 
-> This patch checks the target parameter and if XFS_MD_MAGIC is
-> found, it aborts execution and leave dump file intact.
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+.....
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index 43aa42a3a5d3..61ab5c0a4c45 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -202,7 +202,7 @@ xlog_cil_alloc_shadow_bufs(
+> >  			 */
+> >  			kmem_free(lip->li_lv_shadow);
+> >  
+> > -			lv = kmem_alloc(buf_size, KM_SLEEP|KM_NOFS);
+> > +			lv = kmem_alloc_large(buf_size, KM_SLEEP|KM_NOFS);
 > 
-> Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
+> "KM_SLEEP | KM_NOFS", will fix it on the way in.
 
-a few nits...otherwise,
+*nod*
 
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+> I wonder about expanding the uses of vmalloc space, but otoh stalling
+> the log seems like a worse idea...
 
-> ---
->  mdrestore/xfs_mdrestore.c | 16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index c49c13a..b4bf7b4 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -205,7 +205,7 @@ main(
->  	int 		argc,
->  	char 		**argv)
->  {
-> -	FILE		*src_f;
-> +	FILE		*src_f, *dst_f;
->  	int		dst_fd;
->  	int		c;
->  	int		open_flags;
-> @@ -277,6 +277,7 @@ main(
->  
->  	optind++;
->  
-> +
-^^^ extra space.
+We'll only see this happen when memory is really low and/or
+fragmented, so i don't think it's a problem at all. I could trigger
+warnings without this patch - they disappear with this patch and the
+system seemed more responsive under equivalent loading. That's
+entirely subjective, but it's so hard to consistently drive the
+system into the severe memory shortages and reclaim failures that
+trigger this problem that's the best I was able to do...
 
->  	/* check and open target */
->  	open_flags = O_RDWR;
->  	is_target_file = 0;
-> @@ -285,6 +286,19 @@ main(
->  		open_flags |= O_CREAT;
->  		is_target_file = 1;
->  	} else if (S_ISREG(statbuf.st_mode))  {
-> +		xfs_metablock_t mb;
-> +
-> +		dst_f = fopen(argv[optind], "rb");
-> +		if (dst_f == NULL)
-> +			fatal("cannot open target\n");
-> +
-> +		if (fread(&mb, sizeof(mb), 1, dst_f) == 1) {
-> +			if (be32_to_cpu(mb.mb_magic) == XFS_MD_MAGIC)
-> +				fatal("target file is a xfs_metadump. switched arguments?\n");
-^^^ exceeded 80 columns...probably ok for stdout messages... shrug.
+> Looks ok enough to give it a spin,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> +		}
-> +
-> +		fclose(dst_f);
-> +
->  		open_flags |= O_TRUNC;
->  		is_target_file = 1;
->  	} else  {
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks!
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
