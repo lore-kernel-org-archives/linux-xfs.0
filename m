@@ -1,70 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40586 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750949AbeBEUlT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Feb 2018 15:41:19 -0500
-Date: Mon, 5 Feb 2018 12:41:18 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: updates for 4.16
-Message-ID: <20180205204118.GI4849@magnolia>
-References: <20180131181311.GC4860@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:47690 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751774AbeBEXXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 18:23:06 -0500
+Subject: [PATCH 6/7] xfs_scrub: always init phase information
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 05 Feb 2018 15:23:02 -0800
+Message-ID: <151787298265.3743.11278867933485186707.stgit@magnolia>
+In-Reply-To: <151787293446.3743.11110014829952400444.stgit@magnolia>
+References: <151787293446.3743.11110014829952400444.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180131181311.GC4860@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hi Linus,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-As promised, here's a (much smaller) second pull request for the second
-week of the merge cycle.  This time around we have a couple patches
-shutting off unsupported fs configurations, and a couple of cleanups.
+Make sure we initialize the overall phase state before we start
+executing any code that can end up in the report-status-and-exit paths.
+Otherwise if debugging is turned on we get garbage io/cpu stat reports.
 
-Last, we turn off EXPERIMENTAL for the reverse mapping btree, since
-the primary downstream user of that information (online fsck) is now
-upstream and I haven't seen any major failures in a few kernel
-releases.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/xfs_scrub.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Let me know if you encounter any merge problems; I checked against this
-morning's master and didn't see any.
 
---D
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 6efcf77..89b7fa0 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -618,6 +618,11 @@ main(
+ 	if (getenv("SERVICE_MODE"))
+ 		is_service = true;
+ 
++	/* Initialize overall phase stats. */
++	moveon = phase_start(&all_pi, 0, NULL);
++	if (!moveon)
++		return SCRUB_RET_OPERROR;
++
+ 	/* Find the mount record for the passed-in argument. */
+ 	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
+ 		fprintf(stderr,
+@@ -641,11 +646,6 @@ main(
+ 			mtab = _PATH_MOUNTED;
+ 	}
+ 
+-	/* Initialize overall phase stats. */
+-	moveon = phase_start(&all_pi, 0, NULL);
+-	if (!moveon)
+-		goto out;
+-
+ 	ismnt = find_mountpoint(mtab, &ctx);
+ 	if (!ismnt) {
+ 		fprintf(stderr,
 
-The following changes since commit 1e369b0e199bbfbab5218e1c1443d839700d8884:
-
-  xfs: remove experimental tag for reflinks (2018-01-29 07:27:24 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.16-merge-5
-
-for you to fetch changes up to 76883f7988e6d06a97232e979bc7aaa7846a134b:
-
-  xfs: remove experimental tag for reverse mapping (2018-02-01 21:07:26 -0800)
-
-----------------------------------------------------------------
-Changes since last update:
- - Print scrub build status in the xfs build info.
- - Explicitly call out the remaining two scenarios where we don't
-   support
-   reflink and never have.
- - Remove EXPERIMENTAL tag from reverse mapping btree!
-
-----------------------------------------------------------------
-Darrick J. Wong (4):
-      xfs: fix u32 type usage in sb validation function
-      xfs: don't allow DAX on reflink filesystems
-      xfs: don't allow reflink + realtime filesystems
-      xfs: remove experimental tag for reverse mapping
-
-Eric Sandeen (1):
-      xfs: add scrub to XFS_BUILD_OPTIONS
-
- fs/xfs/libxfs/xfs_sb.c |  4 ++--
- fs/xfs/xfs_super.c     | 24 +++++++++++++++---------
- fs/xfs/xfs_super.h     |  7 +++++++
- 3 files changed, 24 insertions(+), 11 deletions(-)
