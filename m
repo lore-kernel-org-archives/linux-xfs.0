@@ -1,167 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:12843 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751272AbeBAGmI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 01:42:08 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh8ZR-0005Cr-3e
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.90)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh8ZR-00024V-2V
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:25021 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750796AbeBEWfL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 17:35:11 -0500
+Date: Tue, 6 Feb 2018 09:36:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/7] xfs: make imaxpct changes in growfs separate
-Date: Thu,  1 Feb 2018 17:42:00 +1100
-Message-Id: <20180201064202.7174-6-david@fromorbit.com>
-In-Reply-To: <20180201064202.7174-1-david@fromorbit.com>
-References: <20180201064202.7174-1-david@fromorbit.com>
+Subject: Re: XFS over device mapper dm-thin device
+Message-ID: <20180205223604.wgacfnsrsaqrwz7n@destitution>
+References: <147a1764-1988-4efd-4f02-e942a1001b4e@redhat.com>
+ <20180202223541.i27bfjij7itt3q5r@destitution>
+ <9c3ec8ff-3595-c889-3abe-7f069292be0d@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9c3ec8ff-3595-c889-3abe-7f069292be0d@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Todd Gill <tgill@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Feb 02, 2018 at 05:36:40PM -0600, Eric Sandeen wrote:
+> 
+> 
+> On 2/2/18 4:35 PM, Dave Chinner wrote:
+> > On Fri, Feb 02, 2018 at 04:45:33PM -0500, Todd Gill wrote:
+> >>
+> >> Hi,
+> >>
+> >> I'd like to be able to take a snapshot of an XFS filesystem on top of
+> >> dm-thin.
+> >>
+> >> The goal for the snapshot is:
+> >>
+> >>     - fast to complete (couple seconds or better)
+> >>     - independent of origin (UUID updated?)
+> >>     - read/write
+> >>
+> >> To satisfy the independent goal, I'm updating the UUID on the snapshot.
+> >> Currently "xfs_admin -U xxx" takes in the ballpark of 14 seconds on my
+> >> test system.
+> > 
+> > There's a very good chance that this is caused by dm-thinp doing
+> > COW for the storage underlying the superblocks modified by the UUID
+> > change.
+> 
+> It's actually because we rewrite the whole log, because it has the
+> user-facing superblock stamped in it.
+> 
+> I looked at this a bit, and didn't immediately see an easy way around
+> xfs_db's need to rewrite the whole log.
+> 
+> uuid_f()
+>                 /* clear the log (setting uuid) if it's not dirty */
+>                 if (!sb_logzero(&uu))
+>                         return 0;
+> 
+> so I think that's taking the bulk of the time.  I haven't looked closely
+> enough at all the mount-time log parsing to see if we could maybe write
+> less of it and still be valid.
 
-When growfs changes the imaxpct value of the filesystem, it runs
-through all the "change size" growfs code, whether it needs to or
-not. Separate out changing imaxpct into it's own function and
-transaction to simplify the rest of the growfs code.
+Ah, I forgot we added that. Originally the uuid in the log was only
+used to identify external log devices (or Irix based filesystems).
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_fsops.c | 67 +++++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 49 insertions(+), 18 deletions(-)
+> >> Or can the UUID update
+> >> be changed to be faster?
+> > 
+> > Not sure - there's a fixed amount of modification we need to make
+> > to change the UUID so I'm not sure there is any optimisations we
+> > can make here.
+> 
+> In retrospect I think we (I) should have left the "metadata" uuid as
+> the one to match the log, not the user-facing one.
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 94650b7d517e..5c844e540320 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -403,25 +403,21 @@ xfs_growfs_data_private(
- 	xfs_agi_t		*agi;
- 	xfs_agnumber_t		agno;
- 	xfs_buf_t		*bp;
--	int			dpct;
- 	int			error, saved_error = 0;
- 	xfs_agnumber_t		nagcount;
- 	xfs_agnumber_t		nagimax = 0;
- 	xfs_rfsblock_t		nb, nb_mod;
- 	xfs_rfsblock_t		new;
- 	xfs_agnumber_t		oagcount;
--	int			pct;
- 	xfs_trans_t		*tp;
- 	LIST_HEAD		(buffer_list);
- 	struct aghdr_init_data	id = {};
- 
- 	nb = in->newblocks;
--	pct = in->imaxpct;
--	if (nb < mp->m_sb.sb_dblocks || pct < 0 || pct > 100)
-+	if (nb < mp->m_sb.sb_dblocks)
- 		return -EINVAL;
- 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
- 		return error;
--	dpct = pct - mp->m_sb.sb_imax_pct;
- 	error = xfs_buf_read_uncached(mp->m_ddev_targp,
- 				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
- 				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-@@ -554,8 +550,6 @@ xfs_growfs_data_private(
- 				 nb - mp->m_sb.sb_dblocks);
- 	if (id.nfree)
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
--	if (dpct)
--		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
- 	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp);
- 	if (error)
-@@ -564,12 +558,6 @@ xfs_growfs_data_private(
- 	/* New allocation groups fully initialized, so update mount struct */
- 	if (nagimax)
- 		mp->m_maxagi = nagimax;
--	if (mp->m_sb.sb_imax_pct) {
--		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
--		do_div(icount, 100);
--		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
--	} else
--		mp->m_maxicount = 0;
- 	xfs_set_low_space_thresholds(mp);
- 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
- 
-@@ -673,25 +661,68 @@ xfs_growfs_log_private(
- 	return -ENOSYS;
- }
- 
-+static int
-+xfs_growfs_imaxpct(
-+	struct xfs_mount	*mp,
-+	__u32			imaxpct)
-+{
-+	struct xfs_trans	*tp;
-+	int64_t			dpct;
-+	int			error;
-+
-+	if (imaxpct > 100)
-+		return -EINVAL;
-+
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
-+			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
-+	if (error)
-+		return error;
-+
-+	dpct = (int64_t)imaxpct - mp->m_sb.sb_imax_pct;
-+	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
-+	xfs_trans_set_sync(tp);
-+	return xfs_trans_commit(tp);
-+}
-+
- /*
-  * protected versions of growfs function acquire and release locks on the mount
-  * point - exported through ioctls: XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG,
-  * XFS_IOC_FSGROWFSRT
-  */
--
--
- int
- xfs_growfs_data(
--	xfs_mount_t		*mp,
--	xfs_growfs_data_t	*in)
-+	struct xfs_mount	*mp,
-+	struct xfs_growfs_data	*in)
- {
--	int error;
-+	int			error = 0;
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EPERM;
- 	if (!mutex_trylock(&mp->m_growlock))
- 		return -EWOULDBLOCK;
-+
-+	/* update imaxpct seperately to the physical grow of the filesystem */
-+	if (in->imaxpct != mp->m_sb.sb_imax_pct) {
-+		error = xfs_growfs_imaxpct(mp, in->imaxpct);
-+		if (error)
-+			goto out_error;
-+	}
-+
- 	error = xfs_growfs_data_private(mp, in);
-+	if (error)
-+		goto out_error;
-+
-+	/*
-+	 * Post growfs calculations needed to reflect new state in operations
-+	 */
-+	if (mp->m_sb.sb_imax_pct) {
-+		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
-+		do_div(icount, 100);
-+		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
-+	} else
-+		mp->m_maxicount = 0;
-+
-+out_error:
- 	/*
- 	 * Increment the generation unconditionally, the error could be from
- 	 * updating the secondary superblocks, in which case the new size
+I suspect we can just change the log recovery code to accept either
+sb_uuid or sb_metauuid if the metauuid feature bit is set and
+change xfs_db to not rewrite the log when metauuid is used....
+
+Cheers,
+
+Dave.
 -- 
-2.15.1
-
+Dave Chinner
+david@fromorbit.com
