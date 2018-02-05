@@ -1,107 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:2580 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751530AbeBBDlU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 22:41:20 -0500
-Date: Fri, 2 Feb 2018 14:36:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
-Message-ID: <20180202033617.g23puq2xbwy4wmug@destitution>
-References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
- <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
- <20180201234413.idd27uqzqbg54ddk@destitution>
- <20180202004332.GZ4849@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:37920 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753099AbeBEQuu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 11:50:50 -0500
+Date: Mon, 5 Feb 2018 08:50:41 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 5/4] xfs_io: fix copy_file_range symbol name collision
+Message-ID: <20180205165041.GH4849@magnolia>
+References: <151760738102.29371.13542858379823064383.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180202004332.GZ4849@magnolia>
+In-Reply-To: <151760738102.29371.13542858379823064383.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Jiang <dave.jiang@intel.com>, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, fredrik@crux.nu
 
-On Thu, Feb 01, 2018 at 04:43:32PM -0800, Darrick J. Wong wrote:
-> On Fri, Feb 02, 2018 at 10:44:13AM +1100, Dave Chinner wrote:
-> > On Thu, Feb 01, 2018 at 01:33:05PM -0700, Dave Jiang wrote:
-> > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> > > Reported-by: Darrick Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_iops.c  |    3 ++-
-> > >  fs/xfs/xfs_super.c |    9 ++++++++-
-> > >  2 files changed, 10 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > index 56475fcd76f2..ab352c325301 100644
-> > > --- a/fs/xfs/xfs_iops.c
-> > > +++ b/fs/xfs/xfs_iops.c
-> > > @@ -1204,7 +1204,8 @@ xfs_diflags_to_iflags(
-> > >  	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
-> > >  	    !xfs_is_reflink_inode(ip) &&
-> > >  	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
-> > > -	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-> > > +	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX) &&
-> > > +	    blk_queue_dax(bdev_get_queue(inode->i_sb->s_bdev)))
-> > 
-> > This does not discriminate between the rtdev or the data dev. This
-> > needs to call xfs_find_bdev_for_inode() to get the right device
-> > for the inode config.
-> > 
-> > Further, if we add or remove the RT flag to the inode at a later
-> > point in time (e.g. via ioctl) we also need to re-evaluate the S_DAX
-> > flag at that point in time.
-> 
-> Ah, right, I'd missed that subtlety in my earlier replies.  Ok, add
-> another patch to this series to reevaluate S_DAX when we change the RT
-> flag.
-> 
-> > Which brings me to the real problem here: dynamically changing the
-> > S_DAX flag is racy, dangerous and broken. It's not clear that this
-> > should be allowed at all as the inode may have already been mmap()d
-> > by the time the ioctl is called to set/clear the rt file state.
-> 
-> Agreed that this is a mess.  Either this needs to get fixed in the dax
-> code, or we need to decide that we're not going to support reconfiguring
-> the dax flag at all, except possibly for empty files (similar to how we
-> restrict changes to the rt flag).
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hmmm, the rt flag limitations are to do with whether extents have
-been allocated or not. IIRC the issue with S_DAX is whether the file
-has been mmap()d or not which we can't check for reliably even if
-the file is empty...
+glibc 2.27 has a copy_file_range wrapper, so we need to change our
+internal function out of the way to avoid compiler warnings.
 
-.....
+Reported-by: fredrik@crux.nu
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ io/copy_file_range.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-> > >  	if (mp->m_flags & XFS_MOUNT_DAX) {
-> > > +		bool rtdev_is_dax = false;
-> > > +
-> > >  		xfs_warn(mp,
-> > >  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
-> > >  
-> > > +		if (mp->m_rtdev_targp->bt_daxdev)
-> > > +			if (bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
-> > > +					      sb->s_blocksize) == 0)
-> > > +				rtdev_is_dax = true;
-> > 
-> > .... as this code here needs to turn off DAX here if any device
-> > in the filesystem doesn't support DAX....
-> 
-> I think it'd be useful to be able to have a pmem rt device even if the
-> data device doesn't support it.  Or rather, I have a few clients who
-> have expressed interest in this sort of configuration.
-
-Understood.
-
-I suspect all this means we can only support DAX on the rt device by
-setting the RT flag on file create, at least until the dynamic S_DAX
-issues are sorted out.  And that also means it can't be cleared from
-files that have it set. So perhaps all we need to do is disallow
-changing the RT flag on regular files via the ioctl if XFS_MOUNT_DAX
-is set?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index d1dfc5a..99fba20 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -42,13 +42,18 @@ copy_range_help(void)
+ "));
+ }
+ 
++/*
++ * Issue a raw copy_file_range syscall; for our test program we don't want the
++ * glibc buffered copy fallback.
++ */
+ static loff_t
+-copy_file_range(int fd, loff_t *src, loff_t *dst, size_t len)
++copy_file_range_cmd(int fd, loff_t *src, loff_t *dst, size_t len)
+ {
+ 	loff_t ret;
+ 
+ 	do {
+-		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst, len, 0);
++		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst,
++				len, 0);
+ 		if (ret == -1) {
+ 			perror("copy_range");
+ 			return errno;
+@@ -130,7 +135,7 @@ copy_range_f(int argc, char **argv)
+ 		copy_dst_truncate();
+ 	}
+ 
+-	ret = copy_file_range(fd, &src, &dst, len);
++	ret = copy_file_range_cmd(fd, &src, &dst, len);
+ 	close(fd);
+ 	return ret;
+ }
