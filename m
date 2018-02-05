@@ -1,153 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:42485 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751530AbeBCNQq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Feb 2018 08:16:46 -0500
-Received: by mail-qt0-f193.google.com with SMTP id c2so34336625qtn.9
-        for <linux-xfs@vger.kernel.org>; Sat, 03 Feb 2018 05:16:45 -0800 (PST)
-From: Marco A Benatto <marco.antonio.780@gmail.com>
-Subject: [PATCH] xfs_mdrestore: Don't rewind source file stream
-Date: Sat,  3 Feb 2018 11:16:36 -0200
-Message-Id: <1517663796-89208-1-git-send-email-marco.antonio.780@gmail.com>
-In-Reply-To: <20180202202729.GC4849@magnolia>
-References: <20180202202729.GC4849@magnolia>
+Received: from bombadil.infradead.org ([65.50.211.133]:50623 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750943AbeBEHji (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 02:39:38 -0500
+Received: from 178.114.220.110.wireless.dyn.drei.com ([178.114.220.110] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.89 #1 (Red Hat Linux))
+        id 1eibNJ-0004Ui-Qq
+        for linux-xfs@vger.kernel.org; Mon, 05 Feb 2018 07:39:38 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: rewrite the fdatasync optimization
+Date: Mon,  5 Feb 2018 08:39:33 +0100
+Message-Id: <20180205073933.17065-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
 
-Today, xfs_mdrestore from stdin will fail if the -i flag is
-specified, because it attempts to rewind the stream after
-the initial read of the metablock.  This fails, and
-results in an abort with "specified file is not a metadata
-dump."
+Currently we need to the ilock over the log force in xfs_fsync so that we
+can protect ili_fsync_fields against incorrect manipulation.
 
-Read the metablock exactly once in main(), validate the magic,
-print informational flags if requested, and then pass it to
-perform_restore() which will then continue the restore process.
+But if instead we add new XFS_ILOG_VERSION pseudo log area similar to the
+timestamp one we can use that to just record the last dirty / fdatasync
+dirty lsn as long as the inode is pinned, and clear it when unpinning to
+avoid holding the ilock over I/O.
 
-Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
+This will drastically reduce latency on multithreaded workloads that
+mix writes with fsync calls.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mdrestore/xfs_mdrestore.c | 55 +++++++++++++++++++++++------------------------
- 1 file changed, 27 insertions(+), 28 deletions(-)
+ fs/xfs/libxfs/xfs_log_format.h | 11 +++++++++--
+ fs/xfs/xfs_file.c              | 20 ++++++--------------
+ fs/xfs/xfs_inode.c             |  2 --
+ fs/xfs/xfs_inode_item.c        | 13 ++++++++++---
+ fs/xfs/xfs_inode_item.h        |  2 +-
+ fs/xfs/xfs_iomap.c             |  3 +--
+ fs/xfs/xfs_trans_inode.c       | 11 +----------
+ 7 files changed, 28 insertions(+), 34 deletions(-)
 
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 0bb4ac8..3db740d 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -51,35 +51,34 @@ print_progress(const char *fmt, ...)
- 	progress_since_warning = 1;
- }
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 349d9f8edb89..0cb4875b29ec 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -327,6 +327,13 @@ struct xfs_inode_log_format_32 {
+  */
+ #define XFS_ILOG_TIMESTAMP	0x4000
  
 +/*
-+ * perform_restore() -- do the actual work to restore the metadump 
-+ *
-+ * @src_f: A FILE pointer to the source metadump
-+ * @dst_fd: the file descriptor for the target file
-+ * @is_target_file: designates whether the target is a regular file
-+ * @mbp: pointer to metadump's first xfs_metablock, read and verified by the caller
-+ *  
-+ * src_f should be positioned just past a read the previously validated metablock
++ * Similar for this one:  it means we increased the inode version, which
++ * when combined with just XFS_ILOG_TIMESTAMP does not require blocking
++ * in fdatasync.
 + */
- static void
- perform_restore(
- 	FILE			*src_f,
- 	int			dst_fd,
--	int			is_target_file)
-+	int			is_target_file,
-+	const struct xfs_metablock	*mbp)
++#define XFS_ILOG_VERSION	0x8000
++
+ #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+ 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
+ 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
+@@ -343,8 +350,8 @@ struct xfs_inode_log_format_32 {
+ 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
+ 				 XFS_ILOG_DEV | XFS_ILOG_ADATA | \
+ 				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT | \
+-				 XFS_ILOG_TIMESTAMP | XFS_ILOG_DOWNER | \
+-				 XFS_ILOG_AOWNER)
++				 XFS_ILOG_DOWNER | XFS_ILOG_AOWNER | \
++				 XFS_ILOG_TIMESTAMP | XFS_ILOG_VERSION)
+ 
+ static inline int xfs_ilog_fbroot(int w)
  {
--	xfs_metablock_t 	*metablock;	/* header + index + blocks */
-+	struct xfs_metablock 	*metablock, tmb;	/* header + index + blocks */
- 	__be64			*block_index;
- 	char			*block_buffer;
- 	int			block_size;
- 	int			max_indices;
- 	int			cur_index;
- 	int			mb_count;
--	xfs_metablock_t		tmb;
- 	xfs_sb_t		sb;
- 	int64_t			bytes_read;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8601275cc5e6..eeb72f2b10c4 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -165,27 +165,19 @@ xfs_file_fsync(
+ 	 * All metadata updates are logged, which means that we just have to
+ 	 * flush the log up to the latest LSN that touched the inode. If we have
+ 	 * concurrent fsync/fdatasync() calls, we need them to all block on the
+-	 * log force before we clear the ili_fsync_fields field. This ensures
+-	 * that we don't get a racing sync operation that does not wait for the
+-	 * metadata to hit the journal before returning. If we race with
+-	 * clearing the ili_fsync_fields, then all that will happen is the log
+-	 * force will do nothing as the lsn will already be on disk. We can't
+-	 * race with setting ili_fsync_fields because that is done under
+-	 * XFS_ILOCK_EXCL, and that can't happen because we hold the lock shared
+-	 * until after the ili_fsync_fields is cleared.
++	 * log force before returning.
+ 	 */
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	if (xfs_ipincount(ip)) {
+-		if (!datasync ||
+-		    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
++		if (datasync)
++			lsn = ip->i_itemp->ili_datasync_lsn;
++		else
+ 			lsn = ip->i_itemp->ili_last_lsn;
+ 	}
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+-	if (lsn) {
++	if (lsn)
+ 		error = _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, &log_flushed);
+-		ip->i_itemp->ili_fsync_fields = 0;
+-	}
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+ 	/*
+ 	 * If we only have a single device, and the log force about was
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 604ee384a00a..a57772553a2a 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2385,7 +2385,6 @@ xfs_ifree_cluster(
+ 
+ 			iip->ili_last_fields = iip->ili_fields;
+ 			iip->ili_fields = 0;
+-			iip->ili_fsync_fields = 0;
+ 			iip->ili_logged = 1;
+ 			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
+ 						&iip->ili_item.li_lsn);
+@@ -3649,7 +3648,6 @@ xfs_iflush_int(
+ 	 */
+ 	iip->ili_last_fields = iip->ili_fields;
+ 	iip->ili_fields = 0;
+-	iip->ili_fsync_fields = 0;
+ 	iip->ili_logged = 1;
+ 
+ 	xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index d5037f060d6f..3e33a4f421ed 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -442,7 +442,8 @@ xfs_inode_item_format(
+ 	}
+ 
+ 	/* update the format with the exact fields we actually logged */
+-	ilf->ilf_fields |= (iip->ili_fields & ~XFS_ILOG_TIMESTAMP);
++	ilf->ilf_fields |=
++		(iip->ili_fields & ~(XFS_ILOG_TIMESTAMP | XFS_ILOG_VERSION));
+ }
+ 
+ /*
+@@ -630,6 +631,9 @@ xfs_inode_item_committed(
+ 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
+ 
++	iip->ili_last_lsn = 0;
++	iip->ili_datasync_lsn = 0;
++
+ 	if (xfs_iflags_test(ip, XFS_ISTALE)) {
+ 		xfs_inode_item_unpin(lip, 0);
+ 		return -1;
+@@ -646,7 +650,11 @@ xfs_inode_item_committing(
+ 	struct xfs_log_item	*lip,
+ 	xfs_lsn_t		lsn)
+ {
+-	INODE_ITEM(lip)->ili_last_lsn = lsn;
++	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
++
++	iip->ili_last_lsn = lsn;
++	if (iip->ili_fields & ~(XFS_ILOG_TIMESTAMP | XFS_ILOG_VERSION))
++		iip->ili_datasync_lsn = lsn;
+ }
+ 
+ /*
+@@ -826,7 +834,6 @@ xfs_iflush_abort(
+ 		 * attempted.
+ 		 */
+ 		iip->ili_fields = 0;
+-		iip->ili_fsync_fields = 0;
+ 	}
+ 	/*
+ 	 * Release the inode's flush lock since we're done with it.
+diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+index b72373a33cd9..9377ff41322f 100644
+--- a/fs/xfs/xfs_inode_item.h
++++ b/fs/xfs/xfs_inode_item.h
+@@ -30,11 +30,11 @@ typedef struct xfs_inode_log_item {
+ 	struct xfs_inode	*ili_inode;	   /* inode ptr */
+ 	xfs_lsn_t		ili_flush_lsn;	   /* lsn at last flush */
+ 	xfs_lsn_t		ili_last_lsn;	   /* lsn at last transaction */
++	xfs_lsn_t		ili_datasync_lsn;
+ 	unsigned short		ili_lock_flags;	   /* lock flags */
+ 	unsigned short		ili_logged;	   /* flushed logged data */
+ 	unsigned int		ili_last_fields;   /* fields when flushed */
+ 	unsigned int		ili_fields;	   /* fields to be logged */
+-	unsigned int		ili_fsync_fields;  /* logged since last fsync */
+ } xfs_inode_log_item_t;
+ 
+ static inline int xfs_inode_clean(xfs_inode_t *ip)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 66e1edbfb2b2..221d218f08a9 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1090,8 +1090,7 @@ xfs_file_iomap_begin(
+ 		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
+ 	}
+ 
+-	if (xfs_ipincount(ip) && (ip->i_itemp->ili_fsync_fields
+-				& ~XFS_ILOG_TIMESTAMP))
++	if (xfs_ipincount(ip) && ip->i_itemp->ili_datasync_lsn)
+ 		iomap->flags |= IOMAP_F_DIRTY;
+ 
+ 	xfs_bmbt_to_iomap(ip, iomap, &imap);
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 4a89da4b6fe7..0f9fbdea86ba 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -101,15 +101,6 @@ xfs_trans_log_inode(
+ 	ASSERT(ip->i_itemp != NULL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
  
 -	/*
--	 * read in first blocks (superblock 0), set "inprogress" flag for it,
--	 * read in the rest of the file, and if complete, clear SB 0's
--	 * "inprogress flag"
+-	 * Record the specific change for fdatasync optimisation. This
+-	 * allows fdatasync to skip log forces for inodes that are only
+-	 * timestamp dirty. We do this before the change count so that
+-	 * the core being logged in this case does not impact on fdatasync
+-	 * behaviour.
 -	 */
+-	ip->i_itemp->ili_fsync_fields |= flags;
 -
--	if (fread(&tmb, sizeof(tmb), 1, src_f) != 1)
--		fatal("error reading from file: %s\n", strerror(errno));
--
--	if (be32_to_cpu(tmb.mb_magic) != XFS_MD_MAGIC)
--		fatal("specified file is not a metadata dump\n");
--
-+	tmb = *mbp;
- 	block_size = 1 << tmb.mb_blocklog;
- 	max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
- 
-@@ -211,6 +210,7 @@ main(
- 	int		open_flags;
- 	struct stat	statbuf;
- 	int		is_target_file;
-+	xfs_metablock_t		mb;
- 
- 	progname = basename(argv[0]);
- 
-@@ -237,7 +237,12 @@ main(
- 	if (!show_info && argc - optind != 2)
- 		usage();
- 
--	/* open source */
-+	/*
-+	 * open source and test if this really is a dump. The first metadump block
-+	 * will be passed to perform_restore() which will continue to read the
-+	 * file from this point. This avoids rewind the stream, which causes
-+	 * restore to fail when source was being read from stdin.
-+ 	 */
- 	if (strcmp(argv[optind], "-") == 0) {
- 		src_f = stdin;
- 		if (isatty(fileno(stdin)))
-@@ -248,15 +253,12 @@ main(
- 			fatal("cannot open source dump file\n");
+ 	/*
+ 	 * First time we log the inode in a transaction, bump the inode change
+ 	 * counter if it is configured for this to occur. While we have the
+@@ -122,7 +113,7 @@ xfs_trans_log_inode(
+ 	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+ 	    IS_I_VERSION(VFS_I(ip))) {
+ 		if (inode_maybe_inc_iversion(VFS_I(ip), flags & XFS_ILOG_CORE))
+-			flags |= XFS_ILOG_CORE;
++			flags |= XFS_ILOG_VERSION;
  	}
  
--	if (show_info) {
--		xfs_metablock_t		mb;
--
--		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
--			fatal("error reading from file: %s\n", strerror(errno));
--
--		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
--			fatal("specified file is not a metadata dump\n");
-+	if (fread(&mb, sizeof(mb), 1, src_f) != 1)
-+		fatal("error reading from file: %s\n", strerror(errno));
-+	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
-+		fatal("specified file is not a metadata dump\n");
- 
-+	if (show_info) {
- 		if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
- 			printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
- 			argv[optind],
-@@ -270,9 +272,6 @@ main(
- 
- 		if (argc - optind == 1)
- 			exit(0);
--
--		/* Go back to the beginning for the restore function */
--		fseek(src_f, 0L, SEEK_SET);
- 	}
- 
- 	optind++;
-@@ -301,7 +300,7 @@ main(
- 	if (dst_fd < 0)
- 		fatal("couldn't open target \"%s\"\n", argv[optind]);
- 
--	perform_restore(src_f, dst_fd, is_target_file);
-+	perform_restore(src_f, dst_fd, is_target_file, &mb);
- 
- 	close(dst_fd);
- 	if (src_f != stdin)
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
 -- 
-1.8.3.1
+2.14.2
 
