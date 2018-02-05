@@ -1,171 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33736 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751638AbeBCNSE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Feb 2018 08:18:04 -0500
-Received: by mail-lf0-f67.google.com with SMTP id t139so35525160lff.0
-        for <linux-xfs@vger.kernel.org>; Sat, 03 Feb 2018 05:18:03 -0800 (PST)
+Received: from aserp2120.oracle.com ([141.146.126.78]:52074 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751562AbeBEWlC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 17:41:02 -0500
+Date: Mon, 5 Feb 2018 14:40:57 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs_scrub: call for testing
+Message-ID: <20180205224057.GK4849@magnolia>
+References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
+ <20180205161049.7e22aa09@harpe.intellique.com>
+ <61166e99-1195-1192-d229-f7e01f1d52da@sandeen.net>
+ <20180205164412.GF4849@magnolia>
+ <86b1a8c3-4228-c0bb-84dd-3c9baae2d752@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <1517663796-89208-1-git-send-email-marco.antonio.780@gmail.com>
-References: <20180202202729.GC4849@magnolia> <1517663796-89208-1-git-send-email-marco.antonio.780@gmail.com>
-From: Marco Benatto <marco.antonio.780@gmail.com>
-Date: Sat, 3 Feb 2018 11:18:01 -0200
-Message-ID: <CADHkTqUJrLxG6XwtHMGKRHq0uqnB625FDg_EoNgXRzigq=9UrA@mail.gmail.com>
-Subject: Re: [PATCH] xfs_mdrestore: Don't rewind source file stream
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <86b1a8c3-4228-c0bb-84dd-3c9baae2d752@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Emmanuel Florac <eflorac@intellique.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi Darrick,
+On Mon, Feb 05, 2018 at 10:55:22AM -0600, Eric Sandeen wrote:
+> 
+> 
+> On 2/5/18 10:44 AM, Darrick J. Wong wrote:
+> >>> root@bareos16:~# ./xfs_scrub /mnt/raid/
+> >>> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+> >>> Error: /mnt/raid: Kernel metadata scrubbing facility is not available.
+> >>> Info: /mnt/raid: Scrub aborted after phase 1.
+> >>> /mnt/raid: 2 errors found.
+> >> Yup.  TBH I'm not a fan of listing "your kernel can't scrub" as
+> >> "errors found."  I think we should find a way around that.
+> > What do you mean by that?
+> > 
+> > --D
+> > 
+> 
+> When people run a tool like scrub and they see "errors found"
+> at the end of the run, I think it's very easy to have that register
+> as "filesystem errors found" which is not the case here.
+> 
+> If a kernel can't do scrub at all, "2 errors found" is a confusing
+> message - I'd rather find a way to not conflate filesystem
+> errors with operational errors (or simply missing capabilities).
+> 
+> As a first cut I might suggest that if required capabilities for
+> the requested action were not found, we should not even print
+> the "errors found" line, just the informational text.  i.e.
+> just reset the error counters in that specific case before exit.
 
-just resent with the changes for the reviews you mentioned.
+Yeah.  As you and I have been batting around on IRC all day, I've
+changed most of the non-fs-corruption str_warn/str_error calls into
+str_info since they pretty much all abort the scrub anyway (which is
+itself recorded as a runtime error).
 
-Please, let me know if this seems ok now.
+--D
 
-Thanks,
-
-On Sat, Feb 3, 2018 at 11:16 AM, Marco A Benatto
-<marco.antonio.780@gmail.com> wrote:
-> Today, xfs_mdrestore from stdin will fail if the -i flag is
-> specified, because it attempts to rewind the stream after
-> the initial read of the metablock.  This fails, and
-> results in an abort with "specified file is not a metadata
-> dump."
->
-> Read the metablock exactly once in main(), validate the magic,
-> print informational flags if requested, and then pass it to
-> perform_restore() which will then continue the restore process.
->
-> Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
-> ---
->  mdrestore/xfs_mdrestore.c | 55 +++++++++++++++++++++++------------------------
->  1 file changed, 27 insertions(+), 28 deletions(-)
->
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index 0bb4ac8..3db740d 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -51,35 +51,34 @@ print_progress(const char *fmt, ...)
->         progress_since_warning = 1;
->  }
->
-> +/*
-> + * perform_restore() -- do the actual work to restore the metadump
-> + *
-> + * @src_f: A FILE pointer to the source metadump
-> + * @dst_fd: the file descriptor for the target file
-> + * @is_target_file: designates whether the target is a regular file
-> + * @mbp: pointer to metadump's first xfs_metablock, read and verified by the caller
-> + *
-> + * src_f should be positioned just past a read the previously validated metablock
-> + */
->  static void
->  perform_restore(
->         FILE                    *src_f,
->         int                     dst_fd,
-> -       int                     is_target_file)
-> +       int                     is_target_file,
-> +       const struct xfs_metablock      *mbp)
->  {
-> -       xfs_metablock_t         *metablock;     /* header + index + blocks */
-> +       struct xfs_metablock    *metablock, tmb;        /* header + index + blocks */
->         __be64                  *block_index;
->         char                    *block_buffer;
->         int                     block_size;
->         int                     max_indices;
->         int                     cur_index;
->         int                     mb_count;
-> -       xfs_metablock_t         tmb;
->         xfs_sb_t                sb;
->         int64_t                 bytes_read;
->
-> -       /*
-> -        * read in first blocks (superblock 0), set "inprogress" flag for it,
-> -        * read in the rest of the file, and if complete, clear SB 0's
-> -        * "inprogress flag"
-> -        */
-> -
-> -       if (fread(&tmb, sizeof(tmb), 1, src_f) != 1)
-> -               fatal("error reading from file: %s\n", strerror(errno));
-> -
-> -       if (be32_to_cpu(tmb.mb_magic) != XFS_MD_MAGIC)
-> -               fatal("specified file is not a metadata dump\n");
-> -
-> +       tmb = *mbp;
->         block_size = 1 << tmb.mb_blocklog;
->         max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
->
-> @@ -211,6 +210,7 @@ main(
->         int             open_flags;
->         struct stat     statbuf;
->         int             is_target_file;
-> +       xfs_metablock_t         mb;
->
->         progname = basename(argv[0]);
->
-> @@ -237,7 +237,12 @@ main(
->         if (!show_info && argc - optind != 2)
->                 usage();
->
-> -       /* open source */
-> +       /*
-> +        * open source and test if this really is a dump. The first metadump block
-> +        * will be passed to perform_restore() which will continue to read the
-> +        * file from this point. This avoids rewind the stream, which causes
-> +        * restore to fail when source was being read from stdin.
-> +        */
->         if (strcmp(argv[optind], "-") == 0) {
->                 src_f = stdin;
->                 if (isatty(fileno(stdin)))
-> @@ -248,15 +253,12 @@ main(
->                         fatal("cannot open source dump file\n");
->         }
->
-> -       if (show_info) {
-> -               xfs_metablock_t         mb;
-> -
-> -               if (fread(&mb, sizeof(mb), 1, src_f) != 1)
-> -                       fatal("error reading from file: %s\n", strerror(errno));
-> -
-> -               if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
-> -                       fatal("specified file is not a metadata dump\n");
-> +       if (fread(&mb, sizeof(mb), 1, src_f) != 1)
-> +               fatal("error reading from file: %s\n", strerror(errno));
-> +       if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
-> +               fatal("specified file is not a metadata dump\n");
->
-> +       if (show_info) {
->                 if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
->                         printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
->                         argv[optind],
-> @@ -270,9 +272,6 @@ main(
->
->                 if (argc - optind == 1)
->                         exit(0);
-> -
-> -               /* Go back to the beginning for the restore function */
-> -               fseek(src_f, 0L, SEEK_SET);
->         }
->
->         optind++;
-> @@ -301,7 +300,7 @@ main(
->         if (dst_fd < 0)
->                 fatal("couldn't open target \"%s\"\n", argv[optind]);
->
-> -       perform_restore(src_f, dst_fd, is_target_file);
-> +       perform_restore(src_f, dst_fd, is_target_file, &mb);
->
->         close(dst_fd);
->         if (src_f != stdin)
+> -Eric
 > --
-> 1.8.3.1
->
-
-
-
--- 
-Marco Antonio Benatto
-Linux user ID: #506236
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
