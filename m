@@ -1,67 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42178 "EHLO newverein.lst.de"
+Received: from mail1.g1.pair.com ([66.39.3.162]:59221 "EHLO mail1.g1.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751835AbeBFHX6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Feb 2018 02:23:58 -0500
-Date: Tue, 6 Feb 2018 08:23:56 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: rewrite the fdatasync optimization
-Message-ID: <20180206072356.GB1649@lst.de>
-References: <20180205073933.17065-1-hch@lst.de> <20180205221726.c2hdvaairki27gxf@destitution>
+        id S1753017AbeBEPKr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Feb 2018 10:10:47 -0500
+Date: Mon, 5 Feb 2018 16:10:49 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_scrub: call for testing
+Message-ID: <20180205161049.7e22aa09@harpe.intellique.com>
+In-Reply-To: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
+References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180205221726.c2hdvaairki27gxf@destitution>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/+6plJK5jh1m6GAfvCkCIR7y"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Feb 06, 2018 at 09:17:26AM +1100, Dave Chinner wrote:
-> > Currently we need to the ilock over the log force in xfs_fsync so that we
-> > can protect ili_fsync_fields against incorrect manipulation.
-> > 
-> > But if instead we add new XFS_ILOG_VERSION pseudo log area similar to the
-> > timestamp one we can use that to just record the last dirty / fdatasync
-> > dirty lsn as long as the inode is pinned, and clear it when unpinning to
-> > avoid holding the ilock over I/O.
-> 
-> I thought that NFS requires the iversion changes to be made stable
-> at the same time as the data changes they correspond to is made
-> stable? i.e. NFS requires us to stabilise the on disk iversion field
-> during fdatasync.
+--Sig_/+6plJK5jh1m6GAfvCkCIR7y
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Yes, and this patch doesn't change that behavior.  The reason why the
-new XFS_ILOG_VERSION flag is needed is to be able to check if
-an fdatasync needs to flush out an inode log item.  This is done the
-same way we did the XFS_ILOG_TIMESTAMP optimization, i.e. mark the
-version updates as XFS_ILOG_VERSION, which gets propagatated to
-XFS_ILOG_CORE when flushing (and we still commit every transaction
-with a dirty inode), but we then use the ili_datasync_lsn field
-that is only set if something that is not the timestamp or version
-is logged to check in fdatasync if we need to force the log or not.
+Le Fri, 2 Feb 2018 15:36:33 -0600
+Eric Sandeen <sandeen@sandeen.net> =C3=A9crivait:
 
-> 
-> As it is, I think this change XFS_ILOG_VERSION change is unnecessary
-> because Jeff Layton's changes to avoid iversion changes when the
-> value is not being sampled has been merged. Hence iversion won't be
-> changed on every write anymore unless NFS is in the picture and is
-> sampling iversion. 
+> I'd really value feedback on scrub as it stand at this point -
+> Is the documentation clear?  Is the output correct?  Do the
+> tool's arguments make sense?  Does it segfault?  Does it
+> find real errors?  Does it crash your kernel? Does it
+> eat your data?
 
-It still is needed.  We need to change i_version everytime we update
-the timestamps (IFF it is queried in 4.15+), and we need to log every
-transaction that updates timestamps and i_version.  But we do not need
-to force out the log in fdatasync if only the timestamps and i_version
-have changed.
+Wouldn't it be better to remove the parts about repairing the
+filesystem in the documentation? The man page states that it *can't*
+repair the filesystem, but nonetheless explains under which
+circumstances it *won't* be able to repair (in some theoretical future
+version with repair capabilities, I suppose). Ditto with the -n and -y
+option, I suppose they're both basically noop at the moment? That's
+quite unclear what it actually does.
 
-So the only change in 4.15 is that for non-NFS workloads the change
-might not matter that much, but the fundamental issue is the same.
+Regarding FITRIM for flash storage, I think most people refers to it as
+"TRIM", not the ioctl name FITRIM. Using "TRIM" would probably be more
+understandable IMO.
 
-> The change to use ili_datasync_lsn is what reduces the latency
-> because the ilock is not held over the log force anymore. That's
-> useful and stands alone from the iversion modification so I
-> think, at minimum, this needs to be separated into two patches....
+Because I'm such a funny boy, I just wanted to see what happens when
+running xfs_scrub on an unsupported kernel. On both a 4.14.x and a
+3.18.x it seems about right:
 
-I can split it out.  XFS_ILOG_VERSION is the bit that makes our
-old XFS_ILOG_TIMESTAMP optimization actually work on v5 file systems.
+root@bareos16:~# ./xfs_scrub /mnt/raid/
+EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+Error: /mnt/raid: Kernel metadata scrubbing facility is not available.
+Info: /mnt/raid: Scrub aborted after phase 1.
+/mnt/raid: 2 errors found.
+
+I don't have any system running 4.15 to test its effects, but I'll do
+as soon as possible.
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/+6plJK5jh1m6GAfvCkCIR7y
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlp4c/oACgkQX3jQXNUicVarbgCfQqFH5yAI8Xzk22pkpPVwQBow
+Vf4AoMXZ5/wH2BSi4om1sw41XncUmvxo
+=jBpS
+-----END PGP SIGNATURE-----
+
+--Sig_/+6plJK5jh1m6GAfvCkCIR7y--
