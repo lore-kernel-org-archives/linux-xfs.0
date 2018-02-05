@@ -1,67 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:45287 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751901AbeBBWes (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Feb 2018 17:34:48 -0500
-Date: Sat, 3 Feb 2018 09:35:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS over device mapper dm-thin device
-Message-ID: <20180202223541.i27bfjij7itt3q5r@destitution>
-References: <147a1764-1988-4efd-4f02-e942a1001b4e@redhat.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:56985 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752582AbeBERIE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Feb 2018 12:08:04 -0500
+Date: Mon, 5 Feb 2018 18:08:07 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_scrub: call for testing
+Message-ID: <20180205180807.261e822f@harpe.intellique.com>
+In-Reply-To: <61166e99-1195-1192-d229-f7e01f1d52da@sandeen.net>
+References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
+        <20180205161049.7e22aa09@harpe.intellique.com>
+        <61166e99-1195-1192-d229-f7e01f1d52da@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <147a1764-1988-4efd-4f02-e942a1001b4e@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/4p=N_xJYo_D7lJu/3Bl3.gV"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Todd Gill <tgill@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Feb 02, 2018 at 04:45:33PM -0500, Todd Gill wrote:
-> 
-> Hi,
-> 
-> I'd like to be able to take a snapshot of an XFS filesystem on top of
-> dm-thin.
-> 
-> The goal for the snapshot is:
-> 
->     - fast to complete (couple seconds or better)
->     - independent of origin (UUID updated?)
->     - read/write
-> 
-> To satisfy the independent goal, I'm updating the UUID on the snapshot.
-> Currently "xfs_admin -U xxx" takes in the ballpark of 14 seconds on my
-> test system.
+--Sig_/4p=N_xJYo_D7lJu/3Bl3.gV
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-There's a very good chance that this is caused by dm-thinp doing
-COW for the storage underlying the superblocks modified by the UUID
-change.
+Le Mon, 5 Feb 2018 09:49:41 -0600
+Eric Sandeen <sandeen@sandeen.net> =C3=A9crivait:
 
-Best to start by measuring how much IO is going on when you change
-the UUID.  e.g. `iostat -x -d -m 1`. An strace showing how long the
-xfs_db read() and write() calls to the dm-thinp device would lso be
-instructive.
+> >=20
+> > Wouldn't it be better to remove the parts about repairing the
+> > filesystem in the documentation? The man page states that it *can't*
+> > repair the filesystem, but nonetheless explains under which
+> > circumstances it *won't* be able to repair (in some theoretical
+> > future version with repair capabilities, I suppose). Ditto with the
+> > -n and -y option, I suppose they're both basically noop at the
+> > moment? That's quite unclear what it actually does. =20
+>=20
+> I'll take another look at the manpage.  The userspace tool today /can/
+> do some degree of optimization or repair if the kernel supports it,
+> so I was reluctant to suggest removing all such language.
+>=20
+> So, "-n" is not a no-op, it's a check-only ("scrub") pass vs. the
+> default no-argument action of "optimizing," or the extra -y action
+> which would repair. If that's not all clear, I'd appreciate
+> suggestions to clean it up.
+>=20
 
-> Is there a better approach to achieve the goals?
+Now I'm wondering: is the default option of "optimizing" really
+useful? Wouldn't it be better to simply have a check-only (-n) version,
+and a full-fledged version when given no argument?=20
+Or maybe do a simple optimisation, optionally,  when given the '-y' (or
+some other flag) option?=20
 
-No, you are doing the right thing.
+I say that after having a look at man pages from some comparable
+utilities, namely xfs_repair, btrfs_scrub and "zpool scrub", who all
+default to "full operation" without options.
 
-> Or can the UUID update
-> be changed to be faster?
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
-Not sure - there's a fixed amount of modification we need to make
-to change the UUID so I'm not sure there is any optimisations we
-can make here.
+--Sig_/4p=N_xJYo_D7lJu/3Bl3.gV
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
 
-If it's the speed of the underlying snapshot device doing COW after
-a snapshot that is causing this issue, then there's probably nothing
-we can do about it at the filesystem layer, anyway....
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Cheers,
+iEYEARECAAYFAlp4j3cACgkQX3jQXNUicVa72QCguLzxKHD7113jR3sO/RWjttVq
+9c8An3ML54+FfxEtalYVOHI8x4la5Zhz
+=j7uI
+-----END PGP SIGNATURE-----
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Sig_/4p=N_xJYo_D7lJu/3Bl3.gV--
