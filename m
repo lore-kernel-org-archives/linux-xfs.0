@@ -1,40 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40768 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750796AbeBEWhX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Feb 2018 17:37:23 -0500
-Subject: Re: XFS over device mapper dm-thin device
-References: <147a1764-1988-4efd-4f02-e942a1001b4e@redhat.com>
- <20180202223541.i27bfjij7itt3q5r@destitution>
- <9c3ec8ff-3595-c889-3abe-7f069292be0d@sandeen.net>
- <20180205223604.wgacfnsrsaqrwz7n@destitution>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7ed418fa-fa47-1e67-5de8-87d5ba74fbbc@sandeen.net>
-Date: Mon, 5 Feb 2018 16:37:22 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:60022 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751624AbeBEWkF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 17:40:05 -0500
+Date: Mon, 5 Feb 2018 14:39:59 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs_scrub: call for testing
+Message-ID: <20180205223959.GJ4849@magnolia>
+References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
+ <20180205161049.7e22aa09@harpe.intellique.com>
+ <61166e99-1195-1192-d229-f7e01f1d52da@sandeen.net>
+ <20180205180807.261e822f@harpe.intellique.com>
 MIME-Version: 1.0
-In-Reply-To: <20180205223604.wgacfnsrsaqrwz7n@destitution>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180205180807.261e822f@harpe.intellique.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Todd Gill <tgill@redhat.com>, linux-xfs@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
-
-
-On 2/5/18 4:36 PM, Dave Chinner wrote:
->> In retrospect I think we (I) should have left the "metadata" uuid as
->> the one to match the log, not the user-facing one.
-> I suspect we can just change the log recovery code to accept either
-> sb_uuid or sb_metauuid if the metauuid feature bit is set and
-> change xfs_db to not rewrite the log when metauuid is used....
+On Mon, Feb 05, 2018 at 06:08:07PM +0100, Emmanuel Florac wrote:
+> Le Mon, 5 Feb 2018 09:49:41 -0600
+> Eric Sandeen <sandeen@sandeen.net> écrivait:
 > 
-> Cheers,
+> > > 
+> > > Wouldn't it be better to remove the parts about repairing the
+> > > filesystem in the documentation? The man page states that it *can't*
+> > > repair the filesystem, but nonetheless explains under which
+> > > circumstances it *won't* be able to repair (in some theoretical
+> > > future version with repair capabilities, I suppose). Ditto with the
+> > > -n and -y option, I suppose they're both basically noop at the
+> > > moment? That's quite unclear what it actually does.  
+> > 
+> > I'll take another look at the manpage.  The userspace tool today /can/
+> > do some degree of optimization or repair if the kernel supports it,
+> > so I was reluctant to suggest removing all such language.
+> > 
+> > So, "-n" is not a no-op, it's a check-only ("scrub") pass vs. the
+> > default no-argument action of "optimizing," or the extra -y action
+> > which would repair. If that's not all clear, I'd appreciate
+> > suggestions to clean it up.
+> > 
+> 
+> Now I'm wondering: is the default option of "optimizing" really
+> useful? Wouldn't it be better to simply have a check-only (-n) version,
+> and a full-fledged version when given no argument? 
+> Or maybe do a simple optimisation, optionally,  when given the '-y' (or
+> some other flag) option? 
+> 
+> I say that after having a look at man pages from some comparable
+> utilities, namely xfs_repair, btrfs_scrub and "zpool scrub", who all
+> default to "full operation" without options.
 
-That was my first thought, but then newer userspace UUID changes
-won't be mountable on older kernels.   I don't think we can just
-change it w/o some thought re: compatibility...
+I don't care /that/ much about what 'zpool scrub' does, but I do see
+your point that from the admin's perspective either we fix everything or
+we don't, so there's no need for a -y and we can do what repair does (-n
+means dry run, lack of -n means fix it).
 
--Eric
+--D
+
+> 
+> -- 
+> ------------------------------------------------------------------------
+> Emmanuel Florac     |   Direction technique
+>                     |   Intellique
+>                     |	<eflorac@intellique.com>
+>                     |   +33 1 78 94 84 02
+> ------------------------------------------------------------------------
+
+
