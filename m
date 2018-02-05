@@ -1,213 +1,301 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50282 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752986AbeBEQrx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 11:47:53 -0500
-Date: Mon, 5 Feb 2018 08:47:53 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:60522 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751225AbeBEXWt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 18:22:49 -0500
+Subject: [PATCH 4/7] xfs_scrub: reclassify runtime errors
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_mdrestore: Don't rewind source file stream
-Message-ID: <20180205164753.GG4849@magnolia>
-References: <20180203173219.GE4849@magnolia>
- <1517831434-125895-1-git-send-email-marco.antonio.780@gmail.com>
+Date: Mon, 05 Feb 2018 15:22:39 -0800
+Message-ID: <151787295918.3743.2659991069709220643.stgit@magnolia>
+In-Reply-To: <151787293446.3743.11110014829952400444.stgit@magnolia>
+References: <151787293446.3743.11110014829952400444.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1517831434-125895-1-git-send-email-marco.antonio.780@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco A Benatto <marco.antonio.780@gmail.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 05, 2018 at 09:50:34AM -0200, Marco A Benatto wrote:
-> Today, xfs_mdrestore from stdin will fail if the -i flag is
-> specified, because it attempts to rewind the stream after
-> the initial read of the metablock.  This fails, and
-> results in an abort with "specified file is not a metadata
-> dump."
-> 
-> Read the metablock exactly once in main(), validate the magic,
-> print informational flags if requested, and then pass it to
-> perform_restore() which will then continue the restore process.
-> 
-> Reported-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Marco A Benatto <marco.antonio.780@gmail.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+If the program encounters runtime errors, these should be noted as
+information.  Because these errors abort the execution flow (which is
+counted as a runtime error), we need only call str_info to log the
+event.
 
-> ---
->  mdrestore/xfs_mdrestore.c | 68 +++++++++++++++++++++++------------------------
->  1 file changed, 33 insertions(+), 35 deletions(-)
-> 
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index 0bb4ac8..cbabd56 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -51,57 +51,55 @@ print_progress(const char *fmt, ...)
->  	progress_since_warning = 1;
->  }
->  
-> +/*
-> + * perform_restore() -- do the actual work to restore the metadump 
-> + *
-> + * @src_f: A FILE pointer to the source metadump
-> + * @dst_fd: the file descriptor for the target file
-> + * @is_target_file: designates whether the target is a regular file
-> + * @mbp: pointer to metadump's first xfs_metablock, read and verified by the caller
-> + *  
-> + * src_f should be positioned just past a read the previously validated metablock
-> + */
->  static void
->  perform_restore(
->  	FILE			*src_f,
->  	int			dst_fd,
-> -	int			is_target_file)
-> +	int			is_target_file,
-> +	const struct xfs_metablock	*mbp)
->  {
-> -	xfs_metablock_t 	*metablock;	/* header + index + blocks */
-> +	struct xfs_metablock 	*metablock;	/* header + index + blocks */
->  	__be64			*block_index;
->  	char			*block_buffer;
->  	int			block_size;
->  	int			max_indices;
->  	int			cur_index;
->  	int			mb_count;
-> -	xfs_metablock_t		tmb;
->  	xfs_sb_t		sb;
->  	int64_t			bytes_read;
->  
-> -	/*
-> -	 * read in first blocks (superblock 0), set "inprogress" flag for it,
-> -	 * read in the rest of the file, and if complete, clear SB 0's
-> -	 * "inprogress flag"
-> -	 */
-> -
-> -	if (fread(&tmb, sizeof(tmb), 1, src_f) != 1)
-> -		fatal("error reading from file: %s\n", strerror(errno));
-> -
-> -	if (be32_to_cpu(tmb.mb_magic) != XFS_MD_MAGIC)
-> -		fatal("specified file is not a metadata dump\n");
-> -
-> -	block_size = 1 << tmb.mb_blocklog;
-> +	block_size = 1 << mbp->mb_blocklog;
->  	max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
->  
->  	metablock = (xfs_metablock_t *)calloc(max_indices + 1, block_size);
->  	if (metablock == NULL)
->  		fatal("memory allocation failure\n");
->  
-> -	mb_count = be16_to_cpu(tmb.mb_count);
-> +	mb_count = be16_to_cpu(mbp->mb_count);
->  	if (mb_count == 0 || mb_count > max_indices)
->  		fatal("bad block count: %u\n", mb_count);
->  
->  	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
->  	block_buffer = (char *)metablock + block_size;
->  
-> -	if (fread(block_index, block_size - sizeof(tmb), 1, src_f) != 1)
-> +	if (fread(block_index, block_size - sizeof(struct xfs_metablock), 1, src_f) != 1)
->  		fatal("error reading from file: %s\n", strerror(errno));
->  
->  	if (block_index[0] != 0)
->  		fatal("first block is not the primary superblock\n");
->  
->  
-> -	if (fread(block_buffer, mb_count << tmb.mb_blocklog,
-> +	if (fread(block_buffer, mb_count << mbp->mb_blocklog,
->  			1, src_f) != 1)
->  		fatal("error reading from file: %s\n", strerror(errno));
->  
-> @@ -148,7 +146,7 @@ perform_restore(
->  
->  		for (cur_index = 0; cur_index < mb_count; cur_index++) {
->  			if (pwrite(dst_fd, &block_buffer[cur_index <<
-> -					tmb.mb_blocklog], block_size,
-> +					mbp->mb_blocklog], block_size,
->  					be64_to_cpu(block_index[cur_index]) <<
->  						BBSHIFT) < 0)
->  				fatal("error writing block %llu: %s\n",
-> @@ -167,11 +165,11 @@ perform_restore(
->  		if (mb_count > max_indices)
->  			fatal("bad block count: %u\n", mb_count);
->  
-> -		if (fread(block_buffer, mb_count << tmb.mb_blocklog,
-> +		if (fread(block_buffer, mb_count << mbp->mb_blocklog,
->  								1, src_f) != 1)
->  			fatal("error reading from file: %s\n", strerror(errno));
->  
-> -		bytes_read += block_size + (mb_count << tmb.mb_blocklog);
-> +		bytes_read += block_size + (mb_count << mbp->mb_blocklog);
->  	}
->  
->  	if (progress_since_warning)
-> @@ -211,6 +209,7 @@ main(
->  	int		open_flags;
->  	struct stat	statbuf;
->  	int		is_target_file;
-> +	struct xfs_metablock	mb;
->  
->  	progname = basename(argv[0]);
->  
-> @@ -237,7 +236,12 @@ main(
->  	if (!show_info && argc - optind != 2)
->  		usage();
->  
-> -	/* open source */
-> +	/*
-> +	 * open source and test if this really is a dump. The first metadump block
-> +	 * will be passed to perform_restore() which will continue to read the
-> +	 * file from this point. This avoids rewind the stream, which causes
-> +	 * restore to fail when source was being read from stdin.
-> + 	 */
->  	if (strcmp(argv[optind], "-") == 0) {
->  		src_f = stdin;
->  		if (isatty(fileno(stdin)))
-> @@ -248,15 +252,12 @@ main(
->  			fatal("cannot open source dump file\n");
->  	}
->  
-> -	if (show_info) {
-> -		xfs_metablock_t		mb;
-> -
-> -		if (fread(&mb, sizeof(mb), 1, src_f) != 1)
-> -			fatal("error reading from file: %s\n", strerror(errno));
-> -
-> -		if (be32_to_cpu(mb.mb_magic) != XFS_MD_MAGIC)
-> -			fatal("specified file is not a metadata dump\n");
-> +	if (fread(&mb, sizeof(mb), 1, src_f) != 1)
-> +		fatal("error reading from file: %s\n", strerror(errno));
-> +	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
-> +		fatal("specified file is not a metadata dump\n");
->  
-> +	if (show_info) {
->  		if (mb.mb_info & XFS_METADUMP_INFO_FLAGS) {
->  			printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
->  			argv[optind],
-> @@ -270,9 +271,6 @@ main(
->  
->  		if (argc - optind == 1)
->  			exit(0);
-> -
-> -		/* Go back to the beginning for the restore function */
-> -		fseek(src_f, 0L, SEEK_SET);
->  	}
->  
->  	optind++;
-> @@ -301,7 +299,7 @@ main(
->  	if (dst_fd < 0)
->  		fatal("couldn't open target \"%s\"\n", argv[optind]);
->  
-> -	perform_restore(src_f, dst_fd, is_target_file);
-> +	perform_restore(src_f, dst_fd, is_target_file, &mb);
->  
->  	close(dst_fd);
->  	if (src_f != stdin)
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/fscounters.c  |    4 ++--
+ scrub/inodes.c      |    4 ++--
+ scrub/phase1.c      |    8 ++++----
+ scrub/phase2.c      |    6 +++---
+ scrub/phase3.c      |    2 +-
+ scrub/phase6.c      |    2 +-
+ scrub/read_verify.c |    2 +-
+ scrub/scrub.c       |    8 ++++----
+ scrub/spacemap.c    |    8 ++++----
+ scrub/vfs.c         |    6 +++---
+ 10 files changed, 25 insertions(+), 25 deletions(-)
+
+
+diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+index 4294bf3..ecdf4c6 100644
+--- a/scrub/fscounters.c
++++ b/scrub/fscounters.c
+@@ -139,14 +139,14 @@ xfs_count_all_inodes(
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+ 		moveon = false;
+-		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		str_info(ctx, ctx->mntpoint, _("Could not create workqueue."));
+ 		goto out_free;
+ 	}
+ 	for (agno = 0; agno < ctx->geo.agcount; agno++) {
+ 		ret = workqueue_add(&wq, xfs_count_ag_inodes, agno, ci);
+ 		if (ret) {
+ 			moveon = false;
+-			str_error(ctx, ctx->mntpoint,
++			str_info(ctx, ctx->mntpoint,
+ _("Could not queue AG %u icount work."), agno);
+ 			break;
+ 		}
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 23ec704..57b773e 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -266,7 +266,7 @@ xfs_scan_all_inodes(
+ 	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+-		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		str_info(ctx, ctx->mntpoint, _("Could not create workqueue."));
+ 		return false;
+ 	}
+ 
+@@ -274,7 +274,7 @@ xfs_scan_all_inodes(
+ 		ret = workqueue_add(&wq, xfs_scan_ag_inodes, agno, &si);
+ 		if (ret) {
+ 			si.moveon = false;
+-			str_error(ctx, ctx->mntpoint,
++			str_info(ctx, ctx->mntpoint,
+ _("Could not queue AG %u bulkstat work."), agno);
+ 			break;
+ 		}
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 82c8022..6cd5442 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -134,7 +134,7 @@ _("Must be root to run scrub."));
+ 	}
+ 
+ 	if (!platform_test_xfs_fd(ctx->mnt_fd)) {
+-		str_error(ctx, ctx->mntpoint,
++		str_info(ctx, ctx->mntpoint,
+ _("Does not appear to be an XFS filesystem!"));
+ 		return false;
+ 	}
+@@ -191,7 +191,7 @@ _("Kernel metadata repair facility is not available.  Use -n to scrub."));
+ 	errno = 0;
+ 	fsp = fs_table_lookup(ctx->mntpoint, FS_MOUNT_POINT);
+ 	if (!fsp) {
+-		str_error(ctx, ctx->mntpoint,
++		str_info(ctx, ctx->mntpoint,
+ _("Unable to find XFS information."));
+ 		return false;
+ 	}
+@@ -199,12 +199,12 @@ _("Unable to find XFS information."));
+ 
+ 	/* Did we find the log and rt devices, if they're present? */
+ 	if (ctx->geo.logstart == 0 && ctx->fsinfo.fs_log == NULL) {
+-		str_error(ctx, ctx->mntpoint,
++		str_info(ctx, ctx->mntpoint,
+ _("Unable to find log device path."));
+ 		return false;
+ 	}
+ 	if (ctx->geo.rtblocks && ctx->fsinfo.fs_rt == NULL) {
+-		str_error(ctx, ctx->mntpoint,
++		str_info(ctx, ctx->mntpoint,
+ _("Unable to find realtime device path."));
+ 		return false;
+ 	}
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index 32e2752..edf66df 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -94,7 +94,7 @@ xfs_scan_metadata(
+ 	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+-		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		str_info(ctx, ctx->mntpoint, _("Could not create workqueue."));
+ 		return false;
+ 	}
+ 
+@@ -111,7 +111,7 @@ xfs_scan_metadata(
+ 		ret = workqueue_add(&wq, xfs_scan_ag_metadata, agno, &moveon);
+ 		if (ret) {
+ 			moveon = false;
+-			str_error(ctx, ctx->mntpoint,
++			str_info(ctx, ctx->mntpoint,
+ _("Could not queue AG %u scrub work."), agno);
+ 			goto out;
+ 		}
+@@ -123,7 +123,7 @@ _("Could not queue AG %u scrub work."), agno);
+ 	ret = workqueue_add(&wq, xfs_scan_fs_metadata, 0, &moveon);
+ 	if (ret) {
+ 		moveon = false;
+-		str_error(ctx, ctx->mntpoint,
++		str_info(ctx, ctx->mntpoint,
+ _("Could not queue filesystem scrub work."));
+ 		goto out;
+ 	}
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index f4117b0..a0ee5d9 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -137,7 +137,7 @@ xfs_scan_inodes(
+ 	ictx.moveon = true;
+ 	ictx.icount = ptcounter_init(scrub_nproc(ctx));
+ 	if (!ictx.icount) {
+-		str_error(ctx, ctx->mntpoint, _("Could not create counter."));
++		str_info(ctx, ctx->mntpoint, _("Could not create counter."));
+ 		return false;
+ 	}
+ 
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 9795bf3..f985950 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -485,7 +485,7 @@ xfs_scan_blocks(
+ 			xfs_check_rmap_ioerr, disk_heads(ctx->datadev));
+ 	if (!ve.readverify) {
+ 		moveon = false;
+-		str_error(ctx, ctx->mntpoint,
++		str_info(ctx, ctx->mntpoint,
+ _("Could not create media verifier."));
+ 		goto out_rbad;
+ 	}
+diff --git a/scrub/read_verify.c b/scrub/read_verify.c
+index e816688..ae2e85f 100644
+--- a/scrub/read_verify.c
++++ b/scrub/read_verify.c
+@@ -187,7 +187,7 @@ read_verify_queue(
+ 
+ 	ret = workqueue_add(&rvp->wq, read_verify, 0, tmp);
+ 	if (ret) {
+-		str_error(rvp->ctx, rvp->ctx->mntpoint,
++		str_info(rvp->ctx, rvp->ctx->mntpoint,
+ _("Could not queue read-verify work."));
+ 		free(tmp);
+ 		return false;
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index bc0e2f0..ff5357c 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -219,7 +219,7 @@ xfs_check_metadata(
+ 			return CHECK_DONE;
+ 		case ESHUTDOWN:
+ 			/* FS already crashed, give up. */
+-			str_error(ctx, buf,
++			str_info(ctx, buf,
+ _("Filesystem is shut down, aborting."));
+ 			return CHECK_ABORT;
+ 		case EIO:
+@@ -235,7 +235,7 @@ _("Filesystem is shut down, aborting."));
+ 			 * The first two should never escape the kernel,
+ 			 * and the other two should be reported via sm_flags.
+ 			 */
+-			str_error(ctx, buf,
++			str_info(ctx, buf,
+ _("Kernel bug!  errno=%d"), code);
+ 			/* fall through */
+ 		default:
+@@ -568,7 +568,7 @@ __xfs_scrub_test(
+ 	if (debug_tweak_on("XFS_SCRUB_NO_KERNEL"))
+ 		return false;
+ 	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
+-		str_error(ctx, "XFS_SCRUB_FORCE_REPAIR", "Not supported.");
++		str_info(ctx, "XFS_SCRUB_FORCE_REPAIR", "Not supported.");
+ 		return false;
+ 	}
+ 
+@@ -726,7 +726,7 @@ _("Filesystem is busy, deferring repair."));
+ 			return CHECK_RETRY;
+ 		case ESHUTDOWN:
+ 			/* Filesystem is already shut down, abort. */
+-			str_error(ctx, buf,
++			str_info(ctx, buf,
+ _("Filesystem is shut down, aborting."));
+ 			return CHECK_ABORT;
+ 		case ENOTTY:
+diff --git a/scrub/spacemap.c b/scrub/spacemap.c
+index 2dc6e2b..f631913 100644
+--- a/scrub/spacemap.c
++++ b/scrub/spacemap.c
+@@ -217,7 +217,7 @@ xfs_scan_all_spacemaps(
+ 	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+-		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		str_info(ctx, ctx->mntpoint, _("Could not create workqueue."));
+ 		return false;
+ 	}
+ 	if (ctx->fsinfo.fs_rt) {
+@@ -225,7 +225,7 @@ xfs_scan_all_spacemaps(
+ 				ctx->geo.agcount + 1, &sbx);
+ 		if (ret) {
+ 			sbx.moveon = false;
+-			str_error(ctx, ctx->mntpoint,
++			str_info(ctx, ctx->mntpoint,
+ _("Could not queue rtdev fsmap work."));
+ 			goto out;
+ 		}
+@@ -235,7 +235,7 @@ _("Could not queue rtdev fsmap work."));
+ 				ctx->geo.agcount + 2, &sbx);
+ 		if (ret) {
+ 			sbx.moveon = false;
+-			str_error(ctx, ctx->mntpoint,
++			str_info(ctx, ctx->mntpoint,
+ _("Could not queue logdev fsmap work."));
+ 			goto out;
+ 		}
+@@ -244,7 +244,7 @@ _("Could not queue logdev fsmap work."));
+ 		ret = workqueue_add(&wq, xfs_scan_ag_blocks, agno, &sbx);
+ 		if (ret) {
+ 			sbx.moveon = false;
+-			str_error(ctx, ctx->mntpoint,
++			str_info(ctx, ctx->mntpoint,
+ _("Could not queue AG %u fsmap work."), agno);
+ 			break;
+ 		}
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index 573a2d0..0c5b353 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -145,7 +145,7 @@ scan_fs_dir(
+ 			pthread_mutex_unlock(&sft->lock);
+ 			error = workqueue_add(wq, scan_fs_dir, 0, new_sftd);
+ 			if (error) {
+-				str_error(ctx, ctx->mntpoint,
++				str_info(ctx, ctx->mntpoint,
+ _("Could not queue subdirectory scan work."));
+ 				sft->moveon = false;
+ 				break;
+@@ -203,12 +203,12 @@ scan_fs_tree(
+ 	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+-		str_error(ctx, ctx->mntpoint, _("Could not create workqueue."));
++		str_info(ctx, ctx->mntpoint, _("Could not create workqueue."));
+ 		goto out_free;
+ 	}
+ 	ret = workqueue_add(&wq, scan_fs_dir, 0, sftd);
+ 	if (ret) {
+-		str_error(ctx, ctx->mntpoint,
++		str_info(ctx, ctx->mntpoint,
+ _("Could not queue directory scan work."));
+ 		goto out_free;
+ 	}
+
