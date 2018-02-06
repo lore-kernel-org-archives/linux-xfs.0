@@ -1,252 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50098 "EHLO mx1.redhat.com"
+Received: from mga12.intel.com ([192.55.52.136]:9524 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752851AbeBFSuP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Feb 2018 13:50:15 -0500
-Date: Tue, 6 Feb 2018 13:50:12 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] tests/xfs: rmapbt swapext block reservation overrun test
-Message-ID: <20180206185012.GC3862@bfoster.bfoster>
-References: <20180205174601.51574-1-bfoster@redhat.com>
- <20180206131032.62271-1-bfoster@redhat.com>
- <20180206173023.GL4849@magnolia>
+        id S1753329AbeBFWcC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Feb 2018 17:32:02 -0500
+Subject: Re: [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
+References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
+ <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
+ <20180201234413.idd27uqzqbg54ddk@destitution>
+ <20180202004332.GZ4849@magnolia>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <d267ed33-950e-a5c5-73ce-36da6c940513@intel.com>
+Date: Tue, 6 Feb 2018 15:32:00 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180206173023.GL4849@magnolia>
+In-Reply-To: <20180202004332.GZ4849@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
 
-On Tue, Feb 06, 2018 at 09:30:23AM -0800, Darrick J. Wong wrote:
-> On Tue, Feb 06, 2018 at 08:10:32AM -0500, Brian Foster wrote:
-> > The XFS rmapbt extent swap mechanism performs an extent by extent
-> > swap to ensure the rmapbt is rectified with the appropriate extent
-> > owner information after the operation. This implementation suffers
-> > from a corner case that requires extra reservation if the swap
-> > operation results in bouncing one of the associated inodes between
-> > extent and btree formats. When this corner case occurs, it results
-> > in a transaction block reservation overrun and possible corruption
-> > of the free space accounting.
-> > 
-> > This regression test provides coverage for this corner case. It
-> > creates two files with a large enough extent count to require btree
-> > format, regardless of inode size, and performs a sequence of extent
-> > swaps between them with a decreasing extent count until all extents
-> > are removed from the file(s). This ensures that one of the swaps
-> > covers the btree <-> extent fork format boundary case.
-> > 
-> > This test reproduces fs corruption on rmapbt enabled filesystems
-> > running on kernels without the associated extent swap fix.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > This test reproduces one of the problems targeted to be fixed by the
-> > following patch series:
-> > 
-> >   https://marc.info/?l=linux-xfs&m=151785278525201&w=2
-> > 
-> > Also note that this test depends on currently unmerged xfs_io
-> > functionality. The associated functionality is posted for review here:
-> > 
-> >   https://marc.info/?l=linux-xfs&m=151792224511355&w=2
-> > 
-> > ... and so this test should not be merged until/unless that
-> > functionality is reviewed. Thanks.
-> > 
-> > Brian
-> > 
-> >  tests/xfs/440     | 97 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/440.out |  2 ++
-> >  tests/xfs/group   |  1 +
-> >  3 files changed, 100 insertions(+)
-> >  create mode 100755 tests/xfs/440
-> >  create mode 100644 tests/xfs/440.out
-> > 
-> > diff --git a/tests/xfs/440 b/tests/xfs/440
-> > new file mode 100755
-> > index 00000000..c7667e08
-> > --- /dev/null
-> > +++ b/tests/xfs/440
-> > @@ -0,0 +1,97 @@
-> > +#! /bin/bash
-> > +# FS QA Test 440
-> > +#
-> > +# Regression test for the XFS rmapbt based extent swap algorithm. The extent
-> > +# swap algorithm for rmapbt=1 filesystems unmaps/remaps individual extents to
-> > +# rectify the rmapbt for each extent swapped between inodes. If one of the
-> > +# inodes happens to straddle the extent <-> btree format boundary (which can
-> > +# vary depending on inode size), the unmap/remap sequence can bounce the inodes
-> > +# back and forth between formats many times during the swap. Since extent ->
-> > +# btree format conversion requires a block allocation, this can consume more
-> > +# blocks than expected, lead to block reservation overrun and free space
-> > +# accounting inconsistency.
+On 02/01/2018 05:43 PM, Darrick J. Wong wrote:
+> On Fri, Feb 02, 2018 at 10:44:13AM +1100, Dave Chinner wrote:
+>> On Thu, Feb 01, 2018 at 01:33:05PM -0700, Dave Jiang wrote:
+>>> When using realtime device (rtdev) with xfs where the data device is not
+>>> DAX capable, two issues arise. One is when data device is not DAX but the
+>>> realtime device is DAX capable, we currently disable DAX.
+>>> After passing this check, we are also not marking the inode as DAX capable.
+>>> This change will allow DAX enabled if the data device or the realtime
+>>> device is DAX capable. S_DAX will be marked for the inode if the file is
+>>> residing on a DAX capable device. This will prevent the case of rtdev is not
+>>> DAX and data device is DAX to create realtime files.
+>>
+>> I'm confused by this description. I'm not sure what is broken, nor
+>> what you are trying to fix.
+>>
+>> I think what you want to do is enable DAX on RT devices separately
+>> to the data device and vice versa?
+>>
+>> i.e. is this what you are trying to acheive?
+>>
+>> datadev dax	rtdev dax		DAX enabled on
+>> -----------     ---------		--------------
+>> no		no			neither
+>> yes		no			datadev
+>> no		yes			rtdev
+>> yes		yes			both
+>>
+>>
+>>>
+>>> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+>>> Reported-by: Darrick Wong <darrick.wong@oracle.com>
+>>> ---
+>>>  fs/xfs/xfs_iops.c  |    3 ++-
+>>>  fs/xfs/xfs_super.c |    9 ++++++++-
+>>>  2 files changed, 10 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>>> index 56475fcd76f2..ab352c325301 100644
+>>> --- a/fs/xfs/xfs_iops.c
+>>> +++ b/fs/xfs/xfs_iops.c
+>>> @@ -1204,7 +1204,8 @@ xfs_diflags_to_iflags(
+>>>  	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
+>>>  	    !xfs_is_reflink_inode(ip) &&
+>>>  	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
+>>> -	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
+>>> +	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX) &&
+>>> +	    blk_queue_dax(bdev_get_queue(inode->i_sb->s_bdev)))
+>>
+>> This does not discriminate between the rtdev or the data dev. This
+>> needs to call xfs_find_bdev_for_inode() to get the right device
+>> for the inode config.
+>>
+>> Further, if we add or remove the RT flag to the inode at a later
+>> point in time (e.g. via ioctl) we also need to re-evaluate the S_DAX
+>> flag at that point in time.
 > 
-> Yikes. :)
+> Ah, right, I'd missed that subtlety in my earlier replies.  Ok, add
+> another patch to this series to reevaluate S_DAX when we change the RT
+> flag.
 > 
-> <slightly ot here>
+>> Which brings me to the real problem here: dynamically changing the
+>> S_DAX flag is racy, dangerous and broken. It's not clear that this
+>> should be allowed at all as the inode may have already been mmap()d
+>> by the time the ioctl is called to set/clear the rt file state.
 > 
-> TBH, I've long wondered a couple of things about the swapext code --
-> since the rmap version of it can swap extents between any kind of file,
-> does it still make sense to return -EINVAL if the donor file has more
-> extents than the source file?  And do we have a use case for allowing
-> extent swaps of parts of files?
-> 
+> Agreed that this is a mess.  Either this needs to get fixed in the dax
+> code, or we need to decide that we're not going to support reconfiguring
+> the dax flag at all, except possibly for empty files (similar to how we
+> restrict changes to the rt flag).
 
-None that I'm aware of, but I haven't really thought that hard about it.
-:P
+Does this mean we should add a check in xfs_ioctl_setattr_xflags() to
+reject removing of realtime flag if S_DAX is set on the inode until the
+dynamic change issue is sorted out?
 
-> <ok, back to the test>
 > 
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_scratch
-> > +_require_xfs_io_command "falloc"
-> > +_require_xfs_io_command "fpunch"
-> > +_require_xfs_io_command "swapext"
-> > +
-> > +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> > +_scratch_mount || _fail "mount failed"
+>> IOWs, right now we cannot support mixed DAX mode filesystems because
+>> the generic DAX code does not support dynamic changing of the DAX
+>> flag on an inode and so checking the block device state here is
+>> irrelevant....
+>>
+>>>  		inode->i_flags |= S_DAX;
+>>>  }
+>>>  
+>>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>>> index e8a687232614..5ac478924dce 100644
+>>> --- a/fs/xfs/xfs_super.c
+>>> +++ b/fs/xfs/xfs_super.c
+>>> @@ -1649,11 +1649,18 @@ xfs_fs_fill_super(
+>>>  		sb->s_flags |= SB_I_VERSION;
+>>>  
+>>>  	if (mp->m_flags & XFS_MOUNT_DAX) {
+>>> +		bool rtdev_is_dax = false;
+>>> +
+>>>  		xfs_warn(mp,
+>>>  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+>>>  
+>>> +		if (mp->m_rtdev_targp->bt_daxdev)
+>>> +			if (bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
+>>> +					      sb->s_blocksize) == 0)
+>>> +				rtdev_is_dax = true;
+>>
+>> .... as this code here needs to turn off DAX here if any device
+>> in the filesystem doesn't support DAX....
 > 
-> Before we encode too many _scratch_mount || _fail, can we get a decision
-> from the maintainer about whether or not _scratch_mount should just
-> _fail if the mount doesn't work, instead of each test having to
-> open-code this on its own?
+> I think it'd be useful to be able to have a pmem rt device even if the
+> data device doesn't support it.  Or rather, I have a few clients who
+> have expressed interest in this sort of configuration.
 > 
-
-I'd probably leave it around until a patch hits, regardless. It's easy
-to remove if a _scratch_mount() fix lands in the meantime.
-
-> I see that 53 of the 1221 mentions of _scratch_mount already do _fail...
-> 
-> > +
-> > +file1=$SCRATCH_MNT/file1
-> > +file2=$SCRATCH_MNT/file2
-> > +
-> > +# The goal is run an extent swap where one of the associated files has the
-> > +# minimum number of extents to remain in btree format. First, create a couple
-> > +# files with large enough extent counts to ensure btree format on the largest
-> > +# possible inode size filesystems.
-> > +for i in $(seq 0 199); do
-> > +	$XFS_IO_PROG -fc "falloc $((i * 8192)) 4k" $file1
-> > +	$XFS_IO_PROG -fc "falloc $((i * 8192)) 4k" $file2
-> 
-> A 4k extent length isn't going to work on a fs with 64k blocks.  I'd
-> probably just do:
-> 
-> blksz=65536
-> $XFS_IO_PROG -fc "falloc 0 $((400 * blksz))" $file1
-> src/punch_alternating $file1
-> 
-
-Indeed, I didn't know about punch_alternating. I suppose we can also get
-the actual filesystem block size from the filtered mkfs output as well.
-
-> > +done
-> > +
-> > +# Now run an extent swap at every possible extent count down to 0.  Depending
-> > +# on filesystem geometry (i.e., inode size), one of these swaps will cover the
-> > +# boundary case between extent and btree format.
-> > +for i in $(seq 0 199); do
-> > +	# punch one extent from the tmpfile and swap
-> > +	$XFS_IO_PROG -c "fpunch $((i * 8192)) 4k" $file2
-> > +	$XFS_IO_PROG -c "swapext $file2" $file1
-> > +
-> > +	# punch the same extent from the old fork (now in file2) to resync the
-> > +	# extent counts and repeat
-> > +	$XFS_IO_PROG -c "fpunch $((i * 8192)) 4k" $file2
-> > +done
-> > +
-> > +# failure results in fs corruption and possible assert failure
-> > +echo Silence is golden
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/440.out b/tests/xfs/440.out
-> > new file mode 100644
-> > index 00000000..fb8dc21f
-> > --- /dev/null
-> > +++ b/tests/xfs/440.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 440
-> > +Silence is golden
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index cf81451d..ae0c5fc8 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -437,3 +437,4 @@
-> >  437 auto quick other
-> >  438 auto quick quota dangerous
-> >  439 auto quick fuzzers log
-> > +440 auto quick ioctl
-> 
-> Though this isn't a fsr test per se, it does test a regression in the
-> underlying ioctl, so maybe this should also be tagged group fsr?
-> 
-
-No preference. I suppose it does make sense if one wanted to verify a
-kernel was "fsr safe." I'll add it.
-
-Brian
-
 > --D
 > 
-> > -- 
-> > 2.13.6
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>> FWIW, the logic in the code is terrible (not your fault, Dave).
+>> The logic reads
+>>
+>> 	if (NOT bdev_dax_supported(rtdev)) then
+>> 		rtdev supports DAX
+>>
+>> That also needs fixing - we're checking something that has a boolean
+>> return state (yes or no) and so it should define them in a way that
+>> makes the caller logic read cleanly....
+>>
+>> Cheers,
+>>
+>> Dave.
+>> -- 
+>> Dave Chinner
+>> david@fromorbit.com
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
