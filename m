@@ -1,85 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:25021 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750796AbeBEWfL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 17:35:11 -0500
-Date: Tue, 6 Feb 2018 09:36:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS over device mapper dm-thin device
-Message-ID: <20180205223604.wgacfnsrsaqrwz7n@destitution>
-References: <147a1764-1988-4efd-4f02-e942a1001b4e@redhat.com>
- <20180202223541.i27bfjij7itt3q5r@destitution>
- <9c3ec8ff-3595-c889-3abe-7f069292be0d@sandeen.net>
+Received: from userp2130.oracle.com ([156.151.31.86]:50526 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753346AbeBFXtK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Feb 2018 18:49:10 -0500
+Date: Tue, 6 Feb 2018 15:44:07 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/7] xfs: refactor and tablise growfs
+Message-ID: <20180206234407.GN4849@magnolia>
+References: <20180201064202.7174-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9c3ec8ff-3595-c889-3abe-7f069292be0d@sandeen.net>
+In-Reply-To: <20180201064202.7174-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Todd Gill <tgill@redhat.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 02, 2018 at 05:36:40PM -0600, Eric Sandeen wrote:
+On Thu, Feb 01, 2018 at 05:41:55PM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> 
-> On 2/2/18 4:35 PM, Dave Chinner wrote:
-> > On Fri, Feb 02, 2018 at 04:45:33PM -0500, Todd Gill wrote:
-> >>
-> >> Hi,
-> >>
-> >> I'd like to be able to take a snapshot of an XFS filesystem on top of
-> >> dm-thin.
-> >>
-> >> The goal for the snapshot is:
-> >>
-> >>     - fast to complete (couple seconds or better)
-> >>     - independent of origin (UUID updated?)
-> >>     - read/write
-> >>
-> >> To satisfy the independent goal, I'm updating the UUID on the snapshot.
-> >> Currently "xfs_admin -U xxx" takes in the ballpark of 14 seconds on my
-> >> test system.
-> > 
-> > There's a very good chance that this is caused by dm-thinp doing
-> > COW for the storage underlying the superblocks modified by the UUID
-> > change.
-> 
-> It's actually because we rewrite the whole log, because it has the
-> user-facing superblock stamped in it.
-> 
-> I looked at this a bit, and didn't immediately see an easy way around
-> xfs_db's need to rewrite the whole log.
-> 
-> uuid_f()
->                 /* clear the log (setting uuid) if it's not dirty */
->                 if (!sb_logzero(&uu))
->                         return 0;
-> 
-> so I think that's taking the bulk of the time.  I haven't looked closely
-> enough at all the mount-time log parsing to see if we could maybe write
-> less of it and still be valid.
+> This is a series I posted months ago with the first thinspace
+> filesystem support. There was no comments on any of these patches
+> because all the heat and light got focussed on the growfs API.
+> I'm posting this separately to avoid that problem again....
 
-Ah, I forgot we added that. Originally the uuid in the log was only
-used to identify external log devices (or Irix based filesystems).
+...just in time to collide head-on with the online repair series that I
+am planning to push out for review for 4.17. :)
 
-> >> Or can the UUID update
-> >> be changed to be faster?
-> > 
-> > Not sure - there's a fixed amount of modification we need to make
-> > to change the UUID so I'm not sure there is any optimisations we
-> > can make here.
+> Anyway, the core of this change is to make the growfs code much
+> simpler to extend. Most of the code that does structure
+> initialisation is cookie-cutter code and it's whacked into one great
+> big function. This patch set splits it up into separate functions
+> and uses common helper functions where possible. The different
+> structures and their initialisation definitions are now held in a
+> table, so when we add new stuctures or modify existing structures
+> it's a simple and isolate change.
 > 
-> In retrospect I think we (I) should have left the "metadata" uuid as
-> the one to match the log, not the user-facing one.
+> The reworked initialisation code is suitable for moving to libxfs
+> and converting mkfs.xfs to use it for the initial formatting of
+> the filesystem. This will take more work to acheive, so this
+> patch set stops short of moving the code to libxfs.
 
-I suspect we can just change the log recovery code to accept either
-sb_uuid or sb_metauuid if the metauuid feature bit is set and
-change xfs_db to not rewrite the log when metauuid is used....
+Or maybe I'll just pull the patches into my dev tree and move all the
+code to libxfs /now/ since I don't see much difference between growing
+extra limbs and regrowing new body parts.  The "repair" code I've
+written so far chooses to rebuild the entire data structure from other
+parts rather than trying to save an existing structure:
 
-Cheers,
+1. Lock the AG{I,F,FL} header/inode/whatever we're repairing.
+2. Gather all the data that would have been in that data structure.
+3. Make a list of all the blocks with the relevant rmap owner.
+4. Make a list of all the blocks with the relevant rmap owner that are
+   owned by any other structure.  For example, if we're rebuilding the
+   inobt then we make a list of all the OWN_INOBT blocks, and then we
+   iterate the finobt to make a list of finobt blocks.
+5. Allocate a new block for the root, if necessary.
+6. Initialize the data structure.
+7. Import all the data gathered in step 2.
+8. Subtract the list made in step 4 from the list made in step 3.  These
+   are all the blocks that were owned by the structure we just rebuilt,
+   so free them.
+9. Commit transaction, release locks, we're done.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+(Steps 7-8 involve rolling transactions.)
+
+I think growfs'ing a new AG is basically steps 1, 5, 6, 9, with the only
+twist being that growfs uses a delwri list instead of joining things to
+a transaction.  For this to work there needs to be separate functions to
+initialize a block and to deal with writing the xfs_buf to disk; I think
+I see this happening in the patchset, but tbh I suck at reading diff. :)
+
+> The other changes to the growfs code in this patchset also isolate
+> separate parts of the growfs functionality, such as updating the
+> secondary superblocks and changing imaxpct. This makes adding
+> thinspace functionality to growfs much easier.
+> 
+> Finally, there are optimisations to make a large AG count growfs
+> much faster. Instead of initialising and writing headers one at a
+> time synchronously, they are added to a delwri buffer list and
+> written in bulk and asynchronously. This means AG headers get merged
+> by the block layer and it can reduce the IO wait time by an order of
+> magnitude or more.
+
+Sounds good.
+
+> There are also mods to the secondary superblock update algorithm
+> which make it more resilient in the face of writeback failures. We
+> use a two pass update now - the main growfs loop now initialised
+> secondary superblocks with sb_inprogess = 1 to indicate it is not
+> in a valid state before we make any modifications, then after teh
+> transactional grow we do a second pass to set sb_inprogess = 0 and
+> mark them valid.
+> 
+> This means that if we fail to write any secondary superblock, repair
+> is not going to get confused by partial grow state. If we crash
+> during the initial write, nothing has changed in the primary
+> superblock. If we crash after the primary sb grow, then we'll know
+> exactly what secondary superblocks did not get updated because
+> they'll be the ones with sb_inprogress = 1 in them. Hence the
+> recovery process becomes much easier as the parts of the fs that
+> need updating are obvious....
+
+I assume there will eventually be some kind of code to detect
+sb_inprogress==1 and fix it as soon as we try to write an AG?
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
