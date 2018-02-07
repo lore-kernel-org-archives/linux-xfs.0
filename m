@@ -1,297 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60126 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751319AbeBEXWc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Feb 2018 18:22:32 -0500
-Subject: [PATCH 2/7] xfs_scrub: remove preen mode
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 05 Feb 2018 15:22:26 -0800
-Message-ID: <151787294694.3743.4964498325259193655.stgit@magnolia>
-In-Reply-To: <151787293446.3743.11110014829952400444.stgit@magnolia>
-References: <151787293446.3743.11110014829952400444.stgit@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55400 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752848AbeBGEHV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Feb 2018 23:07:21 -0500
+Date: Wed, 7 Feb 2018 12:07:18 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH] tests/xfs: rmapbt swapext block reservation overrun test
+Message-ID: <20180207040718.GW18267@eguan.usersys.redhat.com>
+References: <20180205174601.51574-1-bfoster@redhat.com>
+ <20180206131032.62271-1-bfoster@redhat.com>
+ <20180206173023.GL4849@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180206173023.GL4849@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Feb 06, 2018 at 09:30:23AM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 06, 2018 at 08:10:32AM -0500, Brian Foster wrote:
+> > The XFS rmapbt extent swap mechanism performs an extent by extent
+> > swap to ensure the rmapbt is rectified with the appropriate extent
+> > owner information after the operation. This implementation suffers
+> > from a corner case that requires extra reservation if the swap
+> > operation results in bouncing one of the associated inodes between
+> > extent and btree formats. When this corner case occurs, it results
+> > in a transaction block reservation overrun and possible corruption
+> > of the free space accounting.
+> > 
+> > This regression test provides coverage for this corner case. It
+> > creates two files with a large enough extent count to require btree
+> > format, regardless of inode size, and performs a sequence of extent
+> > swaps between them with a decreasing extent count until all extents
+> > are removed from the file(s). This ensures that one of the swaps
+> > covers the btree <-> extent fork format boundary case.
+> > 
+> > This test reproduces fs corruption on rmapbt enabled filesystems
+> > running on kernels without the associated extent swap fix.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > This test reproduces one of the problems targeted to be fixed by the
+> > following patch series:
+> > 
+> >   https://marc.info/?l=linux-xfs&m=151785278525201&w=2
+> > 
+> > Also note that this test depends on currently unmerged xfs_io
+> > functionality. The associated functionality is posted for review here:
+> > 
+> >   https://marc.info/?l=linux-xfs&m=151792224511355&w=2
+> > 
+> > ... and so this test should not be merged until/unless that
+> > functionality is reviewed. Thanks.
+> > 
+> > Brian
+> > 
+> >  tests/xfs/440     | 97 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/440.out |  2 ++
+> >  tests/xfs/group   |  1 +
+> >  3 files changed, 100 insertions(+)
+> >  create mode 100755 tests/xfs/440
+> >  create mode 100644 tests/xfs/440.out
+> > 
+> > diff --git a/tests/xfs/440 b/tests/xfs/440
+> > new file mode 100755
+> > index 00000000..c7667e08
+> > --- /dev/null
+> > +++ b/tests/xfs/440
+> > @@ -0,0 +1,97 @@
+> > +#! /bin/bash
+> > +# FS QA Test 440
+> > +#
+> > +# Regression test for the XFS rmapbt based extent swap algorithm. The extent
+> > +# swap algorithm for rmapbt=1 filesystems unmaps/remaps individual extents to
+> > +# rectify the rmapbt for each extent swapped between inodes. If one of the
+> > +# inodes happens to straddle the extent <-> btree format boundary (which can
+> > +# vary depending on inode size), the unmap/remap sequence can bounce the inodes
+> > +# back and forth between formats many times during the swap. Since extent ->
+> > +# btree format conversion requires a block allocation, this can consume more
+> > +# blocks than expected, lead to block reservation overrun and free space
+> > +# accounting inconsistency.
+> 
+> Yikes. :)
+> 
+> <slightly ot here>
+> 
+> TBH, I've long wondered a couple of things about the swapext code --
+> since the rmap version of it can swap extents between any kind of file,
+> does it still make sense to return -EINVAL if the donor file has more
+> extents than the source file?  And do we have a use case for allowing
+> extent swaps of parts of files?
+> 
+> <ok, back to the test>
+> 
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +_require_xfs_io_command "falloc"
+> > +_require_xfs_io_command "fpunch"
+> > +_require_xfs_io_command "swapext"
+> > +
+> > +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+> > +_scratch_mount || _fail "mount failed"
+> 
+> Before we encode too many _scratch_mount || _fail, can we get a decision
+> from the maintainer about whether or not _scratch_mount should just
+> _fail if the mount doesn't work, instead of each test having to
+> open-code this on its own?
+> 
+> I see that 53 of the 1221 mentions of _scratch_mount already do _fail...
 
-While it's true that the kernel can tell us whether something needs
-repairs or it needs optimizing, from the admin's perspective there's
-no point in having an optimize-only mode -- either fix everything, or
-don't.  This is what xfs_repair does w.r.t. -n, so let's do the same
-thing too.
+Sorry for not responding to the check _scratch_mount status issue early.
+I'm fine with it overall, as more people are running into this problem
+and get annoyed by the implicit failures. I just wanted to think more
+about it and see what would be the better way to do this.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man/man8/xfs_scrub.8 |   51 +++++++++++++++++++++++---------------------------
- scrub/phase1.c       |    6 +-----
- scrub/phase4.c       |   19 -------------------
- scrub/scrub.c        |    2 +-
- scrub/xfs_scrub.c    |   33 +++++++-------------------------
- scrub/xfs_scrub.h    |    3 ---
- 6 files changed, 32 insertions(+), 82 deletions(-)
+And Ted complained about not checking return status _scratch_mkfs and
+similar functions a month ago, I think we can fix them all together.
 
-
-diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
-index 4c394a5..77fed92 100644
---- a/man/man8/xfs_scrub.8
-+++ b/man/man8/xfs_scrub.8
-@@ -1,10 +1,10 @@
- .TH xfs_scrub 8
- .SH NAME
--xfs_scrub \- scrub the contents of an XFS filesystem
-+xfs_scrub \- check the contents of a mounted XFS filesystem
- .SH SYNOPSIS
- .B xfs_scrub
- [
--.B \-abCemnTvxy
-+.B \-abCemnTvx
- ]
- .RI "[" mount-point " | " block-device "]"
- .br
-@@ -13,6 +13,12 @@ xfs_scrub \- scrub the contents of an XFS filesystem
- .B xfs_scrub
- attempts to check and repair all metadata in a mounted XFS filesystem.
- .PP
-+.B WARNING!
-+This program is
-+.BR EXPERIMENTAL ","
-+which means that its behavior and interface
-+could change at any time!
-+.PP
- .B xfs_scrub
- asks the kernel to scrub all metadata objects in the filesystem.
- Metadata records are scanned for obviously bad values and then
-@@ -28,19 +34,17 @@ the standard error stream.
- Enabling verbose mode will increase the amount of status information
- sent to the output.
- .PP
--This utility does not know how to correct all errors.
--If the tool cannot fix the detected errors, you must unmount the
--filesystem and run
-+If the kernel scrub reports that metadata needs repairs or optimizations and
-+the user does not pass
-+.B -n
-+on the command line, this program will ask the kernel to make the repairs and
-+to perform the optimizations.
-+See the sections about optimizations and repairs for a list of optimizations
-+and repairs known to this program.
-+The kernel may not support repairing or optimizing the filesystem.
-+If this is the case, the filesystem must be unmounted and
- .BR xfs_repair (8)
--to fix the problems.
--If this tool is not run with either of the
--.B \-n
--or
--.B \-y
--options, then it will optimize the filesystem when possible,
--but it will not try to fix errors.
--See the optimizations section below for a list of optimizations
--supported by this program.
-+run on the filesystem to fix the problems.
- .SH OPTIONS
- .TP
- .BI \-a " errors"
-@@ -73,14 +77,14 @@ is given, no action is taken if errors are found; this is the default
- behavior.
- .TP
- .B \-k
--Do not call FITRIM on the free space.
-+Do not call TRIM on the free space.
- .TP
- .BI \-m " file"
- Search this file for mounted filesystems instead of /etc/mtab.
- .TP
- .B \-n
--Dry run, do not modify anything in the filesystem.
--This disables all optimization and repair behaviors.
-+Only check filesystem metadata.
-+Do not repair or optimize anything.
- .TP
- .BI \-T
- Print timing and memory usage information for each phase.
-@@ -98,20 +102,11 @@ will issue O_DIRECT reads to the block device directly.
- If the block device is a SCSI disk, it will instead issue READ VERIFY commands
- directly to the disk.
- These actions will confirm that all file data blocks can be read from storage.
--.TP
--.B \-y
--Try to repair all filesystem errors.
--If the errors cannot be fixed online, then the filesystem must be taken
--offline for repair.
- .SH OPTIMIZATIONS
--Optimizations supported by this program include:
-+Optimizations supported by this program include, but are not limited to:
- .IP \[bu] 2
--Updating secondary superblocks to match the primary superblock.
--.IP \[bu]
--Turning off shared block write checks for files that no longer share blocks.
--.IP \[bu]
- Instructing the underlying storage to discard unused extents via the
--.B FITRIM
-+.B TRIM
- ioctl.
- .SH REPAIRS
- This program currently does not support making any repairs.
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 75da296..af93d0f 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -181,11 +181,7 @@ _("Kernel metadata scrubbing facility is not available."));
- 
- 	/* Do we need kernel-assisted metadata repair? */
- 	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
--		if (ctx->mode == SCRUB_MODE_PREEN)
--			str_error(ctx, ctx->mntpoint,
--_("Kernel metadata optimization facility is not available.  Use -n to scrub."));
--		else
--			str_error(ctx, ctx->mntpoint,
-+		str_error(ctx, ctx->mntpoint,
- _("Kernel metadata repair facility is not available.  Use -n to scrub."));
- 		return false;
- 	}
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index 3100d75..1fb8da9 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -62,25 +62,6 @@ xfs_repair_fs(
- 	return xfs_process_action_items(ctx);
- }
- 
--/* Run the optimize-only phase if there are no errors. */
--bool
--xfs_optimize_fs(
--	struct scrub_ctx	*ctx)
--{
--	/*
--	 * In preen mode, corruptions are immediately recorded as errors,
--	 * so if there are any corruptions on the filesystem errors_found
--	 * will be non-zero and we won't do anything.
--	 */
--	if (ctx->errors_found) {
--		str_info(ctx, ctx->mntpoint,
--_("Errors found, please re-run with -y."));
--		return true;
--	}
--
--	return xfs_process_action_items(ctx);
--}
--
- /* Estimate how much work we're going to do. */
- bool
- xfs_estimate_repair_work(
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 6abca2a..bc0e2f0 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -279,7 +279,7 @@ _("Repairs are required."));
- 	 * otherwise complain.
- 	 */
- 	if (is_unoptimized(meta)) {
--		if (ctx->mode < SCRUB_MODE_PREEN) {
-+		if (ctx->mode != SCRUB_MODE_REPAIR) {
- 			if (!is_inode) {
- 				/* AG or FS metadata, always warn. */
- 				str_info(ctx, buf,
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 5ab557d..6efcf77 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -187,7 +187,6 @@ usage(void)
- 	fprintf(stderr, _("  -v           Verbose output.\n"));
- 	fprintf(stderr, _("  -V           Print version.\n"));
- 	fprintf(stderr, _("  -x           Scrub file data too.\n"));
--	fprintf(stderr, _("  -y           Repair all errors.\n"));
- 
- 	exit(SCRUB_RET_SYNTAX);
- }
-@@ -441,16 +440,11 @@ run_scrub_phases(
- 		/* Turn on certain phases if user said to. */
- 		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data) {
- 			sp->fn = xfs_scan_blocks;
--		} else if (sp->fn == REPAIR_DUMMY_FN) {
--			if (ctx->mode == SCRUB_MODE_PREEN) {
--				sp->descr = _("Optimize filesystem.");
--				sp->fn = xfs_optimize_fs;
--				sp->must_run = true;
--			} else if (ctx->mode == SCRUB_MODE_REPAIR) {
--				sp->descr = _("Repair filesystem.");
--				sp->fn = xfs_repair_fs;
--				sp->must_run = true;
--			}
-+		} else if (sp->fn == REPAIR_DUMMY_FN &&
-+			   ctx->mode == SCRUB_MODE_REPAIR) {
-+			sp->descr = _("Repair filesystem.");
-+			sp->fn = xfs_repair_fs;
-+			sp->must_run = true;
- 		}
- 
- 		/* Skip certain phases unless they're turned on. */
-@@ -524,9 +518,9 @@ main(
- 	textdomain(PACKAGE);
- 
- 	pthread_mutex_init(&ctx.lock, NULL);
--	ctx.mode = SCRUB_MODE_DEFAULT;
-+	ctx.mode = SCRUB_MODE_REPAIR;
- 	ctx.error_action = ERRORS_CONTINUE;
--	while ((c = getopt(argc, argv, "a:bC:de:km:nTvxVy")) != EOF) {
-+	while ((c = getopt(argc, argv, "a:bC:de:km:nTvxV")) != EOF) {
- 		switch (c) {
- 		case 'a':
- 			ctx.max_errors = cvt_u64(optarg, 10);
-@@ -574,11 +568,6 @@ main(
- 			mtab = optarg;
- 			break;
- 		case 'n':
--			if (ctx.mode != SCRUB_MODE_DEFAULT) {
--				fprintf(stderr,
--_("Only one of the options -n or -y may be specified.\n"));
--				usage();
--			}
- 			ctx.mode = SCRUB_MODE_DRY_RUN;
- 			break;
- 		case 'T':
-@@ -595,14 +584,6 @@ _("Only one of the options -n or -y may be specified.\n"));
- 		case 'x':
- 			scrub_data = true;
- 			break;
--		case 'y':
--			if (ctx.mode != SCRUB_MODE_DEFAULT) {
--				fprintf(stderr,
--_("Only one of the options -n or -y may be specified.\n"));
--				usage();
--			}
--			ctx.mode = SCRUB_MODE_REPAIR;
--			break;
- 		case '?':
- 			/* fall through */
- 		default:
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 8407885..89b46a4 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -34,10 +34,8 @@ extern bool			stdout_isatty;
- 
- enum scrub_mode {
- 	SCRUB_MODE_DRY_RUN,
--	SCRUB_MODE_PREEN,
- 	SCRUB_MODE_REPAIR,
- };
--#define SCRUB_MODE_DEFAULT			SCRUB_MODE_PREEN
- 
- enum error_action {
- 	ERRORS_CONTINUE,
-@@ -111,7 +109,6 @@ bool xfs_scan_connections(struct scrub_ctx *ctx);
- bool xfs_scan_blocks(struct scrub_ctx *ctx);
- bool xfs_scan_summary(struct scrub_ctx *ctx);
- bool xfs_repair_fs(struct scrub_ctx *ctx);
--bool xfs_optimize_fs(struct scrub_ctx *ctx);
- 
- /* Progress estimator functions */
- uint64_t xfs_estimate_inodes(struct scrub_ctx *ctx);
-
+Thanks,
+Eryu
