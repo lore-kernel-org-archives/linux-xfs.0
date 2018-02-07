@@ -1,287 +1,291 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:12843 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751378AbeBAGmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Feb 2018 01:42:09 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh8ZR-0005Cs-4X
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.90)
-        (envelope-from <david@fromorbit.com>)
-        id 1eh8ZR-00024Y-3L
-        for linux-xfs@vger.kernel.org; Thu, 01 Feb 2018 17:42:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/7] xfs: separate secondary sb update in growfs
-Date: Thu,  1 Feb 2018 17:42:01 +1100
-Message-Id: <20180201064202.7174-7-david@fromorbit.com>
-In-Reply-To: <20180201064202.7174-1-david@fromorbit.com>
-References: <20180201064202.7174-1-david@fromorbit.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:38614 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932153AbeBGADz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Feb 2018 19:03:55 -0500
+Date: Tue, 6 Feb 2018 16:03:50 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/4] xfs: account only rmapbt-used blocks against rmapbt
+ perag res
+Message-ID: <20180207000350.GO4849@magnolia>
+References: <20180205174601.51574-1-bfoster@redhat.com>
+ <20180205174601.51574-5-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180205174601.51574-5-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Feb 05, 2018 at 12:46:01PM -0500, Brian Foster wrote:
+> The rmapbt perag metadata reservation reserves blocks for the
+> reverse mapping btree (rmapbt). Since the rmapbt uses blocks from
+> the agfl and perag accounting is updated as blocks are allocated
+> from the allocation btrees, the reservation actually accounts blocks
+> as they are allocated to (or freed from) the agfl rather than the
+> rmapbt itself.
+> 
+> While this works for blocks that are eventually used for the rmapbt,
+> not all agfl blocks are destined for the rmapbt. Blocks that are
+> allocated to the agfl (and thus "reserved" for the rmapbt) but then
+> used by another structure leads to a growing inconsistency over time
+> between the runtime tracking of rmapbt usage vs. actual rmapbt
+> usage. Since the runtime tracking thinks all agfl blocks are rmapbt
+> blocks, it essentially believes that less future reservation is
+> required to satisfy the rmapbt than what is actually necessary.
+> 
+> The inconsistency is rectified across mount cycles because the perag
+> reservation is initialized based on the actual rmapbt usage at mount
+> time. The problem, however, is that the excessive drain of the
+> reservation at runtime opens a window to allocate blocks for other
+> purposes that might be required for the rmapbt on a subsequent
+> mount. This problem can be demonstrated by a simple test that runs
+> an allocation workload to consume agfl blocks over time and then
+> observe the difference in the agfl reservation requirement across an
+> unmount/mount cycle:
+> 
+>   mount ...: xfs_ag_resv_init: ... resv 3193 ask 3194 len 3194
+>   ...
+>   ...      : xfs_ag_resv_alloc_extent: ... resv 2957 ask 3194 len 1
+>   umount...: xfs_ag_resv_free: ... resv 2956 ask 3194 len 0
+>   mount ...: xfs_ag_resv_init: ... resv 3052 ask 3194 len 3194
+> 
+> As the above tracepoints show, the reservation requirement reduces
+> from 3194 blocks to 2956 blocks as the workload runs.  Without any
+> other changes in the filesystem, the same reservation requirement
+> jumps from 2956 to 3052 blocks over a umount/mount cycle.
+> 
+> To address this divergence, update the RMAPBT reservation to account
+> blocks used for the rmapbt only rather than all blocks filled into
+> the agfl. This patch makes several high-level changes toward that
+> end:
+> 
+> 1.) Reintroduce an AGFL reservation type to serve as an accounting
+>     no-op for blocks allocated to (or freed from) the AGFL.
+> 2.) Invoke RMAPBT usage accounting from the actual rmapbt block
+>     allocation path rather than the AGFL allocation path.
+> 
+> The first change is required because agfl blocks are considered free
+> blocks throughout their lifetime. The perag reservation subsystem is
+> invoked unconditionally by the allocation subsystem, so we need a
+> way to tell the perag subsystem (via the allocation subsystem) to
+> not make any accounting changes for blocks filled into the AGFL.
+> 
+> The second change causes the in-core RMAPBT reservation usage
+> accounting to remain consistent with the on-disk state at all times
+> and eliminates the risk of leaving the rmapbt reservation
+> underfilled.
 
-This happens after all the transactions to update the superblock
-occur, and errors need to be handled slightly differently. Seperate
-out the code into it's own function, and clean up the error goto
-stack in the core growfs code as it is now much simpler.
+Sorry I haven't gotten to this in a couple of days.  This looks like a
+reasonable enough fix to the complex perag machinery, though Dave and I
+were batting around an idea last week -- what if instead of all these
+reservation types and tracking we simply maintained a per-ag free space
+reservation of a couple megabytes, handed out blocks if we got
+desperate, and replenished that res when we had a good opportunity?
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_fsops.c | 154 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 87 insertions(+), 67 deletions(-)
+I /think/ the answer to that question is that we need to try to reserve
+enough blocks to satisfy the maximum size of the btree (if there is
+one), not just a fixed-size delayed free space.  We already hand out
+blocks if we get desperate, and we replenish the reservation when we
+can.  Lastly, we need the reservation type tracking so that we avoid
+things like the refcount btree stealing blocks from the agfl in
+desperation.  I've also been wondering if each reservation should get
+its own type so that we track refcountbt and finobt blocks separately.
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 5c844e540320..113be7dbdc81 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -401,9 +401,8 @@ xfs_growfs_data_private(
- {
- 	xfs_agf_t		*agf;
- 	xfs_agi_t		*agi;
--	xfs_agnumber_t		agno;
- 	xfs_buf_t		*bp;
--	int			error, saved_error = 0;
-+	int			error;
- 	xfs_agnumber_t		nagcount;
- 	xfs_agnumber_t		nagimax = 0;
- 	xfs_rfsblock_t		nb, nb_mod;
-@@ -475,12 +474,12 @@ xfs_growfs_data_private(
- 		error = xfs_grow_ag_headers(mp, &id);
- 		if (error) {
- 			xfs_buf_delwri_cancel(&id.buffer_list);
--			goto error0;
-+			goto out_trans_cancel;
- 		}
- 	}
- 	error = xfs_buf_delwri_submit(&id.buffer_list);
- 	if (error)
--		goto error0;
-+		goto out_trans_cancel;
- 
- 	xfs_trans_agblocks_delta(tp, id.nfree);
- 
-@@ -494,22 +493,23 @@ xfs_growfs_data_private(
- 		 * Change the agi length.
- 		 */
- 		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
--		if (error) {
--			goto error0;
--		}
-+		if (error)
-+			goto out_trans_cancel;
-+
- 		ASSERT(bp);
- 		agi = XFS_BUF_TO_AGI(bp);
- 		be32_add_cpu(&agi->agi_length, new);
- 		ASSERT(nagcount == oagcount ||
- 		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
- 		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
-+
- 		/*
- 		 * Change agf length.
- 		 */
- 		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
--		if (error) {
--			goto error0;
--		}
-+		if (error)
-+			goto out_trans_cancel;
-+
- 		ASSERT(bp);
- 		agf = XFS_BUF_TO_AGF(bp);
- 		be32_add_cpu(&agf->agf_length, new);
-@@ -529,13 +529,13 @@ xfs_growfs_data_private(
- 				be32_to_cpu(agf->agf_length) - new,
- 				new, &oinfo);
- 		if (error)
--			goto error0;
-+			goto out_trans_cancel;
- 		error = xfs_free_extent(tp,
- 				XFS_AGB_TO_FSB(mp, id.agno,
- 					be32_to_cpu(agf->agf_length) - new),
- 				new, &oinfo, XFS_AG_RESV_NONE);
- 		if (error)
--			goto error0;
-+			goto out_trans_cancel;
- 	}
- 
- 	/*
-@@ -572,16 +572,79 @@ xfs_growfs_data_private(
- 		error = xfs_ag_resv_free(pag);
- 		xfs_perag_put(pag);
- 		if (error)
--			goto out;
-+			return error;
- 	}
- 
- 	/* Reserve AG metadata blocks. */
--	error = xfs_fs_reserve_ag_blocks(mp);
--	if (error && error != -ENOSPC)
--		goto out;
-+	return xfs_fs_reserve_ag_blocks(mp);
-+
-+out_trans_cancel:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+static int
-+xfs_growfs_log_private(
-+	xfs_mount_t		*mp,	/* mount point for filesystem */
-+	xfs_growfs_log_t	*in)	/* growfs log input struct */
-+{
-+	xfs_extlen_t		nb;
-+
-+	nb = in->newblocks;
-+	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
-+		return -EINVAL;
-+	if (nb == mp->m_sb.sb_logblocks &&
-+	    in->isint == (mp->m_sb.sb_logstart != 0))
-+		return -EINVAL;
-+	/*
-+	 * Moving the log is hard, need new interfaces to sync
-+	 * the log first, hold off all activity while moving it.
-+	 * Can have shorter or longer log in the same space,
-+	 * or transform internal to external log or vice versa.
-+	 */
-+	return -ENOSYS;
-+}
-+
-+static int
-+xfs_growfs_imaxpct(
-+	struct xfs_mount	*mp,
-+	__u32			imaxpct)
-+{
-+	struct xfs_trans	*tp;
-+	int			dpct;
-+	int			error;
-+
-+	if (imaxpct > 100)
-+		return -EINVAL;
-+
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
-+			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
-+	if (error)
-+		return error;
-+
-+	dpct = imaxpct - mp->m_sb.sb_imax_pct;
-+	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
-+	xfs_trans_set_sync(tp);
-+	return xfs_trans_commit(tp);
-+}
-+
-+/*
-+ * After a grow operation, we need to update all the secondary superblocks
-+ * to match the new state of the primary. Read/init the superblocks and update
-+ * them appropriately.
-+ */
-+static int
-+xfs_growfs_update_superblocks(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		oagcount)
-+{
-+	struct xfs_buf		*bp;
-+	xfs_agnumber_t		agno;
-+	int			saved_error = 0;
-+	int			error = 0;
- 
- 	/* update secondary superblocks. */
--	for (agno = 1; agno < nagcount; agno++) {
-+	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
- 		error = 0;
- 		/*
- 		 * new secondary superblocks need to be zeroed, not read from
-@@ -631,57 +694,7 @@ xfs_growfs_data_private(
- 		}
- 	}
- 
-- out:
- 	return saved_error ? saved_error : error;
--
-- error0:
--	xfs_trans_cancel(tp);
--	return error;
--}
--
--static int
--xfs_growfs_log_private(
--	xfs_mount_t		*mp,	/* mount point for filesystem */
--	xfs_growfs_log_t	*in)	/* growfs log input struct */
--{
--	xfs_extlen_t		nb;
--
--	nb = in->newblocks;
--	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
--		return -EINVAL;
--	if (nb == mp->m_sb.sb_logblocks &&
--	    in->isint == (mp->m_sb.sb_logstart != 0))
--		return -EINVAL;
--	/*
--	 * Moving the log is hard, need new interfaces to sync
--	 * the log first, hold off all activity while moving it.
--	 * Can have shorter or longer log in the same space,
--	 * or transform internal to external log or vice versa.
--	 */
--	return -ENOSYS;
--}
--
--static int
--xfs_growfs_imaxpct(
--	struct xfs_mount	*mp,
--	__u32			imaxpct)
--{
--	struct xfs_trans	*tp;
--	int64_t			dpct;
--	int			error;
--
--	if (imaxpct > 100)
--		return -EINVAL;
--
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
--			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
--	if (error)
--		return error;
--
--	dpct = (int64_t)imaxpct - mp->m_sb.sb_imax_pct;
--	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
--	xfs_trans_set_sync(tp);
--	return xfs_trans_commit(tp);
- }
- 
- /*
-@@ -694,6 +707,7 @@ xfs_growfs_data(
- 	struct xfs_mount	*mp,
- 	struct xfs_growfs_data	*in)
- {
-+	xfs_agnumber_t		oagcount;
- 	int			error = 0;
- 
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -708,6 +722,7 @@ xfs_growfs_data(
- 			goto out_error;
- 	}
- 
-+	oagcount = mp->m_sb.sb_agcount;
- 	error = xfs_growfs_data_private(mp, in);
- 	if (error)
- 		goto out_error;
-@@ -722,6 +737,11 @@ xfs_growfs_data(
- 	} else
- 		mp->m_maxicount = 0;
- 
-+	/*
-+	 * Update secondary superblocks now the physical grow has completed
-+	 */
-+	error = xfs_growfs_update_superblocks(mp, oagcount);
-+
- out_error:
- 	/*
- 	 * Increment the generation unconditionally, the error could be from
--- 
-2.15.1
+Otherwise I think this series looks ok, but I'll go over it in more
+detail tomorrow.
 
+--D
+
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_ag_resv.c    |  4 ++++
+>  fs/xfs/libxfs/xfs_ag_resv.h    | 31 +++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_alloc.c      | 18 ++++++------------
+>  fs/xfs/libxfs/xfs_rmap_btree.c |  4 ++++
+>  fs/xfs/xfs_mount.h             |  1 +
+>  5 files changed, 46 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> index 0ca2e680034a..03885a968de8 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> @@ -326,6 +326,8 @@ xfs_ag_resv_alloc_extent(
+>  	trace_xfs_ag_resv_alloc_extent(pag, type, args->len);
+>  
+>  	switch (type) {
+> +	case XFS_AG_RESV_AGFL:
+> +		return;
+>  	case XFS_AG_RESV_METADATA:
+>  	case XFS_AG_RESV_RMAPBT:
+>  		resv = xfs_perag_resv(pag, type);
+> @@ -366,6 +368,8 @@ xfs_ag_resv_free_extent(
+>  	trace_xfs_ag_resv_free_extent(pag, type, len);
+>  
+>  	switch (type) {
+> +	case XFS_AG_RESV_AGFL:
+> +		return;
+>  	case XFS_AG_RESV_METADATA:
+>  	case XFS_AG_RESV_RMAPBT:
+>  		resv = xfs_perag_resv(pag, type);
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+> index 8d6c687deef3..938f2f96c5e8 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.h
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.h
+> @@ -32,4 +32,35 @@ void xfs_ag_resv_alloc_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
+>  void xfs_ag_resv_free_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
+>  		struct xfs_trans *tp, xfs_extlen_t len);
+>  
+> +/*
+> + * RMAPBT reservation accounting wrappers. Since rmapbt blocks are sourced from
+> + * the AGFL, they are allocated one at a time and the reservation updates don't
+> + * require a transaction.
+> + */
+> +static inline void
+> +xfs_ag_resv_rmapbt_alloc(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno)
+> +{
+> +	struct xfs_alloc_arg	args = {0};
+> +	struct xfs_perag	*pag;
+> +
+> +	args.len = 1;
+> +	pag = xfs_perag_get(mp, agno);
+> +	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
+> +	xfs_perag_put(pag);
+> +}
+> +
+> +static inline void
+> +xfs_ag_resv_rmapbt_free(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno)
+> +{
+> +	struct xfs_perag	*pag;
+> +
+> +	pag = xfs_perag_get(mp, agno);
+> +	xfs_ag_resv_free_extent(pag, XFS_AG_RESV_RMAPBT, NULL, 1);
+> +	xfs_perag_put(pag);
+> +}
+> +
+>  #endif	/* __XFS_AG_RESV_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index e53d55453dc5..8c401efb2d74 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -711,7 +711,7 @@ xfs_alloc_ag_vextent(
+>  
+>  	ASSERT(args->len >= args->minlen);
+>  	ASSERT(args->len <= args->maxlen);
+> -	ASSERT(!args->wasfromfl || args->resv != XFS_AG_RESV_RMAPBT);
+> +	ASSERT(!args->wasfromfl || args->resv != XFS_AG_RESV_AGFL);
+>  	ASSERT(args->agbno % args->alignment == 0);
+>  
+>  	/* if not file data, insert new block into the reverse map btree */
+> @@ -1564,7 +1564,6 @@ xfs_alloc_ag_vextent_small(
+>  	int		*stat)	/* status: 0-freelist, 1-normal/none */
+>  {
+>  	struct xfs_owner_info	oinfo;
+> -	struct xfs_perag	*pag;
+>  	int		error;
+>  	xfs_agblock_t	fbno;
+>  	xfs_extlen_t	flen;
+> @@ -1583,7 +1582,7 @@ xfs_alloc_ag_vextent_small(
+>  	 * freelist.
+>  	 */
+>  	else if (args->minlen == 1 && args->alignment == 1 &&
+> -		 args->resv != XFS_AG_RESV_RMAPBT &&
+> +		 args->resv != XFS_AG_RESV_AGFL &&
+>  		 (be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_flcount)
+>  		  > args->minleft)) {
+>  		error = xfs_alloc_get_freelist(args->tp, args->agbp, &fbno, 0);
+> @@ -1616,18 +1615,13 @@ xfs_alloc_ag_vextent_small(
+>  			/*
+>  			 * If we're feeding an AGFL block to something that
+>  			 * doesn't live in the free space, we need to clear
+> -			 * out the OWN_AG rmap and add the block back to
+> -			 * the RMAPBT per-AG reservation.
+> +			 * out the OWN_AG rmap.
+>  			 */
+>  			xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+>  			error = xfs_rmap_free(args->tp, args->agbp, args->agno,
+>  					fbno, 1, &oinfo);
+>  			if (error)
+>  				goto error0;
+> -			pag = xfs_perag_get(args->mp, args->agno);
+> -			xfs_ag_resv_free_extent(pag, XFS_AG_RESV_RMAPBT,
+> -					args->tp, 1);
+> -			xfs_perag_put(pag);
+>  
+>  			*stat = 0;
+>  			return 0;
+> @@ -2153,7 +2147,7 @@ xfs_alloc_fix_freelist(
+>  		if (error)
+>  			goto out_agbp_relse;
+>  		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
+> -					   &targs.oinfo, XFS_AG_RESV_RMAPBT);
+> +					   &targs.oinfo, XFS_AG_RESV_AGFL);
+>  		if (error)
+>  			goto out_agbp_relse;
+>  		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
+> @@ -2179,7 +2173,7 @@ xfs_alloc_fix_freelist(
+>  	while (pag->pagf_flcount < need) {
+>  		targs.agbno = 0;
+>  		targs.maxlen = need - pag->pagf_flcount;
+> -		targs.resv = XFS_AG_RESV_RMAPBT;
+> +		targs.resv = XFS_AG_RESV_AGFL;
+>  
+>  		/* Allocate as many blocks as possible at once. */
+>  		error = xfs_alloc_ag_vextent(&targs);
+> @@ -2860,7 +2854,7 @@ xfs_free_extent(
+>  	int			error;
+>  
+>  	ASSERT(len != 0);
+> -	ASSERT(type != XFS_AG_RESV_RMAPBT);
+> +	ASSERT(type != XFS_AG_RESV_AGFL);
+>  
+>  	if (XFS_TEST_ERROR(false, mp,
+>  			XFS_ERRTAG_FREE_EXTENT))
+> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+> index e829c3e489ea..8560091554e0 100644
+> --- a/fs/xfs/libxfs/xfs_rmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+> @@ -130,6 +130,8 @@ xfs_rmapbt_alloc_block(
+>  	be32_add_cpu(&agf->agf_rmap_blocks, 1);
+>  	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
+>  
+> +	xfs_ag_resv_rmapbt_alloc(cur->bc_mp, cur->bc_private.a.agno);
+> +
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+>  	*stat = 1;
+>  	return 0;
+> @@ -158,6 +160,8 @@ xfs_rmapbt_free_block(
+>  			      XFS_EXTENT_BUSY_SKIP_DISCARD);
+>  	xfs_trans_agbtree_delta(cur->bc_tp, -1);
+>  
+> +	xfs_ag_resv_rmapbt_free(cur->bc_mp, cur->bc_private.a.agno);
+> +
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index cf84288b65ca..7aae5af71aba 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -326,6 +326,7 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+>  /* per-AG block reservation data structures*/
+>  enum xfs_ag_resv_type {
+>  	XFS_AG_RESV_NONE = 0,
+> +	XFS_AG_RESV_AGFL,
+>  	XFS_AG_RESV_METADATA,
+>  	XFS_AG_RESV_RMAPBT,
+>  };
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
