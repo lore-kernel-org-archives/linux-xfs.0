@@ -1,372 +1,324 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:63593 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932584AbeBLClm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Feb 2018 21:41:42 -0500
-Date: Mon, 12 Feb 2018 13:41:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: byte range buffer dirty region tracking
-Message-ID: <20180212024138.GB6778@dastard>
-References: <20180201010514.30233-1-david@fromorbit.com>
- <20180205003415.dn6elcqb4kae3xle@destitution>
- <20180206162141.GA3862@bfoster.bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:45544 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932090AbeBGOth (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 7 Feb 2018 09:49:37 -0500
+Date: Wed, 7 Feb 2018 09:49:35 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: account only rmapbt-used blocks against rmapbt
+ perag res
+Message-ID: <20180207144934.GB9789@bfoster.bfoster>
+References: <20180205174601.51574-1-bfoster@redhat.com>
+ <20180205174601.51574-5-bfoster@redhat.com>
+ <20180207000350.GO4849@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180206162141.GA3862@bfoster.bfoster>
+In-Reply-To: <20180207000350.GO4849@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 06, 2018 at 11:21:41AM -0500, Brian Foster wrote:
-> On Mon, Feb 05, 2018 at 11:34:15AM +1100, Dave Chinner wrote:
+On Tue, Feb 06, 2018 at 04:03:50PM -0800, Darrick J. Wong wrote:
+> On Mon, Feb 05, 2018 at 12:46:01PM -0500, Brian Foster wrote:
+> > The rmapbt perag metadata reservation reserves blocks for the
+> > reverse mapping btree (rmapbt). Since the rmapbt uses blocks from
+> > the agfl and perag accounting is updated as blocks are allocated
+> > from the allocation btrees, the reservation actually accounts blocks
+> > as they are allocated to (or freed from) the agfl rather than the
+> > rmapbt itself.
 > > 
-> > From: Dave Chinner <dchinner@redhat.com>
+> > While this works for blocks that are eventually used for the rmapbt,
+> > not all agfl blocks are destined for the rmapbt. Blocks that are
+> > allocated to the agfl (and thus "reserved" for the rmapbt) but then
+> > used by another structure leads to a growing inconsistency over time
+> > between the runtime tracking of rmapbt usage vs. actual rmapbt
+> > usage. Since the runtime tracking thinks all agfl blocks are rmapbt
+> > blocks, it essentially believes that less future reservation is
+> > required to satisfy the rmapbt than what is actually necessary.
 > > 
-> > One of the biggest performance problems with large directory block
-> > sizes is the CPU overhead in maintaining the buffer log item direty
-> > region bitmap.  The bit manipulations and buffer region mapping
-> > calls are right at the top of the profiles when running tests on 64k
-> > directory buffers:
+> > The inconsistency is rectified across mount cycles because the perag
+> > reservation is initialized based on the actual rmapbt usage at mount
+> > time. The problem, however, is that the excessive drain of the
+> > reservation at runtime opens a window to allocate blocks for other
+> > purposes that might be required for the rmapbt on a subsequent
+> > mount. This problem can be demonstrated by a simple test that runs
+> > an allocation workload to consume agfl blocks over time and then
+> > observe the difference in the agfl reservation requirement across an
+> > unmount/mount cycle:
 > > 
-> ...
+> >   mount ...: xfs_ag_resv_init: ... resv 3193 ask 3194 len 3194
+> >   ...
+> >   ...      : xfs_ag_resv_alloc_extent: ... resv 2957 ask 3194 len 1
+> >   umount...: xfs_ag_resv_free: ... resv 2956 ask 3194 len 0
+> >   mount ...: xfs_ag_resv_init: ... resv 3052 ask 3194 len 3194
 > > 
-> >  fs/xfs/xfs_buf.c      |  23 ++-
-> >  fs/xfs/xfs_buf_item.c | 437 ++++++++++++++++++++++++++------------------------
-> >  fs/xfs/xfs_buf_item.h |  19 +++
-> >  3 files changed, 261 insertions(+), 218 deletions(-)
+> > As the above tracepoints show, the reservation requirement reduces
+> > from 3194 blocks to 2956 blocks as the workload runs.  Without any
+> > other changes in the filesystem, the same reservation requirement
+> > jumps from 2956 to 3052 blocks over a umount/mount cycle.
 > > 
-> ...
-> > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> > index 270ddb4d2313..bc6514a08760 100644
-> > --- a/fs/xfs/xfs_buf_item.c
-> > +++ b/fs/xfs/xfs_buf_item.c
-> > @@ -66,50 +66,12 @@ xfs_buf_item_size_segment(
-> >  	int				*nvecs,
-> >  	int				*nbytes)
-> >  {
-> > -	struct xfs_buf			*bp = bip->bli_buf;
-> > -	int				next_bit;
-> > -	int				last_bit;
-> > -
-> > -	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-> > -	if (last_bit == -1)
-> > -		return;
-> > -
-> >  	/*
-> >  	 * initial count for a dirty buffer is 2 vectors - the format structure
-> > -	 * and the first dirty region.
-> > +	 * and the dirty region. Dirty region is accounted for separately.
-> >  	 */
-> >  	*nvecs += 2;
-> > -	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
-> > -
-> > -	while (last_bit != -1) {
-> > -		/*
-> > -		 * This takes the bit number to start looking from and
-> > -		 * returns the next set bit from there.  It returns -1
-> > -		 * if there are no more bits set or the start bit is
-> > -		 * beyond the end of the bitmap.
-> > -		 */
-> > -		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
-> > -					last_bit + 1);
-> > -		/*
-> > -		 * If we run out of bits, leave the loop,
-> > -		 * else if we find a new set of bits bump the number of vecs,
-> > -		 * else keep scanning the current set of bits.
-> > -		 */
-> > -		if (next_bit == -1) {
-> > -			break;
-> > -		} else if (next_bit != last_bit + 1) {
-> > -			last_bit = next_bit;
-> > -			(*nvecs)++;
-> > -		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
-> > -			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
-> > -			    XFS_BLF_CHUNK)) {
-> > -			last_bit = next_bit;
-> > -			(*nvecs)++;
-> > -		} else {
-> > -			last_bit++;
-> > -		}
-> > -		*nbytes += XFS_BLF_CHUNK;
-> > -	}
-> > +	*nbytes += xfs_buf_log_format_size(blfp);
+> > To address this divergence, update the RMAPBT reservation to account
+> > blocks used for the rmapbt only rather than all blocks filled into
+> > the agfl. This patch makes several high-level changes toward that
+> > end:
+> > 
+> > 1.) Reintroduce an AGFL reservation type to serve as an accounting
+> >     no-op for blocks allocated to (or freed from) the AGFL.
+> > 2.) Invoke RMAPBT usage accounting from the actual rmapbt block
+> >     allocation path rather than the AGFL allocation path.
+> > 
+> > The first change is required because agfl blocks are considered free
+> > blocks throughout their lifetime. The perag reservation subsystem is
+> > invoked unconditionally by the allocation subsystem, so we need a
+> > way to tell the perag subsystem (via the allocation subsystem) to
+> > not make any accounting changes for blocks filled into the AGFL.
+> > 
+> > The second change causes the in-core RMAPBT reservation usage
+> > accounting to remain consistent with the on-disk state at all times
+> > and eliminates the risk of leaving the rmapbt reservation
+> > underfilled.
 > 
-> This function has been reduced such that the comment at the top could
-> probably use updating. In fact, we may be able to kill it entirely if
-> it's not used anywhere else..?
+> Sorry I haven't gotten to this in a couple of days.  This looks like a
+> reasonable enough fix to the complex perag machinery, though Dave and I
+> were batting around an idea last week -- what if instead of all these
+> reservation types and tracking we simply maintained a per-ag free space
+> reservation of a couple megabytes, handed out blocks if we got
+> desperate, and replenished that res when we had a good opportunity?
+> 
 
-Killed.
+Firstly, I essentially view this patch as a bug fix vs. some kind of
+larger rework. I'm hoping the split of the rename bits helps emphasize
+that... It's really just a change to accurately account rmapbt block
+consumption at runtime.
 
-> > @@ -167,19 +132,53 @@ xfs_buf_item_size(
-> >  		return;
-> >  	}
+I don't have much context on the broader question you've called out...
+I assume there was a larger requirement (associated with
+reflink+rmapbt?) that necessitated this kind of worst case reservation
+in the first place..? We've since applied it to things like the finobt
+(which I'm still not totally convinced was the right thing to do based
+on the vague justification for it), which kind of blurs the line between
+where it's a requirement vs. nice-to-have/band-aid for me.
+
+> I /think/ the answer to that question is that we need to try to reserve
+> enough blocks to satisfy the maximum size of the btree (if there is
+> one), not just a fixed-size delayed free space.  We already hand out
+> blocks if we get desperate, and we replenish the reservation when we
+> can.  Lastly, we need the reservation type tracking so that we avoid
+> things like the refcount btree stealing blocks from the agfl in
+> desperation.  I've also been wondering if each reservation should get
+> its own type so that we track refcountbt and finobt blocks separately.
+> 
+
+In principle, I'm not really for or against the existing mechanism,
+further granularizing it or changing it out for something else entirely.
+I'm confused about what exactly we're trying to fix in the first place,
+though. Is there a larger fundamental problem at play here? Is the
+reservation (or complexity of the mechanism) simply overkill? Something
+else..?
+
+> Otherwise I think this series looks ok, but I'll go over it in more
+> detail tomorrow.
+> 
+
+Thanks. No rush..
+
+Brian
+
+> --D
+> 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ag_resv.c    |  4 ++++
+> >  fs/xfs/libxfs/xfs_ag_resv.h    | 31 +++++++++++++++++++++++++++++++
+> >  fs/xfs/libxfs/xfs_alloc.c      | 18 ++++++------------
+> >  fs/xfs/libxfs/xfs_rmap_btree.c |  4 ++++
+> >  fs/xfs/xfs_mount.h             |  1 +
+> >  5 files changed, 46 insertions(+), 12 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> > index 0ca2e680034a..03885a968de8 100644
+> > --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> > +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> > @@ -326,6 +326,8 @@ xfs_ag_resv_alloc_extent(
+> >  	trace_xfs_ag_resv_alloc_extent(pag, type, args->len);
 > >  
-> > +
-> > +	/*
-> > +	 * If the last byte of teh first range is zero, then we've been fed a
-> > +	 * clean buffer with a XFS_BLI_DIRTY flag set. This should never happen,
-> > +	 * but be paranoid and catch it. If it does happen, then first should be
-> > +	 * zero, too.
-> > +	 */
-> > +	if (bip->bli_range[0].last == 0) {
-> > +		ASSERT(0);
-> > +		ASSERT(bip->bli_range[0].first == 0);
+> >  	switch (type) {
+> > +	case XFS_AG_RESV_AGFL:
 > > +		return;
-> > +	}
-> 
-> Isn't first == last == 0 a valid, inclusive range?
-
-It indicates someone logged a clean buffer, and we shouldn't ever
-get to this point if that has happened. Someone made a programming
-mistake, so better we catch it here than silently log an empty range
-and hope that log recovery does the right thing...
-
-> > @@ -234,16 +236,6 @@ xfs_buf_item_format_segment(
-> >  	 * memory structure.
-> >  	 */
-> >  	base_size = xfs_buf_log_format_size(blfp);
-> > -
-> > -	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-> > -	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
-> > -		/*
-> > -		 * If the map is not be dirty in the transaction, mark
-> > -		 * the size as zero and do not advance the vector pointer.
-> > -		 */
-> > -		return;
-> > -	}
-> > -
-> >  	blfp = xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BFORMAT, blfp, base_size);
-> >  	blfp->blf_size = 1;
-> 
-> Perhaps we should set the datamap bits before we format out the blf? ;)
-
-No. This code is slightly tricksy, clearly, but that's not something
-this patch has changed.
-
-That is: the blfp we pass in is the source data from the incore buf
-log format structure attached to the buf log item. xlog_copy_iovec()
-returns a pointer to the log iovec data buffer we copied the source
-into. IOWS, after the call to xlog_copy_iovec() blfp points to the
-structure that will be written to the log, not the in-memory
-structure, and we modify that repeatedly as we add new iovecs
-containing the buffer data being logged.
-
-I'll clean it up to name the incoming blfp to "src_blfp" so it's
-clear we are operating on different structures here.
-
-> 
+> >  	case XFS_AG_RESV_METADATA:
+> >  	case XFS_AG_RESV_RMAPBT:
+> >  		resv = xfs_perag_resv(pag, type);
+> > @@ -366,6 +368,8 @@ xfs_ag_resv_free_extent(
+> >  	trace_xfs_ag_resv_free_extent(pag, type, len);
 > >  
-> > @@ -258,46 +250,40 @@ xfs_buf_item_format_segment(
-> >  		return;
-> >  	}
+> >  	switch (type) {
+> > +	case XFS_AG_RESV_AGFL:
+> > +		return;
+> >  	case XFS_AG_RESV_METADATA:
+> >  	case XFS_AG_RESV_RMAPBT:
+> >  		resv = xfs_perag_resv(pag, type);
+> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+> > index 8d6c687deef3..938f2f96c5e8 100644
+> > --- a/fs/xfs/libxfs/xfs_ag_resv.h
+> > +++ b/fs/xfs/libxfs/xfs_ag_resv.h
+> > @@ -32,4 +32,35 @@ void xfs_ag_resv_alloc_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
+> >  void xfs_ag_resv_free_extent(struct xfs_perag *pag, enum xfs_ag_resv_type type,
+> >  		struct xfs_trans *tp, xfs_extlen_t len);
 > >  
-> > +	blfp->blf_size++;
-> >  
-> >  	/*
-> > -	 * Fill in an iovec for each set of contiguous chunks.
-> > +	 * Now we need to set the bits in the bitmap and set up the iovecs
-> > +	 * appropriately. We know there is a contiguous range in this buffer
-> > +	 * than needs to be set, so find the first bit, the last bit, and
-> > +	 * go from there.
-> >  	 */
-> > -	last_bit = first_bit;
-> > -	nbits = 1;
-> > -	for (;;) {
-> > -		/*
-> > -		 * This takes the bit number to start looking from and
-> > -		 * returns the next set bit from there.  It returns -1
-> > -		 * if there are no more bits set or the start bit is
-> > -		 * beyond the end of the bitmap.
-> > -		 */
-> > -		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
-> > -					(uint)last_bit + 1);
-> > -		/*
-> > -		 * If we run out of bits fill in the last iovec and get out of
-> > -		 * the loop.  Else if we start a new set of bits then fill in
-> > -		 * the iovec for the series we were looking at and start
-> > -		 * counting the bits in the new one.  Else we're still in the
-> > -		 * same set of bits so just keep counting and scanning.
-> > -		 */
-> > -		if (next_bit == -1) {
-> > -			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
-> > -						first_bit, nbits);
-> > -			blfp->blf_size++;
-> > -			break;
-> > -		} else if (next_bit != last_bit + 1 ||
-> > -		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
-> 
-> FYI... this kills the only callers of xfs_buf_item_copy_iovec() and
-> xfs_buf_item_straddle() so they should probably be removed.
-
-Good catch. Removed.
-
-> 
-> > -			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
-> > -						first_bit, nbits);
-> > -			blfp->blf_size++;
-> > -			first_bit = next_bit;
-> > -			last_bit = next_bit;
-> > -			nbits = 1;
-> > -		} else {
-> > -			last_bit++;
-> > -			nbits++;
-> > -		}
-> > -	}
-> > +	start = 0;
-> > +	if (offset < rp->first)
-> > +		start = rp->first - offset;
-> > +	end = length - 1;
-> > +	if (offset + length > rp->last)
-> > +		end = rp->last - offset - 1;
+> > +/*
+> > + * RMAPBT reservation accounting wrappers. Since rmapbt blocks are sourced from
+> > + * the AGFL, they are allocated one at a time and the reservation updates don't
+> > + * require a transaction.
+> > + */
+> > +static inline void
+> > +xfs_ag_resv_rmapbt_alloc(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno)
+> > +{
+> > +	struct xfs_alloc_arg	args = {0};
+> > +	struct xfs_perag	*pag;
 > > +
-> 
-> FWIW, it took me a second to identify what was going on here. It might
-> be useful to incorporate that we're calculating the relative byte
-> offsets in order to convert into the bitmap in the new comment above.
-
-Done.
-
-> 
-> Also, I could be lost in the maze a bit here, but why the '- 1' in the
-> end calculation above? Isn't rp->last inclusive?
-
-It was fixing a bug in the initial setting of rp->last, in the case
-where the first range is being set up (didn't have a "- 1" in that
-data). Fixed the initial bug, removed the -1s from here.
-
-> > +	start &= ~((1 << XFS_BLF_SHIFT) - 1);
-> > +	first_bit = start >> XFS_BLF_SHIFT;
-> 
-> Why the mask if we're going to right shift anyways?
-
-Left over debug stuff, I think. Removed.
-
-> > @@ -349,10 +334,36 @@ xfs_buf_item_format(
-> >  		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
-> >  	}
-> >  
-> > -	for (i = 0; i < bip->bli_format_count; i++) {
-> > -		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
-> > -					    &bip->bli_formats[i]);
-> > -		offset += BBTOB(bp->b_maps[i].bm_len);
-> > +	for (i = 0, offset = 0;
-> > +	     i < bip->bli_format_count;
-> > +	     i++, offset += BBTOB(bp->b_maps[i].bm_len)) {
+> > +	args.len = 1;
+> > +	pag = xfs_perag_get(mp, agno);
+> > +	xfs_ag_resv_alloc_extent(pag, XFS_AG_RESV_RMAPBT, &args);
+> > +	xfs_perag_put(pag);
+> > +}
 > > +
-> > +		/* stale regions cover the entire segment */
-> 
-> Something like "stale regions are fixed size" seems more accurate, since
-> we aren't actually logging any range(s).. Hm?
-
-They aren't fixed size, either :P
-
-	/*
-	 * Stale buffers do not have any data logged with them, so
-	 * shortcut the dirty range checks and just emit a segment
-	 * header.
-	 */
-
-
-> > -static void
-> > -xfs_buf_item_log_segment(
-> > +void
-> > +xfs_buf_item_log(
-> > +	struct xfs_buf_log_item	*bip,
-> >  	uint			first,
-> > -	uint			last,
-> > -	uint			*map)
-> > +	uint			last)
+> > +static inline void
+> > +xfs_ag_resv_rmapbt_free(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno)
+> > +{
+> > +	struct xfs_perag	*pag;
+> > +
+> > +	pag = xfs_perag_get(mp, agno);
+> > +	xfs_ag_resv_free_extent(pag, XFS_AG_RESV_RMAPBT, NULL, 1);
+> > +	xfs_perag_put(pag);
+> > +}
+> > +
+> >  #endif	/* __XFS_AG_RESV_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index e53d55453dc5..8c401efb2d74 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -711,7 +711,7 @@ xfs_alloc_ag_vextent(
+> >  
+> >  	ASSERT(args->len >= args->minlen);
+> >  	ASSERT(args->len <= args->maxlen);
+> > -	ASSERT(!args->wasfromfl || args->resv != XFS_AG_RESV_RMAPBT);
+> > +	ASSERT(!args->wasfromfl || args->resv != XFS_AG_RESV_AGFL);
+> >  	ASSERT(args->agbno % args->alignment == 0);
+> >  
+> >  	/* if not file data, insert new block into the reverse map btree */
+> > @@ -1564,7 +1564,6 @@ xfs_alloc_ag_vextent_small(
+> >  	int		*stat)	/* status: 0-freelist, 1-normal/none */
 > >  {
-> > -	uint		first_bit;
-> > -	uint		last_bit;
-> > -	uint		bits_to_set;
-> > -	uint		bits_set;
-> > -	uint		word_num;
-> > -	uint		*wordp;
-> > -	uint		bit;
-> > -	uint		end_bit;
-> > -	uint		mask;
-> > +	struct xfs_bli_range	*rp = NULL;
-> > +	int			i;
-> > +	ASSERT(last != 0);
-> 
-> The current code looks like it implicitly handles this case.
-
-Yes, it may, but logging a zero size dirty region is simply wrong.
-
-> Asserts
-> aside, it looks like this code could essentially add the range, fail to
-> size it correctly (due to the earlier check in the _size() path), but
-> then continue to log it based on the existing xfs_buf_item_log_segment()
-> code that has been shifted over to xfs_buf_item_format_segment().
-> 
-> The interface requests an inclusive range, so perhaps we should just
-> check for last == 0 (assuming first == 0) and bump last so the roundup
-> and all subsequent code continues to behave exactly as it does today.
-
-No code today passes last == 0 into this function. I want to make
-sure it stays taht way, because it's indicative of a bug in the code
-that is calling xfs_buf_item_log().
-
-> >  	/*
-> >  	 * Finally, set any bits left to be set in one last partial word.
-> > +	 * Case 3a: Extend last slot.
-> > +	 *
-> > +	 * If the range is beyond the last slot, extend the last slot to
-> > +	 * cover it. This treated the same as if an overlap existed with
-> > +	 * the last range.
+> >  	struct xfs_owner_info	oinfo;
+> > -	struct xfs_perag	*pag;
+> >  	int		error;
+> >  	xfs_agblock_t	fbno;
+> >  	xfs_extlen_t	flen;
+> > @@ -1583,7 +1582,7 @@ xfs_alloc_ag_vextent_small(
+> >  	 * freelist.
 > >  	 */
-> > -	end_bit = bits_to_set - bits_set;
-> > -	if (end_bit) {
-> > -		mask = (1U << end_bit) - 1;
-> > -		*wordp |= mask;
-> > +	if (i == XFS_BLI_RANGES) {
-> > +		ASSERT(bip->bli_ranges == XFS_BLI_RANGES);
-> > +		rp = &bip->bli_range[XFS_BLI_RANGES - 1];
+> >  	else if (args->minlen == 1 && args->alignment == 1 &&
+> > -		 args->resv != XFS_AG_RESV_RMAPBT &&
+> > +		 args->resv != XFS_AG_RESV_AGFL &&
+> >  		 (be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_flcount)
+> >  		  > args->minleft)) {
+> >  		error = xfs_alloc_get_freelist(args->tp, args->agbp, &fbno, 0);
+> > @@ -1616,18 +1615,13 @@ xfs_alloc_ag_vextent_small(
+> >  			/*
+> >  			 * If we're feeding an AGFL block to something that
+> >  			 * doesn't live in the free space, we need to clear
+> > -			 * out the OWN_AG rmap and add the block back to
+> > -			 * the RMAPBT per-AG reservation.
+> > +			 * out the OWN_AG rmap.
+> >  			 */
+> >  			xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+> >  			error = xfs_rmap_free(args->tp, args->agbp, args->agno,
+> >  					fbno, 1, &oinfo);
+> >  			if (error)
+> >  				goto error0;
+> > -			pag = xfs_perag_get(args->mp, args->agno);
+> > -			xfs_ag_resv_free_extent(pag, XFS_AG_RESV_RMAPBT,
+> > -					args->tp, 1);
+> > -			xfs_perag_put(pag);
+> >  
+> >  			*stat = 0;
+> >  			return 0;
+> > @@ -2153,7 +2147,7 @@ xfs_alloc_fix_freelist(
+> >  		if (error)
+> >  			goto out_agbp_relse;
+> >  		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
+> > -					   &targs.oinfo, XFS_AG_RESV_RMAPBT);
+> > +					   &targs.oinfo, XFS_AG_RESV_AGFL);
+> >  		if (error)
+> >  			goto out_agbp_relse;
+> >  		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
+> > @@ -2179,7 +2173,7 @@ xfs_alloc_fix_freelist(
+> >  	while (pag->pagf_flcount < need) {
+> >  		targs.agbno = 0;
+> >  		targs.maxlen = need - pag->pagf_flcount;
+> > -		targs.resv = XFS_AG_RESV_RMAPBT;
+> > +		targs.resv = XFS_AG_RESV_AGFL;
+> >  
+> >  		/* Allocate as many blocks as possible at once. */
+> >  		error = xfs_alloc_ag_vextent(&targs);
+> > @@ -2860,7 +2854,7 @@ xfs_free_extent(
+> >  	int			error;
+> >  
+> >  	ASSERT(len != 0);
+> > -	ASSERT(type != XFS_AG_RESV_RMAPBT);
+> > +	ASSERT(type != XFS_AG_RESV_AGFL);
+> >  
+> >  	if (XFS_TEST_ERROR(false, mp,
+> >  			XFS_ERRTAG_FREE_EXTENT))
+> > diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > index e829c3e489ea..8560091554e0 100644
+> > --- a/fs/xfs/libxfs/xfs_rmap_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+> > @@ -130,6 +130,8 @@ xfs_rmapbt_alloc_block(
+> >  	be32_add_cpu(&agf->agf_rmap_blocks, 1);
+> >  	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
+> >  
+> > +	xfs_ag_resv_rmapbt_alloc(cur->bc_mp, cur->bc_private.a.agno);
 > > +
-> > +		if (first < rp->first)
-> > +			rp->first = rounddown(first, XFS_BLF_CHUNK);
-> > +		if (last > rp->last)
-> > +			rp->last = roundup(last, XFS_BLF_CHUNK) - 1;
-> > +		goto merge;
-> >  	}
-> 
-> If I read this right, a 5th range arbitrarily extends the last range,
-> regardless of where that range sits in the buffer. For example, if we've
-> logged 4 small (128 byte), non-overlapping ranges within [4k-64k], then
-> say we log 0-128, we end up logging the entire 64k buffer.
-
-Yup, I just did that for simplicity and convenience.
-
-> It would be nice to be a little smarter here. A couple options could be
-> to merge with the first buffer that starts after the new range rather
-> than just using the last, or perhaps implementing a mechanism to
-> condense non-overlapping ranges to free a slot for a new range if doing
-> so would reduce the overall footprint.
-> 
-> Note that the latter sounded like overkill when I first thought of it,
-> but I think it may be possible to enhance the existing merge algorithm
-> you've already included into something that could merge non-adjacent
-> ranges based on an optional "weight" parameter that describes the
-> minimum distance between the new range and the closest existing range.
-> With something of that nature factored into a separate helper, it may
-> not be that difficult to make a decision on whether to condense, merge
-> or pick an existing range to extend. Worth a thought, at least...
-
-Pretty simple to do that, now that I look at it. We don't even need
-a weight calculation because the ranges are ordered and we can
-easily detect when the incoming range falls between two entries.
-
-I'll post an updated version once I've tested it.
-
-Thanks for looking at this, Brian!
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> >  	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+> >  	*stat = 1;
+> >  	return 0;
+> > @@ -158,6 +160,8 @@ xfs_rmapbt_free_block(
+> >  			      XFS_EXTENT_BUSY_SKIP_DISCARD);
+> >  	xfs_trans_agbtree_delta(cur->bc_tp, -1);
+> >  
+> > +	xfs_ag_resv_rmapbt_free(cur->bc_mp, cur->bc_private.a.agno);
+> > +
+> >  	return 0;
+> >  }
+> >  
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index cf84288b65ca..7aae5af71aba 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -326,6 +326,7 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+> >  /* per-AG block reservation data structures*/
+> >  enum xfs_ag_resv_type {
+> >  	XFS_AG_RESV_NONE = 0,
+> > +	XFS_AG_RESV_AGFL,
+> >  	XFS_AG_RESV_METADATA,
+> >  	XFS_AG_RESV_RMAPBT,
+> >  };
+> > -- 
+> > 2.13.6
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
