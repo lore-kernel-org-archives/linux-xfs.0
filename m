@@ -1,69 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60286 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751066AbeBHMvz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Feb 2018 07:51:55 -0500
-Date: Thu, 8 Feb 2018 20:51:52 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: skip xfs_check in _check_xfs_filesystem
-Message-ID: <20180208125152.GE18267@eguan.usersys.redhat.com>
-References: <151803835881.19313.17455678207236452557.stgit@magnolia>
- <151803837117.19313.3481001926133028039.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:62228 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752682AbeBGCBf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Feb 2018 21:01:35 -0500
+Date: Wed, 7 Feb 2018 12:57:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_extent_busy_flush vs. aio
+Message-ID: <20180207015741.yrhe3zfaypwljsdu@destitution>
+References: <20180123164718.GE32478@bfoster.bfoster>
+ <e1229a02-33ea-e5d5-d66f-36fa553a3393@scylladb.com>
+ <20180123173902.GF32478@bfoster.bfoster>
+ <f4751375-0710-cec8-ac6d-1f9546bba1ce@scylladb.com>
+ <20180125130830.GD43198@bfoster.bfoster>
+ <dd148ae0-fe9b-b5b6-5b03-05f0894ce969@scylladb.com>
+ <20180129113556.fd4y3t5yupeqtn5t@destitution>
+ <6eddde50-ad81-f2ce-c273-86442598a934@scylladb.com>
+ <20180129215645.c5dfa3mmoio2iovo@destitution>
+ <e76c840f-edd0-2dcc-e070-313cd2ea31da@scylladb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151803837117.19313.3481001926133028039.stgit@magnolia>
+In-Reply-To: <e76c840f-edd0-2dcc-e070-313cd2ea31da@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Wed, Feb 07, 2018 at 01:19:31PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Feb 06, 2018 at 04:10:12PM +0200, Avi Kivity wrote:
 > 
-> xfs_check has been long obsolete, so stop running it automatically
-> after every test.  Tests that explicitly want xfs_check can call it
-> via _scratch_xfs_check or _xfs_check; that part doesn't go away.
+> On 01/29/2018 11:56 PM, Dave Chinner wrote:
+> > On Mon, Jan 29, 2018 at 01:44:14PM +0200, Avi Kivity wrote:
+> > > > There's many reasons this can happen, but the most common is the
+> > > > working files in a directory (or subset of directories in the same
+> > > > AG) have a combined space usage of larger than an AG ....
+> > > That's certainly possible, even likely (one huge directory with all of the
+> > > files).
+> > > 
+> > > This layout is imposed on us by the compatibility gods. Is there a way to
+> > > tell XFS to change its policy of on-ag-per-directory?
+> > mount with inode32. That rotors files around all AGs in a round
+> > robin fashion instead of trying to keep directory locality for  a
+> > working set. i.e. it distributes the files evenly across the
+> > filesystem.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide/tmp/en-US/html/ch06s09.html
+> says:
+> 
+> "When 32 bit inode numbers are used on a volume larger than 1TB in size,
+> several changes occur.
+> 
+> A 100TB volume using 256 byte inodes mounted in the default inode32 mode has
+> just one percent of its space available for allocating inodes.
+> 
+> XFS will reserve the first 1TB of disk space exclusively for inodes to
+> ensure that the imbalance is no worse than this due to file data
+> allocations."
 
-I'd like to see an ACK on this from XFS community.
+s/exclusively//
 
-Thanks,
-Eryu
+> Does this mean that a 1.1TB disk has 1TB reserved for inodes and 0.1TB left
+> over for data?
 
-> ---
->  common/xfs |   17 -----------------
->  1 file changed, 17 deletions(-)
-> 
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 3dba40d..c63e5dc 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -386,23 +386,6 @@ _check_xfs_filesystem()
->  		ok=0
->  	fi
->  
-> -	# xfs_check runs out of memory on large files, so even providing the test
-> -	# option (-t) to avoid indexing the free space trees doesn't make it pass on
-> -	# large filesystems. Avoid it.
-> -	if [ "$LARGE_SCRATCH_DEV" != yes ]; then
-> -		_xfs_check $extra_log_options $device 2>&1 |\
-> -			_fix_malloc >$tmp.fs_check
-> -	fi
-> -	if [ -s $tmp.fs_check ]; then
-> -		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (c)"
-> -		echo "*** xfs_check output ***"		>>$seqres.full
-> -		cat $tmp.fs_check			>>$seqres.full
-> -		echo "*** end xfs_check output"		>>$seqres.full
-> -
-> -		xfs_metadump $device $seqres.check	>>$seqres.full 2>&1
-> -		ok=0
-> -	fi
-> -
->  	$XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
->  	if [ $? -ne 0 ]; then
->  		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (r)"
-> 
+No, that would be silly.
+
+> Or is it driven by the "one percent" which is mentioned
+> above, so it would be 0.011TB?
+
+No, you're inferring behavioural rules that don't exist from a
+simple example.
+
+Maximum number of inodes is controlled by min(imaxpct, free space).
+For inode32, "free space" is what's in the first 32 bits of the inode
+address space. For inode64, it's global free space.
+
+To enable this, inode32 sets the AGs wholly within the first 32 bits
+of the inode address space to be "metadata prefered" and "inode
+capable".
+
+Important things to note:
+
+	- "first 32 bits of inode address space" means the range of
+	  space that inode32 reserves for inodes changes according
+	  to inode size. 256 byte inodes = 1TB, 2kB inodes = 8TB. If
+	  the filesystem is smaller than this threshold, then it
+	  will silently use the inode64 allocation policy until the
+	  filesystem is grown beyond 32 bit inode address space
+	  size.
+
+	- "inode capable" means inodes can be allocated in the AG
+
+	- "metadata preferred" means user data will not get
+	  allocated in this AG unless all non-prefered AGs are full.
+
+
+So, assuming 256 byte inodes, you 1.1TB fs will have a imaxpct of
+~25%, allowing a maximum of 256GB of inodes or about a billion
+inodes.  But once you put more than 0.1TB of data into the
+filesystem, data will start filling up the inode capable AGs as
+well, and then your limit for inodes looks just like inode64 (i.e.
+depedent on free space).
+
+IOWs, inode32 limits where and how many inodes you can
+create, not how much user data you can write inode the filesystem.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
