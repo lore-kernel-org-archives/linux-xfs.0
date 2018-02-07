@@ -1,99 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23001 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42472 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751031AbeBIQLp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Feb 2018 11:11:45 -0500
-Date: Fri, 9 Feb 2018 11:11:43 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/7] xfs: make imaxpct changes in growfs separate
-Message-ID: <20180209161143.GB21413@bfoster.bfoster>
-References: <20180201064202.7174-1-david@fromorbit.com>
- <20180201064202.7174-6-david@fromorbit.com>
+        id S1750729AbeBGWXk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 7 Feb 2018 17:23:40 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E4D298E6FE
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Feb 2018 22:23:39 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7CC9017A6B
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Feb 2018 22:23:39 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: use memset to initialize xfs_scrub_agfl_info
+Message-ID: <c6ed0221-31ef-0241-f0d0-418aaf6431c2@redhat.com>
+Date: Wed, 7 Feb 2018 16:23:38 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180201064202.7174-6-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Feb 01, 2018 at 05:42:00PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When growfs changes the imaxpct value of the filesystem, it runs
-> through all the "change size" growfs code, whether it needs to or
-> not. Separate out changing imaxpct into it's own function and
-> transaction to simplify the rest of the growfs code.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_fsops.c | 67 +++++++++++++++++++++++++++++++++++++++---------------
->  1 file changed, 49 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 94650b7d517e..5c844e540320 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-...
-> @@ -673,25 +661,68 @@ xfs_growfs_log_private(
-...
->  int
->  xfs_growfs_data(
-> -	xfs_mount_t		*mp,
-> -	xfs_growfs_data_t	*in)
-> +	struct xfs_mount	*mp,
-> +	struct xfs_growfs_data	*in)
->  {
-> -	int error;
-> +	int			error = 0;
->  
->  	if (!capable(CAP_SYS_ADMIN))
->  		return -EPERM;
->  	if (!mutex_trylock(&mp->m_growlock))
->  		return -EWOULDBLOCK;
-> +
-> +	/* update imaxpct seperately to the physical grow of the filesystem */
+Apparently different gcc versions have competing and
+incompatible notions of how to initialize at declaration,
+so just give up and fall back to the time-tested memset().
 
-separately
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> +	if (in->imaxpct != mp->m_sb.sb_imax_pct) {
-> +		error = xfs_growfs_imaxpct(mp, in->imaxpct);
-> +		if (error)
-> +			goto out_error;
-> +	}
-> +
->  	error = xfs_growfs_data_private(mp, in);
-> +	if (error)
-> +		goto out_error;
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index fd97552..05c66e0 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -767,7 +767,7 @@ struct xfs_scrub_agfl_info {
+ xfs_scrub_agfl(
+ 	struct xfs_scrub_context	*sc)
+ {
+-	struct xfs_scrub_agfl_info	sai = { 0 };
++	struct xfs_scrub_agfl_info	sai;
+ 	struct xfs_agf			*agf;
+ 	xfs_agnumber_t			agno;
+ 	unsigned int			agflcount;
+@@ -795,6 +795,7 @@ struct xfs_scrub_agfl_info {
+ 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+ 		goto out;
+ 	}
++	memset(&sai, 0, sizeof(sai));
+ 	sai.sz_entries = agflcount;
+ 	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount, KM_NOFS);
+ 	if (!sai.entries) {
 
-The 'xfs_growfs -m <maxpct>' use case typically doesn't involve a size
-change. With this change, there's no reason to run through
-xfs_growfs_data_private() if in.newblocks == mp->m_sb.sb_dblocks, right?
-Otherwise this seems fine.
-
-Brian
-
-> +
-> +	/*
-> +	 * Post growfs calculations needed to reflect new state in operations
-> +	 */
-> +	if (mp->m_sb.sb_imax_pct) {
-> +		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
-> +		do_div(icount, 100);
-> +		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
-> +	} else
-> +		mp->m_maxicount = 0;
-> +
-> +out_error:
->  	/*
->  	 * Increment the generation unconditionally, the error could be from
->  	 * updating the secondary superblocks, in which case the new size
-> -- 
-> 2.15.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
