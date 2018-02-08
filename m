@@ -1,228 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48038 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752215AbeBHSxX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Feb 2018 13:53:23 -0500
-Date: Thu, 8 Feb 2018 13:53:21 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/7] xfs: convert growfs AG header init to use buffer
- lists
-Message-ID: <20180208185320.GB15342@bfoster.bfoster>
-References: <20180201064202.7174-1-david@fromorbit.com>
- <20180201064202.7174-3-david@fromorbit.com>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:16513 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752046AbeBHXR2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Feb 2018 18:17:28 -0500
+Date: Fri, 9 Feb 2018 10:17:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: rewrite the fdatasync optimization
+Message-ID: <20180208231725.GH20266@dastard>
+References: <20180205073933.17065-1-hch@lst.de>
+ <20180205221726.c2hdvaairki27gxf@destitution>
+ <20180206072356.GB1649@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180201064202.7174-3-david@fromorbit.com>
+In-Reply-To: <20180206072356.GB1649@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
 
-On Thu, Feb 01, 2018 at 05:41:57PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Feb 06, 2018 at 08:23:56AM +0100, Christoph Hellwig wrote:
+> On Tue, Feb 06, 2018 at 09:17:26AM +1100, Dave Chinner wrote:
+> > > Currently we need to the ilock over the log force in xfs_fsync so that we
+> > > can protect ili_fsync_fields against incorrect manipulation.
+> > > 
+> > > But if instead we add new XFS_ILOG_VERSION pseudo log area similar to the
+> > > timestamp one we can use that to just record the last dirty / fdatasync
+> > > dirty lsn as long as the inode is pinned, and clear it when unpinning to
+> > > avoid holding the ilock over I/O.
+> > 
+> > I thought that NFS requires the iversion changes to be made stable
+> > at the same time as the data changes they correspond to is made
+> > stable? i.e. NFS requires us to stabilise the on disk iversion field
+> > during fdatasync.
 > 
-> We currently write all new AG headers synchronously, which can be
-> slow for large grow operations. All we really need to do is ensure
-> all the headers are on disk before we run the growfs transaction, so
-> convert this to a buffer list and a delayed write operation. We
-> block waiting for the delayed write buffer submission to complete,
-> so this will fulfill the requirement to have all the buffers written
-> correctly before proceeding.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
+> Yes,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+So you're agreeing with me that if iversion is changed, then
+fdatasync needs to force the log.
 
->  fs/xfs/xfs_fsops.c | 74 ++++++++++++++++++++++++------------------------------
->  1 file changed, 33 insertions(+), 41 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index cd5196bf8756..d9e08d8cf9ac 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -81,7 +81,8 @@ xfs_grow_ag_headers(
->  	struct xfs_mount	*mp,
->  	xfs_agnumber_t		agno,
->  	xfs_extlen_t		agsize,
-> -	xfs_rfsblock_t		*nfree)
-> +	xfs_rfsblock_t		*nfree,
-> +	struct list_head	*buffer_list)
->  {
->  	struct xfs_agf		*agf;
->  	struct xfs_agi		*agi;
-> @@ -135,11 +136,8 @@ xfs_grow_ag_headers(
->  		agf->agf_refcount_level = cpu_to_be32(1);
->  		agf->agf_refcount_blocks = cpu_to_be32(1);
->  	}
-> -
-> -	error = xfs_bwrite(bp);
-> +	xfs_buf_delwri_queue(bp, buffer_list);
->  	xfs_buf_relse(bp);
-> -	if (error)
-> -		goto out_error;
->  
->  	/*
->  	 * AG freelist header block
-> @@ -164,10 +162,8 @@ xfs_grow_ag_headers(
->  	for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
->  		agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
->  
-> -	error = xfs_bwrite(bp);
-> +	xfs_buf_delwri_queue(bp, buffer_list);
->  	xfs_buf_relse(bp);
-> -	if (error)
-> -		goto out_error;
->  
->  	/*
->  	 * AG inode header block
-> @@ -201,10 +197,8 @@ xfs_grow_ag_headers(
->  	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
->  		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
->  
-> -	error = xfs_bwrite(bp);
-> +	xfs_buf_delwri_queue(bp, buffer_list);
->  	xfs_buf_relse(bp);
-> -	if (error)
-> -		goto out_error;
->  
->  	/*
->  	 * BNO btree root block
-> @@ -226,10 +220,8 @@ xfs_grow_ag_headers(
->  	arec->ar_blockcount = cpu_to_be32(
->  		agsize - be32_to_cpu(arec->ar_startblock));
->  
-> -	error = xfs_bwrite(bp);
-> +	xfs_buf_delwri_queue(bp, buffer_list);
->  	xfs_buf_relse(bp);
-> -	if (error)
-> -		goto out_error;
->  
->  	/*
->  	 * CNT btree root block
-> @@ -251,10 +243,8 @@ xfs_grow_ag_headers(
->  		agsize - be32_to_cpu(arec->ar_startblock));
->  	*nfree += be32_to_cpu(arec->ar_blockcount);
->  
-> -	error = xfs_bwrite(bp);
-> +	xfs_buf_delwri_queue(bp, buffer_list);
->  	xfs_buf_relse(bp);
-> -	if (error)
-> -		goto out_error;
->  
->  	/* RMAP btree root block */
->  	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> @@ -326,10 +316,8 @@ xfs_grow_ag_headers(
->  			be16_add_cpu(&block->bb_numrecs, 1);
->  		}
->  
-> -		error = xfs_bwrite(bp);
-> +		xfs_buf_delwri_queue(bp, buffer_list);
->  		xfs_buf_relse(bp);
-> -		if (error)
-> -			goto out_error;
->  	}
->  
->  	/*
-> @@ -345,11 +333,8 @@ xfs_grow_ag_headers(
->  	}
->  
->  	xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
-> -
-> -	error = xfs_bwrite(bp);
-> +	xfs_buf_delwri_queue(bp, buffer_list);
->  	xfs_buf_relse(bp);
-> -	if (error)
-> -		goto out_error;
->  
->  	/*
->  	 * FINO btree root block
-> @@ -364,13 +349,9 @@ xfs_grow_ag_headers(
->  			goto out_error;
->  		}
->  
-> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
-> -					     0, 0, agno, 0);
-> -
-> -		error = xfs_bwrite(bp);
-> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO, 0, 0, agno, 0);
-> +		xfs_buf_delwri_queue(bp, buffer_list);
->  		xfs_buf_relse(bp);
-> -		if (error)
-> -			goto out_error;
->  	}
->  
->  	/*
-> @@ -386,13 +367,9 @@ xfs_grow_ag_headers(
->  			goto out_error;
->  		}
->  
-> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
-> -				     0, 0, agno, 0);
-> -
-> -		error = xfs_bwrite(bp);
-> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC, 0, 0, agno, 0);
-> +		xfs_buf_delwri_queue(bp, buffer_list);
->  		xfs_buf_relse(bp);
-> -		if (error)
-> -			goto out_error;
->  	}
->  
->  out_error:
-> @@ -419,6 +396,7 @@ xfs_growfs_data_private(
->  	xfs_agnumber_t		oagcount;
->  	int			pct;
->  	xfs_trans_t		*tp;
-> +	LIST_HEAD		(buffer_list);
->  
->  	nb = in->newblocks;
->  	pct = in->imaxpct;
-> @@ -459,9 +437,16 @@ xfs_growfs_data_private(
->  		return error;
->  
->  	/*
-> -	 * Write new AG headers to disk. Non-transactional, but written
-> -	 * synchronously so they are completed prior to the growfs transaction
-> -	 * being logged.
-> +	 * Write new AG headers to disk. Non-transactional, but need to be
-> +	 * written and completed prior to the growfs transaction being logged.
-> +	 * To do this, we use a delayed write buffer list and wait for
-> +	 * submission and IO completion of the list as a whole. This allows the
-> +	 * IO subsystem to merge all the AG headers in a single AG into a single
-> +	 * IO and hide most of the latency of the IO from us.
-> +	 *
-> +	 * This also means that if we get an error whilst building the buffer
-> +	 * list to write, we can cancel the entire list without having written
-> +	 * anything.
->  	 */
->  	nfree = 0;
->  	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
-> @@ -472,10 +457,17 @@ xfs_growfs_data_private(
->  		else
->  			agsize = mp->m_sb.sb_agblocks;
->  
-> -		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree);
-> -		if (error)
-> +		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree,
-> +					    &buffer_list);
-> +		if (error) {
-> +			xfs_buf_delwri_cancel(&buffer_list);
->  			goto error0;
-> +		}
->  	}
-> +	error = xfs_buf_delwri_submit(&buffer_list);
-> +	if (error)
-> +		goto error0;
-> +
->  	xfs_trans_agblocks_delta(tp, nfree);
->  
->  	/*
-> -- 
-> 2.15.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> and this patch doesn't change that behavior.
+
+I think it does.
+
+> The reason why the
+> new XFS_ILOG_VERSION flag is needed is to be able to check if
+> an fdatasync needs to flush out an inode log item.
+
+If we don't change iversion because it's not been queried, then in
+the current code then XFS_ILOG_CORE will not be set and so the inode
+remains only timestamp dirty and does not get flushed by fdatasync.
+If we change iversion, then XFS_ILOG_CORE gets set, and the next
+fdatasync will correctly flush the inode log item.
+
+That's exactly the behaviour we need to meet the above NFS
+requirements - the iversion change is associated with the new data
+being written, not the timestamp change we are making as a result of
+the data change.
+
+If we look at your code now, when we change iversion we'll set
+XFS_ILOG_VERSION and that will now behave identically to the
+timestamp code w.r.t. fdatasync. i.e. we will *never* flush pure
+iversion/timestamp changes on fdatasync.
+
+That's not the behaviour NFS requires - we'll stabilise data but we
+will not stabilise the iversion change that goes along with that
+data change. Hence if we crash after fdatasync, there'll be new data
+on disk and an old iversion....
+
+So, AFAICT, this patch does change behviour and it breaks the
+iversion semantics that the NFS server requires for data
+modification.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
