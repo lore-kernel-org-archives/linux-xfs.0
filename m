@@ -1,47 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:58558 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932184AbeBGBdu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Feb 2018 20:33:50 -0500
-Date: Wed, 7 Feb 2018 12:34:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_io: support a basic extent swap command
-Message-ID: <20180207013441.fwxtfm7nbtsjwidp@destitution>
-References: <20180206130247.61882-1-bfoster@redhat.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60286 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751066AbeBHMvz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Feb 2018 07:51:55 -0500
+Date: Thu, 8 Feb 2018 20:51:52 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 2/4] xfs: skip xfs_check in _check_xfs_filesystem
+Message-ID: <20180208125152.GE18267@eguan.usersys.redhat.com>
+References: <151803835881.19313.17455678207236452557.stgit@magnolia>
+ <151803837117.19313.3481001926133028039.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180206130247.61882-1-bfoster@redhat.com>
+In-Reply-To: <151803837117.19313.3481001926133028039.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Feb 06, 2018 at 08:02:47AM -0500, Brian Foster wrote:
-> Extent swap is a low level mechanism exported by XFS to facilitate
-> filesystem defragmentation. It is typically invoked by xfs_fsr under
-> conditions that will atomically adjust inode extent state without
-> loss of file data.
+On Wed, Feb 07, 2018 at 01:19:31PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> xfs_fsr does not provide the necessary controls for low-level
-> testing of the extent swap command, however. For example, xfs_fsr
-> implements policies that dictate when to perform an extent swap and
-> offers no control over the donor file characteristics.
+> xfs_check has been long obsolete, so stop running it automatically
+> after every test.  Tests that explicitly want xfs_check can call it
+> via _scratch_xfs_check or _xfs_check; that part doesn't go away.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hmmmm. I'm confused - we already use xfs_fsr for low level testing
-of swapext functionality with carefully constructed donor file
-characteristics in xfs/227.
+I'd like to see an ACK on this from XFS community.
 
-What am I missing here?
+Thanks,
+Eryu
 
-I don't see any problem with adding a specific command to run
-more controlled swapext tests, i just want to make sure I understand
-what xfs_fsr is not providing you with.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  common/xfs |   17 -----------------
+>  1 file changed, 17 deletions(-)
+> 
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 3dba40d..c63e5dc 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -386,23 +386,6 @@ _check_xfs_filesystem()
+>  		ok=0
+>  	fi
+>  
+> -	# xfs_check runs out of memory on large files, so even providing the test
+> -	# option (-t) to avoid indexing the free space trees doesn't make it pass on
+> -	# large filesystems. Avoid it.
+> -	if [ "$LARGE_SCRATCH_DEV" != yes ]; then
+> -		_xfs_check $extra_log_options $device 2>&1 |\
+> -			_fix_malloc >$tmp.fs_check
+> -	fi
+> -	if [ -s $tmp.fs_check ]; then
+> -		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (c)"
+> -		echo "*** xfs_check output ***"		>>$seqres.full
+> -		cat $tmp.fs_check			>>$seqres.full
+> -		echo "*** end xfs_check output"		>>$seqres.full
+> -
+> -		xfs_metadump $device $seqres.check	>>$seqres.full 2>&1
+> -		ok=0
+> -	fi
+> -
+>  	$XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
+>  	if [ $? -ne 0 ]; then
+>  		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (r)"
+> 
