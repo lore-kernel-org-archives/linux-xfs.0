@@ -1,205 +1,711 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:52763 "EHLO mga05.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39070 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755058AbeBAUdA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Feb 2018 15:33:00 -0500
-Subject: [PATCH 2 1/2] dax: change bdev_dax_supported() to take a
- block_device as input
-From: Dave Jiang <dave.jiang@intel.com>
-Date: Thu, 01 Feb 2018 13:32:59 -0700
-Message-ID: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
+        id S1752215AbeBHSxR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Feb 2018 13:53:17 -0500
+Date: Thu, 8 Feb 2018 13:53:15 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/7] xfs: factor out AG header initialisation from growfs
+ core
+Message-ID: <20180208185315.GA15342@bfoster.bfoster>
+References: <20180201064202.7174-1-david@fromorbit.com>
+ <20180201064202.7174-2-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180201064202.7174-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-This is in preparation to support DAX for realtime device on XFS.
-bdev_dax_supported() will be taking a block_device as input instead of
-a superblock. The only place a super_block is used in this function is
-providing the id for debug outputs. Also __bdev_dax_supported()
-will be removed since it just directly calls bdev_dax_supported()
-and is not reference by any other code.
+On Thu, Feb 01, 2018 at 05:41:56PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The intialisation of new AG headers is mostly common with the
+> userspace mkfs code and growfs in the kernel, so start factoring it
+> out so we can move it to libxfs and use it in both places.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_fsops.c | 637 ++++++++++++++++++++++++++++-------------------------
+>  1 file changed, 331 insertions(+), 306 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 8b4545623e25..cd5196bf8756 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -71,20 +71,344 @@ xfs_growfs_get_hdr_buf(
+>  	return bp;
+>  }
+>  
+> +/*
+> + * Write new AG headers to disk. Non-transactional, but written
+> + * synchronously so they are completed prior to the growfs transaction
+> + * being logged.
+> + */
+> +static int
+> +xfs_grow_ag_headers(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_extlen_t		agsize,
+> +	xfs_rfsblock_t		*nfree)
+> +{
+...
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0,
+> +			&xfs_agf_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- drivers/dax/super.c |   33 ++++++++++++++++-----------------
- fs/ext2/super.c     |    2 +-
- fs/ext4/super.c     |    2 +-
- fs/xfs/xfs_ioctl.c  |    2 +-
- fs/xfs/xfs_super.c  |    2 +-
- include/linux/dax.h |    8 ++------
- 6 files changed, 22 insertions(+), 27 deletions(-)
+I was going to suggest to kill the error label since it serves no
+purpose in this helper, but a quick look ahead shows that it goes away.
+Looks good to me:
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 473af694ad1c..3bdf6787b6df 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -70,11 +70,10 @@ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
- 	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
- }
- EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
--#endif
- 
- /**
-- * __bdev_dax_supported() - Check if the device supports dax for filesystem
-- * @sb: The superblock of the device
-+ * bdev_dax_supported() - Check if the device supports dax for filesystem
-+ * @sb: The block_device of the device
-  * @blocksize: The block size of the device
-  *
-  * This is a library function for filesystems to check if the block device
-@@ -82,9 +81,8 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-  *
-  * Return: negative errno if unsupported, 0 if supported.
-  */
--int __bdev_dax_supported(struct super_block *sb, int blocksize)
-+int bdev_dax_supported(struct block_device *bdev, int blocksize)
- {
--	struct block_device *bdev = sb->s_bdev;
- 	struct dax_device *dax_dev;
- 	pgoff_t pgoff;
- 	int err, id;
-@@ -93,22 +91,22 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 	long len;
- 
- 	if (blocksize != PAGE_SIZE) {
--		pr_debug("VFS (%s): error: unsupported blocksize for dax\n",
--				sb->s_id);
-+		pr_debug("bdev (%d:%d): error: unsupported blocksize for dax\n",
-+				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
- 		return -EINVAL;
- 	}
- 
- 	err = bdev_dax_pgoff(bdev, 0, PAGE_SIZE, &pgoff);
- 	if (err) {
--		pr_debug("VFS (%s): error: unaligned partition for dax\n",
--				sb->s_id);
-+		pr_debug("bdev (%d:%d): error: unaligned partition for dax\n",
-+				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
- 		return err;
- 	}
- 
- 	dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
- 	if (!dax_dev) {
--		pr_debug("VFS (%s): error: device does not support dax\n",
--				sb->s_id);
-+		pr_debug("bdev (%d:%d): error: device does not support dax\n",
-+				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
- 		return -EOPNOTSUPP;
- 	}
- 
-@@ -119,8 +117,8 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 	put_dax(dax_dev);
- 
- 	if (len < 1) {
--		pr_debug("VFS (%s): error: dax access failed (%ld)\n",
--				sb->s_id, len);
-+		pr_debug("bdev (%d:%d): error: dax access failed (%ld)\n",
-+				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev), len);
- 		return len < 0 ? len : -EIO;
- 	}
- 
-@@ -128,15 +126,16 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 			|| pfn_t_devmap(pfn))
- 		/* pass */;
- 	else {
--		pr_debug("VFS (%s): error: dax support not enabled\n",
--				sb->s_id);
-+		pr_debug("bdev (%d:%d): error: dax support not enabled\n",
-+				MAJOR(bdev->bd_dev), MINOR(bdev->bd_dev));
- 		return -EOPNOTSUPP;
- 	}
- 
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(__bdev_dax_supported);
--#endif
-+EXPORT_SYMBOL_GPL(bdev_dax_supported);
-+#endif /* CONFIG_FS_DAX */
-+#endif /* CONFIG_BLOCK */
- 
- enum dax_device_flags {
- 	/* !alive + rcu grace period == no new operations / mappings */
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index 38f9222606ee..a0de090b18d5 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -958,7 +958,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- 	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
- 
- 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
--		err = bdev_dax_supported(sb, blocksize);
-+		err = bdev_dax_supported(sb->s_bdev, blocksize);
- 		if (err) {
- 			ext2_msg(sb, KERN_ERR,
- 				"DAX unsupported by block device. Turning off DAX.");
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 18873ea89e08..7ebc8d5cab8c 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3712,7 +3712,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 					" that may contain inline data");
- 			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
- 		}
--		err = bdev_dax_supported(sb, blocksize);
-+		err = bdev_dax_supported(sb->s_bdev, blocksize);
- 		if (err) {
- 			ext4_msg(sb, KERN_ERR,
- 				"DAX unsupported by block device. Turning off DAX.");
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 20dc65fef6a4..5fd4d50eb1c6 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1102,7 +1102,7 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
- 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
- 			return -EINVAL;
--		if (bdev_dax_supported(sb, sb->s_blocksize) < 0)
-+		if (bdev_dax_supported(sb->s_bdev, sb->s_blocksize) < 0)
- 			return -EINVAL;
- 	}
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 1dacccc367f8..e8a687232614 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1652,7 +1652,7 @@ xfs_fs_fill_super(
- 		xfs_warn(mp,
- 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
- 
--		error = bdev_dax_supported(sb, sb->s_blocksize);
-+		error = bdev_dax_supported(sb->s_bdev, sb->s_blocksize);
- 		if (error) {
- 			xfs_alert(mp,
- 			"DAX unsupported by block device. Turning off DAX.");
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 5258346c558c..a31a7e3f929b 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -40,11 +40,7 @@ static inline void put_dax(struct dax_device *dax_dev)
- 
- int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
- #if IS_ENABLED(CONFIG_FS_DAX)
--int __bdev_dax_supported(struct super_block *sb, int blocksize);
--static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
--{
--	return __bdev_dax_supported(sb, blocksize);
--}
-+int bdev_dax_supported(struct block_device *bdev, int blocksize);
- 
- static inline struct dax_device *fs_dax_get_by_host(const char *host)
- {
-@@ -58,7 +54,7 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
- 
- struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
- #else
--static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
-+static inline int bdev_dax_supported(struct block_device *bdev, int blocksize)
- {
- 	return -EOPNOTSUPP;
- }
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
+> +	}
+> +
+> +	agf = XFS_BUF_TO_AGF(bp);
+> +	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+> +	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+> +	agf->agf_seqno = cpu_to_be32(agno);
+> +	agf->agf_length = cpu_to_be32(agsize);
+> +	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+> +	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+> +	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		agf->agf_roots[XFS_BTNUM_RMAPi] =
+> +					cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> +		agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
+> +		agf->agf_rmap_blocks = cpu_to_be32(1);
+> +	}
+> +
+> +	agf->agf_flfirst = cpu_to_be32(1);
+> +	agf->agf_fllast = 0;
+> +	agf->agf_flcount = 0;
+> +	tmpsize = agsize - mp->m_ag_prealloc_blocks;
+> +	agf->agf_freeblks = cpu_to_be32(tmpsize);
+> +	agf->agf_longest = cpu_to_be32(tmpsize);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		agf->agf_refcount_root = cpu_to_be32(
+> +				xfs_refc_block(mp));
+> +		agf->agf_refcount_level = cpu_to_be32(1);
+> +		agf->agf_refcount_blocks = cpu_to_be32(1);
+> +	}
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * AG freelist header block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0,
+> +			&xfs_agfl_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	agfl = XFS_BUF_TO_AGFL(bp);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+> +		agfl->agfl_seqno = cpu_to_be32(agno);
+> +		uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+> +	}
+> +
+> +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+> +	for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
+> +		agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * AG inode header block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0,
+> +			&xfs_agi_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	agi = XFS_BUF_TO_AGI(bp);
+> +	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+> +	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+> +	agi->agi_seqno = cpu_to_be32(agno);
+> +	agi->agi_length = cpu_to_be32(agsize);
+> +	agi->agi_count = 0;
+> +	agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> +	agi->agi_level = cpu_to_be32(1);
+> +	agi->agi_freecount = 0;
+> +	agi->agi_newino = cpu_to_be32(NULLAGINO);
+> +	agi->agi_dirino = cpu_to_be32(NULLAGINO);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> +		agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
+> +		agi->agi_free_level = cpu_to_be32(1);
+> +	}
+> +	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+> +		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * BNO btree root block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_allocbt_buf_ops);
+> +
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
+> +
+> +	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> +	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> +	arec->ar_blockcount = cpu_to_be32(
+> +		agsize - be32_to_cpu(arec->ar_startblock));
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * CNT btree root block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_allocbt_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
+> +
+> +	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> +	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> +	arec->ar_blockcount = cpu_to_be32(
+> +		agsize - be32_to_cpu(arec->ar_startblock));
+> +	*nfree += be32_to_cpu(arec->ar_blockcount);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/* RMAP btree root block */
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		struct xfs_rmap_rec	*rrec;
+> +		struct xfs_btree_block	*block;
+> +
+> +		bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_rmapbt_buf_ops);
+> +		if (!bp) {
+> +			error = -ENOMEM;
+> +			goto out_error;
+> +		}
+> +
+> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
+> +					agno, 0);
+> +		block = XFS_BUF_TO_BLOCK(bp);
+> +
+> +
+> +		/*
+> +		 * mark the AG header regions as static metadata The BNO
+> +		 * btree block is the first block after the headers, so
+> +		 * it's location defines the size of region the static
+> +		 * metadata consumes.
+> +		 *
+> +		 * Note: unlike mkfs, we never have to account for log
+> +		 * space when growing the data regions
+> +		 */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 1);
+> +		rrec->rm_startblock = 0;
+> +		rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account freespace btree root blocks */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 2);
+> +		rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +		rrec->rm_blockcount = cpu_to_be32(2);
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account inode btree root blocks */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 3);
+> +		rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> +		rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+> +						XFS_IBT_BLOCK(mp));
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account for rmap btree root */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 4);
+> +		rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> +		rrec->rm_blockcount = cpu_to_be32(1);
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account for refc btree root */
+> +		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +			rrec = XFS_RMAP_REC_ADDR(block, 5);
+> +			rrec->rm_startblock = cpu_to_be32(xfs_refc_block(mp));
+> +			rrec->rm_blockcount = cpu_to_be32(1);
+> +			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+> +			rrec->rm_offset = 0;
+> +			be16_add_cpu(&block->bb_numrecs, 1);
+> +		}
+> +
+> +		error = xfs_bwrite(bp);
+> +		xfs_buf_relse(bp);
+> +		if (error)
+> +			goto out_error;
+> +	}
+> +
+> +	/*
+> +	 * INO btree root block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_inobt_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * FINO btree root block
+> +	 */
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> +		bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_inobt_buf_ops);
+> +		if (!bp) {
+> +			error = -ENOMEM;
+> +			goto out_error;
+> +		}
+> +
+> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
+> +					     0, 0, agno, 0);
+> +
+> +		error = xfs_bwrite(bp);
+> +		xfs_buf_relse(bp);
+> +		if (error)
+> +			goto out_error;
+> +	}
+> +
+> +	/*
+> +	 * refcount btree root block
+> +	 */
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_refcountbt_buf_ops);
+> +		if (!bp) {
+> +			error = -ENOMEM;
+> +			goto out_error;
+> +		}
+> +
+> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
+> +				     0, 0, agno, 0);
+> +
+> +		error = xfs_bwrite(bp);
+> +		xfs_buf_relse(bp);
+> +		if (error)
+> +			goto out_error;
+> +	}
+> +
+> +out_error:
+> +	return error;
+> +}
+> +
+>  static int
+>  xfs_growfs_data_private(
+>  	xfs_mount_t		*mp,		/* mount point for filesystem */
+>  	xfs_growfs_data_t	*in)		/* growfs data input struct */
+>  {
+>  	xfs_agf_t		*agf;
+> -	struct xfs_agfl		*agfl;
+>  	xfs_agi_t		*agi;
+>  	xfs_agnumber_t		agno;
+>  	xfs_extlen_t		agsize;
+> -	xfs_extlen_t		tmpsize;
+> -	xfs_alloc_rec_t		*arec;
+>  	xfs_buf_t		*bp;
+> -	int			bucket;
+>  	int			dpct;
+>  	int			error, saved_error = 0;
+>  	xfs_agnumber_t		nagcount;
+> @@ -141,318 +465,19 @@ xfs_growfs_data_private(
+>  	 */
+>  	nfree = 0;
+>  	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
+> -		__be32	*agfl_bno;
+> -
+> -		/*
+> -		 * AG freespace header block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+> -				XFS_FSS_TO_BB(mp, 1), 0,
+> -				&xfs_agf_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+>  
+> -		agf = XFS_BUF_TO_AGF(bp);
+> -		agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+> -		agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+> -		agf->agf_seqno = cpu_to_be32(agno);
+>  		if (agno == nagcount - 1)
+> -			agsize =
+> -				nb -
+> +			agsize = nb -
+>  				(agno * (xfs_rfsblock_t)mp->m_sb.sb_agblocks);
+>  		else
+>  			agsize = mp->m_sb.sb_agblocks;
+> -		agf->agf_length = cpu_to_be32(agsize);
+> -		agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -		agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+> -		agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+> -		agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+> -		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> -			agf->agf_roots[XFS_BTNUM_RMAPi] =
+> -						cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> -			agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
+> -			agf->agf_rmap_blocks = cpu_to_be32(1);
+> -		}
+> -
+> -		agf->agf_flfirst = cpu_to_be32(1);
+> -		agf->agf_fllast = 0;
+> -		agf->agf_flcount = 0;
+> -		tmpsize = agsize - mp->m_ag_prealloc_blocks;
+> -		agf->agf_freeblks = cpu_to_be32(tmpsize);
+> -		agf->agf_longest = cpu_to_be32(tmpsize);
+> -		if (xfs_sb_version_hascrc(&mp->m_sb))
+> -			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
+> -		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -			agf->agf_refcount_root = cpu_to_be32(
+> -					xfs_refc_block(mp));
+> -			agf->agf_refcount_level = cpu_to_be32(1);
+> -			agf->agf_refcount_blocks = cpu_to_be32(1);
+> -		}
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * AG freelist header block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+> -				XFS_FSS_TO_BB(mp, 1), 0,
+> -				&xfs_agfl_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		agfl = XFS_BUF_TO_AGFL(bp);
+> -		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -			agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+> -			agfl->agfl_seqno = cpu_to_be32(agno);
+> -			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+> -		}
+> -
+> -		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+> -		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
+> -			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+>  
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> +		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree);
+>  		if (error)
+>  			goto error0;
+> -
+> -		/*
+> -		 * AG inode header block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+> -				XFS_FSS_TO_BB(mp, 1), 0,
+> -				&xfs_agi_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		agi = XFS_BUF_TO_AGI(bp);
+> -		agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+> -		agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+> -		agi->agi_seqno = cpu_to_be32(agno);
+> -		agi->agi_length = cpu_to_be32(agsize);
+> -		agi->agi_count = 0;
+> -		agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> -		agi->agi_level = cpu_to_be32(1);
+> -		agi->agi_freecount = 0;
+> -		agi->agi_newino = cpu_to_be32(NULLAGINO);
+> -		agi->agi_dirino = cpu_to_be32(NULLAGINO);
+> -		if (xfs_sb_version_hascrc(&mp->m_sb))
+> -			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+> -		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> -			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
+> -			agi->agi_free_level = cpu_to_be32(1);
+> -		}
+> -		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+> -			agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * BNO btree root block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_allocbt_buf_ops);
+> -
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
+> -
+> -		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> -		arec->ar_blockcount = cpu_to_be32(
+> -			agsize - be32_to_cpu(arec->ar_startblock));
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * CNT btree root block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_allocbt_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
+> -
+> -		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> -		arec->ar_blockcount = cpu_to_be32(
+> -			agsize - be32_to_cpu(arec->ar_startblock));
+> -		nfree += be32_to_cpu(arec->ar_blockcount);
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/* RMAP btree root block */
+> -		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> -			struct xfs_rmap_rec	*rrec;
+> -			struct xfs_btree_block	*block;
+> -
+> -			bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_rmapbt_buf_ops);
+> -			if (!bp) {
+> -				error = -ENOMEM;
+> -				goto error0;
+> -			}
+> -
+> -			xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
+> -						agno, 0);
+> -			block = XFS_BUF_TO_BLOCK(bp);
+> -
+> -
+> -			/*
+> -			 * mark the AG header regions as static metadata The BNO
+> -			 * btree block is the first block after the headers, so
+> -			 * it's location defines the size of region the static
+> -			 * metadata consumes.
+> -			 *
+> -			 * Note: unlike mkfs, we never have to account for log
+> -			 * space when growing the data regions
+> -			 */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 1);
+> -			rrec->rm_startblock = 0;
+> -			rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account freespace btree root blocks */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 2);
+> -			rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -			rrec->rm_blockcount = cpu_to_be32(2);
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account inode btree root blocks */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 3);
+> -			rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> -			rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+> -							XFS_IBT_BLOCK(mp));
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account for rmap btree root */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 4);
+> -			rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> -			rrec->rm_blockcount = cpu_to_be32(1);
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account for refc btree root */
+> -			if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -				rrec = XFS_RMAP_REC_ADDR(block, 5);
+> -				rrec->rm_startblock = cpu_to_be32(
+> -						xfs_refc_block(mp));
+> -				rrec->rm_blockcount = cpu_to_be32(1);
+> -				rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+> -				rrec->rm_offset = 0;
+> -				be16_add_cpu(&block->bb_numrecs, 1);
+> -			}
+> -
+> -			error = xfs_bwrite(bp);
+> -			xfs_buf_relse(bp);
+> -			if (error)
+> -				goto error0;
+> -		}
+> -
+> -		/*
+> -		 * INO btree root block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_inobt_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * FINO btree root block
+> -		 */
+> -		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> -			bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_inobt_buf_ops);
+> -			if (!bp) {
+> -				error = -ENOMEM;
+> -				goto error0;
+> -			}
+> -
+> -			xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
+> -						     0, 0, agno, 0);
+> -
+> -			error = xfs_bwrite(bp);
+> -			xfs_buf_relse(bp);
+> -			if (error)
+> -				goto error0;
+> -		}
+> -
+> -		/*
+> -		 * refcount btree root block
+> -		 */
+> -		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -			bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_refcountbt_buf_ops);
+> -			if (!bp) {
+> -				error = -ENOMEM;
+> -				goto error0;
+> -			}
+> -
+> -			xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
+> -					     0, 0, agno, 0);
+> -
+> -			error = xfs_bwrite(bp);
+> -			xfs_buf_relse(bp);
+> -			if (error)
+> -				goto error0;
+> -		}
+>  	}
+>  	xfs_trans_agblocks_delta(tp, nfree);
+> +
+>  	/*
+>  	 * There are new blocks in the old last a.g.
+>  	 */
+> -- 
+> 2.15.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
