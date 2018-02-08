@@ -1,166 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:23524 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932160AbeBKW5B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Feb 2018 17:57:01 -0500
-Date: Mon, 12 Feb 2018 09:56:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: freezing system for several second on high I/O [kernel 4.15]
-Message-ID: <20180211225657.GA6778@dastard>
-References: <1517337604.9211.13.camel@gmail.com>
- <20180131022209.lmhespbauhqtqrxg@destitution>
- <1517888875.7303.3.camel@gmail.com>
- <20180206060840.kj2u6jjmkuk3vie6@destitution>
- <CABXGCsOgcYyj8Xukn7Pi_M2qz2aJ1MJZTaxaSgYno7f_BtZH6w@mail.gmail.com>
- <1517974845.4352.8.camel@gmail.com>
- <20180207065520.66f6gocvxlnxmkyv@destitution>
- <1518255240.31843.6.camel@gmail.com>
- <1518255352.31843.8.camel@gmail.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:57018 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751130AbeBHB4j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Feb 2018 20:56:39 -0500
+Date: Wed, 7 Feb 2018 17:56:34 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/4] xfs: account format bouncing into rmapbt swapext tx
+ reservation
+Message-ID: <20180208015634.GD5433@magnolia>
+References: <20180205174601.51574-1-bfoster@redhat.com>
+ <20180205174601.51574-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1518255352.31843.8.camel@gmail.com>
+In-Reply-To: <20180205174601.51574-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: mikhail <mikhail.v.gavrilov@gmail.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Feb 10, 2018 at 02:35:52PM +0500, mikhail wrote:
-> On Sat, 2018-02-10 at 14:34 +0500, mikhail wrote:
-> > 
-> > This is happens because in manual
-> > http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> > was proposed first enter "# echo w > /proc/sysrq-trigger" and then "trace-cmd record -e xfs\*"
-> > And first waiting on a lock always registered after entering "# echo w > /proc/sysrq-trigger" command.
-> > Would be more correct if first was proposed to type "trace-cmd record -e xfs \ *", and then "# echo w> / proc / sysrq-
-> > trigger".
-
-Yes, but you still haven't provided me with all the other info that
-this link asks for. Namely:
-
-kernel version (uname -a)
-xfsprogs version (xfs_repair -V)
-number of CPUs
-contents of /proc/meminfo
-contents of /proc/mounts
-contents of /proc/partitions
-RAID layout (hardware and/or software)
-LVM configuration
-type of disks you are using
-write cache status of drives
-size of BBWC and mode it is running in
-xfs_info output on the filesystem in question
-
-And:
-
-"Then you need to describe your workload that is causing the
-problem, ..."
-
-Without any idea of what you are actually doing and what storage you
-are doing that work on, I have no idea what the expected behaviour
-should be. All I can tell is you have something with disk caches and
-io pools on your desktop machine and it's slow....
-
-> > The result is a new trace in which is nothing missed:
-> > https://dumps.sy24.ru/5/trace_report.txt.bz2 (278 MB)
-> > 
-> > 
+On Mon, Feb 05, 2018 at 12:45:59PM -0500, Brian Foster wrote:
+> The extent swap mechanism requires a unique implementation for
+> rmapbt enabled filesystems. Because the rmapbt tracks extent owner
+> information, extent swap must individually unmap and remap each
+> extent between the two inodes.
 > 
-> Forgot to attach dmesg
+> The rmapbt extent swap transaction block reservation currently
+> accounts for the worst case bmapbt block and rmapbt block
+> consumption based on the extent count of each inode. There is a
+> corner case that exists due to the extent swap implementation that
+> is not covered by this reservation, however.
+> 
+> If one of the associated inodes is just over the max extent count
+> used for extent format inodes (i.e., the inode is in btree format by
+> a single extent), the unmap/remap cycle of the extent swap can
+> bounce the inode between extent and btree format multiple times,
+> almost as many times as there are extents in the inode (if the
+> opposing inode happens to have one less, for example). Each back and
+> forth cycle involves a block free and allocation, which isn't a
+> problem except for that the initial transaction reservation must
+> account for the total number of block allocations performed by the
+> chain of deferred operations. If not, a block reservation overrun
+> occurs and the filesystem shuts down.
+> 
+> Update the rmapbt extent swap block reservation to check for this
+> situation and add some block reservation slop to ensure the entire
+> operation succeeds. We'd never likely require reservation for both
+> inodes as fsr wouldn't defrag the file in that case, but the
+> additional reservation is constrained by the data fork size so be
+> cautious and check for both.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 29 ++++++++++++++++++++---------
+>  1 file changed, 20 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index c83f549dc17b..e0a442f504e5 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1899,17 +1899,28 @@ xfs_swap_extents(
+>  	 * performed with log redo items!
+>  	 */
+>  	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		int		w	= XFS_DATA_FORK;
+> +		uint32_t	ipnext	= XFS_IFORK_NEXTENTS(ip, w);
+> +		uint32_t	tipnext	= XFS_IFORK_NEXTENTS(tip, w);
+> +
+> +		/*
+> +		 * Conceptually this shouldn't affect the shape of either bmbt,
+> +		 * but since we atomically move extents one by one, we reserve
+> +		 * enough space to rebuild both trees.
+> +		 */
+> +		resblks = XFS_SWAP_RMAP_SPACE_RES(mp, ipnext, w);
+> +		resblks +=  XFS_SWAP_RMAP_SPACE_RES(mp, tipnext, w);
+> +
+>  		/*
+> -		 * Conceptually this shouldn't affect the shape of either
+> -		 * bmbt, but since we atomically move extents one by one,
+> -		 * we reserve enough space to rebuild both trees.
+> +		 * Handle the corner case where either inode might straddle the
+> +		 * btree format boundary. If so, the inode could bounce between
+> +		 * btree <-> extent format on unmap -> remap cycles, freeing and
+> +		 * allocating a bmapbt block each time.
+>  		 */
+> -		resblks = XFS_SWAP_RMAP_SPACE_RES(mp,
+> -				XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK),
+> -				XFS_DATA_FORK) +
+> -			  XFS_SWAP_RMAP_SPACE_RES(mp,
+> -				XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK),
+> -				XFS_DATA_FORK);
+> +		if (ipnext == (XFS_IFORK_MAXEXT(ip, w) + 1))
+> +			resblks += XFS_IFORK_MAXEXT(ip, w);
+> +		if (tipnext == (XFS_IFORK_MAXEXT(tip, w) + 1))
+> +			resblks += XFS_IFORK_MAXEXT(tip, w);
 
-It's the same thing.
+I think this looks good enough to fix the problem, but I've been
+wondering (in a more general sense) if it really makes sense to be
+repeatedly freeing and allocating bmbt blocks like this?
 
-If I look at 
+What I mean is, there are a few operations (like rmapbt updates) that
+can cause a lot of similar thrashing behavior when we delete a record
+from one place and reinsert it shortly thereafter.  If the btree block
+has the exact minimum number of records then it'll try to disperse the
+records into the adjoining blocks, which is completely unnecessary if we
+know that we're about to reinsert it somewhere else in the block.
 
+Granted in swapext-with-rmap we also have a lot of log update machinery
+in the way so there might not be a good way to hold on to blocks.  It
+might introduce so much extra complexity it's not worth it either, since
+I think we'd have to claw back references to the buffer in the log,
+remove the extent busy record, and change the buffer type...?
 
-> [  861.288279] INFO: task disk_cache:0:8665 blocked for more than 120 seconds.
-> [  861.288283]       Not tainted 4.15.0-rc4-amd-vega+ #13
-> [  861.288287] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [  861.288290] disk_cache:0    D12480  8665   8656 0x00000000
-> [  861.288297] Call Trace:
-> [  861.288304]  __schedule+0x2dc/0xba0
-> [  861.288314]  ? wait_for_completion+0x10e/0x1a0
-> [  861.288318]  schedule+0x33/0x90
-> [  861.288322]  schedule_timeout+0x25a/0x5b0
-> [  861.288329]  ? mark_held_locks+0x5f/0x90
-> [  861.288332]  ? _raw_spin_unlock_irq+0x2c/0x40
-> [  861.288336]  ? wait_for_completion+0x10e/0x1a0
-> [  861.288340]  ? trace_hardirqs_on_caller+0xf4/0x190
-> [  861.288346]  ? wait_for_completion+0x10e/0x1a0
-> [  861.288350]  wait_for_completion+0x136/0x1a0
-> [  861.288355]  ? wake_up_q+0x80/0x80
-> [  861.288387]  ? _xfs_buf_read+0x23/0x30 [xfs]
-> [  861.288427]  xfs_buf_submit_wait+0xb2/0x530 [xfs]
-> [  861.288457]  _xfs_buf_read+0x23/0x30 [xfs]
-> [  861.288483]  xfs_buf_read_map+0x14b/0x300 [xfs]
-> [  861.288514]  ? xfs_trans_read_buf_map+0xc4/0x5d0 [xfs]
-> [  861.288547]  xfs_trans_read_buf_map+0xc4/0x5d0 [xfs]
-> [  861.288577]  xfs_imap_to_bp+0x67/0xe0 [xfs]
-> [  861.288613]  xfs_iunlink_remove+0x231/0x370 [xfs]
-> [  861.288617]  ? trace_event_buffer_commit+0x7c/0x1d0
-> [  861.288626]  ? __lock_is_held+0x65/0xb0
-> [  861.288658]  xfs_ifree+0x47/0x150 [xfs]
-> [  861.288690]  xfs_inactive_ifree+0xc0/0x220 [xfs]
-> [  861.288726]  xfs_inactive+0x7b/0x110 [xfs]
-> [  861.288757]  xfs_fs_destroy_inode+0xbb/0x2d0 [xfs]
-> [  861.288764]  destroy_inode+0x3b/0x60
+--D
 
-Ok, once and for all: this is not an XFS problem.
-
-The trace from task 8665, which is the one that triggered above
-waiting for IO. task -395 is an IO completion worker in XFS that
-is triggered by the lower layer IO completion callbacks, and it's
-running regularly and doing lots of IO completion work every few
-milliseconds.
-
-<...>-8665  [007]   627.332389: xfs_buf_submit_wait:  dev 8:16 bno 0xe96a4040 nblks 0x20 hold 1 pincount 0 lock 0 flags READ|PAGES caller _xfs_buf_read
-<...>-8665  [007]   627.332390: xfs_buf_hold:         dev 8:16 bno 0xe96a4040 nblks 0x20 hold 1 pincount 0 lock 0 flags READ|PAGES caller xfs_buf_submit_wait
-<...>-8665  [007]   627.332416: xfs_buf_iowait:       dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags READ|PAGES caller _xfs_buf_read
-<...>-395   [000]   875.682080: xfs_buf_iodone:       dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags READ|PAGES caller xfs_buf_ioend_work
-<...>-8665  [007]   875.682105: xfs_buf_iowait_done:  dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags DONE|PAGES caller _xfs_buf_read
-<...>-8665  [007]   875.682107: xfs_buf_rele:         dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags DONE|PAGES caller xfs_buf_submit_wait
-
-IOWs, that IO completion took close on 250s for it to be signalled
-to XFS, and so these delays have nothing to do with XFS.
-
-What is clear from the trace is that you are overloading your IO
-subsystem. I see average synchronous read times of 40-50ms which
-implies a constant and heavy load on the underlying storage. In
-the ~1400s trace I see:
-
-$ grep "submit:\|submit_wait:" trace_report.txt |wc -l
-133427
-$
-
-~130k metadata IO submissions.
-
-$ grep "writepage:" trace_report.txt |wc -l
-1662764
-$
-
-There was also over 6GB of data written, and:
-
-$ grep "readpages:" trace_report.txt |wc -l
-85866
-$
-
-About 85000 data read IOs were issued.
-
-A typical SATA drive can sustain ~150 IOPS. I count from the trace
-at least 220,000 IOs in ~1400s, which is pretty much spot on an
-average of 150 IOPS. IOWs, your system is running at the speed of
-you disk and it's clear that it's completely overloaded at times
-leading to large submission backlog queues and excessively long IO
-times.
-
-IOWs, this is not an XFS problem. It's exactly what I'd expect to
-see when you try to run a very IO intensive workload on a cheap SATA
-drive that can't keep up with what is being asked of it....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  	}
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+>  	if (error)
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
