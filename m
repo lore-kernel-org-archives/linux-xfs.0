@@ -1,180 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53330 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58020 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750961AbeBHNMc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Feb 2018 08:12:32 -0500
-Date: Thu, 8 Feb 2018 08:12:30 -0500
+        id S1750929AbeBHQEa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Feb 2018 11:04:30 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: account format bouncing into rmapbt swapext tx
- reservation
-Message-ID: <20180208131230.GB13929@bfoster.bfoster>
-References: <20180205174601.51574-1-bfoster@redhat.com>
- <20180205174601.51574-3-bfoster@redhat.com>
- <20180208015634.GD5433@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180208015634.GD5433@magnolia>
+Subject: [PATCH v2] tests/xfs: rmapbt swapext block reservation overrun test
+Date: Thu,  8 Feb 2018 11:04:29 -0500
+Message-Id: <20180208160429.17281-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 07, 2018 at 05:56:34PM -0800, Darrick J. Wong wrote:
-> On Mon, Feb 05, 2018 at 12:45:59PM -0500, Brian Foster wrote:
-> > The extent swap mechanism requires a unique implementation for
-> > rmapbt enabled filesystems. Because the rmapbt tracks extent owner
-> > information, extent swap must individually unmap and remap each
-> > extent between the two inodes.
-> > 
-> > The rmapbt extent swap transaction block reservation currently
-> > accounts for the worst case bmapbt block and rmapbt block
-> > consumption based on the extent count of each inode. There is a
-> > corner case that exists due to the extent swap implementation that
-> > is not covered by this reservation, however.
-> > 
-> > If one of the associated inodes is just over the max extent count
-> > used for extent format inodes (i.e., the inode is in btree format by
-> > a single extent), the unmap/remap cycle of the extent swap can
-> > bounce the inode between extent and btree format multiple times,
-> > almost as many times as there are extents in the inode (if the
-> > opposing inode happens to have one less, for example). Each back and
-> > forth cycle involves a block free and allocation, which isn't a
-> > problem except for that the initial transaction reservation must
-> > account for the total number of block allocations performed by the
-> > chain of deferred operations. If not, a block reservation overrun
-> > occurs and the filesystem shuts down.
-> > 
-> > Update the rmapbt extent swap block reservation to check for this
-> > situation and add some block reservation slop to ensure the entire
-> > operation succeeds. We'd never likely require reservation for both
-> > inodes as fsr wouldn't defrag the file in that case, but the
-> > additional reservation is constrained by the data fork size so be
-> > cautious and check for both.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_bmap_util.c | 29 ++++++++++++++++++++---------
-> >  1 file changed, 20 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index c83f549dc17b..e0a442f504e5 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -1899,17 +1899,28 @@ xfs_swap_extents(
-> >  	 * performed with log redo items!
-> >  	 */
-> >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> > +		int		w	= XFS_DATA_FORK;
-> > +		uint32_t	ipnext	= XFS_IFORK_NEXTENTS(ip, w);
-> > +		uint32_t	tipnext	= XFS_IFORK_NEXTENTS(tip, w);
-> > +
-> > +		/*
-> > +		 * Conceptually this shouldn't affect the shape of either bmbt,
-> > +		 * but since we atomically move extents one by one, we reserve
-> > +		 * enough space to rebuild both trees.
-> > +		 */
-> > +		resblks = XFS_SWAP_RMAP_SPACE_RES(mp, ipnext, w);
-> > +		resblks +=  XFS_SWAP_RMAP_SPACE_RES(mp, tipnext, w);
-> > +
-> >  		/*
-> > -		 * Conceptually this shouldn't affect the shape of either
-> > -		 * bmbt, but since we atomically move extents one by one,
-> > -		 * we reserve enough space to rebuild both trees.
-> > +		 * Handle the corner case where either inode might straddle the
-> > +		 * btree format boundary. If so, the inode could bounce between
-> > +		 * btree <-> extent format on unmap -> remap cycles, freeing and
-> > +		 * allocating a bmapbt block each time.
-> >  		 */
-> > -		resblks = XFS_SWAP_RMAP_SPACE_RES(mp,
-> > -				XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK),
-> > -				XFS_DATA_FORK) +
-> > -			  XFS_SWAP_RMAP_SPACE_RES(mp,
-> > -				XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK),
-> > -				XFS_DATA_FORK);
-> > +		if (ipnext == (XFS_IFORK_MAXEXT(ip, w) + 1))
-> > +			resblks += XFS_IFORK_MAXEXT(ip, w);
-> > +		if (tipnext == (XFS_IFORK_MAXEXT(tip, w) + 1))
-> > +			resblks += XFS_IFORK_MAXEXT(tip, w);
-> 
-> I think this looks good enough to fix the problem, but I've been
-> wondering (in a more general sense) if it really makes sense to be
-> repeatedly freeing and allocating bmbt blocks like this?
-> 
+The XFS rmapbt extent swap mechanism performs an extent by extent
+swap to ensure the rmapbt is rectified with the appropriate extent
+owner information after the operation. This implementation suffers
+from a corner case that requires extra reservation if the swap
+operation results in bouncing one of the associated inodes between
+extent and btree formats. When this corner case occurs, it results
+in a transaction block reservation overrun and possible corruption
+of the free space accounting.
 
-It is a bit cringe-worthy of a behavior when you look at these
-pathological corner cases, but I think this one really is a corner case
-in the sense that we should probably question the value of anything that
-adds real complexity to the overall operation just for this particular
-situation. To me, swapext seemed a limited enough operation that it
-wasn't worth thinking too hard about something that avoided the higher
-level behavior.
+This regression test provides coverage for this corner case. It
+creates two files with a large enough extent count to require btree
+format, regardless of inode size, and performs a sequence of extent
+swaps between them with a decreasing extent count until all extents
+are removed from the file(s). This ensures that one of the swaps
+covers the btree <-> extent fork format boundary case.
 
-I'm not against doing something more clever, but it would be in addition
-to this fix and should probably require more justification that this
-case alone.
+This test reproduces fs corruption on rmapbt enabled filesystems
+running on kernels without the associated extent swap fix.
 
-> What I mean is, there are a few operations (like rmapbt updates) that
-> can cause a lot of similar thrashing behavior when we delete a record
-> from one place and reinsert it shortly thereafter.  If the btree block
-> has the exact minimum number of records then it'll try to disperse the
-> records into the adjoining blocks, which is completely unnecessary if we
-> know that we're about to reinsert it somewhere else in the block.
-> 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Indeed. Something that comes to mind initially would be to find a way
-for an operation to pin a particular structure format over a broader
-operation, where pin is loosely defined to mean "don't shrink it." An
-obvious challenge there is that we still need to handle cases where
-shuffling around metadata records does actually result in legitimate
-shrink due to creation of contiguity or whatnot. Perhaps such tasks
-could be deferred post high-level op (i.e., such as cursor release) vs.
-always done inline to a particular modification.
+The latest version of the xfs_io swapext patch is here:
 
-Alternatively, I believe we've already loosely taken advantage of the
-concept of reusing freed blocks in the delalloc case (i.e.,
-xfs_bmap_split_indlen()). Perhaps we could apply something like that to
-transactions and physical blocks that have been (deferred) freed.
+  https://marc.info/?l=linux-xfs&m=151810545110330&w=2
 
-But I'm just throwing stuff against the wall here.. :P
-
-> Granted in swapext-with-rmap we also have a lot of log update machinery
-> in the way so there might not be a good way to hold on to blocks.  It
-> might introduce so much extra complexity it's not worth it either, since
-> I think we'd have to claw back references to the buffer in the log,
-> remove the extent busy record, and change the buffer type...?
-> 
-
-Yeah, I think anything that relies on undoing a particular modification
-that has been made in buffers but just hadn't hit disk is probably not
-going to get us very far. Those buffers may have already been unlocked
-or even relogged with other changes by the time we'd get at them again,
-I think.
-
-OTOH, I do think deferred operations could facilitate such a mechanism,
-but I suppose we'd still have to make sure the appropriate rmapbt
-updates are made, accounting/reservation is done correctly, think about
-the case where extents should be busy and thus shouldn't immediately be
-reused, etc. There's definitely enough complexity there that we'd
-probably want to identify whether there are strong enough benefits.
-I.e., what's the problem to this solution? :)
+... and doesn't appear to have serious objections after a first round of
+review.
 
 Brian
 
-> --D
-> 
-> >  	}
-> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
-> >  	if (error)
-> > -- 
-> > 2.13.6
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v2:
+- Use fs blocksize and internal hole punch tool for file setup.
+- Add fiemap sanity check to ensure test executes as expected.
+- Add to fsr group.
+v1: https://marc.info/?l=fstests&m=151792263511472&w=2
+
+ tests/xfs/440     | 106 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/440.out |   2 ++
+ tests/xfs/group   |   1 +
+ 3 files changed, 109 insertions(+)
+ create mode 100755 tests/xfs/440
+ create mode 100644 tests/xfs/440.out
+
+diff --git a/tests/xfs/440 b/tests/xfs/440
+new file mode 100755
+index 00000000..3ce771a8
+--- /dev/null
++++ b/tests/xfs/440
+@@ -0,0 +1,106 @@
++#! /bin/bash
++# FS QA Test 440
++#
++# Regression test for the XFS rmapbt based extent swap algorithm. The extent
++# swap algorithm for rmapbt=1 filesystems unmaps/remaps individual extents to
++# rectify the rmapbt for each extent swapped between inodes. If one of the
++# inodes happens to straddle the extent <-> btree format boundary (which can
++# vary depending on inode size), the unmap/remap sequence can bounce the inodes
++# back and forth between formats many times during the swap. Since extent ->
++# btree format conversion requires a block allocation, this can consume more
++# blocks than expected, lead to block reservation overrun and free space
++# accounting inconsistency.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_test_program "punch-alternating"
++_require_xfs_io_command "falloc"
++_require_xfs_io_command "fpunch"
++_require_xfs_io_command "swapext"
++
++_scratch_mkfs | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
++_scratch_mount || _fail "mount failed"
++
++# get fs block size
++. $tmp.mkfs
++
++file1=$SCRATCH_MNT/file1
++file2=$SCRATCH_MNT/file2
++
++# The goal is run an extent swap where one of the associated files has the
++# minimum number of extents to remain in btree format. First, create a couple
++# files with large enough extent counts (200 or so should be plenty) to ensure
++# btree format on the largest possible inode size filesystems.
++$XFS_IO_PROG -fc "falloc 0 $((400 * dbsize))" $file1
++./src/punch-alternating $file1
++$XFS_IO_PROG -fc "falloc 0 $((400 * dbsize))" $file2
++./src/punch-alternating $file2
++
++# Now run an extent swap at every possible extent count down to 0. Depending on
++# inode size, one of these swaps will cover the boundary case between extent and
++# btree format.
++for i in $(seq 1 2 399); do
++	# punch one extent from the tmpfile and swap
++	$XFS_IO_PROG -c "fpunch $((i * dbsize)) $dbsize" $file2
++	$XFS_IO_PROG -c "swapext $file2" $file1
++
++	# punch the same extent from the old fork (now in file2) to resync the
++	# extent counts and repeat
++	$XFS_IO_PROG -c "fpunch $((i * dbsize)) $dbsize" $file2
++done
++
++# sanity check that no extents are left over
++$XFS_IO_PROG -c "fiemap" $file1 | _filter_fiemap
++$XFS_IO_PROG -c "fiemap" $file2 | _filter_fiemap
++
++# failure results in fs corruption and possible assert failure
++echo Silence is golden
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/440.out b/tests/xfs/440.out
+new file mode 100644
+index 00000000..fb8dc21f
+--- /dev/null
++++ b/tests/xfs/440.out
+@@ -0,0 +1,2 @@
++QA output created by 440
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index cf81451d..ad30be42 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -437,3 +437,4 @@
+ 437 auto quick other
+ 438 auto quick quota dangerous
+ 439 auto quick fuzzers log
++440 auto quick ioctl fsr
+-- 
+2.13.6
+
