@@ -1,30 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60836 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751123AbeBHCVq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Feb 2018 21:21:46 -0500
-Date: Wed, 7 Feb 2018 18:21:38 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:57362 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbeBHFxr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Feb 2018 00:53:47 -0500
+Date: Wed, 7 Feb 2018 21:53:40 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove unused m_dmevmask from xfs_mount struct
-Message-ID: <20180208022138.GG5433@magnolia>
-References: <e62db8d7-73d8-c47c-cd42-977d24aba0ce@redhat.com>
+Subject: Re: XFS over device mapper dm-thin device
+Message-ID: <20180208055340.GH5433@magnolia>
+References: <147a1764-1988-4efd-4f02-e942a1001b4e@redhat.com>
+ <20180202223541.i27bfjij7itt3q5r@destitution>
+ <9c3ec8ff-3595-c889-3abe-7f069292be0d@sandeen.net>
+ <20180205223604.wgacfnsrsaqrwz7n@destitution>
+ <7ed418fa-fa47-1e67-5de8-87d5ba74fbbc@sandeen.net>
+ <20180206061100.yqbc55besdmttkzd@destitution>
+ <89d31e43-a0f7-95f1-080d-1f3bf3d81add@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e62db8d7-73d8-c47c-cd42-977d24aba0ce@redhat.com>
+In-Reply-To: <89d31e43-a0f7-95f1-080d-1f3bf3d81add@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, Todd Gill <tgill@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue, Feb 06, 2018 at 07:54:55PM -0600, Eric Sandeen wrote:
-> The dmevmask structure member is a dmapi leftover; it's
-> set here and there but never actually used.  Remove it.
+On Wed, Feb 07, 2018 at 08:35:12PM -0600, Eric Sandeen wrote:
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> On 2/6/18 12:11 AM, Dave Chinner wrote:
+> > On Mon, Feb 05, 2018 at 04:37:22PM -0600, Eric Sandeen wrote:
+> >>
+> >>
+> >> On 2/5/18 4:36 PM, Dave Chinner wrote:
+> >>>> In retrospect I think we (I) should have left the "metadata" uuid as
+> >>>> the one to match the log, not the user-facing one.
+> >>> I suspect we can just change the log recovery code to accept either
+> >>> sb_uuid or sb_metauuid if the metauuid feature bit is set and
+> >>> change xfs_db to not rewrite the log when metauuid is used....
+> >>>
+> >>> Cheers,
+> >>
+> >> That was my first thought, but then newer userspace UUID changes
+> >> won't be mountable on older kernels.   I don't think we can just
+> >> change it w/o some thought re: compatibility...
+> > 
+> > So maybe we should use a log incompat bit and provide an alternative
+> > command for the old way of changing the UUID in the log?
+> 
+> Sure, if we're happy burning an incompat bit for this, sounds good.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Or a log incompat bit?
 
 --D
+
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
