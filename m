@@ -1,52 +1,229 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47192 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751123AbeBHBm4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Feb 2018 20:42:56 -0500
-Date: Wed, 7 Feb 2018 17:42:52 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/4] xfs: shutdown if block allocation overruns tx
- reservation
-Message-ID: <20180208014252.GC5433@magnolia>
-References: <20180205174601.51574-1-bfoster@redhat.com>
- <20180205174601.51574-2-bfoster@redhat.com>
+Received: from mga18.intel.com ([134.134.136.126]:31098 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752384AbeBIAiO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Feb 2018 19:38:14 -0500
+Subject: [PATCH v3 1/3] fs: allow per-device dax status checking for
+ filesystems
+From: Dave Jiang <dave.jiang@intel.com>
+Date: Thu, 08 Feb 2018 17:38:13 -0700
+Message-ID: <151813669359.15926.14187250483528639203.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <151813659955.15926.8922476613392258086.stgit@djiang5-desk3.ch.intel.com>
+References: <151813659955.15926.8922476613392258086.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180205174601.51574-2-bfoster@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
 
-On Mon, Feb 05, 2018 at 12:45:58PM -0500, Brian Foster wrote:
-> The ->t_blk_res_used field tracks how many blocks have been used in
-> the current transaction. This should never exceed the block
-> reservation (->t_blk_res) for a particular transaction. We currently
-> assert this condition in the transaction block accounting code, but
-> otherwise take no additional action should this situation occur.
-> 
-> The overrun generally has no effect if space ends up being available
-> and the associated transaction commits. If the transaction is
-> duplicated, however, the current block usage is used to determine
-> the remaining block reservation to be transferred to the new
-> transaction. If usage exceeds reservation, this calculation
-> underflows and creates a transaction with an invalid and excessive
-> reservation. When the second transaction commits, the release of
-> unused blocks corrupts the in-core free space counters. With lazy
-> superblock accounting enabled, this inconsistency eventually
-> trickles to the on-disk superblock and corrupts the filesystem.
-> 
-> Replace the transaction block usage accounting assert with an
-> explicit overrun check. If the transaction overruns the reservation,
-> shutdown the filesystem immediately to prevent corruption. Add a new
-> assert to xfs_trans_dup() to catch any callers that might induce
-> this invalid state in the future.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Refactor __bdev_dax_supported into a sb_dax_supported helper for
+single-bdev filesystems and a regular bdev_dax_supported that takes a
+bdev parameter.  This enables multi-device filesystems like xfs to check
+that a dax device can work for the particular filesystem.  Once that's
+in place, actually fix all the parts of XFS where we need to be able to
+distinguish between datadev and rtdev.
 
---D
+This patch fixes the problem where we screw up the dax support checking
+in xfs if the datadev and rtdev have different dax capabilities.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ drivers/dax/super.c |    9 +++++----
+ fs/ext2/super.c     |    2 +-
+ fs/ext4/super.c     |    2 +-
+ fs/xfs/xfs_ioctl.c  |    3 ++-
+ fs/xfs/xfs_iops.c   |   30 +++++++++++++++++++++++++-----
+ fs/xfs/xfs_super.c  |   11 +++++++++--
+ include/linux/dax.h |   16 ++++++++++++----
+ 7 files changed, 55 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 3ec804672601..c4db84f26c0f 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -72,8 +72,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+ #endif
+ 
+ /**
+- * __bdev_dax_supported() - Check if the device supports dax for filesystem
++ * bdev_dax_supported() - Check if the device supports dax for filesystem
+  * @sb: The superblock of the device
++ * @bdev: block device to check
+  * @blocksize: The block size of the device
+  *
+  * This is a library function for filesystems to check if the block device
+@@ -81,9 +82,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+  *
+  * Return: negative errno if unsupported, 0 if supported.
+  */
+-int __bdev_dax_supported(struct super_block *sb, int blocksize)
++int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
++		       int blocksize)
+ {
+-	struct block_device *bdev = sb->s_bdev;
+ 	struct dax_device *dax_dev;
+ 	pgoff_t pgoff;
+ 	int err, id;
+@@ -125,7 +126,7 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(__bdev_dax_supported);
++EXPORT_SYMBOL_GPL(bdev_dax_supported);
+ #endif
+ 
+ enum dax_device_flags {
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 7646818ab266..655699321c45 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -958,7 +958,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ 	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
+ 
+ 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
+-		err = bdev_dax_supported(sb, blocksize);
++		err = sb_dax_supported(sb, blocksize);
+ 		if (err)
+ 			goto failed_mount;
+ 	}
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 7c46693a14d7..804a2d6729af 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -3712,7 +3712,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ 					" that may contain inline data");
+ 			goto failed_mount;
+ 		}
+-		err = bdev_dax_supported(sb, blocksize);
++		err = sb_dax_supported(sb, blocksize);
+ 		if (err)
+ 			goto failed_mount;
+ 	}
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 20dc65fef6a4..f9d3f4314f7c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1102,7 +1102,8 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+ 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+ 			return -EINVAL;
+-		if (bdev_dax_supported(sb, sb->s_blocksize) < 0)
++		if (bdev_dax_supported(sb, xfs_find_bdev_for_inode(VFS_I(ip)),
++				sb->s_blocksize) < 0)
+ 			return -EINVAL;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 56475fcd76f2..66cd61c172af 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1182,6 +1182,30 @@ static const struct inode_operations xfs_inline_symlink_inode_operations = {
+ 	.update_time		= xfs_vn_update_time,
+ };
+ 
++/* Figure out if this file actually supports DAX. */
++static bool
++xfs_inode_supports_dax(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	/* Only supported on non-reflinked files. */
++	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
++		return false;
++
++	/* DAX mount option or DAX iflag must be set. */
++	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
++	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
++		return false;
++
++	/* Block size must match page size */
++	if (mp->m_sb.sb_blocksize != PAGE_SIZE)
++		return false;
++
++	/* Device has to support DAX too. */
++	return xfs_find_daxdev_for_inode(VFS_I(ip)) != NULL;
++}
++
+ STATIC void
+ xfs_diflags_to_iflags(
+ 	struct inode		*inode,
+@@ -1200,11 +1224,7 @@ xfs_diflags_to_iflags(
+ 		inode->i_flags |= S_SYNC;
+ 	if (flags & XFS_DIFLAG_NOATIME)
+ 		inode->i_flags |= S_NOATIME;
+-	if (S_ISREG(inode->i_mode) &&
+-	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
+-	    !xfs_is_reflink_inode(ip) &&
+-	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
+-	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
++	if (xfs_inode_supports_dax(ip))
+ 		inode->i_flags |= S_DAX;
+ }
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 1dacccc367f8..5fd60c1fa9db 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1649,11 +1649,18 @@ xfs_fs_fill_super(
+ 		sb->s_flags |= SB_I_VERSION;
+ 
+ 	if (mp->m_flags & XFS_MOUNT_DAX) {
++		int	error2 = 0;
++
+ 		xfs_warn(mp,
+ 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+ 
+-		error = bdev_dax_supported(sb, sb->s_blocksize);
+-		if (error) {
++		error = bdev_dax_supported(sb, mp->m_ddev_targp->bt_bdev,
++				sb->s_blocksize);
++		if (mp->m_rtdev_targp)
++			error2 = bdev_dax_supported(sb,
++					mp->m_rtdev_targp->bt_bdev,
++					sb->s_blocksize);
++		if (error && error2) {
+ 			xfs_alert(mp,
+ 			"DAX unsupported by block device. Turning off DAX.");
+ 			mp->m_flags &= ~XFS_MOUNT_DAX;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 5258346c558c..1107a980f5c3 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -40,10 +40,11 @@ static inline void put_dax(struct dax_device *dax_dev)
+ 
+ int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
+ #if IS_ENABLED(CONFIG_FS_DAX)
+-int __bdev_dax_supported(struct super_block *sb, int blocksize);
+-static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
++int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
++		       int blocksize);
++static inline int sb_dax_supported(struct super_block *sb, int blocksize)
+ {
+-	return __bdev_dax_supported(sb, blocksize);
++	return bdev_dax_supported(sb, sb->s_bdev, blocksize);
+ }
+ 
+ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+@@ -58,7 +59,14 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
+ 
+ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
+ #else
+-static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
++static inline int bdev_dax_supported(struct super_block *sb,
++				     struct block_device *bdev,
++				     int blocksize)
++{
++	return -EOPNOTSUPP;
++}
++
++static inline int sb_dax_supported(struct super_block *sb, int blocksize)
+ {
+ 	return -EOPNOTSUPP;
+ }
+
