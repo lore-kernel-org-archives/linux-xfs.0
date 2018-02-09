@@ -1,95 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59249 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750961AbeBHWtd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Feb 2018 17:49:33 -0500
-Date: Fri, 9 Feb 2018 09:49:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: account only rmapbt-used blocks against rmapbt
- perag res
-Message-ID: <20180208224930.GG20266@dastard>
-References: <20180205174601.51574-1-bfoster@redhat.com>
- <20180205174601.51574-5-bfoster@redhat.com>
- <20180207000350.GO4849@magnolia>
- <20180207144934.GB9789@bfoster.bfoster>
- <20180208022037.GF5433@magnolia>
- <20180208131938.GC13929@bfoster.bfoster>
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:35287 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751034AbeBIMMC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Feb 2018 07:12:02 -0500
+Received: by mail-wm0-f45.google.com with SMTP id r78so15909844wme.0
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Feb 2018 04:12:01 -0800 (PST)
+Subject: Re: xfs_buf_lock vs aio
+References: <a0531d16-d872-548d-4821-273c072973e6@scylladb.com>
+ <20180207233320.GB20367@dastard>
+ <ed83833b-5024-40f2-b335-2dcab7fddf0e@scylladb.com>
+ <20180208221153.GF20266@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <30274e7a-4029-73b8-0d8b-cdfda450e3bc@scylladb.com>
+Date: Fri, 9 Feb 2018 14:11:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180208131938.GC13929@bfoster.bfoster>
+In-Reply-To: <20180208221153.GF20266@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 08, 2018 at 08:19:38AM -0500, Brian Foster wrote:
-> On Wed, Feb 07, 2018 at 06:20:37PM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 07, 2018 at 09:49:35AM -0500, Brian Foster wrote:
-> > > On Tue, Feb 06, 2018 at 04:03:50PM -0800, Darrick J. Wong wrote:
-> > > We've since applied it to things like the finobt (which I'm still not
-> > > totally convinced was the right thing to do based on the vague
-> > > justification for it), which kind of blurs the line between where it's
-> > > a requirement vs. nice-to-have/band-aid for me.
-> > 
-> > I think the finobt reservation is required: Suppose you have a
-> > filesystem with a lot of empty files, a lot of single-block files, and a
-> > lot of big files such that there's no free space anywhere.  Suppose
-> > further that there's an AG where every finobt block is exactly full,
-> > there's an inode chunk with exactly 64 inodes in use, and every block in
-> > that AG is in use (meaning zero AGFL blocks).  Now find one of the empty
-> > inodes in that totally-full chunk and try to free it.  Truncation
-> > doesn't free up any blocks, but we have to expand the finobt to add the
-> > record for the chunk.  We can't find any blocks in that AG so we shut
-> > down.
-> > 
-> 
-> Yes, I suppose the problem makes sense (I wish the original commit had
-> such an explanation :/). We do have the transaction block reservation in
-> the !perag res case, but I suppose we're susceptible to the same global
-> reservation problem as above.
-> 
-> Have we considered a per-ag + per-transaction mechanism at any point
-> through all of this?
+On 02/09/2018 12:11 AM, Dave Chinner wrote:
+> On Thu, Feb 08, 2018 at 10:24:11AM +0200, Avi Kivity wrote:
+>> On 02/08/2018 01:33 AM, Dave Chinner wrote:
+>>> On Wed, Feb 07, 2018 at 07:20:17PM +0200, Avi Kivity wrote:
+>>>> As usual, I'm having my lovely io_submit()s sleeping. This time some
+>>>> detailed traces. 4.14.15.
+> [....]
+>
+>>>> Forcing the log, so sleeping with ILOCK taken.
+>>> Because it's trying to reallocate an extent that is pinned in the
+>>> log and is marked stale. i.e. we are reallocating a recently freed
+>>> metadata extent that hasn't been committed to disk yet. IOWs, it's
+>>> the metadata form of the "log force to clear a busy extent so we can
+>>> re-use it" condition....
+>>>
+>>> There's nothing you can do to reliably avoid this - it's a sign that
+>>> you're running low on free space in an AG because it's recycling
+>>> recently freed space faster than the CIL is being committed to disk.
+>>>
+>>> You could speed up background journal syncs to try to reduce the
+>>> async checkpoint latency that allows busy extents to build up
+>>> (/proc/sys/fs/xfs/xfssyncd_centisecs) but that also impacts on
+>>> journal overhead and IO latency, etc.
+>> Perhaps xfs should auto-tune this variable.
+> That's not a fix. That's a nasty hack that attempts to hide the
+> underlying problem of selecting AGs and/or free space that requires
+> a log force to be used instead of finding other, un-encumbered
+> freespace present in the filesystem.
 
-That's kind of what I was suggesting to Darrick on IRC a while back.
-i.e. the per-ag reservation of at least 4-8MB of space similar to
-the global reservation pool we have, and when it dips below that
-threshold we reserve more free space.
+Isn't the underlying problem that you have a foreground process 
+depending on the progress of a background process? i.e., no matter how 
+AG and free space selection improves, you can always find a workload 
+that consumes extents faster than they can be laundered?
 
-But yeah, it doesn't completely solve the finobt growth at ENOSPC
-problem, but then again the global reservation pool doesn't
-completely solve the "run out of free space for IO completion
-processing at ENOSPC" problem either. That mechanism is just a
-simple solution that is good enough for 99.99% of XFS users, and if
-you are outside this there's a way to increase the pool size to make
-it more robust (e.g. for those 4096 CPU MPI jobs all doing
-concurrent DIO writeback at ENOSPC).
+I'm not saying that free extent selection can't or shouldn't be 
+improved, just that it can never completely fix the problem on its own.
 
-So the question I'm asking here is this: do we need a "perfect
-solution" or does a simple, small, dynamic reservation pool provide
-"good enough protection" for the vast majority of our users?
+> i.e. We know what the underlying problem is here, and there isn't a
+> quick fix for it. You're just going to have to live with that until
+> we work out a reliable, robust way of avoiding having busy extents
+> block allocations.
+>
+>>>> reactor-29  3336 [029]  3580.420137: xfs:xfs_ilock: dev 9:0 ino
+>>>> 0x50000a9f flags ILOCK_EXCL caller kretprobe_trampoline
+>>>>              7fffa0858572 xfs_ilock ([kernel.kallsyms])
+>>>>              7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
+>>>>              7fff8127314c file_update_time ([kernel.kallsyms])
+>>>>              7fffa0849ab9 xfs_file_aio_write_checks ([kernel.kallsyms])
+>>>>              7fffa0849bce xfs_file_dio_aio_write ([kernel.kallsyms])
+>>>>              7fffa084a13f xfs_file_write_iter ([kernel.kallsyms])
+>>>>              7fff812ab24f aio_write ([kernel.kallsyms])
+>>>>              7fff812ab90e do_io_submit ([kernel.kallsyms])
+>>>>              7fff812ac4c0 sys_io_submit ([kernel.kallsyms])
+>>>>              7fff81005917 do_syscall_64 ([kernel.kallsyms])
+>>>>              7fff81802115 return_from_SYSCALL_64 ([kernel.kallsyms])
+>>>> io_submit() stalls. Later, task 8146 relinquishes the lock, which
+>>>> (after passing through another worker thread), is finally acquired
+>>>> by io_submit() which the continues.
+>>> Yup, so it's the timestamp updates at IO submission that are
+>>> blocking waiting for the *ILOCK* lock.
+>>>
+>>> [.....]
+>>>
+>>>> The other is to check that ILOCK can be taken exclusively in
+>>>> xfs_file_dio_aio_write, if IOCB_NOWAIT. If this is the way to go, I
+>>>> might venture a patch.
+>>> You're getting your locks mixed up - xfs_file_dio_aio_write()
+>>> doesn't ever take the ILOCK directly.  It takes the _IOLOCK_
+>>> directly, and that's what IOCB_NOWAIT acts on.
+>> It also takes ILOCK by calling file_update_time(), as seen in the
+>> trace above. I've seen that it does a _nowait acquisition of the
+>> IOLOCK, but that's not enough.
+>>
+>> If we could pass the iocb to file_update_time() then
+>> xfs_vn_update_time, then it could perform a _nowait acquisition of
+>> ILOCK. Otherwise, we can just check if ILOCK is acquirable in
+>> xfs_file_aio_write_checks(). That's racy, but better than nothing.
+> Sure, but that's not the issue with such suggestions. I'm not about
+> to propose a patch to hack an iocb through generic infrastructure
+> that doesn't need an iocb. Doing stuff like that will only get me
+> shouted at because it's a massive layering violation and I should
+> (and do!) know better....
 
-> I ask because something that has been in the back
-> of my mind (which I think was an idea from Dave originally) for a while
-> is to simply queue inactive inode processing when it can't run at a
-> particular point in time, but that depends on actually knowing whether
-> we can proceed to inactivate an inode or not.
+If updating the time is part of an asynchronous operation, then it 
+should fit with the rest of the async framework, no?
 
-Essentially defer the xfs_ifree() processing step from
-xfs_inactive(), right? i.e. leave the inode on the unlinked list
-until we've got space to free it? This could be determined by a
-simple AG space/resv space check before removign the inode from
-the unlinked list...
+Perhaps a variant file_update_time_async() (which would be called by 
+file_update_time).
 
-FWIW, if we keep a list of inactivated but not yet freed inodes for
-background processing, we could allocate inodes from that list, too,
-simply by removing them from the unlinked list...
 
-Cheers,
+>
+>>> require the _ILOCK_ to be taken exclusively, and there's no way
+>>> of knowing if that is going to be needed at the level of
+>>> xfs_file_dio_aio_write().
+>>>
+>>> There are hooks in xfs_file_aio_write_checks() to avoid timestamp
+>>> updates on write (FMODE_NOCMTIME) but there is no way to set this
+>> >from userspace. It's used exclusively by the XFS open-by-handle
+>>> code so that utilities like online defrag can write data into
+>>> files without changing their user-visible timestamps.
+>>>
+>> xfs_file_aio_write_checks() knows its going to call
+>> file_update_time(), and it can guess that file_update_time() will
+>> call xfs_vn_update_time(). So just before that call, check that
+>> ILOCK is free and EAGAIN if not.  Maybe that patch won't win any
+>> beauty contests but it will reduce some of my pain.
+> Again, grose, unmaintable layering violations. Expeditious solution
+> to cater for your immediate need - you're welcome to do this with
+> your own kernels, but it's not a solution we can really carry
+> upstream.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Well, I don't like it very much either. But I do need some fix.
+
+>
+> And that brings me to the real issue here: If your requirement
+> really is "never block io_submit(), ever", then the correct change
+> to make is to the aio code so that it will /always queue IO/ and
+> never attempt to submit it directly. If you get that done, then we
+> can stop playing this tiresome whack-a-mole game in XFS.....
+>
+>
+
+Queuing is easy, but who looks at that queue? If it's another thread, I 
+can already do that from userspace from a worker thread (less 
+efficiently due to more user/kernel mode changes). But now we have to 
+context switch for each I/O. The whole point was to improve efficiency 
+and reduce latency by doing everything directly.
+
