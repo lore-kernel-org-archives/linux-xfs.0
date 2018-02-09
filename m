@@ -1,128 +1,244 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48566 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:59070 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753393AbeBLUrQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Feb 2018 15:47:16 -0500
-Subject: Re: [PATCH 1/7] xfs_scrub: log operational messages when interactive
-References: <151787293446.3743.11110014829952400444.stgit@magnolia>
- <151787294062.3743.16150442240772340999.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d32e8c99-5a56-6409-ec42-aea01220e2f7@sandeen.net>
-Date: Mon, 12 Feb 2018 14:47:14 -0600
+        id S1751029AbeBIQLe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Feb 2018 11:11:34 -0500
+Date: Fri, 9 Feb 2018 11:11:32 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/7] xfs: turn ag header initialisation into a table
+ driven operation
+Message-ID: <20180209161132.GA21413@bfoster.bfoster>
+References: <20180201064202.7174-1-david@fromorbit.com>
+ <20180201064202.7174-5-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <151787294062.3743.16150442240772340999.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180201064202.7174-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 2/5/18 5:22 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Feb 01, 2018 at 05:41:59PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Record the output of an interactive session in the system log so that
-> future support requests can get a better picture of what happened.
+> There's still more cookie cutter code in setting up each AG header.
+> Separate all the variables into a simple structure and iterate a
+> table of header definitions to initialise everything.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-I really want to log things, but I'm conflicted about spamming syslog.
-I'm wondering if a generic /var/log/xfs.log would be good, and it could
-eventually log all xfs-related administrative actions and outcomes with
-a libfrog library helper... I don't know how non-syslog log files are
-handled in general, does everybody just roll their own?
-
-I'm inclined to leave this one out of 4.15 for now while I/we think
-about the big picture here.
-
--Eric
-
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > ---
->  scrub/common.c |   37 +++++++++++++++++++++++++++++++++++++
->  1 file changed, 37 insertions(+)
+
+Seems fine, modulo previous refactoring comments:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_fsops.c | 163 ++++++++++++++++++++++-------------------------------
+>  1 file changed, 66 insertions(+), 97 deletions(-)
 > 
-> 
-> diff --git a/scrub/common.c b/scrub/common.c
-> index 17c3699..672f286 100644
-> --- a/scrub/common.c
-> +++ b/scrub/common.c
-> @@ -21,6 +21,7 @@
->  #include <pthread.h>
->  #include <stdbool.h>
->  #include <sys/statvfs.h>
-> +#include <syslog.h>
->  #include "platform_defs.h"
->  #include "xfs.h"
->  #include "xfs_fs.h"
-> @@ -29,6 +30,8 @@
->  #include "common.h"
->  #include "progress.h"
->  
-> +extern char		*progname;
-> +
->  /*
->   * Reporting Status to the Console
->   *
-> @@ -64,6 +67,12 @@ static const char *err_str[] = {
->  	[S_PREEN]	= "Optimized",
->  };
->  
-> +static int log_level[] = {
-> +	[S_ERROR]	= LOG_ERR,
-> +	[S_WARN]	= LOG_WARNING,
-> +	[S_INFO]	= LOG_INFO,
-> +};
-> +
->  /* If stream is a tty, clear to end of line to clean up progress bar. */
->  static inline const char *stream_start(FILE *stream)
->  {
-> @@ -73,6 +82,8 @@ static inline const char *stream_start(FILE *stream)
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 44eac79e0b49..94650b7d517e 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -288,12 +288,13 @@ xfs_agiblock_init(
+>  		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
 >  }
 >  
->  /* Print a warning string and some warning text. */
-> +#define LOG_BUFSZ	4096
-> +#define LOGNAME_BUFSZ	256
->  void
->  __str_out(
->  	struct scrub_ctx	*ctx,
-> @@ -110,6 +121,32 @@ __str_out(
->  		va_end(args);
+> +typedef void (*aghdr_init_work_f)(struct xfs_mount *mp, struct xfs_buf *bp,
+> +				  struct aghdr_init_data *id);
+>  static int
+>  xfs_growfs_init_aghdr(
+>  	struct xfs_mount	*mp,
+>  	struct aghdr_init_data	*id,
+> -	void			(*work)(struct xfs_mount *, struct xfs_buf *,
+> -					struct aghdr_init_data *),
+> +	aghdr_init_work_f	work,
+>  	const struct xfs_buf_ops *ops)
+>  
+>  {
+> @@ -310,6 +311,16 @@ xfs_growfs_init_aghdr(
+>  	return 0;
+>  }
+>  
+> +struct xfs_aghdr_grow_data {
+> +	xfs_daddr_t		daddr;
+> +	size_t			numblks;
+> +	const struct xfs_buf_ops *ops;
+> +	aghdr_init_work_f	work;
+> +	xfs_btnum_t		type;
+> +	int			numrecs;
+> +	bool			need_init;
+> +};
+> +
+>  /*
+>   * Write new AG headers to disk. Non-transactional, but written
+>   * synchronously so they are completed prior to the growfs transaction
+> @@ -321,107 +332,65 @@ xfs_grow_ag_headers(
+>  	struct aghdr_init_data	*id)
+>  
+>  {
+> +	struct xfs_aghdr_grow_data aghdr_data[] = {
+> +		/* AGF */
+> +		{ XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
+> +		  XFS_FSS_TO_BB(mp, 1), &xfs_agf_buf_ops,
+> +		  &xfs_agfblock_init, 0, 0, true },
+> +		/* AGFL */
+> +		{ XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp)),
+> +		  XFS_FSS_TO_BB(mp, 1), &xfs_agfl_buf_ops,
+> +		  &xfs_agflblock_init, 0, 0, true },
+> +		/* AGI */
+> +		{ XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp)),
+> +		  XFS_FSS_TO_BB(mp, 1), &xfs_agi_buf_ops,
+> +		  &xfs_agiblock_init, 0, 0, true },
+> +		/* BNO root block */
+> +		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp)),
+> +		  BTOBB(mp->m_sb.sb_blocksize), &xfs_allocbt_buf_ops,
+> +		  &xfs_bnoroot_init, XFS_BTNUM_BNO, 1, true },
+> +		/* CNT root block */
+> +		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp)),
+> +		  BTOBB(mp->m_sb.sb_blocksize), &xfs_allocbt_buf_ops,
+> +		  &xfs_cntroot_init, XFS_BTNUM_CNT, 1, true },
+> +		/* INO root block */
+> +		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp)),
+> +		  BTOBB(mp->m_sb.sb_blocksize), &xfs_inobt_buf_ops,
+> +		  &xfs_btroot_init, XFS_BTNUM_INO, 0, true },
+> +		/* FINO root block */
+> +		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp)),
+> +		  BTOBB(mp->m_sb.sb_blocksize), &xfs_inobt_buf_ops,
+> +		  &xfs_btroot_init, XFS_BTNUM_FINO, 0,
+> +		  xfs_sb_version_hasfinobt(&mp->m_sb) },
+> +		/* RMAP root block */
+> +		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp)),
+> +		  BTOBB(mp->m_sb.sb_blocksize), &xfs_rmapbt_buf_ops,
+> +		  &xfs_rmaproot_init, XFS_BTNUM_RMAP, 0,
+> +		  xfs_sb_version_hasrmapbt(&mp->m_sb) },
+> +		/* REFC root block */
+> +		{ XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp)),
+> +		  BTOBB(mp->m_sb.sb_blocksize), &xfs_refcountbt_buf_ops,
+> +		  &xfs_btroot_init, XFS_BTNUM_REFC, 0,
+> +		  xfs_sb_version_hasreflink(&mp->m_sb) },
+> +		/* NULL terminating block */
+> +		{ XFS_BUF_DADDR_NULL, 0, NULL, NULL, 0, 0, false },
+> +	};
+> +	struct  xfs_aghdr_grow_data *dp;
+>  	int			error = 0;
+>  
+> -	/* AG freespace header block */
+> -	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp));
+> -	id->numblks = XFS_FSS_TO_BB(mp, 1);
+> -	error = xfs_growfs_init_aghdr(mp, id, xfs_agfblock_init,
+> -					&xfs_agf_buf_ops);
+> -	if (error)
+> -		goto out_error;
+> -
+> -	/* AG freelist header block */
+> -	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp));
+> -	id->numblks = XFS_FSS_TO_BB(mp, 1);
+> -	error = xfs_growfs_init_aghdr(mp, id, xfs_agflblock_init,
+> -					&xfs_agfl_buf_ops);
+> -	if (error)
+> -		goto out_error;
+> -
+> -	/* AG inode header block */
+> -	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp));
+> -	id->numblks = XFS_FSS_TO_BB(mp, 1);
+> -	error = xfs_growfs_init_aghdr(mp, id, xfs_agiblock_init,
+> -					&xfs_agi_buf_ops);
+> -	if (error)
+> -		goto out_error;
+> -
+> -
+> -	/* BNO btree root block */
+> -	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp));
+> -	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> -	id->type = XFS_BTNUM_BNO;
+> -	id->numrecs = 1;
+> -	error = xfs_growfs_init_aghdr(mp, id, xfs_bnoroot_init,
+> -				   &xfs_allocbt_buf_ops);
+> -	if (error)
+> -		goto out_error;
+> -
+> -
+> -	/* CNT btree root block */
+> -	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp));
+> -	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> -	id->type = XFS_BTNUM_CNT;
+> -	id->numrecs = 1;
+> -	error = xfs_growfs_init_aghdr(mp, id, xfs_cntroot_init,
+> -				   &xfs_allocbt_buf_ops);
+> -	if (error)
+> -		goto out_error;
+> -
+> -	/* RMAP btree root block */
+> -	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> -		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp));
+> -		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> -		id->type = XFS_BTNUM_RMAP;
+> -		id->numrecs = 0;
+> -		error = xfs_growfs_init_aghdr(mp, id, xfs_rmaproot_init,
+> -					   &xfs_rmapbt_buf_ops);
+> -		if (error)
+> -			goto out_error;
+> -
+> -	}
+> -
+> -	/* INO btree root block */
+> -	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp));
+> -	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> -	id->type = XFS_BTNUM_INO;
+> -	id->numrecs = 0;
+> -	error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+> -				   &xfs_inobt_buf_ops);
+> -	if (error)
+> -		goto out_error;
+> -
+> -
+> -	/*
+> -	 * FINO btree root block
+> -	 */
+> -	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> -		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp));
+> -		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> -		id->type = XFS_BTNUM_FINO;
+> -		id->numrecs = 0;
+> -		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+> -					   &xfs_inobt_buf_ops);
+> -		if (error)
+> -			goto out_error;
+> -	}
+> +	for (dp = &aghdr_data[0]; dp->daddr != XFS_BUF_DADDR_NULL; dp++) {
+> +		if (!dp->need_init)
+> +			continue;
+>  
+> -	/*
+> -	 * refcount btree root block
+> -	 */
+> -	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp));
+> -		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> -		id->type = XFS_BTNUM_REFC;
+> -		id->numrecs = 0;
+> -		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+> -					   &xfs_refcountbt_buf_ops);
+> +		id->daddr = dp->daddr;
+> +		id->numblks = dp->numblks;
+> +		id->numrecs = dp->numrecs;
+> +		id->type = dp->type;
+> +		error = xfs_growfs_init_aghdr(mp, id, dp->work, dp->ops);
+>  		if (error)
+> -			goto out_error;
+> +			break;
 >  	}
 >  
-> +	/* If we're running interactively, log the message to syslog too. */
-> +	if (isatty(fileno(stdin)) && !debug) {
-> +		char	logname[LOGNAME_BUFSZ];
-> +
-> +		snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname,
-> +				ctx->mntpoint);
-> +		openlog(logname, LOG_PID, LOG_DAEMON);
-> +
-> +		if (error) {
-> +			syslog(LOG_ERR, "%s: %s: %s.",
-> +					_(err_str[level]), descr,
-> +					strerror_r(error, buf, DESCR_BUFSZ));
-> +		} else {
-> +			char	buf[LOG_BUFSZ];
-> +			int	sz;
-> +
-> +			sz = snprintf(buf, LOG_BUFSZ, "%s: %s: ",
-> +					_(err_str[level]), descr);
-> +			va_start(args, format);
-> +			vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
-> +			va_end(args);
-> +			syslog(log_level[level], "%s", buf);
-> +		}
-> +		closelog();
-> +	}
-> +
->  	if (debug)
->  		fprintf(stream, _(" (%s line %d)"), file, line);
->  	fprintf(stream, "\n");
+> -out_error:
+>  	return error;
+>  }
+>  
+> -- 
+> 2.15.1
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
