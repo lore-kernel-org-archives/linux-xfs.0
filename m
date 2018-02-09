@@ -1,136 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:41255 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750847AbeBHWL4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Feb 2018 17:11:56 -0500
-Date: Fri, 9 Feb 2018 09:11:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_buf_lock vs aio
-Message-ID: <20180208221153.GF20266@dastard>
-References: <a0531d16-d872-548d-4821-273c072973e6@scylladb.com>
- <20180207233320.GB20367@dastard>
- <ed83833b-5024-40f2-b335-2dcab7fddf0e@scylladb.com>
+Received: from mga09.intel.com ([134.134.136.24]:46727 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752116AbeBIAiU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Feb 2018 19:38:20 -0500
+Subject: [PATCH v3 2/3] dax: change bdev_dax_supported() to support boolean
+ returns
+From: Dave Jiang <dave.jiang@intel.com>
+Date: Thu, 08 Feb 2018 17:38:19 -0700
+Message-ID: <151813669915.15926.5489252461577531.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <151813659955.15926.8922476613392258086.stgit@djiang5-desk3.ch.intel.com>
+References: <151813659955.15926.8922476613392258086.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ed83833b-5024-40f2-b335-2dcab7fddf0e@scylladb.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
 
-On Thu, Feb 08, 2018 at 10:24:11AM +0200, Avi Kivity wrote:
-> On 02/08/2018 01:33 AM, Dave Chinner wrote:
-> >On Wed, Feb 07, 2018 at 07:20:17PM +0200, Avi Kivity wrote:
-> >>As usual, I'm having my lovely io_submit()s sleeping. This time some
-> >>detailed traces. 4.14.15.
+The function return values are confusing with the way the function is
+named. We expect a true or false return value but it actually returns
+0/-errno.  This makes the code very confusing. Changing the return values
+to return a bool where if DAX is supported then return true and no DAX
+support returns false.
 
-[....]
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+---
+ drivers/dax/super.c |   18 +++++++++---------
+ fs/ext2/super.c     |    5 +++--
+ fs/ext4/super.c     |    5 +++--
+ fs/xfs/xfs_ioctl.c  |    4 ++--
+ fs/xfs/xfs_super.c  |   10 +++++-----
+ include/linux/dax.h |   12 ++++++------
+ 6 files changed, 28 insertions(+), 26 deletions(-)
 
-> >>Forcing the log, so sleeping with ILOCK taken.
-> >Because it's trying to reallocate an extent that is pinned in the
-> >log and is marked stale. i.e. we are reallocating a recently freed
-> >metadata extent that hasn't been committed to disk yet. IOWs, it's
-> >the metadata form of the "log force to clear a busy extent so we can
-> >re-use it" condition....
-> >
-> >There's nothing you can do to reliably avoid this - it's a sign that
-> >you're running low on free space in an AG because it's recycling
-> >recently freed space faster than the CIL is being committed to disk.
-> >
-> >You could speed up background journal syncs to try to reduce the
-> >async checkpoint latency that allows busy extents to build up
-> >(/proc/sys/fs/xfs/xfssyncd_centisecs) but that also impacts on
-> >journal overhead and IO latency, etc.
-> 
-> Perhaps xfs should auto-tune this variable.
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index c4db84f26c0f..ef008e384042 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -80,9 +80,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+  * This is a library function for filesystems to check if the block device
+  * can be mounted with dax option.
+  *
+- * Return: negative errno if unsupported, 0 if supported.
++ * Return: true if supported, false if unsupported
+  */
+-int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
++bool bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
+ 		       int blocksize)
+ {
+ 	struct dax_device *dax_dev;
+@@ -95,21 +95,21 @@ int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
+ 	if (blocksize != PAGE_SIZE) {
+ 		pr_debug("VFS (%s): error: unsupported blocksize for dax\n",
+ 				sb->s_id);
+-		return -EINVAL;
++		return false;
+ 	}
+ 
+ 	err = bdev_dax_pgoff(bdev, 0, PAGE_SIZE, &pgoff);
+ 	if (err) {
+-		pr_debug("VFS (%s): error: unaligned partition for dax\n",
+-				sb->s_id);
+-		return err;
++		pr_debug("VFS (%s): error: unaligned partition for dax: %d\n",
++				sb->s_id, err);
++		return false;
+ 	}
+ 
+ 	dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
+ 	if (!dax_dev) {
+ 		pr_debug("VFS (%s): error: device does not support dax\n",
+ 				sb->s_id);
+-		return -EOPNOTSUPP;
++		return false;
+ 	}
+ 
+ 	id = dax_read_lock();
+@@ -121,10 +121,10 @@ int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
+ 	if (len < 1) {
+ 		pr_debug("VFS (%s): error: dax access failed (%ld)\n",
+ 				sb->s_id, len);
+-		return len < 0 ? len : -EIO;
++		return false;
+ 	}
+ 
+-	return 0;
++	return true;
+ }
+ EXPORT_SYMBOL_GPL(bdev_dax_supported);
+ #endif
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 655699321c45..636b9c5e1bff 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -958,9 +958,10 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ 	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
+ 
+ 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
+-		err = sb_dax_supported(sb, blocksize);
+-		if (err)
++		if(!sb_dax_supported(sb, blocksize)) {
++			err = -EIO;
+ 			goto failed_mount;
++		}
+ 	}
+ 
+ 	/* If the blocksize doesn't match, re-read the thing.. */
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 804a2d6729af..7b7650ac9c53 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -3712,9 +3712,10 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ 					" that may contain inline data");
+ 			goto failed_mount;
+ 		}
+-		err = sb_dax_supported(sb, blocksize);
+-		if (err)
++		if (!sb_dax_supported(sb, blocksize)) {
++			err = -EIO;
+ 			goto failed_mount;
++		}
+ 	}
+ 
+ 	if (ext4_has_feature_encrypt(sb) && es->s_encryption_level) {
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index f9d3f4314f7c..e440d789ed1b 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1102,8 +1102,8 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+ 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+ 			return -EINVAL;
+-		if (bdev_dax_supported(sb, xfs_find_bdev_for_inode(VFS_I(ip)),
+-				sb->s_blocksize) < 0)
++		if (!bdev_dax_supported(sb, xfs_find_bdev_for_inode(VFS_I(ip)),
++				sb->s_blocksize))
+ 			return -EINVAL;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5fd60c1fa9db..39b2295bf646 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1649,18 +1649,18 @@ xfs_fs_fill_super(
+ 		sb->s_flags |= SB_I_VERSION;
+ 
+ 	if (mp->m_flags & XFS_MOUNT_DAX) {
+-		int	error2 = 0;
++		bool rtdev_is_dax, datadev_is_dax;
+ 
+ 		xfs_warn(mp,
+ 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+ 
+-		error = bdev_dax_supported(sb, mp->m_ddev_targp->bt_bdev,
+-				sb->s_blocksize);
++		datadev_is_dax = bdev_dax_supported(sb,
++				mp->m_ddev_targp->bt_bdev, sb->s_blocksize);
+ 		if (mp->m_rtdev_targp)
+-			error2 = bdev_dax_supported(sb,
++			rtdev_is_dax = bdev_dax_supported(sb,
+ 					mp->m_rtdev_targp->bt_bdev,
+ 					sb->s_blocksize);
+-		if (error && error2) {
++		if (!rtdev_is_dax && !datadev_is_dax) {
+ 			xfs_alert(mp,
+ 			"DAX unsupported by block device. Turning off DAX.");
+ 			mp->m_flags &= ~XFS_MOUNT_DAX;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 1107a980f5c3..ee962705fffb 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -40,9 +40,9 @@ static inline void put_dax(struct dax_device *dax_dev)
+ 
+ int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
+ #if IS_ENABLED(CONFIG_FS_DAX)
+-int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
++bool bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
+ 		       int blocksize);
+-static inline int sb_dax_supported(struct super_block *sb, int blocksize)
++static inline bool sb_dax_supported(struct super_block *sb, int blocksize)
+ {
+ 	return bdev_dax_supported(sb, sb->s_bdev, blocksize);
+ }
+@@ -59,16 +59,16 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
+ 
+ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
+ #else
+-static inline int bdev_dax_supported(struct super_block *sb,
++static inline bool bdev_dax_supported(struct super_block *sb,
+ 				     struct block_device *bdev,
+ 				     int blocksize)
+ {
+-	return -EOPNOTSUPP;
++	return false;
+ }
+ 
+-static inline int sb_dax_supported(struct super_block *sb, int blocksize)
++static inline bool sb_dax_supported(struct super_block *sb, int blocksize)
+ {
+-	return -EOPNOTSUPP;
++	return false;
+ }
+ 
+ static inline struct dax_device *fs_dax_get_by_host(const char *host)
 
-That's not a fix. That's a nasty hack that attempts to hide the
-underlying problem of selecting AGs and/or free space that requires
-a log force to be used instead of finding other, un-encumbered
-freespace present in the filesystem.
-
-i.e. We know what the underlying problem is here, and there isn't a
-quick fix for it. You're just going to have to live with that until
-we work out a reliable, robust way of avoiding having busy extents
-block allocations.
-
-> >>reactor-29  3336 [029]  3580.420137: xfs:xfs_ilock: dev 9:0 ino
-> >>0x50000a9f flags ILOCK_EXCL caller kretprobe_trampoline
-> >>             7fffa0858572 xfs_ilock ([kernel.kallsyms])
-> >>             7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
-> >>             7fff8127314c file_update_time ([kernel.kallsyms])
-> >>             7fffa0849ab9 xfs_file_aio_write_checks ([kernel.kallsyms])
-> >>             7fffa0849bce xfs_file_dio_aio_write ([kernel.kallsyms])
-> >>             7fffa084a13f xfs_file_write_iter ([kernel.kallsyms])
-> >>             7fff812ab24f aio_write ([kernel.kallsyms])
-> >>             7fff812ab90e do_io_submit ([kernel.kallsyms])
-> >>             7fff812ac4c0 sys_io_submit ([kernel.kallsyms])
-> >>             7fff81005917 do_syscall_64 ([kernel.kallsyms])
-> >>             7fff81802115 return_from_SYSCALL_64 ([kernel.kallsyms])
-> >>io_submit() stalls. Later, task 8146 relinquishes the lock, which
-> >>(after passing through another worker thread), is finally acquired
-> >>by io_submit() which the continues.
-> >Yup, so it's the timestamp updates at IO submission that are
-> >blocking waiting for the *ILOCK* lock.
-> >
-> >[.....]
-> >
-> >>The other is to check that ILOCK can be taken exclusively in
-> >>xfs_file_dio_aio_write, if IOCB_NOWAIT. If this is the way to go, I
-> >>might venture a patch.
-> >You're getting your locks mixed up - xfs_file_dio_aio_write()
-> >doesn't ever take the ILOCK directly.  It takes the _IOLOCK_
-> >directly, and that's what IOCB_NOWAIT acts on.
-> 
-> It also takes ILOCK by calling file_update_time(), as seen in the
-> trace above. I've seen that it does a _nowait acquisition of the
-> IOLOCK, but that's not enough.
-> 
-> If we could pass the iocb to file_update_time() then
-> xfs_vn_update_time, then it could perform a _nowait acquisition of
-> ILOCK. Otherwise, we can just check if ILOCK is acquirable in
-> xfs_file_aio_write_checks(). That's racy, but better than nothing.
-
-Sure, but that's not the issue with such suggestions. I'm not about
-to propose a patch to hack an iocb through generic infrastructure
-that doesn't need an iocb. Doing stuff like that will only get me
-shouted at because it's a massive layering violation and I should
-(and do!) know better....
-
-> >require the _ILOCK_ to be taken exclusively, and there's no way
-> >of knowing if that is going to be needed at the level of
-> >xfs_file_dio_aio_write().
-> >
-> >There are hooks in xfs_file_aio_write_checks() to avoid timestamp
-> >updates on write (FMODE_NOCMTIME) but there is no way to set this
-> >from userspace. It's used exclusively by the XFS open-by-handle
-> >code so that utilities like online defrag can write data into
-> >files without changing their user-visible timestamps.
-> >
-> 
-> xfs_file_aio_write_checks() knows its going to call
-> file_update_time(), and it can guess that file_update_time() will
-> call xfs_vn_update_time(). So just before that call, check that
-> ILOCK is free and EAGAIN if not.  Maybe that patch won't win any
-> beauty contests but it will reduce some of my pain.
-
-Again, grose, unmaintable layering violations. Expeditious solution
-to cater for your immediate need - you're welcome to do this with
-your own kernels, but it's not a solution we can really carry
-upstream.
-
-And that brings me to the real issue here: If your requirement
-really is "never block io_submit(), ever", then the correct change
-to make is to the aio code so that it will /always queue IO/ and
-never attempt to submit it directly. If you get that done, then we
-can stop playing this tiresome whack-a-mole game in XFS.....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
