@@ -1,125 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50206 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753908AbeBLVG7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Feb 2018 16:06:59 -0500
-Subject: Re: [PATCH 7/7] xfs_scrub: refactor outcome display into a separate
- helper
-References: <151787293446.3743.11110014829952400444.stgit@magnolia>
- <151787298870.3743.17315196925370109109.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
-Date: Mon, 12 Feb 2018 15:06:58 -0600
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:35417 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754009AbeBLVS1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Feb 2018 16:18:27 -0500
+Date: Tue, 13 Feb 2018 08:18:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: byte range buffer dirty region tracking
+Message-ID: <20180212211824.GC6778@dastard>
+References: <20180201010514.30233-1-david@fromorbit.com>
+ <20180205003415.dn6elcqb4kae3xle@destitution>
+ <20180206162141.GA3862@bfoster.bfoster>
+ <20180212024138.GB6778@dastard>
+ <20180212142619.GA33694@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <151787298870.3743.17315196925370109109.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180212142619.GA33694@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 2/5/18 5:23 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Feb 12, 2018 at 09:26:19AM -0500, Brian Foster wrote:
+> On Mon, Feb 12, 2018 at 01:41:38PM +1100, Dave Chinner wrote:
+> > On Tue, Feb 06, 2018 at 11:21:41AM -0500, Brian Foster wrote:
+> > > On Mon, Feb 05, 2018 at 11:34:15AM +1100, Dave Chinner wrote:
+> > > > -static void
+> > > > -xfs_buf_item_log_segment(
+> > > > +void
+> > > > +xfs_buf_item_log(
+> > > > +	struct xfs_buf_log_item	*bip,
+> > > >  	uint			first,
+> > > > -	uint			last,
+> > > > -	uint			*map)
+> > > > +	uint			last)
+> > > >  {
+> > > > -	uint		first_bit;
+> > > > -	uint		last_bit;
+> > > > -	uint		bits_to_set;
+> > > > -	uint		bits_set;
+> > > > -	uint		word_num;
+> > > > -	uint		*wordp;
+> > > > -	uint		bit;
+> > > > -	uint		end_bit;
+> > > > -	uint		mask;
+> > > > +	struct xfs_bli_range	*rp = NULL;
+> > > > +	int			i;
+> > > > +	ASSERT(last != 0);
+> > > 
+> > > The current code looks like it implicitly handles this case.
+> > 
+> > Yes, it may, but logging a zero size dirty region is simply wrong.
+> > 
 > 
-> Move all the printing of the scrub outcome into a separate helper to
-> declutter the main function.
+> That's not the case I'm referring to. If the range is inclusive, how
+> would you propose to log the first byte of a buffer?
+
+We don't. No structure on disk has a single byte that needs to be
+logged individually as it's first member. Hence we don't ever do
+this.
+
+If we ever happen to screw up an on-disk structure such that it
+doesn't have a 4 byte magic number and a chunk of self describing
+metadata as it's first 20-30 bytes in a buffer and we try to log
+just the first byte, then these asserts will fire to tell us that
+we've screwed up a new on-disk structure....
+
+> I know we probably
+> don't have this situation and may never, but afaict the current code
+> handles it as you'd expect (which is to say it should behave as if we
+> logged any other single byte in the first chunk of the buffer).
+
+Just because the code handles the case, it doesn't mean it's a valid
+thing to be asking the code to do....
+
+> > > Asserts
+> > > aside, it looks like this code could essentially add the range, fail to
+> > > size it correctly (due to the earlier check in the _size() path), but
+> > > then continue to log it based on the existing xfs_buf_item_log_segment()
+> > > code that has been shifted over to xfs_buf_item_format_segment().
+> > > 
+> > > The interface requests an inclusive range, so perhaps we should just
+> > > check for last == 0 (assuming first == 0) and bump last so the roundup
+> > > and all subsequent code continues to behave exactly as it does today.
+> > 
+> > No code today passes last == 0 into this function. I want to make
+> > sure it stays taht way, because it's indicative of a bug in the code
+> > that is calling xfs_buf_item_log().
+> > 
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> How is that a bug? Looking at the current code, the case of first ==
+> last == 0 sets the first bit in the bitmap to log the first 128 byte
+> region, as expected. Strange as it may be, this results in correctly
+> sizing/formatting the first chunk of the buffer.
 
+Yes, but that doesn't mean the caller is correct.
 
-This might get a bit long, no?
+> With this patch, we'd throw an assert and potentially add a first ==
+> last == 0 range to the bli. This leads to the subsequent assert
+> referenced earlier in xfs_buf_item_size(), which also now returns
+> without including the size of the range along with skipping the
+> remaining ranges in the bli. Because we've shifted the old bitmap
+> logging code over to the format side, it looks like the format code
+> would still copy everything as it does today (modulo the -1 being
+> removed from the end calculation, perhaps), however.
 
-"/path/to/filesystem: errors found 16384; warnings found 16.  Unmount and run xfs_repair."
+Yes, and that's required by the relogging algorithm - we have to
+copy all the older tracked dirty regions when we write an active log
+item into the log multiple times. That's required so we can move
+objects forward in the AIL.
 
-Can we put the "Unmount and run xfs_repair" on its own line?
-That'd make it stand out more, as well.  </nitpick>
+> :/ So it seems to
+> me this breaks a technically valid case in weird/subtle ways. For
+> example, why assert about last == 0, but then go on to add the range
+> anyways, explicitly not size it correctly, but then format it as if
+> nothing is wrong? If it were really wrong/invalid (which I don't think
+> it is), why not put the check in the log side and skip adding the range
+> rather than add it, skip sizing it, and then format it.
 
+So what you're really concerned about is that I put asserts into the
+code to catch broken development code, but then allow production
+systems through without caring whether it works correctly because
+that boundary condition will never occur during runtime on
+production systems?
 
-> ---
->  scrub/xfs_scrub.c |   48 ++++++++++++++++++++++++++++++------------------
->  1 file changed, 30 insertions(+), 18 deletions(-)
-> 
-> 
-> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> index 89b7fa0..fdd35df 100644
-> --- a/scrub/xfs_scrub.c
-> +++ b/scrub/xfs_scrub.c
-> @@ -493,6 +493,34 @@ _("Scrub aborted after phase %d."),
->  	return moveon;
->  }
->  
-> +static void
-> +report_outcome(
-> +	struct scrub_ctx	*ctx)
-> +{
-> +	unsigned long long	total_errors;
-> +
-> +	total_errors = ctx->errors_found + ctx->runtime_errors;
-> +
-> +	if (total_errors == 0 && ctx->warnings_found == 0)
-> +		return;
-> +
-> +	if (total_errors == 0)
-> +		fprintf(stderr, _("%s: warnings found: %llu."), ctx->mntpoint,
-> +				ctx->warnings_found);
-> +	else if (ctx->warnings_found == 0)
-> +		fprintf(stderr, _("%s: errors found: %llu."), ctx->mntpoint,
-> +				total_errors);
-> +	else
-> +		fprintf(stderr, _("%s: errors found: %llu; warnings found: %llu."),
-> +				ctx->mntpoint, total_errors,
-> +				ctx->warnings_found);
-> +
-> +	if (ctx->need_repair)
-> +		fprintf(stderr, "  %s\n", _("Unmount and run xfs_repair."));
-> +	else
-> +		fprintf(stderr, "\n");
-> +}
-> +
->  int
->  main(
->  	int			argc,
-> @@ -501,9 +529,7 @@ main(
->  	struct scrub_ctx	ctx = {0};
->  	struct phase_rusage	all_pi;
->  	char			*mtab = NULL;
-> -	char			*repairstr = "";
->  	FILE			*progress_fp = NULL;
-> -	unsigned long long	total_errors;
->  	bool			moveon = true;
->  	bool			ismnt;
->  	int			c;
-> @@ -692,22 +718,8 @@ _("%s: Not a XFS mount point or block device.\n"),
->  		ctx.runtime_errors++;
->  
->  out:
-> -	total_errors = ctx.errors_found + ctx.runtime_errors;
-> -	if (ctx.need_repair)
-> -		repairstr = _("  Unmount and run xfs_repair.");
-> -	if (total_errors && ctx.warnings_found)
-> -		fprintf(stderr,
-> -_("%s: %llu errors and %llu warnings found.%s\n"),
-> -			ctx.mntpoint, total_errors, ctx.warnings_found,
-> -			repairstr);
-> -	else if (total_errors && ctx.warnings_found == 0)
-> -		fprintf(stderr,
-> -_("%s: %llu errors found.%s\n"),
-> -			ctx.mntpoint, total_errors, repairstr);
-> -	else if (total_errors == 0 && ctx.warnings_found)
-> -		fprintf(stderr,
-> -_("%s: %llu warnings found.\n"),
-> -			ctx.mntpoint, ctx.warnings_found);
-> +	report_outcome(&ctx);
-> +
->  	if (ctx.errors_found) {
->  		if (ctx.error_action == ERRORS_SHUTDOWN)
->  			xfs_shutdown_fs(&ctx);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
