@@ -1,176 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:20863 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932134AbeCABmA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Feb 2018 20:42:00 -0500
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Date: Thu,  1 Mar 2018 12:41:44 +1100
-Message-Id: <20180301014144.28892-1-david@fromorbit.com>
+Received: from sandeen.net ([63.231.237.45]:49086 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753881AbeBLUxf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Feb 2018 15:53:35 -0500
+Subject: Re: [PATCH 6/7] xfs_scrub: always init phase information
+References: <151787293446.3743.11110014829952400444.stgit@magnolia>
+ <151787298265.3743.11278867933485186707.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <965fcbcd-bfe3-8cdd-6657-ca20bef24c51@sandeen.net>
+Date: Mon, 12 Feb 2018 14:53:34 -0600
+MIME-Version: 1.0
+In-Reply-To: <151787298265.3743.11278867933485186707.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: hch@lst.de, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
 
-If we are doing direct IO writes with datasync semantics, we often
-have to flush metadata changes along with the data write. However,
-if we are overwriting existing data, there are no metadata changes
-that we need to flush. In this case, optimising the IO by using
-FUA write makes sense.
 
-We know from teh IOMAP_F_DIRTY flag as to whether a specific inode
-requires a metadata flush - this is currently used by DAX to ensure
-extent modi$fication as stable in page fault operations. For direct
-IO writes, we can use it to determine if we need to flush metadata
-or not once the data is on disk.
+On 2/5/18 5:23 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure we initialize the overall phase state before we start
+> executing any code that can end up in the report-status-and-exit paths.
+> Otherwise if debugging is turned on we get garbage io/cpu stat reports.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hence if we have been returned a mapped extent that is not new and
-the IO mapping is not dirty, then we can use a FUA write to provide
-datasync semantics. This allows us to short-cut the
-generic_write_sync() call in IO completion and hence avoid
-unnecessary operations. This makes pure direct IO data write
-behaviour identical to the way block devices use REQ_FUA to provide
-datasync semantics.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Now that iomap_dio_rw() is determining if REQ_FUA can be used, we
-have to stop issuing generic_write_sync() calls from the XFS code
-when REQ_FUA is issued, otherwise it will still throw a cache flush
-to the device via xfs_file_fsync(). To do this, we need to make
-iomap_dio_rw() always responsible for issuing generic_write_sync()
-when necessary, not just for AIO calls. This means the filesystem
-doesn't have to guess when cache flushes are necessary now.
-
-On a FUA enabled device, a synchronous direct IO write workload
-(sequential 4k overwrites in 32MB file) had the following results:
-
-# xfs_io -fd -c "pwrite -V 1 -D 0 32m" /mnt/scratch/boo
-
-kernel		time	write()s	write iops	Write b/w
-------		----	--------	----------	---------
-(no dsync)	 4s	2173/s		2173		8.5MB/s
-vanilla		22s	 370/s		 750		1.4MB/s
-patched		19s	 420/s		 420		1.6MB/s
-
-The patched code clearly doesn't send cache flushes anymore, but
-instead uses FUA (confirmed via blktrace), and performance improves
-a bit as a result. However, the benefits will be higher on workloads
-that mix O_DSYNC overwrites with other write IO as we won't be
-flushing the entire device cache on every DSYNC overwrite IO
-anymore.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/iomap.c        | 38 +++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_file.c |  5 +++++
- 2 files changed, 38 insertions(+), 5 deletions(-)
-
-diff --git a/fs/iomap.c b/fs/iomap.c
-index afd163586aa0..bcc90e3a2e3f 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
-  * Private flags for iomap_dio, must not overlap with the public ones in
-  * iomap.h:
-  */
-+#define IOMAP_DIO_WRITE_FUA	(1 << 29)
- #define IOMAP_DIO_WRITE		(1 << 30)
- #define IOMAP_DIO_DIRTY		(1 << 31)
- 
-@@ -760,8 +761,19 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 	}
- 
- 	inode_dio_end(file_inode(iocb->ki_filp));
--	kfree(dio);
- 
-+	/*
-+	 * If a FUA write was done, then that is all we required for datasync
-+	 * semantics -. we don't need to call generic_write_sync() to complete
-+	 * the write.
-+	 */
-+	if (ret > 0 &&
-+	    (dio->flags & (IOMAP_DIO_WRITE|IOMAP_DIO_WRITE_FUA)) ==
-+							IOMAP_DIO_WRITE) {
-+		ret = generic_write_sync(iocb, ret);
-+	}
-+
-+	kfree(dio);
- 	return ret;
- }
- 
-@@ -769,12 +781,9 @@ static void iomap_dio_complete_work(struct work_struct *work)
- {
- 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
- 	struct kiocb *iocb = dio->iocb;
--	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
- 	ssize_t ret;
- 
- 	ret = iomap_dio_complete(dio);
--	if (is_write && ret > 0)
--		ret = generic_write_sync(iocb, ret);
- 	iocb->ki_complete(iocb, ret, 0);
- }
- 
-@@ -883,6 +892,15 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 			dio->flags |= IOMAP_DIO_COW;
- 		if (iomap->flags & IOMAP_F_NEW)
- 			need_zeroout = true;
-+		/*
-+		 * Use a FUA write if we need datasync semantics and this is a
-+		 * pure data IO that doesn't require any metadata updates. This
-+		 * allows us to avoid cache flushes on IO completion.
-+		 */
-+		else if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
-+			 (dio->flags & IOMAP_DIO_WRITE) &&
-+			 (dio->iocb->ki_flags & IOCB_DSYNC))
-+			dio->flags |= IOMAP_DIO_WRITE_FUA;
- 		break;
- 	default:
- 		WARN_ON_ONCE(1);
-@@ -930,7 +948,11 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 
- 		n = bio->bi_iter.bi_size;
- 		if (dio->flags & IOMAP_DIO_WRITE) {
--			bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
-+			int op_flags = REQ_SYNC | REQ_IDLE;
-+
-+			if (dio->flags & IOMAP_DIO_WRITE_FUA)
-+				op_flags |= REQ_FUA;
-+			bio_set_op_attrs(bio, REQ_OP_WRITE, op_flags);
- 			task_io_account_write(n);
- 		} else {
- 			bio_set_op_attrs(bio, REQ_OP_READ, 0);
-@@ -961,6 +983,12 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 	return copied;
- }
- 
-+/*
-+ * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
-+ * is being issued as AIO or not. This allows us to optimise pure data writes to
-+ * use REQ_FUA rather than requiring generic_write_sync() to issue a REQ_FLUSH
-+ * post write.
-+ */
- ssize_t
- iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 260ff5e5c264..81aa3b73471e 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -732,6 +732,11 @@ xfs_file_write_iter(
- 		ret = xfs_file_dio_aio_write(iocb, from);
- 		if (ret == -EREMCHG)
- 			goto buffered;
-+		/*
-+		 * Direct IO handles sync type writes internally on I/O
-+		 * completion.
-+		 */
-+		return ret;
- 	} else {
- buffered:
- 		ret = xfs_file_buffered_aio_write(iocb, from);
--- 
-2.16.1
-
+> ---
+>  scrub/xfs_scrub.c |   10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> 
+> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+> index 6efcf77..89b7fa0 100644
+> --- a/scrub/xfs_scrub.c
+> +++ b/scrub/xfs_scrub.c
+> @@ -618,6 +618,11 @@ main(
+>  	if (getenv("SERVICE_MODE"))
+>  		is_service = true;
+>  
+> +	/* Initialize overall phase stats. */
+> +	moveon = phase_start(&all_pi, 0, NULL);
+> +	if (!moveon)
+> +		return SCRUB_RET_OPERROR;
+> +
+>  	/* Find the mount record for the passed-in argument. */
+>  	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
+>  		fprintf(stderr,
+> @@ -641,11 +646,6 @@ main(
+>  			mtab = _PATH_MOUNTED;
+>  	}
+>  
+> -	/* Initialize overall phase stats. */
+> -	moveon = phase_start(&all_pi, 0, NULL);
+> -	if (!moveon)
+> -		goto out;
+> -
+>  	ismnt = find_mountpoint(mtab, &ctx);
+>  	if (!ismnt) {
+>  		fprintf(stderr,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
