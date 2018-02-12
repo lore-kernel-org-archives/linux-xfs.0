@@ -1,121 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:8234 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750991AbeBGXdY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Feb 2018 18:33:24 -0500
-Date: Thu, 8 Feb 2018 10:33:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_buf_lock vs aio
-Message-ID: <20180207233320.GB20367@dastard>
-References: <a0531d16-d872-548d-4821-273c072973e6@scylladb.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33750 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750914AbeBLTlO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Feb 2018 14:41:14 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 377B640FB638
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Feb 2018 19:41:14 +0000 (UTC)
+Date: Mon, 12 Feb 2018 13:41:12 -0600
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH] xfs: remove unused m_dmevmask from xfs_mount struct
+Message-ID: <20180212194112.GA28415@redhat.com>
+References: <e62db8d7-73d8-c47c-cd42-977d24aba0ce@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <a0531d16-d872-548d-4821-273c072973e6@scylladb.com>
+In-Reply-To: <e62db8d7-73d8-c47c-cd42-977d24aba0ce@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Feb 07, 2018 at 07:20:17PM +0200, Avi Kivity wrote:
-> As usual, I'm having my lovely io_submit()s sleeping. This time some
-> detailed traces. 4.14.15.
+On Tue, Feb 06, 2018 at 07:54:55PM -0600, Eric Sandeen wrote:
+> The dmevmask structure member is a dmapi leftover; it's
+> set here and there but never actually used.  Remove it.
 > 
-> kthreadd  8146 [013]  3580.418103:           sched:sched_switch:
-> kworker/13:3:8146 [120] D ==> kworker/13:0:8144 [120]
->             7fff817dd0a5 __schedule ([kernel.kallsyms])
->             7fff817dd5c6 schedule ([kernel.kallsyms])
->             7fff817e1656 schedule_timeout ([kernel.kallsyms])
->             7fff817de181 wait_for_completion ([kernel.kallsyms])
->             7fff8109d51d flush_work ([kernel.kallsyms])
->             7fffa086e29d xlog_cil_force_lsn ([kernel.kallsyms])
->             7fffa086bfd6 _xfs_log_force ([kernel.kallsyms])
->             7fffa086c1fc xfs_log_force ([kernel.kallsyms])
->             7fffa08444d6 xfs_buf_lock ([kernel.kallsyms])
->             7fffa084479b _xfs_buf_find ([kernel.kallsyms])
->             7fffa0844a1a xfs_buf_get_map ([kernel.kallsyms])
->             7fffa087b766 xfs_trans_get_buf_map ([kernel.kallsyms])
->             7fffa0811c14 xfs_btree_get_bufl ([kernel.kallsyms])
->             7fffa08024d2 xfs_bmap_extents_to_btree ([kernel.kallsyms])
->             7fffa0805d68 xfs_bmap_add_extent_unwritten_real
-> ([kernel.kallsyms])
->             7fffa0806a88 xfs_bmapi_convert_unwritten ([kernel.kallsyms])
->             7fffa080c3e0 xfs_bmapi_write ([kernel.kallsyms])
->             7fffa08553c9 xfs_iomap_write_unwritten ([kernel.kallsyms])
->             7fffa0849416 xfs_dio_write_end_io ([kernel.kallsyms])
->             7fff812bc935 iomap_dio_complete ([kernel.kallsyms])
->             7fff812bca17 iomap_dio_complete_work ([kernel.kallsyms])
->             7fff8109dd19 process_one_work ([kernel.kallsyms])
->             7fff8109e79d worker_thread ([kernel.kallsyms])
->             7fff810a43b9 kthread ([kernel.kallsyms])
->             7fff81802335 ret_from_fork ([kernel.kallsyms])
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+looks fine...
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+> ---
 > 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 00240c9..1937a93 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -5127,16 +5127,9 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
+>  	xfs_agino_t	agino;
+>  	int		bucket;
+>  	int		error;
+> -	uint		mp_dmevmask;
+>  
+>  	mp = log->l_mp;
+>  
+> -	/*
+> -	 * Prevent any DMAPI event from being sent while in this function.
+> -	 */
+> -	mp_dmevmask = mp->m_dmevmask;
+> -	mp->m_dmevmask = 0;
+> -
+>  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+>  		/*
+>  		 * Find the agi for this ag.
+> @@ -5172,8 +5165,6 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
+>  		}
+>  		xfs_buf_rele(agibp);
+>  	}
+> -
+> -	mp->m_dmevmask = mp_dmevmask;
+>  }
+>  
+>  STATIC int
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 98fd41c..6f5a5e6 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -803,8 +803,6 @@
+>  		 get_unaligned_be16(&sbp->sb_uuid.b[4]);
+>  	mp->m_fixedfsid[1] = get_unaligned_be32(&sbp->sb_uuid.b[0]);
+>  
+> -	mp->m_dmevmask = 0;	/* not persistent; set after each mount */
+> -
+>  	error = xfs_da_mount(mp);
+>  	if (error) {
+>  		xfs_warn(mp, "Failed dir/attr init: %d", error);
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index e0792d0..44a63c5 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -138,7 +138,6 @@ struct xfs_error_cfg {
+>  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+>  	struct mutex		m_growlock;	/* growfs mutex */
+>  	int			m_fixedfsid[2];	/* unchanged for life of FS */
+> -	uint			m_dmevmask;	/* DMI events for this FS */
+>  	uint64_t		m_flags;	/* global mount flags */
+>  	bool			m_inotbt_nores; /* no per-AG finobt resv. */
+>  	int			m_ialloc_inos;	/* inodes in inode allocation */
 > 
-> 
-> Forcing the log, so sleeping with ILOCK taken.
-
-Because it's trying to reallocate an extent that is pinned in the
-log and is marked stale. i.e. we are reallocating a recently freed
-metadata extent that hasn't been committed to disk yet. IOWs, it's
-the metadata form of the "log force to clear a busy extent so we can
-re-use it" condition....
-
-There's nothing you can do to reliably avoid this - it's a sign that
-you're running low on free space in an AG because it's recycling
-recently freed space faster than the CIL is being committed to disk.
-
-You could speed up background journal syncs to try to reduce the
-async checkpoint latency that allows busy extents to build up
-(/proc/sys/fs/xfs/xfssyncd_centisecs) but that also impacts on
-journal overhead and IO latency, etc.
-
-> reactor-29  3336 [029]  3580.420137: xfs:xfs_ilock: dev 9:0 ino
-> 0x50000a9f flags ILOCK_EXCL caller kretprobe_trampoline
->             7fffa0858572 xfs_ilock ([kernel.kallsyms])
->             7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
->             7fff8127314c file_update_time ([kernel.kallsyms])
->             7fffa0849ab9 xfs_file_aio_write_checks ([kernel.kallsyms])
->             7fffa0849bce xfs_file_dio_aio_write ([kernel.kallsyms])
->             7fffa084a13f xfs_file_write_iter ([kernel.kallsyms])
->             7fff812ab24f aio_write ([kernel.kallsyms])
->             7fff812ab90e do_io_submit ([kernel.kallsyms])
->             7fff812ac4c0 sys_io_submit ([kernel.kallsyms])
->             7fff81005917 do_syscall_64 ([kernel.kallsyms])
->             7fff81802115 return_from_SYSCALL_64 ([kernel.kallsyms])
-
-> io_submit() stalls. Later, task 8146 relinquishes the lock, which
-> (after passing through another worker thread), is finally acquired
-> by io_submit() which the continues.
-
-Yup, so it's the timestamp updates at IO submission that are
-blocking waiting for the *ILOCK* lock.
-
-[.....]
-
-> The other is to check that ILOCK can be taken exclusively in
-> xfs_file_dio_aio_write, if IOCB_NOWAIT. If this is the way to go, I
-> might venture a patch.
-
-You're getting your locks mixed up - xfs_file_dio_aio_write()
-doesn't ever take the ILOCK directly.  It takes the _IOLOCK_
-directly, and that's what IOCB_NOWAIT acts on.
-
-These operations are serialising on metadata updates which require
-the _ILOCK_ to be taken exclusively, and there's no way of knowing
-if that is going to be needed at the level of
-xfs_file_dio_aio_write().
-
-There are hooks in xfs_file_aio_write_checks() to avoid timestamp
-updates on write (FMODE_NOCMTIME) but there is no way to set
-this from userspace. It's used exclusively by the XFS open-by-handle
-code so that utilities like online defrag can write data into files
-without changing their user-visible timestamps.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
