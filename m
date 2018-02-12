@@ -1,153 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:53727 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754528AbeBGRUV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Feb 2018 12:20:21 -0500
-Received: by mail-wm0-f46.google.com with SMTP id t74so4588701wme.3
-        for <linux-xfs@vger.kernel.org>; Wed, 07 Feb 2018 09:20:21 -0800 (PST)
-From: Avi Kivity <avi@scylladb.com>
-Subject: xfs_buf_lock vs aio
-Message-ID: <a0531d16-d872-548d-4821-273c072973e6@scylladb.com>
-Date: Wed, 7 Feb 2018 19:20:17 +0200
+Received: from aserp2120.oracle.com ([141.146.126.78]:38108 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751295AbeBLS3x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Feb 2018 13:29:53 -0500
+Date: Mon, 12 Feb 2018 10:29:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] Cleanup old XFS_BTREE_* traces
+Message-ID: <20180212182948.GB5217@magnolia>
+References: <20180212130005.7199-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180212130005.7199-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-As usual, I'm having my lovely io_submit()s sleeping. This time some 
-detailed traces. 4.14.15.
+On Mon, Feb 12, 2018 at 02:00:05PM +0100, Carlos Maiolino wrote:
+> Remove unused legacy btree traces from IRIX era.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+> 
+> Talking to Dave about it, he mentioned XFS_BTREE_TRACE_CURSOR might be worth to
+> turn into a proper ftrace trace point, so I didn't touch _CURSOR traces in this
+> patchset, and a proper conversion will be sent later, unless it's not worth at
+> all, and I should send a V2 also removing TRACE_CURSOR.
 
+TBH I wonder the opposite -- why not turn all of these into tracepoints?
+There must have been some reason for capturing the cursor state along
+with an integer/ptr/record/key.  It's the XBT_ENTRY/XBT_EXIT stuff that
+I think could go away, since ftrace can already record function
+entry/exit.
 
-kthreadd  8146 [013]  3580.418079:                xfs:xfs_ilock: dev 9:0 
-ino 0x50000a9f flags ILOCK_EXCL caller kretprobe_trampoline
-             7fffa0858572 xfs_ilock ([kernel.kallsyms])
-             7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
-             7fffa0849416 xfs_dio_write_end_io ([kernel.kallsyms])
-             7fff812bc935 iomap_dio_complete ([kernel.kallsyms])
-             7fff812bca17 iomap_dio_complete_work ([kernel.kallsyms])
-             7fff8109dd19 process_one_work ([kernel.kallsyms])
-             7fff8109e79d worker_thread ([kernel.kallsyms])
-             7fff810a43b9 kthread ([kernel.kallsyms])
-             7fff81802335 ret_from_fork ([kernel.kallsyms])
+So, all the XFS_BTREE_TRACE_ARG* become their own tracepoints each named
+after the function they're in (see example below).  The XBT_ENTRY and
+XBT_FXIT traces can be removed entirely; and the XBT_ERROR traces can
+become a new trace_xfs_btree_cursor_error tracepoint.
 
+> Cheers
+> 
+>  fs/xfs/libxfs/xfs_btree.c | 15 ---------------
+>  fs/xfs/libxfs/xfs_btree.h |  7 -------
+>  2 files changed, 22 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 79ee4a1951d1..eb324eb9e5cd 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -1439,7 +1439,6 @@ xfs_btree_log_keys(
+>  	int			last)
+>  {
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
 
-Here we have an I/O completion on some inode, taking ILOCK. So far so good.
+trace_xfs_btree_log_keys(cur, bp, first, last);
 
+then eliminate the XBT_EXIT thing at the end of the function.
 
-kthreadd  8146 [013]  3580.418081:            xfs:xfs_ilock_ret: 
-(ffffffffa08564e0 <- ffffffffa0853357)
-             7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
-             7fffa0849416 xfs_dio_write_end_io ([kernel.kallsyms])
-             7fff812bc935 iomap_dio_complete ([kernel.kallsyms])
-             7fff812bca17 iomap_dio_complete_work ([kernel.kallsyms])
-             7fff8109dd19 process_one_work ([kernel.kallsyms])
-             7fff8109e79d worker_thread ([kernel.kallsyms])
-             7fff810a43b9 kthread ([kernel.kallsyms])
-             7fff81802335 ret_from_fork ([kernel.kallsyms])
+--D
 
-
-ILOCK taken without sleeping.
-
-
-kthreadd  8146 [013]  3580.418103:           sched:sched_switch: 
-kworker/13:3:8146 [120] D ==> kworker/13:0:8144 [120]
-             7fff817dd0a5 __schedule ([kernel.kallsyms])
-             7fff817dd5c6 schedule ([kernel.kallsyms])
-             7fff817e1656 schedule_timeout ([kernel.kallsyms])
-             7fff817de181 wait_for_completion ([kernel.kallsyms])
-             7fff8109d51d flush_work ([kernel.kallsyms])
-             7fffa086e29d xlog_cil_force_lsn ([kernel.kallsyms])
-             7fffa086bfd6 _xfs_log_force ([kernel.kallsyms])
-             7fffa086c1fc xfs_log_force ([kernel.kallsyms])
-             7fffa08444d6 xfs_buf_lock ([kernel.kallsyms])
-             7fffa084479b _xfs_buf_find ([kernel.kallsyms])
-             7fffa0844a1a xfs_buf_get_map ([kernel.kallsyms])
-             7fffa087b766 xfs_trans_get_buf_map ([kernel.kallsyms])
-             7fffa0811c14 xfs_btree_get_bufl ([kernel.kallsyms])
-             7fffa08024d2 xfs_bmap_extents_to_btree ([kernel.kallsyms])
-             7fffa0805d68 xfs_bmap_add_extent_unwritten_real 
-([kernel.kallsyms])
-             7fffa0806a88 xfs_bmapi_convert_unwritten ([kernel.kallsyms])
-             7fffa080c3e0 xfs_bmapi_write ([kernel.kallsyms])
-             7fffa08553c9 xfs_iomap_write_unwritten ([kernel.kallsyms])
-             7fffa0849416 xfs_dio_write_end_io ([kernel.kallsyms])
-             7fff812bc935 iomap_dio_complete ([kernel.kallsyms])
-             7fff812bca17 iomap_dio_complete_work ([kernel.kallsyms])
-             7fff8109dd19 process_one_work ([kernel.kallsyms])
-             7fff8109e79d worker_thread ([kernel.kallsyms])
-             7fff810a43b9 kthread ([kernel.kallsyms])
-             7fff81802335 ret_from_fork ([kernel.kallsyms])
-
-
-
-Forcing the log, so sleeping with ILOCK taken.
-
-
-reactor-29  3336 [029]  3580.420137: xfs:xfs_ilock: dev 9:0 ino 
-0x50000a9f flags ILOCK_EXCL caller kretprobe_trampoline
-             7fffa0858572 xfs_ilock ([kernel.kallsyms])
-             7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
-             7fff8127314c file_update_time ([kernel.kallsyms])
-             7fffa0849ab9 xfs_file_aio_write_checks ([kernel.kallsyms])
-             7fffa0849bce xfs_file_dio_aio_write ([kernel.kallsyms])
-             7fffa084a13f xfs_file_write_iter ([kernel.kallsyms])
-             7fff812ab24f aio_write ([kernel.kallsyms])
-             7fff812ab90e do_io_submit ([kernel.kallsyms])
-             7fff812ac4c0 sys_io_submit ([kernel.kallsyms])
-             7fff81005917 do_syscall_64 ([kernel.kallsyms])
-             7fff81802115 return_from_SYSCALL_64 ([kernel.kallsyms])
-                      697 io_submit (/usr/lib64/libaio.so.1.0.1)
-                       48 [unknown] ([unknown])
-                   140e50 reactor_backend_epoll::~reactor_backend_epoll 
-(/usr/bin/scylla)
-         e90974ffff83087f [unknown] ([unknown])
-
-
-io_submit(), same inode.
-
-
-reactor-29  3336 [029]  3580.420141:           sched:sched_switch: 
-reactor-29:3336 [120] D ==> swapper/29:0 [120]
-             7fff817dd0a5 __schedule ([kernel.kallsyms])
-             7fff817dd5c6 schedule ([kernel.kallsyms])
-             7fff817e09bd rwsem_down_write_failed ([kernel.kallsyms])
-             7fff817d29c7 call_rwsem_down_write_failed ([kernel.kallsyms])
-             7fff817e00bd down_write ([kernel.kallsyms])
-             7fffa08585b0 xfs_ilock ([kernel.kallsyms])
-             7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
-             7fff8127314c file_update_time ([kernel.kallsyms])
-             7fffa0849ab9 xfs_file_aio_write_checks ([kernel.kallsyms])
-             7fffa0849bce xfs_file_dio_aio_write ([kernel.kallsyms])
-             7fffa084a13f xfs_file_write_iter ([kernel.kallsyms])
-             7fff812ab24f aio_write ([kernel.kallsyms])
-             7fff812ab90e do_io_submit ([kernel.kallsyms])
-             7fff812ac4c0 sys_io_submit ([kernel.kallsyms])
-             7fff81005917 do_syscall_64 ([kernel.kallsyms])
-             7fff81802115 return_from_SYSCALL_64 ([kernel.kallsyms])
-                      697 io_submit (/usr/lib64/libaio.so.1.0.1)
-                       48 [unknown] ([unknown])
-                   140e50 reactor_backend_epoll::~reactor_backend_epoll 
-(/usr/bin/scylla)
-         e90974ffff83087f [unknown] ([unknown])
-
-
-io_submit() stalls. Later, task 8146 relinquishes the lock, which (after 
-passing through another worker thread), is finally acquired by 
-io_submit() which the continues.
-
-
-I see to ways two fix this. One is to make sure that we don't need to 
-force the log during completion. Is there something I can do to make 
-this happen? More log space, less log space, magic mount option?
-
-
-The other is to check that ILOCK can be taken exclusively in 
-xfs_file_dio_aio_write, if IOCB_NOWAIT. If this is the way to go, I 
-might venture a patch.
-
-
-
+>  
+>  	if (bp) {
+>  		xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLFT_BTREE_BUF);
+> @@ -1465,7 +1464,6 @@ xfs_btree_log_recs(
+>  	int			last)
+>  {
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
+>  
+>  	xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLFT_BTREE_BUF);
+>  	xfs_trans_log_buf(cur->bc_tp, bp,
+> @@ -1486,7 +1484,6 @@ xfs_btree_log_ptrs(
+>  	int			last)	/* index of last pointer to log */
+>  {
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
+>  
+>  	if (bp) {
+>  		struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+> @@ -1544,7 +1541,6 @@ xfs_btree_log_block(
+>  	};
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGBI(cur, bp, fields);
+>  
+>  	if (bp) {
+>  		int nbits;
+> @@ -1594,7 +1590,6 @@ xfs_btree_increment(
+>  	int			lev;
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGI(cur, level);
+>  
+>  	ASSERT(level < cur->bc_nlevels);
+>  
+> @@ -1702,7 +1697,6 @@ xfs_btree_decrement(
+>  	union xfs_btree_ptr	ptr;
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGI(cur, level);
+>  
+>  	ASSERT(level < cur->bc_nlevels);
+>  
+> @@ -1882,7 +1876,6 @@ xfs_btree_lookup(
+>  	union xfs_btree_ptr	ptr;	/* ptr to btree block */
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGI(cur, dir);
+>  
+>  	XFS_BTREE_STATS_INC(cur, lookup);
+>  
+> @@ -2225,7 +2218,6 @@ xfs_btree_update_keys(
+>  		return __xfs_btree_updkeys(cur, level, block, bp, false);
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGIK(cur, level, keyp);
+>  
+>  	/*
+>  	 * Go up the tree from this level toward the root.
+> @@ -2273,7 +2265,6 @@ xfs_btree_update(
+>  	union xfs_btree_rec	*rp;
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGR(cur, rec);
+>  
+>  	/* Pick up the current block. */
+>  	block = xfs_btree_get_block(cur, 0, &bp);
+> @@ -2340,7 +2331,6 @@ xfs_btree_lshift(
+>  	int			i;
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGI(cur, level);
+>  
+>  	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
+>  	    level == cur->bc_nlevels - 1)
+> @@ -2542,7 +2532,6 @@ xfs_btree_rshift(
+>  	int			i;		/* loop counter */
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGI(cur, level);
+>  
+>  	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
+>  	    (level == cur->bc_nlevels - 1))
+> @@ -2727,8 +2716,6 @@ __xfs_btree_split(
+>  #endif
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGIPK(cur, level, *ptrp, key);
+> -
+>  	XFS_BTREE_STATS_INC(cur, split);
+>  
+>  	/* Set up left block (current one). */
+> @@ -3310,7 +3297,6 @@ xfs_btree_insrec(
+>  	xfs_daddr_t		old_bn;
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGIPR(cur, level, *ptrp, &rec);
+>  
+>  	ncur = NULL;
+>  	lkey = &nkey;
+> @@ -3781,7 +3767,6 @@ xfs_btree_delrec(
+>  	int			numrecs;	/* temporary numrec count */
+>  
+>  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
+> -	XFS_BTREE_TRACE_ARGI(cur, level);
+>  
+>  	tcur = NULL;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index 50440b5618e8..7d4e6b16981d 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -483,13 +483,6 @@ static inline int xfs_btree_get_level(struct xfs_btree_block *block)
+>   * r = btree record
+>   * k = btree key
+>   */
+> -#define	XFS_BTREE_TRACE_ARGBI(c, b, i)
+> -#define	XFS_BTREE_TRACE_ARGBII(c, b, i, j)
+> -#define	XFS_BTREE_TRACE_ARGI(c, i)
+> -#define	XFS_BTREE_TRACE_ARGIPK(c, i, p, s)
+> -#define	XFS_BTREE_TRACE_ARGIPR(c, i, p, r)
+> -#define	XFS_BTREE_TRACE_ARGIK(c, i, k)
+> -#define XFS_BTREE_TRACE_ARGR(c, r)
+>  #define	XFS_BTREE_TRACE_CURSOR(c, t)
+>  
+>  xfs_failaddr_t xfs_btree_sblock_v5hdr_verify(struct xfs_buf *bp);
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
