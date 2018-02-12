@@ -1,85 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:17381 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754757AbeBOFos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Feb 2018 00:44:48 -0500
-Date: Thu, 15 Feb 2018 16:44:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: freezing system for several second on high I/O [kernel 4.15]
-Message-ID: <20180215054436.GN7000@dastard>
-References: <20180206060840.kj2u6jjmkuk3vie6@destitution>
- <CABXGCsOgcYyj8Xukn7Pi_M2qz2aJ1MJZTaxaSgYno7f_BtZH6w@mail.gmail.com>
- <1517974845.4352.8.camel@gmail.com>
- <20180207065520.66f6gocvxlnxmkyv@destitution>
- <1518255240.31843.6.camel@gmail.com>
- <1518255352.31843.8.camel@gmail.com>
- <20180211225657.GA6778@dastard>
- <1518643669.6070.21.camel@gmail.com>
- <20180214215245.GI7000@dastard>
- <1518666178.6070.25.camel@gmail.com>
+Received: from sandeen.net ([63.231.237.45]:48566 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753393AbeBLUrQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Feb 2018 15:47:16 -0500
+Subject: Re: [PATCH 1/7] xfs_scrub: log operational messages when interactive
+References: <151787293446.3743.11110014829952400444.stgit@magnolia>
+ <151787294062.3743.16150442240772340999.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d32e8c99-5a56-6409-ec42-aea01220e2f7@sandeen.net>
+Date: Mon, 12 Feb 2018 14:47:14 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1518666178.6070.25.camel@gmail.com>
+In-Reply-To: <151787294062.3743.16150442240772340999.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: mikhail <mikhail.v.gavrilov@gmail.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 15, 2018 at 08:42:58AM +0500, mikhail wrote:
-> On Thu, 2018-02-15 at 08:52 +1100, Dave Chinner wrote:
-> > On Thu, Feb 15, 2018 at 02:27:49AM +0500, mikhail wrote:
-> > > On Mon, 2018-02-12 at 09:56 +1100, Dave Chinner wrote:
-> > > > IOWs, this is not an XFS problem. It's exactly what I'd
-> > > > expect to see when you try to run a very IO intensive
-> > > > workload on a cheap SATA drive that can't keep up with what
-> > > > is being asked of it....
-> > > > 
-> > > 
-> > > I am understand that XFS is not culprit here. But I am worried
-> > > about of interface freezing and various kernel messages with
-> > > traces which leads to XFS. This is my only clue, and I do not
-> > > know where to dig yet.
-> > 
-> > I've already told you the problem: sustained storage subsystem
-> > overload. You can't "tune" you way around that. i.e. You need a
-> > faster disk subsystem to maintian the load you are putting on
-> > your system - either add more disks (e.g. RAID 0/5/6) or to move
-> > to SSDs.
+On 2/5/18 5:22 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Record the output of an interactive session in the system log so that
+> future support requests can get a better picture of what happened.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+I really want to log things, but I'm conflicted about spamming syslog.
+I'm wondering if a generic /var/log/xfs.log would be good, and it could
+eventually log all xfs-related administrative actions and outcomes with
+a libfrog library helper... I don't know how non-syslog log files are
+handled in general, does everybody just roll their own?
+
+I'm inclined to leave this one out of 4.15 for now while I/we think
+about the big picture here.
+
+-Eric
+
+> ---
+>  scrub/common.c |   37 +++++++++++++++++++++++++++++++++++++
+>  1 file changed, 37 insertions(+)
 > 
 > 
-> I know that you are bored already, but: - But it not a reason send
-> false positive messages in log, because next time when a real
-> problems will occurs I would ignore all messages.
-
-I've already explained that we can't annotate these memory
-allocations to turn off the false positives because that will also
-turning off all detection of real deadlock conditions.  Lockdep has
-many, many limitations, and this happens to be one of them.
-
-FWIW, is there any specific reason you running lockdep on your
-desktop system?
-
-> - I am not believe that for mouse pointer moving needed disk
-> throughput. Very wildly that mouse pointer freeze I never seen
-> this on Windows even I then I create such workload. So it look
-> like on real blocking vital processes for GUI.
-
-I think I've already explained that, too. The graphics subsystem -
-which is responsible for updating the cursor - requires memory
-allocation. The machine is running low on memory, so it runs memory
-reclaim, which recurses back into the filesystem and blocks waiting
-for IO to be completed (either writing dirty data pages or flushing
-dirty metadata) so it can free memory.
-
-IOWs, your problems all stem from long IO latencies caused by the
-overloaded storage subsystem - they are propagate to all
-aspects of the OS via direct memory reclaim blocking on IO....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/scrub/common.c b/scrub/common.c
+> index 17c3699..672f286 100644
+> --- a/scrub/common.c
+> +++ b/scrub/common.c
+> @@ -21,6 +21,7 @@
+>  #include <pthread.h>
+>  #include <stdbool.h>
+>  #include <sys/statvfs.h>
+> +#include <syslog.h>
+>  #include "platform_defs.h"
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> @@ -29,6 +30,8 @@
+>  #include "common.h"
+>  #include "progress.h"
+>  
+> +extern char		*progname;
+> +
+>  /*
+>   * Reporting Status to the Console
+>   *
+> @@ -64,6 +67,12 @@ static const char *err_str[] = {
+>  	[S_PREEN]	= "Optimized",
+>  };
+>  
+> +static int log_level[] = {
+> +	[S_ERROR]	= LOG_ERR,
+> +	[S_WARN]	= LOG_WARNING,
+> +	[S_INFO]	= LOG_INFO,
+> +};
+> +
+>  /* If stream is a tty, clear to end of line to clean up progress bar. */
+>  static inline const char *stream_start(FILE *stream)
+>  {
+> @@ -73,6 +82,8 @@ static inline const char *stream_start(FILE *stream)
+>  }
+>  
+>  /* Print a warning string and some warning text. */
+> +#define LOG_BUFSZ	4096
+> +#define LOGNAME_BUFSZ	256
+>  void
+>  __str_out(
+>  	struct scrub_ctx	*ctx,
+> @@ -110,6 +121,32 @@ __str_out(
+>  		va_end(args);
+>  	}
+>  
+> +	/* If we're running interactively, log the message to syslog too. */
+> +	if (isatty(fileno(stdin)) && !debug) {
+> +		char	logname[LOGNAME_BUFSZ];
+> +
+> +		snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname,
+> +				ctx->mntpoint);
+> +		openlog(logname, LOG_PID, LOG_DAEMON);
+> +
+> +		if (error) {
+> +			syslog(LOG_ERR, "%s: %s: %s.",
+> +					_(err_str[level]), descr,
+> +					strerror_r(error, buf, DESCR_BUFSZ));
+> +		} else {
+> +			char	buf[LOG_BUFSZ];
+> +			int	sz;
+> +
+> +			sz = snprintf(buf, LOG_BUFSZ, "%s: %s: ",
+> +					_(err_str[level]), descr);
+> +			va_start(args, format);
+> +			vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
+> +			va_end(args);
+> +			syslog(log_level[level], "%s", buf);
+> +		}
+> +		closelog();
+> +	}
+> +
+>  	if (debug)
+>  		fprintf(stream, _(" (%s line %d)"), file, line);
+>  	fprintf(stream, "\n");
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
