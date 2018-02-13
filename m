@@ -1,95 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56794 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755188AbeBOIdU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Feb 2018 03:33:20 -0500
-Date: Thu, 15 Feb 2018 16:33:17 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfs/015: enlarge the initial fs size
-Message-ID: <20180215083317.GQ18267@eguan.usersys.redhat.com>
-References: <20180104054626.14458-1-eguan@redhat.com>
- <20180214152401.GO18267@eguan.usersys.redhat.com>
- <20180214164532.GH5217@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:33832 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932641AbeBMAAY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Feb 2018 19:00:24 -0500
+Date: Mon, 12 Feb 2018 16:00:18 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 7/7] xfs_scrub: refactor outcome display into a separate
+ helper
+Message-ID: <20180213000018.GD5217@magnolia>
+References: <151787293446.3743.11110014829952400444.stgit@magnolia>
+ <151787298870.3743.17315196925370109109.stgit@magnolia>
+ <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180214164532.GH5217@magnolia>
+In-Reply-To: <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Feb 14, 2018 at 08:45:32AM -0800, Darrick J. Wong wrote:
-> On Wed, Feb 14, 2018 at 11:24:01PM +0800, Eryu Guan wrote:
-> > On Thu, Jan 04, 2018 at 01:46:26PM +0800, Eryu Guan wrote:
-> > > Kernel commit f59cf5c29919 ("xfs: remove "no-allocation"
-> > > reservations for file creations") is known to cause earlier ENOSPC
-> > > conditions, and xfs/015 is affected in the way that no new file/dir
-> > > can be created in a newly created 16M XFS with both reflink and
-> > > rmapbt enabled, thus xfs/015 fails due to the missing test dirs.
-> > > 
-> > > So enlarge the initial fs size to 32M that we're able to create new
-> 
-> 32M?  I thought this was a 64M -> 128M expansion?
-
-The final fs size (after growfs) is expanded from 64M to 128M, but we
-need the initial fs size (prior to growfs) to be 32M instead of 16M.
-
-> 
-> > > dir/file before growing the filesystem size.
-> > > 
-> > > Signed-off-by: Eryu Guan <eguan@redhat.com>
-> 
-> I don't think this hurts anything, but otoh I couldn't reproduce the
-> failure you're seeing on my setup.
-
-You need "both reflink and rmapbt enabled", I can still reproduce it
-with v4.16-rc1 kernel with MKFS_OPTIONS="-m reflink=1,rmapbt=1".
-
-Thanks for reviewing!
-
-Eryu
-
-> 
-> --D
-> 
+On Mon, Feb 12, 2018 at 03:06:58PM -0600, Eric Sandeen wrote:
+> On 2/5/18 5:23 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > ping on this patch.
+> > Move all the printing of the scrub outcome into a separate helper to
+> > declutter the main function.
 > > 
-> > Eryu
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> 
+> This might get a bit long, no?
+> 
+> "/path/to/filesystem: errors found 16384; warnings found 16.  Unmount and run xfs_repair."
+> 
+> Can we put the "Unmount and run xfs_repair" on its own line?
+> That'd make it stand out more, as well.  </nitpick>
+
+Sure, works for me.  Should I send a separate patch or will you just fix
+it up on the way in?
+
+--D
+
+> 
+> > ---
+> >  scrub/xfs_scrub.c |   48 ++++++++++++++++++++++++++++++------------------
+> >  1 file changed, 30 insertions(+), 18 deletions(-)
 > > 
-> > > ---
-> > >  tests/xfs/015 | 6 +++---
-> > >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/tests/xfs/015 b/tests/xfs/015
-> > > index 2c57f7882308..4939bb92f6fc 100755
-> > > --- a/tests/xfs/015
-> > > +++ b/tests/xfs/015
-> > > @@ -66,15 +66,15 @@ _supported_os Linux
-> > >  
-> > >  _require_scratch
-> > >  
-> > > -# need 64M space, don't make any assumption
-> > > +# need 128M space, don't make any assumption
-> > >  _scratch_mkfs >/dev/null 2>&1
-> > >  _scratch_mount
-> > > -_require_fs_space $SCRATCH_MNT 65536
-> > > +_require_fs_space $SCRATCH_MNT 131072
-> > >  _scratch_unmount
-> > >  
-> > >  rm -f $seqres.full
-> > >  
-> > > -_scratch_mkfs_sized $((16 * 1024 * 1024)) > $tmp.mkfs.raw
-> > > +_scratch_mkfs_sized $((32 * 1024 * 1024)) > $tmp.mkfs.raw
-> > >  cat $tmp.mkfs.raw | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-> > >  # get original data blocks number and agcount
-> > >  . $tmp.mkfs
-> > > -- 
-> > > 2.14.3
-> > > 
+> > 
+> > diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+> > index 89b7fa0..fdd35df 100644
+> > --- a/scrub/xfs_scrub.c
+> > +++ b/scrub/xfs_scrub.c
+> > @@ -493,6 +493,34 @@ _("Scrub aborted after phase %d."),
+> >  	return moveon;
+> >  }
+> >  
+> > +static void
+> > +report_outcome(
+> > +	struct scrub_ctx	*ctx)
+> > +{
+> > +	unsigned long long	total_errors;
+> > +
+> > +	total_errors = ctx->errors_found + ctx->runtime_errors;
+> > +
+> > +	if (total_errors == 0 && ctx->warnings_found == 0)
+> > +		return;
+> > +
+> > +	if (total_errors == 0)
+> > +		fprintf(stderr, _("%s: warnings found: %llu."), ctx->mntpoint,
+> > +				ctx->warnings_found);
+> > +	else if (ctx->warnings_found == 0)
+> > +		fprintf(stderr, _("%s: errors found: %llu."), ctx->mntpoint,
+> > +				total_errors);
+> > +	else
+> > +		fprintf(stderr, _("%s: errors found: %llu; warnings found: %llu."),
+> > +				ctx->mntpoint, total_errors,
+> > +				ctx->warnings_found);
+> > +
+> > +	if (ctx->need_repair)
+> > +		fprintf(stderr, "  %s\n", _("Unmount and run xfs_repair."));
+> > +	else
+> > +		fprintf(stderr, "\n");
+> > +}
+> > +
+> >  int
+> >  main(
+> >  	int			argc,
+> > @@ -501,9 +529,7 @@ main(
+> >  	struct scrub_ctx	ctx = {0};
+> >  	struct phase_rusage	all_pi;
+> >  	char			*mtab = NULL;
+> > -	char			*repairstr = "";
+> >  	FILE			*progress_fp = NULL;
+> > -	unsigned long long	total_errors;
+> >  	bool			moveon = true;
+> >  	bool			ismnt;
+> >  	int			c;
+> > @@ -692,22 +718,8 @@ _("%s: Not a XFS mount point or block device.\n"),
+> >  		ctx.runtime_errors++;
+> >  
+> >  out:
+> > -	total_errors = ctx.errors_found + ctx.runtime_errors;
+> > -	if (ctx.need_repair)
+> > -		repairstr = _("  Unmount and run xfs_repair.");
+> > -	if (total_errors && ctx.warnings_found)
+> > -		fprintf(stderr,
+> > -_("%s: %llu errors and %llu warnings found.%s\n"),
+> > -			ctx.mntpoint, total_errors, ctx.warnings_found,
+> > -			repairstr);
+> > -	else if (total_errors && ctx.warnings_found == 0)
+> > -		fprintf(stderr,
+> > -_("%s: %llu errors found.%s\n"),
+> > -			ctx.mntpoint, total_errors, repairstr);
+> > -	else if (total_errors == 0 && ctx.warnings_found)
+> > -		fprintf(stderr,
+> > -_("%s: %llu warnings found.\n"),
+> > -			ctx.mntpoint, ctx.warnings_found);
+> > +	report_outcome(&ctx);
+> > +
+> >  	if (ctx.errors_found) {
+> >  		if (ctx.error_action == ERRORS_SHUTDOWN)
+> >  			xfs_shutdown_fs(&ctx);
+> > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
