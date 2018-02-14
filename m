@@ -1,179 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60116 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032793AbeBNQvX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 11:51:23 -0500
-Date: Wed, 14 Feb 2018 08:51:16 -0800
+Received: from userp2130.oracle.com ([156.151.31.86]:39206 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161187AbeBNR21 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 12:28:27 -0500
+Date: Wed, 14 Feb 2018 09:28:23 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/7] xfs_scrub: log operational messages when interactive
-Message-ID: <20180214165116.GJ5217@magnolia>
-References: <151787293446.3743.11110014829952400444.stgit@magnolia>
- <151787294062.3743.16150442240772340999.stgit@magnolia>
- <d32e8c99-5a56-6409-ec42-aea01220e2f7@sandeen.net>
- <20180214003928.GG5217@magnolia>
- <CACj3i738kNViGQz34BG69=FjwQYZkD1Aubg--WC4zTEdn8wt3g@mail.gmail.com>
+Subject: Re: [PATCH] Cleanup old XFS_BTREE_* traces
+Message-ID: <20180214172823.GL5217@magnolia>
+References: <20180212130005.7199-1-cmaiolino@redhat.com>
+ <20180212182948.GB5217@magnolia>
+ <20180212212106.GD6778@dastard>
+ <20180213231731.GF5217@magnolia>
+ <20180213235814.GH6778@dastard>
+ <20180214135200.krlhiakaevsh5hi5@odin.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACj3i738kNViGQz34BG69=FjwQYZkD1Aubg--WC4zTEdn8wt3g@mail.gmail.com>
+In-Reply-To: <20180214135200.krlhiakaevsh5hi5@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Wed, Feb 14, 2018 at 08:48:09AM +0100, Jan Tulak wrote:
-> On Wed, Feb 14, 2018 at 1:39 AM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Mon, Feb 12, 2018 at 02:47:14PM -0600, Eric Sandeen wrote:
-> >> On 2/5/18 5:22 PM, Darrick J. Wong wrote:
-> >> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >> >
-> >> > Record the output of an interactive session in the system log so that
-> >> > future support requests can get a better picture of what happened.
-> >> >
-> >> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> I really want to log things, but I'm conflicted about spamming syslog.
-> >> I'm wondering if a generic /var/log/xfs.log would be good, and it could
-> >> eventually log all xfs-related administrative actions and outcomes with
-> >> a libfrog library helper... I don't know how non-syslog log files are
-> >> handled in general, does everybody just roll their own?
-> >
-> > Evidently rsyslog actually can filter things out to a separate file.
-> > For example, /etc/rsyslog.d/20-ufw.conf:
-> >
-> > # Log kernel generated UFW log messages to file
-> > :msg,contains,"[UFW " /var/log/ufw.log
-> >
-> > # Uncomment the following to stop logging anything that matches the last
-> > # rule.  Doing this will stop logging kernel generated UFW log messages
-> > # to the file normally containing kern.* messages (eg,
-> > # /var/log/kern.log)
-> > #& stop
-> >
-> > Therefore, it looks as though we actually /can/ use the regular syslog
-> > calls from various xfs utilities and (if rsyslog is up) forward the
-> > output to a place where support can capture it later.
-> >
+On Wed, Feb 14, 2018 at 02:52:00PM +0100, Carlos Maiolino wrote:
+> On Wed, Feb 14, 2018 at 10:58:14AM +1100, Dave Chinner wrote:
+> > On Tue, Feb 13, 2018 at 03:17:31PM -0800, Darrick J. Wong wrote:
+> > > On Tue, Feb 13, 2018 at 08:21:06AM +1100, Dave Chinner wrote:
+> > > > On Mon, Feb 12, 2018 at 10:29:48AM -0800, Darrick J. Wong wrote:
+> > > > > On Mon, Feb 12, 2018 at 02:00:05PM +0100, Carlos Maiolino wrote:
+> > > > > > Remove unused legacy btree traces from IRIX era.
+> > > > > > 
+> > > > > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > > > > > ---
+> > > > > > 
+> > > > > > Talking to Dave about it, he mentioned XFS_BTREE_TRACE_CURSOR might be worth to
+> > > > > > turn into a proper ftrace trace point, so I didn't touch _CURSOR traces in this
+> > > > > > patchset, and a proper conversion will be sent later, unless it's not worth at
+> > > > > > all, and I should send a V2 also removing TRACE_CURSOR.
+> > > > > 
+> > > > > TBH I wonder the opposite -- why not turn all of these into tracepoints?
+> > > > 
+> > > > TBH, we haven't used them in at least 15 years. What value do they
+> > > > provide apart from making the traces even noisier (and potentially
+> > > > more lossy) than they already are?
+> > > 
+> > > FWIW adding trace_printks to some of those functions was rather useful
+> > > for checking that the unusual refcount and rmap btree semantics actually
+> > > resulted in calls to the desired btree functions.  I wish I'd cleaned up
+> > > that debugging patch and sent it, but it's lost now.
+> > 
 > 
-> I wanted to join Eric in this, but I didn't know about the filter
-> rules, thanks for something new to learn. With such a rule, I'm all
-> for syslog, and I'm attaching my first humble reviewed-by. :-)
+> I see your point, although, for me, it sounds like a very specific debug case,
+> and not something which would add enough benefit to have these extra debug
+> traces lying around.
+> 
+> I mean, if we keep adding trace points for many single debug use-cases, we would
+> end up with tons of trace points in xfs, which are not used in 99% of the debugging
+> processes.
+> 
+> But well, I don't have a decent knowledge in the Btrees infra-structure yet to
+> give a more detailed reason if such extra trace points would be useful or not in
+> several situations. So, this is just my $0.02, based on the amount of trace
+> points we already have, where, most of time I use one or another, and yet, I
+> need to add my own trace_printks, so, particularly, I don't think adding such
+> extra traces in Btree code would be that useful in a long-term period, but well,
+> as I said, just my $0.02.
 
-The downside is that it also doesn't work, at least on the ubuntu 16.04
-rsyslog (which is curious, since that's also where I got the 20-ufw.conf
-file) so someone with better rsyslog-conf-fu will have to help us out
-here.
+We already have 531 tracepoints, a few more probably isn't going to
+hurt.  That said, if you want to send a patch cleaning out both of the
+old trace macros I'd take it.  At worst, if I or anyone else ever come
+across a need to add tracepoints to the core btree code they're not hard
+to add.
 
 --D
 
-> Cheers,
-> Jan
 > 
-> > --D
-> >
-> >>
-> >> I'm inclined to leave this one out of 4.15 for now while I/we think
-> >> about the big picture here.
-> >>
-> >> -Eric
-> >>
-> >> > ---
-> >> >  scrub/common.c |   37 +++++++++++++++++++++++++++++++++++++
-> >> >  1 file changed, 37 insertions(+)
-> >> >
-> >> >
-> >> > diff --git a/scrub/common.c b/scrub/common.c
-> >> > index 17c3699..672f286 100644
-> >> > --- a/scrub/common.c
-> >> > +++ b/scrub/common.c
-> >> > @@ -21,6 +21,7 @@
-> >> >  #include <pthread.h>
-> >> >  #include <stdbool.h>
-> >> >  #include <sys/statvfs.h>
-> >> > +#include <syslog.h>
-> >> >  #include "platform_defs.h"
-> >> >  #include "xfs.h"
-> >> >  #include "xfs_fs.h"
-> >> > @@ -29,6 +30,8 @@
-> >> >  #include "common.h"
-> >> >  #include "progress.h"
-> >> >
-> >> > +extern char                *progname;
-> >> > +
-> >> >  /*
-> >> >   * Reporting Status to the Console
-> >> >   *
-> >> > @@ -64,6 +67,12 @@ static const char *err_str[] = {
-> >> >     [S_PREEN]       = "Optimized",
-> >> >  };
-> >> >
-> >> > +static int log_level[] = {
-> >> > +   [S_ERROR]       = LOG_ERR,
-> >> > +   [S_WARN]        = LOG_WARNING,
-> >> > +   [S_INFO]        = LOG_INFO,
-> >> > +};
-> >> > +
-> >> >  /* If stream is a tty, clear to end of line to clean up progress bar. */
-> >> >  static inline const char *stream_start(FILE *stream)
-> >> >  {
-> >> > @@ -73,6 +82,8 @@ static inline const char *stream_start(FILE *stream)
-> >> >  }
-> >> >
-> >> >  /* Print a warning string and some warning text. */
-> >> > +#define LOG_BUFSZ  4096
-> >> > +#define LOGNAME_BUFSZ      256
-> >> >  void
-> >> >  __str_out(
-> >> >     struct scrub_ctx        *ctx,
-> >> > @@ -110,6 +121,32 @@ __str_out(
-> >> >             va_end(args);
-> >> >     }
-> >> >
-> >> > +   /* If we're running interactively, log the message to syslog too. */
-> >> > +   if (isatty(fileno(stdin)) && !debug) {
-> >> > +           char    logname[LOGNAME_BUFSZ];
-> >> > +
-> >> > +           snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname,
-> >> > +                           ctx->mntpoint);
-> >> > +           openlog(logname, LOG_PID, LOG_DAEMON);
-> >> > +
-> >> > +           if (error) {
-> >> > +                   syslog(LOG_ERR, "%s: %s: %s.",
-> >> > +                                   _(err_str[level]), descr,
-> >> > +                                   strerror_r(error, buf, DESCR_BUFSZ));
-> >> > +           } else {
-> >> > +                   char    buf[LOG_BUFSZ];
-> >> > +                   int     sz;
-> >> > +
-> >> > +                   sz = snprintf(buf, LOG_BUFSZ, "%s: %s: ",
-> >> > +                                   _(err_str[level]), descr);
-> >> > +                   va_start(args, format);
-> >> > +                   vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
-> >> > +                   va_end(args);
-> >> > +                   syslog(log_level[level], "%s", buf);
-> >> > +           }
-> >> > +           closelog();
-> >> > +   }
-> >> > +
-> >> >     if (debug)
-> >> >             fprintf(stream, _(" (%s line %d)"), file, line);
-> >> >     fprintf(stream, "\n");
-> >> >
-> >> > --
-> >> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> > the body of a message to majordomo@vger.kernel.org
-> >> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >> >
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Ok, so the non-cursor traces would have been useful to you.
+> > That's fine - I just don't want to add stuff that doesn't have any
+> > specific use because it's already hard enough to filter traces down
+> > to just the things we need to see....
+> > 
+> 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> 
+> -- 
+> Carlos
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
