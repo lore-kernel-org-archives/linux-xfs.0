@@ -1,202 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33836 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161664AbeBNSMM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 13:12:12 -0500
-Subject: [PATCH 1/4] xfs: convert XFS_AGFL_SIZE to a helper function
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 14 Feb 2018 10:12:06 -0800
-Message-ID: <151863192614.12012.9940466338360411902.stgit@magnolia>
-In-Reply-To: <151863191996.12012.10898223924122487735.stgit@magnolia>
-References: <151863191996.12012.10898223924122487735.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:44418 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030501AbeBNV1z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 16:27:55 -0500
+Received: by mail-lf0-f65.google.com with SMTP id c188so15472238lfc.11
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 13:27:54 -0800 (PST)
+Message-ID: <1518643669.6070.21.camel@gmail.com>
+Subject: Re: freezing system for several second on high I/O [kernel 4.15]
+From: mikhail <mikhail.v.gavrilov@gmail.com>
+Date: Thu, 15 Feb 2018 02:27:49 +0500
+In-Reply-To: <20180211225657.GA6778@dastard>
+References: <1517337604.9211.13.camel@gmail.com>
+         <20180131022209.lmhespbauhqtqrxg@destitution>
+         <1517888875.7303.3.camel@gmail.com>
+         <20180206060840.kj2u6jjmkuk3vie6@destitution>
+         <CABXGCsOgcYyj8Xukn7Pi_M2qz2aJ1MJZTaxaSgYno7f_BtZH6w@mail.gmail.com>
+         <1517974845.4352.8.camel@gmail.com>
+         <20180207065520.66f6gocvxlnxmkyv@destitution>
+         <1518255240.31843.6.camel@gmail.com> <1518255352.31843.8.camel@gmail.com>
+         <20180211225657.GA6778@dastard>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, 2018-02-12 at 09:56 +1100, Dave Chinner wrote:
+> 
+> Yes, but you still haven't provided me with all the other info that
+> this link asks for. Namely:
+> 
+> kernel version (uname -a)
+Linux localhost.localdomain 4.15.2-300.fc27.x86_64+debug #1 SMP Thu Feb 8 21:55:40 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
 
-The AGFL size calculation is about to get more complex, so lets turn
-the macro into a function first and remove the macro.
+> xfsprogs version (xfs_repair -V)
+xfs_repair version 4.12.0
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[darrick: forward port to newer kernel, simplify the helper]
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.c  |   31 ++++++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_alloc.h  |    2 ++
- fs/xfs/libxfs/xfs_format.h |   13 +------------
- fs/xfs/scrub/agheader.c    |    6 +++---
- fs/xfs/xfs_fsops.c         |    2 +-
- 5 files changed, 31 insertions(+), 23 deletions(-)
+> number of CPUs
+i7-4770 4 Cores 8 Threads
+
+> contents of /proc/meminfo
+MemTotal:       31759696 kB
+MemFree:        17587876 kB
+MemAvailable:   21904644 kB
+Buffers:           55280 kB
+Cached:          4674056 kB
+SwapCached:            0 kB
+Active:          8679336 kB
+Inactive:        4286552 kB
+Active(anon):    7792260 kB
+Inactive(anon):   664564 kB
+Active(file):     887076 kB
+Inactive(file):  3621988 kB
+Unevictable:        1976 kB
+Mlocked:            1976 kB
+SwapTotal:      62494716 kB
+SwapFree:       62494716 kB
+Dirty:             28284 kB
+Writeback:          4148 kB
+AnonPages:       8238616 kB
+Mapped:          1903204 kB
+Shmem:            666668 kB
+Slab:             491372 kB
+SReclaimable:     263420 kB
+SUnreclaim:       227952 kB
+KernelStack:       38032 kB
+PageTables:       160156 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    78374564 kB
+Committed_AS:   28033436 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:   2244608 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+CmaTotal:              0 kB
+CmaFree:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      841160 kB
+DirectMap2M:    15837184 kB
+DirectMap1G:    17825792 kB
+
+> contents of /proc/mounts
+sysfs /sys sysfs rw,seclabel,nosuid,nodev,noexec,relatime 0 0
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+devtmpfs /dev devtmpfs rw,seclabel,nosuid,size=15863192k,nr_inodes=3965798,mode=755 0 0
+securityfs /sys/kernel/security securityfs rw,nosuid,nodev,noexec,relatime 0 0
+tmpfs /dev/shm tmpfs rw,seclabel,nosuid,nodev 0 0
+devpts /dev/pts devpts rw,seclabel,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
+tmpfs /run tmpfs rw,seclabel,nosuid,nodev,mode=755 0 0
+tmpfs /sys/fs/cgroup tmpfs ro,seclabel,nosuid,nodev,noexec,mode=755 0 0
+cgroup /sys/fs/cgroup/unified cgroup2 rw,seclabel,nosuid,nodev,noexec,relatime 0 0
+cgroup /sys/fs/cgroup/systemd cgroup rw,seclabel,nosuid,nodev,noexec,relatime,xattr,name=systemd 0 0
+pstore /sys/fs/pstore pstore rw,seclabel,nosuid,nodev,noexec,relatime 0 0
+efivarfs /sys/firmware/efi/efivars efivarfs rw,nosuid,nodev,noexec,relatime 0 0
+cgroup /sys/fs/cgroup/memory cgroup rw,seclabel,nosuid,nodev,noexec,relatime,memory 0 0
+cgroup /sys/fs/cgroup/cpuset cgroup rw,seclabel,nosuid,nodev,noexec,relatime,cpuset 0 0
+cgroup /sys/fs/cgroup/net_cls,net_prio cgroup rw,seclabel,nosuid,nodev,noexec,relatime,net_cls,net_prio 0 0
+cgroup /sys/fs/cgroup/hugetlb cgroup rw,seclabel,nosuid,nodev,noexec,relatime,hugetlb 0 0
+cgroup /sys/fs/cgroup/perf_event cgroup rw,seclabel,nosuid,nodev,noexec,relatime,perf_event 0 0
+cgroup /sys/fs/cgroup/cpu,cpuacct cgroup rw,seclabel,nosuid,nodev,noexec,relatime,cpu,cpuacct 0 0
+cgroup /sys/fs/cgroup/pids cgroup rw,seclabel,nosuid,nodev,noexec,relatime,pids 0 0
+cgroup /sys/fs/cgroup/freezer cgroup rw,seclabel,nosuid,nodev,noexec,relatime,freezer 0 0
+cgroup /sys/fs/cgroup/devices cgroup rw,seclabel,nosuid,nodev,noexec,relatime,devices 0 0
+cgroup /sys/fs/cgroup/blkio cgroup rw,seclabel,nosuid,nodev,noexec,relatime,blkio 0 0
+configfs /sys/kernel/config configfs rw,relatime 0 0
+/dev/sda1 / ext4 rw,seclabel,relatime,data=ordered 0 0
+selinuxfs /sys/fs/selinux selinuxfs rw,relatime 0 0
+systemd-1 /proc/sys/fs/binfmt_misc autofs rw,relatime,fd=24,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=16272 0 0
+hugetlbfs /dev/hugepages hugetlbfs rw,seclabel,relatime,pagesize=2M 0 0
+mqueue /dev/mqueue mqueue rw,seclabel,relatime 0 0
+debugfs /sys/kernel/debug debugfs rw,seclabel,relatime 0 0
+binfmt_misc /proc/sys/fs/binfmt_misc binfmt_misc rw,relatime 0 0
+tmpfs /tmp tmpfs rw,seclabel,nosuid,nodev 0 0
+/dev/sda3 /boot/efi vfat rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=winnt,errors=remount-ro 0 0
+/dev/sdb /home xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+sunrpc /var/lib/nfs/rpc_pipefs rpc_pipefs rw,relatime 0 0
+tmpfs /run/user/42 tmpfs rw,seclabel,nosuid,nodev,relatime,size=3175968k,mode=700,uid=42,gid=42 0 0
+tmpfs /run/user/1000 tmpfs rw,seclabel,nosuid,nodev,relatime,size=3175968k,mode=700,uid=1000,gid=1000 0 0
+gvfsd-fuse /run/user/1000/gvfs fuse.gvfsd-fuse rw,nosuid,nodev,relatime,user_id=1000,group_id=1000 0 0
+fusectl /sys/fs/fuse/connections fusectl rw,relatime 0 0
+/dev/sr0 /run/media/mikhail/MegaFon iso9660 ro,nosuid,nodev,relatime,nojoliet,check=s,map=n,blocksize=2048,uid=1000,gid=1000,dmode=500,fmode=400 0 0
+nodev /sys/kernel/tracing tracefs rw,seclabel,relatime 0 0
+
+> contents of /proc/partitions
+major minor  #blocks  name
+
+   8        0  234431064 sda
+   8        1  171421696 sda1
+   8        2   62494720 sda2
+   8        3     510976 sda3
+   8       16 3907018584 sdb
+   8       32 3907018584 sdc
+   8       33 3907017543 sdc1
+  11        0      72692 sr0
+
+> RAID layout (hardware and/or software)
+no RAID
+
+> LVM configuration
+no LVM
+
+> type of disks you are using
+Seagate Constellation ES.3 [ST4000NM0033]
+
+> write cache status of drives
+> size of BBWC and mode it is running in
+no BBWC module
+
+> xfs_info output on the filesystem in question
+meta-data=/dev/sdb               isize=512    agcount=4, agsize=244188662 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=976754646, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal               bsize=4096   blocks=476930, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+> 
+> And:
+> 
+> "Then you need to describe your workload that is causing the
+> problem, ..."
+After start computer I launch follow applicaions:
+- "gnome-terminal"
+- "Opera" web browser
+- "Firefox" web browser
+- "GitKraken" git GUI client
+- "Evolution" email client
+- "Steam" game store client
+- "virt-manager" and one virtual machine with Windows 10
+- "Reminna" RDP client
+- "Telegram" messenger
+This enought for interface freezes and kernel error messages. All there application consume 10-13Gb RAM after ended launch.
+Total RAM on machine 32Gb
+Also with "atop" I see what all disk throughput in
+idle state consumed by tracker-store process.
+
+> 
+> Without any idea of what you are actually doing and what storage you
+> are doing that work on, I have no idea what the expected behaviour
+> should be. All I can tell is you have something with disk caches and
+> io pools on your desktop machine and it's slow....
+
+My expectations:
+- lack of interface freezes. (No freezes mouse movements, no freezes while switching between applications)
+- lack of error messages in kernel output
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index c02781a..36101e5 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -53,6 +53,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
- 
-+/*
-+ * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
-+ * the beginning of the block for a proper header with the location information
-+ * and CRC.
-+ */
-+unsigned int
-+xfs_agfl_size(
-+	struct xfs_mount	*mp)
-+{
-+	unsigned int		size = mp->m_sb.sb_sectsize;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		size -= sizeof(struct xfs_agfl);
-+
-+	return size / sizeof(xfs_agblock_t);
-+}
-+
- unsigned int
- xfs_refc_block(
- 	struct xfs_mount	*mp)
-@@ -550,7 +567,7 @@ xfs_agfl_verify(
- 	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
- 		return __this_address;
- 
--	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
-+	for (i = 0; i < xfs_agfl_size(mp); i++) {
- 		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
- 		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
- 			return __this_address;
-@@ -2266,7 +2283,7 @@ xfs_alloc_get_freelist(
- 	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
- 	be32_add_cpu(&agf->agf_flfirst, 1);
- 	xfs_trans_brelse(tp, agflbp);
--	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
-+	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
- 		agf->agf_flfirst = 0;
- 
- 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-@@ -2377,7 +2394,7 @@ xfs_alloc_put_freelist(
- 			be32_to_cpu(agf->agf_seqno), &agflbp)))
- 		return error;
- 	be32_add_cpu(&agf->agf_fllast, 1);
--	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
-+	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
- 		agf->agf_fllast = 0;
- 
- 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-@@ -2395,7 +2412,7 @@ xfs_alloc_put_freelist(
- 
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 
--	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
-+	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
- 
- 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
- 	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
-@@ -2428,9 +2445,9 @@ xfs_agf_verify(
- 	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
- 	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
- 	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
--	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
--	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
--	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
-+	      be32_to_cpu(agf->agf_flfirst) < xfs_agfl_size(mp) &&
-+	      be32_to_cpu(agf->agf_fllast) < xfs_agfl_size(mp) &&
-+	      be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp)))
- 		return __this_address;
- 
- 	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 65a0caf..a311a24 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -26,6 +26,8 @@ struct xfs_trans;
- 
- extern struct workqueue_struct *xfs_alloc_wq;
- 
-+unsigned int xfs_agfl_size(struct xfs_mount *mp);
-+
- /*
-  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
-  */
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 1acb584..42956d8 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -803,24 +803,13 @@ typedef struct xfs_agi {
- 		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
- 		(__be32 *)(bp)->b_addr)
- 
--/*
-- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
-- * slots in the beginning of the block for a proper header with the
-- * location information and CRC.
-- */
--#define XFS_AGFL_SIZE(mp) \
--	(((mp)->m_sb.sb_sectsize - \
--	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
--		sizeof(struct xfs_agfl) : 0)) / \
--	  sizeof(xfs_agblock_t))
--
- typedef struct xfs_agfl {
- 	__be32		agfl_magicnum;
- 	__be32		agfl_seqno;
- 	uuid_t		agfl_uuid;
- 	__be64		agfl_lsn;
- 	__be32		agfl_crc;
--	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
-+	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
- } __attribute__((packed)) xfs_agfl_t;
- 
- #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index fd97552..fd383c5 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -80,7 +80,7 @@ xfs_scrub_walk_agfl(
- 	}
- 
- 	/* first to the end */
--	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
-+	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
- 		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
- 		if (error)
- 			return error;
-@@ -664,7 +664,7 @@ xfs_scrub_agf(
- 	if (agfl_last > agfl_first)
- 		fl_count = agfl_last - agfl_first + 1;
- 	else
--		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
-+		fl_count = xfs_agfl_size(mp) - agfl_first + agfl_last + 1;
- 	if (agfl_count != 0 && fl_count != agfl_count)
- 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
- 
-@@ -791,7 +791,7 @@ xfs_scrub_agfl(
- 	/* Allocate buffer to ensure uniqueness of AGFL entries. */
- 	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
- 	agflcount = be32_to_cpu(agf->agf_flcount);
--	if (agflcount > XFS_AGFL_SIZE(sc->mp)) {
-+	if (agflcount > xfs_agfl_size(sc->mp)) {
- 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
- 		goto out;
- 	}
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8b45456..5237927 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -217,7 +217,7 @@ xfs_growfs_data_private(
- 		}
- 
- 		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
--		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
-+		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
- 			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
- 
- 		error = xfs_bwrite(bp);
+> Ok, once and for all: this is not an XFS problem.
+> 
+> The trace from task 8665, which is the one that triggered above
+> waiting for IO. task -395 is an IO completion worker in XFS that
+> is triggered by the lower layer IO completion callbacks, and it's
+> running regularly and doing lots of IO completion work every few
+> milliseconds.
+> 
+> <...>-8665  [007]   627.332389: xfs_buf_submit_wait:  dev 8:16 bno 0xe96a4040 nblks 0x20 hold 1 pincount 0 lock 0 flags READ|PAGES caller _xfs_buf_read
+> <...>-8665  [007]   627.332390: xfs_buf_hold:         dev 8:16 bno 0xe96a4040 nblks 0x20 hold 1 pincount 0 lock 0 flags READ|PAGES caller xfs_buf_submit_wait
+> <...>-8665  [007]   627.332416: xfs_buf_iowait:       dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags READ|PAGES caller _xfs_buf_read
+> <...>-395   [000]   875.682080: xfs_buf_iodone:       dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags READ|PAGES caller xfs_buf_ioend_work
+> <...>-8665  [007]   875.682105: xfs_buf_iowait_done:  dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags DONE|PAGES caller _xfs_buf_read
+> <...>-8665  [007]   875.682107: xfs_buf_rele:         dev 8:16 bno 0xe96a4040 nblks 0x20 hold 2 pincount 0 lock 0 flags DONE|PAGES caller xfs_buf_submit_wait
+> 
+> IOWs, that IO completion took close on 250s for it to be signalled
+> to XFS, and so these delays have nothing to do with XFS.
+> 
+> What is clear from the trace is that you are overloading your IO
+> subsystem. I see average synchronous read times of 40-50ms which
+> implies a constant and heavy load on the underlying storage. In
+> the ~1400s trace I see:
+> 
+> $ grep "submit:\|submit_wait:" trace_report.txt |wc -l
+> 133427
+> $
+> 
+> ~130k metadata IO submissions.
+> 
+> $ grep "writepage:" trace_report.txt |wc -l
+> 1662764
+> $
+> 
+> There was also over 6GB of data written, and:
+> 
+> $ grep "readpages:" trace_report.txt |wc -l
+> 85866
+> $
+> 
+> About 85000 data read IOs were issued.
+> 
+> A typical SATA drive can sustain ~150 IOPS. I count from the trace
+> at least 220,000 IOs in ~1400s, which is pretty much spot on an
+> average of 150 IOPS. IOWs, your system is running at the speed of
+> you disk and it's clear that it's completely overloaded at times
+> leading to large submission backlog queues and excessively long IO
+> times.
+> 
+> IOWs, this is not an XFS problem. It's exactly what I'd expect to
+> see when you try to run a very IO intensive workload on a cheap SATA
+> drive that can't keep up with what is being asked of it....
+> 
+
+I am understand that XFS is not culprit here. But I am worried about of interface freezing and various kernel messages with traces which leads to XFS. This is my only clue, and I do not know where to
+dig yet. It may be IO sheduller or block device layer. I need help to get to the truth.
 
