@@ -1,162 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:17868 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1032055AbeBNX4T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 18:56:19 -0500
-Date: Thu, 15 Feb 2018 10:56:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_buf_lock vs aio
-Message-ID: <20180214235616.GM7000@dastard>
-References: <a0531d16-d872-548d-4821-273c072973e6@scylladb.com>
- <20180207233320.GB20367@dastard>
- <ed83833b-5024-40f2-b335-2dcab7fddf0e@scylladb.com>
- <20180208221153.GF20266@dastard>
- <30274e7a-4029-73b8-0d8b-cdfda450e3bc@scylladb.com>
- <20180209231015.GI20266@dastard>
- <697bf891-e7c4-4d60-e2ce-f1ba6935b38b@scylladb.com>
- <20180213051850.GE6778@dastard>
- <f8b3b7a4-eba4-d5ab-1748-a8382a2a8fd6@scylladb.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:57666 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966207AbeBNAjf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Feb 2018 19:39:35 -0500
+Date: Tue, 13 Feb 2018 16:39:28 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/7] xfs_scrub: log operational messages when interactive
+Message-ID: <20180214003928.GG5217@magnolia>
+References: <151787293446.3743.11110014829952400444.stgit@magnolia>
+ <151787294062.3743.16150442240772340999.stgit@magnolia>
+ <d32e8c99-5a56-6409-ec42-aea01220e2f7@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f8b3b7a4-eba4-d5ab-1748-a8382a2a8fd6@scylladb.com>
+In-Reply-To: <d32e8c99-5a56-6409-ec42-aea01220e2f7@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Feb 14, 2018 at 02:07:42PM +0200, Avi Kivity wrote:
-> On 02/13/2018 07:18 AM, Dave Chinner wrote:
-> >On Mon, Feb 12, 2018 at 11:33:44AM +0200, Avi Kivity wrote:
-> >>On 02/10/2018 01:10 AM, Dave Chinner wrote:
-> >>>On Fri, Feb 09, 2018 at 02:11:58PM +0200, Avi Kivity wrote:
-> >>>>i.e., no matter
-> >>>>how AG and free space selection improves, you can always find a
-> >>>>workload that consumes extents faster than they can be laundered?
-> >>>Sure, but that doesn't mean we have to fall back to a synchronous
-> >>>alogrithm to handle collisions. It's that synchronous behaviour that
-> >>>is the root cause of the long lock stalls you are seeing.
-> >>Well, having that algorithm be asynchronous will be wonderful. But I
-> >>imagine it will be a monstrous effort.
-> >It's not clear yet whether we have to do any of this stuff to solve
-> >your problem.
+On Mon, Feb 12, 2018 at 02:47:14PM -0600, Eric Sandeen wrote:
+> On 2/5/18 5:22 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Record the output of an interactive session in the system log so that
+> > future support requests can get a better picture of what happened.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I was going by "is the root cause" above. But if we don't have to
-> touch it, great.
+> I really want to log things, but I'm conflicted about spamming syslog.
+> I'm wondering if a generic /var/log/xfs.log would be good, and it could
+> eventually log all xfs-related administrative actions and outcomes with
+> a libfrog library helper... I don't know how non-syslog log files are
+> handled in general, does everybody just roll their own?
 
-Remember that triage - which is all about finding the root cause of
-an issue - is a separate process to finding an appropriate fix for
-the issue that has been triaged.
+Evidently rsyslog actually can filter things out to a separate file.
+For example, /etc/rsyslog.d/20-ufw.conf:
 
-> >>>>I'm not saying that free extent selection can't or shouldn't be
-> >>>>improved, just that it can never completely fix the problem on its
-> >>>>own.
-> >>>Righto, if you say so.
-> >>>
-> >>>After all, what do I know about the subject at hand? I'm just the
-> >>>poor dumb guy
-> >>
-> >>Just because you're an XFS expert, and even wrote the code at hand,
-> >>doesn't mean I have nothing to contribute. If I'm wrong, it's enough
-> >>to tell me that and why.
-> >It takes time and effort to have to explain why someone's suggestion
-> >for fixing a bug will not work. It's tiring, unproductive work and I
-> >get no thanks for it at all.
+# Log kernel generated UFW log messages to file
+:msg,contains,"[UFW " /var/log/ufw.log
+
+# Uncomment the following to stop logging anything that matches the last
+# rule.  Doing this will stop logging kernel generated UFW log messages
+# to the file normally containing kern.* messages (eg,
+# /var/log/kern.log)
+#& stop
+
+Therefore, it looks as though we actually /can/ use the regular syslog
+calls from various xfs utilities and (if rsyslog is up) forward the
+output to a place where support can capture it later.
+
+--D
+
 > 
-> Isn't the part of being a maintainer?
-
-I'm not the maintainer.  That burnt me out, and this was one of the
-aspects of the job that contributes significantly to burn-out.
-
-I don't want the current maintainer to suffer from the same fate.
-I can handle some stress, so I'm happy to play the bad guy because
-it shares the stress around.
-
-However, I'm not going to make the same mistake I did the first time
-around - internalising these issues doesn't make them go away. Hence
-I'm going to speak out about it in the hope that users realise that
-their demands can have a serious impact on the people that are
-supporting them. Sure, I could have put it better, but this is still
-an unfamiliar, learning-as-I-go process for me and so next time I
-won't make the same mistakes....
-
-> When everything works, the
-> users are off the mailing list.
-
-That often makes things worse :/ Users are always asking questions
-about configs, optimisations, etc. And then there's all the other
-developers who want their projects merged and supported. The need to
-say no doesn't go away just because "everything works"....
-
-> >I'm just seen as the nasty guy who says
-> >"no" to everything because I eventually run out of patience trying
-> >to explain everything in simple enough terms for non-XFS people to
-> >understand that they don't really understand XFS or what I'm talking
-> >about.
-> >
-> >IOWs, sometimes the best way to contribute is to know when you're in
-> >way over you head and to step back and simply help the master
-> >crafters get on with weaving their magic.....
+> I'm inclined to leave this one out of 4.15 for now while I/we think
+> about the big picture here.
 > 
-> Are you suggesting that I should go away? Or something else?
-
-Something else.
-
-Avi, your help and insight is most definitely welcome (and needed!)
-because we can't find a solution that would suit your needs without
-it.  All I'm asking for is a little bit of patience as we go
-through the process of gathering all the info we need to determine
-the best approach to solving the problem.
-
-Be aware that when you are asked triage questions that seem
-illogical or irrelevant, then the best thing to do is to answer the
-question as best you can and wait to ask questions later. Those
-questions are usually asked to rule out complex, convoluted cases
-that take a long, long time to explain and by responding with
-questions rather than answers it derails the process of expedient
-triage and analysis.
-
-IOWs, lets talk about the merits and mechanisms of solutions when
-they are proposed, not while questions are still being asked about
-the application, requirements, environment, etc needed to determine
-what the best potential solution may be.
-
-> >Indeed, does your application and/or users even care about
-> >[acm]times on your files being absolutely accurate and crash
-> >resilient? i.e. do you use fsync() or fdatasync() to guarantee the
-> >data is on stable storage?
+> -Eric
 > 
-> We use fdatasync and don't care about mtime much. So lazytime would
-> work for us.
-
-OK, so let me explore that in a bit more detail and see whether it's
-something we can cleanly implement....
-
-> >>I still think reducing the amount of outstanding busy extents is
-> >>important.  Modern disks write multiple GB/s, and big-data
-> >>applications like to do large sequential writes and deletes,
-> >Hah! "modern disks"
-> >
-> >You need to recalibrate what "big data" and "high performance IO"
-> >means. This was what we were doing with XFS on linux back in 2006:
-> >
-> >https://web.archive.org/web/20171010112452/http://oss.sgi.com/projects/xfs/papers/ols2006/ols-2006-paper.pdf
-> >
-> >i.e. 10 years ago we were already well into the *tens of GB/s* on
-> >XFS filesystems for big-data applications with large sequential
-> >reads and writes. These "modern disks" are so slow! :)
-> 
-> Today, that's one or a few disks, not 90, and you can such a setup
-> for a few dollars an hour, doing millions of IOPS.
-
-Sure, but that's not "big-data" anymore - it's pretty common
-nowdays in enterprise server environments. Big data applications
-these days are measured in TB/s and hundreds of PBs.... :)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > ---
+> >  scrub/common.c |   37 +++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 37 insertions(+)
+> > 
+> > 
+> > diff --git a/scrub/common.c b/scrub/common.c
+> > index 17c3699..672f286 100644
+> > --- a/scrub/common.c
+> > +++ b/scrub/common.c
+> > @@ -21,6 +21,7 @@
+> >  #include <pthread.h>
+> >  #include <stdbool.h>
+> >  #include <sys/statvfs.h>
+> > +#include <syslog.h>
+> >  #include "platform_defs.h"
+> >  #include "xfs.h"
+> >  #include "xfs_fs.h"
+> > @@ -29,6 +30,8 @@
+> >  #include "common.h"
+> >  #include "progress.h"
+> >  
+> > +extern char		*progname;
+> > +
+> >  /*
+> >   * Reporting Status to the Console
+> >   *
+> > @@ -64,6 +67,12 @@ static const char *err_str[] = {
+> >  	[S_PREEN]	= "Optimized",
+> >  };
+> >  
+> > +static int log_level[] = {
+> > +	[S_ERROR]	= LOG_ERR,
+> > +	[S_WARN]	= LOG_WARNING,
+> > +	[S_INFO]	= LOG_INFO,
+> > +};
+> > +
+> >  /* If stream is a tty, clear to end of line to clean up progress bar. */
+> >  static inline const char *stream_start(FILE *stream)
+> >  {
+> > @@ -73,6 +82,8 @@ static inline const char *stream_start(FILE *stream)
+> >  }
+> >  
+> >  /* Print a warning string and some warning text. */
+> > +#define LOG_BUFSZ	4096
+> > +#define LOGNAME_BUFSZ	256
+> >  void
+> >  __str_out(
+> >  	struct scrub_ctx	*ctx,
+> > @@ -110,6 +121,32 @@ __str_out(
+> >  		va_end(args);
+> >  	}
+> >  
+> > +	/* If we're running interactively, log the message to syslog too. */
+> > +	if (isatty(fileno(stdin)) && !debug) {
+> > +		char	logname[LOGNAME_BUFSZ];
+> > +
+> > +		snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname,
+> > +				ctx->mntpoint);
+> > +		openlog(logname, LOG_PID, LOG_DAEMON);
+> > +
+> > +		if (error) {
+> > +			syslog(LOG_ERR, "%s: %s: %s.",
+> > +					_(err_str[level]), descr,
+> > +					strerror_r(error, buf, DESCR_BUFSZ));
+> > +		} else {
+> > +			char	buf[LOG_BUFSZ];
+> > +			int	sz;
+> > +
+> > +			sz = snprintf(buf, LOG_BUFSZ, "%s: %s: ",
+> > +					_(err_str[level]), descr);
+> > +			va_start(args, format);
+> > +			vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
+> > +			va_end(args);
+> > +			syslog(log_level[level], "%s", buf);
+> > +		}
+> > +		closelog();
+> > +	}
+> > +
+> >  	if (debug)
+> >  		fprintf(stream, _(" (%s line %d)"), file, line);
+> >  	fprintf(stream, "\n");
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
