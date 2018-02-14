@@ -1,96 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:11875 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1031044AbeBNVWc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 16:22:32 -0500
-Date: Thu, 15 Feb 2018 08:22:28 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:4286 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1031536AbeBNWGI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 17:06:08 -0500
+Date: Thu, 15 Feb 2018 09:05:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: skip xfs_check in _check_xfs_filesystem
-Message-ID: <20180214212228.GG7000@dastard>
-References: <151803835881.19313.17455678207236452557.stgit@magnolia>
- <151803837117.19313.3481001926133028039.stgit@magnolia>
- <20180208125152.GE18267@eguan.usersys.redhat.com>
- <62eff3f5-b4fe-3c98-1cd2-c5b2b4ca4c70@sandeen.net>
- <20180214170254.GK5217@magnolia>
+Subject: Re: [PATCH v2] xfs: byte range buffer dirty region tracking
+Message-ID: <20180214220532.GJ7000@dastard>
+References: <20180205003415.dn6elcqb4kae3xle@destitution>
+ <20180206162141.GA3862@bfoster.bfoster>
+ <20180212024138.GB6778@dastard>
+ <20180212142619.GA33694@bfoster.bfoster>
+ <20180212211824.GC6778@dastard>
+ <20180213131525.GA38210@bfoster.bfoster>
+ <20180213220220.GF6778@dastard>
+ <20180214130939.GA42785@bfoster.bfoster>
+ <20180214164912.GI5217@magnolia>
+ <20180214180807.GA43414@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180214170254.GK5217@magnolia>
+In-Reply-To: <20180214180807.GA43414@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Wed, Feb 14, 2018 at 09:02:54AM -0800, Darrick J. Wong wrote:
-> On Wed, Feb 14, 2018 at 10:34:09AM -0600, Eric Sandeen wrote:
-> > On 2/8/18 6:51 AM, Eryu Guan wrote:
-> > > On Wed, Feb 07, 2018 at 01:19:31PM -0800, Darrick J. Wong wrote:
-> > >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >>
-> > >> xfs_check has been long obsolete, so stop running it automatically
-> > >> after every test.  Tests that explicitly want xfs_check can call it
-> > >> via _scratch_xfs_check or _xfs_check; that part doesn't go away.
-> > >>
-> > >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Feb 14, 2018 at 01:08:07PM -0500, Brian Foster wrote:
+> On Wed, Feb 14, 2018 at 08:49:12AM -0800, Darrick J. Wong wrote:
+> > On Wed, Feb 14, 2018 at 08:09:39AM -0500, Brian Foster wrote:
+> > > On Wed, Feb 14, 2018 at 09:02:20AM +1100, Dave Chinner wrote:
+> > > Yep. It's a specially crafted symlink creation on a small FSB, v4
+> > > filesystem with fragmented free space. We log symlink buffers on v4
+> > > filesystems without any header, so the buffer content is not dictated by
+> > > any internal fs metadata format. If the link target is large enough to
+> > > span multiple blocks and free space is fragmented such that those blocks
+> > > are discontiguous, we can end up logging (solely) the first byte of the
+> > > last buffer of the link target.
+
+I'd completely forgotten about that whacky corner case in the v4
+format. :(
+
+> > > This is actually reproducible on demand so I'll just append a basic
+> > > recipe rather than collect the debug data and whatnot..
 > > > 
-> > > I'd like to see an ACK on this from XFS community.
+> > > Brian
+> > > 
+> > > --- 8< ---
+> > > 
+> > > dev=<dev>
+> > > mnt=/mnt
+> > > 
+> > > sym=`for i in $(seq 0 512); do echo -n a; done`
+> > > 
+> > > mkfs.xfs -f -mcrc=0 -bsize=512 -dsize=25m $dev
+> > > mount $dev $mnt
+> > > 
+> > > dd if=/dev/zero of=$mnt/spc1
+> > > ~/xfstests-dev/src/punch-alternating $mnt/spc1
+> > > dd if=/dev/zero of=$mnt/spc2
+> > > xfs_io -c "fpunch 5m 25m" $mnt/spc2
+> > > 
+> > > for i in $(seq 0 2); do
+> > >         ln -s $sym $mnt/link.$i
+> > >         xfs_io -c fsync $mnt
+> > > done
+> > > 
+> > > umount $mnt
 > > 
-> > So, I thought we still had a local implementation of xfs_check-via-xfs_db
-> > in xfstests as an intentional validation against xfs_repair:
+> > Did one of the "fragment free space, do stuff" xfstests hit this?  If
+> > not, would it be worth turning into a test?
 > > 
-> > +# xfs_check script is planned to be deprecated. But, we want to
-> > +# be able to invoke "xfs_check" behavior in xfstests in order to
-> > +# maintain the current verification levels.
-> > +_xfs_check()
-> > 
-> > IOWS, "xfs_check is obsolete" is true for users/admins, but I thought
-> > we were keeping it alive as a developer tool for now, and that it had
-> > a place in xfstests.  No?
-> > 
-> > (But if it /is/ removed, wouldn't you kill off the _xfs_check() function as
-> > well, to truly nuke it from orbit?)
-> > 
-> > Anyway, I don't think I understand the justification for this change;
-> > it was explicitly kept alive in xfstests since commit 
-> > 
-> > 	187bccd xfstests: Remove dependence of xfs_check script
-> > 
-> > and "xfs_check is obsolete for admins" doesn't seem to be sufficient rationale.
-> > 
-> > What do we gain or lose by removing this from _check_xfs_filesystem?
 > 
-> xfs_check likes to consume memory, which means that it consistently runs
-> out and segfaults when I run xfstests on a 1k block configuration.  It's
-> also slow if the fs is really fragmented (which some of the reflink
-> tests set up), so I figured I'd kill both birds with one patch by
-> removing auto-xfscheck.
+> This was just an experiment on this patch. I haven't run xfstests so I
+> can't say for sure whether some existing test would have caught it
+> (though I suspect Dave would have hit the problem by now, if so). I'm
 
-I don't see it run out of memory on my 1p, 1GB RAM, 1k block size
-test VM, running on 10GB test, 20GB scratch devices....
-
-> We /could/ leave it as a check against xfs_repair, but at this point we
-> have three different fsck(ish) tools and maybe it's just time to get rid
-> of check.  Consider that blockget didn't even support v5 filesystems
-> until October 2015[1], which was ~2 years after v5 support landed in
-> repair -- that convinced me (at the time) that nobody really cared about
-> xfs_check anymore.
-
-Actually, that was more a result of the developer who was doing all
-the v5 work being made the as maintainer half way thru it's
-experimental stage and that meant time to work on the non-critical
-pieces of v5 support were pretty severely curtailed. i.e. it wasn't
-because we never intended to support this, just resources and
-priorities changed drastically around that time.
-
-Once we get scrub doing everything check does and have some
-confidence that it's working correctly, then we can remove the db
-based check code. Right now we still rely on it to cross check
-repair and scrub is about to drive a bunch of new changes to th
-erepair code to fix up stuff it doesn't detect.  Once we've got to
-the point that repair and scrub to the same level and have a bit
-more confidence in the scrub code, then we can think about retiring
-the db-based check code...
+Nope, a v4 512 byte block size filesystem is so far outside my
+normal test config matrix it's not funny. In fact, I almost never
+test on v4 filesystems anymore, and I rarely think of them when
+developing new code as it's essentially a legacy format now....
 
 Cheers,
 
