@@ -1,18 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:51428 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754519AbeBNH5Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 02:57:16 -0500
-Received: by mail-wm0-f67.google.com with SMTP id r71so20799084wmd.1
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2018 23:57:16 -0800 (PST)
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:36285 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754530AbeBNH7k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 02:59:40 -0500
+Received: by mail-wr0-f194.google.com with SMTP id y3so21157861wrh.3
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2018 23:59:40 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <b798e93f-4b52-2dd6-d715-580ffde96df7@sandeen.net>
+In-Reply-To: <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
 References: <151787293446.3743.11110014829952400444.stgit@magnolia>
- <151787297178.3743.12195489468667039346.stgit@magnolia> <b798e93f-4b52-2dd6-d715-580ffde96df7@sandeen.net>
+ <151787298870.3743.17315196925370109109.stgit@magnolia> <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
 From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 14 Feb 2018 08:56:55 +0100
-Message-ID: <CACj3i73snXq9qgfDpyw6wdivd=WzsM-fduu-DJDyk_bDdo0bdA@mail.gmail.com>
-Subject: Re: [PATCH 5/7] xfs_scrub: reclassify some of the warning messages
+Date: Wed, 14 Feb 2018 08:59:19 +0100
+Message-ID: <CACj3i73hozkgQXCL41wb=wM=y_qvR=Q_8FL_S-9onETrazzOgA@mail.gmail.com>
+Subject: Re: [PATCH 7/7] xfs_scrub: refactor outcome display into a separate helper
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
@@ -20,73 +20,108 @@ List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Feb 12, 2018 at 9:53 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->
->
-> On 2/5/18 5:22 PM, Darrick J. Wong wrote:
+On Mon, Feb 12, 2018 at 10:06 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 2/5/18 5:23 PM, Darrick J. Wong wrote:
 >> From: Darrick J. Wong <darrick.wong@oracle.com>
 >>
->> Some of the warning messages are actually runtime errors in optional
->> components, so turn them into informational messages.
+>> Move all the printing of the scrub outcome into a separate helper to
+>> declutter the main function.
 >>
 >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 >
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+>
+> This might get a bit long, no?
+>
+> "/path/to/filesystem: errors found 16384; warnings found 16.  Unmount and run xfs_repair."
+>
+> Can we put the "Unmount and run xfs_repair" on its own line?
+> That'd make it stand out more, as well.  </nitpick>
+
+I agree, but that's really just a detail.
 
 Reviewed-by: Jan Tulak <jtulak@redhat.com>
+
+>
 >
 >> ---
->>  scrub/inodes.c |    6 +++---
->>  scrub/phase6.c |    4 ++--
->>  2 files changed, 5 insertions(+), 5 deletions(-)
+>>  scrub/xfs_scrub.c |   48 ++++++++++++++++++++++++++++++------------------
+>>  1 file changed, 30 insertions(+), 18 deletions(-)
 >>
 >>
->> diff --git a/scrub/inodes.c b/scrub/inodes.c
->> index 57b773e..744b003 100644
->> --- a/scrub/inodes.c
->> +++ b/scrub/inodes.c
->> @@ -157,7 +157,7 @@ xfs_iterate_inodes_range(
->>               bulkreq.icount = inogrp.xi_alloccount;
->>               error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT, &bulkreq);
->>               if (error)
->> -                     str_warn(ctx, descr, "%s", strerror_r(errno,
->> +                     str_info(ctx, descr, "%s", strerror_r(errno,
->>                                               buf, DESCR_BUFSZ));
+>> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+>> index 89b7fa0..fdd35df 100644
+>> --- a/scrub/xfs_scrub.c
+>> +++ b/scrub/xfs_scrub.c
+>> @@ -493,6 +493,34 @@ _("Scrub aborted after phase %d."),
+>>       return moveon;
+>>  }
 >>
->>               xfs_iterate_inodes_range_check(ctx, &inogrp, bstat);
->> @@ -181,8 +181,8 @@ xfs_iterate_inodes_range(
->>                               }
->>                               snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
->>                                               (uint64_t)bs->bs_ino);
->> -                             str_warn(ctx, idescr, "%s", strerror_r(error,
->> -                                             buf, DESCR_BUFSZ));
->> +                             str_info(ctx, idescr,
->> +_("Changed too many times during scan; giving up."));
->>                               break;
->>                       case XFS_ITERATE_INODES_ABORT:
->>                               error = 0;
->> diff --git a/scrub/phase6.c b/scrub/phase6.c
->> index f985950..e255eef 100644
->> --- a/scrub/phase6.c
->> +++ b/scrub/phase6.c
->> @@ -188,7 +188,6 @@ xfs_report_verify_inode(
->>       void                            *arg)
->>  {
->>       char                            descr[DESCR_BUFSZ];
->> -     char                            buf[DESCR_BUFSZ];
->>       bool                            moveon;
->>       int                             fd;
->>       int                             error;
->> @@ -209,7 +208,8 @@ xfs_report_verify_inode(
->>               if (error == ESTALE)
->>                       return error;
+>> +static void
+>> +report_outcome(
+>> +     struct scrub_ctx        *ctx)
+>> +{
+>> +     unsigned long long      total_errors;
+>> +
+>> +     total_errors = ctx->errors_found + ctx->runtime_errors;
+>> +
+>> +     if (total_errors == 0 && ctx->warnings_found == 0)
+>> +             return;
+>> +
+>> +     if (total_errors == 0)
+>> +             fprintf(stderr, _("%s: warnings found: %llu."), ctx->mntpoint,
+>> +                             ctx->warnings_found);
+>> +     else if (ctx->warnings_found == 0)
+>> +             fprintf(stderr, _("%s: errors found: %llu."), ctx->mntpoint,
+>> +                             total_errors);
+>> +     else
+>> +             fprintf(stderr, _("%s: errors found: %llu; warnings found: %llu."),
+>> +                             ctx->mntpoint, total_errors,
+>> +                             ctx->warnings_found);
+>> +
+>> +     if (ctx->need_repair)
+>> +             fprintf(stderr, "  %s\n", _("Unmount and run xfs_repair."));
+>> +     else
+>> +             fprintf(stderr, "\n");
+>> +}
+>> +
+>>  int
+>>  main(
+>>       int                     argc,
+>> @@ -501,9 +529,7 @@ main(
+>>       struct scrub_ctx        ctx = {0};
+>>       struct phase_rusage     all_pi;
+>>       char                    *mtab = NULL;
+>> -     char                    *repairstr = "";
+>>       FILE                    *progress_fp = NULL;
+>> -     unsigned long long      total_errors;
+>>       bool                    moveon = true;
+>>       bool                    ismnt;
+>>       int                     c;
+>> @@ -692,22 +718,8 @@ _("%s: Not a XFS mount point or block device.\n"),
+>>               ctx.runtime_errors++;
 >>
->> -             str_warn(ctx, descr, "%s", strerror_r(error, buf, DESCR_BUFSZ));
->> +             str_info(ctx, descr,
->> +_("Disappeared during read error reporting."));
->>               return error;
->>       }
->>
+>>  out:
+>> -     total_errors = ctx.errors_found + ctx.runtime_errors;
+>> -     if (ctx.need_repair)
+>> -             repairstr = _("  Unmount and run xfs_repair.");
+>> -     if (total_errors && ctx.warnings_found)
+>> -             fprintf(stderr,
+>> -_("%s: %llu errors and %llu warnings found.%s\n"),
+>> -                     ctx.mntpoint, total_errors, ctx.warnings_found,
+>> -                     repairstr);
+>> -     else if (total_errors && ctx.warnings_found == 0)
+>> -             fprintf(stderr,
+>> -_("%s: %llu errors found.%s\n"),
+>> -                     ctx.mntpoint, total_errors, repairstr);
+>> -     else if (total_errors == 0 && ctx.warnings_found)
+>> -             fprintf(stderr,
+>> -_("%s: %llu warnings found.\n"),
+>> -                     ctx.mntpoint, ctx.warnings_found);
+>> +     report_outcome(&ctx);
+>> +
+>>       if (ctx.errors_found) {
+>>               if (ctx.error_action == ERRORS_SHUTDOWN)
+>>                       xfs_shutdown_fs(&ctx);
 >>
 >> --
 >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
