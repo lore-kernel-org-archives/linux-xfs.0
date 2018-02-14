@@ -1,134 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:36285 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754530AbeBNH7k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 02:59:40 -0500
-Received: by mail-wr0-f194.google.com with SMTP id y3so21157861wrh.3
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2018 23:59:40 -0800 (PST)
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:39222 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967373AbeBNMBx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 07:01:53 -0500
+Received: by mail-wm0-f41.google.com with SMTP id b21so21560883wme.4
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 04:01:53 -0800 (PST)
+Subject: Re: xfs_buf_lock vs aio
+References: <a0531d16-d872-548d-4821-273c072973e6@scylladb.com>
+ <20180207233320.GB20367@dastard>
+ <ed83833b-5024-40f2-b335-2dcab7fddf0e@scylladb.com>
+ <20180208221153.GF20266@dastard>
+ <30274e7a-4029-73b8-0d8b-cdfda450e3bc@scylladb.com>
+ <20180209231015.GI20266@dastard>
+ <697bf891-e7c4-4d60-e2ce-f1ba6935b38b@scylladb.com>
+ <20180213051850.GE6778@dastard> <20180213231458.GE5217@magnolia>
+ <20180214021627.GI6778@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <8eb4c408-1a1b-c7ff-ab61-342f9b555f36@scylladb.com>
+Date: Wed, 14 Feb 2018 14:01:49 +0200
 MIME-Version: 1.0
-In-Reply-To: <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
-References: <151787293446.3743.11110014829952400444.stgit@magnolia>
- <151787298870.3743.17315196925370109109.stgit@magnolia> <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 14 Feb 2018 08:59:19 +0100
-Message-ID: <CACj3i73hozkgQXCL41wb=wM=y_qvR=Q_8FL_S-9onETrazzOgA@mail.gmail.com>
-Subject: Re: [PATCH 7/7] xfs_scrub: refactor outcome display into a separate helper
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180214021627.GI6778@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 12, 2018 at 10:06 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 2/5/18 5:23 PM, Darrick J. Wong wrote:
->> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 02/14/2018 04:16 AM, Dave Chinner wrote:
+> On Tue, Feb 13, 2018 at 03:14:58PM -0800, Darrick J. Wong wrote:
+>> On Tue, Feb 13, 2018 at 04:18:51PM +1100, Dave Chinner wrote:
+>>> On Mon, Feb 12, 2018 at 11:33:44AM +0200, Avi Kivity wrote:
+>>> You're now trying to guess how we'd solve the busy extent blocking
+>>> problem. i.e. you now appear to be assuming we have a plan to fix
+>>> this problem and are going to do it immediately.  Nothing could be
+>>> further from the truth - I said:
+>>>
+>>>>> this is now important, and so we now need to revisit the issues we
+>>>>> laid out some 8 years ago and work from there.
+>>> That does not mean "we're going to fix this now" - it means we need
+>>> to look at the problem again and determine if it's the best solution
+>>> to the problem being presented to us. There are other avenues we
+>>> still need to explore.
+>> Upstream XFS is a general-purpose solution, which means that the code we
+>> add to it must be suitable for everyone -- that means it has to work for
+>> most everyone and be understandable by everyone who reads the code.
+>> I'd like to try to avoid adding weird hacks.
+> [....]
+>
+>> In other words, more discussion needed:
 >>
->> Move all the printing of the scrub outcome into a separate helper to
->> declutter the main function.
->>
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>> Indeed, does your application and/or users even care about
+>>> [acm]times on your files being absolutely accurate and crash
+>>> resilient? i.e. do you use fsync() or fdatasync() to guarantee the
+>>> data is on stable storage?
+> Because what I'm getting at here is this:
 >
+> $ man 8 mount
+> .....
+>        lazytime
 >
-> This might get a bit long, no?
+> 	      Only update times (atime, mtime, ctime) on the
+> 	      in-memory version of the file inode.
 >
-> "/path/to/filesystem: errors found 16384; warnings found 16.  Unmount and run xfs_repair."
+> 	      This mount option significantly reduces writes to the
+> 	      inode table for workloads that perform frequent random
+> 	      writes to preallocated files.
 >
-> Can we put the "Unmount and run xfs_repair" on its own line?
-> That'd make it stand out more, as well.  </nitpick>
+>                The on-disk timestamps are updated only when:
+>
+> 	      - the inode needs to be updated for some change
+> 		unrelated to file timestamps
+>
+> 	      - the application employs fsync(2), syncfs(2), or
+> 		sync(2)
+>
+> 	      - an undeleted inode is evicted from memory
+>
+> 	      - more than 24 hours have passed since the i-node was
+> 		written to disk.
+>
+> This has been implemented for ext4 and f2fs, but not for XFS.
+> Implementing this for XFS and then using it for your application
+> will basically get rid of the blocking that is occurring in
+> timestamp updates by removing the transaction/locking we are doing
+> around timestamp updates.
+>
 
-I agree, but that's really just a detail.
-
-Reviewed-by: Jan Tulak <jtulak@redhat.com>
-
->
->
->> ---
->>  scrub/xfs_scrub.c |   48 ++++++++++++++++++++++++++++++------------------
->>  1 file changed, 30 insertions(+), 18 deletions(-)
->>
->>
->> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
->> index 89b7fa0..fdd35df 100644
->> --- a/scrub/xfs_scrub.c
->> +++ b/scrub/xfs_scrub.c
->> @@ -493,6 +493,34 @@ _("Scrub aborted after phase %d."),
->>       return moveon;
->>  }
->>
->> +static void
->> +report_outcome(
->> +     struct scrub_ctx        *ctx)
->> +{
->> +     unsigned long long      total_errors;
->> +
->> +     total_errors = ctx->errors_found + ctx->runtime_errors;
->> +
->> +     if (total_errors == 0 && ctx->warnings_found == 0)
->> +             return;
->> +
->> +     if (total_errors == 0)
->> +             fprintf(stderr, _("%s: warnings found: %llu."), ctx->mntpoint,
->> +                             ctx->warnings_found);
->> +     else if (ctx->warnings_found == 0)
->> +             fprintf(stderr, _("%s: errors found: %llu."), ctx->mntpoint,
->> +                             total_errors);
->> +     else
->> +             fprintf(stderr, _("%s: errors found: %llu; warnings found: %llu."),
->> +                             ctx->mntpoint, total_errors,
->> +                             ctx->warnings_found);
->> +
->> +     if (ctx->need_repair)
->> +             fprintf(stderr, "  %s\n", _("Unmount and run xfs_repair."));
->> +     else
->> +             fprintf(stderr, "\n");
->> +}
->> +
->>  int
->>  main(
->>       int                     argc,
->> @@ -501,9 +529,7 @@ main(
->>       struct scrub_ctx        ctx = {0};
->>       struct phase_rusage     all_pi;
->>       char                    *mtab = NULL;
->> -     char                    *repairstr = "";
->>       FILE                    *progress_fp = NULL;
->> -     unsigned long long      total_errors;
->>       bool                    moveon = true;
->>       bool                    ismnt;
->>       int                     c;
->> @@ -692,22 +718,8 @@ _("%s: Not a XFS mount point or block device.\n"),
->>               ctx.runtime_errors++;
->>
->>  out:
->> -     total_errors = ctx.errors_found + ctx.runtime_errors;
->> -     if (ctx.need_repair)
->> -             repairstr = _("  Unmount and run xfs_repair.");
->> -     if (total_errors && ctx.warnings_found)
->> -             fprintf(stderr,
->> -_("%s: %llu errors and %llu warnings found.%s\n"),
->> -                     ctx.mntpoint, total_errors, ctx.warnings_found,
->> -                     repairstr);
->> -     else if (total_errors && ctx.warnings_found == 0)
->> -             fprintf(stderr,
->> -_("%s: %llu errors found.%s\n"),
->> -                     ctx.mntpoint, total_errors, repairstr);
->> -     else if (total_errors == 0 && ctx.warnings_found)
->> -             fprintf(stderr,
->> -_("%s: %llu warnings found.\n"),
->> -                     ctx.mntpoint, ctx.warnings_found);
->> +     report_outcome(&ctx);
->> +
->>       if (ctx.errors_found) {
->>               if (ctx.error_action == ERRORS_SHUTDOWN)
->>                       xfs_shutdown_fs(&ctx);
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Lazytime would work for us. Our backups are implemented by creating 
+hardlinks to fully written and fsynced files, so out-of-date mtime 
+wouldn't harm us too much.
