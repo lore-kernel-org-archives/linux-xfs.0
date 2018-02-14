@@ -1,92 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49080 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753347AbeBLUx0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Feb 2018 15:53:26 -0500
-Subject: Re: [PATCH 5/7] xfs_scrub: reclassify some of the warning messages
-References: <151787293446.3743.11110014829952400444.stgit@magnolia>
- <151787297178.3743.12195489468667039346.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b798e93f-4b52-2dd6-d715-580ffde96df7@sandeen.net>
-Date: Mon, 12 Feb 2018 14:53:25 -0600
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:51463 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754519AbeBNH53 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 02:57:29 -0500
+Received: by mail-wm0-f67.google.com with SMTP id r71so20799991wmd.1
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Feb 2018 23:57:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <151787297178.3743.12195489468667039346.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <965fcbcd-bfe3-8cdd-6657-ca20bef24c51@sandeen.net>
+References: <151787293446.3743.11110014829952400444.stgit@magnolia>
+ <151787298265.3743.11278867933485186707.stgit@magnolia> <965fcbcd-bfe3-8cdd-6657-ca20bef24c51@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 14 Feb 2018 08:57:08 +0100
+Message-ID: <CACj3i72rRQ12fGCCMGJvemvcS_M4x4-pbAhF-h78cvPwTgV+wQ@mail.gmail.com>
+Subject: Re: [PATCH 6/7] xfs_scrub: always init phase information
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
+On Mon, Feb 12, 2018 at 9:53 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+>
+> On 2/5/18 5:23 PM, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Make sure we initialize the overall phase state before we start
+>> executing any code that can end up in the report-status-and-exit paths.
+>> Otherwise if debugging is turned on we get garbage io/cpu stat reports.
+>>
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-
-On 2/5/18 5:22 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Some of the warning messages are actually runtime errors in optional
-> components, so turn them into informational messages.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  scrub/inodes.c |    6 +++---
->  scrub/phase6.c |    4 ++--
->  2 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> 
-> diff --git a/scrub/inodes.c b/scrub/inodes.c
-> index 57b773e..744b003 100644
-> --- a/scrub/inodes.c
-> +++ b/scrub/inodes.c
-> @@ -157,7 +157,7 @@ xfs_iterate_inodes_range(
->  		bulkreq.icount = inogrp.xi_alloccount;
->  		error = ioctl(ctx->mnt_fd, XFS_IOC_FSBULKSTAT, &bulkreq);
->  		if (error)
-> -			str_warn(ctx, descr, "%s", strerror_r(errno,
-> +			str_info(ctx, descr, "%s", strerror_r(errno,
->  						buf, DESCR_BUFSZ));
->  
->  		xfs_iterate_inodes_range_check(ctx, &inogrp, bstat);
-> @@ -181,8 +181,8 @@ xfs_iterate_inodes_range(
->  				}
->  				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
->  						(uint64_t)bs->bs_ino);
-> -				str_warn(ctx, idescr, "%s", strerror_r(error,
-> -						buf, DESCR_BUFSZ));
-> +				str_info(ctx, idescr,
-> +_("Changed too many times during scan; giving up."));
->  				break;
->  			case XFS_ITERATE_INODES_ABORT:
->  				error = 0;
-> diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index f985950..e255eef 100644
-> --- a/scrub/phase6.c
-> +++ b/scrub/phase6.c
-> @@ -188,7 +188,6 @@ xfs_report_verify_inode(
->  	void				*arg)
->  {
->  	char				descr[DESCR_BUFSZ];
-> -	char				buf[DESCR_BUFSZ];
->  	bool				moveon;
->  	int				fd;
->  	int				error;
-> @@ -209,7 +208,8 @@ xfs_report_verify_inode(
->  		if (error == ESTALE)
->  			return error;
->  
-> -		str_warn(ctx, descr, "%s", strerror_r(error, buf, DESCR_BUFSZ));
-> +		str_info(ctx, descr,
-> +_("Disappeared during read error reporting."));
->  		return error;
->  	}
->  
-> 
+Reviewed-by: Jan Tulak <jtulak@redhat.com>
+>
+>> ---
+>>  scrub/xfs_scrub.c |   10 +++++-----
+>>  1 file changed, 5 insertions(+), 5 deletions(-)
+>>
+>>
+>> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+>> index 6efcf77..89b7fa0 100644
+>> --- a/scrub/xfs_scrub.c
+>> +++ b/scrub/xfs_scrub.c
+>> @@ -618,6 +618,11 @@ main(
+>>       if (getenv("SERVICE_MODE"))
+>>               is_service = true;
+>>
+>> +     /* Initialize overall phase stats. */
+>> +     moveon = phase_start(&all_pi, 0, NULL);
+>> +     if (!moveon)
+>> +             return SCRUB_RET_OPERROR;
+>> +
+>>       /* Find the mount record for the passed-in argument. */
+>>       if (stat(argv[optind], &ctx.mnt_sb) < 0) {
+>>               fprintf(stderr,
+>> @@ -641,11 +646,6 @@ main(
+>>                       mtab = _PATH_MOUNTED;
+>>       }
+>>
+>> -     /* Initialize overall phase stats. */
+>> -     moveon = phase_start(&all_pi, 0, NULL);
+>> -     if (!moveon)
+>> -             goto out;
+>> -
+>>       ismnt = find_mountpoint(mtab, &ctx);
+>>       if (!ismnt) {
+>>               fprintf(stderr,
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
