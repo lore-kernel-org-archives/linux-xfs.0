@@ -1,128 +1,228 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47172 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032907AbeBNRDB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 12:03:01 -0500
-Date: Wed, 14 Feb 2018 09:02:54 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/4] xfs: skip xfs_check in _check_xfs_filesystem
-Message-ID: <20180214170254.GK5217@magnolia>
-References: <151803835881.19313.17455678207236452557.stgit@magnolia>
- <151803837117.19313.3481001926133028039.stgit@magnolia>
- <20180208125152.GE18267@eguan.usersys.redhat.com>
- <62eff3f5-b4fe-3c98-1cd2-c5b2b4ca4c70@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:43966 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161585AbeBNSIJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Feb 2018 13:08:09 -0500
+Date: Wed, 14 Feb 2018 13:08:07 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: byte range buffer dirty region tracking
+Message-ID: <20180214180807.GA43414@bfoster.bfoster>
+References: <20180201010514.30233-1-david@fromorbit.com>
+ <20180205003415.dn6elcqb4kae3xle@destitution>
+ <20180206162141.GA3862@bfoster.bfoster>
+ <20180212024138.GB6778@dastard>
+ <20180212142619.GA33694@bfoster.bfoster>
+ <20180212211824.GC6778@dastard>
+ <20180213131525.GA38210@bfoster.bfoster>
+ <20180213220220.GF6778@dastard>
+ <20180214130939.GA42785@bfoster.bfoster>
+ <20180214164912.GI5217@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <62eff3f5-b4fe-3c98-1cd2-c5b2b4ca4c70@sandeen.net>
+In-Reply-To: <20180214164912.GI5217@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Wed, Feb 14, 2018 at 10:34:09AM -0600, Eric Sandeen wrote:
-> On 2/8/18 6:51 AM, Eryu Guan wrote:
-> > On Wed, Feb 07, 2018 at 01:19:31PM -0800, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> xfs_check has been long obsolete, so stop running it automatically
-> >> after every test.  Tests that explicitly want xfs_check can call it
-> >> via _scratch_xfs_check or _xfs_check; that part doesn't go away.
-> >>
-> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Feb 14, 2018 at 08:49:12AM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 14, 2018 at 08:09:39AM -0500, Brian Foster wrote:
+> > On Wed, Feb 14, 2018 at 09:02:20AM +1100, Dave Chinner wrote:
+> > > On Tue, Feb 13, 2018 at 08:15:26AM -0500, Brian Foster wrote:
+> > > > On Tue, Feb 13, 2018 at 08:18:24AM +1100, Dave Chinner wrote:
+> > > > > On Mon, Feb 12, 2018 at 09:26:19AM -0500, Brian Foster wrote:
+> > > > > > :/ So it seems to
+> > > > > > me this breaks a technically valid case in weird/subtle ways. For
+> > > > > > example, why assert about last == 0, but then go on to add the range
+> > > > > > anyways, explicitly not size it correctly, but then format it as if
+> > > > > > nothing is wrong? If it were really wrong/invalid (which I don't think
+> > > > > > it is), why not put the check in the log side and skip adding the range
+> > > > > > rather than add it, skip sizing it, and then format it.
+> > > > > 
+> > > > > So what you're really concerned about is that I put asserts into the
+> > > > > code to catch broken development code, but then allow production
+> > > > > systems through without caring whether it works correctly because
+> > > > > that boundary condition will never occur during runtime on
+> > > > > production systems?
+> > > > 
+> > > > No. As already mentioned in my previous mail, I care little about the
+> > > > asserts. Asserts can easily be removed if they turn out to be bogus.
+> > > > Wrong asserts tend to have little negative effect on production users
+> > > > because along with only affecting debug kernels, they'd have to be
+> > > > fairly rare to slip through our testing. So I'm perfectly _happy_ to be
+> > > > cautious with regard to asserts.
+> > > > 
+> > > > What I care much more about is not leaving latent bugs around in the
+> > > > code. IMO, there is very rarely good enough justification to knowingly
+> > > > commit buggy/fragile code to the kernel,
+> > > 
+> > > Hold on a minute!
+> > > 
+> > > I'm not asking anyone to commit buggy or fragile code. I've already
+> > > fixed the off-by-one problems you've pointed out, and all I was
+> > > trying to do was understand what you saw wrong with the asserts to
+> > > catch a "should never happen" condition so I could change it in a
+> > > way that you'd find acceptible.
+> > > 
+> > > There's no need to shout and rant at me....
+> > > 
 > > 
-> > I'd like to see an ACK on this from XFS community.
-> 
-> So, I thought we still had a local implementation of xfs_check-via-xfs_db
-> in xfstests as an intentional validation against xfs_repair:
-> 
-> +# xfs_check script is planned to be deprecated. But, we want to
-> +# be able to invoke "xfs_check" behavior in xfstests in order to
-> +# maintain the current verification levels.
-> +_xfs_check()
-> 
-> IOWS, "xfs_check is obsolete" is true for users/admins, but I thought
-> we were keeping it alive as a developer tool for now, and that it had
-> a place in xfstests.  No?
-> 
-> (But if it /is/ removed, wouldn't you kill off the _xfs_check() function as
-> well, to truly nuke it from orbit?)
-> 
-> Anyway, I don't think I understand the justification for this change;
-> it was explicitly kept alive in xfstests since commit 
-> 
-> 	187bccd xfstests: Remove dependence of xfs_check script
-> 
-> and "xfs_check is obsolete for admins" doesn't seem to be sufficient rationale.
-> 
-> What do we gain or lose by removing this from _check_xfs_filesystem?
-
-xfs_check likes to consume memory, which means that it consistently runs
-out and segfaults when I run xfstests on a 1k block configuration.  It's
-also slow if the fs is really fragmented (which some of the reflink
-tests set up), so I figured I'd kill both birds with one patch by
-removing auto-xfscheck.
-
-We /could/ leave it as a check against xfs_repair, but at this point we
-have three different fsck(ish) tools and maybe it's just time to get rid
-of check.  Consider that blockget didn't even support v5 filesystems
-until October 2015[1], which was ~2 years after v5 support landed in
-repair -- that convinced me (at the time) that nobody really cared about
-xfs_check anymore.  I only added support so that I could work on
-blocktrash fuzz testing. :)
-
---D
-
-[1] e96864ff4d40, "xfs_db: enable blockget for v5 filesystems"
-
-> 
-> -Eric
-> 
-> > Thanks,
-> > Eryu
+> > I pointed out the first-byte logging case looked broken. Rather than
+> > indicate you're fixing that one way or another (as you had done for the
+> > other issues we've found), you argued that "nobody does that" or "should
+> > never happen."
 > > 
-> >> ---
-> >>  common/xfs |   17 -----------------
-> >>  1 file changed, 17 deletions(-)
-> >>
-> >>
-> >> diff --git a/common/xfs b/common/xfs
-> >> index 3dba40d..c63e5dc 100644
-> >> --- a/common/xfs
-> >> +++ b/common/xfs
-> >> @@ -386,23 +386,6 @@ _check_xfs_filesystem()
-> >>  		ok=0
-> >>  	fi
-> >>  
-> >> -	# xfs_check runs out of memory on large files, so even providing the test
-> >> -	# option (-t) to avoid indexing the free space trees doesn't make it pass on
-> >> -	# large filesystems. Avoid it.
+> > Sorry for the rant and/or whether I've misinterpreted your comment, but
+> > I have no way to read that other than an attempt to justify the problem,
+> > particularly when in comparison every other issue was clearly noted that
+> > it would be fixed. Also note that I think you've slightly misinterpreted
+> > my fragile code comment to be harsher than intended (or I didn't express
+> > my position clearly...). I'm simply trying to explain why I'll likely
+> > not ack this patch unless that problem is fixed (e.g., because I
+> > consider it fragile, independent of current behavior of outside
+> > contexts).
+> > 
+> > I'll try to restate my position more distinctly/clearly... I consider
+> > this patch broken so long as it doesn't handle the set of valid inputs
+> > defined by xfs_trans_log_buf() correctly, as the current code does. I
+> > expect any first <= last range to DTRT and ensure the associated chunk
+> > of the buffer is logged.
+> > 
+> > > > ... having said all that and having already wasted more time on this
+> > > > than it would have taken for you to just fix the patch, I'll end my rant
+> > > > with this splat[1]. It demonstrates the "boundary condition" that "will
+> > > > never occur during runtime on production systems" (production system
+> > > > level output included for extra fun ;P).
+> > > 
+> > > This is a pre-existing bug in xlog_cil_insert_format_items()
+> > > that my change has exposed:
+> > > 
+> > >                 /* Skip items that do not have any vectors for writing */
+> > > 		if (!shadow->lv_niovecs && !ordered)
+> > > 			continue;
+> > > 
+> > > The code I added triggers this (niovecs == 0), and that now gives
+> > > us the case where we have a dirty log item descriptor
+> > > (XFS_LID_DIRTY) without a log vector attached to item->li_lv.
+> > > Then in xlog_cil_insert_items():
+> > > 
+> > >                 /* Skip items which aren't dirty in this transaction. */
+> > >                 if (!(lidp->lid_flags & XFS_LID_DIRTY))
+> > >                         continue;
+> > > 
+> > >                 /*
+> > >                  * Only move the item if it isn't already at the tail. This is
+> > >                  * to prevent a transient list_empty() state when reinserting
+> > >                  * an item that is already the only item in the CIL.
+> > >                  */
+> > >                 if (!list_is_last(&lip->li_cil, &cil->xc_cil))
+> > >                         list_move_tail(&lip->li_cil, &cil->xc_cil);
+> > > 
+> > > 
+> > > We put that "clean" log item on the CIL because XFS_LID_DIRTY is
+> > > set, and then when we push the CIL in xlog_cil_push(), we trip over
+> > > a dirty log item without a log vector when chaining log vectors to
+> > > pass to the log writing code here:
+> > > 
+> > >         while (!list_empty(&cil->xc_cil)) {
+> > >                 struct xfs_log_item     *item;
+> > > 
+> > >                 item = list_first_entry(&cil->xc_cil,
+> > >                                         struct xfs_log_item, li_cil);
+> > >                 list_del_init(&item->li_cil);
+> > >                 if (!ctx->lv_chain)
+> > >                         ctx->lv_chain = item->li_lv;
+> > >                 else
+> > >                         lv->lv_next = item->li_lv;       <<<<<<<<<
+> > >  >>>>>>>>       lv = item->li_lv;
+> > >                 item->li_lv = NULL;
+> > >                 num_iovecs += lv->lv_niovecs;
+> > >         }
+> > > 
+> > > i.e. lv ends up null part way through the log item chain we are
+> > > processing and the next loop iteration fails.
+> > > 
+> > 
+> > Ok, I hadn't traced through the actual crash. The above all sounds sane
+> > to me...
+> > 
+> > > IOWs, the bug isn't in the patch I wrote - it has uncovered a
+> > > latent bug added years ago for a condition that had never, ever been
+> > > exercised until now.
+> > > 
+> > 
+> > Note that I agree you're probably right that there is a bug worth fixing
+> > in the CIL code to not crash in this case. The crash is just a symptom,
+> > however. There's still a bug in this patch because the buffer needs to
+> > be logged.
+> > 
+> > IOW, the purpose of this test is to demonstrate that the "should never
+> > happen" case argued above "actually can happen."
+> > 
+> > > Brian, can you now give me all the details of what you were doing to
+> > > produce this and turn on CONFIG_XFS_DEBUG so that it catches the
+> > > zero length buffer that was logged when it happens?  That way I can
+> > > test a fix for this bug and that the buffer range logging exercises
+> > > this case properly...
+> > > 
+> > 
+> > Yep. It's a specially crafted symlink creation on a small FSB, v4
+> > filesystem with fragmented free space. We log symlink buffers on v4
+> > filesystems without any header, so the buffer content is not dictated by
+> > any internal fs metadata format. If the link target is large enough to
+> > span multiple blocks and free space is fragmented such that those blocks
+> > are discontiguous, we can end up logging (solely) the first byte of the
+> > last buffer of the link target.
+> > 
+> > This is actually reproducible on demand so I'll just append a basic
+> > recipe rather than collect the debug data and whatnot..
+> > 
+> > Brian
+> > 
+> > --- 8< ---
+> > 
+> > dev=<dev>
+> > mnt=/mnt
+> > 
+> > sym=`for i in $(seq 0 512); do echo -n a; done`
+> > 
+> > mkfs.xfs -f -mcrc=0 -bsize=512 -dsize=25m $dev
+> > mount $dev $mnt
+> > 
+> > dd if=/dev/zero of=$mnt/spc1
+> > ~/xfstests-dev/src/punch-alternating $mnt/spc1
+> > dd if=/dev/zero of=$mnt/spc2
+> > xfs_io -c "fpunch 5m 25m" $mnt/spc2
+> > 
+> > for i in $(seq 0 2); do
+> >         ln -s $sym $mnt/link.$i
+> >         xfs_io -c fsync $mnt
+> > done
+> > 
+> > umount $mnt
 > 
+> Did one of the "fragment free space, do stuff" xfstests hit this?  If
+> not, would it be worth turning into a test?
 > 
-> >> -	if [ "$LARGE_SCRATCH_DEV" != yes ]; then
-> >> -		_xfs_check $extra_log_options $device 2>&1 |\
-> >> -			_fix_malloc >$tmp.fs_check
-> >> -	fi
-> >> -	if [ -s $tmp.fs_check ]; then
-> >> -		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (c)"
-> >> -		echo "*** xfs_check output ***"		>>$seqres.full
-> >> -		cat $tmp.fs_check			>>$seqres.full
-> >> -		echo "*** end xfs_check output"		>>$seqres.full
-> >> -
-> >> -		xfs_metadump $device $seqres.check	>>$seqres.full 2>&1
-> >> -		ok=0
-> >> -	fi
-> >> -
-> >>  	$XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
-> >>  	if [ $? -ne 0 ]; then
-> >>  		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (r)"
-> >>
+
+This was just an experiment on this patch. I haven't run xfstests so I
+can't say for sure whether some existing test would have caught it
+(though I suspect Dave would have hit the problem by now, if so). I'm
+not sure it's worth an independent test since it really just exercises a
+bug in a patch that is still under development (as opposed to a
+regression). This sequence won't trigger any problems that I'm aware of
+on upstream XFS.
+
+Brian
+
+> --D
+> 
 > > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
