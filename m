@@ -1,135 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33832 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932641AbeBMAAY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Feb 2018 19:00:24 -0500
-Date: Mon, 12 Feb 2018 16:00:18 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] xfs_scrub: refactor outcome display into a separate
- helper
-Message-ID: <20180213000018.GD5217@magnolia>
-References: <151787293446.3743.11110014829952400444.stgit@magnolia>
- <151787298870.3743.17315196925370109109.stgit@magnolia>
- <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:11875 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1031044AbeBNVWc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 16:22:32 -0500
+Date: Thu, 15 Feb 2018 08:22:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/4] xfs: skip xfs_check in _check_xfs_filesystem
+Message-ID: <20180214212228.GG7000@dastard>
+References: <151803835881.19313.17455678207236452557.stgit@magnolia>
+ <151803837117.19313.3481001926133028039.stgit@magnolia>
+ <20180208125152.GE18267@eguan.usersys.redhat.com>
+ <62eff3f5-b4fe-3c98-1cd2-c5b2b4ca4c70@sandeen.net>
+ <20180214170254.GK5217@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5279e63a-6ea9-517b-f73f-2b52d0a2f7ea@sandeen.net>
+In-Reply-To: <20180214170254.GK5217@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Eryu Guan <eguan@redhat.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Feb 12, 2018 at 03:06:58PM -0600, Eric Sandeen wrote:
-> On 2/5/18 5:23 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Feb 14, 2018 at 09:02:54AM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 14, 2018 at 10:34:09AM -0600, Eric Sandeen wrote:
+> > On 2/8/18 6:51 AM, Eryu Guan wrote:
+> > > On Wed, Feb 07, 2018 at 01:19:31PM -0800, Darrick J. Wong wrote:
+> > >> From: Darrick J. Wong <darrick.wong@oracle.com>
+> > >>
+> > >> xfs_check has been long obsolete, so stop running it automatically
+> > >> after every test.  Tests that explicitly want xfs_check can call it
+> > >> via _scratch_xfs_check or _xfs_check; that part doesn't go away.
+> > >>
+> > >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > I'd like to see an ACK on this from XFS community.
 > > 
-> > Move all the printing of the scrub outcome into a separate helper to
-> > declutter the main function.
+> > So, I thought we still had a local implementation of xfs_check-via-xfs_db
+> > in xfstests as an intentional validation against xfs_repair:
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > +# xfs_check script is planned to be deprecated. But, we want to
+> > +# be able to invoke "xfs_check" behavior in xfstests in order to
+> > +# maintain the current verification levels.
+> > +_xfs_check()
+> > 
+> > IOWS, "xfs_check is obsolete" is true for users/admins, but I thought
+> > we were keeping it alive as a developer tool for now, and that it had
+> > a place in xfstests.  No?
+> > 
+> > (But if it /is/ removed, wouldn't you kill off the _xfs_check() function as
+> > well, to truly nuke it from orbit?)
+> > 
+> > Anyway, I don't think I understand the justification for this change;
+> > it was explicitly kept alive in xfstests since commit 
+> > 
+> > 	187bccd xfstests: Remove dependence of xfs_check script
+> > 
+> > and "xfs_check is obsolete for admins" doesn't seem to be sufficient rationale.
+> > 
+> > What do we gain or lose by removing this from _check_xfs_filesystem?
 > 
-> 
-> This might get a bit long, no?
-> 
-> "/path/to/filesystem: errors found 16384; warnings found 16.  Unmount and run xfs_repair."
-> 
-> Can we put the "Unmount and run xfs_repair" on its own line?
-> That'd make it stand out more, as well.  </nitpick>
+> xfs_check likes to consume memory, which means that it consistently runs
+> out and segfaults when I run xfstests on a 1k block configuration.  It's
+> also slow if the fs is really fragmented (which some of the reflink
+> tests set up), so I figured I'd kill both birds with one patch by
+> removing auto-xfscheck.
 
-Sure, works for me.  Should I send a separate patch or will you just fix
-it up on the way in?
+I don't see it run out of memory on my 1p, 1GB RAM, 1k block size
+test VM, running on 10GB test, 20GB scratch devices....
 
---D
+> We /could/ leave it as a check against xfs_repair, but at this point we
+> have three different fsck(ish) tools and maybe it's just time to get rid
+> of check.  Consider that blockget didn't even support v5 filesystems
+> until October 2015[1], which was ~2 years after v5 support landed in
+> repair -- that convinced me (at the time) that nobody really cared about
+> xfs_check anymore.
 
-> 
-> > ---
-> >  scrub/xfs_scrub.c |   48 ++++++++++++++++++++++++++++++------------------
-> >  1 file changed, 30 insertions(+), 18 deletions(-)
-> > 
-> > 
-> > diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> > index 89b7fa0..fdd35df 100644
-> > --- a/scrub/xfs_scrub.c
-> > +++ b/scrub/xfs_scrub.c
-> > @@ -493,6 +493,34 @@ _("Scrub aborted after phase %d."),
-> >  	return moveon;
-> >  }
-> >  
-> > +static void
-> > +report_outcome(
-> > +	struct scrub_ctx	*ctx)
-> > +{
-> > +	unsigned long long	total_errors;
-> > +
-> > +	total_errors = ctx->errors_found + ctx->runtime_errors;
-> > +
-> > +	if (total_errors == 0 && ctx->warnings_found == 0)
-> > +		return;
-> > +
-> > +	if (total_errors == 0)
-> > +		fprintf(stderr, _("%s: warnings found: %llu."), ctx->mntpoint,
-> > +				ctx->warnings_found);
-> > +	else if (ctx->warnings_found == 0)
-> > +		fprintf(stderr, _("%s: errors found: %llu."), ctx->mntpoint,
-> > +				total_errors);
-> > +	else
-> > +		fprintf(stderr, _("%s: errors found: %llu; warnings found: %llu."),
-> > +				ctx->mntpoint, total_errors,
-> > +				ctx->warnings_found);
-> > +
-> > +	if (ctx->need_repair)
-> > +		fprintf(stderr, "  %s\n", _("Unmount and run xfs_repair."));
-> > +	else
-> > +		fprintf(stderr, "\n");
-> > +}
-> > +
-> >  int
-> >  main(
-> >  	int			argc,
-> > @@ -501,9 +529,7 @@ main(
-> >  	struct scrub_ctx	ctx = {0};
-> >  	struct phase_rusage	all_pi;
-> >  	char			*mtab = NULL;
-> > -	char			*repairstr = "";
-> >  	FILE			*progress_fp = NULL;
-> > -	unsigned long long	total_errors;
-> >  	bool			moveon = true;
-> >  	bool			ismnt;
-> >  	int			c;
-> > @@ -692,22 +718,8 @@ _("%s: Not a XFS mount point or block device.\n"),
-> >  		ctx.runtime_errors++;
-> >  
-> >  out:
-> > -	total_errors = ctx.errors_found + ctx.runtime_errors;
-> > -	if (ctx.need_repair)
-> > -		repairstr = _("  Unmount and run xfs_repair.");
-> > -	if (total_errors && ctx.warnings_found)
-> > -		fprintf(stderr,
-> > -_("%s: %llu errors and %llu warnings found.%s\n"),
-> > -			ctx.mntpoint, total_errors, ctx.warnings_found,
-> > -			repairstr);
-> > -	else if (total_errors && ctx.warnings_found == 0)
-> > -		fprintf(stderr,
-> > -_("%s: %llu errors found.%s\n"),
-> > -			ctx.mntpoint, total_errors, repairstr);
-> > -	else if (total_errors == 0 && ctx.warnings_found)
-> > -		fprintf(stderr,
-> > -_("%s: %llu warnings found.\n"),
-> > -			ctx.mntpoint, ctx.warnings_found);
-> > +	report_outcome(&ctx);
-> > +
-> >  	if (ctx.errors_found) {
-> >  		if (ctx.error_action == ERRORS_SHUTDOWN)
-> >  			xfs_shutdown_fs(&ctx);
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Actually, that was more a result of the developer who was doing all
+the v5 work being made the as maintainer half way thru it's
+experimental stage and that meant time to work on the non-critical
+pieces of v5 support were pretty severely curtailed. i.e. it wasn't
+because we never intended to support this, just resources and
+priorities changed drastically around that time.
+
+Once we get scrub doing everything check does and have some
+confidence that it's working correctly, then we can remove the db
+based check code. Right now we still rely on it to cross check
+repair and scrub is about to drive a bunch of new changes to th
+erepair code to fix up stuff it doesn't detect.  Once we've got to
+the point that repair and scrub to the same level and have a bit
+more confidence in the scrub code, then we can think about retiring
+the db-based check code...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
