@@ -1,46 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46028 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1165737AbeBORwv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Feb 2018 12:52:51 -0500
-Date: Thu, 15 Feb 2018 09:52:41 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 1/3] fs: allow per-device dax status checking for
- filesystems
-Message-ID: <20180215175241.GA25223@infradead.org>
-References: <151871644696.27617.4390718895806529377.stgit@djiang5-desk3.ch.intel.com>
- <151871655228.27617.3514495396592472682.stgit@djiang5-desk3.ch.intel.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:55810 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032738AbeBNQph (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 11:45:37 -0500
+Date: Wed, 14 Feb 2018 08:45:32 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs/015: enlarge the initial fs size
+Message-ID: <20180214164532.GH5217@magnolia>
+References: <20180104054626.14458-1-eguan@redhat.com>
+ <20180214152401.GO18267@eguan.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151871655228.27617.3514495396592472682.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <20180214152401.GO18267@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: darrick.wong@oracle.com, linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
->  /**
-> - * __bdev_dax_supported() - Check if the device supports dax for filesystem
-> + * bdev_dax_supported() - Check if the device supports dax for filesystem
->   * @sb: The superblock of the device
-> + * @bdev: block device to check
->   * @blocksize: The block size of the device
->   *
->   * This is a library function for filesystems to check if the block device
-> @@ -82,9 +83,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
->   *
->   * Return: negative errno if unsupported, 0 if supported.
->   */
-> -int __bdev_dax_supported(struct super_block *sb, int blocksize)
-> +int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
-> +		       int blocksize)
->  {
-> -	struct block_device *bdev = sb->s_bdev;
->  	struct dax_device *dax_dev;
->  	pgoff_t pgoff;
->  	int err, id;
+On Wed, Feb 14, 2018 at 11:24:01PM +0800, Eryu Guan wrote:
+> On Thu, Jan 04, 2018 at 01:46:26PM +0800, Eryu Guan wrote:
+> > Kernel commit f59cf5c29919 ("xfs: remove "no-allocation"
+> > reservations for file creations") is known to cause earlier ENOSPC
+> > conditions, and xfs/015 is affected in the way that no new file/dir
+> > can be created in a newly created 16M XFS with both reflink and
+> > rmapbt enabled, thus xfs/015 fails due to the missing test dirs.
+> > 
+> > So enlarge the initial fs size to 32M that we're able to create new
 
-This now only uses sb for sb->s_id.  It might be better to use bdevname
-to print the device name and don't bother passing a sb at all.
+32M?  I thought this was a 64M -> 128M expansion?
 
+> > dir/file before growing the filesystem size.
+> > 
+> > Signed-off-by: Eryu Guan <eguan@redhat.com>
+
+I don't think this hurts anything, but otoh I couldn't reproduce the
+failure you're seeing on my setup.
+
+--D
+
+> 
+> ping on this patch.
+> 
+> Eryu
+> 
+> > ---
+> >  tests/xfs/015 | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/tests/xfs/015 b/tests/xfs/015
+> > index 2c57f7882308..4939bb92f6fc 100755
+> > --- a/tests/xfs/015
+> > +++ b/tests/xfs/015
+> > @@ -66,15 +66,15 @@ _supported_os Linux
+> >  
+> >  _require_scratch
+> >  
+> > -# need 64M space, don't make any assumption
+> > +# need 128M space, don't make any assumption
+> >  _scratch_mkfs >/dev/null 2>&1
+> >  _scratch_mount
+> > -_require_fs_space $SCRATCH_MNT 65536
+> > +_require_fs_space $SCRATCH_MNT 131072
+> >  _scratch_unmount
+> >  
+> >  rm -f $seqres.full
+> >  
+> > -_scratch_mkfs_sized $((16 * 1024 * 1024)) > $tmp.mkfs.raw
+> > +_scratch_mkfs_sized $((32 * 1024 * 1024)) > $tmp.mkfs.raw
+> >  cat $tmp.mkfs.raw | _filter_mkfs >$seqres.full 2>$tmp.mkfs
+> >  # get original data blocks number and agcount
+> >  . $tmp.mkfs
+> > -- 
+> > 2.14.3
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
