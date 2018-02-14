@@ -1,96 +1,301 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39206 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161187AbeBNR21 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 12:28:27 -0500
-Date: Wed, 14 Feb 2018 09:28:23 -0800
+Received: from aserp2130.oracle.com ([141.146.126.79]:55174 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161664AbeBNSMV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 13:12:21 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1EI7Fmo096099
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:12:20 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2g4t0yr4es-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:12:20 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w1EICJTd006681
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:12:19 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w1EICJNg029468
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:12:19 GMT
+Subject: [PATCH 3/4] xfs: fix agfl wrapping on v5 filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] Cleanup old XFS_BTREE_* traces
-Message-ID: <20180214172823.GL5217@magnolia>
-References: <20180212130005.7199-1-cmaiolino@redhat.com>
- <20180212182948.GB5217@magnolia>
- <20180212212106.GD6778@dastard>
- <20180213231731.GF5217@magnolia>
- <20180213235814.GH6778@dastard>
- <20180214135200.krlhiakaevsh5hi5@odin.usersys.redhat.com>
+Date: Wed, 14 Feb 2018 10:12:18 -0800
+Message-ID: <151863193838.12012.1555535174255677328.stgit@magnolia>
+In-Reply-To: <151863191996.12012.10898223924122487735.stgit@magnolia>
+References: <151863191996.12012.10898223924122487735.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180214135200.krlhiakaevsh5hi5@odin.usersys.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 14, 2018 at 02:52:00PM +0100, Carlos Maiolino wrote:
-> On Wed, Feb 14, 2018 at 10:58:14AM +1100, Dave Chinner wrote:
-> > On Tue, Feb 13, 2018 at 03:17:31PM -0800, Darrick J. Wong wrote:
-> > > On Tue, Feb 13, 2018 at 08:21:06AM +1100, Dave Chinner wrote:
-> > > > On Mon, Feb 12, 2018 at 10:29:48AM -0800, Darrick J. Wong wrote:
-> > > > > On Mon, Feb 12, 2018 at 02:00:05PM +0100, Carlos Maiolino wrote:
-> > > > > > Remove unused legacy btree traces from IRIX era.
-> > > > > > 
-> > > > > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > > > > > ---
-> > > > > > 
-> > > > > > Talking to Dave about it, he mentioned XFS_BTREE_TRACE_CURSOR might be worth to
-> > > > > > turn into a proper ftrace trace point, so I didn't touch _CURSOR traces in this
-> > > > > > patchset, and a proper conversion will be sent later, unless it's not worth at
-> > > > > > all, and I should send a V2 also removing TRACE_CURSOR.
-> > > > > 
-> > > > > TBH I wonder the opposite -- why not turn all of these into tracepoints?
-> > > > 
-> > > > TBH, we haven't used them in at least 15 years. What value do they
-> > > > provide apart from making the traces even noisier (and potentially
-> > > > more lossy) than they already are?
-> > > 
-> > > FWIW adding trace_printks to some of those functions was rather useful
-> > > for checking that the unusual refcount and rmap btree semantics actually
-> > > resulted in calls to the desired btree functions.  I wish I'd cleaned up
-> > > that debugging patch and sent it, but it's lost now.
-> > 
-> 
-> I see your point, although, for me, it sounds like a very specific debug case,
-> and not something which would add enough benefit to have these extra debug
-> traces lying around.
-> 
-> I mean, if we keep adding trace points for many single debug use-cases, we would
-> end up with tons of trace points in xfs, which are not used in 99% of the debugging
-> processes.
-> 
-> But well, I don't have a decent knowledge in the Btrees infra-structure yet to
-> give a more detailed reason if such extra trace points would be useful or not in
-> several situations. So, this is just my $0.02, based on the amount of trace
-> points we already have, where, most of time I use one or another, and yet, I
-> need to add my own trace_printks, so, particularly, I don't think adding such
-> extra traces in Btree code would be that useful in a long-term period, but well,
-> as I said, just my $0.02.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We already have 531 tracepoints, a few more probably isn't going to
-hurt.  That said, if you want to send a patch cleaning out both of the
-old trace macros I'd take it.  At worst, if I or anyone else ever come
-across a need to add tracepoints to the core btree code they're not hard
-to add.
+Introduce helper functions to scan and fix the AGFLs at mount time.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c  |  169 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h  |    3 +
+ fs/xfs/libxfs/xfs_format.h |    5 +
+ fs/xfs/xfs_mount.c         |   10 +++
+ fs/xfs/xfs_super.c         |   10 +++
+ 5 files changed, 197 insertions(+)
 
-> 
-> > Ok, so the non-cursor traces would have been useful to you.
-> > That's fine - I just don't want to add stuff that doesn't have any
-> > specific use because it's already hard enough to filter traces down
-> > to just the things we need to see....
-> > 
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
-> 
-> -- 
-> Carlos
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 36101e5..8e4e1ae 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -70,6 +70,175 @@ xfs_agfl_size(
+ 	return size / sizeof(xfs_agblock_t);
+ }
+ 
++/*
++ * Detect and fixup a screwup in the struct xfs_agfl definition that results in
++ * different free list sizes depending on the compiler padding added to the
++ * xfs_agfl. This will only matter on v5 filesystems that have the freelist
++ * wrapping around the end of the AGFL.  If we fix the problem, we log the new
++ * AGF immediately; if the caller fixes any AGFLs, then it should set the
++ * superblock flag to say we've fixed everything.
++ *
++ * This function returns 1 if something was fixed, 0 if nothing needed fixing,
++ * or the usual negative error code.
++ */
++int
++xfs_agf_fixup_freelist_count(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agfbp,
++	struct xfs_perag	*pag)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_agf		*agf;
++	struct xfs_buf		*agflbp;
++	__be32			*agfl_bno;
++	xfs_agnumber_t		agno;
++	uint32_t		agfl_size;
++	uint32_t		flfirst;
++	uint32_t		fllast;
++	int32_t			active;
++	int			offset;
++	int			error;
++
++	/* v4 or fixed-agfl fs doesn't need fixing */
++	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
++	    xfs_sb_version_hasfixedagfl(&mp->m_sb))
++		return 0;
++
++	agfl_size = xfs_agfl_size(mp);
++
++	agf = XFS_BUF_TO_AGF(agfbp);
++	agno = be32_to_cpu(agf->agf_seqno);
++	flfirst = be32_to_cpu(agf->agf_flfirst);
++	fllast = be32_to_cpu(agf->agf_fllast);
++
++	/*
++	 * In the original v5 code, we had a structure padding error in struct
++	 * xfs_agfl such that XFS_AGFL_SIZE thought the structure size was 36
++	 * on 32-bit and 40 on 64-bit.  On a 512b sector fs this lead to
++	 * ((512 - 36) / 4) = 119 agfl entries on 32bit, whereas on 64-bit
++	 * ((512 - 40) / 4) = 118 agfl entries.  This could lead to problems
++	 * if you migrated filesystems between 32bit and 64bit machines.
++	 *
++	 * In Linux 4.5 we fixed the padding problem such that the structure
++	 * size is always 36 bytes (119 entries in the above example), but
++	 * this still leads to verifier problems because flfirst/fllast have
++	 * to match flcount even if they wrap around the end.  This was also
++	 * problematic because there were v5 filesystems already deployed, and
++	 * some of them have the 40-byte padding (i.e. 118 entries).
++	 *
++	 * Now we're introducing a FIXED_AGFL feature that means that we've
++	 * fixed any wrapping problems and we'll never do that again.  Better
++	 * yet, old kernels won't be touching the AGFL because it's a rocompat
++	 * feature.  We retain the 36-byte padding.
++	 */
++
++	/* Empty AGFL?  Make sure we aren't pointing at the end. */
++	if (pag->pagf_flcount == 0) {
++		if (flfirst >= agfl_size || fllast >= agfl_size) {
++			agf->agf_flfirst = cpu_to_be32(1);
++			agf->agf_fllast = 0;
++			xfs_alloc_log_agf(tp, agfbp,
++					XFS_AGF_FLFIRST | XFS_AGF_FLLAST);
++			return 1;
++		}
++		return 0;
++	}
++
++	/* Make sure we're either spot on or off by 1. */
++	active = fllast - flfirst + 1;
++	if (active <= 0)
++		active += agfl_size;
++	if (active == pag->pagf_flcount)
++		return 0;
++	else if (active != pag->pagf_flcount + 1)
++		return -EFSCORRUPTED;
++
++	/* Would this have even passed muster on an old system? */
++	if (flfirst >= agfl_size - 1 || fllast >= agfl_size - 1 ||
++	    pag->pagf_flcount > agfl_size - 1)
++		return -EFSCORRUPTED;
++
++	/*
++	 * Convert a 40-byte-padded agfl into a 36-byte-padded AGFL.
++	 * Therefore, we need to move the AGFL blocks
++	 * bno[flfirst..agfl_size - 2] to bno[flfirst + 1...agfl_size - 1].
++	 *
++	 * Reusing the example above, if we had flfirst == 116, we need
++	 * to move bno[116] and bno[117] into bno[117] and bno[118],
++	 * respectively, and then increment flfirst.
++	 */
++	error = xfs_alloc_read_agfl(mp, tp, agno, &agflbp);
++	if (error)
++		return error;
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
++	memmove(&agfl_bno[flfirst + 1], &agfl_bno[flfirst],
++			(agfl_size - flfirst - 1) * sizeof(xfs_agblock_t));
++	agfl_bno[flfirst] = cpu_to_be32(NULLAGBLOCK);
++	xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
++	offset = (char *)&agfl_bno[flfirst] - (char *)agflbp->b_addr;
++	xfs_trans_log_buf(tp, agflbp, offset, BBTOB(agflbp->b_length) - 1);
++	xfs_trans_brelse(tp, agflbp);
++	agflbp = NULL;
++
++	be32_add_cpu(&agf->agf_flfirst, 1);
++	xfs_alloc_log_agf(tp, agfbp, XFS_AGF_FLFIRST);
++
++	return 1;
++}
++
++/* Fix all the AGFL counters. */
++int
++xfs_agf_fixup_freelist_counts(
++	struct xfs_mount	*mp)
++{
++	struct xfs_trans	*tp;
++	struct xfs_perag	*pag;
++	struct xfs_buf		*agfbp;
++	xfs_agnumber_t		agno;
++	bool			needed_fixing = false;
++	int			error;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb) ||
++	    xfs_sb_version_hasfixedagfl(&mp->m_sb))
++		return 0;
++
++	/* Need to be able to log all AGFs + primary super */
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata, 0, 0, 0, &tp);
++	if (error)
++		return error;
++
++	/* Make sure all the AGFLs do not go off the end of the array. */
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		error = xfs_alloc_read_agf(mp, tp, agno, 0, &agfbp);
++		if (error)
++			goto cancel;
++		if (!agfbp) {
++			error = -ENOMEM;
++			goto cancel;
++		}
++		pag = xfs_perag_get(mp, agno);
++		error = xfs_agf_fixup_freelist_count(tp, agfbp, pag);
++		xfs_perag_put(pag);
++		xfs_trans_brelse(tp, agfbp);
++		if (error == 1)
++			needed_fixing = true;
++		else if (error < 0)
++			goto cancel;
++	}
++
++	if (!needed_fixing)
++		goto cancel;
++
++	/* Add the feature flag so we don't have to do this again. */
++	xfs_sb_version_addfixedagfl(&mp->m_sb);
++	xfs_log_sb(tp);
++	return xfs_trans_commit(tp);
++
++cancel:
++	xfs_trans_cancel(tp);
++	return error;
++}
++
+ unsigned int
+ xfs_refc_block(
+ 	struct xfs_mount	*mp)
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index a311a24..2c79ea4e 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -27,6 +27,9 @@ struct xfs_trans;
+ extern struct workqueue_struct *xfs_alloc_wq;
+ 
+ unsigned int xfs_agfl_size(struct xfs_mount *mp);
++int xfs_agf_fixup_freelist_count(struct xfs_trans *tp, struct xfs_buf *agfbp,
++		struct xfs_perag *pag);
++int xfs_agf_fixup_freelist_counts(struct xfs_mount *mp);
+ 
+ /*
+  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 4f6f41b..6a7d65f 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -566,6 +566,11 @@ static inline bool xfs_sb_version_hasfixedagfl(struct xfs_sb *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL);
+ }
+ 
++static inline void xfs_sb_version_addfixedagfl(struct xfs_sb *sbp)
++{
++	sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL;
++}
++
+ /*
+  * end of superblock version macros
+  */
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 98fd41c..62865aa 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -875,6 +875,16 @@ xfs_mountfs(
+ 	}
+ 
+ 	/*
++	 * Make sure our AGFL counters do not wrap the end of the block in a
++	 * troublesome manner.  Don't bother if we're readonly.
++	 */
++	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
++		error = xfs_agf_fixup_freelist_counts(mp);
++		if (error)
++			goto out_log_dealloc;
++	}
++
++	/*
+ 	 * Get and sanity-check the root inode.
+ 	 * Save the pointer to it in the mount structure.
+ 	 */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 7aba628..5fa0501 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1353,6 +1353,16 @@ xfs_fs_remount(
+ 		}
+ 
+ 		/*
++		 * Make sure our AGFL counters do not wrap the end of the block
++		 * in a troublesome manner.
++		 */
++		error = xfs_agf_fixup_freelist_counts(mp);
++		if (error) {
++			xfs_warn(mp, "failed to set FIXED_AGFL feature");
++			return error;
++		}
++
++		/*
+ 		 * Fill out the reserve pool if it is empty. Use the stashed
+ 		 * value if it is non-zero, otherwise go with the default.
+ 		 */
+
