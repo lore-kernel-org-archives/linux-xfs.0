@@ -1,78 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:58601
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1031408AbeBNVsD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 16:48:03 -0500
-Date: Thu, 15 Feb 2018 08:48:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Behavior of falloc collapse range when preceded by falloc keep
- size : Possible eof block loss
-Message-ID: <20180214214800.GH7000@dastard>
-References: <CA+EzBbBtpD=shOwnWLwTfkb-mmyaznndGNL3saSEobX0uT7MfA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60848 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030561AbeBONQc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Feb 2018 08:16:32 -0500
+Date: Thu, 15 Feb 2018 08:16:30 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 0/4] xfs: fix v5 AGFL wrapping
+Message-ID: <20180215131630.GA48590@bfoster.bfoster>
+References: <151863191996.12012.10898223924122487735.stgit@magnolia>
+ <20180214195651.GB43414@bfoster.bfoster>
+ <20180215020548.GN5217@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CA+EzBbBtpD=shOwnWLwTfkb-mmyaznndGNL3saSEobX0uT7MfA@mail.gmail.com>
+In-Reply-To: <20180215020548.GN5217@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jayashree Mohan <jayashree2912@gmail.com>
-Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 14, 2018 at 10:56:31AM -0600, Jayashree Mohan wrote:
-> Hi,
+On Wed, Feb 14, 2018 at 06:05:48PM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 14, 2018 at 02:56:51PM -0500, Brian Foster wrote:
+> > On Wed, Feb 14, 2018 at 10:12:00AM -0800, Darrick J. Wong wrote:
+> > > Hi all,
+> > > 
+> > > Here's a bunch of patches fixing the AGFL padding problem once and for
+> > > all.  When the v5 disk format was rolled out, the AGFL header definition
+> > > had a different padding size on 32-bit vs 64-bit systems, with the
+> > > result that XFS_AGFL_SIZE reports different maximum lengths depending on
+> > > the compiler.  In Linux 4.5 we fixed the structure definition, but this
+> > > has lead to sporadic corruption reports on filesystems that were
+> > > unmounted with a pre-4.5 kernel and a wrapped AGFL and then remounted on
+> > > a 4.5+ kernel.
+> > > 
+> > > To deal with these corruption problems, we introduce a new ROCOMPAT
+> > > feature bit to indicate that the AGFL has been scanned and guaranteed
+> > > not to wrap.  We then amend the mounting code to find broken wrapping,
+> > > fix the wrapping, and if we had to fix anything, set the new ROCOMPAT
+> > > flag.  The ROCOMPAT flag prevents re-mounting on unpatched kernels, so
+> > > this series will likely have to be backported.
+> > > 
+> > 
+> > I haven't taken a close enough look at the code yet, but I'm more
+> > curious about the high level approach before getting into that.. IIUC,
+> > we'll set the rocompat bit iff we mount on a fixed kernel, found the
+> > agfl wrapped and detected the agfl size mismatch problem. So we
+> > essentially only restrict mounts on older kernels if we happen to detect
+> > the size mismatch conditions on the newer kernel.
 > 
-> I am Jayashree Mohan, a PhD student at the University of Texas at
-> Austin, working with Prof. Vijay Chidambaram. I've been working on the
-> Crashmonkey project, which is a test harness for file system crash
-> consistency checks[1].
+> Correct.
 > 
-> While trying to reproduce some of the reported bugs on filesystems
-> using CrashMonkey we stumbled upon the following issue:
+> > IOW, a user can mount back and forth between good/bad kernels so long as
+> > the agfl isn't wrapped during a mount on the good kernel, and then at
+> > some seemingly random point in the future said user might be permanently
+> > restricted from rw mounts on the older kernel based on the issue being
+> > detected/cleared in the new kernel. That seems a bit.. heavy-handed for
+> > such an unpredictable condition. Why is a warning that the user has a
+> > busted/old/in-need-of-upgrade kernel in the mix not sufficient?
 > 
-> Whenever we have a collapse_range operation that follows fallocate
-> with keep_size that allocated blocks beyond the end-of-file, the eof
-> blocks are lost due to the collapse_range operation in f2fs and xfs.
-
-.....
-
-> If we didn't have the keep_size option with fallocate in step 2, then
-> we see the xfs_bmap after step 3 to be
-> 0: [0..223]: 160..383
-> 1: [224..823]: 416..1015
-> 2: [824..831]: 1016..1023
+> I like the rocompat approach because we can prevent admins from mounting
+> filesystems on old kernels, rather than letting the mount proceed and
+> then blowing up in the middle of a transaction some time later when
+> something actually hits the badly wrapped AGFL.  If we backport this
+> series to the relevant distro kernels (ha!) then they will work without
+> incident.
 > 
-> This clearly shows, the blocks allocated beyond the eof are lost
-> during the collapse_range operation, if keep_size was specified while
-> allocating these blocks. This behavior is seen in both f2fs and xfs,
-> while ext4 seems to preserve the allocated blocks. All these were
-> tested on linux kernel 4.15. Shouldn't f2fs and xfs also behave like
-> ext4?
 
-Yup, XFS trims post-eof blocks before a collapse because:
+Ok, so the intent is to "protect" those old kernels from a filesystem
+that has seen a "fixed" kernel so the _old_ kernel doesn't explode on a
+filesystem that has a wrapped agfl from a fixed kernel. That sounds
+reasonable.. I guess what concerns me is that the bit doesn't seem to be
+used in that manner. A user can always run a fixed kernel, wrap the
+agfl, then go back to the bad one and cry when it explodes.
 
-        /*
-         * Trim eofblocks to avoid shifting uninitialized post-eof preallocation
-         * into the accessible region of the file.
-         */
-        if (xfs_can_free_eofblocks(ip, true)) {
-                error = xfs_free_eofblocks(ip);
-                if (error)
-                        return error;
-        }
+IOW, if the goal is this kind of retroactive protection, I'd expect the
+bit to be enabled any time the filesystem is in a state that would cause
+problems on the old kernel. Technically, that could mean doing something
+like setting the bit any time an AGFL is in a wrapped state and clearing
+it when that state clears. Or perhaps setting it unconditionally on
+mount and leaving it permanently would be another way to satisfy the
+requirement, though certainly more heavy handed.
 
-we can retain uninitialised extents beyond EOF. I think that
-uninitialised preallocation beyond EOF cannot occur in ext4 (i.e.
-it can only have unwritten extents beyond EOF) but you'll need to
-check that.
+Note that what I dislike about other possible combinations of the above,
+such as setting the bit internally/conditionally and never clearing it
+(which is what I think this series currently does), is that can
+potentially fool a user who actually does due diligence to test a
+filesystem against two kernels (for whatever, probably odd, reason). For
+example:
 
-IOWs, ext4 needs to be considered "potentially dangerous" in
-terms of it's behaviour here, and that both XFS and f2fs are doing
-the obviously safe thing.
+- mount fs on good kernel, scribble on it
+- test my (bad) back up kernel, mount, scribble some more
+- back to my primary kernels, everything still works, deploy!
 
-Cheers,
+So the whole "set the bit unconditionally" thing might be heavy-handed,
+but at least that is predictable. The set/clear approach is less
+predictable, but the advantage of that approach is that it is
+recoverable without putting a user in a bind with no other option but to
+upgrade.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> The thing I dislike about this approach is that now we have this
+> rocompat bit that has to be backported everywhere, and it only triggers
+> in the specific case that (a) you have a v5 filesystem that (b) you run
+> a mixed environment with 4.5+ and pre-4.5 kernels and (c) happened to
+> land on a badly wrapped AGFL.  It's a lot of work for us (and the distro
+> partners) but it's the least amount of work for admins -- so long as
+> they keep their environments up to date.
+> 
+
+We should have already backported fixes to stable kernels for the AGFL
+size problem itself, right? IOW, it really should be a minimal set of
+users affected by this who haven't updated their old, broken kernels
+that should have stable updates available by now.
+
+If so, then I agree.. Technicalities aside, I'm not a huge fan of
+propagating a feature bit all over just to try and isolate those users.
+Plus with some of the other ideas I'm throwing out above, we'd have to
+start also thinking about users who might end up using two old kernels
+that cross the boundary where the feature bit was introduced. Ugh. :P
+
+Yet another way to look at it.. if we have enough users out there using
+two kernels where one of them happens to be a stale/broken kernel
+because they haven't upgraded to the agfl fix, what evidence do we have
+that those users would actually update their variant of the "good agfl"
+kernel to one that handles the agfl good/bad transition and sets a
+feature bit? IOW, it seems to me that on some level the ship has sailed.
+
+> A second solution I considered was fixing the AGFL at mount/remount-rw
+> time like we do in this series and adding code to move the AGFL to the
+> start at freeze/remount-ro/umount time.  For the common case where we
+> don't crash, we handle the mixed kernel environment seamlessly.  This
+> would be my primary choice except that it'll still blow up if we wrap
+> the AGFL, crash, and reboot with an old kernel.  Here too it won't fail
+> at mount time, it'll fail some time after mount when something tries to
+> modify an AGFL.
+> 
+
+Interesting idea, but I also think it would be unfortunate to alter our
+normal/common runtime behavior to pacify some old, broken kernel that
+also has stable fixes. To get around the crash thing, we'd probably have
+to shuffle the AGFL locations on the fly, and that would be even worse
+IMO.
+
+> One solution involves a fair amount of backport and sw redeployment but
+> makes it obvious when things are broken; the other solution handles it
+> *almost* seamlessly... until it doesn't.
+> 
+> > I guess I'm just not really seeing the value in using the feature bit
+> > for this as opposed to doing something more simple like detect an agfl
+> > with a size mismatch with respect to the current kernel and forcing the
+> > read-only mount in that instance. E.g., similar to how we handle log
+> > recovery byte order mismatches:
+> > 
+> >   "dirty log written in incompatible format - can't recover"
+> > 
+> > But in this case it would be more something like "agfl in invalid state,
+> > mounting read-only, please run xfs_repair and ditch that old kernel that
+> 
+> Good point, third option: if the agfl wraps badly, printk that the agfl
+> is in an invalid state and that the user must mount with -o fixagfl
+> (which will fix the problem and set the rocompat flag) and upgrade the
+> kernel.  Seems kinda clunky... but all of these solutions have a wart of
+> some kind.
+> 
+
+Hmm, I still think my preferred approach is to mount time detect,
+enforce read-only and tell the user to xfs_repair[1]. It's the most
+simple implementation as we don't have to carry fixup code in the kernel
+for such an uncommon situation (which facilitates a broad backport
+strategy). It protects the users on stable kernels who pull in the
+latest bug fixes, including the guy who goes from a bad kernel to a good
+one, and all kernels going forward without having to use a feature bit.
+We don't do anything for the guy who wraps the agfl on newer kernels and
+goes back to the bad one, but at some point he just needs to update the
+broken kernel.
+
+[1] I guess doing a mount time fix up vs. a read-only mount + warning is
+a separate question from the feature bit. I'd prefer the latter for
+simplicity, but perhaps there are use cases where the benefit outweighs
+the risk.
+
+Anyways, that's just my .02. There is no real great option here, I
+guess. I just think that at some point maybe it's best to fix all the
+kernels we can to handle the size mismatch, live with the fact that some
+users might have those old, unfixed kernels and bonk them on the head to
+upgrade when they (hopefully decreasingly) pop up. Perhaps others can
+chime in with more thoughts..
+
+Brian
+
+> > caused this in the first place ..." Then we write a FAQ entry that
+> > elaborates on how/why a user hit that problem and backport to stable
+> > kernels as far and wide as possible. Hm?
+> 
+> I /do/ like the part about writing FAQ to update the kernel.
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > --D
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
