@@ -1,105 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53650 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1032282AbeBNQeK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Feb 2018 11:34:10 -0500
-Subject: Re: [PATCH 2/4] xfs: skip xfs_check in _check_xfs_filesystem
-References: <151803835881.19313.17455678207236452557.stgit@magnolia>
- <151803837117.19313.3481001926133028039.stgit@magnolia>
- <20180208125152.GE18267@eguan.usersys.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <62eff3f5-b4fe-3c98-1cd2-c5b2b4ca4c70@sandeen.net>
-Date: Wed, 14 Feb 2018 10:34:09 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:36564 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032437AbeBOCFy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 21:05:54 -0500
+Date: Wed, 14 Feb 2018 18:05:48 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 0/4] xfs: fix v5 AGFL wrapping
+Message-ID: <20180215020548.GN5217@magnolia>
+References: <151863191996.12012.10898223924122487735.stgit@magnolia>
+ <20180214195651.GB43414@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180208125152.GE18267@eguan.usersys.redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180214195651.GB43414@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 2/8/18 6:51 AM, Eryu Guan wrote:
-> On Wed, Feb 07, 2018 at 01:19:31PM -0800, Darrick J. Wong wrote:
->> From: Darrick J. Wong <darrick.wong@oracle.com>
->>
->> xfs_check has been long obsolete, so stop running it automatically
->> after every test.  Tests that explicitly want xfs_check can call it
->> via _scratch_xfs_check or _xfs_check; that part doesn't go away.
->>
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Feb 14, 2018 at 02:56:51PM -0500, Brian Foster wrote:
+> On Wed, Feb 14, 2018 at 10:12:00AM -0800, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > Here's a bunch of patches fixing the AGFL padding problem once and for
+> > all.  When the v5 disk format was rolled out, the AGFL header definition
+> > had a different padding size on 32-bit vs 64-bit systems, with the
+> > result that XFS_AGFL_SIZE reports different maximum lengths depending on
+> > the compiler.  In Linux 4.5 we fixed the structure definition, but this
+> > has lead to sporadic corruption reports on filesystems that were
+> > unmounted with a pre-4.5 kernel and a wrapped AGFL and then remounted on
+> > a 4.5+ kernel.
+> > 
+> > To deal with these corruption problems, we introduce a new ROCOMPAT
+> > feature bit to indicate that the AGFL has been scanned and guaranteed
+> > not to wrap.  We then amend the mounting code to find broken wrapping,
+> > fix the wrapping, and if we had to fix anything, set the new ROCOMPAT
+> > flag.  The ROCOMPAT flag prevents re-mounting on unpatched kernels, so
+> > this series will likely have to be backported.
+> > 
 > 
-> I'd like to see an ACK on this from XFS community.
+> I haven't taken a close enough look at the code yet, but I'm more
+> curious about the high level approach before getting into that.. IIUC,
+> we'll set the rocompat bit iff we mount on a fixed kernel, found the
+> agfl wrapped and detected the agfl size mismatch problem. So we
+> essentially only restrict mounts on older kernels if we happen to detect
+> the size mismatch conditions on the newer kernel.
 
-So, I thought we still had a local implementation of xfs_check-via-xfs_db
-in xfstests as an intentional validation against xfs_repair:
+Correct.
 
-+# xfs_check script is planned to be deprecated. But, we want to
-+# be able to invoke "xfs_check" behavior in xfstests in order to
-+# maintain the current verification levels.
-+_xfs_check()
+> IOW, a user can mount back and forth between good/bad kernels so long as
+> the agfl isn't wrapped during a mount on the good kernel, and then at
+> some seemingly random point in the future said user might be permanently
+> restricted from rw mounts on the older kernel based on the issue being
+> detected/cleared in the new kernel. That seems a bit.. heavy-handed for
+> such an unpredictable condition. Why is a warning that the user has a
+> busted/old/in-need-of-upgrade kernel in the mix not sufficient?
 
-IOWS, "xfs_check is obsolete" is true for users/admins, but I thought
-we were keeping it alive as a developer tool for now, and that it had
-a place in xfstests.  No?
+I like the rocompat approach because we can prevent admins from mounting
+filesystems on old kernels, rather than letting the mount proceed and
+then blowing up in the middle of a transaction some time later when
+something actually hits the badly wrapped AGFL.  If we backport this
+series to the relevant distro kernels (ha!) then they will work without
+incident.
 
-(But if it /is/ removed, wouldn't you kill off the _xfs_check() function as
-well, to truly nuke it from orbit?)
+The thing I dislike about this approach is that now we have this
+rocompat bit that has to be backported everywhere, and it only triggers
+in the specific case that (a) you have a v5 filesystem that (b) you run
+a mixed environment with 4.5+ and pre-4.5 kernels and (c) happened to
+land on a badly wrapped AGFL.  It's a lot of work for us (and the distro
+partners) but it's the least amount of work for admins -- so long as
+they keep their environments up to date.
 
-Anyway, I don't think I understand the justification for this change;
-it was explicitly kept alive in xfstests since commit 
+A second solution I considered was fixing the AGFL at mount/remount-rw
+time like we do in this series and adding code to move the AGFL to the
+start at freeze/remount-ro/umount time.  For the common case where we
+don't crash, we handle the mixed kernel environment seamlessly.  This
+would be my primary choice except that it'll still blow up if we wrap
+the AGFL, crash, and reboot with an old kernel.  Here too it won't fail
+at mount time, it'll fail some time after mount when something tries to
+modify an AGFL.
 
-	187bccd xfstests: Remove dependence of xfs_check script
+One solution involves a fair amount of backport and sw redeployment but
+makes it obvious when things are broken; the other solution handles it
+*almost* seamlessly... until it doesn't.
 
-and "xfs_check is obsolete for admins" doesn't seem to be sufficient rationale.
-
-What do we gain or lose by removing this from _check_xfs_filesystem?
-
--Eric
-
-> Thanks,
-> Eryu
+> I guess I'm just not really seeing the value in using the feature bit
+> for this as opposed to doing something more simple like detect an agfl
+> with a size mismatch with respect to the current kernel and forcing the
+> read-only mount in that instance. E.g., similar to how we handle log
+> recovery byte order mismatches:
 > 
->> ---
->>  common/xfs |   17 -----------------
->>  1 file changed, 17 deletions(-)
->>
->>
->> diff --git a/common/xfs b/common/xfs
->> index 3dba40d..c63e5dc 100644
->> --- a/common/xfs
->> +++ b/common/xfs
->> @@ -386,23 +386,6 @@ _check_xfs_filesystem()
->>  		ok=0
->>  	fi
->>  
->> -	# xfs_check runs out of memory on large files, so even providing the test
->> -	# option (-t) to avoid indexing the free space trees doesn't make it pass on
->> -	# large filesystems. Avoid it.
+>   "dirty log written in incompatible format - can't recover"
+> 
+> But in this case it would be more something like "agfl in invalid state,
+> mounting read-only, please run xfs_repair and ditch that old kernel that
 
+Good point, third option: if the agfl wraps badly, printk that the agfl
+is in an invalid state and that the user must mount with -o fixagfl
+(which will fix the problem and set the rocompat flag) and upgrade the
+kernel.  Seems kinda clunky... but all of these solutions have a wart of
+some kind.
 
->> -	if [ "$LARGE_SCRATCH_DEV" != yes ]; then
->> -		_xfs_check $extra_log_options $device 2>&1 |\
->> -			_fix_malloc >$tmp.fs_check
->> -	fi
->> -	if [ -s $tmp.fs_check ]; then
->> -		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (c)"
->> -		echo "*** xfs_check output ***"		>>$seqres.full
->> -		cat $tmp.fs_check			>>$seqres.full
->> -		echo "*** end xfs_check output"		>>$seqres.full
->> -
->> -		xfs_metadump $device $seqres.check	>>$seqres.full 2>&1
->> -		ok=0
->> -	fi
->> -
->>  	$XFS_REPAIR_PROG -n $extra_options $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
->>  	if [ $? -ne 0 ]; then
->>  		_log_err "_check_xfs_filesystem: filesystem on $device is inconsistent (r)"
->>
+> caused this in the first place ..." Then we write a FAQ entry that
+> elaborates on how/why a user hit that problem and backport to stable
+> kernels as far and wide as possible. Hm?
+
+I /do/ like the part about writing FAQ to update the kernel.
+
+--D
+
+> Brian
+> 
+> > --D
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
