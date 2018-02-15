@@ -1,78 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52873 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965740AbeBMUfU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Feb 2018 15:35:20 -0500
-Subject: Re: [PATCH v3 2/3] dax: change bdev_dax_supported() to support
- boolean returns
-References: <151813659955.15926.8922476613392258086.stgit@djiang5-desk3.ch.intel.com>
- <151813669915.15926.5489252461577531.stgit@djiang5-desk3.ch.intel.com>
- <20180213203148.GB13682@linux.intel.com>
-From: Dave Jiang <dave.jiang@intel.com>
-Message-ID: <2e99d401-04f5-5a1c-1b7a-6c0fb6054beb@intel.com>
-Date: Tue, 13 Feb 2018 13:35:19 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:52784 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1423532AbeBOQjZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Feb 2018 11:39:25 -0500
+Date: Thu, 15 Feb 2018 08:39:17 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs/015: enlarge the initial fs size
+Message-ID: <20180215163917.GA14582@magnolia>
+References: <20180104054626.14458-1-eguan@redhat.com>
+ <20180214152401.GO18267@eguan.usersys.redhat.com>
+ <20180214164532.GH5217@magnolia>
+ <20180215083317.GQ18267@eguan.usersys.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180213203148.GB13682@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180215083317.GQ18267@eguan.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: darrick.wong@oracle.com, linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
+To: Eryu Guan <eguan@redhat.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-
-
-On 02/13/2018 01:31 PM, Ross Zwisler wrote:
-> On Thu, Feb 08, 2018 at 05:38:19PM -0700, Dave Jiang wrote:
->> The function return values are confusing with the way the function is
->> named. We expect a true or false return value but it actually returns
->> 0/-errno.  This makes the code very confusing. Changing the return values
->> to return a bool where if DAX is supported then return true and no DAX
->> support returns false.
->>
->> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
->> ---
+On Thu, Feb 15, 2018 at 04:33:17PM +0800, Eryu Guan wrote:
+> On Wed, Feb 14, 2018 at 08:45:32AM -0800, Darrick J. Wong wrote:
+> > On Wed, Feb 14, 2018 at 11:24:01PM +0800, Eryu Guan wrote:
+> > > On Thu, Jan 04, 2018 at 01:46:26PM +0800, Eryu Guan wrote:
+> > > > Kernel commit f59cf5c29919 ("xfs: remove "no-allocation"
+> > > > reservations for file creations") is known to cause earlier ENOSPC
+> > > > conditions, and xfs/015 is affected in the way that no new file/dir
+> > > > can be created in a newly created 16M XFS with both reflink and
+> > > > rmapbt enabled, thus xfs/015 fails due to the missing test dirs.
+> > > > 
+> > > > So enlarge the initial fs size to 32M that we're able to create new
+> > 
+> > 32M?  I thought this was a 64M -> 128M expansion?
 > 
->> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
->> index 655699321c45..636b9c5e1bff 100644
->> --- a/fs/ext2/super.c
->> +++ b/fs/ext2/super.c
->> @@ -958,9 +958,10 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
->>  	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
->>  
->>  	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
->> -		err = sb_dax_supported(sb, blocksize);
->> -		if (err)
->> +		if(!sb_dax_supported(sb, blocksize)) {
->> +			err = -EIO;
-> 
-> No need to set 'err' here.  This is just a temporary variable used for some
-> local checks later in the function.  'ret' is the value that will be returned,
-> and that is already initialized to -EINVAL which should be fine.
+> The final fs size (after growfs) is expanded from 64M to 128M, but we
+> need the initial fs size (prior to growfs) to be 32M instead of 16M.
 
-Change ret to -EIO instead to set the correct error return code?
+Ahh, ok.  The initial size is doubled (and the test still grows the fs
+4x), so we need to double the _require_space.
 
 > 
->>  			goto failed_mount;
->> +		}
->>  	}
->>  
->>  	/* If the blocksize doesn't match, re-read the thing.. */
->> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
->> index 804a2d6729af..7b7650ac9c53 100644
->> --- a/fs/ext4/super.c
->> +++ b/fs/ext4/super.c
->> @@ -3712,9 +3712,10 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
->>  					" that may contain inline data");
->>  			goto failed_mount;
->>  		}
->> -		err = sb_dax_supported(sb, blocksize);
->> -		if (err)
->> +		if (!sb_dax_supported(sb, blocksize)) {
->> +			err = -EIO;
+> > 
+> > > > dir/file before growing the filesystem size.
+> > > > 
+> > > > Signed-off-by: Eryu Guan <eguan@redhat.com>
+> > 
+> > I don't think this hurts anything, but otoh I couldn't reproduce the
+> > failure you're seeing on my setup.
 > 
-> Same comment as with the ext2 case - no need to set 'err', 'ret' is -EINVAL
-> and has you covered.
+> You need "both reflink and rmapbt enabled", I can still reproduce it
+> with v4.16-rc1 kernel with MKFS_OPTIONS="-m reflink=1,rmapbt=1".
 > 
+> Thanks for reviewing!
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
