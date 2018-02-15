@@ -1,44 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:36815 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1031527AbeBNWn2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 17:43:28 -0500
-Date: Thu, 15 Feb 2018 09:43:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: rewrite the fdatasync optimization
-Message-ID: <20180214224326.GL7000@dastard>
-References: <20180205073933.17065-1-hch@lst.de>
- <20180205221726.c2hdvaairki27gxf@destitution>
- <20180206072356.GB1649@lst.de>
- <20180208231725.GH20266@dastard>
- <20180213150402.GA15030@lst.de>
- <20180213232640.GG6778@dastard>
- <20180214155343.GA4472@lst.de>
+Received: from mga01.intel.com ([192.55.52.88]:6369 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1034081AbeBOR64 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Feb 2018 12:58:56 -0500
+Subject: Re: [PATCH v4 1/3] fs: allow per-device dax status checking for
+ filesystems
+References: <151871644696.27617.4390718895806529377.stgit@djiang5-desk3.ch.intel.com>
+ <151871655228.27617.3514495396592472682.stgit@djiang5-desk3.ch.intel.com>
+ <20180215175241.GA25223@infradead.org>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <f5f93cd1-4d9e-c794-99fb-28daa0d1669d@intel.com>
+Date: Thu, 15 Feb 2018 10:58:54 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180214155343.GA4472@lst.de>
+In-Reply-To: <20180215175241.GA25223@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: darrick.wong@oracle.com, linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
 
-On Wed, Feb 14, 2018 at 04:53:43PM +0100, Christoph Hellwig wrote:
-> Ok, for the case where the same file also accessed throught NFS is
-> locally written and fdatasync we'll run into an issue.
+On 02/15/2018 10:52 AM, Christoph Hellwig wrote:
+>>  /**
+>> - * __bdev_dax_supported() - Check if the device supports dax for filesystem
+>> + * bdev_dax_supported() - Check if the device supports dax for filesystem
+>>   * @sb: The superblock of the device
+>> + * @bdev: block device to check
+>>   * @blocksize: The block size of the device
+>>   *
+>>   * This is a library function for filesystems to check if the block device
+>> @@ -82,9 +83,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+>>   *
+>>   * Return: negative errno if unsupported, 0 if supported.
+>>   */
+>> -int __bdev_dax_supported(struct super_block *sb, int blocksize)
+>> +int bdev_dax_supported(struct super_block *sb, struct block_device *bdev,
+>> +		       int blocksize)
+>>  {
+>> -	struct block_device *bdev = sb->s_bdev;
+>>  	struct dax_device *dax_dev;
+>>  	pgoff_t pgoff;
+>>  	int err, id;
 > 
-> But we already have the exact same issue on NFSv3 which always uses
-> ctime and never looks at iversion.
+> This now only uses sb for sb->s_id.  It might be better to use bdevname
+> to print the device name and don't bother passing a sb at all.
+> 
 
-The NFSv3 server won't be querying the iversion field, so on
-upstream kernels it will never change or need to be logged on local
-fs accesses. Hence I don't think we need to care about NFSv3 at all
-here....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think Darrick wanted to keep the API the same for non-XFS users. I'm
+ok with dropping the passed in sb if Darrick has no objections.
