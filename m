@@ -1,59 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:59554 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161731AbeBNSPP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 13:15:15 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1EI7FTi096095
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:15:13 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2g4t0yr5hu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:15:12 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w1EICPoA006916
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:12:25 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1EICPrc031346
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Feb 2018 18:12:25 GMT
-Subject: [PATCH 4/4] xfs: enable fixed agfl feature
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 14 Feb 2018 10:12:24 -0800
-Message-ID: <151863194454.12012.14421928416868243601.stgit@magnolia>
-In-Reply-To: <151863191996.12012.10898223924122487735.stgit@magnolia>
-References: <151863191996.12012.10898223924122487735.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:48532 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752371AbeBODqO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Feb 2018 22:46:14 -0500
+Date: Wed, 14 Feb 2018 19:46:13 -0800
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: freezing system for several second on high I/O [kernel 4.15]
+Message-ID: <20180215034613.GC5775@bombadil.infradead.org>
+References: <20180206060840.kj2u6jjmkuk3vie6@destitution>
+ <CABXGCsOgcYyj8Xukn7Pi_M2qz2aJ1MJZTaxaSgYno7f_BtZH6w@mail.gmail.com>
+ <1517974845.4352.8.camel@gmail.com>
+ <20180207065520.66f6gocvxlnxmkyv@destitution>
+ <1518255240.31843.6.camel@gmail.com>
+ <1518255352.31843.8.camel@gmail.com>
+ <20180211225657.GA6778@dastard>
+ <1518643669.6070.21.camel@gmail.com>
+ <20180214215245.GI7000@dastard>
+ <1518666178.6070.25.camel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1518666178.6070.25.camel@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: mikhail <mikhail.v.gavrilov@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Feb 15, 2018 at 08:42:58AM +0500, mikhail wrote:
+> [101309.501428]  (sb_internal#2){.+.+}, at: [<00000000df1d676f>] xfs_trans_alloc+0xe2/0x120 [xfs]
+> [101309.501465] 
+>                 but task is already holding lock:
+> [101309.501466]  (fs_reclaim){+.+.}, at: [<000000002ed6959d>] fs_reclaim_acquire.part.74+0x5/0x30
+> [101309.501470] 
+>                 which lock already depends on the new lock.
 
-Now that we have all the FIXED AGFL bits ready, enable the feature flag.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_format.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 6a7d65f..8c1425d 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -466,7 +466,8 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK | \
-+		 XFS_SB_FEAT_RO_COMPAT_FIXED_AGFL)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-
+This one's an already-known mis-annotation.
