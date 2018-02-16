@@ -1,139 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:60884 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752682AbeBGHJx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Feb 2018 02:09:53 -0500
-Date: Wed, 7 Feb 2018 18:10:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/7] xfs: refactor and tablise growfs
-Message-ID: <20180207071045.5nlw7b7fozldohgs@destitution>
+Received: from mx1.redhat.com ([209.132.183.28]:42884 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967661AbeBPM40 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Feb 2018 07:56:26 -0500
+Date: Fri, 16 Feb 2018 07:56:25 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 7/7] xfs: rework secondary superblock updates in growfs
+Message-ID: <20180216125624.GB53090@bfoster.bfoster>
 References: <20180201064202.7174-1-david@fromorbit.com>
- <20180206234407.GN4849@magnolia>
+ <20180201064202.7174-8-david@fromorbit.com>
+ <20180209161240.GD21413@bfoster.bfoster>
+ <20180215223138.GT7000@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180206234407.GN4849@magnolia>
+In-Reply-To: <20180215223138.GT7000@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Feb 06, 2018 at 03:44:07PM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 01, 2018 at 05:41:55PM +1100, Dave Chinner wrote:
-> > Hi folks,
+On Fri, Feb 16, 2018 at 09:31:38AM +1100, Dave Chinner wrote:
+> On Fri, Feb 09, 2018 at 11:12:41AM -0500, Brian Foster wrote:
+> > On Thu, Feb 01, 2018 at 05:42:02PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Right now we wait until we've committed changes to the primary
+> > > superblock before we initialise any of the new secondary
+> > > superblocks. This means that if we have any write errors for new
+> > > secondary superblocks we end up with garbage in place rather than
+> > > zeros or even an "in progress" superblock to indicate a grow
+> > > operation is being done.
+> > > 
+> > > To ensure we can write the secondary superblocks, initialise them
+> > > earlier in the same loop that initialises the AG headers. We stamp
+> > > the new secondary superblocks here with the old geometry, but set
+> > > the "sb_inprogress" field to indicate that updates are being done to
+> > > the superblock so they cannot be used.  This will result in the
+> > > secondary superblock fields being updated or triggering errors that
+> > > will abort the grow before we commit any permanent changes.
+> > > 
+> > > This also means we can change the update mechanism of the secondary
+> > > superblocks.  We know that we are going to wholly overwrite the
+> > > information in the struct xfs_sb in the buffer, so there's no point
+> > > reading it from disk. Just allocate an uncached buffer, zero it in
+> > > memory, stamp the new superblock structure in it and write it out.
+> > > If we fail to write it out, then we'll leave the existing sb (old or
+> > > new w/ inprogress) on disk for repair to deal with later.
+> > > 
+> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_fsops.c | 92 ++++++++++++++++++++++++++++++++----------------------
+> > >  1 file changed, 55 insertions(+), 37 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > index 113be7dbdc81..7318cebb591d 100644
+> > > --- a/fs/xfs/xfs_fsops.c
+> > > +++ b/fs/xfs/xfs_fsops.c
+> > ...
+> > > @@ -630,43 +653,27 @@ xfs_growfs_imaxpct(
+> > >  
+> > ...
+> > >  static int
+> > >  xfs_growfs_update_superblocks(
+> > ...
+> > >  	/* update secondary superblocks. */
+> > >  	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+> > > -		error = 0;
+> > > -		/*
+> > > -		 * new secondary superblocks need to be zeroed, not read from
+> > > -		 * disk as the contents of the new area we are growing into is
+> > > -		 * completely unknown.
+> > > -		 */
+> > > -		if (agno < oagcount) {
+> > > -			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+> > > -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> > > -				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
+> > > -				  &xfs_sb_buf_ops);
+> > > -		} else {
+> > > -			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
+> > > -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> > > -				  XFS_FSS_TO_BB(mp, 1), 0);
+> > > -			if (bp) {
+> > > -				bp->b_ops = &xfs_sb_buf_ops;
+> > > -				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+> > > -			} else
+> > > -				error = -ENOMEM;
+> > > -		}
+> > > +		struct xfs_buf		*bp;
+> > >  
+> > > +		bp = xfs_growfs_get_hdr_buf(mp,
+> > > +				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+> > > +				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
 > > 
-> > This is a series I posted months ago with the first thinspace
-> > filesystem support. There was no comments on any of these patches
-> > because all the heat and light got focussed on the growfs API.
-> > I'm posting this separately to avoid that problem again....
-> 
-> ...just in time to collide head-on with the online repair series that I
-> am planning to push out for review for 4.17. :)
-
-Yuck. :(
-
-> > Anyway, the core of this change is to make the growfs code much
-> > simpler to extend. Most of the code that does structure
-> > initialisation is cookie-cutter code and it's whacked into one great
-> > big function. This patch set splits it up into separate functions
-> > and uses common helper functions where possible. The different
-> > structures and their initialisation definitions are now held in a
-> > table, so when we add new stuctures or modify existing structures
-> > it's a simple and isolate change.
+> > This all seems fine to me up until the point where we use uncached
+> > buffers for pre-existing secondary superblocks. This may all be fine now
+> > if nothing else happens to access/use secondary supers, but it seems
+> > like this essentially enforces that going forward.
 > > 
-> > The reworked initialisation code is suitable for moving to libxfs
-> > and converting mkfs.xfs to use it for the initial formatting of
-> > the filesystem. This will take more work to acheive, so this
-> > patch set stops short of moving the code to libxfs.
+> > Hmm, I see that scrub does appear to look at secondary superblocks via
+> > cached buffers. Shouldn't we expect this path to maintain coherency with
+> > an sb buffer that may have been read/cached from there?
 > 
-> Or maybe I'll just pull the patches into my dev tree and move all the
-> code to libxfs /now/ since I don't see much difference between growing
-> extra limbs and regrowing new body parts.  The "repair" code I've
-> written so far chooses to rebuild the entire data structure from other
-> parts rather than trying to save an existing structure:
+> Good catch! I wrote this before scrub started looking at secondary
+> superblocks. As a general rulle, we don't want to cache secondary
+> superblocks as they should never be used by the kernel except in
+> exceptional situations like grow or scrub.
 > 
-> 1. Lock the AG{I,F,FL} header/inode/whatever we're repairing.
-> 2. Gather all the data that would have been in that data structure.
-> 3. Make a list of all the blocks with the relevant rmap owner.
-> 4. Make a list of all the blocks with the relevant rmap owner that are
->    owned by any other structure.  For example, if we're rebuilding the
->    inobt then we make a list of all the OWN_INOBT blocks, and then we
->    iterate the finobt to make a list of finobt blocks.
-> 5. Allocate a new block for the root, if necessary.
-> 6. Initialize the data structure.
-> 7. Import all the data gathered in step 2.
-> 8. Subtract the list made in step 4 from the list made in step 3.  These
->    are all the blocks that were owned by the structure we just rebuilt,
->    so free them.
-> 9. Commit transaction, release locks, we're done.
+> I'll have a look at making this use cached buffers that get freed
+> immediately after we release them (i.e. don't go onto the LRU) and
+> that should solve the problem.
 > 
-> (Steps 7-8 involve rolling transactions.)
+
+Ok. Though that sounds a bit odd. What is the purpose of a cached buffer
+that is not cached? Isn't the behavior you're after here (perhaps
+analogous to pagecache coherency management between buffered/direct I/O)
+more cleanly implemented using a cache invalidation mechanism? E.g.,
+invalidate cache, use uncached buffer (then perhaps invalidate again).
+
+I guess I'm also a little curious why we couldn't continue to use cached
+buffers here, but it doesn't really matter to me that much so long as
+the metadata ends up coherent between subsystems..
+
+Brian
+
+> Cheers,
 > 
-> I think growfs'ing a new AG is basically steps 1, 5, 6, 9, with the only
-> twist being that growfs uses a delwri list instead of joining things to
-> a transaction. 
-
-Actually, it's a lot more different than just that. It's not
-transactional, and we can't use cached buffers (and hence
-transactions) because we're writing beyond the current valid end
-of the filesystem. i.e. we're initialising all the structures before
-we modify the superblock to indicate they are valid. That's also why
-all the dirty buffers are gathered on a delwri list rather than in a
-transaction context and we don't have to worry about locking...
-
-> For this to work there needs to be separate functions to
-> initialize a block and to deal with writing the xfs_buf to disk; I think
-> I see this happening in the patchset, but tbh I suck at reading diff. :)
-
-Yeah, there are separate functions to initialise the different
-structures, but common code controls the delwri list addition and
-writeback.
-
-> > There are also mods to the secondary superblock update algorithm
-> > which make it more resilient in the face of writeback failures. We
-> > use a two pass update now - the main growfs loop now initialised
-> > secondary superblocks with sb_inprogess = 1 to indicate it is not
-> > in a valid state before we make any modifications, then after teh
-> > transactional grow we do a second pass to set sb_inprogess = 0 and
-> > mark them valid.
-> > 
-> > This means that if we fail to write any secondary superblock, repair
-> > is not going to get confused by partial grow state. If we crash
-> > during the initial write, nothing has changed in the primary
-> > superblock. If we crash after the primary sb grow, then we'll know
-> > exactly what secondary superblocks did not get updated because
-> > they'll be the ones with sb_inprogress = 1 in them. Hence the
-> > recovery process becomes much easier as the parts of the fs that
-> > need updating are obvious....
-> 
-> I assume there will eventually be some kind of code to detect
-> sb_inprogress==1 and fix it as soon as we try to write an AG?
-
-Well, sort of. We never actually read secondary superblocks, except
-in repair and now scrub. But reapir needs to know if secondary
-superblocks are stale or not yet valid - right now it's an interesting
-situation to be in if grow succeeds and then fails to write all the
-secondary superblocks because we can't tell the difference between
-per-grow and post-grow sbs. At least with sb_inprogress set in these
-secondary superblocks we'll be able to tell how far the update got
-before failing, and hence that makes it easier to recover to
-consistent state.
-
-Ultimately, I want to make the secondary superblock update loop a
-set of ordered buffers associated with the primary superblock change
-transaction. That way we can make log recovery correctly recover
-from crashes during grow operations (i.e. it can re-run the
-secondary sb updates based on the sb_inprogress flags...).
-
-Or alternatively, turn grow into a set of defered ops with intents
-so we can do the superblock size change first and always be able to
-complete the secondary superblock updates in a transactional
-manner...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
