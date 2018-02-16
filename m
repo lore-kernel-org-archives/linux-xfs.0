@@ -1,139 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:14753 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751576AbeBUVFz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Feb 2018 16:05:55 -0500
-Date: Thu, 22 Feb 2018 08:04:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2 2/2] xfs: Fix "use after free" of intent items
-Message-ID: <20180221210404.GF7000@dastard>
-References: <20180221022826.7020-1-chandan@linux.vnet.ibm.com>
- <20180221022826.7020-2-chandan@linux.vnet.ibm.com>
- <20180221040109.GE7000@dastard>
- <18759094.m032Vjinrq@localhost.localdomain>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:51370 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753922AbeBPIH7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Feb 2018 03:07:59 -0500
+Received: by mail-wm0-f47.google.com with SMTP id r71so1584477wmd.1
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Feb 2018 00:07:58 -0800 (PST)
+Subject: Re: xfs_buf_lock vs aio
+References: <20180207233320.GB20367@dastard>
+ <ed83833b-5024-40f2-b335-2dcab7fddf0e@scylladb.com>
+ <20180208221153.GF20266@dastard>
+ <30274e7a-4029-73b8-0d8b-cdfda450e3bc@scylladb.com>
+ <20180209231015.GI20266@dastard>
+ <697bf891-e7c4-4d60-e2ce-f1ba6935b38b@scylladb.com>
+ <20180213051850.GE6778@dastard>
+ <f8b3b7a4-eba4-d5ab-1748-a8382a2a8fd6@scylladb.com>
+ <20180214235616.GM7000@dastard>
+ <1f90f49b-e11d-3140-f73b-5834e52b5f8a@scylladb.com>
+ <20180215213030.GO7000@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <946349de-471f-f766-47d8-f32959990cc6@scylladb.com>
+Date: Fri, 16 Feb 2018 10:07:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <18759094.m032Vjinrq@localhost.localdomain>
+In-Reply-To: <20180215213030.GO7000@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, darrick.wong@oracle.com, bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 21, 2018 at 11:15:22AM +0530, Chandan Rajendra wrote:
-> On Wednesday, February 21, 2018 9:31:09 AM IST Dave Chinner wrote:
-> > On Wed, Feb 21, 2018 at 07:58:26AM +0530, Chandan Rajendra wrote:
-> > > generic/388 can cause the following "use after free" error to occur,
-> > > 
-> > >  =============================================================================
-> > >  BUG xfs_efi_item (Not tainted): Poison overwritten
-> > >  -----------------------------------------------------------------------------
-> > > 
-> > >  Disabling lock debugging due to kernel taint
-> > >  INFO: 0x00000000292c4bd4-0x00000000292c4bd4. First byte 0x6a instead of 0x6b
-> > >  INFO: Allocated in .kmem_zone_alloc+0xcc/0x190 age=79 cpu=0 pid=12436
-> > >         .__slab_alloc+0x54/0x80
-> > >         .kmem_cache_alloc+0x124/0x350
-> > >         .kmem_zone_alloc+0xcc/0x190
-> > >         .xfs_efi_init+0x48/0xf0
-> > >         .xfs_extent_free_create_intent+0x40/0x130
-> > >         .xfs_defer_intake_work+0x74/0x1e0
-> > >         .xfs_defer_finish+0xac/0x5c0
-> > >         .xfs_itruncate_extents+0x170/0x590
-> > >         .xfs_inactive_truncate+0xcc/0x170
-> > >         .xfs_inactive+0x1d8/0x2f0
-> > >         .xfs_fs_destroy_inode+0xe4/0x3d0
-> > >         .destroy_inode+0x68/0xb0
-> > >         .do_unlinkat+0x1e8/0x390
-> > >         system_call+0x58/0x6c
-> > >  INFO: Freed in .xfs_efi_item_free+0x44/0x80 age=79 cpu=0 pid=12436
-> > >         .kmem_cache_free+0x120/0x2b0
-> > >         .xfs_efi_item_free+0x44/0x80
-> > >         .xfs_trans_free_items+0xd4/0x130
-> > >         .__xfs_trans_commit+0xd0/0x350
-> > >         .xfs_trans_roll+0x4c/0x90
-> > >         .xfs_defer_trans_roll+0xa4/0x2b0
-> > >         .xfs_defer_finish+0xb8/0x5c0
-> > >         .xfs_itruncate_extents+0x170/0x590
-> > >         .xfs_inactive_truncate+0xcc/0x170
-> > >         .xfs_inactive+0x1d8/0x2f0
-> > >         .xfs_fs_destroy_inode+0xe4/0x3d0
-> > >         .destroy_inode+0x68/0xb0
-> > >         .do_unlinkat+0x1e8/0x390
-> > >         system_call+0x58/0x6c
-> > > 
-> > > This happens due to the following interaction,
-> > > 1. xfs_defer_finish() creates "extent free" intent item and adds it to the
-> > >    per-transction list of log items.
-> > > 2. xfs_defer_trans_roll() invokes __xfs_trans_commit(). Here, if the
-> > >    XFS_MOUNT_FS_SHUTDOWN flag is set, we invoke io_unlock() operation
-> > >    for each of the log items in the per-transction list. For "extent
-> > >    free" log items xfs_efi_item_unlock() gets invoked which then frees
-> > >    the xfs_efi_log_item.
-> > 
-> > Isn't this the problem? i.e. it's freeing the EFI item because the
-> > abort flag is set, but there are still other references to it? Isn't
-> > this wrong now that we have a cleanup function that will free the
-> > EFI is the commit fails? i.e: this ....
-> > 
-> > > 3. xfs_defer_trans_roll() then invokes xfs_defer_trans_abort(). Since the
-> > >    xfs_defer_pending->dfp_intent is still set to the "extent free" intent
-> > >    item, we invoke xfs_extent_free_abort_intent(). This accesses the
-> > >    previously freed xfs_efi_log_item to decrement the ref count.
-> > 
-> > ... will free the EFI correctly on transaction commit failure and so
-> > we should be able to remove the "free immediately" hack from the
-> > iop_unlock() code that we used to need because there was no external
-> > reference that could free the EFI on commit failure....
-> 
-> The EFI log item would have its ref count initialized to 2 (One for the
-> CIL/AIL and one for EFD).
+On 02/15/2018 11:30 PM, Dave Chinner wrote:
+> On Thu, Feb 15, 2018 at 11:36:54AM +0200, Avi Kivity wrote:
+>> On 02/15/2018 01:56 AM, Dave Chinner wrote:
+>> A little bird whispered in my ear to try XFS_IOC_OPEN_BY_HANDLE to
+>> avoid the the time update lock, so we'll be trying that next, to
+>> emulate lazytime.
+> Biggest problem with that is it requires root permissions. It's not
+> a solution that can be deployed in practice, so I haven't bothered
+> suggesting it as something to try.
+>
+> If you want to try lazytime, an easier test might be to rebuild the
+> kernel with this change below to support the lazytime mount option
+> and not log the timestamp updates. This is essentially the mechanism
+> that I'll use for this, but it will need to grow more stuff to have
+> the correct lazytime semantics...
+>
 
-And that's part of what has always been wrong with this code - it
-takes references for things that don't really have references yet,
-instead of taking them when the EFI is actually referenced. Hence we
-have to hack around that with things like ignoring the reference
-count when we get an abort signal, because we haven't reference
-counted the object properly.
+We tried open by handle to see if lazytime would provide relief, but it 
+looks like it just pushes the lock acquisition to another place:
 
-> In the "use after free" case the EFI was not
-> committed to the CIL. At this point, we don't have any entity owning a
-> reference to the log item since the EFI was not committed to the CIL nor was
-> the EFD created. Hence IMHO, freeing the log item is the right approach.
+reactor-8 16033 [009] 1482121.241125:                xfs:xfs_ilock:
+dev 9:2 ino 0xc0004bac flags ILOCK_EXCL caller kretprobe_trampoline
+             7fffa01ca572 xfs_ilock ([kernel.kallsyms])
+             7fff8105f5a0 kretprobe_trampoline ([kernel.kallsyms])
+             7fff812bd2ea iomap_apply ([kernel.kallsyms])
+             7fff812bdb81 iomap_dio_rw ([kernel.kallsyms])
+             7fffa01bbc26 xfs_file_dio_aio_write ([kernel.kallsyms])
+             7fffa01bc13f xfs_file_write_iter ([kernel.kallsyms])
+             7fff812ab24f aio_write ([kernel.kallsyms])
+             7fff812ab90e do_io_submit ([kernel.kallsyms])
+             7fff812ac4c0 sys_io_submit ([kernel.kallsyms])
+             7fff81005917 do_syscall_64 ([kernel.kallsyms])
+             7fff81802115 return_from_SYSCALL_64 ([kernel.kallsyms])
+                    f27f9 syscall (/usr/lib64/libc-2.17.so)
+                       1c [unknown] ([unknown])
+                   142e60 reactor_backend_epoll::~reactor_backend_epoll
+(/usr/bin/scylla)
 
-No, we clearly have a reference - the deferops structure has a
-reference to it. If it didn't have a reference, then we wouldn't
-have a use after free situation....
+Probably, iomap_apply calls xfs_file_iomap_begin, which calls xfs_ilock().
 
-> Also, the cleanup function (i.e. xfs_extent_free_abort_intent()) would
-> decrement the ref count by 1 i.e. Its refcount would go from the initial value
-> of 2 to 1. Hence the cleanup function won't free the EFI log item causing a
-> memory leak.
+It consults need_excl_ilock() to see whether it wants to lock or not:
 
-No, then the xfs_extent_free_abort_intent() call releases it,
-dropping the remaining reference that was intended for the EFD
-which, because we aborted, will never take over control of that
-reference.
+static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
+{
+         /*
+          * COW writes will allocate delalloc space, so we need to make sure
+          * to take the lock exclusively here.
+          */
+         if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | 
+IOMAP_ZERO)))
+                 return true;
+         if ((flags & IOMAP_DIRECT) && (flags & IOMAP_WRITE))
+                 return true;
+         return false;
+}
 
-i.e. the two references that are created at initialisation are for
-the EFI itself as it passes through the CIL and journal commit, and
-the second reference is used by the defer_ops it is attached to and
-then handed to the EFD for it's pass through the CIL and journal
-commit.
+However, that function can EAGAIN (it does for IOLOCK) so maybe we can 
+change xfs_ilock to xfs_ilock_nowait and teach it about not waiting for 
+ILOCK too.
 
-If we never commit the EFI, then we need to release that reference
-(on abort), and then we need to clean up the extra reference that is
-destined for the EFD which is held by the deferops. That's done by
-xfs_extent_free_abort_intent().
-
-And I'm guessing that we need to make sure the same fix goes through
-all the other items that are used as deferops intents that were
-modeled on the EFI/EFD infrastructure, too.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
