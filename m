@@ -1,212 +1,257 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37114 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:33742 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755779AbeBPRbH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Feb 2018 12:31:07 -0500
-Date: Fri, 16 Feb 2018 09:26:07 -0800
+        with ESMTP id S1161687AbeBPR5H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Feb 2018 12:57:07 -0500
+Date: Fri, 16 Feb 2018 09:57:01 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v6 2/3] dax: change bdev_dax_supported() to support
- boolean returns
-Message-ID: <20180216172607.GT5217@magnolia>
-References: <151880058592.43131.558230052922233871.stgit@djiang5-desk3.ch.intel.com>
- <151880066062.43131.82642632079885057.stgit@djiang5-desk3.ch.intel.com>
+Subject: Re: [PATCH v2 0/4] xfs: fix v5 AGFL wrapping
+Message-ID: <20180216175701.GA27629@magnolia>
+References: <151863191996.12012.10898223924122487735.stgit@magnolia>
+ <20180214195651.GB43414@bfoster.bfoster>
+ <20180215020548.GN5217@magnolia>
+ <20180215131630.GA48590@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151880066062.43131.82642632079885057.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <20180215131630.GA48590@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>
-Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 16, 2018 at 10:04:20AM -0700, Dave Jiang wrote:
-> The function return values are confusing with the way the function is
-> named. We expect a true or false return value but it actually returns
-> 0/-errno.  This makes the code very confusing. Changing the return values
-> to return a bool where if DAX is supported then return true and no DAX
-> support returns false.
+On Thu, Feb 15, 2018 at 08:16:30AM -0500, Brian Foster wrote:
+> On Wed, Feb 14, 2018 at 06:05:48PM -0800, Darrick J. Wong wrote:
+> > On Wed, Feb 14, 2018 at 02:56:51PM -0500, Brian Foster wrote:
+> > > On Wed, Feb 14, 2018 at 10:12:00AM -0800, Darrick J. Wong wrote:
+> > > > Hi all,
+> > > > 
+> > > > Here's a bunch of patches fixing the AGFL padding problem once and for
+> > > > all.  When the v5 disk format was rolled out, the AGFL header definition
+> > > > had a different padding size on 32-bit vs 64-bit systems, with the
+> > > > result that XFS_AGFL_SIZE reports different maximum lengths depending on
+> > > > the compiler.  In Linux 4.5 we fixed the structure definition, but this
+> > > > has lead to sporadic corruption reports on filesystems that were
+> > > > unmounted with a pre-4.5 kernel and a wrapped AGFL and then remounted on
+> > > > a 4.5+ kernel.
+> > > > 
+> > > > To deal with these corruption problems, we introduce a new ROCOMPAT
+> > > > feature bit to indicate that the AGFL has been scanned and guaranteed
+> > > > not to wrap.  We then amend the mounting code to find broken wrapping,
+> > > > fix the wrapping, and if we had to fix anything, set the new ROCOMPAT
+> > > > flag.  The ROCOMPAT flag prevents re-mounting on unpatched kernels, so
+> > > > this series will likely have to be backported.
+> > > > 
+> > > 
+> > > I haven't taken a close enough look at the code yet, but I'm more
+> > > curious about the high level approach before getting into that.. IIUC,
+> > > we'll set the rocompat bit iff we mount on a fixed kernel, found the
+> > > agfl wrapped and detected the agfl size mismatch problem. So we
+> > > essentially only restrict mounts on older kernels if we happen to detect
+> > > the size mismatch conditions on the newer kernel.
+> > 
+> > Correct.
+> > 
+> > > IOW, a user can mount back and forth between good/bad kernels so long as
+> > > the agfl isn't wrapped during a mount on the good kernel, and then at
+> > > some seemingly random point in the future said user might be permanently
+> > > restricted from rw mounts on the older kernel based on the issue being
+> > > detected/cleared in the new kernel. That seems a bit.. heavy-handed for
+> > > such an unpredictable condition. Why is a warning that the user has a
+> > > busted/old/in-need-of-upgrade kernel in the mix not sufficient?
+> > 
+> > I like the rocompat approach because we can prevent admins from mounting
+> > filesystems on old kernels, rather than letting the mount proceed and
+> > then blowing up in the middle of a transaction some time later when
+> > something actually hits the badly wrapped AGFL.  If we backport this
+> > series to the relevant distro kernels (ha!) then they will work without
+> > incident.
+> > 
 > 
-> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/dax/super.c |   16 ++++++++--------
->  fs/ext2/super.c     |    3 +--
->  fs/ext4/super.c     |    3 +--
->  fs/xfs/xfs_ioctl.c  |    4 ++--
->  fs/xfs/xfs_super.c  |   12 ++++++------
->  include/linux/dax.h |    6 +++---
->  6 files changed, 21 insertions(+), 23 deletions(-)
+> Ok, so the intent is to "protect" those old kernels from a filesystem
+> that has seen a "fixed" kernel so the _old_ kernel doesn't explode on a
+> filesystem that has a wrapped agfl from a fixed kernel. That sounds
+> reasonable.. I guess what concerns me is that the bit doesn't seem to be
+> used in that manner. A user can always run a fixed kernel, wrap the
+> agfl, then go back to the bad one and cry when it explodes.
 > 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index f037458600aa..a7a30d3794f6 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -80,9 +80,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
->   * This is a library function for filesystems to check if the block device
->   * can be mounted with dax option.
->   *
-> - * Return: negative errno if unsupported, 0 if supported.
-> + * Return: true if supported, false if unsupported
->   */
-> -int bdev_dax_supported(struct block_device *bdev, int blocksize)
-> +bool bdev_dax_supported(struct block_device *bdev, int blocksize)
->  {
->  	struct dax_device *dax_dev;
->  	pgoff_t pgoff;
-> @@ -95,21 +95,21 @@ int bdev_dax_supported(struct block_device *bdev, int blocksize)
->  	if (blocksize != PAGE_SIZE) {
->  		pr_debug("%s: error: unsupported blocksize for dax\n",
->  				bdevname(bdev, buf));
-> -		return -EINVAL;
-> +		return false;
->  	}
->  
->  	err = bdev_dax_pgoff(bdev, 0, PAGE_SIZE, &pgoff);
->  	if (err) {
->  		pr_debug("%s: error: unaligned partition for dax\n",
->  				bdevname(bdev, buf));
-> -		return err;
-> +		return false;
->  	}
->  
->  	dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
->  	if (!dax_dev) {
->  		pr_debug("%s: error: device does not support dax\n",
->  				bdevname(bdev, buf));
-> -		return -EOPNOTSUPP;
-> +		return false;
->  	}
->  
->  	id = dax_read_lock();
-> @@ -121,7 +121,7 @@ int bdev_dax_supported(struct block_device *bdev, int blocksize)
->  	if (len < 1) {
->  		pr_debug("%s: error: dax access failed (%ld)\n",
->  				bdevname(bdev, buf), len);
-> -		return len < 0 ? len : -EIO;
-> +		return false;
->  	}
->  
->  	if ((IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn))
-> @@ -130,10 +130,10 @@ int bdev_dax_supported(struct block_device *bdev, int blocksize)
->  	else {
->  		pr_debug("%s: error: dax support not enabled\n",
->  				bdevname(bdev, buf));
-> -		return -EOPNOTSUPP;
-> +		return false;
->  	}
->  
-> -	return 0;
-> +	return true;
->  }
->  EXPORT_SYMBOL_GPL(bdev_dax_supported);
->  #endif
-> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-> index b8063b640ec1..5e19e1a886b7 100644
-> --- a/fs/ext2/super.c
-> +++ b/fs/ext2/super.c
-> @@ -961,8 +961,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
->  	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
->  
->  	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
-> -		err = bdev_dax_supported(sb->s_bdev, blocksize);
-> -		if (err) {
-> +		if(!bdev_dax_supported(sb->s_bdev, blocksize)) {
+> IOW, if the goal is this kind of retroactive protection, I'd expect the
+> bit to be enabled any time the filesystem is in a state that would cause
+> problems on the old kernel. Technically, that could mean doing something
+> like setting the bit any time an AGFL is in a wrapped state and clearing
+> it when that state clears. Or perhaps setting it unconditionally on
+> mount and leaving it permanently would be another way to satisfy the
+> requirement, though certainly more heavy handed.
 
-Minor spacing nit: if (!bdev...
+The previous version of this series did that, though Dave suggested I
+change it to set the bit only if we actually touched an agfl.  I
+probably should have pushed back harder, but it was only rfc at the
+time.
 
-Otherwise looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Note that what I dislike about other possible combinations of the above,
+> such as setting the bit internally/conditionally and never clearing it
+> (which is what I think this series currently does), is that can
+> potentially fool a user who actually does due diligence to test a
+> filesystem against two kernels (for whatever, probably odd, reason). For
+> example:
+> 
+> - mount fs on good kernel, scribble on it
+> - test my (bad) back up kernel, mount, scribble some more
+> - back to my primary kernels, everything still works, deploy!
+> 
+> So the whole "set the bit unconditionally" thing might be heavy-handed,
+> but at least that is predictable. The set/clear approach is less
+> predictable, but the advantage of that approach is that it is
+> recoverable without putting a user in a bind with no other option but to
+> upgrade.
+> 
+> > The thing I dislike about this approach is that now we have this
+> > rocompat bit that has to be backported everywhere, and it only triggers
+> > in the specific case that (a) you have a v5 filesystem that (b) you run
+> > a mixed environment with 4.5+ and pre-4.5 kernels and (c) happened to
+> > land on a badly wrapped AGFL.  It's a lot of work for us (and the distro
+> > partners) but it's the least amount of work for admins -- so long as
+> > they keep their environments up to date.
+> > 
+> 
+> We should have already backported fixes to stable kernels for the AGFL
+> size problem itself, right? IOW, it really should be a minimal set of
+> users affected by this who haven't updated their old, broken kernels
+> that should have stable updates available by now.
+
+Eric tells me RHEL xfsprogs/kernels ship with the agfl fix reverted /
+not applied, so there are potentially a lot of people who haven't
+updated... :/
+
+(I also find it weird that RHEL7 changed the mkfs defaults post-GA to
+enable v5 by default, doesn't that create compatibility problems?)
+
+> If so, then I agree.. Technicalities aside, I'm not a huge fan of
+> propagating a feature bit all over just to try and isolate those users.
+> Plus with some of the other ideas I'm throwing out above, we'd have to
+> start also thinking about users who might end up using two old kernels
+> that cross the boundary where the feature bit was introduced. Ugh. :P
+> 
+> Yet another way to look at it.. if we have enough users out there using
+> two kernels where one of them happens to be a stale/broken kernel
+> because they haven't upgraded to the agfl fix, what evidence do we have
+> that those users would actually update their variant of the "good agfl"
+> kernel to one that handles the agfl good/bad transition and sets a
+> feature bit? IOW, it seems to me that on some level the ship has sailed.
+
+That's difficult to know.  Some customers have certified configurations
+and never update (and never run mixed environments), others are fairly
+good at pulling down the quarterly updates, and others do risky things
+like run mixed $distrokernel series, because mixing 2.6.39 and 4.1 is
+fun.
+
+> > A second solution I considered was fixing the AGFL at mount/remount-rw
+> > time like we do in this series and adding code to move the AGFL to the
+> > start at freeze/remount-ro/umount time.  For the common case where we
+> > don't crash, we handle the mixed kernel environment seamlessly.  This
+> > would be my primary choice except that it'll still blow up if we wrap
+> > the AGFL, crash, and reboot with an old kernel.  Here too it won't fail
+> > at mount time, it'll fail some time after mount when something tries to
+> > modify an AGFL.
+> > 
+> 
+> Interesting idea, but I also think it would be unfortunate to alter our
+> normal/common runtime behavior to pacify some old, broken kernel that
+> also has stable fixes. To get around the crash thing, we'd probably have
+> to shuffle the AGFL locations on the fly, and that would be even worse
+> IMO.
+
+Agreed, in the long run everyone will be post-4.5 so we should minimize
+the clutter and pain.
+
+> > One solution involves a fair amount of backport and sw redeployment but
+> > makes it obvious when things are broken; the other solution handles it
+> > *almost* seamlessly... until it doesn't.
+> > 
+> > > I guess I'm just not really seeing the value in using the feature bit
+> > > for this as opposed to doing something more simple like detect an agfl
+> > > with a size mismatch with respect to the current kernel and forcing the
+> > > read-only mount in that instance. E.g., similar to how we handle log
+> > > recovery byte order mismatches:
+> > > 
+> > >   "dirty log written in incompatible format - can't recover"
+> > > 
+> > > But in this case it would be more something like "agfl in invalid state,
+> > > mounting read-only, please run xfs_repair and ditch that old kernel that
+> > 
+> > Good point, third option: if the agfl wraps badly, printk that the agfl
+> > is in an invalid state and that the user must mount with -o fixagfl
+> > (which will fix the problem and set the rocompat flag) and upgrade the
+> > kernel.  Seems kinda clunky... but all of these solutions have a wart of
+> > some kind.
+> > 
+> 
+> Hmm, I still think my preferred approach is to mount time detect,
+> enforce read-only and tell the user to xfs_repair[1]. It's the most
+
+I think this is difficult to do for the root fs -- in general I don't
+think initrds ship with xfs_repair and the logic to detect the "refuses
+to mount rw" condition and react to that with xfs_repair and a second
+mount attempt.
+
+Also I think this doesn't work if we do an initial ro mount and then try
+to remount-rw...
+
+> simple implementation as we don't have to carry fixup code in the kernel
+> for such an uncommon situation (which facilitates a broad backport
+> strategy). It protects the users on stable kernels who pull in the
+> latest bug fixes, including the guy who goes from a bad kernel to a good
+> one, and all kernels going forward without having to use a feature bit.
+> We don't do anything for the guy who wraps the agfl on newer kernels and
+> goes back to the bad one, but at some point he just needs to update the
+> broken kernel.
+> 
+> [1] I guess doing a mount time fix up vs. a read-only mount + warning is
+> a separate question from the feature bit. I'd prefer the latter for
+> simplicity, but perhaps there are use cases where the benefit outweighs
+> the risk.
+> 
+> Anyways, that's just my .02. There is no real great option here, I
+> guess. I just think that at some point maybe it's best to fix all the
+> kernels we can to handle the size mismatch, live with the fact that some
+> users might have those old, unfixed kernels and bonk them on the head to
+> upgrade when they (hopefully decreasingly) pop up. Perhaps others can
+> chime in with more thoughts..
+
+Yeah, we could do that too (make all the next releases of
+rhel/ol/debian/ubuntu/sles/whatever quietly fix the bad-wrap agfls and
+skip the feature bit) and just let the unpatched kernels rot.  It keeps
+coming up, though...
 
 --D
 
->  			ext2_msg(sb, KERN_ERR,
->  				"DAX unsupported by block device. Turning off DAX.");
->  			sbi->s_mount_opt &= ~EXT2_MOUNT_DAX;
-> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> index 911eca771853..23debb8313e5 100644
-> --- a/fs/ext4/super.c
-> +++ b/fs/ext4/super.c
-> @@ -3714,8 +3714,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
->  					" that may contain inline data");
->  			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
->  		}
-> -		err = bdev_dax_supported(sb->s_bdev, blocksize);
-> -		if (err) {
-> +		if (!bdev_dax_supported(sb->s_bdev, blocksize)) {
->  			ext4_msg(sb, KERN_ERR,
->  				"DAX unsupported by block device. Turning off DAX.");
->  			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 0effd46b965f..2c70a0a4f59f 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1103,8 +1103,8 @@ xfs_ioctl_setattr_dax_invalidate(
->  	if (fa->fsx_xflags & FS_XFLAG_DAX) {
->  		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
->  			return -EINVAL;
-> -		if (bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
-> -				sb->s_blocksize) < 0)
-> +		if (!bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
-> +				sb->s_blocksize))
->  			return -EINVAL;
->  	}
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index aaaba6e604c4..3634e7eb362c 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1657,17 +1657,17 @@ xfs_fs_fill_super(
->  		sb->s_flags |= SB_I_VERSION;
->  
->  	if (mp->m_flags & XFS_MOUNT_DAX) {
-> -		int	error2 = 0;
-> +		bool rtdev_is_dax = false, datadev_is_dax;
->  
->  		xfs_warn(mp,
->  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
->  
-> -		error = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
-> -				sb->s_blocksize);
-> +		datadev_is_dax = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
-> +			sb->s_blocksize);
->  		if (mp->m_rtdev_targp)
-> -			error2 = bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
-> -					sb->s_blocksize);
-> -		if (error && error2) {
-> +			rtdev_is_dax = bdev_dax_supported(
-> +				mp->m_rtdev_targp->bt_bdev, sb->s_blocksize);
-> +		if (!rtdev_is_dax && !datadev_is_dax) {
->  			xfs_alert(mp,
->  			"DAX unsupported by block device. Turning off DAX.");
->  			mp->m_flags &= ~XFS_MOUNT_DAX;
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 8eb3a359df95..dd77b0ed2283 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -40,7 +40,7 @@ static inline void put_dax(struct dax_device *dax_dev)
->  
->  int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
->  #if IS_ENABLED(CONFIG_FS_DAX)
-> -int bdev_dax_supported(struct block_device *bdev, int blocksize);
-> +bool bdev_dax_supported(struct block_device *bdev, int blocksize);
->  static inline struct dax_device *fs_dax_get_by_host(const char *host)
->  {
->  	return dax_get_by_host(host);
-> @@ -53,10 +53,10 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
->  
->  struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
->  #else
-> -static inline int bdev_dax_supported(struct block_device *bdev,
-> +static inline bool bdev_dax_supported(struct block_device *bdev,
->  		int blocksize)
->  {
-> -	return -EOPNOTSUPP;
-> +	return false;
->  }
->  
->  static inline struct dax_device *fs_dax_get_by_host(const char *host)
 > 
+> Brian
+> 
+> > > caused this in the first place ..." Then we write a FAQ entry that
+> > > elaborates on how/why a user hit that problem and backport to stable
+> > > kernels as far and wide as possible. Hm?
+> > 
+> > I /do/ like the part about writing FAQ to update the kernel.
+> > 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > --D
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
