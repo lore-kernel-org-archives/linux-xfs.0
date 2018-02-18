@@ -1,38 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:34031 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751978AbeBVEhG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Feb 2018 23:37:06 -0500
-Date: Thu, 22 Feb 2018 15:37:03 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:47976 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751083AbeBRAXV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Feb 2018 19:23:21 -0500
+Date: Sun, 18 Feb 2018 11:23:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: reserve blocks for refcount / rmap log item recovery
-Message-ID: <20180222043703.GA28971@dastard>
-References: <20180221033854.GK27629@magnolia>
+Subject: Re: [PATCH v6 3/3] xfs: reject removal of realtime flag when datadev
+ doesn't support DAX
+Message-ID: <20180218002317.GU7000@dastard>
+References: <151880058592.43131.558230052922233871.stgit@djiang5-desk3.ch.intel.com>
+ <151880066614.43131.15847174332875373188.stgit@djiang5-desk3.ch.intel.com>
+ <20180216172247.GS5217@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180221033854.GK27629@magnolia>
+In-Reply-To: <20180216172247.GS5217@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
 
-On Tue, Feb 20, 2018 at 07:38:54PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 16, 2018 at 09:22:47AM -0800, Darrick J. Wong wrote:
+> On Fri, Feb 16, 2018 at 10:04:26AM -0700, Dave Jiang wrote:
+> > In a situation where the rt_dev is DAX and data_dev is not DAX, if the user
+> > requests to remove the realtime flag via ioctl we can no longer support DAX
+> > for that file. Dynamic changing of S_DAX on the inode is not supported due
+> > to various complications in the existing implementation. Therefore until we
+> > address the dynamic S_DAX change issues, we must disallow realtime flag
+> > being removed.
+> > 
+> > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_ioctl.c |   14 ++++++++++++++
+> >  1 file changed, 14 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index 2c70a0a4f59f..edd97d527fe8 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -1030,6 +1030,20 @@ xfs_ioctl_setattr_xflags(
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	uint64_t		di_flags2;
+> > +	struct inode		*inode = VFS_I(ip);
+> > +	struct super_block	*sb = inode->i_sb;
+> > +
+> > +	/*
+> > +	 * In the case that the inode is realtime, and we are trying to remove
+> > +	 * the realtime flag, and the rtdev supports DAX but the datadev does
+> > +	 * not support DAX, we can't allow the realtime flag to be removed
+> > +	 * since we do not support dynamic S_DAX flag removal yet.
+> > +	 */
+> > +	if (XFS_IS_REALTIME_INODE(ip) &&
+> > +	    !(fa->fsx_xflags & FS_XFLAG_REALTIME) &&
+> > +	    bdev_dax_supported(mp->m_rtdev_targp->bt_bdev, sb->s_blocksize) &&
+> > +	    !bdev_dax_supported(mp->m_ddev_targp->bt_bdev, sb->s_blocksize))
 > 
-> During log recovery, the per-AG reservations aren't yet set up, so log
-> recovery has to reserve enough blocks to handle all possible btree
-> splits.
+> What happens here if we have a non-rt file that we're trying to turn
+> into an rt file and the data dev supports dax but not the rt dev?
 > 
-> Reported-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Changing the rt flag is only supported on files with no data blocks (no
+> extents, no delalloc blocks), so why can't we remove S_DAX from an empty
+> file?  There aren't any memory mappings or page cache to get in the way,
+> correct?
 
-This appears to have fixed all the random recovery failures I was
-having through fstests. The logic seems sounds, too, so
+File size can be non-zero, so you can have DAX read-over-hole
+mappings present. I simply don't think it's safe to remove/add S_DAX
+flags via ioctls right now. If we have a DAX capable rtdev, then the
+only way we should allow rtdev+dax to be used right now is via the
+RT inherit bit on the dir that creates files in the rtdev right from
+the start. i.e. we can't set/remove the RT inode flag on an inode
+via ioctl if rtdev+dax is enabled until the whole dynamic S_DAX
+inode flag thing is resolved.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
