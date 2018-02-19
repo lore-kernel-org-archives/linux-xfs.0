@@ -1,100 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:33679 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753189AbeBVKWy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 05:22:54 -0500
-Received: by mail-wr0-f174.google.com with SMTP id s5so10000771wra.0
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 02:22:53 -0800 (PST)
-Date: Thu, 22 Feb 2018 11:22:49 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: XFS corruption of in-memory data detected with KVM
-Message-ID: <20180222102249.kpaqec37ejrrmown@odin.usersys.redhat.com>
-References: <CAJbUkCSw-Cyi1-KkfAtaCWYODZ3jHAsE8coQpMo1qb+SXDsyEw@mail.gmail.com>
- <20180221114627.tbdequwrbmsakvcu@odin.usersys.redhat.com>
- <CAJbUkCRN3p-o7qKjad+zOFEJ9cRMoop1TjFhG7pt6ConjdEL5w@mail.gmail.com>
- <20180221175540.618eda28@harpe.intellique.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36374 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752666AbeBSNVF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Feb 2018 08:21:05 -0500
+Date: Mon, 19 Feb 2018 08:21:04 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 7/7] xfs: rework secondary superblock updates in growfs
+Message-ID: <20180219132103.GA65426@bfoster.bfoster>
+References: <20180201064202.7174-1-david@fromorbit.com>
+ <20180201064202.7174-8-david@fromorbit.com>
+ <20180209161240.GD21413@bfoster.bfoster>
+ <20180215223138.GT7000@dastard>
+ <20180216125624.GB53090@bfoster.bfoster>
+ <20180219021636.GV7000@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180221175540.618eda28@harpe.intellique.com>
+In-Reply-To: <20180219021636.GV7000@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Andrea Mazzocchi <mazzocchiandrea24@gmail.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 21, 2018 at 05:55:40PM +0100, Emmanuel Florac wrote:
-> Le Wed, 21 Feb 2018 16:23:43 +0100
-> Andrea Mazzocchi <mazzocchiandrea24@gmail.com> écrivait:
-> 
-> > > Also, you are running a very old kernel, so, please make sure you
-> > > try to run a newer xfs_repair.  
+On Mon, Feb 19, 2018 at 01:16:36PM +1100, Dave Chinner wrote:
+> On Fri, Feb 16, 2018 at 07:56:25AM -0500, Brian Foster wrote:
+> > On Fri, Feb 16, 2018 at 09:31:38AM +1100, Dave Chinner wrote:
+> > > On Fri, Feb 09, 2018 at 11:12:41AM -0500, Brian Foster wrote:
+> > > > On Thu, Feb 01, 2018 at 05:42:02PM +1100, Dave Chinner wrote:
+> > > > > +		bp = xfs_growfs_get_hdr_buf(mp,
+> > > > > +				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+> > > > > +				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
+> > > > 
+> > > > This all seems fine to me up until the point where we use uncached
+> > > > buffers for pre-existing secondary superblocks. This may all be fine now
+> > > > if nothing else happens to access/use secondary supers, but it seems
+> > > > like this essentially enforces that going forward.
+> > > > 
+> > > > Hmm, I see that scrub does appear to look at secondary superblocks via
+> > > > cached buffers. Shouldn't we expect this path to maintain coherency with
+> > > > an sb buffer that may have been read/cached from there?
+> > > 
+> > > Good catch! I wrote this before scrub started looking at secondary
+> > > superblocks. As a general rulle, we don't want to cache secondary
+> > > superblocks as they should never be used by the kernel except in
+> > > exceptional situations like grow or scrub.
+> > > 
+> > > I'll have a look at making this use cached buffers that get freed
+> > > immediately after we release them (i.e. don't go onto the LRU) and
+> > > that should solve the problem.
+> > > 
 > > 
-> > We installed yesterday 3.10.0-693.17.1.el7. I know that CentOS and
-> > RedHat keep old stable kernel version and backport important stuff:
-> > do you think that upgrading to a more recent kernel (4 and above)
-> > would be better, even if less stable?
+> > Ok. Though that sounds a bit odd. What is the purpose of a cached buffer
+> > that is not cached?
+> 
+> Serialisation of concurrent access to what is normal a single-use
+> access code path while it is in memory. i.e. exactly the reason we
+> have XFS_IGET_DONTCACHE and use it for things like bulkstat lookups.
 > 
 
-Yes, there are several things backported over Enterprise distributed kernels,
-but, hte upstream community can't offer support on that, once we can't easily
-keep track of what has been backported or not, so, that's why we usually tell
-people reporting bugs here, using an enterprise distributed kernel, to report
-the bug directly to their support representatives.
+Well, that's the purpose of looking up a cached instance of an uncached
+buffer. That makes sense, but that's only half the question...
 
-> Actually the 3.10 from CentOS 7 has a lot of things backported, for
-> instance it supports XFS with crc metadata which was introduced in 3.16.
+> > Isn't the behavior you're after here (perhaps
+> > analogous to pagecache coherency management between buffered/direct I/O)
+> > more cleanly implemented using a cache invalidation mechanism? E.g.,
+> > invalidate cache, use uncached buffer (then perhaps invalidate again).
 > 
-> However in the recent year I've never met any reason NOT to use a
-> recent LTS kernel (like a 4.9 or 4.14). I don't really understand why
-> RedHat sticks to these absurdly old kernel releases as a basis (and
-> taking the pain of backporting stuff for years and years).
-
-There are several reasons for that, and it is not only Red Hat who does it. One
-of the reasons is ABI stability.
-
-> 
-> > > Also, this is more a guess than anything. If you see this happening
-> > > often (even after xfs_repair), you might want to double-check your
-> > > storage stack and see if this is not corrupting anything, bad
-> > > configured storage stacks in virtual environments are very usual
-> > > culprits on filesystem corruption cases.  
-> > 
-> > How could we check our storage stack and see if it is the one to
-> > blame?
+> Invalidation as a mechanism for non-coherent access sycnhronisation
+> is completely broken model when it comes to concurrent access. We
+> explicitly tell app developers not ot mix cached + uncached IO to
+> the same file for exactly this reason.  Using a cached buffer and
+> using the existing xfs_buf_find/lock serialisation avoids this
+> problem, and by freeing them immediately after we've used them we
+> also minimise the memory footprint of single-use access patterns.
 > 
 
+Ok..
 
-> Hard to say, what KVM disk format are you using? Raw, qcow2, LVM
-> volumes? If these are files (raw or qcow2), what kind of filesystem and
-> hardware stack are they living on? Are there any error on the hosting
-> system?
+> > I guess I'm also a little curious why we couldn't continue to use cached
+> > buffers here,
 > 
-> At tne VM level, do you see any IO error? Are you using the virtio disk
-> driver or something else? 
->
+> As I said, we will continue to use cached buffers here. I'll just
+> call xfs_buf_set_ref(bp, 0) on them so they are reclaimed when
+> released. That means concurrent access will serialise correctly
+> through _xfs_buf_find(), otherwise we won't keep them in memory.
+> 
 
-^ Good start, also, what kind of caching policies is a good information,
-particularly, using any cache policies for VM disks other than 'None', is a good
-way to start having problems per my experience.
+Ok, but what's the purpose/motivation for doing that here? Purely to
+save on memory? Is that really an impactful enough change in behavior
+for (pre-existing) secondary superblocks? This seems a clear enough
+decision when growfs was the only consumer of these buffers, but having
+another cached accessor kind of clouds the logic.
 
-Also:
+E.g., if task A reads a set of buffers cached, it's made a decision that
+it's potentially beneficial to leave them around. Now we have task B
+that has decided it doesn't want to cache the buffers, but what bearing
+does that have on task A? It certainly makes sense for task B to drop
+any buffer that wasn't already cached, but for already cached buffers it
+doesn't really make sense for task B to decide there is no further
+advantage to caching for task A.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+FWIW, I think this is how IGET_DONTCACHE works: don't cache the inode
+unless it was actually found in cache. I presume that is so a bulkstat
+or whatever doesn't toss the existing cached inode working set. It also
+looks like an intermediate xfs_iget_cache_hit() actually clears the
+pending 'don't cache' state (which makes me wonder what happens when
+simultaneous 'don't cache' lookups occur; afaict we'd end up with a
+cached inode :/). Bugs aside, perhaps that is a better approach here
+rather than stomping on the lru reference count?
 
-Don't forget xfs_repair :)
+Brian
 
+P.S., Another factor to consider is I think this may have potential for
+unintended side effect without one of the previously suggested changes
+to not call into the growfs internals code on pure imaxpct changes
+(which I think you indicated you were going to fix, I just haven't
+looked back).
 
+> > but it doesn't really matter to me that much so long as
+> > the metadata ends up coherent between subsystems..
+> 
+> Yup, that's the idea.
+> 
+> Cheers,
+> 
+> Dave.
 > -- 
-> ------------------------------------------------------------------------
-> Emmanuel Florac     |   Direction technique
->                     |   Intellique
->                     |	<eflorac@intellique.com>
->                     |   +33 1 78 94 84 02
-> ------------------------------------------------------------------------
-
-
-
--- 
-Carlos
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
