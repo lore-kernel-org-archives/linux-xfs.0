@@ -1,143 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11980 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932116AbeBSWOI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Feb 2018 17:14:08 -0500
-Date: Tue, 20 Feb 2018 09:14:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/7] xfs: rework secondary superblock updates in growfs
-Message-ID: <20180219221404.GZ7000@dastard>
-References: <20180201064202.7174-1-david@fromorbit.com>
- <20180201064202.7174-8-david@fromorbit.com>
- <20180209161240.GD21413@bfoster.bfoster>
- <20180215223138.GT7000@dastard>
- <20180216125624.GB53090@bfoster.bfoster>
- <20180219021636.GV7000@dastard>
- <20180219132103.GA65426@bfoster.bfoster>
+Received: from sandeen.net ([63.231.237.45]:59020 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932180AbeBSWyB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Feb 2018 17:54:01 -0500
+Subject: Re: Debian packaging updates
+References: <CAFMei7PKv0hQnpwKA+qkkjMa9rqXdq8JfBdUjHkgXT1R9nd=GQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1d732605-bcc9-c1f3-2d7c-1a5449317831@sandeen.net>
+Date: Mon, 19 Feb 2018 16:53:59 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180219132103.GA65426@bfoster.bfoster>
+In-Reply-To: <CAFMei7PKv0hQnpwKA+qkkjMa9rqXdq8JfBdUjHkgXT1R9nd=GQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Nathan Scott <nathans@redhat.com>, "Sandeen, Eric" <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Feb 19, 2018 at 08:21:04AM -0500, Brian Foster wrote:
-> On Mon, Feb 19, 2018 at 01:16:36PM +1100, Dave Chinner wrote:
-> > On Fri, Feb 16, 2018 at 07:56:25AM -0500, Brian Foster wrote:
-> > > On Fri, Feb 16, 2018 at 09:31:38AM +1100, Dave Chinner wrote:
-> > > > On Fri, Feb 09, 2018 at 11:12:41AM -0500, Brian Foster wrote:
-> > > > > On Thu, Feb 01, 2018 at 05:42:02PM +1100, Dave Chinner wrote:
-> > > > > > +		bp = xfs_growfs_get_hdr_buf(mp,
-> > > > > > +				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> > > > > > +				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
-> > > > > 
-> > > > > This all seems fine to me up until the point where we use uncached
-> > > > > buffers for pre-existing secondary superblocks. This may all be fine now
-> > > > > if nothing else happens to access/use secondary supers, but it seems
-> > > > > like this essentially enforces that going forward.
-> > > > > 
-> > > > > Hmm, I see that scrub does appear to look at secondary superblocks via
-> > > > > cached buffers. Shouldn't we expect this path to maintain coherency with
-> > > > > an sb buffer that may have been read/cached from there?
-> > > > 
-> > > > Good catch! I wrote this before scrub started looking at secondary
-> > > > superblocks. As a general rulle, we don't want to cache secondary
-> > > > superblocks as they should never be used by the kernel except in
-> > > > exceptional situations like grow or scrub.
-> > > > 
-> > > > I'll have a look at making this use cached buffers that get freed
-> > > > immediately after we release them (i.e. don't go onto the LRU) and
-> > > > that should solve the problem.
-> > > > 
-> > > 
-> > > Ok. Though that sounds a bit odd. What is the purpose of a cached buffer
-> > > that is not cached?
-> > 
-> > Serialisation of concurrent access to what is normal a single-use
-> > access code path while it is in memory. i.e. exactly the reason we
-> > have XFS_IGET_DONTCACHE and use it for things like bulkstat lookups.
-> > 
+
+
+On 2/19/18 3:56 AM, Nathan Scott wrote:
+> Hi Eric, Darrick, all,
 > 
-> Well, that's the purpose of looking up a cached instance of an uncached
-> buffer. That makes sense, but that's only half the question...
+> Some Debian packaging updates for xfsprogs, hopefully in time for
+> 4.15.0 still.  Enjoy!
+
+Plenty of time :)
+
+Can you fix up the other error in this line as well?
+
+-_("Lazy superblock counted always enabled for CRC enabled filesytems\n"));
++_("Lazy superblock counted always enabled for CRC enabled filesystems\n"));
+                          ^
+
+Looks fine to me otherwise, insofar as I understand debian packaging
+(which is to say, not at all) ;)
+
+Thanks,
+-Eric
+
+> Changes committed to https://github.com/natoscott/xfsprogs master
 > 
-> > > Isn't the behavior you're after here (perhaps
-> > > analogous to pagecache coherency management between buffered/direct I/O)
-> > > more cleanly implemented using a cache invalidation mechanism? E.g.,
-> > > invalidate cache, use uncached buffer (then perhaps invalidate again).
-> > 
-> > Invalidation as a mechanism for non-coherent access sycnhronisation
-> > is completely broken model when it comes to concurrent access. We
-> > explicitly tell app developers not ot mix cached + uncached IO to
-> > the same file for exactly this reason.  Using a cached buffer and
-> > using the existing xfs_buf_find/lock serialisation avoids this
-> > problem, and by freeing them immediately after we've used them we
-> > also minimise the memory footprint of single-use access patterns.
-> > 
+> Nathan Scott (4):
+>       Several updates to use more modern Debian packaging
+>       Update .gitignore list for generated scrub cron file
+>       Add xfs_scrub_fail systemd service file docs entry
+>       Fix grammar and spelling in strings and man pages
 > 
-> Ok..
+>  .gitignore                       |    1 +
+>  Makefile                         |    4 +++-
+>  debian/changelog                 |   10 ++++++++++
+>  debian/compat                    |    2 +-
+>  debian/control                   |    2 +-
+>  debian/rules                     |    8 ++++++--
+>  debian/source/format             |    1 +
+>  io/mmap.c                        |    2 +-
+>  io/prealloc.c                    |    2 +-
+>  man/man8/xfs_io.8                |    2 +-
+>  man/man8/xfs_quota.8             |    4 ++--
+>  mkfs/xfs_mkfs.c                  |   12 ++++++------
+>  scrub/xfs_scrub_fail@.service.in |    1 +
+>  13 files changed, 35 insertions(+), 16 deletions(-)
 > 
-> > > I guess I'm also a little curious why we couldn't continue to use cached
-> > > buffers here,
-> > 
-> > As I said, we will continue to use cached buffers here. I'll just
-> > call xfs_buf_set_ref(bp, 0) on them so they are reclaimed when
-> > released. That means concurrent access will serialise correctly
-> > through _xfs_buf_find(), otherwise we won't keep them in memory.
-> > 
 > 
-> Ok, but what's the purpose/motivation for doing that here? Purely to
-> save on memory?
-
-Partly, but mainly because they are single use buffers and accesses
-are so rare that it's a waste of resources to cache them because
-they'll be reclaimed long before they are ever accessed again.
-
-> Is that really an impactful enough change in behavior
-> for (pre-existing) secondary superblocks?
-
-Yes. We know that there are people out there doing "create tiny,
-deploy, grow to thousands of AGs" as part of their crazy, screwed up
-container deployment scripts. THat's thousands of secondary
-superblocks that will be cached and generate unnecessary memory
-pressure when cached,
-
-> This seems a clear enough
-> decision when growfs was the only consumer of these buffers, but having
-> another cached accessor kind of clouds the logic.
-
-Scrub is not something that runs often enough we should be trying to
-cache it's metadata to speed up the next run. The whole point of
-scrub is that it reads metadata that hasn't been accessed in a long
-time to verify it hasn't degraded. Caching secondary superblocks for
-either growfs or scrub makes no sense. However, we have to make sure
-if the two occur at the same time, their actions are coherent and
-correctly serialised.
-
-> E.g., if task A reads a set of buffers cached, it's made a decision that
-> it's potentially beneficial to leave them around. Now we have task B
-> that has decided it doesn't want to cache the buffers, but what bearing
-> does that have on task A? It certainly makes sense for task B to drop
-> any buffer that wasn't already cached, but for already cached buffers it
-> doesn't really make sense for task B to decide there is no further
-> advantage to caching for task A.
+> commit e9a183018503fc1a08d6c84307089ae9cb67ac6c
+> Author: Nathan Scott <nathans@debian.org>
+> Date:   Mon Feb 19 20:46:41 2018 +1100
 > 
-> FWIW, I think this is how IGET_DONTCACHE works: don't cache the inode
-> unless it was actually found in cache. I presume that is so a bulkstat
-> or whatever doesn't toss the existing cached inode working set.
-
-Yes, precisely the point of this inode cache behaviour. However,
-that's not a concern for secondary superblocks because they are
-never part of the working set of metadata ongoing user workloads
-require to be cached. They only get brought into memory as a result
-of admin operations, and those are very, very rare.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>     Fix grammar and spelling in strings and man pages
+> 
+>     Signed-off-by: Nathan Scott <nathans@debian.org>
+> 
+> commit b43b9d237b40905dcd8175d090c4c34413175d73
+> Author: Nathan Scott <nathans@debian.org>
+> Date:   Mon Feb 19 20:42:14 2018 +1100
+> 
+>     Add xfs_scrub_fail systemd service file docs entry
+> 
+>     Signed-off-by: Nathan Scott <nathans@debian.org>
+> 
+> commit 579435f65985bd93d1e42d7710432531ce9d17c8
+> Author: Nathan Scott <nathans@debian.org>
+> Date:   Mon Feb 19 20:40:50 2018 +1100
+> 
+>     Update .gitignore list for generated scrub cron file
+> 
+>     Signed-off-by: Nathan Scott <nathans@debian.org>
+> 
+> commit 02ccd5edb4437fdd0f2a6e64a7f0bfa3072fcbb5
+> Author: Nathan Scott <nathans@debian.org>
+> Date:   Mon Feb 19 20:39:51 2018 +1100
+> 
+>     Several updates to use more modern Debian packaging
+> 
+>     Switch to Debian packaging features available in more
+>     recent years to resolve some long-standing issues.
+> 
+>     In particular, using the quilt format gives non-native
+>     package builds finally, while keeping the ability for
+>     developers to do upstream deb builds.  Also split the
+>     binary-arch and binary-indep debian/rules targets as
+>     is now mandated, and update to latest standard version.
+>     Mark a bunch of long-resolved bugs as fixed in the deb
+>     changelog so they are automatically closed by the next
+>     update.
+> 
+>     Signed-off-by: Nathan Scott <nathans@debian.org>
+> 
+> 
+> cheers.
+> 
+> --
+> Nathan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
