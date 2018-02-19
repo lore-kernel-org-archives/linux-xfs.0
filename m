@@ -1,117 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:45389 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751335AbeBROCz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Feb 2018 09:02:55 -0500
-Received: by mail-lf0-f67.google.com with SMTP id x196so9716817lfd.12
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Feb 2018 06:02:54 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:13461 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752045AbeBSCQj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Feb 2018 21:16:39 -0500
+Date: Mon, 19 Feb 2018 13:16:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 7/7] xfs: rework secondary superblock updates in growfs
+Message-ID: <20180219021636.GV7000@dastard>
+References: <20180201064202.7174-1-david@fromorbit.com>
+ <20180201064202.7174-8-david@fromorbit.com>
+ <20180209161240.GD21413@bfoster.bfoster>
+ <20180215223138.GT7000@dastard>
+ <20180216125624.GB53090@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180215214858.GQ7000@dastard>
-References: <1517974845.4352.8.camel@gmail.com> <20180207065520.66f6gocvxlnxmkyv@destitution>
- <1518255240.31843.6.camel@gmail.com> <1518255352.31843.8.camel@gmail.com>
- <20180211225657.GA6778@dastard> <1518643669.6070.21.camel@gmail.com>
- <20180214215245.GI7000@dastard> <1518666178.6070.25.camel@gmail.com>
- <20180215054436.GN7000@dastard> <CABXGCsOpJU4WU2w5DYBA+Q1nquh14zN0oCW6OfCbhTOFYLwO5w@mail.gmail.com>
- <20180215214858.GQ7000@dastard>
-From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-Date: Sun, 18 Feb 2018 19:02:37 +0500
-Message-ID: <CABXGCsMK61J_+3c4JaXoi1e6aZzngvkQ29zRvQAj3nNcRpv5-Q@mail.gmail.com>
-Subject: Re: freezing system for several second on high I/O [kernel 4.15]
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180216125624.GB53090@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 16 February 2018 at 02:48, Dave Chinner <david@fromorbit.com> wrote:
-> On Fri, Feb 16, 2018 at 12:02:28AM +0500, Mikhail Gavrilov wrote:
->> On 15 February 2018 at 10:44, Dave Chinner <david@fromorbit.com> wrote:
->> > I've already explained that we can't annotate these memory
->> > allocations to turn off the false positives because that will also
->> > turning off all detection of real deadlock conditions.  Lockdep has
->> > many, many limitations, and this happens to be one of them.
->> >
->> > FWIW, is there any specific reason you running lockdep on your
->> > desktop system?
->>
->> Because I wanna make open source better (help fixing all freezing)
->
-> lockdep isn't a user tool - most developers don't even understand
-> what it tries to tell them. Worse, it is likely contributing to your
-> problems as it has a significant runtime CPU and memory overhead....
+On Fri, Feb 16, 2018 at 07:56:25AM -0500, Brian Foster wrote:
+> On Fri, Feb 16, 2018 at 09:31:38AM +1100, Dave Chinner wrote:
+> > On Fri, Feb 09, 2018 at 11:12:41AM -0500, Brian Foster wrote:
+> > > On Thu, Feb 01, 2018 at 05:42:02PM +1100, Dave Chinner wrote:
+> > > > +		bp = xfs_growfs_get_hdr_buf(mp,
+> > > > +				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+> > > > +				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
+> > > 
+> > > This all seems fine to me up until the point where we use uncached
+> > > buffers for pre-existing secondary superblocks. This may all be fine now
+> > > if nothing else happens to access/use secondary supers, but it seems
+> > > like this essentially enforces that going forward.
+> > > 
+> > > Hmm, I see that scrub does appear to look at secondary superblocks via
+> > > cached buffers. Shouldn't we expect this path to maintain coherency with
+> > > an sb buffer that may have been read/cached from there?
+> > 
+> > Good catch! I wrote this before scrub started looking at secondary
+> > superblocks. As a general rulle, we don't want to cache secondary
+> > superblocks as they should never be used by the kernel except in
+> > exceptional situations like grow or scrub.
+> > 
+> > I'll have a look at making this use cached buffers that get freed
+> > immediately after we release them (i.e. don't go onto the LRU) and
+> > that should solve the problem.
+> > 
+> 
+> Ok. Though that sounds a bit odd. What is the purpose of a cached buffer
+> that is not cached?
 
-I don't know how else collect debug info about freezes which occurring
-accidentally. Is there a better idea?
+Serialisation of concurrent access to what is normal a single-use
+access code path while it is in memory. i.e. exactly the reason we
+have XFS_IGET_DONTCACHE and use it for things like bulkstat lookups.
 
->> > I think I've already explained that, too. The graphics subsystem -
->> > which is responsible for updating the cursor - requires memory
->> > allocation. The machine is running low on memory, so it runs memory
->> > reclaim, which recurses back into the filesystem and blocks waiting
->> > for IO to be completed (either writing dirty data pages or flushing
->> > dirty metadata) so it can free memory.
->>
->> Which means machine is running low on memory?
->> How many memory needed?
->>
->> $ free -h
->>               total        used        free      shared  buff/cache   available
->> Mem:            30G         17G        2,1G        1,4G         10G         12G
->> Swap:           59G          0B         59G
->>
->> As can we see machine have 12G available memory. Is this means low memory?
->
-> No, you only have 2.1G free memory. You have 10GB of *reclaimable
-> memory* in the buffer/page cache, and that gives you 12GB of
-> "available memory". Memory reclaim happens all the time in a normal
-> system - it does not mean you are running low on memory, it just
-> means your system is busy.
->
-> And, FWIW, we know you have memory pressure because the lockdep
-> reports you are pasting are a result of memory reclaim operating.
->
+> Isn't the behavior you're after here (perhaps
+> analogous to pagecache coherency management between buffered/direct I/O)
+> more cleanly implemented using a cache invalidation mechanism? E.g.,
+> invalidate cache, use uncached buffer (then perhaps invalidate again).
 
-Anyway I believe that memory pressure should not lead to such lockdep
-reports. Looks like something wrong but not on file system side, may
-be on side memory management.
-Last 24 hours I don't see lockdep reports, but short-term interface
-freezing whatever occurs.
+Invalidation as a mechanism for non-coherent access sycnhronisation
+is completely broken model when it comes to concurrent access. We
+explicitly tell app developers not ot mix cached + uncached IO to
+the same file for exactly this reason.  Using a cached buffer and
+using the existing xfs_buf_find/lock serialisation avoids this
+problem, and by freeing them immediately after we've used them we
+also minimise the memory footprint of single-use access patterns.
 
->> > IOWs, your problems all stem from long IO latencies caused by the
->> > overloaded storage subsystem - they are propagate to all
->> > aspects of the OS via direct memory reclaim blocking on IO....
->>
->> I'm surprised that no QOS analog for disk I/O.
->
-> There is, but it's not like a network where overload situations are
-> mitigated by dropping packets to reduce load. We cannot do that with
-> IO (dropped IO == broken filesystem), so QoS doesn't help when you
-> drive the storage subsystem in extreme, long term overload
-> conditions as you seem to be doing.
+> I guess I'm also a little curious why we couldn't continue to use cached
+> buffers here,
 
-I no suggest broke file system I suggest reserving I/O and memory for
-proceses who need realtime work for example for GUI (gnome-shell). I
-this way high I/O and memory pressure couldn't affect to user
-experience.
+As I said, we will continue to use cached buffers here. I'll just
+call xfs_buf_set_ref(bp, 0) on them so they are reclaimed when
+released. That means concurrent access will serialise correctly
+through _xfs_buf_find(), otherwise we won't keep them in memory.
 
->
->> This is reminiscent of the situation in past where a torrent client
->> clogs the entire channel on the cheap router and it causes problems
->> with opening web pages. In nowadays it never happens with modern
->> routers even with overloaded network channel are possible video calls
->
-> Storage != network.
->
->> In 2018 my personaly expectation that user can run any set of
->> applications on computer and this never shoudn't harm system.
->
-> There's no "harm" occurring on your system - it's just slow
-> because the load you've put on it means no task can execute quickly.
+> but it doesn't really matter to me that much so long as
+> the metadata ends up coherent between subsystems..
 
-slow != freeze
-I have nothing against long time launching and long time working
-applications, but system freezing hurts everybody.
+Yup, that's the idea.
 
---
-Best Regards,
-Mike Gavrilov.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
