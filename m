@@ -1,86 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:13461 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752045AbeBSCQj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Feb 2018 21:16:39 -0500
-Date: Mon, 19 Feb 2018 13:16:36 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:16339 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752220AbeBSCk6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Feb 2018 21:40:58 -0500
+Date: Mon, 19 Feb 2018 13:40:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/7] xfs: rework secondary superblock updates in growfs
-Message-ID: <20180219021636.GV7000@dastard>
-References: <20180201064202.7174-1-david@fromorbit.com>
- <20180201064202.7174-8-david@fromorbit.com>
- <20180209161240.GD21413@bfoster.bfoster>
- <20180215223138.GT7000@dastard>
- <20180216125624.GB53090@bfoster.bfoster>
+Subject: Re: xfs_buf_lock vs aio
+Message-ID: <20180219024055.GW7000@dastard>
+References: <20180208221153.GF20266@dastard>
+ <30274e7a-4029-73b8-0d8b-cdfda450e3bc@scylladb.com>
+ <20180209231015.GI20266@dastard>
+ <697bf891-e7c4-4d60-e2ce-f1ba6935b38b@scylladb.com>
+ <20180213051850.GE6778@dastard>
+ <f8b3b7a4-eba4-d5ab-1748-a8382a2a8fd6@scylladb.com>
+ <20180214235616.GM7000@dastard>
+ <1f90f49b-e11d-3140-f73b-5834e52b5f8a@scylladb.com>
+ <20180215213030.GO7000@dastard>
+ <946349de-471f-f766-47d8-f32959990cc6@scylladb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180216125624.GB53090@bfoster.bfoster>
+In-Reply-To: <946349de-471f-f766-47d8-f32959990cc6@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Avi Kivity <avi@scylladb.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 16, 2018 at 07:56:25AM -0500, Brian Foster wrote:
-> On Fri, Feb 16, 2018 at 09:31:38AM +1100, Dave Chinner wrote:
-> > On Fri, Feb 09, 2018 at 11:12:41AM -0500, Brian Foster wrote:
-> > > On Thu, Feb 01, 2018 at 05:42:02PM +1100, Dave Chinner wrote:
-> > > > +		bp = xfs_growfs_get_hdr_buf(mp,
-> > > > +				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> > > > +				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
-> > > 
-> > > This all seems fine to me up until the point where we use uncached
-> > > buffers for pre-existing secondary superblocks. This may all be fine now
-> > > if nothing else happens to access/use secondary supers, but it seems
-> > > like this essentially enforces that going forward.
-> > > 
-> > > Hmm, I see that scrub does appear to look at secondary superblocks via
-> > > cached buffers. Shouldn't we expect this path to maintain coherency with
-> > > an sb buffer that may have been read/cached from there?
-> > 
-> > Good catch! I wrote this before scrub started looking at secondary
-> > superblocks. As a general rulle, we don't want to cache secondary
-> > superblocks as they should never be used by the kernel except in
-> > exceptional situations like grow or scrub.
-> > 
-> > I'll have a look at making this use cached buffers that get freed
-> > immediately after we release them (i.e. don't go onto the LRU) and
-> > that should solve the problem.
-> > 
+On Fri, Feb 16, 2018 at 10:07:55AM +0200, Avi Kivity wrote:
+> On 02/15/2018 11:30 PM, Dave Chinner wrote:
+> >On Thu, Feb 15, 2018 at 11:36:54AM +0200, Avi Kivity wrote:
+> >>On 02/15/2018 01:56 AM, Dave Chinner wrote:
+> >>A little bird whispered in my ear to try XFS_IOC_OPEN_BY_HANDLE to
+> >>avoid the the time update lock, so we'll be trying that next, to
+> >>emulate lazytime.
+> >Biggest problem with that is it requires root permissions. It's not
+> >a solution that can be deployed in practice, so I haven't bothered
+> >suggesting it as something to try.
+> >
+> >If you want to try lazytime, an easier test might be to rebuild the
+> >kernel with this change below to support the lazytime mount option
+> >and not log the timestamp updates. This is essentially the mechanism
+> >that I'll use for this, but it will need to grow more stuff to have
+> >the correct lazytime semantics...
+> >
 > 
-> Ok. Though that sounds a bit odd. What is the purpose of a cached buffer
-> that is not cached?
+> We tried open by handle to see if lazytime would provide relief, but
+> it looks like it just pushes the lock acquisition to another place:
 
-Serialisation of concurrent access to what is normal a single-use
-access code path while it is in memory. i.e. exactly the reason we
-have XFS_IGET_DONTCACHE and use it for things like bulkstat lookups.
+Whack-a-mole.
 
-> Isn't the behavior you're after here (perhaps
-> analogous to pagecache coherency management between buffered/direct I/O)
-> more cleanly implemented using a cache invalidation mechanism? E.g.,
-> invalidate cache, use uncached buffer (then perhaps invalidate again).
+This is the whole problem with driving the "nowait" semantics into
+the filesystem implementations - every time we fix one blocking
+point, we find a deeper one, and we have to drive the "nowait"
+semantics deeper into code that should not have to care about IO
+level blocking semantics. And by doing it in a "slap-a-bandaid on
+it" process, we end up with spagetti code that is fragile and
+unmaintainable...
 
-Invalidation as a mechanism for non-coherent access sycnhronisation
-is completely broken model when it comes to concurrent access. We
-explicitly tell app developers not ot mix cached + uncached IO to
-the same file for exactly this reason.  Using a cached buffer and
-using the existing xfs_buf_find/lock serialisation avoids this
-problem, and by freeing them immediately after we've used them we
-also minimise the memory footprint of single-use access patterns.
+> However, that function can EAGAIN (it does for IOLOCK) so maybe we
+> can change xfs_ilock to xfs_ilock_nowait and teach it about not
+> waiting for ILOCK too.
 
-> I guess I'm also a little curious why we couldn't continue to use cached
-> buffers here,
+If only it were that simple. Why, exactly, does the direct IO write
+code require the ILOCK exclusive? Indeed, if it goes to allocate
+blocks, we do this:
 
-As I said, we will continue to use cached buffers here. I'll just
-call xfs_buf_set_ref(bp, 0) on them so they are reclaimed when
-released. That means concurrent access will serialise correctly
-through _xfs_buf_find(), otherwise we won't keep them in memory.
+                /*
+                 * xfs_iomap_write_direct() expects the shared lock. It
+                 * is unlocked on return.
+                 */
+                if (lockmode == XFS_ILOCK_EXCL)
+                        xfs_ilock_demote(ip, lockmode);
 
-> but it doesn't really matter to me that much so long as
-> the metadata ends up coherent between subsystems..
+We demote the lock to shared before we call into the allocation
+code. And for pure direct IO writes, all we care about is ensuring
+the extent map does not change while we do the lookup and check.
+That only requires a shared lock.
 
-Yup, that's the idea.
+So now I've got to go work out why need_excl_ilock() says we need
+an exclusive ilock for direct IO writes when it looks pretty clear
+to me that we don't. 
+
+But that's only half the problem. The other problem is that even if
+we take it shared, we're still going to block on IO completion
+taking the ILOCK exclusive to do things like unwritten extent
+completion. So we still need to hack about with "trylock" operations
+into functions into various functions (xfs_ilock_data_map_shared()
+for one).
+
+What a mess....
 
 Cheers,
 
