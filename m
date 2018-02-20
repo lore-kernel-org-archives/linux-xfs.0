@@ -1,627 +1,361 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50804 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752067AbeBTPJY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Feb 2018 10:09:24 -0500
-Subject: Re: [ANNOUNCE] xfsprogs v4.15.0-rc1 released
-References: <7025bd78-65f9-ad25-e884-cada818a685b@sandeen.net>
- <20180220003635.GA8479@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8675595f-abe1-739c-c131-e12737045365@sandeen.net>
-Date: Tue, 20 Feb 2018 09:09:22 -0600
+Received: from aserp2130.oracle.com ([141.146.126.79]:60266 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752823AbeBTRIh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Feb 2018 12:08:37 -0500
+Date: Tue, 20 Feb 2018 09:08:30 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 0/4] xfs: fix v5 AGFL wrapping
+Message-ID: <20180220170830.GF27629@magnolia>
+References: <151863191996.12012.10898223924122487735.stgit@magnolia>
+ <20180214195651.GB43414@bfoster.bfoster>
+ <20180215020548.GN5217@magnolia>
+ <20180215131630.GA48590@bfoster.bfoster>
+ <20180216175701.GA27629@magnolia>
+ <20180219135456.GB65426@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180220003635.GA8479@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180219135456.GB65426@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-(resend, somehow I keep missing reply-all)
-
-That would be much faster than at least our historical progression
-for new features:
-
-* Experimental for $LONG_TIME
-* Drop experimental for $SIGNIFICANT_TIME
-* Make default after that
-
-My sense is that it's a bit premature, having /just/ dropped the
-EXPERIMENTAL tag, which will (in theory) get more people using
-it in earnest and maybe shaking out more bugs.
-
-But I'd like to hear what others think as well.
-
-Thanks,
--Eric
-
-
-On 2/19/18 6:36 PM, Christoph Hellwig wrote:
-> Btw, what do you think about enabling reflink support by default
-> in xfsprogs 4.15?  It's been stable in the kernel for a while,
-> and the only real on-disk format change is a couple additional
-> used/reserved blocks.
+On Mon, Feb 19, 2018 at 08:54:57AM -0500, Brian Foster wrote:
+> On Fri, Feb 16, 2018 at 09:57:01AM -0800, Darrick J. Wong wrote:
+> > On Thu, Feb 15, 2018 at 08:16:30AM -0500, Brian Foster wrote:
+> > > On Wed, Feb 14, 2018 at 06:05:48PM -0800, Darrick J. Wong wrote:
+> > > > On Wed, Feb 14, 2018 at 02:56:51PM -0500, Brian Foster wrote:
+> > > > > On Wed, Feb 14, 2018 at 10:12:00AM -0800, Darrick J. Wong wrote:
+> > > > > > Hi all,
+> > > > > > 
+> > > > > > Here's a bunch of patches fixing the AGFL padding problem once and for
+> > > > > > all.  When the v5 disk format was rolled out, the AGFL header definition
+> > > > > > had a different padding size on 32-bit vs 64-bit systems, with the
+> > > > > > result that XFS_AGFL_SIZE reports different maximum lengths depending on
+> > > > > > the compiler.  In Linux 4.5 we fixed the structure definition, but this
+> > > > > > has lead to sporadic corruption reports on filesystems that were
+> > > > > > unmounted with a pre-4.5 kernel and a wrapped AGFL and then remounted on
+> > > > > > a 4.5+ kernel.
+> > > > > > 
+> > > > > > To deal with these corruption problems, we introduce a new ROCOMPAT
+> > > > > > feature bit to indicate that the AGFL has been scanned and guaranteed
+> > > > > > not to wrap.  We then amend the mounting code to find broken wrapping,
+> > > > > > fix the wrapping, and if we had to fix anything, set the new ROCOMPAT
+> > > > > > flag.  The ROCOMPAT flag prevents re-mounting on unpatched kernels, so
+> > > > > > this series will likely have to be backported.
+> > > > > > 
+> > > > > 
+> > > > > I haven't taken a close enough look at the code yet, but I'm more
+> > > > > curious about the high level approach before getting into that.. IIUC,
+> > > > > we'll set the rocompat bit iff we mount on a fixed kernel, found the
+> > > > > agfl wrapped and detected the agfl size mismatch problem. So we
+> > > > > essentially only restrict mounts on older kernels if we happen to detect
+> > > > > the size mismatch conditions on the newer kernel.
+> > > > 
+> > > > Correct.
+> > > > 
+> > > > > IOW, a user can mount back and forth between good/bad kernels so long as
+> > > > > the agfl isn't wrapped during a mount on the good kernel, and then at
+> > > > > some seemingly random point in the future said user might be permanently
+> > > > > restricted from rw mounts on the older kernel based on the issue being
+> > > > > detected/cleared in the new kernel. That seems a bit.. heavy-handed for
+> > > > > such an unpredictable condition. Why is a warning that the user has a
+> > > > > busted/old/in-need-of-upgrade kernel in the mix not sufficient?
+> > > > 
+> > > > I like the rocompat approach because we can prevent admins from mounting
+> > > > filesystems on old kernels, rather than letting the mount proceed and
+> > > > then blowing up in the middle of a transaction some time later when
+> > > > something actually hits the badly wrapped AGFL.  If we backport this
+> > > > series to the relevant distro kernels (ha!) then they will work without
+> > > > incident.
+> > > > 
+> > > 
+> > > Ok, so the intent is to "protect" those old kernels from a filesystem
+> > > that has seen a "fixed" kernel so the _old_ kernel doesn't explode on a
+> > > filesystem that has a wrapped agfl from a fixed kernel. That sounds
+> > > reasonable.. I guess what concerns me is that the bit doesn't seem to be
+> > > used in that manner. A user can always run a fixed kernel, wrap the
+> > > agfl, then go back to the bad one and cry when it explodes.
+> > > 
+> > > IOW, if the goal is this kind of retroactive protection, I'd expect the
+> > > bit to be enabled any time the filesystem is in a state that would cause
+> > > problems on the old kernel. Technically, that could mean doing something
+> > > like setting the bit any time an AGFL is in a wrapped state and clearing
+> > > it when that state clears. Or perhaps setting it unconditionally on
+> > > mount and leaving it permanently would be another way to satisfy the
+> > > requirement, though certainly more heavy handed.
+> > 
+> > The previous version of this series did that, though Dave suggested I
+> > change it to set the bit only if we actually touched an agfl.  I
+> > probably should have pushed back harder, but it was only rfc at the
+> > time.
+> > 
 > 
-> On Tue, Feb 13, 2018 at 02:29:00PM -0600, Eric Sandeen wrote:
->> Hi folks,
->>
->> The xfsprogs repository at:
->>
->> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
->>
->> has just been updated.
->>
->> This is the first release candidate for v4.15.0, and it has
->> the new experimental scrub utility as previously mentioned.
->>
->> You can get the auto-generated tarball from:
->> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/snapshot/xfsprogs-dev-4.15.0-rc1.tar.gz
->>
->> Other highlights; if you think something's missing here let me know:
->>
->> xfsprogs-4.15.0-rc1 (13 Feb 2018)
->>         - xfs_scrub: experimental new tool added (Darrick Wong)
->>         - xfs_metadump: fix issues with -i flag (Marco Benatto)
->>         - mkfs.xfs: don't allow creation of realtime+reflink (Darrick Wong)
->>         - mkfs.xfs: don't crash on dswidth overflow (Darrick Wong)
->>         - mkfs.xfs: much refactoring (Dave Chinner)
->>         - xfs_copy: fix copy of v5 filesystems (Eric Sandeen)
->>         - xfs_io: add a new 'log_writes' command (Ross Zwisler)
->>         - xfs_io: add MAP_SYNC support to mmap() (Ross Zwisler)
->>         - libxfs: memory zone handling cleanups (Eric Sandeen)
->>
->> Patches often get missed, so please check if your outstanding
->> patches were in this update. If they have not been in this update,
->> please resubmit them to linux-xfs@vger.kernel.org so they can be
->> picked up in the next -rc or the next release cycle.
->>
->> The new head of the master branch is commit:
->>
->> a753d26 xfsprogs: Release v4.15.0-rc1
->>
->> New Commits since v4.14.0, including all the libxfs sync bits:
->>
->> Brian Foster (1):
->>       [5963006] xfs: refactor buffer logging into buffer dirtying helper
->>
->> Christoph Hellwig (67):
->>       [0fcf377] xfs: fix incorrect extent state in xfs_bmap_add_extent_unwritten
->>       [99a663c] xfs: use xfs_iext_get_extent instead of open coding it
->>       [e9fa15a] xfs: don't set XFS_BTCUR_BPRV_WASDEL in xfs_bunmapi
->>       [675b5a2] xfs: rename bno to end in __xfs_bunmapi
->>       [ad68fd1] xfs: use xfs_bmap_del_extent_delay for the data fork as well
->>       [bd92a38] xfs: move some more code into xfs_bmap_del_extent_real
->>       [d0a03e5] xfs: use correct state defines in xfs_bmap_del_extent_{cow,delay
->>       [b039ac7] xfs: use the state defines in xfs_bmap_del_extent_real
->>       [70bf753] xfs: refactor xfs_del_extent_real
->>       [450b398] xfs: refactor xfs_bmap_add_extent_hole_delay
->>       [3281eb9] xfs: refactor xfs_bmap_add_extent_hole_real
->>       [1988471] xfs: refactor xfs_bmap_add_extent_delay_real
->>       [5bfca47] xfs: refactor delalloc accounting in xfs_bmap_add_extent_delay_r
->>       [fd19685] xfs: refactor xfs_bmap_add_extent_unwritten_real
->>       [d0e5f1f] xfs: pass a struct xfs_bmbt_irec to xfs_bmbt_update
->>       [70a9311] xfs: pass a struct xfs_bmbt_irec to xfs_bmbt_lookup_eq
->>       [4f76f49] xfs: replace xfs_bmbt_lookup_ge with xfs_bmbt_lookup_first
->>       [adddf4b] xfs: remove all xfs_bmbt_set_* helpers except for xfs_bmbt_set_a
->>       [bb318cd] xfs: remove xfs_bmbt_get_state
->>       [7bd4333] xfs: add a xfs_bmap_fork_to_state helper
->>       [1a32da8] xfs: make better use of the 'state' variable in xfs_bmap_del_ext
->>       [cfe299d] xfs: remove post-bmap tracing in xfs_bmap_local_to_extents
->>       [df926c0] xfs: move pre/post-bmap tracing into xfs_iext_update_extent
->>       [322fd80] xfs: remove XFS_BMAP_TRACE_EXLIST
->>       [95817f5] xfs: remove the never fully implemented UUID fork format
->>       [551174e] xfs: remove if_rdev
->>       [6835c36] xfs: remove XFS_BMAP_MAX_SHIFT_EXTENTS
->>       [a9f5d25] xfs: split xfs_bmap_shift_extents
->>       [364937e] xfs: remove xfs_bmse_shift_one
->>       [f36ccac] xfs: update got in xfs_bmap_shift_update_extent
->>       [bac2049] xfs: don't rely on extent indices in xfs_bmap_collapse_extents
->>       [bd80a80] xfs: don't rely on extent indices in xfs_bmap_insert_extents
->>       [2d3a650] xfs: rewrite xfs_bmap_first_unused to make better use of xfs_iex
->>       [6d79c95] xfs: merge xfs_bmap_read_extents into xfs_iread_extents
->>       [d6fbe8f] xfs: add a new xfs_iext_lookup_extent_before helper
->>       [4ed3a0f] xfs: remove the inode log format from the inode log item
->>       [d29ce39] xfs: don't create overlapping extents in xfs_bmap_add_extent_del
->>       [bc5dec5] xfs: remove a duplicate assignment in xfs_bmap_add_extent_delay_
->>       [12ebbfe] xfs: treat idx as a cursor in xfs_bmap_add_extent_delay_real
->>       [ee2bb3f] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_delay
->>       [501dd27] xfs: treat idx as a cursor in xfs_bmap_add_extent_hole_real
->>       [8121dd7] xfs: treat idx as a cursor in xfs_bmap_add_extent_unwritten_real
->>       [2844122] xfs: treat idx as a cursor in xfs_bmap_del_extent_*
->>       [c162e31] xfs: treat idx as a cursor in xfs_bmap_collapse_extents
->>       [36d7c0a] xfs: pass an on-disk extent to xfs_bmbt_validate_extent
->>       [f11e750] xfs: iterate over extents in xfs_iextents_copy
->>       [62ed733] xfs: iterate over extents in xfs_bmap_extents_to_btree
->>       [9788e05] xfs: introduce the xfs_iext_cursor abstraction
->>       [8e87c88] xfs: simplify xfs_reflink_convert_cow
->>       [07fe466] xfs: remove support for inlining data/extents into the inode for
->>       [c2e6c70] xfs: allow unaligned extent records in xfs_bmbt_disk_set_all
->>       [b37d753] xfs: use a b+tree for the in-core extent list
->>       [26a75f6] xfs: remove the nr_extents argument to xfs_iext_insert
->>       [cf455a6] xfs: remove the nr_extents argument to xfs_iext_remove
->>       [080f0c7] xfs: pass struct xfs_bmbt_irec to xfs_bmbt_validate_extent
->>       [5837f99] xfs: move xfs_bmbt_irec and xfs_exntst_t to xfs_types.h
->>       [246486c] xfs: mark xfs_btree_check_lblock and xfs_btree_check_ptr static
->>       [fd4c3ba] xfs: fix number of records handling in xfs_iext_split_leaf
->>       [ba0bf2c] xfs: add some comments to xfs_iext_insert/xfs_iext_insert_node
->>       [f3c6504] xfs: remove a superflous assignment in xfs_iext_remove_node
->>       [c45b87c] xfs: trivial indentation fixup for xfs_iext_remove_node
->>       [373c077] xfs: add comments documenting the rebalance algorithm
->>       [546f383] xfs: handle zero entries case in xfs_iext_rebalance_leaf
->>       [dc9b1f5] xfs: abstract out dev_t conversions
->>       [c1a29e9] xfs: remove "no-allocation" reservations for file creations
->>       [38d096b] xfs: remove wrappers around b_fspriv
->>       [cfc06b6] xfs: add a proper transaction pointer to struct xfs_buf
->>
->> Colin Ian King (1):
->>       [d92c880] xfs: remove redundant assignment to variable bit
->>
->> Darrick J. Wong (103):
->>       [9bef625] xfs: create block pointer check functions
->>       [d5c546d] xfs: refactor btree pointer checks
->>       [b47beff] xfs: refactor btree block header checking functions
->>       [be3bf25] xfs: create inode pointer verifiers
->>       [afbe3b6] xfs: create an ioctl to scrub AG metadata
->>       [d17a627] xfs: probe the scrub ioctl
->>       [15c4e6e] xfs: scrub the shape of a metadata btree
->>       [f253a97] xfs: scrub the secondary superblocks
->>       [d6e1f78] xfs: scrub AGF and AGFL
->>       [1770bca] xfs: scrub the AGI
->>       [1b07bd7] xfs: scrub free space btrees
->>       [3898cda] xfs: scrub inode btrees
->>       [d21c412] xfs: scrub rmap btrees
->>       [286f7cc] xfs: scrub refcount btrees
->>       [1155b77] xfs: scrub inodes
->>       [c123295] xfs: scrub inode block mappings
->>       [16c101b] xfs: scrub directory metadata
->>       [97ebbf2] xfs: scrub extended attributes
->>       [3db552c] xfs: scrub symbolic links
->>       [9d9d4f0] xfs: scrub directory parent pointers
->>       [1da1b67] xfs: scrub realtime bitmap/summary
->>       [821a975] xfs: scrub quota information
->>       [9473ee3] xfs: abort dir/attr btree operation if btree is obviously weird
->>       [0ad12e7] xfs: compare btree block keys to parent block's keys during scru
->>       [e784bcd] xfs: remove inode log format typedef
->>       [56d3fc2] xfs: move error injection tags into their own file
->>       [52da310] xfs: remove u_int* type usage
->>       [0484232] xfs: fix type usage
->>       [904d971] xfs_io: pull xfs errortag definitions from libxfs
->>       [813c67c] xfs_io: provide an interface to the scrub ioctls
->>       [5591018] man: describe the metadata scrubbing ioctl
->>       [5caa042] libfrog: move all the userspace support stuff into a new library
->>       [24f4f99] libfrog: move libxfs_log2_roundup to libfrog
->>       [1ca68d6] libfrog: add bit manipulation functions
->>       [b28b84c] libfrog: move list_sort out of libxfs
->>       [67f3faf] libfrog: promote avl64 code from xfs_repair
->>       [f434fd9] libfrog: create a threaded workqueue
->>       [695fc50] libfrog: move topology code out of libxcmd
->>       [b95410d] libfrog: move conversion factors out of libxcmd
->>       [bd987fe] libfrog: move paths.c out of libxcmd
->>       [ce1abf9] libfrog: add missing function fs_table_destroy
->>       [852fe01] libhandle: add missing destructor
->>       [62843f3] xfs_repair: remove old workqueue stuff in favor of libfrog code
->>       [31df6ad] xfs_db: print structure padding fields consistently
->>       [70c1cce] xfs_db: add missing padding fields
->>       [30a757b] libxfs: libxfs_nproc should never return negative numbers
->>       [6f67c32] xfs: add the ability to join a held buffer to a defer_ops
->>       [3fbc4d7] xfs: hold xfs_buf locked between shortform->leaf conversion and 
->>       [db2cf1d] xfs: account for null transactions in bunmapi
->>       [6428e6c] xfs: move xfs_iext_insert tracepoint to report useful informatio
->>       [a44b23a] xfs: queue deferred rmap ops for cow staging extent alloc/free i
->>       [3ee858a] xfs: always honor OWN_UNKNOWN rmap removal requests
->>       [19f9a63] xfs: only skip rmap owner checks for unknown-owner rmap removal
->>       [1ad4d3b] libhandle: zap fdhash in fshandle_destroy
->>       [b638281] xfs_db: check should deal with cow staging extents correctly
->>       [945e47e] xfs_db: fix crash when field list selector string has trailing s
->>       [532d03d] xfs_repair: fix libxfs namespace problems
->>       [128491c] find-api-violations: fix a broken grep pattern
->>       [50663dc] xfsprogs: update dead urls
->>       [ba795fb] xfs_db: interpret inode timestamps as signed integers
->>       [25f9772] misc: ubsan fixes
->>       [91c7d13] mkfs: don't crash on dswidth overflow
->>       [0b1cf8b] mkfs: don't call values 'illegal', they're invalid
->>       [7d25f65] mkfs: always explain why numeric inputs are invalid
->>       [95b1e50] xfs_scrub: create online filesystem scrub program
->>       [f0585fc] xfs_scrub: common error handling
->>       [828105d] xfs_scrub: set up command line argument parsing
->>       [173a028] xfs_scrub: dispatch the various phases of the scrub program
->>       [e031d90] xfs_scrub: figure out how many threads we're going to need
->>       [a555a1f] xfs_scrub: create an abstraction for a block device
->>       [50a573a] xfs_scrub: find XFS filesystem geometry
->>       [372d4ba] xfs_scrub: add inode iteration functions
->>       [bc94c5d] xfs_scrub: add space map iteration functions
->>       [c6eb0ff] xfs_scrub: add file space map iteration functions
->>       [604dd33] xfs_scrub: filesystem counter collection functions
->>       [fd7d73c] xfs_scrub: wrap the scrub ioctl
->>       [e758ad0] xfs_scrub: scan filesystem and AG metadata
->>       [d11cc69] xfs_scrub: thread-safe stats counter
->>       [fa16b37] xfs_scrub: scan inodes
->>       [c4892e7] xfs_scrub: check directory connectivity
->>       [396cd02] xfs_scrub: warn about suspicious characters in directory/xattr n
->>       [4bbed4e] xfs_scrub: warn about normalized Unicode name collisions
->>       [0cf6f68] xfs_scrub: create a bitmap data structure
->>       [2000470] xfs_scrub: create infrastructure to read verify data blocks
->>       [b364a9c] xfs_scrub: scrub file data blocks
->>       [03c0cd8] xfs_scrub: optionally use SCSI READ VERIFY commands to scrub dat
->>       [698c6c7] xfs_scrub: check summary counters
->>       [7e36bc0] xfs_scrub: fstrim the free areas if there are no errors on the f
->>       [ed60d21] xfs_scrub: progress indicator
->>       [f1dca11] xfs_scrub: create a script to scrub all xfs filesystems
->>       [824b580] xfs_scrub: integrate services with systemd
->>       [5c7826c] debian/control: remove nonexistent libreadline5-dev build depend
->>       [1985247] xfs_scrub: wire up repair ioctl
->>       [bfa66ec] mkfs: don't create realtime filesystems with reflink enabled
->>       [e91c285] xfs_scrub: close dir_fd if we don't get a DIR pointer
->>       [33a5034] xfs_scrub: kill dead code
->>       [8041435] xfs_io: fix copy_file_range symbol name collision
->>       [1658224] xfs_scrub: remove preen mode
->>       [1df93c8] xfs_scrub: classify lack of ioctl support as a runtime error
->>       [82377bd] xfs_scrub: reclassify runtime errors
->>       [bb5dbd0] xfs_scrub: reclassify some of the warning messages
->>       [2e4959c] xfs_scrub: always init phase information
->>       [5454c2b] xfs_scrub: refactor outcome display into a separate helper
->>
->> Dave Chinner (51):
->>       [893d9af] xfs: convert remaining xfs_sb_version_... checks to bool
->>       [41198ef] xfs_io: fix gcc-7 related printf warnings
->>       [594932f] mkfs: disallow specifying the sector size of internal log
->>       [05abf43] mkfs: make subopt table const
->>       [cf627f3] mkfs: introduce a structure to hold CLI options
->>       [a350bbc] mkfs: add generic subopt parsing table
->>       [85d6f03] mkfs: factor block subopts parser
->>       [a1273b7] mkfs: factor data subopts parser
->>       [a3ac5af] mkfs: factor inode subopts parser
->>       [f3bc91a] mkfs: factor log subopts parser
->>       [997136c] mkfs: factor meta subopts parser
->>       [98d4092] mkfs: factor naming subopts parser
->>       [d145f69] mkfs: factor rt subopts parser
->>       [f948f00] mkfs: factor sector subopts parser
->>       [4ab08e3] mkfs: Introduce mkfs configuration structure
->>       [d113804] mkfs: factor printing of mkfs config
->>       [afda75a] mkfs: factor in memory superblock setup
->>       [e99bf83] mkfs: factor out device preparation
->>       [0ff1b0e] mkfs: factor writing AG headers
->>       [e2847e5] mkfs: factor secondary superblock updates
->>       [68344ba] mkfs: introduce default configuration structure
->>       [ebed4ac] mkfs: rename top level CLI parameters
->>       [585f41b] mkfs: factor sectorsize validation
->>       [b1b8e54] mkfs: factor blocksize validation
->>       [22319b5] mkfs: factor log sector size validation
->>       [a43e656] mkfs: factor superblock feature validation
->>       [fdea8fb] mkfs: factor directory blocksize validation
->>       [8fe2902] mkfs: factor inode size validation
->>       [e24dfa2] mkfs: factor out device size calculations
->>       [7175103] mkfs: fix hidden parameter in DTOBT()
->>       [80b154f] mkfs: factor rtdev extent size validation
->>       [2f44b1b] mkfs: rework stripe calculations
->>       [379f01d] mkfs: factor device opening
->>       [dd5ac31] mkfs: factor data device validation
->>       [90b7e13] mkfs: factor log device validation
->>       [7a9af89] mkfs: factor rt device validation
->>       [1de0144] mkfs: factor AG geometry calculations
->>       [051b4e3] mkfs: factor AG alignment
->>       [d7240c9] mkfs: rework imaxpct calculation
->>       [befcd76] mkfs: factor initial mount setup
->>       [e3bc839] mkfs: factor log size calculations
->>       [b449c79] mkfs: cleanup redundant temporary code
->>       [dafb318] mkfs: move error functions
->>       [4eee66c] mkfs: tidy up definitions
->>       [a9857ca] mkfs: use opts parameter during option parsing
->>       [a6fb6ab] mkfs: simplify minimum log size calculation
->>       [f1301cc] mkfs: protofile only needs to be set up once
->>       [cedf1c4] mkfs: support arbitrary conflict specification
->>       [64e924d] mkfs: convert subopt name, val pairs to enums and declared array
->>       [6c75555] mkfs: resolve sector size CLI conflicts
->>       [2cf637c] mkfs: remove logarithm based CLI options
->>
->> Eric Sandeen (20):
->>       [6e72e94] Merge branch 'libxfs-4.15-sync' into for-next
->>       [fc60b66] xfs_io: add buf_lru_ref tag to inject table
->>       [5c40ca1] xfs: fix leaks on corruption errors in xfs_bmap.c
->>       [df90234] Merge branch 'libxfs-4.15-sync' into for-next
->>       [b729d14] mkfs: Don't emit default config message yet
->>       [ec64d06] mkfs: remove unused m_uuid in sb_feat_args
->>       [639d0b0] mkfs: invert project id width boolean name
->>       [852b325] mkfs: document sb_feat_args members
->>       [129d98a] mkfs: remove use-once default macros
->>       [c66bd30] mkfs: un-document removed logarithm based CLI options
->>       [e5e612a] mkfs: pass switch case value directly into getnum/getstr
->>       [9502da2] mkfs: do not allow both "dev" and "name" subopts for log or real
->>       [2e2caf7] libxfs: remove unused buf_fsprivate3
->>       [67d7227] libxfs: use a memory zone for transactions
->>       [a1c5615] libxfs: use a memory zone for log items
->>       [12f365e] xfs_logprint: fix v3 inode formatting
->>       [d0ca5d8] xfs_copy: accept CRC version of ABTB_MAGIC in ASSERT
->>       [16adcb8] mkfs: more sunit/swidth sanity checking
->>       [ffdd272] xfs_scrub: handle scrub-only kernels more helpfully
->>       [a753d26] xfsprogs: Release v4.15.0-rc1
->>
->> Marco Benatto (2):
->>       [720eec0] xfs_mdrestore: Add -i option to built-in help
->>       [d789af7] xfs_mdrestore: Don't rewind source file stream
->>
->> Nikolay Borisov (1):
->>       [7c18973] xfs_io: implement ranged fiemap query
->>
->> Ross Zwisler (2):
->>       [dad7968] xfs_io: add MAP_SYNC support to mmap()
->>       [851c5d1] xfs_io: add a new 'log_writes' command
->>
->> Shu Wang (1):
->>       [c822b63] xfs: fix memory leak in xfs_iext_free_last_leaf
->>
->>
->> Code Diffstat:
->>
->>  .gitignore                          |    5 +
->>  Makefile                            |    9 +-
->>  README                              |    2 +-
->>  VERSION                             |    4 +-
->>  configure.ac                        |   15 +-
->>  copy/Makefile                       |    4 +-
->>  copy/xfs_copy.c                     |    3 +-
->>  db/Makefile                         |    4 +-
->>  db/agi.c                            |    3 +-
->>  db/attr.c                           |    2 +-
->>  db/bit.c                            |    4 +-
->>  db/check.c                          |   19 +-
->>  db/dir2.c                           |    5 +-
->>  db/dquot.c                          |    2 +-
->>  db/flist.c                          |    1 +
->>  db/fprint.c                         |    3 +-
->>  db/inode.c                          |    2 +
->>  debian/control                      |   10 +-
->>  debian/copyright                    |    2 +-
->>  debian/postinst                     |    3 +
->>  debian/rules                        |    2 +-
->>  debian/watch                        |    2 +-
->>  doc/CHANGES                         |   11 +
->>  growfs/Makefile                     |    4 +-
->>  {repair => include}/avl64.h         |    0
->>  include/bitops.h                    |   58 +
->>  include/builddefs.in                |   16 +
->>  include/convert.h                   |   37 +
->>  include/handle.h                    |    2 +
->>  include/input.h                     |   15 +-
->>  include/libfrog.h                   |   23 +
->>  include/libxfs.h                    |   21 +-
->>  include/linux.h                     |    8 +
->>  include/ptvar.h                     |   32 +
->>  include/workqueue.h                 |   55 +
->>  include/xfs.h                       |    4 +
->>  include/xfs_inode.h                 |    1 +
->>  include/xfs_multidisk.h             |    9 -
->>  include/xfs_trace.h                 |    7 +-
->>  include/xfs_trans.h                 |    2 +-
->>  io/Makefile                         |   17 +-
->>  io/copy_file_range.c                |   11 +-
->>  io/fiemap.c                         |   81 +-
->>  io/fsmap.c                          |    4 +-
->>  io/init.c                           |    2 +
->>  io/inject.c                         |   37 +-
->>  io/io.h                             |    9 +
->>  io/log_writes.c                     |  106 +
->>  io/mmap.c                           |   29 +-
->>  io/scrub.c                          |  252 ++
->>  libfrog/Makefile                    |   39 +
->>  {repair => libfrog}/avl64.c         |    4 +-
->>  libfrog/convert.c                   |  384 +++
->>  {libxfs => libfrog}/list_sort.c     |    7 +-
->>  {libxcmd => libfrog}/paths.c        |   20 +
->>  {libxcmd => libfrog}/projects.c     |    0
->>  libfrog/ptvar.c                     |  133 +
->>  {libxfs => libfrog}/radix-tree.c    |   26 +-
->>  {libxcmd => libfrog}/topology.c     |    0
->>  libfrog/util.c                      |   36 +
->>  libfrog/workqueue.c                 |  174 ++
->>  libhandle/handle.c                  |   14 +
->>  libxcmd/Makefile                    |   10 +-
->>  libxcmd/input.c                     |  375 ---
->>  libxfs/Makefile                     |    4 +-
->>  libxfs/init.c                       |   11 +-
->>  libxfs/libxfs_api_defs.h            |    3 +-
->>  libxfs/libxfs_io.h                  |   10 +-
->>  libxfs/libxfs_priv.h                |   23 +
->>  libxfs/logitem.c                    |   13 +-
->>  libxfs/trans.c                      |  162 +-
->>  libxfs/util.c                       |   45 +-
->>  libxfs/xfs_ag_resv.c                |    1 +
->>  libxfs/xfs_alloc.c                  |   54 +-
->>  libxfs/xfs_alloc.h                  |    4 +
->>  libxfs/xfs_attr.c                   |   20 +-
->>  libxfs/xfs_attr_leaf.c              |   15 +-
->>  libxfs/xfs_attr_leaf.h              |    3 +-
->>  libxfs/xfs_bmap.c                   | 2065 ++++++--------
->>  libxfs/xfs_bmap.h                   |   66 +-
->>  libxfs/xfs_bmap_btree.c             |  250 +-
->>  libxfs/xfs_bmap_btree.h             |   22 +-
->>  libxfs/xfs_btree.c                  |  259 +-
->>  libxfs/xfs_btree.h                  |   32 +-
->>  libxfs/xfs_da_btree.c               |   22 +-
->>  libxfs/xfs_defer.c                  |   39 +-
->>  libxfs/xfs_defer.h                  |    5 +-
->>  libxfs/xfs_dir2.c                   |   24 +-
->>  libxfs/xfs_dir2.h                   |   17 +
->>  libxfs/xfs_errortag.h               |  106 +
->>  libxfs/xfs_format.h                 |   35 +-
->>  libxfs/xfs_fs.h                     |   77 +
->>  libxfs/xfs_ialloc.c                 |  101 +-
->>  libxfs/xfs_ialloc.h                 |    8 +-
->>  libxfs/xfs_iext_tree.c              | 1043 +++++++
->>  libxfs/xfs_inode_buf.c              |    1 +
->>  libxfs/xfs_inode_fork.c             | 1331 +--------
->>  libxfs/xfs_inode_fork.h             |  138 +-
->>  libxfs/xfs_log_format.h             |   24 +-
->>  libxfs/xfs_refcount.c               |   53 +-
->>  libxfs/xfs_rmap.c                   |  100 +-
->>  libxfs/xfs_rmap.h                   |   16 +-
->>  libxfs/xfs_rtbitmap.c               |   13 +-
->>  libxfs/xfs_types.h                  |   22 +
->>  libxlog/xfs_log_recover.c           |    4 +-
->>  logprint/Makefile                   |    4 +-
->>  logprint/log_misc.c                 |   17 +-
->>  logprint/log_print_all.c            |    6 +-
->>  logprint/logprint.h                 |    4 +-
->>  m4/Makefile                         |    4 +
->>  m4/package_attr.m4                  |   23 +
->>  m4/package_devmapper.m4             |   11 +
->>  m4/package_libcdev.m4               |   92 +
->>  m4/package_services.m4              |   77 +
->>  m4/package_unistring.m4             |   19 +
->>  man/Makefile                        |    2 +-
->>  man/man2/Makefile                   |   22 +
->>  man/man2/ioctl_xfs_scrub_metadata.2 |  318 +++
->>  man/man8/mkfs.xfs.8                 |   58 +-
->>  man/man8/xfs_io.8                   |   51 +-
->>  man/man8/xfs_scrub.8                |  142 +
->>  man/man8/xfs_scrub_all.8            |   32 +
->>  mdrestore/Makefile                  |    4 +-
->>  mdrestore/xfs_mdrestore.c           |   70 +-
->>  mkfs/Makefile                       |    7 +-
->>  mkfs/maxtrres.c                     |  102 -
->>  mkfs/xfs_mkfs.c                     | 5213 +++++++++++++++++++----------------
->>  quota/Makefile                      |    4 +-
->>  repair/Makefile                     |   10 +-
->>  repair/dino_chunks.c                |    2 +-
->>  repair/phase3.c                     |   16 +-
->>  repair/phase4.c                     |   26 +-
->>  repair/phase6.c                     |   16 +-
->>  repair/phase7.c                     |    9 +-
->>  repair/prefetch.c                   |   20 +-
->>  repair/prefetch.h                   |    4 +-
->>  repair/sb.c                         |    8 +-
->>  repair/scan.c                       |   16 +-
->>  repair/slab.c                       |    4 +-
->>  repair/threads.c                    |  125 +-
->>  repair/threads.h                    |   38 +-
->>  scrub/Makefile                      |  142 +
->>  scrub/bitmap.c                      |  410 +++
->>  scrub/bitmap.h                      |   38 +
->>  scrub/common.c                      |  391 +++
->>  scrub/common.h                      |   92 +
->>  scrub/counter.c                     |  104 +
->>  scrub/counter.h                     |   29 +
->>  scrub/disk.c                        |  315 +++
->>  scrub/disk.h                        |   40 +
->>  scrub/filemap.c                     |  157 ++
->>  scrub/filemap.h                     |   39 +
->>  scrub/fscounters.c                  |  212 ++
->>  scrub/fscounters.h                  |   29 +
->>  scrub/inodes.c                      |  297 ++
->>  scrub/inodes.h                      |   32 +
->>  scrub/phase1.c                      |  241 ++
->>  scrub/phase2.c                      |  148 +
->>  scrub/phase3.c                      |  169 ++
->>  scrub/phase4.c                      |   77 +
->>  scrub/phase5.c                      |  314 +++
->>  scrub/phase6.c                      |  544 ++++
->>  scrub/phase7.c                      |  266 ++
->>  scrub/progress.c                    |  223 ++
->>  scrub/progress.h                    |   33 +
->>  scrub/read_verify.c                 |  270 ++
->>  scrub/read_verify.h                 |   50 +
->>  scrub/scrub.c                       |  782 ++++++
->>  scrub/scrub.h                       |   82 +
->>  scrub/spacemap.c                    |  256 ++
->>  scrub/spacemap.h                    |   31 +
->>  scrub/unicrash.c                    |  392 +++
->>  scrub/unicrash.h                    |   47 +
->>  scrub/vfs.c                         |  250 ++
->>  scrub/vfs.h                         |   33 +
->>  scrub/xfs_scrub.c                   |  756 +++++
->>  scrub/xfs_scrub.h                   |  125 +
->>  scrub/xfs_scrub@.service.in         |   20 +
->>  scrub/xfs_scrub_all.cron.in         |    1 +
->>  scrub/xfs_scrub_all.in              |  203 ++
->>  scrub/xfs_scrub_all.service.in      |   10 +
->>  scrub/xfs_scrub_all.timer           |   11 +
->>  scrub/xfs_scrub_fail                |   26 +
->>  scrub/xfs_scrub_fail@.service.in    |   10 +
->>  spaceman/Makefile                   |    4 +-
->>  tools/find-api-violations.sh        |    4 +-
->>  186 files changed, 16170 insertions(+), 6533 deletions(-)
->>  rename {repair => include}/avl64.h (100%)
->>  create mode 100644 include/convert.h
->>  create mode 100644 include/libfrog.h
->>  create mode 100644 include/ptvar.h
->>  create mode 100644 include/workqueue.h
->>  create mode 100644 io/log_writes.c
->>  create mode 100644 io/scrub.c
->>  create mode 100644 libfrog/Makefile
->>  rename {repair => libfrog}/avl64.c (99%)
->>  create mode 100644 libfrog/convert.c
->>  rename {libxfs => libfrog}/list_sort.c (98%)
->>  rename {libxcmd => libfrog}/paths.c (97%)
->>  rename {libxcmd => libfrog}/projects.c (100%)
->>  create mode 100644 libfrog/ptvar.c
->>  rename {libxfs => libfrog}/radix-tree.c (97%)
->>  rename {libxcmd => libfrog}/topology.c (100%)
->>  create mode 100644 libfrog/util.c
->>  create mode 100644 libfrog/workqueue.c
->>  create mode 100644 libxfs/xfs_errortag.h
->>  create mode 100644 libxfs/xfs_iext_tree.c
->>  create mode 100644 m4/package_attr.m4
->>  create mode 100644 m4/package_devmapper.m4
->>  create mode 100644 m4/package_services.m4
->>  create mode 100644 m4/package_unistring.m4
->>  create mode 100644 man/man2/Makefile
->>  create mode 100644 man/man2/ioctl_xfs_scrub_metadata.2
->>  create mode 100644 man/man8/xfs_scrub.8
->>  create mode 100644 man/man8/xfs_scrub_all.8
->>  delete mode 100644 mkfs/maxtrres.c
->>  create mode 100644 scrub/Makefile
->>  create mode 100644 scrub/bitmap.c
->>  create mode 100644 scrub/bitmap.h
->>  create mode 100644 scrub/common.c
->>  create mode 100644 scrub/common.h
->>  create mode 100644 scrub/counter.c
->>  create mode 100644 scrub/counter.h
->>  create mode 100644 scrub/disk.c
->>  create mode 100644 scrub/disk.h
->>  create mode 100644 scrub/filemap.c
->>  create mode 100644 scrub/filemap.h
->>  create mode 100644 scrub/fscounters.c
->>  create mode 100644 scrub/fscounters.h
->>  create mode 100644 scrub/inodes.c
->>  create mode 100644 scrub/inodes.h
->>  create mode 100644 scrub/phase1.c
->>  create mode 100644 scrub/phase2.c
->>  create mode 100644 scrub/phase3.c
->>  create mode 100644 scrub/phase4.c
->>  create mode 100644 scrub/phase5.c
->>  create mode 100644 scrub/phase6.c
->>  create mode 100644 scrub/phase7.c
->>  create mode 100644 scrub/progress.c
->>  create mode 100644 scrub/progress.h
->>  create mode 100644 scrub/read_verify.c
->>  create mode 100644 scrub/read_verify.h
->>  create mode 100644 scrub/scrub.c
->>  create mode 100644 scrub/scrub.h
->>  create mode 100644 scrub/spacemap.c
->>  create mode 100644 scrub/spacemap.h
->>  create mode 100644 scrub/unicrash.c
->>  create mode 100644 scrub/unicrash.h
->>  create mode 100644 scrub/vfs.c
->>  create mode 100644 scrub/vfs.h
->>  create mode 100644 scrub/xfs_scrub.c
->>  create mode 100644 scrub/xfs_scrub.h
->>  create mode 100644 scrub/xfs_scrub@.service.in
->>  create mode 100644 scrub/xfs_scrub_all.cron.in
->>  create mode 100644 scrub/xfs_scrub_all.in
->>  create mode 100644 scrub/xfs_scrub_all.service.in
->>  create mode 100644 scrub/xfs_scrub_all.timer
->>  create mode 100755 scrub/xfs_scrub_fail
->>  create mode 100644 scrub/xfs_scrub_fail@.service.in
->>
+> It's not clear which of the above options you're referring to. FWIW, the
+> former seems notably more usable to me than the latter.
+
+Sorry about that.  The previous iteration would do:
+
+if (!has_fixedagfl) {
+	fix_agfls();
+	set_fixedagfl();
+}
+
+Which probably doesn't satisfy your usability test. :)
+
+Hmm... another possible strategy would be to fix the agfls and set the
+fixedagfl bit at mount time, then at unmount/freeze/remount-ro we fix
+the agfls again and clear the fixedagfl bit.  Then the only way an
+unpatched kernel hits this is if we crash with a patched kernel and the
+recovery mount is an unpatched kernel.
+
+What does everyone think of this strategy?  I think I like it the most
+of all the things we've put forth because the only time anyone will trip
+over this rocompat bit is this one specific scenario.
+
+(Apologies if we've already talked about this, I've gotten lost in this
+thread.)
+
+> > > Note that what I dislike about other possible combinations of the above,
+> > > such as setting the bit internally/conditionally and never clearing it
+> > > (which is what I think this series currently does), is that can
+> > > potentially fool a user who actually does due diligence to test a
+> > > filesystem against two kernels (for whatever, probably odd, reason). For
+> > > example:
+> > > 
+> > > - mount fs on good kernel, scribble on it
+> > > - test my (bad) back up kernel, mount, scribble some more
+> > > - back to my primary kernels, everything still works, deploy!
+> > > 
+> > > So the whole "set the bit unconditionally" thing might be heavy-handed,
+> > > but at least that is predictable. The set/clear approach is less
+> > > predictable, but the advantage of that approach is that it is
+> > > recoverable without putting a user in a bind with no other option but to
+> > > upgrade.
+> > > 
+> > > > The thing I dislike about this approach is that now we have this
+> > > > rocompat bit that has to be backported everywhere, and it only triggers
+> > > > in the specific case that (a) you have a v5 filesystem that (b) you run
+> > > > a mixed environment with 4.5+ and pre-4.5 kernels and (c) happened to
+> > > > land on a badly wrapped AGFL.  It's a lot of work for us (and the distro
+> > > > partners) but it's the least amount of work for admins -- so long as
+> > > > they keep their environments up to date.
+> > > > 
+> > > 
+> > > We should have already backported fixes to stable kernels for the AGFL
+> > > size problem itself, right? IOW, it really should be a minimal set of
+> > > users affected by this who haven't updated their old, broken kernels
+> > > that should have stable updates available by now.
+> > 
+> > Eric tells me RHEL xfsprogs/kernels ship with the agfl fix reverted /
+> > not applied, so there are potentially a lot of people who haven't
+> > updated... :/
+> > 
 > 
+> Eh, I suppose that could be another problem. I guess that is "our
+> problem" though, and not something we should allow to factor into
+> upstream decisions.
+
+Ideally, yes, but OTOH I get the feeling that most of us upstream
+developers are also downstream developers, so we ought to try to roll
+this out in a coordinated and least-clumsy fashion.
+
+> > (I also find it weird that RHEL7 changed the mkfs defaults post-GA to
+> > enable v5 by default, doesn't that create compatibility problems?)
+> > 
 > 
+> I don't recall the reasoning behind that decision. It may have just been
+> early enough for the benefit to outweigh the risk.
 > 
-> ---end quoted text---
+> > > If so, then I agree.. Technicalities aside, I'm not a huge fan of
+> > > propagating a feature bit all over just to try and isolate those users.
+> > > Plus with some of the other ideas I'm throwing out above, we'd have to
+> > > start also thinking about users who might end up using two old kernels
+> > > that cross the boundary where the feature bit was introduced. Ugh. :P
+> > > 
+> > > Yet another way to look at it.. if we have enough users out there using
+> > > two kernels where one of them happens to be a stale/broken kernel
+> > > because they haven't upgraded to the agfl fix, what evidence do we have
+> > > that those users would actually update their variant of the "good agfl"
+> > > kernel to one that handles the agfl good/bad transition and sets a
+> > > feature bit? IOW, it seems to me that on some level the ship has sailed.
+> > 
+> > That's difficult to know.  Some customers have certified configurations
+> > and never update (and never run mixed environments), others are fairly
+> > good at pulling down the quarterly updates, and others do risky things
+> > like run mixed $distrokernel series, because mixing 2.6.39 and 4.1 is
+> > fun.
+> > 
+> 
+> Heh, indeed. I guess this is part of the reason why I wonder whether a
+> feature bit could create as many user issues as it resolves. In a sense,
+> we're floating another compatibility obstacle downstream (by that I mean
+> upstream -stable) that users have to navigate around.
+
+Yeah... the obstacle is annoying but so is crashing on a wrapped agfl.
+
+> > > > A second solution I considered was fixing the AGFL at mount/remount-rw
+> > > > time like we do in this series and adding code to move the AGFL to the
+> > > > start at freeze/remount-ro/umount time.  For the common case where we
+> > > > don't crash, we handle the mixed kernel environment seamlessly.  This
+> > > > would be my primary choice except that it'll still blow up if we wrap
+> > > > the AGFL, crash, and reboot with an old kernel.  Here too it won't fail
+> > > > at mount time, it'll fail some time after mount when something tries to
+> > > > modify an AGFL.
+> > > > 
+> > > 
+> > > Interesting idea, but I also think it would be unfortunate to alter our
+> > > normal/common runtime behavior to pacify some old, broken kernel that
+> > > also has stable fixes. To get around the crash thing, we'd probably have
+> > > to shuffle the AGFL locations on the fly, and that would be even worse
+> > > IMO.
+> > 
+> > Agreed, in the long run everyone will be post-4.5 so we should minimize
+> > the clutter and pain.
+> > 
+> > > > One solution involves a fair amount of backport and sw redeployment but
+> > > > makes it obvious when things are broken; the other solution handles it
+> > > > *almost* seamlessly... until it doesn't.
+> > > > 
+> > > > > I guess I'm just not really seeing the value in using the feature bit
+> > > > > for this as opposed to doing something more simple like detect an agfl
+> > > > > with a size mismatch with respect to the current kernel and forcing the
+> > > > > read-only mount in that instance. E.g., similar to how we handle log
+> > > > > recovery byte order mismatches:
+> > > > > 
+> > > > >   "dirty log written in incompatible format - can't recover"
+> > > > > 
+> > > > > But in this case it would be more something like "agfl in invalid state,
+> > > > > mounting read-only, please run xfs_repair and ditch that old kernel that
+> > > > 
+> > > > Good point, third option: if the agfl wraps badly, printk that the agfl
+> > > > is in an invalid state and that the user must mount with -o fixagfl
+> > > > (which will fix the problem and set the rocompat flag) and upgrade the
+> > > > kernel.  Seems kinda clunky... but all of these solutions have a wart of
+> > > > some kind.
+> > > > 
+> > > 
+> > > Hmm, I still think my preferred approach is to mount time detect,
+> > > enforce read-only and tell the user to xfs_repair[1]. It's the most
+> > 
+> > I think this is difficult to do for the root fs -- in general I don't
+> > think initrds ship with xfs_repair and the logic to detect the "refuses
+> > to mount rw" condition and react to that with xfs_repair and a second
+> > mount attempt.
+> > 
+> 
+> Good point. I guess what concerns me is leaving around such highly
+> specialized code. I figured an error check is less risk than a function
+> that modifies the fs. Do we have a test case that would exercise this
+> codepath going forward, at least?
+
+I did write xfstests for the general case, though apparently I've been
+lagging xfstests and haven't sent it.  :/
+
+Oh, right, we're still discussing semantics & existence of an rocompat
+bit, which affects the golden output.
+
+> > Also I think this doesn't work if we do an initial ro mount and then try
+> > to remount-rw...
+> > 
+> 
+> That one seems like it would just require a bit more code. E.g., we'd
+> have to cache or re-check state on ro -> rw transitions. That's
+> secondary to the rootfs use case justification, though..
+
+<nod>
+
+> > > simple implementation as we don't have to carry fixup code in the kernel
+> > > for such an uncommon situation (which facilitates a broad backport
+> > > strategy). It protects the users on stable kernels who pull in the
+> > > latest bug fixes, including the guy who goes from a bad kernel to a good
+> > > one, and all kernels going forward without having to use a feature bit.
+> > > We don't do anything for the guy who wraps the agfl on newer kernels and
+> > > goes back to the bad one, but at some point he just needs to update the
+> > > broken kernel.
+> > > 
+> > > [1] I guess doing a mount time fix up vs. a read-only mount + warning is
+> > > a separate question from the feature bit. I'd prefer the latter for
+> > > simplicity, but perhaps there are use cases where the benefit outweighs
+> > > the risk.
+> > > 
+> > > Anyways, that's just my .02. There is no real great option here, I
+> > > guess. I just think that at some point maybe it's best to fix all the
+> > > kernels we can to handle the size mismatch, live with the fact that some
+> > > users might have those old, unfixed kernels and bonk them on the head to
+> > > upgrade when they (hopefully decreasingly) pop up. Perhaps others can
+> > > chime in with more thoughts..
+> > 
+> > Yeah, we could do that too (make all the next releases of
+> > rhel/ol/debian/ubuntu/sles/whatever quietly fix the bad-wrap agfls and
+> > skip the feature bit) and just let the unpatched kernels rot.  It keeps
+> > coming up, though...
+> > 
+> 
+> I guess I haven't really noticed it enough to consider it an ongoing
+> issue (which doesn't mean it isn't :P). Any pattern to the use cache
+> behind these continued reports..?
+
+No particular pattern, other than using/freeing agfl blocks.
+
+> From an upstream perspective, RHEL continuing to operate in this mode
+> certainly does create an ongoing situation where a "current" distro
+> has/causes compatibility issues, particularly since some other
+> downstream distros may have kernels that use the upstream/fixed format.
+> 
+> I'll reiterate that in principle I don't think downstream decisions
+> should prohibit doing the right thing upstream, but for somebody on a
+> downstream distro who happens to test an upstream kernel (say as part of
+> a regression test/investigation), having the upstream kernel decide the
+> downstream kernel is no longer allowed to mount the fs seems kind of
+> mean. :P
+
+Agreed, though agfl-related crashes are also mean. :/
+
+--D
+
+> Brian
+> 
+> > --D
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > > caused this in the first place ..." Then we write a FAQ entry that
+> > > > > elaborates on how/why a user hit that problem and backport to stable
+> > > > > kernels as far and wide as possible. Hm?
+> > > > 
+> > > > I /do/ like the part about writing FAQ to update the kernel.
+> > > > 
+> > > > --D
+> > > > 
+> > > > > Brian
+> > > > > 
+> > > > > > --D
+> > > > > > --
+> > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
