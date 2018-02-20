@@ -1,38 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f171.google.com ([209.85.217.171]:38112 "EHLO
-        mail-ua0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753501AbeBVLb3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 06:31:29 -0500
-Received: by mail-ua0-f171.google.com with SMTP id e25so3073637uan.5
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 03:31:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20180222102249.kpaqec37ejrrmown@odin.usersys.redhat.com>
-References: <CAJbUkCSw-Cyi1-KkfAtaCWYODZ3jHAsE8coQpMo1qb+SXDsyEw@mail.gmail.com>
- <20180221114627.tbdequwrbmsakvcu@odin.usersys.redhat.com> <CAJbUkCRN3p-o7qKjad+zOFEJ9cRMoop1TjFhG7pt6ConjdEL5w@mail.gmail.com>
- <20180221175540.618eda28@harpe.intellique.com> <20180222102249.kpaqec37ejrrmown@odin.usersys.redhat.com>
-From: Andrea Mazzocchi <mazzocchiandrea24@gmail.com>
-Date: Thu, 22 Feb 2018 12:31:28 +0100
-Message-ID: <CAJbUkCTeO6_0Xu5-UbuF_tj1GP2PZF6YP91BsKJuQ=T65cdj9w@mail.gmail.com>
-Subject: Re: XFS corruption of in-memory data detected with KVM
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.suse.de ([195.135.220.15]:46269 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750732AbeBTNxI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Feb 2018 08:53:08 -0500
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id DB002ADE6
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2018 13:53:06 +0000 (UTC)
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH] xfs: Remove duplicated check
+Date: Tue, 20 Feb 2018 15:53:02 +0200
+Message-Id: <1519134782-10062-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>, Andrea Mazzocchi <mazzocchiandrea24@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Nikolay Borisov <nborisov@suse.com>
 
-3.10.0-693.17.1.el7 means Enterprise Linux 7, right?
-Enterprise Linux 7 uses Linux kernel 3.10.0-123
-(https://en.wikipedia.org/wiki/Red_Hat_Enterprise_Linux#RHEL_7)
-and even if it backports important things, I saw that kernel 4.9 and
-4.14 introduces
-various bug fixes and improvements about XFS file system that may
-greatly help us .
+The check performed before the memcpy responsible for copying the rest
+of the inode is already performed before we call xfs_log_dinode_to_disk.
+So let's remove the 2nd instance of the check. No functional changes.
 
-In 3.10.0-693.17.1.el7 changelog there are at least 1400 entries for "XFS"
-(http://rpmfind.net/linux/RPM/centos/updates/7.4.1708/x86_64/Packages/kernel-devel-3.10.0-693.17.1.el7.x86_64.html):
-how could I see what kernel would be the best?
-Do I have to manually check the XFS bug fixes between 3.10.0-693.17.1.el7
-and 4.14.20 (https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5791577963426c5a2db51fff57e9fcd72061e2c3)
-to see what best suits us?
-We do not know what caused the crash, so we do not know what bug had
-to be fixed and which kernel actually fixed it...
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+Reported-by: Jeff Mahoney <jeffm@suse.com>
+---
+ fs/xfs/xfs_log_recover.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 00240c9ee72e..88dccfb1de96 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3174,11 +3174,8 @@ xlog_recover_inode_pass2(
+ 	xfs_log_dinode_to_disk(ldip, dip);
+ 
+ 	/* the rest is in on-disk format */
+-	if (item->ri_buf[1].i_len > isize) {
+-		memcpy((char *)dip + isize,
+-			item->ri_buf[1].i_addr + isize,
++	memcpy((char *)dip + isize, item->ri_buf[1].i_addr + isize,
+ 			item->ri_buf[1].i_len - isize);
+-	}
+ 
+ 	fields = in_f->ilf_fields;
+ 	if (fields & XFS_ILOG_DEV)
+-- 
+2.7.4
+
