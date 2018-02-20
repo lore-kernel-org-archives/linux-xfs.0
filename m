@@ -1,68 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:2102 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750799AbeBTVMY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Feb 2018 16:12:24 -0500
-Date: Wed, 21 Feb 2018 08:11:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Remove duplicated check
-Message-ID: <20180220211114.GC7000@dastard>
-References: <1519134782-10062-1-git-send-email-nborisov@suse.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:46886 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751823AbeBTXYG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Feb 2018 18:24:06 -0500
+Date: Tue, 20 Feb 2018 15:23:58 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v6 3/3] xfs: reject removal of realtime flag when datadev
+ doesn't support DAX
+Message-ID: <20180220232358.GH27629@magnolia>
+References: <151880058592.43131.558230052922233871.stgit@djiang5-desk3.ch.intel.com>
+ <151880066614.43131.15847174332875373188.stgit@djiang5-desk3.ch.intel.com>
+ <20180216172247.GS5217@magnolia>
+ <20180218002317.GU7000@dastard>
+ <20180220230109.GG27629@magnolia>
+ <20180220231524.GD7000@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1519134782-10062-1-git-send-email-nborisov@suse.com>
+In-Reply-To: <20180220231524.GD7000@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nikolay Borisov <nborisov@suse.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
 
-On Tue, Feb 20, 2018 at 03:53:02PM +0200, Nikolay Borisov wrote:
-> The check performed before the memcpy responsible for copying the rest
-> of the inode is already performed before we call xfs_log_dinode_to_disk.
-> So let's remove the 2nd instance of the check. No functional changes.
+On Wed, Feb 21, 2018 at 10:15:24AM +1100, Dave Chinner wrote:
+> On Tue, Feb 20, 2018 at 03:01:09PM -0800, Darrick J. Wong wrote:
+> > On Sun, Feb 18, 2018 at 11:23:17AM +1100, Dave Chinner wrote:
+> > > On Fri, Feb 16, 2018 at 09:22:47AM -0800, Darrick J. Wong wrote:
+> > > > On Fri, Feb 16, 2018 at 10:04:26AM -0700, Dave Jiang wrote:
+> > > > > In a situation where the rt_dev is DAX and data_dev is not DAX, if the user
+> > > > > requests to remove the realtime flag via ioctl we can no longer support DAX
+> > > > > for that file. Dynamic changing of S_DAX on the inode is not supported due
+> > > > > to various complications in the existing implementation. Therefore until we
+> > > > > address the dynamic S_DAX change issues, we must disallow realtime flag
+> > > > > being removed.
+> > > > > 
+> > > > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > > ---
+> > > > >  fs/xfs/xfs_ioctl.c |   14 ++++++++++++++
+> > > > >  1 file changed, 14 insertions(+)
+> > > > > 
+> > > > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > > > > index 2c70a0a4f59f..edd97d527fe8 100644
+> > > > > --- a/fs/xfs/xfs_ioctl.c
+> > > > > +++ b/fs/xfs/xfs_ioctl.c
+> > > > > @@ -1030,6 +1030,20 @@ xfs_ioctl_setattr_xflags(
+> > > > >  {
+> > > > >  	struct xfs_mount	*mp = ip->i_mount;
+> > > > >  	uint64_t		di_flags2;
+> > > > > +	struct inode		*inode = VFS_I(ip);
+> > > > > +	struct super_block	*sb = inode->i_sb;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * In the case that the inode is realtime, and we are trying to remove
+> > > > > +	 * the realtime flag, and the rtdev supports DAX but the datadev does
+> > > > > +	 * not support DAX, we can't allow the realtime flag to be removed
+> > > > > +	 * since we do not support dynamic S_DAX flag removal yet.
+> > > > > +	 */
+> > > > > +	if (XFS_IS_REALTIME_INODE(ip) &&
+> > > > > +	    !(fa->fsx_xflags & FS_XFLAG_REALTIME) &&
+> > > > > +	    bdev_dax_supported(mp->m_rtdev_targp->bt_bdev, sb->s_blocksize) &&
+> > > > > +	    !bdev_dax_supported(mp->m_ddev_targp->bt_bdev, sb->s_blocksize))
+> > > > 
+> > > > What happens here if we have a non-rt file that we're trying to turn
+> > > > into an rt file and the data dev supports dax but not the rt dev?
+> > > > 
+> > > > Changing the rt flag is only supported on files with no data blocks (no
+> > > > extents, no delalloc blocks), so why can't we remove S_DAX from an empty
+> > > > file?  There aren't any memory mappings or page cache to get in the way,
+> > > > correct?
+> > > 
+> > > File size can be non-zero, so you can have DAX read-over-hole
+> > > mappings present. I simply don't think it's safe to remove/add S_DAX
+> > > flags via ioctls right now. If we have a DAX capable rtdev, then the
+> > > only way we should allow rtdev+dax to be used right now is via the
+> > > RT inherit bit on the dir that creates files in the rtdev right from
+> > > the start. i.e. we can't set/remove the RT inode flag on an inode
+> > > via ioctl if rtdev+dax is enabled until the whole dynamic S_DAX
+> > > inode flag thing is resolved.
+> > 
+> > Could we deal with the restriction that the DAX flag can't change
+> > (whether by user ioctl or by toggling the rt flag) unless the file size
+> > is zero?  That adds another way setting/clearing the realtime flag can
+> > fail, but at least it'd be the same EINVAL.
 > 
-> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> Reported-by: Jeff Mahoney <jeffm@suse.com>
-> ---
->  fs/xfs/xfs_log_recover.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+> I thought we still mmap a zero length file and get a page fault that
+> returns a zeroed page? Or does that segv?
+
+I think it segfaults, but let's see...
+
+$ rm -rf /opt/b ; xfs_io -f -c 'mmap -rw 0 1m' -c 'mread 512 20' /opt/b
+Bus error
+$ rm -rf /opt/b ; xfs_io -f -c 'mmap -rw 0 1m' -c 'mwrite 512 20' /opt/b
+Bus error
+
+--D
+
 > 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 00240c9ee72e..88dccfb1de96 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3174,11 +3174,8 @@ xlog_recover_inode_pass2(
->  	xfs_log_dinode_to_disk(ldip, dip);
->  
->  	/* the rest is in on-disk format */
-> -	if (item->ri_buf[1].i_len > isize) {
-> -		memcpy((char *)dip + isize,
-> -			item->ri_buf[1].i_addr + isize,
-> +	memcpy((char *)dip + isize, item->ri_buf[1].i_addr + isize,
->  			item->ri_buf[1].i_len - isize);
-> -	}
->  
-
-This looks wrong.
-
-The previous check is:
-
-	if (unlikely(item->ri_buf[1].i_len > isize)) {
-		CORRUPTION_ERROR
-		....
-		error = -EFSCORRUPTED;
-		goto out_release;
-	}
-
-So after this item->ri_buf[1].i_len is always <= isize. IOWs, the
-memcpy() is currently dead code that is never executed, not code we
-want to execute in every inode recovery.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
