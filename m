@@ -1,150 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:51992 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46936 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751810AbeBVCjv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Feb 2018 21:39:51 -0500
+        by vger.kernel.org with ESMTP id S932370AbeBTDhq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Feb 2018 22:37:46 -0500
 Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1M2d8Bs030024
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Feb 2018 21:39:50 -0500
-Received: from e06smtp12.uk.ibm.com (e06smtp12.uk.ibm.com [195.75.94.108])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2g9n7x02c4-1
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1K3aH0K145739
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2018 22:37:46 -0500
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2g896tvf3h-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Feb 2018 21:39:50 -0500
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Feb 2018 22:37:45 -0500
 Received: from localhost
-        by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 22 Feb 2018 02:39:47 -0000
+        Mon, 19 Feb 2018 22:37:44 -0500
 From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH V2 2/2] xfs: Fix "use after free" of intent items
-Date: Thu, 22 Feb 2018 08:11:14 +0530
-In-Reply-To: <20180221210404.GF7000@dastard>
-References: <20180221022826.7020-1-chandan@linux.vnet.ibm.com> <18759094.m032Vjinrq@localhost.localdomain> <20180221210404.GF7000@dastard>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <3012089.sqaZR1v9oP@localhost.localdomain>
+Subject: [PATCH] xfs: Fix "use after free" of intent items
+Date: Tue, 20 Feb 2018 09:08:44 +0530
+Message-Id: <20180220033844.13999-1-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, hch@infradead.org, darrick.wong@oracle.com, bfoster@redhat.com
+To: linux-xfs@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, hch@infradead.org, darrick.wong@oracle.com, bfoster@redhat.com
 
-On Thursday, February 22, 2018 2:34:04 AM IST Dave Chinner wrote:
-> On Wed, Feb 21, 2018 at 11:15:22AM +0530, Chandan Rajendra wrote:
-> > On Wednesday, February 21, 2018 9:31:09 AM IST Dave Chinner wrote:
-> > > On Wed, Feb 21, 2018 at 07:58:26AM +0530, Chandan Rajendra wrote:
-> > > > generic/388 can cause the following "use after free" error to occur,
-> > > > 
-> > > >  =============================================================================
-> > > >  BUG xfs_efi_item (Not tainted): Poison overwritten
-> > > >  -----------------------------------------------------------------------------
-> > > > 
-> > > >  Disabling lock debugging due to kernel taint
-> > > >  INFO: 0x00000000292c4bd4-0x00000000292c4bd4. First byte 0x6a instead of 0x6b
-> > > >  INFO: Allocated in .kmem_zone_alloc+0xcc/0x190 age=79 cpu=0 pid=12436
-> > > >         .__slab_alloc+0x54/0x80
-> > > >         .kmem_cache_alloc+0x124/0x350
-> > > >         .kmem_zone_alloc+0xcc/0x190
-> > > >         .xfs_efi_init+0x48/0xf0
-> > > >         .xfs_extent_free_create_intent+0x40/0x130
-> > > >         .xfs_defer_intake_work+0x74/0x1e0
-> > > >         .xfs_defer_finish+0xac/0x5c0
-> > > >         .xfs_itruncate_extents+0x170/0x590
-> > > >         .xfs_inactive_truncate+0xcc/0x170
-> > > >         .xfs_inactive+0x1d8/0x2f0
-> > > >         .xfs_fs_destroy_inode+0xe4/0x3d0
-> > > >         .destroy_inode+0x68/0xb0
-> > > >         .do_unlinkat+0x1e8/0x390
-> > > >         system_call+0x58/0x6c
-> > > >  INFO: Freed in .xfs_efi_item_free+0x44/0x80 age=79 cpu=0 pid=12436
-> > > >         .kmem_cache_free+0x120/0x2b0
-> > > >         .xfs_efi_item_free+0x44/0x80
-> > > >         .xfs_trans_free_items+0xd4/0x130
-> > > >         .__xfs_trans_commit+0xd0/0x350
-> > > >         .xfs_trans_roll+0x4c/0x90
-> > > >         .xfs_defer_trans_roll+0xa4/0x2b0
-> > > >         .xfs_defer_finish+0xb8/0x5c0
-> > > >         .xfs_itruncate_extents+0x170/0x590
-> > > >         .xfs_inactive_truncate+0xcc/0x170
-> > > >         .xfs_inactive+0x1d8/0x2f0
-> > > >         .xfs_fs_destroy_inode+0xe4/0x3d0
-> > > >         .destroy_inode+0x68/0xb0
-> > > >         .do_unlinkat+0x1e8/0x390
-> > > >         system_call+0x58/0x6c
-> > > > 
-> > > > This happens due to the following interaction,
-> > > > 1. xfs_defer_finish() creates "extent free" intent item and adds it to the
-> > > >    per-transction list of log items.
-> > > > 2. xfs_defer_trans_roll() invokes __xfs_trans_commit(). Here, if the
-> > > >    XFS_MOUNT_FS_SHUTDOWN flag is set, we invoke io_unlock() operation
-> > > >    for each of the log items in the per-transction list. For "extent
-> > > >    free" log items xfs_efi_item_unlock() gets invoked which then frees
-> > > >    the xfs_efi_log_item.
-> > > 
-> > > Isn't this the problem? i.e. it's freeing the EFI item because the
-> > > abort flag is set, but there are still other references to it? Isn't
-> > > this wrong now that we have a cleanup function that will free the
-> > > EFI is the commit fails? i.e: this ....
-> > > 
-> > > > 3. xfs_defer_trans_roll() then invokes xfs_defer_trans_abort(). Since the
-> > > >    xfs_defer_pending->dfp_intent is still set to the "extent free" intent
-> > > >    item, we invoke xfs_extent_free_abort_intent(). This accesses the
-> > > >    previously freed xfs_efi_log_item to decrement the ref count.
-> > > 
-> > > ... will free the EFI correctly on transaction commit failure and so
-> > > we should be able to remove the "free immediately" hack from the
-> > > iop_unlock() code that we used to need because there was no external
-> > > reference that could free the EFI on commit failure....
-> > 
-> > The EFI log item would have its ref count initialized to 2 (One for the
-> > CIL/AIL and one for EFD).
-> 
-> And that's part of what has always been wrong with this code - it
-> takes references for things that don't really have references yet,
-> instead of taking them when the EFI is actually referenced. Hence we
-> have to hack around that with things like ignoring the reference
-> count when we get an abort signal, because we haven't reference
-> counted the object properly.
-> 
-> > In the "use after free" case the EFI was not
-> > committed to the CIL. At this point, we don't have any entity owning a
-> > reference to the log item since the EFI was not committed to the CIL nor was
-> > the EFD created. Hence IMHO, freeing the log item is the right approach.
-> 
-> No, we clearly have a reference - the deferops structure has a
-> reference to it. If it didn't have a reference, then we wouldn't
-> have a use after free situation....
-> 
-> > Also, the cleanup function (i.e. xfs_extent_free_abort_intent()) would
-> > decrement the ref count by 1 i.e. Its refcount would go from the initial value
-> > of 2 to 1. Hence the cleanup function won't free the EFI log item causing a
-> > memory leak.
-> 
-> No, then the xfs_extent_free_abort_intent() call releases it,
-> dropping the remaining reference that was intended for the EFD
-> which, because we aborted, will never take over control of that
-> reference.
-> 
-> i.e. the two references that are created at initialisation are for
-> the EFI itself as it passes through the CIL and journal commit, and
-> the second reference is used by the defer_ops it is attached to and
-> then handed to the EFD for it's pass through the CIL and journal
-> commit.
-> 
-> If we never commit the EFI, then we need to release that reference
-> (on abort), and then we need to clean up the extra reference that is
-> destined for the EFD which is held by the deferops. That's done by
-> xfs_extent_free_abort_intent().
-> 
-> And I'm guessing that we need to make sure the same fix goes through
-> all the other items that are used as deferops intents that were
-> modeled on the EFI/EFD infrastructure, too.
-> 
+generic/388 can cause the following "use after free" error to occur,
 
-I agree. Thanks for the explaination. I will work on writing up a 
-patch to fix this issue for all the log items which have 
-corresponding intent and done items.
+ =============================================================================
+ BUG xfs_efi_item (Not tainted): Poison overwritten
+ -----------------------------------------------------------------------------
 
+ Disabling lock debugging due to kernel taint
+ INFO: 0x00000000292c4bd4-0x00000000292c4bd4. First byte 0x6a instead of 0x6b
+ INFO: Allocated in .kmem_zone_alloc+0xcc/0x190 age=79 cpu=0 pid=12436
+        .__slab_alloc+0x54/0x80
+        .kmem_cache_alloc+0x124/0x350
+        .kmem_zone_alloc+0xcc/0x190
+        .xfs_efi_init+0x48/0xf0
+        .xfs_extent_free_create_intent+0x40/0x130
+        .xfs_defer_intake_work+0x74/0x1e0
+        .xfs_defer_finish+0xac/0x5c0
+        .xfs_itruncate_extents+0x170/0x590
+        .xfs_inactive_truncate+0xcc/0x170
+        .xfs_inactive+0x1d8/0x2f0
+        .xfs_fs_destroy_inode+0xe4/0x3d0
+        .destroy_inode+0x68/0xb0
+        .do_unlinkat+0x1e8/0x390
+        system_call+0x58/0x6c
+ INFO: Freed in .xfs_efi_item_free+0x44/0x80 age=79 cpu=0 pid=12436
+        .kmem_cache_free+0x120/0x2b0
+        .xfs_efi_item_free+0x44/0x80
+        .xfs_trans_free_items+0xd4/0x130
+        .__xfs_trans_commit+0xd0/0x350
+        .xfs_trans_roll+0x4c/0x90
+        .xfs_defer_trans_roll+0xa4/0x2b0
+        .xfs_defer_finish+0xb8/0x5c0
+        .xfs_itruncate_extents+0x170/0x590
+        .xfs_inactive_truncate+0xcc/0x170
+        .xfs_inactive+0x1d8/0x2f0
+        .xfs_fs_destroy_inode+0xe4/0x3d0
+        .destroy_inode+0x68/0xb0
+        .do_unlinkat+0x1e8/0x390
+        system_call+0x58/0x6c
+
+This happens due to the following interaction,
+1. xfs_defer_finish() creates "extent free" intent item and adds it to the
+   per-transction list of log items.
+2. xfs_defer_trans_roll() invokes __xfs_trans_commit(). Here, if the
+   XFS_MOUNT_FS_SHUTDOWN flag is set, we invoke io_unlock() operation
+   for each of the log items in the per-transction list. For "extent
+   free" log items xfs_efi_item_unlock() gets invoked which then frees
+   the xfs_efi_log_item.
+3. xfs_defer_trans_roll() then invokes xfs_defer_trans_abort(). Since the
+   xfs_defer_pending->dfp_intent is still set to the "extent free" intent
+   item, we invoke xfs_extent_free_abort_intent(). This accesses the
+   previously freed xfs_efi_log_item to decrement the ref count.
+
+This commit fixes the bug by invoking xfs_defer_trans_abort() only when
+the log items in the per-transaction list have been committed to the
+CIL. The log item "committed" status is being tracked by
+xfs_defer_ops->dop_committed. This was the behaviour prior to commit
+3ab78df2a59a485f479d26852a060acfd8c4ecd7 (xfs: rework xfs_bmap_free
+callers to use xfs_defer_ops).
+
+Reported-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ fs/xfs/libxfs/xfs_defer.c | 6 +++---
+ fs/xfs/xfs_bmap_util.c    | 2 +-
+ fs/xfs/xfs_inode.c        | 2 +-
+ fs/xfs/xfs_trans.c        | 8 +++++++-
+ fs/xfs/xfs_trans.h        | 2 +-
+ fs/xfs/xfs_trans_inode.c  | 2 +-
+ 6 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 087fea0..eb879a0 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -256,13 +256,13 @@ xfs_defer_trans_roll(
+ 	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
+ 
+ 	/* Roll the transaction. */
+-	error = xfs_trans_roll(tp);
++	error = xfs_trans_roll(tp, &dop->dop_committed);
+ 	if (error) {
+ 		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
+-		xfs_defer_trans_abort(*tp, dop, error);
++		if (dop->dop_committed == true)
++			xfs_defer_trans_abort(*tp, dop, error);
+ 		return error;
+ 	}
+-	dop->dop_committed = true;
+ 
+ 	/* Rejoin the joined inodes. */
+ 	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index c83f549..9d84d36 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1830,7 +1830,7 @@ xfs_swap_change_owner(
+ 		if (error != -EAGAIN)
+ 			break;
+ 
+-		error = xfs_trans_roll(tpp);
++		error = xfs_trans_roll(tpp, NULL);
+ 		if (error)
+ 			break;
+ 		tp = *tpp;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 604ee38..6419549 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1049,7 +1049,7 @@ xfs_dir_ialloc(
+ 			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
+ 		}
+ 
+-		code = xfs_trans_roll(&tp);
++		code = xfs_trans_roll(&tp, NULL);
+ 		if (committed != NULL)
+ 			*committed = 1;
+ 
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 86f92df..1bf2505 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1057,12 +1057,15 @@ xfs_trans_cancel(
+  */
+ int
+ xfs_trans_roll(
+-	struct xfs_trans	**tpp)
++	struct xfs_trans	**tpp,
++	bool 			*committed)
+ {
+ 	struct xfs_trans	*trans = *tpp;
+ 	struct xfs_trans_res	tres;
+ 	int			error;
+ 
++	if (committed)
++		*committed = false;
+ 	/*
+ 	 * Copy the critical parameters from one trans to the next.
+ 	 */
+@@ -1082,6 +1085,9 @@ xfs_trans_roll(
+ 	if (error)
+ 		return error;
+ 
++	if (committed)
++		*committed = true;
++
+ 	/*
+ 	 * Reserve space in the log for the next transaction.
+ 	 * This also pushes items in the "AIL", the list of logged items,
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 9d542df..d4deb49 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -230,7 +230,7 @@ int		xfs_trans_free_extent(struct xfs_trans *,
+ 				      struct xfs_efd_log_item *, xfs_fsblock_t,
+ 				      xfs_extlen_t, struct xfs_owner_info *);
+ int		xfs_trans_commit(struct xfs_trans *);
+-int		xfs_trans_roll(struct xfs_trans **);
++int		xfs_trans_roll(struct xfs_trans **, bool *);
+ int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
+ void		xfs_trans_cancel(xfs_trans_t *);
+ int		xfs_trans_ail_init(struct xfs_mount *);
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 4a89da4..bedd5fd 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -147,7 +147,7 @@ xfs_trans_roll_inode(
+ 	int			error;
+ 
+ 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+-	error = xfs_trans_roll(tpp);
++	error = xfs_trans_roll(tpp, NULL);
+ 	if (!error)
+ 		xfs_trans_ijoin(*tpp, ip, 0);
+ 	return error;
 -- 
-chandan
+2.9.5
 
