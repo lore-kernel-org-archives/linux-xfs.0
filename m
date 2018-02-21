@@ -1,118 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39050 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756203AbeBOWcH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Feb 2018 17:32:07 -0500
-Date: Fri, 16 Feb 2018 09:31:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/7] xfs: rework secondary superblock updates in growfs
-Message-ID: <20180215223138.GT7000@dastard>
-References: <20180201064202.7174-1-david@fromorbit.com>
- <20180201064202.7174-8-david@fromorbit.com>
- <20180209161240.GD21413@bfoster.bfoster>
+Received: from mail1.g1.pair.com ([66.39.3.162]:30212 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752006AbeBUQzg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Feb 2018 11:55:36 -0500
+Date: Wed, 21 Feb 2018 17:55:40 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: XFS corruption of in-memory data detected with KVM
+Message-ID: <20180221175540.618eda28@harpe.intellique.com>
+In-Reply-To: <CAJbUkCRN3p-o7qKjad+zOFEJ9cRMoop1TjFhG7pt6ConjdEL5w@mail.gmail.com>
+References: <CAJbUkCSw-Cyi1-KkfAtaCWYODZ3jHAsE8coQpMo1qb+SXDsyEw@mail.gmail.com>
+        <20180221114627.tbdequwrbmsakvcu@odin.usersys.redhat.com>
+        <CAJbUkCRN3p-o7qKjad+zOFEJ9cRMoop1TjFhG7pt6ConjdEL5w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180209161240.GD21413@bfoster.bfoster>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/5cy_1GRQ4L7LpUQhoBOuzzm"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Andrea Mazzocchi <mazzocchiandrea24@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Feb 09, 2018 at 11:12:41AM -0500, Brian Foster wrote:
-> On Thu, Feb 01, 2018 at 05:42:02PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Right now we wait until we've committed changes to the primary
-> > superblock before we initialise any of the new secondary
-> > superblocks. This means that if we have any write errors for new
-> > secondary superblocks we end up with garbage in place rather than
-> > zeros or even an "in progress" superblock to indicate a grow
-> > operation is being done.
-> > 
-> > To ensure we can write the secondary superblocks, initialise them
-> > earlier in the same loop that initialises the AG headers. We stamp
-> > the new secondary superblocks here with the old geometry, but set
-> > the "sb_inprogress" field to indicate that updates are being done to
-> > the superblock so they cannot be used.  This will result in the
-> > secondary superblock fields being updated or triggering errors that
-> > will abort the grow before we commit any permanent changes.
-> > 
-> > This also means we can change the update mechanism of the secondary
-> > superblocks.  We know that we are going to wholly overwrite the
-> > information in the struct xfs_sb in the buffer, so there's no point
-> > reading it from disk. Just allocate an uncached buffer, zero it in
-> > memory, stamp the new superblock structure in it and write it out.
-> > If we fail to write it out, then we'll leave the existing sb (old or
-> > new w/ inprogress) on disk for repair to deal with later.
-> > 
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_fsops.c | 92 ++++++++++++++++++++++++++++++++----------------------
-> >  1 file changed, 55 insertions(+), 37 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index 113be7dbdc81..7318cebb591d 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> ...
-> > @@ -630,43 +653,27 @@ xfs_growfs_imaxpct(
-> >  
-> ...
-> >  static int
-> >  xfs_growfs_update_superblocks(
-> ...
-> >  	/* update secondary superblocks. */
-> >  	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
-> > -		error = 0;
-> > -		/*
-> > -		 * new secondary superblocks need to be zeroed, not read from
-> > -		 * disk as the contents of the new area we are growing into is
-> > -		 * completely unknown.
-> > -		 */
-> > -		if (agno < oagcount) {
-> > -			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> > -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> > -				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-> > -				  &xfs_sb_buf_ops);
-> > -		} else {
-> > -			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
-> > -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> > -				  XFS_FSS_TO_BB(mp, 1), 0);
-> > -			if (bp) {
-> > -				bp->b_ops = &xfs_sb_buf_ops;
-> > -				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> > -			} else
-> > -				error = -ENOMEM;
-> > -		}
-> > +		struct xfs_buf		*bp;
-> >  
-> > +		bp = xfs_growfs_get_hdr_buf(mp,
-> > +				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> > +				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
-> 
-> This all seems fine to me up until the point where we use uncached
-> buffers for pre-existing secondary superblocks. This may all be fine now
-> if nothing else happens to access/use secondary supers, but it seems
-> like this essentially enforces that going forward.
-> 
-> Hmm, I see that scrub does appear to look at secondary superblocks via
-> cached buffers. Shouldn't we expect this path to maintain coherency with
-> an sb buffer that may have been read/cached from there?
+--Sig_/5cy_1GRQ4L7LpUQhoBOuzzm
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Good catch! I wrote this before scrub started looking at secondary
-superblocks. As a general rulle, we don't want to cache secondary
-superblocks as they should never be used by the kernel except in
-exceptional situations like grow or scrub.
+Le Wed, 21 Feb 2018 16:23:43 +0100
+Andrea Mazzocchi <mazzocchiandrea24@gmail.com> =C3=A9crivait:
 
-I'll have a look at making this use cached buffers that get freed
-immediately after we release them (i.e. don't go onto the LRU) and
-that should solve the problem.
+> > Also, you are running a very old kernel, so, please make sure you
+> > try to run a newer xfs_repair. =20
+>=20
+> We installed yesterday 3.10.0-693.17.1.el7. I know that CentOS and
+> RedHat keep old stable kernel version and backport important stuff:
+> do you think that upgrading to a more recent kernel (4 and above)
+> would be better, even if less stable?
 
-Cheers,
+Actually the 3.10 from CentOS 7 has a lot of things backported, for
+instance it supports XFS with crc metadata which was introduced in 3.16.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+However in the recent year I've never met any reason NOT to use a
+recent LTS kernel (like a 4.9 or 4.14). I don't really understand why
+RedHat sticks to these absurdly old kernel releases as a basis (and
+taking the pain of backporting stuff for years and years).
+
+> > Also, this is more a guess than anything. If you see this happening
+> > often (even after xfs_repair), you might want to double-check your
+> > storage stack and see if this is not corrupting anything, bad
+> > configured storage stacks in virtual environments are very usual
+> > culprits on filesystem corruption cases. =20
+>=20
+> How could we check our storage stack and see if it is the one to
+> blame?
+
+Hard to say, what KVM disk format are you using? Raw, qcow2, LVM
+volumes? If these are files (raw or qcow2), what kind of filesystem and
+hardware stack are they living on? Are there any error on the hosting
+system?
+
+At tne VM level, do you see any IO error? Are you using the virtio disk
+driver or something else?=20
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/5cy_1GRQ4L7LpUQhoBOuzzm
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlqNpIwACgkQX3jQXNUicVazJACg+E/JswG2Mbi3rLYSw+5wZ6+e
+tfwAnRI7XYMNMF3DplupiPMo2eSd6qLV
+=Reki
+-----END PGP SIGNATURE-----
+
+--Sig_/5cy_1GRQ4L7LpUQhoBOuzzm--
