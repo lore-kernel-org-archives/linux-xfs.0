@@ -1,58 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41975 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750753AbeBSFCL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Feb 2018 00:02:11 -0500
-Date: Mon, 19 Feb 2018 16:02:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: freezing system for several second on high I/O [kernel 4.15]
-Message-ID: <20180219050209.GY7000@dastard>
-References: <1518255240.31843.6.camel@gmail.com>
- <1518255352.31843.8.camel@gmail.com>
- <20180211225657.GA6778@dastard>
- <1518643669.6070.21.camel@gmail.com>
- <20180214215245.GI7000@dastard>
- <1518666178.6070.25.camel@gmail.com>
- <20180215054436.GN7000@dastard>
- <CABXGCsOpJU4WU2w5DYBA+Q1nquh14zN0oCW6OfCbhTOFYLwO5w@mail.gmail.com>
- <20180215214858.GQ7000@dastard>
- <CABXGCsMK61J_+3c4JaXoi1e6aZzngvkQ29zRvQAj3nNcRpv5-Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABXGCsMK61J_+3c4JaXoi1e6aZzngvkQ29zRvQAj3nNcRpv5-Q@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:45277 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751350AbeBUHW2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Feb 2018 02:22:28 -0500
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id BC47FAE7A
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Feb 2018 07:22:26 +0000 (UTC)
+From: Nikolay Borisov <nborisov@suse.com>
+Subject: [PATCH] xfs: Remove dead code from inode recover function
+Date: Wed, 21 Feb 2018 09:22:24 +0200
+Message-Id: <1519197744-8339-1-git-send-email-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
+To: linux-xfs@vger.kernel.org
+Cc: Nikolay Borisov <nborisov@suse.com>
 
-On Sun, Feb 18, 2018 at 07:02:37PM +0500, Mikhail Gavrilov wrote:
-> On 16 February 2018 at 02:48, Dave Chinner <david@fromorbit.com> wrote:
-> > On Fri, Feb 16, 2018 at 12:02:28AM +0500, Mikhail Gavrilov wrote:
-> >> On 15 February 2018 at 10:44, Dave Chinner <david@fromorbit.com> wrote:
-> >> > I've already explained that we can't annotate these memory
-> >> > allocations to turn off the false positives because that will also
-> >> > turning off all detection of real deadlock conditions.  Lockdep has
-> >> > many, many limitations, and this happens to be one of them.
-> >> >
-> >> > FWIW, is there any specific reason you running lockdep on your
-> >> > desktop system?
-> >>
-> >> Because I wanna make open source better (help fixing all freezing)
-> >
-> > lockdep isn't a user tool - most developers don't even understand
-> > what it tries to tell them. Worse, it is likely contributing to your
-> > problems as it has a significant runtime CPU and memory overhead....
-> 
-> I don't know how else collect debug info about freezes which occurring
-> accidentally. Is there a better idea?
+The memcpy is guarded by a check which is performed a right before we
+call xfs_log_dinode_to_disk. At this point we are sure this check will
+always be false otherwise we would have errored out. So let's remove
+this dead weight.
 
-Lockdep tells us about locking problems, not arbitrary operational
-latencies. Go look at the bcc collection of tools for tracking down
-where latencies occur in the system.
+Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+---
+ fs/xfs/xfs_log_recover.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
--Dave.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 00240c9ee72e..cb20f2e83412 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3173,13 +3173,6 @@ xlog_recover_inode_pass2(
+ 	/* recover the log dinode inode into the on disk inode */
+ 	xfs_log_dinode_to_disk(ldip, dip);
+ 
+-	/* the rest is in on-disk format */
+-	if (item->ri_buf[1].i_len > isize) {
+-		memcpy((char *)dip + isize,
+-			item->ri_buf[1].i_addr + isize,
+-			item->ri_buf[1].i_len - isize);
+-	}
+-
+ 	fields = in_f->ilf_fields;
+ 	if (fields & XFS_ILOG_DEV)
+ 		xfs_dinode_put_rdev(dip, in_f->ilf_u.ilfu_rdev);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
