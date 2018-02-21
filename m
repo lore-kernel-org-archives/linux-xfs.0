@@ -1,98 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43382 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750842AbeBVUt2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Feb 2018 15:49:28 -0500
-Subject: Re: [ANNOUNCE] xfsprogs v4.15.0-rc1 released
-References: <7025bd78-65f9-ad25-e884-cada818a685b@sandeen.net>
- <20180220003635.GA8479@infradead.org>
- <8675595f-abe1-739c-c131-e12737045365@sandeen.net>
- <20180220163347.GB27629@magnolia> <20180220210237.GB7000@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b5f653da-d56d-550f-645c-36da93ba7441@sandeen.net>
-Date: Thu, 22 Feb 2018 14:49:27 -0600
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:35550 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932556AbeBULqj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Feb 2018 06:46:39 -0500
+Received: by mail-wr0-f181.google.com with SMTP id l43so3634683wrc.2
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Feb 2018 03:46:39 -0800 (PST)
+Date: Wed, 21 Feb 2018 12:46:27 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: XFS corruption of in-memory data detected with KVM
+Message-ID: <20180221114627.tbdequwrbmsakvcu@odin.usersys.redhat.com>
+References: <CAJbUkCSw-Cyi1-KkfAtaCWYODZ3jHAsE8coQpMo1qb+SXDsyEw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180220210237.GB7000@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJbUkCSw-Cyi1-KkfAtaCWYODZ3jHAsE8coQpMo1qb+SXDsyEw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Andrea Mazzocchi <mazzocchiandrea24@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 2/20/18 3:02 PM, Dave Chinner wrote:
-> On Tue, Feb 20, 2018 at 08:33:47AM -0800, Darrick J. Wong wrote:
->> On Tue, Feb 20, 2018 at 09:09:22AM -0600, Eric Sandeen wrote:
->>> (resend, somehow I keep missing reply-all)
->>>
->>> That would be much faster than at least our historical progression
->>> for new features:
->>>
->>> * Experimental for $LONG_TIME
->>> * Drop experimental for $SIGNIFICANT_TIME
->>> * Make default after that
->>
->> ISTR Dave once telling me that he usually waited ~4 kernel releases to
->> drop the experimental tag and then another year to turn it on by
->> default in mkfs.  I'll grant you that seven kernels went by before
->> EXPERIMENTAL went away, so I don't think we need to wait a whole other
->> year.  How about turning it on by default in July or so?
+On Wed, Feb 21, 2018 at 11:57:01AM +0100, Andrea Mazzocchi wrote:
+> Hello everybody.
 > 
-> The wait time for "supported -> default" is so that distro's have
-> time to move to a feature supported kernel before they pick up a new
-> xfsprogs release that turns on that feature by default. this mostly
-> avoids the problem of distros accidentally turning on a feature that
-> is still experimental in their kernel....
-
-Speaking for Fedora, it brings userspace & kernelspace into a distro
-together, so that's not a problem.  Speaking for RHEL, it's a long term
-distro that knows darned well that mixing and matching new & old requires
-care, if it's done at all.
-
-> It also gives us "early adopter" feedback before large numbers of
-> unsuspecting users have it enabled for them....
-
-*nod*
-
->> Speaking of which, hasn't enough time passed to enable spinodes by
->> default in mkfs?  Given the likelihood of worse fragmentation once we
->> add cow into the mix, we probably want that turned on before reflink.
->>
->> Hm.... EXPERIMENTAL was removed for spinodes in July 2016, so that
->> probably could be turned on "now".
+> We are experiencing crashes on our SSD VPSes, all working on KVM;
+> other VPSes hosted on another VPS provider
+> using VMware never gave us troubles, the ones on KVM occasionally
+> crashes under unknown circumstances.
+> We use the same CentOS7 ISO on all our hosts (both KVM and VMware).
+> Only the hosts on KVM crash and we don't understand why.
 > 
-> Yup, enough time has passed there.
-
-Uh, ok, 4.16 then?  Maybe not something to do at the very last minute
-of 4.15.
-
->>> My sense is that it's a bit premature, having /just/ dropped the
->>> EXPERIMENTAL tag, which will (in theory) get more people using
->>> it in earnest and maybe shaking out more bugs.
->>>
->>> But I'd like to hear what others think as well.
->>
->> There's already too much new stuff in mkfs 4.15; let's wait for .17
->> because that'll give the more cautious testers more time to find
->> whatever other bugs still lurk. :)
+> Here's the dmesg of the crashed host in the emergency console.
+> Any suggestion is more than welcome!
 > 
-> I think even that is too fast. If distro's want it as the default
-> before we set it, then they can patch mkfs themselves.
 
-Again speaking with my own distro maintainer hat on, I hate backporting
-fundamental changes in behavior like that.  It's easier on everyone
-if xfsprogs version $FOO has a well known, consistent set of features, but -
+By a quick look, looks like your machine is falling into emergency mode due a
+failure to mount the root filesystem due metadata corruption. Have you tried to
+run xfs_repair on this filesystem to see if it catches something?
 
-> If this is really a huge problem for distros, then wasn't this what
-> someone wanted mkfs config files for?
+Looks like XFS found an on-disk corruption while trying to process an extent
+free intent found in the log.
 
-Suse folk seem to like that approach, yes.  But while the config
-file facilitates that sort of distro approach, it isn't really
-a hard requirement, I'd think - patching is always an option
-in the end.
+Notice though, if you can't properly mount/unmount it (to replay the log) before
+running xfs_repair, you will might need to zero out the log (-L option).
 
--Eric
+Also, you are running a very old kernel, so, please make sure you try to run a
+newer xfs_repair.
+
+Have you tried xfs_repair already? Did the same problem happened after it? Have
+you tried to use an updated kernel? Your kernel is old, and we can't track what
+have been fixed or not by the distro, so that's why I suggested to try a newer
+kernel anyway.
+
+Also, this is more a guess than anything. If you see this happening often (even
+after xfs_repair), you might want to double-check your storage stack and see if
+this is not corrupting anything, bad configured storage stacks in virtual
+environments are very usual culprits on filesystem corruption cases.
+
+> Best regards
+> 
+> [    1.781684] systemd[1]: Found device /dev/mapper/centos-root.
+> [    1.781919] systemd[1]: Starting File System Check on
+> /dev/mapper/centos-root...
+> [    1.798487] systemd-fsck[3751]: /sbin/fsck.xfs: XFS file system.
+> [    1.799458] systemd[1]: Started File System Check on /dev/mapper/centos-root.
+> [    1.838485] systemd[1]: Started dracut initqueue hook.
+> [    1.838637] systemd[1]: Reached target Remote File Systems (Pre).
+> [    1.838764] systemd[1]: Starting Remote File Systems (Pre).
+> [    1.838886] systemd[1]: Reached target Remote File Systems.
+> [    1.839070] systemd[1]: Starting Remote File Systems.
+> [    1.839211] systemd[1]: Started dracut pre-mount hook.
+> [    1.839357] systemd[1]: Mounting /sysroot...
+> [    2.235562] kernel: SGI XFS with ACLs, security attributes, no debug enabled
+> [    2.237759] kernel: XFS (dm-0): Mounting U5 Filesystem
+> [    5.413560] kernel: XFS (dm-0): Starting recovery (logdev: internal)
+> [    5.436057] kernel: XFS (dm-0): Internal error
+> XFS_WANT_CORRUPTED_GOTO at line 3171 of file
+> fs/xfs/libxfs/xfs_btree.c. Caller xfs_free_ag_extent+8x402/0x780 [xfs]
+> [    5.437201] kernel: CPU: 1 PID: 398 Comm: mount Not tainted
+> 3.18.0-693.11.1.e17.x86_64 #1
+> [    5.438265] kernel: Hardware name: QEMU Standard PC (i440FX + PIIX,
+> 1996), BIOS rel-1.11.0-0-g63451fca13-prebuilt.qemu-project.org
+> 04/01/2014
+> [    5.448392] kernel: ffff8801361368d8 0000000073ff73da
+> ffff8801363bfa88 ffffffff816a3e61
+> [    5.441585] kernel: ffff8881363bfa28 ffffffffc822c46b
+> ffffffffc01e94d2 ffff8881363bfa98
+> [    5.442682] kernel: ffffffffc0206543 ffff8801363bfafc
+> 0000000000000000 00000000ffffffff
+> [    5.443783] kernel: Call Trace:
+> [    5.444828] kernel: [<ffffffff816a3e61>] dump_stack+0x19/0x1b
+> [    5.445958] kernel: [<ffffffffc022c46b>] xfs_error_report+0x3b/0x40 [xfs]
+> [    5.447159] kernel: [<ffffffffc0le94d2>] ?
+> xfs_free_ag_extent+0x402/0x780 [xfs]
+> [    5.448357] kernel: [<ffffffffc0206543>] xfs_btree_insert+0x1a3/0x1b0 [xfs]
+> [    5.449683] kernel: [<ffffffffc0le94d2>] xfs_free_ag_extent+0x402/0x780 [xfs]
+> [    5.458844] kernel: [<ffffffffc0lebe6c>] xfs_free_extent+0xfc/0x130 [xfs]
+> [    5.452168] kernel: [<ffffffffc025a6b6>]
+> xfs_trans_free_extent+0x26/0x60 [xfs]
+> [    5.453378] kernel: [<ffffffffc0252a5e>]
+> xlog_recover_process_efi+0x17e/0x1c0 [xfs]
+> [    5.454788] kernel: [<ffffffffc0254db7>]
+> xlog_recover_process_efis.isra.30+0x77/0xe0 [xfs]
+> [    5.455927] kernel: [<ffffffffc02586e1>] xlog_recover_finish+0x21/0xb0 [xfs]
+> [    5.457896] kernel: [<ffffffffc024b814>] xfs_log_mount_finish+0x34/0x50 [xfs]
+> [    5.458273] kernel: [<ffffffffc0241eal>] xfs_mountfs+0x5d1/0x8b0 [xfs]
+> [    5.459589] kernel: [<ffffffffc02301a0>] ?
+> xfs_filestreamget_parent+Ox80/0x80 [xis]
+> [    5.468727] kernel: [<ffffffffc0244ceb>] xfs_fs_fill_super+0x3bb/0x4d0 [xfs]
+> [    5.461933] kernel: [<ffffffff81204b10>] mount_bdev+0x1b0/0x1f0
+> [    5.463161] kernel: [<ffffffffc0244930>] ?
+> xfs_test_remount_options.isra.11+0x70/0x70 [xfs]
+> [    5.464485] kernel: [<ffffffffc0243655>] xfs_fs_mount+0x15/0x20 [xfs]
+> [    5.465668] kernel: [<ffffffff81205389>] mount_fs+0x39/0x1b0
+> [    5.466951] kernel: [<ffffffff811a5f05>] ? __alloc_percpu+0x15/0x20
+> [    5.468185] kernel: [<ffffffff81221e57>] vfs_kern_mount+0x67/0x110
+> [    5.469497] kernel: [<ffffffff81224363>] do_mount+0x233/0xaf0
+> [    5.478715] kernel: [<ffffffff811a100b>] ? strndup_user+0x4b/0xa0
+> [    5.471909] kernel: [<ffffffff81224fa6>] SyS_mount+0x96/Oxf0
+> [    5.473063] kernel: [<ffffffff816b5089>] system_call_fastpath+0x16/0x1b
+> [    5.474233] kernel: XFS (dm-0): Internal error xfs_trans_cancel at
+> line 984 of file fs/xfs xfs_trans.c. Caller
+> xlog_recover_process_efi+Oxl8e/Oxlc0 (xis]
+> [    5.476668] kernel: CPU: 1 PID: 390 Comm: mount Not tainted
+> 3.10.0-693.11.1.e17.x86_64 #1
+> [    5.477942] kernel: Hardware name: QEMU Standard PC (i440FX + PIIX,
+> 1996), BIOS rel-1.11.0-0-g63451fca13-prebuilt.qemu-project.org
+> 04/01/2014
+> [    5.480466] kernel: ffff880136010000 0000000073ff73da
+> ffff8801363bfbd0 ffffffff816a3e61
+> [    5.481751] kernel: ffff8801363bfbe8 ffffffffc022c46b
+> ffffffffc0252a6e ffff8801363bfc10
+> [    5.483028] kernel: ffffffffc02488cd ffff8800369d6000
+> 0000000000000000 ffff8800369d6198
+> [    5.484313] kernel: Call Trace:
+> [    5.485801] kernel: [<ffffffff816a3e61>] dump_stack+0x19/0x1b
+> [    5.487129] kernel: [<ffffffffc022c46b>] xfs_error_report+Ox3b/0x40 [xfs]
+> [    5.488464] kernel: [<ffffffffc0252a6e>] ?
+> xlog_recover_process_efi+Oxl8e/Oxlc0 [xfs]
+> [    5.489797] kernel: [<ffffffffc02488cd>] xfs_trans_cancel+Oxbd/Oxe0 [xfs]
+> [    5.491123] kernel: [<ffffffffc0252a6e>]
+> xlog_recover_process_efi+Oxl8e/Oxlc0 [xis]
+> [    5.492429] kernel: [<ffffffffc0254db7>]
+> xlog_recover_process_efis.isra.30+0x77/0xe0 [xfs]
+> [    5.493748] kernel: [<ffffffffc02586el>] xlog_recover_finish+Ox21/OxbO [xfs]
+> [    5.495001] kernel: [<ffffffffc024b814>] xfs_log_mount_finish+0x34/0x50 [xfs]
+> [    5.496286] kernel: [<ffffffffc0241eal>] xfs_mountfs+0x5d1/0x8b0 [xfs]
+> [    5.497508] kernel: [<ffffffffc02301a0>] ?
+> xfs_filestream_get_parent+0x80/0x80 [xfs]
+> [    5.498700] kernel: [<ffffffffc0244ceb>] xfs_fs_fi1l_super+Ox3bb/Ox4d0 [xfs]
+> [    5.499866] kernel: [<ffffffff81204b10>] mount_bdev+0x1b0/0x1f0
+> [    5.501050] kernel: [<ffffffffc0244930>] ?
+> xfs_test_remount_options.isra.11+0x70/0x70 [xfs]
+> [    5.502232] kernel: [<ffffffffc0243655>] xfs_fs_mount+Ox15/0x20 [xfs]
+> [    5.503406] kernel: [<ffffffff81205389>] mount_fs+0x39/0x1b0
+> [    5.504556] kernel: [<ffffffff811a5f05>] ? __alloc_percpu+Ox15/0x20
+> [    5.505713] kernel: [<ffffffff81221e57>] vfs_kern_mount+0x67/0x110
+> [    5.506893] kernel: [<ffffffff81224363>] do_mount+0x233/0xaf0
+> [    5.508048] kernel: [<ffffffff811a100b>] ? strndup_user+Ox4b/Oxa0
+> [    5.509222] kernel: [<ffffffff81224fa6>] SyS_mount+0x96/0xf0
+> [    5.510366] kernel: [<ffffffff816b5089>] system_call_fastpath+0x16/0x1b
+> [    5.511554] kernel: XFS (dm-0): xfs_do_force_shutdown(0x8) called
+> from line 985 of file fs/xfs/xfs_trans.c.     Return address =
+> Oxffffffffc02488e6
+> [    5.514064] kernel: XFS (dm-0): Corruption of in-memory data
+> detected. Shutting down file system
+> [    5.515795] kernel: XFS (dm-0): Please umount the filesystem and
+> rectify the problem(s)
+> [    5.517485] kernel: XFS (dm-0): Failed to recover EFIs
+> [    5.519112] kernel: XFS (dm-0): log mount finish failed
+> [    5.208098] mount[390]: mount: mount /dev/mapper/centos-root on
+> /sysroot failed: Structure needs cleaning
+> [    5.208670] systemd[1]: sysroot.mount mount process exited,
+> code-exited status=32
+> [    5.208864] systemd[1]: Failed to mount /sysroot.
+> [    5.209318] systemd[1]: Dependency failed for Initrd Root File System.
+> [    5.214710] systemd[1]: Dependency failed for Reload Configuration
+> from the Real Root.
+> [    5.214839] systemd[1]: Job initrd-parse-etc.service/start failed
+> with result 'dependency'
+> [    5.214948] systemd[1]: Triggering OnFailure= dependencies of
+> initrd-parse-etc.service.
+> [    5.215120] systemd[1]: Job initrd-root-fs.target/start failed with
+> result 'dependency'.
+> [    5.215248] systemd[1]: Triggering OnFailure= dependencies of
+> initrd-root-fs.target.
+> [    5.236947] systemd[1]: Startup finished in 806ms (kernel) + 0
+> (initrd) + 4.430s (userspace) = 5.236s.
+> [    5.237073] systemd[1]: Starting Emergency Mode.
+> [    5.256981] systemd[1]: Received SIGRTMIM+21 from PID 274 (plymouthd).
+> (END)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
