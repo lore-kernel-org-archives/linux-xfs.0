@@ -1,97 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51802 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751681AbeBTXBn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Feb 2018 18:01:43 -0500
-Date: Tue, 20 Feb 2018 15:01:09 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v6 3/3] xfs: reject removal of realtime flag when datadev
- doesn't support DAX
-Message-ID: <20180220230109.GG27629@magnolia>
-References: <151880058592.43131.558230052922233871.stgit@djiang5-desk3.ch.intel.com>
- <151880066614.43131.15847174332875373188.stgit@djiang5-desk3.ch.intel.com>
- <20180216172247.GS5217@magnolia>
- <20180218002317.GU7000@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180218002317.GU7000@dastard>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57824 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751017AbeBUC1V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Feb 2018 21:27:21 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1L2Nkja001754
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2018 21:27:20 -0500
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2g8y2p1tmr-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2018 21:27:20 -0500
+Received: from localhost
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Tue, 20 Feb 2018 19:27:19 -0700
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V2 1/2] xfs: Remove "committed" argument of xfs_dir_ialloc
+Date: Wed, 21 Feb 2018 07:58:25 +0530
+Message-Id: <20180221022826.7020-1-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
+To: linux-xfs@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, hch@infradead.org, darrick.wong@oracle.com, bfoster@redhat.com
 
-On Sun, Feb 18, 2018 at 11:23:17AM +1100, Dave Chinner wrote:
-> On Fri, Feb 16, 2018 at 09:22:47AM -0800, Darrick J. Wong wrote:
-> > On Fri, Feb 16, 2018 at 10:04:26AM -0700, Dave Jiang wrote:
-> > > In a situation where the rt_dev is DAX and data_dev is not DAX, if the user
-> > > requests to remove the realtime flag via ioctl we can no longer support DAX
-> > > for that file. Dynamic changing of S_DAX on the inode is not supported due
-> > > to various complications in the existing implementation. Therefore until we
-> > > address the dynamic S_DAX change issues, we must disallow realtime flag
-> > > being removed.
-> > > 
-> > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/xfs_ioctl.c |   14 ++++++++++++++
-> > >  1 file changed, 14 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > index 2c70a0a4f59f..edd97d527fe8 100644
-> > > --- a/fs/xfs/xfs_ioctl.c
-> > > +++ b/fs/xfs/xfs_ioctl.c
-> > > @@ -1030,6 +1030,20 @@ xfs_ioctl_setattr_xflags(
-> > >  {
-> > >  	struct xfs_mount	*mp = ip->i_mount;
-> > >  	uint64_t		di_flags2;
-> > > +	struct inode		*inode = VFS_I(ip);
-> > > +	struct super_block	*sb = inode->i_sb;
-> > > +
-> > > +	/*
-> > > +	 * In the case that the inode is realtime, and we are trying to remove
-> > > +	 * the realtime flag, and the rtdev supports DAX but the datadev does
-> > > +	 * not support DAX, we can't allow the realtime flag to be removed
-> > > +	 * since we do not support dynamic S_DAX flag removal yet.
-> > > +	 */
-> > > +	if (XFS_IS_REALTIME_INODE(ip) &&
-> > > +	    !(fa->fsx_xflags & FS_XFLAG_REALTIME) &&
-> > > +	    bdev_dax_supported(mp->m_rtdev_targp->bt_bdev, sb->s_blocksize) &&
-> > > +	    !bdev_dax_supported(mp->m_ddev_targp->bt_bdev, sb->s_blocksize))
-> > 
-> > What happens here if we have a non-rt file that we're trying to turn
-> > into an rt file and the data dev supports dax but not the rt dev?
-> > 
-> > Changing the rt flag is only supported on files with no data blocks (no
-> > extents, no delalloc blocks), so why can't we remove S_DAX from an empty
-> > file?  There aren't any memory mappings or page cache to get in the way,
-> > correct?
-> 
-> File size can be non-zero, so you can have DAX read-over-hole
-> mappings present. I simply don't think it's safe to remove/add S_DAX
-> flags via ioctls right now. If we have a DAX capable rtdev, then the
-> only way we should allow rtdev+dax to be used right now is via the
-> RT inherit bit on the dir that creates files in the rtdev right from
-> the start. i.e. we can't set/remove the RT inode flag on an inode
-> via ioctl if rtdev+dax is enabled until the whole dynamic S_DAX
-> inode flag thing is resolved.
+xfs_dir_ialloc() rolls the current transaction when allocation of a new
+inode required the space manager to perform an allocation and replinish
+the Inode btree.
 
-Could we deal with the restriction that the DAX flag can't change
-(whether by user ioctl or by toggling the rt flag) unless the file size
-is zero?  That adds another way setting/clearing the realtime flag can
-fail, but at least it'd be the same EINVAL.
+None of the callers of xfs_dir_ialloc() need to know if the
+transaction was committed. Hence this commit removes the "committed"
+argument of xfs_dir_ialloc.
 
---D
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+Changelog:
+v1 -> v2:
+1. Add a patch to remove the "commited" argument of xfs_dir_ialloc.
+   Hence the second patch now has xfs_dir_ialloc() invoking
+   xfs_trans_roll() by passing NULL as the second argument.
+   
+ fs/xfs/xfs_inode.c   | 14 +++-----------
+ fs/xfs/xfs_inode.h   |  2 +-
+ fs/xfs/xfs_qm.c      |  4 +---
+ fs/xfs/xfs_symlink.c |  2 +-
+ 4 files changed, 6 insertions(+), 16 deletions(-)
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 604ee38..37d9426 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -972,10 +972,8 @@ xfs_dir_ialloc(
+ 	xfs_nlink_t	nlink,
+ 	dev_t		rdev,
+ 	prid_t		prid,		/* project id */
+-	xfs_inode_t	**ipp,		/* pointer to inode; it will be
++	xfs_inode_t	**ipp)		/* pointer to inode; it will be
+ 					   locked. */
+-	int		*committed)
+-
+ {
+ 	xfs_trans_t	*tp;
+ 	xfs_inode_t	*ip;
+@@ -1050,8 +1048,6 @@ xfs_dir_ialloc(
+ 		}
+ 
+ 		code = xfs_trans_roll(&tp);
+-		if (committed != NULL)
+-			*committed = 1;
+ 
+ 		/*
+ 		 * Re-attach the quota info that we detached from prev trx.
+@@ -1088,9 +1084,6 @@ xfs_dir_ialloc(
+ 		}
+ 		ASSERT(!ialloc_context && ip);
+ 
+-	} else {
+-		if (committed != NULL)
+-			*committed = 0;
+ 	}
+ 
+ 	*ipp = ip;
+@@ -1217,8 +1210,7 @@ xfs_create(
+ 	 * entry pointing to them, but a directory also the "." entry
+ 	 * pointing to itself.
+ 	 */
+-	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip,
+-			NULL);
++	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+@@ -1351,7 +1343,7 @@ xfs_create_tmpfile(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0, prid, &ip, NULL);
++	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0, prid, &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 3e8dc99..50a2a84 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -431,7 +431,7 @@ xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
+ 
+ int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
+ 			       xfs_nlink_t, dev_t, prid_t,
+-			       struct xfs_inode **, int *);
++			       struct xfs_inode **);
+ 
+ /* from xfs_file.c */
+ enum xfs_prealloc_flags {
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 5b848f4..ec39ae2 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -748,7 +748,6 @@ xfs_qm_qino_alloc(
+ {
+ 	xfs_trans_t	*tp;
+ 	int		error;
+-	int		committed;
+ 	bool		need_alloc = true;
+ 
+ 	*ip = NULL;
+@@ -788,8 +787,7 @@ xfs_qm_qino_alloc(
+ 		return error;
+ 
+ 	if (need_alloc) {
+-		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, ip,
+-				&committed);
++		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, ip);
+ 		if (error) {
+ 			xfs_trans_cancel(tp);
+ 			return error;
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 2e9e793..5b66ac1 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -264,7 +264,7 @@ xfs_symlink(
+ 	 * Allocate an inode for the symlink.
+ 	 */
+ 	error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
+-			       prid, &ip, NULL);
++			       prid, &ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-- 
+2.9.5
+
