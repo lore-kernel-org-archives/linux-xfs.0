@@ -1,205 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58280 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751017AbeBUC10 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Feb 2018 21:27:26 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w1L2Nk59001814
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2018 21:27:25 -0500
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2g8y2p1tpt-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Feb 2018 21:27:25 -0500
-Received: from localhost
-        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Tue, 20 Feb 2018 19:27:24 -0700
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V2 2/2] xfs: Fix "use after free" of intent items
-Date: Wed, 21 Feb 2018 07:58:26 +0530
-In-Reply-To: <20180221022826.7020-1-chandan@linux.vnet.ibm.com>
-References: <20180221022826.7020-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180221022826.7020-2-chandan@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:43502 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750738AbeBUGaY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Feb 2018 01:30:24 -0500
+Subject: Re: [PATCH] xfs: Remove duplicated check
+References: <1519134782-10062-1-git-send-email-nborisov@suse.com>
+ <20180220211114.GC7000@dastard>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <e23b32c5-8b5f-c0ff-c8b9-db383dd775fb@suse.com>
+Date: Wed, 21 Feb 2018 08:30:21 +0200
+MIME-Version: 1.0
+In-Reply-To: <20180220211114.GC7000@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, hch@infradead.org, darrick.wong@oracle.com, bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-generic/388 can cause the following "use after free" error to occur,
 
- =============================================================================
- BUG xfs_efi_item (Not tainted): Poison overwritten
- -----------------------------------------------------------------------------
 
- Disabling lock debugging due to kernel taint
- INFO: 0x00000000292c4bd4-0x00000000292c4bd4. First byte 0x6a instead of 0x6b
- INFO: Allocated in .kmem_zone_alloc+0xcc/0x190 age=79 cpu=0 pid=12436
-        .__slab_alloc+0x54/0x80
-        .kmem_cache_alloc+0x124/0x350
-        .kmem_zone_alloc+0xcc/0x190
-        .xfs_efi_init+0x48/0xf0
-        .xfs_extent_free_create_intent+0x40/0x130
-        .xfs_defer_intake_work+0x74/0x1e0
-        .xfs_defer_finish+0xac/0x5c0
-        .xfs_itruncate_extents+0x170/0x590
-        .xfs_inactive_truncate+0xcc/0x170
-        .xfs_inactive+0x1d8/0x2f0
-        .xfs_fs_destroy_inode+0xe4/0x3d0
-        .destroy_inode+0x68/0xb0
-        .do_unlinkat+0x1e8/0x390
-        system_call+0x58/0x6c
- INFO: Freed in .xfs_efi_item_free+0x44/0x80 age=79 cpu=0 pid=12436
-        .kmem_cache_free+0x120/0x2b0
-        .xfs_efi_item_free+0x44/0x80
-        .xfs_trans_free_items+0xd4/0x130
-        .__xfs_trans_commit+0xd0/0x350
-        .xfs_trans_roll+0x4c/0x90
-        .xfs_defer_trans_roll+0xa4/0x2b0
-        .xfs_defer_finish+0xb8/0x5c0
-        .xfs_itruncate_extents+0x170/0x590
-        .xfs_inactive_truncate+0xcc/0x170
-        .xfs_inactive+0x1d8/0x2f0
-        .xfs_fs_destroy_inode+0xe4/0x3d0
-        .destroy_inode+0x68/0xb0
-        .do_unlinkat+0x1e8/0x390
-        system_call+0x58/0x6c
+On 20.02.2018 23:11, Dave Chinner wrote:
+> On Tue, Feb 20, 2018 at 03:53:02PM +0200, Nikolay Borisov wrote:
+>> The check performed before the memcpy responsible for copying the rest
+>> of the inode is already performed before we call xfs_log_dinode_to_disk.
+>> So let's remove the 2nd instance of the check. No functional changes.
+>>
+>> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+>> Reported-by: Jeff Mahoney <jeffm@suse.com>
+>> ---
+>>  fs/xfs/xfs_log_recover.c | 5 +----
+>>  1 file changed, 1 insertion(+), 4 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+>> index 00240c9ee72e..88dccfb1de96 100644
+>> --- a/fs/xfs/xfs_log_recover.c
+>> +++ b/fs/xfs/xfs_log_recover.c
+>> @@ -3174,11 +3174,8 @@ xlog_recover_inode_pass2(
+>>  	xfs_log_dinode_to_disk(ldip, dip);
+>>  
+>>  	/* the rest is in on-disk format */
+>> -	if (item->ri_buf[1].i_len > isize) {
+>> -		memcpy((char *)dip + isize,
+>> -			item->ri_buf[1].i_addr + isize,
+>> +	memcpy((char *)dip + isize, item->ri_buf[1].i_addr + isize,
+>>  			item->ri_buf[1].i_len - isize);
+>> -	}
+>>  
+> 
+> This looks wrong.
+> 
+> The previous check is:
+> 
+> 	if (unlikely(item->ri_buf[1].i_len > isize)) {
+> 		CORRUPTION_ERROR
+> 		....
+> 		error = -EFSCORRUPTED;
+> 		goto out_release;
+> 	}
+> 
+> So after this item->ri_buf[1].i_len is always <= isize. IOWs, the
+> memcpy() is currently dead code that is never executed, not code we
+> want to execute in every inode recovery.
 
-This happens due to the following interaction,
-1. xfs_defer_finish() creates "extent free" intent item and adds it to the
-   per-transction list of log items.
-2. xfs_defer_trans_roll() invokes __xfs_trans_commit(). Here, if the
-   XFS_MOUNT_FS_SHUTDOWN flag is set, we invoke io_unlock() operation
-   for each of the log items in the per-transction list. For "extent
-   free" log items xfs_efi_item_unlock() gets invoked which then frees
-   the xfs_efi_log_item.
-3. xfs_defer_trans_roll() then invokes xfs_defer_trans_abort(). Since the
-   xfs_defer_pending->dfp_intent is still set to the "extent free" intent
-   item, we invoke xfs_extent_free_abort_intent(). This accesses the
-   previously freed xfs_efi_log_item to decrement the ref count.
+Doh, you are right, will resend.
 
-This commit fixes the bug by invoking xfs_defer_trans_abort() only when
-the log items in the per-transaction list have been committed to the
-CIL. The log item "committed" status is being tracked by
-xfs_defer_ops->dop_committed. This was the behaviour prior to commit
-3ab78df2a59a485f479d26852a060acfd8c4ecd7 (xfs: rework xfs_bmap_free
-callers to use xfs_defer_ops).
-
-Reported-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- fs/xfs/libxfs/xfs_defer.c | 6 +++---
- fs/xfs/xfs_bmap_util.c    | 2 +-
- fs/xfs/xfs_inode.c        | 2 +-
- fs/xfs/xfs_trans.c        | 8 +++++++-
- fs/xfs/xfs_trans.h        | 2 +-
- fs/xfs/xfs_trans_inode.c  | 2 +-
- 6 files changed, 14 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 087fea0..eb879a0 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -256,13 +256,13 @@ xfs_defer_trans_roll(
- 	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
- 
- 	/* Roll the transaction. */
--	error = xfs_trans_roll(tp);
-+	error = xfs_trans_roll(tp, &dop->dop_committed);
- 	if (error) {
- 		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
--		xfs_defer_trans_abort(*tp, dop, error);
-+		if (dop->dop_committed == true)
-+			xfs_defer_trans_abort(*tp, dop, error);
- 		return error;
- 	}
--	dop->dop_committed = true;
- 
- 	/* Rejoin the joined inodes. */
- 	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c83f549..9d84d36 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1830,7 +1830,7 @@ xfs_swap_change_owner(
- 		if (error != -EAGAIN)
- 			break;
- 
--		error = xfs_trans_roll(tpp);
-+		error = xfs_trans_roll(tpp, NULL);
- 		if (error)
- 			break;
- 		tp = *tpp;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 37d9426..9b74539 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1047,7 +1047,7 @@ xfs_dir_ialloc(
- 			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
- 		}
- 
--		code = xfs_trans_roll(&tp);
-+		code = xfs_trans_roll(&tp, NULL);
- 
- 		/*
- 		 * Re-attach the quota info that we detached from prev trx.
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 86f92df..1bf2505 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1057,12 +1057,15 @@ xfs_trans_cancel(
-  */
- int
- xfs_trans_roll(
--	struct xfs_trans	**tpp)
-+	struct xfs_trans	**tpp,
-+	bool 			*committed)
- {
- 	struct xfs_trans	*trans = *tpp;
- 	struct xfs_trans_res	tres;
- 	int			error;
- 
-+	if (committed)
-+		*committed = false;
- 	/*
- 	 * Copy the critical parameters from one trans to the next.
- 	 */
-@@ -1082,6 +1085,9 @@ xfs_trans_roll(
- 	if (error)
- 		return error;
- 
-+	if (committed)
-+		*committed = true;
-+
- 	/*
- 	 * Reserve space in the log for the next transaction.
- 	 * This also pushes items in the "AIL", the list of logged items,
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 9d542df..d4deb49 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -230,7 +230,7 @@ int		xfs_trans_free_extent(struct xfs_trans *,
- 				      struct xfs_efd_log_item *, xfs_fsblock_t,
- 				      xfs_extlen_t, struct xfs_owner_info *);
- int		xfs_trans_commit(struct xfs_trans *);
--int		xfs_trans_roll(struct xfs_trans **);
-+int		xfs_trans_roll(struct xfs_trans **, bool *);
- int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
- void		xfs_trans_cancel(xfs_trans_t *);
- int		xfs_trans_ail_init(struct xfs_mount *);
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index 4a89da4..bedd5fd 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -147,7 +147,7 @@ xfs_trans_roll_inode(
- 	int			error;
- 
- 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
--	error = xfs_trans_roll(tpp);
-+	error = xfs_trans_roll(tpp, NULL);
- 	if (!error)
- 		xfs_trans_ijoin(*tpp, ip, 0);
- 	return error;
--- 
-2.9.5
-
+> 
+> Cheers,
+> 
+> Dave.
+> 
