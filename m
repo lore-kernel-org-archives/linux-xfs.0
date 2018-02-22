@@ -1,179 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from m213138.ym.163.com ([223.252.213.138]:39635 "EHLO
-        m213138.ym.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbeB1Dkk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 22:40:40 -0500
-Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
-References: <5A914B45.8080200@xtaotech.com>
- <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
- <20180224220428.GB30854@dastard> <5A953693.8080101@xtaotech.com>
- <5aeeed0a-f808-0331-d528-04fdd42d90be@sandeen.net>
-From: Yang Joseph <joseph.yang@xtaotech.com>
-Message-ID: <5A9622A2.4030309@xtaotech.com>
-Date: Wed, 28 Feb 2018 11:31:46 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:38978 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751158AbeBVVdF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Feb 2018 16:33:05 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C64CE28216
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 21:33:05 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8C8FF5C892
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 21:33:05 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] libxfs: don't return cnt as failure from XFS_BUF_SET_PTR
+Message-ID: <7514683c-3a04-5fd6-a455-c09a5b370bc5@redhat.com>
+Date: Thu, 22 Feb 2018 15:33:04 -0600
 MIME-Version: 1.0
-In-Reply-To: <5aeeed0a-f808-0331-d528-04fdd42d90be@sandeen.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
-Cc: sandeen@redhat.com, nathans@debian.org, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
+We must not get here very often, because any test of an error
+from XFS_BUF_SET_PTR will fail because it  returns whatever
+is sent in as cnt.  Fix the macro to return 0 so that
+"error = XFS_BUF_SET_PTR()" works as expected.
 
+Should probably make this xfs_buf_associate_memory() to be
+more like kernelspace, but for now just fix up the bug.
 
-On 02/27/2018 10:47 PM, Eric Sandeen wrote:
-> On 2/27/18 4:44 AM, Yang Joseph wrote:
->> xfs_repair should not touch non-xfs mountpoints in platform_check_mount().
->> If non-xfs mountpoints can be filtered out, the dead fuse mountpoint can
->> never block our xfs_repair. The following patch can fix my problem and not
->> add dangerous option to xfs_repair.
-> I don't think this is a safe solution.  For example:
->
-> # mkfs.ext4 /dev/sdb1
-> # mount /dev/sdb1 /mnt/test
->
-> Old behavior:
->
-> # xfs_repair /dev/sdb1
-> xfs_repair: /dev/sdb1 contains a mounted filesystem
->
-> New behavior with your patch:
->
-> # repair/xfs_repair /dev/sdb1
-> xfs_repair: cannot open /dev/sdb1: Device or resource busy
-As /dev/sdb1 will never be modified, I think this behavior is acceptable.
->
-> With your patch, if we explicitly ask xfs_repair to repair a non-xfs
-> filesystem which is mounted, it will get past all of the checks and
-> try to open the device O_EXCL - which should fail if the device is
-> mounted, but I'm guessing your fuse case would now simply hang here
-> instead.
->
-> Worse, other utilities aren't so graceful.
->
-> Old:
->
-> # xfs_copy /dev/sdb2 /dev/sdb1
-> xfs_copy:  a filesystem is mounted on target device "/dev/sdb1".
-> xfs_copy cannot copy to mounted filesystems.  Aborting
->
-> New:
->
-> copy/xfs_copy /dev/sdb2 /dev/sdb1
->   0%  ... 10%  ... 20%  ... 30%  ... 40%  ... 50%  ... 60%  ... 70%  ... 80%  ... 90%  ... 100%
->
-> All copies completed.
->
-> (now we've just written over a mounted, writable ext4 filesystem)
-This is horrible. Maybe we can add O_EXCL flag when open target device.
+Found this via xfs_logprint failing for no good reason.
 
-   //copy/xfs_copy.c:main()
-   /* now open targets */
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-   open_flags = O_RDWR | O_EXCL; // add O_EXCL
-
-#mount
-...
-/dev/sdf1 on /root/xx1 type ext4 (rw,relatime,data=ordered)
-// /dev/sdf2 contains a xfs image
-# ./xfs_copy.new /dev/sdf2 /dev/sdf1
-xfs_copy.new:  couldn't open target "/dev/sdf1"
-Aborting XFS copy - reason:  Device or resource busy
-
->
-> (Anyone want to investigate whether every device open in xfsprogs should
-> be O_EXCL?)
-// from manpage: OPEN(2)
-on Linux 2.6
-               and later, O_EXCL can be used without O_CREAT if pathname 
-refers to a block device.  If the block device is  in  use
-               by the system (e.g., mounted), open() fails with the 
-error EBUSY.
-
->
-> Also, in general:
->
-> When sending a patch to the list, please prefix the subject with
-> [PATCH] to make it obvious; patches also require a Signed-off-by:
-> line similar to:
->
->    Signed-off-by: Yang Joseph <joseph.yang@xtaotech.com>
->
-> The Signed-off-by: tag indicates that the signer was involved in the
-> development of the patch.
->
-> It essentially states that you are the author of this work and you have
-> the right to submit it for inclusion in this project.
-ok, thank you.
->
-> Thanks,
-> -Eric
->
->
->> thx,
->>
->> Yang Honggang
->>
->> -------------------------new patch----------------------
->> diff --git a/libxfs/linux.c b/libxfs/linux.c
->> index 0bace3e..6ad24ce 100644
->> --- a/libxfs/linux.c
->> +++ b/libxfs/linux.c
->> @@ -44,6 +44,7 @@ static int max_block_alignment;
->>   #endif
->>
->>   #define PROC_MOUNTED   "/proc/mounts"
->> +#define MNTTYPE_XFS        "xfs"
-> indentation should be consistent with the string above; the whole
-> patch is whitespace-mangled and won't apply.
->
->>   /*
->>    * Check if the filesystem is mounted.  Be verbose if asked, and
->> @@ -78,6 +79,9 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
->>                  return 1;
->>          }
->>          while ((mnt = getmntent(f)) != NULL) {
->> +               /* filter out non xfs mountpoint */
->> +               if (strncmp(mnt->mnt_type, MNTTYPE_XFS, strlen(mnt->mnt_type)))
->> +                       continue;
->>                  if (stat(mnt->mnt_dir, &mst) < 0)
->>                          continue;
->>                  if (mst.st_dev != s->st_rdev)
->> -------------------------new patch end-----------------
->>
->> On 02/25/2018 06:04 AM, Dave Chinner wrote:
->>> On Sat, Feb 24, 2018 at 11:56:44AM -0600, Eric Sandeen wrote:
->>>> On 2/24/18 5:23 AM, Yang Joseph wrote:
->>>>> hello,
->>>>>
->>>>> Before the repair process, xfs_repair will check if user specified device already
->>>>> has a writable mountpoint. And it will stat all the mountpoints of the system. If there
->>>>> is a dead mountpoint, this checking will be blocked and xfs_repair will enter 'D' state.
->>> So why is the mount point dead?
->>>
->>> That kinda means that the filesystem is still mounted, but something
->>> has hung somewhere and the filesystem may still have active
->>> references to the underlying device and be doing stuff that is
->>> modifying the filesystem....
->>>
->>> And if the device is still busy, then you aren't going to be able to
->>> mount the repaired device, anyway, because the block device is still
->>> busy...
->>>
->>>> That sounds like a bug worth fixing, but I am much
->>>> less excited about adding options which could do serious damage
->>>> to a filesystem.
->>> TO me it sounds like something that should be fixed by a reboot, not
->>> by adding dangerous options to xfs_repair...
->>>
->>> Cheers,
->>>
->>> Dave.
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 81d2804..0ae7a28 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -105,6 +105,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+ #define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
+ 	(bp)->b_addr = (char *)(p);		\
+ 	XFS_BUF_SET_COUNT(bp,cnt);		\
++	0;					\
+ })
+ 
+ #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
 
