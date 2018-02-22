@@ -1,109 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45244 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751872AbeB0CSv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 21:18:51 -0500
-Received: from Liberator-5.local (erlite [10.0.0.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id F332A116F1
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2018 20:17:55 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v4.15.1 released
-Message-ID: <485c7496-92bc-b166-a358-c3db18647411@sandeen.net>
-Date: Mon, 26 Feb 2018 20:18:49 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:43264 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750916AbeBVXvF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 18:51:05 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1MNlpxH066330
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 23:51:04 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2ga7cjr3v1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 23:51:04 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1MNp2ro018127
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 23:51:03 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1MNp2LG019982
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 23:51:02 GMT
+Date: Thu, 22 Feb 2018 15:51:01 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: don't iunlock the quota ip when quota block
+ allocation fails
+Message-ID: <20180222235101.GK9827@magnolia>
+References: <20180222230435.GJ9827@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180222230435.GJ9827@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j
-Content-Type: multipart/mixed; boundary="bItptON9zw7yjRHVVGH6BOWl5SrSp9pep";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <485c7496-92bc-b166-a358-c3db18647411@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v4.15.1 released
+On Thu, Feb 22, 2018 at 03:04:35PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In xfs_qm_dqalloc, we join the locked quota inode to the transaction we
+> use to allocate blocks.  If the allocation or mapping fails, we're not
+> allowed to unlock the inode because the transaction code is in charge of
+> unlocking it for us.  Therefore, remove the iunlock call to avoid
+> blowing asserts about unbalanced locking + mount hang.
+> 
+> Found by corrupting the AGF and allocating space in the filesystem
+> (quotacheck) immediately after mount.  The upcoming agfl wrapping fixup
+> test will trigger this scenario.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
---bItptON9zw7yjRHVVGH6BOWl5SrSp9pep
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Realized I had a whole pile of other fixes to send out, so ignore this
+for now.
 
-Hi folks,
+--D
 
-The xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated and tagged w/ v4.15.1
-
-This is a small delta, only debian build fixes (my fault for missing)
-and a polish translation update.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-4bfc773 xfsprogs: Release v4.15.1
-
-New Commits:
-
-Darrick J. Wong (2):
-      [638c642] debian: add build-depends on pkg-config
-      [37c528c] debian: don't fail postinst when upgrading chroot
-
-Eric Sandeen (1):
-      [4bfc773] xfsprogs: Release v4.15.1
-
-Jakub Bogusz (1):
-      [4f35436] po/pl.po: update Polish translation for 4.15.0
-
-
-Code Diffstat:
-
- VERSION          |    2 +-
- configure.ac     |    2 +-
- debian/changelog |    6 +
- debian/control   |    2 +-
- debian/postinst  |    2 +-
- doc/CHANGES      |    5 +
- po/pl.po         | 4218 +++++++++++++++++++++++++++++++++++-------------=
-------
- 7 files changed, 2743 insertions(+), 1494 deletions(-)
-
-
---bItptON9zw7yjRHVVGH6BOWl5SrSp9pep--
-
---7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlqUwAkACgkQIK4WkuE9
-3uCKug/+PTEMYck0ZkGRz9k6HY/XwCdochnfCA7wx+ZvrDVf5Usq5/SzqP6X26qT
-5MwghFLGMT3rsDJYEGNgdhKdi1O7kHJnL4RUovpiwDugrkCLy7MQD00Rp9NUifub
-JUEBmvpoCxFL3RGEXAtqb5M7oZLqBevLEzDduQX5SUsYVwPXyjI2IFLDbJKaoomb
-2J3uKd+8CrHK+TVSmnSQjcXI034hRZiwXUTLHx+5rdfog45egbid7OSRviJB57gw
-585+Cc+1UUm0Q+Xv7f/INArw9unjUVgcZbj9a9kBJAXvMw7WTMOgopTZDJMy9SCE
-VmWgwMIasvVOk6JPiUnbZ6p6leNvaSMTsWe35Hugh/BSmRvCFc2F0D69RmPv80ef
-/jmYvPEJSso79Pi5kY1obVs5/FFV/SXLaWDVrHJULOd1zGPePvVzN+QyUGt1Hkga
-MI8SXJovTIf7Ear0RunwxZapQdqdTpsLG87S6RWaAuCjjd+NbREnuaQSs8dMrDYI
-7SZvUv7TpVJbgYVUxbIERVYxBda+sS+aSMDCVhxDcEOGbRu9Y1fEeMmyPn6Ts3Cc
-QPzyzhcvzzBVxQQ5u5tumieDOz4lNOHUUaAFT+PhGSPGBEFEEzgP5hfo8Ne4P10y
-ItzxrjOguPvhlGkj8sj8X3LKIucL35+KnBGgcvSUm0UiE0OEiwM=
-=/dVJ
------END PGP SIGNATURE-----
-
---7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j--
+> ---
+>  fs/xfs/xfs_dquot.c |    2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 43572f8..2410acc 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -394,8 +394,6 @@ xfs_qm_dqalloc(
+>  error1:
+>  	xfs_defer_cancel(&dfops);
+>  error0:
+> -	xfs_iunlock(quotip, XFS_ILOCK_EXCL);
+> -
+>  	return error;
+>  }
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
