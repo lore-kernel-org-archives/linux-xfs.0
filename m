@@ -1,86 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:51334 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751874AbeB1BcJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 20:32:09 -0500
-Message-ID: <5A960691.9000901@cn.fujitsu.com>
-Date: Wed, 28 Feb 2018 09:32:01 +0800
-From: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751600AbeBVWlS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Feb 2018 17:41:18 -0500
+Subject: Re: [PATCH] libxfs: don't return cnt as failure from XFS_BUF_SET_PTR
+References: <7514683c-3a04-5fd6-a455-c09a5b370bc5@redhat.com>
+ <20180222214647.GH9827@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <9dee9e11-3480-8406-1d8e-8fc14220371b@redhat.com>
+Date: Thu, 22 Feb 2018 16:41:17 -0600
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: Ensure just xfs_repair without -n can return
- a status code of 2
-References: <1519710632-16129-1-git-send-email-yangx.jy@cn.fujitsu.com> <b311ddb9-e996-9e4b-f7f1-d0d45b8f782a@sandeen.net>
-In-Reply-To: <b311ddb9-e996-9e4b-f7f1-d0d45b8f782a@sandeen.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <20180222214647.GH9827@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 2018/02/27 22:21, Eric Sandeen wrote:
-> On 2/26/18 11:50 PM, Xiao Yang wrote:
->> Since commit b04647edea32, xfs_repair -L could't succeed to clear a dirty log
->> and returned a status of 2.  Besides, xfs_repair -n returned a status of 2
->> instead of 1 if a dirty log was detected.  I think just xfs_repair without -n
->> should return a status code of 2 when getting a dirty log, so fix it.  We can
->> expose this issue by xfstests case xfs/098.
+On 2/22/18 3:46 PM, Darrick J. Wong wrote:
+> On Thu, Feb 22, 2018 at 03:33:04PM -0600, Eric Sandeen wrote:
+>> We must not get here very often, because any test of an error
+>> from XFS_BUF_SET_PTR will fail because it  returns whatever
+>> is sent in as cnt.  Fix the macro to return 0 so that
+>> "error = XFS_BUF_SET_PTR()" works as expected.
 >>
->> Fixes:'commit b04647edea32 ("xfs_repair: exit with status 2 if log dirtiness is unknown")'
+>> Should probably make this xfs_buf_associate_memory() to be
+>> more like kernelspace, but for now just fix up the bug.
 >>
->> Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
-> Whoops, yes this was a silly mistake, my fault, and definitely a bug -
-> and your fix is obviously correct.
->
-> However, your description isn't accurate; the bug exists only when
-> xlog_find_tail() fails to find the head or the tail, which
-> is why this went undiscovered for so long.  xfs_repair -L certainly
-> can clear a dirty log today, it only fails if xlog_find_tail fails.
->
-> The core bug here is missing braces; the result is that an unparseable
-> log always exits with exit(2), even if we've asked for -n or -L which
-> should proceed.
->
-> Can you resend this patch with a proper summary and a description
-> which more closely matches the actual bug?
-Hi Eric,
-
-Thanks for your comment.
-I will resend this patch as you suggested.
-
-Thanks,
-Xiao Yang
-> Thanks,
-> -Eric
->
+>> Found this via xfs_logprint failing for no good reason.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 >> ---
->>   repair/phase2.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
 >>
->> diff --git a/repair/phase2.c b/repair/phase2.c
->> index 992e997..c124882 100644
->> --- a/repair/phase2.c
->> +++ b/repair/phase2.c
->> @@ -78,12 +78,13 @@ zero_log(
->>   		do_warn(
->>   		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
->>   			error);
->> -		if (!no_modify&&  !zap_log)
->> +		if (!no_modify&&  !zap_log) {
->>   			do_warn(_(
->>   "ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
->>   "filesystem to replay the log or use the -L option to destroy the log and\n"
->>   "attempt a repair.\n"));
->>   			exit(2);
->> +		}
->>   	} else {
->>   		if (verbose) {
->>   			do_log(
->>
->
-> .
->
+>> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+>> index 81d2804..0ae7a28 100644
+>> --- a/libxfs/libxfs_io.h
+>> +++ b/libxfs/libxfs_io.h
+>> @@ -105,6 +105,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+>>  #define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
+>>  	(bp)->b_addr = (char *)(p);		\
+>>  	XFS_BUF_SET_COUNT(bp,cnt);		\
+>> +	0;					\
+> 
+> There are only two callers of this macro and it's not exported to
+> xfslibs headers, so why not just fix them not to care about the return
+> value?
 
+because it marginally matches kernel code ... *shrug* I'd rather
+have libxlog diverge less from kernel, not more, overall.
 
-
+-Eric
