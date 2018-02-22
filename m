@@ -1,37 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35682 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752011AbeBXCPQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Feb 2018 21:15:16 -0500
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH] xfs_scrub: make interpreter explicit to python3
-Date: Fri, 23 Feb 2018 18:15:12 -0800
-Message-Id: <20180224021512.23819-1-mcgrof@kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:39228 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751372AbeBVCQd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Feb 2018 21:16:33 -0500
+Date: Wed, 21 Feb 2018 18:16:25 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] misc: enable retpolines across all xfsprogs utilities
+Message-ID: <20180222021625.GA9827@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Using #!/usr/bin/env makes some package dependency tools
-such as rpm complain given that it cannot verify package
-dependencies. Making it explicit resolves this lint rant.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Detect and enable retpolines for all code, to mitigate Spectre v2
+(branch target injection) on x86.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/xfs_scrub_all.in | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ configure.ac          |    1 +
+ include/builddefs.in  |    7 +++++++
+ m4/package_libcdev.m4 |   22 ++++++++++++++++++++++
+ 3 files changed, 30 insertions(+)
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index fff05da3ea7a..80f07d5c8b02 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -1,4 +1,4 @@
--#!/usr/bin/env python3
-+#!/usr/bin/python3
+diff --git a/configure.ac b/configure.ac
+index d068ba0..2104219 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -206,6 +206,7 @@ if test "$have_threadsan" = "yes" && test "$have_addrsan" = "yes"; then
+         AC_MSG_WARN([ADDRSAN and THREADSAN are not known to work together.])
+ fi
  
- # Run online scrubbers in parallel, but avoid thrashing.
- #
--- 
-2.16.2
-
++AC_PACKAGE_CHECK_RETPOLINE
+ AC_CHECK_SIZEOF([long])
+ AC_CHECK_SIZEOF([char *])
+ AC_TYPE_UMODE_T
+diff --git a/include/builddefs.in b/include/builddefs.in
+index df76b2c..fe05dc3 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -176,6 +176,13 @@ endif
+ SANITIZER_CFLAGS += @addrsan_cflags@ @threadsan_cflags@ @ubsan_cflags@
+ SANITIZER_LDFLAGS += @addrsan_ldflags@ @threadsan_ldflags@ @ubsan_ldflags@
+ 
++# Enable retpolines if available
++HAVE_RETPOLINE = @have_retpoline@
++ifeq ($(HAVE_RETPOLINE),yes)
++OPTIMIZER += @retpoline_cflags@
++LOADERFLAGS += @retpoline_ldflags@
++endif
++
+ GCFLAGS = $(DEBUG) \
+ 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+ 	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include -I$(TOPDIR)/libxfs
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 9258c27..5a7baa1 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -420,3 +420,25 @@ AC_DEFUN([AC_HAVE_HDIO_GETGEO],
+        AC_MSG_RESULT(no))
+     AC_SUBST(have_hdio_getgeo)
+   ])
++
++AC_DEFUN([AC_PACKAGE_CHECK_RETPOLINE],
++  [ AC_MSG_CHECKING([if C compiler supports retpoline])
++    OLD_CFLAGS="$CFLAGS"
++    OLD_LDFLAGS="$LDFLAGS"
++    RETPOLINE_FLAGS="-mindirect-branch=thunk"
++    CFLAGS="$CFLAGS $RETPOLINE_FLAGS"
++    LDFLAGS="$LDFLAGS $RETPOLINE_FLAGS"
++    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
++        [AC_MSG_RESULT([yes])]
++        [retpoline_cflags=$RETPOLINE_FLAGS]
++        [retpoline_ldflags=$RETPOLINE_FLAGS],
++        [AC_MSG_RESULT([no])])
++    if test -n "$retpoline_cflags"; then
++        have_retpoline=yes
++    fi
++    CFLAGS="${OLD_CFLAGS}"
++    LDFLAGS="${OLD_LDFLAGS}"
++    AC_SUBST(have_retpoline)
++    AC_SUBST(retpoline_cflags)
++    AC_SUBST(retpoline_ldflags)
++  ])
