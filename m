@@ -1,62 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46178 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932316AbeBVPG4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 10:06:56 -0500
-Received: from [107.17.164.176] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.89 #1 (Red Hat Linux))
-        id 1eosSV-0006pm-SB
-        for linux-xfs@vger.kernel.org; Thu, 22 Feb 2018 15:06:55 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: don't block on the ilock for RWF_NOWAIT
-Date: Thu, 22 Feb 2018 07:06:53 -0800
-Message-Id: <20180222150653.18479-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:58562 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751959AbeBVXHf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 18:07:35 -0500
+Date: Thu, 22 Feb 2018 15:02:30 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] libxfs: don't return cnt as failure from XFS_BUF_SET_PTR
+Message-ID: <20180222230230.GI9827@magnolia>
+References: <7514683c-3a04-5fd6-a455-c09a5b370bc5@redhat.com>
+ <20180222214647.GH9827@magnolia>
+ <9dee9e11-3480-8406-1d8e-8fc14220371b@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9dee9e11-3480-8406-1d8e-8fc14220371b@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Fix xfs_file_iomap_begin to trylock the ilock if IOMAP_NOWAIT is passed,
-so that we don't block io_submit callers.
+On Thu, Feb 22, 2018 at 04:41:17PM -0600, Eric Sandeen wrote:
+> On 2/22/18 3:46 PM, Darrick J. Wong wrote:
+> > On Thu, Feb 22, 2018 at 03:33:04PM -0600, Eric Sandeen wrote:
+> >> We must not get here very often, because any test of an error
+> >> from XFS_BUF_SET_PTR will fail because it  returns whatever
+> >> is sent in as cnt.  Fix the macro to return 0 so that
+> >> "error = XFS_BUF_SET_PTR()" works as expected.
+> >>
+> >> Should probably make this xfs_buf_associate_memory() to be
+> >> more like kernelspace, but for now just fix up the bug.
+> >>
+> >> Found this via xfs_logprint failing for no good reason.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> >>
+> >> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+> >> index 81d2804..0ae7a28 100644
+> >> --- a/libxfs/libxfs_io.h
+> >> +++ b/libxfs/libxfs_io.h
+> >> @@ -105,6 +105,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+> >>  #define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
+> >>  	(bp)->b_addr = (char *)(p);		\
+> >>  	XFS_BUF_SET_COUNT(bp,cnt);		\
+> >> +	0;					\
+> > 
+> > There are only two callers of this macro and it's not exported to
+> > xfslibs headers, so why not just fix them not to care about the return
+> > value?
+> 
+> because it marginally matches kernel code ... *shrug* I'd rather
+> have libxlog diverge less from kernel, not more, overall.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iomap.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
+Uhh... well in that case, I think you should rename XFS_BUF_SET_PTR
+with xfs_buf_associate_memory (the helper function that
+xlog_bread_offset uses in the kernel).
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 221d218f08a9..6dccc76d2b37 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -993,16 +993,20 @@ xfs_file_iomap_begin(
- 		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
- 	}
- 
--	if (need_excl_ilock(ip, flags)) {
-+	if (need_excl_ilock(ip, flags) ||
-+	    ((ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
-+	      !(ip->i_df.if_flags & XFS_IFEXTENTS))))
- 		lockmode = XFS_ILOCK_EXCL;
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--	} else {
--		lockmode = xfs_ilock_data_map_shared(ip);
--	}
-+	else
-+		lockmode = XFS_ILOCK_SHARED;
- 
--	if ((flags & IOMAP_NOWAIT) && !(ip->i_df.if_flags & XFS_IFEXTENTS)) {
--		error = -EAGAIN;
--		goto out_unlock;
-+	if (flags & IOMAP_NOWAIT) {
-+		if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
-+			return -EAGAIN;
-+		if (!xfs_ilock_nowait(ip, lockmode))
-+			return -EAGAIN;
-+	} else {
-+		xfs_ilock(ip, lockmode);
- 	}
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
--- 
-2.14.2
+--D
 
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
