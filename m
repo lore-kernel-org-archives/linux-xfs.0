@@ -1,377 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56766 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933441AbeBVSLf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 13:11:35 -0500
-Date: Thu, 22 Feb 2018 10:11:30 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 0/4] xfs: fix v5 AGFL wrapping
-Message-ID: <20180222181130.GF9827@magnolia>
-References: <20180214195651.GB43414@bfoster.bfoster>
- <20180215020548.GN5217@magnolia>
- <20180215131630.GA48590@bfoster.bfoster>
- <20180216175701.GA27629@magnolia>
- <20180219135456.GB65426@bfoster.bfoster>
- <20180220170830.GF27629@magnolia>
- <20180221133915.GA29048@bfoster.bfoster>
- <20180221173546.GL27629@magnolia>
- <20180222115502.GA33048@bfoster.bfoster>
- <20180222180628.GE9827@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:54671 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933563AbeBVSRY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Feb 2018 13:17:24 -0500
+Date: Thu, 22 Feb 2018 18:17:31 +0000
+From: Luis Henriques <lhenriques@suse.com>
+Subject: Re: [PATCH v2 6/8] fsstress: implement the clonerange/deduperange
+ ioctls
+Message-ID: <20180222181731.jlddocrjlaaauaf3@hermes.olymp>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+ <151314503583.18893.15475795025536691678.stgit@magnolia>
+ <20171215020731.GM6896@magnolia>
+ <20180222160614.t2afwtdsouxliqie@hermes.olymp>
+ <20180222172741.GD9827@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20180222180628.GE9827@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180222172741.GD9827@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Feb 22, 2018 at 10:06:28AM -0800, Darrick J. Wong wrote:
-> On Thu, Feb 22, 2018 at 06:55:03AM -0500, Brian Foster wrote:
-> > On Wed, Feb 21, 2018 at 09:35:46AM -0800, Darrick J. Wong wrote:
-> > > On Wed, Feb 21, 2018 at 08:39:16AM -0500, Brian Foster wrote:
-> > > > On Tue, Feb 20, 2018 at 09:08:30AM -0800, Darrick J. Wong wrote:
-> > > > > On Mon, Feb 19, 2018 at 08:54:57AM -0500, Brian Foster wrote:
-> > > > > > On Fri, Feb 16, 2018 at 09:57:01AM -0800, Darrick J. Wong wrote:
-> > > > > > > On Thu, Feb 15, 2018 at 08:16:30AM -0500, Brian Foster wrote:
-> > > > > > > > On Wed, Feb 14, 2018 at 06:05:48PM -0800, Darrick J. Wong wrote:
-> > > > > > > > > On Wed, Feb 14, 2018 at 02:56:51PM -0500, Brian Foster wrote:
-> > > > ...
-> > > > > > > > 
-> > > > > > > > Ok, so the intent is to "protect" those old kernels from a filesystem
-> > > > > > > > that has seen a "fixed" kernel so the _old_ kernel doesn't explode on a
-> > > > > > > > filesystem that has a wrapped agfl from a fixed kernel. That sounds
-> > > > > > > > reasonable.. I guess what concerns me is that the bit doesn't seem to be
-> > > > > > > > used in that manner. A user can always run a fixed kernel, wrap the
-> > > > > > > > agfl, then go back to the bad one and cry when it explodes.
-> > > > > > > > 
-> > > > > > > > IOW, if the goal is this kind of retroactive protection, I'd expect the
-> > > > > > > > bit to be enabled any time the filesystem is in a state that would cause
-> > > > > > > > problems on the old kernel. Technically, that could mean doing something
-> > > > > > > > like setting the bit any time an AGFL is in a wrapped state and clearing
-> > > > > > > > it when that state clears. Or perhaps setting it unconditionally on
-> > > > > > > > mount and leaving it permanently would be another way to satisfy the
-> > > > > > > > requirement, though certainly more heavy handed.
-> > > > > > > 
-> > > > > > > The previous version of this series did that, though Dave suggested I
-> > > > > > > change it to set the bit only if we actually touched an agfl.  I
-> > > > > > > probably should have pushed back harder, but it was only rfc at the
-> > > > > > > time.
-> > > > > > > 
-> > > > > > 
-> > > > > > It's not clear which of the above options you're referring to. FWIW, the
-> > > > > > former seems notably more usable to me than the latter.
-> > > > > 
-> > > > > Sorry about that.  The previous iteration would do:
-> > > > > 
-> > > > > if (!has_fixedagfl) {
-> > > > > 	fix_agfls();
-> > > > > 	set_fixedagfl();
-> > > > > }
-> > > > > 
-> > > > > Which probably doesn't satisfy your usability test. :)
-> > > > > 
-> > > > > Hmm... another possible strategy would be to fix the agfls and set the
-> > > > > fixedagfl bit at mount time, then at unmount/freeze/remount-ro we fix
-> > > > > the agfls again and clear the fixedagfl bit.  Then the only way an
-> > > > > unpatched kernel hits this is if we crash with a patched kernel and the
-> > > > > recovery mount is an unpatched kernel.
-> > > > > 
-> > > > 
-> > > > What's the purpose of "fixing the agfls again" at unmount time? Hasn't
-> > > > the patched kernel already addressed the size mismatch at mount time?
-> > > 
-> > > Sorry, my wording there didn't match what was in my head.  I'll try
-> > > again:
-> > > 
-> > > At mount/remount-rw time:
-> > > if agfl list is wrapped assuming the shorter agfl length:
-> > > 	fix wrapping to fit the longer 4.5+ agfl length
-> > > set fixedagfl bit
-> > > 
-> > > At unmount/freeze/remount-ro time:
-> > > if agfl list touches the last agfl item:
-> > > 	reset agfl list to the start of the agfl
-> > > clear fixedagfl bit
-> > > 
+On Thu, Feb 22, 2018 at 09:27:41AM -0800, Darrick J. Wong wrote:
+> On Thu, Feb 22, 2018 at 04:06:14PM +0000, Luis Henriques wrote:
+> > On Thu, Dec 14, 2017 at 06:07:31PM -0800, Darrick J. Wong wrote:
 > > 
-> > Hmm, that doesn't seem so bad. I was hesitant to change agfl/allocator
-> > behavior going forward for such a rare case, but doing one-off fixups at
-> > mount/unmount time is much less intrusive. The reduced scope of rocompat
-> > enforcement also eliminates permanent breakage for unsuspecting users.
+> > <snip>
 > > 
-> > Of course it still suffers from the general drawbacks associated with
-> > using a feature bit. IMO, it's not worth creating a new set of backwards
-> > incompat kernels (i.e., those with the feature bit vs. those without,
-> > where both kernels are essentially "fixed" already with regard to the
-> > agfl) just to provide nicer behavior for users still on the broken
-> > kernel. E.g., if they're still on the broken kernel, I don't see them
-> > upgrading to the feature enabled non-broken kernel designed to fix the
-> > broken kernel. Further, if the rhel case ends up using a similar
-> > "backwards detection" (if that is even possible, I have no idea)
-> > approach to address functionality, I suspect we'd have to support the
-> > feature bit on a kernel that doesn't technically have the fixed agfl.
+> > > +void
+> > > +clonerange_f(
+> > > +	int			opno,
+> > > +	long			r)
+> > > +{
 > > 
-> > The detection patch fixes breakage going forward. AFAICT all the feature
-> > bit does is create a softer landing for users going back to a broken
-> > kernel. In the end, this doesn't actually fix the broken environment, so
-> > the next steps are the same either way: the user needs to upgrade the
-> > broken kernel. This all sums up to what seems like a superfluous change
-> > to me. All that said, if others feel like we really need this for some
-> > reason then I'd prefer this policy over anything we've discussed so far
-> > wrt the feature bit.
+> > <snip>
+> > 
+> > > +	/* Calculate offsets */
+> > > +	len = (random() % FILELEN_MAX) + 1;
+> > > +	len &= ~(stat1.st_blksize - 1);
+> > > +	if (len == 0)
+> > > +		len = stat1.st_blksize;
+> > > +	if (len > stat1.st_size)
+> > > +		len = stat1.st_size;
+> > > +
+> > > +	lr = ((__int64_t)random() << 32) + random();
+> > > +	if (stat1.st_size == len)
+> > > +		off1 = 0;
+> > > +	else
+> > > +		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
+> > > +	off1 %= maxfsize;
+> > > +	off1 &= ~(stat1.st_blksize - 1);
+> > > +
+> > > +	/*
+> > > +	 * If srcfile == destfile, randomly generate destination ranges
+> > > +	 * until we find one that doesn't overlap the source range.
+> > > +	 */
+> > > +	do {
+> > > +		lr = ((__int64_t)random() << 32) + random();
+> > > +		off2 = (off64_t)(lr % MIN(stat2.st_size + (1024 * 1024), MAXFSIZE));
+> > > +		off2 %= maxfsize;
+> > > +		off2 &= ~(stat2.st_blksize - 1);
+> > > +	} while (stat1.st_ino == stat2.st_ino && llabs(off2 - off1) < len);
+> > 
+> > I started seeing hangs in generic/013 on cephfs.  After spending some
+> > time looking, I found that this loops forever.  And the reason seems to
+> > be that stat1.st_blksize is too big for this filesystem (4M) -- when
+> > doing:
 > 
-> It occurred to me over breakfast that we also have rocompat features
-> that were introduced after 4.5, which narrows further the number of
-> filesystems requiring fixups.
+> "Too big for this filesystem"?
 > 
-> rmapbt and reflink were introduced in 4.8 and 4.9, which means that any
-> fs with either of those features enabled has always the longer agfl size
-> and cannot be write-mounted on an unpatched kernel.  As time goes by,
-> the percentage of v5 filesystems without either feature will shrink.
-> Therefore, we can skip both agfl fixups if either feature is enabled:
+> Uh... maybe you'd better start by giving me more stat buffer info --
+> what's st_size?
 > 
-> At mount/remount-rw time:
-> if !reflink && !rmap && agfl list is wrapped assuming the shorter agfl length:
-> 	fix wrapping to fit the longer 4.5+ agfl length
+> > 	off1 &= ~(stat1.st_blksize - 1);
 > 
-> At unmount/freeze/remount-ro time:
-> if !reflink && !rmap && agfl list touches the last agfl item:
-> 	reset agfl list to the start of the agfl
-
-<sigh> pseudocode bug; try again:
-
-At mount/remount-rw time:
-if v5fs && !reflink && !rmap && agfl list is wrapped assuming the shorter agfl length:
-	fix wrapping to fit the longer 4.5+ agfl length
-
-At unmount/freeze/remount-ro time:
-if v5fs && !reflink && !rmap && agfl list touches the last agfl item:
-	reset agfl list to the start of the agfl
-
-Those first three predicates should be a helper function that does:
-
-if v5 && (no v5 feature bits are set that weren't defined in 4.5)
-
---D
-
+> These bits round the start offset down to block granularity, since clone
+> range implementations generally require that the ranges align to block
+> boundaries.
 > 
-> The only way we're vulnerable to agfl wrapping problems is if someone
-> (a) uses an unpatched kernel to (b) recover a dirty filesystem that (c)
-> has a wrapped agfl and (d) doesn't have rmap or reflink enabled.
+> (Though AFAICT ceph doesn't support clone range anyway...)
 > 
-> I think that's narrow enough that we can skip the rocompat bit.
+> So reading between the lines, is the problem here that ceph advertises a
+> blocksize of 4M and fsstress calls clonerange_f with files that are
+> smaller than 4M in size, so the only possible offsets with a 4M
+> blocksize are zero and that's why we end up looping forever?
+
+Brilliantly described!  That is *exactly* what I'm seeing and failed to
+describe.  I guess I could use FSSTRESS_AVOID to work around this issue,
+but there are probably better options.
+
+Cheers,
+--
+Luís
+
 > 
 > --D
 > 
-> > Brian
 > > 
-> > > This way, we're only using the rocompat bit to prevent unpatched kernels
-> > > from *recovering* filesystems that might have an agfl wrap that it
-> > > doesn't understand.
-> > > 
-> > > > > What does everyone think of this strategy?  I think I like it the most
-> > > > > of all the things we've put forth because the only time anyone will trip
-> > > > > over this rocompat bit is this one specific scenario.
-> > > > > 
-> > > > > (Apologies if we've already talked about this, I've gotten lost in this
-> > > > > thread.)
-> > > > > 
-> > > > ...
-> > > > > > > > 
-> > > > > > > > Hmm, I still think my preferred approach is to mount time detect,
-> > > > > > > > enforce read-only and tell the user to xfs_repair[1]. It's the most
-> > > > > > > 
-> > > > > > > I think this is difficult to do for the root fs -- in general I don't
-> > > > > > > think initrds ship with xfs_repair and the logic to detect the "refuses
-> > > > > > > to mount rw" condition and react to that with xfs_repair and a second
-> > > > > > > mount attempt.
-> > > > > > > 
-> > > > > > 
-> > > > > > Good point. I guess what concerns me is leaving around such highly
-> > > > > > specialized code. I figured an error check is less risk than a function
-> > > > > > that modifies the fs. Do we have a test case that would exercise this
-> > > > > > codepath going forward, at least?
-> > > > > 
-> > > > > I did write xfstests for the general case, though apparently I've been
-> > > > > lagging xfstests and haven't sent it.  :/
-> > > > > 
-> > > > > Oh, right, we're still discussing semantics & existence of an rocompat
-> > > > > bit, which affects the golden output.
-> > > > > 
-> > > > 
-> > > > Ok..
-> > > > 
-> > > > > > > Also I think this doesn't work if we do an initial ro mount and then try
-> > > > > > > to remount-rw...
-> > > > > > > 
-> > > > > > 
-> > > > > > That one seems like it would just require a bit more code. E.g., we'd
-> > > > > > have to cache or re-check state on ro -> rw transitions. That's
-> > > > > > secondary to the rootfs use case justification, though..
-> > > > > 
-> > > > > <nod>
-> > > > > 
-> > > > > > > > simple implementation as we don't have to carry fixup code in the kernel
-> > > > > > > > for such an uncommon situation (which facilitates a broad backport
-> > > > > > > > strategy). It protects the users on stable kernels who pull in the
-> > > > > > > > latest bug fixes, including the guy who goes from a bad kernel to a good
-> > > > > > > > one, and all kernels going forward without having to use a feature bit.
-> > > > > > > > We don't do anything for the guy who wraps the agfl on newer kernels and
-> > > > > > > > goes back to the bad one, but at some point he just needs to update the
-> > > > > > > > broken kernel.
-> > > > > > > > 
-> > > > > > > > [1] I guess doing a mount time fix up vs. a read-only mount + warning is
-> > > > > > > > a separate question from the feature bit. I'd prefer the latter for
-> > > > > > > > simplicity, but perhaps there are use cases where the benefit outweighs
-> > > > > > > > the risk.
-> > > > > > > > 
-> > > > > > > > Anyways, that's just my .02. There is no real great option here, I
-> > > > > > > > guess. I just think that at some point maybe it's best to fix all the
-> > > > > > > > kernels we can to handle the size mismatch, live with the fact that some
-> > > > > > > > users might have those old, unfixed kernels and bonk them on the head to
-> > > > > > > > upgrade when they (hopefully decreasingly) pop up. Perhaps others can
-> > > > > > > > chime in with more thoughts..
-> > > > > > > 
-> > > > > > > Yeah, we could do that too (make all the next releases of
-> > > > > > > rhel/ol/debian/ubuntu/sles/whatever quietly fix the bad-wrap agfls and
-> > > > > > > skip the feature bit) and just let the unpatched kernels rot.  It keeps
-> > > > > > > coming up, though...
-> > > > > > > 
-> > > > > > 
-> > > > > > I guess I haven't really noticed it enough to consider it an ongoing
-> > > > > > issue (which doesn't mean it isn't :P). Any pattern to the use cache
-> > > > > > behind these continued reports..?
-> > > > > 
-> > > > > No particular pattern, other than using/freeing agfl blocks.
-> > > > > 
-> > > > 
-> > > > I'm more curious about the use case than the workload. E.g., what's the
-> > > > purpose for using two kernels? Was it bad luck on an upgrade or
-> > > > something that implies the problematic state could reoccur (i.e., active
-> > > > switching between good/bad kernels)?
-> > > > 
-> > > > IOW, if the "it keeps coming up" situation is simply because the
-> > > > existing userbase hasn't fully upgraded yet, then a simple detect/repair
-> > > > forward-fix patch is going to be sufficient (perhaps with a warning not
-> > > > to revert to $previous kernel) to resolve the problem for the remaining
-> > > > set of users who are susceptible to the problem.
-> > > > 
-> > > > If the problem is instead a set of users that are switching back and
-> > > > forth for whatever reason, then perhaps a feature bit policy is more
-> > > > justified.
-> > > 
-> > > $employer has customers that want or have to run mixed environments.
-> > > 
-> > > Not many, though.
-> > > 
-> > > > > > From an upstream perspective, RHEL continuing to operate in this mode
-> > > > > > certainly does create an ongoing situation where a "current" distro
-> > > > > > has/causes compatibility issues, particularly since some other
-> > > > > > downstream distros may have kernels that use the upstream/fixed format.
-> > > > > > 
-> > > > > > I'll reiterate that in principle I don't think downstream decisions
-> > > > > > should prohibit doing the right thing upstream, but for somebody on a
-> > > > > > downstream distro who happens to test an upstream kernel (say as part of
-> > > > > > a regression test/investigation), having the upstream kernel decide the
-> > > > > > downstream kernel is no longer allowed to mount the fs seems kind of
-> > > > > > mean. :P
-> > > > > 
-> > > > > Agreed, though agfl-related crashes are also mean. :/
-> > > > > 
-> > > > 
-> > > > Yeah, but you can recover from that. In the use case above, the feature
-> > > > bit has permanently prevented the user from going back to the distro
-> > > > kernel. So this is one semi-realistic "switching between kernels" use
-> > > > case where I think this feature bit actually hurts more than it helps.
-> > > > If it were a big enough problem, I'd much rather have the downstream
-> > > > kernel implement the feature bit to indicate that the upstream kernel
-> > > > shouldn't/can't mount this filesystem than retroactively doing the
-> > > > opposite. Even then, I still think I'd prefer the downstream kernel just
-> > > > detect, fail to mount and encourage repair so we don't have to support
-> > > > the strange transition from a clearly unsupported sequence (but this is
-> > > > all downstream/distro discussion).
-> > > > 
-> > > > FWIW, if you actually want to make progress on this in absense of any
-> > > > other feedback, I think the best approach is to refactor this series to
-> > > > separate the detect/repair mechanism from all of this feature bit policy
-> > > > stuff. The former all seems reasonable/justified to me based on your
-> > > > explanations, so I'd be happy to review those portions of it without the
-> > > > feature bit (which could still be tacked on for further review,
-> > > > reordered appropriately on merge if ultimately necessary, etc.) and
-> > > > consider the feature bit separately based on justification for added
-> > > > benefit over the former.
-> > > 
-> > > Ok, I'll split out the part that fixes the AGFL and we can review those
-> > > parts separately from the feature bit stuff.
-> > > 
-> > > --D
-> > > 
-> > > > 
-> > > > Brian
-> > > > 
-> > > > > --D
-> > > > > 
-> > > > > > Brian
-> > > > > > 
-> > > > > > > --D
-> > > > > > > 
-> > > > > > > > 
-> > > > > > > > Brian
-> > > > > > > > 
-> > > > > > > > > > caused this in the first place ..." Then we write a FAQ entry that
-> > > > > > > > > > elaborates on how/why a user hit that problem and backport to stable
-> > > > > > > > > > kernels as far and wide as possible. Hm?
-> > > > > > > > > 
-> > > > > > > > > I /do/ like the part about writing FAQ to update the kernel.
-> > > > > > > > > 
-> > > > > > > > > --D
-> > > > > > > > > 
-> > > > > > > > > > Brian
-> > > > > > > > > > 
-> > > > > > > > > > > --D
-> > > > > > > > > > > --
-> > > > > > > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > > > > > > > --
-> > > > > > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > > > > > > --
-> > > > > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > > > > > --
-> > > > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > > > > --
-> > > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > > > --
-> > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > > the body of a message to majordomo@vger.kernel.org
-> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > off1 (and off2) will both end up with 0.  Does this make sense?  Would
+> > something like:
+> > 
+> > -	off1 &= ~(stat1.st_blksize - 1);
+> > +	if (stat1.st_blksize <= stat1.st_size)
+> > +		off1 &= ~(stat1.st_blksize - 1);
+> > 
+> > be acceptable?  (and a similar change for off2, of course.)
+> 
+> > Cheers,
+> > --
+> > Luís
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
