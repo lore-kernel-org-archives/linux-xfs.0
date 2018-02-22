@@ -1,97 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46812 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750938AbeB0Qyx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:54:53 -0500
-Date: Tue, 27 Feb 2018 17:54:49 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 02/12] dax: introduce IS_DEVDAX() and IS_FSDAX()
-Message-ID: <20180227165449.abbhpu7gwqpxcqst@quack2.suse.cz>
-References: <151970519370.26729.1011551137381425076.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151970520551.26729.12707678649514382892.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:57056 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751359AbeBVVvw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 16:51:52 -0500
+Date: Thu, 22 Feb 2018 13:46:47 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] libxfs: don't return cnt as failure from XFS_BUF_SET_PTR
+Message-ID: <20180222214647.GH9827@magnolia>
+References: <7514683c-3a04-5fd6-a455-c09a5b370bc5@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151970520551.26729.12707678649514382892.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <7514683c-3a04-5fd6-a455-c09a5b370bc5@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Theodore Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, "supporter:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon 26-02-18 20:20:05, Dan Williams wrote:
-> The current IS_DAX() helper that checks the S_DAX inode flag is
-> ambiguous, and currently has the broken assumption that the S_DAX flag
-
-I don't think S_DAX flag is really ambiguous. It is just that in
-CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, the compiler is not able to figure
-out some calls behind IS_DAX() are dead code and so the kernel won't
-compile / link. Or is there any other problem I'm missing?
-
-If I'm indeed right, then please tell this in the changelog and don't talk
-about abstract ambiguity of S_DAX flag.
-
-As much as I'd prefer to solve link-time problems with stubs instead of
-relying on dead-code elimination, I can live with split macros so once the
-changelog is settled, feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> is only non-zero in the CONFIG_FS_DAX=y case. In preparation for
-> defining S_DAX to non-zero in the  CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y
-> case, introduce two explicit helpers to replace IS_DAX().
+On Thu, Feb 22, 2018 at 03:33:04PM -0600, Eric Sandeen wrote:
+> We must not get here very often, because any test of an error
+> from XFS_BUF_SET_PTR will fail because it  returns whatever
+> is sent in as cnt.  Fix the macro to return 0 so that
+> "error = XFS_BUF_SET_PTR()" works as expected.
 > 
-> Cc: "Theodore Ts'o" <tytso@mit.edu>
-> Cc: Andreas Dilger <adilger.kernel@dilger.ca>
-> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org (supporter:XFS FILESYSTEM)
-> Cc: Matthew Wilcox <mawilcox@microsoft.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Cc: <stable@vger.kernel.org>
-> Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
-> Reported-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Should probably make this xfs_buf_associate_memory() to be
+> more like kernelspace, but for now just fix up the bug.
+> 
+> Found this via xfs_logprint failing for no good reason.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  include/linux/fs.h |   22 ++++++++++++++++++++++
->  1 file changed, 22 insertions(+)
 > 
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 79c413985305..bd0c46880572 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1909,6 +1909,28 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
->  #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
->  				 (inode)->i_rdev == WHITEOUT_DEV)
+> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+> index 81d2804..0ae7a28 100644
+> --- a/libxfs/libxfs_io.h
+> +++ b/libxfs/libxfs_io.h
+> @@ -105,6 +105,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+>  #define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
+>  	(bp)->b_addr = (char *)(p);		\
+>  	XFS_BUF_SET_COUNT(bp,cnt);		\
+> +	0;					\
+
+There are only two callers of this macro and it's not exported to
+xfslibs headers, so why not just fix them not to care about the return
+value?
+
+--D
+
+>  })
 >  
-> +static inline bool IS_DEVDAX(struct inode *inode)
-> +{
-> +	if (!IS_ENABLED(CONFIG_DEV_DAX))
-> +		return false;
-> +	if ((inode->i_flags & S_DAX) == 0)
-> +		return false;
-> +	if (!S_ISCHR(inode->i_mode))
-> +		return false;
-> +	return true;
-> +}
-> +
-> +static inline bool IS_FSDAX(struct inode *inode)
-> +{
-> +	if (!IS_ENABLED(CONFIG_FS_DAX))
-> +		return false;
-> +	if ((inode->i_flags & S_DAX) == 0)
-> +		return false;
-> +	if (S_ISCHR(inode->i_mode))
-> +		return false;
-> +	return true;
-> +}
-> +
->  static inline bool HAS_UNMAPPED_ID(struct inode *inode)
->  {
->  	return !uid_valid(inode->i_uid) || !gid_valid(inode->i_gid);
+>  #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
