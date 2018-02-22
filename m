@@ -1,82 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:40428 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:48662 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933376AbeBVRRy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 12:17:54 -0500
-Date: Thu, 22 Feb 2018 09:15:29 -0800
+        with ESMTP id S933210AbeBVR1t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 12:27:49 -0500
+Date: Thu, 22 Feb 2018 09:27:41 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] misc: enable retpolines across all xfsprogs utilities
-Message-ID: <20180222171529.GC9827@magnolia>
-References: <20180222021625.GA9827@magnolia>
- <20180222150922.GA26282@infradead.org>
- <4d78832f-4148-d0d9-e2f2-ee8e02a44e97@redhat.com>
+Subject: Re: [PATCH v2 6/8] fsstress: implement the clonerange/deduperange
+ ioctls
+Message-ID: <20180222172741.GD9827@magnolia>
+References: <151314499003.18893.8687182548758898133.stgit@magnolia>
+ <151314503583.18893.15475795025536691678.stgit@magnolia>
+ <20171215020731.GM6896@magnolia>
+ <20180222160614.t2afwtdsouxliqie@hermes.olymp>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <4d78832f-4148-d0d9-e2f2-ee8e02a44e97@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180222160614.t2afwtdsouxliqie@hermes.olymp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
+To: Luis Henriques <lhenriques@suse.com>
+Cc: eguan@redhat.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Feb 22, 2018 at 09:31:41AM -0600, Eric Sandeen wrote:
-> On 2/22/18 9:09 AM, Christoph Hellwig wrote:
-> > On Wed, Feb 21, 2018 at 06:16:25PM -0800, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> Detect and enable retpolines for all code, to mitigate Spectre v2
-> >> (branch target injection) on x86.
-> > 
-> > The mechanics look ok, but why do we really care for xfsprogs?
-> > fs utilities seem like a lesser target and should just be covered
+On Thu, Feb 22, 2018 at 04:06:14PM +0000, Luis Henriques wrote:
+> On Thu, Dec 14, 2017 at 06:07:31PM -0800, Darrick J. Wong wrote:
+> 
+> <snip>
+> 
+> > +void
+> > +clonerange_f(
+> > +	int			opno,
+> > +	long			r)
+> > +{
+> 
+> <snip>
+> 
+> > +	/* Calculate offsets */
+> > +	len = (random() % FILELEN_MAX) + 1;
+> > +	len &= ~(stat1.st_blksize - 1);
+> > +	if (len == 0)
+> > +		len = stat1.st_blksize;
+> > +	if (len > stat1.st_size)
+> > +		len = stat1.st_size;
+> > +
+> > +	lr = ((__int64_t)random() << 32) + random();
+> > +	if (stat1.st_size == len)
+> > +		off1 = 0;
+> > +	else
+> > +		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
+> > +	off1 %= maxfsize;
+> > +	off1 &= ~(stat1.st_blksize - 1);
+> > +
+> > +	/*
+> > +	 * If srcfile == destfile, randomly generate destination ranges
+> > +	 * until we find one that doesn't overlap the source range.
+> > +	 */
+> > +	do {
+> > +		lr = ((__int64_t)random() << 32) + random();
+> > +		off2 = (off64_t)(lr % MIN(stat2.st_size + (1024 * 1024), MAXFSIZE));
+> > +		off2 %= maxfsize;
+> > +		off2 &= ~(stat2.st_blksize - 1);
+> > +	} while (stat1.st_ino == stat2.st_ino && llabs(off2 - off1) < len);
+> 
+> I started seeing hangs in generic/013 on cephfs.  After spending some
+> time looking, I found that this loops forever.  And the reason seems to
+> be that stat1.st_blksize is too big for this filesystem (4M) -- when
+> doing:
 
-They're a smaller target than the kernel, for sure, but the scary part
-about spectre is that unprivileged programs running on the same core as
-a privileged xfs_repair can then use branch predictor poisoning to cause
-problems with the xfs_repair.
+"Too big for this filesystem"?
 
-> > by hopefully sane compiler defaults, shouldn't they?
+Uh... maybe you'd better start by giving me more stat buffer info --
+what's st_size?
 
-I would have thought so, but look at the gcc manpage:
+> 	off1 &= ~(stat1.st_blksize - 1);
 
--mindirect-branch=choice
-	Convert indirect call and jump with choice.  The default is
-	keep, which keeps indirect call and jump unmodified.  thunk
+These bits round the start offset down to block granularity, since clone
+range implementations generally require that the ranges align to block
+boundaries.
 
-Unmodified, as in don't provide spectre mitigations...
+(Though AFAICT ceph doesn't support clone range anyway...)
 
-	converts indirect call and jump to call and return thunk.
-	thunk-inline converts indirect call and jump to inlined call and
-	return thunk.  thunk-extern converts indirect call and jump to
-	external call and return thunk provided in a separate object
-	file.  You can control this behavior for a specific function by
-	using the function attribute "indirect_branch".
-
-	Note that -mcmodel=large is incompatible with
-	-mindirect-branch=thunk nor -mindirect-branch=thunk-extern since
-	the thunk function may not be reachable in large code model.
-
-So, gcc defaults to unprotected.
-
-> That's my feeling as well - does manually fixing one utility out of
-> hundreds on the system help anything? Shouldn't this be done via toolchain
-> or distro-package-build defaults?
-
-Maybe they will someday, but right now:
-
-$ dpkg-buildflags --get CFLAGS
--g -O2 -fdebug-prefix-map=/home/djwong=. -fstack-protector-strong -Wformat -Werror=format-security
-
-It's not clear to me if Debian plans to adopt the per-platform spectre
-mitigations distro-wide or just for specific packages, or what?  So far
-it looks like Ubuntu is only doing it for their browser packages.  libc
-hasn't been rebuilt, which limits the effectiveness of turning it on for
-xfsprogs, but otoh we could still protect the bits we control.
+So reading between the lines, is the problem here that ceph advertises a
+blocksize of 4M and fsstress calls clonerange_f with files that are
+smaller than 4M in size, so the only possible offsets with a 4M
+blocksize are zero and that's why we end up looping forever?
 
 --D
 
-> -Eric
+> 
+> off1 (and off2) will both end up with 0.  Does this make sense?  Would
+> something like:
+> 
+> -	off1 &= ~(stat1.st_blksize - 1);
+> +	if (stat1.st_blksize <= stat1.st_size)
+> +		off1 &= ~(stat1.st_blksize - 1);
+> 
+> be acceptable?  (and a similar change for off2, of course.)
+
+> Cheers,
+> --
+> Luís
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
