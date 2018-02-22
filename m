@@ -1,145 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f174.google.com ([209.85.217.174]:37510 "EHLO
-        mail-ua0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbeBVXmN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 18:42:13 -0500
-Received: by mail-ua0-f174.google.com with SMTP id q8so4528083uae.4
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Feb 2018 15:42:12 -0800 (PST)
-MIME-Version: 1.0
-From: Alatun Rom <alatun.rom@gmail.com>
-Date: Fri, 23 Feb 2018 00:42:11 +0100
-Message-ID: <CACssdW1a=+6Dh=TEV1g13ipfM1TXd29SEHNuz_ar7RfwpmgdFg@mail.gmail.com>
-Subject: xfs_repair questions
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:44794 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932957AbeBVPaJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 10:30:09 -0500
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/2] xfs: implement the lazytime mount options
+Date: Thu, 22 Feb 2018 07:29:57 -0800
+Message-Id: <20180222152957.19624-3-hch@lst.de>
+In-Reply-To: <20180222152957.19624-1-hch@lst.de>
+References: <20180222152957.19624-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
 
-Hi all!
+Use the VFS dirty inode tracking for lazytime inodes only, and just
+log them in ->dirty_inode.
 
-Maybe someone with knowledge about xfs_repair can tell me, what could
-be the reason why a repair of an XFS partition is currently impossible.
-
-The backstory: one of our servers is running a VM with a proprietary
-service. After updating some packages on the host, the VM had crashed
-after running initially after the update. At next start the system in
-the VM (a rather old linux based on 2.2 kernel) could no longer boot
-complaining about invalid XFS structures. The VM is using a VMDK HD
-container. Using vmware-mount tools I detected that the VMDK container
-itself was also damaged. Vmware-tools could repair the container and I
-tried to mount the root partition which failed. I was able to locate
-the offset of the MBR inside the container and mounted a loop-back
-with that offset and using testdisk I was able to extract the
-partition with the root file system to a file. I also extracted two
-other partitions with this approach: another XFS and one EXT2.
-These two could be checked and fixed, but unfortunately the root filesystem is
-tricky. Maybe another information is important here: initially the
-system inside the VM was running on a native machine (about 10 years
-ago). The root fs was created as XFS on a software raid (/dev/md0).
-When I migrated the native machine to a VM I cloned the disks and
-later removed all but one of partitions of the disc array.
-
-Now I'm trying to fix the xfs in this partition dump. xfs_repair found
-7 candidates of secondary superblocks, but is unable to verify them. I
-was rather disappointed with the lack of information xfs_repair
-reported.
-
-So I made a git clone of xfstools and looked for the code doing the
-repair and added some more output. I added information about the file
-offset of the candidates and the status, why it is considered unusable.
-The output of xfs_repair for my broken partition now looks like this:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-Phase 1 - find and verify superblock...
-bad primary superblock - bad magic number !!!
+ fs/xfs/xfs_iops.c        |  5 +++++
+ fs/xfs/xfs_super.c       | 23 +++++++++++++++++++++++
+ fs/xfs/xfs_trans_inode.c |  8 ++++++++
+ 3 files changed, 36 insertions(+)
 
-attempting to find secondary superblock...
-found candidate secondary superblock... off: 32204029952
-checking sbs#: 4
-check sbs@ 32212221952 - status: 1
-check sbs@ 64424443904 - status: 1
-check sbs@ 96636665856 - status: 1
-unable to verify superblock, continuing... error code: 16
-found candidate secondary superblock... off: 57813565440
-checking sbs#: 4
-check sbs@ 32212221952 - status: 1
-check sbs@ 64424443904 - status: 1
-check sbs@ 96636665856 - status: 1
-unable to verify superblock, continuing... error code: 16
-found candidate secondary superblock... off: 64185663488
-checking sbs#: 4
-check sbs@ 32212221952 - status: 1
-check sbs@ 64424443904 - status: 1
-check sbs@ 96636665856 - status: 1
-unable to verify superblock, continuing... error code: 16
-found candidate secondary superblock... off: 96412992512
-checking sbs#: 4
-check sbs@ 7232069632 - status: 1
-check sbs@ 14464139264 - status: 1
-check sbs@ 21696208896 - status: 1
-unable to verify superblock, continuing... error code: 16
-found candidate secondary superblock... off: 96413164544
-checking sbs#: 4
-check sbs@ 7232069632 - status: 1
-check sbs@ 14464139264 - status: 1
-check sbs@ 21696208896 - status: 1
-unable to verify superblock, continuing... error code: 16
-found candidate secondary superblock... off: 96413271040
-checking sbs#: 4
-check sbs@ 7232069632 - status: 1
-check sbs@ 14464139264 - status: 1
-check sbs@ 21696208896 - status: 1
-unable to verify superblock, continuing... error code: 16
-found candidate secondary superblock... off: 96419537920
-checking sbs#: 4
-check sbs@ 7232069632 - status: 1
-check sbs@ 14464139264 - status: 1
-check sbs@ 21696208896 - status: 1
-unable to verify superblock, continuing... error code: 16
-Sorry, could not find valid secondary superblock
-Exiting now.
---
-(error code 16: not enough superblocks to validate
-status code 1: invalid superblock signature)
-I also extracted the blocks at the given offsets (eg @ 32204029952) ,
-examined them and the contents of the SSBs are looking quite good:
---
-00000000  58 46 53 42 00 00 10 00  00 00 00 00 01 df ff e0  |XFSB............|
-00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-00000020  b1 f2 a8 ad 7d 75 4d a0  9a be 3f e6 a4 e4 05 c3  |....}uM...?.....|
-00000030  00 00 00 00 01 00 00 04  00 00 00 00 00 00 00 80  |................|
-00000040  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
-00000050  00 00 00 01 00 77 ff f8  00 00 00 04 00 00 00 00  |.....w..........|
-00000060  00 00 3b ff b4 a4 02 00  01 00 00 10 68 79 00 00  |..;.........hy..|
-00000070  00 00 00 00 00 00 00 00  0c 09 08 04 17 00 00 19  |................|
-00000080  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-00000090  00 00 00 00 01 df c3 d1  00 00 00 00 00 00 00 00  |................|
-000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-000000b0  00 00 00 00 00 00 00 02  00 00 00 00 00 00 00 00  |................|
-000000c0  00 00 00 00 00 00 00 01  00 00 00 08 00 00 00 08  |................|
-000000d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00000200
---
-As far as I understood, xfs_repair considers the file system
-unfixable, because the secondary superblocks are not found at the offsets,
-where they should be. The blocks found look quite ok.
-My guess: because the VMDK container got damaged, the information of
-the internal partitions is now incorrect, so testdisk did extract a
-file that is somehow broken. But from what I've seen so far, it could
-be possible to fix it up to the point, to extract some files.
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 56475fcd76f2..0946a3baae6a 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -46,6 +46,7 @@
+ #include <linux/security.h>
+ #include <linux/iomap.h>
+ #include <linux/slab.h>
++#include <linux/iversion.h>
+ 
+ /*
+  * Directories have different lock order w.r.t. mmap_sem compared to regular
+@@ -1057,6 +1058,10 @@ xfs_vn_update_time(
+ 
+ 	trace_xfs_update_time(ip);
+ 
++	if ((inode->i_sb->s_flags & SB_LAZYTIME) &&
++	    !((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false)))
++		return generic_update_time(inode, now, flags);
++
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 7aba628dc527..20d53f125c35 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1007,6 +1007,28 @@ xfs_fs_destroy_inode(
+ 	xfs_inode_set_reclaim_tag(ip);
+ }
+ 
++static void
++xfs_fs_dirty_inode(
++	struct inode			*inode,
++	int				flag)
++{
++	struct xfs_inode		*ip = XFS_I(inode);
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_trans		*tp;
++
++	if (!(inode->i_sb->s_flags & SB_LAZYTIME))
++		return;
++	if (flag != I_DIRTY_SYNC || !(inode->i_state & I_DIRTY_TIME))
++		return;
++
++	if (xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp))
++		return;
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
++	xfs_trans_commit(tp);
++}
++
+ /*
+  * Slab object creation initialisation for the XFS inode.
+  * This covers only the idempotent fields in the XFS inode;
+@@ -1787,6 +1809,7 @@ xfs_fs_free_cached_objects(
+ static const struct super_operations xfs_super_operations = {
+ 	.alloc_inode		= xfs_fs_alloc_inode,
+ 	.destroy_inode		= xfs_fs_destroy_inode,
++	.dirty_inode		= xfs_fs_dirty_inode,
+ 	.drop_inode		= xfs_fs_drop_inode,
+ 	.put_super		= xfs_fs_put_super,
+ 	.sync_fs		= xfs_fs_sync_fs,
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index fddacf9575df..769943fcc1f2 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -98,9 +98,17 @@ xfs_trans_log_inode(
+ 	xfs_inode_t	*ip,
+ 	uint		flags)
+ {
++	struct inode	*inode = VFS_I(ip);
++
+ 	ASSERT(ip->i_itemp != NULL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
++	if (inode->i_state & (I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED)) {
++		spin_lock(&inode->i_lock);
++		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
++		spin_unlock(&inode->i_lock);
++	}
++
+ 	/*
+ 	 * First time we log the inode in a transaction, bump the inode change
+ 	 * counter if it is configured for this to occur. While we have the
+-- 
+2.14.2
 
-What is unclear for me: why are 7 SSB found? Is this a geometry issue?
-The found superblocks tell, that a total of 4 superblocks should
-exist. What happens if you grow an XFS file system? Do additional
-stripes generate a layout like this? Is the distance between the
-superblock copies ALWAYS a constant value? In my scenario the distance
-of the first 3 superblocks is not a fixed value. But how can blocks
-get lost? I don't think this is possible with VMDK to "mark blocks as
-deleted" inside a partition and they are skipped when reading a partition.
-
-Perhaps somebody with more knowledge can comment on this and can give me
-some pointers.
-
-
-Thanks
