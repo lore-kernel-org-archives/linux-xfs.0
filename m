@@ -1,28 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57326 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:58166 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbeBWCEC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:04:02 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N22C33150262
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:04:02 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2ga9bpg2ar-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:04:02 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1N240ar025685
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:04:01 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N240kA032419
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:04:00 GMT
-Subject: [PATCH 20/20] xfs: repair damaged symlinks
+        with ESMTP id S1750916AbeBWCFO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:05:14 -0500
+Subject: [PATCH 4/5] xfs: convert XFS_AGFL_SIZE to a helper function
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Feb 2018 18:03:59 -0800
-Message-ID: <151935143942.22097.9174318143682132009.stgit@magnolia>
-In-Reply-To: <151935130484.22097.9694510081310029779.stgit@magnolia>
-References: <151935130484.22097.9694510081310029779.stgit@magnolia>
+Date: Thu, 22 Feb 2018 18:00:06 -0800
+Message-ID: <151935120662.21654.13415426558899842401.stgit@magnolia>
+In-Reply-To: <151935118240.21654.10146641674018880885.stgit@magnolia>
+References: <151935118240.21654.10146641674018880885.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -30,369 +16,187 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Repair inconsistent symbolic link data.
+The AGFL size calculation is about to get more complex, so lets turn
+the macro into a function first and remove the macro.
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+[darrick: forward port to newer kernel, simplify the helper]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile               |    1 
- fs/xfs/scrub/repair.h         |    2 
- fs/xfs/scrub/scrub.c          |    1 
- fs/xfs/scrub/symlink.c        |    2 
- fs/xfs/scrub/symlink_repair.c |  285 +++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 290 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/scrub/symlink_repair.c
+ fs/xfs/libxfs/xfs_alloc.c  |   31 ++++++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_alloc.h  |    2 ++
+ fs/xfs/libxfs/xfs_format.h |   13 +------------
+ fs/xfs/scrub/agheader.c    |    6 +++---
+ fs/xfs/xfs_fsops.c         |    2 +-
+ 5 files changed, 31 insertions(+), 23 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 7a44ddbac..88c961b 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -182,6 +182,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   refcount_repair.o \
- 				   repair.o \
- 				   rmap_repair.o \
-+				   symlink_repair.o \
- 				   )
- endif
- endif
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 1c5d562..928fb37 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -124,6 +124,7 @@ int xfs_repair_refcountbt(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_inode(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_bmap_data(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_bmap_attr(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
-+int xfs_repair_symlink(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index c02781a..36101e5 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -53,6 +53,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
  
- #else
- 
-@@ -159,6 +160,7 @@ xfs_repair_calc_ag_resblks(
- # define xfs_repair_inode		(NULL)
- # define xfs_repair_bmap_data		(NULL)
- # define xfs_repair_bmap_attr		(NULL)
-+# define xfs_repair_symlink		(NULL)
- 
- #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 2a3a292..889f1f9 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -318,6 +318,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_INODE,
- 		.setup	= xfs_scrub_setup_symlink,
- 		.scrub	= xfs_scrub_symlink,
-+		.repair	= xfs_repair_symlink,
- 	},
- 	[XFS_SCRUB_TYPE_PARENT] = {	/* parent pointers */
- 		.type	= ST_INODE,
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-index 3aa3d60..a370aad 100644
---- a/fs/xfs/scrub/symlink.c
-+++ b/fs/xfs/scrub/symlink.c
-@@ -48,7 +48,7 @@ xfs_scrub_setup_symlink(
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip, XFS_SYMLINK_MAPS);
- }
- 
- /* Symbolic links. */
-diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
-new file mode 100644
-index 0000000..edd9942
---- /dev/null
-+++ b/fs/xfs/scrub/symlink_repair.c
-@@ -0,0 +1,285 @@
 +/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
++ * the beginning of the block for a proper header with the location information
++ * and CRC.
 + */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_symlink.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+
-+/* Blow out the whole symlink; replace contents. */
-+STATIC int
-+xfs_repair_symlink_rewrite(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	const char		*target_path,
-+	int			pathlen)
++unsigned int
++xfs_agfl_size(
++	struct xfs_mount	*mp)
 +{
-+	struct xfs_defer_ops	dfops;
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	struct xfs_ifork	*ifp;
-+	const char		*cur_chunk;
-+	struct xfs_mount	*mp = (*tpp)->t_mountp;
-+	struct xfs_buf		*bp;
-+	xfs_fsblock_t		first_block;
-+	xfs_fileoff_t		first_fsb;
-+	xfs_filblks_t		fs_blocks;
-+	xfs_daddr_t		d;
-+	int			byte_cnt;
-+	int			n;
-+	int			nmaps;
-+	int			offset;
-+	int			error = 0;
++	unsigned int		size = mp->m_sb.sb_sectsize;
 +
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		size -= sizeof(struct xfs_agfl);
 +
-+	/* Truncate the whole data fork if it wasn't inline. */
-+	if (!(ifp->if_flags & XFS_IFINLINE)) {
-+		error = xfs_itruncate_extents(tpp, ip, XFS_DATA_FORK, 0);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Blow out the in-core fork and zero the on-disk fork. */
-+	xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
-+	ip->i_d.di_nextents = 0;
-+	memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
-+	ip->i_df.if_flags |= XFS_IFEXTENTS;
-+
-+	/* Rewrite an inline symlink. */
-+	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
-+		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
-+
-+		i_size_write(VFS_I(ip), pathlen);
-+		ip->i_d.di_size = pathlen;
-+		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
-+		xfs_trans_log_inode(*tpp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
-+		goto out;
-+
-+	}
-+
-+	/* Rewrite a remote symlink. */
-+	fs_blocks = xfs_symlink_blocks(mp, pathlen);
-+	first_fsb = 0;
-+	nmaps = XFS_SYMLINK_MAPS;
-+
-+	/* Reserve quota for new blocks. */
-+	error = xfs_trans_reserve_quota_nblks(*tpp, ip, fs_blocks, 0,
-+			XFS_QMOPT_RES_REGBLKS);
-+	if (error)
-+		goto out;
-+
-+	/* Map blocks, write symlink target. */
-+	xfs_defer_init(&dfops, &first_block);
-+
-+	error = xfs_bmapi_write(*tpp, ip, first_fsb, fs_blocks,
-+			  XFS_BMAPI_METADATA, &first_block, fs_blocks,
-+			  mval, &nmaps, &dfops);
-+	if (error)
-+		goto out_bmap_cancel;
-+
-+	ip->i_d.di_size = pathlen;
-+	i_size_write(VFS_I(ip), pathlen);
-+	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+
-+	cur_chunk = target_path;
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		char	*buf;
-+
-+		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
-+		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-+		bp = xfs_trans_get_buf(*tpp, mp->m_ddev_targp, d,
-+				       BTOBB(byte_cnt), 0);
-+		if (!bp) {
-+			error = -ENOMEM;
-+			goto out_bmap_cancel;
-+		}
-+		bp->b_ops = &xfs_symlink_buf_ops;
-+
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
-+		byte_cnt = min(byte_cnt, pathlen);
-+
-+		buf = bp->b_addr;
-+		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
-+					   byte_cnt, bp);
-+
-+		memcpy(buf, cur_chunk, byte_cnt);
-+
-+		cur_chunk += byte_cnt;
-+		pathlen -= byte_cnt;
-+		offset += byte_cnt;
-+
-+		xfs_trans_buf_set_type(*tpp, bp, XFS_BLFT_SYMLINK_BUF);
-+		xfs_trans_log_buf(*tpp, bp, 0, (buf + byte_cnt - 1) -
-+						(char *)bp->b_addr);
-+	}
-+	ASSERT(pathlen == 0);
-+
-+	error = xfs_defer_finish(tpp, &dfops);
-+	if (error)
-+		goto out_bmap_cancel;
-+
-+	return 0;
-+
-+out_bmap_cancel:
-+	xfs_defer_cancel(&dfops);
-+out:
-+	return error;
++	return size / sizeof(xfs_agblock_t);
 +}
 +
-+/* Fix everything that fails the verifiers in the remote blocks. */
-+STATIC int
-+xfs_repair_symlink_fix_remotes(
-+	struct xfs_scrub_context	*sc,
-+	loff_t				len)
-+{
-+	struct xfs_bmbt_irec		mval[XFS_SYMLINK_MAPS];
-+	struct xfs_buf			*bp;
-+	xfs_filblks_t			fsblocks;
-+	xfs_daddr_t			d;
-+	loff_t				offset;
-+	unsigned int			byte_cnt;
-+	int				n;
-+	int				nmaps = XFS_SYMLINK_MAPS;
-+	int				nr;
-+	int				error;
+ unsigned int
+ xfs_refc_block(
+ 	struct xfs_mount	*mp)
+@@ -550,7 +567,7 @@ xfs_agfl_verify(
+ 	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
+ 		return __this_address;
+ 
+-	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
++	for (i = 0; i < xfs_agfl_size(mp); i++) {
+ 		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
+ 		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+ 			return __this_address;
+@@ -2266,7 +2283,7 @@ xfs_alloc_get_freelist(
+ 	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
+ 	be32_add_cpu(&agf->agf_flfirst, 1);
+ 	xfs_trans_brelse(tp, agflbp);
+-	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
++	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
+ 		agf->agf_flfirst = 0;
+ 
+ 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+@@ -2377,7 +2394,7 @@ xfs_alloc_put_freelist(
+ 			be32_to_cpu(agf->agf_seqno), &agflbp)))
+ 		return error;
+ 	be32_add_cpu(&agf->agf_fllast, 1);
+-	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
++	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
+ 		agf->agf_fllast = 0;
+ 
+ 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+@@ -2395,7 +2412,7 @@ xfs_alloc_put_freelist(
+ 
+ 	xfs_alloc_log_agf(tp, agbp, logflags);
+ 
+-	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
++	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
+ 
+ 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+ 	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
+@@ -2428,9 +2445,9 @@ xfs_agf_verify(
+ 	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+ 	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+ 	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+-	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+-	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+-	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
++	      be32_to_cpu(agf->agf_flfirst) < xfs_agfl_size(mp) &&
++	      be32_to_cpu(agf->agf_fllast) < xfs_agfl_size(mp) &&
++	      be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp)))
+ 		return __this_address;
+ 
+ 	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 65a0caf..a311a24 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -26,6 +26,8 @@ struct xfs_trans;
+ 
+ extern struct workqueue_struct *xfs_alloc_wq;
+ 
++unsigned int xfs_agfl_size(struct xfs_mount *mp);
 +
-+	fsblocks = xfs_symlink_blocks(sc->mp, len);
-+	error = xfs_bmapi_read(sc->ip, 0, fsblocks, mval, &nmaps, 0);
-+	if (error)
-+		return error;
-+
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		d = XFS_FSB_TO_DADDR(sc->mp, mval[n].br_startblock);
-+		byte_cnt = XFS_FSB_TO_B(sc->mp, mval[n].br_blockcount);
-+
-+		error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
-+				d, BTOBB(byte_cnt), 0, &bp, NULL);
-+		if (error)
-+			return error;
-+		bp->b_ops = &xfs_symlink_buf_ops;
-+
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(sc->mp, byte_cnt);
-+		if (len < byte_cnt)
-+			byte_cnt = len;
-+
-+		nr = xfs_symlink_hdr_set(sc->mp, sc->ip->i_ino, offset,
-+				byte_cnt, bp);
-+
-+		len -= byte_cnt;
-+		offset += byte_cnt;
-+
-+		xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SYMLINK_BUF);
-+		xfs_trans_log_buf(sc->tp, bp, 0, nr - 1);
-+		xfs_trans_brelse(sc->tp, bp);
-+	}
-+	if (len != 0)
-+		return -EFSCORRUPTED;
-+
-+	return 0;
-+}
-+
-+int
-+xfs_repair_symlink(
-+	struct xfs_scrub_context	*sc,
-+	uint32_t			scrub_oflags)
-+{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	loff_t				len;
-+	size_t				newlen;
-+	int				error = 0;
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	len = i_size_read(VFS_I(ip));
-+	xfs_trans_ijoin(sc->tp, ip, 0);
-+
-+	/* Truncate the inode if there's a zero inside the length. */
-+	if (ifp->if_flags & XFS_IFINLINE) {
-+		if (ifp->if_u1.if_data)
-+			newlen = strnlen(ifp->if_u1.if_data,
-+					XFS_IFORK_DSIZE(ip));
-+		else {
-+			/* Zero length symlink becomes a root symlink. */
-+			ifp->if_u1.if_data = kmem_alloc(4, KM_SLEEP | KM_NOFS);
-+			snprintf(ifp->if_u1.if_data, 4, "/");
-+			newlen = 1;
-+		}
-+		if (len > newlen) {
-+			i_size_write(VFS_I(ip), newlen);
-+			ip->i_d.di_size = newlen;
-+			xfs_trans_log_inode(sc->tp, ip, XFS_ILOG_DDATA |
-+					XFS_ILOG_CORE);
-+		}
-+		goto out;
-+	}
-+
-+	error = xfs_repair_symlink_fix_remotes(sc, len);
-+	if (error)
-+		goto out;
-+
-+	/* Roll transaction, release buffers. */
-+	error = xfs_trans_roll_inode(&sc->tp, ip);
-+	if (error)
-+		goto out;
-+
-+	/* Size set correctly? */
-+	len = i_size_read(VFS_I(ip));
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	error = xfs_readlink(ip, sc->buf);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * Figure out the new target length.  We can't handle zero-length
-+	 * symlinks, so make sure that we don't write that out.
-+	 */
-+	newlen = strnlen(sc->buf, XFS_SYMLINK_MAXLEN);
-+	if (newlen == 0) {
-+		*((char *)sc->buf) = '/';
-+		newlen = 1;
-+	}
-+
-+	if (len > newlen)
-+		error = xfs_repair_symlink_rewrite(&sc->tp, ip, sc->buf,
-+				newlen);
-+out:
-+	return error;
-+}
+ /*
+  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
+  */
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 1acb584..42956d8 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -803,24 +803,13 @@ typedef struct xfs_agi {
+ 		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
+ 		(__be32 *)(bp)->b_addr)
+ 
+-/*
+- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
+- * slots in the beginning of the block for a proper header with the
+- * location information and CRC.
+- */
+-#define XFS_AGFL_SIZE(mp) \
+-	(((mp)->m_sb.sb_sectsize - \
+-	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
+-		sizeof(struct xfs_agfl) : 0)) / \
+-	  sizeof(xfs_agblock_t))
+-
+ typedef struct xfs_agfl {
+ 	__be32		agfl_magicnum;
+ 	__be32		agfl_seqno;
+ 	uuid_t		agfl_uuid;
+ 	__be64		agfl_lsn;
+ 	__be32		agfl_crc;
+-	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
++	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
+ } __attribute__((packed)) xfs_agfl_t;
+ 
+ #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index fd97552..fd383c5 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -80,7 +80,7 @@ xfs_scrub_walk_agfl(
+ 	}
+ 
+ 	/* first to the end */
+-	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
++	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
+ 		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+ 		if (error)
+ 			return error;
+@@ -664,7 +664,7 @@ xfs_scrub_agf(
+ 	if (agfl_last > agfl_first)
+ 		fl_count = agfl_last - agfl_first + 1;
+ 	else
+-		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
++		fl_count = xfs_agfl_size(mp) - agfl_first + agfl_last + 1;
+ 	if (agfl_count != 0 && fl_count != agfl_count)
+ 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+ 
+@@ -791,7 +791,7 @@ xfs_scrub_agfl(
+ 	/* Allocate buffer to ensure uniqueness of AGFL entries. */
+ 	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+ 	agflcount = be32_to_cpu(agf->agf_flcount);
+-	if (agflcount > XFS_AGFL_SIZE(sc->mp)) {
++	if (agflcount > xfs_agfl_size(sc->mp)) {
+ 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+ 		goto out;
+ 	}
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 8b45456..5237927 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -217,7 +217,7 @@ xfs_growfs_data_private(
+ 		}
+ 
+ 		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+-		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
++		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+ 			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+ 
+ 		error = xfs_bwrite(bp);
 
