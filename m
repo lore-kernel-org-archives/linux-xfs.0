@@ -1,26 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57800 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:58534 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbeBWCEo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:04:44 -0500
+        with ESMTP id S1750916AbeBWCFt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:05:49 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N22UXw151111
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:04:44 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2ga9bpg2cb-1
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N22UY1151111
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:05:49 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2ga9bpg2ej-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:04:44 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:05:49 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1N1xhGt009223
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1N20l11018884
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 01:59:43 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N1xh0q029962
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 01:59:43 GMT
-Subject: [PATCH 0/5] xfs: fix various problems
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:48 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N20lcf030770
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:47 GMT
+Subject: [PATCH 3/8] xfs: refactor inode buffer verifier error logging
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Feb 2018 17:59:42 -0800
-Message-ID: <151935118240.21654.10146641674018880885.stgit@magnolia>
+Date: Thu, 22 Feb 2018 18:00:46 -0800
+Message-ID: <151935124663.21842.16074707117316314139.stgit@magnolia>
+In-Reply-To: <151935122813.21842.14996049216693190946.stgit@magnolia>
+References: <151935122813.21842.14996049216693190946.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -30,30 +32,116 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This series fixes miscellaneous problems in XFS.  The first two fix some
-crashes and locking problems that happen when we're fed fs images with
-corrupt directories or AGFs.
+When the inode buffer verifier encounters an error, it's much more
+helpful to print a buffer from the offending inode instead of just the
+start of the inode chunk buffer.
 
-The third patch speeds up inode reclaim by avoiding an unnecessary
-transaction allocation when there's nothing in the CoW fork.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c |    4 +++-
+ fs/xfs/xfs_error.c            |   29 ++++++++++++++++++++++++-----
+ fs/xfs/xfs_error.h            |    3 +++
+ 3 files changed, 30 insertions(+), 6 deletions(-)
 
-The final two patches fix the AGFL wrapping problems we've seen with the
-v5 disk format once and for all.  At mount time we fix any AGFL wrapping
-problems that an old kernel might have left for us, and at unmount or
-freeze or remount-ro time we ensure that the AGFLs we leave behind for
-other filesystems to mount do not wrap around the end of the block.
-This should fix all the intermittent agf verifier failures people see.
-Note that the mitigation is switched off for rmap or reflink filesystems
-on the assumption that any kernel that supports those features also has
-the 4.5 agfl padding patch applied.
 
-These patches are all against 4.16-rc2, though aside from the first two
-I intend them all for 4.17.
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 4fe17b3..b12851e 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -115,13 +115,15 @@ xfs_inode_buf_verify(
+ 				return;
+ 			}
+ 
+-			xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
+ #ifdef DEBUG
+ 			xfs_alert(mp,
+ 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+ 				(unsigned long long)bp->b_bn, i,
+ 				be16_to_cpu(dip->di_magic));
+ #endif
++			xfs_buf_verifier_error(bp, -EFSCORRUPTED,
++					__func__, dip, sizeof(*dip),
++					__this_address);
+ 		}
+ 	}
+ 	xfs_inobp_check(mp, bp);
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index ccf520f..a63f508 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -347,27 +347,32 @@ xfs_corruption_error(
+  * values, and omit the stack trace unless the error level is tuned high.
+  */
+ void
+-xfs_verifier_error(
++xfs_buf_verifier_error(
+ 	struct xfs_buf		*bp,
+ 	int			error,
++	const char		*name,
++	void			*buf,
++	size_t			bufsz,
+ 	xfs_failaddr_t		failaddr)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	xfs_failaddr_t		fa;
++	int			sz;
+ 
+ 	fa = failaddr ? failaddr : __return_address;
+ 	__xfs_buf_ioerror(bp, error, fa);
+ 
+-	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx",
++	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx %s",
+ 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
+-		  fa, bp->b_ops->name, bp->b_bn);
++		  fa, bp->b_ops->name, bp->b_bn, name);
+ 
+ 	xfs_alert(mp, "Unmount and run xfs_repair");
+ 
+ 	if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
++		sz = min_t(size_t, XFS_CORRUPTION_DUMP_LEN, bufsz);
+ 		xfs_alert(mp, "First %d bytes of corrupted metadata buffer:",
+-				XFS_CORRUPTION_DUMP_LEN);
+-		xfs_hex_dump(xfs_buf_offset(bp, 0), XFS_CORRUPTION_DUMP_LEN);
++				sz);
++		xfs_hex_dump(buf, sz);
+ 	}
+ 
+ 	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
+@@ -375,6 +380,20 @@ xfs_verifier_error(
+ }
+ 
+ /*
++ * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
++ * values, and omit the stack trace unless the error level is tuned high.
++ */
++void
++xfs_verifier_error(
++	struct xfs_buf		*bp,
++	int			error,
++	xfs_failaddr_t		failaddr)
++{
++	return xfs_buf_verifier_error(bp, error, "", xfs_buf_offset(bp, 0),
++			XFS_CORRUPTION_DUMP_LEN, failaddr);
++}
++
++/*
+  * Warnings for inode corruption problems.  Don't bother with the stack
+  * trace unless the error level is turned up high.
+  */
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 7e728c5..ce39134 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -26,6 +26,9 @@ extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
+ extern void xfs_corruption_error(const char *tag, int level,
+ 			struct xfs_mount *mp, void *p, const char *filename,
+ 			int linenum, xfs_failaddr_t failaddr);
++extern void xfs_buf_verifier_error(struct xfs_buf *bp, int error,
++			const char *name, void *buf, size_t bufsz,
++			xfs_failaddr_t failaddr);
+ extern void xfs_verifier_error(struct xfs_buf *bp, int error,
+ 			xfs_failaddr_t failaddr);
+ extern void xfs_inode_verifier_error(struct xfs_inode *ip, int error,
 
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
