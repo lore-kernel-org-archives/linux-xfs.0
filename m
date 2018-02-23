@@ -1,74 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37840 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751716AbeB0A0b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 19:26:31 -0500
-Date: Mon, 26 Feb 2018 16:25:50 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC] mkfs config file bikeshed now!
-Message-ID: <20180227002550.GH19312@magnolia>
-References: <20180226224224.GE19312@magnolia>
- <20180227000122.GR14069@wotan.suse.de>
- <3e239e61-bc79-c594-c1fd-44fa3efe779d@sandeen.net>
- <CAB=NE6U+7hmRhrkkd1v=rEKrcY+NNf61jL9B4nm=kDbTPvy--w@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:55954 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753662AbeBWTbA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Feb 2018 14:31:00 -0500
+Subject: Re: xfs_repair questions
+References: <CACssdW1a=+6Dh=TEV1g13ipfM1TXd29SEHNuz_ar7RfwpmgdFg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <99fc8927-31d4-7634-c96e-7905f3d74646@sandeen.net>
+Date: Fri, 23 Feb 2018 13:30:58 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAB=NE6U+7hmRhrkkd1v=rEKrcY+NNf61jL9B4nm=kDbTPvy--w@mail.gmail.com>
+In-Reply-To: <CACssdW1a=+6Dh=TEV1g13ipfM1TXd29SEHNuz_ar7RfwpmgdFg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Tso Ted <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Alatun Rom <alatun.rom@gmail.com>, linux-xfs@vger.kernel.org
 
-On Mon, Feb 26, 2018 at 04:15:06PM -0800, Luis R. Rodriguez wrote:
-> On Mon, Feb 26, 2018 at 4:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> >
-> >
-> > On 2/26/18 6:01 PM, Luis R. Rodriguez wrote:
-> >>  IIRC with e2fsprogs profile parsers we could end up with something
-> >> like:
-> >>
-> >> [defaults]
-> >> foo=0
-> >> bar=0
-> >> [stuff]
-> >>       some_release =  {
-> >>               foo=1
-> >>               bar=2
-> >>       }
-> >>       new_release = {
-> >>               foo=2
-> >>       }
-> >
-> > I can't tell what that means.  What's "stuff?"  Why would we need this sort of
-> > nesting?
+On 2/22/18 5:42 PM, Alatun Rom wrote:
+> Now I'm trying to fix the xfs in this partition dump. xfs_repair found
+> 7 candidates of secondary superblocks, but is unable to verify them. I
+> was rather disappointed with the lack of information xfs_repair
+> reported.
 > 
-> I'll leave the crafty examples to Darrick as he had some complex ideas
-> in mind. On my part I was happy to not have to deal with the namespace
-> stuff -- however I realized some may want it, so I had to mention both
-> libraries libini_config and e2fsprogs profile parser do support it,
-> just in different ways.
+> So I made a git clone of xfstools and looked for the code doing the
+> repair and added some more output. I added information about the file
+> offset of the candidates and the status, why it is considered unusable.
+> The output of xfs_repair for my broken partition now looks like this:
+> ---
+> Phase 1 - find and verify superblock...
+> bad primary superblock - bad magic number !!!
 
-Well I /did/ have an even stupider parser in mind if segmented config
-files got shot down...
+So right off the bat, the first superblock in sector zero looks bad.
+Are you sure you properly extracted this part of the disk?  What
+does i.e. blkid or file -s say about what you extracted, and
+what does a hexdump look like?
 
-/etc/xfs/mkfs/uek5.conf:
-data.agcount 32
-metadata.reflink 0
+> attempting to find secondary superblock...
+> found candidate secondary superblock... off: 32204029952
+> checking sbs#: 4
+> check sbs@ 32212221952 - status: 1
 
-# mkfs.xfs -t uek5 /dev/sda
+without knowing what your patches do, I don't know what "status: 1"
+means here.  Is that a failure?
 
-open("/etc/xfs/mkfs/${t_optarg}.conf")...
+And backing up, what version of xfsprogs are you using?
 
-Then we can parse it with a simple fgets/strtok loop to tokenize the
-input lines and feed them to the geometry arg parser.  But I'll go read
-your paper all the way through first before I scribble more. :)
+> check sbs@ 64424443904 - status: 1
+> check sbs@ 96636665856 - status: 1
+> unable to verify superblock, continuing... error code: 16
 
---D
+#define XR_INSUFF_SEC_SB        16      /* not enough matching secondary sbs */
 
->  Luis
+        if (num_ok < num_sbs / 2) {
+                retval = XR_INSUFF_SEC_SB;
+
+> found candidate secondary superblock... off: 57813565440
+> checking sbs#: 4
+> check sbs@ 32212221952 - status: 1
+> check sbs@ 64424443904 - status: 1
+> check sbs@ 96636665856 - status: 1
+> unable to verify superblock, continuing... error code: 16
+> found candidate secondary superblock... off: 64185663488
+> checking sbs#: 4
+> check sbs@ 32212221952 - status: 1
+> check sbs@ 64424443904 - status: 1
+> check sbs@ 96636665856 - status: 1
+> unable to verify superblock, continuing... error code: 16
+> found candidate secondary superblock... off: 96412992512
+> checking sbs#: 4
+> check sbs@ 7232069632 - status: 1
+> check sbs@ 14464139264 - status: 1
+> check sbs@ 21696208896 - status: 1
+> unable to verify superblock, continuing... error code: 16
+> found candidate secondary superblock... off: 96413164544
+> checking sbs#: 4
+> check sbs@ 7232069632 - status: 1
+> check sbs@ 14464139264 - status: 1
+> check sbs@ 21696208896 - status: 1
+> unable to verify superblock, continuing... error code: 16
+> found candidate secondary superblock... off: 96413271040
+> checking sbs#: 4
+> check sbs@ 7232069632 - status: 1
+> check sbs@ 14464139264 - status: 1
+> check sbs@ 21696208896 - status: 1
+> unable to verify superblock, continuing... error code: 16
+> found candidate secondary superblock... off: 96419537920
+> checking sbs#: 4
+> check sbs@ 7232069632 - status: 1
+> check sbs@ 14464139264 - status: 1
+> check sbs@ 21696208896 - status: 1
+> unable to verify superblock, continuing... error code: 16
+> Sorry, could not find valid secondary superblock
+> Exiting now.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> (error code 16: not enough superblocks to validate
+> status code 1: invalid superblock signature)
+> I also extracted the blocks at the given offsets (eg @ 32204029952) ,
+> examined them and the contents of the SSBs are looking quite good:
+> --
+> 00000000  58 46 53 42 00 00 10 00  00 00 00 00 01 df ff e0  |XFSB............|
+> 00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+> 00000020  b1 f2 a8 ad 7d 75 4d a0  9a be 3f e6 a4 e4 05 c3  |....}uM...?.....|
+> 00000030  00 00 00 00 01 00 00 04  00 00 00 00 00 00 00 80  |................|
+> 00000040  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
+> 00000050  00 00 00 01 00 77 ff f8  00 00 00 04 00 00 00 00  |.....w..........|
+> 00000060  00 00 3b ff b4 a4 02 00  01 00 00 10 68 79 00 00  |..;.........hy..|
+> 00000070  00 00 00 00 00 00 00 00  0c 09 08 04 17 00 00 19  |................|
+> 00000080  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+> 00000090  00 00 00 00 01 df c3 d1  00 00 00 00 00 00 00 00  |................|
+> 000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+> 000000b0  00 00 00 00 00 00 00 02  00 00 00 00 00 00 00 00  |................|
+> 000000c0  00 00 00 00 00 00 00 01  00 00 00 08 00 00 00 08  |................|
+> 000000d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+> *
+> 00000200
+> --
+> As far as I understood, xfs_repair considers the file system
+> unfixable, because the secondary superblocks are not found at the offsets,
+> where they should be. The blocks found look quite ok.
+> My guess: because the VMDK container got damaged, the information of
+> the internal partitions is now incorrect, so testdisk did extract a
+> file that is somehow broken. But from what I've seen so far, it could
+> be possible to fix it up to the point, to extract some files.
+> 
+> What is unclear for me: why are 7 SSB found?
+
+It may have found logged superblocks in the log region.
+
+> Is this a geometry issue?
+> The found superblocks tell, that a total of 4 superblocks should
+> exist. What happens if you grow an XFS file system? Do additional
+> stripes generate a layout like this? 
+
+you get extra allocation groups added, and the superblock AG count
+will reflect this.
+
+> Is the distance between the
+> superblock copies ALWAYS a constant value? 
+
+yes, though the last one may be a smaller size.
+
+> In my scenario the distance
+> of the first 3 superblocks is not a fixed value. But how can blocks
+> get lost? I don't think this is possible with VMDK to "mark blocks as
+> deleted" inside a partition and they are skipped when reading a partition.
+> 
+> Perhaps somebody with more knowledge can comment on this and can give me
+> some pointers.
+
+So, xfs_repair used to be really braindead and scan the entire device
+sector by sector looking for candidate superblocks.  A while back some
+heuristics were added to try to be a little smarter; once a candidate was
+found, try checking the other locations that the found superblock
+points to.  However if things fail, IIRC it is supposed to fall back to
+a block-by-block scan.
+
+Can you try xfsprogs-4.6.0, and run an xfs_repair -n from that?
+
+(-n will be check only and will leave the fs unchanged; if that does
+work I'd like to get to the bottom of why newer xfsprogs fails for you,
+so would rather not modify anything yet, if you can tolerate a bit of
+a wait)
+
+-Eric
