@@ -1,56 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53300 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751381AbeBWQWb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Feb 2018 11:22:31 -0500
-Date: Fri, 23 Feb 2018 08:22:24 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] fsstress: avoid infinite loops in clonerange_f
-Message-ID: <20180223162224.GD14582@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:33210 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751351AbeBWPfO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Feb 2018 10:35:14 -0500
+Date: Fri, 23 Feb 2018 16:35:13 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] xfs: implement the lazytime mount options
+Message-ID: <20180223153513.GA17023@lst.de>
+References: <20180222152957.19624-1-hch@lst.de> <20180222152957.19624-3-hch@lst.de> <20180223005048.GK7000@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180223005048.GK7000@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@redhat.com
-Cc: Luis Henriques <lhenriques@suse.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 23, 2018 at 11:50:48AM +1100, Dave Chinner wrote:
+> > +	if ((inode->i_sb->s_flags & SB_LAZYTIME) &&
+> > +	    !((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false)))
+> > +		return generic_update_time(inode, now, flags);
+> 
+> So if we've incremented iversion here on a lazytime update (hence
+> making it not lazy), we won't do the iversion update in
+> xfs_trans_log_inode() because the query bit has been cleared here.
+> Hence we won't set XFS_ILOG_CORE in the transaction and the iversion
+> update will not be logged.
 
-Evidently ceph will report a 4M blocksize, which trips clonerange_f's
-clumsy attempt to avoid reflinking an extent on top of itself.  The
-original code assumed that "pick a random destination up to 1MB past the
-end of the file" would suffice, but that clearly won't with a 4M
-blocksize.  Instead, we'll change it to 1024*blksize.
+Indeed, I'll fix this up.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Tested-by: Luis Henriques <lhenriques@suse.com>
----
- ltp/fsstress.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> > +	if (inode->i_state & (I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED)) {
+> > +		spin_lock(&inode->i_lock);
+> > +		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
+> > +		spin_unlock(&inode->i_lock);
+> > +	}
+> 
+> I suspect this is racy w.r.t other code that sets/clears the
+> I_DIRTY_TIME fields. Shouldn't both the check and clear be under the
+> spin lock?
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 935f5de..e107099 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -2222,6 +2222,7 @@ clonerange_f(
- 	off64_t			lr;
- 	off64_t			off1;
- 	off64_t			off2;
-+	off64_t			max_off2;
- 	size_t			len;
- 	int			v1;
- 	int			v2;
-@@ -2305,9 +2306,10 @@ clonerange_f(
- 	 * If srcfile == destfile, randomly generate destination ranges
- 	 * until we find one that doesn't overlap the source range.
- 	 */
-+	max_off2 = MIN(stat2.st_size + (1024ULL * stat2.st_blksize), MAXFSIZE);
- 	do {
- 		lr = ((int64_t)random() << 32) + random();
--		off2 = (off64_t)(lr % MIN(stat2.st_size + (1024 * 1024), MAXFSIZE));
-+		off2 = (off64_t)(lr % max_off2);
- 		off2 %= maxfsize;
- 		off2 &= ~(stat2.st_blksize - 1);
- 	} while (stat1.st_ino == stat2.st_ino && llabs(off2 - off1) < len);
+I don;t think so.  The racy check is perfectly fine - if someone
+cleared the flag racing with the above nothing bad will happen.
+If someone raced setting it we won't capture this update in the
+transaction and will have to log another one 24 hours later in the
+worst case.  The only reason for the lock is to not corrupt i_state
+itself by overlapping rmw cycles.
