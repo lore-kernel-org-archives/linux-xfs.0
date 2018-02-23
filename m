@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58534 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbeBWCFt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:05:49 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N22UY1151111
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:05:49 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2ga9bpg2ej-1
+Received: from userp2120.oracle.com ([156.151.31.85]:36616 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750916AbeBWCGH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:06:07 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N21nON069903
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:06:07 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2ga9bpg2k4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:05:49 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:06:07 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1N20l11018884
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w1N216kI002191
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:48 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N20lcf030770
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:47 GMT
-Subject: [PATCH 3/8] xfs: refactor inode buffer verifier error logging
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:01:06 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N216AH031083
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:01:06 GMT
+Subject: [PATCH 6/8] xfs: remove xfs_buf parameter from inode scrub methods
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Feb 2018 18:00:46 -0800
-Message-ID: <151935124663.21842.16074707117316314139.stgit@magnolia>
+Date: Thu, 22 Feb 2018 18:01:04 -0800
+Message-ID: <151935126488.21842.5740969037089228697.stgit@magnolia>
 In-Reply-To: <151935122813.21842.14996049216693190946.stgit@magnolia>
 References: <151935122813.21842.14996049216693190946.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,114 +34,610 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When the inode buffer verifier encounters an error, it's much more
-helpful to print a buffer from the offending inode instead of just the
-start of the inode chunk buffer.
+Now that we no longer do raw inode buffer scrubbing, the bp parameter is
+no longer used anywhere we're dealing with an inode, so remove it and
+all the useless NULL parameters that go with it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |    4 +++-
- fs/xfs/xfs_error.c            |   29 ++++++++++++++++++++++++-----
- fs/xfs/xfs_error.h            |    3 +++
- 3 files changed, 30 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/attr.c     |    2 -
+ fs/xfs/scrub/bmap.c     |    4 +-
+ fs/xfs/scrub/common.c   |   22 ++++------
+ fs/xfs/scrub/common.h   |   13 ++----
+ fs/xfs/scrub/dir.c      |    2 -
+ fs/xfs/scrub/inode.c    |  106 ++++++++++++++++++++++-------------------------
+ fs/xfs/scrub/quota.c    |    2 -
+ fs/xfs/scrub/rtbitmap.c |    3 -
+ fs/xfs/scrub/trace.h    |   31 ++------------
+ 9 files changed, 74 insertions(+), 111 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 4fe17b3..b12851e 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -115,13 +115,15 @@ xfs_inode_buf_verify(
- 				return;
- 			}
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 4ed8047..127575f 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -98,7 +98,7 @@ xfs_scrub_xattr_listent(
  
--			xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
- #ifdef DEBUG
- 			xfs_alert(mp,
- 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
- 				(unsigned long long)bp->b_bn, i,
- 				be16_to_cpu(dip->di_magic));
- #endif
-+			xfs_buf_verifier_error(bp, -EFSCORRUPTED,
-+					__func__, dip, sizeof(*dip),
-+					__this_address);
+ 	if (flags & XFS_ATTR_INCOMPLETE) {
+ 		/* Incomplete attr key, just mark the inode for preening. */
+-		xfs_scrub_ino_set_preen(sx->sc, context->dp->i_ino, NULL);
++		xfs_scrub_ino_set_preen(sx->sc, context->dp->i_ino);
+ 		return;
+ 	}
+ 
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index aee5355..372077a 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -609,7 +609,7 @@ xfs_scrub_bmap(
+ 			goto out;
+ 		/* No CoW forks on non-reflink inodes/filesystems. */
+ 		if (!xfs_is_reflink_inode(ip)) {
+-			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
++			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+ 			goto out;
  		}
- 	}
- 	xfs_inobp_check(mp, bp);
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index ccf520f..a63f508 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -347,27 +347,32 @@ xfs_corruption_error(
-  * values, and omit the stack trace unless the error level is tuned high.
-  */
+ 		break;
+@@ -618,7 +618,7 @@ xfs_scrub_bmap(
+ 			goto out_check_rmap;
+ 		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
+ 		    !xfs_sb_version_hasattr2(&mp->m_sb))
+-			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
++			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+ 		break;
+ 	default:
+ 		ASSERT(whichfork == XFS_DATA_FORK);
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 8033ab9..fe3a2b1 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -213,12 +213,10 @@ xfs_scrub_block_set_preen(
  void
--xfs_verifier_error(
-+xfs_buf_verifier_error(
- 	struct xfs_buf		*bp,
- 	int			error,
-+	const char		*name,
-+	void			*buf,
-+	size_t			bufsz,
- 	xfs_failaddr_t		failaddr)
+ xfs_scrub_ino_set_preen(
+ 	struct xfs_scrub_context	*sc,
+-	xfs_ino_t			ino,
+-	struct xfs_buf			*bp)
++	xfs_ino_t			ino)
  {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	xfs_failaddr_t		fa;
-+	int			sz;
+ 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
+-	trace_xfs_scrub_ino_preen(sc, ino, bp ? bp->b_bn : 0,
+-			__return_address);
++	trace_xfs_scrub_ino_preen(sc, ino, __return_address);
+ }
  
- 	fa = failaddr ? failaddr : __return_address;
- 	__xfs_buf_ioerror(bp, error, fa);
+ /* Record a corrupt block. */
+@@ -249,22 +247,20 @@ xfs_scrub_block_xref_set_corrupt(
+ void
+ xfs_scrub_ino_set_corrupt(
+ 	struct xfs_scrub_context	*sc,
+-	xfs_ino_t			ino,
+-	struct xfs_buf			*bp)
++	xfs_ino_t			ino)
+ {
+ 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+-	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
++	trace_xfs_scrub_ino_error(sc, ino, __return_address);
+ }
  
--	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx",
-+	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx %s",
- 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
--		  fa, bp->b_ops->name, bp->b_bn);
-+		  fa, bp->b_ops->name, bp->b_bn, name);
+ /* Record a corruption while cross-referencing with an inode. */
+ void
+ xfs_scrub_ino_xref_set_corrupt(
+ 	struct xfs_scrub_context	*sc,
+-	xfs_ino_t			ino,
+-	struct xfs_buf			*bp)
++	xfs_ino_t			ino)
+ {
+ 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
+-	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
++	trace_xfs_scrub_ino_error(sc, ino, __return_address);
+ }
  
- 	xfs_alert(mp, "Unmount and run xfs_repair");
+ /* Record corruption in a block indexed by a file fork. */
+@@ -296,12 +292,10 @@ xfs_scrub_fblock_xref_set_corrupt(
+ void
+ xfs_scrub_ino_set_warning(
+ 	struct xfs_scrub_context	*sc,
+-	xfs_ino_t			ino,
+-	struct xfs_buf			*bp)
++	xfs_ino_t			ino)
+ {
+ 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
+-	trace_xfs_scrub_ino_warning(sc, ino, bp ? bp->b_bn : 0,
+-			__return_address);
++	trace_xfs_scrub_ino_warning(sc, ino, __return_address);
+ }
  
- 	if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
-+		sz = min_t(size_t, XFS_CORRUPTION_DUMP_LEN, bufsz);
- 		xfs_alert(mp, "First %d bytes of corrupted metadata buffer:",
--				XFS_CORRUPTION_DUMP_LEN);
--		xfs_hex_dump(xfs_buf_offset(bp, 0), XFS_CORRUPTION_DUMP_LEN);
-+				sz);
-+		xfs_hex_dump(buf, sz);
+ /* Warn about a block indexed by a file fork that needs review. */
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index ddb65d2..deaf604 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -63,25 +63,22 @@ bool xfs_scrub_fblock_xref_process_error(struct xfs_scrub_context *sc,
+ 
+ void xfs_scrub_block_set_preen(struct xfs_scrub_context *sc,
+ 		struct xfs_buf *bp);
+-void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, xfs_ino_t ino,
+-		struct xfs_buf *bp);
++void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, xfs_ino_t ino);
+ 
+ void xfs_scrub_block_set_corrupt(struct xfs_scrub_context *sc,
+ 		struct xfs_buf *bp);
+-void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
+-		struct xfs_buf *bp);
++void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino);
+ void xfs_scrub_fblock_set_corrupt(struct xfs_scrub_context *sc, int whichfork,
+ 		xfs_fileoff_t offset);
+ 
+ void xfs_scrub_block_xref_set_corrupt(struct xfs_scrub_context *sc,
+ 		struct xfs_buf *bp);
+-void xfs_scrub_ino_xref_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
+-		struct xfs_buf *bp);
++void xfs_scrub_ino_xref_set_corrupt(struct xfs_scrub_context *sc,
++		xfs_ino_t ino);
+ void xfs_scrub_fblock_xref_set_corrupt(struct xfs_scrub_context *sc,
+ 		int whichfork, xfs_fileoff_t offset);
+ 
+-void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc, xfs_ino_t ino,
+-		struct xfs_buf *bp);
++void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc, xfs_ino_t ino);
+ void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
+ 		xfs_fileoff_t offset);
+ 
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 50b6a26..38f2980 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -781,7 +781,7 @@ xfs_scrub_directory(
+ 
+ 	/* Plausible size? */
+ 	if (sc->ip->i_d.di_size < xfs_dir2_sf_hdr_size(0)) {
+-		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
++		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+ 		goto out;
  	}
  
- 	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
-@@ -375,6 +380,20 @@ xfs_verifier_error(
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 0332a01..9eadca9 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -98,7 +98,6 @@ xfs_scrub_setup_inode(
+ STATIC void
+ xfs_scrub_inode_extsize(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_buf			*bp,
+ 	struct xfs_dinode		*dip,
+ 	xfs_ino_t			ino,
+ 	uint16_t			mode,
+@@ -149,7 +148,7 @@ xfs_scrub_inode_extsize(
+ 
+ 	return;
+ bad:
+-	xfs_scrub_ino_set_corrupt(sc, ino, bp);
++	xfs_scrub_ino_set_corrupt(sc, ino);
  }
  
  /*
-+ * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
-+ * values, and omit the stack trace unless the error level is tuned high.
-+ */
-+void
-+xfs_verifier_error(
-+	struct xfs_buf		*bp,
-+	int			error,
-+	xfs_failaddr_t		failaddr)
-+{
-+	return xfs_buf_verifier_error(bp, error, "", xfs_buf_offset(bp, 0),
-+			XFS_CORRUPTION_DUMP_LEN, failaddr);
-+}
-+
-+/*
-  * Warnings for inode corruption problems.  Don't bother with the stack
-  * trace unless the error level is turned up high.
-  */
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 7e728c5..ce39134 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -26,6 +26,9 @@ extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
- extern void xfs_corruption_error(const char *tag, int level,
- 			struct xfs_mount *mp, void *p, const char *filename,
- 			int linenum, xfs_failaddr_t failaddr);
-+extern void xfs_buf_verifier_error(struct xfs_buf *bp, int error,
-+			const char *name, void *buf, size_t bufsz,
-+			xfs_failaddr_t failaddr);
- extern void xfs_verifier_error(struct xfs_buf *bp, int error,
- 			xfs_failaddr_t failaddr);
- extern void xfs_inode_verifier_error(struct xfs_inode *ip, int error,
+@@ -161,7 +160,6 @@ xfs_scrub_inode_extsize(
+ STATIC void
+ xfs_scrub_inode_cowextsize(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_buf			*bp,
+ 	struct xfs_dinode		*dip,
+ 	xfs_ino_t			ino,
+ 	uint16_t			mode,
+@@ -205,14 +203,13 @@ xfs_scrub_inode_cowextsize(
+ 
+ 	return;
+ bad:
+-	xfs_scrub_ino_set_corrupt(sc, ino, bp);
++	xfs_scrub_ino_set_corrupt(sc, ino);
+ }
+ 
+ /* Make sure the di_flags make sense for the inode. */
+ STATIC void
+ xfs_scrub_inode_flags(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_buf			*bp,
+ 	struct xfs_dinode		*dip,
+ 	xfs_ino_t			ino,
+ 	uint16_t			mode,
+@@ -251,14 +248,13 @@ xfs_scrub_inode_flags(
+ 
+ 	return;
+ bad:
+-	xfs_scrub_ino_set_corrupt(sc, ino, bp);
++	xfs_scrub_ino_set_corrupt(sc, ino);
+ }
+ 
+ /* Make sure the di_flags2 make sense for the inode. */
+ STATIC void
+ xfs_scrub_inode_flags2(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_buf			*bp,
+ 	struct xfs_dinode		*dip,
+ 	xfs_ino_t			ino,
+ 	uint16_t			mode,
+@@ -295,14 +291,13 @@ xfs_scrub_inode_flags2(
+ 
+ 	return;
+ bad:
+-	xfs_scrub_ino_set_corrupt(sc, ino, bp);
++	xfs_scrub_ino_set_corrupt(sc, ino);
+ }
+ 
+ /* Scrub all the ondisk inode fields. */
+ STATIC void
+ xfs_scrub_dinode(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_buf			*bp,
+ 	struct xfs_dinode		*dip,
+ 	xfs_ino_t			ino)
+ {
+@@ -333,7 +328,7 @@ xfs_scrub_dinode(
+ 		/* mode is recognized */
+ 		break;
+ 	default:
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	}
+ 
+@@ -344,22 +339,22 @@ xfs_scrub_dinode(
+ 		 * We autoconvert v1 inodes into v2 inodes on writeout,
+ 		 * so just mark this inode for preening.
+ 		 */
+-		xfs_scrub_ino_set_preen(sc, ino, bp);
++		xfs_scrub_ino_set_preen(sc, ino);
+ 		break;
+ 	case 2:
+ 	case 3:
+ 		if (dip->di_onlink != 0)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 		if (dip->di_mode == 0 && sc->ip)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 		if (dip->di_projid_hi != 0 &&
+ 		    !xfs_sb_version_hasprojid32bit(&mp->m_sb))
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	default:
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 		return;
+ 	}
+ 
+@@ -369,40 +364,40 @@ xfs_scrub_dinode(
+ 	 */
+ 	if (dip->di_uid == cpu_to_be32(-1U) ||
+ 	    dip->di_gid == cpu_to_be32(-1U))
+-		xfs_scrub_ino_set_warning(sc, ino, bp);
++		xfs_scrub_ino_set_warning(sc, ino);
+ 
+ 	/* di_format */
+ 	switch (dip->di_format) {
+ 	case XFS_DINODE_FMT_DEV:
+ 		if (!S_ISCHR(mode) && !S_ISBLK(mode) &&
+ 		    !S_ISFIFO(mode) && !S_ISSOCK(mode))
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		if (!S_ISDIR(mode) && !S_ISLNK(mode))
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		if (!S_ISREG(mode) && !S_ISDIR(mode) && !S_ISLNK(mode))
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if (!S_ISREG(mode) && !S_ISDIR(mode))
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	case XFS_DINODE_FMT_UUID:
+ 	default:
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	}
+ 
+ 	/* di_[amc]time.nsec */
+ 	if (be32_to_cpu(dip->di_atime.t_nsec) >= NSEC_PER_SEC)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 	if (be32_to_cpu(dip->di_mtime.t_nsec) >= NSEC_PER_SEC)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 	if (be32_to_cpu(dip->di_ctime.t_nsec) >= NSEC_PER_SEC)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 	/*
+ 	 * di_size.  xfs_dinode_verify checks for things that screw up
+@@ -411,19 +406,19 @@ xfs_scrub_dinode(
+ 	 */
+ 	isize = be64_to_cpu(dip->di_size);
+ 	if (isize & (1ULL << 63))
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 	/* Devices, fifos, and sockets must have zero size */
+ 	if (!S_ISDIR(mode) && !S_ISREG(mode) && !S_ISLNK(mode) && isize != 0)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 	/* Directories can't be larger than the data section size (32G) */
+ 	if (S_ISDIR(mode) && (isize == 0 || isize >= XFS_DIR2_SPACE_SIZE))
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 	/* Symlinks can't be larger than SYMLINK_MAXLEN */
+ 	if (S_ISLNK(mode) && (isize == 0 || isize >= XFS_SYMLINK_MAXLEN))
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 	/*
+ 	 * Warn if the running kernel can't handle the kinds of offsets
+@@ -432,7 +427,7 @@ xfs_scrub_dinode(
+ 	 * overly large offsets, flag the inode for admin review.
+ 	 */
+ 	if (isize >= mp->m_super->s_maxbytes)
+-		xfs_scrub_ino_set_warning(sc, ino, bp);
++		xfs_scrub_ino_set_warning(sc, ino);
+ 
+ 	/* di_nblocks */
+ 	if (flags2 & XFS_DIFLAG2_REFLINK) {
+@@ -447,15 +442,15 @@ xfs_scrub_dinode(
+ 		 */
+ 		if (be64_to_cpu(dip->di_nblocks) >=
+ 		    mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 	} else {
+ 		if (be64_to_cpu(dip->di_nblocks) >= mp->m_sb.sb_dblocks)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 	}
+ 
+-	xfs_scrub_inode_flags(sc, bp, dip, ino, mode, flags);
++	xfs_scrub_inode_flags(sc, dip, ino, mode, flags);
+ 
+-	xfs_scrub_inode_extsize(sc, bp, dip, ino, mode, flags);
++	xfs_scrub_inode_extsize(sc, dip, ino, mode, flags);
+ 
+ 	/* di_nextents */
+ 	nextents = be32_to_cpu(dip->di_nextents);
+@@ -463,31 +458,31 @@ xfs_scrub_dinode(
+ 	switch (dip->di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		if (nextents > fork_recs)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if (nextents <= fork_recs)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	default:
+ 		if (nextents != 0)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	}
+ 
+ 	/* di_forkoff */
+ 	if (XFS_DFORK_APTR(dip) >= (char *)dip + mp->m_sb.sb_inodesize)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 	if (dip->di_anextents != 0 && dip->di_forkoff == 0)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 	if (dip->di_forkoff == 0 && dip->di_aformat != XFS_DINODE_FMT_EXTENTS)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 	/* di_aformat */
+ 	if (dip->di_aformat != XFS_DINODE_FMT_LOCAL &&
+ 	    dip->di_aformat != XFS_DINODE_FMT_EXTENTS &&
+ 	    dip->di_aformat != XFS_DINODE_FMT_BTREE)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ 
+ 	/* di_anextents */
+ 	nextents = be16_to_cpu(dip->di_anextents);
+@@ -495,22 +490,22 @@ xfs_scrub_dinode(
+ 	switch (dip->di_aformat) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		if (nextents > fork_recs)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if (nextents <= fork_recs)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 		break;
+ 	default:
+ 		if (nextents != 0)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
++			xfs_scrub_ino_set_corrupt(sc, ino);
+ 	}
+ 
+ 	if (dip->di_version >= 3) {
+ 		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
+-			xfs_scrub_ino_set_corrupt(sc, ino, bp);
+-		xfs_scrub_inode_flags2(sc, bp, dip, ino, mode, flags, flags2);
+-		xfs_scrub_inode_cowextsize(sc, bp, dip, ino, mode, flags,
++			xfs_scrub_ino_set_corrupt(sc, ino);
++		xfs_scrub_inode_flags2(sc, dip, ino, mode, flags, flags2);
++		xfs_scrub_inode_cowextsize(sc, dip, ino, mode, flags,
+ 				flags2);
+ 	}
+ }
+@@ -579,18 +574,18 @@ xfs_scrub_inode_xref_bmap(
+ 	if (!xfs_scrub_should_check_xref(sc, &error, NULL))
+ 		return;
+ 	if (nextents < be32_to_cpu(dip->di_nextents))
+-		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino);
+ 
+ 	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
+ 			&nextents, &acount);
+ 	if (!xfs_scrub_should_check_xref(sc, &error, NULL))
+ 		return;
+ 	if (nextents != be16_to_cpu(dip->di_anextents))
+-		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino);
+ 
+ 	/* Check nblocks against the inode. */
+ 	if (count + acount != be64_to_cpu(dip->di_nblocks))
+-		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino);
+ }
+ 
+ /* Cross-reference with the other btrees. */
+@@ -634,8 +629,7 @@ xfs_scrub_inode_xref(
+ static void
+ xfs_scrub_inode_check_reflink_iflag(
+ 	struct xfs_scrub_context	*sc,
+-	xfs_ino_t			ino,
+-	struct xfs_buf			*bp)
++	xfs_ino_t			ino)
+ {
+ 	struct xfs_mount		*mp = sc->mp;
+ 	bool				has_shared;
+@@ -650,9 +644,9 @@ xfs_scrub_inode_check_reflink_iflag(
+ 			XFS_INO_TO_AGBNO(mp, ino), &error))
+ 		return;
+ 	if (xfs_is_reflink_inode(sc->ip) && !has_shared)
+-		xfs_scrub_ino_set_preen(sc, ino, bp);
++		xfs_scrub_ino_set_preen(sc, ino);
+ 	else if (!xfs_is_reflink_inode(sc->ip) && has_shared)
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
++		xfs_scrub_ino_set_corrupt(sc, ino);
+ }
+ 
+ /* Scrub an inode. */
+@@ -665,13 +659,13 @@ xfs_scrub_inode(
+ 
+ 	/* iget failed means automatic fail. */
+ 	if (!sc->ip) {
+-		xfs_scrub_ino_set_corrupt(sc, sc->sm->sm_ino, NULL);
++		xfs_scrub_ino_set_corrupt(sc, sc->sm->sm_ino);
+ 		return 0;
+ 	}
+ 
+ 	/* Scrub the inode core. */
+ 	xfs_inode_to_disk(sc->ip, &di, 0);
+-	xfs_scrub_dinode(sc, NULL, &di, sc->ip->i_ino);
++	xfs_scrub_dinode(sc, &di, sc->ip->i_ino);
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		goto out;
+ 
+@@ -681,7 +675,7 @@ xfs_scrub_inode(
+ 	 * we scrubbed the dinode.
+ 	 */
+ 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
+-		xfs_scrub_inode_check_reflink_iflag(sc, sc->ip->i_ino, NULL);
++		xfs_scrub_inode_check_reflink_iflag(sc, sc->ip->i_ino);
+ 
+ 	xfs_scrub_inode_xref(sc, sc->ip->i_ino, &di);
+ out:
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 51daa4a..6ba465e 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -219,7 +219,7 @@ xfs_scrub_quota(
+ 	/* Look for problem extents. */
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
+-		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
++		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+ 		goto out_unlock_inode;
+ 	}
+ 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index 2639099..39c41dfe 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -116,8 +116,7 @@ xfs_scrub_xref_is_used_rt_space(
+ 	if (!xfs_scrub_should_check_xref(sc, &error, NULL))
+ 		goto out_unlock;
+ 	if (is_free)
+-		xfs_scrub_ino_xref_set_corrupt(sc, sc->mp->m_rbmip->i_ino,
+-				NULL);
++		xfs_scrub_ino_xref_set_corrupt(sc, sc->mp->m_rbmip->i_ino);
+ out_unlock:
+ 	xfs_iunlock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+ }
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 4dc8968..5d2b1c2 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -174,53 +174,32 @@ DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_error);
+ DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_preen);
+ 
+ DECLARE_EVENT_CLASS(xfs_scrub_ino_error_class,
+-	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, xfs_daddr_t daddr,
+-		 void *ret_ip),
+-	TP_ARGS(sc, ino, daddr, ret_ip),
++	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, void *ret_ip),
++	TP_ARGS(sc, ino, ret_ip),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+ 		__field(unsigned int, type)
+-		__field(xfs_agnumber_t, agno)
+-		__field(xfs_agblock_t, bno)
+ 		__field(void *, ret_ip)
+ 	),
+ 	TP_fast_assign(
+-		xfs_fsblock_t	fsbno;
+-		xfs_agnumber_t	agno;
+-		xfs_agblock_t	bno;
+-
+-		if (daddr) {
+-			fsbno = XFS_DADDR_TO_FSB(sc->mp, daddr);
+-			agno = XFS_FSB_TO_AGNO(sc->mp, fsbno);
+-			bno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
+-		} else {
+-			agno = XFS_INO_TO_AGNO(sc->mp, ino);
+-			bno = XFS_AGINO_TO_AGBNO(sc->mp,
+-					XFS_INO_TO_AGINO(sc->mp, ino));
+-		}
+-
+ 		__entry->dev = sc->mp->m_super->s_dev;
+ 		__entry->ino = ino;
+ 		__entry->type = sc->sm->sm_type;
+-		__entry->agno = agno;
+-		__entry->bno = bno;
+ 		__entry->ret_ip = ret_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx type %u agno %u agbno %u ret_ip %pS",
++	TP_printk("dev %d:%d ino 0x%llx type %u ret_ip %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->type,
+-		  __entry->agno,
+-		  __entry->bno,
+ 		  __entry->ret_ip)
+ )
+ 
+ #define DEFINE_SCRUB_INO_ERROR_EVENT(name) \
+ DEFINE_EVENT(xfs_scrub_ino_error_class, name, \
+ 	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, \
+-		 xfs_daddr_t daddr, void *ret_ip), \
+-	TP_ARGS(sc, ino, daddr, ret_ip))
++		 void *ret_ip), \
++	TP_ARGS(sc, ino, ret_ip))
+ 
+ DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_error);
+ DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_preen);
 
