@@ -1,275 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:2403 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751317AbeBWAIW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 19:08:22 -0500
-Date: Fri, 23 Feb 2018 11:08:19 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from verein.lst.de ([213.95.11.211]:58664 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751723AbeBWAWo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Feb 2018 19:22:44 -0500
+Date: Fri, 23 Feb 2018 01:22:42 +0100
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH] xfs: don't block on the ilock for RWF_NOWAIT
-Message-ID: <20180223000819.GJ7000@dastard>
-References: <20180222150653.18479-1-hch@lst.de>
+Message-ID: <20180223002242.GA4007@lst.de>
+References: <20180222150653.18479-1-hch@lst.de> <20180223000819.GJ7000@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="2fHTh5uZTiUOsy+g"
 Content-Disposition: inline
-In-Reply-To: <20180222150653.18479-1-hch@lst.de>
+In-Reply-To: <20180223000819.GJ7000@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
-
-On Thu, Feb 22, 2018 at 07:06:53AM -0800, Christoph Hellwig wrote:
-> Fix xfs_file_iomap_begin to trylock the ilock if IOMAP_NOWAIT is passed,
-> so that we don't block io_submit callers.
-
-I'm testing a patch that cleans this up - it moves all
-this trylock crap out into a helper function and reworks the
-rest of the function to be clear about non-blocking operations
-i.e. gets rid of most of the IOMAP_NOWAIT checks
-nested inside the different conditions in this code.
-
-I'm much prefer to clean this us properly than layer yet another
-undocumented set of non-blocking hacks into this code.
-
-There's also a bug in the code where we take the ILOCK exclusive for
-direct IO writes only to then have to demote it before calling
-xfs_iomap_write_direct() if allocation is required.  This was a
-regression introduced with the iomap direct IO path rework...
-
-Current patch I have been testing is below. I need to split it up
-into a set of smaller patches for submission, though.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
 
-xfs: clean up xfs_file_iomap_begin, make it non-blocking
+--2fHTh5uZTiUOsy+g
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Feb 23, 2018 at 11:08:19AM +1100, Dave Chinner wrote:
+> There's also a bug in the code where we take the ILOCK exclusive for
+> direct IO writes only to then have to demote it before calling
+> xfs_iomap_write_direct() if allocation is required.  This was a
+> regression introduced with the iomap direct IO path rework...
 
-Gah, what a friggin' mess.
+I actually have a fix for that and a few related bits pending in
+the O_ATOMIC tree, but that still has a few other items to fix..
+The relevant commit is attached below for reference.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> +xfs_ilock_for_iomap(
+> +	struct xfs_inode	*ip,
+> +	unsigned		flags,
+> +	unsigned		*lockmode)
+>  {
+> +	unsigned		mode = XFS_ILOCK_SHARED;
+> +
+> +	/* Modifications to reflink files require exclusive access */
+> +	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO))) {
+> +		/*
+> +		 * A reflinked inode will result in CoW alloc.
+> +		 * FIXME: It could still overwrite on unshared extents
+> +		 * and not need allocation in the direct IO path.
+> +		 */
+> +		if ((flags & IOMAP_NOWAIT) && (flags & IOMAP_DIRECT))
+> +			return -EAGAIN;
+
+The IOMAP_DIRECT check here doesn't really make sense - currently we
+will only get IOMAP_NOWAIT if IOMAP_DIRECT also is set, but if at some
+point that is not true there is no point in depending on IOMAP_DIRECT
+either.
+
+> +		mode = XFS_ILOCK_EXCL;
+> +	}
+> +
+> +	/* Non-direct IO modifications require exclusive access */
+> +	if (!(flags & IOMAP_DIRECT) && (flags & IOMAP_WRITE))
+> +		mode = XFS_ILOCK_EXCL;
+
+There is no point in taking the lock exclusively in the main
+xfs_file_iomap_begin for !IOMAP_DIRECT at all.  We only need it for the
+reflink case that is handled above, or if we call
+into xfs_file_iomap_begin_delay, which does its own locking.
+
+> +	if (!xfs_ilock_nowait(ip, mode)) {
+> +		if (flags & IOMAP_NOWAIT)
+> +			return -EAGAIN;
+> +		xfs_ilock(ip, mode);
+> +	}
+
+This pattern has caused some nasty performance regressions, which is
+why we removed it again elsewhere.  See the "xfs: fix AIM7 regression"
+commit (942491c9e6d631c012f3c4ea8e7777b0b02edeab).
+
+> +	/* Non-modifying mapping requested, so we are done */
+> +	if (!(flags & (IOMAP_WRITE | IOMAP_ZERO)))
+> +		goto iomap_found;
+
+This should probably separate from any locking changes.  I thought about
+just splitting the pure read case from the direct / extsz allocate
+case but haven't looked into it yet.  In fact the read only case could
+probably share code with xfs_xattr_iomap_begin.
+
+Note that we also have another bug in this area, in that we allocate
+blocks for holes or unwritten extents in reflink files, see the
+other attached patch.
+
+
+--2fHTh5uZTiUOsy+g
+Content-Type: text/x-patch; charset=us-ascii
+Content-Disposition: attachment; filename="0012-xfs-don-t-allocate-COW-blocks-for-zeroing-holes-or-u.patch"
+
+>From 584c49543b2376cc46a6d4a640fd7123df987607 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Mon, 12 Feb 2018 10:19:41 -0800
+Subject: xfs: don't allocate COW blocks for zeroing holes or unwritten extents
+
+The iomap zeroing interface is smart enough to skip zeroing holes or
+unwritten extents.  Don't subvert this logic for reflink files.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iomap.c | 166 ++++++++++++++++++++++++++++++++---------------------
- 1 file changed, 101 insertions(+), 65 deletions(-)
+ fs/xfs/xfs_iomap.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 66e1edbfb2b2..9c7398c8f7e7 100644
+index 66e1edbfb2b2..4e771e0f1170 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -955,19 +955,52 @@ static inline bool imap_needs_alloc(struct inode *inode,
+@@ -955,6 +955,13 @@ static inline bool imap_needs_alloc(struct inode *inode,
  		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
  }
  
--static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
-+static int
-+xfs_ilock_for_iomap(
-+	struct xfs_inode	*ip,
-+	unsigned		flags,
-+	unsigned		*lockmode)
++static inline bool needs_cow_for_zeroing(struct xfs_bmbt_irec *imap, int nimaps)
++{
++	return nimaps &&
++		imap->br_startblock != HOLESTARTBLOCK &&
++		imap->br_state != XFS_EXT_UNWRITTEN;
++}
++
+ static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
  {
-+	unsigned		mode = XFS_ILOCK_SHARED;
-+
-+	/* Modifications to reflink files require exclusive access */
-+	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO))) {
-+		/*
-+		 * A reflinked inode will result in CoW alloc.
-+		 * FIXME: It could still overwrite on unshared extents
-+		 * and not need allocation in the direct IO path.
-+		 */
-+		if ((flags & IOMAP_NOWAIT) && (flags & IOMAP_DIRECT))
-+			return -EAGAIN;
-+		mode = XFS_ILOCK_EXCL;
-+	}
-+
-+	/* Non-direct IO modifications require exclusive access */
-+	if (!(flags & IOMAP_DIRECT) && (flags & IOMAP_WRITE))
-+		mode = XFS_ILOCK_EXCL;
-+
  	/*
+@@ -1024,7 +1031,9 @@ xfs_file_iomap_begin(
+ 			goto out_unlock;
+ 	}
+ 
+-	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
++	if (xfs_is_reflink_inode(ip) &&
++	    ((flags & IOMAP_WRITE) ||
++	     ((flags & IOMAP_ZERO) && needs_cow_for_zeroing(&imap, nimaps)))) {
+ 		if (flags & IOMAP_DIRECT) {
+ 			/*
+ 			 * A reflinked inode will result in CoW alloc.
+-- 
+2.14.2
+
+
+--2fHTh5uZTiUOsy+g
+Content-Type: text/x-patch; charset=us-ascii
+Content-Disposition: attachment; filename="0013-xfs-don-t-start-out-with-the-exclusive-ilock-for-dir.patch"
+
+>From 24220b8b4a18ff60e509ab640fbe2a48b6a4fa51 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Mon, 12 Feb 2018 10:24:10 -0800
+Subject: xfs: don't start out with the exclusive ilock for direct I/O
+
+There is no reason to take the ilock exclusively at the start of
+xfs_file_iomap_begin for direct I/O, given that it will be demoted
+just before calling xfs_iomap_write_direct anyway.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_iomap.c | 19 +++++--------------
+ 1 file changed, 5 insertions(+), 14 deletions(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 4e771e0f1170..bc9ff5d8efea 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -962,19 +962,6 @@ static inline bool needs_cow_for_zeroing(struct xfs_bmbt_irec *imap, int nimaps)
+ 		imap->br_state != XFS_EXT_UNWRITTEN;
+ }
+ 
+-static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
+-{
+-	/*
 -	 * COW writes will allocate delalloc space, so we need to make sure
 -	 * to take the lock exclusively here.
-+	 * Extents not yet cached requires exclusive access, don't block.
-+	 * This is an opencoded xfs_ilock_data_map_shared() call but with
-+	 * non-blocking behaviour.
- 	 */
+-	 */
 -	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO)))
 -		return true;
 -	if ((flags & IOMAP_DIRECT) && (flags & IOMAP_WRITE))
 -		return true;
 -	return false;
-+	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-+		if (flags & IOMAP_NOWAIT)
-+			return -EAGAIN;
-+		mode = XFS_ILOCK_EXCL;
-+	}
-+
-+	if (!xfs_ilock_nowait(ip, mode)) {
-+		if (flags & IOMAP_NOWAIT)
-+			return -EAGAIN;
-+		xfs_ilock(ip, mode);
-+	}
-+
-+	*lockmode = mode;
-+	return 0;
- }
- 
-+
+-}
+-
  static int
  xfs_file_iomap_begin(
  	struct inode		*inode,
-@@ -993,17 +1026,15 @@ xfs_file_iomap_begin(
+@@ -1000,7 +987,11 @@ xfs_file_iomap_begin(
  		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
  	}
  
 -	if (need_excl_ilock(ip, flags)) {
--		lockmode = XFS_ILOCK_EXCL;
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--	} else {
--		lockmode = xfs_ilock_data_map_shared(ip);
--	}
--
--	if ((flags & IOMAP_NOWAIT) && !(ip->i_df.if_flags & XFS_IFEXTENTS)) {
--		error = -EAGAIN;
--		goto out_unlock;
--	}
 +	/*
-+	 * Lock the inode in the manner required for the specified operation and
-+	 * check for as many conditions that would result in blocking as
-+	 * possible. This removes most of the non-blocking checks from the
-+	 * mapping code below.
++	 * COW writes may allocate delalloc space or convert unwritten COW
++	 * extents, so we need to make sure to take the lock exclusively here.
 +	 */
-+	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
-+	if (error)
-+		return error;
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 	if (offset > mp->m_super->s_maxbytes - length)
-@@ -1024,17 +1055,16 @@ xfs_file_iomap_begin(
- 			goto out_unlock;
- 	}
- 
--	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && xfs_is_reflink_inode(ip)) {
-+	/* Non-modifying mapping requested, so we are done */
-+	if (!(flags & (IOMAP_WRITE | IOMAP_ZERO)))
-+		goto iomap_found;
-+
-+	/*
-+	 * Break shared extents if necessary. Checks for blocking in the direct
-+	 * IO case have been done up front, so we don't need to do them here.
-+	 */
-+	if (xfs_is_reflink_inode(ip)) {
- 		if (flags & IOMAP_DIRECT) {
--			/*
--			 * A reflinked inode will result in CoW alloc.
--			 * FIXME: It could still overwrite on unshared extents
--			 * and not need allocation.
--			 */
--			if (flags & IOMAP_NOWAIT) {
--				error = -EAGAIN;
--				goto out_unlock;
--			}
- 			/* may drop and re-acquire the ilock */
- 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
- 					&lockmode);
-@@ -1050,46 +1080,45 @@ xfs_file_iomap_begin(
- 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
- 	}
- 
--	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
--		/*
--		 * If nowait is set bail since we are going to make
--		 * allocations.
--		 */
--		if (flags & IOMAP_NOWAIT) {
--			error = -EAGAIN;
--			goto out_unlock;
--		}
--		/*
--		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
--		 * pages to keep the chunks of work done where somewhat symmetric
--		 * with the work writeback does. This is a completely arbitrary
--		 * number pulled out of thin air as a best guess for initial
--		 * testing.
--		 *
--		 * Note that the values needs to be less than 32-bits wide until
--		 * the lower level functions are updated.
--		 */
--		length = min_t(loff_t, length, 1024 * PAGE_SIZE);
--		/*
--		 * xfs_iomap_write_direct() expects the shared lock. It
--		 * is unlocked on return.
--		 */
--		if (lockmode == XFS_ILOCK_EXCL)
--			xfs_ilock_demote(ip, lockmode);
--		error = xfs_iomap_write_direct(ip, offset, length, &imap,
--				nimaps);
--		if (error)
--			return error;
-+	/* Don't need to allocate over holes when doing zeroing operations. */
-+	if (flags & IOMAP_ZERO)
-+		goto iomap_found;
-+	ASSERT(flags & IOMAP_WRITE);
- 
--		iomap->flags = IOMAP_F_NEW;
--		trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
--	} else {
--		ASSERT(nimaps);
-+	if (!imap_needs_alloc(inode, &imap, nimaps))
-+		goto iomap_found;
- 
--		xfs_iunlock(ip, lockmode);
--		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
-+	/* Don't block on allocation if we are doing non-blocking IO */
-+	if (flags & IOMAP_NOWAIT) {
-+		error = -EAGAIN;
-+		goto out_unlock;
- 	}
- 
-+	/*
-+	 * We cap the maximum length we map here to a sane size keep the chunks
-+	 * of work done where somewhat symmetric with the work writeback does.
-+	 * This is a completely arbitrary number pulled out of thin air as a
-+	 * best guess for initial testing.
-+	 *
-+	 * Note that the values needs to be less than 32-bits wide until the
-+	 * lower level functions are updated.
-+	 */
-+	length = min_t(loff_t, length, 1024 * PAGE_SIZE);
-+
-+	/*
-+	 * xfs_iomap_write_direct() expects the shared lock. It is unlocked on
-+	 * return.
-+	 */
-+	if (lockmode == XFS_ILOCK_EXCL)
-+		xfs_ilock_demote(ip, lockmode);
-+	error = xfs_iomap_write_direct(ip, offset, length, &imap, nimaps);
-+	if (error)
-+		return error;
-+
-+	iomap->flags = IOMAP_F_NEW;
-+	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
-+
-+iomap_finish:
- 	if (xfs_ipincount(ip) && (ip->i_itemp->ili_fsync_fields
- 				& ~XFS_ILOG_TIMESTAMP))
- 		iomap->flags |= IOMAP_F_DIRTY;
-@@ -1099,6 +1128,13 @@ xfs_file_iomap_begin(
- 	if (shared)
- 		iomap->flags |= IOMAP_F_SHARED;
- 	return 0;
-+
-+iomap_found:
-+	ASSERT(nimaps);
-+	xfs_iunlock(ip, lockmode);
-+	trace_xfs_iomap_found(ip, offset, length, 0, &imap);
-+	goto iomap_finish;
-+
- out_unlock:
- 	xfs_iunlock(ip, lockmode);
- 	return error;
++	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO))) {
+ 		lockmode = XFS_ILOCK_EXCL;
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	} else {
+-- 
+2.14.2
+
+
+--2fHTh5uZTiUOsy+g--
