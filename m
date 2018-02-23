@@ -1,28 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36616 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:37484 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbeBWCGH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:06:07 -0500
+        with ESMTP id S1750916AbeBWCHS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:07:18 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N21nON069903
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:06:07 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2ga9bpg2k4-1
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N21neg069907
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:07:17 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2ga9bpg2pb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:06:07 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w1N216kI002191
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:07:17 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1N22HCE022537
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:01:06 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N216AH031083
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:01:06 GMT
-Subject: [PATCH 6/8] xfs: remove xfs_buf parameter from inode scrub methods
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:02:17 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N22GGp010941
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:02:17 GMT
+Subject: [PATCH 05/20] xfs: add BMAPI_NORMAP flag to perform block remapping
+ without updating rmpabt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Feb 2018 18:01:04 -0800
-Message-ID: <151935126488.21842.5740969037089228697.stgit@magnolia>
-In-Reply-To: <151935122813.21842.14996049216693190946.stgit@magnolia>
-References: <151935122813.21842.14996049216693190946.stgit@magnolia>
+Date: Thu, 22 Feb 2018 18:02:15 -0800
+Message-ID: <151935133569.22097.3746887180888519062.stgit@magnolia>
+In-Reply-To: <151935130484.22097.9694510081310029779.stgit@magnolia>
+References: <151935130484.22097.9694510081310029779.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -34,610 +35,201 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we no longer do raw inode buffer scrubbing, the bp parameter is
-no longer used anywhere we're dealing with an inode, so remove it and
-all the useless NULL parameters that go with it.
+Add a new flag, XFS_BMAPI_NORMAP, which will perform file block
+remapping without updating the rmapbt.  This will be used by the repair
+code to reconstruct bmbts from the rmapbt, in which case we don't want
+the rmapbt update.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/attr.c     |    2 -
- fs/xfs/scrub/bmap.c     |    4 +-
- fs/xfs/scrub/common.c   |   22 ++++------
- fs/xfs/scrub/common.h   |   13 ++----
- fs/xfs/scrub/dir.c      |    2 -
- fs/xfs/scrub/inode.c    |  106 ++++++++++++++++++++++-------------------------
- fs/xfs/scrub/quota.c    |    2 -
- fs/xfs/scrub/rtbitmap.c |    3 -
- fs/xfs/scrub/trace.h    |   31 ++------------
- 9 files changed, 74 insertions(+), 111 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |   59 ++++++++++++++++++++++++++++++----------------
+ fs/xfs/libxfs/xfs_bmap.h |   10 +++++++-
+ 2 files changed, 47 insertions(+), 22 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 4ed8047..127575f 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -98,7 +98,7 @@ xfs_scrub_xattr_listent(
- 
- 	if (flags & XFS_ATTR_INCOMPLETE) {
- 		/* Incomplete attr key, just mark the inode for preening. */
--		xfs_scrub_ino_set_preen(sx->sc, context->dp->i_ino, NULL);
-+		xfs_scrub_ino_set_preen(sx->sc, context->dp->i_ino);
- 		return;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index fe7534e..f253f36 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1998,9 +1998,12 @@ xfs_bmap_add_extent_delay_real(
  	}
  
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index aee5355..372077a 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -609,7 +609,7 @@ xfs_scrub_bmap(
- 			goto out;
- 		/* No CoW forks on non-reflink inodes/filesystems. */
- 		if (!xfs_is_reflink_inode(ip)) {
--			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-+			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
- 			goto out;
- 		}
- 		break;
-@@ -618,7 +618,7 @@ xfs_scrub_bmap(
- 			goto out_check_rmap;
- 		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
- 		    !xfs_sb_version_hasattr2(&mp->m_sb))
--			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-+			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
- 		break;
- 	default:
- 		ASSERT(whichfork == XFS_DATA_FORK);
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 8033ab9..fe3a2b1 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -213,12 +213,10 @@ xfs_scrub_block_set_preen(
- void
- xfs_scrub_ino_set_preen(
- 	struct xfs_scrub_context	*sc,
--	xfs_ino_t			ino,
--	struct xfs_buf			*bp)
-+	xfs_ino_t			ino)
+ 	/* add reverse mapping */
+-	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
+-	if (error)
+-		goto done;
++	if (!(bma->flags & XFS_BMAPI_NORMAP)) {
++		error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip,
++				whichfork, new);
++		if (error)
++			goto done;
++	}
+ 
+ 	/* convert to a btree if necessary */
+ 	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+@@ -2664,7 +2667,8 @@ xfs_bmap_add_extent_hole_real(
+ 	struct xfs_bmbt_irec	*new,
+ 	xfs_fsblock_t		*first,
+ 	struct xfs_defer_ops	*dfops,
+-	int			*logflagsp)
++	int			*logflagsp,
++	int			flags)
  {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
--	trace_xfs_scrub_ino_preen(sc, ino, bp ? bp->b_bn : 0,
--			__return_address);
-+	trace_xfs_scrub_ino_preen(sc, ino, __return_address);
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -2842,9 +2846,11 @@ xfs_bmap_add_extent_hole_real(
+ 	}
+ 
+ 	/* add reverse mapping */
+-	error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
+-	if (error)
+-		goto done;
++	if (!(flags & XFS_BMAPI_NORMAP)) {
++		error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
++		if (error)
++			goto done;
++	}
+ 
+ 	/* convert to a btree if necessary */
+ 	if (xfs_bmap_needs_btree(ip, whichfork)) {
+@@ -4119,7 +4125,8 @@ xfs_bmapi_allocate(
+ 	else
+ 		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
+ 				whichfork, &bma->icur, &bma->cur, &bma->got,
+-				bma->firstblock, bma->dfops, &bma->logflags);
++				bma->firstblock, bma->dfops, &bma->logflags,
++				bma->flags);
+ 
+ 	bma->logflags |= tmp_logflags;
+ 	if (error)
+@@ -4505,30 +4512,37 @@ xfs_bmapi_write(
+ 	return error;
  }
  
- /* Record a corrupt block. */
-@@ -249,22 +247,20 @@ xfs_scrub_block_xref_set_corrupt(
- void
- xfs_scrub_ino_set_corrupt(
- 	struct xfs_scrub_context	*sc,
--	xfs_ino_t			ino,
--	struct xfs_buf			*bp)
-+	xfs_ino_t			ino)
+-static int
++int
+ xfs_bmapi_remap(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+ 	xfs_fileoff_t		bno,
+ 	xfs_filblks_t		len,
+ 	xfs_fsblock_t		startblock,
+-	struct xfs_defer_ops	*dfops)
++	struct xfs_defer_ops	*dfops,
++	int			flags)
  {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
--	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
-+	trace_xfs_scrub_ino_error(sc, ino, __return_address);
- }
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	struct xfs_ifork	*ifp;
+ 	struct xfs_btree_cur	*cur = NULL;
+ 	xfs_fsblock_t		firstblock = NULLFSBLOCK;
+ 	struct xfs_bmbt_irec	got;
+ 	struct xfs_iext_cursor	icur;
++	int			whichfork = xfs_bmapi_whichfork(flags);
+ 	int			logflags = 0, error;
  
- /* Record a corruption while cross-referencing with an inode. */
- void
- xfs_scrub_ino_xref_set_corrupt(
- 	struct xfs_scrub_context	*sc,
--	xfs_ino_t			ino,
--	struct xfs_buf			*bp)
-+	xfs_ino_t			ino)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XCORRUPT;
--	trace_xfs_scrub_ino_error(sc, ino, bp ? bp->b_bn : 0, __return_address);
-+	trace_xfs_scrub_ino_error(sc, ino, __return_address);
- }
++	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(len > 0);
+ 	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(!(flags & (XFS_BMAPI_DELALLOC | XFS_BMAPI_COWFORK |
++			  XFS_BMAPI_ZERO | XFS_BMAPI_CONVERT |
++			  XFS_BMAPI_IGSTATE | XFS_BMAPI_METADATA |
++			  XFS_BMAPI_ENTIRE | XFS_BMAPI_CONVERT_ONLY)));
  
- /* Record corruption in a block indexed by a file fork. */
-@@ -296,12 +292,10 @@ xfs_scrub_fblock_xref_set_corrupt(
- void
- xfs_scrub_ino_set_warning(
- 	struct xfs_scrub_context	*sc,
--	xfs_ino_t			ino,
--	struct xfs_buf			*bp)
-+	xfs_ino_t			ino)
- {
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_WARNING;
--	trace_xfs_scrub_ino_warning(sc, ino, bp ? bp->b_bn : 0,
--			__return_address);
-+	trace_xfs_scrub_ino_warning(sc, ino, __return_address);
- }
+ 	if (unlikely(XFS_TEST_ERROR(
+-	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
+-	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
++	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
++	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+ 	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
+ 		XFS_ERROR_REPORT("xfs_bmapi_remap", XFS_ERRLEVEL_LOW, mp);
+ 		return -EFSCORRUPTED;
+@@ -4538,7 +4552,7 @@ xfs_bmapi_remap(
+ 		return -EIO;
  
- /* Warn about a block indexed by a file fork that needs review. */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index ddb65d2..deaf604 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -63,25 +63,22 @@ bool xfs_scrub_fblock_xref_process_error(struct xfs_scrub_context *sc,
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+-		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++		error = xfs_iread_extents(tp, ip, whichfork);
+ 		if (error)
+ 			return error;
+ 	}
+@@ -4553,7 +4567,7 @@ xfs_bmapi_remap(
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
  
- void xfs_scrub_block_set_preen(struct xfs_scrub_context *sc,
- 		struct xfs_buf *bp);
--void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, xfs_ino_t ino,
--		struct xfs_buf *bp);
-+void xfs_scrub_ino_set_preen(struct xfs_scrub_context *sc, xfs_ino_t ino);
+ 	if (ifp->if_flags & XFS_IFBROOT) {
+-		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
++		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+ 		cur->bc_private.b.firstblock = firstblock;
+ 		cur->bc_private.b.dfops = dfops;
+ 		cur->bc_private.b.flags = 0;
+@@ -4562,18 +4576,21 @@ xfs_bmapi_remap(
+ 	got.br_startoff = bno;
+ 	got.br_startblock = startblock;
+ 	got.br_blockcount = len;
+-	got.br_state = XFS_EXT_NORM;
++	if (flags & XFS_BMAPI_PREALLOC)
++		got.br_state = XFS_EXT_UNWRITTEN;
++	else
++		got.br_state = XFS_EXT_NORM;
  
- void xfs_scrub_block_set_corrupt(struct xfs_scrub_context *sc,
- 		struct xfs_buf *bp);
--void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
--		struct xfs_buf *bp);
-+void xfs_scrub_ino_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino);
- void xfs_scrub_fblock_set_corrupt(struct xfs_scrub_context *sc, int whichfork,
- 		xfs_fileoff_t offset);
+-	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &icur,
+-			&cur, &got, &firstblock, dfops, &logflags);
++	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
++			&cur, &got, &firstblock, dfops, &logflags, flags);
+ 	if (error)
+ 		goto error0;
  
- void xfs_scrub_block_xref_set_corrupt(struct xfs_scrub_context *sc,
- 		struct xfs_buf *bp);
--void xfs_scrub_ino_xref_set_corrupt(struct xfs_scrub_context *sc, xfs_ino_t ino,
--		struct xfs_buf *bp);
-+void xfs_scrub_ino_xref_set_corrupt(struct xfs_scrub_context *sc,
-+		xfs_ino_t ino);
- void xfs_scrub_fblock_xref_set_corrupt(struct xfs_scrub_context *sc,
- 		int whichfork, xfs_fileoff_t offset);
+-	if (xfs_bmap_wants_extents(ip, XFS_DATA_FORK)) {
++	if (xfs_bmap_wants_extents(ip, whichfork)) {
+ 		int		tmp_logflags = 0;
  
--void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc, xfs_ino_t ino,
--		struct xfs_buf *bp);
-+void xfs_scrub_ino_set_warning(struct xfs_scrub_context *sc, xfs_ino_t ino);
- void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
- 		xfs_fileoff_t offset);
- 
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 50b6a26..38f2980 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -781,7 +781,7 @@ xfs_scrub_directory(
- 
- 	/* Plausible size? */
- 	if (sc->ip->i_d.di_size < xfs_dir2_sf_hdr_size(0)) {
--		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
- 		goto out;
+ 		error = xfs_bmap_btree_to_extents(tp, ip, cur,
+-			&tmp_logflags, XFS_DATA_FORK);
++			&tmp_logflags, whichfork);
+ 		logflags |= tmp_logflags;
  	}
  
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 0332a01..9eadca9 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -98,7 +98,6 @@ xfs_scrub_setup_inode(
- STATIC void
- xfs_scrub_inode_extsize(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_buf			*bp,
- 	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
-@@ -149,7 +148,7 @@ xfs_scrub_inode_extsize(
- 
- 	return;
- bad:
--	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	xfs_scrub_ino_set_corrupt(sc, ino);
- }
- 
- /*
-@@ -161,7 +160,6 @@ xfs_scrub_inode_extsize(
- STATIC void
- xfs_scrub_inode_cowextsize(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_buf			*bp,
- 	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
-@@ -205,14 +203,13 @@ xfs_scrub_inode_cowextsize(
- 
- 	return;
- bad:
--	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	xfs_scrub_ino_set_corrupt(sc, ino);
- }
- 
- /* Make sure the di_flags make sense for the inode. */
- STATIC void
- xfs_scrub_inode_flags(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_buf			*bp,
- 	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
-@@ -251,14 +248,13 @@ xfs_scrub_inode_flags(
- 
- 	return;
- bad:
--	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	xfs_scrub_ino_set_corrupt(sc, ino);
- }
- 
- /* Make sure the di_flags2 make sense for the inode. */
- STATIC void
- xfs_scrub_inode_flags2(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_buf			*bp,
- 	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
-@@ -295,14 +291,13 @@ xfs_scrub_inode_flags2(
- 
- 	return;
- bad:
--	xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+	xfs_scrub_ino_set_corrupt(sc, ino);
- }
- 
- /* Scrub all the ondisk inode fields. */
- STATIC void
- xfs_scrub_dinode(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_buf			*bp,
- 	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino)
- {
-@@ -333,7 +328,7 @@ xfs_scrub_dinode(
- 		/* mode is recognized */
+@@ -6145,7 +6162,7 @@ xfs_bmap_finish_one(
+ 	switch (type) {
+ 	case XFS_BMAP_MAP:
+ 		error = xfs_bmapi_remap(tp, ip, startoff, *blockcount,
+-				startblock, dfops);
++				startblock, dfops, 0);
+ 		*blockcount = 0;
  		break;
- 	default:
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	}
+ 	case XFS_BMAP_UNMAP:
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index e0fef89..71b31af 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -116,6 +116,9 @@ struct xfs_extent_free_item
+ /* Only convert unwritten extents, don't allocate new blocks */
+ #define XFS_BMAPI_CONVERT_ONLY	0x800
  
-@@ -344,22 +339,22 @@ xfs_scrub_dinode(
- 		 * We autoconvert v1 inodes into v2 inodes on writeout,
- 		 * so just mark this inode for preening.
- 		 */
--		xfs_scrub_ino_set_preen(sc, ino, bp);
-+		xfs_scrub_ino_set_preen(sc, ino);
- 		break;
- 	case 2:
- 	case 3:
- 		if (dip->di_onlink != 0)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
++/* Do not update the rmap btree.  Used for reconstructing bmbt from rmapbt. */
++#define XFS_BMAPI_NORMAP	0x1000
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -128,7 +131,8 @@ struct xfs_extent_free_item
+ 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
+ 	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
+ 	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }, \
+-	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }
++	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }, \
++	{ XFS_BMAPI_NORMAP,	"NORMAP" }
  
- 		if (dip->di_mode == 0 && sc->ip)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
  
- 		if (dip->di_projid_hi != 0 &&
- 		    !xfs_sb_version_hasprojid32bit(&mp->m_sb))
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	default:
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 		return;
- 	}
+ static inline int xfs_bmapi_aflag(int w)
+@@ -279,4 +283,8 @@ xfs_failaddr_t xfs_bmbt_validate_extent(struct xfs_mount *mp, bool isrt,
+ xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
+ 		struct xfs_bmbt_irec *irec);
  
-@@ -369,40 +364,40 @@ xfs_scrub_dinode(
- 	 */
- 	if (dip->di_uid == cpu_to_be32(-1U) ||
- 	    dip->di_gid == cpu_to_be32(-1U))
--		xfs_scrub_ino_set_warning(sc, ino, bp);
-+		xfs_scrub_ino_set_warning(sc, ino);
- 
- 	/* di_format */
- 	switch (dip->di_format) {
- 	case XFS_DINODE_FMT_DEV:
- 		if (!S_ISCHR(mode) && !S_ISBLK(mode) &&
- 		    !S_ISFIFO(mode) && !S_ISSOCK(mode))
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_LOCAL:
- 		if (!S_ISDIR(mode) && !S_ISLNK(mode))
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_EXTENTS:
- 		if (!S_ISREG(mode) && !S_ISDIR(mode) && !S_ISLNK(mode))
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
- 		if (!S_ISREG(mode) && !S_ISDIR(mode))
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_UUID:
- 	default:
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	}
- 
- 	/* di_[amc]time.nsec */
- 	if (be32_to_cpu(dip->di_atime.t_nsec) >= NSEC_PER_SEC)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 	if (be32_to_cpu(dip->di_mtime.t_nsec) >= NSEC_PER_SEC)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 	if (be32_to_cpu(dip->di_ctime.t_nsec) >= NSEC_PER_SEC)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 
- 	/*
- 	 * di_size.  xfs_dinode_verify checks for things that screw up
-@@ -411,19 +406,19 @@ xfs_scrub_dinode(
- 	 */
- 	isize = be64_to_cpu(dip->di_size);
- 	if (isize & (1ULL << 63))
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 
- 	/* Devices, fifos, and sockets must have zero size */
- 	if (!S_ISDIR(mode) && !S_ISREG(mode) && !S_ISLNK(mode) && isize != 0)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 
- 	/* Directories can't be larger than the data section size (32G) */
- 	if (S_ISDIR(mode) && (isize == 0 || isize >= XFS_DIR2_SPACE_SIZE))
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 
- 	/* Symlinks can't be larger than SYMLINK_MAXLEN */
- 	if (S_ISLNK(mode) && (isize == 0 || isize >= XFS_SYMLINK_MAXLEN))
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 
- 	/*
- 	 * Warn if the running kernel can't handle the kinds of offsets
-@@ -432,7 +427,7 @@ xfs_scrub_dinode(
- 	 * overly large offsets, flag the inode for admin review.
- 	 */
- 	if (isize >= mp->m_super->s_maxbytes)
--		xfs_scrub_ino_set_warning(sc, ino, bp);
-+		xfs_scrub_ino_set_warning(sc, ino);
- 
- 	/* di_nblocks */
- 	if (flags2 & XFS_DIFLAG2_REFLINK) {
-@@ -447,15 +442,15 @@ xfs_scrub_dinode(
- 		 */
- 		if (be64_to_cpu(dip->di_nblocks) >=
- 		    mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 	} else {
- 		if (be64_to_cpu(dip->di_nblocks) >= mp->m_sb.sb_dblocks)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 	}
- 
--	xfs_scrub_inode_flags(sc, bp, dip, ino, mode, flags);
-+	xfs_scrub_inode_flags(sc, dip, ino, mode, flags);
- 
--	xfs_scrub_inode_extsize(sc, bp, dip, ino, mode, flags);
-+	xfs_scrub_inode_extsize(sc, dip, ino, mode, flags);
- 
- 	/* di_nextents */
- 	nextents = be32_to_cpu(dip->di_nextents);
-@@ -463,31 +458,31 @@ xfs_scrub_dinode(
- 	switch (dip->di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
- 		if (nextents > fork_recs)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
- 		if (nextents <= fork_recs)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	default:
- 		if (nextents != 0)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	}
- 
- 	/* di_forkoff */
- 	if (XFS_DFORK_APTR(dip) >= (char *)dip + mp->m_sb.sb_inodesize)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 	if (dip->di_anextents != 0 && dip->di_forkoff == 0)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 	if (dip->di_forkoff == 0 && dip->di_aformat != XFS_DINODE_FMT_EXTENTS)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 
- 	/* di_aformat */
- 	if (dip->di_aformat != XFS_DINODE_FMT_LOCAL &&
- 	    dip->di_aformat != XFS_DINODE_FMT_EXTENTS &&
- 	    dip->di_aformat != XFS_DINODE_FMT_BTREE)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- 
- 	/* di_anextents */
- 	nextents = be16_to_cpu(dip->di_anextents);
-@@ -495,22 +490,22 @@ xfs_scrub_dinode(
- 	switch (dip->di_aformat) {
- 	case XFS_DINODE_FMT_EXTENTS:
- 		if (nextents > fork_recs)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_BTREE:
- 		if (nextents <= fork_recs)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	default:
- 		if (nextents != 0)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+			xfs_scrub_ino_set_corrupt(sc, ino);
- 	}
- 
- 	if (dip->di_version >= 3) {
- 		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
--			xfs_scrub_ino_set_corrupt(sc, ino, bp);
--		xfs_scrub_inode_flags2(sc, bp, dip, ino, mode, flags, flags2);
--		xfs_scrub_inode_cowextsize(sc, bp, dip, ino, mode, flags,
-+			xfs_scrub_ino_set_corrupt(sc, ino);
-+		xfs_scrub_inode_flags2(sc, dip, ino, mode, flags, flags2);
-+		xfs_scrub_inode_cowextsize(sc, dip, ino, mode, flags,
- 				flags2);
- 	}
- }
-@@ -579,18 +574,18 @@ xfs_scrub_inode_xref_bmap(
- 	if (!xfs_scrub_should_check_xref(sc, &error, NULL))
- 		return;
- 	if (nextents < be32_to_cpu(dip->di_nextents))
--		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
-+		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino);
- 
- 	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
- 			&nextents, &acount);
- 	if (!xfs_scrub_should_check_xref(sc, &error, NULL))
- 		return;
- 	if (nextents != be16_to_cpu(dip->di_anextents))
--		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
-+		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino);
- 
- 	/* Check nblocks against the inode. */
- 	if (count + acount != be64_to_cpu(dip->di_nblocks))
--		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino, NULL);
-+		xfs_scrub_ino_xref_set_corrupt(sc, sc->ip->i_ino);
- }
- 
- /* Cross-reference with the other btrees. */
-@@ -634,8 +629,7 @@ xfs_scrub_inode_xref(
- static void
- xfs_scrub_inode_check_reflink_iflag(
- 	struct xfs_scrub_context	*sc,
--	xfs_ino_t			ino,
--	struct xfs_buf			*bp)
-+	xfs_ino_t			ino)
- {
- 	struct xfs_mount		*mp = sc->mp;
- 	bool				has_shared;
-@@ -650,9 +644,9 @@ xfs_scrub_inode_check_reflink_iflag(
- 			XFS_INO_TO_AGBNO(mp, ino), &error))
- 		return;
- 	if (xfs_is_reflink_inode(sc->ip) && !has_shared)
--		xfs_scrub_ino_set_preen(sc, ino, bp);
-+		xfs_scrub_ino_set_preen(sc, ino);
- 	else if (!xfs_is_reflink_inode(sc->ip) && has_shared)
--		xfs_scrub_ino_set_corrupt(sc, ino, bp);
-+		xfs_scrub_ino_set_corrupt(sc, ino);
- }
- 
- /* Scrub an inode. */
-@@ -665,13 +659,13 @@ xfs_scrub_inode(
- 
- 	/* iget failed means automatic fail. */
- 	if (!sc->ip) {
--		xfs_scrub_ino_set_corrupt(sc, sc->sm->sm_ino, NULL);
-+		xfs_scrub_ino_set_corrupt(sc, sc->sm->sm_ino);
- 		return 0;
- 	}
- 
- 	/* Scrub the inode core. */
- 	xfs_inode_to_disk(sc->ip, &di, 0);
--	xfs_scrub_dinode(sc, NULL, &di, sc->ip->i_ino);
-+	xfs_scrub_dinode(sc, &di, sc->ip->i_ino);
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
- 
-@@ -681,7 +675,7 @@ xfs_scrub_inode(
- 	 * we scrubbed the dinode.
- 	 */
- 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
--		xfs_scrub_inode_check_reflink_iflag(sc, sc->ip->i_ino, NULL);
-+		xfs_scrub_inode_check_reflink_iflag(sc, sc->ip->i_ino);
- 
- 	xfs_scrub_inode_xref(sc, sc->ip->i_ino, &di);
- out:
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 51daa4a..6ba465e 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -219,7 +219,7 @@ xfs_scrub_quota(
- 	/* Look for problem extents. */
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
--		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
- 		goto out_unlock_inode;
- 	}
- 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 2639099..39c41dfe 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -116,8 +116,7 @@ xfs_scrub_xref_is_used_rt_space(
- 	if (!xfs_scrub_should_check_xref(sc, &error, NULL))
- 		goto out_unlock;
- 	if (is_free)
--		xfs_scrub_ino_xref_set_corrupt(sc, sc->mp->m_rbmip->i_ino,
--				NULL);
-+		xfs_scrub_ino_xref_set_corrupt(sc, sc->mp->m_rbmip->i_ino);
- out_unlock:
- 	xfs_iunlock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
- }
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 4dc8968..5d2b1c2 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -174,53 +174,32 @@ DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_error);
- DEFINE_SCRUB_BLOCK_ERROR_EVENT(xfs_scrub_block_preen);
- 
- DECLARE_EVENT_CLASS(xfs_scrub_ino_error_class,
--	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, xfs_daddr_t daddr,
--		 void *ret_ip),
--	TP_ARGS(sc, ino, daddr, ret_ip),
-+	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, void *ret_ip),
-+	TP_ARGS(sc, ino, ret_ip),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
- 		__field(unsigned int, type)
--		__field(xfs_agnumber_t, agno)
--		__field(xfs_agblock_t, bno)
- 		__field(void *, ret_ip)
- 	),
- 	TP_fast_assign(
--		xfs_fsblock_t	fsbno;
--		xfs_agnumber_t	agno;
--		xfs_agblock_t	bno;
--
--		if (daddr) {
--			fsbno = XFS_DADDR_TO_FSB(sc->mp, daddr);
--			agno = XFS_FSB_TO_AGNO(sc->mp, fsbno);
--			bno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
--		} else {
--			agno = XFS_INO_TO_AGNO(sc->mp, ino);
--			bno = XFS_AGINO_TO_AGBNO(sc->mp,
--					XFS_INO_TO_AGINO(sc->mp, ino));
--		}
--
- 		__entry->dev = sc->mp->m_super->s_dev;
- 		__entry->ino = ino;
- 		__entry->type = sc->sm->sm_type;
--		__entry->agno = agno;
--		__entry->bno = bno;
- 		__entry->ret_ip = ret_ip;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx type %u agno %u agbno %u ret_ip %pS",
-+	TP_printk("dev %d:%d ino 0x%llx type %u ret_ip %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->type,
--		  __entry->agno,
--		  __entry->bno,
- 		  __entry->ret_ip)
- )
- 
- #define DEFINE_SCRUB_INO_ERROR_EVENT(name) \
- DEFINE_EVENT(xfs_scrub_ino_error_class, name, \
- 	TP_PROTO(struct xfs_scrub_context *sc, xfs_ino_t ino, \
--		 xfs_daddr_t daddr, void *ret_ip), \
--	TP_ARGS(sc, ino, daddr, ret_ip))
-+		 void *ret_ip), \
-+	TP_ARGS(sc, ino, ret_ip))
- 
- DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_error);
- DEFINE_SCRUB_INO_ERROR_EVENT(xfs_scrub_ino_preen);
++int	xfs_bmapi_remap(struct xfs_trans *tp, struct xfs_inode *ip,
++		xfs_fileoff_t bno, xfs_filblks_t len, xfs_fsblock_t startblock,
++		struct xfs_defer_ops *dfops, int flags);
++
+ #endif	/* __XFS_BMAP_H__ */
 
