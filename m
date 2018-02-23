@@ -1,14 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58166 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbeBWCFO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:05:14 -0500
-Subject: [PATCH 4/5] xfs: convert XFS_AGFL_SIZE to a helper function
+Received: from userp2120.oracle.com ([156.151.31.85]:36548 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750916AbeBWCGB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:06:01 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N21nbI069911
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:06:00 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2ga9bpg2js-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:06:00 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1N210fk019470
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:01:00 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w1N20xuH005885
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:01:00 GMT
+Subject: [PATCH 5/8] xfs: inode scrubber shouldn't bother with raw checks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Feb 2018 18:00:06 -0800
-Message-ID: <151935120662.21654.13415426558899842401.stgit@magnolia>
-In-Reply-To: <151935118240.21654.10146641674018880885.stgit@magnolia>
-References: <151935118240.21654.10146641674018880885.stgit@magnolia>
+Date: Thu, 22 Feb 2018 18:00:58 -0800
+Message-ID: <151935125879.21842.10380711479854109278.stgit@magnolia>
+In-Reply-To: <151935122813.21842.14996049216693190946.stgit@magnolia>
+References: <151935122813.21842.14996049216693190946.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,187 +30,152 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The AGFL size calculation is about to get more complex, so lets turn
-the macro into a function first and remove the macro.
+The inode scrubber tries to _iget the inode prior to running checks.
+If that _iget call fails with corruption errors that's an automatic
+fail, regardless of whether it was the inode buffer read verifier,
+the ifork verifier, or the ifork formatter that errored out.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[darrick: forward port to newer kernel, simplify the helper]
+Therefore, get rid of the raw mode scrub code because it's not needed.
+Found by trying to fix some test failures in xfs/379 and xfs/415.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  |   31 ++++++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_alloc.h  |    2 ++
- fs/xfs/libxfs/xfs_format.h |   13 +------------
- fs/xfs/scrub/agheader.c    |    6 +++---
- fs/xfs/xfs_fsops.c         |    2 +-
- 5 files changed, 31 insertions(+), 23 deletions(-)
+ fs/xfs/scrub/inode.c |   98 +++++---------------------------------------------
+ 1 file changed, 9 insertions(+), 89 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index c02781a..36101e5 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -53,6 +53,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 21297be..0332a01 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -515,72 +515,6 @@ xfs_scrub_dinode(
+ 	}
+ }
  
-+/*
-+ * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
-+ * the beginning of the block for a proper header with the location information
-+ * and CRC.
-+ */
-+unsigned int
-+xfs_agfl_size(
-+	struct xfs_mount	*mp)
-+{
-+	unsigned int		size = mp->m_sb.sb_sectsize;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		size -= sizeof(struct xfs_agfl);
-+
-+	return size / sizeof(xfs_agblock_t);
-+}
-+
- unsigned int
- xfs_refc_block(
- 	struct xfs_mount	*mp)
-@@ -550,7 +567,7 @@ xfs_agfl_verify(
- 	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
- 		return __this_address;
- 
--	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
-+	for (i = 0; i < xfs_agfl_size(mp); i++) {
- 		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
- 		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
- 			return __this_address;
-@@ -2266,7 +2283,7 @@ xfs_alloc_get_freelist(
- 	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
- 	be32_add_cpu(&agf->agf_flfirst, 1);
- 	xfs_trans_brelse(tp, agflbp);
--	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
-+	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
- 		agf->agf_flfirst = 0;
- 
- 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-@@ -2377,7 +2394,7 @@ xfs_alloc_put_freelist(
- 			be32_to_cpu(agf->agf_seqno), &agflbp)))
- 		return error;
- 	be32_add_cpu(&agf->agf_fllast, 1);
--	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
-+	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
- 		agf->agf_fllast = 0;
- 
- 	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-@@ -2395,7 +2412,7 @@ xfs_alloc_put_freelist(
- 
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 
--	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
-+	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
- 
- 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
- 	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
-@@ -2428,9 +2445,9 @@ xfs_agf_verify(
- 	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
- 	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
- 	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
--	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
--	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
--	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
-+	      be32_to_cpu(agf->agf_flfirst) < xfs_agfl_size(mp) &&
-+	      be32_to_cpu(agf->agf_fllast) < xfs_agfl_size(mp) &&
-+	      be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp)))
- 		return __this_address;
- 
- 	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 65a0caf..a311a24 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -26,6 +26,8 @@ struct xfs_trans;
- 
- extern struct workqueue_struct *xfs_alloc_wq;
- 
-+unsigned int xfs_agfl_size(struct xfs_mount *mp);
-+
- /*
-  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
-  */
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 1acb584..42956d8 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -803,24 +803,13 @@ typedef struct xfs_agi {
- 		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
- 		(__be32 *)(bp)->b_addr)
- 
--/*
-- * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
-- * slots in the beginning of the block for a proper header with the
-- * location information and CRC.
-- */
--#define XFS_AGFL_SIZE(mp) \
--	(((mp)->m_sb.sb_sectsize - \
--	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
--		sizeof(struct xfs_agfl) : 0)) / \
--	  sizeof(xfs_agblock_t))
+-/* Map and read a raw inode. */
+-STATIC int
+-xfs_scrub_inode_map_raw(
+-	struct xfs_scrub_context	*sc,
+-	xfs_ino_t			ino,
+-	struct xfs_buf			**bpp,
+-	struct xfs_dinode		**dipp)
+-{
+-	struct xfs_imap			imap;
+-	struct xfs_mount		*mp = sc->mp;
+-	struct xfs_buf			*bp = NULL;
+-	struct xfs_dinode		*dip;
+-	int				error;
 -
- typedef struct xfs_agfl {
- 	__be32		agfl_magicnum;
- 	__be32		agfl_seqno;
- 	uuid_t		agfl_uuid;
- 	__be64		agfl_lsn;
- 	__be32		agfl_crc;
--	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
-+	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
- } __attribute__((packed)) xfs_agfl_t;
+-	error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
+-	if (error == -EINVAL) {
+-		/*
+-		 * Inode could have gotten deleted out from under us;
+-		 * just forget about it.
+-		 */
+-		error = -ENOENT;
+-		goto out;
+-	}
+-	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+-			XFS_INO_TO_AGBNO(mp, ino), &error))
+-		goto out;
+-
+-	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+-			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
+-			NULL);
+-	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+-			XFS_INO_TO_AGBNO(mp, ino), &error))
+-		goto out;
+-
+-	/*
+-	 * Is this really an inode?  We disabled verifiers in the above
+-	 * xfs_trans_read_buf call because the inode buffer verifier
+-	 * fails on /any/ inode record in the inode cluster with a bad
+-	 * magic or version number, not just the one that we're
+-	 * checking.  Therefore, grab the buffer unconditionally, attach
+-	 * the inode verifiers by hand, and run the inode verifier only
+-	 * on the one inode we want.
+-	 */
+-	bp->b_ops = &xfs_inode_buf_ops;
+-	dip = xfs_buf_offset(bp, imap.im_boffset);
+-	if (xfs_dinode_verify(mp, ino, dip) != NULL ||
+-	    !xfs_dinode_good_version(mp, dip->di_version)) {
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
+-		goto out_buf;
+-	}
+-
+-	/* ...and is it the one we asked for? */
+-	if (be32_to_cpu(dip->di_gen) != sc->sm->sm_gen) {
+-		error = -ENOENT;
+-		goto out_buf;
+-	}
+-
+-	*dipp = dip;
+-	*bpp = bp;
+-out:
+-	return error;
+-out_buf:
+-	xfs_trans_brelse(sc->tp, bp);
+-	return error;
+-}
+-
+ /*
+  * Make sure the finobt doesn't think this inode is free.
+  * We don't have to check the inobt ourselves because we got the inode via
+@@ -727,43 +661,29 @@ xfs_scrub_inode(
+ 	struct xfs_scrub_context	*sc)
+ {
+ 	struct xfs_dinode		di;
+-	struct xfs_buf			*bp = NULL;
+-	struct xfs_dinode		*dip;
+-	xfs_ino_t			ino;
+ 	int				error = 0;
  
- #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index fd97552..fd383c5 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -80,7 +80,7 @@ xfs_scrub_walk_agfl(
+-	/* Did we get the in-core inode, or are we doing this manually? */
+-	if (sc->ip) {
+-		ino = sc->ip->i_ino;
+-		xfs_inode_to_disk(sc->ip, &di, 0);
+-		dip = &di;
+-	} else {
+-		/* Map & read inode. */
+-		ino = sc->sm->sm_ino;
+-		error = xfs_scrub_inode_map_raw(sc, ino, &bp, &dip);
+-		if (error || !bp)
+-			goto out;
++	/* iget failed means automatic fail. */
++	if (!sc->ip) {
++		xfs_scrub_ino_set_corrupt(sc, sc->sm->sm_ino, NULL);
++		return 0;
  	}
  
- 	/* first to the end */
--	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
-+	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
- 		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
- 		if (error)
- 			return error;
-@@ -664,7 +664,7 @@ xfs_scrub_agf(
- 	if (agfl_last > agfl_first)
- 		fl_count = agfl_last - agfl_first + 1;
- 	else
--		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
-+		fl_count = xfs_agfl_size(mp) - agfl_first + agfl_last + 1;
- 	if (agfl_count != 0 && fl_count != agfl_count)
- 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
- 
-@@ -791,7 +791,7 @@ xfs_scrub_agfl(
- 	/* Allocate buffer to ensure uniqueness of AGFL entries. */
- 	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
- 	agflcount = be32_to_cpu(agf->agf_flcount);
--	if (agflcount > XFS_AGFL_SIZE(sc->mp)) {
-+	if (agflcount > xfs_agfl_size(sc->mp)) {
- 		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+-	xfs_scrub_dinode(sc, bp, dip, ino);
++	/* Scrub the inode core. */
++	xfs_inode_to_disk(sc->ip, &di, 0);
++	xfs_scrub_dinode(sc, NULL, &di, sc->ip->i_ino);
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
  		goto out;
- 	}
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 8b45456..5237927 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -217,7 +217,7 @@ xfs_growfs_data_private(
- 		}
  
- 		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
--		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
-+		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
- 			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+-	/* Now let's do the things that require a live inode. */
+-	if (!sc->ip)
+-		goto out;
+-
+ 	/*
+ 	 * Look for discrepancies between file's data blocks and the reflink
+ 	 * iflag.  We already checked the iflag against the file mode when
+ 	 * we scrubbed the dinode.
+ 	 */
+ 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
+-		xfs_scrub_inode_check_reflink_iflag(sc, ino, bp);
++		xfs_scrub_inode_check_reflink_iflag(sc, sc->ip->i_ino, NULL);
  
- 		error = xfs_bwrite(bp);
+-	xfs_scrub_inode_xref(sc, ino, dip);
++	xfs_scrub_inode_xref(sc, sc->ip->i_ino, &di);
+ out:
+-	if (bp)
+-		xfs_trans_brelse(sc->tp, bp);
+ 	return error;
+ }
 
