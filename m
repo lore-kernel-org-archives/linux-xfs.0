@@ -1,183 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58895 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752768AbeBXAwd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Feb 2018 19:52:33 -0500
-Subject: [PATCH v3 3/6] xfs, dax: introduce IS_FSDAX()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 23 Feb 2018 16:43:27 -0800
-Message-ID: <151943300713.29249.545330864711927648.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <151943298533.29249.14597996053028346159.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151943298533.29249.14597996053028346159.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:45450 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753352AbeBWSds (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Feb 2018 13:33:48 -0500
+Date: Fri, 23 Feb 2018 10:33:24 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ANNOUNCE] xfsprogs v4.15.0-rc1 released
+Message-ID: <20180223183324.GN9827@magnolia>
+References: <7025bd78-65f9-ad25-e884-cada818a685b@sandeen.net>
+ <20180220003635.GA8479@infradead.org>
+ <8675595f-abe1-739c-c131-e12737045365@sandeen.net>
+ <20180220163347.GB27629@magnolia>
+ <20180220210237.GB7000@dastard>
+ <b5f653da-d56d-550f-645c-36da93ba7441@sandeen.net>
+ <20180222234446.GH7000@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180222234446.GH7000@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, kbuild test robot <fengguang.wu@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Given that S_DAX is non-zero in the FS_DAX=n + DEV_DAX=y case, another
-mechanism besides the plain IS_DAX() check to compile out dead
-filesystem-dax code paths. Without IS_FSDAX() xfs will fail at link time
-with:
+On Fri, Feb 23, 2018 at 10:44:46AM +1100, Dave Chinner wrote:
+> On Thu, Feb 22, 2018 at 02:49:27PM -0600, Eric Sandeen wrote:
+> > 
+> > 
+> > On 2/20/18 3:02 PM, Dave Chinner wrote:
+> > > On Tue, Feb 20, 2018 at 08:33:47AM -0800, Darrick J. Wong wrote:
+> > >> On Tue, Feb 20, 2018 at 09:09:22AM -0600, Eric Sandeen wrote:
+> > >>> (resend, somehow I keep missing reply-all)
+> > >>>
+> > >>> That would be much faster than at least our historical progression
+> > >>> for new features:
+> > >>>
+> > >>> * Experimental for $LONG_TIME
+> > >>> * Drop experimental for $SIGNIFICANT_TIME
+> > >>> * Make default after that
+> > >>
+> > >> ISTR Dave once telling me that he usually waited ~4 kernel releases to
+> > >> drop the experimental tag and then another year to turn it on by
+> > >> default in mkfs.  I'll grant you that seven kernels went by before
+> > >> EXPERIMENTAL went away, so I don't think we need to wait a whole other
+> > >> year.  How about turning it on by default in July or so?
+> > > 
+> > > The wait time for "supported -> default" is so that distro's have
+> > > time to move to a feature supported kernel before they pick up a new
+> > > xfsprogs release that turns on that feature by default. this mostly
+> > > avoids the problem of distros accidentally turning on a feature that
+> > > is still experimental in their kernel....
+> > 
+> > Speaking for Fedora, it brings userspace & kernelspace into a distro
+> > together, so that's not a problem.  Speaking for RHEL, it's a long term
+> > distro that knows darned well that mixing and matching new & old requires
+> > care, if it's done at all.
+> 
+> Right, but other distros like debian have async kernel and userspace
+> package update schedules. It's not until they "freeze" for a release
+> that things like userspace and kernel versions are expected to have
+> feature matches. e.g. we could upload xfsprogs 4.16 with reflink
+> enabled by default to unstable the moment it is released. At that
+> point in time, the default unstable kernel might be a 4.15 kernel
+> (or older). Worse, the current installer kernel might be be even
+> older, even though the nightly build picks up the new installer
+> package we uploaded.
+> 
+> It's unecessary angst and pain that is easily avoided by having some
+> delay between saying "this is suported now" and "every new
+> filesystem will use it by default"....
 
-    ERROR: "dax_finish_sync_fault" [fs/xfs/xfs.ko] undefined!
-    ERROR: "dax_iomap_fault" [fs/xfs/xfs.ko] undefined!
-    ERROR: "dax_iomap_rw" [fs/xfs/xfs.ko] undefined!
+Right, and I was suggesting 4.18 or so, which gives distros 4 months to
+update their kernels... but now I looked at my notes from 2015 which
+said "reflink on by default in 420??", snickered at my own juvenile
+humor, and reflected on how that wasn't such an inaccurate forecast
+after all. :P
 
-This compile failure was previously hidden by the fact that S_DAX was
-erroneously defined to '0' in the FS_DAX=n + DEV_DAX=y case.
+So, uh, how about 4.20?  That'll give everyone a good 9 months to pick
+up a new kernel.
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Cc: <stable@vger.kernel.org>
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/xfs_file.c    |   14 +++++++-------
- fs/xfs/xfs_ioctl.c   |    4 ++--
- fs/xfs/xfs_iomap.c   |    6 +++---
- fs/xfs/xfs_reflink.c |    2 +-
- include/linux/fs.h   |    2 ++
- 5 files changed, 15 insertions(+), 13 deletions(-)
+(As for debian, I thought they /were/ doing the "update kernel and then
+matching xfsprogs" dance, at least for stretch and beyond.)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9ea08326f876..46a098b90fd0 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -288,7 +288,7 @@ xfs_file_read_iter(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	if (IS_DAX(inode))
-+	if (IS_FSDAX(inode))
- 		ret = xfs_file_dax_read(iocb, to);
- 	else if (iocb->ki_flags & IOCB_DIRECT)
- 		ret = xfs_file_dio_aio_read(iocb, to);
-@@ -726,7 +726,7 @@ xfs_file_write_iter(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
- 		return -EIO;
- 
--	if (IS_DAX(inode))
-+	if (IS_FSDAX(inode))
- 		ret = xfs_file_dax_write(iocb, from);
- 	else if (iocb->ki_flags & IOCB_DIRECT) {
- 		/*
-@@ -1045,7 +1045,7 @@ __xfs_filemap_fault(
- 	}
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	if (IS_DAX(inode)) {
-+	if (IS_FSDAX(inode)) {
- 		pfn_t pfn;
- 
- 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL, &xfs_iomap_ops);
-@@ -1070,7 +1070,7 @@ xfs_filemap_fault(
- {
- 	/* DAX can shortcut the normal fault path on write faults! */
- 	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
--			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-+			IS_FSDAX(file_inode(vmf->vma->vm_file)) &&
- 			(vmf->flags & FAULT_FLAG_WRITE));
- }
- 
-@@ -1079,7 +1079,7 @@ xfs_filemap_huge_fault(
- 	struct vm_fault		*vmf,
- 	enum page_entry_size	pe_size)
- {
--	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-+	if (!IS_FSDAX(file_inode(vmf->vma->vm_file)))
- 		return VM_FAULT_FALLBACK;
- 
- 	/* DAX can shortcut the normal fault path on write faults! */
-@@ -1124,12 +1124,12 @@ xfs_file_mmap(
- 	 * We don't support synchronous mappings for non-DAX files. At least
- 	 * until someone comes with a sensible use case.
- 	 */
--	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
-+	if (!IS_FSDAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
- 		return -EOPNOTSUPP;
- 
- 	file_accessed(filp);
- 	vma->vm_ops = &xfs_file_vm_ops;
--	if (IS_DAX(file_inode(filp)))
-+	if (IS_FSDAX(file_inode(filp)))
- 		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89fb1eb80aae..234279ff66ce 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1108,9 +1108,9 @@ xfs_ioctl_setattr_dax_invalidate(
- 	}
- 
- 	/* If the DAX state is not changing, we have nothing to do here. */
--	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
-+	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_FSDAX(inode))
- 		return 0;
--	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
-+	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_FSDAX(inode))
- 		return 0;
- 
- 	/* lock, flush and invalidate mapping in preparation for flag change */
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 66e1edbfb2b2..cf794d429aec 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -241,7 +241,7 @@ xfs_iomap_write_direct(
- 	 * the reserve block pool for bmbt block allocation if there is no space
- 	 * left but we need to do unwritten extent conversion.
- 	 */
--	if (IS_DAX(VFS_I(ip))) {
-+	if (IS_FSDAX(VFS_I(ip))) {
- 		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
- 		if (imap->br_state == XFS_EXT_UNWRITTEN) {
- 			tflags |= XFS_TRANS_RESERVE;
-@@ -952,7 +952,7 @@ static inline bool imap_needs_alloc(struct inode *inode,
- 	return !nimaps ||
- 		imap->br_startblock == HOLESTARTBLOCK ||
- 		imap->br_startblock == DELAYSTARTBLOCK ||
--		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
-+		(IS_FSDAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
- }
- 
- static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
-@@ -988,7 +988,7 @@ xfs_file_iomap_begin(
- 		return -EIO;
- 
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
--			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
-+			!IS_FSDAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		/* Reserve delalloc blocks for regular writeback. */
- 		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
- 	}
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 270246943a06..a126e00e05e3 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1351,7 +1351,7 @@ xfs_reflink_remap_range(
- 		goto out_unlock;
- 
- 	/* Don't share DAX file data for now. */
--	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+	if (IS_FSDAX(inode_in) || IS_FSDAX(inode_out))
- 		goto out_unlock;
- 
- 	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 79c413985305..a4310a95011b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1909,6 +1909,8 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
- #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
- 				 (inode)->i_rdev == WHITEOUT_DEV)
- 
-+#define IS_FSDAX(inode) (IS_ENABLED(CONFIG_FS_DAX) && IS_DAX(inode))
-+
- static inline bool HAS_UNMAPPED_ID(struct inode *inode)
- {
- 	return !uid_valid(inode->i_uid) || !gid_valid(inode->i_gid);
+--D
 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
