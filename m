@@ -1,106 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54478 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbeBWCAn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 21:00:43 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w1N1umL1146550
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:42 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2ga9bpg1yp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:42 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w1N20fc7018571
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:41 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w1N20fO6010366
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 02:00:41 GMT
-Subject: [PATCH 2/8] xfs: refactor inode verifier error logging
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 22 Feb 2018 18:00:40 -0800
-Message-ID: <151935124037.21842.10647303189739031227.stgit@magnolia>
-In-Reply-To: <151935122813.21842.14996049216693190946.stgit@magnolia>
-References: <151935122813.21842.14996049216693190946.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36139 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752232AbeBWWOw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Feb 2018 17:14:52 -0500
+Date: Sat, 24 Feb 2018 09:14:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ANNOUNCE] xfsprogs v4.15.0-rc1 released
+Message-ID: <20180223221449.GN7000@dastard>
+References: <7025bd78-65f9-ad25-e884-cada818a685b@sandeen.net>
+ <20180220003635.GA8479@infradead.org>
+ <8675595f-abe1-739c-c131-e12737045365@sandeen.net>
+ <20180220163347.GB27629@magnolia>
+ <20180220210237.GB7000@dastard>
+ <b5f653da-d56d-550f-645c-36da93ba7441@sandeen.net>
+ <20180222234446.GH7000@dastard>
+ <20180223183324.GN9827@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180223183324.GN9827@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Feb 23, 2018 at 10:33:24AM -0800, Darrick J. Wong wrote:
+> On Fri, Feb 23, 2018 at 10:44:46AM +1100, Dave Chinner wrote:
+> > On Thu, Feb 22, 2018 at 02:49:27PM -0600, Eric Sandeen wrote:
+> > > 
+> > > 
+> > > On 2/20/18 3:02 PM, Dave Chinner wrote:
+> > > > On Tue, Feb 20, 2018 at 08:33:47AM -0800, Darrick J. Wong wrote:
+> > > >> On Tue, Feb 20, 2018 at 09:09:22AM -0600, Eric Sandeen wrote:
+> > > >>> (resend, somehow I keep missing reply-all)
+> > > >>>
+> > > >>> That would be much faster than at least our historical progression
+> > > >>> for new features:
+> > > >>>
+> > > >>> * Experimental for $LONG_TIME
+> > > >>> * Drop experimental for $SIGNIFICANT_TIME
+> > > >>> * Make default after that
+> > > >>
+> > > >> ISTR Dave once telling me that he usually waited ~4 kernel releases to
+> > > >> drop the experimental tag and then another year to turn it on by
+> > > >> default in mkfs.  I'll grant you that seven kernels went by before
+> > > >> EXPERIMENTAL went away, so I don't think we need to wait a whole other
+> > > >> year.  How about turning it on by default in July or so?
+> > > > 
+> > > > The wait time for "supported -> default" is so that distro's have
+> > > > time to move to a feature supported kernel before they pick up a new
+> > > > xfsprogs release that turns on that feature by default. this mostly
+> > > > avoids the problem of distros accidentally turning on a feature that
+> > > > is still experimental in their kernel....
+> > > 
+> > > Speaking for Fedora, it brings userspace & kernelspace into a distro
+> > > together, so that's not a problem.  Speaking for RHEL, it's a long term
+> > > distro that knows darned well that mixing and matching new & old requires
+> > > care, if it's done at all.
+> > 
+> > Right, but other distros like debian have async kernel and userspace
+> > package update schedules. It's not until they "freeze" for a release
+> > that things like userspace and kernel versions are expected to have
+> > feature matches. e.g. we could upload xfsprogs 4.16 with reflink
+> > enabled by default to unstable the moment it is released. At that
+> > point in time, the default unstable kernel might be a 4.15 kernel
+> > (or older). Worse, the current installer kernel might be be even
+> > older, even though the nightly build picks up the new installer
+> > package we uploaded.
+> > 
+> > It's unecessary angst and pain that is easily avoided by having some
+> > delay between saying "this is suported now" and "every new
+> > filesystem will use it by default"....
+> 
+> Right, and I was suggesting 4.18 or so, which gives distros 4 months to
+> update their kernels... but now I looked at my notes from 2015 which
+> said "reflink on by default in 420??", snickered at my own juvenile
+> humor, and reflected on how that wasn't such an inaccurate forecast
+> after all. :P
+> 
+> So, uh, how about 4.20?  That'll give everyone a good 9 months to pick
+> up a new kernel.
 
-Refactor some of the inode verifier failure logging call sites to use
-the new xfs_inode_verifier_error method which dumps the offending buffer
-as well as the code location of the failed check.  This trims the
-output, makes it clearer to the admin that repair must be run, and gives
-the developers more details to work from.
+Fine by me.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c       |    5 +++--
- fs/xfs/libxfs/xfs_inode_fork.c |   15 +++++++++------
- 2 files changed, 12 insertions(+), 8 deletions(-)
+> (As for debian, I thought they /were/ doing the "update kernel and then
+> matching xfsprogs" dance, at least for stretch and beyond.)
 
+It's the rolling unstable branch that is the problem here. Things
+tend to move back to the testing branch relatively sanely, but even
+then you can have much bigger gaps between the default kernel
+version and userspace if a userspace package migrates before the
+kernel update occurs.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5850e76..fe7534e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1244,8 +1244,9 @@ xfs_iread_extents(
- 			xfs_warn(ip->i_mount,
- 				"corrupt dinode %Lu, (btree extents).",
- 				(unsigned long long) ip->i_ino);
--			XFS_CORRUPTION_ERROR(__func__,
--				XFS_ERRLEVEL_LOW, ip->i_mount, block);
-+			xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+					__func__, block, sizeof(*block),
-+					__this_address);
- 			error = -EFSCORRUPTED;
- 			goto out_brelse;
- 		}
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 613fba2..701c42a 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -195,8 +195,9 @@ xfs_iformat_local(
- 	"corrupt inode %Lu (bad size %d for local fork, size = %d).",
- 			(unsigned long long) ip->i_ino, size,
- 			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
--		XFS_CORRUPTION_ERROR("xfs_iformat_local", XFS_ERRLEVEL_LOW,
--				     ip->i_mount, dip);
-+		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+				"xfs_iformat_local", dip, sizeof(*dip),
-+				__this_address);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -231,8 +232,9 @@ xfs_iformat_extents(
- 	if (unlikely(size < 0 || size > XFS_DFORK_SIZE(dip, mp, whichfork))) {
- 		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %d).",
- 			(unsigned long long) ip->i_ino, nex);
--		XFS_CORRUPTION_ERROR("xfs_iformat_extents(1)", XFS_ERRLEVEL_LOW,
--				     mp, dip);
-+		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+				"xfs_iformat_extents(1)", dip, sizeof(*dip),
-+				__this_address);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -309,8 +311,9 @@ xfs_iformat_btree(
- 		     level == 0 || level > XFS_BTREE_MAXLEVELS) {
- 		xfs_warn(mp, "corrupt inode %Lu (btree).",
- 					(unsigned long long) ip->i_ino);
--		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
--					 mp, dip);
-+		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+				"xfs_iformat_btree", dfp, size,
-+				__this_address);
- 		return -EFSCORRUPTED;
- 	}
- 
+And when you factor in things like non-maintiner uploads, things can
+get out of step very easily....
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
