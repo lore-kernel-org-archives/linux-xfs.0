@@ -1,40 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49445 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750916AbeBWB4o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Feb 2018 20:56:44 -0500
-Date: Fri, 23 Feb 2018 01:56:42 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [ANNOUNCE] xfsprogs v4.15.0-rc1 released
-Message-ID: <20180223015642.GA27199@wotan.suse.de>
-References: <7025bd78-65f9-ad25-e884-cada818a685b@sandeen.net>
- <20180220003635.GA8479@infradead.org>
- <8675595f-abe1-739c-c131-e12737045365@sandeen.net>
- <20180220163347.GB27629@magnolia>
- <20180220210237.GB7000@dastard>
- <b5f653da-d56d-550f-645c-36da93ba7441@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:53300 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751381AbeBWQWb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Feb 2018 11:22:31 -0500
+Date: Fri, 23 Feb 2018 08:22:24 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] fsstress: avoid infinite loops in clonerange_f
+Message-ID: <20180223162224.GD14582@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b5f653da-d56d-550f-645c-36da93ba7441@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: eguan@redhat.com
+Cc: Luis Henriques <lhenriques@suse.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Feb 22, 2018 at 02:49:27PM -0600, Eric Sandeen wrote:
-> On 2/20/18 3:02 PM, Dave Chinner wrote:
-> > If this is really a huge problem for distros, then wasn't this what
-> > someone wanted mkfs config files for?
-> 
-> Suse folk seem to like that approach, yes.  But while the config
-> file facilitates that sort of distro approach, it isn't really
-> a hard requirement, I'd think - patching is always an option
-> in the end.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Clearly. Its still a nice sensible feature to address any defaults,
-and now that I see chinner/mkfs-refactor is merged I'll go work
-off of that and post patches again soon.
+Evidently ceph will report a 4M blocksize, which trips clonerange_f's
+clumsy attempt to avoid reflinking an extent on top of itself.  The
+original code assumed that "pick a random destination up to 1MB past the
+end of the file" would suffice, but that clearly won't with a 4M
+blocksize.  Instead, we'll change it to 1024*blksize.
 
-  Luis
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Tested-by: Luis Henriques <lhenriques@suse.com>
+---
+ ltp/fsstress.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 935f5de..e107099 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -2222,6 +2222,7 @@ clonerange_f(
+ 	off64_t			lr;
+ 	off64_t			off1;
+ 	off64_t			off2;
++	off64_t			max_off2;
+ 	size_t			len;
+ 	int			v1;
+ 	int			v2;
+@@ -2305,9 +2306,10 @@ clonerange_f(
+ 	 * If srcfile == destfile, randomly generate destination ranges
+ 	 * until we find one that doesn't overlap the source range.
+ 	 */
++	max_off2 = MIN(stat2.st_size + (1024ULL * stat2.st_blksize), MAXFSIZE);
+ 	do {
+ 		lr = ((int64_t)random() << 32) + random();
+-		off2 = (off64_t)(lr % MIN(stat2.st_size + (1024 * 1024), MAXFSIZE));
++		off2 = (off64_t)(lr % max_off2);
+ 		off2 %= maxfsize;
+ 		off2 &= ~(stat2.st_blksize - 1);
+ 	} while (stat1.st_ino == stat2.st_ino && llabs(off2 - off1) < len);
