@@ -1,113 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59810 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752330AbeBTQpI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Feb 2018 11:45:08 -0500
-Date: Tue, 20 Feb 2018 08:45:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Debian packaging updates
-Message-ID: <20180220164504.GD27629@magnolia>
-References: <CAFMei7PKv0hQnpwKA+qkkjMa9rqXdq8JfBdUjHkgXT1R9nd=GQ@mail.gmail.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:26791 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750827AbeBWMCx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Feb 2018 07:02:53 -0500
+Date: Fri, 23 Feb 2018 13:02:54 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_repair questions
+Message-ID: <20180223130254.39d32448@harpe.intellique.com>
+In-Reply-To: <CACssdW1a=+6Dh=TEV1g13ipfM1TXd29SEHNuz_ar7RfwpmgdFg@mail.gmail.com>
+References: <CACssdW1a=+6Dh=TEV1g13ipfM1TXd29SEHNuz_ar7RfwpmgdFg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAFMei7PKv0hQnpwKA+qkkjMa9rqXdq8JfBdUjHkgXT1R9nd=GQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/WyL5gmxzy3bTP6akiasnpbY"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nathan Scott <nathans@redhat.com>
-Cc: "Sandeen, Eric" <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Alatun Rom <alatun.rom@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Feb 19, 2018 at 08:56:16PM +1100, Nathan Scott wrote:
-> Hi Eric, Darrick, all,
-> 
-> Some Debian packaging updates for xfsprogs, hopefully in time for
-> 4.15.0 still.  Enjoy!
-> 
-> Changes committed to https://github.com/natoscott/xfsprogs master
-> 
-> Nathan Scott (4):
->       Several updates to use more modern Debian packaging
->       Update .gitignore list for generated scrub cron file
->       Add xfs_scrub_fail systemd service file docs entry
->       Fix grammar and spelling in strings and man pages
-> 
->  .gitignore                       |    1 +
->  Makefile                         |    4 +++-
->  debian/changelog                 |   10 ++++++++++
->  debian/compat                    |    2 +-
->  debian/control                   |    2 +-
->  debian/rules                     |    8 ++++++--
->  debian/source/format             |    1 +
->  io/mmap.c                        |    2 +-
->  io/prealloc.c                    |    2 +-
->  man/man8/xfs_io.8                |    2 +-
->  man/man8/xfs_quota.8             |    4 ++--
->  mkfs/xfs_mkfs.c                  |   12 ++++++------
->  scrub/xfs_scrub_fail@.service.in |    1 +
->  13 files changed, 35 insertions(+), 16 deletions(-)
-> 
-> 
-> commit e9a183018503fc1a08d6c84307089ae9cb67ac6c
-> Author: Nathan Scott <nathans@debian.org>
-> Date:   Mon Feb 19 20:46:41 2018 +1100
-> 
->     Fix grammar and spelling in strings and man pages
-> 
->     Signed-off-by: Nathan Scott <nathans@debian.org>
-> 
-> commit b43b9d237b40905dcd8175d090c4c34413175d73
-> Author: Nathan Scott <nathans@debian.org>
-> Date:   Mon Feb 19 20:42:14 2018 +1100
-> 
->     Add xfs_scrub_fail systemd service file docs entry
-> 
->     Signed-off-by: Nathan Scott <nathans@debian.org>
-> 
-> commit 579435f65985bd93d1e42d7710432531ce9d17c8
-> Author: Nathan Scott <nathans@debian.org>
-> Date:   Mon Feb 19 20:40:50 2018 +1100
-> 
->     Update .gitignore list for generated scrub cron file
-> 
->     Signed-off-by: Nathan Scott <nathans@debian.org>
-> 
+--Sig_/WyL5gmxzy3bTP6akiasnpbY
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-The first three look ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Le Fri, 23 Feb 2018 00:42:11 +0100
+Alatun Rom <alatun.rom@gmail.com> =C3=A9crivait:
 
-(I decline to review this last one due to my debian-packaging fu being
-zero, but if it debuilds I have no objections.)
+> As far as I understood, xfs_repair considers the file system
+> unfixable, because the secondary superblocks are not found at the
+> offsets, where they should be.
 
-> commit 02ccd5edb4437fdd0f2a6e64a7f0bfa3072fcbb5
-> Author: Nathan Scott <nathans@debian.org>
-> Date:   Mon Feb 19 20:39:51 2018 +1100
-> 
->     Several updates to use more modern Debian packaging
-> 
->     Switch to Debian packaging features available in more
->     recent years to resolve some long-standing issues.
-> 
->     In particular, using the quilt format gives non-native
->     package builds finally, while keeping the ability for
->     developers to do upstream deb builds.  Also split the
->     binary-arch and binary-indep debian/rules targets as
->     is now mandated, and update to latest standard version.
->     Mark a bunch of long-resolved bugs as fixed in the deb
->     changelog so they are automatically closed by the next
->     update.
-> 
->     Signed-off-by: Nathan Scott <nathans@debian.org>
+I don't think so, as it reports "invalid superblock signature", this is
+most probably the culprit. It needs at least one proper, uncorrupted
+superblock.
 
---D
+> The blocks found look quite ok.
+> My guess: because the VMDK container got damaged, the information of
+> the internal partitions is now incorrect, so testdisk did extract a
+> file that is somehow broken. But from what I've seen so far, it could
+> be possible to fix it up to the point, to extract some files.
+>=20
 
-> 
-> 
-> cheers.
-> 
-> --
-> Nathan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I never knew that testdisk could be used like that. Is the volume of
+the right size, matching the original partition?
+
+> What is unclear for me: why are 7 SSB found? Is this a geometry issue?
+
+The adresses are super weird: the 4 first seem OK, the the last three
+are bizarrely close to each other:
+
+32204029952
+57813565440
+64185663488
+96412992512
+96413164544
+96413271040
+96419537920
+
+> The found superblocks tell, that a total of 4 superblocks should
+> exist. What happens if you grow an XFS file system? Do additional
+> stripes generate a layout like this? Is the distance between the
+> superblock copies ALWAYS a constant value? In my scenario the distance
+> of the first 3 superblocks is not a fixed value. But how can blocks
+> get lost? I don't think this is possible with VMDK to "mark blocks as
+> deleted" inside a partition and they are skipped when reading a
+> partition.
+
+Honestly, AFAIK VMDK are hollow files. If it gets damaged all bets are
+off...
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/WyL5gmxzy3bTP6akiasnpbY
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlqQAu4ACgkQX3jQXNUicVYJ8QCgo6Gu7yjIo6NcO5uXa3QHkvrn
+nUcAn3YuQRgESHrzRcd/XCD773fHeHp2
+=C8ri
+-----END PGP SIGNATURE-----
+
+--Sig_/WyL5gmxzy3bTP6akiasnpbY--
