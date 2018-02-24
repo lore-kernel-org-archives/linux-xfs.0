@@ -1,56 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41686 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751175AbeB0AP2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 19:15:28 -0500
-Received: from mail-io0-f169.google.com (mail-io0-f169.google.com [209.85.223.169])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C1D32217C0
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2018 00:15:27 +0000 (UTC)
-Received: by mail-io0-f169.google.com with SMTP id h23so8656007iob.11
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2018 16:15:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <3e239e61-bc79-c594-c1fd-44fa3efe779d@sandeen.net>
-References: <20180226224224.GE19312@magnolia> <20180227000122.GR14069@wotan.suse.de>
- <3e239e61-bc79-c594-c1fd-44fa3efe779d@sandeen.net>
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Date: Mon, 26 Feb 2018 16:15:06 -0800
-Message-ID: <CAB=NE6U+7hmRhrkkd1v=rEKrcY+NNf61jL9B4nm=kDbTPvy--w@mail.gmail.com>
-Subject: Re: [RFC] mkfs config file bikeshed now!
-Content-Type: text/plain; charset="UTF-8"
+Received: from mr11p00im-asmtp004.me.com ([17.110.69.135]:28538 "EHLO
+        mr11p00im-asmtp004.me.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750905AbeBXLdj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Feb 2018 06:33:39 -0500
+Received: from process-dkim-sign-daemon.mr11p00im-asmtp004.me.com by
+ mr11p00im-asmtp004.me.com
+ (Oracle Communications Messaging Server 8.0.1.2.20170607 64bit (built Jun  7
+ 2017)) id <0P4N00I00H6RMT00@mr11p00im-asmtp004.me.com> for
+ linux-xfs@vger.kernel.org; Sat, 24 Feb 2018 10:33:35 +0000 (GMT)
+From: Chengguang Xu <cgxu519@icloud.com>
+Subject: [PATCH] xfs: fix potential memory leak in mount option parsing
+Date: Sat, 24 Feb 2018 18:33:26 +0800
+Message-id: <1519468406-67354-1-git-send-email-cgxu519@icloud.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Tso Ted <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Chengguang Xu <cgxu519@icloud.com>
 
-On Mon, Feb 26, 2018 at 4:10 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->
->
-> On 2/26/18 6:01 PM, Luis R. Rodriguez wrote:
->>  IIRC with e2fsprogs profile parsers we could end up with something
->> like:
->>
->> [defaults]
->> foo=0
->> bar=0
->> [stuff]
->>       some_release =  {
->>               foo=1
->>               bar=2
->>       }
->>       new_release = {
->>               foo=2
->>       }
->
-> I can't tell what that means.  What's "stuff?"  Why would we need this sort of
-> nesting?
+When specifying string type mount option (e.g., logdev)
+several times in a mount, current option parsing may
+cause memory leak. Hence, call kfree for previous one
+in this case.
 
-I'll leave the crafty examples to Darrick as he had some complex ideas
-in mind. On my part I was happy to not have to deal with the namespace
-stuff -- however I realized some may want it, so I had to mention both
-libraries libini_config and e2fsprogs profile parser do support it,
-just in different ways.
+Signed-off-by: Chengguang Xu <cgxu519@icloud.com>
+---
+ fs/xfs/xfs_super.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
- Luis
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 7aba628..93588ea 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -250,6 +250,7 @@ enum {
+ 				return -EINVAL;
+ 			break;
+ 		case Opt_logdev:
++			kfree(mp->m_logname);
+ 			mp->m_logname = match_strdup(args);
+ 			if (!mp->m_logname)
+ 				return -ENOMEM;
+@@ -258,6 +259,7 @@ enum {
+ 			xfs_warn(mp, "%s option not allowed on this system", p);
+ 			return -EINVAL;
+ 		case Opt_rtdev:
++			kfree(mp->m_rtname);
+ 			mp->m_rtname = match_strdup(args);
+ 			if (!mp->m_rtname)
+ 				return -ENOMEM;
+-- 
+1.8.3.1
+
