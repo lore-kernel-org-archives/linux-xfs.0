@@ -1,40 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from buxtehude.debian.org ([209.87.16.39]:43110 "EHLO
-        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752532AbeB0K5H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 05:57:07 -0500
-Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
+Received: from userp2120.oracle.com ([156.151.31.85]:38672 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751840AbeBXEk0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Feb 2018 23:40:26 -0500
+Date: Fri, 23 Feb 2018 20:40:18 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_scrub: make interpreter explicit to python3
+Message-ID: <20180224044018.GA19312@magnolia>
+References: <20180224021512.23819-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-From: "Debian Bug Tracking System" <owner@bugs.debian.org>
-Subject: Processed: notfixed 874209 in 4.15, fixed 874209 in 4.15.0-1
-Message-ID: <handler.s.C.151972879114373.transcript@bugs.debian.org>
-References: <1519728786-4028-bts-jrtc27@debian.org>
-Date: Tue, 27 Feb 2018 10:57:04 +0000
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180224021512.23819-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: James Clarke <jrtc27@debian.org>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
 
-Processing commands for control@bugs.debian.org:
+On Fri, Feb 23, 2018 at 06:15:12PM -0800, Luis R. Rodriguez wrote:
+> Using #!/usr/bin/env makes some package dependency tools
+> such as rpm complain given that it cannot verify package
+> dependencies. Making it explicit resolves this lint rant.
+> 
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 
-> notfixed 874209 4.15
-Bug #874209 {Done: Anatoly Pugachev <matorola@gmail.com>} [xfsprogs] xfsprogs: please bump xfsprogs version in experimental and/or unstable from 4.9 to 4.12
-There is no source info for the package 'xfsprogs' at version '4.15' with architecture ''
-Unable to make a source version for version '4.15'
-No longer marked as fixed in versions xfsprogs/4.15.
-> fixed 874209 4.15.0-1
-Bug #874209 {Done: Anatoly Pugachev <matorola@gmail.com>} [xfsprogs] xfsprogs: please bump xfsprogs version in experimental and/or unstable from 4.9 to 4.12
-There is no source info for the package 'xfsprogs' at version '4.15.0-1' with architecture ''
-Unable to make a source version for version '4.15.0-1'
-Marked as fixed in versions 4.15.0-1.
-> thanks
-Stopping processing here.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Please contact me if you need assistance.
--- 
-874209: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=874209
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
+--D
+
+> ---
+>  scrub/xfs_scrub_all.in | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+> index fff05da3ea7a..80f07d5c8b02 100644
+> --- a/scrub/xfs_scrub_all.in
+> +++ b/scrub/xfs_scrub_all.in
+> @@ -1,4 +1,4 @@
+> -#!/usr/bin/env python3
+> +#!/usr/bin/python3
+>  
+>  # Run online scrubbers in parallel, but avoid thrashing.
+>  #
+> -- 
+> 2.16.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
