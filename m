@@ -1,145 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41342 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751455AbeB0A65 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 19:58:57 -0500
-Date: Mon, 26 Feb 2018 16:58:51 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Reflink (cow) copy of busy files
-Message-ID: <20180227005851.GI19312@magnolia>
-References: <20180225024727.GD30854@dastard>
- <25ebcdb42650430d83d283435053efed@assyoma.it>
- <20180225211309.GF30854@dastard>
- <d105d0000652be75774cc1f5f23eae68@assyoma.it>
- <20180226002533.GG30854@dastard>
- <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
- <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
- <73ef828837683073feb1c49e3405dd6a@assyoma.it>
- <20180226172601.GC19312@magnolia>
- <20180227003348.GH30854@dastard>
+Received: from mga09.intel.com ([134.134.136.24]:58895 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752768AbeBXAwd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Feb 2018 19:52:33 -0500
+Subject: [PATCH v3 3/6] xfs, dax: introduce IS_FSDAX()
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 23 Feb 2018 16:43:27 -0800
+Message-ID: <151943300713.29249.545330864711927648.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <151943298533.29249.14597996053028346159.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151943298533.29249.14597996053028346159.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180227003348.GH30854@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Gionatan Danti <g.danti@assyoma.it>, Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-nvdimm@lists.01.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, kbuild test robot <fengguang.wu@intel.com>
 
-On Tue, Feb 27, 2018 at 11:33:48AM +1100, Dave Chinner wrote:
-> On Mon, Feb 26, 2018 at 09:26:01AM -0800, Darrick J. Wong wrote:
-> > On Mon, Feb 26, 2018 at 09:26:14AM +0100, Gionatan Danti wrote:
-> > > Hi Amir,
-> > > 
-> > > Il 26-02-2018 08:58 Amir Goldstein ha scritto:
-> > > >
-> > > >Gionatan,
-> > > >
-> > > >First of all, the answer to your question is "just" faster copy.
-> > > >reflinkning a file is much faster than copy, but it is not O(1).
-> > > >I believe cp --reflink can result in cloning part of the file if the
-> > > >system
-> > > >crashes mid operation, so in any case, the operation is not *atomic*
-> > > >in that sense.
-> > > >
-> > > >But your questions about quiescence the filesystem and your question
-> > > >about the *atomic* nature of the clone operation are two very different
-> > > >questions.
-> > > 
-> > > can this result on out-of-order writes from the cloned file's point of view?
-> > > I mean:
-> > > - take a 10-extents file;
-> > > - a vm/db/whatever is writing to the file;
-> > > - a cp --reflink is executed;
-> > > - extents are cloned one-by-one, with extents 1-4 alredy cloned, 5 is in
-> > > progress;
-> > > - the vm/db writes to extent n.1 - this write will *not* be present on the
-> > > cloned file;
-> > > - application writes to extent n.6 which will be cloned shortly;
-> > > - the cloned file ends with the later write to extent n.6 but not the
-> > > previous on extent n.1;
-> > > - bad things happen!
-> > > 
-> > > If the above is true, than cp --reflink can't be used even for
-> > > relaxed-consistency backup/clones.
-> > > 
-> > > >What you seem to *think* xfs reflink does, it does not actually do.
-> > > >xfs reflink does NOT reflink the file in-memory data.
-> > > >xfs reflink "only" reflinks the file on-disk data.
-> > > >Right now, if you write a large file without fsync and clone it, you
-> > > >might as well get a clone of unallocated or partly fallocated file with
-> > > >zero or stale data.
-> > > 
-> > > Oh, I absolutely do not expect for reflink/clone to works on in-memory data.
-> > > I *surely* expect for dirty, not commited data to be lost: this is the very
-> > > reason I wrote about crash-consistent backup.
-> > > 
-> > > In short: is cloning/reflink the same as "pulling the plug" for the cloned
-> > > file? I mean:
-> > > - a successfull clone (so, a non-interruped/crashed one) is akin to an
-> > > atomic process for the cloned file;
-> > > - async writes/dirty data are lost;
-> > > - fsynced writes are preserved;
-> > > - writes are not reordered/commited out of order.
-> > > 
-> > > Maybe the entire discussion is skewed by the fact that, in some cases, I am
-> > > willing to relax my consistency model to include a crash-consistent backup
-> > > option. Fact is, in the virtualization world there are many backup
-> > > utilities/applications which *use* this model, and I wondered if a cp
-> > > --reflink would give similar results without the hassle.
-> > > 
-> > > Maybe the entire crash-vs-application consistency is out of place in a
-> > > filesystem mailing list, where you (rightfully!!!) strive for
-> > > perfect/maximum data consistency (and I *really* appreciate that). Hoewever,
-> > > given the recent reflinking works on XFS, I wonder if I can put this to
-> > > "good use" when it is considered stable.
-> > 
-> > The way reflink is supposed to work wrt consistency is:
-> > 
-> > 1. lock out all new io/fallocate activity on both inodes (iolock/mmaplock)
-> > 2. wait for all directio to complete
-> > 3. fsync both files (write all the dirty pagecache to disk)
-> 
-> My point is that vfs_clone_file_range is not running fsync(2)i
-> operations.
-> 
-> It's a fdatawrite_and_wait() call, which submits dirty data to disk
-> and waits for it, but does *not flush volatile storage caches*.
-> IOWs, it's not a data integrity operation.
-> 
-> Hence while the reflink now has "data on disk" and can clone the
-> extents, Neither the data nor the extents being cloned are stable
-> and won't be until an fsync operation is performed on either the
-> reflink source or destination file....
-> 
-> > 4. lock both inodes (ilock)
-> > 5. clone each extent atomically
-> > 6. unlock ilock
-> > 7. unlock iolock/mmaplock
-> > 
-> > So at least in theory the cloned file will match whatever the host saw
-> > on disk and page cache at the time the reflink call was initiated.
-> > I say 'in theory' because there could be bugs.
-> 
-> Still no cache flushes. Hence even after the clone has run,
-> you can still lose the data (and extents!) from the host file....
+Given that S_DAX is non-zero in the FS_DAX=n + DEV_DAX=y case, another
+mechanism besides the plain IS_DAX() check to compile out dead
+filesystem-dax code paths. Without IS_FSDAX() xfs will fail at link time
+with:
 
-TBH I was assuming that the host doesn't go down in these scenarios, so
-we were only concerned about getting the guest to flush everything it
-had.  But Dave is right, if you need the host to maintain data integrity
-too, then you need to fsync both the src and dest fds too.
+    ERROR: "dax_finish_sync_fault" [fs/xfs/xfs.ko] undefined!
+    ERROR: "dax_iomap_fault" [fs/xfs/xfs.ko] undefined!
+    ERROR: "dax_iomap_rw" [fs/xfs/xfs.ko] undefined!
 
---D
+This compile failure was previously hidden by the fact that S_DAX was
+erroneously defined to '0' in the FS_DAX=n + DEV_DAX=y case.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Cc: <stable@vger.kernel.org>
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/xfs/xfs_file.c    |   14 +++++++-------
+ fs/xfs/xfs_ioctl.c   |    4 ++--
+ fs/xfs/xfs_iomap.c   |    6 +++---
+ fs/xfs/xfs_reflink.c |    2 +-
+ include/linux/fs.h   |    2 ++
+ 5 files changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 9ea08326f876..46a098b90fd0 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -288,7 +288,7 @@ xfs_file_read_iter(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	if (IS_DAX(inode))
++	if (IS_FSDAX(inode))
+ 		ret = xfs_file_dax_read(iocb, to);
+ 	else if (iocb->ki_flags & IOCB_DIRECT)
+ 		ret = xfs_file_dio_aio_read(iocb, to);
+@@ -726,7 +726,7 @@ xfs_file_write_iter(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+-	if (IS_DAX(inode))
++	if (IS_FSDAX(inode))
+ 		ret = xfs_file_dax_write(iocb, from);
+ 	else if (iocb->ki_flags & IOCB_DIRECT) {
+ 		/*
+@@ -1045,7 +1045,7 @@ __xfs_filemap_fault(
+ 	}
+ 
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	if (IS_DAX(inode)) {
++	if (IS_FSDAX(inode)) {
+ 		pfn_t pfn;
+ 
+ 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL, &xfs_iomap_ops);
+@@ -1070,7 +1070,7 @@ xfs_filemap_fault(
+ {
+ 	/* DAX can shortcut the normal fault path on write faults! */
+ 	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
+-			IS_DAX(file_inode(vmf->vma->vm_file)) &&
++			IS_FSDAX(file_inode(vmf->vma->vm_file)) &&
+ 			(vmf->flags & FAULT_FLAG_WRITE));
+ }
+ 
+@@ -1079,7 +1079,7 @@ xfs_filemap_huge_fault(
+ 	struct vm_fault		*vmf,
+ 	enum page_entry_size	pe_size)
+ {
+-	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
++	if (!IS_FSDAX(file_inode(vmf->vma->vm_file)))
+ 		return VM_FAULT_FALLBACK;
+ 
+ 	/* DAX can shortcut the normal fault path on write faults! */
+@@ -1124,12 +1124,12 @@ xfs_file_mmap(
+ 	 * We don't support synchronous mappings for non-DAX files. At least
+ 	 * until someone comes with a sensible use case.
+ 	 */
+-	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
++	if (!IS_FSDAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
+ 		return -EOPNOTSUPP;
+ 
+ 	file_accessed(filp);
+ 	vma->vm_ops = &xfs_file_vm_ops;
+-	if (IS_DAX(file_inode(filp)))
++	if (IS_FSDAX(file_inode(filp)))
+ 		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89fb1eb80aae..234279ff66ce 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1108,9 +1108,9 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	}
+ 
+ 	/* If the DAX state is not changing, we have nothing to do here. */
+-	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
++	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_FSDAX(inode))
+ 		return 0;
+-	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
++	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_FSDAX(inode))
+ 		return 0;
+ 
+ 	/* lock, flush and invalidate mapping in preparation for flag change */
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 66e1edbfb2b2..cf794d429aec 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -241,7 +241,7 @@ xfs_iomap_write_direct(
+ 	 * the reserve block pool for bmbt block allocation if there is no space
+ 	 * left but we need to do unwritten extent conversion.
+ 	 */
+-	if (IS_DAX(VFS_I(ip))) {
++	if (IS_FSDAX(VFS_I(ip))) {
+ 		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
+ 		if (imap->br_state == XFS_EXT_UNWRITTEN) {
+ 			tflags |= XFS_TRANS_RESERVE;
+@@ -952,7 +952,7 @@ static inline bool imap_needs_alloc(struct inode *inode,
+ 	return !nimaps ||
+ 		imap->br_startblock == HOLESTARTBLOCK ||
+ 		imap->br_startblock == DELAYSTARTBLOCK ||
+-		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
++		(IS_FSDAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
+ }
+ 
+ static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
+@@ -988,7 +988,7 @@ xfs_file_iomap_begin(
+ 		return -EIO;
+ 
+ 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
+-			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
++			!IS_FSDAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		/* Reserve delalloc blocks for regular writeback. */
+ 		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
+ 	}
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 270246943a06..a126e00e05e3 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1351,7 +1351,7 @@ xfs_reflink_remap_range(
+ 		goto out_unlock;
+ 
+ 	/* Don't share DAX file data for now. */
+-	if (IS_DAX(inode_in) || IS_DAX(inode_out))
++	if (IS_FSDAX(inode_in) || IS_FSDAX(inode_out))
+ 		goto out_unlock;
+ 
+ 	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 79c413985305..a4310a95011b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1909,6 +1909,8 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
+ #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
+ 				 (inode)->i_rdev == WHITEOUT_DEV)
+ 
++#define IS_FSDAX(inode) (IS_ENABLED(CONFIG_FS_DAX) && IS_DAX(inode))
++
+ static inline bool HAS_UNMAPPED_ID(struct inode *inode)
+ {
+ 	return !uid_valid(inode->i_uid) || !gid_valid(inode->i_gid);
+
