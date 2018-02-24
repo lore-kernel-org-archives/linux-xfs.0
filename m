@@ -1,91 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39386 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751569AbeBZVbI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 16:31:08 -0500
-Date: Mon, 26 Feb 2018 13:31:02 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Reflink (cow) copy of busy files
-Message-ID: <20180226213102.GD19312@magnolia>
-References: <20180225024727.GD30854@dastard>
- <25ebcdb42650430d83d283435053efed@assyoma.it>
- <20180225211309.GF30854@dastard>
- <d105d0000652be75774cc1f5f23eae68@assyoma.it>
- <20180226002533.GG30854@dastard>
- <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
- <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
- <73ef828837683073feb1c49e3405dd6a@assyoma.it>
- <20180226172601.GC19312@magnolia>
- <2f48d103c0a6eff6c0a1136057e828b6@assyoma.it>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:31187 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751399AbeBXWEb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Feb 2018 17:04:31 -0500
+Date: Sun, 25 Feb 2018 09:04:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
+Message-ID: <20180224220428.GB30854@dastard>
+References: <5A914B45.8080200@xtaotech.com>
+ <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2f48d103c0a6eff6c0a1136057e828b6@assyoma.it>
+In-Reply-To: <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Yang Joseph <joseph.yang@xtaotech.com>, sandeen@redhat.com, nathans@debian.org, linux-xfs@vger.kernel.org
 
-On Mon, Feb 26, 2018 at 10:23:45PM +0100, Gionatan Danti wrote:
-> Il 26-02-2018 18:26 Darrick J. Wong ha scritto:
-> >The way reflink is supposed to work wrt consistency is:
-> >
-> >1. lock out all new io/fallocate activity on both inodes (iolock/mmaplock)
-> >2. wait for all directio to complete
-> >3. fsync both files (write all the dirty pagecache to disk)
-> >4. lock both inodes (ilock)
-> >5. clone each extent atomically
-> >6. unlock ilock
-> >7. unlock iolock/mmaplock
-> >
-> >So at least in theory the cloned file will match whatever the host saw
-> >on disk and page cache at the time the reflink call was initiated.
-> >I say 'in theory' because there could be bugs.
-> 
-> Great! CoW will be a great addition for XFS when it will be considered
-> stable.
-> 
-> >Whatever dirty state is in the guest VM stays in that VM, which means
-> >that if you only cp --reflink on the host, the clone you get will
-> >reflect the virtual disk state as if you'd kill -9'd the VM, cloned the
-> >VM disk, and restarted the VM.  Upon restart the log recovers whatever
-> >metadata made it out of the VM.
-> 
-> Sure, it is what I means for "crash-consistent".
-> 
-> >However, if you tell the guest to freeze the fs before cloning (as Dave
-> >suggested earlier) the guest will flush all its state to the upper level
-> >(the host) and the host will push all that out to disk before cloning.
-> >The snapshot you create should be cleaner because you're effectively
-> >prepaying the recovery costs by flushing everything before taking the
-> >snapshot.
-> 
-> True, and this is "application-level consistency" (which requires a guest
-> agent and possibly even an application-specific agent)
+On Sat, Feb 24, 2018 at 11:56:44AM -0600, Eric Sandeen wrote:
+> On 2/24/18 5:23 AM, Yang Joseph wrote:
+> > hello,
+> > 
+> > Before the repair process, xfs_repair will check if user specified device already
+> > has a writable mountpoint. And it will stat all the mountpoints of the system. If there
+> > is a dead mountpoint, this checking will be blocked and xfs_repair will enter 'D' state.
 
-I believe qemu-ga takes care of guest fs freeze inside the guest,
-and you can invoke it from the host via 'virsh domfsfreeze' or the
---quiesce argument to snapshot-create... but you ought to confirm that
-for yourself.
+So why is the mount point dead?
 
---D
+That kinda means that the filesystem is still mounted, but something
+has hung somewhere and the filesystem may still have active
+references to the underlying device and be doing stuff that is
+modifying the filesystem....
 
-> >Also note that if the host goes down before returning from the syscall,
-> >the log will continue on with whichever extent was being cloned at the
-> >time in order to preserve metadata integrity, but the destination file
-> >will reflect a partial copy.
-> 
-> Thanks for pointing that, and for your extremely clear explanation!
-> 
-> 
-> -- 
-> Danti Gionatan
-> Supporto Tecnico
-> Assyoma S.r.l. - www.assyoma.it
-> email: g.danti@assyoma.it - info@assyoma.it
-> GPG public key ID: FF5F32A8
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And if the device is still busy, then you aren't going to be able to
+mount the repaired device, anyway, because the block device is still
+busy...
+
+> That sounds like a bug worth fixing, but I am much
+> less excited about adding options which could do serious damage
+> to a filesystem.
+
+TO me it sounds like something that should be fixed by a reboot, not
+by adding dangerous options to xfs_repair...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
