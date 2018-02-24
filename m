@@ -1,48 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11762 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751464AbeBXWH7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Feb 2018 17:07:59 -0500
-Date: Sun, 25 Feb 2018 09:07:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Reflink (cow) copy of busy files
-Message-ID: <20180224220757.GC30854@dastard>
-References: <9e69fcd01e1c02ea53e0e1ac66d60d24@assyoma.it>
+Received: from sandeen.net ([63.231.237.45]:58298 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751357AbeBXR4q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 24 Feb 2018 12:56:46 -0500
+Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
+References: <5A914B45.8080200@xtaotech.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
+Date: Sat, 24 Feb 2018 11:56:44 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9e69fcd01e1c02ea53e0e1ac66d60d24@assyoma.it>
+In-Reply-To: <5A914B45.8080200@xtaotech.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
+To: Yang Joseph <joseph.yang@xtaotech.com>, sandeen@redhat.com, nathans@debian.org
 Cc: linux-xfs@vger.kernel.org
 
-On Sat, Feb 24, 2018 at 07:20:48PM +0100, Gionatan Danti wrote:
-> Hi all,
-> I have a question on how CoW/reflink works when used on busy files,
-> as vm image files, databases, ecc.
+On 2/24/18 5:23 AM, Yang Joseph wrote:
+> hello,
+> 
+> Before the repair process, xfs_repair will check if user specified device already
+> has a writable mountpoint. And it will stat all the mountpoints of the system. If there
+> is a dead mountpoint, this checking will be blocked and xfs_repair will enter 'D' state.
+> 
+> So, if user can make sure there is no writable mountpoint, xfs_repair can skip
+> this checking. This PR add a new option '-F' to do this job.
+> 
+> Your suggestions are appreciated!
 
-Define "busy file", please.
+For starters, this patch seems whitespace mangled and does not apply for me.
 
-> In short: can reflink-copy be used to create a crash-consistent
-> snapshot of, say, a busy vm disk file?
+However, repairing a filesystem that is actually mounted read-write
+could cause serious damage.  Giving the admin tools to do this carries
+significant risk; we already call it "dangerous" to repair even an
+ro-mounted filesystem.
 
-If the file is being actively written, then the clone will not be
-consistent.
+Do you have a testcase to produce a "dead" mountpoint which causes xfs_repair
+to go into "D" state?  Where was xfs_repair stuck?
 
-> Or the db/vm/whatever should
-> be quiesced before taking the copy (ie: similarly to how lvm call
-> fsfreeze during the snapshot)?
+That sounds like a bug worth fixing, but I am much
+less excited about adding options which could do serious damage
+to a filesystem.
 
-Yes, it's just like any other snapshot process - you have to quiesce
-everything that is writing to the file before cloning it. i.e. the
-data in the file needs to be in a stable, consistent, unchanging
-state if you want the clone to contain consistent data...
+Thanks,
+-Eric
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
