@@ -1,109 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f172.google.com ([209.85.128.172]:42288 "EHLO
-        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751847AbeBYRrN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Feb 2018 12:47:13 -0500
-Received: by mail-wr0-f172.google.com with SMTP id k9so18883904wre.9
-        for <linux-xfs@vger.kernel.org>; Sun, 25 Feb 2018 09:47:12 -0800 (PST)
-Subject: Re: xfs_buf_lock vs aio
-References: <20180208221153.GF20266@dastard>
- <30274e7a-4029-73b8-0d8b-cdfda450e3bc@scylladb.com>
- <20180209231015.GI20266@dastard>
- <697bf891-e7c4-4d60-e2ce-f1ba6935b38b@scylladb.com>
- <20180213051850.GE6778@dastard>
- <f8b3b7a4-eba4-d5ab-1748-a8382a2a8fd6@scylladb.com>
- <20180214235616.GM7000@dastard>
- <1f90f49b-e11d-3140-f73b-5834e52b5f8a@scylladb.com>
- <20180215213030.GO7000@dastard>
- <946349de-471f-f766-47d8-f32959990cc6@scylladb.com>
- <20180219024055.GW7000@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <ea00b0d5-3d29-d8a7-13f9-83e6a4404192@scylladb.com>
-Date: Sun, 25 Feb 2018 19:47:09 +0200
+Received: from userp2120.oracle.com ([156.151.31.85]:60978 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751838AbeBYSJ0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Feb 2018 13:09:26 -0500
+Date: Sun, 25 Feb 2018 10:09:16 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix potential memory leak in mount option parsing
+Message-ID: <20180225180916.GB19312@magnolia>
+References: <1519468406-67354-1-git-send-email-cgxu519@icloud.com>
+ <5d92aa93-cec4-2495-70fa-61d082e1cb6b@sandeen.net>
+ <326CF29E-FC88-493B-B16E-7EA318169E9A@icloud.com>
 MIME-Version: 1.0
-In-Reply-To: <20180219024055.GW7000@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <326CF29E-FC88-493B-B16E-7EA318169E9A@icloud.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Chengguang Xu <cgxu519@icloud.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-Sorry for the late reply, I was on vacation.
+On Sun, Feb 25, 2018 at 12:11:23PM +0800, Chengguang Xu wrote:
+> > 
+> > 在 2018年2月25日，上午1:58，Eric Sandeen <sandeen@sandeen.net> 写道：
+> > 
+> > On 2/24/18 4:33 AM, Chengguang Xu wrote:
+> >> When specifying string type mount option (e.g., logdev)
+> >> several times in a mount, current option parsing may
+> >> cause memory leak. Hence, call kfree for previous one
+> >> in this case.
+> >> 
+> >> Signed-off-by: Chengguang Xu <cgxu519@icloud.com>
+> > 
+> > IMHO multiple specifications of logdev or rtdev should not
+> > be allowed; only one may be chosen, and specifying twice
+> > should probably be considered and administrative error.
+> > 
+> > I'd rather see something that fails and cleans up properly
+> > if either option is respecified.
+> 
+> Hi Eric,
+> 
+> Thanks for quick reply. I think your suggestion makes sense,
+> but considering of the consistency with other options, 
+> we should check multiple specifications for all options. 
+> 
+> So I think this patch is the cheapest way to fix the issue.
+> What do you think?
 
+I think the all the mount options should be cleaned up to allow one
+specification only.
 
-On 02/19/2018 04:40 AM, Dave Chinner wrote:
-> On Fri, Feb 16, 2018 at 10:07:55AM +0200, Avi Kivity wrote:
->> On 02/15/2018 11:30 PM, Dave Chinner wrote:
->>> On Thu, Feb 15, 2018 at 11:36:54AM +0200, Avi Kivity wrote:
->>>> On 02/15/2018 01:56 AM, Dave Chinner wrote:
->>>> A little bird whispered in my ear to try XFS_IOC_OPEN_BY_HANDLE to
->>>> avoid the the time update lock, so we'll be trying that next, to
->>>> emulate lazytime.
->>> Biggest problem with that is it requires root permissions. It's not
->>> a solution that can be deployed in practice, so I haven't bothered
->>> suggesting it as something to try.
->>>
->>> If you want to try lazytime, an easier test might be to rebuild the
->>> kernel with this change below to support the lazytime mount option
->>> and not log the timestamp updates. This is essentially the mechanism
->>> that I'll use for this, but it will need to grow more stuff to have
->>> the correct lazytime semantics...
->>>
->> We tried open by handle to see if lazytime would provide relief, but
->> it looks like it just pushes the lock acquisition to another place:
-> Whack-a-mole.
->
-> This is the whole problem with driving the "nowait" semantics into
-> the filesystem implementations - every time we fix one blocking
-> point, we find a deeper one, and we have to drive the "nowait"
-> semantics deeper into code that should not have to care about IO
-> level blocking semantics. And by doing it in a "slap-a-bandaid on
-> it" process, we end up with spagetti code that is fragile and
-> unmaintainable...
+--D
 
-I agree it's not pretty. It would be worse if the kernel did not have 
-strict error handling hygiene that allows you to add those EAGAIN 
-returns without too much fear.
-
->
->> However, that function can EAGAIN (it does for IOLOCK) so maybe we
->> can change xfs_ilock to xfs_ilock_nowait and teach it about not
->> waiting for ILOCK too.
-> If only it were that simple. Why, exactly, does the direct IO write
-> code require the ILOCK exclusive? Indeed, if it goes to allocate
-> blocks, we do this:
->
->                  /*
->                   * xfs_iomap_write_direct() expects the shared lock. It
->                   * is unlocked on return.
->                   */
->                  if (lockmode == XFS_ILOCK_EXCL)
->                          xfs_ilock_demote(ip, lockmode);
->
-> We demote the lock to shared before we call into the allocation
-> code. And for pure direct IO writes, all we care about is ensuring
-> the extent map does not change while we do the lookup and check.
-> That only requires a shared lock.
->
-> So now I've got to go work out why need_excl_ilock() says we need
-> an exclusive ilock for direct IO writes when it looks pretty clear
-> to me that we don't.
->
-> But that's only half the problem. The other problem is that even if
-> we take it shared, we're still going to block on IO completion
-> taking the ILOCK exclusive to do things like unwritten extent
-> completion. So we still need to hack about with "trylock" operations
-> into functions into various functions (xfs_ilock_data_map_shared()
-> for one).
-
-I'll try your patch and report, thanks.
-
-> What a mess....
->
-> Cheers,
->
-> Dave.
-
+> 
+> 
+> Thanks,
+> Chengguang.--
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
