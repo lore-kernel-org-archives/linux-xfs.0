@@ -1,75 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:32552 "EHLO mga04.intel.com"
+Received: from sandeen.net ([63.231.237.45]:38116 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751591AbeB0E3L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 23:29:11 -0500
-Subject: [PATCH v4 02/12] dax: introduce IS_DEVDAX() and IS_FSDAX()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 26 Feb 2018 20:20:05 -0800
-Message-ID: <151970520551.26729.12707678649514382892.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <151970519370.26729.1011551137381425076.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151970519370.26729.1011551137381425076.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S1751557AbeBYVPR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 25 Feb 2018 16:15:17 -0500
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH] xfs: fix potential memory leak in mount option parsing
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20180225210524.GE30854@dastard>
+Date: Sun, 25 Feb 2018 15:15:15 -0600
+Content-Transfer-Encoding: 8BIT
+Message-Id: <A8DAD77E-D870-4E88-A2D0-ACCAB0DC7348@sandeen.net>
+References: <1519468406-67354-1-git-send-email-cgxu519@icloud.com> <5d92aa93-cec4-2495-70fa-61d082e1cb6b@sandeen.net> <326CF29E-FC88-493B-B16E-7EA318169E9A@icloud.com> <20180225180916.GB19312@magnolia> <fe6ac2e6-bac0-7f8f-4a24-f72439365848@sandeen.net> <20180225210524.GE30854@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Theodore Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, "supporter:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, linux-mm@kvack.org, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Chengguang Xu <cgxu519@icloud.com>, linux-xfs@vger.kernel.org
 
-The current IS_DAX() helper that checks the S_DAX inode flag is
-ambiguous, and currently has the broken assumption that the S_DAX flag
-is only non-zero in the CONFIG_FS_DAX=y case. In preparation for
-defining S_DAX to non-zero in the  CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y
-case, introduce two explicit helpers to replace IS_DAX().
 
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Andreas Dilger <adilger.kernel@dilger.ca>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org (supporter:XFS FILESYSTEM)
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: <stable@vger.kernel.org>
-Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
-Reported-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- include/linux/fs.h |   22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 79c413985305..bd0c46880572 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1909,6 +1909,28 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
- #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
- 				 (inode)->i_rdev == WHITEOUT_DEV)
- 
-+static inline bool IS_DEVDAX(struct inode *inode)
-+{
-+	if (!IS_ENABLED(CONFIG_DEV_DAX))
-+		return false;
-+	if ((inode->i_flags & S_DAX) == 0)
-+		return false;
-+	if (!S_ISCHR(inode->i_mode))
-+		return false;
-+	return true;
-+}
-+
-+static inline bool IS_FSDAX(struct inode *inode)
-+{
-+	if (!IS_ENABLED(CONFIG_FS_DAX))
-+		return false;
-+	if ((inode->i_flags & S_DAX) == 0)
-+		return false;
-+	if (S_ISCHR(inode->i_mode))
-+		return false;
-+	return true;
-+}
-+
- static inline bool HAS_UNMAPPED_ID(struct inode *inode)
- {
- 	return !uid_valid(inode->i_uid) || !gid_valid(inode->i_gid);
+> On Feb 25, 2018, at 3:05 PM, Dave Chinner <david@fromorbit.com> wrote:
+> 
+>> On Sun, Feb 25, 2018 at 12:11:28PM -0600, Eric Sandeen wrote:
+>> 
+>> 
+>>> On 2/25/18 12:09 PM, Darrick J. Wong wrote:
+>>> On Sun, Feb 25, 2018 at 12:11:23PM +0800, Chengguang Xu wrote:
+>>>>> 
+>>>>> 在 2018年2月25日，上午1:58，Eric Sandeen <sandeen@sandeen.net> 写道：
+>>>>> 
+>>>>>> On 2/24/18 4:33 AM, Chengguang Xu wrote:
+>>>>>> When specifying string type mount option (e.g., logdev)
+>>>>>> several times in a mount, current option parsing may
+>>>>>> cause memory leak. Hence, call kfree for previous one
+>>>>>> in this case.
+>>>>>> 
+>>>>>> Signed-off-by: Chengguang Xu <cgxu519@icloud.com>
+>>>>> 
+>>>>> IMHO multiple specifications of logdev or rtdev should not
+>>>>> be allowed; only one may be chosen, and specifying twice
+>>>>> should probably be considered and administrative error.
+>>>>> 
+>>>>> I'd rather see something that fails and cleans up properly
+>>>>> if either option is respecified.
+>>>> 
+>>>> Hi Eric,
+>>>> 
+>>>> Thanks for quick reply. I think your suggestion makes sense,
+>>>> but considering of the consistency with other options, 
+>>>> we should check multiple specifications for all options. 
+>>>> 
+>>>> So I think this patch is the cheapest way to fix the issue.
+>>>> What do you think?
+>>> 
+>>> I think the all the mount options should be cleaned up to allow one
+>>> specification only.
+>> 
+>> Yeah, I think so too, though perhaps it's fair to have one patch
+>> to fix the leak as it stands today, and another to clean up the
+>> respecification problem.
+> 
+> Won't that break existing userspace configs? Haven't we had cases in
+> the past where mount did something whacky and passed dulicate
+> options to the kernel through no fault of the user?
+> 
+Hmm perhaps on remount yes... worth testing / checking.
+
+Eric
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
