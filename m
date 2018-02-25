@@ -1,164 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:7240 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751663AbeB0E3n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 23:29:43 -0500
-Subject: [PATCH v4 08/12] xfs, dax: replace IS_DAX() with IS_FSDAX()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 26 Feb 2018 20:20:37 -0800
-Message-ID: <151970523724.26729.2708434307206092584.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <151970519370.26729.1011551137381425076.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151970519370.26729.1011551137381425076.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-wr0-f172.google.com ([209.85.128.172]:42288 "EHLO
+        mail-wr0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751847AbeBYRrN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Feb 2018 12:47:13 -0500
+Received: by mail-wr0-f172.google.com with SMTP id k9so18883904wre.9
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Feb 2018 09:47:12 -0800 (PST)
+Subject: Re: xfs_buf_lock vs aio
+References: <20180208221153.GF20266@dastard>
+ <30274e7a-4029-73b8-0d8b-cdfda450e3bc@scylladb.com>
+ <20180209231015.GI20266@dastard>
+ <697bf891-e7c4-4d60-e2ce-f1ba6935b38b@scylladb.com>
+ <20180213051850.GE6778@dastard>
+ <f8b3b7a4-eba4-d5ab-1748-a8382a2a8fd6@scylladb.com>
+ <20180214235616.GM7000@dastard>
+ <1f90f49b-e11d-3140-f73b-5834e52b5f8a@scylladb.com>
+ <20180215213030.GO7000@dastard>
+ <946349de-471f-f766-47d8-f32959990cc6@scylladb.com>
+ <20180219024055.GW7000@dastard>
+From: Avi Kivity <avi@scylladb.com>
+Message-ID: <ea00b0d5-3d29-d8a7-13f9-83e6a4404192@scylladb.com>
+Date: Sun, 25 Feb 2018 19:47:09 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180219024055.GW7000@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Jan Kara <jack@suse.com>, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
-
-In preparation for fixing the broken definition of S_DAX in the
-CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, convert all IS_DAX() usages to
-use explicit tests for FSDAX since DAX is ambiguous.
-
-Cc: Jan Kara <jack@suse.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: <stable@vger.kernel.org>
-Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/xfs_file.c    |   14 +++++++-------
- fs/xfs/xfs_ioctl.c   |    4 ++--
- fs/xfs/xfs_iomap.c   |    6 +++---
- fs/xfs/xfs_reflink.c |    2 +-
- 4 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9ea08326f876..46a098b90fd0 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -288,7 +288,7 @@ xfs_file_read_iter(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	if (IS_DAX(inode))
-+	if (IS_FSDAX(inode))
- 		ret = xfs_file_dax_read(iocb, to);
- 	else if (iocb->ki_flags & IOCB_DIRECT)
- 		ret = xfs_file_dio_aio_read(iocb, to);
-@@ -726,7 +726,7 @@ xfs_file_write_iter(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
- 		return -EIO;
- 
--	if (IS_DAX(inode))
-+	if (IS_FSDAX(inode))
- 		ret = xfs_file_dax_write(iocb, from);
- 	else if (iocb->ki_flags & IOCB_DIRECT) {
- 		/*
-@@ -1045,7 +1045,7 @@ __xfs_filemap_fault(
- 	}
- 
- 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	if (IS_DAX(inode)) {
-+	if (IS_FSDAX(inode)) {
- 		pfn_t pfn;
- 
- 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL, &xfs_iomap_ops);
-@@ -1070,7 +1070,7 @@ xfs_filemap_fault(
- {
- 	/* DAX can shortcut the normal fault path on write faults! */
- 	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
--			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-+			IS_FSDAX(file_inode(vmf->vma->vm_file)) &&
- 			(vmf->flags & FAULT_FLAG_WRITE));
- }
- 
-@@ -1079,7 +1079,7 @@ xfs_filemap_huge_fault(
- 	struct vm_fault		*vmf,
- 	enum page_entry_size	pe_size)
- {
--	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-+	if (!IS_FSDAX(file_inode(vmf->vma->vm_file)))
- 		return VM_FAULT_FALLBACK;
- 
- 	/* DAX can shortcut the normal fault path on write faults! */
-@@ -1124,12 +1124,12 @@ xfs_file_mmap(
- 	 * We don't support synchronous mappings for non-DAX files. At least
- 	 * until someone comes with a sensible use case.
- 	 */
--	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
-+	if (!IS_FSDAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
- 		return -EOPNOTSUPP;
- 
- 	file_accessed(filp);
- 	vma->vm_ops = &xfs_file_vm_ops;
--	if (IS_DAX(file_inode(filp)))
-+	if (IS_FSDAX(file_inode(filp)))
- 		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89fb1eb80aae..234279ff66ce 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1108,9 +1108,9 @@ xfs_ioctl_setattr_dax_invalidate(
- 	}
- 
- 	/* If the DAX state is not changing, we have nothing to do here. */
--	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
-+	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_FSDAX(inode))
- 		return 0;
--	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
-+	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_FSDAX(inode))
- 		return 0;
- 
- 	/* lock, flush and invalidate mapping in preparation for flag change */
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 66e1edbfb2b2..cf794d429aec 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -241,7 +241,7 @@ xfs_iomap_write_direct(
- 	 * the reserve block pool for bmbt block allocation if there is no space
- 	 * left but we need to do unwritten extent conversion.
- 	 */
--	if (IS_DAX(VFS_I(ip))) {
-+	if (IS_FSDAX(VFS_I(ip))) {
- 		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
- 		if (imap->br_state == XFS_EXT_UNWRITTEN) {
- 			tflags |= XFS_TRANS_RESERVE;
-@@ -952,7 +952,7 @@ static inline bool imap_needs_alloc(struct inode *inode,
- 	return !nimaps ||
- 		imap->br_startblock == HOLESTARTBLOCK ||
- 		imap->br_startblock == DELAYSTARTBLOCK ||
--		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
-+		(IS_FSDAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
- }
- 
- static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
-@@ -988,7 +988,7 @@ xfs_file_iomap_begin(
- 		return -EIO;
- 
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
--			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
-+			!IS_FSDAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		/* Reserve delalloc blocks for regular writeback. */
- 		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
- 	}
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 270246943a06..a126e00e05e3 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1351,7 +1351,7 @@ xfs_reflink_remap_range(
- 		goto out_unlock;
- 
- 	/* Don't share DAX file data for now. */
--	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-+	if (IS_FSDAX(inode_in) || IS_FSDAX(inode_out))
- 		goto out_unlock;
- 
- 	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
+Sorry for the late reply, I was on vacation.
+
+
+On 02/19/2018 04:40 AM, Dave Chinner wrote:
+> On Fri, Feb 16, 2018 at 10:07:55AM +0200, Avi Kivity wrote:
+>> On 02/15/2018 11:30 PM, Dave Chinner wrote:
+>>> On Thu, Feb 15, 2018 at 11:36:54AM +0200, Avi Kivity wrote:
+>>>> On 02/15/2018 01:56 AM, Dave Chinner wrote:
+>>>> A little bird whispered in my ear to try XFS_IOC_OPEN_BY_HANDLE to
+>>>> avoid the the time update lock, so we'll be trying that next, to
+>>>> emulate lazytime.
+>>> Biggest problem with that is it requires root permissions. It's not
+>>> a solution that can be deployed in practice, so I haven't bothered
+>>> suggesting it as something to try.
+>>>
+>>> If you want to try lazytime, an easier test might be to rebuild the
+>>> kernel with this change below to support the lazytime mount option
+>>> and not log the timestamp updates. This is essentially the mechanism
+>>> that I'll use for this, but it will need to grow more stuff to have
+>>> the correct lazytime semantics...
+>>>
+>> We tried open by handle to see if lazytime would provide relief, but
+>> it looks like it just pushes the lock acquisition to another place:
+> Whack-a-mole.
+>
+> This is the whole problem with driving the "nowait" semantics into
+> the filesystem implementations - every time we fix one blocking
+> point, we find a deeper one, and we have to drive the "nowait"
+> semantics deeper into code that should not have to care about IO
+> level blocking semantics. And by doing it in a "slap-a-bandaid on
+> it" process, we end up with spagetti code that is fragile and
+> unmaintainable...
+
+I agree it's not pretty. It would be worse if the kernel did not have 
+strict error handling hygiene that allows you to add those EAGAIN 
+returns without too much fear.
+
+>
+>> However, that function can EAGAIN (it does for IOLOCK) so maybe we
+>> can change xfs_ilock to xfs_ilock_nowait and teach it about not
+>> waiting for ILOCK too.
+> If only it were that simple. Why, exactly, does the direct IO write
+> code require the ILOCK exclusive? Indeed, if it goes to allocate
+> blocks, we do this:
+>
+>                  /*
+>                   * xfs_iomap_write_direct() expects the shared lock. It
+>                   * is unlocked on return.
+>                   */
+>                  if (lockmode == XFS_ILOCK_EXCL)
+>                          xfs_ilock_demote(ip, lockmode);
+>
+> We demote the lock to shared before we call into the allocation
+> code. And for pure direct IO writes, all we care about is ensuring
+> the extent map does not change while we do the lookup and check.
+> That only requires a shared lock.
+>
+> So now I've got to go work out why need_excl_ilock() says we need
+> an exclusive ilock for direct IO writes when it looks pretty clear
+> to me that we don't.
+>
+> But that's only half the problem. The other problem is that even if
+> we take it shared, we're still going to block on IO completion
+> taking the ILOCK exclusive to do things like unwritten extent
+> completion. So we still need to hack about with "trylock" operations
+> into functions into various functions (xfs_ilock_data_map_shared()
+> for one).
+
+I'll try your patch and report, thanks.
+
+> What a mess....
+>
+> Cheers,
+>
+> Dave.
 
