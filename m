@@ -1,66 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45818 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751345AbeBVX6A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 18:58:00 -0500
-Date: Fri, 23 Feb 2018 10:57:58 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] misc: enable retpolines across all xfsprogs utilities
-Message-ID: <20180222235758.GI7000@dastard>
-References: <20180222021625.GA9827@magnolia>
- <20180222150922.GA26282@infradead.org>
- <4d78832f-4148-d0d9-e2f2-ee8e02a44e97@redhat.com>
- <20180222171529.GC9827@magnolia>
- <20180222211024.GA26034@citd.de>
+Received: from mr013msb.fastweb.it ([85.18.95.104]:39992 "EHLO
+        mr013msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751499AbeBZV2j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 16:28:39 -0500
+Subject: Re: Reflink (cow) copy of busy files
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180222211024.GA26034@citd.de>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Mon, 26 Feb 2018 22:28:37 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <CAOQ4uxh5OrWyD9DddC7W9UYPaYP1ON1CzKUB=R+8midTFsa+bg@mail.gmail.com>
+References: <9e69fcd01e1c02ea53e0e1ac66d60d24@assyoma.it>
+ <20180224220757.GC30854@dastard>
+ <711dd96e3c4b3e92d3fb38a01e77dc64@assyoma.it>
+ <20180225024727.GD30854@dastard>
+ <25ebcdb42650430d83d283435053efed@assyoma.it>
+ <20180225211309.GF30854@dastard>
+ <d105d0000652be75774cc1f5f23eae68@assyoma.it>
+ <20180226002533.GG30854@dastard>
+ <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
+ <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
+ <73ef828837683073feb1c49e3405dd6a@assyoma.it>
+ <CAOQ4uxh5OrWyD9DddC7W9UYPaYP1ON1CzKUB=R+8midTFsa+bg@mail.gmail.com>
+Message-ID: <00a65dbb1d14b47fb92409db5e7d1e6e@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthias Schniedermeyer <ms@citd.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, g.danti@assyoma.it
 
-On Thu, Feb 22, 2018 at 10:10:24PM +0100, Matthias Schniedermeyer wrote:
-> On 22.02.2018 09:15, Darrick J. Wong wrote:
-> > They're a smaller target than the kernel, for sure, but the scary part
-> > about spectre is that unprivileged programs running on the same core as
-> > a privileged xfs_repair can then use branch predictor poisoning to cause
-> > problems with the xfs_repair.
-> 
-> Spectre & Meltdown are information disclosure vulnerabilities IOW "Read 
-> Only".
-> The other process CAN NOT interfere with xfs_repair.
+Il 26-02-2018 21:29 Amir Goldstein ha scritto:
+> I was also expecting dirty data to be lost, but according to Darrick 
+> that is
+> not the case for page cache dirty data, although in all likelyhook, 
+> your VM
+> is using direct IO to write to image file.
 
-Yup, that's enough to leak private information. e.g. encryption keys
-stored in extended attributes...
+Yeah, it was better than expected. For some VM I use Qemu/KVM writeback 
+policy rather than "none"/O_DIRECT, so the fact that host-side dirty 
+data will not be lost when reflinking is a pleasant surprise.
 
-> I would speculate that the most it can get, is information about parts 
-> of the filesystem that are inaccsessible to an unprivileged process by 
-> spying on xfs_repair.
-> I don't know how xfs_repair works, especially how xfs_repair handles 
-> storing data in memory. But for xfs_repair to be a good target, it 
-> would have to store relevant data in a deterministic fashion and for 
-> some length of time. At least enough to justify writing an extraction 
-> program for it.
+> I think your use case is interesting and this is definitely the right 
+> place
+> to ask these questions.
 
-Oh, yeah, we've got this whopping great big buffer cache that can
-cache all the metadata it reads from disk in memory while repair
-does it's validation work. It's a pretty big target from that
-perspective. That's made even worse if you consider a large
-filesystem that takes days for xfs_repair to completely check....
+Great ;)
 
-> I would say the 'good old' xfs_repair case isn't really a good target, 
-> but the online-scrubbing-case sure sounds to be a different beast.
 
-Scrubbing is done in the kernel, with metadata cached in kernel
-memory, so it's already protected by whatever kernel mitigations are
-in place.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
