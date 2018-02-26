@@ -1,75 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35604 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:33888 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751448AbeBZRcH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 12:32:07 -0500
-Received: from Liberator-5.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5FAAE325433
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2018 11:31:12 -0600 (CST)
+        id S1751165AbeBZXmQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Feb 2018 18:42:16 -0500
+Subject: Re: [RFC] mkfs config file bikeshed now!
+References: <20180226224224.GE19312@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs libxfs-4.16-sync branch pushed
-Message-ID: <216787d2-6727-f943-9b3b-c815445c6f8f@sandeen.net>
-Date: Mon, 26 Feb 2018 11:32:05 -0600
+Message-ID: <71515062-0ca8-3dbd-88d0-26c9d10b2c9d@sandeen.net>
+Date: Mon, 26 Feb 2018 17:42:15 -0600
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="2iTwkitZOspgLpjpVvIEBRKEgZTI1ODsw"
+In-Reply-To: <20180226224224.GE19312@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---2iTwkitZOspgLpjpVvIEBRKEgZTI1ODsw
-Content-Type: multipart/mixed; boundary="SADR8aTYC6uk4O909iBKZ09PJB7S2BOia";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <216787d2-6727-f943-9b3b-c815445c6f8f@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs libxfs-4.16-sync branch pushed
 
---SADR8aTYC6uk4O909iBKZ09PJB7S2BOia
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
 
-I've pushed up a preliminary libxfs-4.16-sync branch for xfsprogs to
-pull in all the kernel 4.16 changes.  No detailed changelog here as it's
-just the kernel sync-up.
+On 2/26/18 4:42 PM, Darrick J. Wong wrote:
+> On Thu, Feb 22, 2018 at 05:59:09PM -0800, Darrick J. Wong wrote:
+> 
+>>> Clearly. Its still a nice sensible feature to address any defaults,
+>>> and now that I see chinner/mkfs-refactor is merged I'll go work
+>>> off of that and post patches again soon.
+> 
+> I'll help you start the config file format bikeshedding:
+> 
+> So here at $employer we have to support a bunch of different base system
+> and kernel configurations.  Some of our customers run heterogeneous
+> environments where they have to be able to go back and forth between
+> recent and old systems (stock OL6.9 <-> OL7 + UEK4) whereas others only
+> care about formatting to whatever runs on the deployed system.  Right
+> now we ship xfsprogs 4.5 with very conservative defaults, but this has
+> become a hassle to keep patching mkfs, to remember which option sets
+> correspond with which config, and to communicate that whole mess to
+> customers.  Shipping multiple xfsprogs packages seems gross.
+> 
+> What we'd prefer to do is ship a single up to date xfsprogs package
+> along with a mkfs config file containing distro-supported filesystem
+> profiles.  As a side note, if there's no config file then we'd use
+> whatever defaults are coded into xfs_mkfs.c.
 
-This is just my first pass at it, the branch will almost certainly
-be rebased before I merge it to for-next, but if anyone spots any
-issues please feel free to let me know.
+I think that is an extremely important note, and the only sane behavior.  :)
+ 
+> For example, say we had a /etc/xfs.conf file shipping with xfsprogs:
 
-Thanks,
+/etc/mkfs.xfs.conf please, this configures mkfs and nothing else, right?
+
+> 
+> [defaults]
+> metadata.crc = false
+> naming.ftype = false
+> 
+> [rhel7]
+> metadata.crc = true
+> 
+> [uek3]
+> naming.ftype = true
+> 
+> [uek4]
+> metadata.crc = true
+> naming.ftype = true
+> metdata.finobt = true
+> 
+> [experimental]
+> metadata.rmapbt = true
+> metadata.reflink = true
+> inode.sparse = true
+> data.agcount = 32
+> 
+> The "defaults" section enables the distro vendor to patch in whatever
+> default config they want to support.  In the example above the distro is
+> not yet ready to support ftype or v5 filesystems everywhere because they
+> want maximum compatibility, even though xfsprogs (by this point in the
+> future) enables them by default.
+
+Do the subsequent sections each independently specify the behavior or do they
+build on the defaults?  I'd prefer the former (do not build on [defaults]),
+I think.
+
+> # mkfs.xfs /dev/sda <-- formats a boring v4 filesystem
+
+IIRC Dave had a patch that emitted what was being used for defaults if
+not the code - also IIRC I removed it but we should put that back
+in with any config file parsing, I think.
+
+"Using defaults from config file [defaults]" or somesuch.
+
+I had also asked whether upstream would ship a config file at all.  I'd suggest
+that we should not, because we wouldn't do anything other than restate
+code defaults, and I'm not interested in keeping that consistent.
+
+(OTOH a mkfs.xfs --config-file-defaults to spit out a code-defaults
+configfile for editing might be neato) ;)
+
 -Eric
-
-
---SADR8aTYC6uk4O909iBKZ09PJB7S2BOia--
-
---2iTwkitZOspgLpjpVvIEBRKEgZTI1ODsw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlqURJYACgkQIK4WkuE9
-3uAmYw//VYBWc+2LDHB/4YJtLB9Bv9ti7+Ct0vZoZeflpJOtnoh5EB5KRxrMXIOG
-lIC8/bV3UKOhI2WdDtlpmlsGKBf5yva3kGdrEUTAay/Sl/E+ExfQcPLQOaOSmHV0
-FXIJiA/h3biwW71gQepmQUXb2dnTP2BkNFvTremtWr9Mgpeor4oXYvTjMrngM75w
-K/mpm4krT6QsDemmDfHw2zWcgFwHDpH+RbfjAulIwFkytP3dbT35+NproKxWN1Jo
-bZvj5rCCAmdfev1HAanh25HyzX9HieBdhT2ScbGVQI/16vbww9pLw/doisdyDenv
-Q3ccopo6gnqJ0jODXcWhcuVmAqG8SA1kCyXhKiczjn1dsdQVSGqrpJIxJCENZ6Vw
-EV82IoE4vM/ADShdHfNM1YnXstvdnN3PoAmuRAkOI76N9GFL68KVjVFxMAC0UcFX
-dwMftxGgGks/8wBFUoCAA0ITadAiLVtXjgoxT1o49b64Wvxr+oc85JOVqHxTGl4i
-39KXn8UJloN6xS6VgcOq5/Y35MaIg1VVkQj0SFV+fGjQASLrsVl0V0AIM/JTgnbg
-vCWEz3+rrPIL4DYjv2WiKffLFjmnTu8qiKxZyIJl2R7UNpe/Q6yf+rIoo8PdmZTe
-jhVvDomf9fAzU8VDuOkuK17Mv7xvam4ZIkB32hd/TGijla9lggc=
-=4opU
------END PGP SIGNATURE-----
-
---2iTwkitZOspgLpjpVvIEBRKEgZTI1ODsw--
