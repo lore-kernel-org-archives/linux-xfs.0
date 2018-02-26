@@ -1,112 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33128 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752157AbeBZMTZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 07:19:25 -0500
-Date: Mon, 26 Feb 2018 07:19:19 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
-Message-ID: <20180226121918.GA50790@bfoster.bfoster>
-References: <5A914B45.8080200@xtaotech.com>
- <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
- <20180224220428.GB30854@dastard>
- <5A9377FB.7000201@xtaotech.com>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:41465 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751732AbeBZPsI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 10:48:08 -0500
+Received: by mail-oi0-f67.google.com with SMTP id g5so4795247oiy.8
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2018 07:48:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5A9377FB.7000201@xtaotech.com>
+In-Reply-To: <20180226100611.sgw2rucvv6yhzn5y@quack2.suse.cz>
+References: <151943298533.29249.14597996053028346159.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <151943300713.29249.545330864711927648.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180226100611.sgw2rucvv6yhzn5y@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 26 Feb 2018 07:48:07 -0800
+Message-ID: <CAPcyv4jDNW=9dNPtmX2oiHhp9S7wr+w7DPONZsx-LnLhcLPesg@mail.gmail.com>
+Subject: Re: [PATCH v3 3/6] xfs, dax: introduce IS_FSDAX()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yang Joseph <joseph.yang@xtaotech.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, nathans@debian.org, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-nvdimm@lists.01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, kbuild test robot <fengguang.wu@intel.com>
 
-On Mon, Feb 26, 2018 at 10:59:07AM +0800, Yang Joseph wrote:
-> In our case, there is a mountpoint of ceph-fuse type and this mountpoint is
-> abnormal.
-> I execute 'xfs_repair -n /dev/nbd4' cmd. Then xfs_repair is blocked in
-> stat()
-> systemcall. '/dev/nbd4' has no relationship with the ceph-fuse mountpoint.
-> 
-> [root@compute5 ~]# ps aux | grep xfs_repair
-> root     16469  0.0  0.0 114744   564 ?        D    10:50   0:00 xfs_repair
-> -n /dev/nbd4
-> 
-> [root@compute5 ~]# cat /proc/16469/stack
-> [<ffffffffa04b953d>] __fuse_request_send+0x13d/0x2c0 [fuse]
-> [<ffffffffa04b96d2>] fuse_request_send+0x12/0x20 [fuse]
-> [<ffffffffa04be67a>] fuse_do_getattr+0x11a/0x2e0 [fuse]
-> [<ffffffffa04bfba5>] fuse_update_attributes+0x75/0x80 [fuse]
-> [<ffffffffa04bfbf3>] fuse_getattr+0x43/0x50 [fuse]
-> [<ffffffff81203976>] vfs_getattr+0x46/0x80
-> [<ffffffff81203aa5>] vfs_fstatat+0x75/0xc0
-> [<ffffffff81203ffe>] SYSC_newstat+0x2e/0x60
-> [<ffffffff812042de>] SyS_newstat+0xe/0x10
-> [<ffffffff81697809>] system_call_fastpath+0x16/0x1b
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> The stat() is from the following code:
-> 
-> // libxfs/linux.c:platform_check_mount()
->   while ((mnt = getmntent(f)) != NULL) {
->     if (stat64(mnt->mnt_fsname, &mst) < 0) <---------<<<< unconditionally
-> stat all mountpoints
->       continue;
-> 
-> xfs_repair have to check all mountpoints of the system to make sure there is
-> no writable mount point of user specified device. If there is one abnormal
-> mountpoint, event it not related to user specified device, xfs_repair will
-> be blocked.
-> 
-> I can make sure there is no writable mountpoint of /dev/nbd4, so xfs_repair
-> don't need to check all mountpoints of the system. This is why I want to add
-> this '-F' option.
-> 
-> Because there are lots of other services on this node, I can't reboot the
-> machine.
-> 
+On Mon, Feb 26, 2018 at 2:06 AM, Jan Kara <jack@suse.cz> wrote:
+> On Fri 23-02-18 16:43:27, Dan Williams wrote:
+>> Given that S_DAX is non-zero in the FS_DAX=n + DEV_DAX=y case, another
+>> mechanism besides the plain IS_DAX() check to compile out dead
+>> filesystem-dax code paths. Without IS_FSDAX() xfs will fail at link time
+>> with:
+>>
+>>     ERROR: "dax_finish_sync_fault" [fs/xfs/xfs.ko] undefined!
+>>     ERROR: "dax_iomap_fault" [fs/xfs/xfs.ko] undefined!
+>>     ERROR: "dax_iomap_rw" [fs/xfs/xfs.ko] undefined!
+>>
+>> This compile failure was previously hidden by the fact that S_DAX was
+>> erroneously defined to '0' in the FS_DAX=n + DEV_DAX=y case.
+>>
+>> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+>> Cc: linux-xfs@vger.kernel.org
+>> Cc: <stable@vger.kernel.org>
+>> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>
+> As much as I appreciate that relying on compiler to optimize out dead
+> branches results in nicer looking code this is an example where it
+> backfires. Also having IS_DAX() and IS_FSDAX() doing almost the same, just
+> not exactly the same, is IMHO a recipe for confusion (e.g. a casual reader
+> could think why does ext4 get away with using IS_DAX while XFS has to use
+> IS_FSDAX?). So I'd just prefer to handle this as is usual in other kernel
+> areas - define empty stubs for all exported functions when CONFIG_FS_DAX is
+> not enabled. That way code can stay without ugly ifdefs and we don't have
+> to bother with IS_FSDAX vs IS_DAX distinction in filesystem code. Thoughts?
+>
 
-Suffice it to say that I agree with the other comments that this
-probably isn't something we want to "fix" in xfs_repair... but given
-your particular circumstances, would a lazy unmount of the borked mount
-allow the repair to proceed?
-
-Brian
-
-> thx
-> 
-> Yang Honggang
-> 
-> On 02/25/2018 06:04 AM, Dave Chinner wrote:
-> > On Sat, Feb 24, 2018 at 11:56:44AM -0600, Eric Sandeen wrote:
-> > > On 2/24/18 5:23 AM, Yang Joseph wrote:
-> > > > hello,
-> > > > 
-> > > > Before the repair process, xfs_repair will check if user specified device already
-> > > > has a writable mountpoint. And it will stat all the mountpoints of the system. If there
-> > > > is a dead mountpoint, this checking will be blocked and xfs_repair will enter 'D' state.
-> > So why is the mount point dead?
-> > 
-> > That kinda means that the filesystem is still mounted, but something
-> > has hung somewhere and the filesystem may still have active
-> > references to the underlying device and be doing stuff that is
-> > modifying the filesystem....
-> > 
-> > And if the device is still busy, then you aren't going to be able to
-> > mount the repaired device, anyway, because the block device is still
-> > busy...
-> > 
-> > > That sounds like a bug worth fixing, but I am much
-> > > less excited about adding options which could do serious damage
-> > > to a filesystem.
-> > TO me it sounds like something that should be fixed by a reboot, not
-> > by adding dangerous options to xfs_repair...
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think my patch is incomplete either way, because the current
+IS_DAX() usages handle more than just compiling out calls to fs/dax.c
+symbols. I.e. even if there were stubs for all fs/dax.c call outs call
+there are still local usages of the helper. Lets kill IS_DAX() and
+only have IS_FSDAX() and IS_DEVDAX() with the S_ISCHR() check. Any
+issues with that?
