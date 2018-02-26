@@ -1,201 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53506 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:33128 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751548AbeBZKGO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 05:06:14 -0500
-Date: Mon, 26 Feb 2018 11:06:11 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 3/6] xfs, dax: introduce IS_FSDAX()
-Message-ID: <20180226100611.sgw2rucvv6yhzn5y@quack2.suse.cz>
-References: <151943298533.29249.14597996053028346159.stgit@dwillia2-desk3.amr.corp.intel.com>
- <151943300713.29249.545330864711927648.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1752157AbeBZMTZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Feb 2018 07:19:25 -0500
+Date: Mon, 26 Feb 2018 07:19:19 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
+Message-ID: <20180226121918.GA50790@bfoster.bfoster>
+References: <5A914B45.8080200@xtaotech.com>
+ <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
+ <20180224220428.GB30854@dastard>
+ <5A9377FB.7000201@xtaotech.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151943300713.29249.545330864711927648.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <5A9377FB.7000201@xtaotech.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, kbuild test robot <fengguang.wu@intel.com>
+To: Yang Joseph <joseph.yang@xtaotech.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, nathans@debian.org, linux-xfs@vger.kernel.org
 
-On Fri 23-02-18 16:43:27, Dan Williams wrote:
-> Given that S_DAX is non-zero in the FS_DAX=n + DEV_DAX=y case, another
-> mechanism besides the plain IS_DAX() check to compile out dead
-> filesystem-dax code paths. Without IS_FSDAX() xfs will fail at link time
-> with:
+On Mon, Feb 26, 2018 at 10:59:07AM +0800, Yang Joseph wrote:
+> In our case, there is a mountpoint of ceph-fuse type and this mountpoint is
+> abnormal.
+> I execute 'xfs_repair -n /dev/nbd4' cmd. Then xfs_repair is blocked in
+> stat()
+> systemcall. '/dev/nbd4' has no relationship with the ceph-fuse mountpoint.
 > 
->     ERROR: "dax_finish_sync_fault" [fs/xfs/xfs.ko] undefined!
->     ERROR: "dax_iomap_fault" [fs/xfs/xfs.ko] undefined!
->     ERROR: "dax_iomap_rw" [fs/xfs/xfs.ko] undefined!
+> [root@compute5 ~]# ps aux | grep xfs_repair
+> root     16469  0.0  0.0 114744   564 ?        D    10:50   0:00 xfs_repair
+> -n /dev/nbd4
 > 
-> This compile failure was previously hidden by the fact that S_DAX was
-> erroneously defined to '0' in the FS_DAX=n + DEV_DAX=y case.
+> [root@compute5 ~]# cat /proc/16469/stack
+> [<ffffffffa04b953d>] __fuse_request_send+0x13d/0x2c0 [fuse]
+> [<ffffffffa04b96d2>] fuse_request_send+0x12/0x20 [fuse]
+> [<ffffffffa04be67a>] fuse_do_getattr+0x11a/0x2e0 [fuse]
+> [<ffffffffa04bfba5>] fuse_update_attributes+0x75/0x80 [fuse]
+> [<ffffffffa04bfbf3>] fuse_getattr+0x43/0x50 [fuse]
+> [<ffffffff81203976>] vfs_getattr+0x46/0x80
+> [<ffffffff81203aa5>] vfs_fstatat+0x75/0xc0
+> [<ffffffff81203ffe>] SYSC_newstat+0x2e/0x60
+> [<ffffffff812042de>] SyS_newstat+0xe/0x10
+> [<ffffffff81697809>] system_call_fastpath+0x16/0x1b
+> [<ffffffffffffffff>] 0xffffffffffffffff
 > 
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: <stable@vger.kernel.org>
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> The stat() is from the following code:
+> 
+> // libxfs/linux.c:platform_check_mount()
+>   while ((mnt = getmntent(f)) != NULL) {
+>     if (stat64(mnt->mnt_fsname, &mst) < 0) <---------<<<< unconditionally
+> stat all mountpoints
+>       continue;
+> 
+> xfs_repair have to check all mountpoints of the system to make sure there is
+> no writable mount point of user specified device. If there is one abnormal
+> mountpoint, event it not related to user specified device, xfs_repair will
+> be blocked.
+> 
+> I can make sure there is no writable mountpoint of /dev/nbd4, so xfs_repair
+> don't need to check all mountpoints of the system. This is why I want to add
+> this '-F' option.
+> 
+> Because there are lots of other services on this node, I can't reboot the
+> machine.
+> 
 
-As much as I appreciate that relying on compiler to optimize out dead
-branches results in nicer looking code this is an example where it
-backfires. Also having IS_DAX() and IS_FSDAX() doing almost the same, just
-not exactly the same, is IMHO a recipe for confusion (e.g. a casual reader
-could think why does ext4 get away with using IS_DAX while XFS has to use
-IS_FSDAX?). So I'd just prefer to handle this as is usual in other kernel
-areas - define empty stubs for all exported functions when CONFIG_FS_DAX is
-not enabled. That way code can stay without ugly ifdefs and we don't have
-to bother with IS_FSDAX vs IS_DAX distinction in filesystem code. Thoughts?
+Suffice it to say that I agree with the other comments that this
+probably isn't something we want to "fix" in xfs_repair... but given
+your particular circumstances, would a lazy unmount of the borked mount
+allow the repair to proceed?
 
-								Honza
+Brian
 
-> ---
->  fs/xfs/xfs_file.c    |   14 +++++++-------
->  fs/xfs/xfs_ioctl.c   |    4 ++--
->  fs/xfs/xfs_iomap.c   |    6 +++---
->  fs/xfs/xfs_reflink.c |    2 +-
->  include/linux/fs.h   |    2 ++
->  5 files changed, 15 insertions(+), 13 deletions(-)
+> thx
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 9ea08326f876..46a098b90fd0 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -288,7 +288,7 @@ xfs_file_read_iter(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> -	if (IS_DAX(inode))
-> +	if (IS_FSDAX(inode))
->  		ret = xfs_file_dax_read(iocb, to);
->  	else if (iocb->ki_flags & IOCB_DIRECT)
->  		ret = xfs_file_dio_aio_read(iocb, to);
-> @@ -726,7 +726,7 @@ xfs_file_write_iter(
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
->  		return -EIO;
->  
-> -	if (IS_DAX(inode))
-> +	if (IS_FSDAX(inode))
->  		ret = xfs_file_dax_write(iocb, from);
->  	else if (iocb->ki_flags & IOCB_DIRECT) {
->  		/*
-> @@ -1045,7 +1045,7 @@ __xfs_filemap_fault(
->  	}
->  
->  	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> -	if (IS_DAX(inode)) {
-> +	if (IS_FSDAX(inode)) {
->  		pfn_t pfn;
->  
->  		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL, &xfs_iomap_ops);
-> @@ -1070,7 +1070,7 @@ xfs_filemap_fault(
->  {
->  	/* DAX can shortcut the normal fault path on write faults! */
->  	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
-> -			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-> +			IS_FSDAX(file_inode(vmf->vma->vm_file)) &&
->  			(vmf->flags & FAULT_FLAG_WRITE));
->  }
->  
-> @@ -1079,7 +1079,7 @@ xfs_filemap_huge_fault(
->  	struct vm_fault		*vmf,
->  	enum page_entry_size	pe_size)
->  {
-> -	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
-> +	if (!IS_FSDAX(file_inode(vmf->vma->vm_file)))
->  		return VM_FAULT_FALLBACK;
->  
->  	/* DAX can shortcut the normal fault path on write faults! */
-> @@ -1124,12 +1124,12 @@ xfs_file_mmap(
->  	 * We don't support synchronous mappings for non-DAX files. At least
->  	 * until someone comes with a sensible use case.
->  	 */
-> -	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
-> +	if (!IS_FSDAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
->  		return -EOPNOTSUPP;
->  
->  	file_accessed(filp);
->  	vma->vm_ops = &xfs_file_vm_ops;
-> -	if (IS_DAX(file_inode(filp)))
-> +	if (IS_FSDAX(file_inode(filp)))
->  		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 89fb1eb80aae..234279ff66ce 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1108,9 +1108,9 @@ xfs_ioctl_setattr_dax_invalidate(
->  	}
->  
->  	/* If the DAX state is not changing, we have nothing to do here. */
-> -	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
-> +	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_FSDAX(inode))
->  		return 0;
-> -	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
-> +	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_FSDAX(inode))
->  		return 0;
->  
->  	/* lock, flush and invalidate mapping in preparation for flag change */
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 66e1edbfb2b2..cf794d429aec 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -241,7 +241,7 @@ xfs_iomap_write_direct(
->  	 * the reserve block pool for bmbt block allocation if there is no space
->  	 * left but we need to do unwritten extent conversion.
->  	 */
-> -	if (IS_DAX(VFS_I(ip))) {
-> +	if (IS_FSDAX(VFS_I(ip))) {
->  		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
->  		if (imap->br_state == XFS_EXT_UNWRITTEN) {
->  			tflags |= XFS_TRANS_RESERVE;
-> @@ -952,7 +952,7 @@ static inline bool imap_needs_alloc(struct inode *inode,
->  	return !nimaps ||
->  		imap->br_startblock == HOLESTARTBLOCK ||
->  		imap->br_startblock == DELAYSTARTBLOCK ||
-> -		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
-> +		(IS_FSDAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
->  }
->  
->  static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
-> @@ -988,7 +988,7 @@ xfs_file_iomap_begin(
->  		return -EIO;
->  
->  	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
-> -			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
-> +			!IS_FSDAX(inode) && !xfs_get_extsz_hint(ip)) {
->  		/* Reserve delalloc blocks for regular writeback. */
->  		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
->  	}
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 270246943a06..a126e00e05e3 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1351,7 +1351,7 @@ xfs_reflink_remap_range(
->  		goto out_unlock;
->  
->  	/* Don't share DAX file data for now. */
-> -	if (IS_DAX(inode_in) || IS_DAX(inode_out))
-> +	if (IS_FSDAX(inode_in) || IS_FSDAX(inode_out))
->  		goto out_unlock;
->  
->  	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 79c413985305..a4310a95011b 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1909,6 +1909,8 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
->  #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
->  				 (inode)->i_rdev == WHITEOUT_DEV)
->  
-> +#define IS_FSDAX(inode) (IS_ENABLED(CONFIG_FS_DAX) && IS_DAX(inode))
-> +
->  static inline bool HAS_UNMAPPED_ID(struct inode *inode)
->  {
->  	return !uid_valid(inode->i_uid) || !gid_valid(inode->i_gid);
+> Yang Honggang
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> On 02/25/2018 06:04 AM, Dave Chinner wrote:
+> > On Sat, Feb 24, 2018 at 11:56:44AM -0600, Eric Sandeen wrote:
+> > > On 2/24/18 5:23 AM, Yang Joseph wrote:
+> > > > hello,
+> > > > 
+> > > > Before the repair process, xfs_repair will check if user specified device already
+> > > > has a writable mountpoint. And it will stat all the mountpoints of the system. If there
+> > > > is a dead mountpoint, this checking will be blocked and xfs_repair will enter 'D' state.
+> > So why is the mount point dead?
+> > 
+> > That kinda means that the filesystem is still mounted, but something
+> > has hung somewhere and the filesystem may still have active
+> > references to the underlying device and be doing stuff that is
+> > modifying the filesystem....
+> > 
+> > And if the device is still busy, then you aren't going to be able to
+> > mount the repaired device, anyway, because the block device is still
+> > busy...
+> > 
+> > > That sounds like a bug worth fixing, but I am much
+> > > less excited about adding options which could do serious damage
+> > > to a filesystem.
+> > TO me it sounds like something that should be fixed by a reboot, not
+> > by adding dangerous options to xfs_repair...
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
