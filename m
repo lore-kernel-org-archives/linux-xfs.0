@@ -1,76 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40097 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751903AbeBZMxQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Feb 2018 07:53:16 -0500
-Date: Mon, 26 Feb 2018 13:53:14 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/2] fs: don't clear I_DIRTY_TIME before calling
- mark_inode_dirty_sync
-Message-ID: <20180226125314.yt2rnti6zt65mjbr@quack2.suse.cz>
-References: <20180222152957.19624-1-hch@lst.de>
- <20180222152957.19624-2-hch@lst.de>
+Received: from mr011msb.fastweb.it ([85.18.95.108]:51880 "EHLO
+        mr011msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750877AbeBZVXv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 16:23:51 -0500
+Subject: Re: Reflink (cow) copy of busy files
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180222152957.19624-2-hch@lst.de>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Mon, 26 Feb 2018 22:23:45 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20180226172601.GC19312@magnolia>
+References: <20180224220757.GC30854@dastard>
+ <711dd96e3c4b3e92d3fb38a01e77dc64@assyoma.it>
+ <20180225024727.GD30854@dastard>
+ <25ebcdb42650430d83d283435053efed@assyoma.it>
+ <20180225211309.GF30854@dastard>
+ <d105d0000652be75774cc1f5f23eae68@assyoma.it>
+ <20180226002533.GG30854@dastard>
+ <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
+ <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
+ <73ef828837683073feb1c49e3405dd6a@assyoma.it>
+ <20180226172601.GC19312@magnolia>
+Message-ID: <2f48d103c0a6eff6c0a1136057e828b6@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, g.danti@assyoma.it
 
-On Thu 22-02-18 07:29:56, Christoph Hellwig wrote:
-> __mark_inode_dirty already takes care of that, and for the XFS lazytime
-> implementation we need to know that ->dirty_inode was called because
-> I_DIRTY_TIME was set.
+Il 26-02-2018 18:26 Darrick J. Wong ha scritto:
+> The way reflink is supposed to work wrt consistency is:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks good. You can add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  fs/inode.c | 1 -
->  fs/sync.c  | 6 +-----
->  2 files changed, 1 insertion(+), 6 deletions(-)
+> 1. lock out all new io/fallocate activity on both inodes 
+> (iolock/mmaplock)
+> 2. wait for all directio to complete
+> 3. fsync both files (write all the dirty pagecache to disk)
+> 4. lock both inodes (ilock)
+> 5. clone each extent atomically
+> 6. unlock ilock
+> 7. unlock iolock/mmaplock
 > 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index ef362364d396..6295f1415761 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -1533,7 +1533,6 @@ void iput(struct inode *inode)
->  	if (atomic_dec_and_lock(&inode->i_count, &inode->i_lock)) {
->  		if (inode->i_nlink && (inode->i_state & I_DIRTY_TIME)) {
->  			atomic_inc(&inode->i_count);
-> -			inode->i_state &= ~I_DIRTY_TIME;
->  			spin_unlock(&inode->i_lock);
->  			trace_writeback_lazytime_iput(inode);
->  			mark_inode_dirty_sync(inode);
-> diff --git a/fs/sync.c b/fs/sync.c
-> index 6e0a2cbaf6de..09f0259724ff 100644
-> --- a/fs/sync.c
-> +++ b/fs/sync.c
-> @@ -187,12 +187,8 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
->  
->  	if (!file->f_op->fsync)
->  		return -EINVAL;
-> -	if (!datasync && (inode->i_state & I_DIRTY_TIME)) {
-> -		spin_lock(&inode->i_lock);
-> -		inode->i_state &= ~I_DIRTY_TIME;
-> -		spin_unlock(&inode->i_lock);
-> +	if (!datasync && (inode->i_state & I_DIRTY_TIME))
->  		mark_inode_dirty_sync(inode);
-> -	}
->  	return file->f_op->fsync(file, start, end, datasync);
->  }
->  EXPORT_SYMBOL(vfs_fsync_range);
-> -- 
-> 2.14.2
-> 
+> So at least in theory the cloned file will match whatever the host saw
+> on disk and page cache at the time the reflink call was initiated.
+> I say 'in theory' because there could be bugs.
+
+Great! CoW will be a great addition for XFS when it will be considered 
+stable.
+
+> Whatever dirty state is in the guest VM stays in that VM, which means
+> that if you only cp --reflink on the host, the clone you get will
+> reflect the virtual disk state as if you'd kill -9'd the VM, cloned the
+> VM disk, and restarted the VM.  Upon restart the log recovers whatever
+> metadata made it out of the VM.
+
+Sure, it is what I means for "crash-consistent".
+
+> However, if you tell the guest to freeze the fs before cloning (as Dave
+> suggested earlier) the guest will flush all its state to the upper 
+> level
+> (the host) and the host will push all that out to disk before cloning.
+> The snapshot you create should be cleaner because you're effectively
+> prepaying the recovery costs by flushing everything before taking the
+> snapshot.
+
+True, and this is "application-level consistency" (which requires a 
+guest agent and possibly even an application-specific agent)
+
+> Also note that if the host goes down before returning from the syscall,
+> the log will continue on with whichever extent was being cloned at the
+> time in order to preserve metadata integrity, but the destination file
+> will reflect a partial copy.
+
+Thanks for pointing that, and for your extremely clear explanation!
+
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
