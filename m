@@ -1,135 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52250 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750941AbeBZX5J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 18:57:09 -0500
-Date: Mon, 26 Feb 2018 15:56:49 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC] mkfs config file bikeshed now!
-Message-ID: <20180226235649.GG19312@magnolia>
-References: <20180226224224.GE19312@magnolia>
- <71515062-0ca8-3dbd-88d0-26c9d10b2c9d@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <71515062-0ca8-3dbd-88d0-26c9d10b2c9d@sandeen.net>
+Received: from prv3-mh.provo.novell.com ([137.65.250.26]:44719 "EHLO
+        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750882AbeBZHbc (ORCPT
+        <rfc822;groupwise-linux-xfs@vger.kernel.org:0:0>);
+        Mon, 26 Feb 2018 02:31:32 -0500
+From: Qu Wenruo <wqu@suse.com>
+Subject: [RFC PATCH] fstests: Check if a fs can survive random (emulated) power loss
+Date: Mon, 26 Feb 2018 15:31:11 +0800
+Message-Id: <20180226073111.3066-1-wqu@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: fstests@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Mon, Feb 26, 2018 at 05:42:15PM -0600, Eric Sandeen wrote:
-> 
-> 
-> On 2/26/18 4:42 PM, Darrick J. Wong wrote:
-> > On Thu, Feb 22, 2018 at 05:59:09PM -0800, Darrick J. Wong wrote:
-> > 
-> >>> Clearly. Its still a nice sensible feature to address any defaults,
-> >>> and now that I see chinner/mkfs-refactor is merged I'll go work
-> >>> off of that and post patches again soon.
-> > 
-> > I'll help you start the config file format bikeshedding:
-> > 
-> > So here at $employer we have to support a bunch of different base system
-> > and kernel configurations.  Some of our customers run heterogeneous
-> > environments where they have to be able to go back and forth between
-> > recent and old systems (stock OL6.9 <-> OL7 + UEK4) whereas others only
-> > care about formatting to whatever runs on the deployed system.  Right
-> > now we ship xfsprogs 4.5 with very conservative defaults, but this has
-> > become a hassle to keep patching mkfs, to remember which option sets
-> > correspond with which config, and to communicate that whole mess to
-> > customers.  Shipping multiple xfsprogs packages seems gross.
-> > 
-> > What we'd prefer to do is ship a single up to date xfsprogs package
-> > along with a mkfs config file containing distro-supported filesystem
-> > profiles.  As a side note, if there's no config file then we'd use
-> > whatever defaults are coded into xfs_mkfs.c.
-> 
-> I think that is an extremely important note, and the only sane behavior.  :)
->  
-> > For example, say we had a /etc/xfs.conf file shipping with xfsprogs:
-> 
-> /etc/mkfs.xfs.conf please, this configures mkfs and nothing else, right?
+This test case is originally designed to expose unexpected corruption
+for btrfs, where there are several reports about btrfs serious metadata
+corruption after power loss.
 
-Ok.  I mean, I might let that be $sysconfdir/mkfs.xfs.conf or something,
-but I agree about the filename component of the path.
+The test case itself will trigger heavy fsstress for the fs, and use
+dm-flakey to emulate power loss by dropping all later writes.
 
-> > 
-> > [defaults]
-> > metadata.crc = false
-> > naming.ftype = false
-> > 
-> > [rhel7]
-> > metadata.crc = true
->
-> Oh, one more thing.  Let's not arbitrarily decide that the commandline
-> uses 1/0 but the configfile uses true/false.  I'd really like as much 
-> 1:1 consistency here as possible.
+For btrfs, it should be completely fine, as long as superblock write
+(FUA write) finishes atomically, since with metadata CoW, superblock
+either points to old trees or new tress, the fs should be as atomic as
+superblock.
 
-Oops.  I of course meant 0 / 1 here, since the goal is to use the
-existing mkfs parsing system here.
+For journal based filesystems, each metadata update should be journaled,
+so metadata operation is as atomic as journal updates.
 
-> > [uek3]
-> > naming.ftype = true
-> > 
-> > [uek4]
-> > metadata.crc = true
-> > naming.ftype = true
-> > metdata.finobt = true
-> > 
-> > [experimental]
-> > metadata.rmapbt = true
-> > metadata.reflink = true
-> > inode.sparse = true
-> > data.agcount = 32
-> > 
-> > The "defaults" section enables the distro vendor to patch in whatever
-> > default config they want to support.  In the example above the distro is
-> > not yet ready to support ftype or v5 filesystems everywhere because they
-> > want maximum compatibility, even though xfsprogs (by this point in the
-> > future) enables them by default.
-> 
-> Do the subsequent sections each independently specify the behavior or do they
-> build on the defaults?  I'd prefer the former (do not build on [defaults]),
-> I think.
+It does show that XFS is doing the best work among the tested
+filesystems (Btrfs, XFS, ext4), no kernel nor xfs_repair problem at all.
 
-Not sure either.  It would be useful to let the non-defaults profile
-inherit off of the defaults profile, but otoh to an administrator it's a
-lot clearer what they're getting with a profile if we force the config
-file writer to specify the entire configuration.
+For btrfs, although btrfs check doesn't report any problem, kernel
+reports some data checksum error, which is a little unexpected as data
+is CoWed by default, which should be as atomic as superblock.
+(Unfortunately, still not the exact problem I'm chasing for)
 
-Hmmm, I am drifting towards "do not build on defaults".
+For EXT4, kernel is fine, but later e2fsck reports problem, which may
+indicates there is still something to be improved.
 
-> > # mkfs.xfs /dev/sda <-- formats a boring v4 filesystem
-> 
-> IIRC Dave had a patch that emitted what was being used for defaults if
-> not the code - also IIRC I removed it but we should put that back
-> in with any config file parsing, I think.
-> 
-> "Using defaults from config file [defaults]" or somesuch.
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+---
+ tests/generic/479     | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/479.out |   2 +
+ tests/generic/group   |   1 +
+ 3 files changed, 112 insertions(+)
+ create mode 100755 tests/generic/479
+ create mode 100644 tests/generic/479.out
 
-Yes.  How about:
+diff --git a/tests/generic/479 b/tests/generic/479
+new file mode 100755
+index 00000000..ab530231
+--- /dev/null
++++ b/tests/generic/479
+@@ -0,0 +1,109 @@
++#! /bin/bash
++# FS QA Test 479
++#
++# Test if a filesystem can survive emulated powerloss.
++#
++# No matter what the solution a filesystem uses (journal or CoW),
++# it should survive unexpected powerloss, without major metadata
++# corruption.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 SuSE.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	ps -e | grep fsstress > /dev/null 2>&1
++	while [ $? -eq 0 ]; do
++		$KILLALL_PROG -KILL fsstress > /dev/null 2>&1
++		wait > /dev/null 2>&1
++		ps -e | grep fsstress > /dev/null 2>&1
++	done
++	_unmount_flakey &> /dev/null
++	_cleanup_flakey
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/dmflakey
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_dm_target flakey
++_require_command "$KILLALL_PROG" "killall"
++
++runtime=$(($TIME_FACTOR * 15))
++loops=$(($LOAD_FACTOR * 4))
++
++for i in $(seq -w $loops); do
++	echo "=== Loop $i: $(date) ===" >> $seqres.full
++
++	_scratch_mkfs >/dev/null 2>&1
++	_init_flakey
++	_mount_flakey
++
++	($FSSTRESS_PROG $FSSTRESS_AVOID -w -d $SCRATCH_MNT -n 1000000 \
++		-p 100 >> $seqres.full &) > /dev/null 2>&1
++
++	sleep $runtime
++
++	# Here we only want to drop all write, don't need to umount the fs
++	_load_flakey_table $FLAKEY_DROP_WRITES
++
++	ps -e | grep fsstress > /dev/null 2>&1
++	while [ $? -eq 0 ]; do
++		$KILLALL_PROG -KILL fsstress > /dev/null 2>&1
++		wait > /dev/null 2>&1
++		ps -e | grep fsstress > /dev/null 2>&1
++	done
++
++	_unmount_flakey
++	_cleanup_flakey
++
++	# Mount the fs to do proper log replay for journal based fs
++	# so later check won't report annoying dirty log and only
++	# report real problem.
++	_scratch_mount
++	_scratch_unmount
++
++	_check_scratch_fs
++done
++
++echo "Silence is golden"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/479.out b/tests/generic/479.out
+new file mode 100644
+index 00000000..290f18b3
+--- /dev/null
++++ b/tests/generic/479.out
+@@ -0,0 +1,2 @@
++QA output created by 479
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 1e808865..5ce3db1d 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -481,3 +481,4 @@
+ 476 auto rw
+ 477 auto quick exportfs
+ 478 auto quick
++479 auto
+-- 
+2.15.1
 
-"Using profile 'rhel7' from /etc/mkfs.xfs.conf."
-
-> I had also asked whether upstream would ship a config file at all.  I'd suggest
-> that we should not, because we wouldn't do anything other than restate
-> code defaults, and I'm not interested in keeping that consistent.
-
-I don't see much of a point since we'd be shipping
-
-# mkfs.xfs --config-file-defaults > /etc/mkfs.xfs.conf
-
-> (OTOH a mkfs.xfs --config-file-defaults to spit out a code-defaults
-> configfile for editing might be neato) ;)
-
---generate-config-file?
-
---D
-
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
