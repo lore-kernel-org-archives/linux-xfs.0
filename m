@@ -1,53 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr014msb.fastweb.it ([85.18.95.103]:39228 "EHLO
-        mr014msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751449AbeBXW5f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Feb 2018 17:57:35 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:39386 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751569AbeBZVbI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 16:31:08 -0500
+Date: Mon, 26 Feb 2018 13:31:02 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: Reflink (cow) copy of busy files
+Message-ID: <20180226213102.GD19312@magnolia>
+References: <20180225024727.GD30854@dastard>
+ <25ebcdb42650430d83d283435053efed@assyoma.it>
+ <20180225211309.GF30854@dastard>
+ <d105d0000652be75774cc1f5f23eae68@assyoma.it>
+ <20180226002533.GG30854@dastard>
+ <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
+ <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
+ <73ef828837683073feb1c49e3405dd6a@assyoma.it>
+ <20180226172601.GC19312@magnolia>
+ <2f48d103c0a6eff6c0a1136057e828b6@assyoma.it>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Sat, 24 Feb 2018 23:57:32 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <20180224220757.GC30854@dastard>
-References: <9e69fcd01e1c02ea53e0e1ac66d60d24@assyoma.it>
- <20180224220757.GC30854@dastard>
-Message-ID: <711dd96e3c4b3e92d3fb38a01e77dc64@assyoma.it>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2f48d103c0a6eff6c0a1136057e828b6@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, g.danti@assyoma.it
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Il 24-02-2018 23:07 Dave Chinner ha scritto:
-> Define "busy file", please.
-
-Think about a running virtual machine. Maybe an XFS-based virtual image 
-(ie: a CentOS 7 guest).
-
-> If the file is being actively written, then the clone will not be
-> consistent.
+On Mon, Feb 26, 2018 at 10:23:45PM +0100, Gionatan Danti wrote:
+> Il 26-02-2018 18:26 Darrick J. Wong ha scritto:
+> >The way reflink is supposed to work wrt consistency is:
+> >
+> >1. lock out all new io/fallocate activity on both inodes (iolock/mmaplock)
+> >2. wait for all directio to complete
+> >3. fsync both files (write all the dirty pagecache to disk)
+> >4. lock both inodes (ilock)
+> >5. clone each extent atomically
+> >6. unlock ilock
+> >7. unlock iolock/mmaplock
+> >
+> >So at least in theory the cloned file will match whatever the host saw
+> >on disk and page cache at the time the reflink call was initiated.
+> >I say 'in theory' because there could be bugs.
 > 
-> Yes, it's just like any other snapshot process - you have to quiesce
-> everything that is writing to the file before cloning it. i.e. the
-> data in the file needs to be in a stable, consistent, unchanging
-> state if you want the clone to contain consistent data...
+> Great! CoW will be a great addition for XFS when it will be considered
+> stable.
+> 
+> >Whatever dirty state is in the guest VM stays in that VM, which means
+> >that if you only cp --reflink on the host, the clone you get will
+> >reflect the virtual disk state as if you'd kill -9'd the VM, cloned the
+> >VM disk, and restarted the VM.  Upon restart the log recovers whatever
+> >metadata made it out of the VM.
+> 
+> Sure, it is what I means for "crash-consistent".
+> 
+> >However, if you tell the guest to freeze the fs before cloning (as Dave
+> >suggested earlier) the guest will flush all its state to the upper level
+> >(the host) and the host will push all that out to disk before cloning.
+> >The snapshot you create should be cleaner because you're effectively
+> >prepaying the recovery costs by flushing everything before taking the
+> >snapshot.
+> 
+> True, and this is "application-level consistency" (which requires a guest
+> agent and possibly even an application-specific agent)
 
-About *what* level of consistency are we speaking? I understand that 
-application-level consistency requires a quiesced filesystem and, 
-possibly, an application-level agent. But is it a quiesced filesystem a 
-requisite for a *crash-consistent* ie: pull the plug) snapshot?
+I believe qemu-ga takes care of guest fs freeze inside the guest,
+and you can invoke it from the host via 'virsh domfsfreeze' or the
+--quiesce argument to snapshot-create... but you ought to confirm that
+for yourself.
 
-In other words: would a cp --reflink=always <vmdisk> <snapshot> of a 
-runnig virtual machine produce an usable, crash-consistent snapshot, or 
-it risks ending with binary garbage?
+--D
 
-Thanks.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+> >Also note that if the host goes down before returning from the syscall,
+> >the log will continue on with whichever extent was being cloned at the
+> >time in order to preserve metadata integrity, but the destination file
+> >will reflect a partial copy.
+> 
+> Thanks for pointing that, and for your extremely clear explanation!
+> 
+> 
+> -- 
+> Danti Gionatan
+> Supporto Tecnico
+> Assyoma S.r.l. - www.assyoma.it
+> email: g.danti@assyoma.it - info@assyoma.it
+> GPG public key ID: FF5F32A8
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
