@@ -1,114 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f170.google.com ([209.85.161.170]:33633 "EHLO
-        mail-yw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753723AbeBZU3o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 15:29:44 -0500
-Received: by mail-yw0-f170.google.com with SMTP id l200so5553612ywb.0
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2018 12:29:43 -0800 (PST)
+Received: from mailly.debian.org ([82.195.75.114]:40430 "EHLO
+        mailly.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751656AbeBZWXR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 17:23:17 -0500
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
 MIME-Version: 1.0
-In-Reply-To: <73ef828837683073feb1c49e3405dd6a@assyoma.it>
-References: <9e69fcd01e1c02ea53e0e1ac66d60d24@assyoma.it> <20180224220757.GC30854@dastard>
- <711dd96e3c4b3e92d3fb38a01e77dc64@assyoma.it> <20180225024727.GD30854@dastard>
- <25ebcdb42650430d83d283435053efed@assyoma.it> <20180225211309.GF30854@dastard>
- <d105d0000652be75774cc1f5f23eae68@assyoma.it> <20180226002533.GG30854@dastard>
- <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it> <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
- <73ef828837683073feb1c49e3405dd6a@assyoma.it>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 26 Feb 2018 22:29:42 +0200
-Message-ID: <CAOQ4uxh5OrWyD9DddC7W9UYPaYP1ON1CzKUB=R+8midTFsa+bg@mail.gmail.com>
-Subject: Re: Reflink (cow) copy of busy files
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: xfsprogs_4.15.0-1_source.changes ACCEPTED into unstable
+Message-Id: <E1eqQgE-000GPa-36@fasolo.debian.org>
+Date: Mon, 26 Feb 2018 21:51:30 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: XFS Development Team <linux-xfs@vger.kernel.org>, Nathan Scott <nathans@debian.org>
 
-On Mon, Feb 26, 2018 at 10:26 AM, Gionatan Danti <g.danti@assyoma.it> wrote:
-> Hi Amir,
->
-> Il 26-02-2018 08:58 Amir Goldstein ha scritto:
->>
->>
->> Gionatan,
->>
->> First of all, the answer to your question is "just" faster copy.
->> reflinkning a file is much faster than copy, but it is not O(1).
->> I believe cp --reflink can result in cloning part of the file if the
->> system
->> crashes mid operation, so in any case, the operation is not *atomic*
->> in that sense.
->>
->> But your questions about quiescence the filesystem and your question
->> about the *atomic* nature of the clone operation are two very different
->> questions.
->
->
-> can this result on out-of-order writes from the cloned file's point of view?
-> I mean:
-> - take a 10-extents file;
-> - a vm/db/whatever is writing to the file;
-> - a cp --reflink is executed;
-> - extents are cloned one-by-one, with extents 1-4 alredy cloned, 5 is in
-> progress;
-> - the vm/db writes to extent n.1 - this write will *not* be present on the
-> cloned file;
-> - application writes to extent n.6 which will be cloned shortly;
 
-As Darrick explained, new writes to both files should be blocked throughout
-the clone operation.
 
-> - the cloned file ends with the later write to extent n.6 but not the
-> previous on extent n.1;
-> - bad things happen!
->
-> If the above is true, than cp --reflink can't be used even for
-> relaxed-consistency backup/clones.
->
->> What you seem to *think* xfs reflink does, it does not actually do.
->> xfs reflink does NOT reflink the file in-memory data.
->> xfs reflink "only" reflinks the file on-disk data.
->> Right now, if you write a large file without fsync and clone it, you
->> might as well get a clone of unallocated or partly fallocated file with
->> zero or stale data.
->
->
-> Oh, I absolutely do not expect for reflink/clone to works on in-memory data.
-> I *surely* expect for dirty, not commited data to be lost: this is the very
-> reason I wrote about crash-consistent backup.
->
+Accepted:
 
-I was also expecting dirty data to be lost, but according to Darrick that is
-not the case for page cache dirty data, although in all likelyhook, your VM
-is using direct IO to write to image file.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-> In short: is cloning/reflink the same as "pulling the plug" for the cloned
-> file? I mean:
-> - a successfull clone (so, a non-interruped/crashed one) is akin to an
-> atomic process for the cloned file;
-> - async writes/dirty data are lost;
-> - fsynced writes are preserved;
-> - writes are not reordered/commited out of order.
->
+Format: 1.8
+Date: Fri, 23 Feb 2018 13:06:35 -0600
+Source: xfsprogs
+Binary: xfsprogs xfslibs-dev xfsprogs-udeb
+Architecture: source
+Version: 4.15.0-1
+Distribution: unstable
+Urgency: low
+Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+Changed-By: Nathan Scott <nathans@debian.org>
+Description:
+ xfslibs-dev - XFS filesystem-specific static libraries and headers
+ xfsprogs   - Utilities for managing the XFS filesystem
+ xfsprogs-udeb - A stripped-down version of xfsprogs, for debian-installer (udeb)
+Changes:
+ xfsprogs (4.15.0-1) unstable; urgency=low
+ .
+   * New upstream release
+Checksums-Sha1:
+ bf9cb62d2d8a490d2cdf60fde9f9a99f11b3ab31 2093 xfsprogs_4.15.0-1.dsc
+ 3381d2f836df45120fb183764586c7b55c7a9004 1757097 xfsprogs_4.15.0.orig.tar.gz
+ 8927db7cf000abb3ff81f691e98c57eed1098881 8644 xfsprogs_4.15.0-1.debian.tar.xz
+ 8218736bffab84f1fd6d604846a2335b8fd0e144 5916 xfsprogs_4.15.0-1_source.buildinfo
+Checksums-Sha256:
+ 5d636c7017b75610c7c84d26f58def1f8cd055107ffbcf05d9d9d242ad225b44 2093 xfsprogs_4.15.0-1.dsc
+ 8d909048938a75e02eac65c181fb4cbbda4f2a43aa26e6595264f1683a7248d3 1757097 xfsprogs_4.15.0.orig.tar.gz
+ 58bbeebd0e300be09ee3ab16ad3f36292928527b069e366c8ce973623a14df09 8644 xfsprogs_4.15.0-1.debian.tar.xz
+ df7bca08434c199704a9ef158fa7291262c0d3bc8ab6853f373797fd0e75db73 5916 xfsprogs_4.15.0-1_source.buildinfo
+Files:
+ e6052c8ef327f88168650421e95e017c 2093 admin optional xfsprogs_4.15.0-1.dsc
+ 9df818a4e96e61944386a192af469684 1757097 admin optional xfsprogs_4.15.0.orig.tar.gz
+ 23d58f49b0da147a0f3c57cd1eb8509b 8644 admin optional xfsprogs_4.15.0-1.debian.tar.xz
+ 50f679580b6f2658ebf313a13eed0859 5916 admin optional xfsprogs_4.15.0-1_source.buildinfo
 
-Got it now. According to Darrick's description, the answer seems to be
-that your assumptions about clone are correct.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-> Maybe the entire discussion is skewed by the fact that, in some cases, I am
-> willing to relax my consistency model to include a crash-consistent backup
-> option. Fact is, in the virtualization world there are many backup
-> utilities/applications which *use* this model, and I wondered if a cp
-> --reflink would give similar results without the hassle.
->
-> Maybe the entire crash-vs-application consistency is out of place in a
-> filesystem mailing list, where you (rightfully!!!) strive for
-> perfect/maximum data consistency (and I *really* appreciate that). Hoewever,
-> given the recent reflinking works on XFS, I wonder if I can put this to
-> "good use" when it is considered stable.
->
+iQIcBAEBCAAGBQJalHsbAAoJEP4IQu423YwM9YAQALQCrCU4VJEKK/+JeimrScxU
+Y+LwE/4uZ5aO7DMsxDiaFToM8O5NRlilyVZFOkHaxR89Q1NSqPW+D4SH1Ao4Xmtp
+YjhO6SMnSBq582E5w0aZhF4Udj+spQGDaJwhW4KQEDkZzM/wPxnhZM1YZwPam/qb
+eN744MXV072ukWcKMob07PSM5NMB+3MbW9xv4j81dC62TsLAyK7+2xNc5jyxZPtg
+SawxuOUzIBsNs6HXnxMmweSPt62slOSZGt8nygk2xHIe5LAC4V2FtDXL+nAfvUpe
++d/3iAGPZNOAC9Z4t2XZjxnyl7e9eeHdl71EIoMmBbGDxe85+pepv0naAXVAkvx1
+a1UO9Mf52Ua8yV0+K5DPXOD5jZXtyRRlBms5rlZKj6aGzlqdWP+xWNdFdfC30Hlh
+9yqxl/V2SZ3oP54QbzhmVYZ/HGh81RHRq876ECcX8LhyI/JEwG4+W03rmPbp0zz8
+Sz6ldSsiv4/ttWZtunh6JwoF7C3BJt7/fDcceVzYQzE6iBL9ZBPbUbbcPQN/4T4k
+qG3WNVelcfeQ5M8YLnSu6vFpXR0OLPOE3L8Ec8CNCxUmJRM1WOxErlZ80koVYG9k
+wCz1oiFawzYh8YPmAVyFuM09v0U/bvj/zjEC725GrcngEqJJ4K2sSoQp4AkoJN0Z
+D0m33bGQyVcFdsJZcY0Q
+=ERcl
+-----END PGP SIGNATURE-----
 
-I think your use case is interesting and this is definitely the right place
-to ask these questions.
 
-Cheers,
-Amir.
+Thank you for your contribution to Debian.
