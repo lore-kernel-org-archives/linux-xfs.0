@@ -1,107 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58744 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755096AbeBWUHE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Feb 2018 15:07:04 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4626B182EA
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Feb 2018 14:06:13 -0600 (CST)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v4.15.0 released
-Message-ID: <64d0cfb4-a800-1183-c1b6-efbbfb839bc4@sandeen.net>
-Date: Fri, 23 Feb 2018 14:07:02 -0600
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:39586 "EHLO
+        mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751022AbeBZIpM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 03:45:12 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="RI3x2lLFx9GSWFuMnrYl0D2bqc7DUWMlp"
+In-Reply-To: <5c46dfaa-296e-4882-5205-13a2a6739d79@gmx.com>
+References: <20180226073111.3066-1-wqu@suse.com> <CAOQ4uxhsvGVH19HZE6b1exnFt3pB6qwLr=PUkjpXeq12F9sNJQ@mail.gmail.com>
+ <a127175a-50bc-e2e2-9426-02d5d25a4b10@gmx.com> <CAOQ4uxhXmoaJbJVCUk-9VXipTxuYhmTHAh89bWZ1xrWUUd76GA@mail.gmail.com>
+ <5c46dfaa-296e-4882-5205-13a2a6739d79@gmx.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 26 Feb 2018 10:45:11 +0200
+Message-ID: <CAOQ4uxgJ=eKMLwQ05HcK6Rk2znx_Q5ujv77NFJr86ksXTC9Qtw@mail.gmail.com>
+Subject: Re: [RFC PATCH] fstests: Check if a fs can survive random (emulated)
+ power loss
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc: Qu Wenruo <wqu@suse.com>, fstests <fstests@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---RI3x2lLFx9GSWFuMnrYl0D2bqc7DUWMlp
-Content-Type: multipart/mixed; boundary="kZnctMewwjH39e2hDCOXGQM2635UJhz4f";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <64d0cfb4-a800-1183-c1b6-efbbfb839bc4@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v4.15.0 released
+On Mon, Feb 26, 2018 at 10:41 AM, Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
+>
+>
+> On 2018=E5=B9=B402=E6=9C=8826=E6=97=A5 16:33, Amir Goldstein wrote:
+>> On Mon, Feb 26, 2018 at 10:20 AM, Qu Wenruo <quwenruo.btrfs@gmx.com> wro=
+te:
+>>>
+>>>
+>>> On 2018=E5=B9=B402=E6=9C=8826=E6=97=A5 16:15, Amir Goldstein wrote:
+>>>> On Mon, Feb 26, 2018 at 9:31 AM, Qu Wenruo <wqu@suse.com> wrote:
+>>>>> This test case is originally designed to expose unexpected corruption
+>>>>> for btrfs, where there are several reports about btrfs serious metada=
+ta
+>>>>> corruption after power loss.
+>>>>>
+>>>>> The test case itself will trigger heavy fsstress for the fs, and use
+>>>>> dm-flakey to emulate power loss by dropping all later writes.
+>>>>>
+>>>>
+>>>> Come on... dm-flakey is so 2016
+>>>> You should take Josef's fsstress+log-writes test and bring it to fstes=
+ts:
+>>>> https://github.com/josefbacik/log-writes
+>>>>
+>>>> By doing that you will gain two very important features from the test:
+>>>>
+>>>> 1. Problems will be discovered much faster, because the test can run f=
+sck
+>>>>     after every single block write has been replayed instead of just a=
+t random
+>>>>     times like in your test
+>>>
+>>> That's what exactly I want!!!
+>>>
+>>> Great thanks for this one! I would definitely look into this.
+>>> (Although the initial commit is even older than 2016)
+>>>
+>>
+>> Please note that Josef's replay-individual-faster.sh script runs fsck
+>> every 1000 writes (i.e. --check 1000), so you can play with this argumen=
+t
+>> in your test. Can also run --fsck every --check fua or --check flush, wh=
+ich
+>> may be more indicative of real world problems. not sure.
+>>
+>>>
+>>> But the test itself could already expose something on EXT4, it still
+>>> makes some sense for ext4 developers as a verification test case.
+>>>
+>>
+>> Please take a look at generic/456
+>> When generic/455 found a reproduciable problem in ext4,
+>> I created a specific test without any randomness to pin point the
+>> problem found (using dm-flakey).
+>> If the problem you found is reproduciable, then it will be easy for you
+>> to create a similar "bisected" test.
+>
+> Yep, it's definitely needed for a pin-point test case, but I'm also
+> wondering if a random, stress test could also help.
+>
+> Test case with plain fsstress is already super helpful to expose some
+> bugs, such stress test won't hurt.
+>
 
---kZnctMewwjH39e2hDCOXGQM2635UJhz4f
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
 
-Hi folks,
+Yes, but the same stress test with dm-log-writes instead of dm-flakey
+will be as useful and much more, so no reason to merge the less useful
+stress test.
 
-The xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated and tagged with v4.15.0 release.
-
-Tarballs are on kernel.org:
-
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-4.15.0.ta=
-r.xz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-4.15.0.ta=
-r.gz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-4.15.0.ta=
-r.sign
-
-Patches often get missed, so please check if your outstanding
-patches were in this release. If they have not been in this release,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-bc95a6f5b xfsprogs: Release v4.15.0
-
-A very brief summary of major changes in this release:
-
-xfsprogs-4.15.0 (23 Feb 2018)
-        - various debian-related packaging fixes (Nathan Scott)
-
-xfsprogs-4.15.0-rc1 (13 Feb 2018)
-        - xfs_scrub: experimental new tool added (Darrick Wong)
-        - xfs_metadump: fix issues with -i flag (Marco Benatto)
-        - mkfs.xfs: don't allow creation of realtime+reflink (Darrick Won=
-g)
-        - mkfs.xfs: don't crash on dswidth overflow (Darrick Wong)
-        - mkfs.xfs: much refactoring (Dave Chinner)
-        - xfs_copy: fix copy of v5 filesystems (Eric Sandeen)
-        - xfs_io: add a new 'log_writes' command (Ross Zwisler)
-        - xfs_io: add MAP_SYNC support to mmap() (Ross Zwisler)
-        - libxfs: memory zone handling cleanups (Eric Sandeen)
-
-
---kZnctMewwjH39e2hDCOXGQM2635UJhz4f--
-
---RI3x2lLFx9GSWFuMnrYl0D2bqc7DUWMlp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlqQdGcACgkQIK4WkuE9
-3uBloA/9ETA7OZY9suJMBRXS9vSJoC6YB8EO3mRjAvGD1i8Omf/yF/oUC1Y8gCk1
-slyZRUMbIzfp7psj6lexAkSv8QvxP8aEl/f8o0850BXxpF+wBdM5BnWG9epBGi1z
-qdXYH1dzHFOwQEgh0acyd7lFgcmF46hHSz9g7ARy/k9BwhuNDa+GfKwr85RkDR4z
-Ts9Y5y36i/PpiEyxz0ekLRn2mOlc3LvD3OThc+/OrAitUCRrrAILLUSyiShrBEB2
-ITGkfBD8/XEK/jtiqN8Ub3IhxZ+glbyLwgXijC12xb3F9ze+m+3x95mS6dCXM/39
-RJVeQN90oStHlUL0nHtlSK49lYrcRJlvIwF4rtg1zw0TR8xCLDITZ19KowxES7kI
-IgMAxNURu2cbz5hcNy+5JEA0LXogXwRVMmB96heqkb6ihCCbfP8o5dGMKB19uu3n
-ZyV08cTLz99YRwRaSVUcgEsEqYJq26I1ATT8dYUzCEgBd4NQekjYOBQReA/nmank
-bxubKNIEfqQhX4RwOD1wL6DtwQd4ypNbaHQ37L854qbmVyaVAZ2vPl8BiqBSAg0N
-WBEyHh7sPsQl55AZ7BewXwfkvCG0QvOt3jR+MCLTdHKMIaFAX+loP2UBDpOdhABO
-6VAirkrPTGO9aPFicFCscSLqis18a3/37ho3RXlO950c6n1kfgo=
-=hh9Z
------END PGP SIGNATURE-----
-
---RI3x2lLFx9GSWFuMnrYl0D2bqc7DUWMlp--
+Thanks,
+Amir.
