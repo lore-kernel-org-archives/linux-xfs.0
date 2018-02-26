@@ -1,186 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from prv3-mh.provo.novell.com ([137.65.250.26]:44719 "EHLO
-        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750882AbeBZHbc (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:0:0>);
-        Mon, 26 Feb 2018 02:31:32 -0500
-From: Qu Wenruo <wqu@suse.com>
-Subject: [RFC PATCH] fstests: Check if a fs can survive random (emulated) power loss
-Date: Mon, 26 Feb 2018 15:31:11 +0800
-Message-Id: <20180226073111.3066-1-wqu@suse.com>
+Received: from mout.gmx.net ([212.227.15.15]:44269 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750767AbeBZIUa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Feb 2018 03:20:30 -0500
+Subject: Re: [RFC PATCH] fstests: Check if a fs can survive random (emulated)
+ power loss
+References: <20180226073111.3066-1-wqu@suse.com>
+ <CAOQ4uxhsvGVH19HZE6b1exnFt3pB6qwLr=PUkjpXeq12F9sNJQ@mail.gmail.com>
+From: Qu Wenruo <quwenruo.btrfs@gmx.com>
+Message-ID: <a127175a-50bc-e2e2-9426-02d5d25a4b10@gmx.com>
+Date: Mon, 26 Feb 2018 16:20:14 +0800
+MIME-Version: 1.0
+In-Reply-To: <CAOQ4uxhsvGVH19HZE6b1exnFt3pB6qwLr=PUkjpXeq12F9sNJQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="bqnMEH11SO8OfydVCMdJH4bh1RIJ6lcgl"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>, Qu Wenruo <wqu@suse.com>
+Cc: fstests <fstests@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>
 
-This test case is originally designed to expose unexpected corruption
-for btrfs, where there are several reports about btrfs serious metadata
-corruption after power loss.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--bqnMEH11SO8OfydVCMdJH4bh1RIJ6lcgl
+Content-Type: multipart/mixed; boundary="wmBuEmMbsaYgAsHqPNJmEfrwTaiwpUOwc";
+ protected-headers="v1"
+From: Qu Wenruo <quwenruo.btrfs@gmx.com>
+To: Amir Goldstein <amir73il@gmail.com>, Qu Wenruo <wqu@suse.com>
+Cc: fstests <fstests@vger.kernel.org>,
+ Linux Btrfs <linux-btrfs@vger.kernel.org>,
+ linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>,
+ Josef Bacik <josef@toxicpanda.com>
+Message-ID: <a127175a-50bc-e2e2-9426-02d5d25a4b10@gmx.com>
+Subject: Re: [RFC PATCH] fstests: Check if a fs can survive random (emulated)
+ power loss
+References: <20180226073111.3066-1-wqu@suse.com>
+ <CAOQ4uxhsvGVH19HZE6b1exnFt3pB6qwLr=PUkjpXeq12F9sNJQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxhsvGVH19HZE6b1exnFt3pB6qwLr=PUkjpXeq12F9sNJQ@mail.gmail.com>
 
-The test case itself will trigger heavy fsstress for the fs, and use
-dm-flakey to emulate power loss by dropping all later writes.
+--wmBuEmMbsaYgAsHqPNJmEfrwTaiwpUOwc
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-For btrfs, it should be completely fine, as long as superblock write
-(FUA write) finishes atomically, since with metadata CoW, superblock
-either points to old trees or new tress, the fs should be as atomic as
-superblock.
 
-For journal based filesystems, each metadata update should be journaled,
-so metadata operation is as atomic as journal updates.
 
-It does show that XFS is doing the best work among the tested
-filesystems (Btrfs, XFS, ext4), no kernel nor xfs_repair problem at all.
+On 2018=E5=B9=B402=E6=9C=8826=E6=97=A5 16:15, Amir Goldstein wrote:
+> On Mon, Feb 26, 2018 at 9:31 AM, Qu Wenruo <wqu@suse.com> wrote:
+>> This test case is originally designed to expose unexpected corruption
+>> for btrfs, where there are several reports about btrfs serious metadat=
+a
+>> corruption after power loss.
+>>
+>> The test case itself will trigger heavy fsstress for the fs, and use
+>> dm-flakey to emulate power loss by dropping all later writes.
+>>
+>=20
+> Come on... dm-flakey is so 2016
+> You should take Josef's fsstress+log-writes test and bring it to fstest=
+s:
+> https://github.com/josefbacik/log-writes
+>=20
+> By doing that you will gain two very important features from the test:
+>=20
+> 1. Problems will be discovered much faster, because the test can run fs=
+ck
+>     after every single block write has been replayed instead of just at=
+ random
+>     times like in your test
 
-For btrfs, although btrfs check doesn't report any problem, kernel
-reports some data checksum error, which is a little unexpected as data
-is CoWed by default, which should be as atomic as superblock.
-(Unfortunately, still not the exact problem I'm chasing for)
+That's what exactly I want!!!
 
-For EXT4, kernel is fine, but later e2fsck reports problem, which may
-indicates there is still something to be improved.
+Great thanks for this one! I would definitely look into this.
+(Although the initial commit is even older than 2016)
 
-Signed-off-by: Qu Wenruo <wqu@suse.com>
----
- tests/generic/479     | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/479.out |   2 +
- tests/generic/group   |   1 +
- 3 files changed, 112 insertions(+)
- create mode 100755 tests/generic/479
- create mode 100644 tests/generic/479.out
 
-diff --git a/tests/generic/479 b/tests/generic/479
-new file mode 100755
-index 00000000..ab530231
---- /dev/null
-+++ b/tests/generic/479
-@@ -0,0 +1,109 @@
-+#! /bin/bash
-+# FS QA Test 479
-+#
-+# Test if a filesystem can survive emulated powerloss.
-+#
-+# No matter what the solution a filesystem uses (journal or CoW),
-+# it should survive unexpected powerloss, without major metadata
-+# corruption.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 SuSE.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	ps -e | grep fsstress > /dev/null 2>&1
-+	while [ $? -eq 0 ]; do
-+		$KILLALL_PROG -KILL fsstress > /dev/null 2>&1
-+		wait > /dev/null 2>&1
-+		ps -e | grep fsstress > /dev/null 2>&1
-+	done
-+	_unmount_flakey &> /dev/null
-+	_cleanup_flakey
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmflakey
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_dm_target flakey
-+_require_command "$KILLALL_PROG" "killall"
-+
-+runtime=$(($TIME_FACTOR * 15))
-+loops=$(($LOAD_FACTOR * 4))
-+
-+for i in $(seq -w $loops); do
-+	echo "=== Loop $i: $(date) ===" >> $seqres.full
-+
-+	_scratch_mkfs >/dev/null 2>&1
-+	_init_flakey
-+	_mount_flakey
-+
-+	($FSSTRESS_PROG $FSSTRESS_AVOID -w -d $SCRATCH_MNT -n 1000000 \
-+		-p 100 >> $seqres.full &) > /dev/null 2>&1
-+
-+	sleep $runtime
-+
-+	# Here we only want to drop all write, don't need to umount the fs
-+	_load_flakey_table $FLAKEY_DROP_WRITES
-+
-+	ps -e | grep fsstress > /dev/null 2>&1
-+	while [ $? -eq 0 ]; do
-+		$KILLALL_PROG -KILL fsstress > /dev/null 2>&1
-+		wait > /dev/null 2>&1
-+		ps -e | grep fsstress > /dev/null 2>&1
-+	done
-+
-+	_unmount_flakey
-+	_cleanup_flakey
-+
-+	# Mount the fs to do proper log replay for journal based fs
-+	# so later check won't report annoying dirty log and only
-+	# report real problem.
-+	_scratch_mount
-+	_scratch_unmount
-+
-+	_check_scratch_fs
-+done
-+
-+echo "Silence is golden"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/479.out b/tests/generic/479.out
-new file mode 100644
-index 00000000..290f18b3
---- /dev/null
-+++ b/tests/generic/479.out
-@@ -0,0 +1,2 @@
-+QA output created by 479
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 1e808865..5ce3db1d 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -481,3 +481,4 @@
- 476 auto rw
- 477 auto quick exportfs
- 478 auto quick
-+479 auto
--- 
-2.15.1
+But the test itself could already expose something on EXT4, it still
+makes some sense for ext4 developers as a verification test case.
 
+Thanks,
+Qu
+
+>=20
+> 2. Absolute guaranty to reproducing the problem by replaying the write =
+log.
+>     Even though your fsstress could use a pre-defined random seed to re=
+sults
+>     will be far from reproduciable, because of process and IO schedulin=
+g
+>     differences between subsequent test runs.
+>     When you catch an inconsistency with log-writes test, you can send =
+the
+>     write-log recording to the maintainer to analyze the problem, even =
+if it is
+>     a hard problem to hit. I used that useful technique for ext4,btrfs,=
+xfs when
+>     ran tests with generic/455 and found problems.
+>=20
+> Cheers,
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+
+--wmBuEmMbsaYgAsHqPNJmEfrwTaiwpUOwc--
+
+--bqnMEH11SO8OfydVCMdJH4bh1RIJ6lcgl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQFLBAEBCAA1FiEELd9y5aWlW6idqkLhwj2R86El/qgFAlqTwz8XHHF1d2VucnVv
+LmJ0cmZzQGdteC5jb20ACgkQwj2R86El/qg/RQf+LE3S/HqMJuSAnRDqtqcnyTmY
+avJewbqN7k4K4QqrPVCdKfc/VVS0L8QI1aSRQ3yFz5sW3EPGjihAz9gEhocY0XM7
+b1EtiAD72Rhik4aLVLOCRXjPPw5qMqtkYOx7m22SPT0b0rPH/Z5I5l2zNwk5HRVs
+fQXBFfmQ9DXeCq5dzKPQIO2f5sBAuSRsJbiBdRIXRJ921zR6qHHwR1Sv9OsP07W8
+WQYqpKaqLbVg4q2HRi+vDXgjVDXOfds7PmGe2KeGeX/8WAMwt2adRZjTo1q1jj+m
+y1Rs1jPROJU8tfxe2b0GtL8wsbb6hTtQ4Oo+05YCDWqcdOSPLPmrBoedIAPsog==
+=uqaB
+-----END PGP SIGNATURE-----
+
+--bqnMEH11SO8OfydVCMdJH4bh1RIJ6lcgl--
