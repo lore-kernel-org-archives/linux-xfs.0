@@ -1,53 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38672 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751840AbeBXEk0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Feb 2018 23:40:26 -0500
-Date: Fri, 23 Feb 2018 20:40:18 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_scrub: make interpreter explicit to python3
-Message-ID: <20180224044018.GA19312@magnolia>
-References: <20180224021512.23819-1-mcgrof@kernel.org>
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:24815 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750778AbeB0GAi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 01:00:38 -0500
+From: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Subject: [PATCH] xfs_repair: Ensure just xfs_repair without -n can return a status code of 2
+Date: Tue, 27 Feb 2018 13:50:32 +0800
+Message-ID: <1519710632-16129-1-git-send-email-yangx.jy@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180224021512.23819-1-mcgrof@kernel.org>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, Xiao Yang <yangx.jy@cn.fujitsu.com>
 
-On Fri, Feb 23, 2018 at 06:15:12PM -0800, Luis R. Rodriguez wrote:
-> Using #!/usr/bin/env makes some package dependency tools
-> such as rpm complain given that it cannot verify package
-> dependencies. Making it explicit resolves this lint rant.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Since commit b04647edea32, xfs_repair -L could't succeed to clear a dirty log
+and returned a status of 2.  Besides, xfs_repair -n returned a status of 2
+instead of 1 if a dirty log was detected.  I think just xfs_repair without -n
+should return a status code of 2 when getting a dirty log, so fix it.  We can
+expose this issue by xfstests case xfs/098.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fixes:'commit b04647edea32 ("xfs_repair: exit with status 2 if log dirtiness is unknown")'
 
---D
+Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+---
+ repair/phase2.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> ---
->  scrub/xfs_scrub_all.in | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-> index fff05da3ea7a..80f07d5c8b02 100644
-> --- a/scrub/xfs_scrub_all.in
-> +++ b/scrub/xfs_scrub_all.in
-> @@ -1,4 +1,4 @@
-> -#!/usr/bin/env python3
-> +#!/usr/bin/python3
->  
->  # Run online scrubbers in parallel, but avoid thrashing.
->  #
-> -- 
-> 2.16.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 992e997..c124882 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -78,12 +78,13 @@ zero_log(
+ 		do_warn(
+ 		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
+ 			error);
+-		if (!no_modify && !zap_log)
++		if (!no_modify && !zap_log) {
+ 			do_warn(_(
+ "ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
+ "filesystem to replay the log or use the -L option to destroy the log and\n"
+ "attempt a repair.\n"));
+ 			exit(2);
++		}
+ 	} else {
+ 		if (verbose) {
+ 			do_log(
+-- 
+1.8.3.1
+
+
+
