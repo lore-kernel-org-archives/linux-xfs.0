@@ -1,49 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52551 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:47624 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751117AbeB0SLq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Feb 2018 13:11:46 -0500
-Date: Tue, 27 Feb 2018 18:11:42 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [RFC] mkfs config file bikeshed now!
-Message-ID: <20180227181142.GT14069@wotan.suse.de>
-References: <20180226224224.GE19312@magnolia>
- <20180227000122.GR14069@wotan.suse.de>
- <3e239e61-bc79-c594-c1fd-44fa3efe779d@sandeen.net>
- <CAB=NE6U+7hmRhrkkd1v=rEKrcY+NNf61jL9B4nm=kDbTPvy--w@mail.gmail.com>
- <20180227002550.GH19312@magnolia>
- <20180227031757.GB24294@thunk.org>
+        id S1751847AbeB0Te3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Feb 2018 14:34:29 -0500
+Date: Tue, 27 Feb 2018 14:34:26 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/5] xfs: convert XFS_AGFL_SIZE to a helper function
+Message-ID: <20180227193425.GE3479@bfoster.bfoster>
+References: <151935118240.21654.10146641674018880885.stgit@magnolia>
+ <151935120662.21654.13415426558899842401.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180227031757.GB24294@thunk.org>
+In-Reply-To: <151935120662.21654.13415426558899842401.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Mon, Feb 26, 2018 at 10:17:57PM -0500, Theodore Ts'o wrote:
-> So number one, unlike everyone else, I didn't reinvent the wheel.  I
-> grabbed the same wheel I wrote for MIT Kerberos years before.  :-)
+On Thu, Feb 22, 2018 at 06:00:06PM -0800, Darrick J. Wong wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The AGFL size calculation is about to get more complex, so lets turn
+> the macro into a function first and remove the macro.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [darrick: forward port to newer kernel, simplify the helper]
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Yes thank you for not re-inventing the wheel.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> But hey, to be clear, I'm not the one trying to claim everyone should
-> use my library (even though it's the best looking and above-average,
-> ala Lake Wobegon. :-)
-
-I started out with libconfig. Clearly that's crap. As I waited for the facelift
-of mkfs/xfs_mkfs.c I found libini_config and was supportive of it as the best
-in the community given community traction and good code. As I poked further and
-extracted e2fsprogs profile library into its own repo and sized it up against
-libini_config, I'll let it be on me to say:
-
-I think its *very* sensible for us to consider using it *provided* we're up to
-co-maintain a future small shared library in the hopes others will stop also
-re-inventing the wheel further.
-
-Unless I hear otherwise I'll give e2fsprogs profile library a shot for my
-next iteration under the assumption we can share the library long term.
-
-  Luis
+>  fs/xfs/libxfs/xfs_alloc.c  |   31 ++++++++++++++++++++++++-------
+>  fs/xfs/libxfs/xfs_alloc.h  |    2 ++
+>  fs/xfs/libxfs/xfs_format.h |   13 +------------
+>  fs/xfs/scrub/agheader.c    |    6 +++---
+>  fs/xfs/xfs_fsops.c         |    2 +-
+>  5 files changed, 31 insertions(+), 23 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index c02781a..36101e5 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -53,6 +53,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+>  STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+>  		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+>  
+> +/*
+> + * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
+> + * the beginning of the block for a proper header with the location information
+> + * and CRC.
+> + */
+> +unsigned int
+> +xfs_agfl_size(
+> +	struct xfs_mount	*mp)
+> +{
+> +	unsigned int		size = mp->m_sb.sb_sectsize;
+> +
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		size -= sizeof(struct xfs_agfl);
+> +
+> +	return size / sizeof(xfs_agblock_t);
+> +}
+> +
+>  unsigned int
+>  xfs_refc_block(
+>  	struct xfs_mount	*mp)
+> @@ -550,7 +567,7 @@ xfs_agfl_verify(
+>  	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
+>  		return __this_address;
+>  
+> -	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
+> +	for (i = 0; i < xfs_agfl_size(mp); i++) {
+>  		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
+>  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+>  			return __this_address;
+> @@ -2266,7 +2283,7 @@ xfs_alloc_get_freelist(
+>  	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
+>  	be32_add_cpu(&agf->agf_flfirst, 1);
+>  	xfs_trans_brelse(tp, agflbp);
+> -	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+> +	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
+>  		agf->agf_flfirst = 0;
+>  
+>  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> @@ -2377,7 +2394,7 @@ xfs_alloc_put_freelist(
+>  			be32_to_cpu(agf->agf_seqno), &agflbp)))
+>  		return error;
+>  	be32_add_cpu(&agf->agf_fllast, 1);
+> -	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
+> +	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
+>  		agf->agf_fllast = 0;
+>  
+>  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> @@ -2395,7 +2412,7 @@ xfs_alloc_put_freelist(
+>  
+>  	xfs_alloc_log_agf(tp, agbp, logflags);
+>  
+> -	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
+> +	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
+>  
+>  	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+>  	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
+> @@ -2428,9 +2445,9 @@ xfs_agf_verify(
+>  	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+>  	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+>  	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+> -	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+> -	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+> -	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
+> +	      be32_to_cpu(agf->agf_flfirst) < xfs_agfl_size(mp) &&
+> +	      be32_to_cpu(agf->agf_fllast) < xfs_agfl_size(mp) &&
+> +	      be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp)))
+>  		return __this_address;
+>  
+>  	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index 65a0caf..a311a24 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -26,6 +26,8 @@ struct xfs_trans;
+>  
+>  extern struct workqueue_struct *xfs_alloc_wq;
+>  
+> +unsigned int xfs_agfl_size(struct xfs_mount *mp);
+> +
+>  /*
+>   * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 1acb584..42956d8 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -803,24 +803,13 @@ typedef struct xfs_agi {
+>  		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
+>  		(__be32 *)(bp)->b_addr)
+>  
+> -/*
+> - * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
+> - * slots in the beginning of the block for a proper header with the
+> - * location information and CRC.
+> - */
+> -#define XFS_AGFL_SIZE(mp) \
+> -	(((mp)->m_sb.sb_sectsize - \
+> -	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
+> -		sizeof(struct xfs_agfl) : 0)) / \
+> -	  sizeof(xfs_agblock_t))
+> -
+>  typedef struct xfs_agfl {
+>  	__be32		agfl_magicnum;
+>  	__be32		agfl_seqno;
+>  	uuid_t		agfl_uuid;
+>  	__be64		agfl_lsn;
+>  	__be32		agfl_crc;
+> -	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
+> +	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
+>  } __attribute__((packed)) xfs_agfl_t;
+>  
+>  #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
+> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> index fd97552..fd383c5 100644
+> --- a/fs/xfs/scrub/agheader.c
+> +++ b/fs/xfs/scrub/agheader.c
+> @@ -80,7 +80,7 @@ xfs_scrub_walk_agfl(
+>  	}
+>  
+>  	/* first to the end */
+> -	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
+> +	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
+>  		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+>  		if (error)
+>  			return error;
+> @@ -664,7 +664,7 @@ xfs_scrub_agf(
+>  	if (agfl_last > agfl_first)
+>  		fl_count = agfl_last - agfl_first + 1;
+>  	else
+> -		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
+> +		fl_count = xfs_agfl_size(mp) - agfl_first + agfl_last + 1;
+>  	if (agfl_count != 0 && fl_count != agfl_count)
+>  		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+>  
+> @@ -791,7 +791,7 @@ xfs_scrub_agfl(
+>  	/* Allocate buffer to ensure uniqueness of AGFL entries. */
+>  	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+>  	agflcount = be32_to_cpu(agf->agf_flcount);
+> -	if (agflcount > XFS_AGFL_SIZE(sc->mp)) {
+> +	if (agflcount > xfs_agfl_size(sc->mp)) {
+>  		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+>  		goto out;
+>  	}
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 8b45456..5237927 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -217,7 +217,7 @@ xfs_growfs_data_private(
+>  		}
+>  
+>  		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+> -		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
+> +		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+>  			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+>  
+>  		error = xfs_bwrite(bp);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
