@@ -1,75 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37304 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753133AbeB0OVa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:21:30 -0500
-Subject: Re: [PATCH] xfs_repair: Ensure just xfs_repair without -n can return
- a status code of 2
-References: <1519710632-16129-1-git-send-email-yangx.jy@cn.fujitsu.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b311ddb9-e996-9e4b-f7f1-d0d45b8f782a@sandeen.net>
-Date: Tue, 27 Feb 2018 08:21:29 -0600
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:52063 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753218AbeB0NoG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 08:44:06 -0500
+Received: by mail-wm0-f46.google.com with SMTP id h21so24160260wmd.1
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Feb 2018 05:44:05 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1519710632-16129-1-git-send-email-yangx.jy@cn.fujitsu.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180227034545.GC24294@thunk.org>
+References: <20180226224224.GE19312@magnolia> <20180227000122.GR14069@wotan.suse.de>
+ <3e239e61-bc79-c594-c1fd-44fa3efe779d@sandeen.net> <CAB=NE6U+7hmRhrkkd1v=rEKrcY+NNf61jL9B4nm=kDbTPvy--w@mail.gmail.com>
+ <20180227002550.GH19312@magnolia> <20180227031757.GB24294@thunk.org> <20180227034545.GC24294@thunk.org>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 27 Feb 2018 14:43:44 +0100
+Message-ID: <CACj3i72YvAhVfqT-oVkFdrEfBjKOXqtbedMQS2uydBuX_WXhjQ@mail.gmail.com>
+Subject: Re: [RFC] mkfs config file bikeshed now!
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 2/26/18 11:50 PM, Xiao Yang wrote:
-> Since commit b04647edea32, xfs_repair -L could't succeed to clear a dirty log
-> and returned a status of 2.  Besides, xfs_repair -n returned a status of 2
-> instead of 1 if a dirty log was detected.  I think just xfs_repair without -n
-> should return a status code of 2 when getting a dirty log, so fix it.  We can
-> expose this issue by xfstests case xfs/098.
-> 
-> Fixes:'commit b04647edea32 ("xfs_repair: exit with status 2 if log dirtiness is unknown")'
-> 
-> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+On Tue, Feb 27, 2018 at 4:45 AM, Theodore Ts'o <tytso@mit.edu> wrote:
+> One other thing I'll mention is that it was really important to me
+> that it was very easy to look up values from the config file.  So for
+> me it was a lot more than just the parser.  So I can fetch a read a
+> config parameter from the config file like this:
+>
+>         profile_get_boolean(ctx->profile, "options", "no_optimize_extents",
+>                             0, 0, &c);
+>
+> That's because I use this for a lot more than just file system tuning
+> parametres, but also for changing how e2fsck / mke2fs behaves.  So
+> trying to parse all of the config file at startup time and having to
+> stash that in some global context structure is just lot of extra work
+> that isn't necessary with the profile library compared with other
+> libraries which are focused exclusively on the parsing aspect of
+> things (which is actually pretty trivial).
+>
+> Maybe this doesn't matter for XFS, but other file system utilities may
+> find this issue to be something worthy of consideration when trying to
+> pick a config file library.
 
-Whoops, yes this was a silly mistake, my fault, and definitely a bug -
-and your fix is obviously correct.
+Neat. But yeah, I don't think the nesting would be useful for xfs.
+Especially as I prefer the /etc/mkfs.xfs.d/ idea. It might make sense
+to use something like this, instead of foo.bar style prefixing,
+though.
 
-However, your description isn't accurate; the bug exists only when
-xlog_find_tail() fails to find the head or the tail, which
-is why this went undiscovered for so long.  xfs_repair -L certainly
-can clear a dirty log today, it only fails if xlog_find_tail fails.
+/etc/mkfs.xfs.d/default:
 
-The core bug here is missing braces; the result is that an unparseable
-log always exits with exit(2), even if we've asked for -n or -L which
-should proceed.
+[metadata]
+crc = 0
 
-Can you resend this patch with a proper summary and a description
-which more closely matches the actual bug?
+[naming]
+ftype = 0
 
-Thanks,
--Eric
 
-> ---
->  repair/phase2.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/repair/phase2.c b/repair/phase2.c
-> index 992e997..c124882 100644
-> --- a/repair/phase2.c
-> +++ b/repair/phase2.c
-> @@ -78,12 +78,13 @@ zero_log(
->  		do_warn(
->  		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
->  			error);
-> -		if (!no_modify && !zap_log)
-> +		if (!no_modify && !zap_log) {
->  			do_warn(_(
->  "ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
->  "filesystem to replay the log or use the -L option to destroy the log and\n"
->  "attempt a repair.\n"));
->  			exit(2);
-> +		}
->  	} else {
->  		if (verbose) {
->  			do_log(
-> 
+Cheers,
+Jan
+
+>
+>                                                         - Ted
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
