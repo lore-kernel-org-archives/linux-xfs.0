@@ -1,54 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:24815 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750778AbeB0GAi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 01:00:38 -0500
-From: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Subject: [PATCH] xfs_repair: Ensure just xfs_repair without -n can return a status code of 2
-Date: Tue, 27 Feb 2018 13:50:32 +0800
-Message-ID: <1519710632-16129-1-git-send-email-yangx.jy@cn.fujitsu.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57426 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932129AbeB0Nzn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Feb 2018 08:55:43 -0500
+Date: Tue, 27 Feb 2018 08:55:42 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/5] xfs: don't iunlock the quota ip when quota block
+ allocation fails
+Message-ID: <20180227135541.GB3479@bfoster.bfoster>
+References: <151935118240.21654.10146641674018880885.stgit@magnolia>
+ <151935118851.21654.14051188649580444275.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151935118851.21654.14051188649580444275.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, Xiao Yang <yangx.jy@cn.fujitsu.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Since commit b04647edea32, xfs_repair -L could't succeed to clear a dirty log
-and returned a status of 2.  Besides, xfs_repair -n returned a status of 2
-instead of 1 if a dirty log was detected.  I think just xfs_repair without -n
-should return a status code of 2 when getting a dirty log, so fix it.  We can
-expose this issue by xfstests case xfs/098.
+On Thu, Feb 22, 2018 at 05:59:48PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In xfs_qm_dqalloc, we join the locked quota inode to the transaction we
+> use to allocate blocks.  If the allocation or mapping fails, we're not
+> allowed to unlock the inode because the transaction code is in charge of
+> unlocking it for us.  Therefore, remove the iunlock call to avoid
+> blowing asserts about unbalanced locking + mount hang.
+> 
+> Found by corrupting the AGF and allocating space in the filesystem
+> (quotacheck) immediately after mount.  The upcoming agfl wrapping fixup
+> test will trigger this scenario.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Fixes:'commit b04647edea32 ("xfs_repair: exit with status 2 if log dirtiness is unknown")'
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
----
- repair/phase2.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 992e997..c124882 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -78,12 +78,13 @@ zero_log(
- 		do_warn(
- 		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
- 			error);
--		if (!no_modify && !zap_log)
-+		if (!no_modify && !zap_log) {
- 			do_warn(_(
- "ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
- "filesystem to replay the log or use the -L option to destroy the log and\n"
- "attempt a repair.\n"));
- 			exit(2);
-+		}
- 	} else {
- 		if (verbose) {
- 			do_log(
--- 
-1.8.3.1
-
-
-
+>  fs/xfs/xfs_dquot.c |    2 --
+>  1 file changed, 2 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 43572f8..2410acc 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -394,8 +394,6 @@ xfs_qm_dqalloc(
+>  error1:
+>  	xfs_defer_cancel(&dfops);
+>  error0:
+> -	xfs_iunlock(quotip, XFS_ILOCK_EXCL);
+> -
+>  	return error;
+>  }
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
