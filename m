@@ -1,156 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38994 "EHLO sandeen.net"
+Received: from mga02.intel.com ([134.134.136.20]:53853 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753623AbeB0Org (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Feb 2018 09:47:36 -0500
-Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
-References: <5A914B45.8080200@xtaotech.com>
- <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
- <20180224220428.GB30854@dastard> <5A953693.8080101@xtaotech.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5aeeed0a-f808-0331-d528-04fdd42d90be@sandeen.net>
-Date: Tue, 27 Feb 2018 08:47:35 -0600
+        id S1751307AbeB0Qqz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Feb 2018 11:46:55 -0500
+Subject: Re: [PATCH v6 3/3] xfs: reject removal of realtime flag when datadev
+ doesn't support DAX
+References: <151880058592.43131.558230052922233871.stgit@djiang5-desk3.ch.intel.com>
+ <151880066614.43131.15847174332875373188.stgit@djiang5-desk3.ch.intel.com>
+ <20180216172247.GS5217@magnolia> <20180218002317.GU7000@dastard>
+ <20180220230109.GG27629@magnolia> <20180220231524.GD7000@dastard>
+ <20180220232358.GH27629@magnolia>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <1e6ed5f9-fdc1-f0f4-1ff7-e068f6506f39@intel.com>
+Date: Tue, 27 Feb 2018 09:46:54 -0700
 MIME-Version: 1.0
-In-Reply-To: <5A953693.8080101@xtaotech.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20180220232358.GH27629@magnolia>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yang Joseph <joseph.yang@xtaotech.com>, Dave Chinner <david@fromorbit.com>
-Cc: sandeen@redhat.com, nathans@debian.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
 
 
-On 2/27/18 4:44 AM, Yang Joseph wrote:
-> xfs_repair should not touch non-xfs mountpoints in platform_check_mount().
-> If non-xfs mountpoints can be filtered out, the dead fuse mountpoint can
-> never block our xfs_repair. The following patch can fix my problem and not
-> add dangerous option to xfs_repair.
 
-I don't think this is a safe solution.  For example:
-
-# mkfs.ext4 /dev/sdb1 
-# mount /dev/sdb1 /mnt/test
-
-Old behavior:
-
-# xfs_repair /dev/sdb1 
-xfs_repair: /dev/sdb1 contains a mounted filesystem
-
-New behavior with your patch:
-
-# repair/xfs_repair /dev/sdb1 
-xfs_repair: cannot open /dev/sdb1: Device or resource busy
-
-With your patch, if we explicitly ask xfs_repair to repair a non-xfs
-filesystem which is mounted, it will get past all of the checks and
-try to open the device O_EXCL - which should fail if the device is
-mounted, but I'm guessing your fuse case would now simply hang here
-instead.
-
-Worse, other utilities aren't so graceful.
-
-Old:
-
-# xfs_copy /dev/sdb2 /dev/sdb1 
-xfs_copy:  a filesystem is mounted on target device "/dev/sdb1".
-xfs_copy cannot copy to mounted filesystems.  Aborting
-
-New:
-
-copy/xfs_copy /dev/sdb2 /dev/sdb1 
- 0%  ... 10%  ... 20%  ... 30%  ... 40%  ... 50%  ... 60%  ... 70%  ... 80%  ... 90%  ... 100%
-
-All copies completed.
-
-(now we've just written over a mounted, writable ext4 filesystem)
-
-(Anyone want to investigate whether every device open in xfsprogs should
-be O_EXCL?)
-
-Also, in general:
-
-When sending a patch to the list, please prefix the subject with
-[PATCH] to make it obvious; patches also require a Signed-off-by:
-line similar to:
-
-  Signed-off-by: Yang Joseph <joseph.yang@xtaotech.com>
-
-The Signed-off-by: tag indicates that the signer was involved in the
-development of the patch.
-
-It essentially states that you are the author of this work and you have
-the right to submit it for inclusion in this project.
-
-Thanks,
--Eric
-
-
-> thx,
-> 
-> Yang Honggang
-> 
-> -------------------------new patch----------------------
-> diff --git a/libxfs/linux.c b/libxfs/linux.c
-> index 0bace3e..6ad24ce 100644
-> --- a/libxfs/linux.c
-> +++ b/libxfs/linux.c
-> @@ -44,6 +44,7 @@ static int max_block_alignment;
->  #endif
-> 
->  #define PROC_MOUNTED   "/proc/mounts"
-> +#define MNTTYPE_XFS        "xfs"
-
-indentation should be consistent with the string above; the whole
-patch is whitespace-mangled and won't apply.
-
-> 
->  /*
->   * Check if the filesystem is mounted.  Be verbose if asked, and
-> @@ -78,6 +79,9 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
->                 return 1;
->         }
->         while ((mnt = getmntent(f)) != NULL) {
-> +               /* filter out non xfs mountpoint */
-> +               if (strncmp(mnt->mnt_type, MNTTYPE_XFS, strlen(mnt->mnt_type)))
-> +                       continue;
->                 if (stat(mnt->mnt_dir, &mst) < 0)
->                         continue;
->                 if (mst.st_dev != s->st_rdev)
-> -------------------------new patch end-----------------
-> 
-> On 02/25/2018 06:04 AM, Dave Chinner wrote:
->> On Sat, Feb 24, 2018 at 11:56:44AM -0600, Eric Sandeen wrote:
->>> On 2/24/18 5:23 AM, Yang Joseph wrote:
->>>> hello,
+On 02/20/2018 04:23 PM, Darrick J. Wong wrote:
+> On Wed, Feb 21, 2018 at 10:15:24AM +1100, Dave Chinner wrote:
+>> On Tue, Feb 20, 2018 at 03:01:09PM -0800, Darrick J. Wong wrote:
+>>> On Sun, Feb 18, 2018 at 11:23:17AM +1100, Dave Chinner wrote:
+>>>> On Fri, Feb 16, 2018 at 09:22:47AM -0800, Darrick J. Wong wrote:
+>>>>> On Fri, Feb 16, 2018 at 10:04:26AM -0700, Dave Jiang wrote:
+>>>>>> In a situation where the rt_dev is DAX and data_dev is not DAX, if the user
+>>>>>> requests to remove the realtime flag via ioctl we can no longer support DAX
+>>>>>> for that file. Dynamic changing of S_DAX on the inode is not supported due
+>>>>>> to various complications in the existing implementation. Therefore until we
+>>>>>> address the dynamic S_DAX change issues, we must disallow realtime flag
+>>>>>> being removed.
+>>>>>>
+>>>>>> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+>>>>>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>>>>>> ---
+>>>>>>  fs/xfs/xfs_ioctl.c |   14 ++++++++++++++
+>>>>>>  1 file changed, 14 insertions(+)
+>>>>>>
+>>>>>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>>>>>> index 2c70a0a4f59f..edd97d527fe8 100644
+>>>>>> --- a/fs/xfs/xfs_ioctl.c
+>>>>>> +++ b/fs/xfs/xfs_ioctl.c
+>>>>>> @@ -1030,6 +1030,20 @@ xfs_ioctl_setattr_xflags(
+>>>>>>  {
+>>>>>>  	struct xfs_mount	*mp = ip->i_mount;
+>>>>>>  	uint64_t		di_flags2;
+>>>>>> +	struct inode		*inode = VFS_I(ip);
+>>>>>> +	struct super_block	*sb = inode->i_sb;
+>>>>>> +
+>>>>>> +	/*
+>>>>>> +	 * In the case that the inode is realtime, and we are trying to remove
+>>>>>> +	 * the realtime flag, and the rtdev supports DAX but the datadev does
+>>>>>> +	 * not support DAX, we can't allow the realtime flag to be removed
+>>>>>> +	 * since we do not support dynamic S_DAX flag removal yet.
+>>>>>> +	 */
+>>>>>> +	if (XFS_IS_REALTIME_INODE(ip) &&
+>>>>>> +	    !(fa->fsx_xflags & FS_XFLAG_REALTIME) &&
+>>>>>> +	    bdev_dax_supported(mp->m_rtdev_targp->bt_bdev, sb->s_blocksize) &&
+>>>>>> +	    !bdev_dax_supported(mp->m_ddev_targp->bt_bdev, sb->s_blocksize))
+>>>>>
+>>>>> What happens here if we have a non-rt file that we're trying to turn
+>>>>> into an rt file and the data dev supports dax but not the rt dev?
+>>>>>
+>>>>> Changing the rt flag is only supported on files with no data blocks (no
+>>>>> extents, no delalloc blocks), so why can't we remove S_DAX from an empty
+>>>>> file?  There aren't any memory mappings or page cache to get in the way,
+>>>>> correct?
 >>>>
->>>> Before the repair process, xfs_repair will check if user specified device already
->>>> has a writable mountpoint. And it will stat all the mountpoints of the system. If there
->>>> is a dead mountpoint, this checking will be blocked and xfs_repair will enter 'D' state.
->> So why is the mount point dead?
+>>>> File size can be non-zero, so you can have DAX read-over-hole
+>>>> mappings present. I simply don't think it's safe to remove/add S_DAX
+>>>> flags via ioctls right now. If we have a DAX capable rtdev, then the
+>>>> only way we should allow rtdev+dax to be used right now is via the
+>>>> RT inherit bit on the dir that creates files in the rtdev right from
+>>>> the start. i.e. we can't set/remove the RT inode flag on an inode
+>>>> via ioctl if rtdev+dax is enabled until the whole dynamic S_DAX
+>>>> inode flag thing is resolved.
+>>>
+>>> Could we deal with the restriction that the DAX flag can't change
+>>> (whether by user ioctl or by toggling the rt flag) unless the file size
+>>> is zero?  That adds another way setting/clearing the realtime flag can
+>>> fail, but at least it'd be the same EINVAL.
 >>
->> That kinda means that the filesystem is still mounted, but something
->> has hung somewhere and the filesystem may still have active
->> references to the underlying device and be doing stuff that is
->> modifying the filesystem....
->>
->> And if the device is still busy, then you aren't going to be able to
->> mount the repaired device, anyway, because the block device is still
->> busy...
->>
->>> That sounds like a bug worth fixing, but I am much
->>> less excited about adding options which could do serious damage
->>> to a filesystem.
->> TO me it sounds like something that should be fixed by a reboot, not
->> by adding dangerous options to xfs_repair...
->>
->> Cheers,
->>
->> Dave.
+>> I thought we still mmap a zero length file and get a page fault that
+>> returns a zeroed page? Or does that segv?
 > 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I think it segfaults, but let's see...
 > 
+> $ rm -rf /opt/b ; xfs_io -f -c 'mmap -rw 0 1m' -c 'mread 512 20' /opt/b
+> Bus error
+> $ rm -rf /opt/b ; xfs_io -f -c 'mmap -rw 0 1m' -c 'mwrite 512 20' /opt/b
+> Bus error
+
+Darrick,
+So you want the change to be if the file size is 0 then we can modify
+the RT bit, otherwise reject if DAX is involved?
