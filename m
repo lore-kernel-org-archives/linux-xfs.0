@@ -1,66 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:4812 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751646AbeB0WEq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 17:04:46 -0500
-Date: Wed, 28 Feb 2018 09:04:04 +1100
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:26556
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751656AbeB0WOK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 17:14:10 -0500
+Date: Wed, 28 Feb 2018 09:14:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Reflink (cow) copy of busy files
-Message-ID: <20180227220404.GI30854@dastard>
-References: <25ebcdb42650430d83d283435053efed@assyoma.it>
- <20180225211309.GF30854@dastard>
- <d105d0000652be75774cc1f5f23eae68@assyoma.it>
- <20180226002533.GG30854@dastard>
- <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
- <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
- <73ef828837683073feb1c49e3405dd6a@assyoma.it>
- <20180226172601.GC19312@magnolia>
- <20180227003348.GH30854@dastard>
- <fc797c0a-7263-c347-729d-c381b6936d3a@assyoma.it>
+Subject: Re: [RFC] mkfs config file bikeshed now!
+Message-ID: <20180227221408.GJ30854@dastard>
+References: <20180226224224.GE19312@magnolia>
+ <20180227000122.GR14069@wotan.suse.de>
+ <3e239e61-bc79-c594-c1fd-44fa3efe779d@sandeen.net>
+ <CAB=NE6U+7hmRhrkkd1v=rEKrcY+NNf61jL9B4nm=kDbTPvy--w@mail.gmail.com>
+ <20180227002550.GH19312@magnolia>
+ <20180227031757.GB24294@thunk.org>
+ <20180227034545.GC24294@thunk.org>
+ <CACj3i72YvAhVfqT-oVkFdrEfBjKOXqtbedMQS2uydBuX_WXhjQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fc797c0a-7263-c347-729d-c381b6936d3a@assyoma.it>
+In-Reply-To: <CACj3i72YvAhVfqT-oVkFdrEfBjKOXqtbedMQS2uydBuX_WXhjQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Gionatan Danti <g.danti@assyoma.it>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Feb 27, 2018 at 09:06:25AM +0100, Gionatan Danti wrote:
-> On 27/02/2018 01:33, Dave Chinner wrote:
-> >On Mon, Feb 26, 2018 at 09:26:01AM -0800, Darrick J. Wong wrote:
+On Tue, Feb 27, 2018 at 02:43:44PM +0100, Jan Tulak wrote:
+> On Tue, Feb 27, 2018 at 4:45 AM, Theodore Ts'o <tytso@mit.edu> wrote:
+> > One other thing I'll mention is that it was really important to me
+> > that it was very easy to look up values from the config file.  So for
+> > me it was a lot more than just the parser.  So I can fetch a read a
+> > config parameter from the config file like this:
 > >
-> >My point is that vfs_clone_file_range is not running fsync(2)i
-> >operations.
+> >         profile_get_boolean(ctx->profile, "options", "no_optimize_extents",
+> >                             0, 0, &c);
+
+
+That's not the way we've set up mkfs to deal with config file
+defaults.
+
+i.e. the config file creates a "default values" structure that gets
+used when no CLI parameter was specified. IOWs, all we need the
+config file to do is to be parsed into a pre-defined structure and
+the rest of mkfs will already DTRT.
+
+i.e. We don't need (or want) mkfs to be directly pulling random
+values from config files depending on the current option context.
+
+> > That's because I use this for a lot more than just file system tuning
+> > parametres, but also for changing how e2fsck / mke2fs behaves.  So
+> > trying to parse all of the config file at startup time and having to
+> > stash that in some global context structure is just lot of extra work
+> > that isn't necessary with the profile library compared with other
+> > libraries which are focused exclusively on the parsing aspect of
+> > things (which is actually pretty trivial).
 > >
-> >It's a fdatawrite_and_wait() call, which submits dirty data to disk
-> >and waits for it, but does *not flush volatile storage caches*.
-> >IOWs, it's not a data integrity operation.
-> >
-> >Hence while the reflink now has "data on disk" and can clone the
-> >extents, Neither the data nor the extents being cloned are stable
-> >and won't be until an fsync operation is performed on either the
-> >reflink source or destination file....
-> >
-> >Still no cache flushes. Hence even after the clone has run,
-> >you can still lose the data (and extents!) from the host file....
+> > Maybe this doesn't matter for XFS, but other file system utilities may
+> > find this issue to be something worthy of consideration when trying to
+> > pick a config file library.
 > 
-> Am I right saying that you are speaking about an *host* crash during
-> or just after the clone?
+> Neat. But yeah, I don't think the nesting would be useful for xfs.
+> Especially as I prefer the /etc/mkfs.xfs.d/ idea. It might make sense
+> to use something like this, instead of foo.bar style prefixing,
+> though.
 > 
-> Even in such a case, only the newly created file clone should be
-> lost/corrupted, while the original file will *not* be affected,
-> right? Or will an interrupted clone operation (ie: due to a power
-> failure) leave *both* files in an unconsistent state?
+> /etc/mkfs.xfs.d/default:
+> 
+> [metadata]
+> crc = 0
+> 
+> [naming]
+> ftype = 0
 
-A host crash can lose data from the original file when it is
-configured in writeback mode (as you've said you are using). If the
-clone is there, both source and clone should be fully intact. If
-it's not, then you will have lost data from the original image file.
+Yup, I like the simplicity of this approach. One config per file,
+with simple config groups that mirror the CLI grouping and options.
+Simple for admins, simple for developers, simple to implement and
+test.
 
-But, really, why risk losing data or filesystem corruption by trying
-to take shortcuts?
+We really don't need any more complexity than this, so lets not make
+it any more complex than it needs to be - that mistake has already
+been made in recent times with mkfs.xfs modifications, and I don't
+want to dig us out of that hole again...
 
 Cheers,
 
