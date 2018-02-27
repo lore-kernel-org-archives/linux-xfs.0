@@ -1,209 +1,546 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47624 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46880 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751847AbeB0Te3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Feb 2018 14:34:29 -0500
-Date: Tue, 27 Feb 2018 14:34:26 -0500
+        id S1751742AbeB0Tfu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Feb 2018 14:35:50 -0500
+Date: Tue, 27 Feb 2018 14:35:49 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/5] xfs: convert XFS_AGFL_SIZE to a helper function
-Message-ID: <20180227193425.GE3479@bfoster.bfoster>
+Subject: Re: [PATCH 5/5] xfs: fix agfl wrapping
+Message-ID: <20180227193548.GF3479@bfoster.bfoster>
 References: <151935118240.21654.10146641674018880885.stgit@magnolia>
- <151935120662.21654.13415426558899842401.stgit@magnolia>
+ <151935121574.21654.7158330354778549108.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <151935120662.21654.13415426558899842401.stgit@magnolia>
+In-Reply-To: <151935121574.21654.7158330354778549108.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Feb 22, 2018 at 06:00:06PM -0800, Darrick J. Wong wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Feb 22, 2018 at 06:00:15PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The AGFL size calculation is about to get more complex, so lets turn
-> the macro into a function first and remove the macro.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [darrick: forward port to newer kernel, simplify the helper]
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_alloc.c  |   31 ++++++++++++++++++++++++-------
->  fs/xfs/libxfs/xfs_alloc.h  |    2 ++
->  fs/xfs/libxfs/xfs_format.h |   13 +------------
->  fs/xfs/scrub/agheader.c    |    6 +++---
->  fs/xfs/xfs_fsops.c         |    2 +-
->  5 files changed, 31 insertions(+), 23 deletions(-)
+>  fs/xfs/Makefile     |    1 
+>  fs/xfs/xfs_fixups.c |  310 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_fixups.h |   26 ++++
+>  fs/xfs/xfs_mount.c  |   21 +++
+>  fs/xfs/xfs_super.c  |   10 ++
+>  5 files changed, 367 insertions(+), 1 deletion(-)
+>  create mode 100644 fs/xfs/xfs_fixups.c
+>  create mode 100644 fs/xfs/xfs_fixups.h
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index c02781a..36101e5 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -53,6 +53,23 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
->  STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
->  		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
->  
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index b03c77e..f88368a 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -86,6 +86,7 @@ xfs-y				+= xfs_aops.o \
+>  				   xfs_extent_busy.o \
+>  				   xfs_file.o \
+>  				   xfs_filestream.o \
+> +				   xfs_fixups.o \
+>  				   xfs_fsmap.o \
+>  				   xfs_fsops.o \
+>  				   xfs_globals.o \
+> diff --git a/fs/xfs/xfs_fixups.c b/fs/xfs/xfs_fixups.c
+> new file mode 100644
+> index 0000000..0cad7bb
+> --- /dev/null
+> +++ b/fs/xfs/xfs_fixups.c
+> @@ -0,0 +1,310 @@
 > +/*
-> + * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
-> + * the beginning of the block for a proper header with the location information
-> + * and CRC.
+> + * Copyright (C) 2018 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 > + */
-> +unsigned int
-> +xfs_agfl_size(
-> +	struct xfs_mount	*mp)
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_fixups.h"
+> +
+> +/*
+> + * v5 AGFL padding defects
+> + *
+> + * When the v5 format was first introduced, there was a defect in the struct
+> + * xfs_agfl definition that resulted in XFS_AGFL_SIZE returning different
+
+XFS_AGFL_SIZE() no longer exists as of the previous patch. It might be
+better to size refer to "the agfl size" generically.
+
+> + * values depending on the compiler padding.  On a fs with 512-byte sectors,
+> + * this meant that XFS_AGFL_SIZE was 119 on i386, but 118 on x64.  Commit
+> + * 96f859d52bcb1 ("libxfs: pack the agfl header structure so XFS_AGFL_SIZE is
+> + * correct") changed the definition to disable padding the end of the
+> + * structure, and was accepted into Linux 4.5.  Since then, the AGFL has
+> + * always used the larger size (e.g. 119 entries on a 512b sector fs).
+> + *
+> + * Unfortunately, pre-4.5 kernels can produce filesystems with AGFLs that wrap
+> + * at the smaller size, and those kernels are not prepared to handle the
+> + * longer size.  This typically manifests itself as an AGF verifier corruption
+> + * error followed by a filesystem shutdown.  While we encourage admins to stay
+> + * current with software, we would like to avoid this intermittent breakage.
+> + *
+> + * Any v5 filesystem which has a feature bit set for a feature that was
+> + * introduced after Linux 4.5 will not have this problem, as such kernels
+> + * cannot be mounted on older kernels.  v4 filesystems are also unaffected.
+> + *
+> + * Therefore, we add two fixup functions -- the first runs at mount time to
+> + * detect a short-wrapped AGFL and fix it; the second runs at unmount, freeze,
+> + * or remount-ro time to move a wrapped AGFL to the beginning of the list.
+> + * This reduces the likelihood of a screwup to the scenario where you have (a)
+> + * a filesystem with no post-4.5 features (reflink, rmap), (b) the AGFL wraps,
+> + * (c) the filesystem goes down leaving a dirty log, and (d) the dirty
+> + * filesystem is mounted on an old kernel.
+> + */
+> +
+
+While the mount vs. unmount time fixups serve different purposes and
+have different conditions, do we really need two separate fixup
+implementations? E.g., if we have to unwrap the AGFL at unmount time,
+why not just reuse that fixup at mount time (when needed) as well? I
+suspect the difference would only be the length of what we can consider
+valid in the agfl at the time.
+
+> +/*
+> + * Decide if we need to have the agfl wrapping fixes applied.  This only
+> + * affects v5 filesystems that do not have any features enabled that did not
+> + * exist when the agfl padding fix went in.
+> + *
+> + * Features already present when the fix went in were finobt, ftype, spinodes.
+> + * If we see something new (e.g. reflink) then don't bother.
+> + */
+> +#define XFS_SB_FEAT_RO_COMPAT_AGFL_WRAP_ALREADY_FIXED \
+> +		(~(XFS_SB_FEAT_RO_COMPAT_FINOBT))
+> +#define XFS_SB_FEAT_INCOMPAT_AGFL_WRAP_ALREADY_FIXED \
+> +		(~(XFS_SB_FEAT_INCOMPAT_FTYPE | \
+> +		   XFS_SB_FEAT_INCOMPAT_SPINODES))
+> +#define XFS_SB_FEAT_INCOMPAT_LOG_AGFL_WRAP_ALREADY_FIXED \
+> +		(~0)
+> +static inline bool xfs_sb_version_needs_agfl_wrap_fixes(struct xfs_sb *sbp)
 > +{
-> +	unsigned int		size = mp->m_sb.sb_sectsize;
-> +
-> +	if (xfs_sb_version_hascrc(&mp->m_sb))
-> +		size -= sizeof(struct xfs_agfl);
-> +
-> +	return size / sizeof(xfs_agblock_t);
+> +	return xfs_sb_version_hascrc(sbp) &&
+> +		!xfs_sb_has_incompat_feature(sbp,
+> +			XFS_SB_FEAT_INCOMPAT_AGFL_WRAP_ALREADY_FIXED) &&
+> +		!xfs_sb_has_ro_compat_feature(sbp,
+> +			XFS_SB_FEAT_RO_COMPAT_AGFL_WRAP_ALREADY_FIXED) &&
+> +		!xfs_sb_has_incompat_log_feature(sbp,
+> +			XFS_SB_FEAT_INCOMPAT_LOG_AGFL_WRAP_ALREADY_FIXED);
 > +}
 > +
->  unsigned int
->  xfs_refc_block(
->  	struct xfs_mount	*mp)
-> @@ -550,7 +567,7 @@ xfs_agfl_verify(
->  	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
->  		return __this_address;
->  
-> -	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
-> +	for (i = 0; i < xfs_agfl_size(mp); i++) {
->  		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
->  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
->  			return __this_address;
-> @@ -2266,7 +2283,7 @@ xfs_alloc_get_freelist(
->  	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
->  	be32_add_cpu(&agf->agf_flfirst, 1);
->  	xfs_trans_brelse(tp, agflbp);
-> -	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
-> +	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
->  		agf->agf_flfirst = 0;
->  
->  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> @@ -2377,7 +2394,7 @@ xfs_alloc_put_freelist(
->  			be32_to_cpu(agf->agf_seqno), &agflbp)))
->  		return error;
->  	be32_add_cpu(&agf->agf_fllast, 1);
-> -	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
-> +	if (be32_to_cpu(agf->agf_fllast) == xfs_agfl_size(mp))
->  		agf->agf_fllast = 0;
->  
->  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> @@ -2395,7 +2412,7 @@ xfs_alloc_put_freelist(
->  
->  	xfs_alloc_log_agf(tp, agbp, logflags);
->  
-> -	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
-> +	ASSERT(be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp));
->  
->  	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
->  	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
-> @@ -2428,9 +2445,9 @@ xfs_agf_verify(
->  	if (!(agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
->  	      XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
->  	      be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
-> -	      be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
-> -	      be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
-> -	      be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp)))
-> +	      be32_to_cpu(agf->agf_flfirst) < xfs_agfl_size(mp) &&
-> +	      be32_to_cpu(agf->agf_fllast) < xfs_agfl_size(mp) &&
-> +	      be32_to_cpu(agf->agf_flcount) <= xfs_agfl_size(mp)))
->  		return __this_address;
->  
->  	if (be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]) < 1 ||
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 65a0caf..a311a24 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -26,6 +26,8 @@ struct xfs_trans;
->  
->  extern struct workqueue_struct *xfs_alloc_wq;
->  
-> +unsigned int xfs_agfl_size(struct xfs_mount *mp);
+> +/*
+> + * Fix an AGFL wrapping that falls short of the end of the block by filling the
+> + * gap at the end of the block.
+> + */
+> +STATIC int
+> +xfs_fixup_freelist_wrap_mount(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agfbp,
+> +	struct xfs_perag	*pag)
+> +{
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xfs_agf		*agf;
+> +	struct xfs_buf		*agflbp;
+> +	__be32			*agfl_bno;
+> +	xfs_agnumber_t		agno;
+> +	uint32_t		agfl_size;
+> +	uint32_t		flfirst;
+> +	uint32_t		fllast;
+> +	int32_t			active;
+> +	int			offset;
+> +	int			len;
+> +	int			error;
 > +
->  /*
->   * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
->   */
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 1acb584..42956d8 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -803,24 +803,13 @@ typedef struct xfs_agi {
->  		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
->  		(__be32 *)(bp)->b_addr)
->  
-> -/*
-> - * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
-> - * slots in the beginning of the block for a proper header with the
-> - * location information and CRC.
-> - */
-> -#define XFS_AGFL_SIZE(mp) \
-> -	(((mp)->m_sb.sb_sectsize - \
-> -	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-> -		sizeof(struct xfs_agfl) : 0)) / \
-> -	  sizeof(xfs_agblock_t))
+> +	if (pag->pagf_flcount == 0)
+> +		return 0;
+> +
+> +	agfl_size = xfs_agfl_size(mp);
+> +	agf = XFS_BUF_TO_AGF(agfbp);
+> +	agno = be32_to_cpu(agf->agf_seqno);
+> +	flfirst = be32_to_cpu(agf->agf_flfirst);
+> +	fllast = be32_to_cpu(agf->agf_fllast);
+> +
+> +	/* Make sure we're either spot on or off by 1. */
+> +	active = fllast - flfirst + 1;
+> +	if (active <= 0)
+> +		active += agfl_size;
+> +	if (active == pag->pagf_flcount)
+> +		return 0;
+> +	else if (active != pag->pagf_flcount + 1)
+> +		return -EFSCORRUPTED;
+> +
+
+So we're not attempting to cover the case where the agfl has 1 more
+block than the agfl size (i.e., the case where an fs goes back to a
+kernel with an unpacked header)?
+
+I'm wondering whether using the unmount algorithm in both places (as
+noted above) would also facilitate this mechanism to work both ways
+(unpacked <-> packed), provided particular conditions are met. I suppose
+that could be considered regardless, but the less variance the better
+IMO.
+
+> +	/* Would this have even passed muster on an old system? */
+
+Comment doesn't really explain what is going on here..?
+
+> +	if (flfirst >= agfl_size - 1 || fllast >= agfl_size - 1 ||
+> +	    pag->pagf_flcount > agfl_size - 1)
+> +		return -EFSCORRUPTED;
+> +
+
+I take it these are checks for whether the agfl was previously corrupted
+based on the unpacked size? FWIW, it might be a bit more clear to use an
+old/unpacked_agfl_size variable to declare intent (here and in some of
+the comments and whatnot that follow).
+
+> +	/*
+> +	 * Convert a 40-byte-padded agfl into a 36-byte-padded AGFL.
+> +	 * Therefore, we need to move the AGFL blocks
+> +	 * bno[flfirst..agfl_size - 2] to bno[flfirst + 1...agfl_size - 1].
+> +	 *
+> +	 * Reusing the example above, if we had flfirst == 116, we need
+> +	 * to move bno[116] and bno[117] into bno[117] and bno[118],
+> +	 * respectively, and then increment flfirst.
+> +	 */
+
+Kind of a strange example to use given that it doesn't mention
+wrapping.. this only triggers if the agfl was previously wrapped, right?
+
+> +	error = xfs_alloc_read_agfl(mp, tp, agno, &agflbp);
+> +	if (error)
+> +		return error;
+> +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+> +
+> +	len = (agfl_size - flfirst - 1) * sizeof(xfs_agblock_t);
+> +	memmove(&agfl_bno[flfirst + 1], &agfl_bno[flfirst], len);
+> +	offset = (char *)&agfl_bno[flfirst + 1] - (char *)agflbp->b_addr;
+> +	be32_add_cpu(&agf->agf_flfirst, 1);
+> +
+> +	xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
+> +	xfs_trans_log_buf(tp, agflbp, offset, offset + len - 1);
+> +	xfs_trans_brelse(tp, agflbp);
+> +	agflbp = NULL;
+> +	xfs_alloc_log_agf(tp, agfbp, XFS_AGF_FLFIRST);
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Fix an AGFL that touches the end of the block by moving the first or last
+> + * part of the list elsewhere in the AGFL so that old kernels don't trip over
+> + * wrapping issues.
+> + */
+> +STATIC int
+> +xfs_fixup_freelist_wrap_unmount(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agfbp,
+> +	struct xfs_perag	*pag)
+> +{
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xfs_agf		*agf;
+> +	struct xfs_buf		*agflbp;
+> +	__be32			*agfl_bno;
+> +	xfs_agnumber_t		agno;
+> +	uint32_t		agfl_size;
+> +	uint32_t		flfirst;
+> +	uint32_t		fllast;
+> +	int			offset;
+> +	int			len;
+> +	int			error;
+> +
+> +	agfl_size = xfs_agfl_size(mp);
+> +	agf = XFS_BUF_TO_AGF(agfbp);
+> +	agno = be32_to_cpu(agf->agf_seqno);
+> +	flfirst = be32_to_cpu(agf->agf_flfirst);
+> +	fllast = be32_to_cpu(agf->agf_fllast);
+> +
+> +	/* Empty AGFL?  Make sure we aren't pointing at the end. */
+> +	if (pag->pagf_flcount == 0) {
+> +		if (flfirst >= agfl_size || fllast >= agfl_size) {
+
+When would either field be >= agfl_size? Isn't that where they wrap?
+
+> +			agf->agf_flfirst = cpu_to_be32(1);
+> +			agf->agf_fllast = 0;
+> +			xfs_alloc_log_agf(tp, agfbp,
+> +					XFS_AGF_FLFIRST | XFS_AGF_FLLAST);
+> +		}
+> +		return 0;
+> +	}
+> +
+> +	/* If we don't hit the end, we're done. */
+> +	if (flfirst < fllast && fllast != agfl_size - 1)
+> +		return 0;
+> +
+> +	/*
+> +	 * Move a start of a wrapped list towards the start of the agfl block.
+
+FWIW, this and the subsequent comments kind of gave me the impression
+that the agfl would be "shifted" towards the start of the block. The
+code doesn't do that, but rather rotates the start/head of the agfl to
+the tail and adjusts the pointers (changing the effective order). That
+seems technically Ok, but I had to grok the code and read back to
+understand the comment rather than the other way around.
+
+> +	 * Therefore, we need to move the AGFL blocks
+> +	 * bno[flfirst..agfl_size - 1] to bno[fllast + 1...agfl_size - flfirst].
+> +	 * Then we reset flfirst and fllast appropriately.
+> +	 *
+> +	 * Reusing the example above, if we had flfirst == 117 and fllast == 4,
+> +	 * we need to move bno[117] and bno[118] into bno[5] and bno[6],
+> +	 * respectively, and then reset flfirst and fllast.
+> +	 *
+> +	 * If it's just the last block that touches the end, only move that.
+> +	 */
+> +	error = xfs_alloc_read_agfl(mp, tp, agno, &agflbp);
+> +	if (error)
+> +		return error;
+> +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+> +
+> +	if (fllast == agfl_size - 1) {
+> +		/* Back the AGFL off from the end of the block. */
+> +		len = sizeof(xfs_agblock_t);
+> +		agfl_bno[flfirst - 1] = agfl_bno[agfl_size - 1];
+
+What if the agfl is full (flfirst == 0)?
+
+> +		offset = (char *)&agfl_bno[flfirst - 1] - (char *)agflbp->b_addr;
+> +		be32_add_cpu(&agf->agf_fllast, -1);
+> +		be32_add_cpu(&agf->agf_flfirst, -1);
+> +	} else {
+> +		/* Move the first part of the AGFL towards the front. */
+> +		len = (agfl_size - flfirst) * sizeof(xfs_agblock_t);
+> +		memcpy(&agfl_bno[fllast + 1], &agfl_bno[flfirst], len);
+> +		offset = (char *)&agfl_bno[fllast + 1] - (char *)agflbp->b_addr;
+> +		agf->agf_flfirst = 0;
+> +		agf->agf_fllast = cpu_to_be32(pag->pagf_flcount - 1);
+
+Similar question here as above.. it looks like the copy may be a no-op,
+but we still reset flfirst/fllast (which may also be fine, but
+unnecessary).
+
+The more interesting case here is flcount == 1 and flfirst == fllast,
+where it looks like we'd wrongly reset first/last (and perhaps copy more
+than we should..?).
+
+Ugh. Remind me again why we can't just detect a mismatch, fail the mount
+and tell the user to repair? :P Random thought... have we considered
+anything less invasive/more simple for this issue than low level buffer
+manipulation? For example, could we address the unpacked -> packed case
+by just allocating a block to fill the gap at the end of the wrapped
+agfl? Perhaps that could even be done more discreetly in
+xfs_alloc_fix_freelist() when we already have a transaction set up, etc.
+That wouldn't help going the other direction, but maybe we could
+consider similar logic to free an extraneous block and then worry about
+protecting users who won't upgrade broken kernels separately if that
+really continues to be a problem.
+
+Brian
+
+> +	}
+> +
+> +	xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
+> +	xfs_trans_log_buf(tp, agflbp, offset, offset + len - 1);
+> +	xfs_trans_brelse(tp, agflbp);
+> +	agflbp = NULL;
+> +	xfs_alloc_log_agf(tp, agfbp, XFS_AGF_FLFIRST | XFS_AGF_FLLAST);
+> +
+> +	return 0;
+> +}
+> +
+> +typedef int (*xfs_agf_apply_fn_t)(struct xfs_trans *tp, struct xfs_buf *agfbp,
+> +		struct xfs_perag *pag);
+> +
+> +/* Apply something to every AGF. */
+> +STATIC int
+> +xfs_fixup_agf_apply(
+> +	struct xfs_mount	*mp,
+> +	xfs_agf_apply_fn_t	fn)
+> +{
+> +	struct xfs_trans	*tp;
+> +	struct xfs_perag	*pag;
+> +	struct xfs_buf		*agfbp;
+> +	xfs_agnumber_t		agno;
+> +	int			error;
+> +
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata, 0, 0, 0, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> +		error = xfs_alloc_read_agf(mp, tp, agno, 0, &agfbp);
+> +		if (error)
+> +			goto cancel;
+> +		if (!agfbp) {
+> +			error = -ENOMEM;
+> +			goto cancel;
+> +		}
+> +		pag = xfs_perag_get(mp, agno);
+> +		error = fn(tp, agfbp, pag);
+> +		xfs_perag_put(pag);
+> +		xfs_trans_brelse(tp, agfbp);
+> +		if (error)
+> +			goto cancel;
+> +	}
+> +
+> +	return xfs_trans_commit(tp);
+> +cancel:
+> +	xfs_trans_cancel(tp);
+> +	return error;
+> +}
+> +
+> +/* Fix AGFL wrapping so we can use the filesystem. */
+> +int
+> +xfs_fixup_agfl_wrap_mount(
+> +	struct xfs_mount	*mp)
+> +{
+> +	if (!xfs_sb_version_needs_agfl_wrap_fixes(&mp->m_sb))
+> +		return 0;
+> +
+> +	return xfs_fixup_agf_apply(mp, xfs_fixup_freelist_wrap_mount);
+> +}
+> +
+> +/* Fix AGFL wrapping so old kernels can use this filesystem. */
+> +int
+> +xfs_fixup_agfl_wrap_unmount(
+> +	struct xfs_mount	*mp)
+> +{
+> +	if (!xfs_sb_version_needs_agfl_wrap_fixes(&mp->m_sb))
+> +		return 0;
+> +
+> +	return xfs_fixup_agf_apply(mp, xfs_fixup_freelist_wrap_unmount);
+> +}
+> diff --git a/fs/xfs/xfs_fixups.h b/fs/xfs/xfs_fixups.h
+> new file mode 100644
+> index 0000000..fb52a96
+> --- /dev/null
+> +++ b/fs/xfs/xfs_fixups.h
+> @@ -0,0 +1,26 @@
+> +/*
+> + * Copyright (C) 2018 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#ifndef	__XFS_FIXUPS_H__
+> +#define	__XFS_FIXUPS_H__
+> +
+> +int xfs_fixup_agfl_wrap_mount(struct xfs_mount *mp);
+> +int xfs_fixup_agfl_wrap_unmount(struct xfs_mount *mp);
+> +
+> +#endif /* __XFS_FIXUPS_H__ */
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 98fd41c..eb284aa 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -46,7 +46,7 @@
+>  #include "xfs_refcount_btree.h"
+>  #include "xfs_reflink.h"
+>  #include "xfs_extent_busy.h"
 > -
->  typedef struct xfs_agfl {
->  	__be32		agfl_magicnum;
->  	__be32		agfl_seqno;
->  	uuid_t		agfl_uuid;
->  	__be64		agfl_lsn;
->  	__be32		agfl_crc;
-> -	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
-> +	__be32		agfl_bno[];	/* actually xfs_agfl_size(mp) */
->  } __attribute__((packed)) xfs_agfl_t;
+> +#include "xfs_fixups.h"
 >  
->  #define XFS_AGFL_CRC_OFF	offsetof(struct xfs_agfl, agfl_crc)
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index fd97552..fd383c5 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -80,7 +80,7 @@ xfs_scrub_walk_agfl(
+>  static DEFINE_MUTEX(xfs_uuid_table_mutex);
+>  static int xfs_uuid_table_size;
+> @@ -875,6 +875,16 @@ xfs_mountfs(
 >  	}
 >  
->  	/* first to the end */
-> -	for (i = flfirst; i < XFS_AGFL_SIZE(mp); i++) {
-> +	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
->  		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
->  		if (error)
->  			return error;
-> @@ -664,7 +664,7 @@ xfs_scrub_agf(
->  	if (agfl_last > agfl_first)
->  		fl_count = agfl_last - agfl_first + 1;
->  	else
-> -		fl_count = XFS_AGFL_SIZE(mp) - agfl_first + agfl_last + 1;
-> +		fl_count = xfs_agfl_size(mp) - agfl_first + agfl_last + 1;
->  	if (agfl_count != 0 && fl_count != agfl_count)
->  		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
+>  	/*
+> +	 * Make sure our AGFL counters do not wrap the end of the block
+> +	 * in a troublesome manner.
+> +	 */
+> +	error = xfs_fixup_agfl_wrap_mount(mp);
+> +	if (error) {
+> +		xfs_warn(mp, "Failed to fix agfl wrapping.  Run xfs_repair.");
+> +		goto out_log_dealloc;
+> +	}
+> +
+> +	/*
+>  	 * Get and sanity-check the root inode.
+>  	 * Save the pointer to it in the mount structure.
+>  	 */
+> @@ -1128,6 +1138,15 @@ xfs_unmountfs(
+>  	xfs_qm_unmount(mp);
 >  
-> @@ -791,7 +791,7 @@ xfs_scrub_agfl(
->  	/* Allocate buffer to ensure uniqueness of AGFL entries. */
->  	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
->  	agflcount = be32_to_cpu(agf->agf_flcount);
-> -	if (agflcount > XFS_AGFL_SIZE(sc->mp)) {
-> +	if (agflcount > xfs_agfl_size(sc->mp)) {
->  		xfs_scrub_block_set_corrupt(sc, sc->sa.agf_bp);
->  		goto out;
->  	}
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 8b45456..5237927 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -217,7 +217,7 @@ xfs_growfs_data_private(
->  		}
+>  	/*
+> +	 * Make sure our AGFL counters do not wrap the end of the block
+> +	 * in a troublesome manner for old kernels.
+> +	 */
+> +	error = xfs_fixup_agfl_wrap_unmount(mp);
+> +	if (error)
+> +		xfs_warn(mp, "Unable to fix agfl wrapping.  "
+> +				"This may cause problems on next mount.");
+> +
+> +	/*
+>  	 * Unreserve any blocks we have so that when we unmount we don't account
+>  	 * the reserved free space as used. This is really only necessary for
+>  	 * lazy superblock counting because it trusts the incore superblock
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 624a802..d9aa39a 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -50,6 +50,7 @@
+>  #include "xfs_refcount_item.h"
+>  #include "xfs_bmap_item.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_fixups.h"
 >  
->  		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
-> -		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
-> +		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
->  			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+>  #include <linux/namei.h>
+>  #include <linux/dax.h>
+> @@ -1206,6 +1207,15 @@ xfs_quiesce_attr(
+>  	xfs_reclaim_inodes(mp, 0);
+>  	xfs_reclaim_inodes(mp, SYNC_WAIT);
 >  
->  		error = xfs_bwrite(bp);
+> +	/*
+> +	 * Make sure our AGFL counters do not wrap the end of the block
+> +	 * in a troublesome manner for old kernels.
+> +	 */
+> +	error = xfs_fixup_agfl_wrap_unmount(mp);
+> +	if (error)
+> +		xfs_warn(mp, "Unable to fix agfl wrapping.  "
+> +				"This may cause problems on next mount.");
+> +
+>  	/* Push the superblock and write an unmount record */
+>  	error = xfs_log_sbcount(mp);
+>  	if (error)
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
