@@ -1,77 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:23765 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751951AbeBVXou (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Feb 2018 18:44:50 -0500
-Date: Fri, 23 Feb 2018 10:44:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE] xfsprogs v4.15.0-rc1 released
-Message-ID: <20180222234446.GH7000@dastard>
-References: <7025bd78-65f9-ad25-e884-cada818a685b@sandeen.net>
- <20180220003635.GA8479@infradead.org>
- <8675595f-abe1-739c-c131-e12737045365@sandeen.net>
- <20180220163347.GB27629@magnolia>
- <20180220210237.GB7000@dastard>
- <b5f653da-d56d-550f-645c-36da93ba7441@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:45244 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751872AbeB0CSv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Feb 2018 21:18:51 -0500
+Received: from Liberator-5.local (erlite [10.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id F332A116F1
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Feb 2018 20:17:55 -0600 (CST)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v4.15.1 released
+Message-ID: <485c7496-92bc-b166-a358-c3db18647411@sandeen.net>
+Date: Mon, 26 Feb 2018 20:18:49 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b5f653da-d56d-550f-645c-36da93ba7441@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Feb 22, 2018 at 02:49:27PM -0600, Eric Sandeen wrote:
-> 
-> 
-> On 2/20/18 3:02 PM, Dave Chinner wrote:
-> > On Tue, Feb 20, 2018 at 08:33:47AM -0800, Darrick J. Wong wrote:
-> >> On Tue, Feb 20, 2018 at 09:09:22AM -0600, Eric Sandeen wrote:
-> >>> (resend, somehow I keep missing reply-all)
-> >>>
-> >>> That would be much faster than at least our historical progression
-> >>> for new features:
-> >>>
-> >>> * Experimental for $LONG_TIME
-> >>> * Drop experimental for $SIGNIFICANT_TIME
-> >>> * Make default after that
-> >>
-> >> ISTR Dave once telling me that he usually waited ~4 kernel releases to
-> >> drop the experimental tag and then another year to turn it on by
-> >> default in mkfs.  I'll grant you that seven kernels went by before
-> >> EXPERIMENTAL went away, so I don't think we need to wait a whole other
-> >> year.  How about turning it on by default in July or so?
-> > 
-> > The wait time for "supported -> default" is so that distro's have
-> > time to move to a feature supported kernel before they pick up a new
-> > xfsprogs release that turns on that feature by default. this mostly
-> > avoids the problem of distros accidentally turning on a feature that
-> > is still experimental in their kernel....
-> 
-> Speaking for Fedora, it brings userspace & kernelspace into a distro
-> together, so that's not a problem.  Speaking for RHEL, it's a long term
-> distro that knows darned well that mixing and matching new & old requires
-> care, if it's done at all.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j
+Content-Type: multipart/mixed; boundary="bItptON9zw7yjRHVVGH6BOWl5SrSp9pep";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <485c7496-92bc-b166-a358-c3db18647411@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v4.15.1 released
 
-Right, but other distros like debian have async kernel and userspace
-package update schedules. It's not until they "freeze" for a release
-that things like userspace and kernel versions are expected to have
-feature matches. e.g. we could upload xfsprogs 4.16 with reflink
-enabled by default to unstable the moment it is released. At that
-point in time, the default unstable kernel might be a 4.15 kernel
-(or older). Worse, the current installer kernel might be be even
-older, even though the nightly build picks up the new installer
-package we uploaded.
+--bItptON9zw7yjRHVVGH6BOWl5SrSp9pep
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-It's unecessary angst and pain that is easily avoided by having some
-delay between saying "this is suported now" and "every new
-filesystem will use it by default"....
+Hi folks,
 
-Cheers,
+The xfsprogs repository at:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated and tagged w/ v4.15.1
+
+This is a small delta, only debian build fixes (my fault for missing)
+and a polish translation update.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+4bfc773 xfsprogs: Release v4.15.1
+
+New Commits:
+
+Darrick J. Wong (2):
+      [638c642] debian: add build-depends on pkg-config
+      [37c528c] debian: don't fail postinst when upgrading chroot
+
+Eric Sandeen (1):
+      [4bfc773] xfsprogs: Release v4.15.1
+
+Jakub Bogusz (1):
+      [4f35436] po/pl.po: update Polish translation for 4.15.0
+
+
+Code Diffstat:
+
+ VERSION          |    2 +-
+ configure.ac     |    2 +-
+ debian/changelog |    6 +
+ debian/control   |    2 +-
+ debian/postinst  |    2 +-
+ doc/CHANGES      |    5 +
+ po/pl.po         | 4218 +++++++++++++++++++++++++++++++++++-------------=
+------
+ 7 files changed, 2743 insertions(+), 1494 deletions(-)
+
+
+--bItptON9zw7yjRHVVGH6BOWl5SrSp9pep--
+
+--7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlqUwAkACgkQIK4WkuE9
+3uCKug/+PTEMYck0ZkGRz9k6HY/XwCdochnfCA7wx+ZvrDVf5Usq5/SzqP6X26qT
+5MwghFLGMT3rsDJYEGNgdhKdi1O7kHJnL4RUovpiwDugrkCLy7MQD00Rp9NUifub
+JUEBmvpoCxFL3RGEXAtqb5M7oZLqBevLEzDduQX5SUsYVwPXyjI2IFLDbJKaoomb
+2J3uKd+8CrHK+TVSmnSQjcXI034hRZiwXUTLHx+5rdfog45egbid7OSRviJB57gw
+585+Cc+1UUm0Q+Xv7f/INArw9unjUVgcZbj9a9kBJAXvMw7WTMOgopTZDJMy9SCE
+VmWgwMIasvVOk6JPiUnbZ6p6leNvaSMTsWe35Hugh/BSmRvCFc2F0D69RmPv80ef
+/jmYvPEJSso79Pi5kY1obVs5/FFV/SXLaWDVrHJULOd1zGPePvVzN+QyUGt1Hkga
+MI8SXJovTIf7Ear0RunwxZapQdqdTpsLG87S6RWaAuCjjd+NbREnuaQSs8dMrDYI
+7SZvUv7TpVJbgYVUxbIERVYxBda+sS+aSMDCVhxDcEOGbRu9Y1fEeMmyPn6Ts3Cc
+QPzyzhcvzzBVxQQ5u5tumieDOz4lNOHUUaAFT+PhGSPGBEFEEzgP5hfo8Ne4P10y
+ItzxrjOguPvhlGkj8sj8X3LKIucL35+KnBGgcvSUm0UiE0OEiwM=
+=/dVJ
+-----END PGP SIGNATURE-----
+
+--7RsnwTLIjfN7ELmSwh482ly1MXqDkOi5j--
