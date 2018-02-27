@@ -1,35 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mailly.debian.org ([82.195.75.114]:39204 "EHLO
-        mailly.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751511AbeBZVzY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 16:55:24 -0500
-Received: from usper.debian.org ([128.31.0.69])
-        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
-        by mailly.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <ftpmaster@ftp-master.debian.org>)
-        id 1eqQdP-0004Of-3s
-        for linux-xfs@vger.kernel.org; Mon, 26 Feb 2018 21:48:35 +0000
-Received: from dak-unpriv by usper.debian.org with local (Exim 4.89)
-        (envelope-from <ftpmaster@ftp-master.debian.org>)
-        id 1eqQdO-0000ux-2i
-        for linux-xfs@vger.kernel.org; Mon, 26 Feb 2018 21:48:34 +0000
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-Subject: Processing of xfsprogs_4.15.0-1_source.changes
-Date: Mon, 26 Feb 2018 21:48:34 +0000
-Message-Id: <E1eqQdO-0000ux-2i@usper.debian.org>
+Received: from mr011msb.fastweb.it ([85.18.95.108]:58892 "EHLO
+        mr011msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751668AbeB0IGa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 03:06:30 -0500
+Subject: Re: Reflink (cow) copy of busy files
+References: <711dd96e3c4b3e92d3fb38a01e77dc64@assyoma.it>
+ <20180225024727.GD30854@dastard>
+ <25ebcdb42650430d83d283435053efed@assyoma.it>
+ <20180225211309.GF30854@dastard>
+ <d105d0000652be75774cc1f5f23eae68@assyoma.it>
+ <20180226002533.GG30854@dastard>
+ <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
+ <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
+ <73ef828837683073feb1c49e3405dd6a@assyoma.it>
+ <20180226172601.GC19312@magnolia> <20180227003348.GH30854@dastard>
+From: Gionatan Danti <g.danti@assyoma.it>
+Message-ID: <fc797c0a-7263-c347-729d-c381b6936d3a@assyoma.it>
+Date: Tue, 27 Feb 2018 09:06:25 +0100
+MIME-Version: 1.0
+In-Reply-To: <20180227003348.GH30854@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: it-IT
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Gionatan Danti <g.danti@assyoma.it>
 
-xfsprogs_4.15.0-1_source.changes uploaded successfully to localhost
-along with the files:
-  xfsprogs_4.15.0-1.dsc
-  xfsprogs_4.15.0.orig.tar.gz
-  xfsprogs_4.15.0-1.debian.tar.xz
-  xfsprogs_4.15.0-1_source.buildinfo
+On 27/02/2018 01:33, Dave Chinner wrote:
+> On Mon, Feb 26, 2018 at 09:26:01AM -0800, Darrick J. Wong wrote:
+> 
+> My point is that vfs_clone_file_range is not running fsync(2)i
+> operations.
+> 
+> It's a fdatawrite_and_wait() call, which submits dirty data to disk
+> and waits for it, but does *not flush volatile storage caches*.
+> IOWs, it's not a data integrity operation.
+> 
+> Hence while the reflink now has "data on disk" and can clone the
+> extents, Neither the data nor the extents being cloned are stable
+> and won't be until an fsync operation is performed on either the
+> reflink source or destination file....
+> 
+> Still no cache flushes. Hence even after the clone has run,
+> you can still lose the data (and extents!) from the host file....
 
-Greetings,
+Am I right saying that you are speaking about an *host* crash during or 
+just after the clone?
 
-	Your Debian queue daemon (running on host usper.debian.org)
+Even in such a case, only the newly created file clone should be 
+lost/corrupted, while the original file will *not* be affected, right? 
+Or will an interrupted clone operation (ie: due to a power failure) 
+leave *both* files in an unconsistent state?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
