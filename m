@@ -1,50 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58298 "EHLO sandeen.net"
+Received: from muffat.debian.org ([209.87.16.33]:32994 "EHLO muffat.debian.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751357AbeBXR4q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 24 Feb 2018 12:56:46 -0500
-Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
-References: <5A914B45.8080200@xtaotech.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5c0df437-0f09-129c-945f-0f917bfdaa7e@sandeen.net>
-Date: Sat, 24 Feb 2018 11:56:44 -0600
-MIME-Version: 1.0
-In-Reply-To: <5A914B45.8080200@xtaotech.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1751582AbeB0DUS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Feb 2018 22:20:18 -0500
+Received: from usper.debian.org ([128.31.0.69])
+        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+        by muffat.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1eqVgx-0005Qu-M7
+        for linux-xfs@vger.kernel.org; Tue, 27 Feb 2018 03:12:35 +0000
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.89)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1eqVgw-0001VE-ME
+        for linux-xfs@vger.kernel.org; Tue, 27 Feb 2018 03:12:34 +0000
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_4.15.1-1_source.changes
+Date: Tue, 27 Feb 2018 03:12:34 +0000
+Message-Id: <E1eqVgw-0001VE-ME@usper.debian.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yang Joseph <joseph.yang@xtaotech.com>, sandeen@redhat.com, nathans@debian.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 2/24/18 5:23 AM, Yang Joseph wrote:
-> hello,
-> 
-> Before the repair process, xfs_repair will check if user specified device already
-> has a writable mountpoint. And it will stat all the mountpoints of the system. If there
-> is a dead mountpoint, this checking will be blocked and xfs_repair will enter 'D' state.
-> 
-> So, if user can make sure there is no writable mountpoint, xfs_repair can skip
-> this checking. This PR add a new option '-F' to do this job.
-> 
-> Your suggestions are appreciated!
+xfsprogs_4.15.1-1_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_4.15.1-1.dsc
+  xfsprogs_4.15.1.orig.tar.gz
+  xfsprogs_4.15.1-1.debian.tar.xz
+  xfsprogs_4.15.1-1_source.buildinfo
 
-For starters, this patch seems whitespace mangled and does not apply for me.
+Greetings,
 
-However, repairing a filesystem that is actually mounted read-write
-could cause serious damage.  Giving the admin tools to do this carries
-significant risk; we already call it "dangerous" to repair even an
-ro-mounted filesystem.
-
-Do you have a testcase to produce a "dead" mountpoint which causes xfs_repair
-to go into "D" state?  Where was xfs_repair stuck?
-
-That sounds like a bug worth fixing, but I am much
-less excited about adding options which could do serious damage
-to a filesystem.
-
-Thanks,
--Eric
-
+	Your Debian queue daemon (running on host usper.debian.org)
