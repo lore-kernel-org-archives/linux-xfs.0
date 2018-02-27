@@ -1,83 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr011msb.fastweb.it ([85.18.95.108]:51880 "EHLO
-        mr011msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750877AbeBZVXv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 16:23:51 -0500
-Subject: Re: Reflink (cow) copy of busy files
+Received: from mx2.suse.de ([195.135.220.15]:32841 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750941AbeB0ABY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Feb 2018 19:01:24 -0500
+Date: Tue, 27 Feb 2018 00:01:22 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [RFC] mkfs config file bikeshed now!
+Message-ID: <20180227000122.GR14069@wotan.suse.de>
+References: <20180226224224.GE19312@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Mon, 26 Feb 2018 22:23:45 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <20180226172601.GC19312@magnolia>
-References: <20180224220757.GC30854@dastard>
- <711dd96e3c4b3e92d3fb38a01e77dc64@assyoma.it>
- <20180225024727.GD30854@dastard>
- <25ebcdb42650430d83d283435053efed@assyoma.it>
- <20180225211309.GF30854@dastard>
- <d105d0000652be75774cc1f5f23eae68@assyoma.it>
- <20180226002533.GG30854@dastard>
- <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
- <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
- <73ef828837683073feb1c49e3405dd6a@assyoma.it>
- <20180226172601.GC19312@magnolia>
-Message-ID: <2f48d103c0a6eff6c0a1136057e828b6@assyoma.it>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180226224224.GE19312@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, g.danti@assyoma.it
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Tso Ted <tytso@mit.edu>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Il 26-02-2018 18:26 Darrick J. Wong ha scritto:
-> The way reflink is supposed to work wrt consistency is:
-> 
-> 1. lock out all new io/fallocate activity on both inodes 
-> (iolock/mmaplock)
-> 2. wait for all directio to complete
-> 3. fsync both files (write all the dirty pagecache to disk)
-> 4. lock both inodes (ilock)
-> 5. clone each extent atomically
-> 6. unlock ilock
-> 7. unlock iolock/mmaplock
-> 
-> So at least in theory the cloned file will match whatever the host saw
-> on disk and page cache at the time the reflink call was initiated.
-> I say 'in theory' because there could be bugs.
+On Mon, Feb 26, 2018 at 02:42:24PM -0800, Darrick J. Wong wrote:
+> Note that a libconfig file (Dave suggested libconfig ages ago) might
+> look more like this:
 
-Great! CoW will be a great addition for XFS when it will be considered 
-stable.
+No, Dave *only hinted* towards libconfig ;)
 
-> Whatever dirty state is in the guest VM stays in that VM, which means
-> that if you only cp --reflink on the host, the clone you get will
-> reflect the virtual disk state as if you'd kill -9'd the VM, cloned the
-> VM disk, and restarted the VM.  Upon restart the log recovers whatever
-> metadata made it out of the VM.
+I ran into grotesque issues with libconfig, and quickly moved to evaluate
+libini_config (used for SSSD) as an alternative. IMHO it had the best
+and up to date implementation, had great community traction, and I saw
+support for it on a slew of old older distros.
 
-Sure, it is what I means for "crash-consistent".
+I also evaluated Ted Tso's e2fprogs profile parser (based on MIT kerberos), and
+it turns out that its 14.86% the size of libini_config.so.5.2.0, which is an
+incredible bonus. It also supports to work with a slew of different OSes (which
+we probably don't care for), but the gains in size are perhaps worth
+considering. That and the fact that it will likely build on probably even
+more ancient distros.  The e2fsprogs profile parser also lacks uint64_t support
+but adding support is very trivial.  Another thing with e2fprogs's profile
+parser is we'd have to come to an agreement with Ted and the e2fsprogs
+community on sharing the library code. He seems to be open to that if we go
+this route. To help I already did a lot of the work of extracting what we'd
+need and also threw in a demo program:
 
-> However, if you tell the guest to freeze the fs before cloning (as Dave
-> suggested earlier) the guest will flush all its state to the upper 
-> level
-> (the host) and the host will push all that out to disk before cloning.
-> The snapshot you create should be cleaner because you're effectively
-> prepaying the recovery costs by flushing everything before taking the
-> snapshot.
+https://gitlab.com/mcgrof/libekprofile
 
-True, and this is "application-level consistency" (which requires a 
-guest agent and possibly even an application-specific agent)
+Similar review / demo is available with the other libraries:
 
-> Also note that if the host goes down before returning from the syscall,
-> the log will continue on with whichever extent was being cloned at the
-> time in order to preserve metadata integrity, but the destination file
-> will reflect a partial copy.
+https://gitlab.com/mcgrof/libconfig-int64-issues
+https://gitlab.com/mcgrof/libini_config-demo
 
-Thanks for pointing that, and for your extremely clear explanation!
+For boring details on further evaluation with other filesystems and what they
+do and nitty gritty details of the above evaluation you can read my paper [0].
+I even had evaluated NFS's configuration parser... at this point I was surprised
+everyone keeps re-inventing the wheel...
 
+One reason to consider sharing also is to help other filesystems as they
+likely will run into similar requirements. Why does everyone keep re-inventing
+this simple wheel on filesystem configuration parsers? Yes I suspect btrfs may
+want something similar.
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+So in terms of bikeshedding -- its probably important also to at least zero down on
+a library we want to work with. The rest I suspect will actually be pretty
+trivial bikeshedding.
+
+FWIW both libini_config and the e2fsprogs profile parser could cope with
+namespaces on the configuration file as well. The syntax just varies
+slightly. IIRC with e2fsprogs profile parsers we could end up with something
+like:
+
+[defaults]
+foo=0
+bar=0
+[stuff]
+	some_release =  {
+		foo=1
+		bar=2
+	}
+	new_release = {
+		foo=2
+	}
+
+Meanwhile I think with libini_config it was something like:
+
+[defaults]
+foo=0
+bar=0
+[stuff/some_release]
+foo=1
+bar=2
+[stuff/new_release]
+foo=2
+
+[0] https://gitlab.com/mcgrof/filesystem-configuration-paper/blob/master/paper.pdf
+
+  Luis
