@@ -1,56 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mr013msb.fastweb.it ([85.18.95.104]:39992 "EHLO
-        mr013msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751499AbeBZV2j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Feb 2018 16:28:39 -0500
-Subject: Re: Reflink (cow) copy of busy files
+Received: from sandeen.net ([63.231.237.45]:35890 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751697AbeB0AKL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Feb 2018 19:10:11 -0500
+Subject: Re: [RFC] mkfs config file bikeshed now!
+References: <20180226224224.GE19312@magnolia>
+ <20180227000122.GR14069@wotan.suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3e239e61-bc79-c594-c1fd-44fa3efe779d@sandeen.net>
+Date: Mon, 26 Feb 2018 18:10:09 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date: Mon, 26 Feb 2018 22:28:37 +0100
-From: Gionatan Danti <g.danti@assyoma.it>
-In-Reply-To: <CAOQ4uxh5OrWyD9DddC7W9UYPaYP1ON1CzKUB=R+8midTFsa+bg@mail.gmail.com>
-References: <9e69fcd01e1c02ea53e0e1ac66d60d24@assyoma.it>
- <20180224220757.GC30854@dastard>
- <711dd96e3c4b3e92d3fb38a01e77dc64@assyoma.it>
- <20180225024727.GD30854@dastard>
- <25ebcdb42650430d83d283435053efed@assyoma.it>
- <20180225211309.GF30854@dastard>
- <d105d0000652be75774cc1f5f23eae68@assyoma.it>
- <20180226002533.GG30854@dastard>
- <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
- <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
- <73ef828837683073feb1c49e3405dd6a@assyoma.it>
- <CAOQ4uxh5OrWyD9DddC7W9UYPaYP1ON1CzKUB=R+8midTFsa+bg@mail.gmail.com>
-Message-ID: <00a65dbb1d14b47fb92409db5e7d1e6e@assyoma.it>
+In-Reply-To: <20180227000122.GR14069@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, g.danti@assyoma.it
-
-Il 26-02-2018 21:29 Amir Goldstein ha scritto:
-> I was also expecting dirty data to be lost, but according to Darrick 
-> that is
-> not the case for page cache dirty data, although in all likelyhook, 
-> your VM
-> is using direct IO to write to image file.
-
-Yeah, it was better than expected. For some VM I use Qemu/KVM writeback 
-policy rather than "none"/O_DIRECT, so the fact that host-side dirty 
-data will not be lost when reflinking is a pleasant surprise.
-
-> I think your use case is interesting and this is definitely the right 
-> place
-> to ask these questions.
-
-Great ;)
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Tso Ted <tytso@mit.edu>
+Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, NeilBrown <neilb@suse.com>, Jeff Mahoney <jeffm@suse.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+
+On 2/26/18 6:01 PM, Luis R. Rodriguez wrote:
+>  IIRC with e2fsprogs profile parsers we could end up with something
+> like:
+> 
+> [defaults]
+> foo=0
+> bar=0
+> [stuff]
+> 	some_release =  {
+> 		foo=1
+> 		bar=2
+> 	}
+> 	new_release = {
+> 		foo=2
+> 	}
+
+I can't tell what that means.  What's "stuff?"  Why would we need this sort of
+nesting?
+
+I /really/ want to adhere to the KISS principle here as much as possible.
+
+The last thing I want is for the config file structure to make it difficult
+for admins to understand, and easy to mis-write, resulting in unexpected
+configs deployed...
+
+There are all kinds of clever things we could do (see previous question about
+inheritance) but config files are going to be write-once-use-many for the most
+part, and I really think that complexity would be a net negative here.  I'd
+much rather have explicit cut and paste in each section than confusing nesting
+of option specifications.
+
+-Eric
