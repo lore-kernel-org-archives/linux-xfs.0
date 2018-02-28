@@ -1,142 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55156 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933833AbeB1R5o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Feb 2018 12:57:44 -0500
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] xfs: implement the lazytime mount option
-Date: Wed, 28 Feb 2018 09:57:37 -0800
-Message-Id: <20180228175737.317-3-hch@lst.de>
-In-Reply-To: <20180228175737.317-1-hch@lst.de>
-References: <20180228175737.317-1-hch@lst.de>
+Received: from mr014msb.fastweb.it ([85.18.95.103]:36820 "EHLO
+        mr014msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932126AbeB1S2C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Feb 2018 13:28:02 -0500
+Subject: Re: Reflink (cow) copy of busy files
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Wed, 28 Feb 2018 19:27:57 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20180228170737.GL19312@magnolia>
+References: <d105d0000652be75774cc1f5f23eae68@assyoma.it>
+ <20180226002533.GG30854@dastard>
+ <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
+ <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
+ <73ef828837683073feb1c49e3405dd6a@assyoma.it>
+ <20180226172601.GC19312@magnolia> <20180227003348.GH30854@dastard>
+ <fc797c0a-7263-c347-729d-c381b6936d3a@assyoma.it>
+ <20180227220404.GI30854@dastard>
+ <e20d5782df830e4ae36917191bbe0750@assyoma.it>
+ <20180228170737.GL19312@magnolia>
+Message-ID: <358aa0b224b6a7017f1c8af845a3b9bf@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, g.danti@assyoma.it
 
-Use the VFS dirty inode tracking for lazytime inodes only, and just
-log them in ->dirty_inode.
+Il 28-02-2018 18:07 Darrick J. Wong ha scritto:
+> reflink performs (more or less) a fdatasync of the source and dest file
+> before it starts so that any dirty pages backed by delayed allocation
+> reservation will be allocated and written to disk, but it doesn't do 
+> the
+> "force all dirty metadata out to log" action that distinguishes
+> fdatasync from fsync.  That is a deliberate design decision because:
+> 
+> 1) fsync is fairly heavyweight,
+> 2) customers might have disposable environments where it is preferable
+>    to lose srcfile and destfile over paying performance penalties
+>    all the time, and
+> 3) if you need srcfile to be completely stable on disk, you needed to
+>    call fsync anyway, and nothing prevents you from doing so before
+>    calling copy_file_range/clone_file_range if that is part of your
+>    operational requirements.
+> 
+> In other words, if at a certain point you can't afford to lose the
+> source file due to a host crash, you have to call fsync, as has been 
+> the
+> case for ages.  reflink does not itself call fsync, nor does it 
+> increase
+> the chances of losing any file contents that weren't fsync'd before the
+> host went down.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iops.c        | 13 ++++++++++++-
- fs/xfs/xfs_super.c       | 23 +++++++++++++++++++++++
- fs/xfs/xfs_trans_inode.c | 14 ++++++++++++++
- 3 files changed, 49 insertions(+), 1 deletion(-)
+Ok, this is exactly what I expect.
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 56475fcd76f2..8567951eff10 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -46,6 +46,7 @@
- #include <linux/security.h>
- #include <linux/iomap.h>
- #include <linux/slab.h>
-+#include <linux/iversion.h>
- 
- /*
-  * Directories have different lock order w.r.t. mmap_sem compared to regular
-@@ -1052,11 +1053,21 @@ xfs_vn_update_time(
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
-+	int			log_flags = XFS_ILOG_TIMESTAMP;
- 	struct xfs_trans	*tp;
- 	int			error;
- 
- 	trace_xfs_update_time(ip);
- 
-+	if (inode->i_sb->s_flags & SB_LAZYTIME) {
-+		if (!((flags & S_VERSION) &&
-+		      inode_maybe_inc_iversion(inode, false)))
-+			return generic_update_time(inode, now, flags);
-+
-+		/* Capture the iversion update that just occurred */
-+		log_flags |= XFS_ILOG_CORE;
-+	}
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
- 	if (error)
- 		return error;
-@@ -1070,7 +1081,7 @@ xfs_vn_update_time(
- 		inode->i_atime = *now;
- 
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
-+	xfs_trans_log_inode(tp, ip, log_flags);
- 	return xfs_trans_commit(tp);
- }
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 7aba628dc527..20d53f125c35 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1007,6 +1007,28 @@ xfs_fs_destroy_inode(
- 	xfs_inode_set_reclaim_tag(ip);
- }
- 
-+static void
-+xfs_fs_dirty_inode(
-+	struct inode			*inode,
-+	int				flag)
-+{
-+	struct xfs_inode		*ip = XFS_I(inode);
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_trans		*tp;
-+
-+	if (!(inode->i_sb->s_flags & SB_LAZYTIME))
-+		return;
-+	if (flag != I_DIRTY_SYNC || !(inode->i_state & I_DIRTY_TIME))
-+		return;
-+
-+	if (xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp))
-+		return;
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
-+	xfs_trans_commit(tp);
-+}
-+
- /*
-  * Slab object creation initialisation for the XFS inode.
-  * This covers only the idempotent fields in the XFS inode;
-@@ -1787,6 +1809,7 @@ xfs_fs_free_cached_objects(
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-+	.dirty_inode		= xfs_fs_dirty_inode,
- 	.drop_inode		= xfs_fs_drop_inode,
- 	.put_super		= xfs_fs_put_super,
- 	.sync_fs		= xfs_fs_sync_fs,
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index fddacf9575df..bbb596860bf8 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -98,9 +98,23 @@ xfs_trans_log_inode(
- 	xfs_inode_t	*ip,
- 	uint		flags)
- {
-+	struct inode	*inode = VFS_I(ip);
-+
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 
-+	/*
-+	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
-+	 * don't matter - we either will need an extra transaction in 24 hours
-+	 * to log the timestamps, or will clear already cleared fields in the
-+	 * worst case.
-+	 */
-+	if (inode->i_state & (I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED)) {
-+		spin_lock(&inode->i_lock);
-+		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
-+		spin_unlock(&inode->i_lock);
-+	}
-+
- 	/*
- 	 * First time we log the inode in a transaction, bump the inode change
- 	 * counter if it is configured for this to occur. While we have the
+To add some context: Qemu/KVM added safe barrier/fsync passing years 
+ago, so when a guest issues a fsync+barrier operation (ie: after key 
+operations, as a journal update or a COMMIT) they are immediately passed 
+to the host, which issues real fsync+barrier on the backing file. In 
+other words, host's writeback cache is used as the volatile disk's DRAM 
+cache (which needs to be flushed at specific interval). See: 
+https://www.static.linuxfound.org/jp_uploads/JLS2009/jls09_hellwig.pdf
+
+Back to the original argument: are guest/user initiated fsyncs+barriers 
+honored even *during a cp --reflink copy*? If so, I can't see any 
+shortcoming in using reflinking to hot copy a busy file. Sure, I risk 
+losing async writes (which are in writeback host cache *or* in the 
+unflushed volatile disk's DRAM cache), but this is nothing more (or 
+less) than a normal, interrupted copy. I am right saying that?
+
+Maybe encapsulating the reflink copy in between two fsync calls is a 
+good idea?
+
+Thanks.
+
 -- 
-2.14.2
-
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
