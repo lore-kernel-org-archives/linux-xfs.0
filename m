@@ -1,7 +1,7 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from m213138.ym.163.com ([223.252.213.138]:39517 "EHLO
+Received: from m213138.ym.163.com ([223.252.213.138]:39635 "EHLO
         m213138.ym.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751605AbeB1Dkk (ORCPT
+        with ESMTP id S1751611AbeB1Dkk (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 22:40:40 -0500
 Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
 References: <5A914B45.8080200@xtaotech.com>
@@ -9,8 +9,8 @@ References: <5A914B45.8080200@xtaotech.com>
  <20180224220428.GB30854@dastard> <5A953693.8080101@xtaotech.com>
  <5aeeed0a-f808-0331-d528-04fdd42d90be@sandeen.net>
 From: Yang Joseph <joseph.yang@xtaotech.com>
-Message-ID: <5A962355.1090408@xtaotech.com>
-Date: Wed, 28 Feb 2018 11:34:45 +0800
+Message-ID: <5A9622A2.4030309@xtaotech.com>
+Date: Wed, 28 Feb 2018 11:31:46 +0800
 MIME-Version: 1.0
 In-Reply-To: <5aeeed0a-f808-0331-d528-04fdd42d90be@sandeen.net>
 Content-Type: text/plain; charset=windows-1252; format=flowed
@@ -43,14 +43,13 @@ On 02/27/2018 10:47 PM, Eric Sandeen wrote:
 >
 > # repair/xfs_repair /dev/sdb1
 > xfs_repair: cannot open /dev/sdb1: Device or resource busy
+As /dev/sdb1 will never be modified, I think this behavior is acceptable.
 >
 > With your patch, if we explicitly ask xfs_repair to repair a non-xfs
 > filesystem which is mounted, it will get past all of the checks and
 > try to open the device O_EXCL - which should fail if the device is
 > mounted, but I'm guessing your fuse case would now simply hang here
 > instead.
-As fuse mountpoint is filtered out, xfs_repair will not hang here.
-(No stat(/fuse/mountpoint/))
 >
 > Worse, other utilities aren't so graceful.
 >
@@ -68,9 +67,31 @@ As fuse mountpoint is filtered out, xfs_repair will not hang here.
 > All copies completed.
 >
 > (now we've just written over a mounted, writable ext4 filesystem)
+This is horrible. Maybe we can add O_EXCL flag when open target device.
+
+   //copy/xfs_copy.c:main()
+   /* now open targets */
+
+   open_flags = O_RDWR | O_EXCL; // add O_EXCL
+
+#mount
+...
+/dev/sdf1 on /root/xx1 type ext4 (rw,relatime,data=ordered)
+// /dev/sdf2 contains a xfs image
+# ./xfs_copy.new /dev/sdf2 /dev/sdf1
+xfs_copy.new:  couldn't open target "/dev/sdf1"
+Aborting XFS copy - reason:  Device or resource busy
+
 >
 > (Anyone want to investigate whether every device open in xfsprogs should
 > be O_EXCL?)
+// from manpage: OPEN(2)
+on Linux 2.6
+               and later, O_EXCL can be used without O_CREAT if pathname 
+refers to a block device.  If the block device is  in  use
+               by the system (e.g., mounted), open() fails with the 
+error EBUSY.
+
 >
 > Also, in general:
 >
@@ -85,6 +106,7 @@ As fuse mountpoint is filtered out, xfs_repair will not hang here.
 >
 > It essentially states that you are the author of this work and you have
 > the right to submit it for inclusion in this project.
+ok, thank you.
 >
 > Thanks,
 > -Eric
