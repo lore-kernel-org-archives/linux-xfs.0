@@ -1,65 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36598 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751791AbeB1D5e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Feb 2018 22:57:34 -0500
-Subject: Re: [PATCH v2] xfs_repair: Add missing braces
-References: <b311ddb9-e996-9e4b-f7f1-d0d45b8f782a@sandeen.net>
- <1519789313-4037-1-git-send-email-yangx.jy@cn.fujitsu.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e5b3cd69-4e4b-f5b4-6867-8ce1cad8e4e1@sandeen.net>
-Date: Tue, 27 Feb 2018 21:57:32 -0600
+Received: from mr014msb.fastweb.it ([85.18.95.103]:50348 "EHLO
+        mr014msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751793AbeB1HIw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Feb 2018 02:08:52 -0500
+Subject: Re: Reflink (cow) copy of busy files
 MIME-Version: 1.0
-In-Reply-To: <1519789313-4037-1-git-send-email-yangx.jy@cn.fujitsu.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date: Wed, 28 Feb 2018 08:08:47 +0100
+From: Gionatan Danti <g.danti@assyoma.it>
+In-Reply-To: <20180227220404.GI30854@dastard>
+References: <25ebcdb42650430d83d283435053efed@assyoma.it>
+ <20180225211309.GF30854@dastard>
+ <d105d0000652be75774cc1f5f23eae68@assyoma.it>
+ <20180226002533.GG30854@dastard>
+ <6eacd8faae2779b8dfb62fb0d65a9411@assyoma.it>
+ <CAOQ4uxixAP6F8f6hT5VENQLD0o_3Bym6pkAJhXva5b99BhE9Eg@mail.gmail.com>
+ <73ef828837683073feb1c49e3405dd6a@assyoma.it>
+ <20180226172601.GC19312@magnolia> <20180227003348.GH30854@dastard>
+ <fc797c0a-7263-c347-729d-c381b6936d3a@assyoma.it>
+ <20180227220404.GI30854@dastard>
+Message-ID: <e20d5782df830e4ae36917191bbe0750@assyoma.it>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, g.danti@assyoma.it
 
-On 2/27/18 9:41 PM, Xiao Yang wrote:
-> When xlog_find_tail() fails to find the head or the tail, the missing
-> braces leads that an unparseable log always exits with status 2, even
-> if we've asked for -n or -L which should proceed.  We can expose this
-> issue by xfstests case xfs/098.
-> 
-> Fixes:'commit b04647edea32 ("xfs_repair: exit with status 2 if log dirtiness is unknown")'
-> 
-> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Il 27-02-2018 23:04 Dave Chinner ha scritto:
+> A host crash can lose data from the original file when it is
+> configured in writeback mode (as you've said you are using). If the
+> clone is there, both source and clone should be fully intact. If
+> it's not, then you will have lost data from the original image file.
 
-Thanks. I may make the subject more descriptive of the resulting
-bug, but this is much better.
+I have difficult grasping how a system crash during a cp --refcopy could 
+corrupt the source file.
+As per Darrick explanation, new writes on the original file should be 
+blocked/queued during the copy. Even if this is not the case, fsync 
+writes should complete only when data successfully landed on the disk 
+platter. Losing some second on async writes should not be a problem in 
+many environments (this is the very reasoning behind providing Qemu/KVM 
+with a working writeback option).
 
-And thanks again for spotting it!
+Clearly a crash during the copy *will* produce an invalid destination 
+file, but this can not be avoided (after all, the system crashed!).
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> But, really, why risk losing data or filesystem corruption by trying
+> to take shortcuts?
 
-> ---
+Losing data and filesystem corruption are two *very* different things. 
+On many VMs, I can afford losing some seconds of async writes; 
+obviously, fsync writes (which can lead do filesystem corruption) must 
+*not* be lost on *any* condition.
 
+The point of the discussion is that if a cp --reflink is suitable for 
+hot backup, it would be an extremely fast and convenient method to take 
+"cheap" snapshot of key files. But if an interrupted copy can lead to 
+total loss of the *original* file/filesystem, than this is clearly the 
+wrong idea.
 
->  repair/phase2.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/repair/phase2.c b/repair/phase2.c
-> index 992e997..c124882 100644
-> --- a/repair/phase2.c
-> +++ b/repair/phase2.c
-> @@ -78,12 +78,13 @@ zero_log(
->  		do_warn(
->  		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
->  			error);
-> -		if (!no_modify && !zap_log)
-> +		if (!no_modify && !zap_log) {
->  			do_warn(_(
->  "ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
->  "filesystem to replay the log or use the -L option to destroy the log and\n"
->  "attempt a repair.\n"));
->  			exit(2);
-> +		}
->  	} else {
->  		if (verbose) {
->  			do_log(
-> 
+I am missing something?
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
