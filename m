@@ -1,104 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53853 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751307AbeB0Qqz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Feb 2018 11:46:55 -0500
-Subject: Re: [PATCH v6 3/3] xfs: reject removal of realtime flag when datadev
- doesn't support DAX
-References: <151880058592.43131.558230052922233871.stgit@djiang5-desk3.ch.intel.com>
- <151880066614.43131.15847174332875373188.stgit@djiang5-desk3.ch.intel.com>
- <20180216172247.GS5217@magnolia> <20180218002317.GU7000@dastard>
- <20180220230109.GG27629@magnolia> <20180220231524.GD7000@dastard>
- <20180220232358.GH27629@magnolia>
-From: Dave Jiang <dave.jiang@intel.com>
-Message-ID: <1e6ed5f9-fdc1-f0f4-1ff7-e068f6506f39@intel.com>
-Date: Tue, 27 Feb 2018 09:46:54 -0700
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:42293 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751566AbeB1Dv5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Feb 2018 22:51:57 -0500
+From: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Subject: [PATCH v2] xfs_repair: Add missing braces
+Date: Wed, 28 Feb 2018 11:41:53 +0800
+Message-ID: <1519789313-4037-1-git-send-email-yangx.jy@cn.fujitsu.com>
+In-Reply-To: <b311ddb9-e996-9e4b-f7f1-d0d45b8f782a@sandeen.net>
+References: <b311ddb9-e996-9e4b-f7f1-d0d45b8f782a@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20180220232358.GH27629@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com
+To: sandeen@sandeen.net
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, Xiao Yang <yangx.jy@cn.fujitsu.com>
+
+When xlog_find_tail() fails to find the head or the tail, the missing
+braces leads that an unparseable log always exits with status 2, even
+if we've asked for -n or -L which should proceed.  We can expose this
+issue by xfstests case xfs/098.
+
+Fixes:'commit b04647edea32 ("xfs_repair: exit with status 2 if log dirtiness is unknown")'
+
+Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+---
+ repair/phase2.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 992e997..c124882 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -78,12 +78,13 @@ zero_log(
+ 		do_warn(
+ 		_("zero_log: cannot find log head/tail (xlog_find_tail=%d)\n"),
+ 			error);
+-		if (!no_modify && !zap_log)
++		if (!no_modify && !zap_log) {
+ 			do_warn(_(
+ "ERROR: The log head and/or tail cannot be discovered. Attempt to mount the\n"
+ "filesystem to replay the log or use the -L option to destroy the log and\n"
+ "attempt a repair.\n"));
+ 			exit(2);
++		}
+ 	} else {
+ 		if (verbose) {
+ 			do_log(
+-- 
+1.8.3.1
 
 
 
-On 02/20/2018 04:23 PM, Darrick J. Wong wrote:
-> On Wed, Feb 21, 2018 at 10:15:24AM +1100, Dave Chinner wrote:
->> On Tue, Feb 20, 2018 at 03:01:09PM -0800, Darrick J. Wong wrote:
->>> On Sun, Feb 18, 2018 at 11:23:17AM +1100, Dave Chinner wrote:
->>>> On Fri, Feb 16, 2018 at 09:22:47AM -0800, Darrick J. Wong wrote:
->>>>> On Fri, Feb 16, 2018 at 10:04:26AM -0700, Dave Jiang wrote:
->>>>>> In a situation where the rt_dev is DAX and data_dev is not DAX, if the user
->>>>>> requests to remove the realtime flag via ioctl we can no longer support DAX
->>>>>> for that file. Dynamic changing of S_DAX on the inode is not supported due
->>>>>> to various complications in the existing implementation. Therefore until we
->>>>>> address the dynamic S_DAX change issues, we must disallow realtime flag
->>>>>> being removed.
->>>>>>
->>>>>> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
->>>>>> Reviewed-by: Christoph Hellwig <hch@lst.de>
->>>>>> ---
->>>>>>  fs/xfs/xfs_ioctl.c |   14 ++++++++++++++
->>>>>>  1 file changed, 14 insertions(+)
->>>>>>
->>>>>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->>>>>> index 2c70a0a4f59f..edd97d527fe8 100644
->>>>>> --- a/fs/xfs/xfs_ioctl.c
->>>>>> +++ b/fs/xfs/xfs_ioctl.c
->>>>>> @@ -1030,6 +1030,20 @@ xfs_ioctl_setattr_xflags(
->>>>>>  {
->>>>>>  	struct xfs_mount	*mp = ip->i_mount;
->>>>>>  	uint64_t		di_flags2;
->>>>>> +	struct inode		*inode = VFS_I(ip);
->>>>>> +	struct super_block	*sb = inode->i_sb;
->>>>>> +
->>>>>> +	/*
->>>>>> +	 * In the case that the inode is realtime, and we are trying to remove
->>>>>> +	 * the realtime flag, and the rtdev supports DAX but the datadev does
->>>>>> +	 * not support DAX, we can't allow the realtime flag to be removed
->>>>>> +	 * since we do not support dynamic S_DAX flag removal yet.
->>>>>> +	 */
->>>>>> +	if (XFS_IS_REALTIME_INODE(ip) &&
->>>>>> +	    !(fa->fsx_xflags & FS_XFLAG_REALTIME) &&
->>>>>> +	    bdev_dax_supported(mp->m_rtdev_targp->bt_bdev, sb->s_blocksize) &&
->>>>>> +	    !bdev_dax_supported(mp->m_ddev_targp->bt_bdev, sb->s_blocksize))
->>>>>
->>>>> What happens here if we have a non-rt file that we're trying to turn
->>>>> into an rt file and the data dev supports dax but not the rt dev?
->>>>>
->>>>> Changing the rt flag is only supported on files with no data blocks (no
->>>>> extents, no delalloc blocks), so why can't we remove S_DAX from an empty
->>>>> file?  There aren't any memory mappings or page cache to get in the way,
->>>>> correct?
->>>>
->>>> File size can be non-zero, so you can have DAX read-over-hole
->>>> mappings present. I simply don't think it's safe to remove/add S_DAX
->>>> flags via ioctls right now. If we have a DAX capable rtdev, then the
->>>> only way we should allow rtdev+dax to be used right now is via the
->>>> RT inherit bit on the dir that creates files in the rtdev right from
->>>> the start. i.e. we can't set/remove the RT inode flag on an inode
->>>> via ioctl if rtdev+dax is enabled until the whole dynamic S_DAX
->>>> inode flag thing is resolved.
->>>
->>> Could we deal with the restriction that the DAX flag can't change
->>> (whether by user ioctl or by toggling the rt flag) unless the file size
->>> is zero?  That adds another way setting/clearing the realtime flag can
->>> fail, but at least it'd be the same EINVAL.
->>
->> I thought we still mmap a zero length file and get a page fault that
->> returns a zeroed page? Or does that segv?
-> 
-> I think it segfaults, but let's see...
-> 
-> $ rm -rf /opt/b ; xfs_io -f -c 'mmap -rw 0 1m' -c 'mread 512 20' /opt/b
-> Bus error
-> $ rm -rf /opt/b ; xfs_io -f -c 'mmap -rw 0 1m' -c 'mwrite 512 20' /opt/b
-> Bus error
-
-Darrick,
-So you want the change to be if the file size is 0 then we can modify
-the RT bit, otherwise reject if DAX is involved?
