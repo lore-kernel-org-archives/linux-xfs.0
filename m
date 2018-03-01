@@ -1,89 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55510 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932571AbeCEXdL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Mar 2018 18:33:11 -0500
-Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
-References: <20180305150546.32191-1-jtulak@redhat.com>
- <20180305215659.GE18129@dastard>
- <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net>
- <20180305223148.GG18129@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net>
-Date: Mon, 5 Mar 2018 17:33:10 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180305223148.GG18129@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:37423 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1162606AbeCAWgy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 17:36:54 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1erWnP-0001if-NP
+        for linux-xfs@vger.kernel.org; Fri, 02 Mar 2018 09:35:27 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.90_1)
+        (envelope-from <david@fromorbit.com>)
+        id 1erWnP-0007SQ-KV
+        for linux-xfs@vger.kernel.org; Fri, 02 Mar 2018 09:35:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: handle inconsistent log item formatting state correctly
+Date: Fri,  2 Mar 2018 09:35:27 +1100
+Message-Id: <20180301223527.28626-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 3/5/18 4:31 PM, Dave Chinner wrote:
-> On Mon, Mar 05, 2018 at 04:06:38PM -0600, Eric Sandeen wrote:
+From: Dave Chinner <dchinner@redhat.com>
 
-...
+Brian Foster reported an oops like:
 
-> Nope, xfs_repair is not packaged in the debian initramfs. And, well,
-> on a more recently installed machine:
-> 
-> $ lsinitramfs /boot/initrd.img-4.15.0-rc8-amd64  |grep xfs
-> lib/modules/4.15.0-rc8-amd64/kernel/fs/xfs
-> lib/modules/4.15.0-rc8-amd64/kernel/fs/xfs/xfs.ko
-> $
-> 
-> fsck.xfs isn't even in the built initramfs for a machine running
-> only XFS filesystems....
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
+IP: xlog_cil_push+0x184/0x400 [xfs]
+....
+Workqueue: xfs-cil/dm-3 xlog_cil_push_work [xfs]
+RIP: 0010:xlog_cil_push+0x184/0x400 [xfs]
+....
 
-Ok, well, that's a distro issue not an xfsprogs issue.  :)  Shows
-that the script needs to test for presence of xfs_repair, though.
+This was caused by the log item size calculation return that there
+were no log vectors to write on a normal buffer. This should only
+occur for ordered buffers - the exception handling had never been
+executed for a non-ordered buffer. This mean we ended up with
+a log item marked dirty (XFS_LID_DIRTY) but with no log vectors
+attached that got added to the CIL. When the CIL was pushed, it
+tripped over the null log vector on the dirty log item when trying
+to chain the log vectors that needed to be written to the log.
 
->>> Also, if the log is dirty, xfs_repair won't run. If the filesystem
->>> is already mounted read-only, xfs_repair won't run. So if we're
->>> forcing a boot time check, we want it to run unconditionally and fix
->>> any problems found automatically, right?
->>
->> Yep, I'm curious if this was tested - I played with something like this
->> a while ago but didn't take notes.  ;)
->>
->> As for running automatically and fix any problems, we may need to make
->> a decision.  If it won't mount due to a log problem, do we automatically
->> use -L or drop to a shell and punt to the admin?  (That's what we would
->> do w/o any fsck -f invocation today...)
-> 
-> Define the expected "forcefsck" semantics, and that will tell us
-> what we need to do. Is it automatic system recovery? What if the
-> root fs can't be mounted due to log replay problems?
+Fix this by clearing the XFS_LID_DIRTY flag on the log item if
+nothing gets formatted. This will prevent the log item from being
+added incorrectly to the CIL, and hence avoid the crash
 
-You're asking too much.  ;)  Semantics?  ;)  Best we can probably do
-is copy what e2fsck does - it tries to replay the log before running
-the actual fsck.  So ... what does e2fsck do if /it/ can't replay
-the log?
+Reported-by: Brian Foster <bfoster@redhat.com>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_cil.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 61ab5c0a4c45..c1ecd7698100 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -345,9 +345,16 @@ xlog_cil_insert_format_items(
+ 		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
+ 			ordered = true;
  
->>> I also wonder if we can limit this to just the boot infrastructure,
->>> because I really don't like the idea of users using fsck.xfs -f to
->>> repair damage filesystems because "that's what I do to repair ext4
->>> filesystems"....
->>
->> Depending on how this gets fleshed out, fsck.xfs -f isn't any different
->> than bare xfs_repair...  (Unless all of the above suggestions about dirty
->> logs get added, then it certainly is!)  So, yeah...
->>
->> How would you propose limiting it to the boot environment? 
-> 
-> I have no idea - this is all way outside my area of expertise...
+-		/* Skip items that do not have any vectors for writing */
+-		if (!shadow->lv_niovecs && !ordered)
++		/*
++		 * Skip items that do not have any vectors for writing. These
++		 * log items must now be considered clean in this transaction,
++		 * so clear the XFS_LID_DIRTY flag to ensure it doesn't get
++		 * added to the CIL by mistake.
++		 */
++		if (!shadow->lv_niovecs && !ordered) {
++			lidp->lid_flags &= ~XFS_LID_DIRTY;
+ 			continue;
++		}
+ 
+ 		/* compare to existing item size */
+ 		old_lv = lip->li_lv;
+@@ -486,6 +493,14 @@ xlog_cil_insert_items(
+ 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
+ 			continue;
+ 
++		/*
++		 * Log items added to the CIL must have a formatted log vector
++		 * attached to them. This is a requirement of the log vector
++		 * chaining used separate the log items from the changes that
++		 * need to be written to the log in xlog_cil_push().
++		 */
++		ASSERT(lip->li_lv);
++
+ 		/*
+ 		 * Only move the item if it isn't already at the tail. This is
+ 		 * to prevent a transient list_empty() state when reinserting
+@@ -655,6 +670,7 @@ xlog_cil_push(
+ 	struct xfs_log_vec	lvhdr = { NULL };
+ 	xfs_lsn_t		commit_lsn;
+ 	xfs_lsn_t		push_seq;
++	struct xfs_log_item	*item;
+ 
+ 	if (!cil)
+ 		return 0;
+@@ -722,11 +738,8 @@ xlog_cil_push(
+ 	 */
+ 	lv = NULL;
+ 	num_iovecs = 0;
+-	while (!list_empty(&cil->xc_cil)) {
+-		struct xfs_log_item	*item;
+-
+-		item = list_first_entry(&cil->xc_cil,
+-					struct xfs_log_item, li_cil);
++	while ((item = list_first_entry_or_null(&cil->xc_cil,
++					struct xfs_log_item, li_cil))) {
+ 		list_del_init(&item->li_cil);
+ 		if (!ctx->lv_chain)
+ 			ctx->lv_chain = item->li_lv;
+-- 
+2.16.1
 
-A halfway measure would be to test whether the script is interactive, perhaps?
-
-https://www.tldp.org/LDP/abs/html/intandnonint.html
-
-case $- in
-*i*)    # interactive shell
-;;
-*)      # non-interactive shell
-;;
-
--Eric
