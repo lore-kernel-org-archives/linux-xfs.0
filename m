@@ -1,100 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33800 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934327AbeCGT6d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Mar 2018 14:58:33 -0500
-Subject: Re: [PATCH] xfs: do not log/recover swapext extent owner changes for
- deleted inodes
-References: <f2dcef25-01f2-d7fe-3b2d-f54a809215a5@redhat.com>
- <20180226163951.GC51394@bfoster.bfoster>
- <20180226205622.GD51394@bfoster.bfoster>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <20228c4e-eac9-edc7-a364-27fd387b916d@sandeen.net>
-Date: Wed, 7 Mar 2018 13:58:31 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:53510 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1162589AbeCAWsG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 17:48:06 -0500
+Date: Thu, 1 Mar 2018 14:48:00 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
+Message-ID: <20180301224800.GI12763@magnolia>
+References: <20180228154951.31714-1-vbendel@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180226205622.GD51394@bfoster.bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180228154951.31714-1-vbendel@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Vratislav Bendel <vbendel@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, djwong@kernel.org
 
-
-
-On 2/26/18 2:56 PM, Brian Foster wrote:
-> On Mon, Feb 26, 2018 at 11:39:51AM -0500, Brian Foster wrote:
->> On Fri, Feb 23, 2018 at 05:49:41PM -0600, Eric Sandeen wrote:
->>> Today if we run swapext and crash, log replay can fail because
->>> the recovery code tries to instantiate the donor inode from
->>> disk to replay the swapext, but it's been deleted and we throw
->>> corruption failures if we try to get an inode off disk with
->>> i_mode == 0.
->>>
->>> This fixes both sides: We don't log the swapext change if the
->>> inode has been deleted, and we don't try to recover it either.
->>>
->>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->>> ---
->>>
->>> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
->>> index 26f2413..de48eb8 100644
->>> --- a/fs/xfs/xfs_inode_item.c
->>> +++ b/fs/xfs/xfs_inode_item.c
->>> @@ -436,6 +436,12 @@ xfs_inode_item_format(
->>>  			~(XFS_ILOG_ADATA | XFS_ILOG_ABROOT | XFS_ILOG_AEXT);
->>>  	}
->>>  
->>> +	/* If this inode has been deleted do not log swapext owner changes */
->>> +	if (VFS_I(ip)->i_mode == 0) {
->>> +		ilf->ilf_fields &= ~(XFS_ILOG_DOWNER | XFS_ILOG_AOWNER);
->>> +		iip->ili_fields &= ~(XFS_ILOG_DOWNER | XFS_ILOG_AOWNER);
->>> +	}
->>> +
->>
->> Do you have any more details on the context that leads to this issue?
->> More specifically, is the problem limited to/because of the case where
->> the inode is relogged and the owner change flag carries forward to the
->> transaction that ultimately frees it (which seems to me is what the
->> above prevents)? Or is there some other scenario that can lead to this?
->>
->> I guess I'm kind of wondering if this can still happen in spite of the
->> above, if the extent swap -> unlink happens in separate log formats and
->> the inode happens to be written back before a crash and the log tail
->> being unpinned. Now that I think of it I suppose the log recovery lsn
->> ordering should prevent that kind of thing on v5 filesystems, at least.
->>
+On Wed, Feb 28, 2018 at 04:49:51PM +0100, Vratislav Bendel wrote:
+> The function xfs_buftarg_isolate() used by xfs buffer schrinkers 
+> to determine whether a buffer should be isolated and disposed 
+> from LRU list, has inverted logic.
 > 
-> After playing around a bit I think I managed to set myself straight on
-> this. Indeed, I think the above recovery LSN ordering rules hold for any
-> separately logged extent swap and subsequent inode free on v5
-> filesystems. It essentially doesn't matter on v4 filesystems because
-> there is no metadata owner update on extent swap, since that format
-> doesn't have the owner info in the bmbt buffers.
+> Excerpt from xfs_buftarg_isolate():
+>         /*
+>          * Decrement the b_lru_ref count unless the value is already
+>          * zero. If the value is already zero, we need to reclaim the
+>          * buffer, otherwise it gets another trip through the LRU.
+>          */
+>         if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
+>                 spin_unlock(&bp->b_lock);
+>                 return LRU_ROTATE;
+>         }
 > 
-> So I think this covers everything. My only remaining comments are to
-> perhaps add a bit more detail in the commit log and/or code comments to
-> document the situation. Also, have you considered defining a new
-> function to perform this update on the inode item explicitly from
-> xfs_ifree() rather than burying it down in xfs_inode_item_format() (more
-> for clarity than any technical reason that I can think of)?
+> However, as per documentation, atomic_add_unless() returns _zero_
+> if the atomic value was originally equal to the specified *unsless* value.
+> 
+> Ultimately causing a xfs_buffer with ->b_lru_ref == 0, to take another 
+> trip around LRU, while isolating buffers with non-zero b_lru_ref.
+> 
+> Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
+> CC: Brian Foster <bfoster@redhat.com>
 
-Sorry for the late reply.
+Looks ok, will test...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm not sure I see a way to do this in xfs_ifree, because we don't have
-access to the inode log format to make the necessary changes at that point.
-Or am I missing something?
+--D
 
-And, um, you've probably been more methodical than I have in checking out
-the change - can I ask for a suggestion of what sorts of comments you'd
-like to see to make things more clear?  I fear I'm in "unknown unknowns"
-territory.
-
-Thanks,
--Eric
-
-
-> Brian
-
+> ---
+>  fs/xfs/xfs_buf.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index d1da2ee9e6db..ac669a10c62f 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1708,7 +1708,7 @@ xfs_buftarg_isolate(
+>  	 * zero. If the value is already zero, we need to reclaim the
+>  	 * buffer, otherwise it gets another trip through the LRU.
+>  	 */
+> -	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
+> +	if (atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
+>  		spin_unlock(&bp->b_lock);
+>  		return LRU_ROTATE;
+>  	}
+> -- 
+> 2.14.3
+> 
