@@ -1,84 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:9457 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164734AbeCBEDG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:03:06 -0500
-Subject: [PATCH v5 05/12] ext4,
- dax: define ext4_dax_*() infrastructure in all cases
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 01 Mar 2018 19:54:00 -0800
-Message-ID: <151996284080.28483.11296105582801541424.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:37822 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161161AbeCATNo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:44 -0500
+Subject: [PATCH 07/16] xfs_db: print transaction reservation type information
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 01 Mar 2018 11:13:39 -0800
+Message-ID: <151993161907.22223.2470790760502530047.stgit@magnolia>
+In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
-In preparation for fixing S_DAX to be defined in the CONFIG_FS_DAX=n +
-CONFIG_DEV_DAX=y case, move the definition of these routines outside of
-the "#ifdef CONFIG_FS_DAX" guard. This is also a coding-style fix to
-move all ifdef handling to header files rather than in the source. The
-compiler will still be able to determine that all the related code can
-be discarded in the CONFIG_FS_DAX=n case.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Cc: <stable@vger.kernel.org>
-Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Create a new xfs_db command to print the transaction reservation info for
+a given filesystem.  This will make it easier to compare the calculations
+made by the kernel and xfsprogs in case there is a discrepancy.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/ext4/file.c |    6 ------
- 1 file changed, 6 deletions(-)
+ db/command.c             |    1 +
+ db/logformat.c           |   59 ++++++++++++++++++++++++++++++++++++++++++++++
+ db/logformat.h           |    1 +
+ libxfs/libxfs_api_defs.h |    2 +-
+ man/man8/xfs_db.8        |    6 +++++
+ 5 files changed, 68 insertions(+), 1 deletion(-)
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index fb6f023622fe..51854e7608f0 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -34,7 +34,6 @@
- #include "xattr.h"
- #include "acl.h"
+
+diff --git a/db/command.c b/db/command.c
+index 5ff3c4f..12ae5b7 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -138,6 +138,7 @@ init_commands(void)
+ 	hash_init();
+ 	inode_init();
+ 	input_init();
++	logres_init();
+ 	logformat_init();
+ 	io_init();
+ 	metadump_init();
+diff --git a/db/logformat.c b/db/logformat.c
+index 70097bc..b290bd3 100644
+--- a/db/logformat.c
++++ b/db/logformat.c
+@@ -147,3 +147,62 @@ logformat_init(void)
  
--#ifdef CONFIG_FS_DAX
- static ssize_t ext4_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- {
- 	struct inode *inode = file_inode(iocb->ki_filp);
-@@ -60,7 +59,6 @@ static ssize_t ext4_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	file_accessed(iocb->ki_filp);
- 	return ret;
+ 	add_command(&logformat_cmd);
  }
--#endif
++
++static void
++print_logres(
++	int			i,
++	struct xfs_trans_res	*res)
++{
++	dbprintf(_("type %d logres %u logcount %d flags 0x%x\n"),
++		i, res->tr_logres, res->tr_logcount, res->tr_logflags);
++}
++
++int
++logres_f(
++	int			argc,
++	char			**argv)
++{
++	struct xfs_trans_res	resv;
++	struct xfs_trans_res	*res;
++	struct xfs_trans_res	*end_res;
++	int			i;
++
++	res = (struct xfs_trans_res *)M_RES(mp);
++	end_res = (struct xfs_trans_res *)(M_RES(mp) + 1);
++	for (i = 0; res < end_res; i++, res++)
++		print_logres(i, res);
++	libxfs_log_get_max_trans_res(mp, &resv);
++	print_logres(-1, &resv);
++
++	return 0;
++}
++
++static void
++logres_help(void)
++{
++	dbprintf(_(
++"\n"
++" The 'logres' command prints information about all log reservation types.\n"
++" This includes the reservation space, the intended transaction roll count,\n"
++" and the reservation flags, if any.\n"
++"\n"
++	));
++}
++
++static const struct cmdinfo logres_cmd = {
++	.name =		"logres",
++	.altname =	NULL,
++	.cfunc =	logres_f,
++	.argmin =	0,
++	.argmax =	0,
++	.canpush =	0,
++	.args =		NULL,
++	.oneline =	N_("dump log reservations"),
++	.help =		logres_help,
++};
++
++void
++logres_init(void)
++{
++	add_command(&logres_cmd);
++}
+diff --git a/db/logformat.h b/db/logformat.h
+index f9763ee..60396c0 100644
+--- a/db/logformat.h
++++ b/db/logformat.h
+@@ -17,3 +17,4 @@
+  */
  
- static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- {
-@@ -70,10 +68,8 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	if (!iov_iter_count(to))
- 		return 0; /* skip atime */
- 
--#ifdef CONFIG_FS_DAX
- 	if (IS_DAX(file_inode(iocb->ki_filp)))
- 		return ext4_dax_read_iter(iocb, to);
--#endif
- 	return generic_file_read_iter(iocb, to);
- }
- 
-@@ -179,7 +175,6 @@ static ssize_t ext4_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	return iov_iter_count(from);
- }
- 
--#ifdef CONFIG_FS_DAX
- static ssize_t
- ext4_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- {
-@@ -208,7 +203,6 @@ ext4_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		ret = generic_write_sync(iocb, ret);
- 	return ret;
- }
--#endif
- 
- static ssize_t
- ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ void logformat_init(void);
++void logres_init(void);
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index d2ab02a..5d56340 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -60,7 +60,7 @@
+ #define xfs_trans_roll			libxfs_trans_roll
+ #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
+ #define xfs_trans_resv_calc		libxfs_trans_resv_calc
+-
++#define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
+ #define xfs_attr_get			libxfs_attr_get
+ #define xfs_attr_set			libxfs_attr_set
+ #define xfs_attr_remove			libxfs_attr_remove
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 37018a7..524b1ef 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -690,6 +690,12 @@ Start logging output to
+ .IR filename ,
+ stop logging, or print the current logging status.
+ .TP
++.B logres
++Print transaction reservation size information for each transaction type.
++This makes it easier to find discrepancies in the reservation calculations
++between xfsprogs and the kernel, which will help when diagnosing minimum
++log size calculation errors.
++.TP
+ .BI "metadump [\-egow] " filename
+ Dumps metadata to a file. See
+ .BR xfs_metadump (8)
 
