@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55384 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161105AbeCATNT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:19 -0500
-Subject: [PATCH 03/16] xfs_scrub: log operational messages when interactive
+Received: from userp2130.oracle.com ([156.151.31.86]:52548 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161161AbeCATNi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:38 -0500
+Subject: [PATCH 06/16] xfs_scrub: don't try to scan xattrs if bstat says
+ there aren't any
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 01 Mar 2018 11:13:14 -0800
-Message-ID: <151993159412.22223.9791048469399407816.stgit@magnolia>
+Date: Thu, 01 Mar 2018 11:13:32 -0800
+Message-ID: <151993161291.22223.12229177976202068960.stgit@magnolia>
 In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
 References: <151993157539.22223.6269629008244777191.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,89 +21,34 @@ Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Record the output of an interactive session in the system log so that
-future support requests can get a better picture of what happened.
+Only try to scan the extended attributes of a file if bstat says that
+the file actually has any.  Surprisingly, this reduces the phase 5
+runtime by 40% if most of the files don't have attrs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/common.c |   37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ scrub/phase5.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 
-diff --git a/scrub/common.c b/scrub/common.c
-index 17c3699..672f286 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -21,6 +21,7 @@
- #include <pthread.h>
- #include <stdbool.h>
- #include <sys/statvfs.h>
-+#include <syslog.h>
- #include "platform_defs.h"
- #include "xfs.h"
- #include "xfs_fs.h"
-@@ -29,6 +30,8 @@
- #include "common.h"
- #include "progress.h"
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 0ef6339..8e0a1be 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -256,9 +256,12 @@ xfs_scrub_connections(
+ 	background_sleep();
  
-+extern char		*progname;
-+
- /*
-  * Reporting Status to the Console
-  *
-@@ -64,6 +67,12 @@ static const char *err_str[] = {
- 	[S_PREEN]	= "Optimized",
- };
- 
-+static int log_level[] = {
-+	[S_ERROR]	= LOG_ERR,
-+	[S_WARN]	= LOG_WARNING,
-+	[S_INFO]	= LOG_INFO,
-+};
-+
- /* If stream is a tty, clear to end of line to clean up progress bar. */
- static inline const char *stream_start(FILE *stream)
- {
-@@ -73,6 +82,8 @@ static inline const char *stream_start(FILE *stream)
- }
- 
- /* Print a warning string and some warning text. */
-+#define LOG_BUFSZ	4096
-+#define LOGNAME_BUFSZ	256
- void
- __str_out(
- 	struct scrub_ctx	*ctx,
-@@ -110,6 +121,32 @@ __str_out(
- 		va_end(args);
- 	}
- 
-+	/* If we're running interactively, log the message to syslog too. */
-+	if (isatty(fileno(stdin)) && !debug) {
-+		char	logname[LOGNAME_BUFSZ];
-+
-+		snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname,
-+				ctx->mntpoint);
-+		openlog(logname, LOG_PID, LOG_DAEMON);
-+
-+		if (error) {
-+			syslog(LOG_ERR, "%s: %s: %s.",
-+					_(err_str[level]), descr,
-+					strerror_r(error, buf, DESCR_BUFSZ));
-+		} else {
-+			char	buf[LOG_BUFSZ];
-+			int	sz;
-+
-+			sz = snprintf(buf, LOG_BUFSZ, "%s: %s: ",
-+					_(err_str[level]), descr);
-+			va_start(args, format);
-+			vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
-+			va_end(args);
-+			syslog(log_level[level], "%s", buf);
-+		}
-+		closelog();
+ 	/* Warn about naming problems in xattrs. */
+-	moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle, bstat);
+-	if (!moveon)
+-		goto out;
++	if (bstat->bs_xflags & FS_XFLAG_HASATTR) {
++		moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle,
++				bstat);
++		if (!moveon)
++			goto out;
 +	}
-+
- 	if (debug)
- 		fprintf(stream, _(" (%s line %d)"), file, line);
- 	fprintf(stream, "\n");
+ 
+ 	/* Open the dir, let the kernel try to reconnect it to the root. */
+ 	if (S_ISDIR(bstat->bs_mode)) {
 
