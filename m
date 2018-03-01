@@ -1,84 +1,277 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33706 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58438 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033270AbeCARjl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 12:39:41 -0500
-Date: Thu, 1 Mar 2018 12:39:39 -0500
+        id S1033238AbeCAR2f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Mar 2018 12:28:35 -0500
+Date: Thu, 1 Mar 2018 12:28:33 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
-Message-ID: <20180301173939.GB34164@bfoster.bfoster>
-References: <20180228154951.31714-1-vbendel@redhat.com>
+Subject: Re: [PATCH 5/5] xfs: fix agfl wrapping
+Message-ID: <20180301172832.GA34164@bfoster.bfoster>
+References: <151935118240.21654.10146641674018880885.stgit@magnolia>
+ <151935121574.21654.7158330354778549108.stgit@magnolia>
+ <20180227193548.GF3479@bfoster.bfoster>
+ <20180227210313.GK19312@magnolia>
+ <20180228224351.GA31332@bfoster.bfoster>
+ <20180228232032.GK19318@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180228154951.31714-1-vbendel@redhat.com>
+In-Reply-To: <20180228232032.GK19318@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vratislav Bendel <vbendel@redhat.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Feb 28, 2018 at 04:49:51PM +0100, Vratislav Bendel wrote:
-> The function xfs_buftarg_isolate() used by xfs buffer schrinkers 
-> to determine whether a buffer should be isolated and disposed 
-> from LRU list, has inverted logic.
+On Wed, Feb 28, 2018 at 03:20:32PM -0800, Darrick J. Wong wrote:
+> On Wed, Feb 28, 2018 at 05:43:51PM -0500, Brian Foster wrote:
+> > On Tue, Feb 27, 2018 at 01:03:13PM -0800, Darrick J. Wong wrote:
+> > > On Tue, Feb 27, 2018 at 02:35:49PM -0500, Brian Foster wrote:
+> > > > On Thu, Feb 22, 2018 at 06:00:15PM -0800, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+...
+> > > > > diff --git a/fs/xfs/xfs_fixups.c b/fs/xfs/xfs_fixups.c
+> > > > > new file mode 100644
+> > > > > index 0000000..0cad7bb
+> > > > > --- /dev/null
+> > > > > +++ b/fs/xfs/xfs_fixups.c
+> > > > > @@ -0,0 +1,310 @@
+...
+> > > Now let's say that we run for a while and want to unmount, but our AGFL
+> > > wraps like this:
+> > > 
+> > >          0   1   2   3   4   5   6   7   8   9
+> > > Header | T | U | V |   |   |   |   | Q | R | S |
+> > >                  ^-- fllast          ^-- flfirst
+> > > 
+> > > We don't know that the next kernel to mount this filesystem will have
+> > > the "4.5 agfl padding fix" applied to it; if it does not, it will flag
+> > > the AGF as corrupted because flcount is 6 but in its view the distance
+> > > between flfirst and fllast (which omits bno[9]) is 5.  We don't want
+> > > it to choke on that, so the unmount fixer moves all the records between
+> > > flfirst and the end (Q, R, and S) towards the start of the block and
+> > > resets flfirst/fllast:
+> > > 
+> > >          0   1   2   3   4   5   6   7   8   9
+> > > Header | T | U | V | Q | R | S |   |   |   |   |
+> > >          ^-- flfirst         ^-- fllast
+> > > 
+> > 
+> > Could we use this basic algorithm at mount time as well? I know it
+> > wouldn't be _exactly_ the same operation at mount time as it is for
+> > unmount since slot 9 is a gap in the former case, but afaict the only
+> > difference from an algorithmic perspective is the length of the shift.
+> > 
+> > IOW, if we were to parameterize the length of the shift and have the
+> > mount fixup call the unmount algorithm, would it not also address the
+> > problem?
 > 
-> Excerpt from xfs_buftarg_isolate():
->         /*
->          * Decrement the b_lru_ref count unless the value is already
->          * zero. If the value is already zero, we need to reclaim the
->          * buffer, otherwise it gets another trip through the LRU.
->          */
->         if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
->                 spin_unlock(&bp->b_lock);
->                 return LRU_ROTATE;
->         }
+> Yes, I believe that would work.  I think it would be more efficient in
+> the patch below to memmove the entries instead of put_freelist'ing them
+> individually.
 > 
-> However, as per documentation, atomic_add_unless() returns _zero_
-> if the atomic value was originally equal to the specified *unsless* value.
+> If the agfl is completely full then fix_freelist ought to trim it down
+> by at least one element.  The algorithm then becomes:
+> 
+> if mounting and flfirst < fllast:
+> 	return 0
+> if flcount == agfl_size:
+> 	assert !mounting
+> 	fix_freelist()
+
+Not sure I follow where the fix_freelist() came in, but I think we need
+to be careful here. What if flfirst == 118 and that slot is garbage?
+Don't we need to fix up the agfl before we can allow any traditional
+operations to proceed?
+
+> 	assert flcount < agfl_size
+> if flfirst < fllast:
+> 	return 0
+> movelen = agfl_size - flfirst
+> if active == flcount - 1:
+> 	movelen--
+> memmove(&agflbno[fllast + 1], &agflbno[flfirst], movelen)
+> flfirst = 0
+> fllast = fllast + movelen
+> 
+...
+> > > > 
+> > > > So we're not attempting to cover the case where the agfl has 1 more
+> > > > block than the agfl size (i.e., the case where an fs goes back to a
+> > > > kernel with an unpacked header)?
+> > > 
+> > > We don't know how the next kernel to touch this filesystem will define
+> > > XFS_AGFL_SIZE -- it could be a 4.5+ kernel (same agfl size), a 32-bit
+> > > pre-4.5 kernel (same agfl size), or a 64-bit pre-4.5 kernel (small agfl
+> > > size).
+> > > 
+> > 
+> > I don't think I was clear.. I'm envisioning whether we could come up
+> > with a patch that would generically fix up the agfl on disk to be sane
+> > relative to the current kernel. This patch covers the case of a packed
+> > agfl kernel mounting an unpacked on-disk agfl. It would be nice if we
+> > could implement something that also handled a packed on-disk agfl to an
+> > unpacked agfl kernel (for easier backport to unpacked kernels, for
+> > e.g.).
+> 
+> If we're going to touch an old kernel's source at all I'd rather we
+> backport both the packing fix and this fixer-upper.
 > 
 
-Nit:							     unless
+Not sure I parse... the "old kernel" is essentially the rhel example
+where we apparently have deliberately maintained the unpacked format to
+avoid this incompatibility problem. If we had a patch that generically
+converted on-disk format (packed or unpacked) to the current kernel
+(packed or unpacked), we could merge that patch to upstream, stable as
+well as distro kernels that might not include the agfl packing fix and
+eliminate compatibility problems between them (even if the packing fix
+comes in out of order).
 
-> Ultimately causing a xfs_buffer with ->b_lru_ref == 0, to take another 
-> trip around LRU, while isolating buffers with non-zero b_lru_ref.
-> 
-> Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
-> CC: Brian Foster <bfoster@redhat.com>
-> ---
+Otherwise, we need a separate unpacked -> packed fixup for packed
+kernels (i.e., this patch) and a packed -> unpacked fixup for unpacked
+kernels and to make sure they are used in the right places. Trying to
+see if we could avoid this kind of dependency matrix was one of the
+objectives around the hack I posted previously. I'm not married to that
+particular implementation, but I'm much less concerned about
+inefficiency (even if it dictates a mount time fixup over a runtime one)
+in comparison to simplicity and flexibility. Perhaps we can accomplish
+something similarly flexible via direct buffer manipulation..?
 
-It might be worth pointing out in the commit log that currently isolated
-buffers end up right back on the LRU once they are released, because
-->b_lru_ref remains elevated. Therefore, this patch essentially fixes
-that circuitous route by leaving them on the LRU as originally intended.
-Otherwise this looks Ok to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Thanks for sending the patch.
+FWIW, I've appended another variant of the previous hack that is less
+brute force, but I think is still able to convert back and forth. The
+tradeoff is essentially that it no longer uses the same generic
+algorithm.
 
 Brian
 
->  fs/xfs/xfs_buf.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index d1da2ee9e6db..ac669a10c62f 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1708,7 +1708,7 @@ xfs_buftarg_isolate(
->  	 * zero. If the value is already zero, we need to reclaim the
->  	 * buffer, otherwise it gets another trip through the LRU.
->  	 */
-> -	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
-> +	if (atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
->  		spin_unlock(&bp->b_lock);
->  		return LRU_ROTATE;
->  	}
-> -- 
-> 2.14.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- 8< ---
+
+static int
+xfs_agfl_ondisk_size(
+	struct xfs_mount	*mp,
+	int			first,
+	int			last,
+	int			flcount)
+{
+	int			active;
+	int			size;
+	int			agfl_size = XFS_AGFL_SIZE(mp);
+
+	if (last >= first)
+		active = last - first + 1;
+	else
+		active = agfl_size - first + last + 1;
+
+	if (active == flcount + 1)
+		size = agfl_size - 1;
+	else if ((active == flcount - 1) ||
+		 first == agfl_size || last == agfl_size)
+		size = agfl_size + 1;
+	else if (active == flcount)
+		size = agfl_size;
+	else
+		return -EFSCORRUPTED;
+
+	return size;
+}
+
+int
+xfs_agfl_fixup(
+	struct xfs_trans	*tp,
+	struct xfs_buf		*agbp,
+	struct xfs_perag	*pag)
+{
+	struct xfs_mount	*mp = tp->t_mountp;
+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+	int			agfl_size = XFS_AGFL_SIZE(mp);
+	int			ofirst, olast, osize;
+	int			nfirst, nlast;
+	struct xfs_buf		*agflbp;
+	__be32			*agfl_bno;
+	xfs_agblock_t		bno = -1;
+	int			tidx = -1;
+	bool			empty = false;
+	int			logflags = 0;
+	int			error;
+
+	ofirst = nfirst = be32_to_cpu(agf->agf_flfirst);
+	olast = nlast = be32_to_cpu(agf->agf_fllast);
+	osize = xfs_agfl_ondisk_size(mp, ofirst, olast, pag->pagf_flcount);
+	if (osize < 0)
+		return osize;
+	if (pag->pagf_flcount == 0)
+		empty = true;
+
+	/* sizes match, nothing to do */
+	if (osize == agfl_size)
+		return 0;
+
+	/* size mismatch, read the agfl.. */
+	error = xfs_alloc_read_agfl(mp, tp, be32_to_cpu(agf->agf_seqno),
+				    &agflbp);
+	if (error)
+		return error;
+	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+
+	/*
+	 * If the on-disk agfl is smaller than what the kernel expects, the last
+	 * slot of the on-disk agfl is a gap with bogus data. Allocate the first
+	 * valid block from the agfl, manually place it in the gap and fix up
+	 * the count.
+	 */
+	if (osize < agfl_size) {
+		ASSERT(!empty);
+		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
+		if (error)
+			goto out_relse;
+
+		pag->pagf_flcount++;
+		be32_add_cpu(&agf->agf_flcount, 1);
+		logflags |= XFS_AGF_FLCOUNT;
+		tidx = agfl_size - 1;
+		goto done;
+	}
+
+	/*
+	 * Otherwise, the on-disk agfl is larger than what the current kernel
+	 * can manage. If the agfl was empty, we just fix up the first and last
+	 * pointers. If not, move the inaccessible block in the last slot to the
+	 * next valid, open slot.
+	 */
+	nfirst = do_mod(nfirst, agfl_size);
+	if (empty) {
+		nlast = (nfirst == 0 ? agfl_size - 1 : nfirst - 1);
+		goto done;
+	}
+	if (nlast != agfl_size)
+		nlast++;
+	nlast = do_mod(nlast, agfl_size);
+	tidx = nlast;
+	bno = be32_to_cpu(agfl_bno[osize - 1]);
+
+done:
+	if (nfirst != ofirst) {
+		agf->agf_flfirst = cpu_to_be32(nfirst);
+		logflags |= XFS_AGF_FLFIRST;
+	}
+	if (nlast != olast) {
+		agf->agf_fllast = cpu_to_be32(nlast);
+		logflags |= XFS_AGF_FLLAST;
+	}
+	if (bno != -1) {
+		int	startoff;
+
+		agfl_bno[tidx] = cpu_to_be32(bno);
+		xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
+		startoff = (char *) &agfl_bno[tidx] - (char *) agflbp->b_addr;
+		xfs_trans_log_buf(tp, agflbp, startoff,
+				  startoff + sizeof(xfs_agblock_t) - 1);
+	}
+	if (logflags)
+		xfs_alloc_log_agf(tp, agbp, logflags);
+
+out_relse:
+	xfs_trans_brelse(tp, agflbp);
+	return error;
+}
+
