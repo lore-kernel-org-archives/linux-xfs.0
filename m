@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52548 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161161AbeCATNi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:38 -0500
-Subject: [PATCH 06/16] xfs_scrub: don't try to scan xattrs if bstat says
- there aren't any
+Received: from aserp2130.oracle.com ([141.146.126.79]:55960 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161214AbeCATN7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:59 -0500
+Subject: [PATCH 08/16] xfs_repair: don't fail directory repairs when
+ grabbing inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 01 Mar 2018 11:13:32 -0800
-Message-ID: <151993161291.22223.12229177976202068960.stgit@magnolia>
+Date: Thu, 01 Mar 2018 11:13:45 -0800
+Message-ID: <151993162526.22223.3665832156616656282.stgit@magnolia>
 In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
 References: <151993157539.22223.6269629008244777191.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,34 +21,210 @@ Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Only try to scan the extended attributes of a file if bstat says that
-the file actually has any.  Surprisingly, this reduces the phase 5
-runtime by 40% if most of the files don't have attrs.
+There are a few places where xfs_repair needs to be able to load a
+damaged directory inode to perform repairs.  Since inline data fork
+verifiers can now be customized, refactor libxfs_iget to enable
+repair to get at this so that we don't crash in phase 6.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/phase5.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ db/attrset.c        |    6 ++++--
+ include/xfs_inode.h |    6 ++++--
+ libxfs/rdwr.c       |   25 +++++++++++++++++--------
+ libxfs/trans.c      |    6 ++++--
+ libxfs/util.c       |    2 +-
+ repair/phase6.c     |   16 +++++++++++-----
+ 6 files changed, 41 insertions(+), 20 deletions(-)
 
 
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 0ef6339..8e0a1be 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -256,9 +256,12 @@ xfs_scrub_connections(
- 	background_sleep();
+diff --git a/db/attrset.c b/db/attrset.c
+index ad3c8f3..457317a 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -151,7 +151,8 @@ attr_set_f(
+ 		value = NULL;
+ 	}
  
- 	/* Warn about naming problems in xattrs. */
--	moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle, bstat);
--	if (!moveon)
--		goto out;
-+	if (bstat->bs_xflags & FS_XFLAG_HASATTR) {
-+		moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle,
-+				bstat);
-+		if (!moveon)
-+			goto out;
-+	}
+-	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
++	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip,
++			&xfs_default_ifork_ops)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+ 			(unsigned long long)iocur_top->ino);
+ 		goto out;
+@@ -226,7 +227,8 @@ attr_remove_f(
  
- 	/* Open the dir, let the kernel try to reconnect it to the root. */
- 	if (S_ISDIR(bstat->bs_mode)) {
+ 	name = argv[optind];
+ 
+-	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
++	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip,
++			&xfs_default_ifork_ops)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+ 			(unsigned long long)iocur_top->ino);
+ 		goto out;
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 92829a2..f29f0f0 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -162,9 +162,11 @@ extern void	libxfs_trans_ichgtime(struct xfs_trans *,
+ extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
+ 
+ /* Inode Cache Interfaces */
+-extern bool	libxfs_inode_verify_forks(struct xfs_inode *ip);
++extern bool	libxfs_inode_verify_forks(struct xfs_inode *ip,
++				struct xfs_ifork_ops *);
+ extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+-				uint, struct xfs_inode **);
++				uint, struct xfs_inode **,
++				struct xfs_ifork_ops *);
+ extern void	libxfs_iput(struct xfs_inode *);
+ 
+ #define IRELE(ip) libxfs_iput(ip)
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 3c5def2..416e89b 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1342,12 +1342,16 @@ extern kmem_zone_t	*xfs_inode_zone;
+  */
+ bool
+ libxfs_inode_verify_forks(
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	struct xfs_ifork_ops	*ops)
+ {
+ 	struct xfs_ifork	*ifp;
+ 	xfs_failaddr_t		fa;
+ 
+-	fa = xfs_ifork_verify_data(ip, &xfs_default_ifork_ops);
++	if (!ops)
++		return true;
++
++	fa = xfs_ifork_verify_data(ip, ops);
+ 	if (fa) {
+ 		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "data fork",
+@@ -1355,7 +1359,7 @@ libxfs_inode_verify_forks(
+ 		return false;
+ 	}
+ 
+-	fa = xfs_ifork_verify_attr(ip, &xfs_default_ifork_ops);
++	fa = xfs_ifork_verify_attr(ip, ops);
+ 	if (fa) {
+ 		ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+ 		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "attr fork",
+@@ -1367,11 +1371,16 @@ libxfs_inode_verify_forks(
+ }
+ 
+ int
+-libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+-		xfs_inode_t **ipp)
++libxfs_iget(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_ino_t		ino,
++	uint			lock_flags,
++	struct xfs_inode	**ipp,
++	struct xfs_ifork_ops	*ifork_ops)
+ {
+-	xfs_inode_t	*ip;
+-	int		error = 0;
++	struct xfs_inode	*ip;
++	int			error = 0;
+ 
+ 	ip = kmem_zone_zalloc(xfs_inode_zone, 0);
+ 	if (!ip)
+@@ -1386,7 +1395,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+ 		return error;
+ 	}
+ 
+-	if (!libxfs_inode_verify_forks(ip)) {
++	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
+ 		libxfs_iput(ip);
+ 		return -EFSCORRUPTED;
+ 	}
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 0e7b7ae..67b1117 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -243,9 +243,11 @@ libxfs_trans_iget(
+ 	xfs_inode_log_item_t	*iip;
+ 
+ 	if (tp == NULL)
+-		return libxfs_iget(mp, tp, ino, lock_flags, ipp);
++		return libxfs_iget(mp, tp, ino, lock_flags, ipp,
++				&xfs_default_ifork_ops);
+ 
+-	error = libxfs_iget(mp, tp, ino, lock_flags, &ip);
++	error = libxfs_iget(mp, tp, ino, lock_flags, &ip,
++			&xfs_default_ifork_ops);
+ 	if (error)
+ 		return error;
+ 	ASSERT(ip != NULL);
+diff --git a/libxfs/util.c b/libxfs/util.c
+index aac558c..611ab9c 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -494,7 +494,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
+ 		VFS_I(ip)->i_version++;
+ 
+ 	/* Check the inline fork data before we write out. */
+-	if (!libxfs_inode_verify_forks(ip))
++	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
+ 		return -EFSCORRUPTED;
+ 
+ 	/*
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 1a398aa..aff83bc 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -927,7 +927,9 @@ mk_orphanage(xfs_mount_t *mp)
+ 	 * would have been cleared in phase3 and phase4.
+ 	 */
+ 
+-	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
++	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip,
++			&xfs_default_ifork_ops);
++	if (i)
+ 		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
+ 			i, ORPHANAGE);
+ 
+@@ -951,7 +953,9 @@ mk_orphanage(xfs_mount_t *mp)
+ 	 * use iget/ijoin instead of trans_iget because the ialloc
+ 	 * wrapper can commit the transaction and start a new one
+ 	 */
+-/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
++/*	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip,
++			&xfs_default_ifork_ops);
++	if (i)
+ 		do_error(_("%d - couldn't iget root inode to make %s\n"),
+ 			i, ORPHANAGE);*/
+ 
+@@ -1066,7 +1070,8 @@ mv_orphanage(
+ 	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
+ 				(unsigned long long)ino);
+ 
+-	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip);
++	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip,
++			&xfs_default_ifork_ops);
+ 	if (err)
+ 		do_error(_("%d - couldn't iget orphanage inode\n"), err);
+ 	/*
+@@ -1078,7 +1083,8 @@ mv_orphanage(
+ 		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
+ 					(unsigned long long)ino, ++incr);
+ 
+-	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
++	err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, &xfs_default_ifork_ops);
++	if (err)
+ 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+ 
+ 	xname.type = libxfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
+@@ -2827,7 +2833,7 @@ process_dir_inode(
+ 
+ 	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
+ 
+-	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
++	error = -libxfs_iget(mp, NULL, ino, 0, &ip, NULL);
+ 	if (error) {
+ 		if (!no_modify)
+ 			do_error(
 
