@@ -1,43 +1,173 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39663 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750914AbeC0Tyh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Mar 2018 15:54:37 -0400
-Date: Tue, 27 Mar 2018 19:54:35 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
- during ifree
-Message-ID: <20180327195435.GE9190@wotan.suse.de>
-References: <20171123060137.GL2135@magnolia>
- <20180323013037.GA9190@wotan.suse.de>
- <20180323034145.GH4818@magnolia>
- <20180323170813.GD30543@wotan.suse.de>
- <20180323172620.GK4818@magnolia>
- <20180323182302.GB9190@wotan.suse.de>
- <20180325223357.GJ18129@dastard>
- <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
- <20180327070637.GX5652@dhcp22.suse.cz>
+Received: from aserp2120.oracle.com ([141.146.126.78]:45128 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161241AbeCATOg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:14:36 -0500
+Subject: [PATCH 14/16] xfs_info: move to xfs_spaceman
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 01 Mar 2018 11:14:31 -0800
+Message-ID: <151993167183.22223.13501751102361596724.stgit@magnolia>
+In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180327070637.GX5652@dhcp22.suse.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Sasha Levin <levinsasha928@gmail.com>, Dave Chinner <david@fromorbit.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Sasha Levin <alexander.levin@microsoft.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Joerg Roedel <joro@8bytes.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
-On Tue, Mar 27, 2018 at 09:06:37AM +0200, Michal Hocko wrote:
-> So by no means the MM backports were reviewed by me. And considering how hard
-> it is to get any review for MM patches in general I strongly suspect that
-> others didn't review either.
-> 
-> In general I am quite skeptical about the automagic backports
-> selections, to be honest. MM patches should be reasonably good at
-> selecting stable backports and adding more patches on top just risks
-> regressions. 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-BTW other than suggesting we needing *actual review* of the MM patches, are
-there known unit tests which could be run as well? Thinking long term.
+Move xfs_info to be under spaceman so that we can remove growfs -N.
 
-  Luis
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ growfs/Makefile      |    2 --
+ growfs/xfs_info.sh   |   32 --------------------------------
+ spaceman/Makefile    |    2 ++
+ spaceman/init.c      |    5 ++++-
+ spaceman/xfs_info.sh |   32 ++++++++++++++++++++++++++++++++
+ 5 files changed, 38 insertions(+), 35 deletions(-)
+ delete mode 100755 growfs/xfs_info.sh
+ create mode 100755 spaceman/xfs_info.sh
+
+
+diff --git a/growfs/Makefile b/growfs/Makefile
+index f0190e4..adcd84b 100644
+--- a/growfs/Makefile
++++ b/growfs/Makefile
+@@ -20,7 +20,6 @@ endif
+ 
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+-LSRCFILES = xfs_info.sh
+ 
+ default: depend $(LTCOMMAND)
+ 
+@@ -29,7 +28,6 @@ include $(BUILDRULES)
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+-	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
+ install-dev:
+ 
+ -include .dep
+diff --git a/growfs/xfs_info.sh b/growfs/xfs_info.sh
+deleted file mode 100755
+index b85f120..0000000
+--- a/growfs/xfs_info.sh
++++ /dev/null
+@@ -1,32 +0,0 @@
+-#!/bin/sh -f
+-#
+-# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-
+-OPTS=""
+-USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
+-
+-while getopts "t:V" c
+-do
+-	case $c in
+-	t)	OPTS="-t $OPTARG" ;;
+-	V)	xfs_growfs -p xfs_info -V
+-		status=$?
+-		exit $status
+-		;;
+-	*)	echo $USAGE 1>&2
+-		exit 2
+-		;;
+-	esac
+-done
+-set -- extra "$@"
+-shift $OPTIND
+-case $# in
+-	1)	xfs_growfs -p xfs_info -n $OPTS "$1"
+-		status=$?
+-		;;
+-	*)	echo $USAGE 1>&2
+-		exit 2
+-		;;
+-esac
+-exit $status
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index c1d903b..0d5ae2d 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -8,6 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+ CFILES = info.c init.c file.c prealloc.c trim.c
++LSRCFILES = xfs_info.sh
+ 
+ LLDLIBS = $(LIBXCMD) $(LIBFROG)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
+@@ -35,6 +36,7 @@ include $(BUILDRULES)
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
++	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
+ install-dev:
+ 
+ -include .dep
+diff --git a/spaceman/init.c b/spaceman/init.c
+index 895504f..91c773f 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -81,11 +81,14 @@ init(
+ 	textdomain(PACKAGE);
+ 
+ 	fs_table_initialise(0, NULL, 0, NULL);
+-	while ((c = getopt(argc, argv, "c:V")) != EOF) {
++	while ((c = getopt(argc, argv, "c:p:V")) != EOF) {
+ 		switch (c) {
+ 		case 'c':
+ 			add_user_command(optarg);
+ 			break;
++		case 'p':
++			progname = optarg;
++			break;
+ 		case 'V':
+ 			printf(_("%s version %s\n"), progname, VERSION);
+ 			exit(0);
+diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
+new file mode 100755
+index 0000000..5df0a26
+--- /dev/null
++++ b/spaceman/xfs_info.sh
+@@ -0,0 +1,32 @@
++#!/bin/sh -f
++#
++# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
++#
++
++OPTS=""
++USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
++
++while getopts "t:V" c
++do
++	case $c in
++	t)	OPTS="-t $OPTARG" ;;
++	V)	xfs_spaceman -p xfs_info -V
++		status=$?
++		exit $status
++		;;
++	*)	echo $USAGE 1>&2
++		exit 2
++		;;
++	esac
++done
++set -- extra "$@"
++shift $OPTIND
++case $# in
++	1)	xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
++		status=$?
++		;;
++	*)	echo $USAGE 1>&2
++		exit 2
++		;;
++esac
++exit $status
+
