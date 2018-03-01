@@ -1,48 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46246 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750838AbeCFK0k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Mar 2018 05:26:40 -0500
-From: Vratislav Bendel <vbendel@redhat.com>
-Subject: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
-Date: Tue,  6 Mar 2018 11:26:38 +0100
-Message-Id: <20180306102638.25322-1-vbendel@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:55384 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161105AbeCATNT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:19 -0500
+Subject: [PATCH 03/16] xfs_scrub: log operational messages when interactive
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 01 Mar 2018 11:13:14 -0800
+Message-ID: <151993159412.22223.9791048469399407816.stgit@magnolia>
+In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
-Due to an inverted logic mistake in xfs_buftarg_isolate()
-the xfs_buffers with zero b_lru_ref will take another trip
-around LRU, while isolating buffers with non-zero b_lru_ref.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Additionally those isolated buffers end up right back on the LRU
-once they are released, because b_lru_ref remains elevated.
+Record the output of an interactive session in the system log so that
+future support requests can get a better picture of what happened.
 
-Fix that circuitous route by leaving them on the LRU
-as originally intended.
-
-Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ scrub/common.c |   37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index d1da2ee9e6db..ac669a10c62f 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1708,7 +1708,7 @@ xfs_buftarg_isolate(
- 	 * zero. If the value is already zero, we need to reclaim the
- 	 * buffer, otherwise it gets another trip through the LRU.
- 	 */
--	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
-+	if (atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
- 		spin_unlock(&bp->b_lock);
- 		return LRU_ROTATE;
+
+diff --git a/scrub/common.c b/scrub/common.c
+index 17c3699..672f286 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -21,6 +21,7 @@
+ #include <pthread.h>
+ #include <stdbool.h>
+ #include <sys/statvfs.h>
++#include <syslog.h>
+ #include "platform_defs.h"
+ #include "xfs.h"
+ #include "xfs_fs.h"
+@@ -29,6 +30,8 @@
+ #include "common.h"
+ #include "progress.h"
+ 
++extern char		*progname;
++
+ /*
+  * Reporting Status to the Console
+  *
+@@ -64,6 +67,12 @@ static const char *err_str[] = {
+ 	[S_PREEN]	= "Optimized",
+ };
+ 
++static int log_level[] = {
++	[S_ERROR]	= LOG_ERR,
++	[S_WARN]	= LOG_WARNING,
++	[S_INFO]	= LOG_INFO,
++};
++
+ /* If stream is a tty, clear to end of line to clean up progress bar. */
+ static inline const char *stream_start(FILE *stream)
+ {
+@@ -73,6 +82,8 @@ static inline const char *stream_start(FILE *stream)
+ }
+ 
+ /* Print a warning string and some warning text. */
++#define LOG_BUFSZ	4096
++#define LOGNAME_BUFSZ	256
+ void
+ __str_out(
+ 	struct scrub_ctx	*ctx,
+@@ -110,6 +121,32 @@ __str_out(
+ 		va_end(args);
  	}
--- 
-2.14.3
+ 
++	/* If we're running interactively, log the message to syslog too. */
++	if (isatty(fileno(stdin)) && !debug) {
++		char	logname[LOGNAME_BUFSZ];
++
++		snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname,
++				ctx->mntpoint);
++		openlog(logname, LOG_PID, LOG_DAEMON);
++
++		if (error) {
++			syslog(LOG_ERR, "%s: %s: %s.",
++					_(err_str[level]), descr,
++					strerror_r(error, buf, DESCR_BUFSZ));
++		} else {
++			char	buf[LOG_BUFSZ];
++			int	sz;
++
++			sz = snprintf(buf, LOG_BUFSZ, "%s: %s: ",
++					_(err_str[level]), descr);
++			va_start(args, format);
++			vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
++			va_end(args);
++			syslog(log_level[level], "%s", buf);
++		}
++		closelog();
++	}
++
+ 	if (debug)
+ 		fprintf(stream, _(" (%s line %d)"), file, line);
+ 	fprintf(stream, "\n");
 
