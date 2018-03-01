@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44766 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161214AbeCATOT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:14:19 -0500
-Subject: [PATCH 11/16] mkfs: use geometry generation / helper functions
+Received: from userp2120.oracle.com ([156.151.31.85]:38898 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161242AbeCATOn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:14:43 -0500
+Subject: [PATCH 15/16] xfs_info: call xfs_db for offline filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 01 Mar 2018 11:14:13 -0800
-Message-ID: <151993165335.22223.8818718662877576511.stgit@magnolia>
+Date: Thu, 01 Mar 2018 11:14:38 -0800
+Message-ID: <151993167797.22223.1002851265800487377.stgit@magnolia>
 In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
 References: <151993157539.22223.6269629008244777191.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,109 +20,228 @@ Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since libxfs now has a function to fill out the geometry structure
-and libfrog has a function to pretty-print the geometry, have mkfs
-use the two helpers instead of open-coding it.
+If the online filesystem geometry query doesn't work, try using xfs_db
+to see if we can grab the information offline.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/libxfs_api_defs.h |    1 +
- mkfs/xfs_mkfs.c          |   54 ++++++++++++++--------------------------------
- 2 files changed, 18 insertions(+), 37 deletions(-)
+ man/man8/xfs_growfs.8 |   47 +-----------------------
+ man/man8/xfs_info.8   |   95 +++++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/xfs_info.sh  |   12 +++++-
+ 3 files changed, 106 insertions(+), 48 deletions(-)
+ create mode 100644 man/man8/xfs_info.8
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 5d56340..a23a28d 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -150,5 +150,6 @@
- #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
- #define xfs_refc_block			libxfs_refc_block
- #define xfs_rmap_compare		libxfs_rmap_compare
-+#define xfs_fs_geometry			libxfs_fs_geometry
+diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
+index e23d30e..7e6a387 100644
+--- a/man/man8/xfs_growfs.8
++++ b/man/man8/xfs_growfs.8
+@@ -11,7 +11,7 @@
  
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f973b6b..c234b93 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -20,7 +20,7 @@
- #include <ctype.h>
- #include "xfs_multidisk.h"
- #include "libxcmd.h"
+ .TH xfs_growfs 8
+ .SH NAME
+-xfs_growfs, xfs_info \- expand an XFS filesystem
++xfs_growfs \- expand an XFS filesystem
+ .SH SYNOPSIS
+ .B xfs_growfs
+ [
+@@ -38,16 +38,6 @@ xfs_growfs, xfs_info \- expand an XFS filesystem
+ .I mount-point
+ .br
+ .B xfs_growfs \-V
+-.PP
+-.br
+-.B xfs_info
+-[
+-.B \-t
+-.I mtab
+-]
+-.I mount-point
+-.br
+-.B xfs_info \-V
+ .SH DESCRIPTION
+ .B xfs_growfs
+ expands an existing XFS filesystem (see
+@@ -59,13 +49,6 @@ is mounted. The filesystem must be mounted to be grown (see
+ .BR mount (8)).
+ The existing contents of the filesystem are undisturbed, and the added space
+ becomes available for additional file storage.
+-.PP
+-.B xfs_info
+-is equivalent to invoking
+-.B xfs_growfs
+-with the
+-.B \-n
+-option (see discussion below).
+ .SH OPTIONS
+ .TP
+ .BI "\-d | \-D " size
+@@ -169,35 +152,9 @@ reside. In order to grow a filesystem, it is necessary to provide added
+ space for it to occupy. Therefore there must be at least one spare new
+ disk partition available. Adding the space is often done through the use
+ of a logical volume manager.
+-.SH "EXAMPLES"
 -
-+#include "fsgeom.h"
- 
- 
- #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
-@@ -3172,40 +3172,6 @@ initialise_mount(
- 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
- }
- 
--static void
--print_mkfs_cfg(
--	struct mkfs_params	*cfg,
--	char			*dfile,
--	char			*logfile,
--	char			*rtfile)
--{
--	struct sb_feat_args	*fp = &cfg->sb_feat;
+-Understanding xfs_info output.
+-.PP
+-Suppose one has the following "xfs_info /dev/sda" output:
+-.PP
+-.RS 2
+-.Vb
+-\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
+-\&         =              sectsz=512   attr=2
+-\&data     =              bsize=4096   blocks=536869888, imaxpct=5
+-\&         =              sunit=32     swidth=128 blks
+-\&naming   =version 2     bsize=4096
+-\&log      =internal      bsize=4096   blocks=32768, version=2
+-\&         =              sectsz=512   sunit=32 blks, lazy-count=1
+-\&realtime =none          extsz=524288 blocks=0, rtextents=0
+-.Ve
+-.RE
+-.PP
 -
--	printf(_(
--"meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
--"         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
--"         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
--"data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
--"         =%-22s sunit=%-6u swidth=%u blks\n"
--"naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
--"log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
--"         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
--"realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
--		dfile, cfg->inodesize, (long long)cfg->agcount,
--			(long long)cfg->agsize,
--		"", cfg->sectorsize, fp->attr_version, fp->projid32bit,
--		"", fp->crcs_enabled, fp->finobt, fp->spinodes, fp->rmapbt,
--			fp->reflink,
--		"", cfg->blocksize, (long long)cfg->dblocks, cfg->imaxpct,
--		"", cfg->dsunit, cfg->dswidth,
--		fp->dir_version, cfg->dirblocksize, fp->nci, fp->dirftype,
--		logfile, cfg->blocksize, (long long)cfg->logblocks,
--			fp->log_version,
--		"", cfg->lsectorsize, cfg->lsunit, fp->lazy_sb_counters,
--		rtfile, (int)cfg->rtextblocks << cfg->blocklog,
--			(long long)cfg->rtblocks, (long long)cfg->rtextents);
--}
--
- /*
-  * Format everything from the generated config into the superblock that
-  * will be used to initialise the on-disk superblock. This is the in-memory
-@@ -3967,12 +3933,26 @@ main(
- 	 */
- 	calculate_log_size(&cfg, &cli, mp);
+-Here, the data section of the output indicates "bsize=4096",
+-meaning the data block size for this filesystem is 4096 bytes.
+-This section also shows "sunit=32 swidth=128 blks", which means
+-the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
+-width is 128*4096 bytes = 512 kibibytes.
+-A single stripe of this filesystem therefore consists
+-of four stripe units (128 blocks / 32 blocks per unit).
+ .SH SEE ALSO
+ .BR mkfs.xfs (8),
++.BR xfs_info (8),
+ .BR md (4),
+ .BR lvm (8),
+ .BR mount (8).
+diff --git a/man/man8/xfs_info.8 b/man/man8/xfs_info.8
+new file mode 100644
+index 0000000..c4c470d
+--- /dev/null
++++ b/man/man8/xfs_info.8
+@@ -0,0 +1,95 @@
++.\" Verbatim blocks taken from openssl req manpage content
++.de Vb \" Begin verbatim text
++.ft CW
++.nf
++.ne \\$1
++..
++.de Ve \" End verbatim text
++.ft R
++.fi
++..
++
++.TH xfs_info 8
++.SH NAME
++xfs_info, \- display XFS filesystem geometry information
++.SH SYNOPSIS
++.B xfs_info
++[
++.B \-t
++.I mtab
++]
++[
++.I mount-point
++|
++.I block-device
++|
++.I file-image
++]
++.br
++.B xfs_info \-V
++.SH DESCRIPTION
++.B xfs_info
++displays geometry information about an existing XFS filesystem.
++The
++.I mount-point
++argument is the pathname of a directory where the filesystem
++is mounted.
++The
++.I block-device
++or
++.I file-image
++contain a raw XFS filesystem.
++The existing contents of the filesystem are undisturbed.
++.SH OPTIONS
++.TP
++.B \-t
++Specifies an alternate mount table file (default is
++.I /proc/mounts
++if it exists, else
++.IR /etc/mtab ).
++This is used when working with filesystems mounted without writing to
++.I /etc/mtab
++file - refer to
++.BR mount (8)
++for further details.
++This option has no effect with the
++.IR block-device " or " file-image
++parameters.
++.TP
++.B \-V
++Prints the version number and exits. The
++.I mount-point
++argument is not required with
++.BR \-V .
++.SH "EXAMPLES"
++
++Understanding xfs_info output.
++.PP
++Suppose one has the following "xfs_info /dev/sda" output:
++.PP
++.RS 2
++.Vb
++\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
++\&         =              sectsz=512   attr=2
++\&data     =              bsize=4096   blocks=536869888, imaxpct=5
++\&         =              sunit=32     swidth=128 blks
++\&naming   =version 2     bsize=4096
++\&log      =internal log  bsize=4096   blocks=32768, version=2
++\&         =              sectsz=512   sunit=32 blks, lazy-count=1
++\&realtime =none          extsz=524288 blocks=0, rtextents=0
++.Ve
++.RE
++.PP
++
++Here, the data section of the output indicates "bsize=4096",
++meaning the data block size for this filesystem is 4096 bytes.
++This section also shows "sunit=32 swidth=128 blks", which means
++the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
++width is 128*4096 bytes = 512 kibibytes.
++A single stripe of this filesystem therefore consists
++of four stripe units (128 blocks / 32 blocks per unit).
++.SH SEE ALSO
++.BR mkfs.xfs (8),
++.BR md (4),
++.BR lvm (8),
++.BR mount (8).
+diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
+index 5df0a26..2e17fd9 100755
+--- a/spaceman/xfs_info.sh
++++ b/spaceman/xfs_info.sh
+@@ -4,7 +4,7 @@
+ #
  
-+	finish_superblock_setup(&cfg, mp, sbp);
-+
-+	/* Print the intended geometry of the fs. */
- 	if (!quiet || dry_run) {
--		print_mkfs_cfg(&cfg, dfile, logfile, rtfile);
-+		struct xfs_fsop_geom	geo;
-+		int			error;
-+
-+		error = -libxfs_fs_geometry(sbp, &geo,
-+				XFS_FS_GEOM_MAX_STRUCT_VER);
-+		if (error) {
-+			fprintf(stderr,
-+	_("%s: failed to generate filesystem geometry\n"),
-+				progname);
-+			exit(1);
-+		}
-+
-+		xfs_report_geom(&geo, dfile, logfile, rtfile);
- 		if (dry_run)
- 			exit(0);
- 	}
--	finish_superblock_setup(&cfg, mp, sbp);
+ OPTS=""
+-USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
++USAGE="Usage: xfs_info [-V] [-t mtab] [mountpoint|device|file]"
  
- 	/*
- 	 * we need the libxfs buffer cache from here on in.
+ while getopts "t:V" c
+ do
+@@ -22,8 +22,14 @@ done
+ set -- extra "$@"
+ shift $OPTIND
+ case $# in
+-	1)	xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
+-		status=$?
++	1)
++		if [ -b "$1" ] || [ -f "$1" ]; then
++			xfs_db -p xfs_info -c "info" $OPTS "$1"
++			status=$?
++		else
++			xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
++			status=$?
++		fi
+ 		;;
+ 	*)	echo $USAGE 1>&2
+ 		exit 2
 
