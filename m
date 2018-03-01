@@ -1,79 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9937 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752322AbeC0Qsd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Mar 2018 12:48:33 -0400
-Subject: Re: FreeBSD and xfsprogs ?
-References: <cem@freebsd.org>
- <CAG6CVpU3qe10UUY6B-N4fs9WTwwUerVcJh0CrP22D8hvB4Z14Q@mail.gmail.com>
- <201803261953.w2QJrYQm028227@slippy.cwsent.com>
- <CAG6CVpXi3rb-NfLUXQqzStipmwRviKJPMpgKeQA9DfBmOWJ5oQ@mail.gmail.com>
- <20180327160714.GB4818@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <8396fd92-3a64-a84f-b110-7edc6f0844b0@redhat.com>
-Date: Tue, 27 Mar 2018 11:48:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180327160714.GB4818@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:58012 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1162620AbeCAWfI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 17:35:08 -0500
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] inode: don't memset the inode address space twice
+Date: Fri,  2 Mar 2018 09:34:02 +1100
+Message-Id: <20180301223402.26897-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Conrad Meyer <cem@freebsd.org>
-Cc: Cy Schubert <Cy.Schubert@cschubert.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Carlos Maiolino <cmaiolino@redhat.com>, "freebsd-arch@freebsd.org" <freebsd-arch@freebsd.org>, xfs <linux-xfs@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On 3/27/18 11:07 AM, Darrick J. Wong wrote:
-> [cc the xfsprogs maintainer]
-> [cc xfs list]
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, thanks.
+Noticed when looking at why cycling 600k inodes/s through the inode
+cache was taking a total of 8% cpu in memset() during inode
+initialisation.  There is no need to zero the inode.i_data structure
+twice.
 
-> On Mon, Mar 26, 2018 at 12:57:55PM -0700, Conrad Meyer wrote:
->> Yeah, someone broke the build recently via a base toolchain change or
->> a ports framework/compiler change.  I don't think that changes
->> anything.
->>
->> On Mon, Mar 26, 2018 at 12:53 PM, Cy Schubert <Cy.Schubert@cschubert.com> wrote:
->>> In message <CAG6CVpU3qe10UUY6B-N4fs9WTwwUerVcJh0CrP22D8hvB4Z14Q@mail.gma
->>> il.com>
->>> , Conrad Meyer writes:
->>>> On Fri, Mar 23, 2018 at 12:18 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote
->>>> :
->>>>> On the Linux xfs development list there is an RFC to remove IRIX,
->>>>> Darwin, and FreeBSD support from xfsprogs, the userspace program used
->>>>> to create/interact with XFS filesystems. Just wanted to poke and check
->>>>> to ensure that FreeBSD is not interested in XFS, if this is incorrect
->>>>> now would be the good time to chime into the list and discussion.
->>>>>
->>>>> [0] https://lkml.kernel.org/r/20180322202102.wpff347scdmfpv62@odin.usersys.
->>>> redhat.com
->>>>
->>>> Hi Luis,
->>>>
->>>> FreeBSD 11+ can mount XFS filesystems read and write via a FUSE port
->>>> incorporating LKL[0] (sysutils/fusefs-lkl).  I would appreciate
-> Yikes.  I'm curious, how many people use fusefs-lkl?
-> 
-> Eric will have more to say about this, but is your xfsprogs port still
-> on 3.2.4 because ./configure can't find libblkid?
+This increases single threaded bulkstat throughput from ~200,000
+inodes/s to ~220,000 inodes/s, so we save a substantial amount of
+CPU time per inode init by doing this.
 
-So: At this point, it seems like if you're still on a 4 year old xfsprogs
-release with custom patches due to build problems we've never heard about,
-there doesn't seem to be a very strong effort to keep XFS on FreeBSD thriving.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/inode.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-And, given that you're stuck on 3.2.4, removing support from 4.16.0 won't
-change your situation anyway.
+diff --git a/fs/inode.c b/fs/inode.c
+index 6295f1415761..b153aeaa61ea 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -346,9 +346,8 @@ void inc_nlink(struct inode *inode)
+ }
+ EXPORT_SYMBOL(inc_nlink);
+ 
+-void address_space_init_once(struct address_space *mapping)
++static void __address_space_init_once(struct address_space *mapping)
+ {
+-	memset(mapping, 0, sizeof(*mapping));
+ 	INIT_RADIX_TREE(&mapping->page_tree, GFP_ATOMIC | __GFP_ACCOUNT);
+ 	spin_lock_init(&mapping->tree_lock);
+ 	init_rwsem(&mapping->i_mmap_rwsem);
+@@ -356,6 +355,12 @@ void address_space_init_once(struct address_space *mapping)
+ 	spin_lock_init(&mapping->private_lock);
+ 	mapping->i_mmap = RB_ROOT_CACHED;
+ }
++
++void address_space_init_once(struct address_space *mapping)
++{
++	memset(mapping, 0, sizeof(*mapping));
++	__address_space_init_once(mapping);
++}
+ EXPORT_SYMBOL(address_space_init_once);
+ 
+ /*
+@@ -371,7 +376,7 @@ void inode_init_once(struct inode *inode)
+ 	INIT_LIST_HEAD(&inode->i_io_list);
+ 	INIT_LIST_HEAD(&inode->i_wb_list);
+ 	INIT_LIST_HEAD(&inode->i_lru);
+-	address_space_init_once(&inode->i_data);
++	__address_space_init_once(&inode->i_data);
+ 	i_size_ordered_init(inode);
+ }
+ EXPORT_SYMBOL(inode_init_once);
+-- 
+2.16.1
 
-Are people using this?  Is anyone dedicated to maintaining it, or is it
-just kind of floating along at this point?
-
-I'd rather not keep non-building freebsd code around just in case; I'd like
-to either see someone take ownership to get freebsd properly building upstream,
-or just drop it and let FreeBSD keep patching on the side as you've been doing
-for a few years anyway.
-
-Thoughts?
-
-Thanks,
--Eric
