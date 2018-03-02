@@ -1,115 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:55261 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164684AbeCBEDB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:03:01 -0500
-Subject: [PATCH v5 04/12] ext2,
- dax: define ext2_dax_*() infrastructure in all cases
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 01 Mar 2018 19:53:55 -0800
-Message-ID: <151996283559.28483.2221179891176741624.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39780 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932131AbeCBVxA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 16:53:00 -0500
+Date: Sat, 3 Mar 2018 08:52:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: handle inconsistent log item formatting state
+ correctly
+Message-ID: <20180302215257.GR30854@dastard>
+References: <20180301223527.28626-1-david@fromorbit.com>
+ <20180302171833.GS19312@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180302171833.GS19312@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-In preparation for fixing S_DAX to be defined in the CONFIG_FS_DAX=n +
-CONFIG_DEV_DAX=y case, move the definition of these routines outside of
-the "#ifdef CONFIG_FS_DAX" guard. This is also a coding-style fix to
-move all ifdef handling to header files rather than in the source. The
-compiler will still be able to determine that all the related code can
-be discarded in the CONFIG_FS_DAX=n case.
+On Fri, Mar 02, 2018 at 09:18:33AM -0800, Darrick J. Wong wrote:
+> On Fri, Mar 02, 2018 at 09:35:27AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Brian Foster reported an oops like:
+> > 
+> > BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
+> > IP: xlog_cil_push+0x184/0x400 [xfs]
+> > ....
+> > Workqueue: xfs-cil/dm-3 xlog_cil_push_work [xfs]
+> > RIP: 0010:xlog_cil_push+0x184/0x400 [xfs]
+> > ....
+> > 
+> > This was caused by the log item size calculation return that there
+> > were no log vectors to write on a normal buffer. This should only
+> > occur for ordered buffers - the exception handling had never been
+> > executed for a non-ordered buffer. This mean we ended up with
+> > a log item marked dirty (XFS_LID_DIRTY) but with no log vectors
+> > attached that got added to the CIL. When the CIL was pushed, it
+> > tripped over the null log vector on the dirty log item when trying
+> > to chain the log vectors that needed to be written to the log.
+> > 
+> > Fix this by clearing the XFS_LID_DIRTY flag on the log item if
+> > nothing gets formatted. This will prevent the log item from being
+> > added incorrectly to the CIL, and hence avoid the crash
+> 
+> Is there a test case for this, or just intermittent crashes?
 
-Cc: <stable@vger.kernel.org>
-Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/ext2/file.c      |    8 --------
- include/linux/dax.h |   10 ++++++++--
- 2 files changed, 8 insertions(+), 10 deletions(-)
+Nope, we can't hit this case right now - it's something that was
+only triggered by a bug in my ranged buffer logging patch. It's
+clearly a bug, though, so it's a landmine we should remove.
 
-diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index 1c7ea1bcddde..5ac98d074323 100644
---- a/fs/ext2/file.c
-+++ b/fs/ext2/file.c
-@@ -29,7 +29,6 @@
- #include "xattr.h"
- #include "acl.h"
- 
--#ifdef CONFIG_FS_DAX
- static ssize_t ext2_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- {
- 	struct inode *inode = iocb->ki_filp->f_mapping->host;
-@@ -128,9 +127,6 @@ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
- 	vma->vm_flags |= VM_MIXEDMAP;
- 	return 0;
- }
--#else
--#define ext2_file_mmap	generic_file_mmap
--#endif
- 
- /*
-  * Called when filp is released. This happens when all file descriptors
-@@ -162,19 +158,15 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
- 
- static ssize_t ext2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- {
--#ifdef CONFIG_FS_DAX
- 	if (IS_DAX(iocb->ki_filp->f_mapping->host))
- 		return ext2_dax_read_iter(iocb, to);
--#endif
- 	return generic_file_read_iter(iocb, to);
- }
- 
- static ssize_t ext2_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- {
--#ifdef CONFIG_FS_DAX
- 	if (IS_DAX(iocb->ki_filp->f_mapping->host))
- 		return ext2_dax_write_iter(iocb, from);
--#endif
- 	return generic_file_write_iter(iocb, from);
- }
- 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0185ecdae135..47edbce4fc52 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -93,8 +93,6 @@ void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
- 
--ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
--		const struct iomap_ops *ops);
- int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
- 		    pfn_t *pfnp, int *errp, const struct iomap_ops *ops);
- int dax_finish_sync_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
-@@ -107,6 +105,8 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- int __dax_zero_page_range(struct block_device *bdev,
- 		struct dax_device *dax_dev, sector_t sector,
- 		unsigned int offset, unsigned int length);
-+ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
-+		const struct iomap_ops *ops);
- #else
- static inline int __dax_zero_page_range(struct block_device *bdev,
- 		struct dax_device *dax_dev, sector_t sector,
-@@ -114,6 +114,12 @@ static inline int __dax_zero_page_range(struct block_device *bdev,
- {
- 	return -ENXIO;
- }
-+
-+static inline ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
-+		const struct iomap_ops *ops)
-+{
-+	return -ENXIO;
-+}
- #endif
- 
- static inline bool dax_mapping(struct address_space *mapping)
+> > Reported-by: Brian Foster <bfoster@redhat.com>
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_log_cil.c | 27 ++++++++++++++++++++-------
+> >  1 file changed, 20 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index 61ab5c0a4c45..c1ecd7698100 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -345,9 +345,16 @@ xlog_cil_insert_format_items(
+> >  		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
+> >  			ordered = true;
+> >  
+> > -		/* Skip items that do not have any vectors for writing */
+> > -		if (!shadow->lv_niovecs && !ordered)
+> > +		/*
+> > +		 * Skip items that do not have any vectors for writing. These
+> > +		 * log items must now be considered clean in this transaction,
+> > +		 * so clear the XFS_LID_DIRTY flag to ensure it doesn't get
+> > +		 * added to the CIL by mistake.
+> > +		 */
+> > +		if (!shadow->lv_niovecs && !ordered) {
+> > +			lidp->lid_flags &= ~XFS_LID_DIRTY;
+> >  			continue;
+> > +		}
+> >  
+> >  		/* compare to existing item size */
+> >  		old_lv = lip->li_lv;
+> > @@ -486,6 +493,14 @@ xlog_cil_insert_items(
+> >  		if (!(lidp->lid_flags & XFS_LID_DIRTY))
+> >  			continue;
+> >  
+> > +		/*
+> > +		 * Log items added to the CIL must have a formatted log vector
+> > +		 * attached to them. This is a requirement of the log vector
+> > +		 * chaining used separate the log items from the changes that
+>                          ^^^^^^^^^^^^^^^^^^
+> /me trips over this part of the comment, is this supposed to say
+> '...chaining using separate log items...' or '...used to separate the log
+> items...'?
 
+The latter.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
