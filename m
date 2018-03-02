@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10205 "EHLO mga09.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:30878 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163935AbeCBEC6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:02:58 -0500
-Subject: [PATCH v5 03/12] ext2, dax: finish implementing dax_sem helpers
+        id S1164696AbeCBEDM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Mar 2018 23:03:12 -0500
+Subject: [PATCH v5 06/12] ext2, dax: replace IS_DAX() with IS_FSDAX()
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 01 Mar 2018 19:53:50 -0800
-Message-ID: <151996283005.28483.12905745385121745420.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 01 Mar 2018 19:54:06 -0800
+Message-ID: <151996284593.28483.4922911524438696817.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,82 +16,82 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-dax_sem_{up,down}_write_sem() allow the ext2 dax semaphore to be
-compiled out in the CONFIG_FS_DAX=n case. However there are still some
-open coded uses of the semaphore. Add dax_sem_{up_read,down_read}() and
-dax_sem_assert_held() helpers. Use them to convert all open-coded usages
-of the semaphore to the helpers.
+In preparation for fixing the broken definition of S_DAX in the
+CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, convert all IS_DAX() usages to
+use explicit tests for FSDAX since DAX is ambiguous.
 
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
 Cc: <stable@vger.kernel.org>
 Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
 Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/ext2/ext2.h  |    6 ++++++
- fs/ext2/file.c  |    5 ++---
- fs/ext2/inode.c |    4 +---
- 3 files changed, 9 insertions(+), 6 deletions(-)
+ fs/ext2/file.c  |    6 +++---
+ fs/ext2/inode.c |    6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index 032295e1d386..203c31dfe549 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -711,9 +711,15 @@ struct ext2_inode_info {
- #ifdef CONFIG_FS_DAX
- #define dax_sem_down_write(ext2_inode)	down_write(&(ext2_inode)->dax_sem)
- #define dax_sem_up_write(ext2_inode)	up_write(&(ext2_inode)->dax_sem)
-+#define dax_sem_assert_held(ei)		WARN_ON(!rwsem_is_locked(&(ei)->dax_sem))
-+#define dax_sem_down_read(ext2_inode)	down_read(&(ext2_inode)->dax_sem)
-+#define dax_sem_up_read(ext2_inode)	up_read(&(ext2_inode)->dax_sem)
- #else
- #define dax_sem_down_write(ext2_inode)
- #define dax_sem_up_write(ext2_inode)
-+#define dax_sem_assert_held(ext2_inode)
-+#define dax_sem_down_read(ext2_inode)
-+#define dax_sem_up_read(ext2_inode)
- #endif
- 
- /*
 diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index 09640220fda8..1c7ea1bcddde 100644
+index 5ac98d074323..702a36df6c01 100644
 --- a/fs/ext2/file.c
 +++ b/fs/ext2/file.c
-@@ -91,18 +91,17 @@ static ssize_t ext2_dax_write_iter(struct kiocb *iocb, struct iov_iter *from)
- static int ext2_dax_fault(struct vm_fault *vmf)
+@@ -119,7 +119,7 @@ static const struct vm_operations_struct ext2_dax_vm_ops = {
+ 
+ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
  {
- 	struct inode *inode = file_inode(vmf->vma->vm_file);
--	struct ext2_inode_info *ei = EXT2_I(inode);
- 	int ret;
+-	if (!IS_DAX(file_inode(file)))
++	if (!IS_FSDAX(file_inode(file)))
+ 		return generic_file_mmap(file, vma);
  
- 	if (vmf->flags & FAULT_FLAG_WRITE) {
- 		sb_start_pagefault(inode->i_sb);
- 		file_update_time(vmf->vma->vm_file);
- 	}
--	down_read(&ei->dax_sem);
-+	dax_sem_down_read(EXT2_I(inode));
+ 	file_accessed(file);
+@@ -158,14 +158,14 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
  
- 	ret = dax_iomap_fault(vmf, PE_SIZE_PTE, NULL, NULL, &ext2_iomap_ops);
+ static ssize_t ext2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ {
+-	if (IS_DAX(iocb->ki_filp->f_mapping->host))
++	if (IS_FSDAX(iocb->ki_filp->f_mapping->host))
+ 		return ext2_dax_read_iter(iocb, to);
+ 	return generic_file_read_iter(iocb, to);
+ }
  
--	up_read(&ei->dax_sem);
-+	dax_sem_up_read(EXT2_I(inode));
- 	if (vmf->flags & FAULT_FLAG_WRITE)
- 		sb_end_pagefault(inode->i_sb);
- 	return ret;
+ static ssize_t ext2_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ {
+-	if (IS_DAX(iocb->ki_filp->f_mapping->host))
++	if (IS_FSDAX(iocb->ki_filp->f_mapping->host))
+ 		return ext2_dax_write_iter(iocb, from);
+ 	return generic_file_write_iter(iocb, from);
+ }
 diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 9b2ac55ac34f..4783db0e4873 100644
+index 4783db0e4873..5352207da9d5 100644
 --- a/fs/ext2/inode.c
 +++ b/fs/ext2/inode.c
-@@ -1187,9 +1187,7 @@ static void __ext2_truncate_blocks(struct inode *inode, loff_t offset)
- 	blocksize = inode->i_sb->s_blocksize;
- 	iblock = (offset + blocksize-1) >> EXT2_BLOCK_SIZE_BITS(inode->i_sb);
+@@ -733,7 +733,7 @@ static int ext2_get_blocks(struct inode *inode,
+ 		goto cleanup;
+ 	}
  
--#ifdef CONFIG_FS_DAX
--	WARN_ON(!rwsem_is_locked(&ei->dax_sem));
--#endif
-+	dax_sem_assert_held(ei);
+-	if (IS_DAX(inode)) {
++	if (IS_FSDAX(inode)) {
+ 		/*
+ 		 * We must unmap blocks before zeroing so that writeback cannot
+ 		 * overwrite zeros with stale data from block device page cache.
+@@ -940,7 +940,7 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 	loff_t offset = iocb->ki_pos;
+ 	ssize_t ret;
  
- 	n = ext2_block_to_path(inode, iblock, offsets, NULL);
- 	if (n == 0)
+-	if (WARN_ON_ONCE(IS_DAX(inode)))
++	if (WARN_ON_ONCE(IS_FSDAX(inode)))
+ 		return -EIO;
+ 
+ 	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
+@@ -1294,7 +1294,7 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
+ 
+ 	inode_dio_wait(inode);
+ 
+-	if (IS_DAX(inode)) {
++	if (IS_FSDAX(inode)) {
+ 		error = iomap_zero_range(inode, newsize,
+ 					 PAGE_ALIGN(newsize) - newsize, NULL,
+ 					 &ext2_iomap_ops);
 
