@@ -1,78 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from m213138.ym.163.com ([223.252.213.138]:22672 "EHLO
-        m213138.ym.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935990AbeCBGXg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 01:23:36 -0500
-Subject: Re: xfs_repair: add '-F' option to ignore writable mount checking
-References: <5A97638A.9050509@xtaotech.com> <5A9765FD.1090907@xtaotech.com>
-From: Yang Joseph <joseph.yang@xtaotech.com>
-Message-ID: <5A98EDCD.9060005@xtaotech.com>
-Date: Fri, 2 Mar 2018 14:23:09 +0800
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:45540 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1425193AbeCBJIq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 04:08:46 -0500
+Received: by mail-wr0-f196.google.com with SMTP id p104so9281884wrc.12
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Mar 2018 01:08:46 -0800 (PST)
+Date: Fri, 2 Mar 2018 10:08:42 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs_scrub: make interpreter explicit to python3
+Message-ID: <20180302090842.yln3r2qalmsvbw4j@odin.usersys.redhat.com>
+References: <20180224021512.23819-1-mcgrof@kernel.org>
+ <20180224044018.GA19312@magnolia>
+ <4f0ac49f-8a87-4b69-8b06-43ca6b9930a0@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <5A9765FD.1090907@xtaotech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4f0ac49f-8a87-4b69-8b06-43ca6b9930a0@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: sandeen@sandeen.net, david@fromorbit.com, sandeen@redhat.com, nathans@debian.org, rtlinux@163.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
 
+On Thu, Mar 01, 2018 at 10:05:09PM -0600, Eric Sandeen wrote:
+> 
+> 
+> On 2/23/18 10:40 PM, Darrick J. Wong wrote:
+> > On Fri, Feb 23, 2018 at 06:15:12PM -0800, Luis R. Rodriguez wrote:
+> >> Using #!/usr/bin/env makes some package dependency tools
+> >> such as rpm complain given that it cannot verify package
+> >> dependencies. Making it explicit resolves this lint rant.
+> >>
+> >> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > 
+> > Looks ok,
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> intereting, my rpmbuild actually converts this on the fly.  ;)
+> But fine by me to hardcode it if Darrick says ok.  :)
+> 
 
-Hello Eric Sandeen and Dave Chinner,
+Just a question though about this.
 
-Could you kindly help me to review this patch? This time, the xfs_repair 
-block problem is fixed,
-and xfs_repair/xfs_copy's behaviors are the same as before.
+What if somebody/somedistro installs python3 on another $PATH?
 
-# mount | grep fuse
-ceph-fuse on /mnt/registry type fuse.ceph-fuse 
-(rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other)
+It's been a while since I don't do any packaging stuff, so, I just wonder if
+this couldn't cause issues on distros using different install paths?
 
-stat('ceph-fuse') will return error, and the mountpoint scanning loop 
-will continue, other than blocked on stat("/mnt/registry").
+Cheers.
 
-thx,
+> Thanks,
+> -Eric
+> 
+> > --D
+> > 
+> >> ---
+> >>  scrub/xfs_scrub_all.in | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+> >> index fff05da3ea7a..80f07d5c8b02 100644
+> >> --- a/scrub/xfs_scrub_all.in
+> >> +++ b/scrub/xfs_scrub_all.in
+> >> @@ -1,4 +1,4 @@
+> >> -#!/usr/bin/env python3
+> >> +#!/usr/bin/python3
+> >>  
+> >>  # Run online scrubbers in parallel, but avoid thrashing.
+> >>  #
+> >> -- 
+> >> 2.16.2
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yang Honggang
-
-On 03/01/2018 10:31 AM, Yang Joseph wrote:
->
-> hello,
->
-> My last reply is rejected, so I resend this email.
->
-> A new suggestion:
->
-> From: Yang Honggang <joseph.yang@xtaotech.com>
->
-> stat(/path/to/device) instead of stat(mountpoint) to prevent
-> platform_check_mount() from hanging on stat() systemcall
-> when a dead fuse mountpoint is encountered. Because this
-> kind of mountpoint has no local device, only 'ceph-fuse',
-> stat('ceph-fuse') will return error, and the while loop will
-> continue.
->
-> Signed-off-by: Yang Honggang <joseph.yang@xtaotech.com>
-> ---
->  libxfs/linux.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/libxfs/linux.c b/libxfs/linux.c
-> index 0bace3e..d415c33 100644
-> --- a/libxfs/linux.c
-> +++ b/libxfs/linux.c
-> @@ -78,9 +78,9 @@ platform_check_mount(char *name, char *block, struct 
-> stat *s, int flags)
->          return 1;
->      }
->      while ((mnt = getmntent(f)) != NULL) {
-> -        if (stat(mnt->mnt_dir, &mst) < 0)
-> +        if (stat(mnt->mnt_fsname, &mst) < 0)
->              continue;
-> -        if (mst.st_dev != s->st_rdev)
-> +        if (mst.st_rdev != s->st_rdev)
->              continue;
->          /* Found our device, is RO OK? */
->          if ((flags & CHECK_MOUNT_WRITABLE) && hasmntopt(mnt, MNTOPT_RO))
-
+-- 
+Carlos
