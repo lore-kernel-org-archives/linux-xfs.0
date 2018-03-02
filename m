@@ -1,67 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62753 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932121AbeCBWnN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 17:43:13 -0500
-Date: Sat, 3 Mar 2018 09:43:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Change URL for the project in xfs.txt
-Message-ID: <20180302224310.GV30854@dastard>
-References: <20180302133013.9744-1-standby24x7@gmail.com>
- <20180302172401.GT19312@magnolia>
- <20180302215731.GT30854@dastard>
- <27d9f522-fa75-6766-3ca6-79f99522e861@sandeen.net>
+Received: from userp2130.oracle.com ([156.151.31.86]:44818 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1945949AbeCBRSh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 12:18:37 -0500
+Date: Fri, 2 Mar 2018 09:18:33 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: handle inconsistent log item formatting state
+ correctly
+Message-ID: <20180302171833.GS19312@magnolia>
+References: <20180301223527.28626-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <27d9f522-fa75-6766-3ca6-79f99522e861@sandeen.net>
+In-Reply-To: <20180301223527.28626-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Masanari Iida <standby24x7@gmail.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Mar 02, 2018 at 04:08:24PM -0600, Eric Sandeen wrote:
+On Fri, Mar 02, 2018 at 09:35:27AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
+> Brian Foster reported an oops like:
 > 
-> On 3/2/18 3:57 PM, Dave Chinner wrote:
-> > On Fri, Mar 02, 2018 at 09:24:01AM -0800, Darrick J. Wong wrote:
-> >> On Fri, Mar 02, 2018 at 10:30:13PM +0900, Masanari Iida wrote:
-> >>> The oss.sgi.com doesn't exist any more.
-> >>> Change it to current project URL, https://xfs.wiki.kernel.org/
-> >>>
-> >>> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-> >>> ---
-> >>>  Documentation/filesystems/xfs.txt | 2 +-
-> >>>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> >>> index 3b9b5c149f32..4d9ff0a7f8e1 100644
-> >>> --- a/Documentation/filesystems/xfs.txt
-> >>> +++ b/Documentation/filesystems/xfs.txt
-> >>> @@ -9,7 +9,7 @@ variable block sizes, is extent based, and makes extensive use of
-> >>>  Btrees (directories, extents, free space) to aid both performance
-> >>>  and scalability.
-> >>>  
-> >>> -Refer to the documentation at http://oss.sgi.com/projects/xfs/
-> >>> +Refer to the documentation at https://xfs.wiki.kernel.org/
-> > 
-> > Did I miss a memo?
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
+> IP: xlog_cil_push+0x184/0x400 [xfs]
+> ....
+> Workqueue: xfs-cil/dm-3 xlog_cil_push_work [xfs]
+> RIP: 0010:xlog_cil_push+0x184/0x400 [xfs]
+> ....
 > 
-> About which part, the loss of oss.sgi or the addition of the kernel.org wiki?
+> This was caused by the log item size calculation return that there
+> were no log vectors to write on a normal buffer. This should only
+> occur for ordered buffers - the exception handling had never been
+> executed for a non-ordered buffer. This mean we ended up with
+> a log item marked dirty (XFS_LID_DIRTY) but with no log vectors
+> attached that got added to the CIL. When the CIL was pushed, it
+> tripped over the null log vector on the dirty log item when trying
+> to chain the log vectors that needed to be written to the log.
 > 
-> The kernel.org wiki is pretty bare though.  OTOH xfs.org is a bit less
-> official.  We really need to resolve this issue.
+> Fix this by clearing the XFS_LID_DIRTY flag on the log item if
+> nothing gets formatted. This will prevent the log item from being
+> added incorrectly to the CIL, and hence avoid the crash
 
-Moving everything to kernel.org wiki. As I mentioned on IRC, I'd
-much prefer we move away from wiki's to something we can edit
-locally, review via email, has proper revision control and a
-"publish" mechanism that pushes built documentation out to the
-public website.
+Is there a test case for this, or just intermittent crashes?
 
-Cheers,
+> Reported-by: Brian Foster <bfoster@redhat.com>
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log_cil.c | 27 ++++++++++++++++++++-------
+>  1 file changed, 20 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 61ab5c0a4c45..c1ecd7698100 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -345,9 +345,16 @@ xlog_cil_insert_format_items(
+>  		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
+>  			ordered = true;
+>  
+> -		/* Skip items that do not have any vectors for writing */
+> -		if (!shadow->lv_niovecs && !ordered)
+> +		/*
+> +		 * Skip items that do not have any vectors for writing. These
+> +		 * log items must now be considered clean in this transaction,
+> +		 * so clear the XFS_LID_DIRTY flag to ensure it doesn't get
+> +		 * added to the CIL by mistake.
+> +		 */
+> +		if (!shadow->lv_niovecs && !ordered) {
+> +			lidp->lid_flags &= ~XFS_LID_DIRTY;
+>  			continue;
+> +		}
+>  
+>  		/* compare to existing item size */
+>  		old_lv = lip->li_lv;
+> @@ -486,6 +493,14 @@ xlog_cil_insert_items(
+>  		if (!(lidp->lid_flags & XFS_LID_DIRTY))
+>  			continue;
+>  
+> +		/*
+> +		 * Log items added to the CIL must have a formatted log vector
+> +		 * attached to them. This is a requirement of the log vector
+> +		 * chaining used separate the log items from the changes that
+                         ^^^^^^^^^^^^^^^^^^
+/me trips over this part of the comment, is this supposed to say
+'...chaining using separate log items...' or '...used to separate the log
+items...'?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Codewise I /think/ I understand what this is trying to do...
+
+--D
+
+> +		 * need to be written to the log in xlog_cil_push().
+> +		 */
+> +		ASSERT(lip->li_lv);
+> +
+>  		/*
+>  		 * Only move the item if it isn't already at the tail. This is
+>  		 * to prevent a transient list_empty() state when reinserting
+> @@ -655,6 +670,7 @@ xlog_cil_push(
+>  	struct xfs_log_vec	lvhdr = { NULL };
+>  	xfs_lsn_t		commit_lsn;
+>  	xfs_lsn_t		push_seq;
+> +	struct xfs_log_item	*item;
+>  
+>  	if (!cil)
+>  		return 0;
+> @@ -722,11 +738,8 @@ xlog_cil_push(
+>  	 */
+>  	lv = NULL;
+>  	num_iovecs = 0;
+> -	while (!list_empty(&cil->xc_cil)) {
+> -		struct xfs_log_item	*item;
+> -
+> -		item = list_first_entry(&cil->xc_cil,
+> -					struct xfs_log_item, li_cil);
+> +	while ((item = list_first_entry_or_null(&cil->xc_cil,
+> +					struct xfs_log_item, li_cil))) {
+>  		list_del_init(&item->li_cil);
+>  		if (!ctx->lv_chain)
+>  			ctx->lv_chain = item->li_lv;
+> -- 
+> 2.16.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
