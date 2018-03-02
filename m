@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19606 "EHLO mga01.intel.com"
+Received: from mga06.intel.com ([134.134.136.31]:54060 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164868AbeCBEDk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:03:40 -0500
-Subject: [PATCH v5 11/12] dax: fix S_DAX definition
+        id S1164868AbeCBEDp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Mar 2018 23:03:45 -0500
+Subject: [PATCH v5 12/12] vfio: disable filesystem-dax page pinning
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 01 Mar 2018 19:54:34 -0800
-Message-ID: <151996287403.28483.8962319815764432894.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 01 Mar 2018 19:54:39 -0800
+Message-ID: <151996287917.28483.16157329534570989926.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,34 +16,77 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.orglinux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: Alex Williamson <alex.williamson@redhat.com>, Michal Hocko <mhocko@suse.com>, Christoph Hellwig <hch@lst.de>, kvm@vger.kernel.org, stable@vger.kernel.org, Haozhong Zhang <haozhong.zhang@intel.com>Haozhong Zhang <haozhong.zhang@intel.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Make sure S_DAX is defined in the CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y
-case. Otherwise vma_is_dax() may incorrectly return false in the
-Device-DAX case.
+Filesystem-DAX is incompatible with 'longterm' page pinning. Without
+page cache indirection a DAX mapping maps filesystem blocks directly.
+This means that the filesystem must not modify a file's block map while
+any page in a mapping is pinned. In order to prevent the situation of
+userspace holding of filesystem operations indefinitely, disallow
+'longterm' Filesystem-DAX mappings.
 
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
+RDMA has the same conflict and the plan there is to add a 'with lease'
+mechanism to allow the kernel to notify userspace that the mapping is
+being torn down for block-map maintenance. Perhaps something similar can
+be put in place for vfio.
+
+Note that xfs and ext4 still report:
+
+   "DAX enabled. Warning: EXPERIMENTAL, use at your own risk"
+
+...at mount time, and resolving the dax-dma-vs-truncate problem is one
+of the last hurdles to remove that designation.
+
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Michal Hocko <mhocko@suse.com>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: kvm@vger.kernel.org
 Cc: <stable@vger.kernel.org>
-Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
-Reviewed-by: Jan Kara <jack@suse.cz>
+Reported-by: Haozhong Zhang <haozhong.zhang@intel.com>
+Tested-by: Haozhong Zhang <haozhong.zhang@intel.com>
+Fixes: d475c6346a38 ("dax,ext2: replace XIP read and write with DAX I/O")
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- include/linux/fs.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/vfio/vfio_iommu_type1.c |   18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index b2b2e15d227b..1242511b1c46 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1859,7 +1859,7 @@ struct super_operations {
- #define S_IMA		1024	/* Inode has an associated IMA struct */
- #define S_AUTOMOUNT	2048	/* Automount/referral quasi-directory */
- #define S_NOSEC		4096	/* no suid or xattr security attributes */
--#ifdef CONFIG_FS_DAX
-+#if IS_ENABLED(CONFIG_FS_DAX) || IS_ENABLED(CONFIG_DEV_DAX)
- #define S_DAX		8192	/* Direct Access, avoiding the page cache */
- #else
- #define S_DAX		0	/* Make all the DAX code disappear */
+diff --git a/drivers/vfio/vfio_iommu_type1.c b/drivers/vfio/vfio_iommu_type1.c
+index e30e29ae4819..45657e2b1ff7 100644
+--- a/drivers/vfio/vfio_iommu_type1.c
++++ b/drivers/vfio/vfio_iommu_type1.c
+@@ -338,11 +338,12 @@ static int vaddr_get_pfn(struct mm_struct *mm, unsigned long vaddr,
+ {
+ 	struct page *page[1];
+ 	struct vm_area_struct *vma;
++	struct vm_area_struct *vmas[1];
+ 	int ret;
+ 
+ 	if (mm == current->mm) {
+-		ret = get_user_pages_fast(vaddr, 1, !!(prot & IOMMU_WRITE),
+-					  page);
++		ret = get_user_pages_longterm(vaddr, 1, !!(prot & IOMMU_WRITE),
++					      page, vmas);
+ 	} else {
+ 		unsigned int flags = 0;
+ 
+@@ -351,7 +352,18 @@ static int vaddr_get_pfn(struct mm_struct *mm, unsigned long vaddr,
+ 
+ 		down_read(&mm->mmap_sem);
+ 		ret = get_user_pages_remote(NULL, mm, vaddr, 1, flags, page,
+-					    NULL, NULL);
++					    vmas, NULL);
++		/*
++		 * The lifetime of a vaddr_get_pfn() page pin is
++		 * userspace-controlled. In the fs-dax case this could
++		 * lead to indefinite stalls in filesystem operations.
++		 * Disallow attempts to pin fs-dax pages via this
++		 * interface.
++		 */
++		if (ret > 0 && vma_is_fsdax(vmas[0])) {
++			ret = -EOPNOTSUPP;
++			put_page(page[0]);
++		}
+ 		up_read(&mm->mmap_sem);
+ 	}
+ 
 
