@@ -1,49 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:43864 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161105AbeCATNN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:13 -0500
-Subject: [PATCH 02/16] xfs_db: don't crash in ablock if there's no inode
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 01 Mar 2018 11:13:07 -0800
-Message-ID: <151993158791.22223.3859108968502533810.stgit@magnolia>
-In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
-References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+Received: from verein.lst.de ([213.95.11.211]:38343 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933561AbeCBWxS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Mar 2018 17:53:18 -0500
+Date: Fri, 2 Mar 2018 23:53:16 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v5 02/12] dax: introduce IS_DEVDAX() and IS_FSDAX()
+Message-ID: <20180302225316.GC31240@lst.de>
+References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com> <151996282448.28483.10415125852182473579.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <151996282448.28483.10415125852182473579.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+> +static inline bool IS_DEVDAX(struct inode *inode)
+> +{
+> +	if (!IS_ENABLED(CONFIG_DEV_DAX))
+> +		return false;
+> +	if ((inode->i_flags & S_DAX) == 0)
+> +		return false;
+> +	if (!S_ISCHR(inode->i_mode))
+> +		return false;
+> +	return true;
+> +}
+> +
+> +static inline bool IS_FSDAX(struct inode *inode)
+> +{
+> +	if (!IS_ENABLED(CONFIG_FS_DAX))
+> +		return false;
+> +	if ((inode->i_flags & S_DAX) == 0)
+> +		return false;
+> +	if (S_ISCHR(inode->i_mode))
+> +		return false;
+> +	return true;
 
-Make sure we actually have an inode selected before trying to unwrap its
-attribute fork.  Found via a crash in xfs/288 with project quotas
-enabled.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- db/block.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
-
-diff --git a/db/block.c b/db/block.c
-index 5ecd687..174e29a 100644
---- a/db/block.c
-+++ b/db/block.c
-@@ -84,6 +84,11 @@ ablock_f(
- 	}
- 	push_cur();
- 	set_cur_inode(iocur_top->ino);
-+	if (!iocur_top->data) {
-+		pop_cur();
-+		dbprintf(_("no current inode\n"));
-+		return 0;
-+	}
- 	haveattr = XFS_DFORK_Q((xfs_dinode_t *)iocur_top->data);
- 	pop_cur();
- 	if (!haveattr) {
-
+Encoding the is char device or not thing here is just nasty.  I think
+this is going entirely in the wrong direction.
