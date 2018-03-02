@@ -1,50 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:51908 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932403AbeCDXBZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Mar 2018 18:01:25 -0500
-Date: Mon, 5 Mar 2018 10:00:49 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Message-ID: <20180304230049.GA18129@dastard>
-References: <20180301014144.28892-1-david@fromorbit.com>
- <20180302222031.GA30818@lst.de>
- <20180302222641.GA30953@lst.de>
+Received: from sandeen.net ([63.231.237.45]:59214 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1163301AbeCBDpo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Mar 2018 22:45:44 -0500
+Subject: Re: [PATCH] xfs_io: add RWF_DSYNC support to pwrite
+References: <20180301013633.28364-1-david@fromorbit.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <fa38bfa3-2d30-be52-5bde-80b34aee3587@sandeen.net>
+Date: Thu, 1 Mar 2018 21:45:43 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180302222641.GA30953@lst.de>
+In-Reply-To: <20180301013633.28364-1-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Fri, Mar 02, 2018 at 11:26:41PM +0100, Christoph Hellwig wrote:
-> While we're at it we should probably
-> also skil the generic_write_sync call for DAX pure overwrites while
-> we're at it.
+On 2/28/18 7:36 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Enable testing write behaviour with the per-io RWF_DSYNC flag.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  io/pwrite.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/io/pwrite.c b/io/pwrite.c
+> index a89edfd0496f..58867b764635 100644
+> --- a/io/pwrite.c
+> +++ b/io/pwrite.c
+> @@ -56,6 +56,7 @@ pwrite_help(void)
+>  #endif
+>  #ifdef HAVE_PWRITEV2
+>  " -N   -- Perform the pwritev2() with RWF_NOWAIT\n"
+> +" -D   -- Perform the pwritev2() with RWF_DSYNC\n"
 
-Now that I've looked at it, DAX is a friggin' mess.
+Needs an xfs_io manpage update and a pwrite_cmd.args
+(short help) update, please.
 
-We can't push the generic_write_sync() call into dax_iomap_rw()
-because dax_iomap_rw is called with the inode_lock() held, and both
-ext2's and ext4's ->fsync implementation can call
-__generic_file_fsync() which takes the inode_lock(). Deadlock
-central right there - someone is going to have to screw with ext4's
-indoe sync code to before we can do this.
+Thanks,
+-Eric
 
-Further, XFS has post-write metadata updates to do in the case of
-extending writes, and hence we'd still need the call to
-generic_write_sync() after we have returned from dax_iomap_rw(). I'm
-thinking we'd really need a dax write IO completion callback (say in
-the struct iomap_ops) to run the filesystem specific IO completions
-(like the DIO path) before we can start to think about optimisations
-like this for DAX for XFS....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  #endif
+>  "\n"));
+>  }
+> @@ -299,7 +300,7 @@ pwrite_f(
+>  	init_cvtnum(&fsblocksize, &fssectsize);
+>  	bsize = fsblocksize;
+>  
+> -	while ((c = getopt(argc, argv, "b:BCdf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "b:BCdDf:Fi:NqRs:OS:uV:wWZ:")) != EOF) {
+>  		switch (c) {
+>  		case 'b':
+>  			tmp = cvtnum(fsblocksize, fssectsize, optarg);
+> @@ -335,6 +336,9 @@ pwrite_f(
+>  		case 'N':
+>  			pwritev2_flags |= RWF_NOWAIT;
+>  			break;
+> +		case 'D':
+> +			pwritev2_flags |= RWF_DSYNC;
+> +			break;
+>  #endif
+>  		case 's':
+>  			skip = cvtnum(fsblocksize, fssectsize, optarg);
+> 
