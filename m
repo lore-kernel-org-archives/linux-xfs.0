@@ -1,155 +1,213 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:34823 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751275AbeCEWTA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Mar 2018 17:19:00 -0500
-Date: Tue, 6 Mar 2018 09:18:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: handle inconsistent log item formatting state
- correctly
-Message-ID: <20180305221857.GF18129@dastard>
-References: <20180301223527.28626-1-david@fromorbit.com>
- <20180305144001.GA6135@bfoster.bfoster>
+Received: from aserp2120.oracle.com ([141.146.126.78]:34036 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1946676AbeCBRh0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 12:37:26 -0500
+Date: Fri, 2 Mar 2018 09:37:22 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: don't retry xfs_buf_find on XBF_TRYLOCK failure
+Message-ID: <20180302173722.GU19312@magnolia>
+References: <20180301223632.28742-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180305144001.GA6135@bfoster.bfoster>
+In-Reply-To: <20180301223632.28742-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Mar 05, 2018 at 09:40:01AM -0500, Brian Foster wrote:
-> On Fri, Mar 02, 2018 at 09:35:27AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Brian Foster reported an oops like:
-> > 
-> > BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-> > IP: xlog_cil_push+0x184/0x400 [xfs]
-> > ....
-> > Workqueue: xfs-cil/dm-3 xlog_cil_push_work [xfs]
-> > RIP: 0010:xlog_cil_push+0x184/0x400 [xfs]
-> > ....
-> > 
-> > This was caused by the log item size calculation return that there
-> > were no log vectors to write on a normal buffer. This should only
-> > occur for ordered buffers - the exception handling had never been
-> > executed for a non-ordered buffer. This mean we ended up with
-> > a log item marked dirty (XFS_LID_DIRTY) but with no log vectors
-> > attached that got added to the CIL. When the CIL was pushed, it
-> > tripped over the null log vector on the dirty log item when trying
-> > to chain the log vectors that needed to be written to the log.
-> > 
-> > Fix this by clearing the XFS_LID_DIRTY flag on the log item if
-> > nothing gets formatted. This will prevent the log item from being
-> > added incorrectly to the CIL, and hence avoid the crash
-> > 
-> > Reported-by: Brian Foster <bfoster@redhat.com>
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > ---
+On Fri, Mar 02, 2018 at 09:36:32AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Refamiliarizing myself with the problem... we commit a dirty buffer
-> without any logged ranges, the commit time code manages to skip through
-> the formatting and whatnot, yet still inserts the item because it is
-> dirty. A push occurs sometime later and expects to find a log vector,
-> but runs into a NULL deref because the associated item wasn't prepared.
+> When looking at an event trace recently, I noticed that non-blocking
+> buffer lookup attempts would fail on cached locked buffers and then
+> run the slow cache-miss path. This means we are doing an xfs_buf
+> allocation, lookup and free unnecessarily every time we avoid
+> blocking on a locked buffer.
 > 
-> >  fs/xfs/xfs_log_cil.c | 27 ++++++++++++++++++++-------
-> >  1 file changed, 20 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > index 61ab5c0a4c45..c1ecd7698100 100644
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> > @@ -345,9 +345,16 @@ xlog_cil_insert_format_items(
-> >  		if (shadow->lv_buf_len == XFS_LOG_VEC_ORDERED)
-> >  			ordered = true;
-> >  
-> > -		/* Skip items that do not have any vectors for writing */
-> > -		if (!shadow->lv_niovecs && !ordered)
-> > +		/*
-> > +		 * Skip items that do not have any vectors for writing. These
-> > +		 * log items must now be considered clean in this transaction,
-> > +		 * so clear the XFS_LID_DIRTY flag to ensure it doesn't get
-> > +		 * added to the CIL by mistake.
-> > +		 */
-> > +		if (!shadow->lv_niovecs && !ordered) {
-> > +			lidp->lid_flags &= ~XFS_LID_DIRTY;
-> >  			continue;
-> > +		}
+> Fix this by changing _xfs_buf_find() to return an error status
+> encoded via ERR_PTR() to the caller to indicate that we failed the
+> lock attempt rather than just returning a NULL. This allows the
+> higher level code to discriminate between a cache miss and an cache
+> hit that we failed to lock.
 > 
-> So to address the problem, we clear the dirty bit at format time and
-> thus prevent it from being added to the CIL. That looks effective to me
-> wrt to avoiding the crash, but I'm not sure it sufficiently addresses
-> the root problem of not logging a dirty item...
-
-I don't think there's a problem we need to solve with clean objects
-that are marked dirty in the transaction.  I'm just fixing an
-obvious (now) logic bug in the original code that did not handle
-objects that were incorrectly marked dirty safely.
-
-> Hitting this state in this context means the transaction either set the
-> dirty state incorrectly or failed to log any data for an item that was
-> legitimately dirty (the latter being the variant we actually hit via the
-> buffer dirty range tracking patch). If we do nothing else here (but not
-> crash), what state have we left the filesystem in?
-
-A perfectly fine state. It's no different to having a clean object
-attached to a transaction, and having the transaction commit release
-it.
-
-> We've presumably
-> modified the buffer,
-
-Not according to the log item, which says there is nothing to write
-to the log. It's clean, so treat it that way.
-
-> but will it ever be written back (unless some other
-> transaction modifies/commits it) if it doesn't make it to the AIL? ISTM
-> that this is a corruption vector with at least a couple different
-> interesting paths (e.g. unmount losing data or a crash -> log recovery
-> inconsistency).
+> This also allows us to return a -EFSCORRUPTED state if we are asked
+> to look up a block number outside the range of the filesystem in
+> _xfs_buf_find(), which moves us one step closer to being able to
+> handle such errors in a more graceful manner at the higher levels.
 > 
-> Unless I'm mistaken in the above, I think we need to be a bit more
-> aggressive in handling this condition. We could obviously assert/warn,
-> but IMO a shutdown is appropriate given that we may have to assume that
-> clearing the dirty state made the fs inconsistent (and we already
-> shutdown for slightly more innocuous things, like tx overrun, in
-> comparison). The problem is that we need to make sure the current
-> transaction is not partially committed so we don't actually corrupt the
-> fs by shutting down, which leads to one last thought...
+> Finally, to ensure code outside the buffer cache does not see any
+> change, convert external callers to use xfs_incore() and change that
+> to an inline function that maintains the old "buffer or NULL" return
+> values so the external code doesn't need to care about this internal
+> change to _xfs_buf_find() semantics.
 > 
-> AFAICT the transaction commit path expects to handle items that are
-> either not dirty or otherwise must be logged. It looks like the earliest
-> we identify this problem is xlog_cil_alloc_shadow_bufs() after we've
-> called ->iop_size(). Any reason we couldn't handle this problem there?
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 56 +++++++++++++++++++++++++++++++++++++++++---------------
+>  fs/xfs/xfs_buf.h |  8 +++++++-
+>  fs/xfs/xfs_qm.c  |  5 ++---
+>  3 files changed, 50 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 88587b33dd15..fa1e62ac5e8c 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -549,20 +549,32 @@ xfs_buf_hash_destroy(
+>  }
+>  
+>  /*
+> - *	Look up, and creates if absent, a lockable buffer for
+> - *	a given range of an inode.  The buffer is returned
+> - *	locked.	No I/O is implied by this call.
+> + * Look up a buffer in the buffer cache and return it referenced and locked.
+> + *
+> + * If @new_bp is supplied and we have a lookup miss, insert @new_bp into the
+> + * cache.
+> + *
+> + * If XBF_TRYLOCK is set in @flags, only try to lock the buffer and return
+> + * -EAGAIN if we fail to lock it.
+> + *
+> + * Return values are:
+> + *	-EFSCORRUPTED if have been supplied with an invalid address
+> + *	-EAGAIN on trylock failure
+> + *	NULL if we fail to find a match and @new_bp was NULL
+> + *	@new_bp if we inserted it into the cache
+> + *	the buffer we found and locked.
+>   */
+> -xfs_buf_t *
+> +
+> +struct xfs_buf *
+>  _xfs_buf_find(
+>  	struct xfs_buftarg	*btp,
+>  	struct xfs_buf_map	*map,
+>  	int			nmaps,
+>  	xfs_buf_flags_t		flags,
+> -	xfs_buf_t		*new_bp)
+> +	struct xfs_buf		*new_bp)
+>  {
+>  	struct xfs_perag	*pag;
+> -	xfs_buf_t		*bp;
+> +	struct xfs_buf		*bp;
+>  	struct xfs_buf_map	cmap = { .bm_bn = map[0].bm_bn };
+>  	xfs_daddr_t		eofs;
+>  	int			i;
+> @@ -580,16 +592,11 @@ _xfs_buf_find(
+>  	 */
+>  	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
+>  	if (cmap.bm_bn < 0 || cmap.bm_bn >= eofs) {
+> -		/*
+> -		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
+> -		 * but none of the higher level infrastructure supports
+> -		 * returning a specific error on buffer lookup failures.
+> -		 */
+>  		xfs_alert(btp->bt_mount,
+>  			  "%s: daddr 0x%llx out of range, EOFS 0x%llx",
+>  			  __func__, cmap.bm_bn, eofs);
+>  		WARN_ON(1);
+> -		return NULL;
+> +		return ERR_PTR(-EFSCORRUPTED);
+>  	}
+>  
+>  	pag = xfs_perag_get(btp->bt_mount,
+> @@ -626,7 +633,7 @@ _xfs_buf_find(
+>  		if (flags & XBF_TRYLOCK) {
+>  			xfs_buf_rele(bp);
+>  			XFS_STATS_INC(btp->bt_mount, xb_busy_locked);
+> -			return NULL;
+> +			return ERR_PTR(-EAGAIN);
+>  		}
+>  		xfs_buf_lock(bp);
+>  		XFS_STATS_INC(btp->bt_mount, xb_get_locked_waited);
+> @@ -666,9 +673,28 @@ xfs_buf_get_map(
+>  	int			error = 0;
+>  
+>  	bp = _xfs_buf_find(target, map, nmaps, flags, NULL);
+> -	if (likely(bp))
+> +	if (!IS_ERR_OR_NULL(bp))
+>  		goto found;
+>  
+> +	switch (PTR_ERR(bp)) {
+> +		case 0:
+> +			/* cache miss, need to insert new buffer */
+> +			break;
+> +
+> +		case -EAGAIN:
+> +			/* cache hit, trylock failure, caller handles failure */
+> +			ASSERT(flags & XBF_TRYLOCK);
+> +			return NULL;
+> +
+> +		case -EFSCORRUPTED:
+> +		default:
+> +			/*
+> +			 * None of the higher layers understand failure types
+> +			 * yet, so return NULL to signal a fatal lookup error.
+> +			 */
+> +			return NULL;
 
-Because that code can validly be passed a dirty object that ends up
-with no logged regions. IMO, shadow buffer allocation is the wrong
-place to be determining if a dirty item needs to be added to the CIL
-or not - that's the job of the formatting code....
+Should I expect a follow-on patch to fix the higher layers?
 
-> There's no reason to allocate a vector we already know we aren't going
-> to use (and that is clearly based on invalid parameters), after all.
+> +	}
+> +
+>  	new_bp = _xfs_buf_alloc(target, map, nmaps, flags);
+>  	if (unlikely(!new_bp))
+>  		return NULL;
+> @@ -680,7 +706,7 @@ xfs_buf_get_map(
+>  	}
+>  
+>  	bp = _xfs_buf_find(target, map, nmaps, flags, new_bp);
+> -	if (!bp) {
+> +	if (IS_ERR_OR_NULL(bp)) {
+>  		xfs_buf_free(new_bp);
+>  		return NULL;
+>  	}
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 2f4c91452861..db87ad0b9b79 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -229,8 +229,14 @@ xfs_incore(
+>  	size_t			numblks,
+>  	xfs_buf_flags_t		flags)
+>  {
+> +	struct xfs_buf		*bp;
+> +
+>  	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+> -	return _xfs_buf_find(target, &map, 1, flags, NULL);
+> +
+> +	bp = _xfs_buf_find(target, &map, 1, flags, NULL);
+> +	if (IS_ERR_OR_NULL(bp))
+> +		return NULL;
+> +	return bp;
+>  }
+>  
+>  struct xfs_buf *_xfs_buf_alloc(struct xfs_buftarg *target,
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 5b848f4b637f..8d90d19684a7 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1249,9 +1249,8 @@ xfs_qm_flush_one(
+>  	 */
+>  	if (!xfs_dqflock_nowait(dqp)) {
+>  		/* buf is pinned in-core by delwri list */
+> -		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
+> -				      mp->m_quotainfo->qi_dqchunklen);
+> -		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
+> +		bp = xfs_incore(mp->m_ddev_targp, dqp->q_blkno,
+> +				mp->m_quotainfo->qi_dqchunklen, 0);
 
-Such objects still need a log vector attached to them so they can be
-processed through the CIL and entered into the AIL via the log
-vector chain.
+Looks ok otherwise.
 
-> Given both of the above, a clean way to handle the error may be to allow
-> the lv allocation code to return an error up through xfs_trans_commit()
-> and let the caller abort the transaction, since we haven't committed any
-> part of it at that point. Thoughts?
+--D
 
-I don't think there's any problem at all with marking an object that
-is dirty in a transaction but otherwise unmodified as "clean" in the
-transaction and treating it as a clean object....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  		if (!bp) {
+>  			error = -EINVAL;
+>  			goto out_unlock;
+> -- 
+> 2.16.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
