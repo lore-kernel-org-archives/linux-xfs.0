@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:30878 "EHLO mga05.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:55261 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164696AbeCBEDM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:03:12 -0500
-Subject: [PATCH v5 06/12] ext2, dax: replace IS_DAX() with IS_FSDAX()
+        id S1164684AbeCBEDB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Mar 2018 23:03:01 -0500
+Subject: [PATCH v5 04/12] ext2,
+ dax: define ext2_dax_*() infrastructure in all cases
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 01 Mar 2018 19:54:06 -0800
-Message-ID: <151996284593.28483.4922911524438696817.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 01 Mar 2018 19:53:55 -0800
+Message-ID: <151996283559.28483.2221179891176741624.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,82 +17,99 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-In preparation for fixing the broken definition of S_DAX in the
-CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, convert all IS_DAX() usages to
-use explicit tests for FSDAX since DAX is ambiguous.
+In preparation for fixing S_DAX to be defined in the CONFIG_FS_DAX=n +
+CONFIG_DEV_DAX=y case, move the definition of these routines outside of
+the "#ifdef CONFIG_FS_DAX" guard. This is also a coding-style fix to
+move all ifdef handling to header files rather than in the source. The
+compiler will still be able to determine that all the related code can
+be discarded in the CONFIG_FS_DAX=n case.
 
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
 Cc: <stable@vger.kernel.org>
 Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
 Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/ext2/file.c  |    6 +++---
- fs/ext2/inode.c |    6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ fs/ext2/file.c      |    8 --------
+ include/linux/dax.h |   10 ++++++++--
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
 diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-index 5ac98d074323..702a36df6c01 100644
+index 1c7ea1bcddde..5ac98d074323 100644
 --- a/fs/ext2/file.c
 +++ b/fs/ext2/file.c
-@@ -119,7 +119,7 @@ static const struct vm_operations_struct ext2_dax_vm_ops = {
+@@ -29,7 +29,6 @@
+ #include "xattr.h"
+ #include "acl.h"
  
- static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
+-#ifdef CONFIG_FS_DAX
+ static ssize_t ext2_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
  {
--	if (!IS_DAX(file_inode(file)))
-+	if (!IS_FSDAX(file_inode(file)))
- 		return generic_file_mmap(file, vma);
+ 	struct inode *inode = iocb->ki_filp->f_mapping->host;
+@@ -128,9 +127,6 @@ static int ext2_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 	vma->vm_flags |= VM_MIXEDMAP;
+ 	return 0;
+ }
+-#else
+-#define ext2_file_mmap	generic_file_mmap
+-#endif
  
- 	file_accessed(file);
-@@ -158,14 +158,14 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+ /*
+  * Called when filp is released. This happens when all file descriptors
+@@ -162,19 +158,15 @@ int ext2_fsync(struct file *file, loff_t start, loff_t end, int datasync)
  
  static ssize_t ext2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
  {
--	if (IS_DAX(iocb->ki_filp->f_mapping->host))
-+	if (IS_FSDAX(iocb->ki_filp->f_mapping->host))
+-#ifdef CONFIG_FS_DAX
+ 	if (IS_DAX(iocb->ki_filp->f_mapping->host))
  		return ext2_dax_read_iter(iocb, to);
+-#endif
  	return generic_file_read_iter(iocb, to);
  }
  
  static ssize_t ext2_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
  {
--	if (IS_DAX(iocb->ki_filp->f_mapping->host))
-+	if (IS_FSDAX(iocb->ki_filp->f_mapping->host))
+-#ifdef CONFIG_FS_DAX
+ 	if (IS_DAX(iocb->ki_filp->f_mapping->host))
  		return ext2_dax_write_iter(iocb, from);
+-#endif
  	return generic_file_write_iter(iocb, from);
  }
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 4783db0e4873..5352207da9d5 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -733,7 +733,7 @@ static int ext2_get_blocks(struct inode *inode,
- 		goto cleanup;
- 	}
  
--	if (IS_DAX(inode)) {
-+	if (IS_FSDAX(inode)) {
- 		/*
- 		 * We must unmap blocks before zeroing so that writeback cannot
- 		 * overwrite zeros with stale data from block device page cache.
-@@ -940,7 +940,7 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 	loff_t offset = iocb->ki_pos;
- 	ssize_t ret;
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 0185ecdae135..47edbce4fc52 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -93,8 +93,6 @@ void dax_flush(struct dax_device *dax_dev, void *addr, size_t size);
+ void dax_write_cache(struct dax_device *dax_dev, bool wc);
+ bool dax_write_cache_enabled(struct dax_device *dax_dev);
  
--	if (WARN_ON_ONCE(IS_DAX(inode)))
-+	if (WARN_ON_ONCE(IS_FSDAX(inode)))
- 		return -EIO;
+-ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+-		const struct iomap_ops *ops);
+ int dax_iomap_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+ 		    pfn_t *pfnp, int *errp, const struct iomap_ops *ops);
+ int dax_finish_sync_fault(struct vm_fault *vmf, enum page_entry_size pe_size,
+@@ -107,6 +105,8 @@ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ int __dax_zero_page_range(struct block_device *bdev,
+ 		struct dax_device *dax_dev, sector_t sector,
+ 		unsigned int offset, unsigned int length);
++ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
++		const struct iomap_ops *ops);
+ #else
+ static inline int __dax_zero_page_range(struct block_device *bdev,
+ 		struct dax_device *dax_dev, sector_t sector,
+@@ -114,6 +114,12 @@ static inline int __dax_zero_page_range(struct block_device *bdev,
+ {
+ 	return -ENXIO;
+ }
++
++static inline ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
++		const struct iomap_ops *ops)
++{
++	return -ENXIO;
++}
+ #endif
  
- 	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
-@@ -1294,7 +1294,7 @@ static int ext2_setsize(struct inode *inode, loff_t newsize)
- 
- 	inode_dio_wait(inode);
- 
--	if (IS_DAX(inode)) {
-+	if (IS_FSDAX(inode)) {
- 		error = iomap_zero_range(inode, newsize,
- 					 PAGE_ALIGN(newsize) - newsize, NULL,
- 					 &ext2_iomap_ops);
+ static inline bool dax_mapping(struct address_space *mapping)
 
