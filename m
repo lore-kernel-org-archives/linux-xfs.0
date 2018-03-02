@@ -1,137 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28338 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164734AbeCBEDS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:03:18 -0500
-Subject: [PATCH v5 07/12] ext4, dax: replace IS_DAX() with IS_FSDAX()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 01 Mar 2018 19:54:11 -0800
-Message-ID: <151996285107.28483.10237358640480864296.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:38770 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752340AbeCBWVl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 17:21:41 -0500
+Received: by mail-oi0-f51.google.com with SMTP id 123so8154892oig.5
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Mar 2018 14:21:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180302221020.GA30722@lst.de>
+References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180302221020.GA30722@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 2 Mar 2018 14:21:40 -0800
+Message-ID: <CAPcyv4gKyvkHY_qQTYvd8wrLpaXXciJyWZY+9T7Q_Eg-Zuxpgw@mail.gmail.com>
+Subject: Re: [PATCH v5 00/12] vfio, dax: prevent long term filesystem-dax pins
+ and other fixes
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, KVM list <kvm@vger.kernel.org>, Haozhong Zhang <haozhong.zhang@intel.com>, Jane Chu <jane.chu@oracle.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Gerd Rausch <gerd.rausch@oracle.com>, stable <stable@vger.kernel.org>, Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@suse.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Linux MM <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-In preparation for fixing the broken definition of S_DAX in the
-CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, convert all IS_DAX() usages to
-use explicit tests for FSDAX since DAX is ambiguous.
+On Fri, Mar 2, 2018 at 2:10 PM, Christoph Hellwig <hch@lst.de> wrote:
+> I really don't like these IS_DEVDAX and IS_FSDAX flags.  We should
+> stop pretending DAX is a global per-inode choice and get rid of these
+> magic flags entirely.  So please convert the instances inside the
+> various file systems to checking the file system mount options instead.
+>
+> For the core ones we'll need to differentiate:
+>
+>  - the checks in generic_file_read_iter and __generic_file_write_iter
+>    seem to not be needed anymore at all since we stopped abusing the
+>    direct I/O code for DAX, so they should probably be removed.
+>  - io_is_direct is a weird check and should probably just go away,
+>    as there is not point in always setting IOCB_DIRECT for DAX I/O
+>  - fadvise should either become a file op, or a flag on the inode that
+>    fadvice is supported instead of the nasty noop_backing_dev_info or
+>    DAX check.
+>  - Ditto for madvise
+>  - vma_is_dax should probably be replaced with a VMA flag.
+>  - thp_get_unmapped_area I don't really understand why we have a dax
+>    check there.
+>  - dax_mapping will be much harder to sort out.
+>
+> But all these DAX flags certainly look like a major hodge podge to me.
 
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Andreas Dilger <adilger.kernel@dilger.ca>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: <stable@vger.kernel.org>
-Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/ext4/file.c  |   12 +++++-------
- fs/ext4/inode.c |    4 ++--
- fs/ext4/ioctl.c |    2 +-
- fs/ext4/super.c |    2 +-
- 4 files changed, 9 insertions(+), 11 deletions(-)
+They are indeed a hodge-podge. The problem is that the current
+IS_DAX() is broken. So I'd like to propose fixing IS_DAX() with
+IS_FSDAX() + IS_DEVDAX() for 4.16-rc4 and queue up these wider reworks
+you propose for the next merge window.
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 51854e7608f0..561ea843b458 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -48,7 +48,7 @@ static ssize_t ext4_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	 * Recheck under inode lock - at this point we are sure it cannot
- 	 * change anymore
- 	 */
--	if (!IS_DAX(inode)) {
-+	if (!IS_FSDAX(inode)) {
- 		inode_unlock_shared(inode);
- 		/* Fallback to buffered IO in case we cannot support DAX */
- 		return generic_file_read_iter(iocb, to);
-@@ -68,7 +68,7 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	if (!iov_iter_count(to))
- 		return 0; /* skip atime */
- 
--	if (IS_DAX(file_inode(iocb->ki_filp)))
-+	if (IS_FSDAX(file_inode(iocb->ki_filp)))
- 		return ext4_dax_read_iter(iocb, to);
- 	return generic_file_read_iter(iocb, to);
- }
-@@ -216,10 +216,8 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
- 		return -EIO;
- 
--#ifdef CONFIG_FS_DAX
--	if (IS_DAX(inode))
-+	if (IS_FSDAX(inode))
- 		return ext4_dax_write_iter(iocb, from);
--#endif
- 	if (!o_direct && (iocb->ki_flags & IOCB_NOWAIT))
- 		return -EOPNOTSUPP;
- 
-@@ -361,11 +359,11 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
- 	 * We don't support synchronous mappings for non-DAX files. At least
- 	 * until someone comes with a sensible use case.
- 	 */
--	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
-+	if (!IS_FSDAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
- 		return -EOPNOTSUPP;
- 
- 	file_accessed(file);
--	if (IS_DAX(file_inode(file))) {
-+	if (IS_FSDAX(file_inode(file))) {
- 		vma->vm_ops = &ext4_dax_vm_ops;
- 		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
- 	} else {
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index c94780075b04..1879b33aa391 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3858,7 +3858,7 @@ static ssize_t ext4_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 		return 0;
- 
- 	/* DAX uses iomap path now */
--	if (WARN_ON_ONCE(IS_DAX(inode)))
-+	if (WARN_ON_ONCE(IS_FSDAX(inode)))
- 		return 0;
- 
- 	trace_ext4_direct_IO_enter(inode, offset, count, iov_iter_rw(iter));
-@@ -4076,7 +4076,7 @@ static int ext4_block_zero_page_range(handle_t *handle,
- 	if (length > max || length < 0)
- 		length = max;
- 
--	if (IS_DAX(inode)) {
-+	if (IS_FSDAX(inode)) {
- 		return iomap_zero_range(inode, from, length, NULL,
- 					&ext4_iomap_ops);
- 	}
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index 7e99ad02f1ba..040fc6570ddb 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -790,7 +790,7 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 				 "Online defrag not supported with bigalloc");
- 			err = -EOPNOTSUPP;
- 			goto mext_out;
--		} else if (IS_DAX(inode)) {
-+		} else if (IS_FSDAX(inode)) {
- 			ext4_msg(sb, KERN_ERR,
- 				 "Online defrag not supported with DAX");
- 			err = -EOPNOTSUPP;
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 39bf464c35f1..933e12940181 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1161,7 +1161,7 @@ static int ext4_set_context(struct inode *inode, const void *ctx, size_t len,
- 	if (inode->i_ino == EXT4_ROOT_INO)
- 		return -EPERM;
- 
--	if (WARN_ON_ONCE(IS_DAX(inode) && i_size_read(inode)))
-+	if (WARN_ON_ONCE(IS_FSDAX(inode) && i_size_read(inode)))
- 		return -EINVAL;
- 
- 	res = ext4_convert_inline_data(inode);
-
+Acceptable?
