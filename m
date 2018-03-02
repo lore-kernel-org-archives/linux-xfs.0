@@ -1,91 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:44151 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424852AbeCBJQB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 04:16:01 -0500
-Received: by mail-wr0-f195.google.com with SMTP id v65so9307361wrc.11
-        for <linux-xfs@vger.kernel.org>; Fri, 02 Mar 2018 01:16:00 -0800 (PST)
-Date: Fri, 2 Mar 2018 10:15:57 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] inode: don't memset the inode address space twice
-Message-ID: <20180302091557.hfu2hjm2krrg3xmq@odin.usersys.redhat.com>
-References: <20180301223402.26897-1-david@fromorbit.com>
+Received: from verein.lst.de ([213.95.11.211]:38254 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932266AbeCBWUc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Mar 2018 17:20:32 -0500
+Date: Fri, 2 Mar 2018 23:20:31 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+Message-ID: <20180302222031.GA30818@lst.de>
+References: <20180301014144.28892-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180301223402.26897-1-david@fromorbit.com>
+In-Reply-To: <20180301014144.28892-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org
 
-On Fri, Mar 02, 2018 at 09:34:02AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Noticed when looking at why cycling 600k inodes/s through the inode
-> cache was taking a total of 8% cpu in memset() during inode
-> initialisation.  There is no need to zero the inode.i_data structure
-> twice.
-> 
-> This increases single threaded bulkstat throughput from ~200,000
-> inodes/s to ~220,000 inodes/s, so we save a substantial amount of
-> CPU time per inode init by doing this.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-
-Looks good to me.
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> ---
->  fs/inode.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 6295f1415761..b153aeaa61ea 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -346,9 +346,8 @@ void inc_nlink(struct inode *inode)
->  }
->  EXPORT_SYMBOL(inc_nlink);
+> @@ -760,8 +761,19 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+>  	}
 >  
-> -void address_space_init_once(struct address_space *mapping)
-> +static void __address_space_init_once(struct address_space *mapping)
->  {
-> -	memset(mapping, 0, sizeof(*mapping));
->  	INIT_RADIX_TREE(&mapping->page_tree, GFP_ATOMIC | __GFP_ACCOUNT);
->  	spin_lock_init(&mapping->tree_lock);
->  	init_rwsem(&mapping->i_mmap_rwsem);
-> @@ -356,6 +355,12 @@ void address_space_init_once(struct address_space *mapping)
->  	spin_lock_init(&mapping->private_lock);
->  	mapping->i_mmap = RB_ROOT_CACHED;
->  }
+>  	inode_dio_end(file_inode(iocb->ki_filp));
+> -	kfree(dio);
+>  
+> +	/*
+> +	 * If a FUA write was done, then that is all we required for datasync
+> +	 * semantics -. we don't need to call generic_write_sync() to complete
+> +	 * the write.
+> +	 */
+> +	if (ret > 0 &&
+> +	    (dio->flags & (IOMAP_DIO_WRITE|IOMAP_DIO_WRITE_FUA)) ==
+> +							IOMAP_DIO_WRITE) {
+> +		ret = generic_write_sync(iocb, ret);
+> +	}
 > +
-> +void address_space_init_once(struct address_space *mapping)
-> +{
-> +	memset(mapping, 0, sizeof(*mapping));
-> +	__address_space_init_once(mapping);
-> +}
->  EXPORT_SYMBOL(address_space_init_once);
->  
->  /*
-> @@ -371,7 +376,7 @@ void inode_init_once(struct inode *inode)
->  	INIT_LIST_HEAD(&inode->i_io_list);
->  	INIT_LIST_HEAD(&inode->i_wb_list);
->  	INIT_LIST_HEAD(&inode->i_lru);
-> -	address_space_init_once(&inode->i_data);
-> +	__address_space_init_once(&inode->i_data);
->  	i_size_ordered_init(inode);
->  }
->  EXPORT_SYMBOL(inode_init_once);
-> -- 
-> 2.16.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +	kfree(dio);
 
--- 
-Carlos
+Can please split the move of the generic_write_sync call into
+generic_write_sync a separate prep patch?  It's enough of a logic change
+on its own that it warrants a separate commit with a separate explanation.
+
+Also I'd be tempted to invert the IOMAP_DIO_WRITE_FUA flag and replace
+it with an IOMAP_DIO_WRITE_SYNC flag to indicate we need the
+generic_write_sync call, as that should make the logic much more clear.
+
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 260ff5e5c264..81aa3b73471e 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -732,6 +732,11 @@ xfs_file_write_iter(
+>  		ret = xfs_file_dio_aio_write(iocb, from);
+>  		if (ret == -EREMCHG)
+>  			goto buffered;
+> +		/*
+> +		 * Direct IO handles sync type writes internally on I/O
+> +		 * completion.
+> +		 */
+> +		return ret;
+>  	} else {
+>  buffered:
+>  		ret = xfs_file_buffered_aio_write(iocb, from);
+
+The else is not needed and you can now have a much more sensible
+code flow here:
+
+		ret = xfs_file_dio_aio_write(iocb, from);
+		if (ret != -EREMCHG))
+			return ret;
+	}
+
+	ret = xfs_file_buffered_aio_write(iocb, from);
+
