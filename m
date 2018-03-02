@@ -1,44 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38217 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:47600 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932197AbeCBWKX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Mar 2018 17:10:23 -0500
-Date: Fri, 2 Mar 2018 23:10:20 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 00/12] vfio, dax: prevent long term filesystem-dax
-        pins and other fixes
-Message-ID: <20180302221020.GA30722@lst.de>
-References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S932197AbeCBWLZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Mar 2018 17:11:25 -0500
+Subject: Re: [PATCH 01/16] misc: fix gcc 7.3 warnings
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+ <151993158177.22223.13396508401318390165.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <af22a8cb-a8b5-627a-6202-19ff035ad82c@sandeen.net>
+Date: Fri, 2 Mar 2018 16:11:24 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <151993158177.22223.13396508401318390165.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, kvm@vger.kernel.org, Haozhong Zhang <haozhong.zhang@intel.com>, Jane Chu <jane.chu@oracle.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Gerd Rausch <gerd.rausch@oracle.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@suse.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Christoph Hellwig <hch@lst.de>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-fsdevel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>, Theodore Ts'o <tytso@mit.edu>, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
-I really don't like these IS_DEVDAX and IS_FSDAX flags.  We should
-stop pretending DAX is a global per-inode choice and get rid of these
-magic flags entirely.  So please convert the instances inside the
-various file systems to checking the file system mount options instead.
 
-For the core ones we'll need to differentiate:
 
- - the checks in generic_file_read_iter and __generic_file_write_iter
-   seem to not be needed anymore at all since we stopped abusing the
-   direct I/O code for DAX, so they should probably be removed.
- - io_is_direct is a weird check and should probably just go away,
-   as there is not point in always setting IOCB_DIRECT for DAX I/O
- - fadvise should either become a file op, or a flag on the inode that
-   fadvice is supported instead of the nasty noop_backing_dev_info or
-   DAX check.
- - Ditto for madvise
- - vma_is_dax should probably be replaced with a VMA flag.
- - thp_get_unmapped_area I don't really understand why we have a dax
-   check there.
- - dax_mapping will be much harder to sort out.
+On 3/1/18 1:13 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Fix various compiler warnings that pop up in 7.3.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-But all these DAX flags certainly look like a major hodge podge to me.
+(after long code archaeology session and reading to be sure
+that last fallthrough really is correct, ugh, comments
+would have been good when _cnt & _bno were merged...)
 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  db/bit.c        |    4 ++--
+>  repair/dinode.c |    1 +
+>  repair/scan.c   |    1 +
+>  3 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/db/bit.c b/db/bit.c
+> index bf8d80e..a6d8c9f 100644
+> --- a/db/bit.c
+> +++ b/db/bit.c
+> @@ -111,11 +111,11 @@ getbitval(
+>  			/* handle endian swap here */
+>  #if __BYTE_ORDER == LITTLE_ENDIAN
+>  			if (i == 0 && signext && nbits < 64)
+> -				rval = -1LL << nbits;
+> +				rval = (~0ULL) << nbits;
+>  			rval |= 1ULL << (nbits - i - 1);
+>  #else
+>  			if ((i == (nbits - 1)) && signext && nbits < 64)
+> -				rval |= (-1LL << nbits);
+> +				rval |= ((~0ULL) << nbits);
+>  			rval |= 1ULL << (nbits - i - 1);
+>  #endif
+>  		}
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 32cc769..07bcf80 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -525,6 +525,7 @@ _("data fork in rt inode %" PRIu64 " found metadata block %" PRIu64 " in rt bmap
+>  		case XR_E_INUSE:
+>  			if (pwe)
+>  				break;
+> +			/* fall through */
+>  		case XR_E_MULT:
+>  			set_rtbmap(ext, XR_E_MULT);
+>  			do_warn(
+> diff --git a/repair/scan.c b/repair/scan.c
+> index e4ac4a7..0fc41f2 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -705,6 +705,7 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+>  							     XR_E_FREE);
+>  						break;
+>  					}
+> +					/* fall through */
+>  				default:
+>  					do_warn(
+>  	_("block (%d,%d-%d) multiply claimed by %s space tree, state - %d\n"),
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
