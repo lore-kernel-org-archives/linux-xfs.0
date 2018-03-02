@@ -1,147 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:58902 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932084AbeCEWbv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Mar 2018 17:31:51 -0500
-Date: Tue, 6 Mar 2018 09:31:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
-Message-ID: <20180305223148.GG18129@dastard>
-References: <20180305150546.32191-1-jtulak@redhat.com>
- <20180305215659.GE18129@dastard>
- <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34869 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1947318AbeCBShl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 13:37:41 -0500
+Received: by mail-oi0-f67.google.com with SMTP id x10so7723792oig.2
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Mar 2018 10:37:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net>
+In-Reply-To: <20180302174530.GV19312@magnolia>
+References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <151996282448.28483.10415125852182473579.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180302174530.GV19312@magnolia>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 2 Mar 2018 10:37:40 -0800
+Message-ID: <CAPcyv4iu32ja_vPiN=E0DP7_PFaj887XQ48EOMupE0Q4p1dCkQ@mail.gmail.com>
+Subject: Re: [PATCH v5 02/12] dax: introduce IS_DEVDAX() and IS_FSDAX()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-xfs <linux-xfs@vger.kernel.org>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable <stable@vger.kernel.org>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, Mar 05, 2018 at 04:06:38PM -0600, Eric Sandeen wrote:
-> On 3/5/18 3:56 PM, Dave Chinner wrote:
-> > On Mon, Mar 05, 2018 at 04:05:46PM +0100, Jan Tulak wrote:
-> >> The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
-> >> run on every unclean shutdown. However, sometimes it may happen that the
-> >> root filesystem really requires the usage of xfs_repair and then it is a
-> >> hassle. This patch makes the situation a bit easier by detecting forced
-> >> checks (/forcefsck or fsck.mode=force), so user can require the repair,
-> >> without the repair being run all the time.
-> >>
-> >> (Thanks Eric for suggesting this.)
-> >>
-> >> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> > 
-> > Ok, so I can see why support for this is probably neecssary, I have
-> > a few reservations about the implementation....
-> > 
-> >> ---
-> >>  fsck/xfs_fsck.sh | 14 ++++++++++++--
-> >>  1 file changed, 12 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-> >> index e52969e4..71bfa2e1 100755
-> >> --- a/fsck/xfs_fsck.sh
-> >> +++ b/fsck/xfs_fsck.sh
-> >> @@ -4,10 +4,12 @@
-> >>  #
-> >>  
-> >>  AUTO=false
-> >> -while getopts ":aApy" c
-> >> +FORCE=false
-> >> +while getopts ":aApyf" c
-> >>  do
-> >>  	case $c in
-> >>  	a|A|p|y)	AUTO=true;;
-> >> +	f)      	FORCE=true;;
-> >>  	esac
-> >>  done
-> >>  eval DEV=\${$#}
-> >> @@ -15,10 +17,18 @@ if [ ! -e $DEV ]; then
-> >>  	echo "$0: $DEV does not exist"
-> >>  	exit 8
-> >>  fi
-> >> +
-> >> +# The flag -f is added by systemd/init scripts when /forcefsck file is present
-> >> +# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
-> >> +# this check, user has to explicitly require a forced fsck.
-> >> +if $FORCE; then
-> >> +	xfs_repair $DEV
-> >> +	exit $?
-> >> +fi
-> > 
-> > This needs to check that the xfs_repair binary is present in the
-> > environment that is running fsck. If this is checking the root fs
-> > from the initramfs, then distros are going to need to package
-> > xfs_repair into their initramfs build scripts...
-> 
-> Fedora and RHEL does, FWIW.  Can others check?  What does Debian do?
+On Fri, Mar 2, 2018 at 9:45 AM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Thu, Mar 01, 2018 at 07:53:44PM -0800, Dan Williams wrote:
+>> The current IS_DAX() helper that checks if a file is in DAX mode serves
+>> two purposes. It is a control flow branch condition for DAX vs
+>> non-DAX paths and it is a mechanism to perform dead code elimination. The
+>> dead code elimination is required in the CONFIG_FS_DAX=n case since
+>> there are symbols in fs/dax.c that will be elided. While the
+>> dead code elimination can be addressed with nop stubs for the fs/dax.c
+>> symbols that does not address the need for a DAX control flow helper
+>> where fs/dax.c symbols are not involved.
+>>
+>> Moreover, the control flow changes, in some cases, need to be cognizant
+>> of whether the DAX file is a typical file or a Device-DAX special file.
+>> Introduce IS_DEVDAX() and IS_FSDAX() to simultaneously address the
+>> file-type control flow and dead-code elimination use cases. IS_DAX()
+>> will be deleted after all sites are converted to use the file-type
+>> specific helper.
+>>
+>> Note, this change is also a pre-requisite for fixing the definition of
+>> the S_DAX inode flag in the CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case.
+>> The flag needs to be defined, non-zero, if either DAX facility is
+>> enabled.
+>>
+>> Cc: "Theodore Ts'o" <tytso@mit.edu>
+>> Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+>> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+>> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+>> Cc: linux-xfs@vger.kernel.org
+>> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+>> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> Cc: <stable@vger.kernel.org>
+>> Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
+>> Reported-by: Jan Kara <jack@suse.cz>
+>> Reviewed-by: Jan Kara <jack@suse.cz>
+>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>> ---
+>>  include/linux/fs.h |   22 ++++++++++++++++++++++
+>>  1 file changed, 22 insertions(+)
+>>
+>> diff --git a/include/linux/fs.h b/include/linux/fs.h
+>> index 79c413985305..bd0c46880572 100644
+>> --- a/include/linux/fs.h
+>> +++ b/include/linux/fs.h
+>> @@ -1909,6 +1909,28 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
+>>  #define IS_WHITEOUT(inode)   (S_ISCHR(inode->i_mode) && \
+>>                                (inode)->i_rdev == WHITEOUT_DEV)
+>>
+>> +static inline bool IS_DEVDAX(struct inode *inode)
+>> +{
+>> +     if (!IS_ENABLED(CONFIG_DEV_DAX))
+>> +             return false;
+>> +     if ((inode->i_flags & S_DAX) == 0)
+>> +             return false;
+>> +     if (!S_ISCHR(inode->i_mode))
+>> +             return false;
+>> +     return true;
+>> +}
+>> +
+>> +static inline bool IS_FSDAX(struct inode *inode)
+>> +{
+>> +     if (!IS_ENABLED(CONFIG_FS_DAX))
+>> +             return false;
+>
+> I echo Jan's complaint from the last round that the dead code
+> elimination here is subtle, as compared to:
+>
+> #if IS_ENABLED(CONFIG_FS_DAX)
+> static inline bool IS_FSDAX(struct inode *inode) { ... }
+> #else
+> # define IS_FSDAX(inode) (false)
+> #endif
+>
+> But I guess even with that we're relying on dead code elimination higher
+> up in the call stack...
 
-No idea. I've never needed to peel an initramfs to check what is
-inside.
+If IS_FSDAX() was only a dead-code elimination mechanism rather than a
+runtime branch condition then I agree. Otherwise I think IS_ENABLED()
+is suitable and not subtle, especially when used in a header file.
 
-Ah, debian has a tool for that (lsinitramfs)....
+>> +     if ((inode->i_flags & S_DAX) == 0)
+>> +             return false;
+>> +     if (S_ISCHR(inode->i_mode))
+>> +             return false;
+>
+> I'm curious, do we have character devices with S_DAX set?
 
-$ lsinitramfs /boot/initrd.img-4.15.0-1-amd64  |grep xfs
-lib/modules/4.13.0-1-amd64/kernel/fs/xfs
-lib/modules/4.13.0-1-amd64/kernel/fs/xfs/xfs.ko
-sbin/fsck.xfs
-$
+Yes, Device-DAX, see:
 
-Nope, xfs_repair is not packaged in the debian initramfs. And, well,
-on a more recently installed machine:
+    ab68f2622136 /dev/dax, pmem: direct access to persistent memory
 
-$ lsinitramfs /boot/initrd.img-4.15.0-rc8-amd64  |grep xfs
-lib/modules/4.15.0-rc8-amd64/kernel/fs/xfs
-lib/modules/4.15.0-rc8-amd64/kernel/fs/xfs/xfs.ko
-$
+> I /think/ we're expecting that only block/char devices and files will
+> ever have S_DAX set, so IS_FSDAX is only true for block devices and
+> files.  Right?
 
-fsck.xfs isn't even in the built initramfs for a machine running
-only XFS filesystems....
+We had S_DAX on block-devices for a short while, but deleted it and
+went with the Device-DAX interface instead. So it's only regular files
+and /dev/daxX.Y nodes these days.
 
-> > Also, if the log is dirty, xfs_repair won't run. If the filesystem
-> > is already mounted read-only, xfs_repair won't run. So if we're
-> > forcing a boot time check, we want it to run unconditionally and fix
-> > any problems found automatically, right?
-> 
-> Yep, I'm curious if this was tested - I played with something like this
-> a while ago but didn't take notes.  ;)
-> 
-> As for running automatically and fix any problems, we may need to make
-> a decision.  If it won't mount due to a log problem, do we automatically
-> use -L or drop to a shell and punt to the admin?  (That's what we would
-> do w/o any fsck -f invocation today...)
+> (A comment here about why S_ISCHR->false here would be helpful.)
 
-Define the expected "forcefsck" semantics, and that will tell us
-what we need to do. Is it automatic system recovery? What if the
-root fs can't be mounted due to log replay problems?
-
-> > I also wonder if we can limit this to just the boot infrastructure,
-> > because I really don't like the idea of users using fsck.xfs -f to
-> > repair damage filesystems because "that's what I do to repair ext4
-> > filesystems"....
-> 
-> Depending on how this gets fleshed out, fsck.xfs -f isn't any different
-> than bare xfs_repair...  (Unless all of the above suggestions about dirty
-> logs get added, then it certainly is!)  So, yeah...
-> 
-> How would you propose limiting it to the boot environment? 
-
-I have no idea - this is all way outside my area of expertise...
-
-> I wondered
-> about the script itself checking for /forcefsck or the boot parameters,
-> but at least the boot params probably last for the duration of the uptime.
-> And re-coding / re-implementing the systemd checks in our own script
-> probably is a bad idea, so forget I suggested it ...
-
-But, yeah, we don't want to have to do that....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ok.
