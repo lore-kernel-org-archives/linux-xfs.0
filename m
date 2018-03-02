@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10237 "EHLO mga09.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:9465 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164868AbeCBEDf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:03:35 -0500
-Subject: [PATCH v5 10/12] fs, dax: kill IS_DAX()
+        id S1164734AbeCBEDX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Mar 2018 23:03:23 -0500
+Subject: [PATCH v5 08/12] xfs, dax: replace IS_DAX() with IS_FSDAX()
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 01 Mar 2018 19:54:28 -0800
-Message-ID: <151996286805.28483.12933227722062678008.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 01 Mar 2018 19:54:16 -0800
+Message-ID: <151996285683.28483.13394624369523668388.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,12 +16,14 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
 In preparation for fixing the broken definition of S_DAX in the
-CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, convert all the remaining
-IS_DAX() usages to use explicit tests for FSDAX.
+CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, convert all IS_DAX() usages to
+use explicit tests for FSDAX since DAX is ambiguous.
 
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 Cc: Matthew Wilcox <mawilcox@microsoft.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
 Cc: <stable@vger.kernel.org>
@@ -29,56 +31,134 @@ Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
 Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/iomap.c          |    2 +-
- include/linux/dax.h |    2 +-
- include/linux/fs.h  |    3 +--
- 3 files changed, 3 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_file.c    |   14 +++++++-------
+ fs/xfs/xfs_ioctl.c   |    4 ++--
+ fs/xfs/xfs_iomap.c   |    6 +++---
+ fs/xfs/xfs_reflink.c |    2 +-
+ 4 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index afd163586aa0..fe379d8949fd 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -377,7 +377,7 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 		offset = pos & (PAGE_SIZE - 1); /* Within page */
- 		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 9ea08326f876..46a098b90fd0 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -288,7 +288,7 @@ xfs_file_read_iter(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
  
--		if (IS_DAX(inode))
-+		if (IS_FSDAX(inode))
- 			status = iomap_dax_zero(pos, offset, bytes, iomap);
- 		else
- 			status = iomap_zero(inode, pos, offset, bytes, iomap);
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 47edbce4fc52..ce520e932adc 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -124,7 +124,7 @@ static inline ssize_t dax_iomap_rw(struct kiocb *iocb, struct iov_iter *iter,
+-	if (IS_DAX(inode))
++	if (IS_FSDAX(inode))
+ 		ret = xfs_file_dax_read(iocb, to);
+ 	else if (iocb->ki_flags & IOCB_DIRECT)
+ 		ret = xfs_file_dio_aio_read(iocb, to);
+@@ -726,7 +726,7 @@ xfs_file_write_iter(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
  
- static inline bool dax_mapping(struct address_space *mapping)
+-	if (IS_DAX(inode))
++	if (IS_FSDAX(inode))
+ 		ret = xfs_file_dax_write(iocb, from);
+ 	else if (iocb->ki_flags & IOCB_DIRECT) {
+ 		/*
+@@ -1045,7 +1045,7 @@ __xfs_filemap_fault(
+ 	}
+ 
+ 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+-	if (IS_DAX(inode)) {
++	if (IS_FSDAX(inode)) {
+ 		pfn_t pfn;
+ 
+ 		ret = dax_iomap_fault(vmf, pe_size, &pfn, NULL, &xfs_iomap_ops);
+@@ -1070,7 +1070,7 @@ xfs_filemap_fault(
  {
--	return mapping->host && IS_DAX(mapping->host);
-+	return mapping->host && IS_FSDAX(mapping->host);
+ 	/* DAX can shortcut the normal fault path on write faults! */
+ 	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
+-			IS_DAX(file_inode(vmf->vma->vm_file)) &&
++			IS_FSDAX(file_inode(vmf->vma->vm_file)) &&
+ 			(vmf->flags & FAULT_FLAG_WRITE));
  }
  
- struct writeback_control;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 33e859e7d100..b2b2e15d227b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1903,7 +1903,6 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
- #define IS_IMA(inode)		((inode)->i_flags & S_IMA)
- #define IS_AUTOMOUNT(inode)	((inode)->i_flags & S_AUTOMOUNT)
- #define IS_NOSEC(inode)		((inode)->i_flags & S_NOSEC)
--#define IS_DAX(inode)		((inode)->i_flags & S_DAX)
- #define IS_ENCRYPTED(inode)	((inode)->i_flags & S_ENCRYPTED)
- 
- #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
-@@ -3203,7 +3202,7 @@ extern int file_update_time(struct file *file);
- 
- static inline bool io_is_direct(struct file *filp)
+@@ -1079,7 +1079,7 @@ xfs_filemap_huge_fault(
+ 	struct vm_fault		*vmf,
+ 	enum page_entry_size	pe_size)
  {
--	return (filp->f_flags & O_DIRECT) || IS_DAX(filp->f_mapping->host);
-+	return (filp->f_flags & O_DIRECT) || IS_FSDAX(filp->f_mapping->host);
+-	if (!IS_DAX(file_inode(vmf->vma->vm_file)))
++	if (!IS_FSDAX(file_inode(vmf->vma->vm_file)))
+ 		return VM_FAULT_FALLBACK;
+ 
+ 	/* DAX can shortcut the normal fault path on write faults! */
+@@ -1124,12 +1124,12 @@ xfs_file_mmap(
+ 	 * We don't support synchronous mappings for non-DAX files. At least
+ 	 * until someone comes with a sensible use case.
+ 	 */
+-	if (!IS_DAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
++	if (!IS_FSDAX(file_inode(filp)) && (vma->vm_flags & VM_SYNC))
+ 		return -EOPNOTSUPP;
+ 
+ 	file_accessed(filp);
+ 	vma->vm_ops = &xfs_file_vm_ops;
+-	if (IS_DAX(file_inode(filp)))
++	if (IS_FSDAX(file_inode(filp)))
+ 		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89fb1eb80aae..234279ff66ce 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1108,9 +1108,9 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	}
+ 
+ 	/* If the DAX state is not changing, we have nothing to do here. */
+-	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
++	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_FSDAX(inode))
+ 		return 0;
+-	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
++	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_FSDAX(inode))
+ 		return 0;
+ 
+ 	/* lock, flush and invalidate mapping in preparation for flag change */
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 66e1edbfb2b2..cf794d429aec 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -241,7 +241,7 @@ xfs_iomap_write_direct(
+ 	 * the reserve block pool for bmbt block allocation if there is no space
+ 	 * left but we need to do unwritten extent conversion.
+ 	 */
+-	if (IS_DAX(VFS_I(ip))) {
++	if (IS_FSDAX(VFS_I(ip))) {
+ 		bmapi_flags = XFS_BMAPI_CONVERT | XFS_BMAPI_ZERO;
+ 		if (imap->br_state == XFS_EXT_UNWRITTEN) {
+ 			tflags |= XFS_TRANS_RESERVE;
+@@ -952,7 +952,7 @@ static inline bool imap_needs_alloc(struct inode *inode,
+ 	return !nimaps ||
+ 		imap->br_startblock == HOLESTARTBLOCK ||
+ 		imap->br_startblock == DELAYSTARTBLOCK ||
+-		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
++		(IS_FSDAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
  }
  
- static inline bool vma_is_dax(struct vm_area_struct *vma)
+ static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
+@@ -988,7 +988,7 @@ xfs_file_iomap_begin(
+ 		return -EIO;
+ 
+ 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
+-			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
++			!IS_FSDAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		/* Reserve delalloc blocks for regular writeback. */
+ 		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
+ 	}
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 270246943a06..a126e00e05e3 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1351,7 +1351,7 @@ xfs_reflink_remap_range(
+ 		goto out_unlock;
+ 
+ 	/* Don't share DAX file data for now. */
+-	if (IS_DAX(inode_in) || IS_DAX(inode_out))
++	if (IS_FSDAX(inode_in) || IS_FSDAX(inode_out))
+ 		goto out_unlock;
+ 
+ 	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
 
