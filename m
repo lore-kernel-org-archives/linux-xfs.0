@@ -1,155 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37822 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161161AbeCATNo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Mar 2018 14:13:44 -0500
-Subject: [PATCH 07/16] xfs_db: print transaction reservation type information
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 01 Mar 2018 11:13:39 -0800
-Message-ID: <151993161907.22223.2470790760502530047.stgit@magnolia>
-In-Reply-To: <151993157539.22223.6269629008244777191.stgit@magnolia>
-References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+Received: from mga02.intel.com ([134.134.136.20]:28338 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1164734AbeCBEDS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Mar 2018 23:03:18 -0500
+Subject: [PATCH v5 07/12] ext4, dax: replace IS_DAX() with IS_FSDAX()
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 01 Mar 2018 19:54:11 -0800
+Message-ID: <151996285107.28483.10237358640480864296.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Alexander Viro <viro@zeniv.linux.org.uk>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, stable@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+In preparation for fixing the broken definition of S_DAX in the
+CONFIG_FS_DAX=n + CONFIG_DEV_DAX=y case, convert all IS_DAX() usages to
+use explicit tests for FSDAX since DAX is ambiguous.
 
-Create a new xfs_db command to print the transaction reservation info for
-a given filesystem.  This will make it easier to compare the calculations
-made by the kernel and xfsprogs in case there is a discrepancy.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: <stable@vger.kernel.org>
+Fixes: dee410792419 ("/dev/dax, core: file operations and dax-mmap")
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- db/command.c             |    1 +
- db/logformat.c           |   59 ++++++++++++++++++++++++++++++++++++++++++++++
- db/logformat.h           |    1 +
- libxfs/libxfs_api_defs.h |    2 +-
- man/man8/xfs_db.8        |    6 +++++
- 5 files changed, 68 insertions(+), 1 deletion(-)
+ fs/ext4/file.c  |   12 +++++-------
+ fs/ext4/inode.c |    4 ++--
+ fs/ext4/ioctl.c |    2 +-
+ fs/ext4/super.c |    2 +-
+ 4 files changed, 9 insertions(+), 11 deletions(-)
 
-
-diff --git a/db/command.c b/db/command.c
-index 5ff3c4f..12ae5b7 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -138,6 +138,7 @@ init_commands(void)
- 	hash_init();
- 	inode_init();
- 	input_init();
-+	logres_init();
- 	logformat_init();
- 	io_init();
- 	metadump_init();
-diff --git a/db/logformat.c b/db/logformat.c
-index 70097bc..b290bd3 100644
---- a/db/logformat.c
-+++ b/db/logformat.c
-@@ -147,3 +147,62 @@ logformat_init(void)
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 51854e7608f0..561ea843b458 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -48,7 +48,7 @@ static ssize_t ext4_dax_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 	 * Recheck under inode lock - at this point we are sure it cannot
+ 	 * change anymore
+ 	 */
+-	if (!IS_DAX(inode)) {
++	if (!IS_FSDAX(inode)) {
+ 		inode_unlock_shared(inode);
+ 		/* Fallback to buffered IO in case we cannot support DAX */
+ 		return generic_file_read_iter(iocb, to);
+@@ -68,7 +68,7 @@ static ssize_t ext4_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 	if (!iov_iter_count(to))
+ 		return 0; /* skip atime */
  
- 	add_command(&logformat_cmd);
+-	if (IS_DAX(file_inode(iocb->ki_filp)))
++	if (IS_FSDAX(file_inode(iocb->ki_filp)))
+ 		return ext4_dax_read_iter(iocb, to);
+ 	return generic_file_read_iter(iocb, to);
  }
-+
-+static void
-+print_logres(
-+	int			i,
-+	struct xfs_trans_res	*res)
-+{
-+	dbprintf(_("type %d logres %u logcount %d flags 0x%x\n"),
-+		i, res->tr_logres, res->tr_logcount, res->tr_logflags);
-+}
-+
-+int
-+logres_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct xfs_trans_res	resv;
-+	struct xfs_trans_res	*res;
-+	struct xfs_trans_res	*end_res;
-+	int			i;
-+
-+	res = (struct xfs_trans_res *)M_RES(mp);
-+	end_res = (struct xfs_trans_res *)(M_RES(mp) + 1);
-+	for (i = 0; res < end_res; i++, res++)
-+		print_logres(i, res);
-+	libxfs_log_get_max_trans_res(mp, &resv);
-+	print_logres(-1, &resv);
-+
-+	return 0;
-+}
-+
-+static void
-+logres_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" The 'logres' command prints information about all log reservation types.\n"
-+" This includes the reservation space, the intended transaction roll count,\n"
-+" and the reservation flags, if any.\n"
-+"\n"
-+	));
-+}
-+
-+static const struct cmdinfo logres_cmd = {
-+	.name =		"logres",
-+	.altname =	NULL,
-+	.cfunc =	logres_f,
-+	.argmin =	0,
-+	.argmax =	0,
-+	.canpush =	0,
-+	.args =		NULL,
-+	.oneline =	N_("dump log reservations"),
-+	.help =		logres_help,
-+};
-+
-+void
-+logres_init(void)
-+{
-+	add_command(&logres_cmd);
-+}
-diff --git a/db/logformat.h b/db/logformat.h
-index f9763ee..60396c0 100644
---- a/db/logformat.h
-+++ b/db/logformat.h
-@@ -17,3 +17,4 @@
-  */
+@@ -216,10 +216,8 @@ ext4_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
+ 		return -EIO;
  
- void logformat_init(void);
-+void logres_init(void);
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index d2ab02a..5d56340 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -60,7 +60,7 @@
- #define xfs_trans_roll			libxfs_trans_roll
- #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
- #define xfs_trans_resv_calc		libxfs_trans_resv_calc
--
-+#define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
- #define xfs_attr_get			libxfs_attr_get
- #define xfs_attr_set			libxfs_attr_set
- #define xfs_attr_remove			libxfs_attr_remove
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 37018a7..524b1ef 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -690,6 +690,12 @@ Start logging output to
- .IR filename ,
- stop logging, or print the current logging status.
- .TP
-+.B logres
-+Print transaction reservation size information for each transaction type.
-+This makes it easier to find discrepancies in the reservation calculations
-+between xfsprogs and the kernel, which will help when diagnosing minimum
-+log size calculation errors.
-+.TP
- .BI "metadump [\-egow] " filename
- Dumps metadata to a file. See
- .BR xfs_metadump (8)
+-#ifdef CONFIG_FS_DAX
+-	if (IS_DAX(inode))
++	if (IS_FSDAX(inode))
+ 		return ext4_dax_write_iter(iocb, from);
+-#endif
+ 	if (!o_direct && (iocb->ki_flags & IOCB_NOWAIT))
+ 		return -EOPNOTSUPP;
+ 
+@@ -361,11 +359,11 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 	 * We don't support synchronous mappings for non-DAX files. At least
+ 	 * until someone comes with a sensible use case.
+ 	 */
+-	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
++	if (!IS_FSDAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
+ 		return -EOPNOTSUPP;
+ 
+ 	file_accessed(file);
+-	if (IS_DAX(file_inode(file))) {
++	if (IS_FSDAX(file_inode(file))) {
+ 		vma->vm_ops = &ext4_dax_vm_ops;
+ 		vma->vm_flags |= VM_MIXEDMAP | VM_HUGEPAGE;
+ 	} else {
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index c94780075b04..1879b33aa391 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3858,7 +3858,7 @@ static ssize_t ext4_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 		return 0;
+ 
+ 	/* DAX uses iomap path now */
+-	if (WARN_ON_ONCE(IS_DAX(inode)))
++	if (WARN_ON_ONCE(IS_FSDAX(inode)))
+ 		return 0;
+ 
+ 	trace_ext4_direct_IO_enter(inode, offset, count, iov_iter_rw(iter));
+@@ -4076,7 +4076,7 @@ static int ext4_block_zero_page_range(handle_t *handle,
+ 	if (length > max || length < 0)
+ 		length = max;
+ 
+-	if (IS_DAX(inode)) {
++	if (IS_FSDAX(inode)) {
+ 		return iomap_zero_range(inode, from, length, NULL,
+ 					&ext4_iomap_ops);
+ 	}
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index 7e99ad02f1ba..040fc6570ddb 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -790,7 +790,7 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 				 "Online defrag not supported with bigalloc");
+ 			err = -EOPNOTSUPP;
+ 			goto mext_out;
+-		} else if (IS_DAX(inode)) {
++		} else if (IS_FSDAX(inode)) {
+ 			ext4_msg(sb, KERN_ERR,
+ 				 "Online defrag not supported with DAX");
+ 			err = -EOPNOTSUPP;
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 39bf464c35f1..933e12940181 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -1161,7 +1161,7 @@ static int ext4_set_context(struct inode *inode, const void *ctx, size_t len,
+ 	if (inode->i_ino == EXT4_ROOT_INO)
+ 		return -EPERM;
+ 
+-	if (WARN_ON_ONCE(IS_DAX(inode) && i_size_read(inode)))
++	if (WARN_ON_ONCE(IS_FSDAX(inode) && i_size_read(inode)))
+ 		return -EINVAL;
+ 
+ 	res = ext4_convert_inline_data(inode);
 
