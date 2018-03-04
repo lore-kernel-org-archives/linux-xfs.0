@@ -1,74 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38254 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932266AbeCBWUc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Mar 2018 17:20:32 -0500
-Date: Fri, 2 Mar 2018 23:20:31 +0100
-From: Christoph Hellwig <hch@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:51908 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932403AbeCDXBZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Mar 2018 18:01:25 -0500
+Date: Mon, 5 Mar 2018 10:00:49 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Message-ID: <20180302222031.GA30818@lst.de>
+Message-ID: <20180304230049.GA18129@dastard>
 References: <20180301014144.28892-1-david@fromorbit.com>
+ <20180302222031.GA30818@lst.de>
+ <20180302222641.GA30953@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180301014144.28892-1-david@fromorbit.com>
+In-Reply-To: <20180302222641.GA30953@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-> @@ -760,8 +761,19 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
->  	}
->  
->  	inode_dio_end(file_inode(iocb->ki_filp));
-> -	kfree(dio);
->  
-> +	/*
-> +	 * If a FUA write was done, then that is all we required for datasync
-> +	 * semantics -. we don't need to call generic_write_sync() to complete
-> +	 * the write.
-> +	 */
-> +	if (ret > 0 &&
-> +	    (dio->flags & (IOMAP_DIO_WRITE|IOMAP_DIO_WRITE_FUA)) ==
-> +							IOMAP_DIO_WRITE) {
-> +		ret = generic_write_sync(iocb, ret);
-> +	}
-> +
-> +	kfree(dio);
+On Fri, Mar 02, 2018 at 11:26:41PM +0100, Christoph Hellwig wrote:
+> While we're at it we should probably
+> also skil the generic_write_sync call for DAX pure overwrites while
+> we're at it.
 
-Can please split the move of the generic_write_sync call into
-generic_write_sync a separate prep patch?  It's enough of a logic change
-on its own that it warrants a separate commit with a separate explanation.
+Now that I've looked at it, DAX is a friggin' mess.
 
-Also I'd be tempted to invert the IOMAP_DIO_WRITE_FUA flag and replace
-it with an IOMAP_DIO_WRITE_SYNC flag to indicate we need the
-generic_write_sync call, as that should make the logic much more clear.
+We can't push the generic_write_sync() call into dax_iomap_rw()
+because dax_iomap_rw is called with the inode_lock() held, and both
+ext2's and ext4's ->fsync implementation can call
+__generic_file_fsync() which takes the inode_lock(). Deadlock
+central right there - someone is going to have to screw with ext4's
+indoe sync code to before we can do this.
 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 260ff5e5c264..81aa3b73471e 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -732,6 +732,11 @@ xfs_file_write_iter(
->  		ret = xfs_file_dio_aio_write(iocb, from);
->  		if (ret == -EREMCHG)
->  			goto buffered;
-> +		/*
-> +		 * Direct IO handles sync type writes internally on I/O
-> +		 * completion.
-> +		 */
-> +		return ret;
->  	} else {
->  buffered:
->  		ret = xfs_file_buffered_aio_write(iocb, from);
+Further, XFS has post-write metadata updates to do in the case of
+extending writes, and hence we'd still need the call to
+generic_write_sync() after we have returned from dax_iomap_rw(). I'm
+thinking we'd really need a dax write IO completion callback (say in
+the struct iomap_ops) to run the filesystem specific IO completions
+(like the DIO path) before we can start to think about optimisations
+like this for DAX for XFS....
 
-The else is not needed and you can now have a much more sensible
-code flow here:
+Cheers,
 
-		ret = xfs_file_dio_aio_write(iocb, from);
-		if (ret != -EREMCHG))
-			return ret;
-	}
-
-	ret = xfs_file_buffered_aio_write(iocb, from);
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
