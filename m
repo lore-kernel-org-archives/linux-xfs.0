@@ -1,92 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47600 "EHLO sandeen.net"
+Received: from verein.lst.de ([213.95.11.211]:48018 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932197AbeCBWLZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Mar 2018 17:11:25 -0500
-Subject: Re: [PATCH 01/16] misc: fix gcc 7.3 warnings
-References: <151993157539.22223.6269629008244777191.stgit@magnolia>
- <151993158177.22223.13396508401318390165.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <af22a8cb-a8b5-627a-6202-19ff035ad82c@sandeen.net>
-Date: Fri, 2 Mar 2018 16:11:24 -0600
+        id S1751634AbeCEPLc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Mar 2018 10:11:32 -0500
+Date: Mon, 5 Mar 2018 16:11:31 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+Message-ID: <20180305151131.GB15965@lst.de>
+References: <20180301014144.28892-1-david@fromorbit.com> <20180302222031.GA30818@lst.de> <20180302222641.GA30953@lst.de> <20180304230049.GA18129@dastard>
 MIME-Version: 1.0
-In-Reply-To: <151993158177.22223.13396508401318390165.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180304230049.GA18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
+Oh well, lets skip DAX for now then.  I still think moving the
+generic_write_sync call into xfs_file_dax_write/xfs_file_dio_aio_write/
+xfs_file_buffered_aio_write functions would be a useful cleanup.
 
-
-On 3/1/18 1:13 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Mar 05, 2018 at 10:00:49AM +1100, Dave Chinner wrote:
+> On Fri, Mar 02, 2018 at 11:26:41PM +0100, Christoph Hellwig wrote:
+> > While we're at it we should probably
+> > also skil the generic_write_sync call for DAX pure overwrites while
+> > we're at it.
 > 
-> Fix various compiler warnings that pop up in 7.3.
+> Now that I've looked at it, DAX is a friggin' mess.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-(after long code archaeology session and reading to be sure
-that last fallthrough really is correct, ugh, comments
-would have been good when _cnt & _bno were merged...)
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  db/bit.c        |    4 ++--
->  repair/dinode.c |    1 +
->  repair/scan.c   |    1 +
->  3 files changed, 4 insertions(+), 2 deletions(-)
+> We can't push the generic_write_sync() call into dax_iomap_rw()
+> because dax_iomap_rw is called with the inode_lock() held, and both
+> ext2's and ext4's ->fsync implementation can call
+> __generic_file_fsync() which takes the inode_lock(). Deadlock
+> central right there - someone is going to have to screw with ext4's
+> indoe sync code to before we can do this.
 > 
+> Further, XFS has post-write metadata updates to do in the case of
+> extending writes, and hence we'd still need the call to
+> generic_write_sync() after we have returned from dax_iomap_rw(). I'm
+> thinking we'd really need a dax write IO completion callback (say in
+> the struct iomap_ops) to run the filesystem specific IO completions
+> (like the DIO path) before we can start to think about optimisations
+> like this for DAX for XFS....
 > 
-> diff --git a/db/bit.c b/db/bit.c
-> index bf8d80e..a6d8c9f 100644
-> --- a/db/bit.c
-> +++ b/db/bit.c
-> @@ -111,11 +111,11 @@ getbitval(
->  			/* handle endian swap here */
->  #if __BYTE_ORDER == LITTLE_ENDIAN
->  			if (i == 0 && signext && nbits < 64)
-> -				rval = -1LL << nbits;
-> +				rval = (~0ULL) << nbits;
->  			rval |= 1ULL << (nbits - i - 1);
->  #else
->  			if ((i == (nbits - 1)) && signext && nbits < 64)
-> -				rval |= (-1LL << nbits);
-> +				rval |= ((~0ULL) << nbits);
->  			rval |= 1ULL << (nbits - i - 1);
->  #endif
->  		}
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 32cc769..07bcf80 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -525,6 +525,7 @@ _("data fork in rt inode %" PRIu64 " found metadata block %" PRIu64 " in rt bmap
->  		case XR_E_INUSE:
->  			if (pwe)
->  				break;
-> +			/* fall through */
->  		case XR_E_MULT:
->  			set_rtbmap(ext, XR_E_MULT);
->  			do_warn(
-> diff --git a/repair/scan.c b/repair/scan.c
-> index e4ac4a7..0fc41f2 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -705,6 +705,7 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
->  							     XR_E_FREE);
->  						break;
->  					}
-> +					/* fall through */
->  				default:
->  					do_warn(
->  	_("block (%d,%d-%d) multiply claimed by %s space tree, state - %d\n"),
+> Cheers,
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+---end quoted text---
