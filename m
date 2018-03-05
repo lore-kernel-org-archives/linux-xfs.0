@@ -1,52 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f193.google.com ([209.85.213.193]:37401 "EHLO
-        mail-yb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1425322AbeCBJHG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 04:07:06 -0500
+Received: from mx2.suse.de ([195.135.220.15]:56502 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751723AbeCERo4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Mar 2018 12:44:56 -0500
+Date: Mon, 5 Mar 2018 17:44:55 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] xfs: fix transaction allocation deadlock in IO path
+Message-ID: <20180305174455.GB14201@wotan.suse.de>
+References: <20180305041120.4224-1-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJfpegtMhcAFpVk0TkAxdoiJzDqYFHFNzykztTGWfii52rPazA@mail.gmail.com>
-References: <CAJfpegtMhcAFpVk0TkAxdoiJzDqYFHFNzykztTGWfii52rPazA@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 2 Mar 2018 11:07:05 +0200
-Message-ID: <CAOQ4uxjfmrJ3OPAOJ_cVQjfmMeHbcJL3gWVdHEATa_FGPWLzCA@mail.gmail.com>
-Subject: Re: Weird overlayfs/xfs bug on v4.15
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180305041120.4224-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Mar 2, 2018 at 10:25 AM, Miklos Szeredi <miklos@szeredi.hu> wrote:
-> Hi,
->
-> I get xfstests failure of overlay/017 on a kvm guest.  The symptom is
-> that the chardev turns into a whiteout (i.e. the 1/1 device number
-> magically turns to 0/0 after flushing the caches) but then turns back
-> into the old chardev on remount or another cache flush.  So the
-> underlying xfs is not currupted but the cache is (verified that i_rdev
-> was indeed zeroed out on the relevant inode).
->
-> Btw. i_rdev on the blkdev also turned zero, but the test doesn't
-> respond to that, because it's only checking the inum and not other
-> attributes.
->
-> The test triggers reliably, but shows signs of a heisenbug (e.g.
-> adding printks lessens or eliminates the chance of triggering)
->
-> Attaching the full xfs trace, the output of the testcase and guest
-> kernel config.
->
-> Haven't been able to reproduce without overlayfs, so possibly
-> overlayfs is the culprit.
->
-> Any ideas?
->
+On Mon, Mar 05, 2018 at 03:11:20PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> xfs_trans_alloc() does GFP_KERNEL allocation, and we can call it
+> while holding pages locked for writeback in the ->writepages path.
+> The memory allocation is allowed to wait on pages under writeback,
+> and so can wait on pages that are held locked in writeback by the
+> caller.
+> 
+> This affects both pre-IO submission and post-IO submission paths.
+> Hence xfs_setsize_trans_alloc(), xfs_reflink_end_cow(),
+> xfs_iomap_write_unwritten() and xfs_reflink_cancel_cow_range().
+> xfs_iomap_write_unwritten() already does the right thing, but the
+> others don't. Fix them.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 
-That is supposed to be fixed by
-acd1d71598f7 xfs: preserve i_rdev when recycling a reclaimable inode
+I believe these are two separate regressions though, introduced on separate
+kernels Can we treat them as such and use respective Fixes tag for them?
 
-It fixes a v4.15 regression.
+> ---
+>  fs/xfs/xfs_aops.c    | 3 ++-
+>  fs/xfs/xfs_reflink.c | 4 ++--
+>  2 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 9c6a830da0ee..a0afb6411417 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -209,7 +209,8 @@ xfs_setfilesize_trans_alloc(
+>  	struct xfs_trans	*tp;
+>  	int			error;
+>  
+> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0,
+> +				XFS_TRANS_NOFS, &tp);
+>  	if (error)
+>  		return error;
+>  
 
-Cheers,
-Amir.
+Fixes: 253f4911f297b ("xfs: better xfs_trans_alloc interface")
+
+Introduced on v4.7
+
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 270246943a06..8c16177b33d4 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -668,7 +668,7 @@ xfs_reflink_cancel_cow_range(
+>  
+>  	/* Start a rolling transaction to remove the mappings */
+>  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+> -			0, 0, 0, &tp);
+> +			0, 0, XFS_TRANS_NOFS, &tp);
+>  	if (error)
+>  		goto out;
+>  
+> @@ -741,7 +741,7 @@ xfs_reflink_end_cow(
+>  			(unsigned int)(end_fsb - offset_fsb),
+>  			XFS_DATA_FORK);
+>  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+> -			resblks, 0, XFS_TRANS_RESERVE, &tp);
+> +			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+>  	if (error)
+>  		goto out;
+
+For both of the above:
+
+Fixes: 43caeb187deb9 ("xfs: move mappings from cow fork to data fork after copy-write)"
+
+Introduced on v4.9.
+
+  Luis
