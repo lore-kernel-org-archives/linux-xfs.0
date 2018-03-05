@@ -1,63 +1,160 @@
 Return-Path: linux-xfs-owner@vger.kernel.org
-Received: from verein.lst.de ([213.95.11.211]:44742 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751981AbeCJJvp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 10 Mar 2018 04:51:45 -0500
-Date: Sat, 10 Mar 2018 10:51:44 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v5 10/11] xfs: prepare xfs_break_layouts() for another
-        layout type
-Message-ID: <20180310095144.GB31604@lst.de>
-References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com> <152066494277.40260.7360641938196726871.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from buxtehude.debian.org ([209.87.16.39]:43424 "EHLO
+        buxtehude.debian.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934109AbeCEM5p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Mar 2018 07:57:45 -0500
 Content-Disposition: inline
-In-Reply-To: <152066494277.40260.7360641938196726871.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+From: "Debian Bug Tracking System" <owner@bugs.debian.org>
+Subject: Processed: glibc 2.27 is now in unstable
+Message-ID: <handler.s.C.152025440518192.transcript@bugs.debian.org>
+References: <20180305125320.GB7540@localhost>
+Date: Mon, 05 Mar 2018 12:57:26 +0000
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@debian.org>
+Cc: jsw@debian.org, debian-med-packaging@lists.alioth.debian.org, ron@debian.org, sjr@debian.org, pkg-llvm-team@lists.alioth.debian.org, pkg-games-devel@lists.alioth.debian.org, debian-hpc@lists.debian.org, linux-xfs@vger.kernel.org, pkg-qemu-devel@lists.alioth.debian.org, colin.king@canonical.com, srivasta@debian.org, pkg-multimedia-maintainers@lists.alioth.debian.org, pkg-virtualbox-devel@lists.alioth.debian.org, pkg-phototools-devel@lists.alioth.debian.org, gfa@zumbi.com.ar, debian-science-maintainers@lists.alioth.debian.org, pkg-gnustep-maintainers@lists.alioth.debian.org, debian-x@lists.debian.org, dkogan@debian.org, pkg-gauche-devel@lists.alioth.debian.org
 
->  
-> +int
-> +xfs_break_layouts(
-> +	struct inode		*inode,
-> +	uint			*iolock,
-> +	unsigned long		flags)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	uint			iolock_assert = 0;
-> +	int			ret = 0;
-> +
-> +	if (flags & XFS_BREAK_REMOTE)
-> +		iolock_assert |= XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL;
-> +	if (flags & XFS_BREAK_MAPS)
-> +		iolock_assert |= XFS_MMAPLOCK_EXCL;
-> +
-> +	ASSERT(xfs_isilocked(ip, iolock_assert));
-> +
-> +	if (flags & XFS_BREAK_REMOTE)
-> +		ret = xfs_break_leased_layouts(inode, iolock);
-> +	return ret;
+Processing commands for control@bugs.debian.org:
 
-This just looks weird as hell.  We already pass in what to drop/reacquire
-in the iolock argument.  I don't think we need another argument controlled
-by the same callers to assert it.
+> found 891365 4.1-9.1
+Bug #891365 [src:make-dfsg] make-dfsg: FTBFS with glibc 2.27: undefined reference to `__alloca'
+Marked as found in versions make-dfsg/4.1-9.1.
+> tags 891365 buster sid
+Bug #891365 [src:make-dfsg] make-dfsg: FTBFS with glibc 2.27: undefined reference to `__alloca'
+Added tag(s) buster and sid.
+> severity 890271 serious
+Bug #890271 [src:libcgns] libcgns: FTBFS with glibc 2.27: undefined reference to `matherr'
+Severity set to 'serious' from 'important'
+> severity 890631 serious
+Bug #890631 [src:trinityrnaseq] trinityrnaseq: FTBFS with glibc 2.27: cannot find -lieee
+Severity set to 'serious' from 'important'
+> severity 890633 serious
+Bug #890633 [caps] caps: FTBFS with glibc 2.27: error: 'pow10f' was not declared in this scope
+Severity set to 'serious' from 'important'
+> tags 890633 buster sid
+Bug #890633 [caps] caps: FTBFS with glibc 2.27: error: 'pow10f' was not declared in this scope
+Added tag(s) buster and sid.
+> severity 890634 serious
+Bug #890634 [eq10q] eq10q: FTBFS with glibc 2.27: error: 'pow10' was not declared in this scope
+Severity set to 'serious' from 'important'
+> tags 890634 buster sid
+Bug #890634 [eq10q] eq10q: FTBFS with glibc 2.27: error: 'pow10' was not declared in this scope
+Added tag(s) sid and buster.
+> severity 890669 serious
+Bug #890669 [fmit] fmit: FTBFS with glibc 2.27: error: 'pow10' was not declared in this scope
+Severity set to 'serious' from 'important'
+> tags 890669 buster sid
+Bug #890669 [fmit] fmit: FTBFS with glibc 2.27: error: 'pow10' was not declared in this scope
+Added tag(s) buster and sid.
+> severity 890671 serious
+Bug #890671 [src:vpb-driver] vpb-driver: FTBFS with glibc 2.27: error: 'pow10' was not declared in this scope
+Severity set to 'serious' from 'important'
+> tags 890671 buster sid
+Bug #890671 [src:vpb-driver] vpb-driver: FTBFS with glibc 2.27: error: 'pow10' was not declared in this scope
+Added tag(s) sid and buster.
+> severity 890672 serious
+Bug #890672 [x42-plugins] x42-plugins: FTBFS with glibc 2.27: error: 'pow10f' was not declared in this scope
+Severity set to 'serious' from 'important'
+> severity 890679 serious
+Bug #890679 [src:libxshmfence] libxshmfence: FTBFS with glibc 2.27: error: implicit declaration of function 'memfd_create'
+Severity set to 'serious' from 'important'
+> tags 890679 buster sid
+Bug #890679 [src:libxshmfence] libxshmfence: FTBFS with glibc 2.27: error: implicit declaration of function 'memfd_create'
+Added tag(s) sid and buster.
+> severity 890716 serious
+Bug #890716 [src:xfsprogs] xfsprogs: FTBFS with glibc 2.27: error: conflicting types for 'copy_file_range'
+Severity set to 'serious' from 'important'
+> severity 891272 serious
+Bug #891272 [src:libraw] libraw: FTBFS with glibc 2.27: error: call of overloaded 'powf64(int, int)' is ambiguous
+Severity set to 'serious' from 'important'
+> severity 891292 serious
+Bug #891292 [src:sisl] sisl: FTBFS with glibc 2.27: error: 'MAXDOUBLE' undeclared (first use in this function); did you mean 'DOUBLE'?
+Severity set to 'serious' from 'important'
+> tags 891292 buster sid
+Bug #891292 [src:sisl] sisl: FTBFS with glibc 2.27: error: 'MAXDOUBLE' undeclared (first use in this function); did you mean 'DOUBLE'?
+Added tag(s) buster and sid.
+> severity 891299 serious
+Bug #891299 [gauche-gtk] gauche-gtk: FTBFS with glibc 2.27: glgdGraph.c:25:42: error: 'HUGE' undeclared (first use in this function)
+Severity set to 'serious' from 'important'
+> tags 891299 buster sid
+Bug #891299 [gauche-gtk] gauche-gtk: FTBFS with glibc 2.27: glgdGraph.c:25:42: error: 'HUGE' undeclared (first use in this function)
+Added tag(s) sid and buster.
+> severity 891375 serious
+Bug #891375 [src:qemu] qemu: FTBFS with glibc 2.27: error: static declaration of 'memfd_create' follows non-static declaration
+Severity set to 'serious' from 'important'
+> severity 891679 serious
+Bug #891679 [src:libc++] libc++: FTBFS with glibc 2.27: Failing Tests
+Severity set to 'serious' from 'important'
+> severity 891275 serious
+Bug #891275 [stress-ng] stress-ng: FTBFS with glibc 2.27: error: 'ret' undeclared (first use in this function); did you mean 'recv'?
+Severity set to 'serious' from 'important'
+> severity 891293 serious
+Bug #891293 [trinity] trinity: FTBFS with glibc 2.27: error: static declaration of 'memfd_create' follows non-static declaration
+Severity set to 'serious' from 'important'
+> severity 891337 serious
+Bug #891337 [src:mia] mia: FTBFS with glibc 2.27: error: 'HUGE' was not declared in this scope
+Severity set to 'serious' from 'important'
+> severity 891338 serious
+Bug #891338 [src:micropolis-activity] micropolis-activity: FTBFS with glibc 2.27: error: 'DOMAIN' undeclared (first use in this function)
+Severity set to 'serious' from 'important'
+> tags 891338 buster sid
+Bug #891338 [src:micropolis-activity] micropolis-activity: FTBFS with glibc 2.27: error: 'DOMAIN' undeclared (first use in this function)
+Added tag(s) buster and sid.
+> severity 891372 serious
+Bug #891372 [kbuild] kbuild: FTBFS with glibc 2.27: undefined reference to `__alloca'
+Severity set to 'serious' from 'important'
+> severity 891373 serious
+Bug #891373 [src:gridengine] gridengine: FTBFS with glibc 2.27: undefined reference to `__alloca'
+Severity set to 'serious' from 'important'
+> severity 891335 serious
+Bug #891335 [clonalframe] clonalframe: FTBFS with glibc 2.27: error: 'UNDERFLOW' was not declared in this scope
+Severity set to 'serious' from 'important'
+> severity 891336 serious
+Bug #891336 [lynkeos.app] lynkeos.app: FTBFS with glibc 2.27: error: 'HUGE' undeclared (first use in this function)
+Severity set to 'serious' from 'important'
+> tags 891336 buster sid
+Bug #891336 [lynkeos.app] lynkeos.app: FTBFS with glibc 2.27: error: 'HUGE' undeclared (first use in this function)
+Added tag(s) sid and buster.
+> severity 891368 serious
+Bug #891368 {Done: Dima Kogan <dkogan@debian.org>} [remake] remake: FTBFS with glibc 2.27: undefined reference to `__alloca'
+Severity set to 'serious' from 'important'
+> found 891368 4.1+dbg1.1+dfsg-1
+Bug #891368 {Done: Dima Kogan <dkogan@debian.org>} [remake] remake: FTBFS with glibc 2.27: undefined reference to `__alloca'
+Marked as found in versions remake/4.1+dbg1.1+dfsg-1.
+> tags 891368 buster sid
+Bug #891368 {Done: Dima Kogan <dkogan@debian.org>} [remake] remake: FTBFS with glibc 2.27: undefined reference to `__alloca'
+Added tag(s) buster and sid.
+> thanks
+Stopping processing here.
 
-> @@ -768,7 +790,7 @@ xfs_file_fallocate(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	long			error;
->  	enum xfs_prealloc_flags	flags = 0;
-> -	uint			iolock = XFS_IOLOCK_EXCL;
-> +	uint			iolock = XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL;
-
-This is a behavior change that should not be in a patch titled
-"prepare xfs_break_layouts() for another layout type" but in one
-explicitly changing this and documenting why.
-
-In summary:  I think this should be replaced with a patch that
-allows xfs_break_layouts to be called with the mmap lock held, and
-change the callers that want the mmap lock to pass it with a good
-explanation, and we should get rid of the XFS_BREAK_* flags here.
-(need to check the next patch if there is any other good reason for
-them to be added later, though).
+Please contact me if you need assistance.
+-- 
+890271: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890271
+890631: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890631
+890633: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890633
+890634: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890634
+890669: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890669
+890671: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890671
+890672: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890672
+890679: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890679
+890716: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=890716
+891272: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891272
+891275: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891275
+891292: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891292
+891293: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891293
+891299: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891299
+891335: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891335
+891336: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891336
+891337: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891337
+891338: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891338
+891365: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891365
+891368: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891368
+891372: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891372
+891373: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891373
+891375: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891375
+891679: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=891679
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
