@@ -1,54 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48018 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:49836 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751634AbeCEPLc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Mar 2018 10:11:32 -0500
-Date: Mon, 5 Mar 2018 16:11:31 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Message-ID: <20180305151131.GB15965@lst.de>
-References: <20180301014144.28892-1-david@fromorbit.com> <20180302222031.GA30818@lst.de> <20180302222641.GA30953@lst.de> <20180304230049.GA18129@dastard>
+        id S1753144AbeCEWGj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Mar 2018 17:06:39 -0500
+Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
+References: <20180305150546.32191-1-jtulak@redhat.com>
+ <20180305215659.GE18129@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net>
+Date: Mon, 5 Mar 2018 16:06:38 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180304230049.GA18129@dastard>
+In-Reply-To: <20180305215659.GE18129@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Oh well, lets skip DAX for now then.  I still think moving the
-generic_write_sync call into xfs_file_dax_write/xfs_file_dio_aio_write/
-xfs_file_buffered_aio_write functions would be a useful cleanup.
+On 3/5/18 3:56 PM, Dave Chinner wrote:
+> On Mon, Mar 05, 2018 at 04:05:46PM +0100, Jan Tulak wrote:
+>> The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
+>> run on every unclean shutdown. However, sometimes it may happen that the
+>> root filesystem really requires the usage of xfs_repair and then it is a
+>> hassle. This patch makes the situation a bit easier by detecting forced
+>> checks (/forcefsck or fsck.mode=force), so user can require the repair,
+>> without the repair being run all the time.
+>>
+>> (Thanks Eric for suggesting this.)
+>>
+>> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> 
+> Ok, so I can see why support for this is probably neecssary, I have
+> a few reservations about the implementation....
+> 
+>> ---
+>>  fsck/xfs_fsck.sh | 14 ++++++++++++--
+>>  1 file changed, 12 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+>> index e52969e4..71bfa2e1 100755
+>> --- a/fsck/xfs_fsck.sh
+>> +++ b/fsck/xfs_fsck.sh
+>> @@ -4,10 +4,12 @@
+>>  #
+>>  
+>>  AUTO=false
+>> -while getopts ":aApy" c
+>> +FORCE=false
+>> +while getopts ":aApyf" c
+>>  do
+>>  	case $c in
+>>  	a|A|p|y)	AUTO=true;;
+>> +	f)      	FORCE=true;;
+>>  	esac
+>>  done
+>>  eval DEV=\${$#}
+>> @@ -15,10 +17,18 @@ if [ ! -e $DEV ]; then
+>>  	echo "$0: $DEV does not exist"
+>>  	exit 8
+>>  fi
+>> +
+>> +# The flag -f is added by systemd/init scripts when /forcefsck file is present
+>> +# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
+>> +# this check, user has to explicitly require a forced fsck.
+>> +if $FORCE; then
+>> +	xfs_repair $DEV
+>> +	exit $?
+>> +fi
+> 
+> This needs to check that the xfs_repair binary is present in the
+> environment that is running fsck. If this is checking the root fs
+> from the initramfs, then distros are going to need to package
+> xfs_repair into their initramfs build scripts...
 
-On Mon, Mar 05, 2018 at 10:00:49AM +1100, Dave Chinner wrote:
-> On Fri, Mar 02, 2018 at 11:26:41PM +0100, Christoph Hellwig wrote:
-> > While we're at it we should probably
-> > also skil the generic_write_sync call for DAX pure overwrites while
-> > we're at it.
+Fedora and RHEL does, FWIW.  Can others check?  What does Debian do?
+
+> Also, if the log is dirty, xfs_repair won't run. If the filesystem
+> is already mounted read-only, xfs_repair won't run. So if we're
+> forcing a boot time check, we want it to run unconditionally and fix
+> any problems found automatically, right?
+
+Yep, I'm curious if this was tested - I played with something like this
+a while ago but didn't take notes.  ;)
+
+As for running automatically and fix any problems, we may need to make
+a decision.  If it won't mount due to a log problem, do we automatically
+use -L or drop to a shell and punt to the admin?  (That's what we would
+do w/o any fsck -f invocation today...)
+
+> Also, fsck exit values have specific meaning to the boot
+> infrastructure and xfs_repair does not follow them. Hence returning
+> the output of xfs_repair to the fsck caller is going to result in
+> unexpected/undesired behaviour. From the fsck man page:
 > 
-> Now that I've looked at it, DAX is a friggin' mess.
+>       The exit code returned by fsck is the sum of the following conditions:
 > 
-> We can't push the generic_write_sync() call into dax_iomap_rw()
-> because dax_iomap_rw is called with the inode_lock() held, and both
-> ext2's and ext4's ->fsync implementation can call
-> __generic_file_fsync() which takes the inode_lock(). Deadlock
-> central right there - someone is going to have to screw with ext4's
-> indoe sync code to before we can do this.
+>               0      No errors
+>               1      Filesystem errors corrected
+>               2      System should be rebooted
+>               4      Filesystem errors left uncorrected
+>               8      Operational error
+>               16     Usage or syntax error
+>               32     Checking canceled by user request
+>               128    Shared-library error
 > 
-> Further, XFS has post-write metadata updates to do in the case of
-> extending writes, and hence we'd still need the call to
-> generic_write_sync() after we have returned from dax_iomap_rw(). I'm
-> thinking we'd really need a dax write IO completion callback (say in
-> the struct iomap_ops) to run the filesystem specific IO completions
-> (like the DIO path) before we can start to think about optimisations
-> like this for DAX for XFS....
+> So there's error post processing that is needed here so that the
+> infrastructure is given the correct status indication so it will
+> do things like reboot the system if necessary after a repair...
+
+Good point, thanks.
+ 
+> I also wonder if we can limit this to just the boot infrastructure,
+> because I really don't like the idea of users using fsck.xfs -f to
+> repair damage filesystems because "that's what I do to repair ext4
+> filesystems"....
+
+Depending on how this gets fleshed out, fsck.xfs -f isn't any different
+than bare xfs_repair...  (Unless all of the above suggestions about dirty
+logs get added, then it certainly is!)  So, yeah...
+
+How would you propose limiting it to the boot environment?  I wondered
+about the script itself checking for /forcefsck or the boot parameters,
+but at least the boot params probably last for the duration of the uptime.
+And re-coding / re-implementing the systemd checks in our own script
+probably is a bad idea, so forget I suggested it ...
+
+> Also missing is a fsck.xfs man page update to document the option.
+
+*nod*
+
+ 
+>>  if $AUTO; then
+>>  	echo "$0: XFS file system."
+>>  else
+>>  	echo "If you wish to check the consistency of an XFS filesystem or"
+>>  	echo "repair a damaged filesystem, see xfs_repair(8)."
+>>  fi
+>> -exit 0
+> 
+> I think we still need to exit with a zero status if we did nothing,
+> because that's what the caller is expecting....
 > 
 > Cheers,
 > 
 > Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
----end quoted text---
+> 
