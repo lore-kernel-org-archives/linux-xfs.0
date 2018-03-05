@@ -1,45 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:44769 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932329AbeCCCTR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 21:19:17 -0500
-Received: by mail-oi0-f67.google.com with SMTP id b8so8413819oib.11
-        for <linux-xfs@vger.kernel.org>; Fri, 02 Mar 2018 18:19:17 -0800 (PST)
+Received: from aserp2120.oracle.com ([141.146.126.78]:57656 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751311AbeCESxG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Mar 2018 13:53:06 -0500
+Date: Mon, 5 Mar 2018 10:52:59 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
+Message-ID: <20180305185259.GC18989@magnolia>
+References: <20180228154951.31714-1-vbendel@redhat.com>
+ <20180301224800.GI12763@magnolia>
+ <20180302163603.GQ19312@magnolia>
+ <CAHrQN1w2DxYD_ZscBhsuGq2b6CKn41AnVCaH6_hSQ2tN8DkA1Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4jM=N=wjnK4gWxHu0Fk9VXnfReLf6shW6mbzvf3sahjrQ@mail.gmail.com>
-References: <151996281307.28483.12343847096989509127.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180302221020.GA30722@lst.de> <CAPcyv4gKyvkHY_qQTYvd8wrLpaXXciJyWZY+9T7Q_Eg-Zuxpgw@mail.gmail.com>
- <20180302225734.GE31240@lst.de> <CAPcyv4jM=N=wjnK4gWxHu0Fk9VXnfReLf6shW6mbzvf3sahjrQ@mail.gmail.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 2 Mar 2018 18:19:16 -0800
-Message-ID: <CAPcyv4iZ3QCR5qjvEdBEZ3PikEujJbWK62TiKoceEoG2N+dUzw@mail.gmail.com>
-Subject: Re: [PATCH v5 00/12] vfio, dax: prevent long term filesystem-dax pins
- and other fixes
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHrQN1w2DxYD_ZscBhsuGq2b6CKn41AnVCaH6_hSQ2tN8DkA1Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, KVM list <kvm@vger.kernel.org>, Haozhong Zhang <haozhong.zhang@intel.com>, Jane Chu <jane.chu@oracle.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Gerd Rausch <gerd.rausch@oracle.com>, stable <stable@vger.kernel.org>, Jan Kara <jack@suse.cz>, Michal Hocko <mhocko@suse.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>, Theodore Ts'o <tytso@mit.edu>, Linux MM <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Vratislav Bendel <vbendel@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, djwong@kernel.org
 
-On Fri, Mar 2, 2018 at 3:49 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Fri, Mar 2, 2018 at 2:57 PM, Christoph Hellwig <hch@lst.de> wrote:
->> On Fri, Mar 02, 2018 at 02:21:40PM -0800, Dan Williams wrote:
->>> They are indeed a hodge-podge. The problem is that the current
->>> IS_DAX() is broken. So I'd like to propose fixing IS_DAX() with
->>> IS_FSDAX() + IS_DEVDAX() for 4.16-rc4 and queue up these wider reworks
->>> you propose for the next merge window.
->>
->> The only thing broken about IS_DAX are the code elimination games
->> based on the CONFIG_* flags.  Remove those and just add proper stubs
->> for the dax routines and everything will be fine for now until we can
->> kill that inode flag.
->>
->> IS_FSDAX and IS_DEVDAX on the other hand are a giant mess that isn't
->> helping anyone.
->
-> Ok, I'll take another shot at something suitable for 4.16, but without
-> these new helpers...
+On Mon, Mar 05, 2018 at 11:19:46AM +0100, Vratislav Bendel wrote:
+> (In response to Luis' comment:)
+> > Can you add a respective Fixes: tag?
+> 
+> It was apparently present since LRU was added to xfs buffer cache via:
+> commit 430cbeb86fdcbbdabea7d4aa65307de8de425350
+> [xfs: add a lru to the XFS buffer cache]
+> 
+> But I wouldn't say this patch "fixes" that commit.
+> What do you think? Should a fixes tag be added in this case?
+> 
+> 
+> > Also what effects are observed by
+> > the user when this happens on the kernel log?
+> 
+> I haven't spotted any differences visible to user, nor in the kernel log.
+> 
+> (In response to Brian's comment:)
+> >> However, as per documentation, atomic_add_unless() returns _zero_
+> >> if the atomic value was originally equal to the specified *unsless* value.
+> >>
+> > Nit:                                                         unless
+> 
+> Thanks very much for feedback. Since it's my very first upstream
+> commit-proposal,
+> I expected that some polish would be needed.
+> 
+> 
+> > It might be worth pointing out in the commit log that currently isolated
+> > buffers end up right back on the LRU once they are released, because
+> > ->b_lru_ref remains elevated. Therefore, this patch essentially fixes
+> > that circuitous route by leaving them on the LRU as originally intended.
+> > Otherwise this looks Ok to me:
+> 
+> So the final commit message could be:
+> ~~~
+> Currently the xfs_buftarg_isolate() is causing an xfs_buffer
 
-I'll drop patches 2-11 for now, and just get the high priority fixes
-in for the next rc.
+"Due to an inverted logic mistake in xfs_buftarg_isolate()..."?
+
+> with zero b_lru_ref, to take another trip around LRU, while
+
+                   ^^^^ no need for this comma
+
+> isolating buffers with non-zero b_lru_ref.
+> 
+> Additionally those isolated buffers end up right back on the LRU
+> once they are released, because ->b_lru_ref remains elevated.
+> 
+> Fix that circuitous route by leaving them on the LRU
+> as originally intended.
+
+Otherwise this seems fine to me; can you please resend the patch w/
+updated change log and reviewed-by tags?
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> 
+> >> Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
