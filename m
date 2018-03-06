@@ -1,35 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49626 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755104AbeCHIJz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 03:09:55 -0500
-Date: Thu, 8 Mar 2018 00:09:53 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/5] libxfs: Replace XFS_BUF_SET_PTR with
- xfs_buf_associate_memory
-Message-ID: <20180308080953.GC15163@infradead.org>
+Received: from sandeen.net ([63.231.237.45]:36334 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754035AbeCFXZR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 18:25:17 -0500
+Subject: Re: [PATCH 4/5] libxfs: Catch non-empty zones on destroy
 References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
- <bc3750b9-7aec-aad3-f7f8-e5a1ef39e6b8@sandeen.net>
+ <c2dd15a8-a048-6373-2fad-3ffd28a606e0@sandeen.net>
+ <20180306230625.GN18989@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <99164755-34c7-7c5a-7d4d-97e0210b2078@sandeen.net>
+Date: Tue, 6 Mar 2018 17:25:15 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bc3750b9-7aec-aad3-f7f8-e5a1ef39e6b8@sandeen.net>
+In-Reply-To: <20180306230625.GN18989@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Mar 06, 2018 at 03:54:08PM -0600, Eric Sandeen wrote:
-> We test the return value of this macro, but it returns
-> a side-effect which looks like failure.  Write a
-> userspace-libxfs-specific version of xfs_buf_associate_memory
-> to make this code a tad more like the kernel, with a proper
-> return value to boot.
 
-Looks good:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On 3/6/18 5:06 PM, Darrick J. Wong wrote:
+>> @@ -887,11 +893,15 @@ libxfs_umount(xfs_mount_t *mp)
+>>  void
+>>  libxfs_destroy(void)
+>>  {
+>> +	int	leaked;
+>> +
+>>  	/* Free everything from the buffer cache before freeing buffer zone */
+>>  	libxfs_bcache_purge();
+>>  	libxfs_bcache_free();
+>>  	cache_destroy(libxfs_bcache);
+>> -	manage_zones(1);
+>> +	leaked = manage_zones(1);
+>> +	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
+>> +		exit(1);
+> What do you think of assert(getenv() == NULL || !leaked); here?
+> LIBXFS_LEAK_CHECK is a debugging option, so we might as well dump core
+> right where we violate the assumptions.
+> 
+> (OTOH I guess this probably happens at program exit anyway...)
 
-But aren't we supposed to just share xfs_log_recover.c (or the
-relevant parts of it) with the kernel anyway?
+I don't think a core dump will be that useful, we already print out
+which zone leaked & how much - I don't think a core would tell us more...?
+
+-Eric
