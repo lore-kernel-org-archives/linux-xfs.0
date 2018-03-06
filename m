@@ -1,298 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38666 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:58522 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933415AbeCGTYx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Mar 2018 14:24:53 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BE913804F2
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Mar 2018 19:24:53 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8EF2B5D6A3
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Mar 2018 19:24:53 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC] xfs: convert between packed and unpacked agfls on-demand
-Date: Wed,  7 Mar 2018 14:24:51 -0500
-Message-Id: <20180307192451.24196-1-bfoster@redhat.com>
+        id S1753923AbeCFV4M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 16:56:12 -0500
+Subject: [PATCH 4/5] libxfs: Catch non-empty zones on destroy
+References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c2dd15a8-a048-6373-2fad-3ffd28a606e0@sandeen.net>
+Date: Tue, 6 Mar 2018 15:56:11 -0600
+MIME-Version: 1.0
+In-Reply-To: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Disliked-by: Brian Foster <bfoster@redhat.com>
+Create and use a kmem_zone_destroy which warns if we are
+releasing a non-empty zone when the LIBXFS_LEAK_CHECK
+environment variable is set, wire this into libxfs_destroy(),
+and call that when various tools exit.
+
+The LIBXFS_LEAK_CHECK environment variable also causes
+the program to exit with failure when a leak is detected,
+useful for failing automated tests if leaks are encountered.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
+ include/kmem.h |  1 +
+ libxfs/init.c  | 36 +++++++++++++++++++++++-------------
+ libxfs/kmem.c  | 14 ++++++++++++++
+ 3 files changed, 38 insertions(+), 13 deletions(-)
 
-Sent as RFC for the time being. This tests Ok on a straight xfstests run
-and also seems to pass Darrick's agfl fixup tester (thanks) both on
-upstream and on a rhel7 kernel with some minor supporting hacks.
-
-I tried to tighten up the logic a bit to reduce the odds of mistaking
-actual corruption for a padding mismatch as much as possible. E.g.,
-limit to cases where the agfl is wrapped, make sure we don't mistake a
-corruption that looks like an agfl with 120 entries on a packed kernel,
-etc.
-
-While I do prefer an on-demand fixup approach to a mount time scan, ISTM
-that in either case it's impossible to completely eliminate the risk of
-confusing corruption with a padding mismatch so long as we're doing a
-manual agfl fixup. The more I think about that the more I really dislike
-doing this. :(
-
-After some IRC discussion with djwong and sandeen, I'm wondering if the
-existence of 'xfs_repair -d' is a good enough last resort for those
-users who might be bit by unexpected padding issues on a typical
-upgrade. If so, we could fall back to a safer mount-time detection model
-that enforces a read-only mount and let the user run repair. The
-supposition is that those who aren't prepared to repair via a ramdisk or
-whatever should be able to 'xfs_repair -d' a rootfs that is mounted
-read-only provided agfl padding is the only inconsistency. 
-
-Eric points out that we can still write an unmount record for a
-read-only mount, but I'm not sure that would be a problem if repair only
-needs to fix the agfl. xfs_repair shouldn't touch the log unless there's
-a recovery issue or it needs to be reformatted to update the LSN, both
-of which seem to qualify as "you have more problems than agfl padding
-and need to run repair anyways" to me. Thoughts?
-
-Brian
-
- fs/xfs/libxfs/xfs_alloc.c | 147 +++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_mount.h        |   1 +
- fs/xfs/xfs_trace.h        |  18 ++++++
- 3 files changed, 164 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index c02781a4c091..31330996e31c 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2054,6 +2054,136 @@ xfs_alloc_space_available(
+diff --git a/include/kmem.h b/include/kmem.h
+index 65f0ade..572a4fa 100644
+--- a/include/kmem.h
++++ b/include/kmem.h
+@@ -33,6 +33,7 @@ typedef struct kmem_zone {
+ extern kmem_zone_t *kmem_zone_init(int, char *);
+ extern void	*kmem_zone_alloc(kmem_zone_t *, int);
+ extern void	*kmem_zone_zalloc(kmem_zone_t *, int);
++extern int	kmem_zone_destroy(kmem_zone_t *);
+ 
+ static inline void
+ kmem_zone_free(kmem_zone_t *zone, void *ptr)
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 3456cb5..a65c86c 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -43,7 +43,7 @@ int libxfs_bhash_size;		/* #buckets in bcache */
+ 
+ int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
+ 
+-static void manage_zones(int);	/* setup global zones */
++static int manage_zones(int);	/* setup/teardown global zones */
+ 
+ /*
+  * dev_map - map open devices to fd.
+@@ -372,7 +372,7 @@ done:
+ /*
+  * Initialize/destroy all of the zone allocators we use.
+  */
+-static void
++static int
+ manage_zones(int release)
+ {
+ 	extern kmem_zone_t	*xfs_buf_zone;
+@@ -388,16 +388,20 @@ manage_zones(int release)
+ 	extern void		xfs_dir_startup();
+ 
+ 	if (release) {	/* free zone allocation */
+-		kmem_free(xfs_buf_zone);
+-		kmem_free(xfs_inode_zone);
+-		kmem_free(xfs_ifork_zone);
+-		kmem_free(xfs_buf_item_zone);
+-		kmem_free(xfs_da_state_zone);
+-		kmem_free(xfs_btree_cur_zone);
+-		kmem_free(xfs_bmap_free_item_zone);
+-		kmem_free(xfs_trans_zone);
+-		kmem_free(xfs_log_item_desc_zone);
+-		return;
++		int	leaked = 0;
++
++		leaked += kmem_zone_destroy(xfs_buf_zone);
++		leaked += kmem_zone_destroy(xfs_ili_zone);
++		leaked += kmem_zone_destroy(xfs_inode_zone);
++		leaked += kmem_zone_destroy(xfs_ifork_zone);
++		leaked += kmem_zone_destroy(xfs_buf_item_zone);
++		leaked += kmem_zone_destroy(xfs_da_state_zone);
++		leaked += kmem_zone_destroy(xfs_btree_cur_zone);
++		leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
++		leaked += kmem_zone_destroy(xfs_trans_zone);
++		leaked += kmem_zone_destroy(xfs_log_item_desc_zone);
++
++		return leaked;
+ 	}
+ 	/* otherwise initialise zone allocation */
+ 	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
+@@ -419,6 +423,8 @@ manage_zones(int release)
+ 	xfs_log_item_desc_zone = kmem_zone_init(
+ 			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
+ 	xfs_dir_startup();
++
++	return 0;
  }
  
  /*
-+ * Estimate the on-disk agfl size based on the agf state. A size mismatch due to
-+ * padding is only significant if the agfl wraps around the end or refers to an
-+ * invalid first/last value.
-+ */
-+static int
-+xfs_agfl_ondisk_size(
-+	struct xfs_mount	*mp,
-+	int			first,
-+	int			last,
-+	int			count)
+@@ -887,11 +893,15 @@ libxfs_umount(xfs_mount_t *mp)
+ void
+ libxfs_destroy(void)
+ {
++	int	leaked;
++
+ 	/* Free everything from the buffer cache before freeing buffer zone */
+ 	libxfs_bcache_purge();
+ 	libxfs_bcache_free();
+ 	cache_destroy(libxfs_bcache);
+-	manage_zones(1);
++	leaked = manage_zones(1);
++	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
++		exit(1);
+ }
+ 
+ int
+diff --git a/libxfs/kmem.c b/libxfs/kmem.c
+index c8bcb50..a1f64e5 100644
+--- a/libxfs/kmem.c
++++ b/libxfs/kmem.c
+@@ -23,6 +23,20 @@ kmem_zone_init(int size, char *name)
+ 	return ptr;
+ }
+ 
++int
++kmem_zone_destroy(kmem_zone_t *zone)
 +{
-+	int			active = count;
-+	int			agfl_size = XFS_AGFL_SIZE(mp);
-+	bool			wrapped = (first > last) ? true : false;
++	int	leaked = 0;
 +
-+	if (count && last >= first)
-+		active = last - first + 1;
-+	else if (count)
-+		active = agfl_size - first + last + 1;
-+
-+	if (wrapped && active == count + 1)
-+		agfl_size--;
-+	else if ((wrapped && active == count - 1) ||
-+		 first == agfl_size || last == agfl_size)
-+		agfl_size++;
-+
-+	/*
-+	 * We can't discern the packing problem from certain forms of corruption
-+	 * that may look exactly the same. To minimize the chance of mistaking
-+	 * corruption for a size mismatch, clamp the size to known valid values.
-+	 * A packed header agfl has 119 entries and the older unpacked format
-+	 * has one less.
-+	 */
-+	if (agfl_size < 118 || agfl_size > 119)
-+		agfl_size = XFS_AGFL_SIZE(mp);
-+
-+	return agfl_size;
++	if (getenv("LIBXFS_LEAK_CHECK") && zone->allocated) {
++		leaked = 1;
++		printf("zone %s freed with %d items allocated\n",
++				zone->zone_name, zone->allocated);
++	}
++	free(zone);
++	return leaked;
 +}
 +
-+static bool
-+xfs_agfl_need_padfix(
-+	struct xfs_mount	*mp,
-+	struct xfs_agf		*agf)
-+{
-+	int			f = be32_to_cpu(agf->agf_flfirst);
-+	int			l = be32_to_cpu(agf->agf_fllast);
-+	int			c = be32_to_cpu(agf->agf_flcount);
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return false;
-+
-+	return xfs_agfl_ondisk_size(mp, f, l, c) != XFS_AGFL_SIZE(mp);
-+}
-+
-+static int
-+xfs_agfl_check_padfix(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*agbp,
-+	struct xfs_buf		*agflbp,
-+	struct xfs_perag	*pag)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
-+	__be32			*agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
-+	int			agfl_size = XFS_AGFL_SIZE(mp);
-+	int			ofirst, olast, osize;
-+	int			nfirst, nlast;
-+	int			logflags = 0;
-+	int			startoff = 0;
-+
-+	if (!pag->pagf_needpadfix)
-+		return 0;
-+
-+	ofirst = nfirst = be32_to_cpu(agf->agf_flfirst);
-+	olast = nlast = be32_to_cpu(agf->agf_fllast);
-+	osize = xfs_agfl_ondisk_size(mp, ofirst, olast, pag->pagf_flcount);
-+
-+	/*
-+	 * If the on-disk agfl is smaller than what the kernel expects, the
-+	 * last slot of the on-disk agfl is a gap with bogus data. Move the
-+	 * first valid block into the gap and bump the pointer.
-+	 */
-+	if (osize < agfl_size) {
-+		ASSERT(pag->pagf_flcount != 0);
-+		agfl_bno[agfl_size - 1] = agfl_bno[ofirst];
-+		startoff = (char *) &agfl_bno[agfl_size - 1] - (char *) agflbp->b_addr;
-+		nfirst++;
-+		goto done;
-+	}
-+
-+	/*
-+	 * Otherwise, the on-disk agfl is larger than what the current kernel
-+	 * expects. If empty, just fix up the first and last pointers. If not,
-+	 * move the inaccessible block to the end of the valid range.
-+	 */
-+	nfirst = do_mod(nfirst, agfl_size);
-+	if (pag->pagf_flcount == 0) {
-+		nlast = (nfirst == 0 ? agfl_size - 1 : nfirst - 1);
-+		goto done;
-+	}
-+	if (nlast != agfl_size)
-+		nlast++;
-+	nlast = do_mod(nlast, agfl_size);
-+	agfl_bno[nlast] = agfl_bno[osize - 1];
-+	startoff = (char *) &agfl_bno[nlast] - (char *) agflbp->b_addr;
-+
-+done:
-+	if (nfirst != ofirst) {
-+		agf->agf_flfirst = cpu_to_be32(nfirst);
-+		logflags |= XFS_AGF_FLFIRST;
-+	}
-+	if (nlast != olast) {
-+		agf->agf_fllast = cpu_to_be32(nlast);
-+		logflags |= XFS_AGF_FLLAST;
-+	}
-+	if (startoff) {
-+		xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
-+		xfs_trans_log_buf(tp, agflbp, startoff,
-+				  startoff + sizeof(xfs_agblock_t) - 1);
-+	}
-+	if (logflags)
-+		xfs_alloc_log_agf(tp, agbp, logflags);
-+
-+	trace_xfs_agfl_padfix(mp, osize, agfl_size);
-+	pag->pagf_needpadfix = false;
-+
-+	return 0;
-+}
-+
-+/*
-  * Decide whether to use this allocation group for this allocation.
-  * If so, fix up the btree freelist's size.
-  */
-@@ -2258,6 +2388,12 @@ xfs_alloc_get_freelist(
- 	if (error)
- 		return error;
- 
-+	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-+	error = xfs_agfl_check_padfix(tp, agbp, agflbp, pag);
-+	if (error) {
-+		xfs_perag_put(pag);
-+		return error;
-+	}
- 
- 	/*
- 	 * Get the block number and update the data structures.
-@@ -2269,7 +2405,6 @@ xfs_alloc_get_freelist(
- 	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
- 		agf->agf_flfirst = 0;
- 
--	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
- 	be32_add_cpu(&agf->agf_flcount, -1);
- 	xfs_trans_agflist_delta(tp, -1);
- 	pag->pagf_flcount--;
-@@ -2376,11 +2511,18 @@ xfs_alloc_put_freelist(
- 	if (!agflbp && (error = xfs_alloc_read_agfl(mp, tp,
- 			be32_to_cpu(agf->agf_seqno), &agflbp)))
- 		return error;
-+
-+	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-+	error = xfs_agfl_check_padfix(tp, agbp, agflbp, pag);
-+	if (error) {
-+		xfs_perag_put(pag);
-+		return error;
-+	}
-+
- 	be32_add_cpu(&agf->agf_fllast, 1);
- 	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
- 		agf->agf_fllast = 0;
- 
--	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
- 	be32_add_cpu(&agf->agf_flcount, 1);
- 	xfs_trans_agflist_delta(tp, 1);
- 	pag->pagf_flcount++;
-@@ -2588,6 +2730,7 @@ xfs_alloc_read_agf(
- 		pag->pagb_count = 0;
- 		pag->pagb_tree = RB_ROOT;
- 		pag->pagf_init = 1;
-+		pag->pagf_needpadfix = xfs_agfl_need_padfix(mp, agf);
- 	}
- #ifdef DEBUG
- 	else if (!XFS_FORCED_SHUTDOWN(mp)) {
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index e0792d036be2..78a6377a9b38 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -353,6 +353,7 @@ typedef struct xfs_perag {
- 	char		pagi_inodeok;	/* The agi is ok for inodes */
- 	uint8_t		pagf_levels[XFS_BTNUM_AGF];
- 					/* # of levels in bno & cnt btree */
-+	bool		pagf_needpadfix;
- 	uint32_t	pagf_flcount;	/* count of blocks in freelist */
- 	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
- 	xfs_extlen_t	pagf_longest;	/* longest free space */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 945de08af7ba..c7a3bcd6cc4a 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3339,6 +3339,24 @@ TRACE_EVENT(xfs_trans_resv_calc,
- 		  __entry->logflags)
- );
- 
-+TRACE_EVENT(xfs_agfl_padfix,
-+	TP_PROTO(struct xfs_mount *mp, int osize, int nsize),
-+	TP_ARGS(mp, osize, nsize),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(int, osize)
-+		__field(int, nsize)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->osize = osize;
-+		__entry->nsize = nsize;
-+	),
-+	TP_printk("dev %d:%d old size %d new size %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->osize, __entry->nsize)
-+);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
+ void *
+ kmem_zone_alloc(kmem_zone_t *zone, int flags)
+ {
 -- 
-2.13.6
+1.8.3.1
+
 
