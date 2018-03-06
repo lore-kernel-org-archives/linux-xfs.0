@@ -1,101 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56186 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932078AbeCFXHp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Mar 2018 18:07:45 -0500
-Date: Tue, 6 Mar 2018 14:57:39 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/5] libxfs: Replace XFS_BUF_SET_PTR with
- xfs_buf_associate_memory
-Message-ID: <20180306225739.GL18989@magnolia>
-References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
- <bc3750b9-7aec-aad3-f7f8-e5a1ef39e6b8@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:37970 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750782AbeCFQxp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 11:53:45 -0500
+Subject: Re: [PATCH] xfs: fix transaction allocation deadlock in IO path
+References: <20180305041120.4224-1-david@fromorbit.com>
+ <20180305174455.GB14201@wotan.suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <eab0394c-60ba-d0fe-8d81-d581aa8317d9@sandeen.net>
+Date: Tue, 6 Mar 2018 10:53:44 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bc3750b9-7aec-aad3-f7f8-e5a1ef39e6b8@sandeen.net>
+In-Reply-To: <20180305174455.GB14201@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 06, 2018 at 03:54:08PM -0600, Eric Sandeen wrote:
-> We test the return value of this macro, but it returns
-> a side-effect which looks like failure.  Write a
-> userspace-libxfs-specific version of xfs_buf_associate_memory
-> to make this code a tad more like the kernel, with a proper
-> return value to boot.
+
+
+On 3/5/18 11:44 AM, Luis R. Rodriguez wrote:
+> On Mon, Mar 05, 2018 at 03:11:20PM +1100, Dave Chinner wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
+>>
+>> xfs_trans_alloc() does GFP_KERNEL allocation, and we can call it
+>> while holding pages locked for writeback in the ->writepages path.
+>> The memory allocation is allowed to wait on pages under writeback,
+>> and so can wait on pages that are held locked in writeback by the
+>> caller.
+>>
+>> This affects both pre-IO submission and post-IO submission paths.
+>> Hence xfs_setsize_trans_alloc(), xfs_reflink_end_cow(),
+>> xfs_iomap_write_unwritten() and xfs_reflink_cancel_cow_range().
+>> xfs_iomap_write_unwritten() already does the right thing, but the
+>> others don't. Fix them.
+>>
+>> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  libxfs/libxfs_io.h        | 12 ++++++++----
->  libxlog/xfs_log_recover.c |  4 ++--
->  2 files changed, 10 insertions(+), 6 deletions(-)
+> I believe these are two separate regressions though, introduced on separate
+> kernels Can we treat them as such and use respective Fixes tag for them?
 > 
-> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-> index 6308a74..78b6780 100644
-> --- a/libxfs/libxfs_io.h
-> +++ b/libxfs/libxfs_io.h
-> @@ -103,10 +103,6 @@ enum xfs_buf_flags_t {	/* b_flags bits */
->  #define XFS_BUF_SIZE(bp)		((bp)->b_bcount)
->  #define XFS_BUF_COUNT(bp)		((bp)->b_bcount)
->  #define XFS_BUF_TARGET(bp)		((bp)->b_dev)
-> -#define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
-> -	(bp)->b_addr = (char *)(p);		\
-> -	XFS_BUF_SET_COUNT(bp,cnt);		\
-> -})
->  
->  #define XFS_BUF_SET_ADDR(bp,blk)	((bp)->b_bn = (blk))
->  #define XFS_BUF_SET_COUNT(bp,cnt)	((bp)->b_bcount = (cnt))
-> @@ -230,4 +226,12 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
->  			 cksum_offset);
->  }
->  
-> +static inline int
-> +xfs_buf_associate_memory(struct xfs_buf *bp, void *mem, size_t len)
-> +{
-> +	bp->b_addr = mem;
-> +	bp->b_bcount = len;
-
-So long as len is never larger than an unsigned int (len is size_t,
-b_bcount is unsigned int) this is fine. :)
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-
-> +	return 0;
-> +}
-> +
->  #endif	/* __LIBXFS_IO_H__ */
-> diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
-> index 6bd000c..58d9182 100644
-> --- a/libxlog/xfs_log_recover.c
-> +++ b/libxlog/xfs_log_recover.c
-> @@ -171,14 +171,14 @@ xlog_bread_offset(
->  	int		orig_len = bp->b_bcount;
->  	int		error, error2;
->  
-> -	error = XFS_BUF_SET_PTR(bp, offset, BBTOB(nbblks));
-> +	error = xfs_buf_associate_memory(bp, offset, BBTOB(nbblks));
->  	if (error)
->  		return error;
->  
->  	error = xlog_bread_noalign(log, blk_no, nbblks, bp);
->  
->  	/* must reset buffer pointer even on error */
-> -	error2 = XFS_BUF_SET_PTR(bp, orig_offset, orig_len);
-> +	error2 = xfs_buf_associate_memory(bp, orig_offset, orig_len);
->  	if (error)
->  		return error;
->  	return error2;
-> -- 
-> 1.8.3.1
+>> ---
+>>  fs/xfs/xfs_aops.c    | 3 ++-
+>>  fs/xfs/xfs_reflink.c | 4 ++--
+>>  2 files changed, 4 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+>> index 9c6a830da0ee..a0afb6411417 100644
+>> --- a/fs/xfs/xfs_aops.c
+>> +++ b/fs/xfs/xfs_aops.c
+>> @@ -209,7 +209,8 @@ xfs_setfilesize_trans_alloc(
+>>  	struct xfs_trans	*tp;
+>>  	int			error;
+>>  
+>> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+>> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0,
+>> +				XFS_TRANS_NOFS, &tp);
+>>  	if (error)
+>>  		return error;
+>>  
 > 
+> Fixes: 253f4911f297b ("xfs: better xfs_trans_alloc interface")
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Introduced on v4.7
+
+I don't think so - prior to that commit, this allocation could still
+recurse into the filesystem, the only allocation flag used was KM_SLEEP,
+AFAICT.
+ 
+>> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+>> index 270246943a06..8c16177b33d4 100644
+>> --- a/fs/xfs/xfs_reflink.c
+>> +++ b/fs/xfs/xfs_reflink.c
+>> @@ -668,7 +668,7 @@ xfs_reflink_cancel_cow_range(
+>>  
+>>  	/* Start a rolling transaction to remove the mappings */
+>>  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+>> -			0, 0, 0, &tp);
+>> +			0, 0, XFS_TRANS_NOFS, &tp);
+>>  	if (error)
+>>  		goto out;
+>>  
+>> @@ -741,7 +741,7 @@ xfs_reflink_end_cow(
+>>  			(unsigned int)(end_fsb - offset_fsb),
+>>  			XFS_DATA_FORK);
+>>  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+>> -			resblks, 0, XFS_TRANS_RESERVE, &tp);
+>> +			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
+>>  	if (error)
+>>  		goto out;
+> 
+> For both of the above:
+> 
+> Fixes: 43caeb187deb9 ("xfs: move mappings from cow fork to data fork after copy-write)"
+> 
+> Introduced on v4.9.
+
+Perhaps, as that commit did add the new allocations which could recurse.
+
+-Eric
