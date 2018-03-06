@@ -1,121 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:16808 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932656AbeCEVdr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Mar 2018 16:33:47 -0500
-Date: Tue, 6 Mar 2018 08:32:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix transaction allocation deadlock in IO path
-Message-ID: <20180305213248.GC18129@dastard>
-References: <20180305041120.4224-1-david@fromorbit.com>
- <20180305174455.GB14201@wotan.suse.de>
+Received: from mga05.intel.com ([192.55.52.43]:58063 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932243AbeCFAGl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Mar 2018 19:06:41 -0500
+Date: Mon, 5 Mar 2018 17:06:39 -0700
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH 2 2/2] xfs: fix rt_dev usage for DAX
+Message-ID: <20180306000639.GA15227@linux.intel.com>
+References: <151751717968.69886.6978962571680635420.stgit@djiang5-desk3.ch.intel.com>
+ <151751718516.69886.135497175511444689.stgit@djiang5-desk3.ch.intel.com>
+ <20180201234413.idd27uqzqbg54ddk@destitution>
+ <20180202004332.GZ4849@magnolia>
+ <d267ed33-950e-a5c5-73ce-36da6c940513@intel.com>
+ <20180206231915.GA26233@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180305174455.GB14201@wotan.suse.de>
+In-Reply-To: <20180206231915.GA26233@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Jiang <dave.jiang@intel.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, ross.zwisler@linux.intel.com, linux-ext4@vger.kernel.org, dan.j.williams@intel.com, linux-nvdimm@lists.01.org
 
-On Mon, Mar 05, 2018 at 05:44:55PM +0000, Luis R. Rodriguez wrote:
-> On Mon, Mar 05, 2018 at 03:11:20PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > xfs_trans_alloc() does GFP_KERNEL allocation, and we can call it
-> > while holding pages locked for writeback in the ->writepages path.
-> > The memory allocation is allowed to wait on pages under writeback,
-> > and so can wait on pages that are held locked in writeback by the
-> > caller.
-> > 
-> > This affects both pre-IO submission and post-IO submission paths.
-> > Hence xfs_setsize_trans_alloc(), xfs_reflink_end_cow(),
-> > xfs_iomap_write_unwritten() and xfs_reflink_cancel_cow_range().
-> > xfs_iomap_write_unwritten() already does the right thing, but the
-> > others don't. Fix them.
-> > 
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+On Tue, Feb 06, 2018 at 03:19:15PM -0800, Darrick J. Wong wrote:
+<>
+> The last time I paid much attention to DAX was the thread "re-enable XFS
+> per-inode DAX"[1] last September.  Motivating me to merge anything else
+> into DAX involves convincing me that we (mm, fs, dax developers) have
+> some kind of agreement about what we want the user-visible interfaces to
+> DAX to look like.  
+
+Yep, I agree that is the next step.
+
+> Namely:
 > 
-> I believe these are two separate regressions though, introduced on separate
-> kernels Can we treat them as such and use respective Fixes tag for them?
+> 0. On what level do we allow users / administrators to control usage of
+> the dax paths?  Can the hardware convey enough detail to the kernel that
+> the kernel can make a reasonable decision on its own whether buffered or
+> dax io make more sense?  If so, can we please just have that?  If not,
+> why?
 
-Neither are regressions - they are effectively zero-day bugs. In
-general, I don't use Fixes tags for things that are not regressions
-and are easily discoverable from the published git history...
+Maybe eventually via the HMAT, but I don't think we have any systems today
+that do a good job of this.
 
+> 1. If we want to let users override whatever decision the kernel makes,
+> how should we do this?  One mount option that applies to everything,
+> like ext4?  Inheritable inode flags, like xfs?  Do we have one to force
+> it on even if the kernel doesn't want to?  Do we have another to force
+> it off even if the kernel wants to?  Do we even want to go down this
+> path?  Can we get away with making the answer to Q0 "yes" and then see
+> if anyone actually complains about not having fine-grained control?
+
+I agree with Dan's assessment that even if we can make the kernel smart enough
+to know when it's not a performance loss to use DAX (i.e. the persistent
+memory you're using DAX on is just as fast as the page cache), users will
+probably still want to retain the ability to force it on for use cases like
+MAP_SYNC, and force it off for things like RDMA or VFIO, at least until the
+page pinning work is complete.
+
+Personally I'm still hopeful that we can have both the mount option and the
+inheritable inode flags, and that we can figure out what we need to to get
+S_DAX transitions happening again.
+
+> 2. Under what conditions can we support dynamic changing of S_DAX on
+> inodes at runtime?  Will this switching work at any time?  Only for
+> files that are open but not mmap'd?  Only for files that are empty?
+>
+> 3. The MAP_SYNC support that was merged into 4.15 -- is this sufficient
+> to allow this fsyncless clflush business that everyone seems to want?
+
+Yep, I think so.  The next big battles are S_DAX transitions, per-inode DAX
+support, and of course the page pinning / leases code that Dan & Christoph
+have been talking about.
+
+> 4. Can someone please fix the XFS iomap_begin function to handle CoW
+> properly?  I think it's a simple matter of allocate blocks, memcpy, and
+> remap, though I don't know how to do that. ;)
 > 
-> > ---
-> >  fs/xfs/xfs_aops.c    | 3 ++-
-> >  fs/xfs/xfs_reflink.c | 4 ++--
-> >  2 files changed, 4 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index 9c6a830da0ee..a0afb6411417 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -209,7 +209,8 @@ xfs_setfilesize_trans_alloc(
-> >  	struct xfs_trans	*tp;
-> >  	int			error;
-> >  
-> > -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
-> > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0,
-> > +				XFS_TRANS_NOFS, &tp);
-> >  	if (error)
-> >  		return error;
-> >  
+> 5. Do we test any of this stuff?
+
+Yes, I think in general we do a pretty good job of DAX test case coverage
+between a combination of xfstests (which I have added to as I've fixed DAX
+related bugs), nfit_test and the ndctl unit tests.  hch has recently suggested
+we start using blktests as well, though I don't think we've actually made any
+new tests there yet.  Suggestions on how we can get better test coverage are
+welcome.
+
+> The thread from last September left off with promises to go define what
+> interface and behaviors we are providing to userspace, but afaict none
+> of that ever happened?  If we don't resolve these questions before LSF
+> then I think what's needed is to lock everyone in a room to hash all
+> this out. :P
+
+Yep, that's accurate.  I got pulled off onto other work and am just now
+finding my way back.  I think talking about it at LSF sounds great, but it's a
+shame that hch won't be available.  It'll be nice to finally meet dchinner,
+though. :)
+
+> --D
 > 
-> Fixes: 253f4911f297b ("xfs: better xfs_trans_alloc interface")
-
-No, thats wrong - that commit didn't change any behaviour. The
-original commit:
-
-281627df3eb5 ("xfs: log file size updates at I/O completion time")
-
-called:
-
-	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
-
-
-which resulted in a GFP_KERNEL allocation via:
-
-	tp = _xfs_trans_alloc(mp, type, KM_SLEEP);
-
-So this is a zero-day bug in logging file size updates at IO
-completion.
-
-> Introduced on v4.7
+> PS: My personal inclination is {yes, get rid of all that until someone
+> complains, i think so but haven't tested it, ???, i sure hope so}.
 > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 270246943a06..8c16177b33d4 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -668,7 +668,7 @@ xfs_reflink_cancel_cow_range(
-> >  
-> >  	/* Start a rolling transaction to remove the mappings */
-> >  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
-> > -			0, 0, 0, &tp);
-> > +			0, 0, XFS_TRANS_NOFS, &tp);
-> >  	if (error)
-> >  		goto out;
-> >  
-> > @@ -741,7 +741,7 @@ xfs_reflink_end_cow(
-> >  			(unsigned int)(end_fsb - offset_fsb),
-> >  			XFS_DATA_FORK);
-> >  	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
-> > -			resblks, 0, XFS_TRANS_RESERVE, &tp);
-> > +			resblks, 0, XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
-> >  	if (error)
-> >  		goto out;
-> 
-> For both of the above:
-> 
-> Fixes: 43caeb187deb9 ("xfs: move mappings from cow fork to data fork after copy-write)"
-
-And that's a zero-day, too. So neither are regressions.
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+> [1] https://marc.info/?l=linux-xfs&m=150638135225793&w=2
