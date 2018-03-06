@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47730 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:48216 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752997AbeCFTRB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Mar 2018 14:17:01 -0500
-Subject: Re: [PATCH 07/16] xfs_db: print transaction reservation type
- information
+        id S1752055AbeCFTXx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 14:23:53 -0500
+Subject: Re: [PATCH 08/16] xfs_repair: don't fail directory repairs when
+ grabbing inodes
 References: <151993157539.22223.6269629008244777191.stgit@magnolia>
- <151993161907.22223.2470790760502530047.stgit@magnolia>
+ <151993162526.22223.3665832156616656282.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <16edb54d-209f-79f1-774e-b5d21b0f4ae3@sandeen.net>
-Date: Tue, 6 Mar 2018 13:16:56 -0600
+Message-ID: <fa21f326-8144-8dd1-0d4e-3a36a6f439c2@sandeen.net>
+Date: Tue, 6 Mar 2018 13:23:51 -0600
 MIME-Version: 1.0
-In-Reply-To: <151993161907.22223.2470790760502530047.stgit@magnolia>
+In-Reply-To: <151993162526.22223.3665832156616656282.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -24,141 +24,218 @@ Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 On 3/1/18 1:13 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Create a new xfs_db command to print the transaction reservation info for
-> a given filesystem.  This will make it easier to compare the calculations
-> made by the kernel and xfsprogs in case there is a discrepancy.
+> There are a few places where xfs_repair needs to be able to load a
+> damaged directory inode to perform repairs.  Since inline data fork
+> verifiers can now be customized, refactor libxfs_iget to enable
+> repair to get at this so that we don't crash in phase 6.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Hm but there /is/ no custom verifier here, right?  Just NULL or default?
+In that case does it make sense to be passing ops around vs. just
+adding a "bool validate" arg in place of the NULL ops dance you have now?
 
 > ---
->  db/command.c             |    1 +
->  db/logformat.c           |   59 ++++++++++++++++++++++++++++++++++++++++++++++
->  db/logformat.h           |    1 +
->  libxfs/libxfs_api_defs.h |    2 +-
->  man/man8/xfs_db.8        |    6 +++++
->  5 files changed, 68 insertions(+), 1 deletion(-)
+>  db/attrset.c        |    6 ++++--
+>  include/xfs_inode.h |    6 ++++--
+>  libxfs/rdwr.c       |   25 +++++++++++++++++--------
+>  libxfs/trans.c      |    6 ++++--
+>  libxfs/util.c       |    2 +-
+>  repair/phase6.c     |   16 +++++++++++-----
+>  6 files changed, 41 insertions(+), 20 deletions(-)
 > 
 > 
-> diff --git a/db/command.c b/db/command.c
-> index 5ff3c4f..12ae5b7 100644
-> --- a/db/command.c
-> +++ b/db/command.c
-> @@ -138,6 +138,7 @@ init_commands(void)
->  	hash_init();
->  	inode_init();
->  	input_init();
-> +	logres_init();
->  	logformat_init();
->  	io_init();
->  	metadump_init();
-> diff --git a/db/logformat.c b/db/logformat.c
-> index 70097bc..b290bd3 100644
-> --- a/db/logformat.c
-> +++ b/db/logformat.c
-> @@ -147,3 +147,62 @@ logformat_init(void)
+> diff --git a/db/attrset.c b/db/attrset.c
+> index ad3c8f3..457317a 100644
+> --- a/db/attrset.c
+> +++ b/db/attrset.c
+> @@ -151,7 +151,8 @@ attr_set_f(
+>  		value = NULL;
+>  	}
 >  
->  	add_command(&logformat_cmd);
->  }
-> +
-> +static void
-> +print_logres(
-> +	int			i,
-> +	struct xfs_trans_res	*res)
-> +{
-> +	dbprintf(_("type %d logres %u logcount %d flags 0x%x\n"),
-> +		i, res->tr_logres, res->tr_logcount, res->tr_logflags);
-> +}
-> +
-> +int
-> +logres_f(
-> +	int			argc,
-> +	char			**argv)
-> +{
-> +	struct xfs_trans_res	resv;
-> +	struct xfs_trans_res	*res;
-> +	struct xfs_trans_res	*end_res;
-> +	int			i;
-> +
-> +	res = (struct xfs_trans_res *)M_RES(mp);
-> +	end_res = (struct xfs_trans_res *)(M_RES(mp) + 1);
-> +	for (i = 0; res < end_res; i++, res++)
-> +		print_logres(i, res);
-> +	libxfs_log_get_max_trans_res(mp, &resv);
-> +	print_logres(-1, &resv);
-> +
-> +	return 0;
-> +}
-> +
-> +static void
-> +logres_help(void)
-> +{
-> +	dbprintf(_(
-> +"\n"
-> +" The 'logres' command prints information about all log reservation types.\n"
-> +" This includes the reservation space, the intended transaction roll count,\n"
-> +" and the reservation flags, if any.\n"
-> +"\n"
-> +	));
-> +}
-> +
-> +static const struct cmdinfo logres_cmd = {
-> +	.name =		"logres",
-> +	.altname =	NULL,
-> +	.cfunc =	logres_f,
-> +	.argmin =	0,
-> +	.argmax =	0,
-> +	.canpush =	0,
-> +	.args =		NULL,
-> +	.oneline =	N_("dump log reservations"),
-> +	.help =		logres_help,
-> +};
-> +
-> +void
-> +logres_init(void)
-> +{
-> +	add_command(&logres_cmd);
-> +}
-> diff --git a/db/logformat.h b/db/logformat.h
-> index f9763ee..60396c0 100644
-> --- a/db/logformat.h
-> +++ b/db/logformat.h
-> @@ -17,3 +17,4 @@
+> -	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
+> +	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip,
+> +			&xfs_default_ifork_ops)) {
+>  		dbprintf(_("failed to iget inode %llu\n"),
+>  			(unsigned long long)iocur_top->ino);
+>  		goto out;
+> @@ -226,7 +227,8 @@ attr_remove_f(
+>  
+>  	name = argv[optind];
+>  
+> -	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip)) {
+> +	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip,
+> +			&xfs_default_ifork_ops)) {
+>  		dbprintf(_("failed to iget inode %llu\n"),
+>  			(unsigned long long)iocur_top->ino);
+>  		goto out;
+> diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+> index 92829a2..f29f0f0 100644
+> --- a/include/xfs_inode.h
+> +++ b/include/xfs_inode.h
+> @@ -162,9 +162,11 @@ extern void	libxfs_trans_ichgtime(struct xfs_trans *,
+>  extern int	libxfs_iflush_int (struct xfs_inode *, struct xfs_buf *);
+>  
+>  /* Inode Cache Interfaces */
+> -extern bool	libxfs_inode_verify_forks(struct xfs_inode *ip);
+> +extern bool	libxfs_inode_verify_forks(struct xfs_inode *ip,
+> +				struct xfs_ifork_ops *);
+>  extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+> -				uint, struct xfs_inode **);
+> +				uint, struct xfs_inode **,
+> +				struct xfs_ifork_ops *);
+>  extern void	libxfs_iput(struct xfs_inode *);
+>  
+>  #define IRELE(ip) libxfs_iput(ip)
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 3c5def2..416e89b 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -1342,12 +1342,16 @@ extern kmem_zone_t	*xfs_inode_zone;
 >   */
+>  bool
+>  libxfs_inode_verify_forks(
+> -	struct xfs_inode	*ip)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_ifork_ops	*ops)
+>  {
+>  	struct xfs_ifork	*ifp;
+>  	xfs_failaddr_t		fa;
 >  
->  void logformat_init(void);
-> +void logres_init(void);
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index d2ab02a..5d56340 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -60,7 +60,7 @@
->  #define xfs_trans_roll			libxfs_trans_roll
->  #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
->  #define xfs_trans_resv_calc		libxfs_trans_resv_calc
-> -
-> +#define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
->  #define xfs_attr_get			libxfs_attr_get
->  #define xfs_attr_set			libxfs_attr_set
->  #define xfs_attr_remove			libxfs_attr_remove
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 37018a7..524b1ef 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -690,6 +690,12 @@ Start logging output to
->  .IR filename ,
->  stop logging, or print the current logging status.
->  .TP
-> +.B logres
-> +Print transaction reservation size information for each transaction type.
-> +This makes it easier to find discrepancies in the reservation calculations
-> +between xfsprogs and the kernel, which will help when diagnosing minimum
-> +log size calculation errors.
-> +.TP
->  .BI "metadump [\-egow] " filename
->  Dumps metadata to a file. See
->  .BR xfs_metadump (8)
+> -	fa = xfs_ifork_verify_data(ip, &xfs_default_ifork_ops);
+> +	if (!ops)
+> +		return true;
+> +
+> +	fa = xfs_ifork_verify_data(ip, ops);
+>  	if (fa) {
+>  		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+>  		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "data fork",
+> @@ -1355,7 +1359,7 @@ libxfs_inode_verify_forks(
+>  		return false;
+>  	}
+>  
+> -	fa = xfs_ifork_verify_attr(ip, &xfs_default_ifork_ops);
+> +	fa = xfs_ifork_verify_attr(ip, ops);
+>  	if (fa) {
+>  		ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+>  		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "attr fork",
+> @@ -1367,11 +1371,16 @@ libxfs_inode_verify_forks(
+>  }
+>  
+>  int
+> -libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+> -		xfs_inode_t **ipp)
+> +libxfs_iget(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+> +	xfs_ino_t		ino,
+> +	uint			lock_flags,
+> +	struct xfs_inode	**ipp,
+> +	struct xfs_ifork_ops	*ifork_ops)
+>  {
+> -	xfs_inode_t	*ip;
+> -	int		error = 0;
+> +	struct xfs_inode	*ip;
+> +	int			error = 0;
+>  
+>  	ip = kmem_zone_zalloc(xfs_inode_zone, 0);
+>  	if (!ip)
+> @@ -1386,7 +1395,7 @@ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+>  		return error;
+>  	}
+>  
+> -	if (!libxfs_inode_verify_forks(ip)) {
+> +	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
+>  		libxfs_iput(ip);
+>  		return -EFSCORRUPTED;
+>  	}
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 0e7b7ae..67b1117 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -243,9 +243,11 @@ libxfs_trans_iget(
+>  	xfs_inode_log_item_t	*iip;
+>  
+>  	if (tp == NULL)
+> -		return libxfs_iget(mp, tp, ino, lock_flags, ipp);
+> +		return libxfs_iget(mp, tp, ino, lock_flags, ipp,
+> +				&xfs_default_ifork_ops);
+>  
+> -	error = libxfs_iget(mp, tp, ino, lock_flags, &ip);
+> +	error = libxfs_iget(mp, tp, ino, lock_flags, &ip,
+> +			&xfs_default_ifork_ops);
+>  	if (error)
+>  		return error;
+>  	ASSERT(ip != NULL);
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index aac558c..611ab9c 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+> @@ -494,7 +494,7 @@ libxfs_iflush_int(xfs_inode_t *ip, xfs_buf_t *bp)
+>  		VFS_I(ip)->i_version++;
+>  
+>  	/* Check the inline fork data before we write out. */
+> -	if (!libxfs_inode_verify_forks(ip))
+> +	if (!libxfs_inode_verify_forks(ip, &xfs_default_ifork_ops))
+>  		return -EFSCORRUPTED;
+>  
+>  	/*
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 1a398aa..aff83bc 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -927,7 +927,9 @@ mk_orphanage(xfs_mount_t *mp)
+>  	 * would have been cleared in phase3 and phase4.
+>  	 */
+>  
+> -	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
+> +	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip,
+> +			&xfs_default_ifork_ops);
+> +	if (i)
+>  		do_error(_("%d - couldn't iget root inode to obtain %s\n"),
+>  			i, ORPHANAGE);
+>  
+> @@ -951,7 +953,9 @@ mk_orphanage(xfs_mount_t *mp)
+>  	 * use iget/ijoin instead of trans_iget because the ialloc
+>  	 * wrapper can commit the transaction and start a new one
+>  	 */
+> -/*	if ((i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip)))
+> +/*	i = -libxfs_iget(mp, NULL, mp->m_sb.sb_rootino, 0, &pip,
+> +			&xfs_default_ifork_ops);
+> +	if (i)
+>  		do_error(_("%d - couldn't iget root inode to make %s\n"),
+>  			i, ORPHANAGE);*/
+>  
+> @@ -1066,7 +1070,8 @@ mv_orphanage(
+>  	xname.len = snprintf((char *)fname, sizeof(fname), "%llu",
+>  				(unsigned long long)ino);
+>  
+> -	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip);
+> +	err = -libxfs_iget(mp, NULL, orphanage_ino, 0, &orphanage_ip,
+> +			&xfs_default_ifork_ops);
+>  	if (err)
+>  		do_error(_("%d - couldn't iget orphanage inode\n"), err);
+>  	/*
+> @@ -1078,7 +1083,8 @@ mv_orphanage(
+>  		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
+>  					(unsigned long long)ino, ++incr);
+>  
+> -	if ((err = -libxfs_iget(mp, NULL, ino, 0, &ino_p)))
+> +	err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, &xfs_default_ifork_ops);
+> +	if (err)
+>  		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+>  
+>  	xname.type = libxfs_mode_to_ftype(VFS_I(ino_p)->i_mode);
+> @@ -2827,7 +2833,7 @@ process_dir_inode(
+>  
+>  	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
+>  
+> -	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
+> +	error = -libxfs_iget(mp, NULL, ino, 0, &ip, NULL);
+>  	if (error) {
+>  		if (!no_modify)
+>  			do_error(
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
