@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43848 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55876 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750947AbeCFNA7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Mar 2018 08:00:59 -0500
+        id S1753577AbeCFNBA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 08:01:00 -0500
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A3A94EAEAB
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Mar 2018 13:00:58 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id CF6DB4023150
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Mar 2018 13:00:59 +0000 (UTC)
 Received: from odin.brq.redhat.com (unknown [10.43.17.117])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2C3B810B0F32
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Mar 2018 13:00:58 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7456E10B0F32
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Mar 2018 13:00:59 +0000 (UTC)
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/4] Get rid of XFS_BUF_PTR() macro
-Date: Tue,  6 Mar 2018 14:00:50 +0100
-Message-Id: <20180306130053.13958-2-cmaiolino@redhat.com>
+Subject: [PATCH 3/4] get rid of XFS_BUF_COUNT() macro
+Date: Tue,  6 Mar 2018 14:00:52 +0100
+Message-Id: <20180306130053.13958-4-cmaiolino@redhat.com>
 In-Reply-To: <20180306130053.13958-1-cmaiolino@redhat.com>
 References: <20180306130053.13958-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -24,203 +24,127 @@ To: linux-xfs@vger.kernel.org
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- libxfs/libxfs_io.h       |  1 -
- libxfs/rdwr.c            |  6 +++---
- logprint/log_print_all.c |  4 ++--
- mkfs/proto.c             |  4 ++--
- mkfs/xfs_mkfs.c          | 14 +++++++-------
- repair/agheader.c        |  6 +++---
- repair/phase6.c          |  4 ++--
- repair/prefetch.c        |  2 +-
- 8 files changed, 20 insertions(+), 21 deletions(-)
+ libxfs/libxfs_io.h   | 1 -
+ libxfs/logitem.c     | 2 +-
+ libxfs/rdwr.c        | 2 +-
+ libxfs/trans.c       | 2 +-
+ mkfs/proto.c         | 6 +++---
+ repair/attr_repair.c | 4 ++--
+ repair/dino_chunks.c | 2 +-
+ repair/prefetch.c    | 2 +-
+ 8 files changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 6308a742..a1c62071 100644
+index 04bbc9b7..f429d667 100644
 --- a/libxfs/libxfs_io.h
 +++ b/libxfs/libxfs_io.h
-@@ -97,7 +97,6 @@ enum xfs_buf_flags_t {	/* b_flags bits */
- 
- #define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
- 
--#define XFS_BUF_PTR(bp)			((char *)(bp)->b_addr)
+@@ -100,7 +100,6 @@ enum xfs_buf_flags_t {	/* b_flags bits */
  #define xfs_buf_offset(bp, offset)	((bp)->b_addr + (offset))
  #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
  #define XFS_BUF_SIZE(bp)		((bp)->b_bcount)
+-#define XFS_BUF_COUNT(bp)		((bp)->b_bcount)
+ #define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
+ 	(bp)->b_addr = (char *)(p);		\
+ 	XFS_BUF_SET_COUNT(bp,cnt);		\
+diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+index 39ac1923..afe1570c 100644
+--- a/libxfs/logitem.c
++++ b/libxfs/logitem.c
+@@ -120,7 +120,7 @@ xfs_buf_item_init(
+ 	bip->bli_buf = bp;
+ 	bip->bli_format.blf_type = XFS_LI_BUF;
+ 	bip->bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
+-	bip->bli_format.blf_len = (unsigned short)BTOBB(XFS_BUF_COUNT(bp));
++	bip->bli_format.blf_len = (unsigned short)BTOBB(bp->b_bcount);
+ 	bp->b_log_item = bip;
+ }
+ 
 diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 3c5def29..7c633106 100644
+index 7c633106..5077d074 100644
 --- a/libxfs/rdwr.c
 +++ b/libxfs/rdwr.c
 @@ -143,7 +143,7 @@ static char *next(
  	struct xfs_buf	*buf = (struct xfs_buf *)private;
  
  	if (buf &&
--	    (XFS_BUF_COUNT(buf) < (int)(ptr - XFS_BUF_PTR(buf)) + offset))
-+	    (XFS_BUF_COUNT(buf) < (int)(ptr - (char *)buf->b_addr) + offset))
+-	    (XFS_BUF_COUNT(buf) < (int)(ptr - (char *)buf->b_addr) + offset))
++	    (buf->b_bcount < (int)(ptr - (char *)buf->b_addr) + offset))
  		abort();
  
  	return ptr + offset;
-@@ -204,7 +204,7 @@ libxfs_log_clear(
- 	ptr = dptr;
- 	if (btp) {
- 		bp = libxfs_getbufr(btp, start, len);
--		ptr = XFS_BUF_PTR(bp);
-+		ptr = bp->b_addr;
- 	}
- 	libxfs_log_header(ptr, fs_uuid, version, sunit, fmt, lsn, tail_lsn,
- 			  next, bp);
-@@ -252,7 +252,7 @@ libxfs_log_clear(
- 		ptr = dptr;
- 		if (btp) {
- 			bp = libxfs_getbufr(btp, blk, len);
--			ptr = XFS_BUF_PTR(bp);
-+			ptr = bp->b_addr;
- 		}
- 		/*
- 		 * Note: pass the full buffer length as the sunit to initialize
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index cdaf77bf..aa5bcea0 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -39,10 +39,10 @@ xlog_print_find_oldest(
- 	first_blk = 0;		/* read first block */
- 	bp = xlog_get_bp(log, 1);
- 	xlog_bread_noalign(log, 0, 1, bp);
--	first_half_cycle = xlog_get_cycle(XFS_BUF_PTR(bp));
-+	first_half_cycle = xlog_get_cycle(bp->b_addr);
- 	*last_blk = log->l_logBBsize-1;	/* read last block */
- 	xlog_bread_noalign(log, *last_blk, 1, bp);
--	last_half_cycle = xlog_get_cycle(XFS_BUF_PTR(bp));
-+	last_half_cycle = xlog_get_cycle(bp->b_addr);
- 	ASSERT(last_half_cycle != 0);
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 0e7b7ae0..3e80e0cb 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -402,7 +402,7 @@ libxfs_trans_log_buf(
+ {
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
  
- 	if (first_half_cycle == last_half_cycle) /* all cycle nos are same */
+-	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
++	ASSERT((first <= last) && (last < bp->b_bcount));
+ 
+ 	xfs_trans_dirty_buf(tp, bp);
+ 	xfs_buf_item_log(bip, first, last);
 diff --git a/mkfs/proto.c b/mkfs/proto.c
-index bc383458..a0a833d0 100644
+index a0a833d0..66b8115f 100644
 --- a/mkfs/proto.c
 +++ b/mkfs/proto.c
-@@ -275,9 +275,9 @@ newfile(
- 		d = XFS_FSB_TO_DADDR(mp, map.br_startblock);
+@@ -276,10 +276,10 @@ newfile(
  		bp = libxfs_trans_get_buf(logit ? tp : 0, mp->m_dev, d,
  			nb << mp->m_blkbb_log, 0);
--		memmove(XFS_BUF_PTR(bp), buf, len);
-+		memmove(bp->b_addr, buf, len);
- 		if (len < XFS_BUF_COUNT(bp))
--			memset(XFS_BUF_PTR(bp) + len, 0, XFS_BUF_COUNT(bp) - len);
-+			memset(bp->b_addr + len, 0, XFS_BUF_COUNT(bp) - len);
+ 		memmove(bp->b_addr, buf, len);
+-		if (len < XFS_BUF_COUNT(bp))
+-			memset(bp->b_addr + len, 0, XFS_BUF_COUNT(bp) - len);
++		if (len < bp->b_bcount)
++			memset(bp->b_addr + len, 0, bp->b_bcount - len);
  		if (logit)
- 			libxfs_trans_log_buf(tp, bp, 0, XFS_BUF_COUNT(bp) - 1);
+-			libxfs_trans_log_buf(tp, bp, 0, XFS_BUF_COUNT(bp) - 1);
++			libxfs_trans_log_buf(tp, bp, 0, bp->b_bcount - 1);
  		else
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f973b6bc..6be09059 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3299,7 +3299,7 @@ prepare_devices(
- 	 */
- 	buf = libxfs_getbuf(mp->m_ddev_targp, (xi->dsize - whack_blks),
- 			    whack_blks);
--	memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
-+	memset(buf->b_addr, 0, WHACK_SIZE);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- 	libxfs_purgebuf(buf);
- 
-@@ -3310,15 +3310,15 @@ prepare_devices(
- 	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
- 	 */
- 	buf = libxfs_getbuf(mp->m_ddev_targp, 0, whack_blks);
--	memset(XFS_BUF_PTR(buf), 0, WHACK_SIZE);
-+	memset(buf->b_addr, 0, WHACK_SIZE);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- 	libxfs_purgebuf(buf);
- 
- 	/* OK, now write the superblock... */
- 	buf = libxfs_getbuf(mp->m_ddev_targp, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
- 	buf->b_ops = &xfs_sb_buf_ops;
--	memset(XFS_BUF_PTR(buf), 0, cfg->sectorsize);
--	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp);
-+	memset(buf->b_addr, 0, cfg->sectorsize);
-+	libxfs_sb_to_disk((void *)buf->b_addr, sbp);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- 	libxfs_purgebuf(buf);
- 
-@@ -3338,7 +3338,7 @@ prepare_devices(
- 		buf = libxfs_getbuf(mp->m_rtdev_targp,
- 				    XFS_FSB_TO_BB(mp, cfg->rtblocks - 1LL),
- 				    BTOBB(cfg->blocksize));
--		memset(XFS_BUF_PTR(buf), 0, cfg->blocksize);
-+		memset(buf->b_addr, 0, cfg->blocksize);
- 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- 		libxfs_purgebuf(buf);
+ 			libxfs_writebuf(bp, LIBXFS_EXIT_ON_FAILURE);
  	}
-@@ -3382,8 +3382,8 @@ initialise_ag_headers(
- 			XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
- 			XFS_FSS_TO_BB(mp, 1));
- 	buf->b_ops = &xfs_sb_buf_ops;
--	memset(XFS_BUF_PTR(buf), 0, cfg->sectorsize);
--	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp);
-+	memset(buf->b_addr, 0, cfg->sectorsize);
-+	libxfs_sb_to_disk((void *)buf->b_addr, sbp);
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- 
- 	/*
-diff --git a/repair/agheader.c b/repair/agheader.c
-index cce376f2..df3c3fe3 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -290,8 +290,8 @@ secondary_sb_whack(
- 			+ sizeof(sb->sb_dirblklog);
- 
- 	/* Check the buffer we read from disk for garbage outside size */
--	for (ip = XFS_BUF_PTR(sbuf) + size;
--	     ip < XFS_BUF_PTR(sbuf) + mp->m_sb.sb_sectsize;
-+	for (ip = sbuf->b_addr + size;
-+	     ip < (char *)sbuf->b_addr + mp->m_sb.sb_sectsize;
- 	     ip++)  {
- 		if (*ip)  {
- 			do_bzero = 1;
-@@ -314,7 +314,7 @@ secondary_sb_whack(
- 			memcpy(&tmpuuid, &sb->sb_meta_uuid, sizeof(uuid_t));
- 			memset((void *)((intptr_t)sb + size), 0,
- 				mp->m_sb.sb_sectsize - size);
--			memset(XFS_BUF_PTR(sbuf) + size, 0,
-+			memset(sbuf->b_addr + size, 0,
- 				mp->m_sb.sb_sectsize - size);
- 			/* Preserve meta_uuid so we don't fail uuid checks */
- 			memcpy(&sb->sb_meta_uuid, &tmpuuid, sizeof(uuid_t));
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 1a398aa1..65d2fd9e 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -632,7 +632,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
- 			return(1);
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 8b1b8a75..39569ebe 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -437,9 +437,9 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
+ 			break;
  		}
  
--		memmove(XFS_BUF_PTR(bp), bmp, mp->m_sb.sb_blocksize);
-+		memmove(bp->b_addr, bmp, mp->m_sb.sb_blocksize);
+-		ASSERT(mp->m_sb.sb_blocksize == XFS_BUF_COUNT(bp));
++		ASSERT(mp->m_sb.sb_blocksize == bp->b_bcount);
  
- 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+-		length = MIN(XFS_BUF_COUNT(bp) - hdrsize, valuelen - amountdone);
++		length = MIN(bp->b_bcount - hdrsize, valuelen - amountdone);
+ 		memmove(value, bp->b_addr + hdrsize, length);
+ 		amountdone += length;
+ 		value += length;
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 17de95f5..1c7f9c8d 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -689,7 +689,7 @@ process_inode_chunk(
  
-@@ -704,7 +704,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
- 			return(1);
- 		}
+ 		pftrace("readbuf %p (%llu, %d) in AG %d", bplist[bp_index],
+ 			(long long)XFS_BUF_ADDR(bplist[bp_index]),
+-			XFS_BUF_COUNT(bplist[bp_index]), agno);
++			bplist[bp_index]->b_bcount, agno);
  
--		memmove(XFS_BUF_PTR(bp), smp, mp->m_sb.sb_blocksize);
-+		memmove(bp->b_addr, smp, mp->m_sb.sb_blocksize);
- 
- 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+ 		bplist[bp_index]->b_ops = &xfs_inode_buf_ops;
  
 diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 9c68e35c..0783d225 100644
+index 0783d225..ff40d18d 100644
 --- a/repair/prefetch.c
 +++ b/repair/prefetch.c
-@@ -591,7 +591,7 @@ pf_batch_read(
- 				size = XFS_BUF_SIZE(bplist[i]);
- 				if (len < size)
- 					break;
--				memcpy(XFS_BUF_PTR(bplist[i]), pbuf, size);
-+				memcpy(bplist[i]->b_addr, pbuf, size);
- 				bplist[i]->b_flags |= (LIBXFS_B_UPTODATE |
- 						       LIBXFS_B_UNCHECKED);
- 				len -= size;
+@@ -403,7 +403,7 @@ pf_read_inode_dirs(
+ 	if (bp->b_error)
+ 		return;
+ 
+-	for (icnt = 0; icnt < (XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog); icnt++) {
++	for (icnt = 0; icnt < (bp->b_bcount >> mp->m_sb.sb_inodelog); icnt++) {
+ 		dino = xfs_make_iptr(mp, bp, icnt);
+ 
+ 		/*
 -- 
 2.14.3
 
