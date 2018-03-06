@@ -1,58 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:43878 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424852AbeCBJOg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Mar 2018 04:14:36 -0500
-Received: by mail-qk0-f196.google.com with SMTP id j4so11080940qke.10
-        for <linux-xfs@vger.kernel.org>; Fri, 02 Mar 2018 01:14:36 -0800 (PST)
+Received: from mx2.suse.de ([195.135.220.15]:33460 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750933AbeCFK5S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 05:57:18 -0500
+Date: Tue, 6 Mar 2018 11:57:16 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] inode: don't memset the inode address space twice
+Message-ID: <20180306105716.rqi2solaa6lkbqyt@quack2.suse.cz>
+References: <20180301223402.26897-1-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxjfmrJ3OPAOJ_cVQjfmMeHbcJL3gWVdHEATa_FGPWLzCA@mail.gmail.com>
-References: <CAJfpegtMhcAFpVk0TkAxdoiJzDqYFHFNzykztTGWfii52rPazA@mail.gmail.com>
- <CAOQ4uxjfmrJ3OPAOJ_cVQjfmMeHbcJL3gWVdHEATa_FGPWLzCA@mail.gmail.com>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Fri, 2 Mar 2018 10:14:35 +0100
-Message-ID: <CAJfpeguueNEu+vJteL-6MVnerWmN=fNKbNbrP7tMDZg-exFccg@mail.gmail.com>
-Subject: Re: Weird overlayfs/xfs bug on v4.15
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180301223402.26897-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Mar 2, 2018 at 10:07 AM, Amir Goldstein <amir73il@gmail.com> wrote:
-> On Fri, Mar 2, 2018 at 10:25 AM, Miklos Szeredi <miklos@szeredi.hu> wrote:
->> Hi,
->>
->> I get xfstests failure of overlay/017 on a kvm guest.  The symptom is
->> that the chardev turns into a whiteout (i.e. the 1/1 device number
->> magically turns to 0/0 after flushing the caches) but then turns back
->> into the old chardev on remount or another cache flush.  So the
->> underlying xfs is not currupted but the cache is (verified that i_rdev
->> was indeed zeroed out on the relevant inode).
->>
->> Btw. i_rdev on the blkdev also turned zero, but the test doesn't
->> respond to that, because it's only checking the inum and not other
->> attributes.
->>
->> The test triggers reliably, but shows signs of a heisenbug (e.g.
->> adding printks lessens or eliminates the chance of triggering)
->>
->> Attaching the full xfs trace, the output of the testcase and guest
->> kernel config.
->>
->> Haven't been able to reproduce without overlayfs, so possibly
->> overlayfs is the culprit.
->>
->> Any ideas?
->>
->
-> That is supposed to be fixed by
-> acd1d71598f7 xfs: preserve i_rdev when recycling a reclaimable inode
->
-> It fixes a v4.15 regression.
+On Fri 02-03-18 09:34:02, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Noticed when looking at why cycling 600k inodes/s through the inode
+> cache was taking a total of 8% cpu in memset() during inode
+> initialisation.  There is no need to zero the inode.i_data structure
+> twice.
+> 
+> This increases single threaded bulkstat throughput from ~200,000
+> inodes/s to ~220,000 inodes/s, so we save a substantial amount of
+> CPU time per inode init by doing this.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 
-Ah, thanks.  Missed that due to not having the Cc: stable tag.
+Nice and the patch looks good. You can add:
 
-Thanks,
-Miklos
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  fs/inode.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 6295f1415761..b153aeaa61ea 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -346,9 +346,8 @@ void inc_nlink(struct inode *inode)
+>  }
+>  EXPORT_SYMBOL(inc_nlink);
+>  
+> -void address_space_init_once(struct address_space *mapping)
+> +static void __address_space_init_once(struct address_space *mapping)
+>  {
+> -	memset(mapping, 0, sizeof(*mapping));
+>  	INIT_RADIX_TREE(&mapping->page_tree, GFP_ATOMIC | __GFP_ACCOUNT);
+>  	spin_lock_init(&mapping->tree_lock);
+>  	init_rwsem(&mapping->i_mmap_rwsem);
+> @@ -356,6 +355,12 @@ void address_space_init_once(struct address_space *mapping)
+>  	spin_lock_init(&mapping->private_lock);
+>  	mapping->i_mmap = RB_ROOT_CACHED;
+>  }
+> +
+> +void address_space_init_once(struct address_space *mapping)
+> +{
+> +	memset(mapping, 0, sizeof(*mapping));
+> +	__address_space_init_once(mapping);
+> +}
+>  EXPORT_SYMBOL(address_space_init_once);
+>  
+>  /*
+> @@ -371,7 +376,7 @@ void inode_init_once(struct inode *inode)
+>  	INIT_LIST_HEAD(&inode->i_io_list);
+>  	INIT_LIST_HEAD(&inode->i_wb_list);
+>  	INIT_LIST_HEAD(&inode->i_lru);
+> -	address_space_init_once(&inode->i_data);
+> +	__address_space_init_once(&inode->i_data);
+>  	i_size_ordered_init(inode);
+>  }
+>  EXPORT_SYMBOL(inode_init_once);
+> -- 
+> 2.16.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
