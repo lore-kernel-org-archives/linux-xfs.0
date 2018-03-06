@@ -1,23 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47302 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755104AbeCHIIi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 03:08:38 -0500
-Date: Thu, 8 Mar 2018 00:08:37 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
-Message-ID: <20180308080837.GB15163@infradead.org>
-References: <20180306102638.25322-1-vbendel@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:48078 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754270AbeCFXcv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Mar 2018 18:32:51 -0500
+Date: Tue, 6 Mar 2018 15:32:46 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/5] libxfs-apply: add Signed-off-by:
+Message-ID: <20180306233246.GR18989@magnolia>
+References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+ <12ef6721-1f1d-9dfa-507f-47e3d8143234@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180306102638.25322-1-vbendel@redhat.com>
+In-Reply-To: <12ef6721-1f1d-9dfa-507f-47e3d8143234@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vratislav Bendel <vbendel@redhat.com>
-Cc: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Looks good,
+> Subject: [PATCH 6/5] libxfs-apply: add Signed-off-by:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Heh.  Everybody's doing it!
+
+On Tue, Mar 06, 2018 at 05:24:16PM -0600, Eric Sandeen wrote:
+> Technically when a maintainer moves a patch from another project,
+> they should add their Signed-off-by: tag.  Pick up SOB info
+> from git-config, and add an option to override that value if
+> desired.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> --
+> 
+> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+> index e7d7e0a..2957fa0 100755
+> --- a/tools/libxfs-apply
+> +++ b/tools/libxfs-apply
+> @@ -8,7 +8,7 @@ usage()
+>  	echo $*
+>  	echo
+>  	echo "Usage:"
+> -	echo "	libxfs-apply [--verbose] --source <repodir> --commit <commit_id>"
+> +	echo "	libxfs-apply [--verbose] [--sob <name/email>] --source <repodir> --commit <commit_id>"
+>  	echo "	libxfs-apply --patch <patchfile>"
+>  	echo
+>  	echo "libxfs-apply should be run in the destination git repository."
+> @@ -73,6 +73,7 @@ while [ $# -gt 0 ]; do
+>  	--source)	REPO=$2 ; shift ;;
+>  	--patch)	PATCH=$2; shift ;;
+>  	--commit)	COMMIT_ID=$2 ; shift ;;
+> +	--sob)		SIGNED_OFF_BY=$2 ; shift ;;
+
+Heh.
+
+>  	--verbose)	VERBOSE=true ;;
+>  	*)		usage ;;
+>  	esac
+> @@ -274,6 +275,20 @@ fixup_header_format()
+>  			print $0
+>  		}' > $_hdr.new
+>  
+> +	# Remove the last line if it contains only whitespace
+> +	sed -i '${/^ *$/d;}' $_hdr.new
+
+'/^[[:space:]]*$/d' ?
+
+Just in case my computer starts dumping tabs into the commit messages.
+
+> +
+> +	# Add Signed-off-by: header if specified
+> +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
+> +		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
+> +	else	# get it from git config if present
+> +		SOB_NAME=`git config --get user.name`
+> +		SOB_EMAIL=`git config --get user.email`
+> +		if [ ! -z ${SOB_NAME+x} ]; then
+> +			echo "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" >> $_hdr.new
+
+I don't think it's necessary to add your sob if it's already on the
+kernel patch.
+
+--D
+
+> +		fi
+> +	fi
+> +
+>  	# now output the new patch
+>  	cat $_hdr.new $_diff
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
