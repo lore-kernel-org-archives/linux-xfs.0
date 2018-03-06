@@ -1,68 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43262 "EHLO mx2.suse.de"
+Received: from sandeen.net ([63.231.237.45]:39616 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751992AbeCWRIO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Mar 2018 13:08:14 -0400
-Date: Fri, 23 Mar 2018 17:08:13 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
- during ifree
-Message-ID: <20180323170813.GD30543@wotan.suse.de>
-References: <20171123060137.GL2135@magnolia>
- <20180323013037.GA9190@wotan.suse.de>
- <20180323034145.GH4818@magnolia>
+        id S1753864AbeCFRQx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 12:16:53 -0500
+Subject: Re: [PATCH 04/16] xfs_scrub: don't ask user to run xfs_repair for
+ only warnings
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+ <151993160036.22223.2742740914776483127.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <63982341-7cce-68c0-144c-b24b279ddc3f@sandeen.net>
+Date: Tue, 6 Mar 2018 11:16:50 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180323034145.GH4818@magnolia>
+In-Reply-To: <151993160036.22223.2742740914776483127.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
-On Thu, Mar 22, 2018 at 08:41:45PM -0700, Darrick J. Wong wrote:
-> On Fri, Mar 23, 2018 at 01:30:37AM +0000, Luis R. Rodriguez wrote:
-> > On Wed, Nov 22, 2017 at 10:01:37PM -0800, Darrick J. Wong wrote:
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index 61d1cb7..8012741 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -2401,6 +2401,24 @@ xfs_ifree_cluster(
-> > >  }
-> > >  
-> > >  /*
-> > > + * Free any local-format buffers sitting around before we reset to
-> > > + * extents format.
-> > > + */
-> > > +static inline void
-> > > +xfs_ifree_local_data(
-> > > +	struct xfs_inode	*ip,
-> > > +	int			whichfork)
-> > > +{
-> > > +	struct xfs_ifork	*ifp;
-> > > +
-> > > +	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
-> > > +		return;
-> > 
-> > I'm new to all this so this was a bit hard to follow. I'm confused with how
-> > commit 43518812d2 ("xfs: remove support for inlining data/extents into the
-> > inode fork") exacerbated the leak, isn't that commit about
-> > XFS_DINODE_FMT_EXTENTS?
+
+
+On 3/1/18 1:13 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Not specifically _EXTENTS, merely any fork (EXTENTS or LOCAL) whose
-> incore data was small enough to fit in if_inline_ata.
-
-Got it, I thought those were XFS_DINODE_FMT_EXTENTS by definition.
-
-> > Did we have cases where the format was XFS_DINODE_FMT_LOCAL and yet
-> > ifp->if_u1.if_data == ifp->if_u2.if_inline_data ?
+> Don't advise the user to run xfs_repair on a filesystem that triggers
+> warnings but no errors; there's no corruption for it to fix.
 > 
-> An empty directory is 6 bytes, which is what you get with a fresh mkdir
-> or after deleting everything in the directory.  Prior to the 43518812d2
-> patch we could get away with not even checking if we had to free if_data
-> when deleting a directory because it fit within if_inline_data.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ah got it. So your fix *is* also applicable even prior to commit 43518812d2.
+I went looking for why ->need_repair is set if repair isn't needed, and:
 
-  Luis
+C symbol: need_repair
+
+  File              Function	   Line
+0 scrub/xfs_scrub.h <global>        98 bool need_repair;
+1 scrub/phase1.c    xfs_setup_fs   239 ctx->need_repair = true;
+2 scrub/xfs_scrub.c report_outcome 517 if (ctx->need_repair)
+
+um, when is ->need_repair ever false?  What am I missing?
+
+> ---
+>  scrub/xfs_scrub.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+> index ab26e63..53a105a 100644
+> --- a/scrub/xfs_scrub.c
+> +++ b/scrub/xfs_scrub.c
+> @@ -514,7 +514,7 @@ report_outcome(
+>  		fprintf(stderr, _("%s: errors found: %llu; warnings found: %llu\n"),
+>  				ctx->mntpoint, total_errors,
+>  				ctx->warnings_found);
+> -	if (ctx->need_repair)
+> +	if (ctx->need_repair && total_errors > 0)
+>  		fprintf(stderr, _("%s: Unmount and run xfs_repair.\n"),
+>  				ctx->mntpoint);
+>  }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
