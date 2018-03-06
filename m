@@ -1,68 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58506 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:37148 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753904AbeCFVzz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Mar 2018 16:55:55 -0500
-Subject: [PATCH 3/5] libxfs: move xfs_inode_zone to rdwr.c
-References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+        id S932687AbeCFXhI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 18:37:08 -0500
+Subject: [PATCH 4/5 V2] libxfs: Catch non-empty zones on destroy
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ab899bab-b034-1167-21e7-073ce5258082@sandeen.net>
-Date: Tue, 6 Mar 2018 15:55:54 -0600
+References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+ <c2dd15a8-a048-6373-2fad-3ffd28a606e0@sandeen.net>
+Message-ID: <7fe7fc2a-8ed6-80d7-0727-0093b19f3164@sandeen.net>
+Date: Tue, 6 Mar 2018 17:37:06 -0600
 MIME-Version: 1.0
-In-Reply-To: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+In-Reply-To: <c2dd15a8-a048-6373-2fad-3ffd28a606e0@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-The zone itself is created in rdwr.c, so define it there as
-well, and add it to the list of externs in manage_zones along
-with all the rest, for consistency.
+Create and use a kmem_zone_destroy which warns if we are
+releasing a non-empty zone when the LIBXFS_LEAK_CHECK
+environment variable is set, wire this into libxfs_destroy(),
+and call that when various tools exit.
+
+The LIBXFS_LEAK_CHECK environment variable also causes
+the program to exit with failure when a leak is detected,
+useful for failing automated tests if leaks are encountered.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- libxfs/init.c | 3 +--
- libxfs/rdwr.c | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
 
+v2 fprintf, stderr
+
+ include/kmem.h |  1 +
+ libxfs/init.c  | 36 +++++++++++++++++++++++-------------
+ libxfs/kmem.c  | 14 ++++++++++++++
+ 3 files changed, 38 insertions(+), 13 deletions(-)
+
+
+
+diff --git a/include/kmem.h b/include/kmem.h
+index 65f0ade..572a4fa 100644
+--- a/include/kmem.h
++++ b/include/kmem.h
+@@ -33,6 +33,7 @@ typedef struct kmem_zone {
+ extern kmem_zone_t *kmem_zone_init(int, char *);
+ extern void	*kmem_zone_alloc(kmem_zone_t *, int);
+ extern void	*kmem_zone_zalloc(kmem_zone_t *, int);
++extern int	kmem_zone_destroy(kmem_zone_t *);
+ 
+ static inline void
+ kmem_zone_free(kmem_zone_t *zone, void *ptr)
 diff --git a/libxfs/init.c b/libxfs/init.c
-index c7d73b6..3456cb5 100644
+index 3456cb5..a65c86c 100644
 --- a/libxfs/init.c
 +++ b/libxfs/init.c
-@@ -45,8 +45,6 @@ int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
+@@ -43,7 +43,7 @@ int libxfs_bhash_size;		/* #buckets in bcache */
  
- static void manage_zones(int);	/* setup global zones */
+ int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
  
--kmem_zone_t	*xfs_inode_zone;
--
+-static void manage_zones(int);	/* setup global zones */
++static int manage_zones(int);	/* setup/teardown global zones */
+ 
  /*
   * dev_map - map open devices to fd.
+@@ -372,7 +372,7 @@ done:
+ /*
+  * Initialize/destroy all of the zone allocators we use.
   */
-@@ -379,6 +377,7 @@ manage_zones(int release)
+-static void
++static int
+ manage_zones(int release)
  {
  	extern kmem_zone_t	*xfs_buf_zone;
- 	extern kmem_zone_t	*xfs_ili_zone;
-+	extern kmem_zone_t	*xfs_inode_zone;
- 	extern kmem_zone_t	*xfs_ifork_zone;
- 	extern kmem_zone_t	*xfs_buf_item_zone;
- 	extern kmem_zone_t	*xfs_da_state_zone;
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 81701b7..3142094 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1351,8 +1351,8 @@ struct cache_operations libxfs_bcache_operations = {
-  * Inode cache stubs.
-  */
+@@ -388,16 +388,20 @@ manage_zones(int release)
+ 	extern void		xfs_dir_startup();
  
-+kmem_zone_t		*xfs_inode_zone;
- extern kmem_zone_t	*xfs_ili_zone;
--extern kmem_zone_t	*xfs_inode_zone;
+ 	if (release) {	/* free zone allocation */
+-		kmem_free(xfs_buf_zone);
+-		kmem_free(xfs_inode_zone);
+-		kmem_free(xfs_ifork_zone);
+-		kmem_free(xfs_buf_item_zone);
+-		kmem_free(xfs_da_state_zone);
+-		kmem_free(xfs_btree_cur_zone);
+-		kmem_free(xfs_bmap_free_item_zone);
+-		kmem_free(xfs_trans_zone);
+-		kmem_free(xfs_log_item_desc_zone);
+-		return;
++		int	leaked = 0;
++
++		leaked += kmem_zone_destroy(xfs_buf_zone);
++		leaked += kmem_zone_destroy(xfs_ili_zone);
++		leaked += kmem_zone_destroy(xfs_inode_zone);
++		leaked += kmem_zone_destroy(xfs_ifork_zone);
++		leaked += kmem_zone_destroy(xfs_buf_item_zone);
++		leaked += kmem_zone_destroy(xfs_da_state_zone);
++		leaked += kmem_zone_destroy(xfs_btree_cur_zone);
++		leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
++		leaked += kmem_zone_destroy(xfs_trans_zone);
++		leaked += kmem_zone_destroy(xfs_log_item_desc_zone);
++
++		return leaked;
+ 	}
+ 	/* otherwise initialise zone allocation */
+ 	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
+@@ -419,6 +423,8 @@ manage_zones(int release)
+ 	xfs_log_item_desc_zone = kmem_zone_init(
+ 			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
+ 	xfs_dir_startup();
++
++	return 0;
+ }
  
  /*
-  * If there are inline format data / attr forks attached to this inode,
--- 
-1.8.3.1
+@@ -887,11 +893,15 @@ libxfs_umount(xfs_mount_t *mp)
+ void
+ libxfs_destroy(void)
+ {
++	int	leaked;
++
+ 	/* Free everything from the buffer cache before freeing buffer zone */
+ 	libxfs_bcache_purge();
+ 	libxfs_bcache_free();
+ 	cache_destroy(libxfs_bcache);
+-	manage_zones(1);
++	leaked = manage_zones(1);
++	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
++		exit(1);
+ }
+ 
+ int
+diff --git a/libxfs/kmem.c b/libxfs/kmem.c
+index c8bcb50..256db94 100644
+--- a/libxfs/kmem.c
++++ b/libxfs/kmem.c
+@@ -23,6 +23,20 @@ kmem_zone_init(int size, char *name)
+ 	return ptr;
+ }
+ 
++int
++kmem_zone_destroy(kmem_zone_t *zone)
++{
++	int	leaked = 0;
++
++	if (getenv("LIBXFS_LEAK_CHECK") && zone->allocated) {
++		leaked = 1;
++		fprintf(stderr, "zone %s freed with %d items allocated\n",
++				zone->zone_name, zone->allocated);
++	}
++	free(zone);
++	return leaked;
++}
++
+ void *
+ kmem_zone_alloc(kmem_zone_t *zone, int flags)
+ {
+
 
