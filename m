@@ -1,38 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:41716 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750989AbeCGJK0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Mar 2018 04:10:26 -0500
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1etV5b-0000q4-6C
-        for linux-xfs@vger.kernel.org; Wed, 07 Mar 2018 20:10:23 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.90_1)
-        (envelope-from <david@fromorbit.com>)
-        id 1etV5b-0001eP-2Q
-        for linux-xfs@vger.kernel.org; Wed, 07 Mar 2018 20:10:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/2] xfs: fix transaction joining problems.
-Date: Wed,  7 Mar 2018 20:10:18 +1100
-Message-Id: <20180307091020.6186-1-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34830 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753904AbeCFVwY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 16:52:24 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C014D61476
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Mar 2018 21:52:24 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 934CF600D3
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Mar 2018 21:52:24 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/5] xfsprogs: my very own patchbomb
+Message-ID: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+Date: Tue, 6 Mar 2018 15:52:23 -0600
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi folks,
-
-I found these when tracking down a hang in some new code I wrote
-this afternoon. Joining a log item mulitple times to the same
-transaction violates the relationship assumptions between
-transactions and log items. It broke the code I wrote this afternoon
-so subtly it took me several hours to track this down....
-
-I don't know of any issues that can be attributed to these bugs, but
-it's incorrect behaviour that needs fixing.
-
-Cheers,
-
-Dave.
-
+Mostly resends of previously-sent patches, fixed up per
+prior comments.
