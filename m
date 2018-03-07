@@ -1,108 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55012 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753878AbeCFXol (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Mar 2018 18:44:41 -0500
-Date: Tue, 6 Mar 2018 15:44:35 -0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:43270 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753873AbeCGAeJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Mar 2018 19:34:09 -0500
+Date: Tue, 6 Mar 2018 16:34:03 -0800
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/5] libxfs-apply: add Signed-off-by:
-Message-ID: <20180306234435.GT18989@magnolia>
-References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
- <12ef6721-1f1d-9dfa-507f-47e3d8143234@sandeen.net>
- <20180306233246.GR18989@magnolia>
- <655fcd7d-83ff-cb4d-3f67-60fa876a94e8@redhat.com>
+Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
+Message-ID: <20180307003403.GU18989@magnolia>
+References: <20180306102638.25322-1-vbendel@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <655fcd7d-83ff-cb4d-3f67-60fa876a94e8@redhat.com>
+In-Reply-To: <20180306102638.25322-1-vbendel@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Vratislav Bendel <vbendel@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
 
-On Tue, Mar 06, 2018 at 05:36:12PM -0600, Eric Sandeen wrote:
-> On 3/6/18 5:32 PM, Darrick J. Wong wrote:
-> >> Subject: [PATCH 6/5] libxfs-apply: add Signed-off-by:
-> > 
-> > Heh.  Everybody's doing it!
-> > 
-> > On Tue, Mar 06, 2018 at 05:24:16PM -0600, Eric Sandeen wrote:
-> >> Technically when a maintainer moves a patch from another project,
-> >> they should add their Signed-off-by: tag.  Pick up SOB info
-> >> from git-config, and add an option to override that value if
-> >> desired.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> --
-> >>
-> >> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
-> >> index e7d7e0a..2957fa0 100755
-> >> --- a/tools/libxfs-apply
-> >> +++ b/tools/libxfs-apply
-> >> @@ -8,7 +8,7 @@ usage()
-> >>  	echo $*
-> >>  	echo
-> >>  	echo "Usage:"
-> >> -	echo "	libxfs-apply [--verbose] --source <repodir> --commit <commit_id>"
-> >> +	echo "	libxfs-apply [--verbose] [--sob <name/email>] --source <repodir> --commit <commit_id>"
-> >>  	echo "	libxfs-apply --patch <patchfile>"
-> >>  	echo
-> >>  	echo "libxfs-apply should be run in the destination git repository."
-> >> @@ -73,6 +73,7 @@ while [ $# -gt 0 ]; do
-> >>  	--source)	REPO=$2 ; shift ;;
-> >>  	--patch)	PATCH=$2; shift ;;
-> >>  	--commit)	COMMIT_ID=$2 ; shift ;;
-> >> +	--sob)		SIGNED_OFF_BY=$2 ; shift ;;
-> > 
-> > Heh.
-> > 
-> >>  	--verbose)	VERBOSE=true ;;
-> >>  	*)		usage ;;
-> >>  	esac
-> >> @@ -274,6 +275,20 @@ fixup_header_format()
-> >>  			print $0
-> >>  		}' > $_hdr.new
-> >>  
-> >> +	# Remove the last line if it contains only whitespace
-> >> +	sed -i '${/^ *$/d;}' $_hdr.new
-> > 
-> > '/^[[:space:]]*$/d' ?
-> > 
-> > Just in case my computer starts dumping tabs into the commit messages.
+On Tue, Mar 06, 2018 at 11:26:38AM +0100, Vratislav Bendel wrote:
+> Due to an inverted logic mistake in xfs_buftarg_isolate()
+> the xfs_buffers with zero b_lru_ref will take another trip
+> around LRU, while isolating buffers with non-zero b_lru_ref.
 > 
-> I guess - this is filtering what it's actually doing today.... but *shrug* ok.
-
-D'oh, I forgot that the leading '$' makes it only operate on the last
-line.  Disregard this comment.
-
-> >> +
-> >> +	# Add Signed-off-by: header if specified
-> >> +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
-> >> +		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
-> >> +	else	# get it from git config if present
-> >> +		SOB_NAME=`git config --get user.name`
-> >> +		SOB_EMAIL=`git config --get user.email`
-> >> +		if [ ! -z ${SOB_NAME+x} ]; then
-> >> +			echo "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" >> $_hdr.new
-> > 
-> > I don't think it's necessary to add your sob if it's already on the
-> > kernel patch.
+> Additionally those isolated buffers end up right back on the LRU
+> once they are released, because b_lru_ref remains elevated.
 > 
-> maybe not, but it doesn't hurt either, it shows the path of the patch over time.
-> Are you worried about an extra line?  I guess I'm not... and I sometimes use
-> different emails depending on the hat I'm wearing, so I'm not that excited about
-> figuring out fancy matching and exclusion here.
+> Fix that circuitous route by leaving them on the LRU
+> as originally intended.
+> 
+> Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok.  Good enough for me. :)
-
-Looks ok,
+Looks ok, tests ok...
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
+>  fs/xfs/xfs_buf.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> -Eric
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index d1da2ee9e6db..ac669a10c62f 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1708,7 +1708,7 @@ xfs_buftarg_isolate(
+>  	 * zero. If the value is already zero, we need to reclaim the
+>  	 * buffer, otherwise it gets another trip through the LRU.
+>  	 */
+> -	if (!atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
+> +	if (atomic_add_unless(&bp->b_lru_ref, -1, 0)) {
+>  		spin_unlock(&bp->b_lock);
+>  		return LRU_ROTATE;
+>  	}
+> -- 
+> 2.14.3
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
