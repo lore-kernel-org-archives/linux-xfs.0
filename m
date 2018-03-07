@@ -1,156 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58522 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753923AbeCFV4M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Mar 2018 16:56:12 -0500
-Subject: [PATCH 4/5] libxfs: Catch non-empty zones on destroy
-References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c2dd15a8-a048-6373-2fad-3ffd28a606e0@sandeen.net>
-Date: Tue, 6 Mar 2018 15:56:11 -0600
-MIME-Version: 1.0
-In-Reply-To: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54146 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933048AbeCGJFR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 7 Mar 2018 04:05:17 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3AC0580AD238
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Mar 2018 09:05:17 +0000 (UTC)
+Received: from odin.brq.redhat.com (unknown [10.43.17.117])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D3B4110B0F49
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Mar 2018 09:05:16 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 3/4] get rid of XFS_BUF_COUNT() macro
+Date: Wed,  7 Mar 2018 10:05:05 +0100
+Message-Id: <20180307090506.30199-4-cmaiolino@redhat.com>
+In-Reply-To: <20180307090506.30199-1-cmaiolino@redhat.com>
+References: <20180307090506.30199-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Create and use a kmem_zone_destroy which warns if we are
-releasing a non-empty zone when the LIBXFS_LEAK_CHECK
-environment variable is set, wire this into libxfs_destroy(),
-and call that when various tools exit.
-
-The LIBXFS_LEAK_CHECK environment variable also causes
-the program to exit with failure when a leak is detected,
-useful for failing automated tests if leaks are encountered.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- include/kmem.h |  1 +
- libxfs/init.c  | 36 +++++++++++++++++++++++-------------
- libxfs/kmem.c  | 14 ++++++++++++++
- 3 files changed, 38 insertions(+), 13 deletions(-)
+V2:
+	Fix conflicts with changes on patch 1
 
-diff --git a/include/kmem.h b/include/kmem.h
-index 65f0ade..572a4fa 100644
---- a/include/kmem.h
-+++ b/include/kmem.h
-@@ -33,6 +33,7 @@ typedef struct kmem_zone {
- extern kmem_zone_t *kmem_zone_init(int, char *);
- extern void	*kmem_zone_alloc(kmem_zone_t *, int);
- extern void	*kmem_zone_zalloc(kmem_zone_t *, int);
-+extern int	kmem_zone_destroy(kmem_zone_t *);
+ libxfs/libxfs_io.h   | 1 -
+ libxfs/logitem.c     | 2 +-
+ libxfs/rdwr.c        | 2 +-
+ libxfs/trans.c       | 2 +-
+ mkfs/proto.c         | 7 +++----
+ repair/attr_repair.c | 4 ++--
+ repair/dino_chunks.c | 2 +-
+ repair/prefetch.c    | 2 +-
+ 8 files changed, 10 insertions(+), 12 deletions(-)
+
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 04bbc9b7..f429d667 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -100,7 +100,6 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+ #define xfs_buf_offset(bp, offset)	((bp)->b_addr + (offset))
+ #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
+ #define XFS_BUF_SIZE(bp)		((bp)->b_bcount)
+-#define XFS_BUF_COUNT(bp)		((bp)->b_bcount)
+ #define XFS_BUF_SET_PTR(bp,p,cnt)	({	\
+ 	(bp)->b_addr = (char *)(p);		\
+ 	XFS_BUF_SET_COUNT(bp,cnt);		\
+diff --git a/libxfs/logitem.c b/libxfs/logitem.c
+index 39ac1923..afe1570c 100644
+--- a/libxfs/logitem.c
++++ b/libxfs/logitem.c
+@@ -120,7 +120,7 @@ xfs_buf_item_init(
+ 	bip->bli_buf = bp;
+ 	bip->bli_format.blf_type = XFS_LI_BUF;
+ 	bip->bli_format.blf_blkno = (int64_t)XFS_BUF_ADDR(bp);
+-	bip->bli_format.blf_len = (unsigned short)BTOBB(XFS_BUF_COUNT(bp));
++	bip->bli_format.blf_len = (unsigned short)BTOBB(bp->b_bcount);
+ 	bp->b_log_item = bip;
+ }
  
- static inline void
- kmem_zone_free(kmem_zone_t *zone, void *ptr)
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 3456cb5..a65c86c 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -43,7 +43,7 @@ int libxfs_bhash_size;		/* #buckets in bcache */
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 9acdb98c..60880de4 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -143,7 +143,7 @@ static char *next(
+ 	struct xfs_buf	*buf = (struct xfs_buf *)private;
  
- int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
+ 	if (buf &&
+-	    (XFS_BUF_COUNT(buf) < (int)(ptr - (char *)buf->b_addr) + offset))
++	    (buf->b_bcount < (int)(ptr - (char *)buf->b_addr) + offset))
+ 		abort();
  
--static void manage_zones(int);	/* setup global zones */
-+static int manage_zones(int);	/* setup/teardown global zones */
- 
- /*
-  * dev_map - map open devices to fd.
-@@ -372,7 +372,7 @@ done:
- /*
-  * Initialize/destroy all of the zone allocators we use.
-  */
--static void
-+static int
- manage_zones(int release)
+ 	return ptr + offset;
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 0e7b7ae0..3e80e0cb 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -402,7 +402,7 @@ libxfs_trans_log_buf(
  {
- 	extern kmem_zone_t	*xfs_buf_zone;
-@@ -388,16 +388,20 @@ manage_zones(int release)
- 	extern void		xfs_dir_startup();
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
  
- 	if (release) {	/* free zone allocation */
--		kmem_free(xfs_buf_zone);
--		kmem_free(xfs_inode_zone);
--		kmem_free(xfs_ifork_zone);
--		kmem_free(xfs_buf_item_zone);
--		kmem_free(xfs_da_state_zone);
--		kmem_free(xfs_btree_cur_zone);
--		kmem_free(xfs_bmap_free_item_zone);
--		kmem_free(xfs_trans_zone);
--		kmem_free(xfs_log_item_desc_zone);
--		return;
-+		int	leaked = 0;
-+
-+		leaked += kmem_zone_destroy(xfs_buf_zone);
-+		leaked += kmem_zone_destroy(xfs_ili_zone);
-+		leaked += kmem_zone_destroy(xfs_inode_zone);
-+		leaked += kmem_zone_destroy(xfs_ifork_zone);
-+		leaked += kmem_zone_destroy(xfs_buf_item_zone);
-+		leaked += kmem_zone_destroy(xfs_da_state_zone);
-+		leaked += kmem_zone_destroy(xfs_btree_cur_zone);
-+		leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
-+		leaked += kmem_zone_destroy(xfs_trans_zone);
-+		leaked += kmem_zone_destroy(xfs_log_item_desc_zone);
-+
-+		return leaked;
+-	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
++	ASSERT((first <= last) && (last < bp->b_bcount));
+ 
+ 	xfs_trans_dirty_buf(tp, bp);
+ 	xfs_buf_item_log(bip, first, last);
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 15545ad1..c925edb2 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -276,11 +276,10 @@ newfile(
+ 		bp = libxfs_trans_get_buf(logit ? tp : 0, mp->m_dev, d,
+ 			nb << mp->m_blkbb_log, 0);
+ 		memmove(bp->b_addr, buf, len);
+-		if (len < XFS_BUF_COUNT(bp))
+-			memset((char *)bp->b_addr + len, 0,
+-			       XFS_BUF_COUNT(bp) - len);
++		if (len < bp->b_bcount)
++			memset((char *)bp->b_addr + len, 0, bp->b_bcount - len);
+ 		if (logit)
+-			libxfs_trans_log_buf(tp, bp, 0, XFS_BUF_COUNT(bp) - 1);
++			libxfs_trans_log_buf(tp, bp, 0, bp->b_bcount - 1);
+ 		else
+ 			libxfs_writebuf(bp, LIBXFS_EXIT_ON_FAILURE);
  	}
- 	/* otherwise initialise zone allocation */
- 	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
-@@ -419,6 +423,8 @@ manage_zones(int release)
- 	xfs_log_item_desc_zone = kmem_zone_init(
- 			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
- 	xfs_dir_startup();
-+
-+	return 0;
- }
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 8b1b8a75..39569ebe 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -437,9 +437,9 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
+ 			break;
+ 		}
  
- /*
-@@ -887,11 +893,15 @@ libxfs_umount(xfs_mount_t *mp)
- void
- libxfs_destroy(void)
- {
-+	int	leaked;
-+
- 	/* Free everything from the buffer cache before freeing buffer zone */
- 	libxfs_bcache_purge();
- 	libxfs_bcache_free();
- 	cache_destroy(libxfs_bcache);
--	manage_zones(1);
-+	leaked = manage_zones(1);
-+	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
-+		exit(1);
- }
+-		ASSERT(mp->m_sb.sb_blocksize == XFS_BUF_COUNT(bp));
++		ASSERT(mp->m_sb.sb_blocksize == bp->b_bcount);
  
- int
-diff --git a/libxfs/kmem.c b/libxfs/kmem.c
-index c8bcb50..a1f64e5 100644
---- a/libxfs/kmem.c
-+++ b/libxfs/kmem.c
-@@ -23,6 +23,20 @@ kmem_zone_init(int size, char *name)
- 	return ptr;
- }
+-		length = MIN(XFS_BUF_COUNT(bp) - hdrsize, valuelen - amountdone);
++		length = MIN(bp->b_bcount - hdrsize, valuelen - amountdone);
+ 		memmove(value, bp->b_addr + hdrsize, length);
+ 		amountdone += length;
+ 		value += length;
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 17de95f5..1c7f9c8d 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -689,7 +689,7 @@ process_inode_chunk(
  
-+int
-+kmem_zone_destroy(kmem_zone_t *zone)
-+{
-+	int	leaked = 0;
-+
-+	if (getenv("LIBXFS_LEAK_CHECK") && zone->allocated) {
-+		leaked = 1;
-+		printf("zone %s freed with %d items allocated\n",
-+				zone->zone_name, zone->allocated);
-+	}
-+	free(zone);
-+	return leaked;
-+}
-+
- void *
- kmem_zone_alloc(kmem_zone_t *zone, int flags)
- {
+ 		pftrace("readbuf %p (%llu, %d) in AG %d", bplist[bp_index],
+ 			(long long)XFS_BUF_ADDR(bplist[bp_index]),
+-			XFS_BUF_COUNT(bplist[bp_index]), agno);
++			bplist[bp_index]->b_bcount, agno);
+ 
+ 		bplist[bp_index]->b_ops = &xfs_inode_buf_ops;
+ 
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 0783d225..ff40d18d 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -403,7 +403,7 @@ pf_read_inode_dirs(
+ 	if (bp->b_error)
+ 		return;
+ 
+-	for (icnt = 0; icnt < (XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog); icnt++) {
++	for (icnt = 0; icnt < (bp->b_bcount >> mp->m_sb.sb_inodelog); icnt++) {
+ 		dino = xfs_make_iptr(mp, bp, icnt);
+ 
+ 		/*
 -- 
-1.8.3.1
-
+2.14.3
 
