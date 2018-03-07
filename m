@@ -1,71 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:34993 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754333AbeCGVHg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Mar 2018 16:07:36 -0500
-Date: Thu, 8 Mar 2018 08:07:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: fix double ijoin in xfs_reflink_cancel_cow_range
-Message-ID: <20180307210706.GO18129@dastard>
-References: <20180307091020.6186-1-david@fromorbit.com>
- <20180307091020.6186-3-david@fromorbit.com>
- <20180307131725.GA32572@infradead.org>
+Received: from sandeen.net ([63.231.237.45]:50638 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753857AbeCGDAW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Mar 2018 22:00:22 -0500
+Subject: Re: [PATCH 09/16] misc: enable link time optimization, if requested
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+ <151993164084.22223.15974003091174128021.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5efb2255-8bed-18d7-12f5-5e9a1a6fb42c@sandeen.net>
+Date: Tue, 6 Mar 2018 21:00:20 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180307131725.GA32572@infradead.org>
+In-Reply-To: <151993164084.22223.15974003091174128021.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
-On Wed, Mar 07, 2018 at 05:17:25AM -0800, Christoph Hellwig wrote:
-> On Wed, Mar 07, 2018 at 08:10:20PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > AN inode is joined to teh same transaction twice in
-> > xfs_reflink_cancel_cow_range() resulting in the following assert
-> > failure:
+On 3/1/18 1:14 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Needs some major spelling love :)
-
-Yeah, I sent it out as soon as I realised it was more than just an
-isolated occurrence. Needs updating...
-
-> > [   30.180485] XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+> Enable link time optimization (LTO) if the builder requests it.  The
+> extra link optimization results in smaller binaries.
 > 
-> That assertations seems like something that only exists locally in your
-> tree.  Any chance to send it out with this series?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-It's in the first patch. I've got to revise it, anyway, because I
-missed the xfs_trans_brelease() case that removes the log item from
-the transaction and that throws a false positive in the rmap
-finishing code.
+ok
 
-> The other option would be to make xfs_trans_ijoin a no-op if the inode
-> is already joined, except that this wouldn't work with the magic unlock
-> on commit. 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-I'd much prefer we catch all the places where we are not handling
-permanent transaction state correctly as we pass it between
-different functions. Especially as we need to do that to get rid of
-the log item descriptor abstraction...
-
-> Which is a feature I find horribly confusing, so we should
-> get rid of it, for which we'd need to get rid of the concept of
-> synchronous transactions in favour of leaving the log force to the
-> caller, which again would be more logical.
+> ---
+>  configure.ac          |   12 ++++++++++++
+>  debian/rules          |    4 ++--
+>  include/builddefs.in  |    9 +++++++++
+>  m4/package_libcdev.m4 |   26 ++++++++++++++++++++++++++
+>  4 files changed, 49 insertions(+), 2 deletions(-)
 > 
-> Guess I need to look into doing these cleanups as I don't want to force
-> them on anyone else.  Just need to finish all the other more important
-> bits on the todo list first :)
-
-As always :P
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> diff --git a/configure.ac b/configure.ac
+> index 3a0ab18..9cfc661 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -90,6 +90,11 @@ AC_ARG_ENABLE(threadsan,
+>  	enable_threadsan=no)
+>  AC_SUBST(enable_threadsan)
+>  
+> +AC_ARG_ENABLE(lto,
+> +[ --enable-lto=[yes/no]      Enable link time optimization (LTO) [default=probe]],,
+> +	enable_lto=probe)
+> +AC_SUBST(enable_lto)
+> +
+>  #
+>  # If the user specified a libdir ending in lib64 do not append another
+>  # 64 to the library names.
+> @@ -206,6 +211,13 @@ if test "$have_threadsan" = "yes" && test "$have_addrsan" = "yes"; then
+>          AC_MSG_WARN([ADDRSAN and THREADSAN are not known to work together.])
+>  fi
+>  
+> +if test "$enable_lto" = "yes" || test "$enable_lto" = "probe"; then
+> +        AC_PACKAGE_CHECK_LTO
+> +fi
+> +if test "$enable_lto" = "yes" && test "$have_lto" != "yes"; then
+> +        AC_MSG_ERROR([LTO not supported by compiler.])
+> +fi
+> +
+>  AC_CHECK_SIZEOF([long])
+>  AC_CHECK_SIZEOF([char *])
+>  AC_TYPE_UMODE_T
+> diff --git a/debian/rules b/debian/rules
+> index 4cba165..cb4fa22 100755
+> --- a/debian/rules
+> +++ b/debian/rules
+> @@ -20,9 +20,9 @@ stdenv = @GZIP=-q; export GZIP;
+>  
+>  options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+>  	  INSTALL_USER=root INSTALL_GROUP=root \
+> -	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan" ;
+> +	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
+>  diopts  = $(options) \
+> -	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan" ;
+> +	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
+>  checkdir = test -f debian/rules
+>  
+>  build: build-arch build-indep
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index df76b2c..b0bf9f1 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -176,6 +176,15 @@ endif
+>  SANITIZER_CFLAGS += @addrsan_cflags@ @threadsan_cflags@ @ubsan_cflags@
+>  SANITIZER_LDFLAGS += @addrsan_ldflags@ @threadsan_ldflags@ @ubsan_ldflags@
+>  
+> +# Use special ar/ranlib wrappers if we have lto
+> +HAVE_LTO = @have_lto@
+> +ifeq ($(HAVE_LTO),yes)
+> +OPTIMIZER += @lto_cflags@
+> +LOADERFLAGS += @lto_ldflags@
+> +AR = @gcc_ar@
+> +RANLIB = @gcc_ranlib@
+> +endif
+> +
+>  GCFLAGS = $(DEBUG) \
+>  	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+>  	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include -I$(TOPDIR)/libxfs
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index 9258c27..52ddac2 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -420,3 +420,29 @@ AC_DEFUN([AC_HAVE_HDIO_GETGEO],
+>         AC_MSG_RESULT(no))
+>      AC_SUBST(have_hdio_getgeo)
+>    ])
+> +
+> +AC_DEFUN([AC_PACKAGE_CHECK_LTO],
+> +  [ AC_MSG_CHECKING([if C compiler supports LTO])
+> +    OLD_CFLAGS="$CFLAGS"
+> +    OLD_LDFLAGS="$LDFLAGS"
+> +    LTO_FLAGS="-flto -ffat-lto-objects"
+> +    CFLAGS="$CFLAGS $LTO_FLAGS"
+> +    LDFLAGS="$LDFLAGS $LTO_FLAGS"
+> +    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
+> +        [AC_MSG_RESULT([yes])]
+> +        [lto_cflags=$LTO_FLAGS]
+> +        [lto_ldflags=$LTO_FLAGS]
+> +        [AC_PATH_PROG(gcc_ar, gcc-ar,,)]
+> +        [AC_PATH_PROG(gcc_ranlib, gcc-ranlib,,)],
+> +        [AC_MSG_RESULT([no])])
+> +    if test -x "$gcc_ar" && test -x "$gcc_ranlib"; then
+> +        have_lto=yes
+> +    fi
+> +    CFLAGS="${OLD_CFLAGS}"
+> +    LDFLAGS="${OLD_LDFLAGS}"
+> +    AC_SUBST(gcc_ar)
+> +    AC_SUBST(gcc_ranlib)
+> +    AC_SUBST(have_lto)
+> +    AC_SUBST(lto_cflags)
+> +    AC_SUBST(lto_ldflags)
+> +  ])
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
