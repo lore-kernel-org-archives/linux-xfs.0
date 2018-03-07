@@ -1,179 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57728 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932078AbeCFXJI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Mar 2018 18:09:08 -0500
-Date: Tue, 6 Mar 2018 15:06:25 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/5] libxfs: Catch non-empty zones on destroy
-Message-ID: <20180306230625.GN18989@magnolia>
-References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
- <c2dd15a8-a048-6373-2fad-3ffd28a606e0@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c2dd15a8-a048-6373-2fad-3ffd28a606e0@sandeen.net>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:41716 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751189AbeCGJK1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Mar 2018 04:10:27 -0500
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1etV5b-0000q6-7u
+        for linux-xfs@vger.kernel.org; Wed, 07 Mar 2018 20:10:23 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.90_1)
+        (envelope-from <david@fromorbit.com>)
+        id 1etV5b-0001eU-6l
+        for linux-xfs@vger.kernel.org; Wed, 07 Mar 2018 20:10:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: fix double ijoin in xfs_reflink_cancel_cow_range
+Date: Wed,  7 Mar 2018 20:10:20 +1100
+Message-Id: <20180307091020.6186-3-david@fromorbit.com>
+In-Reply-To: <20180307091020.6186-1-david@fromorbit.com>
+References: <20180307091020.6186-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Tue, Mar 06, 2018 at 03:56:11PM -0600, Eric Sandeen wrote:
-> Create and use a kmem_zone_destroy which warns if we are
-> releasing a non-empty zone when the LIBXFS_LEAK_CHECK
-> environment variable is set, wire this into libxfs_destroy(),
-> and call that when various tools exit.
-> 
-> The LIBXFS_LEAK_CHECK environment variable also causes
-> the program to exit with failure when a leak is detected,
-> useful for failing automated tests if leaks are encountered.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  include/kmem.h |  1 +
->  libxfs/init.c  | 36 +++++++++++++++++++++++-------------
->  libxfs/kmem.c  | 14 ++++++++++++++
->  3 files changed, 38 insertions(+), 13 deletions(-)
-> 
-> diff --git a/include/kmem.h b/include/kmem.h
-> index 65f0ade..572a4fa 100644
-> --- a/include/kmem.h
-> +++ b/include/kmem.h
-> @@ -33,6 +33,7 @@ typedef struct kmem_zone {
->  extern kmem_zone_t *kmem_zone_init(int, char *);
->  extern void	*kmem_zone_alloc(kmem_zone_t *, int);
->  extern void	*kmem_zone_zalloc(kmem_zone_t *, int);
-> +extern int	kmem_zone_destroy(kmem_zone_t *);
->  
->  static inline void
->  kmem_zone_free(kmem_zone_t *zone, void *ptr)
-> diff --git a/libxfs/init.c b/libxfs/init.c
-> index 3456cb5..a65c86c 100644
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -43,7 +43,7 @@ int libxfs_bhash_size;		/* #buckets in bcache */
->  
->  int	use_xfs_buf_lock;	/* global flag: use xfs_buf_t locks for MT */
->  
-> -static void manage_zones(int);	/* setup global zones */
-> +static int manage_zones(int);	/* setup/teardown global zones */
+From: Dave Chinner <dchinner@redhat.com>
 
-Returns what?  Number of leaked objects?
+AN inode is joined to teh same transaction twice in
+xfs_reflink_cancel_cow_range() resulting in the following assert
+failure:
 
-Oh, 1 if leaks and 0 if no leaks.
+[   30.180485] XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+[   30.183435] ------------[ cut here ]------------
+......
+[   30.209264] Call Trace:
+[   30.209935]  xfs_trans_add_item+0xcc/0xe0
+[   30.210968]  xfs_reflink_cancel_cow_blocks+0xab/0x290
+[   30.212249]  ? xfs_trans_reserve+0x1b4/0x2b0
+[   30.213320]  ? kmem_zone_alloc+0x61/0xe0
+[   30.214321]  xfs_reflink_cancel_cow_range+0xb2/0x1f0
+[   30.215616]  xfs_fs_destroy_inode+0x1bd/0x280
+[   30.216757]  dispose_list+0x35/0x40
+[   30.217656]  evict_inodes+0x132/0x160
+[   30.218620]  generic_shutdown_super+0x3a/0x110
+[   30.219771]  kill_block_super+0x21/0x50
+[   30.220762]  deactivate_locked_super+0x39/0x70
+[   30.221909]  cleanup_mnt+0x3b/0x70
+[   30.222819]  task_work_run+0x7f/0xa0
+[   30.223762]  exit_to_usermode_loop+0x9b/0xa0
+[   30.224884]  do_syscall_64+0x18f/0x1a0
 
->  
->  /*
->   * dev_map - map open devices to fd.
-> @@ -372,7 +372,7 @@ done:
->  /*
->   * Initialize/destroy all of the zone allocators we use.
->   */
-> -static void
-> +static int
->  manage_zones(int release)
->  {
->  	extern kmem_zone_t	*xfs_buf_zone;
-> @@ -388,16 +388,20 @@ manage_zones(int release)
->  	extern void		xfs_dir_startup();
->  
->  	if (release) {	/* free zone allocation */
-> -		kmem_free(xfs_buf_zone);
-> -		kmem_free(xfs_inode_zone);
-> -		kmem_free(xfs_ifork_zone);
-> -		kmem_free(xfs_buf_item_zone);
-> -		kmem_free(xfs_da_state_zone);
-> -		kmem_free(xfs_btree_cur_zone);
-> -		kmem_free(xfs_bmap_free_item_zone);
-> -		kmem_free(xfs_trans_zone);
-> -		kmem_free(xfs_log_item_desc_zone);
-> -		return;
-> +		int	leaked = 0;
-> +
-> +		leaked += kmem_zone_destroy(xfs_buf_zone);
-> +		leaked += kmem_zone_destroy(xfs_ili_zone);
-> +		leaked += kmem_zone_destroy(xfs_inode_zone);
-> +		leaked += kmem_zone_destroy(xfs_ifork_zone);
-> +		leaked += kmem_zone_destroy(xfs_buf_item_zone);
-> +		leaked += kmem_zone_destroy(xfs_da_state_zone);
-> +		leaked += kmem_zone_destroy(xfs_btree_cur_zone);
-> +		leaked += kmem_zone_destroy(xfs_bmap_free_item_zone);
-> +		leaked += kmem_zone_destroy(xfs_trans_zone);
-> +		leaked += kmem_zone_destroy(xfs_log_item_desc_zone);
-> +
-> +		return leaked;
->  	}
->  	/* otherwise initialise zone allocation */
->  	xfs_buf_zone = kmem_zone_init(sizeof(xfs_buf_t), "xfs_buffer");
-> @@ -419,6 +423,8 @@ manage_zones(int release)
->  	xfs_log_item_desc_zone = kmem_zone_init(
->  			sizeof(struct xfs_log_item_desc), "xfs_log_item_desc");
->  	xfs_dir_startup();
-> +
-> +	return 0;
->  }
->  
->  /*
-> @@ -887,11 +893,15 @@ libxfs_umount(xfs_mount_t *mp)
->  void
->  libxfs_destroy(void)
->  {
-> +	int	leaked;
-> +
->  	/* Free everything from the buffer cache before freeing buffer zone */
->  	libxfs_bcache_purge();
->  	libxfs_bcache_free();
->  	cache_destroy(libxfs_bcache);
-> -	manage_zones(1);
-> +	leaked = manage_zones(1);
-> +	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
-> +		exit(1);
+Fix it and document that the callers of
+xfs_reflink_cancel_cow_blocks() must have already joined the inode
+to the permanent transaction passed in.
 
-What do you think of assert(getenv() == NULL || !leaked); here?
-LIBXFS_LEAK_CHECK is a debugging option, so we might as well dump core
-right where we violate the assumptions.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_reflink.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-(OTOH I guess this probably happens at program exit anyway...)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 8c16177b33d4..6225d1ea3fdb 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -552,6 +552,9 @@ xfs_reflink_trim_irec_to_next_cow(
+  *
+  * If cancel_real is true this function cancels all COW fork extents for the
+  * inode; if cancel_real is false, real extents are not cleared.
++ *
++ * Caller must have already joined the inode to the current transaction. The
++ * inode will be joined to the transaction returned to the caller.
+  */
+ int
+ xfs_reflink_cancel_cow_blocks(
+@@ -592,7 +595,6 @@ xfs_reflink_cancel_cow_blocks(
+ 			if (error)
+ 				break;
+ 		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+-			xfs_trans_ijoin(*tpp, ip, 0);
+ 			xfs_defer_init(&dfops, &firstfsb);
+ 
+ 			/* Free the CoW orphan record. */
+@@ -1571,6 +1573,7 @@ xfs_reflink_clear_inode_flag(
+ 	 * We didn't find any shared blocks so turn off the reflink flag.
+ 	 * First, get rid of any leftover CoW mappings.
+ 	 */
++	xfs_trans_ijoin(*tpp, ip, 0);
+ 	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, true);
+ 	if (error)
+ 		return error;
+@@ -1579,7 +1582,6 @@ xfs_reflink_clear_inode_flag(
+ 	trace_xfs_reflink_unset_inode_flag(ip);
+ 	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+ 	xfs_inode_clear_cowblocks_tag(ip);
+-	xfs_trans_ijoin(*tpp, ip, 0);
+ 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+ 
+ 	return error;
+-- 
+2.16.1
 
->  }
->  
->  int
-> diff --git a/libxfs/kmem.c b/libxfs/kmem.c
-> index c8bcb50..a1f64e5 100644
-> --- a/libxfs/kmem.c
-> +++ b/libxfs/kmem.c
-> @@ -23,6 +23,20 @@ kmem_zone_init(int size, char *name)
->  	return ptr;
->  }
->  
-> +int
-> +kmem_zone_destroy(kmem_zone_t *zone)
-> +{
-> +	int	leaked = 0;
-> +
-> +	if (getenv("LIBXFS_LEAK_CHECK") && zone->allocated) {
-> +		leaked = 1;
-> +		printf("zone %s freed with %d items allocated\n",
-> +				zone->zone_name, zone->allocated);
-
-fprintf(stderr, ...)?  Since leaking /is/ an error.
-
---D
-
-> +	}
-> +	free(zone);
-> +	return leaked;
-> +}
-> +
->  void *
->  kmem_zone_alloc(kmem_zone_t *zone, int flags)
->  {
-> -- 
-> 1.8.3.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
