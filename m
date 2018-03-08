@@ -1,51 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:42175 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932826AbeCLSR0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Mar 2018 14:17:26 -0400
-Received: by mail-oi0-f65.google.com with SMTP id c18so13102762oiy.9
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Mar 2018 11:17:26 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.99]:53422 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752052AbeCHSsB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Mar 2018 13:48:01 -0500
+Date: Thu, 8 Mar 2018 10:48:00 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.16-rc5
+Message-ID: <20180308184800.GA18989@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180312141721.GB4214@redhat.com>
-References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152066492680.40260.6843692416565308005.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180312141721.GB4214@redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 12 Mar 2018 11:17:25 -0700
-Message-ID: <CAPcyv4jdOdvUZHS43Q18h3yTNzmiVJceEcVN5XSKstTkQHfDFQ@mail.gmail.com>
-Subject: Re: [PATCH v5 07/11] mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Michal Hocko <mhocko@suse.com>, david <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On Mon, Mar 12, 2018 at 7:17 AM, Jerome Glisse <jglisse@redhat.com> wrote:
-> On Fri, Mar 09, 2018 at 10:55:26PM -0800, Dan Williams wrote:
->> The HMM sub-system extended dev_pagemap to arrange a callback when a
->> dev_pagemap managed page is freed. Since a dev_pagemap page is free /
->> idle when its reference count is 1 it requires an additional branch to
->> check the page-type at put_page() time. Given put_page() is a hot-path
->> we do not want to incur that check if HMM is not in use, so a static
->> branch is used to avoid that overhead when not necessary.
->>
->> Now, the FS_DAX implementation wants to reuse this mechanism for
->> receiving dev_pagemap ->page_free() callbacks. Rework the HMM-specific
->> static-key into a generic mechanism that either HMM or FS_DAX code paths
->> can enable.
->
-> Why EXPORT_SYMBOL_GPL and not EXPORT_SYMBOL like it was prior to this
-> patch ? Not i care that much about that, just wondering. Maybe keep it
-> EXPORT_SYMBOL() ?
+Hi Linus,
 
-HMM has significant integrations and useful hacks within the mm
-sub-system, I think we should go further than just these symbols and
-also include devm_memremap_pages() as EXPORT_SYMBOL_GPL. It was simply
-an oversight that these were EXPORT_SYMBOL previously.
+Here's a few more fixes for locking problems and incorrect copy on
+write behaviors on 4.16.  It should merge cleanly, but please let me
+know if it doesn't.
 
-> In any case
-> Reviewed-by: "J=C3=A9r=C3=B4me Glisse" <jglisse@redhat.com>
+--Darrick
 
-Thanks!
+The following changes since commit 5b4c845ea4f4b86c43096eb924354c83a2e26f3c:
+
+  xfs: fix potential memory leak in mount option parsing (2018-02-26 10:02:13 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.16-fixes-3
+
+for you to fetch changes up to ff3d8b9c4cb95180ae6ef9eed28409840525b9fa:
+
+  xfs: don't block on the ilock for RWF_NOWAIT (2018-03-01 14:12:45 -0800)
+
+----------------------------------------------------------------
+Changes since last update:
+- Fix some iomap locking problems
+- Don't allocate cow blocks when we're zeroing file data
+
+----------------------------------------------------------------
+Christoph Hellwig (3):
+      xfs: don't allocate COW blocks for zeroing holes or unwritten extents
+      xfs: don't start out with the exclusive ilock for direct I/O
+      xfs: don't block on the ilock for RWF_NOWAIT
+
+ fs/xfs/xfs_iomap.c | 42 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 30 insertions(+), 12 deletions(-)
