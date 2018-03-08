@@ -1,400 +1,339 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44394 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751866AbeCLOJ7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Mar 2018 10:09:59 -0400
-Date: Mon, 12 Mar 2018 10:09:57 -0400
-From: Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH v5 06/11] mm, dax: enable filesystems to trigger
- dev_pagemap ->page_free callbacks
-Message-ID: <20180312140956.GA4214@redhat.com>
-References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152066492126.40260.11297816369314187769.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:51909 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755962AbeCHOP3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 09:15:29 -0500
+Received: by mail-wm0-f45.google.com with SMTP id h21so11579201wmd.1
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Mar 2018 06:15:28 -0800 (PST)
+Date: Thu, 8 Mar 2018 15:15:24 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH RFC] xfs: convert between packed and unpacked agfls
+ on-demand
+Message-ID: <20180308141524.vpilm6xbcnm6mgrv@odin.usersys.redhat.com>
+References: <20180307192451.24196-1-bfoster@redhat.com>
+ <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <152066492126.40260.11297816369314187769.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Michal Hocko <mhocko@suse.com>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.com, linux-kernel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Fri, Mar 09, 2018 at 10:55:21PM -0800, Dan Williams wrote:
-> In order to resolve collisions between filesystem operations and DMA to
-> DAX mapped pages we need a callback when DMA completes. With a callback
-> we can hold off filesystem operations while DMA is in-flight and then
-> resume those operations when the last put_page() occurs on a DMA page.
+On Thu, Mar 08, 2018 at 03:03:54PM +0100, Carlos Maiolino wrote:
+> Hi,
 > 
-> Recall that the 'struct page' entries for DAX memory are created with
-> devm_memremap_pages(). That routine arranges for the pages to be
-> allocated, but never onlined, so a DAX page is DMA-idle when its
-> reference count reaches one.
+> On Wed, Mar 07, 2018 at 02:24:51PM -0500, Brian Foster wrote:
+> > Disliked-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Sent as RFC for the time being. This tests Ok on a straight xfstests run
+> > and also seems to pass Darrick's agfl fixup tester (thanks) both on
+> > upstream and on a rhel7 kernel with some minor supporting hacks.
+> > 
+> > I tried to tighten up the logic a bit to reduce the odds of mistaking
+> > actual corruption for a padding mismatch as much as possible. E.g.,
+> > limit to cases where the agfl is wrapped, make sure we don't mistake a
+> > corruption that looks like an agfl with 120 entries on a packed kernel,
+> > etc.
+> > 
+> > While I do prefer an on-demand fixup approach to a mount time scan, ISTM
+> > that in either case it's impossible to completely eliminate the risk of
+> > confusing corruption with a padding mismatch so long as we're doing a
+> > manual agfl fixup. The more I think about that the more I really dislike
+> > doing this. :(
+> > 
+> > After some IRC discussion with djwong and sandeen, I'm wondering if the
+> > existence of 'xfs_repair -d' is a good enough last resort for those
+> > users who might be bit by unexpected padding issues on a typical
+> > upgrade. If so, we could fall back to a safer mount-time detection model
+> > that enforces a read-only mount and let the user run repair. The
+> > supposition is that those who aren't prepared to repair via a ramdisk or
+> > whatever should be able to 'xfs_repair -d' a rootfs that is mounted
+> > read-only provided agfl padding is the only inconsistency. 
+> > 
+> > Eric points out that we can still write an unmount record for a
+> > read-only mount, but I'm not sure that would be a problem if repair only
+> > needs to fix the agfl. xfs_repair shouldn't touch the log unless there's
+> > a recovery issue or it needs to be reformatted to update the LSN, both
+> > of which seem to qualify as "you have more problems than agfl padding
+> > and need to run repair anyways" to me. Thoughts?
+> > 
 > 
-> Also recall that the HMM sub-system added infrastructure to trap the
-> page-idle (2-to-1 reference count) transition of the pages allocated by
-> devm_memremap_pages() and trigger a callback via the 'struct
-> dev_pagemap' associated with the page range. Whereas the HMM callbacks
-> are going to a device driver to manage bounce pages in device-memory in
-> the filesystem-dax case we will call back to filesystem specified
-> callback.
+> Sorry if this may sound stupid, but in the possibility this can help the issue,
+> or at least me learning something new.
 > 
-> Since the callback is not known at devm_memremap_pages() time we arrange
-> for the filesystem to install it at mount time. No functional changes
-> are expected as this only registers a nop handler for the ->page_free()
-> event for device-mapped pages.
+> ISTM this issue is all related to the way xfs_agfl packing. I read the commit
+> log where packed attribute was added to xfs_agfl, and I was wondering...
 > 
-> Cc: Michal Hocko <mhocko@suse.com>
+> What are the implications of breaking up the lsn field in xfs_agfl, in 2 __be32?
+> Merge it together in a 64bit field when reading it from disk, or split it when
+> writing to?
+> It seems to me this would avoid the size difference we are seeing now in 32/64
+> bit systems, and avoid such risk of confusion when trying to discern between a
+> corrupted agfl and a padding mismatch.
+> 
+> But still, just as reinforcement, this is just a guess, and I have no idea if
+> this is feasible or not, but in case I'm completely nuts, I'll learn something
+> new :)
 
-Looks good to me
+Btw, I thought about this because once the LSN is logically separated between
+cycle number and block number, it could possibly be recorded using two separated
+32bit fields in xfs_agfl, but again, I don't know yet if this feasible, just my
+$0.02
 
-Reviewed-by: "Jérôme Glisse" <jglisse@redhat.com>
+> 
+> Cheers.
+> 
+> > Brian
+> > 
+> >  fs/xfs/libxfs/xfs_alloc.c | 147 +++++++++++++++++++++++++++++++++++++++++++++-
+> >  fs/xfs/xfs_mount.h        |   1 +
+> >  fs/xfs/xfs_trace.h        |  18 ++++++
+> >  3 files changed, 164 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index c02781a4c091..31330996e31c 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -2054,6 +2054,136 @@ xfs_alloc_space_available(
+> >  }
+> >  
+> >  /*
+> > + * Estimate the on-disk agfl size based on the agf state. A size mismatch due to
+> > + * padding is only significant if the agfl wraps around the end or refers to an
+> > + * invalid first/last value.
+> > + */
+> > +static int
+> > +xfs_agfl_ondisk_size(
+> > +	struct xfs_mount	*mp,
+> > +	int			first,
+> > +	int			last,
+> > +	int			count)
+> > +{
+> > +	int			active = count;
+> > +	int			agfl_size = XFS_AGFL_SIZE(mp);
+> > +	bool			wrapped = (first > last) ? true : false;
+> > +
+> > +	if (count && last >= first)
+> > +		active = last - first + 1;
+> > +	else if (count)
+> > +		active = agfl_size - first + last + 1;
+> > +
+> > +	if (wrapped && active == count + 1)
+> > +		agfl_size--;
+> > +	else if ((wrapped && active == count - 1) ||
+> > +		 first == agfl_size || last == agfl_size)
+> > +		agfl_size++;
+> > +
+> > +	/*
+> > +	 * We can't discern the packing problem from certain forms of corruption
+> > +	 * that may look exactly the same. To minimize the chance of mistaking
+> > +	 * corruption for a size mismatch, clamp the size to known valid values.
+> > +	 * A packed header agfl has 119 entries and the older unpacked format
+> > +	 * has one less.
+> > +	 */
+> > +	if (agfl_size < 118 || agfl_size > 119)
+> > +		agfl_size = XFS_AGFL_SIZE(mp);
+> > +
+> > +	return agfl_size;
+> > +}
+> > +
+> > +static bool
+> > +xfs_agfl_need_padfix(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_agf		*agf)
+> > +{
+> > +	int			f = be32_to_cpu(agf->agf_flfirst);
+> > +	int			l = be32_to_cpu(agf->agf_fllast);
+> > +	int			c = be32_to_cpu(agf->agf_flcount);
+> > +
+> > +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> > +		return false;
+> > +
+> > +	return xfs_agfl_ondisk_size(mp, f, l, c) != XFS_AGFL_SIZE(mp);
+> > +}
+> > +
+> > +static int
+> > +xfs_agfl_check_padfix(
+> > +	struct xfs_trans	*tp,
+> > +	struct xfs_buf		*agbp,
+> > +	struct xfs_buf		*agflbp,
+> > +	struct xfs_perag	*pag)
+> > +{
+> > +	struct xfs_mount	*mp = tp->t_mountp;
+> > +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+> > +	__be32			*agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+> > +	int			agfl_size = XFS_AGFL_SIZE(mp);
+> > +	int			ofirst, olast, osize;
+> > +	int			nfirst, nlast;
+> > +	int			logflags = 0;
+> > +	int			startoff = 0;
+> > +
+> > +	if (!pag->pagf_needpadfix)
+> > +		return 0;
+> > +
+> > +	ofirst = nfirst = be32_to_cpu(agf->agf_flfirst);
+> > +	olast = nlast = be32_to_cpu(agf->agf_fllast);
+> > +	osize = xfs_agfl_ondisk_size(mp, ofirst, olast, pag->pagf_flcount);
+> > +
+> > +	/*
+> > +	 * If the on-disk agfl is smaller than what the kernel expects, the
+> > +	 * last slot of the on-disk agfl is a gap with bogus data. Move the
+> > +	 * first valid block into the gap and bump the pointer.
+> > +	 */
+> > +	if (osize < agfl_size) {
+> > +		ASSERT(pag->pagf_flcount != 0);
+> > +		agfl_bno[agfl_size - 1] = agfl_bno[ofirst];
+> > +		startoff = (char *) &agfl_bno[agfl_size - 1] - (char *) agflbp->b_addr;
+> > +		nfirst++;
+> > +		goto done;
+> > +	}
+> > +
+> > +	/*
+> > +	 * Otherwise, the on-disk agfl is larger than what the current kernel
+> > +	 * expects. If empty, just fix up the first and last pointers. If not,
+> > +	 * move the inaccessible block to the end of the valid range.
+> > +	 */
+> > +	nfirst = do_mod(nfirst, agfl_size);
+> > +	if (pag->pagf_flcount == 0) {
+> > +		nlast = (nfirst == 0 ? agfl_size - 1 : nfirst - 1);
+> > +		goto done;
+> > +	}
+> > +	if (nlast != agfl_size)
+> > +		nlast++;
+> > +	nlast = do_mod(nlast, agfl_size);
+> > +	agfl_bno[nlast] = agfl_bno[osize - 1];
+> > +	startoff = (char *) &agfl_bno[nlast] - (char *) agflbp->b_addr;
+> > +
+> > +done:
+> > +	if (nfirst != ofirst) {
+> > +		agf->agf_flfirst = cpu_to_be32(nfirst);
+> > +		logflags |= XFS_AGF_FLFIRST;
+> > +	}
+> > +	if (nlast != olast) {
+> > +		agf->agf_fllast = cpu_to_be32(nlast);
+> > +		logflags |= XFS_AGF_FLLAST;
+> > +	}
+> > +	if (startoff) {
+> > +		xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
+> > +		xfs_trans_log_buf(tp, agflbp, startoff,
+> > +				  startoff + sizeof(xfs_agblock_t) - 1);
+> > +	}
+> > +	if (logflags)
+> > +		xfs_alloc_log_agf(tp, agbp, logflags);
+> > +
+> > +	trace_xfs_agfl_padfix(mp, osize, agfl_size);
+> > +	pag->pagf_needpadfix = false;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> >   * Decide whether to use this allocation group for this allocation.
+> >   * If so, fix up the btree freelist's size.
+> >   */
+> > @@ -2258,6 +2388,12 @@ xfs_alloc_get_freelist(
+> >  	if (error)
+> >  		return error;
+> >  
+> > +	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> > +	error = xfs_agfl_check_padfix(tp, agbp, agflbp, pag);
+> > +	if (error) {
+> > +		xfs_perag_put(pag);
+> > +		return error;
+> > +	}
+> >  
+> >  	/*
+> >  	 * Get the block number and update the data structures.
+> > @@ -2269,7 +2405,6 @@ xfs_alloc_get_freelist(
+> >  	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+> >  		agf->agf_flfirst = 0;
+> >  
+> > -	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> >  	be32_add_cpu(&agf->agf_flcount, -1);
+> >  	xfs_trans_agflist_delta(tp, -1);
+> >  	pag->pagf_flcount--;
+> > @@ -2376,11 +2511,18 @@ xfs_alloc_put_freelist(
+> >  	if (!agflbp && (error = xfs_alloc_read_agfl(mp, tp,
+> >  			be32_to_cpu(agf->agf_seqno), &agflbp)))
+> >  		return error;
+> > +
+> > +	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> > +	error = xfs_agfl_check_padfix(tp, agbp, agflbp, pag);
+> > +	if (error) {
+> > +		xfs_perag_put(pag);
+> > +		return error;
+> > +	}
+> > +
+> >  	be32_add_cpu(&agf->agf_fllast, 1);
+> >  	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
+> >  		agf->agf_fllast = 0;
+> >  
+> > -	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> >  	be32_add_cpu(&agf->agf_flcount, 1);
+> >  	xfs_trans_agflist_delta(tp, 1);
+> >  	pag->pagf_flcount++;
+> > @@ -2588,6 +2730,7 @@ xfs_alloc_read_agf(
+> >  		pag->pagb_count = 0;
+> >  		pag->pagb_tree = RB_ROOT;
+> >  		pag->pagf_init = 1;
+> > +		pag->pagf_needpadfix = xfs_agfl_need_padfix(mp, agf);
+> >  	}
+> >  #ifdef DEBUG
+> >  	else if (!XFS_FORCED_SHUTDOWN(mp)) {
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index e0792d036be2..78a6377a9b38 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -353,6 +353,7 @@ typedef struct xfs_perag {
+> >  	char		pagi_inodeok;	/* The agi is ok for inodes */
+> >  	uint8_t		pagf_levels[XFS_BTNUM_AGF];
+> >  					/* # of levels in bno & cnt btree */
+> > +	bool		pagf_needpadfix;
+> >  	uint32_t	pagf_flcount;	/* count of blocks in freelist */
+> >  	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
+> >  	xfs_extlen_t	pagf_longest;	/* longest free space */
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 945de08af7ba..c7a3bcd6cc4a 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -3339,6 +3339,24 @@ TRACE_EVENT(xfs_trans_resv_calc,
+> >  		  __entry->logflags)
+> >  );
+> >  
+> > +TRACE_EVENT(xfs_agfl_padfix,
+> > +	TP_PROTO(struct xfs_mount *mp, int osize, int nsize),
+> > +	TP_ARGS(mp, osize, nsize),
+> > +	TP_STRUCT__entry(
+> > +		__field(dev_t, dev)
+> > +		__field(int, osize)
+> > +		__field(int, nsize)
+> > +	),
+> > +	TP_fast_assign(
+> > +		__entry->dev = mp->m_super->s_dev;
+> > +		__entry->osize = osize;
+> > +		__entry->nsize = nsize;
+> > +	),
+> > +	TP_printk("dev %d:%d old size %d new size %d",
+> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > +		  __entry->osize, __entry->nsize)
+> > +);
+> > +
+> >  #endif /* _TRACE_XFS_H */
+> >  
+> >  #undef TRACE_INCLUDE_PATH
+> > -- 
+> > 2.13.6
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> Carlos
 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/dax/super.c      |   79 ++++++++++++++++++++++++++++++++++++++++------
->  drivers/nvdimm/pmem.c    |    3 +-
->  fs/ext2/super.c          |    6 ++-
->  fs/ext4/super.c          |    6 ++-
->  fs/xfs/xfs_super.c       |   20 ++++++------
->  include/linux/dax.h      |   17 +++++-----
->  include/linux/memremap.h |    8 +++++
->  7 files changed, 103 insertions(+), 36 deletions(-)
-> 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 2b2332b605e4..ecefe9f7eb60 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -29,6 +29,7 @@ static struct vfsmount *dax_mnt;
->  static DEFINE_IDA(dax_minor_ida);
->  static struct kmem_cache *dax_cache __read_mostly;
->  static struct super_block *dax_superblock __read_mostly;
-> +static DEFINE_MUTEX(devmap_lock);
->  
->  #define DAX_HASH_SIZE (PAGE_SIZE / sizeof(struct hlist_head))
->  static struct hlist_head dax_host_list[DAX_HASH_SIZE];
-> @@ -62,16 +63,6 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
->  }
->  EXPORT_SYMBOL(bdev_dax_pgoff);
->  
-> -#if IS_ENABLED(CONFIG_FS_DAX)
-> -struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-> -{
-> -	if (!blk_queue_dax(bdev->bd_queue))
-> -		return NULL;
-> -	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> -}
-> -EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-> -#endif
-> -
->  /**
->   * __bdev_dax_supported() - Check if the device supports dax for filesystem
->   * @sb: The superblock of the device
-> @@ -169,9 +160,66 @@ struct dax_device {
->  	const char *host;
->  	void *private;
->  	unsigned long flags;
-> +	struct dev_pagemap *pgmap;
->  	const struct dax_operations *ops;
->  };
->  
-> +#if IS_ENABLED(CONFIG_FS_DAX)
-> +static void generic_dax_pagefree(struct page *page, void *data)
-> +{
-> +	/* TODO: wakeup page-idle waiters */
-> +}
-> +
-> +struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
-> +{
-> +	struct dax_device *dax_dev;
-> +	struct dev_pagemap *pgmap;
-> +
-> +	if (!blk_queue_dax(bdev->bd_queue))
-> +		return NULL;
-> +	dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> +	if (!dax_dev->pgmap)
-> +		return dax_dev;
-> +	pgmap = dax_dev->pgmap;
-> +
-> +	mutex_lock(&devmap_lock);
-> +	if ((pgmap->data && pgmap->data != owner) || pgmap->page_free
-> +			|| pgmap->page_fault
-> +			|| pgmap->type != MEMORY_DEVICE_HOST) {
-> +		put_dax(dax_dev);
-> +		mutex_unlock(&devmap_lock);
-> +		return NULL;
-> +	}
-> +
-> +	pgmap->type = MEMORY_DEVICE_FS_DAX;
-> +	pgmap->page_free = generic_dax_pagefree;
-> +	pgmap->data = owner;
-> +	mutex_unlock(&devmap_lock);
-> +
-> +	return dax_dev;
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_claim_bdev);
-> +
-> +void fs_dax_release(struct dax_device *dax_dev, void *owner)
-> +{
-> +	struct dev_pagemap *pgmap = dax_dev ? dax_dev->pgmap : NULL;
-> +
-> +	put_dax(dax_dev);
-> +	if (!pgmap)
-> +		return;
-> +	if (!pgmap->data)
-> +		return;
-> +
-> +	mutex_lock(&devmap_lock);
-> +	WARN_ON(pgmap->data != owner);
-> +	pgmap->type = MEMORY_DEVICE_HOST;
-> +	pgmap->page_free = NULL;
-> +	pgmap->data = NULL;
-> +	mutex_unlock(&devmap_lock);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_release);
-> +#endif
-> +
->  static ssize_t write_cache_show(struct device *dev,
->  		struct device_attribute *attr, char *buf)
->  {
-> @@ -499,6 +547,17 @@ struct dax_device *alloc_dax(void *private, const char *__host,
->  }
->  EXPORT_SYMBOL_GPL(alloc_dax);
->  
-> +struct dax_device *alloc_dax_devmap(void *private, const char *host,
-> +		const struct dax_operations *ops, struct dev_pagemap *pgmap)
-> +{
-> +	struct dax_device *dax_dev = alloc_dax(private, host, ops);
-> +
-> +	if (dax_dev)
-> +		dax_dev->pgmap = pgmap;
-> +	return dax_dev;
-> +}
-> +EXPORT_SYMBOL_GPL(alloc_dax_devmap);
-> +
->  void put_dax(struct dax_device *dax_dev)
->  {
->  	if (!dax_dev)
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index 06f8dcc52ca6..e6d7351f3379 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -408,7 +408,8 @@ static int pmem_attach_disk(struct device *dev,
->  	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
->  	disk->bb = &pmem->bb;
->  
-> -	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
-> +	dax_dev = alloc_dax_devmap(pmem, disk->disk_name, &pmem_dax_ops,
-> +			&pmem->pgmap);
->  	if (!dax_dev) {
->  		put_disk(disk);
->  		return -ENOMEM;
-> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-> index 7666c065b96f..6ae20e319bc4 100644
-> --- a/fs/ext2/super.c
-> +++ b/fs/ext2/super.c
-> @@ -172,7 +172,7 @@ static void ext2_put_super (struct super_block * sb)
->  	brelse (sbi->s_sbh);
->  	sb->s_fs_info = NULL;
->  	kfree(sbi->s_blockgroup_lock);
-> -	fs_put_dax(sbi->s_daxdev);
-> +	fs_dax_release(sbi->s_daxdev, sb);
->  	kfree(sbi);
->  }
->  
-> @@ -817,7 +817,7 @@ static unsigned long descriptor_loc(struct super_block *sb,
->  
->  static int ext2_fill_super(struct super_block *sb, void *data, int silent)
->  {
-> -	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
-> +	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
->  	struct buffer_head * bh;
->  	struct ext2_sb_info * sbi;
->  	struct ext2_super_block * es;
-> @@ -1213,7 +1213,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
->  	kfree(sbi->s_blockgroup_lock);
->  	kfree(sbi);
->  failed:
-> -	fs_put_dax(dax_dev);
-> +	fs_dax_release(dax_dev, sb);
->  	return ret;
->  }
->  
-> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> index 39bf464c35f1..315a323729e3 100644
-> --- a/fs/ext4/super.c
-> +++ b/fs/ext4/super.c
-> @@ -952,7 +952,7 @@ static void ext4_put_super(struct super_block *sb)
->  	if (sbi->s_chksum_driver)
->  		crypto_free_shash(sbi->s_chksum_driver);
->  	kfree(sbi->s_blockgroup_lock);
-> -	fs_put_dax(sbi->s_daxdev);
-> +	fs_dax_release(sbi->s_daxdev, sb);
->  	kfree(sbi);
->  }
->  
-> @@ -3398,7 +3398,7 @@ static void ext4_set_resv_clusters(struct super_block *sb)
->  
->  static int ext4_fill_super(struct super_block *sb, void *data, int silent)
->  {
-> -	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
-> +	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
->  	char *orig_data = kstrdup(data, GFP_KERNEL);
->  	struct buffer_head *bh;
->  	struct ext4_super_block *es = NULL;
-> @@ -4408,7 +4408,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
->  out_free_base:
->  	kfree(sbi);
->  	kfree(orig_data);
-> -	fs_put_dax(dax_dev);
-> +	fs_dax_release(dax_dev, sb);
->  	return err ? err : ret;
->  }
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 93588ea3d3d2..ef7dd7148c0b 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -724,7 +724,7 @@ xfs_close_devices(
->  
->  		xfs_free_buftarg(mp, mp->m_logdev_targp);
->  		xfs_blkdev_put(logdev);
-> -		fs_put_dax(dax_logdev);
-> +		fs_dax_release(dax_logdev, mp);
->  	}
->  	if (mp->m_rtdev_targp) {
->  		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
-> @@ -732,10 +732,10 @@ xfs_close_devices(
->  
->  		xfs_free_buftarg(mp, mp->m_rtdev_targp);
->  		xfs_blkdev_put(rtdev);
-> -		fs_put_dax(dax_rtdev);
-> +		fs_dax_release(dax_rtdev, mp);
->  	}
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
-> -	fs_put_dax(dax_ddev);
-> +	fs_dax_release(dax_ddev, mp);
->  }
->  
->  /*
-> @@ -753,9 +753,9 @@ xfs_open_devices(
->  	struct xfs_mount	*mp)
->  {
->  	struct block_device	*ddev = mp->m_super->s_bdev;
-> -	struct dax_device	*dax_ddev = fs_dax_get_by_bdev(ddev);
-> -	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
-> +	struct dax_device	*dax_ddev = fs_dax_claim_bdev(ddev, mp);
->  	struct block_device	*logdev = NULL, *rtdev = NULL;
-> +	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
->  	int			error;
->  
->  	/*
-> @@ -765,7 +765,7 @@ xfs_open_devices(
->  		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
->  		if (error)
->  			goto out;
-> -		dax_logdev = fs_dax_get_by_bdev(logdev);
-> +		dax_logdev = fs_dax_claim_bdev(logdev, mp);
->  	}
->  
->  	if (mp->m_rtname) {
-> @@ -779,7 +779,7 @@ xfs_open_devices(
->  			error = -EINVAL;
->  			goto out_close_rtdev;
->  		}
-> -		dax_rtdev = fs_dax_get_by_bdev(rtdev);
-> +		dax_rtdev = fs_dax_claim_bdev(rtdev, mp);
->  	}
->  
->  	/*
-> @@ -813,14 +813,14 @@ xfs_open_devices(
->  	xfs_free_buftarg(mp, mp->m_ddev_targp);
->   out_close_rtdev:
->  	xfs_blkdev_put(rtdev);
-> -	fs_put_dax(dax_rtdev);
-> +	fs_dax_release(dax_rtdev, mp);
->   out_close_logdev:
->  	if (logdev && logdev != ddev) {
->  		xfs_blkdev_put(logdev);
-> -		fs_put_dax(dax_logdev);
-> +		fs_dax_release(dax_logdev, mp);
->  	}
->   out:
-> -	fs_put_dax(dax_ddev);
-> +	fs_dax_release(dax_ddev, mp);
->  	return error;
->  }
->  
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index 3045c0d9c804..9b4259aee016 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -51,12 +51,8 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
->  	return dax_get_by_host(host);
->  }
->  
-> -static inline void fs_put_dax(struct dax_device *dax_dev)
-> -{
-> -	put_dax(dax_dev);
-> -}
-> -
-> -struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
-> +struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner);
-> +void fs_dax_release(struct dax_device *dax_dev, void *owner);
->  int dax_set_page_dirty(struct page *page);
->  void dax_invalidatepage(struct page *page, unsigned int offset,
->  		unsigned int length);
-> @@ -71,13 +67,14 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
->  	return NULL;
->  }
->  
-> -static inline void fs_put_dax(struct dax_device *dax_dev)
-> +static inline struct dax_device *fs_dax_claim_bdev(struct block_device *bdev,
-> +		void *owner)
->  {
-> +	return NULL;
->  }
->  
-> -static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-> +static inline void fs_dax_release(struct dax_device *dax_dev, void *owner)
->  {
-> -	return NULL;
->  }
->  
->  #define dax_set_page_dirty NULL
-> @@ -88,6 +85,8 @@ int dax_read_lock(void);
->  void dax_read_unlock(int id);
->  struct dax_device *alloc_dax(void *private, const char *host,
->  		const struct dax_operations *ops);
-> +struct dax_device *alloc_dax_devmap(void *private, const char *host,
-> +		const struct dax_operations *ops, struct dev_pagemap *pgmap);
->  bool dax_alive(struct dax_device *dax_dev);
->  void kill_dax(struct dax_device *dax_dev);
->  void *dax_get_private(struct dax_device *dax_dev);
-> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> index 7b4899c06f49..02d6d042ee7f 100644
-> --- a/include/linux/memremap.h
-> +++ b/include/linux/memremap.h
-> @@ -53,11 +53,19 @@ struct vmem_altmap {
->   * driver can hotplug the device memory using ZONE_DEVICE and with that memory
->   * type. Any page of a process can be migrated to such memory. However no one
->   * should be allow to pin such memory so that it can always be evicted.
-> + *
-> + * MEMORY_DEVICE_FS_DAX:
-> + * When MEMORY_DEVICE_HOST memory is represented by a device that can
-> + * host a filesystem, for example /dev/pmem0, that filesystem can
-> + * register for a callback when a page is idled. For the filesystem-dax
-> + * case page idle callbacks are used to coordinate DMA vs
-> + * hole-punch/truncate.
->   */
->  enum memory_type {
->  	MEMORY_DEVICE_HOST = 0,
->  	MEMORY_DEVICE_PRIVATE,
->  	MEMORY_DEVICE_PUBLIC,
-> +	MEMORY_DEVICE_FS_DAX,
->  };
->  
->  /*
-> 
+-- 
+Carlos
