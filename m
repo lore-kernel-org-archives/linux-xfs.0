@@ -1,68 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39616 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753864AbeCFRQx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Mar 2018 12:16:53 -0500
-Subject: Re: [PATCH 04/16] xfs_scrub: don't ask user to run xfs_repair for
+Received: from aserp2120.oracle.com ([141.146.126.78]:59466 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755816AbeCHTgd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 14:36:33 -0500
+Date: Thu, 8 Mar 2018 11:36:28 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 04/16] xfs_scrub: don't ask user to run xfs_repair for
  only warnings
+Message-ID: <20180308193628.GC18989@magnolia>
 References: <151993157539.22223.6269629008244777191.stgit@magnolia>
  <151993160036.22223.2742740914776483127.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <63982341-7cce-68c0-144c-b24b279ddc3f@sandeen.net>
-Date: Tue, 6 Mar 2018 11:16:50 -0600
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <151993160036.22223.2742740914776483127.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Don't advise the user to run xfs_repair on a filesystem that triggers
+warnings but no errors; there's no corruption for it to fix.
 
-On 3/1/18 1:13 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Don't advise the user to run xfs_repair on a filesystem that triggers
-> warnings but no errors; there's no corruption for it to fix.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix confusing variable name, add more comments
+---
+ scrub/phase1.c    |    2 +-
+ scrub/xfs_scrub.c |    7 ++++++-
+ scrub/xfs_scrub.h |    2 +-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-I went looking for why ->need_repair is set if repair isn't needed, and:
-
-C symbol: need_repair
-
-  File              Function	   Line
-0 scrub/xfs_scrub.h <global>        98 bool need_repair;
-1 scrub/phase1.c    xfs_setup_fs   239 ctx->need_repair = true;
-2 scrub/xfs_scrub.c report_outcome 517 if (ctx->need_repair)
-
-um, when is ->need_repair ever false?  What am I missing?
-
-> ---
->  scrub/xfs_scrub.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> 
-> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> index ab26e63..53a105a 100644
-> --- a/scrub/xfs_scrub.c
-> +++ b/scrub/xfs_scrub.c
-> @@ -514,7 +514,7 @@ report_outcome(
->  		fprintf(stderr, _("%s: errors found: %llu; warnings found: %llu\n"),
->  				ctx->mntpoint, total_errors,
->  				ctx->warnings_found);
-> -	if (ctx->need_repair)
-> +	if (ctx->need_repair && total_errors > 0)
->  		fprintf(stderr, _("%s: Unmount and run xfs_repair.\n"),
->  				ctx->mntpoint);
->  }
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index b856a7f..002c642 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -237,6 +237,6 @@ _("Unable to find realtime device path."));
+ 	 * purely setup errors).
+ 	 */
+ 	log_info(ctx, _("Invoking online scrub."), ctx);
+-	ctx->need_repair = true;
++	ctx->scrub_setup_succeeded = true;
+ 	return true;
+ }
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 7ab0c3e..7ee02b6 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -522,7 +522,12 @@ report_outcome(
+ 				total_errors, ctx->warnings_found);
+ 	}
+ 
+-	if (ctx->need_repair)
++	/*
++	 * Don't advise the user to run repair unless we were successful in
++	 * setting up the scrub and we actually saw corruptions.  Warnings
++	 * are not corruptions.
++	 */
++	if (ctx->scrub_setup_succeeded && total_errors > 0)
+ 		fprintf(stderr, _("%s: Unmount and run xfs_repair.\n"),
+ 				ctx->mntpoint);
+ }
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index b455747..aa130a7 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -96,7 +96,7 @@ struct scrub_ctx {
+ 	unsigned long long	naming_warnings;
+ 	unsigned long long	repairs;
+ 	unsigned long long	preens;
+-	bool			need_repair;
++	bool			scrub_setup_succeeded;
+ 	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+ };
+ 
