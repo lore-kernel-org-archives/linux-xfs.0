@@ -1,89 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:42641 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932161AbeCKQII (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Mar 2018 12:08:08 -0400
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:46940 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755755AbeCHK6C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 05:58:02 -0500
+Received: by mail-wr0-f181.google.com with SMTP id m12so5198630wrm.13
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Mar 2018 02:58:02 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20180201003511.GK4849@magnolia>
-References: <1516952669-14769-1-git-send-email-amir73il@gmail.com>
- <20180126214404.GE9068@magnolia> <CAOQ4uxgVaGgwio=538-PP4QuRbcny6q0_CAeV-9bQEWBaxv2gA@mail.gmail.com>
- <20180129155054.GJ9359@magnolia> <CAOQ4uxjMfZGMtbq2vRN8dL5QvgC0=UD-yWDbNib=dckDTFR0Nw@mail.gmail.com>
- <20180201003511.GK4849@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sun, 11 Mar 2018 18:08:06 +0200
-Message-ID: <CAOQ4uxjE31j7XDpEGnnym7cgD_kqsPnio4KN2gphajsCNMrG1g@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
+In-Reply-To: <20180306213915.GJ18129@dastard>
+References: <20180305150546.32191-1-jtulak@redhat.com> <20180305215659.GE18129@dastard>
+ <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net> <20180305223148.GG18129@dastard>
+ <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net> <CACj3i73y_ZWvgdv3aKTKaKGuo+6uhcfy1465T3CD2uQDLE3=xQ@mail.gmail.com>
+ <20180306213915.GJ18129@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 8 Mar 2018 11:57:40 +0100
+Message-ID: <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
+Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, stable@kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Feb 1, 2018 at 2:35 AM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Thu, Feb 01, 2018 at 02:27:23AM +0200, Amir Goldstein wrote:
->> On Mon, Jan 29, 2018 at 5:50 PM, Darrick J. Wong
->> <darrick.wong@oracle.com> wrote:
->> > On Mon, Jan 29, 2018 at 01:07:36PM +0200, Amir Goldstein wrote:
->> >> On Fri, Jan 26, 2018 at 11:44 PM, Darrick J. Wong
->> >> <darrick.wong@oracle.com> wrote:
->> >> > On Fri, Jan 26, 2018 at 09:44:29AM +0200, Amir Goldstein wrote:
->> >> >> Commit 66f364649d870 ("xfs: remove if_rdev") moved storing of rdev
->> >> >> value for special inodes to VFS inodes, but forgot to preserve the
->> >> >> value of i_rdev when recycling a reclaimable xfs_inode.
->> >> >>
->> >> >> This was detected by xfstest overlay/017 with inodex=on mount option
->> >> >> and xfs base fs. The test does a lookup of overlay chardev and blockdev
->> >> >> right after drop caches.
->> >> >>
->> >> >> Overlayfs inodes hold a reference on underlying xfs inodes when mount
->> >> >> option index=on is configured. If drop caches reclaim xfs inodes, before
->> >> >> it relclaims overlayfs inodes, that can sometimes leave a reclaimable xfs
->> >> >> inode and that test hits that case quite often.
->> >> >>
->> >> >> When that happens, the xfs inode cache remains broken (zere i_rdev)
->> >> >> until the next cycle mount or drop caches.
->> >> >>
->> >> >> Fixes: 66f364649d870 ("xfs: remove if_rdev")
->> >> >> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> >> >
->> >> > Looks ok,
->> >> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->> >> >
+On Tue, Mar 6, 2018 at 10:39 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Mar 06, 2018 at 12:51:18PM +0100, Jan Tulak wrote:
+>> On Tue, Mar 6, 2018 at 12:33 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> > On 3/5/18 4:31 PM, Dave Chinner wrote:
+>> >> On Mon, Mar 05, 2018 at 04:06:38PM -0600, Eric Sandeen wrote:
+>> >>> As for running automatically and fix any problems, we may need to make
+>> >>> a decision.  If it won't mount due to a log problem, do we automatically
+>> >>> use -L or drop to a shell and punt to the admin?  (That's what we would
+>> >>> do w/o any fsck -f invocation today...)
 >> >>
->> >> I recon that now we should now also strap:
->> >> Cc: <stable@vger.kernel.org> #v4.15
->> >>
->> >> Can I assume, you'll add it on apply?
+>> >> Define the expected "forcefsck" semantics, and that will tell us
+>> >> what we need to do. Is it automatic system recovery? What if the
+>> >> root fs can't be mounted due to log replay problems?
 >> >
->> > I'll do a proper backport of this and a couple other critical cow
->> > fixes after I get the 4.16 stuff merged.
+>> > You're asking too much.  ;)  Semantics?  ;)  Best we can probably do
+>> > is copy what e2fsck does - it tries to replay the log before running
+>> > the actual fsck.  So ... what does e2fsck do if /it/ can't replay
+>> > the log?
+>>
+>> As far as I can tell, in that case, e2fsck exit code indicates 4 -
+>> File system errors left uncorrected, but I'm studying ext testing
+>> tools and will try to verify it.
+>> About the -L flag, I think it is a bad idea - we don't want anything
+>> dangerous to happen here, so if it can't be fixed safely and in an
+>> automated way, just bail out.
+>> That being said, I added a log replay attempt in there (via mount/unmount).
+>
+> I really don't advise doing that for a forced filesystem check. If
+> the log is corrupt, mounting it will trigger the problems we are
+> trying to avoid/fix by running a forced filesystem check. As it is,
+> we're probably being run in this mode because mounting has already
+> failed and causing the system not to boot.
+>
+> What we need to do is list how the startup scripts work according to
+> what error is returned, and then match the behaviour we want in a
+> specific corruption case to the behaviour of a specific return
+> value.
+>
+> i.e. if we have a dirty log, then really we need manual
+> intervention. That means we need to return an error that will cause
+> the startup script to stop and drop into an interactive shell for
+> the admin to fix manually.
+>
+> This is what I mean by "define the expected forcefsck semantics" -
+> describe the behaviour of the system in reponse to the errors we can
+> return to it, and match them to the problem cases we need to resolve
+> with fsck.xfs.
+
+I tested it on Fedora 27. Exit codes 2 and 4 ("File system errors
+corrected, system should be rebooted" and "File system errors left
+uncorrected") drop the user into the emergency shell. Anything else
+and the boot continues.
+
+This happens before root volume is mounted during the boot, so I
+propose this behaviour for fsck.xfs:
+- if the volume/device is mounted, exit with 16 - usage or syntax
+error (just to be sure)
+- if the volume/device has a dirty log, exit with 4 - errors left
+uncorrected (drop to the shell)
+- if we find no errors, exit with 0 - no errors
+- if we find anything and xfs_repair ends successfully, exit with 1 -
+errors corrected
+- anything else and exit with 8 - operational error
+
+And is there any other way how to get the "there were some errors, but
+we corrected them" other than either 1) screenscrape xfs_repair or 2)
+run xfs_repair twice, once with -n to detect and then without -n to
+fix the found errors?
+
+>
+>> >>>> I also wonder if we can limit this to just the boot infrastructure,
+>> >>>> because I really don't like the idea of users using fsck.xfs -f to
+>> >>>> repair damage filesystems because "that's what I do to repair ext4
+>> >>>> filesystems"....
+>> >>>
+>> >>> Depending on how this gets fleshed out, fsck.xfs -f isn't any different
+>> >>> than bare xfs_repair...  (Unless all of the above suggestions about dirty
+>> >>> logs get added, then it certainly is!)  So, yeah...
+>> >>>
+>> >>> How would you propose limiting it to the boot environment?
+>> >>
+>> >> I have no idea - this is all way outside my area of expertise...
+>> >
+>> > A halfway measure would be to test whether the script is interactive, perhaps?
+>> >
+>> > https://www.tldp.org/LDP/abs/html/intandnonint.html
+>> >
+>> > case $- in
+>> > *i*)    # interactive shell
+>> > ;;
+>> > *)      # non-interactive shell
+>> > ;;
 >> >
 >>
->> I am not sure what "proper backport" means in the context of
->> this patch.
->> This is a v4.15-rc1 regression fix that is based on v4.15-rc8.
->> It applied cleanly on v4.15.
+>> IMO, any such test would make fsck.xfs behave unpredictably for the
+>> user. If anyone wants to run fsck.xfs -f instead of xfs_repair, it is
+>> their choice.
 >
-> I meant the other things that went into 4.16, like the reflink quota
-> fixes, the directio corruption problems, etc.  Make a branch, add the
-> necessary fixes, run xfstests to make sure it all still works, etc.
+> We limit user choices all the time. Default values, config options,
+> tuning variables, etc, IOWs, it's our choice as developers to allow
+> users to do something or not.  And in this case, we made this choice
+> to limit what fsck.xfs could do a long time ago:
+>
+> # man fsck.xfs
+> .....
+>         If you wish to check the consistency of an XFS filesystem,
+>         or repair a damaged or corrupt XFS filesystem, see
+>         xfs_repair(8).
+> .....
+> # fsck.xfs
+> If you wish to check the consistency of an XFS filesystem or
+> repair a damaged filesystem, see xfs_repair(8).
+> #
 >
 
-Darrick,
+At that point, it was a consistent behaviour, do nothing all the time,
+no matter what.
 
-I may be missing something in the process of stable kernel
-maintenance, but this patch fixes a reproducible v4.15 regression
-(xfstest overlay/017 fails on stable kernel v4.15).
+>
+>> We can print something "next time use xfs_repair
+>> directly" for an interactive session, but I don't like the idea of the
+>> script doing different things based on some (for the user) hidden
+>> variables.
+>
+> What hidden variable are you talking about here? Having a script
+> determine behaviour based on whether it is in an interactive
+> sessions or not is a common thing to do. There's nothing tricky or
+> unusual about it....
+>
 
-Is Greg usually picking those stable patches himself or is he waiting
-for xfs maintainers (or xfs stable maintainers) to stage the
-stable patches?
+I'm not aware of any script or tool that would refuse to work except
+when started in a specific environment and noninteractively (doesn't
+mean they don't exist, but it is not common). And because it seems
+that fsck.xfs -f will do only what bare xfs_repair would do, no log
+replay, nothing... then I really think that changing what the script
+does (not just altering its output) based on environment tests is
+unnecessary. And for anyone without this specific knowledge, it would
+be confusing - people expect that for the same input the application
+or script does the same thing at the end.
 
-As I wrote above, the reason this patch is missing the Cc: stable
-tag is because it landed just after v4.15 was released, but I was
-aiming for it to get merged to v4.15 and avoid the regression in
-a release kernel.
-
-Thanks,
-Amir.
+Cheers,
+Jan
