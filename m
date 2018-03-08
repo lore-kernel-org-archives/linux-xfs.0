@@ -1,136 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1190 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753899AbeCFWOo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Mar 2018 17:14:44 -0500
-Date: Wed, 7 Mar 2018 09:14:41 +1100
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:63575 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934289AbeCHEOj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Mar 2018 23:14:39 -0500
+Date: Thu, 8 Mar 2018 15:14:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: handle inconsistent log item formatting state
- correctly
-Message-ID: <20180306221441.GK18129@dastard>
-References: <20180301223527.28626-1-david@fromorbit.com>
- <20180305144001.GA6135@bfoster.bfoster>
- <20180305221857.GF18129@dastard>
- <20180306123155.GB10982@bfoster.bfoster>
+Subject: Re: [PATCH 12/16] xfs_db: add a superblock info command
+Message-ID: <20180308041435.GP18129@dastard>
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+ <151993165958.22223.10507415725288169958.stgit@magnolia>
+ <20edb4dd-80c4-76e6-d63d-09c6553b5c29@sandeen.net>
+ <777384a3-90de-4715-21fc-a3f7b45387d8@sandeen.net>
+ <20180306204904.GJ18989@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180306123155.GB10982@bfoster.bfoster>
+In-Reply-To: <20180306204904.GJ18989@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, linux-xfs@vger.kernel.org, djwong@kernel.org
 
-On Tue, Mar 06, 2018 at 07:31:56AM -0500, Brian Foster wrote:
-> On Tue, Mar 06, 2018 at 09:18:57AM +1100, Dave Chinner wrote:
-> > On Mon, Mar 05, 2018 at 09:40:01AM -0500, Brian Foster wrote:
-> > > On Fri, Mar 02, 2018 at 09:35:27AM +1100, Dave Chinner wrote:
-> > > but will it ever be written back (unless some other
-> > > transaction modifies/commits it) if it doesn't make it to the AIL? ISTM
-> > > that this is a corruption vector with at least a couple different
-> > > interesting paths (e.g. unmount losing data or a crash -> log recovery
-> > > inconsistency).
-> > > 
-> > > Unless I'm mistaken in the above, I think we need to be a bit more
-> > > aggressive in handling this condition. We could obviously assert/warn,
-> > > but IMO a shutdown is appropriate given that we may have to assume that
-> > > clearing the dirty state made the fs inconsistent (and we already
-> > > shutdown for slightly more innocuous things, like tx overrun, in
-> > > comparison). The problem is that we need to make sure the current
-> > > transaction is not partially committed so we don't actually corrupt the
-> > > fs by shutting down, which leads to one last thought...
-> > > 
-> > > AFAICT the transaction commit path expects to handle items that are
-> > > either not dirty or otherwise must be logged. It looks like the earliest
-> > > we identify this problem is xlog_cil_alloc_shadow_bufs() after we've
-> > > called ->iop_size(). Any reason we couldn't handle this problem there?
-> > 
-> > Because that code can validly be passed a dirty object that ends up
-> > with no logged regions. IMO, shadow buffer allocation is the wrong
-> > place to be determining if a dirty item needs to be added to the CIL
-> > or not - that's the job of the formatting code....
+On Tue, Mar 06, 2018 at 12:49:04PM -0800, Darrick J. Wong wrote:
+> On Tue, Mar 06, 2018 at 01:34:42PM -0600, Eric Sandeen wrote:
+> > Sorry - of course later patches make xfs_info work offline, but still,
+> > I'd like to see some rationale for why we need that capability.  I'm all
+> > for the code reduction of the common printing routine but what's the big
+> > picture rational for teaching all these other tools to print mkfs-like output?
 > 
-> I don't think the lidp dirty state necessarily means an item has logged
-> regions or not (and so lack of dirty regions doesn't necessarily justify
-> clearing the dirty flag). We still log for an invalidated buffer, for
-> example, and/or an item may have been dirtied by a previous transaction
-> and end up clean in a subsequent one.
+> Growing the filesystem falls under the umbrella of space management, so
+> in the long run (like after I finish putting online repair in) I intend
+> to make growfs a part of xfs_spaceman, and then the xfs_growfs command
+> becomes a wrapper around that.  Looking forward towards Dave's subvolume
+> thingy, I think it makes sense to be able to manage subvolumes entirely
+> via spaceman commands.
 
-An invalidated buffer has the BLI_STALE state, and this gets
-formatted into the log on commit in the buf log format structure so
-that log recovery can correctly cancel invalidated buffers instead
-of replaying them. IOWs, they *definitely* have log vectors
-associated with them.
+Agreed with this, as this is where I've implemented all the subvol
+management stuff.
 
-That's the thing - anything that is dirtied and needs to be written
-to the log will write a log item format structure into a log vector.
-The only time this will not occur is if the object is actually clean
-and a log item format structure does not need to be written. That's
-the case where niovecs = 0.
-
-The only exception to this case is ordered buffers - they have a
-dirty lidp, but a clean log item format structure. They need a log
-vector structure allocated because they have to pass through the CIL
-into the AIL so they can be correctly ordered. But the point here is
-that we've passed a "dirty object that ends up with no logged
-regions" to the formatting code, and it's special cased this because
-it's been marked as an "ordered" log item.
-
-> FWIW, I think it would make sense to handle this case at format time if
-> it were a valid state, not so much if it isn't. I'm simply not following
-> how it is a valid state.
-
-The object state is valid. putting such objects into the CIL is what
-is not valid, and that's where the bug is.
-
-> AFAICT we have the following valid states at
-> transaction commit time:
-> 
-> - lid not dirty, lip state is a 'don't care'
-> - lid dirty, lip ordered, niovecs == 0
-> - lid dirty, lip !ordered, niovecs != 0
-> 
-> ... and anything else is essentially a bug. Am I missing some other
-> case?
-
-No. We handle all 3 cases you mention above, but we must keep in
-mind that there's only one other case here:
-
-- lid dirty, lip !ordered, niovecs == 0
-
-And that's exactly the case that the code currently tries to handle
-and gets wrong. It leaves this log item in a bad state (dirty, but
-with no attached xfs_log_vec) and adds it to the CIL, and that gets
-tripped over later when pushing the CIL.
-
-
-That's all I'm fixing in this patch. I'm ignoring whether it's
-possible or not (the original code thought it necessary to handle),
-and if the log item format information says the object is clean,
-then it's clean and we should reflect that in the transaction we are
-committing. That's why I cleared the lid dirty flag - it's clean,
-and we should make sure we treat it consistently as a clean object.
-
-All the transaction cleanup will work correctly when it's committed
-and clean log items are released (and freed) because that doesn't
-care what the lid dirty state is, just what the log item state is...
-
-> > > There's no reason to allocate a vector we already know we aren't going
-> > > to use (and that is clearly based on invalid parameters), after all.
-> > 
-> > Such objects still need a log vector attached to them so they can be
-> > processed through the CIL and entered into the AIL via the log
-> > vector chain.
-> 
-> Confused. This patch prevents that from happening on such objects (which
-> you just noted above wrt to the appropriate place to determine whether
-> to insert into the CIL). Hm?
-
-See my comments about ordered buffers above. The only difference
-between a clean log item we should drop from the transaction and a
-clean log item we should consider as dirty and pass through the CIL
-into the AIL is the ordered flag....
+Also, when we have lots of subvoils sitting around as files, it'd
+bee really nice to be able to have utilities that can identify them
+from accessing the backing file....
 
 Cheers,
 
