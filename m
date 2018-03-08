@@ -1,98 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:51438 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750984AbeCGGMv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Mar 2018 01:12:51 -0500
-Received: by mail-wm0-f68.google.com with SMTP id h21so2478147wmd.1
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Mar 2018 22:12:51 -0800 (PST)
-Date: Wed, 7 Mar 2018 07:12:47 +0100
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/4] Get rid of XFS_BUF_PTR() macro
-Message-ID: <20180307061247.r7uoxz3qtbm5s7xq@odin.usersys.redhat.com>
-References: <20180306130053.13958-1-cmaiolino@redhat.com>
- <20180306130053.13958-2-cmaiolino@redhat.com>
- <20180306222210.GL18129@dastard>
+Received: from bombadil.infradead.org ([198.137.202.133]:53042 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755117AbeCHILP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 03:11:15 -0500
+Date: Thu, 8 Mar 2018 00:11:13 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/5] libxfs: add function to free all buffers in bcache
+Message-ID: <20180308081113.GD15163@infradead.org>
+References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
+ <5b3368e5-6ce7-e225-e75c-5dc6486d4b57@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180306222210.GL18129@dastard>
+In-Reply-To: <5b3368e5-6ce7-e225-e75c-5dc6486d4b57@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Mar 07, 2018 at 09:22:10AM +1100, Dave Chinner wrote:
-> On Tue, Mar 06, 2018 at 02:00:50PM +0100, Carlos Maiolino wrote:
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> .....
+On Tue, Mar 06, 2018 at 03:54:51PM -0600, Eric Sandeen wrote:
+> libxfs_bcache_purge simply moves all "free" buffers
+> onto the xfs_buf_freelist mru list; add a new function to
+> actually free them when we tear everything down, so leak
+> checkers don't go nuts about lots of unfreed xfs_bufs
+> at exit.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  libxfs/init.c      |  5 ++++-
+>  libxfs/libxfs_io.h |  1 +
+>  libxfs/rdwr.c      | 18 ++++++++++++++++++
+>  3 files changed, 23 insertions(+), 1 deletion(-)
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 7bde8b7..c7d73b6 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -888,8 +888,11 @@ libxfs_umount(xfs_mount_t *mp)
+>  void
+>  libxfs_destroy(void)
+>  {
+> -	manage_zones(1);
+> +	/* Free everything from the buffer cache before freeing buffer zone */
+> +	libxfs_bcache_purge();
+> +	libxfs_bcache_free();
+>  	cache_destroy(libxfs_bcache);
+> +	manage_zones(1);
+>  }
+>  
+>  int
+> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+> index 78b6780..6de6fcb 100644
+> --- a/libxfs/libxfs_io.h
+> +++ b/libxfs/libxfs_io.h
+> @@ -188,6 +188,7 @@ extern void	libxfs_readbuf_verify(struct xfs_buf *bp,
+>  			const struct xfs_buf_ops *ops);
+>  extern xfs_buf_t *libxfs_getsb(struct xfs_mount *, int);
+>  extern void	libxfs_bcache_purge(void);
+> +extern void	libxfs_bcache_free(void);
+>  extern void	libxfs_bcache_flush(void);
+>  extern void	libxfs_purgebuf(xfs_buf_t *);
+>  extern int	libxfs_bcache_overflowed(void);
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 3c5def2..81701b7 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -1275,6 +1275,24 @@ libxfs_bulkrelse(
+>  }
+>  
+>  /*
+> + * Free everything from the xfs_buf_freelist MRU, used at final teardown
+> + */
+> +void
+> +libxfs_bcache_free(void)
+> +{
+> +	struct list_head	*cm_list;
+> +	xfs_buf_t		*bp, *next;
+> +
+> +	cm_list = &xfs_buf_freelist.cm_list;
 
-D'oh, I thought I paid attention to the casting, typed git-send too quick, I'll
-review it and submit again.
+Maybe initialize cm_list on the same line as the variable declaration?
 
-> > @@ -275,9 +275,9 @@ newfile(
-> >  		d = XFS_FSB_TO_DADDR(mp, map.br_startblock);
-> >  		bp = libxfs_trans_get_buf(logit ? tp : 0, mp->m_dev, d,
-> >  			nb << mp->m_blkbb_log, 0);
-> > -		memmove(XFS_BUF_PTR(bp), buf, len);
-> > +		memmove(bp->b_addr, buf, len);
-> >  		if (len < XFS_BUF_COUNT(bp))
-> > -			memset(XFS_BUF_PTR(bp) + len, 0, XFS_BUF_COUNT(bp) - len);
-> > +			memset(bp->b_addr + len, 0, XFS_BUF_COUNT(bp) - len);
-> 
-> Bug there. pointer arithmetic changed, needs (char *) cast.
-> 
-> >  	/* OK, now write the superblock... */
-> >  	buf = libxfs_getbuf(mp->m_ddev_targp, XFS_SB_DADDR, XFS_FSS_TO_BB(mp, 1));
-> >  	buf->b_ops = &xfs_sb_buf_ops;
-> > -	memset(XFS_BUF_PTR(buf), 0, cfg->sectorsize);
-> > -	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp);
-> > +	memset(buf->b_addr, 0, cfg->sectorsize);
-> > +	libxfs_sb_to_disk((void *)buf->b_addr, sbp);
-> 
-> Kill the cast - b_addr is already a void *
-> 
-> > @@ -3382,8 +3382,8 @@ initialise_ag_headers(
-> >  			XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> >  			XFS_FSS_TO_BB(mp, 1));
-> >  	buf->b_ops = &xfs_sb_buf_ops;
-> > -	memset(XFS_BUF_PTR(buf), 0, cfg->sectorsize);
-> > -	libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp);
-> > +	memset(buf->b_addr, 0, cfg->sectorsize);
-> > +	libxfs_sb_to_disk((void *)buf->b_addr, sbp);
-> 
-> ditto.
-> 
-> > +++ b/repair/agheader.c
-> > @@ -290,8 +290,8 @@ secondary_sb_whack(
-> >  			+ sizeof(sb->sb_dirblklog);
-> >  
-> >  	/* Check the buffer we read from disk for garbage outside size */
-> > -	for (ip = XFS_BUF_PTR(sbuf) + size;
-> > -	     ip < XFS_BUF_PTR(sbuf) + mp->m_sb.sb_sectsize;
-> > +	for (ip = sbuf->b_addr + size;
-> > +	     ip < (char *)sbuf->b_addr + mp->m_sb.sb_sectsize;
-> 
-> Looks like another pointer math bug there...
-> 
-> >  	     ip++)  {
-> >  		if (*ip)  {
-> >  			do_bzero = 1;
-> > @@ -314,7 +314,7 @@ secondary_sb_whack(
-> >  			memcpy(&tmpuuid, &sb->sb_meta_uuid, sizeof(uuid_t));
-> >  			memset((void *)((intptr_t)sb + size), 0,
-> >  				mp->m_sb.sb_sectsize - size);
-> > -			memset(XFS_BUF_PTR(sbuf) + size, 0,
-> > +			memset(sbuf->b_addr + size, 0,
-> 
-> And another.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Also please don't use xfs_buf_t for new code.
 
--- 
-Carlos
+Otherwise this looks fine to me:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
