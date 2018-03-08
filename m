@@ -1,70 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:44499 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932600AbeCEKTr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Mar 2018 05:19:47 -0500
-Received: by mail-qt0-f196.google.com with SMTP id g60so19673904qtd.11
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Mar 2018 02:19:47 -0800 (PST)
+Received: from sandeen.net ([63.231.237.45]:46670 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750728AbeCHUU6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Mar 2018 15:20:58 -0500
+Subject: Re: [PATCH v2 04/16] xfs_scrub: don't ask user to run xfs_repair for
+ only warnings
+References: <151993157539.22223.6269629008244777191.stgit@magnolia>
+ <151993160036.22223.2742740914776483127.stgit@magnolia>
+ <20180308193628.GC18989@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0612d2cd-ddf4-72d5-7c82-013f1d60b7d7@sandeen.net>
+Date: Thu, 8 Mar 2018 14:20:57 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180302163603.GQ19312@magnolia>
-References: <20180228154951.31714-1-vbendel@redhat.com> <20180301224800.GI12763@magnolia>
- <20180302163603.GQ19312@magnolia>
-From: Vratislav Bendel <vbendel@redhat.com>
-Date: Mon, 5 Mar 2018 11:19:46 +0100
-Message-ID: <CAHrQN1w2DxYD_ZscBhsuGq2b6CKn41AnVCaH6_hSQ2tN8DkA1Q@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180308193628.GC18989@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, djwong@kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org, djwong@kernel.org
 
-(In response to Luis' comment:)
-> Can you add a respective Fixes: tag?
-
-It was apparently present since LRU was added to xfs buffer cache via:
-commit 430cbeb86fdcbbdabea7d4aa65307de8de425350
-[xfs: add a lru to the XFS buffer cache]
-
-But I wouldn't say this patch "fixes" that commit.
-What do you think? Should a fixes tag be added in this case?
-
-
-> Also what effects are observed by
-> the user when this happens on the kernel log?
-
-I haven't spotted any differences visible to user, nor in the kernel log.
-
-(In response to Brian's comment:)
->> However, as per documentation, atomic_add_unless() returns _zero_
->> if the atomic value was originally equal to the specified *unsless* value.
->>
-> Nit:                                                         unless
-
-Thanks very much for feedback. Since it's my very first upstream
-commit-proposal,
-I expected that some polish would be needed.
-
-
-> It might be worth pointing out in the commit log that currently isolated
-> buffers end up right back on the LRU once they are released, because
-> ->b_lru_ref remains elevated. Therefore, this patch essentially fixes
-> that circuitous route by leaving them on the LRU as originally intended.
-> Otherwise this looks Ok to me:
-
-So the final commit message could be:
-~~~
-Currently the xfs_buftarg_isolate() is causing an xfs_buffer
-with zero b_lru_ref, to take another trip around LRU, while
-isolating buffers with non-zero b_lru_ref.
-
-Additionally those isolated buffers end up right back on the LRU
-once they are released, because ->b_lru_ref remains elevated.
-
-Fix that circuitous route by leaving them on the LRU
-as originally intended.
-
->> Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+On 3/8/18 1:36 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Don't advise the user to run xfs_repair on a filesystem that triggers
+> warnings but no errors; there's no corruption for it to fix.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
+> v2: fix confusing variable name, add more comments
+
+thanks, that helps my poor brain.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  scrub/phase1.c    |    2 +-
+>  scrub/xfs_scrub.c |    7 ++++++-
+>  scrub/xfs_scrub.h |    2 +-
+>  3 files changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index b856a7f..002c642 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -237,6 +237,6 @@ _("Unable to find realtime device path."));
+>  	 * purely setup errors).
+>  	 */
+>  	log_info(ctx, _("Invoking online scrub."), ctx);
+> -	ctx->need_repair = true;
+> +	ctx->scrub_setup_succeeded = true;
+>  	return true;
+>  }
+> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+> index 7ab0c3e..7ee02b6 100644
+> --- a/scrub/xfs_scrub.c
+> +++ b/scrub/xfs_scrub.c
+> @@ -522,7 +522,12 @@ report_outcome(
+>  				total_errors, ctx->warnings_found);
+>  	}
+>  
+> -	if (ctx->need_repair)
+> +	/*
+> +	 * Don't advise the user to run repair unless we were successful in
+> +	 * setting up the scrub and we actually saw corruptions.  Warnings
+> +	 * are not corruptions.
+> +	 */
+> +	if (ctx->scrub_setup_succeeded && total_errors > 0)
+>  		fprintf(stderr, _("%s: Unmount and run xfs_repair.\n"),
+>  				ctx->mntpoint);
+>  }
+> diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+> index b455747..aa130a7 100644
+> --- a/scrub/xfs_scrub.h
+> +++ b/scrub/xfs_scrub.h
+> @@ -96,7 +96,7 @@ struct scrub_ctx {
+>  	unsigned long long	naming_warnings;
+>  	unsigned long long	repairs;
+>  	unsigned long long	preens;
+> -	bool			need_repair;
+> +	bool			scrub_setup_succeeded;
+>  	bool			preen_triggers[XFS_SCRUB_TYPE_NR];
+>  };
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
