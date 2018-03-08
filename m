@@ -1,367 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46236 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751773AbeCLORZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Mar 2018 10:17:25 -0400
-Date: Mon, 12 Mar 2018 10:17:21 -0400
-From: Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH v5 07/11] mm, dev_pagemap: introduce
- CONFIG_DEV_PAGEMAP_OPS
-Message-ID: <20180312141721.GB4214@redhat.com>
-References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152066492680.40260.6843692416565308005.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36890 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932076AbeCHRCb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 12:02:31 -0500
+Received: by mail-oi0-f51.google.com with SMTP id f186so4867800oig.4
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Mar 2018 09:02:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <152066492680.40260.6843692416565308005.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <20180108135002.mk427dfa3wfphsgt@quack2.suse.cz>
+References: <151407695916.38751.2866053440557472361.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <151407705124.38751.12934858054023659736.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180104111233.GD29010@quack2.suse.cz> <CAA9_cmcL7E7F+sEp1wn6H4TQBQeNttm_MSJjKT9jNfOri8iK9g@mail.gmail.com>
+ <20180108135002.mk427dfa3wfphsgt@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 8 Mar 2018 09:02:30 -0800
+Message-ID: <CAPcyv4hU6JxZDwZypD5hiQ+4tj=RDXKvB-0+dAckE8wFpaCCkg@mail.gmail.com>
+Subject: Re: [PATCH v4 17/18] mm, fs, dax: dax_flush_dma, handle dma vs
+ block-map-change collisions
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Michal Hocko <mhocko@suse.com>, david@fromorbit.com, hch@lst.de, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.com, linux-kernel@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Fri, Mar 09, 2018 at 10:55:26PM -0800, Dan Williams wrote:
-> The HMM sub-system extended dev_pagemap to arrange a callback when a
-> dev_pagemap managed page is freed. Since a dev_pagemap page is free /
-> idle when its reference count is 1 it requires an additional branch to
-> check the page-type at put_page() time. Given put_page() is a hot-path
-> we do not want to incur that check if HMM is not in use, so a static
-> branch is used to avoid that overhead when not necessary.
-> 
-> Now, the FS_DAX implementation wants to reuse this mechanism for
-> receiving dev_pagemap ->page_free() callbacks. Rework the HMM-specific
-> static-key into a generic mechanism that either HMM or FS_DAX code paths
-> can enable.
+On Mon, Jan 8, 2018 at 5:50 AM, Jan Kara <jack@suse.cz> wrote:
+> On Sun 07-01-18 13:58:42, Dan Williams wrote:
+>> On Thu, Jan 4, 2018 at 3:12 AM, Jan Kara <jack@suse.cz> wrote:
+>> > On Sat 23-12-17 16:57:31, Dan Williams wrote:
+>> >
+>> >> +     /*
+>> >> +      * Flush dax_dma_lock() sections to ensure all possible page
+>> >> +      * references have been taken, or will block on the fs
+>> >> +      * 'mmap_lock'.
+>> >> +      */
+>> >> +     synchronize_rcu();
+>> >
+>> > Frankly, I don't like synchronize_rcu() in a relatively hot path like this.
+>> > Cannot we just abuse get_dev_pagemap() to fail if truncation is in progress
+>> > for the pfn? We could indicate that by some bit in struct page or something
+>> > like that.
+>>
+>> We would need a lockless way to take a reference conditionally if the
+>> page is not subject to truncation.
+>>
+>> I recall the raid5 code did something similar where it split a
+>> reference count into 2 fields. I.e. take page->_refcount and use the
+>> upper bits as a truncation count. Something like:
+>>
+>> do {
+>>     old = atomic_read(&page->_refcount);
+>>     if (old & trunc_mask) /* upper bits of _refcount */
+>>         return false;
+>>     new = cnt + 1;
+>> } while (atomic_cmpxchg(&page->_refcount, old, new) != old);
+>> return true; /* we incremented the _refcount while the truncation
+>> count was zero */
+>>
+>> ...the only concern is teaching the put_page() path to consider that
+>> 'trunc_mask' when determining that the page is idle.
+>>
+>> Other ideas?
+>
+> What I rather thought about was an update to GUP paths (like
+> follow_page_pte()):
+>
+>         if (flags & FOLL_GET) {
+>                 get_page(page);
+>                 if (pte_devmap(pte)) {
+>                         /*
+>                          * Pairs with the barrier in the truncate path.
+>                          * Could be possibly _after_atomic version of the
+>                          * barrier.
+>                          */
+>                         smp_mb();
+>                         if (PageTruncateInProgress(page)) {
+>                                 put_page(page);
+>                                 ..bail...
+>                         }
+>                 }
+>         }
+>
+> and in the truncate path:
+>
+>         down_write(inode->i_mmap_sem);
+>         walk all pages in the mapping and mark them PageTruncateInProgress().
+>         unmap_mapping_range(...);
+>         /*
+>          * Pairs with the barrier in GUP path. In fact not necessary since
+>          * unmap_mapping_range() provides us with the barrier already.
+>          */
+>         smp_mb();
+>         /*
+>          * By now we are either guaranteed to see grabbed page reference or
+>          * GUP is guaranteed to see PageTruncateInProgress().
+>          */
+>         while ((page = dax_find_referenced_page(mapping))) {
+>                 ...
+>         }
+>
+> The barriers need some verification, I've opted for the conservative option
+> but I guess you get the idea.
 
-Why EXPORT_SYMBOL_GPL and not EXPORT_SYMBOL like it was prior to this
-patch ? Not i care that much about that, just wondering. Maybe keep it
-EXPORT_SYMBOL() ?
+[ Reviving this thread for the next rev of this patch set for 4.17
+consideration ]
 
-In any case
-Reviewed-by: "Jérôme Glisse" <jglisse@redhat.com>
-
-> Cc: Michal Hocko <mhocko@suse.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/dax/super.c      |    2 ++
->  fs/Kconfig               |    1 +
->  include/linux/memremap.h |   20 ++-------------
->  include/linux/mm.h       |   61 ++++++++++++++++++++++++++++++++--------------
->  kernel/memremap.c        |   30 ++++++++++++++++++++---
->  mm/Kconfig               |    5 ++++
->  mm/hmm.c                 |   13 ++--------
->  mm/swap.c                |    3 ++
->  8 files changed, 84 insertions(+), 51 deletions(-)
-> 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index ecefe9f7eb60..619b1ed6434c 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -191,6 +191,7 @@ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
->  		return NULL;
->  	}
->  
-> +	dev_pagemap_get_ops();
->  	pgmap->type = MEMORY_DEVICE_FS_DAX;
->  	pgmap->page_free = generic_dax_pagefree;
->  	pgmap->data = owner;
-> @@ -215,6 +216,7 @@ void fs_dax_release(struct dax_device *dax_dev, void *owner)
->  	pgmap->type = MEMORY_DEVICE_HOST;
->  	pgmap->page_free = NULL;
->  	pgmap->data = NULL;
-> +	dev_pagemap_put_ops();
->  	mutex_unlock(&devmap_lock);
->  }
->  EXPORT_SYMBOL_GPL(fs_dax_release);
-> diff --git a/fs/Kconfig b/fs/Kconfig
-> index bc821a86d965..1f0832bbc32f 100644
-> --- a/fs/Kconfig
-> +++ b/fs/Kconfig
-> @@ -38,6 +38,7 @@ config FS_DAX
->  	bool "Direct Access (DAX) support"
->  	depends on MMU
->  	depends on !(ARM || MIPS || SPARC)
-> +	select DEV_PAGEMAP_OPS
->  	select FS_IOMAP
->  	select DAX
->  	help
-> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> index 02d6d042ee7f..9faf25d6abef 100644
-> --- a/include/linux/memremap.h
-> +++ b/include/linux/memremap.h
-> @@ -1,7 +1,6 @@
->  /* SPDX-License-Identifier: GPL-2.0 */
->  #ifndef _LINUX_MEMREMAP_H_
->  #define _LINUX_MEMREMAP_H_
-> -#include <linux/mm.h>
->  #include <linux/ioport.h>
->  #include <linux/percpu-refcount.h>
->  
-> @@ -130,6 +129,9 @@ struct dev_pagemap {
->  	enum memory_type type;
->  };
->  
-> +void dev_pagemap_get_ops(void);
-> +void dev_pagemap_put_ops(void);
-> +
->  #ifdef CONFIG_ZONE_DEVICE
->  void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap);
->  struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
-> @@ -137,8 +139,6 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
->  
->  unsigned long vmem_altmap_offset(struct vmem_altmap *altmap);
->  void vmem_altmap_free(struct vmem_altmap *altmap, unsigned long nr_pfns);
-> -
-> -static inline bool is_zone_device_page(const struct page *page);
->  #else
->  static inline void *devm_memremap_pages(struct device *dev,
->  		struct dev_pagemap *pgmap)
-> @@ -169,20 +169,6 @@ static inline void vmem_altmap_free(struct vmem_altmap *altmap,
->  }
->  #endif /* CONFIG_ZONE_DEVICE */
->  
-> -#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
-> -static inline bool is_device_private_page(const struct page *page)
-> -{
-> -	return is_zone_device_page(page) &&
-> -		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
-> -}
-> -
-> -static inline bool is_device_public_page(const struct page *page)
-> -{
-> -	return is_zone_device_page(page) &&
-> -		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
-> -}
-> -#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
-> -
->  static inline void put_dev_pagemap(struct dev_pagemap *pgmap)
->  {
->  	if (pgmap)
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index ad06d42adb1a..088c76bce360 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -812,27 +812,55 @@ static inline bool is_zone_device_page(const struct page *page)
->  }
->  #endif
->  
-> -#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
-> -void put_zone_device_private_or_public_page(struct page *page);
-> -DECLARE_STATIC_KEY_FALSE(device_private_key);
-> -#define IS_HMM_ENABLED static_branch_unlikely(&device_private_key)
-> -static inline bool is_device_private_page(const struct page *page);
-> -static inline bool is_device_public_page(const struct page *page);
-> -#else /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
-> -static inline void put_zone_device_private_or_public_page(struct page *page)
-> +#ifdef CONFIG_DEV_PAGEMAP_OPS
-> +void __put_devmap_managed_page(struct page *page);
-> +DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
-> +static inline bool put_devmap_managed_page(struct page *page)
->  {
-> +	if (!static_branch_unlikely(&devmap_managed_key))
-> +		return false;
-> +	if (!is_zone_device_page(page))
-> +		return false;
-> +	switch (page->pgmap->type) {
-> +	case MEMORY_DEVICE_PRIVATE:
-> +	case MEMORY_DEVICE_PUBLIC:
-> +	case MEMORY_DEVICE_FS_DAX:
-> +		__put_devmap_managed_page(page);
-> +		return true;
-> +	default:
-> +		break;
-> +	}
-> +	return false;
->  }
-> -#define IS_HMM_ENABLED 0
-> +
->  static inline bool is_device_private_page(const struct page *page)
->  {
-> -	return false;
-> +	return is_zone_device_page(page) &&
-> +		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
->  }
-> +
->  static inline bool is_device_public_page(const struct page *page)
->  {
-> +	return is_zone_device_page(page) &&
-> +		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
-> +}
-> +
-> +#else /* CONFIG_DEV_PAGEMAP_OPS */
-> +static inline bool put_devmap_managed_page(struct page *page)
-> +{
->  	return false;
->  }
-> -#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
->  
-> +static inline bool is_device_private_page(const struct page *page)
-> +{
-> +	return false;
-> +}
-> +
-> +static inline bool is_device_public_page(const struct page *page)
-> +{
-> +	return false;
-> +}
-> +#endif /* CONFIG_DEV_PAGEMAP_OPS */
->  
->  static inline void get_page(struct page *page)
->  {
-> @@ -850,16 +878,13 @@ static inline void put_page(struct page *page)
->  	page = compound_head(page);
->  
->  	/*
-> -	 * For private device pages we need to catch refcount transition from
-> -	 * 2 to 1, when refcount reach one it means the private device page is
-> -	 * free and we need to inform the device driver through callback. See
-> +	 * For devmap managed pages we need to catch refcount transition from
-> +	 * 2 to 1, when refcount reach one it means the page is free and we
-> +	 * need to inform the device driver through callback. See
->  	 * include/linux/memremap.h and HMM for details.
->  	 */
-> -	if (IS_HMM_ENABLED && unlikely(is_device_private_page(page) ||
-> -	    unlikely(is_device_public_page(page)))) {
-> -		put_zone_device_private_or_public_page(page);
-> +	if (put_devmap_managed_page(page))
->  		return;
-> -	}
->  
->  	if (put_page_testzero(page))
->  		__put_page(page);
-> diff --git a/kernel/memremap.c b/kernel/memremap.c
-> index 4dd4274cabe2..bd8300d02d7c 100644
-> --- a/kernel/memremap.c
-> +++ b/kernel/memremap.c
-> @@ -476,8 +476,30 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
->  }
->  #endif /* CONFIG_ZONE_DEVICE */
->  
-> -#if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
-> -void put_zone_device_private_or_public_page(struct page *page)
-> +#ifdef CONFIG_DEV_PAGEMAP_OPS
-> +DEFINE_STATIC_KEY_FALSE(devmap_managed_key);
-> +EXPORT_SYMBOL(devmap_managed_key);
-> +static atomic_t devmap_enable;
-> +
-> +/*
-> + * Toggle the static key for ->page_free() callbacks when dev_pagemap
-> + * pages go idle.
-> + */
-> +void dev_pagemap_get_ops(void)
-> +{
-> +	if (atomic_inc_return(&devmap_enable) == 1)
-> +		static_branch_enable(&devmap_managed_key);
-> +}
-> +EXPORT_SYMBOL_GPL(dev_pagemap_get_ops);
-> +
-> +void dev_pagemap_put_ops(void)
-> +{
-> +	if (atomic_dec_and_test(&devmap_enable))
-> +		static_branch_disable(&devmap_managed_key);
-> +}
-> +EXPORT_SYMBOL_GPL(dev_pagemap_put_ops);
-> +
-> +void __put_devmap_managed_page(struct page *page)
->  {
->  	int count = page_ref_dec_return(page);
->  
-> @@ -497,5 +519,5 @@ void put_zone_device_private_or_public_page(struct page *page)
->  	} else if (!count)
->  		__put_page(page);
->  }
-> -EXPORT_SYMBOL(put_zone_device_private_or_public_page);
-> -#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
-> +EXPORT_SYMBOL_GPL(__put_devmap_managed_page);
-> +#endif /* CONFIG_DEV_PAGEMAP_OPS */
-> diff --git a/mm/Kconfig b/mm/Kconfig
-> index c782e8fb7235..dc32828984a3 100644
-> --- a/mm/Kconfig
-> +++ b/mm/Kconfig
-> @@ -700,6 +700,9 @@ config ARCH_HAS_HMM
->  config MIGRATE_VMA_HELPER
->  	bool
->  
-> +config DEV_PAGEMAP_OPS
-> +	bool
-> +
->  config HMM
->  	bool
->  	select MIGRATE_VMA_HELPER
-> @@ -720,6 +723,7 @@ config DEVICE_PRIVATE
->  	bool "Unaddressable device memory (GPU memory, ...)"
->  	depends on ARCH_HAS_HMM
->  	select HMM
-> +	select DEV_PAGEMAP_OPS
->  
->  	help
->  	  Allows creation of struct pages to represent unaddressable device
-> @@ -730,6 +734,7 @@ config DEVICE_PUBLIC
->  	bool "Addressable device memory (like GPU memory)"
->  	depends on ARCH_HAS_HMM
->  	select HMM
-> +	select DEV_PAGEMAP_OPS
->  
->  	help
->  	  Allows creation of struct pages to represent addressable device
-> diff --git a/mm/hmm.c b/mm/hmm.c
-> index 320545b98ff5..4aa554e76d06 100644
-> --- a/mm/hmm.c
-> +++ b/mm/hmm.c
-> @@ -35,15 +35,6 @@
->  
->  #define PA_SECTION_SIZE (1UL << PA_SECTION_SHIFT)
->  
-> -#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
-> -/*
-> - * Device private memory see HMM (Documentation/vm/hmm.txt) or hmm.h
-> - */
-> -DEFINE_STATIC_KEY_FALSE(device_private_key);
-> -EXPORT_SYMBOL(device_private_key);
-> -#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
-> -
-> -
->  #if IS_ENABLED(CONFIG_HMM_MIRROR)
->  static const struct mmu_notifier_ops hmm_mmu_notifier_ops;
->  
-> @@ -996,7 +987,7 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
->  	resource_size_t addr;
->  	int ret;
->  
-> -	static_branch_enable(&device_private_key);
-> +	dev_pagemap_get_ops();
->  
->  	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
->  				   GFP_KERNEL, dev_to_node(device));
-> @@ -1090,7 +1081,7 @@ struct hmm_devmem *hmm_devmem_add_resource(const struct hmm_devmem_ops *ops,
->  	if (res->desc != IORES_DESC_DEVICE_PUBLIC_MEMORY)
->  		return ERR_PTR(-EINVAL);
->  
-> -	static_branch_enable(&device_private_key);
-> +	dev_pagemap_get_ops();
->  
->  	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
->  				   GFP_KERNEL, dev_to_node(device));
-> diff --git a/mm/swap.c b/mm/swap.c
-> index 0f17330dd0e5..eed846cfc8b8 100644
-> --- a/mm/swap.c
-> +++ b/mm/swap.c
-> @@ -29,6 +29,7 @@
->  #include <linux/cpu.h>
->  #include <linux/notifier.h>
->  #include <linux/backing-dev.h>
-> +#include <linux/memremap.h>
->  #include <linux/memcontrol.h>
->  #include <linux/gfp.h>
->  #include <linux/uio.h>
-> @@ -744,7 +745,7 @@ void release_pages(struct page **pages, int nr)
->  						       flags);
->  				locked_pgdat = NULL;
->  			}
-> -			put_zone_device_private_or_public_page(page);
-> +			put_devmap_managed_page(page);
->  			continue;
->  		}
->  
-> 
+I don't think this barrier scheme can work in the presence of
+get_user_pages_fast(). The get_user_pages_fast() path can race
+unmap_mapping_range() to take out an elevated reference count on a
+page.
