@@ -1,89 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53042 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755117AbeCHILP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 03:11:15 -0500
-Date: Thu, 8 Mar 2018 00:11:13 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] libxfs: add function to free all buffers in bcache
-Message-ID: <20180308081113.GD15163@infradead.org>
-References: <d81cf576-6082-008b-761e-82c487e6a87a@redhat.com>
- <5b3368e5-6ce7-e225-e75c-5dc6486d4b57@sandeen.net>
+Received: from mga02.intel.com ([134.134.136.20]:19755 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932918AbeCJHEW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Mar 2018 02:04:22 -0500
+Subject: [PATCH v5 05/11] fs,
+ dax: use page->mapping to warn if truncate collides with a busy page
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 09 Mar 2018 22:55:15 -0800
+Message-ID: <152066491575.40260.4558985474642451800.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5b3368e5-6ce7-e225-e75c-5dc6486d4b57@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-nvdimm@lists.01.org
+Cc: Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.orgjack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-On Tue, Mar 06, 2018 at 03:54:51PM -0600, Eric Sandeen wrote:
-> libxfs_bcache_purge simply moves all "free" buffers
-> onto the xfs_buf_freelist mru list; add a new function to
-> actually free them when we tear everything down, so leak
-> checkers don't go nuts about lots of unfreed xfs_bufs
-> at exit.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  libxfs/init.c      |  5 ++++-
->  libxfs/libxfs_io.h |  1 +
->  libxfs/rdwr.c      | 18 ++++++++++++++++++
->  3 files changed, 23 insertions(+), 1 deletion(-)
-> 
-> diff --git a/libxfs/init.c b/libxfs/init.c
-> index 7bde8b7..c7d73b6 100644
-> --- a/libxfs/init.c
-> +++ b/libxfs/init.c
-> @@ -888,8 +888,11 @@ libxfs_umount(xfs_mount_t *mp)
->  void
->  libxfs_destroy(void)
->  {
-> -	manage_zones(1);
-> +	/* Free everything from the buffer cache before freeing buffer zone */
-> +	libxfs_bcache_purge();
-> +	libxfs_bcache_free();
->  	cache_destroy(libxfs_bcache);
-> +	manage_zones(1);
->  }
->  
->  int
-> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-> index 78b6780..6de6fcb 100644
-> --- a/libxfs/libxfs_io.h
-> +++ b/libxfs/libxfs_io.h
-> @@ -188,6 +188,7 @@ extern void	libxfs_readbuf_verify(struct xfs_buf *bp,
->  			const struct xfs_buf_ops *ops);
->  extern xfs_buf_t *libxfs_getsb(struct xfs_mount *, int);
->  extern void	libxfs_bcache_purge(void);
-> +extern void	libxfs_bcache_free(void);
->  extern void	libxfs_bcache_flush(void);
->  extern void	libxfs_purgebuf(xfs_buf_t *);
->  extern int	libxfs_bcache_overflowed(void);
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 3c5def2..81701b7 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -1275,6 +1275,24 @@ libxfs_bulkrelse(
->  }
->  
->  /*
-> + * Free everything from the xfs_buf_freelist MRU, used at final teardown
-> + */
-> +void
-> +libxfs_bcache_free(void)
-> +{
-> +	struct list_head	*cm_list;
-> +	xfs_buf_t		*bp, *next;
-> +
-> +	cm_list = &xfs_buf_freelist.cm_list;
+Catch cases where extent unmap operations encounter pages that are
+pinned / busy. Typically this is pinned pages that are under active dma.
+This warning is a canary for potential data corruption as truncated
+blocks could be allocated to a new file while the device is still
+performing i/o.
 
-Maybe initialize cm_list on the same line as the variable declaration?
+Here is an example of a collision that this implementation catches:
 
-Also please don't use xfs_buf_t for new code.
+ WARNING: CPU: 2 PID: 1286 at fs/dax.c:343 dax_disassociate_entry+0x55/0x80
+ [..]
+ Call Trace:
+  __dax_invalidate_mapping_entry+0x6c/0xf0
+  dax_delete_mapping_entry+0xf/0x20
+  truncate_exceptional_pvec_entries.part.12+0x1af/0x200
+  truncate_inode_pages_range+0x268/0x970
+  ? tlb_gather_mmu+0x10/0x20
+  ? up_write+0x1c/0x40
+  ? unmap_mapping_range+0x73/0x140
+  xfs_free_file_space+0x1b6/0x5b0 [xfs]
+  ? xfs_file_fallocate+0x7f/0x320 [xfs]
+  ? down_write_nested+0x40/0x70
+  ? xfs_ilock+0x21d/0x2f0 [xfs]
+  xfs_file_fallocate+0x162/0x320 [xfs]
+  ? rcu_read_lock_sched_held+0x3f/0x70
+  ? rcu_sync_lockdep_assert+0x2a/0x50
+  ? __sb_start_write+0xd0/0x1b0
+  ? vfs_fallocate+0x20c/0x270
+  vfs_fallocate+0x154/0x270
+  SyS_fallocate+0x43/0x80
+  entry_SYSCALL_64_fastpath+0x1f/0x96
 
-Otherwise this looks fine to me:
-
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/dax.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index ba02772fccbc..fecf463a1468 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -325,6 +325,56 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
+ 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+ }
+ 
++static unsigned long dax_entry_size(void *entry)
++{
++	if (dax_is_zero_entry(entry))
++		return 0;
++	else if (dax_is_empty_entry(entry))
++		return 0;
++	else if (dax_is_pmd_entry(entry))
++		return HPAGE_SIZE;
++	else
++		return PAGE_SIZE;
++}
++
++#define for_each_entry_pfn(entry, pfn, end_pfn) \
++	for (pfn = dax_radix_pfn(entry), \
++			end_pfn = pfn + dax_entry_size(entry) / PAGE_SIZE; \
++			pfn < end_pfn; \
++			pfn++)
++
++static void dax_associate_entry(void *entry, struct address_space *mapping)
++{
++	unsigned long pfn, end_pfn;
++
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return;
++
++	for_each_entry_pfn(entry, pfn, end_pfn) {
++		struct page *page = pfn_to_page(pfn);
++
++		WARN_ON_ONCE(page->mapping);
++		page->mapping = mapping;
++	}
++}
++
++static void dax_disassociate_entry(void *entry, struct address_space *mapping,
++		bool trunc)
++{
++	unsigned long pfn, end_pfn;
++
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return;
++
++	for_each_entry_pfn(entry, pfn, end_pfn) {
++		struct page *page = pfn_to_page(pfn);
++
++		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
++		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
++		page->mapping = NULL;
++	}
++}
++
+ /*
+  * Find radix tree entry at given index. If it points to an exceptional entry,
+  * return it with the radix tree entry locked. If the radix tree doesn't
+@@ -431,6 +481,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		}
+ 
+ 		if (pmd_downgrade) {
++			dax_disassociate_entry(entry, mapping, false);
+ 			radix_tree_delete(&mapping->page_tree, index);
+ 			mapping->nrexceptional--;
+ 			dax_wake_mapping_entry_waiter(mapping, index, entry,
+@@ -480,6 +531,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 	    (radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_DIRTY) ||
+ 	     radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
++	dax_disassociate_entry(entry, mapping, trunc);
+ 	radix_tree_delete(page_tree, index);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+@@ -574,6 +626,10 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 
+ 	spin_lock_irq(&mapping->tree_lock);
+ 	new_entry = dax_radix_locked_entry(pfn, flags);
++	if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
++		dax_disassociate_entry(entry, mapping, false);
++		dax_associate_entry(new_entry, mapping);
++	}
+ 
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+ 		/*
+
