@@ -1,116 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0111.outbound.protection.outlook.com ([104.47.32.111]:59393
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753903AbeCVOiP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 10:38:15 -0400
-From: Robert Dorr <rdorr@microsoft.com>
-Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Date: Thu, 22 Mar 2018 14:38:12 +0000
-Message-ID: <BN6PR21MB0740C697371D948B83E6D23FB8A90@BN6PR21MB0740.namprd21.prod.outlook.com>
-References: <20180301014144.28892-1-david@fromorbit.com>
- <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
- <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
- <20180313051037.GC18129@dastard>
- <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180313161242.GA11168@lst.de>
- <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
- <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180322143559.pmwwwz4gic4wkq7r@quack2.suse.cz>
-In-Reply-To: <20180322143559.pmwwwz4gic4wkq7r@quack2.suse.cz>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Received: from verein.lst.de ([213.95.11.211]:44699 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750884AbeCJJqf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Mar 2018 04:46:35 -0500
+Date: Sat, 10 Mar 2018 10:46:33 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v5 02/11] xfs, dax: introduce xfs_dax_aops
+Message-ID: <20180310094633.GA31604@lst.de>
+References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com> <152066489984.40260.2215636951958334858.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152066489984.40260.2215636951958334858.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-U29ycnkgdG8gaGVhciB0aGF0LiAgR2V0IHdlbGwgc29vbi4NCg0KVGhhbmtzIGZvciB0aGUgcmVz
-cG9uc2UuDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbiBLYXJhIDxq
-YWNrQHN1c2UuY3o+IA0KU2VudDogVGh1cnNkYXksIE1hcmNoIDIyLCAyMDE4IDk6MzYgQU0NClRv
-OiBSb2JlcnQgRG9yciA8cmRvcnJAbWljcm9zb2Z0LmNvbT4NCkNjOiBKYW4gS2FyYSA8amFja0Bz
-dXNlLmN6PjsgQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+OyBEYXZlIENoaW5uZXIgPGRh
-dmlkQGZyb21vcmJpdC5jb20+OyBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGludGVsLmNv
-bT47IGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWZzZGV2ZWwgPGxpbnV4LWZzZGV2
-ZWxAdmdlci5rZXJuZWwub3JnPjsgVGhlb2RvcmUgVHMnbyA8dHl0c29AbWl0LmVkdT47IE1hdHRo
-ZXcgV2lsY294IDxtYXdpbGNveEBtaWNyb3NvZnQuY29tPjsgU2NvdHQgS29uZXJzbWFubiA8c2Nv
-dHRrb25AbWljcm9zb2Z0LmNvbT47IFNsYXZhIE9rcyA8c2xhdmFvQG1pY3Jvc29mdC5jb20+OyBK
-YXNyYWogRGFuZ2UgPGphc3JhamRAbWljcm9zb2Z0LmNvbT47IE1pY2hhZWwgTmVsc29uIDxtaWNu
-QG1pY3Jvc29mdC5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIXSBbUkZDXSBpb21hcDogVXNlIEZV
-QSBmb3IgcHVyZSBkYXRhIE9fRFNZTkMgRElPIHdyaXRlcw0KDQpPbiBNb24gMTktMDMtMTggMTY6
-MTQ6MTYsIFJvYmVydCBEb3JyIHdyb3RlOg0KPiBBd2Vzb21lIG5ld3Mgb24gdGhlIHNwaW4uICAg
-DQo+IA0KPiBBcmUgeW91IGdvaW5nIHRvIGJlIGFibGUgdG8gbWFrZSBjaGFuZ2VzIHRvIEVYVDQg
-dG8gYWNjb21tb2RhdGUgDQo+IFJFUV9GVUEgd2l0aG91dCBnZW5lcmljX3dyaXRlX2ZsdXNoIHRv
-IGltcHJvdmUgcGVyZm9ybWFuY2UgbGlrZSB3YXMgZG9uZSBmb3IgeGZzPw0KDQpJJ20gY3VycmVu
-dGx5IG9uIGEgc2ljayBsZWF2ZSBzbyBJJ20gc2xvdyBvbiByZXBsaWVzLiBTb3JyeS4gSSBkb24n
-dCBzZWUgYSByZWFzb24gd2h5IGV4dDQgY291bGQgbm90IGhhdmUgdGhlIHNhbWUgb3B0aW1pemF0
-aW9uIGFzIFhGUyBmb3IgdGhhdCBjYXNlIG9mIGRpcmVjdCBJTy4gSG93ZXZlciBJJ20gbm90IHN1
-cmUgd2hlbiBJIGdldCB0byBpbXBsZW1lbnRpbmcgdGhhdC4NCg0KCQkJCQkJCQlIb256YQ0KDQo+
-IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEphbiBLYXJhIDxqYWNrQHN1c2Uu
-Y3o+DQo+IFNlbnQ6IE1vbmRheSwgTWFyY2ggMTksIDIwMTggMTE6MDcgQU0NCj4gVG86IFJvYmVy
-dCBEb3JyIDxyZG9yckBtaWNyb3NvZnQuY29tPg0KPiBDYzogQ2hyaXN0b3BoIEhlbGx3aWcgPGhj
-aEBsc3QuZGU+OyBEYXZlIENoaW5uZXIgDQo+IDxkYXZpZEBmcm9tb3JiaXQuY29tPjsgRGFuIFdp
-bGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+OyANCj4gbGludXgteGZzQHZnZXIua2Vy
-bmVsLm9yZzsgbGludXgtZnNkZXZlbCANCj4gPGxpbnV4LWZzZGV2ZWxAdmdlci5rZXJuZWwub3Jn
-PjsgSmFuIEthcmEgPGphY2tAc3VzZS5jej47IFRoZW9kb3JlIA0KPiBUcydvIDx0eXRzb0BtaXQu
-ZWR1PjsgTWF0dGhldyBXaWxjb3ggPG1hd2lsY294QG1pY3Jvc29mdC5jb20+OyBTY290dCANCj4g
-S29uZXJzbWFubiA8c2NvdHRrb25AbWljcm9zb2Z0LmNvbT47IFNsYXZhIE9rcyA8c2xhdmFvQG1p
-Y3Jvc29mdC5jb20+OyANCj4gSmFzcmFqIERhbmdlIDxqYXNyYWpkQG1pY3Jvc29mdC5jb20+OyBN
-aWNoYWVsIE5lbHNvbiANCj4gPG1pY25AbWljcm9zb2Z0LmNvbT4NCj4gU3ViamVjdDogUmU6IFtQ
-QVRDSF0gW1JGQ10gaW9tYXA6IFVzZSBGVUEgZm9yIHB1cmUgZGF0YSBPX0RTWU5DIERJTyANCj4g
-d3JpdGVzDQo+IA0KPiBPbiBUdWUgMTMtMDMtMTggMTg6NTI6NTcsIFJvYmVydCBEb3JyIHdyb3Rl
-Og0KPiA+IEkgdHJpZWQgdGhlIFJXRl9PRFNZTkMgYW5kIHhmcyBzZWVtcyB0byBob25vciBwcm9w
-ZXJseSBidXQgaXQgY2F1c2VzDQo+ID4gZXh0NCB0byBnbyBzcGluIG91dCBhIHNpbmdsZSBDUFUg
-YW5kIGhhbmcgdGhlIHN5c3RlbS4g8J+Yig0KPiANCj4gWWVhaCwgdGhhdCdzIGEgYnVnIGluIGdl
-bmVyaWMgZGlyZWN0IElPIGNvZGUgdGhhdCBJJ3ZlIGp1c3QgcmVjZW50bHkgDQo+IGZpeGVkDQo+
-IChkOWMxMGU1Yjg4NjMgImRpcmVjdC1pbzogRml4IHNsZWVwIGluIGF0b21pYyBkdWUgdG8gc3lu
-YyBBSU8iIGluIDQuMTYtcmM0KS4NCj4gDQo+IAkJCQkJCQkJSG9uemENCj4gDQo+ID4gDQo+ID4g
-DQo+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPiBGcm9tOiBDaHJpc3RvcGggSGVs
-bHdpZyA8aGNoQGxzdC5kZT4NCj4gPiBTZW50OiBUdWVzZGF5LCBNYXJjaCAxMywgMjAxOCAxMTox
-MyBBTQ0KPiA+IFRvOiBSb2JlcnQgRG9yciA8cmRvcnJAbWljcm9zb2Z0LmNvbT4NCj4gPiBDYzog
-RGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPjsgRGFuIFdpbGxpYW1zIA0KPiA+IDxk
-YW4uai53aWxsaWFtc0BpbnRlbC5jb20+OyBsaW51eC14ZnNAdmdlci5rZXJuZWwub3JnOyBDaHJp
-c3RvcGggDQo+ID4gSGVsbHdpZyA8aGNoQGxzdC5kZT47IGxpbnV4LWZzZGV2ZWwgPGxpbnV4LWZz
-ZGV2ZWxAdmdlci5rZXJuZWwub3JnPjsgDQo+ID4gSmFuIEthcmEgPGphY2tAc3VzZS5jej47IFRo
-ZW9kb3JlIFRzJ28gPHR5dHNvQG1pdC5lZHU+OyBNYXR0aGV3IA0KPiA+IFdpbGNveCA8bWF3aWxj
-b3hAbWljcm9zb2Z0LmNvbT47IFNjb3R0IEtvbmVyc21hbm4gDQo+ID4gPHNjb3R0a29uQG1pY3Jv
-c29mdC5jb20+OyBTbGF2YSBPa3MgPHNsYXZhb0BtaWNyb3NvZnQuY29tPjsgSmFzcmFqIA0KPiA+
-IERhbmdlIDxqYXNyYWpkQG1pY3Jvc29mdC5jb20+OyBNaWNoYWVsIE5lbHNvbiA8bWljbkBtaWNy
-b3NvZnQuY29tPg0KPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIFtSRkNdIGlvbWFwOiBVc2UgRlVB
-IGZvciBwdXJlIGRhdGEgT19EU1lOQyBESU8gDQo+ID4gd3JpdGVzDQo+ID4gDQo+ID4gPiBJIHRo
-aW5rIHRoZSBhbnN3ZXIgaXMgdGhlIGlvbWFwKiBsb2dpYyBtYWtlcyBzdXJlIHRvIGlzc3VlIGdl
-bmVyaWNfd3JpdGVfc3luYyBmb3IgT19EU1lOQyBXMSBhZnRlciBXMSBpcyBjb21wbGV0ZWQgYnkg
-aGFyZHdhcmUgYW5kIHRoZW4gd2FpdHMgZm9yIGNvbXBsZXRpb24gb2YgdGhlIGZsdXNoIHJlcXVl
-c3QgKFJFUV9QUkVGTFVTSCkgYmVmb3JlIFcxIGlzIHJldHVybmVkIHRvIHRoZSBBSU8gY29tcGxl
-dGlvbiByaW5nLCBwcmV2ZW50aW5nIGlvX2dldGV2ZW50cyBmcm9tIHByb2Nlc3NpbmcgVzEgYmVm
-b3JlIHRoZSBmbHVzaCBvY2N1cnMgYW5kIGNvbXBsZXRlcy4gICBJIGp1c3QgbmVlZCBwcm9wZXIg
-Y29uZmlybWF0aW9uIGZyb20gdGhlIGV4cGVydHMgb24gdGhpcyBjb2RlIHRoYXQgdGhpcyBpcyB0
-aGUgZXhwZWN0ZWQgYmVoYXZpb3IuDQo+ID4gDQo+ID4gWWVzLiB0aGF0IGlzIHRoZSBjYXNlLg0K
-PiA+IA0KPiA+ID4gRm9yIFNRTCBTZXJ2ZXIgdXNpbmcgT19ESVJFQ1QgfCBPX0RTWU5DIG9uIGN1
-cnJlbnQga2VybmVscyBpcyB2ZXJ5IHBlcmZvcm1hbmNlIGltcGFjdGluZy4gICBJbnN0ZWFkIHdl
-IGVuYWJsZSBhIG1vZGUgZm9yIFNRTCB0aGF0IG9wZW5zIE9fRElSRUNUIG9ubHkgYW5kIGlzc3Vl
-cyBmc3luYy9mZGF0YXN5bmMgd2hlbiB3ZSBhcmUgaGFyZGVuaW5nIGxvZyBmaWxlcyBvciBjaGVj
-a3BvaW50aW5nIGRhdGEgZmlsZXMuICAgVGhpcyByZWR1Y2VzIHRoZSB3cml0ZSwgZmx1c2gsIHdy
-aXRlLCBmbHVzaCBwYXR0ZXJuIGFsbG93aW5nIGZvciB3cml0ZSwgd3JpdGUsIHdyaXRlLCAuLi4g
-dGhlbiBmbHVzaCBhcyB3ZSBvbmx5IGlzc3VlIGZsdXNoIHJlcXVlc3RzIHdoZW4gcmVxdWlyZWQg
-dG8gbWFpbnRhaW4gdGhlIGRhdGEgaW50ZWdyaXR5IGJvdW5kYXJpZXMgb2YgU1FMIFNlcnZlci4g
-IFRoZSBwZXJmb3JtYW5jZSBpcyBzaWduaWZpY2FudGx5IGJldHRlciB0aGVuIHRoZSBkZXZpY2Ug
-Zmx1c2ggZm9yIGVhY2ggd3JpdGUgYXMgeW91IGNhbiBpbWFnaW5lLg0KPiA+ID4gDQo+ID4gPiBU
-ZXN0aW5nIHNob3dzIHRoZSBGVUEgZW5oYW5jZW1lbnQgaXMgYmV0dGVyIHRoZW4gdGhlIHdyaXRl
-LCBmbHVzaCBwYXR0ZXJuLiAgIEZvciBTUUwgU2VydmVyIHdlIHdhbnQgdG8gZHluYW1pY2FsbHkg
-b3BlbiB3aXRoIE9fRElSRUNUIHwgT19EU1lOQyB3aGVuIFJFUV9GVUEgY2FuIGJlIHByb3Blcmx5
-IHVzZWQgYW5kIG9wZW4gd2l0aCBPX0RJUkVDVCBhbmQgbGV2ZXJhZ2UgU1FMIFNlcnZlcidzIGFs
-dGVybmF0ZSBmbHVzaCBzY2hlbWUgd2hlbiBydW5uaW5nIG9uIG9sZGVyIGtlcm5lbCBvciBhIHN5
-c3RlbSB0aGF0IGRvZXMgbm90IHN1cHBvcnQgRlVBIChTQVRBLCBJREUsIC4uLikNCj4gPiANCj4g
-PiBUaGVyZSBpcyBubyByZWFsbHkgZ29vZCB3YXkgdG8gZmlndXJlIHRoaXMgb3V0IGV4Y2VwdCBm
-b3IgYmVuY2htYXJraW5nLCBnaXZlbiB0aGF0IHRoZSBGVUEgdXNlIGFuIGltcGxlbWVudGF0aW9u
-IGRldGFpbC4NCj4gPiANCj4gPiBCdHcsIGFub3RoZXIgZmVhdHVyZSB0aGF0IG1pZ2h0IGJlIGlu
-dGVyZXN0aW5nIHRvIHlvdSBpcyB0aGUgUldGX0RTWU5DIGZsYWcgdG8gdGhlIHB3cml0ZXYyIHN5
-c2NhbGwsIHdoaWNoIGFsbG93cyB0byBhcHBseSBPX0RTWU5DIHNlbWFudGljcyBvbiBhIHBlci1J
-L08gYmFzaXMgaW5zdGVhZCBvZiB1c2luZyBpdCBhdCBvcGVuIHRpbWUuDQo+IC0tDQo+IEphbiBL
-YXJhIDxqYWNrQHN1c2UuY29tPg0KPiBTVVNFIExhYnMsIENSDQotLQ0KSmFuIEthcmEgPGphY2tA
-c3VzZS5jb20+DQpTVVNFIExhYnMsIENSDQo=
+> +int dax_set_page_dirty(struct page *page)
+> +{
+> +	/*
+> +	 * Unlike __set_page_dirty_no_writeback that handles dirty page
+> +	 * tracking in the page object, dax does all dirty tracking in
+> +	 * the inode address_space in response to mkwrite faults. In the
+> +	 * dax case we only need to worry about potentially dirty CPU
+> +	 * caches, not dirty page cache pages to write back.
+> +	 *
+> +	 * This callback is defined to prevent fallback to
+> +	 * __set_page_dirty_buffers() in set_page_dirty().
+> +	 */
+> +	return 0;
+> +}
+
+Make this a generic noop_set_page_dirty maybe?
+
+> +EXPORT_SYMBOL(dax_set_page_dirty);
+> +
+> +void dax_invalidatepage(struct page *page, unsigned int offset,
+> +		unsigned int length)
+> +{
+> +	/*
+> +	 * There is no page cache to invalidate in the dax case, however
+> +	 * we need this callback defined to prevent falling back to
+> +	 * block_invalidatepage() in do_invalidatepage().
+> +	 */
+> +}
+
+Same here.
+
+> +EXPORT_SYMBOL(dax_invalidatepage);
+
+And EXPORT_SYMBOL_GPL for anything dax-related, please.
+
+> +const struct address_space_operations xfs_dax_aops = {
+> +	.writepages		= xfs_vm_writepages,
+
+Please split out the DAX case from xfs_vm_writepages.
+
+This patch should probably also split into VFS and XFS parts.
