@@ -1,166 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:20802 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16171 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750713AbeCHWKl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 17:10:41 -0500
-Date: Fri, 9 Mar 2018 09:10:38 +1100
+        by vger.kernel.org with ESMTP id S1751231AbeCJBgt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Mar 2018 20:36:49 -0500
+Date: Sat, 10 Mar 2018 12:36:46 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: handle inconsistent log item formatting state
- correctly
-Message-ID: <20180308221038.GS18129@dastard>
-References: <20180301223527.28626-1-david@fromorbit.com>
- <20180305144001.GA6135@bfoster.bfoster>
- <20180305221857.GF18129@dastard>
- <20180306123155.GB10982@bfoster.bfoster>
- <20180306221441.GK18129@dastard>
- <20180307011602.GA19337@bfoster.bfoster>
- <20180307021245.GV18989@magnolia>
- <20180308044017.GR18129@dastard>
- <20180308191113.GA2725@dhcp-41-192.bos.redhat.com>
+Subject: Re: fallocate on XFS for swap
+Message-ID: <20180310013646.GX18129@dastard>
+References: <8C28C1CB-47F1-48D1-85C9-5373D29EA13E@amazon.com>
+ <20180309234422.GA4860@magnolia>
+ <20180310005850.GW18129@dastard>
+ <20180310011707.GA4875@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180308191113.GA2725@dhcp-41-192.bos.redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180310011707.GA4875@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "Besogonov, Aleksei" <cyberax@amazon.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Mar 08, 2018 at 02:11:13PM -0500, Brian Foster wrote:
-> On Thu, Mar 08, 2018 at 03:40:17PM +1100, Dave Chinner wrote:
-> > On Tue, Mar 06, 2018 at 06:12:45PM -0800, Darrick J. Wong wrote:
-> > > On Tue, Mar 06, 2018 at 08:16:02PM -0500, Brian Foster wrote:
-> > > > On Wed, Mar 07, 2018 at 09:14:41AM +1100, Dave Chinner wrote:
-> > > > > On Tue, Mar 06, 2018 at 07:31:56AM -0500, Brian Foster wrote:
-> > > > My argument is not that it's not possible. My argument is that the
-> > > > semantics of XFS_LID_DIRTY suggest the transaction modified the object
-> > > > in memory. Today, that means we log a range of the object, log an
-> > > > invalidation or order a buffer. E.g., we modify an actual metadata
-> > > > object, dirty the item (log or order), dirty the lidp and dirty the
-> > > > transaction. If we didn't ever modify a particular object, then there's
-> > > > no reason to dirty it that I can see. Failing to log/order the object
-> > > > properly doesn't justify assuming it hasn't been modified IMO, we don't
-> > > > really know either way.
-> > > > 
-> > > > The way the flag is used seems to bear that out. It's set when an object
-> > > > has been modified by a transaction. The way the flag alters behavior
-> > > > suggests the same. Objects that have been dirtied by a transaction
-> > > > cannot be released from that transaction and a cancel of a transaction
-> > > > with a dirty lidp causes fs shutdown (because we dirty the transaction
-> > > > once we dirty a lidp).
-> > 
-> > I'll point out that I've just stumbled onto a series of bugs where
-> > log items are multiply joined to a single transaction, in which case
-> > the lidp state may not reflect the current state of the log item
-> > because the log item no longer points to the lidp in question.
-> > 
-> > This also raises questions about what happens when we process a log
-> > item twice in the cil commit infrastructure - two formatting passes,
-> > multiple inserts into the CIL list, multiple calls to
-> > iop_committing/iop_unlock when the transaction is freed, etc.
-> > There's lots of shit that could go wrong as a result of this type of
-> > bug...
-> > 
-> > > > A cancel of that same transaction would shutdown the fs because it
-> > > > dirtied (i.e., presumably modified) an object. So we can't cancel the
-> > > > transaction for risk of corruption, we can't release the object from the
-> > > > transaction, yet this patch proposes behavior where a commit of that
-> > > > transaction can silently undirty the lidp, commit whatever else might be
-> > > > in the transaction and carry on as if nothing were wrong.
-> > > > 
-> > > > At the very least, this is inconsistent with how this flag is used
-> > > > everywhere else. How do you explain that?
+On Fri, Mar 09, 2018 at 05:17:07PM -0800, Darrick J. Wong wrote:
+> On Sat, Mar 10, 2018 at 11:58:50AM +1100, Dave Chinner wrote:
+> > On Fri, Mar 09, 2018 at 03:44:22PM -0800, Darrick J. Wong wrote:
+> > > [you really ought to cc the xfs list]
 > > > 
-> > > So the state "li dirty, lip !ordered, niovecs == 0" is an invalid state,
-> > > and this patch proposes that if we ever see this invalid state then we
-> > > decide that no the buffer isn't dirty since there are zero iovecs.  This
-> > > prevents the log from allocating anything for this item since there's no
-> > > evidence of anything being dirty.
+> > > On Fri, Mar 09, 2018 at 10:05:24PM +0000, Besogonov, Aleksei wrote:
+> > > > Hi!
+> > > > 
+> > > > We’re working at Amazon on making XFS our default root filesystem for
+> > > > the upcoming Amazon Linux 2 (now in prod preview). One of the problems
+> > > > that we’ve encountered is inability to use fallocated files for swap
+> > > > on XFS. This is really important for us, since we’re shipping our
+> > > > current Amazon Linux with hibernation support .
+> > > 
+> > > <shudder>
+> > > 
+> > > > I’ve traced the problem to bmap(), used in generic_swapfile_activate
+> > > > call, which returns 0 for blocks inside holes created by fallocate and
+> > > > Dave Chinner confirmed it in a private email. I’m thinking about ways
+> > > > to fix it, so far I see the following possibilities:
+> > > > 
+> > > > 1. Change bmap() to not return zeroes for blocks inside holes. But
+> > > > this is an ABI change and it likely will break some obscure userspace
+> > > > utility somewhere.
+> > > 
+> > > bmap is a horrible interface, let's leave it to wither and eventually go
+> > > away.
+> > > 
+> > > > 2. Change generic_swap_activate to use a more modern interface, by
+> > > > adding fiemap-like operation to address_space_operations with fallback
+> > > > on bmap().
+> > > 
+> > > Probably the best idea, but see fs/iomap.c since we're basically leasing
+> > > a chunk of file space to the kernel.  Leasing space to a user that wants
+> > > direct access is becoming rather common (rdma, map_sync, etc.)
 > > 
-> > Essentially. The log item dirty state is the thing we trust right
-> > through the log item life cycle. It's fundamental to the relogging
-> > algorithm we use to keep dirty metadata moving forwards through the
-> > log.
-> > 
-> > The log item descriptor, OTOH, was just an abstraction that allowed
-> > the transaction commit to couple the log item formatting to the
-> > xlog_write() vector calls, which is something that went away with
-> > delayed logging about 8 years ago. The only piece of the log item
-> > descriptor that remained was the dirty flag, and the issue here
-> > boils down to one simple question: which dirty state do we trust -
-> > the log item or the descriptor?
-> > 
-> > That, as an architectural question, is a no brainer. It's the log
-> > item state that matters. The log item descriptor is an abstraction
-> > long past it's use-by date, so I'm going to resolve this problem
-> > simply by removing it (if you are wondering how I found the
-> > mulitply-joined log item bugs...).
-> > 
+> > thing is, we don't want in-kernel users of fiemap. We've got other
+> > block mapping interfaces that can be used, such as iomap...
 > 
-> Ooh, we're in danger of making some progress here... :P
+> Well yes, I was clumsily trying to suggest reimplementing
+> generic_swap_activate with an iomap backend replacing/augmenting the old
+> get_blocks thing... :)
 > 
-> So this all suggests to me that you see the lidp dirty state as
-> duplicative with the log item dirty state.
-
-Well, sort of.
-
-> That is quite different from
-> the perception I have from reading the code (a perception which I tried
-> my best to describe so you, or somebody, could set me straight if
-> necessary). Then again...
-
-The log item descriptor used to link the transaction to the log item
-as it passed though the journal. Transactions used to be freed on
-log IO completion - their life cycle changed drastically with
-delayed logging, such that they are now freed by xfs_trans_commit(),
-rather than being attached to the iclogbuf (as the CIL checkpoint
-transaction now is) and freed on log IO completion. i.e. their
-functionality was effective replaced by the xfs_log_vec that we now
-allocate and format during transaction commit.
-
-IOWs, if we can't/don't create a xfs_log_vec that will be written to
-the log during formatting, then it doesn't matter what the lid says
-- there's nothing to write to the log, so we don't add the object to
-the CIL....
-
-> > In doing this, we no longer have the question of which one to trust
-> > - all the "dirty in transaction" state is carried on the log item
-> > itself and is valid only during the life of a transaction.  At
-> > which point, there should be no possibility of the log item dirty
-> > flag getting out of step with it's dirty state, and we can simply
-> > add asserts in the write place to validate this.
+> > > > 3. Add an XFS-specific implementation of swapfile_activate.
+> > > 
+> > > Ugh no.
 > > 
+> > What we want is an iomap-based re-implementation of
+> > generic_swap_activate(). One of the ways to plumb that in is to
+> > use ->swapfile_activate() like so:
 > 
-> This more describes the lidp object as duplicative, while the dirty
-> state it supports may still be unique with respect to the lip dirty
-> state (which is what I thought to begin with). In other words, we still
-> need to differentiate between a dirty lip that might be in the log
-> pipeline and a log item that is "dirty in a transaction," because afaict
-> it's still possible to have a dirty log item in a clean transaction.
+> Is this distinct from the ->swap_activate function pointer in
+> address_operations or a new one?  I think it'd be best to have it be a
+> separate callback like you suggest:
 
-Yes, that is possible. In which case, it doesn't get formatted again
-by the current transaction commit because it's already been
-formatted and tracked by the CIL/AIL correctly. It's essentially
-just an optimisation to avoid redundant relogging of log items.
+No, we don't need to create a new one - the existing one is used by
+a single caller and we can easily move all the functionality it
+requires inside the NFS specific implementation - it's just mapping
+the entire range as a single extent, but the callout is needed to
+mark the sockets backing the file as in the memalloc path...
 
-> So which of the above is more accurate? If the latter, doesn't the
-> "dirty in transaction" state we'd move over to the lip reflect the same
-> meaning as XFS_LID_DIRTY today? If so, ISTM that we should still not
-> expect to have a "dirty in transaction" log item unless the log item
-> itself is dirty. Hm?
+> > iomap_swapfile_activate()
+> > {
+> > 	return iomap_apply(... iomap_swapfile_add_extent, ...)
+> > }
+> > 
+> > xfs_vm_swapfile_activate()
+> > {
+> > 	return iomap_swapfile_activate(xfs_iomap_ops);
+> > }
+> > 
+> > 	.swapfile_activate = xfs_vm_swapfile_activate()
+> > 
+> > And massage the swapfile_activate callout be friendly to fragmented
+> > files. i.e. change the nfs caller to run a
+> > "add_single_swap_extent()" caller rather than have to do it in the
+> > generic code on return....
+> 
+> But ugh, the names are confusing.  ->swapfile_activate, ->swap_activate,
+> and generic_swapfile_activate.  Not sure what's needed to clean up the
+> other filesystems to use a single mapping interface, though.
 
-Yup, but now it's all held in the one object and there's no
-possibility of getting that out of sync anymore as the state is
-managed directly when the log item is either dirtied or removed
-from the transaction. We're not reliant on managing lids correctly
-for it to be correct.
-
-/me realises that the addition of the XFS_LI_DIRTY flag to the log
-item means that the XFS_BLI_LOGGED flag is now redundant - it
-mirrors the state of the XFS_LID_DIRTY flag and was only ever used
-to assert that the buffer was actually logged by the transaction
-that is trying to format the item...
+If they don't implement the callout, they use the
+generic_swapfile_activate code that currently exists. Maybe with a
+name change, but this way we don't have to touch them....
 
 Cheers,
 
