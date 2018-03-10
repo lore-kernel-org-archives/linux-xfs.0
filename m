@@ -1,356 +1,357 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58434 "EHLO mx1.redhat.com"
+Received: from mga17.intel.com ([192.55.52.151]:44340 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751086AbeCINQ3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Mar 2018 08:16:29 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8A865C058EB3
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Mar 2018 13:16:29 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 58C9A1868F
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Mar 2018 13:16:29 +0000 (UTC)
-Date: Fri, 9 Mar 2018 08:16:28 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC] xfs: convert between packed and unpacked agfls
- on-demand
-Message-ID: <20180309131628.GA3445@bfoster.bfoster>
-References: <20180307192451.24196-1-bfoster@redhat.com>
- <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
+        id S1751695AbeCJHEc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Mar 2018 02:04:32 -0500
+Subject: [PATCH v5 07/11] mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 09 Mar 2018 22:55:26 -0800
+Message-ID: <152066492680.40260.6843692416565308005.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Michal Hocko <mhocko@suse.com>, david@fromorbit.com, hch@lst.de, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-On Thu, Mar 08, 2018 at 03:03:54PM +0100, Carlos Maiolino wrote:
-> Hi,
-> 
-> On Wed, Mar 07, 2018 at 02:24:51PM -0500, Brian Foster wrote:
-> > Disliked-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > Sent as RFC for the time being. This tests Ok on a straight xfstests run
-> > and also seems to pass Darrick's agfl fixup tester (thanks) both on
-> > upstream and on a rhel7 kernel with some minor supporting hacks.
-> > 
-> > I tried to tighten up the logic a bit to reduce the odds of mistaking
-> > actual corruption for a padding mismatch as much as possible. E.g.,
-> > limit to cases where the agfl is wrapped, make sure we don't mistake a
-> > corruption that looks like an agfl with 120 entries on a packed kernel,
-> > etc.
-> > 
-> > While I do prefer an on-demand fixup approach to a mount time scan, ISTM
-> > that in either case it's impossible to completely eliminate the risk of
-> > confusing corruption with a padding mismatch so long as we're doing a
-> > manual agfl fixup. The more I think about that the more I really dislike
-> > doing this. :(
-> > 
-> > After some IRC discussion with djwong and sandeen, I'm wondering if the
-> > existence of 'xfs_repair -d' is a good enough last resort for those
-> > users who might be bit by unexpected padding issues on a typical
-> > upgrade. If so, we could fall back to a safer mount-time detection model
-> > that enforces a read-only mount and let the user run repair. The
-> > supposition is that those who aren't prepared to repair via a ramdisk or
-> > whatever should be able to 'xfs_repair -d' a rootfs that is mounted
-> > read-only provided agfl padding is the only inconsistency. 
-> > 
-> > Eric points out that we can still write an unmount record for a
-> > read-only mount, but I'm not sure that would be a problem if repair only
-> > needs to fix the agfl. xfs_repair shouldn't touch the log unless there's
-> > a recovery issue or it needs to be reformatted to update the LSN, both
-> > of which seem to qualify as "you have more problems than agfl padding
-> > and need to run repair anyways" to me. Thoughts?
-> > 
-> 
-> Sorry if this may sound stupid, but in the possibility this can help the issue,
-> or at least me learning something new.
-> 
-> ISTM this issue is all related to the way xfs_agfl packing. I read the commit
-> log where packed attribute was added to xfs_agfl, and I was wondering...
-> 
-> What are the implications of breaking up the lsn field in xfs_agfl, in 2 __be32?
-> Merge it together in a 64bit field when reading it from disk, or split it when
-> writing to?
-> It seems to me this would avoid the size difference we are seeing now in 32/64
-> bit systems, and avoid such risk of confusion when trying to discern between a
-> corrupted agfl and a padding mismatch.
-> 
+The HMM sub-system extended dev_pagemap to arrange a callback when a
+dev_pagemap managed page is freed. Since a dev_pagemap page is free /
+idle when its reference count is 1 it requires an additional branch to
+check the page-type at put_page() time. Given put_page() is a hot-path
+we do not want to incur that check if HMM is not in use, so a static
+branch is used to avoid that overhead when not necessary.
 
-I'm not following how you'd accomplish the latter..? We already have the
-packed attribute in place, so the padding is fixed with that. This
-effort has to do with trying to fix up an agfl written by an older
-kernel without the padding fix. My understanding is that the xfs_agfl
-header looks exactly the same on-disk in either case, the issue is a
-broken size calculation that causes the older kernel to not see/use one
-last slot in the agfl. If the agfl has wrapped and a newer kernel loads
-the same on-disk structure, it has no means to know whether the content
-of the final slot is a valid block or a "gap" left by an older kernel
-other than to check whether flcount matches the active count from
-flfirst -> fllast (and that's where potential confusion over a padding
-issue vs other corruption comes into play).
+Now, the FS_DAX implementation wants to reuse this mechanism for
+receiving dev_pagemap ->page_free() callbacks. Rework the HMM-specific
+static-key into a generic mechanism that either HMM or FS_DAX code paths
+can enable.
 
-Brian
+Cc: "Jérôme Glisse" <jglisse@redhat.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/dax/super.c      |    2 ++
+ fs/Kconfig               |    1 +
+ include/linux/memremap.h |   20 ++-------------
+ include/linux/mm.h       |   61 ++++++++++++++++++++++++++++++++--------------
+ kernel/memremap.c        |   30 ++++++++++++++++++++---
+ mm/Kconfig               |    5 ++++
+ mm/hmm.c                 |   13 ++--------
+ mm/swap.c                |    3 ++
+ 8 files changed, 84 insertions(+), 51 deletions(-)
 
-> But still, just as reinforcement, this is just a guess, and I have no idea if
-> this is feasible or not, but in case I'm completely nuts, I'll learn something
-> new :)
-> 
-> Cheers.
-> 
-> > Brian
-> > 
-> >  fs/xfs/libxfs/xfs_alloc.c | 147 +++++++++++++++++++++++++++++++++++++++++++++-
-> >  fs/xfs/xfs_mount.h        |   1 +
-> >  fs/xfs/xfs_trace.h        |  18 ++++++
-> >  3 files changed, 164 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index c02781a4c091..31330996e31c 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2054,6 +2054,136 @@ xfs_alloc_space_available(
-> >  }
-> >  
-> >  /*
-> > + * Estimate the on-disk agfl size based on the agf state. A size mismatch due to
-> > + * padding is only significant if the agfl wraps around the end or refers to an
-> > + * invalid first/last value.
-> > + */
-> > +static int
-> > +xfs_agfl_ondisk_size(
-> > +	struct xfs_mount	*mp,
-> > +	int			first,
-> > +	int			last,
-> > +	int			count)
-> > +{
-> > +	int			active = count;
-> > +	int			agfl_size = XFS_AGFL_SIZE(mp);
-> > +	bool			wrapped = (first > last) ? true : false;
-> > +
-> > +	if (count && last >= first)
-> > +		active = last - first + 1;
-> > +	else if (count)
-> > +		active = agfl_size - first + last + 1;
-> > +
-> > +	if (wrapped && active == count + 1)
-> > +		agfl_size--;
-> > +	else if ((wrapped && active == count - 1) ||
-> > +		 first == agfl_size || last == agfl_size)
-> > +		agfl_size++;
-> > +
-> > +	/*
-> > +	 * We can't discern the packing problem from certain forms of corruption
-> > +	 * that may look exactly the same. To minimize the chance of mistaking
-> > +	 * corruption for a size mismatch, clamp the size to known valid values.
-> > +	 * A packed header agfl has 119 entries and the older unpacked format
-> > +	 * has one less.
-> > +	 */
-> > +	if (agfl_size < 118 || agfl_size > 119)
-> > +		agfl_size = XFS_AGFL_SIZE(mp);
-> > +
-> > +	return agfl_size;
-> > +}
-> > +
-> > +static bool
-> > +xfs_agfl_need_padfix(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_agf		*agf)
-> > +{
-> > +	int			f = be32_to_cpu(agf->agf_flfirst);
-> > +	int			l = be32_to_cpu(agf->agf_fllast);
-> > +	int			c = be32_to_cpu(agf->agf_flcount);
-> > +
-> > +	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> > +		return false;
-> > +
-> > +	return xfs_agfl_ondisk_size(mp, f, l, c) != XFS_AGFL_SIZE(mp);
-> > +}
-> > +
-> > +static int
-> > +xfs_agfl_check_padfix(
-> > +	struct xfs_trans	*tp,
-> > +	struct xfs_buf		*agbp,
-> > +	struct xfs_buf		*agflbp,
-> > +	struct xfs_perag	*pag)
-> > +{
-> > +	struct xfs_mount	*mp = tp->t_mountp;
-> > +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
-> > +	__be32			*agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
-> > +	int			agfl_size = XFS_AGFL_SIZE(mp);
-> > +	int			ofirst, olast, osize;
-> > +	int			nfirst, nlast;
-> > +	int			logflags = 0;
-> > +	int			startoff = 0;
-> > +
-> > +	if (!pag->pagf_needpadfix)
-> > +		return 0;
-> > +
-> > +	ofirst = nfirst = be32_to_cpu(agf->agf_flfirst);
-> > +	olast = nlast = be32_to_cpu(agf->agf_fllast);
-> > +	osize = xfs_agfl_ondisk_size(mp, ofirst, olast, pag->pagf_flcount);
-> > +
-> > +	/*
-> > +	 * If the on-disk agfl is smaller than what the kernel expects, the
-> > +	 * last slot of the on-disk agfl is a gap with bogus data. Move the
-> > +	 * first valid block into the gap and bump the pointer.
-> > +	 */
-> > +	if (osize < agfl_size) {
-> > +		ASSERT(pag->pagf_flcount != 0);
-> > +		agfl_bno[agfl_size - 1] = agfl_bno[ofirst];
-> > +		startoff = (char *) &agfl_bno[agfl_size - 1] - (char *) agflbp->b_addr;
-> > +		nfirst++;
-> > +		goto done;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Otherwise, the on-disk agfl is larger than what the current kernel
-> > +	 * expects. If empty, just fix up the first and last pointers. If not,
-> > +	 * move the inaccessible block to the end of the valid range.
-> > +	 */
-> > +	nfirst = do_mod(nfirst, agfl_size);
-> > +	if (pag->pagf_flcount == 0) {
-> > +		nlast = (nfirst == 0 ? agfl_size - 1 : nfirst - 1);
-> > +		goto done;
-> > +	}
-> > +	if (nlast != agfl_size)
-> > +		nlast++;
-> > +	nlast = do_mod(nlast, agfl_size);
-> > +	agfl_bno[nlast] = agfl_bno[osize - 1];
-> > +	startoff = (char *) &agfl_bno[nlast] - (char *) agflbp->b_addr;
-> > +
-> > +done:
-> > +	if (nfirst != ofirst) {
-> > +		agf->agf_flfirst = cpu_to_be32(nfirst);
-> > +		logflags |= XFS_AGF_FLFIRST;
-> > +	}
-> > +	if (nlast != olast) {
-> > +		agf->agf_fllast = cpu_to_be32(nlast);
-> > +		logflags |= XFS_AGF_FLLAST;
-> > +	}
-> > +	if (startoff) {
-> > +		xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
-> > +		xfs_trans_log_buf(tp, agflbp, startoff,
-> > +				  startoff + sizeof(xfs_agblock_t) - 1);
-> > +	}
-> > +	if (logflags)
-> > +		xfs_alloc_log_agf(tp, agbp, logflags);
-> > +
-> > +	trace_xfs_agfl_padfix(mp, osize, agfl_size);
-> > +	pag->pagf_needpadfix = false;
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/*
-> >   * Decide whether to use this allocation group for this allocation.
-> >   * If so, fix up the btree freelist's size.
-> >   */
-> > @@ -2258,6 +2388,12 @@ xfs_alloc_get_freelist(
-> >  	if (error)
-> >  		return error;
-> >  
-> > +	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> > +	error = xfs_agfl_check_padfix(tp, agbp, agflbp, pag);
-> > +	if (error) {
-> > +		xfs_perag_put(pag);
-> > +		return error;
-> > +	}
-> >  
-> >  	/*
-> >  	 * Get the block number and update the data structures.
-> > @@ -2269,7 +2405,6 @@ xfs_alloc_get_freelist(
-> >  	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
-> >  		agf->agf_flfirst = 0;
-> >  
-> > -	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> >  	be32_add_cpu(&agf->agf_flcount, -1);
-> >  	xfs_trans_agflist_delta(tp, -1);
-> >  	pag->pagf_flcount--;
-> > @@ -2376,11 +2511,18 @@ xfs_alloc_put_freelist(
-> >  	if (!agflbp && (error = xfs_alloc_read_agfl(mp, tp,
-> >  			be32_to_cpu(agf->agf_seqno), &agflbp)))
-> >  		return error;
-> > +
-> > +	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> > +	error = xfs_agfl_check_padfix(tp, agbp, agflbp, pag);
-> > +	if (error) {
-> > +		xfs_perag_put(pag);
-> > +		return error;
-> > +	}
-> > +
-> >  	be32_add_cpu(&agf->agf_fllast, 1);
-> >  	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
-> >  		agf->agf_fllast = 0;
-> >  
-> > -	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> >  	be32_add_cpu(&agf->agf_flcount, 1);
-> >  	xfs_trans_agflist_delta(tp, 1);
-> >  	pag->pagf_flcount++;
-> > @@ -2588,6 +2730,7 @@ xfs_alloc_read_agf(
-> >  		pag->pagb_count = 0;
-> >  		pag->pagb_tree = RB_ROOT;
-> >  		pag->pagf_init = 1;
-> > +		pag->pagf_needpadfix = xfs_agfl_need_padfix(mp, agf);
-> >  	}
-> >  #ifdef DEBUG
-> >  	else if (!XFS_FORCED_SHUTDOWN(mp)) {
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index e0792d036be2..78a6377a9b38 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -353,6 +353,7 @@ typedef struct xfs_perag {
-> >  	char		pagi_inodeok;	/* The agi is ok for inodes */
-> >  	uint8_t		pagf_levels[XFS_BTNUM_AGF];
-> >  					/* # of levels in bno & cnt btree */
-> > +	bool		pagf_needpadfix;
-> >  	uint32_t	pagf_flcount;	/* count of blocks in freelist */
-> >  	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
-> >  	xfs_extlen_t	pagf_longest;	/* longest free space */
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 945de08af7ba..c7a3bcd6cc4a 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -3339,6 +3339,24 @@ TRACE_EVENT(xfs_trans_resv_calc,
-> >  		  __entry->logflags)
-> >  );
-> >  
-> > +TRACE_EVENT(xfs_agfl_padfix,
-> > +	TP_PROTO(struct xfs_mount *mp, int osize, int nsize),
-> > +	TP_ARGS(mp, osize, nsize),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(int, osize)
-> > +		__field(int, nsize)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = mp->m_super->s_dev;
-> > +		__entry->osize = osize;
-> > +		__entry->nsize = nsize;
-> > +	),
-> > +	TP_printk("dev %d:%d old size %d new size %d",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> > +		  __entry->osize, __entry->nsize)
-> > +);
-> > +
-> >  #endif /* _TRACE_XFS_H */
-> >  
-> >  #undef TRACE_INCLUDE_PATH
-> > -- 
-> > 2.13.6
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> Carlos
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index ecefe9f7eb60..619b1ed6434c 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -191,6 +191,7 @@ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
+ 		return NULL;
+ 	}
+ 
++	dev_pagemap_get_ops();
+ 	pgmap->type = MEMORY_DEVICE_FS_DAX;
+ 	pgmap->page_free = generic_dax_pagefree;
+ 	pgmap->data = owner;
+@@ -215,6 +216,7 @@ void fs_dax_release(struct dax_device *dax_dev, void *owner)
+ 	pgmap->type = MEMORY_DEVICE_HOST;
+ 	pgmap->page_free = NULL;
+ 	pgmap->data = NULL;
++	dev_pagemap_put_ops();
+ 	mutex_unlock(&devmap_lock);
+ }
+ EXPORT_SYMBOL_GPL(fs_dax_release);
+diff --git a/fs/Kconfig b/fs/Kconfig
+index bc821a86d965..1f0832bbc32f 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -38,6 +38,7 @@ config FS_DAX
+ 	bool "Direct Access (DAX) support"
+ 	depends on MMU
+ 	depends on !(ARM || MIPS || SPARC)
++	select DEV_PAGEMAP_OPS
+ 	select FS_IOMAP
+ 	select DAX
+ 	help
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 02d6d042ee7f..9faf25d6abef 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -1,7 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ #ifndef _LINUX_MEMREMAP_H_
+ #define _LINUX_MEMREMAP_H_
+-#include <linux/mm.h>
+ #include <linux/ioport.h>
+ #include <linux/percpu-refcount.h>
+ 
+@@ -130,6 +129,9 @@ struct dev_pagemap {
+ 	enum memory_type type;
+ };
+ 
++void dev_pagemap_get_ops(void);
++void dev_pagemap_put_ops(void);
++
+ #ifdef CONFIG_ZONE_DEVICE
+ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap);
+ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
+@@ -137,8 +139,6 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
+ 
+ unsigned long vmem_altmap_offset(struct vmem_altmap *altmap);
+ void vmem_altmap_free(struct vmem_altmap *altmap, unsigned long nr_pfns);
+-
+-static inline bool is_zone_device_page(const struct page *page);
+ #else
+ static inline void *devm_memremap_pages(struct device *dev,
+ 		struct dev_pagemap *pgmap)
+@@ -169,20 +169,6 @@ static inline void vmem_altmap_free(struct vmem_altmap *altmap,
+ }
+ #endif /* CONFIG_ZONE_DEVICE */
+ 
+-#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
+-static inline bool is_device_private_page(const struct page *page)
+-{
+-	return is_zone_device_page(page) &&
+-		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
+-}
+-
+-static inline bool is_device_public_page(const struct page *page)
+-{
+-	return is_zone_device_page(page) &&
+-		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
+-}
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+-
+ static inline void put_dev_pagemap(struct dev_pagemap *pgmap)
+ {
+ 	if (pgmap)
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index ad06d42adb1a..088c76bce360 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -812,27 +812,55 @@ static inline bool is_zone_device_page(const struct page *page)
+ }
+ #endif
+ 
+-#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
+-void put_zone_device_private_or_public_page(struct page *page);
+-DECLARE_STATIC_KEY_FALSE(device_private_key);
+-#define IS_HMM_ENABLED static_branch_unlikely(&device_private_key)
+-static inline bool is_device_private_page(const struct page *page);
+-static inline bool is_device_public_page(const struct page *page);
+-#else /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+-static inline void put_zone_device_private_or_public_page(struct page *page)
++#ifdef CONFIG_DEV_PAGEMAP_OPS
++void __put_devmap_managed_page(struct page *page);
++DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
++static inline bool put_devmap_managed_page(struct page *page)
+ {
++	if (!static_branch_unlikely(&devmap_managed_key))
++		return false;
++	if (!is_zone_device_page(page))
++		return false;
++	switch (page->pgmap->type) {
++	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_PUBLIC:
++	case MEMORY_DEVICE_FS_DAX:
++		__put_devmap_managed_page(page);
++		return true;
++	default:
++		break;
++	}
++	return false;
+ }
+-#define IS_HMM_ENABLED 0
++
+ static inline bool is_device_private_page(const struct page *page)
+ {
+-	return false;
++	return is_zone_device_page(page) &&
++		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
+ }
++
+ static inline bool is_device_public_page(const struct page *page)
+ {
++	return is_zone_device_page(page) &&
++		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
++}
++
++#else /* CONFIG_DEV_PAGEMAP_OPS */
++static inline bool put_devmap_managed_page(struct page *page)
++{
+ 	return false;
+ }
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+ 
++static inline bool is_device_private_page(const struct page *page)
++{
++	return false;
++}
++
++static inline bool is_device_public_page(const struct page *page)
++{
++	return false;
++}
++#endif /* CONFIG_DEV_PAGEMAP_OPS */
+ 
+ static inline void get_page(struct page *page)
+ {
+@@ -850,16 +878,13 @@ static inline void put_page(struct page *page)
+ 	page = compound_head(page);
+ 
+ 	/*
+-	 * For private device pages we need to catch refcount transition from
+-	 * 2 to 1, when refcount reach one it means the private device page is
+-	 * free and we need to inform the device driver through callback. See
++	 * For devmap managed pages we need to catch refcount transition from
++	 * 2 to 1, when refcount reach one it means the page is free and we
++	 * need to inform the device driver through callback. See
+ 	 * include/linux/memremap.h and HMM for details.
+ 	 */
+-	if (IS_HMM_ENABLED && unlikely(is_device_private_page(page) ||
+-	    unlikely(is_device_public_page(page)))) {
+-		put_zone_device_private_or_public_page(page);
++	if (put_devmap_managed_page(page))
+ 		return;
+-	}
+ 
+ 	if (put_page_testzero(page))
+ 		__put_page(page);
+diff --git a/kernel/memremap.c b/kernel/memremap.c
+index 4dd4274cabe2..bd8300d02d7c 100644
+--- a/kernel/memremap.c
++++ b/kernel/memremap.c
+@@ -476,8 +476,30 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
+ }
+ #endif /* CONFIG_ZONE_DEVICE */
+ 
+-#if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
+-void put_zone_device_private_or_public_page(struct page *page)
++#ifdef CONFIG_DEV_PAGEMAP_OPS
++DEFINE_STATIC_KEY_FALSE(devmap_managed_key);
++EXPORT_SYMBOL(devmap_managed_key);
++static atomic_t devmap_enable;
++
++/*
++ * Toggle the static key for ->page_free() callbacks when dev_pagemap
++ * pages go idle.
++ */
++void dev_pagemap_get_ops(void)
++{
++	if (atomic_inc_return(&devmap_enable) == 1)
++		static_branch_enable(&devmap_managed_key);
++}
++EXPORT_SYMBOL_GPL(dev_pagemap_get_ops);
++
++void dev_pagemap_put_ops(void)
++{
++	if (atomic_dec_and_test(&devmap_enable))
++		static_branch_disable(&devmap_managed_key);
++}
++EXPORT_SYMBOL_GPL(dev_pagemap_put_ops);
++
++void __put_devmap_managed_page(struct page *page)
+ {
+ 	int count = page_ref_dec_return(page);
+ 
+@@ -497,5 +519,5 @@ void put_zone_device_private_or_public_page(struct page *page)
+ 	} else if (!count)
+ 		__put_page(page);
+ }
+-EXPORT_SYMBOL(put_zone_device_private_or_public_page);
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
++EXPORT_SYMBOL_GPL(__put_devmap_managed_page);
++#endif /* CONFIG_DEV_PAGEMAP_OPS */
+diff --git a/mm/Kconfig b/mm/Kconfig
+index c782e8fb7235..dc32828984a3 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -700,6 +700,9 @@ config ARCH_HAS_HMM
+ config MIGRATE_VMA_HELPER
+ 	bool
+ 
++config DEV_PAGEMAP_OPS
++	bool
++
+ config HMM
+ 	bool
+ 	select MIGRATE_VMA_HELPER
+@@ -720,6 +723,7 @@ config DEVICE_PRIVATE
+ 	bool "Unaddressable device memory (GPU memory, ...)"
+ 	depends on ARCH_HAS_HMM
+ 	select HMM
++	select DEV_PAGEMAP_OPS
+ 
+ 	help
+ 	  Allows creation of struct pages to represent unaddressable device
+@@ -730,6 +734,7 @@ config DEVICE_PUBLIC
+ 	bool "Addressable device memory (like GPU memory)"
+ 	depends on ARCH_HAS_HMM
+ 	select HMM
++	select DEV_PAGEMAP_OPS
+ 
+ 	help
+ 	  Allows creation of struct pages to represent addressable device
+diff --git a/mm/hmm.c b/mm/hmm.c
+index 320545b98ff5..4aa554e76d06 100644
+--- a/mm/hmm.c
++++ b/mm/hmm.c
+@@ -35,15 +35,6 @@
+ 
+ #define PA_SECTION_SIZE (1UL << PA_SECTION_SHIFT)
+ 
+-#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
+-/*
+- * Device private memory see HMM (Documentation/vm/hmm.txt) or hmm.h
+- */
+-DEFINE_STATIC_KEY_FALSE(device_private_key);
+-EXPORT_SYMBOL(device_private_key);
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+-
+-
+ #if IS_ENABLED(CONFIG_HMM_MIRROR)
+ static const struct mmu_notifier_ops hmm_mmu_notifier_ops;
+ 
+@@ -996,7 +987,7 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+ 	resource_size_t addr;
+ 	int ret;
+ 
+-	static_branch_enable(&device_private_key);
++	dev_pagemap_get_ops();
+ 
+ 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
+ 				   GFP_KERNEL, dev_to_node(device));
+@@ -1090,7 +1081,7 @@ struct hmm_devmem *hmm_devmem_add_resource(const struct hmm_devmem_ops *ops,
+ 	if (res->desc != IORES_DESC_DEVICE_PUBLIC_MEMORY)
+ 		return ERR_PTR(-EINVAL);
+ 
+-	static_branch_enable(&device_private_key);
++	dev_pagemap_get_ops();
+ 
+ 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
+ 				   GFP_KERNEL, dev_to_node(device));
+diff --git a/mm/swap.c b/mm/swap.c
+index 0f17330dd0e5..eed846cfc8b8 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -29,6 +29,7 @@
+ #include <linux/cpu.h>
+ #include <linux/notifier.h>
+ #include <linux/backing-dev.h>
++#include <linux/memremap.h>
+ #include <linux/memcontrol.h>
+ #include <linux/gfp.h>
+ #include <linux/uio.h>
+@@ -744,7 +745,7 @@ void release_pages(struct page **pages, int nr)
+ 						       flags);
+ 				locked_pgdat = NULL;
+ 			}
+-			put_zone_device_private_or_public_page(page);
++			put_devmap_managed_page(page);
+ 			continue;
+ 		}
+ 
+
