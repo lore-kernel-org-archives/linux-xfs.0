@@ -1,209 +1,393 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:34007 "EHLO mga07.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:14653 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751348AbeCJHEi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 10 Mar 2018 02:04:38 -0500
-Subject: [PATCH v5 08/11] wait_bit: introduce {wait_on,wake_up}_atomic_one
+        id S1751695AbeCJHE1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Mar 2018 02:04:27 -0500
+Subject: [PATCH v5 06/11] mm,
+ dax: enable filesystems to trigger dev_pagemap ->page_free callbacks
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 09 Mar 2018 22:55:32 -0800
-Message-ID: <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 09 Mar 2018 22:55:21 -0800
+Message-ID: <152066492126.40260.11297816369314187769.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
+Cc: Michal Hocko <mhocko@suse.com>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-Add a generic facility for awaiting an atomic_t to reach a value of 1.
+In order to resolve collisions between filesystem operations and DMA to
+DAX mapped pages we need a callback when DMA completes. With a callback
+we can hold off filesystem operations while DMA is in-flight and then
+resume those operations when the last put_page() occurs on a DMA page.
 
-Page reference counts typically need to reach 0 to be considered a
-free / inactive page. However, ZONE_DEVICE pages allocated via
-devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
-done at init time to assign pages to the page allocator is skipped.
+Recall that the 'struct page' entries for DAX memory are created with
+devm_memremap_pages(). That routine arranges for the pages to be
+allocated, but never onlined, so a DAX page is DMA-idle when its
+reference count reaches one.
 
-These pages will have their reference count elevated > 1 by
-get_user_pages() when they are under DMA. In order to coordinate DMA to
-these pages vs filesytem operations like hole-punch and truncate the
-filesystem-dax implementation needs to capture the DMA-idle event i.e.
-the 2 to 1 count transition).
+Also recall that the HMM sub-system added infrastructure to trap the
+page-idle (2-to-1 reference count) transition of the pages allocated by
+devm_memremap_pages() and trigger a callback via the 'struct
+dev_pagemap' associated with the page range. Whereas the HMM callbacks
+are going to a device driver to manage bounce pages in device-memory in
+the filesystem-dax case we will call back to filesystem specified
+callback.
 
-For now, this implementation does not have functional behavior change,
-follow-on patches will add waiters for these page-idle events.
+Since the callback is not known at devm_memremap_pages() time we arrange
+for the filesystem to install it at mount time. No functional changes
+are expected as this only registers a nop handler for the ->page_free()
+event for device-mapped pages.
 
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: "Jérôme Glisse" <jglisse@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/super.c      |    2 +-
- include/linux/wait_bit.h |   13 ++++++++++
- kernel/sched/wait_bit.c  |   59 +++++++++++++++++++++++++++++++++++++++-------
- 3 files changed, 64 insertions(+), 10 deletions(-)
+ drivers/dax/super.c      |   79 ++++++++++++++++++++++++++++++++++++++++------
+ drivers/nvdimm/pmem.c    |    3 +-
+ fs/ext2/super.c          |    6 ++-
+ fs/ext4/super.c          |    6 ++-
+ fs/xfs/xfs_super.c       |   20 ++++++------
+ include/linux/dax.h      |   17 +++++-----
+ include/linux/memremap.h |    8 +++++
+ 7 files changed, 103 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 619b1ed6434c..7e10fa3460e2 100644
+index 2b2332b605e4..ecefe9f7eb60 100644
 --- a/drivers/dax/super.c
 +++ b/drivers/dax/super.c
-@@ -167,7 +167,7 @@ struct dax_device {
- #if IS_ENABLED(CONFIG_FS_DAX)
- static void generic_dax_pagefree(struct page *page, void *data)
- {
--	/* TODO: wakeup page-idle waiters */
-+	wake_up_atomic_one(&page->_refcount);
+@@ -29,6 +29,7 @@ static struct vfsmount *dax_mnt;
+ static DEFINE_IDA(dax_minor_ida);
+ static struct kmem_cache *dax_cache __read_mostly;
+ static struct super_block *dax_superblock __read_mostly;
++static DEFINE_MUTEX(devmap_lock);
+ 
+ #define DAX_HASH_SIZE (PAGE_SIZE / sizeof(struct hlist_head))
+ static struct hlist_head dax_host_list[DAX_HASH_SIZE];
+@@ -62,16 +63,6 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
  }
+ EXPORT_SYMBOL(bdev_dax_pgoff);
  
- struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
-diff --git a/include/linux/wait_bit.h b/include/linux/wait_bit.h
-index 61b39eaf7cad..564c9a0141cd 100644
---- a/include/linux/wait_bit.h
-+++ b/include/linux/wait_bit.h
-@@ -33,10 +33,15 @@ int __wait_on_bit(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *
- int __wait_on_bit_lock(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry, wait_bit_action_f *action, unsigned int mode);
- void wake_up_bit(void *word, int bit);
- void wake_up_atomic_t(atomic_t *p);
-+static inline void wake_up_atomic_one(atomic_t *p)
+-#if IS_ENABLED(CONFIG_FS_DAX)
+-struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
+-{
+-	if (!blk_queue_dax(bdev->bd_queue))
+-		return NULL;
+-	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
+-}
+-EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+-#endif
+-
+ /**
+  * __bdev_dax_supported() - Check if the device supports dax for filesystem
+  * @sb: The superblock of the device
+@@ -169,9 +160,66 @@ struct dax_device {
+ 	const char *host;
+ 	void *private;
+ 	unsigned long flags;
++	struct dev_pagemap *pgmap;
+ 	const struct dax_operations *ops;
+ };
+ 
++#if IS_ENABLED(CONFIG_FS_DAX)
++static void generic_dax_pagefree(struct page *page, void *data)
 +{
-+	wake_up_atomic_t(p);
-+}
- int out_of_line_wait_on_bit(void *word, int, wait_bit_action_f *action, unsigned int mode);
- int out_of_line_wait_on_bit_timeout(void *word, int, wait_bit_action_f *action, unsigned int mode, unsigned long timeout);
- int out_of_line_wait_on_bit_lock(void *word, int, wait_bit_action_f *action, unsigned int mode);
- int out_of_line_wait_on_atomic_t(atomic_t *p, wait_atomic_t_action_f action, unsigned int mode);
-+int out_of_line_wait_on_atomic_one(atomic_t *p, wait_atomic_t_action_f action, unsigned int mode);
- struct wait_queue_head *bit_waitqueue(void *word, int bit);
- extern void __init wait_bit_init(void);
- 
-@@ -262,4 +267,12 @@ int wait_on_atomic_t(atomic_t *val, wait_atomic_t_action_f action, unsigned mode
- 	return out_of_line_wait_on_atomic_t(val, action, mode);
- }
- 
-+static inline
-+int wait_on_atomic_one(atomic_t *val, wait_atomic_t_action_f action, unsigned mode)
-+{
-+	might_sleep();
-+	if (atomic_read(val) == 1)
-+		return 0;
-+	return out_of_line_wait_on_atomic_one(val, action, mode);
-+}
- #endif /* _LINUX_WAIT_BIT_H */
-diff --git a/kernel/sched/wait_bit.c b/kernel/sched/wait_bit.c
-index 84cb3acd9260..8739b1e50df5 100644
---- a/kernel/sched/wait_bit.c
-+++ b/kernel/sched/wait_bit.c
-@@ -162,28 +162,47 @@ static inline wait_queue_head_t *atomic_t_waitqueue(atomic_t *p)
- 	return bit_waitqueue(p, 0);
- }
- 
--static int wake_atomic_t_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync,
--				  void *arg)
-+static struct wait_bit_queue_entry *to_wait_bit_q(
-+		struct wait_queue_entry *wq_entry)
-+{
-+	return container_of(wq_entry, struct wait_bit_queue_entry, wq_entry);
++	/* TODO: wakeup page-idle waiters */
 +}
 +
-+static int __wake_atomic_t_function(struct wait_queue_entry *wq_entry,
-+		unsigned mode, int sync, void *arg, int target)
- {
- 	struct wait_bit_key *key = arg;
--	struct wait_bit_queue_entry *wait_bit = container_of(wq_entry, struct wait_bit_queue_entry, wq_entry);
-+	struct wait_bit_queue_entry *wait_bit = to_wait_bit_q(wq_entry);
- 	atomic_t *val = key->flags;
- 
- 	if (wait_bit->key.flags != key->flags ||
- 	    wait_bit->key.bit_nr != key->bit_nr ||
--	    atomic_read(val) != 0)
-+	    atomic_read(val) != target)
- 		return 0;
- 	return autoremove_wake_function(wq_entry, mode, sync, key);
- }
- 
-+static int wake_atomic_t_function(struct wait_queue_entry *wq_entry,
-+		unsigned mode, int sync, void *arg)
++struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
 +{
-+	return __wake_atomic_t_function(wq_entry, mode, sync, arg, 0);
-+}
++	struct dax_device *dax_dev;
++	struct dev_pagemap *pgmap;
 +
-+static int wake_atomic_one_function(struct wait_queue_entry *wq_entry,
-+		unsigned mode, int sync, void *arg)
-+{
-+	return __wake_atomic_t_function(wq_entry, mode, sync, arg, 1);
-+}
++	if (!blk_queue_dax(bdev->bd_queue))
++		return NULL;
++	dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
++	if (!dax_dev->pgmap)
++		return dax_dev;
++	pgmap = dax_dev->pgmap;
 +
- /*
-  * To allow interruptible waiting and asynchronous (i.e. nonblocking) waiting,
-  * the actions of __wait_on_atomic_t() are permitted return codes.  Nonzero
-  * return codes halt waiting and return.
-  */
- static __sched
--int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry,
--		       wait_atomic_t_action_f action, unsigned int mode)
-+int __wait_on_atomic_t(struct wait_queue_head *wq_head,
-+		struct wait_bit_queue_entry *wbq_entry,
-+		wait_atomic_t_action_f action, unsigned int mode, int target)
- {
- 	atomic_t *val;
- 	int ret = 0;
-@@ -191,10 +210,10 @@ int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_en
- 	do {
- 		prepare_to_wait(wq_head, &wbq_entry->wq_entry, mode);
- 		val = wbq_entry->key.flags;
--		if (atomic_read(val) == 0)
-+		if (atomic_read(val) == target)
- 			break;
- 		ret = (*action)(val, mode);
--	} while (!ret && atomic_read(val) != 0);
-+	} while (!ret && atomic_read(val) != target);
- 	finish_wait(wq_head, &wbq_entry->wq_entry);
- 	return ret;
- }
-@@ -210,6 +229,17 @@ int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_en
- 		},							\
- 	}
- 
-+#define DEFINE_WAIT_ATOMIC_ONE(name, p)					\
-+	struct wait_bit_queue_entry name = {				\
-+		.key = __WAIT_ATOMIC_T_KEY_INITIALIZER(p),		\
-+		.wq_entry = {						\
-+			.private	= current,			\
-+			.func		= wake_atomic_one_function,	\
-+			.entry		=				\
-+				LIST_HEAD_INIT((name).wq_entry.entry),	\
-+		},							\
++	mutex_lock(&devmap_lock);
++	if ((pgmap->data && pgmap->data != owner) || pgmap->page_free
++			|| pgmap->page_fault
++			|| pgmap->type != MEMORY_DEVICE_HOST) {
++		put_dax(dax_dev);
++		mutex_unlock(&devmap_lock);
++		return NULL;
 +	}
 +
- __sched int out_of_line_wait_on_atomic_t(atomic_t *p,
- 					 wait_atomic_t_action_f action,
- 					 unsigned int mode)
-@@ -217,7 +247,7 @@ __sched int out_of_line_wait_on_atomic_t(atomic_t *p,
- 	struct wait_queue_head *wq_head = atomic_t_waitqueue(p);
- 	DEFINE_WAIT_ATOMIC_T(wq_entry, p);
- 
--	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode);
-+	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode, 0);
- }
- EXPORT_SYMBOL(out_of_line_wait_on_atomic_t);
- 
-@@ -230,6 +260,17 @@ __sched int atomic_t_wait(atomic_t *counter, unsigned int mode)
- }
- EXPORT_SYMBOL(atomic_t_wait);
- 
-+__sched int out_of_line_wait_on_atomic_one(atomic_t *p,
-+					   wait_atomic_t_action_f action,
-+					   unsigned int mode)
-+{
-+	struct wait_queue_head *wq_head = atomic_t_waitqueue(p);
-+	DEFINE_WAIT_ATOMIC_ONE(wq_entry, p);
++	pgmap->type = MEMORY_DEVICE_FS_DAX;
++	pgmap->page_free = generic_dax_pagefree;
++	pgmap->data = owner;
++	mutex_unlock(&devmap_lock);
 +
-+	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode, 1);
++	return dax_dev;
 +}
-+EXPORT_SYMBOL(out_of_line_wait_on_atomic_one);
++EXPORT_SYMBOL_GPL(fs_dax_claim_bdev);
 +
- /**
-  * wake_up_atomic_t - Wake up a waiter on a atomic_t
-  * @p: The atomic_t being waited on, a kernel virtual address
++void fs_dax_release(struct dax_device *dax_dev, void *owner)
++{
++	struct dev_pagemap *pgmap = dax_dev ? dax_dev->pgmap : NULL;
++
++	put_dax(dax_dev);
++	if (!pgmap)
++		return;
++	if (!pgmap->data)
++		return;
++
++	mutex_lock(&devmap_lock);
++	WARN_ON(pgmap->data != owner);
++	pgmap->type = MEMORY_DEVICE_HOST;
++	pgmap->page_free = NULL;
++	pgmap->data = NULL;
++	mutex_unlock(&devmap_lock);
++}
++EXPORT_SYMBOL_GPL(fs_dax_release);
++#endif
++
+ static ssize_t write_cache_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+@@ -499,6 +547,17 @@ struct dax_device *alloc_dax(void *private, const char *__host,
+ }
+ EXPORT_SYMBOL_GPL(alloc_dax);
+ 
++struct dax_device *alloc_dax_devmap(void *private, const char *host,
++		const struct dax_operations *ops, struct dev_pagemap *pgmap)
++{
++	struct dax_device *dax_dev = alloc_dax(private, host, ops);
++
++	if (dax_dev)
++		dax_dev->pgmap = pgmap;
++	return dax_dev;
++}
++EXPORT_SYMBOL_GPL(alloc_dax_devmap);
++
+ void put_dax(struct dax_device *dax_dev)
+ {
+ 	if (!dax_dev)
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 06f8dcc52ca6..e6d7351f3379 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -408,7 +408,8 @@ static int pmem_attach_disk(struct device *dev,
+ 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
+ 	disk->bb = &pmem->bb;
+ 
+-	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
++	dax_dev = alloc_dax_devmap(pmem, disk->disk_name, &pmem_dax_ops,
++			&pmem->pgmap);
+ 	if (!dax_dev) {
+ 		put_disk(disk);
+ 		return -ENOMEM;
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 7666c065b96f..6ae20e319bc4 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -172,7 +172,7 @@ static void ext2_put_super (struct super_block * sb)
+ 	brelse (sbi->s_sbh);
+ 	sb->s_fs_info = NULL;
+ 	kfree(sbi->s_blockgroup_lock);
+-	fs_put_dax(sbi->s_daxdev);
++	fs_dax_release(sbi->s_daxdev, sb);
+ 	kfree(sbi);
+ }
+ 
+@@ -817,7 +817,7 @@ static unsigned long descriptor_loc(struct super_block *sb,
+ 
+ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ {
+-	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
++	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
+ 	struct buffer_head * bh;
+ 	struct ext2_sb_info * sbi;
+ 	struct ext2_super_block * es;
+@@ -1213,7 +1213,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ 	kfree(sbi->s_blockgroup_lock);
+ 	kfree(sbi);
+ failed:
+-	fs_put_dax(dax_dev);
++	fs_dax_release(dax_dev, sb);
+ 	return ret;
+ }
+ 
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 39bf464c35f1..315a323729e3 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -952,7 +952,7 @@ static void ext4_put_super(struct super_block *sb)
+ 	if (sbi->s_chksum_driver)
+ 		crypto_free_shash(sbi->s_chksum_driver);
+ 	kfree(sbi->s_blockgroup_lock);
+-	fs_put_dax(sbi->s_daxdev);
++	fs_dax_release(sbi->s_daxdev, sb);
+ 	kfree(sbi);
+ }
+ 
+@@ -3398,7 +3398,7 @@ static void ext4_set_resv_clusters(struct super_block *sb)
+ 
+ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ {
+-	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
++	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
+ 	char *orig_data = kstrdup(data, GFP_KERNEL);
+ 	struct buffer_head *bh;
+ 	struct ext4_super_block *es = NULL;
+@@ -4408,7 +4408,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ out_free_base:
+ 	kfree(sbi);
+ 	kfree(orig_data);
+-	fs_put_dax(dax_dev);
++	fs_dax_release(dax_dev, sb);
+ 	return err ? err : ret;
+ }
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 93588ea3d3d2..ef7dd7148c0b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -724,7 +724,7 @@ xfs_close_devices(
+ 
+ 		xfs_free_buftarg(mp, mp->m_logdev_targp);
+ 		xfs_blkdev_put(logdev);
+-		fs_put_dax(dax_logdev);
++		fs_dax_release(dax_logdev, mp);
+ 	}
+ 	if (mp->m_rtdev_targp) {
+ 		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
+@@ -732,10 +732,10 @@ xfs_close_devices(
+ 
+ 		xfs_free_buftarg(mp, mp->m_rtdev_targp);
+ 		xfs_blkdev_put(rtdev);
+-		fs_put_dax(dax_rtdev);
++		fs_dax_release(dax_rtdev, mp);
+ 	}
+ 	xfs_free_buftarg(mp, mp->m_ddev_targp);
+-	fs_put_dax(dax_ddev);
++	fs_dax_release(dax_ddev, mp);
+ }
+ 
+ /*
+@@ -753,9 +753,9 @@ xfs_open_devices(
+ 	struct xfs_mount	*mp)
+ {
+ 	struct block_device	*ddev = mp->m_super->s_bdev;
+-	struct dax_device	*dax_ddev = fs_dax_get_by_bdev(ddev);
+-	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
++	struct dax_device	*dax_ddev = fs_dax_claim_bdev(ddev, mp);
+ 	struct block_device	*logdev = NULL, *rtdev = NULL;
++	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
+ 	int			error;
+ 
+ 	/*
+@@ -765,7 +765,7 @@ xfs_open_devices(
+ 		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
+ 		if (error)
+ 			goto out;
+-		dax_logdev = fs_dax_get_by_bdev(logdev);
++		dax_logdev = fs_dax_claim_bdev(logdev, mp);
+ 	}
+ 
+ 	if (mp->m_rtname) {
+@@ -779,7 +779,7 @@ xfs_open_devices(
+ 			error = -EINVAL;
+ 			goto out_close_rtdev;
+ 		}
+-		dax_rtdev = fs_dax_get_by_bdev(rtdev);
++		dax_rtdev = fs_dax_claim_bdev(rtdev, mp);
+ 	}
+ 
+ 	/*
+@@ -813,14 +813,14 @@ xfs_open_devices(
+ 	xfs_free_buftarg(mp, mp->m_ddev_targp);
+  out_close_rtdev:
+ 	xfs_blkdev_put(rtdev);
+-	fs_put_dax(dax_rtdev);
++	fs_dax_release(dax_rtdev, mp);
+  out_close_logdev:
+ 	if (logdev && logdev != ddev) {
+ 		xfs_blkdev_put(logdev);
+-		fs_put_dax(dax_logdev);
++		fs_dax_release(dax_logdev, mp);
+ 	}
+  out:
+-	fs_put_dax(dax_ddev);
++	fs_dax_release(dax_ddev, mp);
+ 	return error;
+ }
+ 
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 3045c0d9c804..9b4259aee016 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -51,12 +51,8 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+ 	return dax_get_by_host(host);
+ }
+ 
+-static inline void fs_put_dax(struct dax_device *dax_dev)
+-{
+-	put_dax(dax_dev);
+-}
+-
+-struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
++struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner);
++void fs_dax_release(struct dax_device *dax_dev, void *owner);
+ int dax_set_page_dirty(struct page *page);
+ void dax_invalidatepage(struct page *page, unsigned int offset,
+ 		unsigned int length);
+@@ -71,13 +67,14 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+ 	return NULL;
+ }
+ 
+-static inline void fs_put_dax(struct dax_device *dax_dev)
++static inline struct dax_device *fs_dax_claim_bdev(struct block_device *bdev,
++		void *owner)
+ {
++	return NULL;
+ }
+ 
+-static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
++static inline void fs_dax_release(struct dax_device *dax_dev, void *owner)
+ {
+-	return NULL;
+ }
+ 
+ #define dax_set_page_dirty NULL
+@@ -88,6 +85,8 @@ int dax_read_lock(void);
+ void dax_read_unlock(int id);
+ struct dax_device *alloc_dax(void *private, const char *host,
+ 		const struct dax_operations *ops);
++struct dax_device *alloc_dax_devmap(void *private, const char *host,
++		const struct dax_operations *ops, struct dev_pagemap *pgmap);
+ bool dax_alive(struct dax_device *dax_dev);
+ void kill_dax(struct dax_device *dax_dev);
+ void *dax_get_private(struct dax_device *dax_dev);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 7b4899c06f49..02d6d042ee7f 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -53,11 +53,19 @@ struct vmem_altmap {
+  * driver can hotplug the device memory using ZONE_DEVICE and with that memory
+  * type. Any page of a process can be migrated to such memory. However no one
+  * should be allow to pin such memory so that it can always be evicted.
++ *
++ * MEMORY_DEVICE_FS_DAX:
++ * When MEMORY_DEVICE_HOST memory is represented by a device that can
++ * host a filesystem, for example /dev/pmem0, that filesystem can
++ * register for a callback when a page is idled. For the filesystem-dax
++ * case page idle callbacks are used to coordinate DMA vs
++ * hole-punch/truncate.
+  */
+ enum memory_type {
+ 	MEMORY_DEVICE_HOST = 0,
+ 	MEMORY_DEVICE_PRIVATE,
+ 	MEMORY_DEVICE_PUBLIC,
++	MEMORY_DEVICE_FS_DAX,
+ };
+ 
+ /*
 
