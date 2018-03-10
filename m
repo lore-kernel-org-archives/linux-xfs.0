@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:32510 "EHLO mga12.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:46423 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932918AbeCJHEL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 10 Mar 2018 02:04:11 -0500
-Subject: [PATCH v5 03/11] ext4, dax: introduce ext4_dax_aops
+        id S1751373AbeCJHEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Mar 2018 02:04:05 -0500
+Subject: [PATCH v5 02/11] xfs, dax: introduce xfs_dax_aops
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 09 Mar 2018 22:55:05 -0800
-Message-ID: <152066490498.40260.13597428016512482129.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 09 Mar 2018 22:54:59 -0800
+Message-ID: <152066489984.40260.2215636951958334858.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,49 +16,156 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, david@fromorbit.com, hch@lst.de, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.orgjack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
+Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.orgjack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
 In preparation for the dax implementation to start associating dax pages
 to inodes via page->mapping, we need to provide a 'struct
 address_space_operations' instance for dax. Otherwise, direct-I/O
-triggers incorrect page cache assumptions and warnings.
+triggers incorrect page cache assumptions and warnings like the
+following:
 
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Andreas Dilger <adilger.kernel@dilger.ca>
-Cc: linux-ext4@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>
+ WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
+ xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
+ [..]
+ CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O 4.15.0-rc2+ #984
+ [..]
+ Call Trace:
+  set_page_dirty_lock+0x40/0x60
+  bio_set_pages_dirty+0x37/0x50
+  iomap_dio_actor+0x2b7/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  iomap_apply+0xa4/0x110
+  iomap_dio_rw+0x29e/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_read_iter+0xa0/0xc0 [xfs]
+  __vfs_read+0xf9/0x170
+  vfs_read+0xa6/0x150
+  SyS_pread64+0x93/0xb0
+  entry_SYSCALL_64_fastpath+0x1f/0x96
+
+...where the default set_page_dirty() handler assumes that dirty state
+is being tracked in 'struct page' flags.
+
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Jan Kara <jack@suse.cz>
+Suggested-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/ext4/inode.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ fs/dax.c            |   27 +++++++++++++++++++++++++++
+ fs/xfs/xfs_aops.c   |    7 +++++++
+ fs/xfs/xfs_aops.h   |    1 +
+ fs/xfs/xfs_iops.c   |    5 ++++-
+ include/linux/dax.h |    6 ++++++
+ 5 files changed, 45 insertions(+), 1 deletion(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index c94780075b04..ef21f0ad38ff 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3946,6 +3946,13 @@ static const struct address_space_operations ext4_da_aops = {
+diff --git a/fs/dax.c b/fs/dax.c
+index b646a46e4d12..ba02772fccbc 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -46,6 +46,33 @@
+ #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
+ #define PG_PMD_NR	(PMD_SIZE >> PAGE_SHIFT)
+ 
++int dax_set_page_dirty(struct page *page)
++{
++	/*
++	 * Unlike __set_page_dirty_no_writeback that handles dirty page
++	 * tracking in the page object, dax does all dirty tracking in
++	 * the inode address_space in response to mkwrite faults. In the
++	 * dax case we only need to worry about potentially dirty CPU
++	 * caches, not dirty page cache pages to write back.
++	 *
++	 * This callback is defined to prevent fallback to
++	 * __set_page_dirty_buffers() in set_page_dirty().
++	 */
++	return 0;
++}
++EXPORT_SYMBOL(dax_set_page_dirty);
++
++void dax_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length)
++{
++	/*
++	 * There is no page cache to invalidate in the dax case, however
++	 * we need this callback defined to prevent falling back to
++	 * block_invalidatepage() in do_invalidatepage().
++	 */
++}
++EXPORT_SYMBOL(dax_invalidatepage);
++
+ static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
+ 
+ static int __init init_dax_wait_table(void)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 9c6a830da0ee..5788b680fa01 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1505,3 +1505,10 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.is_partially_uptodate  = block_is_partially_uptodate,
  	.error_remove_page	= generic_error_remove_page,
  };
- 
-+static const struct address_space_operations ext4_dax_aops = {
-+	.writepages		= ext4_writepages,
-+	.direct_IO		= ext4_direct_IO,
++
++const struct address_space_operations xfs_dax_aops = {
++	.writepages		= xfs_vm_writepages,
++	.direct_IO		= xfs_vm_direct_IO,
 +	.set_page_dirty		= dax_set_page_dirty,
 +	.invalidatepage		= dax_invalidatepage,
 +};
-+
- void ext4_set_aops(struct inode *inode)
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 88c85ea63da0..69346d460dfa 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -54,6 +54,7 @@ struct xfs_ioend {
+ };
+ 
+ extern const struct address_space_operations xfs_address_space_operations;
++extern const struct address_space_operations xfs_dax_aops;
+ 
+ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 56475fcd76f2..951e84df5576 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1272,7 +1272,10 @@ xfs_setup_iops(
+ 	case S_IFREG:
+ 		inode->i_op = &xfs_inode_operations;
+ 		inode->i_fop = &xfs_file_operations;
+-		inode->i_mapping->a_ops = &xfs_address_space_operations;
++		if (IS_DAX(inode))
++			inode->i_mapping->a_ops = &xfs_dax_aops;
++		else
++			inode->i_mapping->a_ops = &xfs_address_space_operations;
+ 		break;
+ 	case S_IFDIR:
+ 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 0185ecdae135..3045c0d9c804 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -57,6 +57,9 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
+ }
+ 
+ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
++int dax_set_page_dirty(struct page *page);
++void dax_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length);
+ #else
+ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
  {
- 	switch (ext4_inode_journal_mode(inode)) {
-@@ -3958,7 +3965,9 @@ void ext4_set_aops(struct inode *inode)
- 	default:
- 		BUG();
- 	}
--	if (test_opt(inode->i_sb, DELALLOC))
-+	if (IS_DAX(inode))
-+		inode->i_mapping->a_ops = &ext4_dax_aops;
-+	else if (test_opt(inode->i_sb, DELALLOC))
- 		inode->i_mapping->a_ops = &ext4_da_aops;
- 	else
- 		inode->i_mapping->a_ops = &ext4_aops;
+@@ -76,6 +79,9 @@ static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
+ {
+ 	return NULL;
+ }
++
++#define dax_set_page_dirty NULL
++#define dax_invalidatepage NULL
+ #endif
+ 
+ int dax_read_lock(void);
 
