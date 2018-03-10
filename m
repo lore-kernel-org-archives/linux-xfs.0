@@ -1,90 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:34325 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932440AbeCLUQZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Mar 2018 16:16:25 -0400
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1959 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933257AbeCJAsw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Mar 2018 19:48:52 -0500
+Date: Sat, 10 Mar 2018 11:48:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: fix double ijoin in xfs_reflink_cancel_cow_range
+Message-ID: <20180310004849.GV18129@dastard>
+References: <20180307091020.6186-1-david@fromorbit.com>
+ <20180307091020.6186-3-david@fromorbit.com>
+ <20180309184335.GG18989@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180312162744.GB4865@magnolia>
-References: <1516952669-14769-1-git-send-email-amir73il@gmail.com>
- <20180126214404.GE9068@magnolia> <CAOQ4uxgVaGgwio=538-PP4QuRbcny6q0_CAeV-9bQEWBaxv2gA@mail.gmail.com>
- <20180129155054.GJ9359@magnolia> <CAOQ4uxjMfZGMtbq2vRN8dL5QvgC0=UD-yWDbNib=dckDTFR0Nw@mail.gmail.com>
- <20180201003511.GK4849@magnolia> <CAOQ4uxjE31j7XDpEGnnym7cgD_kqsPnio4KN2gphajsCNMrG1g@mail.gmail.com>
- <20180311162442.GB2013@kroah.com> <20180312162744.GB4865@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 12 Mar 2018 22:16:24 +0200
-Message-ID: <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180309184335.GG18989@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, stable@kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Mar 12, 2018 at 6:27 PM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Sun, Mar 11, 2018 at 05:24:42PM +0100, Greg KH wrote:
->> On Sun, Mar 11, 2018 at 06:08:06PM +0200, Amir Goldstein wrote:
->> > On Thu, Feb 1, 2018 at 2:35 AM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
->> > > On Thu, Feb 01, 2018 at 02:27:23AM +0200, Amir Goldstein wrote:
->> > >> On Mon, Jan 29, 2018 at 5:50 PM, Darrick J. Wong
->> > >> <darrick.wong@oracle.com> wrote:
->> > >> > On Mon, Jan 29, 2018 at 01:07:36PM +0200, Amir Goldstein wrote:
->> > >> >> On Fri, Jan 26, 2018 at 11:44 PM, Darrick J. Wong
->> > >> >> <darrick.wong@oracle.com> wrote:
->> > >> >> > On Fri, Jan 26, 2018 at 09:44:29AM +0200, Amir Goldstein wrote:
->> > >> >> >> Commit 66f364649d870 ("xfs: remove if_rdev") moved storing of rdev
->> > >> >> >> value for special inodes to VFS inodes, but forgot to preserve the
->> > >> >> >> value of i_rdev when recycling a reclaimable xfs_inode.
->> > >> >> >>
->> > >> >> >> This was detected by xfstest overlay/017 with inodex=on mount option
->> > >> >> >> and xfs base fs. The test does a lookup of overlay chardev and blockdev
->> > >> >> >> right after drop caches.
->> > >> >> >>
->> > >> >> >> Overlayfs inodes hold a reference on underlying xfs inodes when mount
->> > >> >> >> option index=on is configured. If drop caches reclaim xfs inodes, before
->> > >> >> >> it relclaims overlayfs inodes, that can sometimes leave a reclaimable xfs
->> > >> >> >> inode and that test hits that case quite often.
->> > >> >> >>
->> > >> >> >> When that happens, the xfs inode cache remains broken (zere i_rdev)
->> > >> >> >> until the next cycle mount or drop caches.
->> > >> >> >>
->> > >> >> >> Fixes: 66f364649d870 ("xfs: remove if_rdev")
->> > >> >> >> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
->> > >> >> >
->> > >> >> > Looks ok,
->> > >> >> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->> > >> >> >
->> > >> >>
->> > >> >> I recon that now we should now also strap:
->> > >> >> Cc: <stable@vger.kernel.org> #v4.15
->> > >> >>
->> > >> >> Can I assume, you'll add it on apply?
->> > >> >
->> > >> > I'll do a proper backport of this and a couple other critical cow
->> > >> > fixes after I get the 4.16 stuff merged.
->> > >> >
->> > >>
->> > >> I am not sure what "proper backport" means in the context of
->> > >> this patch.
->> > >> This is a v4.15-rc1 regression fix that is based on v4.15-rc8.
->> > >> It applied cleanly on v4.15.
->> > >
->> > > I meant the other things that went into 4.16, like the reflink quota
->> > > fixes, the directio corruption problems, etc.  Make a branch, add the
->> > > necessary fixes, run xfstests to make sure it all still works, etc.
->                        ^^^^^^^^^^^^
-> Hi Amir, could you do   this step   ?
->
+On Fri, Mar 09, 2018 at 10:43:35AM -0800, Darrick J. Wong wrote:
+> On Wed, Mar 07, 2018 at 08:10:20PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > AN inode is joined to teh same transaction twice in
+> > xfs_reflink_cancel_cow_range() resulting in the following assert
+> > failure:
+> > 
+> > [   30.180485] XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+> > [   30.183435] ------------[ cut here ]------------
+> > ......
+> > [   30.209264] Call Trace:
+> > [   30.209935]  xfs_trans_add_item+0xcc/0xe0
+> > [   30.210968]  xfs_reflink_cancel_cow_blocks+0xab/0x290
+> > [   30.212249]  ? xfs_trans_reserve+0x1b4/0x2b0
+> > [   30.213320]  ? kmem_zone_alloc+0x61/0xe0
+> > [   30.214321]  xfs_reflink_cancel_cow_range+0xb2/0x1f0
+> > [   30.215616]  xfs_fs_destroy_inode+0x1bd/0x280
+> > [   30.216757]  dispose_list+0x35/0x40
+> > [   30.217656]  evict_inodes+0x132/0x160
+> > [   30.218620]  generic_shutdown_super+0x3a/0x110
+> > [   30.219771]  kill_block_super+0x21/0x50
+> > [   30.220762]  deactivate_locked_super+0x39/0x70
+> > [   30.221909]  cleanup_mnt+0x3b/0x70
+> > [   30.222819]  task_work_run+0x7f/0xa0
+> > [   30.223762]  exit_to_usermode_loop+0x9b/0xa0
+> > [   30.224884]  do_syscall_64+0x18f/0x1a0
+> > 
+> > Fix it and document that the callers of
+> > xfs_reflink_cancel_cow_blocks() must have already joined the inode
+> > to the permanent transaction passed in.
+> > 
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_reflink.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 8c16177b33d4..6225d1ea3fdb 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -552,6 +552,9 @@ xfs_reflink_trim_irec_to_next_cow(
+> >   *
+> >   * If cancel_real is true this function cancels all COW fork extents for the
+> >   * inode; if cancel_real is false, real extents are not cleared.
+> > + *
+> > + * Caller must have already joined the inode to the current transaction. The
+> > + * inode will be joined to the transaction returned to the caller.
+> >   */
+> >  int
+> >  xfs_reflink_cancel_cow_blocks(
+> > @@ -592,7 +595,6 @@ xfs_reflink_cancel_cow_blocks(
+> >  			if (error)
+> >  				break;
+> >  		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+> > -			xfs_trans_ijoin(*tpp, ip, 0);
+> 
+> Looks ok, but...
+> 
+> >  			xfs_defer_init(&dfops, &firstfsb);
+> >  
+> >  			/* Free the CoW orphan record. */
+> > @@ -1571,6 +1573,7 @@ xfs_reflink_clear_inode_flag(
+> 
+> Wait, what?  Why are we messing with xfs_reflink_clear_inode_flag here?
+> 
+> (Shame on me for looking at patch 3 before patch 2.)
+> 
+> The comment update in patch 3 is fine (caller must ijoin, function will
+> ijoin if returning new transaction) but ... didn't this function already
+> do all this before this churn below?
 
-Will do.
+Peeling the onion from the inside out. First I fixed
+xfs_reflink_cancel_cow_blocks(), then discovered that
+xfs_reflink_clear_inode_flag() also joined the inode to the
+transaction. Basically, patch 2 was a fix that triggered earlier in
+a fstests run, patch three triggered later one after patch 2 was
+done.
 
-> As far as the code patch goes it's probably fine for stable, but I don't
-> want patches going to stable that have not been run through xfstests to
-> look for regressions.  If the patch doesn't increase the number of
-> xfstests failures then it's ready to go to 4.15.y.
->
+I've reworked the series - still testing because now I'm hitting
+transaction block overruns again - and I'll make sure that it's all
+sorted in that series.
 
+Cheers,
 
-Thanks,
-Amir.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
