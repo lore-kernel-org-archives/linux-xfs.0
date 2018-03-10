@@ -1,14 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46423 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:41589 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751373AbeCJHEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 10 Mar 2018 02:04:05 -0500
-Subject: [PATCH v5 02/11] xfs, dax: introduce xfs_dax_aops
+        id S1750735AbeCJHDz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Mar 2018 02:03:55 -0500
+Subject: [PATCH v5 00/11] dax: fix dma vs truncate/hole-punch
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 09 Mar 2018 22:54:59 -0800
-Message-ID: <152066489984.40260.2215636951958334858.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 09 Mar 2018 22:54:49 -0800
+Message-ID: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,156 +14,124 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.orgjack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
+Cc: Dave Hansen <dave.hansen@linux.intel.com>, Peter Zijlstra <peterz@infradead.org>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, Michal Hocko <mhocko@suse.com>, Christoph Hellwig <hch@lst.de>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ingo Molnar <mingo@redhat.com>, Dave Chinner <david@fromorbit.com>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.orgjack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-In preparation for the dax implementation to start associating dax pages
-to inodes via page->mapping, we need to provide a 'struct
-address_space_operations' instance for dax. Otherwise, direct-I/O
-triggers incorrect page cache assumptions and warnings like the
-following:
+Changes since v4 [1]:
+* Kill the DEFINE_FSDAX_AOPS macro and just open code new
+  address_space_operations instances for each fs (Matthew, Jan, Dave,
+  Christoph)
 
- WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
- xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
- [..]
- CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O 4.15.0-rc2+ #984
- [..]
- Call Trace:
-  set_page_dirty_lock+0x40/0x60
-  bio_set_pages_dirty+0x37/0x50
-  iomap_dio_actor+0x2b7/0x3b0
-  ? iomap_dio_zero+0x110/0x110
-  iomap_apply+0xa4/0x110
-  iomap_dio_rw+0x29e/0x3b0
-  ? iomap_dio_zero+0x110/0x110
-  ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
-  xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
-  xfs_file_read_iter+0xa0/0xc0 [xfs]
-  __vfs_read+0xf9/0x170
-  vfs_read+0xa6/0x150
-  SyS_pread64+0x93/0xb0
-  entry_SYSCALL_64_fastpath+0x1f/0x96
+* Rename routines that had a 'dma_' prefix with 'dax_layout_' and merge
+  the dax-layout-break into xfs_break_layouts() (Dave, Christoph)
 
-...where the default set_page_dirty() handler assumes that dirty state
-is being tracked in 'struct page' flags.
+* Rework the implementation to have the fsdax core find the pages, but
+  leave the responsibility of waiting on those pages to the filesystem
+  (Dave).
 
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Suggested-by: Jan Kara <jack@suse.cz>
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+* Drop the nfit_test infrastructure for testing this mechanism, I plan
+  to investigate better mechanisms for injecting arbitrary put_page()
+  delays for dax pages relative to an extent unmap operation. The
+  dm_delay target does not do what I want since it operates at whole
+  device level. A better test interface would be a mechanism to delay
+  I/O completion based on whether a bio referenced a given LBA.
+
+Not changed since v4:
+* This implementation still relies on RCU for synchronizing
+  get_user_pages() and get_user_pages_fast() against
+  dax_layout_busy_page(). We could perform the operation with just
+  barriers if we knew at get_user_pages() time that the pages were flagged
+  for truncation.  However, dax_layout_busy_page() does not have the
+  information to flag that a page is actually going to be truncated, only
+  that it *might* be truncated.
+
+[1]: https://lists.01.org/pipermail/linux-nvdimm/2017-December/013704.html
+
+----
+
+Background:
+
+get_user_pages() in the filesystem pins file backed memory pages for
+access by devices performing dma. However, it only pins the memory pages
+not the page-to-file offset association. If a file is truncated the
+pages are mapped out of the file and dma may continue indefinitely into
+a page that is owned by a device driver. This breaks coherency of the
+file vs dma, but the assumption is that if userspace wants the
+file-space truncated it does not matter what data is inbound from the
+device, it is not relevant anymore. The only expectation is that dma can
+safely continue while the filesystem reallocates the block(s).
+
+Problem:
+
+This expectation that dma can safely continue while the filesystem
+changes the block map is broken by dax. With dax the target dma page
+*is* the filesystem block. The model of leaving the page pinned for dma,
+but truncating the file block out of the file, means that the filesytem
+is free to reallocate a block under active dma to another file and now
+the expected data-incoherency situation has turned into active
+data-corruption.
+
+Solution:
+
+Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+file while any page/block in the file is under active dma. This solution
+assumes that dma is transient. Cases where dma operations are known to
+not be transient, like RDMA, have been explicitly disabled via
+commits like 5f1d43de5416 "IB/core: disable memory registration of
+filesystem-dax vmas".
+
+The dax_layout_busy_page() routine is called by filesystems with a lock
+held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
+The process of looking up a busy page invalidates all mappings
+to trigger any subsequent get_user_pages() to block on i_mmap_lock.
+The filesystem continues to call dax_layout_busy_page() until it finally
+returns no more active pages. This approach assumes that the page
+pinning is transient, if that assumption is violated the system would
+have likely hung from the uncompleted I/O.
+
+
 ---
- fs/dax.c            |   27 +++++++++++++++++++++++++++
- fs/xfs/xfs_aops.c   |    7 +++++++
- fs/xfs/xfs_aops.h   |    1 +
- fs/xfs/xfs_iops.c   |    5 ++++-
- include/linux/dax.h |    6 ++++++
- 5 files changed, 45 insertions(+), 1 deletion(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index b646a46e4d12..ba02772fccbc 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -46,6 +46,33 @@
- #define PG_PMD_COLOUR	((PMD_SIZE >> PAGE_SHIFT) - 1)
- #define PG_PMD_NR	(PMD_SIZE >> PAGE_SHIFT)
- 
-+int dax_set_page_dirty(struct page *page)
-+{
-+	/*
-+	 * Unlike __set_page_dirty_no_writeback that handles dirty page
-+	 * tracking in the page object, dax does all dirty tracking in
-+	 * the inode address_space in response to mkwrite faults. In the
-+	 * dax case we only need to worry about potentially dirty CPU
-+	 * caches, not dirty page cache pages to write back.
-+	 *
-+	 * This callback is defined to prevent fallback to
-+	 * __set_page_dirty_buffers() in set_page_dirty().
-+	 */
-+	return 0;
-+}
-+EXPORT_SYMBOL(dax_set_page_dirty);
-+
-+void dax_invalidatepage(struct page *page, unsigned int offset,
-+		unsigned int length)
-+{
-+	/*
-+	 * There is no page cache to invalidate in the dax case, however
-+	 * we need this callback defined to prevent falling back to
-+	 * block_invalidatepage() in do_invalidatepage().
-+	 */
-+}
-+EXPORT_SYMBOL(dax_invalidatepage);
-+
- static wait_queue_head_t wait_table[DAX_WAIT_TABLE_ENTRIES];
- 
- static int __init init_dax_wait_table(void)
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 9c6a830da0ee..5788b680fa01 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1505,3 +1505,10 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.is_partially_uptodate  = block_is_partially_uptodate,
- 	.error_remove_page	= generic_error_remove_page,
- };
-+
-+const struct address_space_operations xfs_dax_aops = {
-+	.writepages		= xfs_vm_writepages,
-+	.direct_IO		= xfs_vm_direct_IO,
-+	.set_page_dirty		= dax_set_page_dirty,
-+	.invalidatepage		= dax_invalidatepage,
-+};
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 88c85ea63da0..69346d460dfa 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -54,6 +54,7 @@ struct xfs_ioend {
- };
- 
- extern const struct address_space_operations xfs_address_space_operations;
-+extern const struct address_space_operations xfs_dax_aops;
- 
- int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 56475fcd76f2..951e84df5576 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1272,7 +1272,10 @@ xfs_setup_iops(
- 	case S_IFREG:
- 		inode->i_op = &xfs_inode_operations;
- 		inode->i_fop = &xfs_file_operations;
--		inode->i_mapping->a_ops = &xfs_address_space_operations;
-+		if (IS_DAX(inode))
-+			inode->i_mapping->a_ops = &xfs_dax_aops;
-+		else
-+			inode->i_mapping->a_ops = &xfs_address_space_operations;
- 		break;
- 	case S_IFDIR:
- 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0185ecdae135..3045c0d9c804 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -57,6 +57,9 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
- }
- 
- struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
-+int dax_set_page_dirty(struct page *page);
-+void dax_invalidatepage(struct page *page, unsigned int offset,
-+		unsigned int length);
- #else
- static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
- {
-@@ -76,6 +79,9 @@ static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
- {
- 	return NULL;
- }
-+
-+#define dax_set_page_dirty NULL
-+#define dax_invalidatepage NULL
- #endif
- 
- int dax_read_lock(void);
+Dan Williams (11):
+      dax: store pfns in the radix
+      xfs, dax: introduce xfs_dax_aops
+      ext4, dax: introduce ext4_dax_aops
+      ext2, dax: introduce ext2_dax_aops
+      fs, dax: use page->mapping to warn if truncate collides with a busy page
+      mm, dax: enable filesystems to trigger dev_pagemap ->page_free callbacks
+      mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
+      wait_bit: introduce {wait_on,wake_up}_atomic_one
+      mm, fs, dax: handle layout changes to pinned dax mappings
+      xfs: prepare xfs_break_layouts() for another layout type
+      xfs, dax: introduce xfs_break_dax_layouts()
 
+
+ drivers/dax/super.c      |   96 +++++++++++++++--
+ drivers/nvdimm/pmem.c    |    3 -
+ fs/Kconfig               |    1 
+ fs/dax.c                 |  259 +++++++++++++++++++++++++++++++++++++---------
+ fs/ext2/ext2.h           |    1 
+ fs/ext2/inode.c          |   28 ++++-
+ fs/ext2/namei.c          |   18 ---
+ fs/ext2/super.c          |    6 +
+ fs/ext4/inode.c          |   11 ++
+ fs/ext4/super.c          |    6 +
+ fs/xfs/xfs_aops.c        |    7 +
+ fs/xfs/xfs_aops.h        |    1 
+ fs/xfs/xfs_file.c        |   94 ++++++++++++++++-
+ fs/xfs/xfs_inode.h       |    9 ++
+ fs/xfs/xfs_ioctl.c       |    9 +-
+ fs/xfs/xfs_iops.c        |   17 ++-
+ fs/xfs/xfs_pnfs.c        |    8 +
+ fs/xfs/xfs_pnfs.h        |    4 -
+ fs/xfs/xfs_super.c       |   20 ++--
+ include/linux/dax.h      |   45 +++++++-
+ include/linux/memremap.h |   28 ++---
+ include/linux/mm.h       |   61 ++++++++---
+ include/linux/wait_bit.h |   13 ++
+ kernel/memremap.c        |   30 +++++
+ kernel/sched/wait_bit.c  |   59 +++++++++-
+ mm/Kconfig               |    5 +
+ mm/gup.c                 |    5 +
+ mm/hmm.c                 |   13 --
+ mm/swap.c                |    3 -
+ 29 files changed, 663 insertions(+), 197 deletions(-)
