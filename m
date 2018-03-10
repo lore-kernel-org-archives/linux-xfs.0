@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48406 "EHLO mga01.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:34007 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932987AbeCJHEs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 10 Mar 2018 02:04:48 -0500
-Subject: [PATCH v5 10/11] xfs: prepare xfs_break_layouts() for another
- layout type
+        id S1751348AbeCJHEi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 10 Mar 2018 02:04:38 -0500
+Subject: [PATCH v5 08/11] wait_bit: introduce {wait_on,wake_up}_atomic_one
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 09 Mar 2018 22:55:42 -0800
-Message-ID: <152066494277.40260.7360641938196726871.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 09 Mar 2018 22:55:32 -0800
+Message-ID: <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -17,252 +16,194 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-When xfs is operating as the back-end of a pNFS block server, it prevents
-collisions between local and remote operations by requiring a lease to
-be held for remotely accessed blocks. Local filesystem operations break
-those leases before writing or mutating the extent map of the file.
+Add a generic facility for awaiting an atomic_t to reach a value of 1.
 
-A similar mechanism is needed to prevent operations on pinned dax
-mappings, like device-DMA, from colliding with extent unmap operations.
+Page reference counts typically need to reach 0 to be considered a
+free / inactive page. However, ZONE_DEVICE pages allocated via
+devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
+done at init time to assign pages to the page allocator is skipped.
 
-XFS_BREAK_REMOTE and XFS_BREAK_MAPS are introduced as flags to control
-the layouts that need to be broken by xfs_break_layouts(). While
-XFS_BREAK_REMOTE is invoked in all calls to the new xfs_break_layouts(),
-XFS_BREAK_MAPS only needs to specified when extents may be unmapped,
-i.e. xfs_file_fallocate() and xfs_ioc_space(). XFS_BREAK_MAPS also
-imposes the additional locking constraint of breaking (awaiting) pinned
-dax mappings while holding XFS_MMAPLOCK_EXCL.
+These pages will have their reference count elevated > 1 by
+get_user_pages() when they are under DMA. In order to coordinate DMA to
+these pages vs filesytem operations like hole-punch and truncate the
+filesystem-dax implementation needs to capture the DMA-idle event i.e.
+the 2 to 1 count transition).
 
-There is a small functional change in this rework. For the cases where
-XFS_BREAK_MAPS is specified to xfs_break_layouts(), the
-XFS_MMAPLOCK_EXCL ilock is held over the break_layouts() loop in
-xfs_break_leased_layouts().
+For now, this implementation does not have functional behavior change,
+follow-on patches will add waiters for these page-idle events.
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reported-by: Dave Chinner <david@fromorbit.com>
-Reported-by: Christoph Hellwig <hch@lst.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/xfs/xfs_file.c  |   32 ++++++++++++++++++++++++++------
- fs/xfs/xfs_inode.h |    9 +++++++++
- fs/xfs/xfs_ioctl.c |    9 +++------
- fs/xfs/xfs_iops.c  |   12 +++++++-----
- fs/xfs/xfs_pnfs.c  |    8 +++-----
- fs/xfs/xfs_pnfs.h  |    4 ++--
- 6 files changed, 50 insertions(+), 24 deletions(-)
+ drivers/dax/super.c      |    2 +-
+ include/linux/wait_bit.h |   13 ++++++++++
+ kernel/sched/wait_bit.c  |   59 +++++++++++++++++++++++++++++++++++++++-------
+ 3 files changed, 64 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9ea08326f876..f914f0628dc2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -350,7 +350,7 @@ xfs_file_aio_write_checks(
- 	if (error <= 0)
- 		return error;
- 
--	error = xfs_break_layouts(inode, iolock);
-+	error = xfs_break_layouts(inode, iolock, XFS_BREAK_REMOTE);
- 	if (error)
- 		return error;
- 
-@@ -752,6 +752,28 @@ xfs_file_write_iter(
- 	return ret;
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 619b1ed6434c..7e10fa3460e2 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -167,7 +167,7 @@ struct dax_device {
+ #if IS_ENABLED(CONFIG_FS_DAX)
+ static void generic_dax_pagefree(struct page *page, void *data)
+ {
+-	/* TODO: wakeup page-idle waiters */
++	wake_up_atomic_one(&page->_refcount);
  }
  
-+int
-+xfs_break_layouts(
-+	struct inode		*inode,
-+	uint			*iolock,
-+	unsigned long		flags)
+ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
+diff --git a/include/linux/wait_bit.h b/include/linux/wait_bit.h
+index 61b39eaf7cad..564c9a0141cd 100644
+--- a/include/linux/wait_bit.h
++++ b/include/linux/wait_bit.h
+@@ -33,10 +33,15 @@ int __wait_on_bit(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *
+ int __wait_on_bit_lock(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry, wait_bit_action_f *action, unsigned int mode);
+ void wake_up_bit(void *word, int bit);
+ void wake_up_atomic_t(atomic_t *p);
++static inline void wake_up_atomic_one(atomic_t *p)
 +{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	uint			iolock_assert = 0;
-+	int			ret = 0;
-+
-+	if (flags & XFS_BREAK_REMOTE)
-+		iolock_assert |= XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL;
-+	if (flags & XFS_BREAK_MAPS)
-+		iolock_assert |= XFS_MMAPLOCK_EXCL;
-+
-+	ASSERT(xfs_isilocked(ip, iolock_assert));
-+
-+	if (flags & XFS_BREAK_REMOTE)
-+		ret = xfs_break_leased_layouts(inode, iolock);
-+	return ret;
++	wake_up_atomic_t(p);
++}
+ int out_of_line_wait_on_bit(void *word, int, wait_bit_action_f *action, unsigned int mode);
+ int out_of_line_wait_on_bit_timeout(void *word, int, wait_bit_action_f *action, unsigned int mode, unsigned long timeout);
+ int out_of_line_wait_on_bit_lock(void *word, int, wait_bit_action_f *action, unsigned int mode);
+ int out_of_line_wait_on_atomic_t(atomic_t *p, wait_atomic_t_action_f action, unsigned int mode);
++int out_of_line_wait_on_atomic_one(atomic_t *p, wait_atomic_t_action_f action, unsigned int mode);
+ struct wait_queue_head *bit_waitqueue(void *word, int bit);
+ extern void __init wait_bit_init(void);
+ 
+@@ -262,4 +267,12 @@ int wait_on_atomic_t(atomic_t *val, wait_atomic_t_action_f action, unsigned mode
+ 	return out_of_line_wait_on_atomic_t(val, action, mode);
+ }
+ 
++static inline
++int wait_on_atomic_one(atomic_t *val, wait_atomic_t_action_f action, unsigned mode)
++{
++	might_sleep();
++	if (atomic_read(val) == 1)
++		return 0;
++	return out_of_line_wait_on_atomic_one(val, action, mode);
++}
+ #endif /* _LINUX_WAIT_BIT_H */
+diff --git a/kernel/sched/wait_bit.c b/kernel/sched/wait_bit.c
+index 84cb3acd9260..8739b1e50df5 100644
+--- a/kernel/sched/wait_bit.c
++++ b/kernel/sched/wait_bit.c
+@@ -162,28 +162,47 @@ static inline wait_queue_head_t *atomic_t_waitqueue(atomic_t *p)
+ 	return bit_waitqueue(p, 0);
+ }
+ 
+-static int wake_atomic_t_function(struct wait_queue_entry *wq_entry, unsigned mode, int sync,
+-				  void *arg)
++static struct wait_bit_queue_entry *to_wait_bit_q(
++		struct wait_queue_entry *wq_entry)
++{
++	return container_of(wq_entry, struct wait_bit_queue_entry, wq_entry);
 +}
 +
- #define	XFS_FALLOC_FL_SUPPORTED						\
- 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
- 		 FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |	\
-@@ -768,7 +790,7 @@ xfs_file_fallocate(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	long			error;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL;
- 	loff_t			new_size = 0;
- 	bool			do_file_insert = false;
- 
-@@ -778,13 +800,11 @@ xfs_file_fallocate(
- 		return -EOPNOTSUPP;
- 
- 	xfs_ilock(ip, iolock);
--	error = xfs_break_layouts(inode, &iolock);
-+	error = xfs_break_layouts(inode, &iolock,
-+			XFS_BREAK_REMOTE | XFS_BREAK_MAPS);
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	if (mode & FALLOC_FL_PUNCH_HOLE) {
- 		error = xfs_free_file_space(ip, offset, len);
- 		if (error)
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 3e8dc990d41c..9b73ceb09cb1 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -379,6 +379,12 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
- 					>> XFS_ILOCK_SHIFT)
- 
- /*
-+ * Flags for layout breaks
-+ */
-+#define XFS_BREAK_REMOTE (1<<0) /* break remote layout leases */
-+#define XFS_BREAK_MAPS   (1<<1) /* break local direct (dax) mappings */
-+
-+/*
-  * For multiple groups support: if S_ISGID bit is set in the parent
-  * directory, group of new file is set to that of the parent, and
-  * new subdirectory gets S_ISGID bit from parent.
-@@ -447,6 +453,9 @@ int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
- 		     xfs_fsize_t isize, bool *did_zeroing);
- int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
- 		bool *did_zero);
-+int	xfs_break_layouts(struct inode *inode, uint *iolock,
-+		unsigned long flags);
-+
- 
- /* from xfs_iops.c */
- extern void xfs_setup_inode(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89fb1eb80aae..31288d900c8a 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -39,7 +39,6 @@
- #include "xfs_icache.h"
- #include "xfs_symlink.h"
- #include "xfs_trans.h"
--#include "xfs_pnfs.h"
- #include "xfs_acl.h"
- #include "xfs_btree.h"
- #include <linux/fsmap.h>
-@@ -614,7 +613,7 @@ xfs_ioc_space(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct iattr		iattr;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	int			error;
- 
- 	/*
-@@ -644,13 +643,11 @@ xfs_ioc_space(
- 		return error;
- 
- 	xfs_ilock(ip, iolock);
--	error = xfs_break_layouts(inode, &iolock);
-+	error = xfs_break_layouts(inode, &iolock,
-+			XFS_BREAK_REMOTE | XFS_BREAK_MAPS);
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	switch (bf->l_whence) {
- 	case 0: /*SEEK_SET*/
- 		break;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 951e84df5576..15a1c7c874d9 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -37,7 +37,6 @@
- #include "xfs_da_btree.h"
- #include "xfs_dir2.h"
- #include "xfs_trans_space.h"
--#include "xfs_pnfs.h"
- #include "xfs_iomap.h"
- 
- #include <linux/capability.h>
-@@ -1030,11 +1029,14 @@ xfs_vn_setattr(
- 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
- 		uint			iolock = XFS_IOLOCK_EXCL;
- 
--		error = xfs_break_layouts(d_inode(dentry), &iolock);
--		if (error)
--			return error;
--
- 		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+		error = xfs_break_layouts(d_inode(dentry), &iolock,
-+				XFS_BREAK_REMOTE | XFS_BREAK_MAPS);
-+
-+		if (error) {
-+			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-+			return error;
-+		}
- 		error = xfs_vn_setattr_size(dentry, iattr);
- 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	} else {
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index aa6c5c193f45..ed13c9baffff 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -31,15 +31,13 @@
-  * rules in the page fault path we don't bother.
-  */
- int
--xfs_break_layouts(
-+xfs_break_leased_layouts(
- 	struct inode		*inode,
- 	uint			*iolock)
++static int __wake_atomic_t_function(struct wait_queue_entry *wq_entry,
++		unsigned mode, int sync, void *arg, int target)
  {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	int			error;
+ 	struct wait_bit_key *key = arg;
+-	struct wait_bit_queue_entry *wait_bit = container_of(wq_entry, struct wait_bit_queue_entry, wq_entry);
++	struct wait_bit_queue_entry *wait_bit = to_wait_bit_q(wq_entry);
+ 	atomic_t *val = key->flags;
  
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
--
- 	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
- 		xfs_iunlock(ip, *iolock);
- 		error = break_layout(inode, true);
-@@ -120,8 +118,8 @@ xfs_fs_map_blocks(
- 	 * Lock out any other I/O before we flush and invalidate the pagecache,
- 	 * and then hand out a layout to the remote system.  This is very
- 	 * similar to direct I/O, except that the synchronization is much more
--	 * complicated.  See the comment near xfs_break_layouts for a detailed
--	 * explanation.
-+	 * complicated.  See the comment near xfs_break_leased_layouts
-+	 * for a detailed explanation.
- 	 */
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
-diff --git a/fs/xfs/xfs_pnfs.h b/fs/xfs/xfs_pnfs.h
-index bf45951e28fe..12f46fe6d902 100644
---- a/fs/xfs/xfs_pnfs.h
-+++ b/fs/xfs/xfs_pnfs.h
-@@ -9,10 +9,10 @@ int xfs_fs_map_blocks(struct inode *inode, loff_t offset, u64 length,
- int xfs_fs_commit_blocks(struct inode *inode, struct iomap *maps, int nr_maps,
- 		struct iattr *iattr);
- 
--int xfs_break_layouts(struct inode *inode, uint *iolock);
-+int xfs_break_leased_layouts(struct inode *inode, uint *iolock);
- #else
- static inline int
--xfs_break_layouts(struct inode *inode, uint *iolock)
-+xfs_break_leased_layouts(struct inode *inode, uint *iolock)
- {
- 	return 0;
+ 	if (wait_bit->key.flags != key->flags ||
+ 	    wait_bit->key.bit_nr != key->bit_nr ||
+-	    atomic_read(val) != 0)
++	    atomic_read(val) != target)
+ 		return 0;
+ 	return autoremove_wake_function(wq_entry, mode, sync, key);
  }
+ 
++static int wake_atomic_t_function(struct wait_queue_entry *wq_entry,
++		unsigned mode, int sync, void *arg)
++{
++	return __wake_atomic_t_function(wq_entry, mode, sync, arg, 0);
++}
++
++static int wake_atomic_one_function(struct wait_queue_entry *wq_entry,
++		unsigned mode, int sync, void *arg)
++{
++	return __wake_atomic_t_function(wq_entry, mode, sync, arg, 1);
++}
++
+ /*
+  * To allow interruptible waiting and asynchronous (i.e. nonblocking) waiting,
+  * the actions of __wait_on_atomic_t() are permitted return codes.  Nonzero
+  * return codes halt waiting and return.
+  */
+ static __sched
+-int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_entry *wbq_entry,
+-		       wait_atomic_t_action_f action, unsigned int mode)
++int __wait_on_atomic_t(struct wait_queue_head *wq_head,
++		struct wait_bit_queue_entry *wbq_entry,
++		wait_atomic_t_action_f action, unsigned int mode, int target)
+ {
+ 	atomic_t *val;
+ 	int ret = 0;
+@@ -191,10 +210,10 @@ int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_en
+ 	do {
+ 		prepare_to_wait(wq_head, &wbq_entry->wq_entry, mode);
+ 		val = wbq_entry->key.flags;
+-		if (atomic_read(val) == 0)
++		if (atomic_read(val) == target)
+ 			break;
+ 		ret = (*action)(val, mode);
+-	} while (!ret && atomic_read(val) != 0);
++	} while (!ret && atomic_read(val) != target);
+ 	finish_wait(wq_head, &wbq_entry->wq_entry);
+ 	return ret;
+ }
+@@ -210,6 +229,17 @@ int __wait_on_atomic_t(struct wait_queue_head *wq_head, struct wait_bit_queue_en
+ 		},							\
+ 	}
+ 
++#define DEFINE_WAIT_ATOMIC_ONE(name, p)					\
++	struct wait_bit_queue_entry name = {				\
++		.key = __WAIT_ATOMIC_T_KEY_INITIALIZER(p),		\
++		.wq_entry = {						\
++			.private	= current,			\
++			.func		= wake_atomic_one_function,	\
++			.entry		=				\
++				LIST_HEAD_INIT((name).wq_entry.entry),	\
++		},							\
++	}
++
+ __sched int out_of_line_wait_on_atomic_t(atomic_t *p,
+ 					 wait_atomic_t_action_f action,
+ 					 unsigned int mode)
+@@ -217,7 +247,7 @@ __sched int out_of_line_wait_on_atomic_t(atomic_t *p,
+ 	struct wait_queue_head *wq_head = atomic_t_waitqueue(p);
+ 	DEFINE_WAIT_ATOMIC_T(wq_entry, p);
+ 
+-	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode);
++	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode, 0);
+ }
+ EXPORT_SYMBOL(out_of_line_wait_on_atomic_t);
+ 
+@@ -230,6 +260,17 @@ __sched int atomic_t_wait(atomic_t *counter, unsigned int mode)
+ }
+ EXPORT_SYMBOL(atomic_t_wait);
+ 
++__sched int out_of_line_wait_on_atomic_one(atomic_t *p,
++					   wait_atomic_t_action_f action,
++					   unsigned int mode)
++{
++	struct wait_queue_head *wq_head = atomic_t_waitqueue(p);
++	DEFINE_WAIT_ATOMIC_ONE(wq_entry, p);
++
++	return __wait_on_atomic_t(wq_head, &wq_entry, action, mode, 1);
++}
++EXPORT_SYMBOL(out_of_line_wait_on_atomic_one);
++
+ /**
+  * wake_up_atomic_t - Wake up a waiter on a atomic_t
+  * @p: The atomic_t being waited on, a kernel virtual address
 
