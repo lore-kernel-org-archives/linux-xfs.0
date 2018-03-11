@@ -1,54 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35345 "EHLO
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:42665 "EHLO
         mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932191AbeCKRP5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Mar 2018 13:15:57 -0400
-Received: by mail-oi0-f65.google.com with SMTP id x10so10552641oig.2
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Mar 2018 10:15:56 -0700 (PDT)
+        with ESMTP id S932141AbeCKTQ0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Mar 2018 15:16:26 -0400
+Received: by mail-oi0-f65.google.com with SMTP id c18so10662700oiy.9
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Mar 2018 12:16:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180311112725.GC4043@hirez.programming.kicks-ass.net>
+In-Reply-To: <CAPcyv4iZFW9Lk=KdEy=0iYzM9GmQ4ccoN2imYNDq6XwXDgXsDw@mail.gmail.com>
 References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180311112725.GC4043@hirez.programming.kicks-ass.net>
+ <152066489984.40260.2215636951958334858.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180310094633.GA31604@lst.de> <CAPcyv4iZFW9Lk=KdEy=0iYzM9GmQ4ccoN2imYNDq6XwXDgXsDw@mail.gmail.com>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Sun, 11 Mar 2018 10:15:55 -0700
-Message-ID: <CAPcyv4jr53dqVTzdEQ6Ln1Qg7nWVMQSVTkf6uc+Lg6Y-xruhuw@mail.gmail.com>
-Subject: Re: [PATCH v5 08/11] wait_bit: introduce {wait_on,wake_up}_atomic_one
+Date: Sun, 11 Mar 2018 12:16:25 -0700
+Message-ID: <CAPcyv4ijGP_77VgLUekE53=i7JxMPjvUqpebKPnV2vXMqzpWcw@mail.gmail.com>
+Subject: Re: [PATCH v5 02/11] xfs, dax: introduce xfs_dax_aops
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Ingo Molnar <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, david <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Sun, Mar 11, 2018 at 4:27 AM, Peter Zijlstra <peterz@infradead.org> wrote:
-> On Fri, Mar 09, 2018 at 10:55:32PM -0800, Dan Williams wrote:
->> Add a generic facility for awaiting an atomic_t to reach a value of 1.
+On Sat, Mar 10, 2018 at 9:40 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Sat, Mar 10, 2018 at 1:46 AM, Christoph Hellwig <hch@lst.de> wrote:
+>>> +int dax_set_page_dirty(struct page *page)
+>>> +{
+>>> +     /*
+>>> +      * Unlike __set_page_dirty_no_writeback that handles dirty page
+>>> +      * tracking in the page object, dax does all dirty tracking in
+>>> +      * the inode address_space in response to mkwrite faults. In the
+>>> +      * dax case we only need to worry about potentially dirty CPU
+>>> +      * caches, not dirty page cache pages to write back.
+>>> +      *
+>>> +      * This callback is defined to prevent fallback to
+>>> +      * __set_page_dirty_buffers() in set_page_dirty().
+>>> +      */
+>>> +     return 0;
+>>> +}
 >>
->> Page reference counts typically need to reach 0 to be considered a
->> free / inactive page. However, ZONE_DEVICE pages allocated via
->> devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
->> done at init time to assign pages to the page allocator is skipped.
+>> Make this a generic noop_set_page_dirty maybe?
 >>
->> These pages will have their reference count elevated > 1 by
->> get_user_pages() when they are under DMA. In order to coordinate DMA to
->> these pages vs filesytem operations like hole-punch and truncate the
->> filesystem-dax implementation needs to capture the DMA-idle event i.e.
->> the 2 to 1 count transition).
+>>> +EXPORT_SYMBOL(dax_set_page_dirty);
+>>> +
+>>> +void dax_invalidatepage(struct page *page, unsigned int offset,
+>>> +             unsigned int length)
+>>> +{
+>>> +     /*
+>>> +      * There is no page cache to invalidate in the dax case, however
+>>> +      * we need this callback defined to prevent falling back to
+>>> +      * block_invalidatepage() in do_invalidatepage().
+>>> +      */
+>>> +}
 >>
->> For now, this implementation does not have functional behavior change,
->> follow-on patches will add waiters for these page-idle events.
+>> Same here.
 >
-> Argh, no no no.. That whole wait_for_atomic_t thing is a giant
-> trainwreck already and now you're making it worse still.
+> I guess I'm not sure what you mean. These nops are specific to dax I
+> don't think they make sense in another context besides dax.
 >
-> Please have a look here:
->
->   https://lkml.kernel.org/r/20171101190644.chwhfpoz3ywxx2m7@hirez.programming.kicks-ass.net
 
-That thread seems to be worried about the object disappearing the
-moment it's reference count reaches a target. That isn't the case with
-the memmap / struct page objects for ZONE_DEVICE pages. I understand
-wait_for_atomic_one() is broken in the general case, but as far as I
-can see it works fine specifically for ZONE_DEVICE page busy tracking,
-just not generic object lifetime.
+I did the rename, and am housing these in fs/dax.c, I assume that's
+what you wanted.
