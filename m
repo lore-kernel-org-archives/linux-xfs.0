@@ -1,118 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:51674 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbeCJBV7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Mar 2018 20:21:59 -0500
-Date: Fri, 9 Mar 2018 17:17:07 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: fallocate on XFS for swap
-Message-ID: <20180310011707.GA4875@magnolia>
-References: <8C28C1CB-47F1-48D1-85C9-5373D29EA13E@amazon.com>
- <20180309234422.GA4860@magnolia>
- <20180310005850.GW18129@dastard>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:38247 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751300AbeCLTci (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Mar 2018 15:32:38 -0400
+Received: by mail-ot0-f196.google.com with SMTP id 95so16490022ote.5
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Mar 2018 12:32:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180310005850.GW18129@dastard>
+In-Reply-To: <CAPcyv4jr53dqVTzdEQ6Ln1Qg7nWVMQSVTkf6uc+Lg6Y-xruhuw@mail.gmail.com>
+References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180311112725.GC4043@hirez.programming.kicks-ass.net> <CAPcyv4jr53dqVTzdEQ6Ln1Qg7nWVMQSVTkf6uc+Lg6Y-xruhuw@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 12 Mar 2018 12:32:37 -0700
+Message-ID: <CAPcyv4gsLTViqtz=v6U8i5C25bAPL01bzH2=X595t0AR2-qL9g@mail.gmail.com>
+Subject: Re: [PATCH v5 08/11] wait_bit: introduce {wait_on,wake_up}_atomic_one
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Besogonov, Aleksei" <cyberax@amazon.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, xfs <linux-xfs@vger.kernel.org>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Ingo Molnar <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, david <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Sat, Mar 10, 2018 at 11:58:50AM +1100, Dave Chinner wrote:
-> On Fri, Mar 09, 2018 at 03:44:22PM -0800, Darrick J. Wong wrote:
-> > [you really ought to cc the xfs list]
-> > 
-> > On Fri, Mar 09, 2018 at 10:05:24PM +0000, Besogonov, Aleksei wrote:
-> > > Hi!
-> > > 
-> > > We’re working at Amazon on making XFS our default root filesystem for
-> > > the upcoming Amazon Linux 2 (now in prod preview). One of the problems
-> > > that we’ve encountered is inability to use fallocated files for swap
-> > > on XFS. This is really important for us, since we’re shipping our
-> > > current Amazon Linux with hibernation support .
-> > 
-> > <shudder>
-> > 
-> > > I’ve traced the problem to bmap(), used in generic_swapfile_activate
-> > > call, which returns 0 for blocks inside holes created by fallocate and
-> > > Dave Chinner confirmed it in a private email. I’m thinking about ways
-> > > to fix it, so far I see the following possibilities:
-> > > 
-> > > 1. Change bmap() to not return zeroes for blocks inside holes. But
-> > > this is an ABI change and it likely will break some obscure userspace
-> > > utility somewhere.
-> > 
-> > bmap is a horrible interface, let's leave it to wither and eventually go
-> > away.
-> > 
-> > > 2. Change generic_swap_activate to use a more modern interface, by
-> > > adding fiemap-like operation to address_space_operations with fallback
-> > > on bmap().
-> > 
-> > Probably the best idea, but see fs/iomap.c since we're basically leasing
-> > a chunk of file space to the kernel.  Leasing space to a user that wants
-> > direct access is becoming rather common (rdma, map_sync, etc.)
-> 
-> thing is, we don't want in-kernel users of fiemap. We've got other
-> block mapping interfaces that can be used, such as iomap...
+On Sun, Mar 11, 2018 at 10:15 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Sun, Mar 11, 2018 at 4:27 AM, Peter Zijlstra <peterz@infradead.org> wrote:
+>> On Fri, Mar 09, 2018 at 10:55:32PM -0800, Dan Williams wrote:
+>>> Add a generic facility for awaiting an atomic_t to reach a value of 1.
+>>>
+>>> Page reference counts typically need to reach 0 to be considered a
+>>> free / inactive page. However, ZONE_DEVICE pages allocated via
+>>> devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
+>>> done at init time to assign pages to the page allocator is skipped.
+>>>
+>>> These pages will have their reference count elevated > 1 by
+>>> get_user_pages() when they are under DMA. In order to coordinate DMA to
+>>> these pages vs filesytem operations like hole-punch and truncate the
+>>> filesystem-dax implementation needs to capture the DMA-idle event i.e.
+>>> the 2 to 1 count transition).
+>>>
+>>> For now, this implementation does not have functional behavior change,
+>>> follow-on patches will add waiters for these page-idle events.
+>>
+>> Argh, no no no.. That whole wait_for_atomic_t thing is a giant
+>> trainwreck already and now you're making it worse still.
+>>
+>> Please have a look here:
+>>
+>>   https://lkml.kernel.org/r/20171101190644.chwhfpoz3ywxx2m7@hirez.programming.kicks-ass.net
+>
+> That thread seems to be worried about the object disappearing the
+> moment it's reference count reaches a target. That isn't the case with
+> the memmap / struct page objects for ZONE_DEVICE pages. I understand
+> wait_for_atomic_one() is broken in the general case, but as far as I
+> can see it works fine specifically for ZONE_DEVICE page busy tracking,
+> just not generic object lifetime.
 
-Well yes, I was clumsily trying to suggest reimplementing
-generic_swap_activate with an iomap backend replacing/augmenting the old
-get_blocks thing... :)
-
-> > > 3. Add an XFS-specific implementation of swapfile_activate.
-> > 
-> > Ugh no.
-> 
-> What we want is an iomap-based re-implementation of
-> generic_swap_activate(). One of the ways to plumb that in is to
-> use ->swapfile_activate() like so:
-
-Is this distinct from the ->swap_activate function pointer in
-address_operations or a new one?  I think it'd be best to have it be a
-separate callback like you suggest:
-
-> iomap_swapfile_activate()
-> {
-> 	return iomap_apply(... iomap_swapfile_add_extent, ...)
-> }
-> 
-> xfs_vm_swapfile_activate()
-> {
-> 	return iomap_swapfile_activate(xfs_iomap_ops);
-> }
-> 
-> 	.swapfile_activate = xfs_vm_swapfile_activate()
-> 
-> And massage the swapfile_activate callout be friendly to fragmented
-> files. i.e. change the nfs caller to run a
-> "add_single_swap_extent()" caller rather than have to do it in the
-> generic code on return....
-
-But ugh, the names are confusing.  ->swapfile_activate, ->swap_activate,
-and generic_swapfile_activate.  Not sure what's needed to clean up the
-other filesystems to use a single mapping interface, though.
-
-> IOWs, I think the choices we have are to either re-implement
-> generic_swapfile_activate() and then be stuck with using get_block
-> style interfaces forever in XFS, or we use the filesystem specific
-> callout to implement more advanced generic support using the
-> filesystem supplied get_block/iomap interfaces for block mapping
-> like we do for everything else that the VM needs the filesystem to
-> do....
-
-Yes, that's what I was trying to nudge Mr. Besogonov towards, though not
-as clearly as you've put it.  Thanks. :)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Ok, that thread is also concerned with cleaning up the
+wait_for_atomic_* pattern to also do something more idiomatic with
+wait_event(). I agree that would be better, but I'm running short of
+time to go refactor this aou for 4.17 inclusion, especially as I
+expect another couple rounds of review on this more urgent data
+corruption fix series that depends on this new api. I think the
+addition of wait_for_atomic_one() makes it clear that we need a way to
+pass a conditional expression rather than create a variant api for
+each different condition. Can you help me out with an attempt of your
+own, or at least point in a direction that you would accept for
+solving the "Except the current wait_event() doesn't do the whole key
+part that makes the hash-table 'work'."  problem that you highlighted?
