@@ -1,71 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-by2nam03on0098.outbound.protection.outlook.com ([104.47.42.98]:10688
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752320AbeCMSxB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Mar 2018 14:53:01 -0400
-From: Robert Dorr <rdorr@microsoft.com>
-Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Date: Tue, 13 Mar 2018 18:52:57 +0000
-Message-ID: <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
-References: <20180301014144.28892-1-david@fromorbit.com>
- <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
- <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
- <20180313051037.GC18129@dastard>
- <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180313161242.GA11168@lst.de>
-In-Reply-To: <20180313161242.GA11168@lst.de>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Received: from userp2120.oracle.com ([156.151.31.85]:42774 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752750AbeCMUm7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 16:42:59 -0400
+Date: Tue, 13 Mar 2018 13:42:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/8] xfs: fix the check for COW extents in
+ xfs_swap_extents
+Message-ID: <20180313204254.GC4865@magnolia>
+References: <20180313143601.30028-1-hch@lst.de>
+ <20180313143601.30028-2-hch@lst.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180313143601.30028-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
+Cc: linux-xfs@vger.kernel.org
 
-SSB0cmllZCB0aGUgUldGX09EU1lOQyBhbmQgeGZzIHNlZW1zIHRvIGhvbm9yIHByb3Blcmx5IGJ1
-dCBpdCBjYXVzZXMgZXh0NCB0byBnbyBzcGluIG91dCBhIHNpbmdsZSBDUFUgYW5kIGhhbmcgdGhl
-IHN5c3RlbS4g8J+Yig0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDaHJp
-c3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4gDQpTZW50OiBUdWVzZGF5LCBNYXJjaCAxMywgMjAx
-OCAxMToxMyBBTQ0KVG86IFJvYmVydCBEb3JyIDxyZG9yckBtaWNyb3NvZnQuY29tPg0KQ2M6IERh
-dmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT47IERhbiBXaWxsaWFtcyA8ZGFuLmoud2ls
-bGlhbXNAaW50ZWwuY29tPjsgbGludXgteGZzQHZnZXIua2VybmVsLm9yZzsgQ2hyaXN0b3BoIEhl
-bGx3aWcgPGhjaEBsc3QuZGU+OyBsaW51eC1mc2RldmVsIDxsaW51eC1mc2RldmVsQHZnZXIua2Vy
-bmVsLm9yZz47IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+OyBUaGVvZG9yZSBUcydvIDx0eXRzb0Bt
-aXQuZWR1PjsgTWF0dGhldyBXaWxjb3ggPG1hd2lsY294QG1pY3Jvc29mdC5jb20+OyBTY290dCBL
-b25lcnNtYW5uIDxzY290dGtvbkBtaWNyb3NvZnQuY29tPjsgU2xhdmEgT2tzIDxzbGF2YW9AbWlj
-cm9zb2Z0LmNvbT47IEphc3JhaiBEYW5nZSA8amFzcmFqZEBtaWNyb3NvZnQuY29tPjsgTWljaGFl
-bCBOZWxzb24gPG1pY25AbWljcm9zb2Z0LmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0hdIFtSRkNd
-IGlvbWFwOiBVc2UgRlVBIGZvciBwdXJlIGRhdGEgT19EU1lOQyBESU8gd3JpdGVzDQoNCj4gSSB0
-aGluayB0aGUgYW5zd2VyIGlzIHRoZSBpb21hcCogbG9naWMgbWFrZXMgc3VyZSB0byBpc3N1ZSBn
-ZW5lcmljX3dyaXRlX3N5bmMgZm9yIE9fRFNZTkMgVzEgYWZ0ZXIgVzEgaXMgY29tcGxldGVkIGJ5
-IGhhcmR3YXJlIGFuZCB0aGVuIHdhaXRzIGZvciBjb21wbGV0aW9uIG9mIHRoZSBmbHVzaCByZXF1
-ZXN0IChSRVFfUFJFRkxVU0gpIGJlZm9yZSBXMSBpcyByZXR1cm5lZCB0byB0aGUgQUlPIGNvbXBs
-ZXRpb24gcmluZywgcHJldmVudGluZyBpb19nZXRldmVudHMgZnJvbSBwcm9jZXNzaW5nIFcxIGJl
-Zm9yZSB0aGUgZmx1c2ggb2NjdXJzIGFuZCBjb21wbGV0ZXMuICAgSSBqdXN0IG5lZWQgcHJvcGVy
-IGNvbmZpcm1hdGlvbiBmcm9tIHRoZSBleHBlcnRzIG9uIHRoaXMgY29kZSB0aGF0IHRoaXMgaXMg
-dGhlIGV4cGVjdGVkIGJlaGF2aW9yLg0KDQpZZXMuIHRoYXQgaXMgdGhlIGNhc2UuDQoNCj4gRm9y
-IFNRTCBTZXJ2ZXIgdXNpbmcgT19ESVJFQ1QgfCBPX0RTWU5DIG9uIGN1cnJlbnQga2VybmVscyBp
-cyB2ZXJ5IHBlcmZvcm1hbmNlIGltcGFjdGluZy4gICBJbnN0ZWFkIHdlIGVuYWJsZSBhIG1vZGUg
-Zm9yIFNRTCB0aGF0IG9wZW5zIE9fRElSRUNUIG9ubHkgYW5kIGlzc3VlcyBmc3luYy9mZGF0YXN5
-bmMgd2hlbiB3ZSBhcmUgaGFyZGVuaW5nIGxvZyBmaWxlcyBvciBjaGVja3BvaW50aW5nIGRhdGEg
-ZmlsZXMuICAgVGhpcyByZWR1Y2VzIHRoZSB3cml0ZSwgZmx1c2gsIHdyaXRlLCBmbHVzaCBwYXR0
-ZXJuIGFsbG93aW5nIGZvciB3cml0ZSwgd3JpdGUsIHdyaXRlLCAuLi4gdGhlbiBmbHVzaCBhcyB3
-ZSBvbmx5IGlzc3VlIGZsdXNoIHJlcXVlc3RzIHdoZW4gcmVxdWlyZWQgdG8gbWFpbnRhaW4gdGhl
-IGRhdGEgaW50ZWdyaXR5IGJvdW5kYXJpZXMgb2YgU1FMIFNlcnZlci4gIFRoZSBwZXJmb3JtYW5j
-ZSBpcyBzaWduaWZpY2FudGx5IGJldHRlciB0aGVuIHRoZSBkZXZpY2UgZmx1c2ggZm9yIGVhY2gg
-d3JpdGUgYXMgeW91IGNhbiBpbWFnaW5lLg0KPiANCj4gVGVzdGluZyBzaG93cyB0aGUgRlVBIGVu
-aGFuY2VtZW50IGlzIGJldHRlciB0aGVuIHRoZSB3cml0ZSwgZmx1c2ggcGF0dGVybi4gICBGb3Ig
-U1FMIFNlcnZlciB3ZSB3YW50IHRvIGR5bmFtaWNhbGx5IG9wZW4gd2l0aCBPX0RJUkVDVCB8IE9f
-RFNZTkMgd2hlbiBSRVFfRlVBIGNhbiBiZSBwcm9wZXJseSB1c2VkIGFuZCBvcGVuIHdpdGggT19E
-SVJFQ1QgYW5kIGxldmVyYWdlIFNRTCBTZXJ2ZXIncyBhbHRlcm5hdGUgZmx1c2ggc2NoZW1lIHdo
-ZW4gcnVubmluZyBvbiBvbGRlciBrZXJuZWwgb3IgYSBzeXN0ZW0gdGhhdCBkb2VzIG5vdCBzdXBw
-b3J0IEZVQSAoU0FUQSwgSURFLCAuLi4pDQoNClRoZXJlIGlzIG5vIHJlYWxseSBnb29kIHdheSB0
-byBmaWd1cmUgdGhpcyBvdXQgZXhjZXB0IGZvciBiZW5jaG1hcmtpbmcsIGdpdmVuIHRoYXQgdGhl
-IEZVQSB1c2UgYW4gaW1wbGVtZW50YXRpb24gZGV0YWlsLg0KDQpCdHcsIGFub3RoZXIgZmVhdHVy
-ZSB0aGF0IG1pZ2h0IGJlIGludGVyZXN0aW5nIHRvIHlvdSBpcyB0aGUgUldGX0RTWU5DIGZsYWcg
-dG8gdGhlIHB3cml0ZXYyIHN5c2NhbGwsIHdoaWNoIGFsbG93cyB0byBhcHBseSBPX0RTWU5DIHNl
-bWFudGljcyBvbiBhIHBlci1JL08gYmFzaXMgaW5zdGVhZCBvZiB1c2luZyBpdCBhdCBvcGVuIHRp
-bWUuDQo=
+On Tue, Mar 13, 2018 at 03:35:54PM +0100, Christoph Hellwig wrote:
+> i_cnextents does not include delayed allocated extents, so switch
+> to the inode fork size check that we already use in other places
+> instead.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_bmap_util.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index e0a442f504e5..19ea7d086cf8 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -2014,11 +2014,11 @@ xfs_swap_extents(
+>  		ip->i_cowfp = tip->i_cowfp;
+>  		tip->i_cowfp = cowfp;
+>  
+> -		if (ip->i_cowfp && ip->i_cnextents)
+> +		if (ip->i_cowfp && ip->i_cowfp->if_bytes)
+>  			xfs_inode_set_cowblocks_tag(ip);
+>  		else
+>  			xfs_inode_clear_cowblocks_tag(ip);
+> -		if (tip->i_cowfp && tip->i_cnextents)
+> +		if (tip->i_cowfp && tip->i_cowfp->if_bytes)
+>  			xfs_inode_set_cowblocks_tag(tip);
+>  		else
+>  			xfs_inode_clear_cowblocks_tag(tip);
+> -- 
+> 2.14.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
