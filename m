@@ -1,163 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58387 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751000AbeCNSlT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Mar 2018 14:41:19 -0400
-Date: Wed, 14 Mar 2018 18:41:17 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
- our own parser
-Message-ID: <20180314184117.GA5740@wotan.suse.de>
-References: <20180313205911.26082-1-mcgrof@kernel.org>
- <44fa85af-7d59-9909-20e4-c8351f630fb4@sandeen.net>
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:46237 "EHLO
+        mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751495AbeCMGgD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 02:36:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <44fa85af-7d59-9909-20e4-c8351f630fb4@sandeen.net>
+In-Reply-To: <20180313042126.GB18129@dastard>
+References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
+ <20180313042126.GB18129@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 13 Mar 2018 08:36:02 +0200
+Message-ID: <CAOQ4uxgWuS-=mR8+_+vHMkD7szrXTgnnMPtbx2nj88-MgzLa9w@mail.gmail.com>
+Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, darrick.wong@oracle.com
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, Theodore Tso <tytso@mit.edu>, fstests <fstests@vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 11:21:48PM -0400, Eric Sandeen wrote:
-> On 3/13/18 4:59 PM, Luis R. Rodriguez wrote:
-> > You may want to stick to specific set of configuration options when
-> > creating filesystems with mkfs.xfs -- sometimes due to pure technical
-> > reasons, but some other times to ensure systems remain compatible as
-> > new features are introduced with older kernels, or if you always want
-> > to take advantage of some new feature which would otherwise typically
-> > be disruptive.
-> > 
-> > This adds support for parsing a configuration file to override defaults
-> > parameters to be used for mkfs.xfs.
-> > 
-> > We define an XFS configuration directory, /etc/mkfs.xfs.d/ and allow for
-> > different types of configuration files, if none is specified we look for
-> > the default type, /etc/mkfs.xfs.d/default, and you can override with -T.
-> > For instance, if you specify:
-> > 
-> > 	mkfs.xfs -T experimental -f /dev/loop0
-> 
-> Ok, since you have to fix it all anyway, can we please use "-c" for config
-> instead of "-T" for type?
+Since the exact same report was sent to the ext4 list, CC'ing Dave's response to
+Ted and fstests, which seems an appropriate crowd for this discussion.
 
-Sure. Its what I had originally used and I followed Darrick's bike-shed
-email to use -t, and then -T after. I guess I'll revert back.
+I think that future CrashMonkey findings should be CC'ed to either fsdevel
+or fstests, especially if more than one filesystem is affected.
 
-> Can we just call them 'configs'?)
+Thanks,
+Amir.
 
-My pleasure.
-
-> > The file /etc/mkfs.xfs.d/experimental will be used as your configuration
-> > file. If you really need to override the full path of the configuration
-> > file you may use the MKFS_XFS_CONFIG environment variable.
-> > 
-> > To use /etc/ be sure to configure xfsprogs with:
-> > 
-> >  ./configure --sysconfdir=/etc/
-> 
-> surely this should be made default?
-
-As you wish.
-
-> > To verify what configuration file is used on a system use the typical:
-> > 
-> >   mkfs.xfs -N
-> 
-> Nitpick: -N by itself is not valid, it's treated as an error.
-> When it does get a config file, IMHO it should give its name, not just
-> "custom configuration file"
-
-Sure, will amend.
-
-> > There is only a subset of options allowed to be set on the configuration
-> > file, 
-> 
-> I think this is problematic - allowing only booleans is pretty
-> arbitrary.
-
-I was trying to simplify things considering how limited the number of
-uints were on struct mkfs_default_params, and instead how most were just
-bools. But sure, we can go ahead and parse the uints out of struct mkfs_default_params
-as well.
-
-> > We have floated around enough bike shedding emails to have at least reached
-> > a consensus on the fact that we'd be only supporting a mimimum set of default
-> > parameters and would strive to simplify our parser as much as possible.
-> 
-> See above - sorry for not chiming in sooner, but I don't think an arbitrary
-> restriction to the boolean options will be sufficient in the long run.
-
-Sure.
-
-> > --- /dev/null
-> > +++ b/man/man5/mkfs.xfs.d.5
-> > @@ -0,0 +1,121 @@
-> > +.TH mkfs.xfs.d 5
-> > +.SH NAME
-> > +mkfs.xfs.d \- mkfs.xfs configuration directory
-> 
-> IMHO this is all far too wordy, will put my editor hat on later.
-
-Thanks, I appreciate the editorial feedback.
-
-> > Alternatively
-> > +you can set and use the MKFS_XFS_CONFIG environment variable to override
-> > +the default full path of the first file
-> > +.B mkfs.xfs (8)
-> > +looks for.
-> 
-> (How do you envision this env var being used?  How is this better than
-> simply allowing -t to specify a full path?)
-
--c can specify the full path if we want, its up to us if we want to allow
-for that. Its simpler to support it, so fine by me to only accept that
-and remove the environment variable.
-
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index 1ca6a2d148c4..e66330a50b68 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -21,7 +21,11 @@
-> >  #include "xfs_multidisk.h"
-> >  #include "libxcmd.h"
-> >  
-> > -
-> > +#define MKFS_XFS_CONF_DIR	ROOT_SYSCONFDIR "/mkfs.xfs.d/"
-> > +#define CONFIG_MAX_KEY		1024
-> > +#define CONFIG_MAX_VALUE	PATH_MAX
-> > +#define CONFIG_MAX_BUFFER	CONFIG_MAX_KEY + CONFIG_MAX_VALUE + 3
-> > +#define PARAM_OPTS		"T:b:d:i:l:L:m:n:KNp:qr:s:CfV"
-> 
-> what dave said ;)
-> 
-> also re: what dave said - functioning properly only if -t/-T/-c is given
-> first on the commandline is a little odd, though it makes some semantic
-> sense to specify a config file first then additional options so I can
-> live with it, I think.
-> 
-> But it really must then fail, as opposed to silently ignoring it,
-> if the option comes later.
-
-I'll just enable -c to be parsed via the command line interface options
-so it can be defined anywhere.
-
-> <snip wow a whole lot of lines to parse the configfile>
-> 
-> Ok, so my configfile-containing-actual-commandlines was shot down,
-> but I'm a bit dismayed at the LOC required to re-parse the configfile,
-> especially when it's not even handling all options....
-
-Adding uint shouldn't be too much extra code, it just means the callbacks
-will be passing a uint and each option will have also implement a boundary
-check. With the way Dave is suggesting this to be on its own file and set
-of data structures or range checks, this shouldn't be too hard to do, its
-just yet-more code.
-
-> I'll have to take more time to review the bulk of the code, but the
-> behavioral issues above need to be addressed I think.
-
-Makes sense, thanks for the review.
-
-  Luis
+On Tue, Mar 13, 2018 at 6:21 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Mar 12, 2018 at 09:15:25PM -0500, Jayashree Mohan wrote:
+>> Hi,
+>>
+>> We've encountered what seems to be a crash consistency bug in
+>> xfs(kernel 4.15) due to the interaction between delayed allocated
+>> write and an unaligned fallocate(zero range) : Fallocate_zero_range is
+>> not persisted even when followed by a fsync - thereby leading to a
+>> loss of fsynced metadata operation on a file.
+>>
+>> Say we create a disk image with known data and quick format it.
+>> 1. Now write 65K of data to a new file
+>> 2. Zero out a part of the above file using falloc_zero_range (60K+128)
+>> - (60K+128+4096) - an unaligned block
+>> 3. fsync the above file
+>> 4. Crash
+>
+> So, effectively:
+>
+> $ xfs_io -xft -c "pwrite 0 65k" \
+>         -c "fzero $((60 * 1024 + 128)) 4k" \
+>         -c fsync \
+>         -c "shutdown"
+>         /mnt/scratch/testfile
+> $
+>
+>>
+>> If we crash after the fsync, and allow reordering of the block IOs
+>> between two flush/fua commands using Crashmonkey[1], then we can end
+>> up not persisting the zero_range command in step 2 above, even if we
+>> crashed after a fsync.
+>
+> Sorry, but what do you mean by "reordering of the block IOs"?
+>
+>> This workload was inspired from xfstest/generic_042, which tests for
+>> stale data exposure using aligned fallocate commands. It's worth
+>> noting that f2fs and btrfs passes our test clean - irrespective of the
+>> order of bios, user data is intact and fzero operation is correctly persisted.
+>>
+>> To reproduce this bug using CrashMonkey, simply run :
+>> ./c_harness -f /dev/sda -d /dev/cow_ram0 -t xfs -e 102400 -s 1000 -v
+>> tests/generic_042/generic_042_fzero_unaligned.so
+>>
+>> and take a look at the <timestamp>-generic_042_fzero_unaligned.log
+>> created in the build directory. This file has the list of block IOs
+>> issued during the workload and the permutation of bios that lead to
+>> this bug. You can also verify using blktrace that CrashMonkey only
+>> reorders bios between two barrier operations(thereby such a crash
+>> state could be encountered due to reordering blocks at the storage
+>> stack). Note that tools like dm-log-writes cannot capture this bug
+>> because this arises due to reordering blocks between barrier
+>> operations.
+>>
+>> Possible reason for this bug :
+>> On closely inspecting the reason for this bug, we discovered that the
+>> problem lies in updating a data block twice, without a barrier
+>> operation between the two updates.
+>
+> There's nothing wrong with doing that if the filesystem has waited
+> for completion of the first IOs before doing subsequent operations
+> on the block.
+>
+>> The blktrace for the above
+>> mentioned workload shows that sector 280 is updated twice - probably
+>> first due to the write and later due to the fzero operation.
+>
+> WHy is that happening? The trace I have from the above xfs_io
+> command is this:
+>
+>   8,96   2      613     0.081499295  3635  Q  WS 280 + 16 [xfs_io]
+>   8,96   2      617     0.081982168     0  C  WS 280 + 16 [0]
+>   8,96   2      618     0.082033206  3635  Q   R 280 + 8 [xfs_io]
+>   8,96   2      622     0.082420539     0  C   R 280 + 8 [0]
+>   8,96   2      623     0.082475920  3635  Q   R 288 + 8 [xfs_io]
+>   8,96   2      627     0.082988642     0  C   R 288 + 8 [0]
+>   8,96   2      628     0.083050032  3635  Q  WS 160 + 136 [xfs_io]
+>   8,96   2      632     0.084414651     0  C  WS 160 + 136 [0]
+>   8,96   2      633     0.084469733  3635  Q FWFSM 20971632 + 8 [xfs_io]
+>   8,96   2      636     0.107483279     0  C WFSM 20971632 + 8 [0]
+>   8,96   2      637     0.107485345     0  C WFSM 20971632 [0]
+>
+> Which shows serialised IO dispatch and completion of the IO, and no
+> double write. You've only shown queueing of writes, which doesn't
+> tell me about completion order which is what really matters.
+>
+> In more detail.
+>
+> 1. zero-range forces a data flush to occur and then waits for it
+> to complete.
+>
+> ....
+>   xfs_file_fallocate
+>     xfs_zero_file_space(60-68k)
+>       xfs_free_file_space
+>         xfs_flush_unmap_range()
+>           filemap_write_and_wait_range()
+> xfs_writepage:        pgoff 0xf000 size 0x10400
+> xfs_writepage:        pgoff 0x10000 size 0x10400
+>   8,96   2      613     0.081499295  3635  Q  WS 280 + 16 [xfs_io]
+>   8,96   2      617     0.081982168     0  C  WS 280 + 16 [0]
+>           truncate_pagecache_range()
+> xfs_invalidatepage:   pgoff 0xf000 size 0x10400
+> xfs_releasepage:      pgoff 0xf000 size 0x10400
+> xfs_invalidatepage:   pgoff 0x10000 size 0x10400
+> xfs_releasepage:      pgoff 0x10000 size 0x10400
+>         xfs_zero_range()
+>   8,96   2      618     0.082033206  3635  Q   R 280 + 8 [xfs_io]
+>   8,96   2      622     0.082420539     0  C   R 280 + 8 [0]
+>   8,96   2      623     0.082475920  3635  Q   R 288 + 8 [xfs_io]
+>   8,96   2      627     0.082988642     0  C   R 288 + 8 [0]
+>     xfs_alloc_file_space()
+> xfs_map_blocks_found:   startoff 0x0 startblock 68 blockcount 0x30
+>         <nothing to allocate!>
+> .....
+>
+> After the fzero command, we then run fsync:
+>
+> xfs_file_fsync()
+>   filemap_write_and_wait_range()
+> xfs_writepage:        pgoff 0x0 size 0x10400
+> ....
+> xfs_writepage:        pgoff 0x10000 size 0x10400
+>   8,96   2      628     0.083050032  3635  Q  WS 160 + 136 [xfs_io]
+>   8,96   2      632     0.084414651     0  C  WS 160 + 136 [0]
+> <data writeback complete>
+>   xfs_log_force_lsn()
+> xfs_buf_submit:       flags WRITE|NO_IOACCT|ASYNC|SYNCIO|FUA|FLUSH|PAGES
+>   8,96   2      633     0.084469733  3635  Q FWFSM 20971632 + 8 [xfs_io]
+>   8,96   2      636     0.107483279     0  C WFSM 20971632 + 8 [0]
+>   8,96   2      637     0.107485345     0  C WFSM 20971632 [0]
+>
+> And that's the log force. That's all correct and expected behaviour
+> for pwrite, fzero and fsync. And when I dump the data in the file
+> after unmount/mount (because the shutdown stops all IO from the
+> filesytem), I get:
+>
+> 000000 146715 146715 146715 146715 146715 146715 146715 146715
+>
+> 00f080 000000 000000 000000 000000 000000 000000 000000 000000
+> *
+> 010080 146715 146715 146715 146715 146715 146715 146715 146715
+> *
+> 010400
+>
+> exactly the right data in the file.
+>
+>> However
+>> notice that there is no barrier between the two updates, and using
+>> Crashmonkey we see the above mentioned bug when these two updates to
+>> the same block are reordered. Essentially, a reordering here means
+>> fzero goes through first, and is later overwritten by the delayed
+>> allocated write.
+>
+>>  0.000179069  7104  Q  WS 280 + 16 [c_harness]
+>>  0.000594994  7104  Q   R 280 + 8 [c_harness]
+>>  0.000598216  7104  Q   R 288 + 8 [c_harness]
+>>  0.000620552  7104  Q  WS 160 + 120 [c_harness]
+>>  0.000653742  7104  Q  WS 280 + 16 [c_harness]
+>
+> So this is where there's a difference. Note the write in my case:
+>
+> 0.083050032  3635  Q  WS 160 + 136 [xfs_io]
+>
+> It's a single IO - for some reason the kernel you are running has
+> split it into two IOs, but that doesn't make it wrong or invalid -
+> it's not indicative of a bug in any way.
+>
+> What's wrong here is your assumption that you can reorder it around
+> the previous IO to those blocks.  That's *simply not possible*
+> because the filesystem has waited for completion of each IO before
+> issuing the next. The IO serialisation is being done at the
+> filesystem level, not the IO level, and so CrashMonkey is
+> effectively breaking the completion ordering guarantees storage
+> hardware provides us with.
+>
+>>  0.000733154  7104  Q FWFSM 102466 + 3 [c_harness]
+>
+> IOWs, once this pre-flush is completed, the data on disk is supposed
+> to be that of the latter write because that one was received by the
+> storage well after the first one was completed. Reordering a later
+> IO in front of an already completed dependent IO (read or write!) is
+> simply not allowed.
+>
+>> This seems to be a bug, as it is not persisting the metadata operation
+>> even in the presence of fsync.
+>>
+>> Let me know if I am missing some detail here.
+>
+> Filesystem IO ordering in the linux stack is not based on
+> block/request level flush barriers. i.e. there's no such thing as
+> "IO barriers" anymore. Filesystem IO ordering is based on a
+> completion-to-dispatch serialisation model at the filesystem level,
+> and that cannot be observed by looking at block layer traces....
+>
+> This really looks like a crashmonkey bug, not a filesystem problem...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
