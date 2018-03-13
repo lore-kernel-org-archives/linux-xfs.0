@@ -1,47 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:60740 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932120AbeCKL2D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Mar 2018 07:28:03 -0400
-Date: Sun, 11 Mar 2018 12:27:26 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v5 08/11] wait_bit: introduce {wait_on,wake_up}_atomic_one
-Message-ID: <20180311112725.GC4043@hirez.programming.kicks-ass.net>
-References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:54023 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932279AbeCMBcW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Mar 2018 21:32:22 -0400
+Date: Tue, 13 Mar 2018 12:31:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: fallocate on XFS for swap
+Message-ID: <20180313013144.GA18129@dastard>
+References: <8C28C1CB-47F1-48D1-85C9-5373D29EA13E@amazon.com>
+ <20180309234422.GA4860@magnolia>
+ <20180310005850.GW18129@dastard>
+ <20180310011707.GA4875@magnolia>
+ <20180310013646.GX18129@dastard>
+ <A59B9E63-29A2-4C40-960B-E09809DE501F@amazon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <A59B9E63-29A2-4C40-960B-E09809DE501F@amazon.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Ingo Molnar <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.com, linux-kernel@vger.kernel.org
+To: "Besogonov, Aleksei" <cyberax@amazon.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Mar 09, 2018 at 10:55:32PM -0800, Dan Williams wrote:
-> Add a generic facility for awaiting an atomic_t to reach a value of 1.
+[Aleski, can you word wrap your email text at 72 columns? ]
+
+On Mon, Mar 12, 2018 at 10:01:54PM +0000, Besogonov, Aleksei wrote:
+> [snip unrelated]
 > 
-> Page reference counts typically need to reach 0 to be considered a
-> free / inactive page. However, ZONE_DEVICE pages allocated via
-> devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
-> done at init time to assign pages to the page allocator is skipped.
+> So I'm looking at the XFS code and it appears that the iomap is
+> limited to 1024*PAGE_SIZE blocks at a time,
+
+Take a closer look - that code is not used for reading file extents
+and returning them to the caller.
+
+> which is too small for
+> most of swap use-cases. I can of course just loop through the file
+> in 4Mb increments and, just like the bmap() code does today. But
+> this just doesn't look right and it's not atomic. And it looks
+> like iomap in ext2 doesn't have this limitation. 
 > 
-> These pages will have their reference count elevated > 1 by
-> get_user_pages() when they are under DMA. In order to coordinate DMA to
-> these pages vs filesytem operations like hole-punch and truncate the
-> filesystem-dax implementation needs to capture the DMA-idle event i.e.
-> the 2 to 1 count transition).
-> 
-> For now, this implementation does not have functional behavior change,
-> follow-on patches will add waiters for these page-idle events.
+> The stated rationale for the XFS limit is:
+> >/*
+> > * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
+> > * to keep the chunks of work done where somewhat symmetric with the
+> > * work writeback does. This is a completely arbitrary number pulled
+> > * out of thin air as a best guess for initial testing.
+> > *
+> > * Note that the values needs to be less than 32-bits wide until
+> > * the lower level functions are updated.
+> > */
 
-Argh, no no no.. That whole wait_for_atomic_t thing is a giant
-trainwreck already and now you're making it worse still.
+Yeah, that's in the IOMAP_WRITE path used for block allocation. swap
+file mapping should not be asking for IOMAP_WRITE mappings that
+trigger extent allocation, so you should never hit this case.
 
-Please have a look here:
+You should probably be using the IOMAP_REPORT path (i.e. basically
+very similar code to iomap_fiemap/iomap_fiemap_apply and rejecting
+any file that returns an iomap that is not IOMAP_MAPPED or
+IOMAP_UNWRITTEN. Also, you want to reject any file that returns
+IOMAP_F_SHARED in iomap->flags, too, because swapfiles can't do COW
+to break extent sharing on writes.
 
-  https://lkml.kernel.org/r/20171101190644.chwhfpoz3ywxx2m7@hirez.programming.kicks-ass.net
+Cheers,
 
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
