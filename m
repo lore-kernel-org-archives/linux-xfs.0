@@ -1,182 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:19657 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751459AbeCUHwz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 03:52:55 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1eyYYF-0003W2-9N
-        for linux-xfs@vger.kernel.org; Wed, 21 Mar 2018 18:52:51 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.90_1)
-        (envelope-from <david@fromorbit.com>)
-        id 1eyYYF-00021M-7f
-        for linux-xfs@vger.kernel.org; Wed, 21 Mar 2018 18:52:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: catch inode allocation state mismatch corruption
-Date: Wed, 21 Mar 2018 18:52:47 +1100
-Message-Id: <20180321075248.7677-2-david@fromorbit.com>
-In-Reply-To: <20180321075248.7677-1-david@fromorbit.com>
-References: <20180321075248.7677-1-david@fromorbit.com>
+Received: from mail-sn1nam02on0095.outbound.protection.outlook.com ([104.47.36.95]:20408
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932222AbeCMAPb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Mar 2018 20:15:31 -0400
+From: Robert Dorr <rdorr@microsoft.com>
+Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+Date: Tue, 13 Mar 2018 00:15:28 +0000
+Message-ID: <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
+References: <20180301014144.28892-1-david@fromorbit.com>
+ <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
+In-Reply-To: <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
 
-From: Dave Chinner <dchinner@redhat.com>
-
-We recently came across a V4 filesystem causing memory corruption
-due to a newly allocated inode being setup twice and being added to
-the superblock inode list twice. From code inspection, the only way
-this could happen is if a newly allocated inode was not marked as
-free on disk (i.e. di_mode wasn't zero).
-
-Running the metadump on an upstream debug kernel fails during inode
-allocation like so:
-
-XFS: Assertion failed: ip->i_d.di_nblocks == 0, file: fs/xfs/xfs_inode.c, line: 838
-------------[ cut here ]------------
-kernel BUG at fs/xfs/xfs_message.c:114!
-invalid opcode: 0000 [#1] PREEMPT SMP
-CPU: 11 PID: 3496 Comm: mkdir Not tainted 4.16.0-rc5-dgc #442
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-RIP: 0010:assfail+0x28/0x30
-RSP: 0018:ffffc9000236fc80 EFLAGS: 00010202
-RAX: 00000000ffffffea RBX: 0000000000004000 RCX: 0000000000000000
-RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff8227211b
-RBP: ffffc9000236fce8 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000bec R11: f000000000000000 R12: ffffc9000236fd30
-R13: ffff8805c76bab80 R14: ffff8805c77ac800 R15: ffff88083fb12e10
-FS:  00007fac8cbff040(0000) GS:ffff88083fd00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fffa6783ff8 CR3: 00000005c6e2b003 CR4: 00000000000606e0
-Call Trace:
- xfs_ialloc+0x383/0x570
- xfs_dir_ialloc+0x6a/0x2a0
- xfs_create+0x412/0x670
- xfs_generic_create+0x1f7/0x2c0
- ? capable_wrt_inode_uidgid+0x3f/0x50
- vfs_mkdir+0xfb/0x1b0
- SyS_mkdir+0xcf/0xf0
- do_syscall_64+0x73/0x1a0
- entry_SYSCALL_64_after_hwframe+0x42/0xb7
-
-Extracting the inode number we crashed on from an event trace and
-looking at it with xfs_db:
-
-xfs_db> inode 184452204
-xfs_db> p
-core.magic = 0x494e
-core.mode = 0100644
-core.version = 2
-core.format = 2 (extents)
-core.nlinkv2 = 1
-core.onlink = 0
-.....
-
-Confirms that it is not a free inode on disk. xfs_repair
-also trips over this inode:
-
-.....
-zero length extent (off = 0, fsbno = 0) in ino 184452204
-correcting nextents for inode 184452204
-bad attribute fork in inode 184452204, would clear attr fork
-bad nblocks 1 for inode 184452204, would reset to 0
-bad anextents 1 for inode 184452204, would reset to 0
-imap claims in-use inode 184452204 is free, would correct imap
-would have cleared inode 184452204
-.....
-disconnected inode 184452204, would move to lost+found
-
-And so we have a situation where the directory structure and the
-inobt thinks the inode is free, but the inode on disk thinks it is
-still in use. Where this corruption came from is not possible to
-diagnose, but we can detect it and prevent the kernel from oopsing
-on lookup. The reproducer now results in:
-
-$ sudo mkdir /mnt/scratch/{0,1,2,3,4,5}{0,1,2,3,4,5}
-mkdir: cannot create directory ‘/mnt/scratch/00’: File exists
-mkdir: cannot create directory ‘/mnt/scratch/01’: File exists
-mkdir: cannot create directory ‘/mnt/scratch/03’: Structure needs cleaning
-mkdir: cannot create directory ‘/mnt/scratch/04’: Input/output error
-mkdir: cannot create directory ‘/mnt/scratch/05’: Input/output error
-....
-
-And this corruption shutdown:
-
-[   54.843517] XFS (loop0): Corruption detected! Free inode 0xafe846c not marked free on disk
-[   54.845885] XFS (loop0): Internal error xfs_trans_cancel at line 1023 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x425/0x670
-[   54.848994] CPU: 10 PID: 3541 Comm: mkdir Not tainted 4.16.0-rc5-dgc #443
-[   54.850753] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-[   54.852859] Call Trace:
-[   54.853531]  dump_stack+0x85/0xc5
-[   54.854385]  xfs_trans_cancel+0x197/0x1c0
-[   54.855421]  xfs_create+0x425/0x670
-[   54.856314]  xfs_generic_create+0x1f7/0x2c0
-[   54.857390]  ? capable_wrt_inode_uidgid+0x3f/0x50
-[   54.858586]  vfs_mkdir+0xfb/0x1b0
-[   54.859458]  SyS_mkdir+0xcf/0xf0
-[   54.860254]  do_syscall_64+0x73/0x1a0
-[   54.861193]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
-[   54.862492] RIP: 0033:0x7fb73bddf547
-[   54.863358] RSP: 002b:00007ffdaa553338 EFLAGS: 00000246 ORIG_RAX: 0000000000000053
-[   54.865133] RAX: ffffffffffffffda RBX: 00007ffdaa55449a RCX: 00007fb73bddf547
-[   54.866766] RDX: 0000000000000001 RSI: 00000000000001ff RDI: 00007ffdaa55449a
-[   54.868432] RBP: 00007ffdaa55449a R08: 00000000000001ff R09: 00005623a8670dd0
-[   54.870110] R10: 00007fb73be72d5b R11: 0000000000000246 R12: 00000000000001ff
-[   54.871752] R13: 00007ffdaa5534b0 R14: 0000000000000000 R15: 00007ffdaa553500
-[   54.873429] XFS (loop0): xfs_do_force_shutdown(0x8) called from line 1024 of file fs/xfs/xfs_trans.c.  Return address = ffffffff814cd050
-[   54.882790] XFS (loop0): Corruption of in-memory data detected.  Shutting down filesystem
-[   54.884597] XFS (loop0): Please umount the filesystem and rectify the problem(s)
-
-Note that this crash is only possible on v4 filesystemsi or v5
-filesystems mounted with the ikeep mount option. For all other V5
-filesystems, this problem cannot occur because we don't read inodes
-we are allocating from disk - we simply overwrite them with the new
-inode information.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_icache.c | 23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 1dc37b72b6ea..98b7a4ae15e4 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -484,7 +484,28 @@ xfs_iget_cache_miss(
- 
- 	trace_xfs_iget_miss(ip);
- 
--	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
-+
-+	/*
-+	 * If we are allocating a new inode, then check what was returned is
-+	 * actually a free, empty inode. If we are not allocating an inode,
-+	 * the check we didn't find a free inode.
-+	 */
-+	if (flags & XFS_IGET_CREATE) {
-+		if (VFS_I(ip)->i_mode != 0) {
-+			xfs_warn(mp,
-+"Corruption detected! Free inode 0x%llx not marked free on disk",
-+				ino);
-+			error = -EFSCORRUPTED;
-+			goto out_destroy;
-+		}
-+		if (ip->i_d.di_nblocks != 0) {
-+			xfs_warn(mp,
-+"Corruption detected! Free inode 0x%llx has blocks allocated!",
-+				ino);
-+			error = -EFSCORRUPTED;
-+			goto out_destroy;
-+		}
-+	} else if (VFS_I(ip)->i_mode == 0) {
- 		error = -ENOENT;
- 		goto out_destroy;
- 	}
--- 
-2.16.1
-
+SGVsbG8gYWxsLiAgSSBoYXZlIGEgY291cGxlIG9mIGZvbGxvdy11cCBxdWVzdGlvbnMgYXJvdW5k
+IHRoaXMgZWZmb3J0LCB0aGFua3MgeW91IGFsbCBmb3IgYWxsIHlvdXIga2luZCBpbnB1dHMsIHBh
+dGllbmNlIGFuZCBrbm93bGVkZ2UgdHJhbnNmZXIuDQoNCjEuICAgIEhvdyBkb2VzIHhmcyBvciBl
+eHQ0IG1ha2Ugc3VyZSBhIHBhdHRlcm4gb2YgV1MgZm9sbG93ZWQgYnkgRldTIGRvZXMgbm90IGFs
+bG93IHRoZSB3cml0ZSAoV1MpIGNvbXBsZXRpb24gdG8gYmUgdmlzaWJsZSBiZWZvcmUgdGhlIGZs
+dXNoIGNvbXBsZXRlcz8gIEkgc3VzcGVjdGVkIHRoZSB3cml0ZSB3YXMgaGVsZCBpbiBpb21hcF9k
+aW9fY29tcGxldGVfd29yayBidXQgd2l0aCB0aGUgZ2VuZXJpY193cml0ZV9zeW5jIGNoYW5nZSBp
+biB0aGUgcGF0Y2ggd291bGQgYSBPX0RTWU5DIHdyaXRlIHJlcXVlc3QgdG8gYSBEcG9GdWE9MCBi
+bG9jayBxdWV1ZSBhbGxvdyBUMiB0byBzZWUgdGhlIGNvbXBsZXRpb24gdmlhIGlvX2dldGV2ZW50
+cyBiZWZvcmUgVDEgY29tcGxldGVkIHRoZSBhY3R1YWwgZmx1c2g/DQoNCjIuICAgIEhvdyB3aWxs
+IG15IGFwcGxpY2F0aW9uIGJlIGFibGUgdG8gZHluYW1pY2FsbHkgZGV0ZXJtaW5lIGlmIHhmcyBh
+bmQgZXh0NCBoYXZlIHRoZSBwZXJmb3JtYW5jZSBlbmhhbmNlbWVudCBmb3IgRlVBIG9yIEkgbmVl
+ZCBlbmdhZ2UgYWx0ZXJuYXRlIG1ldGhvZHMgdG8gdXNlIGZzeW5jL2ZkYXRhc3luYyBhdCBzdHJh
+dGVnaWMgbG9jYXRpb25zPw0KDQozLiAgICBBcmUgdGhlcmUgYW55IHBsYW5zIHlldCB0byBvcHRp
+bWl6ZSBleHQ0IGFzIHdlbGw/DQoNCjQuICAgIEJlZm9yZSB0aGUgcGF0Y2hlZCBjb2RlIHRoZSB4
+ZnNfZmlsZV93cml0ZV9pdGVyIHdvdWxkIGNhbGwgZ2VuZXJpY193cml0ZV9zeW5jIGFuZCB0aGF0
+IGNhbGxzIHN1Ym1pdF9pb193YWl0LiAgRG9lcyB0aGlzIGhvbGQgdGhlIHRocmVhZCBpc3N1aW5n
+IHRoZSBpb19zdWJtaXQgc28gaXQgaXMgdW5hYmxlIHRvIGRyaXZlIG1vcmUgYXN5bmMgSS9PPw0K
+DQoNClAuUy4gSSB0ZXN0ZWQgdGhlIHhmcyBwYXRjaCB0b2RheSBhbmQgZ3JlYXQgcmVzdWx0cw0K
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18NClN0YW1wIHRoZSBmaWxlIHdpdGggYWxsIDB4Q0NzIGJlZm9yZSBJIGRvIHRoZSB3cml0
+ZSB0aW1pbmcsIHNvIGVhY2ggc2VjdG9yIGlzIHVzZWQgYW5kIG1ldGFkYXRhIGZsdXNoZWQuICBU
+aHJvdWdocHV0IHdheSB1cCBvbiBteSBzeXN0ZW0uDQoNCk9fRElSRUNUIHwgT19EU1lOQyAgICAg
+IFdGUyAgIDE5LjE5IHNlYyAgIChnZXR0aW5nIEZVQSBiZWhhdmlvcikNCk9fRElSRUNUICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgV1MgICAgIDE4LjY1IHNlYw0KDQoNCg0KLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCkZyb206IGRhbi5qLndpbGxpYW1zQGdtYWlsLmNvbSA8ZGFuLmoud2ls
+bGlhbXNAZ21haWwuY29tPiBPbiBCZWhhbGYgT2YgRGFuIFdpbGxpYW1zDQpTZW50OiBNb25kYXks
+IE1hcmNoIDEyLCAyMDE4IDY6NTQgUE0NClRvOiBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJp
+dC5jb20+DQpDYzogbGludXgteGZzQHZnZXIua2VybmVsLm9yZzsgQ2hyaXN0b3BoIEhlbGx3aWcg
+PGhjaEBsc3QuZGU+OyBsaW51eC1mc2RldmVsIDxsaW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9y
+Zz47IFJvYmVydCBEb3JyIDxyZG9yckBtaWNyb3NvZnQuY29tPjsgSmFuIEthcmEgPGphY2tAc3Vz
+ZS5jej47IFRoZW9kb3JlIFRzJ28gPHR5dHNvQG1pdC5lZHU+OyBNYXR0aGV3IFdpbGNveCA8bWF3
+aWxjb3hAbWljcm9zb2Z0LmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0hdIFtSRkNdIGlvbWFwOiBV
+c2UgRlVBIGZvciBwdXJlIGRhdGEgT19EU1lOQyBESU8gd3JpdGVzDQoNClsgYWRkaW5nIFJvYmVy
+dCB3aG8gaGFkIGEgcXVlc3Rpb24gYWJvdXQgdGhpcyBwYXRjaCwgYW5kIEphbiArIFRlZCBmb3Ig
+dGhlIGV4dDQgaW1wbGljYXRpb25zIF0NCg0KSSB0YWxrZWQgd2l0aCBSb2JlcnQgb2ZmbGluZSBh
+bmQgaGUgaGFkIHNvbWUgcXVlc3Rpb25zIGFib3V0IHRoaXMgcGF0Y2ggdGhhdCBiZWxvbmcgb24g
+dGhlIG1haWxpbmcgbGlzdC4NCg0KT24gV2VkLCBGZWIgMjgsIDIwMTggYXQgNTo0MSBQTSwgRGF2
+ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3cm90ZToNCj4gRnJvbTogRGF2ZSBDaGlu
+bmVyIDxkY2hpbm5lckByZWRoYXQuY29tPg0KPg0KPiBJZiB3ZSBhcmUgZG9pbmcgZGlyZWN0IElP
+IHdyaXRlcyB3aXRoIGRhdGFzeW5jIHNlbWFudGljcywgd2Ugb2Z0ZW4gDQo+IGhhdmUgdG8gZmx1
+c2ggbWV0YWRhdGEgY2hhbmdlcyBhbG9uZyB3aXRoIHRoZSBkYXRhIHdyaXRlLiBIb3dldmVyLCBp
+ZiANCj4gd2UgYXJlIG92ZXJ3cml0aW5nIGV4aXN0aW5nIGRhdGEsIHRoZXJlIGFyZSBubyBtZXRh
+ZGF0YSBjaGFuZ2VzIHRoYXQgDQo+IHdlIG5lZWQgdG8gZmx1c2guIEluIHRoaXMgY2FzZSwgb3B0
+aW1pc2luZyB0aGUgSU8gYnkgdXNpbmcgRlVBIHdyaXRlIA0KPiBtYWtlcyBzZW5zZS4NCj4NCj4g
+V2Uga25vdyBmcm9tIHRlaCBJT01BUF9GX0RJUlRZIGZsYWcgYXMgdG8gd2hldGhlciBhIHNwZWNp
+ZmljIGlub2RlIA0KPiByZXF1aXJlcyBhIG1ldGFkYXRhIGZsdXNoIC0gdGhpcyBpcyBjdXJyZW50
+bHkgdXNlZCBieSBEQVggdG8gZW5zdXJlIA0KPiBleHRlbnQgbW9kaSRmaWNhdGlvbiBhcyBzdGFi
+bGUgaW4gcGFnZSBmYXVsdCBvcGVyYXRpb25zLiBGb3IgZGlyZWN0IElPIA0KPiB3cml0ZXMsIHdl
+IGNhbiB1c2UgaXQgdG8gZGV0ZXJtaW5lIGlmIHdlIG5lZWQgdG8gZmx1c2ggbWV0YWRhdGEgb3Ig
+bm90IA0KPiBvbmNlIHRoZSBkYXRhIGlzIG9uIGRpc2suDQo+DQo+IEhlbmNlIGlmIHdlIGhhdmUg
+YmVlbiByZXR1cm5lZCBhIG1hcHBlZCBleHRlbnQgdGhhdCBpcyBub3QgbmV3IGFuZCB0aGUgDQo+
+IElPIG1hcHBpbmcgaXMgbm90IGRpcnR5LCB0aGVuIHdlIGNhbiB1c2UgYSBGVUEgd3JpdGUgdG8g
+cHJvdmlkZSANCj4gZGF0YXN5bmMgc2VtYW50aWNzLiBUaGlzIGFsbG93cyB1cyB0byBzaG9ydC1j
+dXQgdGhlDQo+IGdlbmVyaWNfd3JpdGVfc3luYygpIGNhbGwgaW4gSU8gY29tcGxldGlvbiBhbmQg
+aGVuY2UgYXZvaWQgdW5uZWNlc3NhcnkgDQo+IG9wZXJhdGlvbnMuIFRoaXMgbWFrZXMgcHVyZSBk
+aXJlY3QgSU8gZGF0YSB3cml0ZSBiZWhhdmlvdXIgaWRlbnRpY2FsIA0KPiB0byB0aGUgd2F5IGJs
+b2NrIGRldmljZXMgdXNlIFJFUV9GVUEgdG8gcHJvdmlkZSBkYXRhc3luYyBzZW1hbnRpY3MuDQo+
+DQo+IE5vdyB0aGF0IGlvbWFwX2Rpb19ydygpIGlzIGRldGVybWluaW5nIGlmIFJFUV9GVUEgY2Fu
+IGJlIHVzZWQsIHdlIGhhdmUgDQo+IHRvIHN0b3AgaXNzdWluZyBnZW5lcmljX3dyaXRlX3N5bmMo
+KSBjYWxscyBmcm9tIHRoZSBYRlMgY29kZSB3aGVuIA0KPiBSRVFfRlVBIGlzIGlzc3VlZCwgb3Ro
+ZXJ3aXNlIGl0IHdpbGwgc3RpbGwgdGhyb3cgYSBjYWNoZSBmbHVzaCB0byB0aGUgDQo+IGRldmlj
+ZSB2aWEgeGZzX2ZpbGVfZnN5bmMoKS4gVG8gZG8gdGhpcywgd2UgbmVlZCB0byBtYWtlDQo+IGlv
+bWFwX2Rpb19ydygpIGFsd2F5cyByZXNwb25zaWJsZSBmb3IgaXNzdWluZyBnZW5lcmljX3dyaXRl
+X3N5bmMoKSANCj4gd2hlbiBuZWNlc3NhcnksIG5vdCBqdXN0IGZvciBBSU8gY2FsbHMuIFRoaXMg
+bWVhbnMgdGhlIGZpbGVzeXN0ZW0gDQo+IGRvZXNuJ3QgaGF2ZSB0byBndWVzcyB3aGVuIGNhY2hl
+IGZsdXNoZXMgYXJlIG5lY2Vzc2FyeSBub3cuDQo+DQo+IE9uIGEgRlVBIGVuYWJsZWQgZGV2aWNl
+LCBhIHN5bmNocm9ub3VzIGRpcmVjdCBJTyB3cml0ZSB3b3JrbG9hZCANCj4gKHNlcXVlbnRpYWwg
+NGsgb3ZlcndyaXRlcyBpbiAzMk1CIGZpbGUpIGhhZCB0aGUgZm9sbG93aW5nIHJlc3VsdHM6DQo+
+DQo+ICMgeGZzX2lvIC1mZCAtYyAicHdyaXRlIC1WIDEgLUQgMCAzMm0iIC9tbnQvc2NyYXRjaC9i
+b28NCj4NCj4ga2VybmVsICAgICAgICAgIHRpbWUgICAgd3JpdGUoKXMgICAgICAgIHdyaXRlIGlv
+cHMgICAgICBXcml0ZSBiL3cNCj4gLS0tLS0tICAgICAgICAgIC0tLS0gICAgLS0tLS0tLS0gICAg
+ICAgIC0tLS0tLS0tLS0gICAgICAtLS0tLS0tLS0NCj4gKG5vIGRzeW5jKSAgICAgICA0cyAgICAg
+MjE3My9zICAgICAgICAgIDIxNzMgICAgICAgICAgICA4LjVNQi9zDQo+IHZhbmlsbGEgICAgICAg
+ICAyMnMgICAgICAzNzAvcyAgICAgICAgICAgNzUwICAgICAgICAgICAgMS40TUIvcw0KPiBwYXRj
+aGVkICAgICAgICAgMTlzICAgICAgNDIwL3MgICAgICAgICAgIDQyMCAgICAgICAgICAgIDEuNk1C
+L3MNCj4NCj4gVGhlIHBhdGNoZWQgY29kZSBjbGVhcmx5IGRvZXNuJ3Qgc2VuZCBjYWNoZSBmbHVz
+aGVzIGFueW1vcmUsIGJ1dCANCj4gaW5zdGVhZCB1c2VzIEZVQSAoY29uZmlybWVkIHZpYSBibGt0
+cmFjZSksIGFuZCBwZXJmb3JtYW5jZSBpbXByb3ZlcyBhIA0KPiBiaXQgYXMgYSByZXN1bHQuIEhv
+d2V2ZXIsIHRoZSBiZW5lZml0cyB3aWxsIGJlIGhpZ2hlciBvbiB3b3JrbG9hZHMgDQo+IHRoYXQg
+bWl4IE9fRFNZTkMgb3ZlcndyaXRlcyB3aXRoIG90aGVyIHdyaXRlIElPIGFzIHdlIHdvbid0IGJl
+IA0KPiBmbHVzaGluZyB0aGUgZW50aXJlIGRldmljZSBjYWNoZSBvbiBldmVyeSBEU1lOQyBvdmVy
+d3JpdGUgSU8gYW55bW9yZS4NCj4NCj4gU2lnbmVkLU9mZi1CeTogRGF2ZSBDaGlubmVyIDxkY2hp
+bm5lckByZWRoYXQuY29tPg0KPiAtLS0NCj4gIGZzL2lvbWFwLmMgICAgICAgIHwgMzggKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0NCj4gIGZzL3hmcy94ZnNfZmlsZS5jIHwg
+IDUgKysrKysNCj4gIDIgZmlsZXMgY2hhbmdlZCwgMzggaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlv
+bnMoLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2ZzL2lvbWFwLmMgYi9mcy9pb21hcC5jDQo+IGluZGV4
+IGFmZDE2MzU4NmFhMC4uYmNjOTBlM2EyZTNmIDEwMDY0NA0KPiAtLS0gYS9mcy9pb21hcC5jDQo+
+ICsrKyBiL2ZzL2lvbWFwLmMNCj4gQEAgLTY4NSw2ICs2ODUsNyBAQCBFWFBPUlRfU1lNQk9MX0dQ
+TChpb21hcF9zZWVrX2RhdGEpOw0KPiAgICogUHJpdmF0ZSBmbGFncyBmb3IgaW9tYXBfZGlvLCBt
+dXN0IG5vdCBvdmVybGFwIHdpdGggdGhlIHB1YmxpYyBvbmVzIGluDQo+ICAgKiBpb21hcC5oOg0K
+PiAgICovDQo+ICsjZGVmaW5lIElPTUFQX0RJT19XUklURV9GVUEgICAgKDEgPDwgMjkpDQo+ICAj
+ZGVmaW5lIElPTUFQX0RJT19XUklURSAgICAgICAgICAgICAgICAoMSA8PCAzMCkNCj4gICNkZWZp
+bmUgSU9NQVBfRElPX0RJUlRZICAgICAgICAgICAgICAgICgxIDw8IDMxKQ0KPg0KPiBAQCAtNzYw
+LDggKzc2MSwxOSBAQCBzdGF0aWMgc3NpemVfdCBpb21hcF9kaW9fY29tcGxldGUoc3RydWN0IGlv
+bWFwX2RpbyAqZGlvKQ0KPiAgICAgICAgIH0NCj4NCj4gICAgICAgICBpbm9kZV9kaW9fZW5kKGZp
+bGVfaW5vZGUoaW9jYi0+a2lfZmlscCkpOw0KPiAtICAgICAgIGtmcmVlKGRpbyk7DQo+DQo+ICsg
+ICAgICAgLyoNCj4gKyAgICAgICAgKiBJZiBhIEZVQSB3cml0ZSB3YXMgZG9uZSwgdGhlbiB0aGF0
+IGlzIGFsbCB3ZSByZXF1aXJlZCBmb3IgZGF0YXN5bmMNCj4gKyAgICAgICAgKiBzZW1hbnRpY3Mg
+LS4gd2UgZG9uJ3QgbmVlZCB0byBjYWxsIGdlbmVyaWNfd3JpdGVfc3luYygpIHRvIGNvbXBsZXRl
+DQo+ICsgICAgICAgICogdGhlIHdyaXRlLg0KPiArICAgICAgICAqLw0KPiArICAgICAgIGlmIChy
+ZXQgPiAwICYmDQo+ICsgICAgICAgICAgIChkaW8tPmZsYWdzICYgKElPTUFQX0RJT19XUklURXxJ
+T01BUF9ESU9fV1JJVEVfRlVBKSkgPT0NCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICBJT01BUF9ESU9fV1JJVEUpIHsNCj4gKyAgICAgICAg
+ICAgICAgIHJldCA9IGdlbmVyaWNfd3JpdGVfc3luYyhpb2NiLCByZXQpOw0KPiArICAgICAgIH0N
+Cj4gKw0KPiArICAgICAgIGtmcmVlKGRpbyk7DQo+ICAgICAgICAgcmV0dXJuIHJldDsNCj4gIH0N
+Cj4NCj4gQEAgLTc2OSwxMiArNzgxLDkgQEAgc3RhdGljIHZvaWQgaW9tYXBfZGlvX2NvbXBsZXRl
+X3dvcmsoc3RydWN0IA0KPiB3b3JrX3N0cnVjdCAqd29yaykgIHsNCj4gICAgICAgICBzdHJ1Y3Qg
+aW9tYXBfZGlvICpkaW8gPSBjb250YWluZXJfb2Yod29yaywgc3RydWN0IGlvbWFwX2RpbywgYWlv
+LndvcmspOw0KPiAgICAgICAgIHN0cnVjdCBraW9jYiAqaW9jYiA9IGRpby0+aW9jYjsNCj4gLSAg
+ICAgICBib29sIGlzX3dyaXRlID0gKGRpby0+ZmxhZ3MgJiBJT01BUF9ESU9fV1JJVEUpOw0KPiAg
+ICAgICAgIHNzaXplX3QgcmV0Ow0KPg0KPiAgICAgICAgIHJldCA9IGlvbWFwX2Rpb19jb21wbGV0
+ZShkaW8pOw0KPiAtICAgICAgIGlmIChpc193cml0ZSAmJiByZXQgPiAwKQ0KPiAtICAgICAgICAg
+ICAgICAgcmV0ID0gZ2VuZXJpY193cml0ZV9zeW5jKGlvY2IsIHJldCk7DQo+ICAgICAgICAgaW9j
+Yi0+a2lfY29tcGxldGUoaW9jYiwgcmV0LCAwKTsgIH0NCj4NCj4gQEAgLTg4Myw2ICs4OTIsMTUg
+QEAgaW9tYXBfZGlvX2FjdG9yKHN0cnVjdCBpbm9kZSAqaW5vZGUsIGxvZmZfdCBwb3MsIGxvZmZf
+dCBsZW5ndGgsDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIGRpby0+ZmxhZ3MgfD0gSU9NQVBf
+RElPX0NPVzsNCj4gICAgICAgICAgICAgICAgIGlmIChpb21hcC0+ZmxhZ3MgJiBJT01BUF9GX05F
+VykNCj4gICAgICAgICAgICAgICAgICAgICAgICAgbmVlZF96ZXJvb3V0ID0gdHJ1ZTsNCj4gKyAg
+ICAgICAgICAgICAgIC8qDQo+ICsgICAgICAgICAgICAgICAgKiBVc2UgYSBGVUEgd3JpdGUgaWYg
+d2UgbmVlZCBkYXRhc3luYyBzZW1hbnRpY3MgYW5kIHRoaXMgaXMgYQ0KPiArICAgICAgICAgICAg
+ICAgICogcHVyZSBkYXRhIElPIHRoYXQgZG9lc24ndCByZXF1aXJlIGFueSBtZXRhZGF0YSB1cGRh
+dGVzLiBUaGlzDQo+ICsgICAgICAgICAgICAgICAgKiBhbGxvd3MgdXMgdG8gYXZvaWQgY2FjaGUg
+Zmx1c2hlcyBvbiBJTyBjb21wbGV0aW9uLg0KPiArICAgICAgICAgICAgICAgICovDQo+ICsgICAg
+ICAgICAgICAgICBlbHNlIGlmICghKGlvbWFwLT5mbGFncyAmIChJT01BUF9GX1NIQVJFRHxJT01B
+UF9GX0RJUlRZKSkgJiYNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgIChkaW8tPmZsYWdzICYg
+SU9NQVBfRElPX1dSSVRFKSAmJg0KPiArICAgICAgICAgICAgICAgICAgICAgICAgKGRpby0+aW9j
+Yi0+a2lfZmxhZ3MgJiBJT0NCX0RTWU5DKSkNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgZGlv
+LT5mbGFncyB8PSBJT01BUF9ESU9fV1JJVEVfRlVBOw0KPiAgICAgICAgICAgICAgICAgYnJlYWs7
+DQo+ICAgICAgICAgZGVmYXVsdDoNCj4gICAgICAgICAgICAgICAgIFdBUk5fT05fT05DRSgxKTsN
+Cj4gQEAgLTkzMCw3ICs5NDgsMTEgQEAgaW9tYXBfZGlvX2FjdG9yKHN0cnVjdCBpbm9kZSAqaW5v
+ZGUsIGxvZmZfdCBwb3MsIA0KPiBsb2ZmX3QgbGVuZ3RoLA0KPg0KPiAgICAgICAgICAgICAgICAg
+biA9IGJpby0+YmlfaXRlci5iaV9zaXplOw0KPiAgICAgICAgICAgICAgICAgaWYgKGRpby0+Zmxh
+Z3MgJiBJT01BUF9ESU9fV1JJVEUpIHsNCj4gLSAgICAgICAgICAgICAgICAgICAgICAgYmlvX3Nl
+dF9vcF9hdHRycyhiaW8sIFJFUV9PUF9XUklURSwgUkVRX1NZTkMgfCBSRVFfSURMRSk7DQo+ICsg
+ICAgICAgICAgICAgICAgICAgICAgIGludCBvcF9mbGFncyA9IFJFUV9TWU5DIHwgUkVRX0lETEU7
+DQo+ICsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgaWYgKGRpby0+ZmxhZ3MgJiBJT01BUF9E
+SU9fV1JJVEVfRlVBKQ0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG9wX2ZsYWdz
+IHw9IFJFUV9GVUE7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIGJpb19zZXRfb3BfYXR0cnMo
+YmlvLCBSRVFfT1BfV1JJVEUsIG9wX2ZsYWdzKTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAg
+dGFza19pb19hY2NvdW50X3dyaXRlKG4pOw0KPiAgICAgICAgICAgICAgICAgfSBlbHNlIHsNCj4g
+ICAgICAgICAgICAgICAgICAgICAgICAgYmlvX3NldF9vcF9hdHRycyhiaW8sIFJFUV9PUF9SRUFE
+LCAwKTsgQEAgDQo+IC05NjEsNiArOTgzLDEyIEBAIGlvbWFwX2Rpb19hY3RvcihzdHJ1Y3QgaW5v
+ZGUgKmlub2RlLCBsb2ZmX3QgcG9zLCBsb2ZmX3QgbGVuZ3RoLA0KPiAgICAgICAgIHJldHVybiBj
+b3BpZWQ7DQo+ICB9DQo+DQo+ICsvKg0KPiArICogaW9tYXBfZGlvX3J3KCkgYWx3YXlzIGNvbXBs
+ZXRlcyBPX1tEXVNZTkMgd3JpdGVzIHJlZ2FyZGxlc3Mgb2YgDQo+ICt3aGV0aGVyIHRoZSBJTw0K
+PiArICogaXMgYmVpbmcgaXNzdWVkIGFzIEFJTyBvciBub3QuIFRoaXMgYWxsb3dzIHVzIHRvIG9w
+dGltaXNlIHB1cmUgDQo+ICtkYXRhIHdyaXRlcyB0bw0KPiArICogdXNlIFJFUV9GVUEgcmF0aGVy
+IHRoYW4gcmVxdWlyaW5nIGdlbmVyaWNfd3JpdGVfc3luYygpIHRvIGlzc3VlIGEgDQo+ICtSRVFf
+RkxVU0gNCj4gKyAqIHBvc3Qgd3JpdGUuDQo+ICsgKi8NCj4gIHNzaXplX3QNCj4gIGlvbWFwX2Rp
+b19ydyhzdHJ1Y3Qga2lvY2IgKmlvY2IsIHN0cnVjdCBpb3ZfaXRlciAqaXRlciwNCj4gICAgICAg
+ICAgICAgICAgIGNvbnN0IHN0cnVjdCBpb21hcF9vcHMgKm9wcywgaW9tYXBfZGlvX2VuZF9pb190
+IA0KPiBlbmRfaW8pIGRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2ZpbGUuYyBiL2ZzL3hmcy94ZnNf
+ZmlsZS5jIGluZGV4IA0KPiAyNjBmZjVlNWMyNjQuLjgxYWEzYjczNDcxZSAxMDA2NDQNCj4gLS0t
+IGEvZnMveGZzL3hmc19maWxlLmMNCj4gKysrIGIvZnMveGZzL3hmc19maWxlLmMNCj4gQEAgLTcz
+Miw2ICs3MzIsMTEgQEAgeGZzX2ZpbGVfd3JpdGVfaXRlcigNCj4gICAgICAgICAgICAgICAgIHJl
+dCA9IHhmc19maWxlX2Rpb19haW9fd3JpdGUoaW9jYiwgZnJvbSk7DQo+ICAgICAgICAgICAgICAg
+ICBpZiAocmV0ID09IC1FUkVNQ0hHKQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICBnb3RvIGJ1
+ZmZlcmVkOw0KPiArICAgICAgICAgICAgICAgLyoNCj4gKyAgICAgICAgICAgICAgICAqIERpcmVj
+dCBJTyBoYW5kbGVzIHN5bmMgdHlwZSB3cml0ZXMgaW50ZXJuYWxseSBvbiBJL08NCj4gKyAgICAg
+ICAgICAgICAgICAqIGNvbXBsZXRpb24uDQo+ICsgICAgICAgICAgICAgICAgKi8NCj4gKyAgICAg
+ICAgICAgICAgIHJldHVybiByZXQ7DQo+ICAgICAgICAgfSBlbHNlIHsNCj4gIGJ1ZmZlcmVkOg0K
+PiAgICAgICAgICAgICAgICAgcmV0ID0geGZzX2ZpbGVfYnVmZmVyZWRfYWlvX3dyaXRlKGlvY2Is
+IGZyb20pOw0KPiAtLQ0KPiAyLjE2LjENCj4NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0
+aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXhmcyIgDQo+IGluIHRo
+ZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnIE1vcmUgbWFq
+b3Jkb21vIA0KPiBpbmZvIGF0ICANCj4gaHR0cHM6Ly9uYTAxLnNhZmVsaW5rcy5wcm90ZWN0aW9u
+Lm91dGxvb2suY29tLz91cmw9aHR0cCUzQSUyRiUyRnZnZXIuaw0KPiBlcm5lbC5vcmclMkZtYWpv
+cmRvbW8taW5mby5odG1sJmRhdGE9MDQlN0MwMSU3Q3Jkb3JyJTQwbWljcm9zb2Z0LmNvbSU3DQo+
+IEM3MDI3MWQ4YmM5Yzg0YzEyZTg3ODA4ZDU4ODc0ODVlNSU3QzcyZjk4OGJmODZmMTQxYWY5MWFi
+MmQ3Y2QwMTFkYjQ3JTcNCj4gQzElN0MwJTdDNjM2NTY0OTU2NDQxMjQ5ODQwJTdDVW5rbm93biU3
+Q1RXRnBiR1pzYjNkOGV5SldJam9pTUM0d0xqQXdNRA0KPiBBaUxDSlFJam9pVjJsdU16SWlMQ0pC
+VGlJNklrMWhhV3dpZlElM0QlM0QlN0MtMSZzZGF0YT1LcVBUT0k5N1lReGhybSUyDQo+IEJGdTNN
+cG9GTUlXaWVIMm5rb29sNHR6czVJSjBNJTNEJnJlc2VydmVkPTANCg==
