@@ -1,99 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:47640 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751330AbeCMFKl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 01:10:41 -0400
-Date: Tue, 13 Mar 2018 16:10:37 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Message-ID: <20180313051037.GC18129@dastard>
-References: <20180301014144.28892-1-david@fromorbit.com>
- <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
- <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:34624 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751462AbeCMGss (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 02:48:48 -0400
+Received: by mail-yw0-f193.google.com with SMTP id x17so3107089ywj.1
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Mar 2018 23:48:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
+In-Reply-To: <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
+References: <1516952669-14769-1-git-send-email-amir73il@gmail.com>
+ <20180126214404.GE9068@magnolia> <CAOQ4uxgVaGgwio=538-PP4QuRbcny6q0_CAeV-9bQEWBaxv2gA@mail.gmail.com>
+ <20180129155054.GJ9359@magnolia> <CAOQ4uxjMfZGMtbq2vRN8dL5QvgC0=UD-yWDbNib=dckDTFR0Nw@mail.gmail.com>
+ <20180201003511.GK4849@magnolia> <CAOQ4uxjE31j7XDpEGnnym7cgD_kqsPnio4KN2gphajsCNMrG1g@mail.gmail.com>
+ <20180311162442.GB2013@kroah.com> <20180312162744.GB4865@magnolia> <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 13 Mar 2018 08:48:47 +0200
+Message-ID: <CAOQ4uxhdkhZup=ndukKCRtU13YVs8jQxT0zgOT_XN3_-tB8TfQ@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Robert Dorr <rdorr@microsoft.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 12:15:28AM +0000, Robert Dorr wrote:
-> Hello all.  I have a couple of follow-up questions around this
-> effort, thanks you all for all your kind inputs, patience and
-> knowledge transfer.
-> 
-> 1.    How does xfs or ext4 make sure a pattern of WS followed by
-> FWS does not allow the write (WS) completion to be visible before
-> the flush completes?
+On Mon, Mar 12, 2018 at 10:16 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> On Mon, Mar 12, 2018 at 6:27 PM, Darrick J. Wong
+[...]
 
-I'm not sure what you are asking here. You need to be more precise
-about what these IOs are, who dispatched them and what their
-dependencies are. Where exactly did that FWS (REQ_FLUSH) come from?
+>>> > > I meant the other things that went into 4.16, like the reflink quota
+>>> > > fixes, the directio corruption problems, etc.  Make a branch, add the
+>>> > > necessary fixes, run xfstests to make sure it all still works, etc.
+>>                        ^^^^^^^^^^^^
+>> Hi Amir, could you do   this step   ?
+>>
+>
+> Will do.
+>
 
-I think, though, you're asking questions about IO ordering at the
-wrong level - filesystems serialise and order IO, not the block
-layer. Hence what you see at the block layer is not necessary a
-reflection of the ordering the filesystem is doing.
+Quick question.
 
-(I've already explained this earlier today in a different thread:
-https://marc.info/?l=linux-xfs&m=152091489100831&w=2)
+I don't run -g auto regularly and now when running -g auto on
+v4.15.9 I get a bunch of soft lockups on:
 
-That's why I ask about the operation causing a REQ_FLUSH to be
-issued to the storage device, as that cannot be directly issued from
-userspace. It will occur as a side effect of a data integrity
-operation the filesystem is asked to perform, but without knowing
-the relationship between the integrity operation and the write in
-question an answer cannot be given.
+[37036.050685]  xfs_bmapi_write+0x61a/0xed1
+[37036.051794]  xfs_reflink_convert_cow+0x9d/0xbf
+[37036.052761]  ? xfs_vm_writepages+0x42/0x99
+[37036.053617]  xfs_submit_ioend+0x3b/0xf8
+[37036.054459]  xfs_vm_writepages+0x79/0x99
 
-It may would be better to describe your IO ordering and integrity
-requirements at a higher level (e.g. the syscall layer), because
-then we know what you are trying to acheive rather that trying to
-understand your problem from context-less questions about "IO
-barriers" that don't actually exist...
+Can anyone share a good expunge list for running latest xfs/xfstest/xfsprogs
+with -g auto and reflink support?
 
-> I suspected the write was held in
-> iomap_dio_complete_work but with the generic_write_sync change in
-> the patch would a O_DSYNC write request to a DpoFua=0 block queue
-> allow T2 to see the completion via io_getevents before T1
-> completed the actual flush?
-
-Yes, that can happen as concurrent data direct IO are not serialised
-against each other and will always race to completion without
-providing any ordering guarantees.  IOWs, if you have an IO ordering
-dependency in your application, then that ordering dependency needs
-to be handled in the application.
-
-> 2.    How will my application be able to dynamically determine if
-> xfs and ext4 have the performance enhancement for FUA or I need
-> engage alternate methods to use fsync/fdatasync at strategic
-> locations?
-
-You don't. The filesystem will provide the same integrity guarantees
-in either case - FUA is just a performance optimisation that will
-get used if your hardware supports it. Applications should not care
-what capabilities the storage hardawre has - the kernel should do
-what is fastest and most reliable for the underlying storage....
-
-> 3.    Are there any plans yet to optimize ext4 as well?
-
-Not from me.
-
-> 4.    Before the patched code the xfs_file_write_iter would call
-> generic_write_sync and that calls submit_io_wait.  Does this hold
-> the thread issuing the io_submit so it is unable to drive more
-> async I/O?
-
-No, -EIOCBQUEUED is returned to avoid blocking.
-AIO calls generic_write_sync() from the IO completion
-path via a worker thread so it's all done asynchronously.
-
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Amir.
