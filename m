@@ -1,55 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:34624 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751462AbeCMGss (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 02:48:48 -0400
-Received: by mail-yw0-f193.google.com with SMTP id x17so3107089ywj.1
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Mar 2018 23:48:48 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.133]:33282 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752052AbeCMHOr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 03:14:47 -0400
+Date: Tue, 13 Mar 2018 00:14:40 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: fallocate on XFS for swap
+Message-ID: <20180313071440.GA23797@infradead.org>
+References: <8C28C1CB-47F1-48D1-85C9-5373D29EA13E@amazon.com>
+ <20180309234422.GA4860@magnolia>
+ <20180310005850.GW18129@dastard>
+ <20180310093844.GA23306@infradead.org>
+ <20180312214626.GZ18129@dastard>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
-References: <1516952669-14769-1-git-send-email-amir73il@gmail.com>
- <20180126214404.GE9068@magnolia> <CAOQ4uxgVaGgwio=538-PP4QuRbcny6q0_CAeV-9bQEWBaxv2gA@mail.gmail.com>
- <20180129155054.GJ9359@magnolia> <CAOQ4uxjMfZGMtbq2vRN8dL5QvgC0=UD-yWDbNib=dckDTFR0Nw@mail.gmail.com>
- <20180201003511.GK4849@magnolia> <CAOQ4uxjE31j7XDpEGnnym7cgD_kqsPnio4KN2gphajsCNMrG1g@mail.gmail.com>
- <20180311162442.GB2013@kroah.com> <20180312162744.GB4865@magnolia> <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 13 Mar 2018 08:48:47 +0200
-Message-ID: <CAOQ4uxhdkhZup=ndukKCRtU13YVs8jQxT0zgOT_XN3_-tB8TfQ@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180312214626.GZ18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "Besogonov, Aleksei" <cyberax@amazon.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Mar 12, 2018 at 10:16 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> On Mon, Mar 12, 2018 at 6:27 PM, Darrick J. Wong
-[...]
+On Tue, Mar 13, 2018 at 08:46:26AM +1100, Dave Chinner wrote:
+> > So maybe we want a layout based swap code instead of reinventing it,
+> > with the slight twist to the layout break code to never try a lease
+> > break and just return an error for the IS_SWAPFILE case.
+> 
+> Hmmm - won't that change user visible behaviour on swapfiles? Not
+> that it would be a bad thing to reject read/write from root on swap
+> files, but it would make XFS different to everything else.
 
->>> > > I meant the other things that went into 4.16, like the reflink quota
->>> > > fixes, the directio corruption problems, etc.  Make a branch, add the
->>> > > necessary fixes, run xfstests to make sure it all still works, etc.
->>                        ^^^^^^^^^^^^
->> Hi Amir, could you do   this step   ?
->>
->
-> Will do.
->
+We already can't writew to active swap files, thank god:
 
-Quick question.
+root@testvm:~# dd if=/dev/zero of=swapfile bs=1M count=64
+64+0 records in
+64+0 records out
+67108864 bytes (67 MB, 64 MiB) copied, 0.0458446 s, 1.5 GB/s
+mkswap swapfile
+mkswap: swapfile: insecure permissions 0644, 0600 suggested.
+Setting up swapspace version 1, size = 64 MiB (67104768 bytes)
+no label, UUID=bb42b883-f224-4627-8580-c1ba9f4569ab
+root@testvm:~# swapon swapfile
+swapon: /root/swapfile: insecure permissions 0644, 0600 suggested.
+[   54.165439] Adding 65532k swap on /root/swapfile.  Priority:-2 extents:1 across:65532k
+root@testvm:~# dd if=/dev/zero of=swapfile bs=1M count=64
+dd: failed to open 'swapfile': Text file busy
 
-I don't run -g auto regularly and now when running -g auto on
-v4.15.9 I get a bunch of soft lockups on:
+> 
+> Speaking of which - we probably need to spend some time at LSFMM in
+> the fs track talking about the iomap infrastructure and long term
+> plans to migrate the major filesystems to it....
 
-[37036.050685]  xfs_bmapi_write+0x61a/0xed1
-[37036.051794]  xfs_reflink_convert_cow+0x9d/0xbf
-[37036.052761]  ? xfs_vm_writepages+0x42/0x99
-[37036.053617]  xfs_submit_ioend+0x3b/0xf8
-[37036.054459]  xfs_vm_writepages+0x79/0x99
-
-Can anyone share a good expunge list for running latest xfs/xfstest/xfsprogs
-with -g auto and reflink support?
-
-Thanks,
-Amir.
+I won't be there, as I'll be busy working the local election ballot.
