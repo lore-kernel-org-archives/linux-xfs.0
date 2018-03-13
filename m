@@ -1,69 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1606 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932227AbeCOW0H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 18:26:07 -0400
-Date: Fri, 16 Mar 2018 09:26:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
-Message-ID: <20180315222605.GK18129@dastard>
-References: <20180314171724.41951-1-bfoster@redhat.com>
- <20180314181218.GR4865@magnolia>
- <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
- <20180315103839.GA44732@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:35789 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752885AbeCMXw2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Mar 2018 19:52:28 -0400
+Date: Tue, 13 Mar 2018 23:52:27 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
+ our own parser
+Message-ID: <20180313235227.GH4449@wotan.suse.de>
+References: <20180313205911.26082-1-mcgrof@kernel.org>
+ <20180313213916.GD18129@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180315103839.GA44732@bfoster.bfoster>
+In-Reply-To: <20180313213916.GD18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chiluk <chiluk+linuxxfs@indeed.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@sandeen.net, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu
 
-On Thu, Mar 15, 2018 at 06:38:39AM -0400, Brian Foster wrote:
-> On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
-> > On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
-> > <darrick.wong@oracle.com> wrote:
-> > > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
-> ...
-> > 
-> > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
-> > 
-> > I'm also assuming this will get submitted back to the linux-stable
-> > trees as the agfl packing change is already causing issues in the
-> > stable trees.  If you do not intend to push it into the linux-stable
-> > trees let me know and I'll take care of at least the major ones.
-> > 
+On Wed, Mar 14, 2018 at 08:39:16AM +1100, Dave Chinner wrote:
+> Just one obvious comment from a brief glance - you changed this from
+> "-t" to "-T", but ....
+> > +directory by using the -t parameter and secifying the type. Alternatively
 > 
-> Yeah, I can cc stable in the next post along with the other minor fixes.
-> My question is how far back should this fix go? Was the plan to only go
-> back to v4.5 because that is where the packing fix first went in? Or
-> should this go back further because it looks like the packing fix was
-> backported to v3.10:
+> Not here, or ....
+>
+> > +If you use -t the type configuration file must be present under
 > 
-> $ git show 96f859d52bcb1
-> commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
-> Author: Darrick J. Wong <darrick.wong@oracle.com>
-> Date:   Mon Jan 4 16:13:21 2016 +1100
+> here, or ....
 > 
->     libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
->     
->     ...
->     
->     cc: <stable@vger.kernel.org> # 3.10 - 4.4
->     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->     Reviewed-by: Dave Chinner <dchinner@redhat.com>
->     Signed-off-by: Dave Chinner <david@fromorbit.com>
+> > +#define MKFS_XFS_CONF_DIR	ROOT_SYSCONFDIR "/mkfs.xfs.d/"
+> > +#define CONFIG_MAX_KEY		1024
+> > +#define CONFIG_MAX_VALUE	PATH_MAX
+> > +#define CONFIG_MAX_BUFFER	CONFIG_MAX_KEY + CONFIG_MAX_VALUE + 3
+> > +#define PARAM_OPTS		"T:b:d:i:l:L:m:n:KNp:qr:s:CfV"
+> 
+> [ Please don't obfuscate parsing options like this ]
 
-3.10 was when the problem was first introduced. I have no idea
-whether it got backported that far but the stable kernel
-maintainers, so you'll have to manually audit all current long-term
-stable kernels to determine what kernels need backports.
+The reason was we use them twice.
 
-Cheers,
+> > @@ -3827,25 +4198,47 @@ main(
+> >  	textdomain(PACKAGE);
+> >  
+> >  	/*
+> > -	 * TODO: Sourcing defaults from a config file
+> > -	 *
+> >  	 * Before anything else, see if there's a config file with different
+> > -	 * defaults. If a file exists in <package location>, read in the new
+> > +	 * defaults. If a file exists in MKFS_XFS_CONF_DIR/default, read the new
+> >  	 * default values and overwrite them in the &dft structure. This way the
+> >  	 * new defaults will apply before we parse the CLI, and the CLI will
+> >  	 * still be able to override them. When more than one source is
+> >  	 * implemented, emit a message to indicate where the defaults being
+> >  	 * used came from.
+> > -	 *
+> > -	 * printf(_("Default configuration sourced from %s\n"), dft.source);
+> >  	 */
+> > +	tmp_config = getenv("MKFS_XFS_CONFIG");
+> > +	if (tmp_config != NULL) {
+> > +		dft.config_file = tmp_config;
+> > +		dft.type = DEFAULTS_ENVIRONMENT_CONFIG;
+> > +	}
+> > +
+> > +	c = getopt(argc, argv, PARAM_OPTS);
+> > +	if (c != EOF && c == 't') {
+> 
+> Here. Did you test this?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I forgot to test -T after we bike-shed from -t to -T, sorry. Will fix.
+I had however tested -t for sure.
+
+> And, well, I have my doubts about this method of option parsing.
+> Where does it say in the getopt(3) man page that CLI options are
+> always parsed and returned in order of the option string rather than
+> the order the appear on the CLI?
+
+You are right. Its rather unclear. If -t is passed at the end this may
+not work.
+
+> I'll spend some more time looking at it, but my initial impression
+> is that there's a bit of work to be done yet...
+
+You're right, we should decide if we want to allow for -T to be used
+only in the beginning or if we want to allow for it anywhere on the
+command line. If we allow for it only at the beginning of the command
+line it may be easier and cleaner to support: we'd just check argv[1]
+for -T manually and if passed just bump argv down two slots. So we
+leave getopt() usage only for the other stuff.
+
+Thoughts?
+
+  Luis
