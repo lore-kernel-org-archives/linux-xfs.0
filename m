@@ -1,29 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54514 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:54842 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752397AbeCMVJk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 17:09:40 -0400
-Date: Tue, 13 Mar 2018 14:09:34 -0700
+        with ESMTP id S1752397AbeCMVKE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 17:10:04 -0400
+Date: Tue, 13 Mar 2018 14:10:00 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/8] xfs: remove an outdated comment for
- xfs_inode_item_committing
-Message-ID: <20180313210934.GL4865@magnolia>
+Subject: Re: [PATCH 3/8] xfs: remove the unused log_flushed variable in
+ xfs_extent_busy_flush
+Message-ID: <20180313211000.GM4865@magnolia>
 References: <20180313104927.12926-1-hch@lst.de>
- <20180313104927.12926-3-hch@lst.de>
+ <20180313104927.12926-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180313104927.12926-3-hch@lst.de>
+In-Reply-To: <20180313104927.12926-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 13, 2018 at 11:49:21AM +0100, Christoph Hellwig wrote:
-> The function now does something, and that something is central to our
-> inode logging scheme.
-> 
+On Tue, Mar 13, 2018 at 11:49:22AM +0100, Christoph Hellwig wrote:
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Looks ok,
@@ -32,24 +29,26 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/xfs_inode_item.c | 4 ----
->  1 file changed, 4 deletions(-)
+>  fs/xfs/xfs_extent_busy.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index b83fa38f1c74..31f2b32b7e27 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -634,10 +634,6 @@ xfs_inode_item_committed(
->  	return lsn;
->  }
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 77760dbf0242..1b439db95634 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -611,10 +611,10 @@ xfs_extent_busy_flush(
+>  	unsigned		busy_gen)
+>  {
+>  	DEFINE_WAIT		(wait);
+> -	int			log_flushed = 0, error;
+> +	int			error;
 >  
-> -/*
-> - * XXX rcc - this one really has to do something.  Probably needs
-> - * to stamp in a new field in the incore inode.
-> - */
->  STATIC void
->  xfs_inode_item_committing(
->  	struct xfs_log_item	*lip,
+>  	trace_xfs_log_force(mp, 0, _THIS_IP_);
+> -	error = _xfs_log_force(mp, XFS_LOG_SYNC, &log_flushed);
+> +	error = _xfs_log_force(mp, XFS_LOG_SYNC, NULL);
+>  	if (error)
+>  		return;
+>  
 > -- 
 > 2.14.2
 > 
