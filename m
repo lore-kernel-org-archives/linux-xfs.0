@@ -1,83 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60574 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752749AbeCMUqQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 16:46:16 -0400
-Date: Tue, 13 Mar 2018 13:46:11 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:35346 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932257AbeCMUu6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 16:50:58 -0400
+Date: Tue, 13 Mar 2018 13:50:53 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] xfs: minor cleanup for xfs_reflink_end_cow
-Message-ID: <20180313204611.GH4865@magnolia>
+Subject: Re: [PATCH 7/8] xfs: mark xfs_reflink_clear_inode_flag static
+Message-ID: <20180313205053.GI4865@magnolia>
 References: <20180313143601.30028-1-hch@lst.de>
- <20180313143601.30028-7-hch@lst.de>
+ <20180313143601.30028-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180313143601.30028-7-hch@lst.de>
+In-Reply-To: <20180313143601.30028-8-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 13, 2018 at 03:35:59PM +0100, Christoph Hellwig wrote:
-> Use xfs_iext_prev_extent to skip to the previous extent instead of
-> opencoding it.
-> 
+On Tue, Mar 13, 2018 at 03:36:00PM +0100, Christoph Hellwig wrote:
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_reflink.c | 2 +-
+>  fs/xfs/xfs_reflink.h | 2 --
+>  2 files changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index cdbd342a5249..85d3379a81df 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1552,7 +1552,7 @@ xfs_reflink_inode_has_shared_extents(
+>  }
+>  
+>  /* Clear the inode reflink flag if there are no shared extents. */
+> -int
+> +static int
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Online inode repair/optimization will call this function (see
+xfs_repair_inode in scrub/inode_repair.c in the online repair series),
+so I'd prefer not to add static only to have to pull it out later.
+
+(Granted, nobody's commented on any of online repair afaict...)
 
 --D
 
-> ---
->  fs/xfs/xfs_reflink.c | 17 ++++++++---------
->  1 file changed, 8 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 90aac8889dd9..cdbd342a5249 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -762,10 +762,8 @@ xfs_reflink_end_cow(
->  		xfs_trim_extent(&del, offset_fsb, end_fsb - offset_fsb);
+>  xfs_reflink_clear_inode_flag(
+>  	struct xfs_inode	*ip,
+>  	struct xfs_trans	**tpp)
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index 701487bab468..7d6d34a30200 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -49,8 +49,6 @@ extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
+>  		struct file *file_out, loff_t pos_out, u64 len, bool is_dedupe);
+>  extern int xfs_reflink_inode_has_shared_extents(struct xfs_trans *tp,
+>  		struct xfs_inode *ip, bool *has_shared);
+> -extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
+> -		struct xfs_trans **tpp);
+>  extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t len);
 >  
->  		/* Extent delete may have bumped ext forward */
-> -		if (!del.br_blockcount) {
-> -			xfs_iext_prev(ifp, &icur);
-> -			goto next_extent;
-> -		}
-> +		if (!del.br_blockcount)
-> +			goto prev_extent;
->  
->  		ASSERT(!isnullstartblock(got.br_startblock));
->  
-> @@ -774,10 +772,8 @@ xfs_reflink_end_cow(
->  		 * speculatively preallocated CoW extents that have been
->  		 * allocated but have not yet been involved in a write.
->  		 */
-> -		if (got.br_state == XFS_EXT_UNWRITTEN) {
-> -			xfs_iext_prev(ifp, &icur);
-> -			goto next_extent;
-> -		}
-> +		if (got.br_state == XFS_EXT_UNWRITTEN)
-> +			goto prev_extent;
->  
->  		/* Unmap the old blocks in the data fork. */
->  		xfs_defer_init(&dfops, &firstfsb);
-> @@ -816,9 +812,12 @@ xfs_reflink_end_cow(
->  		error = xfs_defer_finish(&tp, &dfops);
->  		if (error)
->  			goto out_defer;
-> -next_extent:
->  		if (!xfs_iext_get_extent(ifp, &icur, &got))
->  			break;
-> +		continue;
-> +prev_extent:
-> +		if (!xfs_iext_prev_extent(ifp, &icur, &got))
-> +			break;
->  	}
->  
->  	error = xfs_trans_commit(tp);
 > -- 
 > 2.14.2
 > 
