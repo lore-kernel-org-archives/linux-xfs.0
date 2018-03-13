@@ -1,268 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f174.google.com ([209.85.217.174]:35618 "EHLO
-        mail-ua0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932608AbeCMQ5X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 12:57:23 -0400
+Received: from mail-by2nam03on0098.outbound.protection.outlook.com ([104.47.42.98]:10688
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752320AbeCMSxB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Mar 2018 14:53:01 -0400
+From: Robert Dorr <rdorr@microsoft.com>
+Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+Date: Tue, 13 Mar 2018 18:52:57 +0000
+Message-ID: <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+References: <20180301014144.28892-1-david@fromorbit.com>
+ <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
+ <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
+ <20180313051037.GC18129@dastard>
+ <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+ <20180313161242.GA11168@lst.de>
+In-Reply-To: <20180313161242.GA11168@lst.de>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-In-Reply-To: <20180313042126.GB18129@dastard>
-References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
- <20180313042126.GB18129@dastard>
-From: Jayashree Mohan <jayashree2912@gmail.com>
-Date: Tue, 13 Mar 2018 11:57:21 -0500
-Message-ID: <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
-Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
-Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
 
-Hi Dave,
-
-Thanks for the response. CrashMonkey assumes the following behavior of
-disk cache. Let me know if any of this sounds unreasonable.
-
-Whenever the underlying storage device has an associated cache, the IO
-is marked completed the moment it reaches the disk cache. This does
-not guarantee that the disk cache would persist them in the same
-order, unless there is a Flush/FUA. The order of completed writes as
-seen by the user could be A, B, C, *Flush* D, E. However the disk
-cache could write these back to the persistent storage in the order
-say B, A, C, E, D. The only invariant it ensures is that writing in an
-order like  A, C, E, B, D is
-not possible because, writes A,B,C have to strictly happen before D
-and E. However you cannot ensure that (A, B, C) is written to the
-persistent storage in the same order.
-
-CrashMonkey reorders bios in conformance to the guarantees provided by
-disk cache; we do not make any extra assumptions and we respect the
-barrier operations.
-
-On Mon, Mar 12, 2018 at 11:21 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Mar 12, 2018 at 09:15:25PM -0500, Jayashree Mohan wrote:
->> Hi,
->>
->> We've encountered what seems to be a crash consistency bug in
->> xfs(kernel 4.15) due to the interaction between delayed allocated
->> write and an unaligned fallocate(zero range) : Fallocate_zero_range is
->> not persisted even when followed by a fsync - thereby leading to a
->> loss of fsynced metadata operation on a file.
->>
->> Say we create a disk image with known data and quick format it.
->> 1. Now write 65K of data to a new file
->> 2. Zero out a part of the above file using falloc_zero_range (60K+128)
->> - (60K+128+4096) - an unaligned block
->> 3. fsync the above file
->> 4. Crash
->
-> So, effectively:
->
-> $ xfs_io -xft -c "pwrite 0 65k" \
->         -c "fzero $((60 * 1024 + 128)) 4k" \
->         -c fsync \
->         -c "shutdown"
->         /mnt/scratch/testfile
-> $
-
-Yes, this is the right translation of our workload.
-
->>
->> If we crash after the fsync, and allow reordering of the block IOs
->> between two flush/fua commands using Crashmonkey[1], then we can end
->> up not persisting the zero_range command in step 2 above, even if we
->> crashed after a fsync.
->
-> Sorry, but what do you mean by "reordering of the block IOs"?
-
-CrashMonkey reorders IOs between two barrier operations just like the
-disk cache would do, while respecting the guarantees provided by disk
-cache; CrashMonkey will never re order bios across barriers.
-
->> This workload was inspired from xfstest/generic_042, which tests for
->> stale data exposure using aligned fallocate commands. It's worth
->> noting that f2fs and btrfs passes our test clean - irrespective of the
->> order of bios, user data is intact and fzero operation is correctly persisted.
->>
->> To reproduce this bug using CrashMonkey, simply run :
->> ./c_harness -f /dev/sda -d /dev/cow_ram0 -t xfs -e 102400 -s 1000 -v
->> tests/generic_042/generic_042_fzero_unaligned.so
->>
->> and take a look at the <timestamp>-generic_042_fzero_unaligned.log
->> created in the build directory. This file has the list of block IOs
->> issued during the workload and the permutation of bios that lead to
->> this bug. You can also verify using blktrace that CrashMonkey only
->> reorders bios between two barrier operations(thereby such a crash
->> state could be encountered due to reordering blocks at the storage
->> stack). Note that tools like dm-log-writes cannot capture this bug
->> because this arises due to reordering blocks between barrier
->> operations.
->>
->> Possible reason for this bug :
->> On closely inspecting the reason for this bug, we discovered that the
->> problem lies in updating a data block twice, without a barrier
->> operation between the two updates.
->
-> There's nothing wrong with doing that if the filesystem has waited
-> for completion of the first IOs before doing subsequent operations
-> on the block.
->
->> The blktrace for the above
->> mentioned workload shows that sector 280 is updated twice - probably
->> first due to the write and later due to the fzero operation.
->
-> WHy is that happening? The trace I have from the above xfs_io
-> command is this:
->
->   8,96   2      613     0.081499295  3635  Q  WS 280 + 16 [xfs_io]
->   8,96   2      617     0.081982168     0  C  WS 280 + 16 [0]
->   8,96   2      618     0.082033206  3635  Q   R 280 + 8 [xfs_io]
->   8,96   2      622     0.082420539     0  C   R 280 + 8 [0]
->   8,96   2      623     0.082475920  3635  Q   R 288 + 8 [xfs_io]
->   8,96   2      627     0.082988642     0  C   R 288 + 8 [0]
->   8,96   2      628     0.083050032  3635  Q  WS 160 + 136 [xfs_io]
->   8,96   2      632     0.084414651     0  C  WS 160 + 136 [0]
->   8,96   2      633     0.084469733  3635  Q FWFSM 20971632 + 8 [xfs_io]
->   8,96   2      636     0.107483279     0  C WFSM 20971632 + 8 [0]
->   8,96   2      637     0.107485345     0  C WFSM 20971632 [0]
-
-
-1. 8,96   2      617     0.081982168     0  C  WS 280 + 16 [0]
-2. 8,96   2      632     0.084414651     0  C  WS 160 + 136 [0]
-3. 8,96   2      636     0.107483279     0  C WFSM 20971632 + 8 [0]
-
-Again, though (2) is a single bio in your case, we notice that this
-sequential IO updates sector 280 too. By the previous discussion about
-disk cache, it is very well possible that (2) is ordered before (1),
-which gives rise to the bug we mentioned.
-
-
-> Which shows serialised IO dispatch and completion of the IO, and no
-> double write. You've only shown queueing of writes, which doesn't
-> tell me about completion order which is what really matters.
->
-> In more detail.
->
-> 1. zero-range forces a data flush to occur and then waits for it
-> to complete.
->
-> ....
->   xfs_file_fallocate
->     xfs_zero_file_space(60-68k)
->       xfs_free_file_space
->         xfs_flush_unmap_range()
->           filemap_write_and_wait_range()
-> xfs_writepage:        pgoff 0xf000 size 0x10400
-> xfs_writepage:        pgoff 0x10000 size 0x10400
->   8,96   2      613     0.081499295  3635  Q  WS 280 + 16 [xfs_io]
->   8,96   2      617     0.081982168     0  C  WS 280 + 16 [0]
->           truncate_pagecache_range()
-> xfs_invalidatepage:   pgoff 0xf000 size 0x10400
-> xfs_releasepage:      pgoff 0xf000 size 0x10400
-> xfs_invalidatepage:   pgoff 0x10000 size 0x10400
-> xfs_releasepage:      pgoff 0x10000 size 0x10400
->         xfs_zero_range()
->   8,96   2      618     0.082033206  3635  Q   R 280 + 8 [xfs_io]
->   8,96   2      622     0.082420539     0  C   R 280 + 8 [0]
->   8,96   2      623     0.082475920  3635  Q   R 288 + 8 [xfs_io]
->   8,96   2      627     0.082988642     0  C   R 288 + 8 [0]
->     xfs_alloc_file_space()
-> xfs_map_blocks_found:   startoff 0x0 startblock 68 blockcount 0x30
->         <nothing to allocate!>
-> .....
->
-> After the fzero command, we then run fsync:
->
-> xfs_file_fsync()
->   filemap_write_and_wait_range()
-> xfs_writepage:        pgoff 0x0 size 0x10400
-> ....
-> xfs_writepage:        pgoff 0x10000 size 0x10400
->   8,96   2      628     0.083050032  3635  Q  WS 160 + 136 [xfs_io]
->   8,96   2      632     0.084414651     0  C  WS 160 + 136 [0]
-> <data writeback complete>
->   xfs_log_force_lsn()
-> xfs_buf_submit:       flags WRITE|NO_IOACCT|ASYNC|SYNCIO|FUA|FLUSH|PAGES
->   8,96   2      633     0.084469733  3635  Q FWFSM 20971632 + 8 [xfs_io]
->   8,96   2      636     0.107483279     0  C WFSM 20971632 + 8 [0]
->   8,96   2      637     0.107485345     0  C WFSM 20971632 [0]
->
-> And that's the log force. That's all correct and expected behaviour
-> for pwrite, fzero and fsync. And when I dump the data in the file
-> after unmount/mount (because the shutdown stops all IO from the
-> filesytem), I get:
->
-> 000000 146715 146715 146715 146715 146715 146715 146715 146715
->
-> 00f080 000000 000000 000000 000000 000000 000000 000000 000000
-> *
-> 010080 146715 146715 146715 146715 146715 146715 146715 146715
-> *
-> 010400
->
-> exactly the right data in the file.
->
->> However
->> notice that there is no barrier between the two updates, and using
->> Crashmonkey we see the above mentioned bug when these two updates to
->> the same block are reordered. Essentially, a reordering here means
->> fzero goes through first, and is later overwritten by the delayed
->> allocated write.
->
->>  0.000179069  7104  Q  WS 280 + 16 [c_harness]
->>  0.000594994  7104  Q   R 280 + 8 [c_harness]
->>  0.000598216  7104  Q   R 288 + 8 [c_harness]
->>  0.000620552  7104  Q  WS 160 + 120 [c_harness]
->>  0.000653742  7104  Q  WS 280 + 16 [c_harness]
->
-> So this is where there's a difference. Note the write in my case:
->
-> 0.083050032  3635  Q  WS 160 + 136 [xfs_io]
->
-> It's a single IO - for some reason the kernel you are running has
-> split it into two IOs, but that doesn't make it wrong or invalid -
-> it's not indicative of a bug in any way.
->
-> What's wrong here is your assumption that you can reorder it around
-> the previous IO to those blocks.  That's *simply not possible*
-> because the filesystem has waited for completion of each IO before
-> issuing the next. The IO serialisation is being done at the
-> filesystem level, not the IO level, and so CrashMonkey is
-> effectively breaking the completion ordering guarantees storage
-> hardware provides us with.
->
->>  0.000733154  7104  Q FWFSM 102466 + 3 [c_harness]
->
-> IOWs, once this pre-flush is completed, the data on disk is supposed
-> to be that of the latter write because that one was received by the
-> storage well after the first one was completed. Reordering a later
-> IO in front of an already completed dependent IO (read or write!) is
-> simply not allowed.
-
-*Received by the storage* means, received at the disk cache. I agree
-the fzero write went to disk cache after pwrite was marked completed.
-But this does not ensure pwrite data goes to the dpersistent storage
-from the disk cache before fzero.
-
->> This seems to be a bug, as it is not persisting the metadata operation
->> even in the presence of fsync.
->>
->> Let me know if I am missing some detail here.
->
-> Filesystem IO ordering in the linux stack is not based on
-> block/request level flush barriers. i.e. there's no such thing as
-> "IO barriers" anymore. Filesystem IO ordering is based on a
-> completion-to-dispatch serialisation model at the filesystem level,
-> and that cannot be observed by looking at block layer traces....
->
-> This really looks like a crashmonkey bug, not a filesystem problem...
-
-
-CrashMonkey therefore respects the guarantees provided by the disk
-cache, and assumes nothing more than that. I hope this provides more
-clarity on what
-CrashMonkey is trying to do, and why we think it is reasonable to do so.
-
-
-Thanks,
-Jayashree
+SSB0cmllZCB0aGUgUldGX09EU1lOQyBhbmQgeGZzIHNlZW1zIHRvIGhvbm9yIHByb3Blcmx5IGJ1
+dCBpdCBjYXVzZXMgZXh0NCB0byBnbyBzcGluIG91dCBhIHNpbmdsZSBDUFUgYW5kIGhhbmcgdGhl
+IHN5c3RlbS4g8J+Yig0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBDaHJp
+c3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4gDQpTZW50OiBUdWVzZGF5LCBNYXJjaCAxMywgMjAx
+OCAxMToxMyBBTQ0KVG86IFJvYmVydCBEb3JyIDxyZG9yckBtaWNyb3NvZnQuY29tPg0KQ2M6IERh
+dmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT47IERhbiBXaWxsaWFtcyA8ZGFuLmoud2ls
+bGlhbXNAaW50ZWwuY29tPjsgbGludXgteGZzQHZnZXIua2VybmVsLm9yZzsgQ2hyaXN0b3BoIEhl
+bGx3aWcgPGhjaEBsc3QuZGU+OyBsaW51eC1mc2RldmVsIDxsaW51eC1mc2RldmVsQHZnZXIua2Vy
+bmVsLm9yZz47IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+OyBUaGVvZG9yZSBUcydvIDx0eXRzb0Bt
+aXQuZWR1PjsgTWF0dGhldyBXaWxjb3ggPG1hd2lsY294QG1pY3Jvc29mdC5jb20+OyBTY290dCBL
+b25lcnNtYW5uIDxzY290dGtvbkBtaWNyb3NvZnQuY29tPjsgU2xhdmEgT2tzIDxzbGF2YW9AbWlj
+cm9zb2Z0LmNvbT47IEphc3JhaiBEYW5nZSA8amFzcmFqZEBtaWNyb3NvZnQuY29tPjsgTWljaGFl
+bCBOZWxzb24gPG1pY25AbWljcm9zb2Z0LmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0hdIFtSRkNd
+IGlvbWFwOiBVc2UgRlVBIGZvciBwdXJlIGRhdGEgT19EU1lOQyBESU8gd3JpdGVzDQoNCj4gSSB0
+aGluayB0aGUgYW5zd2VyIGlzIHRoZSBpb21hcCogbG9naWMgbWFrZXMgc3VyZSB0byBpc3N1ZSBn
+ZW5lcmljX3dyaXRlX3N5bmMgZm9yIE9fRFNZTkMgVzEgYWZ0ZXIgVzEgaXMgY29tcGxldGVkIGJ5
+IGhhcmR3YXJlIGFuZCB0aGVuIHdhaXRzIGZvciBjb21wbGV0aW9uIG9mIHRoZSBmbHVzaCByZXF1
+ZXN0IChSRVFfUFJFRkxVU0gpIGJlZm9yZSBXMSBpcyByZXR1cm5lZCB0byB0aGUgQUlPIGNvbXBs
+ZXRpb24gcmluZywgcHJldmVudGluZyBpb19nZXRldmVudHMgZnJvbSBwcm9jZXNzaW5nIFcxIGJl
+Zm9yZSB0aGUgZmx1c2ggb2NjdXJzIGFuZCBjb21wbGV0ZXMuICAgSSBqdXN0IG5lZWQgcHJvcGVy
+IGNvbmZpcm1hdGlvbiBmcm9tIHRoZSBleHBlcnRzIG9uIHRoaXMgY29kZSB0aGF0IHRoaXMgaXMg
+dGhlIGV4cGVjdGVkIGJlaGF2aW9yLg0KDQpZZXMuIHRoYXQgaXMgdGhlIGNhc2UuDQoNCj4gRm9y
+IFNRTCBTZXJ2ZXIgdXNpbmcgT19ESVJFQ1QgfCBPX0RTWU5DIG9uIGN1cnJlbnQga2VybmVscyBp
+cyB2ZXJ5IHBlcmZvcm1hbmNlIGltcGFjdGluZy4gICBJbnN0ZWFkIHdlIGVuYWJsZSBhIG1vZGUg
+Zm9yIFNRTCB0aGF0IG9wZW5zIE9fRElSRUNUIG9ubHkgYW5kIGlzc3VlcyBmc3luYy9mZGF0YXN5
+bmMgd2hlbiB3ZSBhcmUgaGFyZGVuaW5nIGxvZyBmaWxlcyBvciBjaGVja3BvaW50aW5nIGRhdGEg
+ZmlsZXMuICAgVGhpcyByZWR1Y2VzIHRoZSB3cml0ZSwgZmx1c2gsIHdyaXRlLCBmbHVzaCBwYXR0
+ZXJuIGFsbG93aW5nIGZvciB3cml0ZSwgd3JpdGUsIHdyaXRlLCAuLi4gdGhlbiBmbHVzaCBhcyB3
+ZSBvbmx5IGlzc3VlIGZsdXNoIHJlcXVlc3RzIHdoZW4gcmVxdWlyZWQgdG8gbWFpbnRhaW4gdGhl
+IGRhdGEgaW50ZWdyaXR5IGJvdW5kYXJpZXMgb2YgU1FMIFNlcnZlci4gIFRoZSBwZXJmb3JtYW5j
+ZSBpcyBzaWduaWZpY2FudGx5IGJldHRlciB0aGVuIHRoZSBkZXZpY2UgZmx1c2ggZm9yIGVhY2gg
+d3JpdGUgYXMgeW91IGNhbiBpbWFnaW5lLg0KPiANCj4gVGVzdGluZyBzaG93cyB0aGUgRlVBIGVu
+aGFuY2VtZW50IGlzIGJldHRlciB0aGVuIHRoZSB3cml0ZSwgZmx1c2ggcGF0dGVybi4gICBGb3Ig
+U1FMIFNlcnZlciB3ZSB3YW50IHRvIGR5bmFtaWNhbGx5IG9wZW4gd2l0aCBPX0RJUkVDVCB8IE9f
+RFNZTkMgd2hlbiBSRVFfRlVBIGNhbiBiZSBwcm9wZXJseSB1c2VkIGFuZCBvcGVuIHdpdGggT19E
+SVJFQ1QgYW5kIGxldmVyYWdlIFNRTCBTZXJ2ZXIncyBhbHRlcm5hdGUgZmx1c2ggc2NoZW1lIHdo
+ZW4gcnVubmluZyBvbiBvbGRlciBrZXJuZWwgb3IgYSBzeXN0ZW0gdGhhdCBkb2VzIG5vdCBzdXBw
+b3J0IEZVQSAoU0FUQSwgSURFLCAuLi4pDQoNClRoZXJlIGlzIG5vIHJlYWxseSBnb29kIHdheSB0
+byBmaWd1cmUgdGhpcyBvdXQgZXhjZXB0IGZvciBiZW5jaG1hcmtpbmcsIGdpdmVuIHRoYXQgdGhl
+IEZVQSB1c2UgYW4gaW1wbGVtZW50YXRpb24gZGV0YWlsLg0KDQpCdHcsIGFub3RoZXIgZmVhdHVy
+ZSB0aGF0IG1pZ2h0IGJlIGludGVyZXN0aW5nIHRvIHlvdSBpcyB0aGUgUldGX0RTWU5DIGZsYWcg
+dG8gdGhlIHB3cml0ZXYyIHN5c2NhbGwsIHdoaWNoIGFsbG93cyB0byBhcHBseSBPX0RTWU5DIHNl
+bWFudGljcyBvbiBhIHBlci1JL08gYmFzaXMgaW5zdGVhZCBvZiB1c2luZyBpdCBhdCBvcGVuIHRp
+bWUuDQo=
