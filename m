@@ -1,137 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38020 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932813AbeCMKt6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Mar 2018 06:49:58 -0400
-Received: from 77.117.139.172.wireless.dyn.drei.com ([77.117.139.172] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1evhVF-0006Iv-D1
-        for linux-xfs@vger.kernel.org; Tue, 13 Mar 2018 10:49:57 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 8/8] xfs: unwind the try_again loop in xfs_log_force
-Date: Tue, 13 Mar 2018 11:49:27 +0100
-Message-Id: <20180313104927.12926-9-hch@lst.de>
-In-Reply-To: <20180313104927.12926-1-hch@lst.de>
-References: <20180313104927.12926-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:33978 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752411AbeCML1a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Mar 2018 07:27:30 -0400
+Date: Tue, 13 Mar 2018 07:27:25 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH RFC] xfs: convert between packed and unpacked agfls
+ on-demand
+Message-ID: <20180313112724.GA33955@bfoster.bfoster>
+References: <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
+ <20180309131628.GA3445@bfoster.bfoster>
+ <20180309173318.GD18989@magnolia>
+ <20180309183727.GA17046@bfoster.bfoster>
+ <20180309190832.GH18989@magnolia>
+ <20180309212031.GA19019@bfoster.bfoster>
+ <20180309223757.GA4865@magnolia>
+ <20180312131157.GA29810@bfoster.bfoster>
+ <20180312173552.GA30332@bfoster.bfoster>
+ <20180312211455.GY18129@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180312211455.GY18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 
-Instead split out a __xfs_log_fore_lsn helper that gets called again
-with the already_slept flag set to true in case we had to sleep.
+On Tue, Mar 13, 2018 at 08:14:55AM +1100, Dave Chinner wrote:
+> On Mon, Mar 12, 2018 at 01:35:53PM -0400, Brian Foster wrote:
+> > On Mon, Mar 12, 2018 at 09:11:58AM -0400, Brian Foster wrote:
+> > > On Fri, Mar 09, 2018 at 02:37:57PM -0800, Darrick J. Wong wrote:
+> > > > On Fri, Mar 09, 2018 at 04:20:31PM -0500, Brian Foster wrote:
+> > > > > On Fri, Mar 09, 2018 at 11:08:32AM -0800, Darrick J. Wong wrote:
+> > > > > > On Fri, Mar 09, 2018 at 01:37:28PM -0500, Brian Foster wrote:
+> > > > > > > On Fri, Mar 09, 2018 at 09:33:18AM -0800, Darrick J. Wong wrote:
+> > ...
+> > > > <nod> I've been mulling over rewriting your previous rfc patch that put
+> > > > all the scanning/lifting in {get,put}_freelist but having it reset the
+> > > > agfl instead of doing the swizzling stuff.
+> > > > 
+> > > 
+> > > Something to be careful of... emptying the agfl obviously means the
+> > > subsequent fixup is a btree block allocation. That may limit the context
+> > > of where the fixup can be performed. IOW, deferring it to
+> > > _get_freelist() might no longer be safe. Instead, I think we'd have to
+> > > implement it such that the on-disk flcount is completely untrusted when
+> > > the mismatch is detected.
+> > > 
+> > ...
+> > 
+> > Here's a variant of that patch that does a reset. It's definitely much
+> > simpler. Thoughts?
+> 
+> I like it - it is so much simpler than the other proposals, and it's
+> done on demand rather than by a brute-force mount/unmount scan.
+> 
+> > Brian
+> > 
+> > --- 8< ---
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index c02781a4c091..7d313bb4677d 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -2053,6 +2053,59 @@ xfs_alloc_space_available(
+> >  	return true;
+> >  }
+> >  
+> > +static bool
+> > +xfs_agf_verify_flcount(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_agf		*agf)
+> 
+> Needs a comment explaining what it's checking and the return value.
+> Might actually read better as "xfs_agf_need_flcount_reset()"
+> returning true if fixup is required, especially at the caller
+> site...
+> 
 
-This prepares for aio_fsync support.
+I changed it from something like that (see the original patch), but more
+just because I expected the simpler logic would now cover more general
+things than just the padding issue rather than any technical reason. The
+_need_reset() name probably accomplishes the same thing so I'll go back
+to the earlier logic.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c | 72 +++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 42 insertions(+), 30 deletions(-)
+I plan to add some actual comments and fix up the warning message into
+something more usable.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index b6c6f227b2d7..9a2008646d57 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3395,41 +3395,17 @@ xfs_log_force(
- 	return -EIO;
- }
- 
--/*
-- * Force the in-core log to disk for a specific LSN.
-- *
-- * Find in-core log with lsn.
-- *	If it is in the DIRTY state, just return.
-- *	If it is in the ACTIVE state, move the in-core log into the WANT_SYNC
-- *		state and go to sleep or return.
-- *	If it is in any other state, go to sleep or return.
-- *
-- * Synchronous forces are implemented with a wait queue.  All callers to force a
-- * given lsn to disk will wait on a the queue attached to the specific in-core
-- * log.  When given in-core log finally completes its write to disk, that thread
-- * will wake up all threads waiting on the queue.
-- */
--int
--xfs_log_force_lsn(
-+static int
-+__xfs_log_force_lsn(
- 	struct xfs_mount	*mp,
- 	xfs_lsn_t		lsn,
- 	uint			flags,
--	int			*log_flushed)
-+	int			*log_flushed,
-+	bool			already_slept)
- {
- 	struct xlog		*log = mp->m_log;
- 	struct xlog_in_core	*iclog;
--	int			already_slept = 0;
--
--	ASSERT(lsn != 0);
--
--	XFS_STATS_INC(mp, xs_log_force);
--	trace_xfs_log_force(mp, lsn, _RET_IP_);
--
--	lsn = xlog_cil_force_lsn(log, lsn);
--	if (lsn == NULLCOMMITLSN)
--		return 0;
- 
--try_again:
- 	spin_lock(&log->l_icloglock);
- 	iclog = log->l_iclog;
- 	if (iclog->ic_state & XLOG_STATE_IOERROR)
-@@ -3469,8 +3445,7 @@ xfs_log_force_lsn(
- 
- 			xlog_wait(&iclog->ic_prev->ic_write_wait,
- 					&log->l_icloglock);
--			already_slept = 1;
--			goto try_again;
-+			return -EAGAIN;
- 		}
- 		atomic_inc(&iclog->ic_refcnt);
- 		xlog_state_switch_iclogs(log, iclog, 0);
-@@ -3503,6 +3478,43 @@ xfs_log_force_lsn(
- 	return -EIO;
- }
- 
-+/*
-+ * Force the in-core log to disk for a specific LSN.
-+ *
-+ * Find in-core log with lsn.
-+ *	If it is in the DIRTY state, just return.
-+ *	If it is in the ACTIVE state, move the in-core log into the WANT_SYNC
-+ *		state and go to sleep or return.
-+ *	If it is in any other state, go to sleep or return.
-+ *
-+ * Synchronous forces are implemented with a wait queue.  All callers to force a
-+ * given lsn to disk will wait on a the queue attached to the specific in-core
-+ * log.  When given in-core log finally completes its write to disk, that thread
-+ * will wake up all threads waiting on the queue.
-+ */
-+int
-+xfs_log_force_lsn(
-+	struct xfs_mount	*mp,
-+	xfs_lsn_t		lsn,
-+	uint			flags,
-+	int			*log_flushed)
-+{
-+	int			ret;
-+	ASSERT(lsn != 0);
-+
-+	XFS_STATS_INC(mp, xs_log_force);
-+	trace_xfs_log_force(mp, lsn, _RET_IP_);
-+
-+	lsn = xlog_cil_force_lsn(mp->m_log, lsn);
-+	if (lsn == NULLCOMMITLSN)
-+		return 0;
-+
-+	ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, false);
-+	if (ret == -EAGAIN)
-+		ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, true);
-+	return ret;
-+}
-+
- /*
-  * Called when we want to mark the current iclog as being ready to sync to
-  * disk.
--- 
-2.14.2
+> > +{
+> > +	int			f = be32_to_cpu(agf->agf_flfirst);
+> > +	int			l = be32_to_cpu(agf->agf_fllast);
+> > +	int			c = be32_to_cpu(agf->agf_flcount);
+> 
+> These should probably be uint32_t - they are unsigned on disk.
+> 
 
+Ok.
+
+> > +	int			active = c;
+> > +	int			agfl_size = XFS_AGFL_SIZE(mp);
+> > +
+> > +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> > +		return true;
+> > +
+> > +	if (c && l >= f)
+> > +		active = l - f + 1;
+> > +	else if (c)
+> > +		active = agfl_size - f + l + 1;
+> 
+> 	else
+> 		active = 0;
+> 
+> To move all the initialisation of active into the one logic
+> statement and not make it dependent on the original value in the
+> AGF?
+> 
+
+I think that should work.
+
+> > +	if (active != c)
+> > +		return false;
+> > +	if (f >= agfl_size || l >= agfl_size)
+> > +		return false;
+> 
+> Shouldn't we be range checking these first? Also should probably
+> checking c the same way.
+> 
+
+I'll move the l/f checks to before the active calculation.
+
+We can also add a check for c > agfl_size but note that technically
+these are superfluous checks because they are checked in the read
+verifier. The f/l range checks were there to cover the case of a packed
+-> unpacked conversion. That would also require a downstream read
+verifier tweak to handle a +1 sized valid agfl range. The verifier tweak
+is not included here because going backwards as such is not something we
+want to support upstream.
+
+IOW, the read verifier dictates a subset of general agfl corruption that
+this fixup is allowed to handle. All that said, the extra checks don't
+hurt and it's probably smart to consistently check the fields we're
+going to feed into calculations. I'll add a count check with a comment
+for added context.
+
+> > +
+> > +	return true;
+> > +}
+> > +
+...
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 945de08af7ba..678d602dc400 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -3339,6 +3339,24 @@ TRACE_EVENT(xfs_trans_resv_calc,
+> >  		  __entry->logflags)
+> >  );
+> >  
+> > +TRACE_EVENT(xfs_agfl_reset,
+> > +	TP_PROTO(struct xfs_perag *pag),
+> > +	TP_ARGS(pag),
+> > +	TP_STRUCT__entry(
+> > +		__field(dev_t, dev)
+> > +		__field(xfs_agnumber_t, agno)
+> > +		__field(int, flcount)
+> > +	),
+> > +	TP_fast_assign(
+> > +		__entry->dev = pag->pag_mount->m_super->s_dev;
+> > +		__entry->agno = pag->pag_agno;
+> > +		__entry->flcount = pag->pagf_flcount;
+> > +	),
+> > +	TP_printk("dev %d:%d agno %u flcount %d",
+> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > +		  __entry->agno, __entry->flcount)
+> > +);
+> 
+> Do we need a new tracepoint? Wouldn't it be better to just
+> call trace_xfs_agf() which will dump all the information in the AGF
+> just before we do the reset? We'll know it's a reset from the caller
+> information that is dumped by that tracepoint....
+> 
+
+Yeah, I missed that tracepoint. I may see if I can turn that into an
+event class so we can still use a unique name. trace_xfs_agf() looks
+like it refers to logging the agf which is already triggered by this
+path after we reset the agfl pointers. Otherwise I'll just add a
+pre-reset call so we have the original field values.
+
+Thanks for the feedback..
+
+Brian
+
+> > +
+> >  #endif /* _TRACE_XFS_H */
+> >  
+> >  #undef TRACE_INCLUDE_PATH
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
