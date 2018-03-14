@@ -1,125 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:33359 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751131AbeCNMdS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 08:33:18 -0400
-Date: Wed, 14 Mar 2018 23:33:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable
- inode
-Message-ID: <20180314123314.GG18129@dastard>
-References: <CAOQ4uxjE31j7XDpEGnnym7cgD_kqsPnio4KN2gphajsCNMrG1g@mail.gmail.com>
- <20180311162442.GB2013@kroah.com>
- <20180312162744.GB4865@magnolia>
- <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
- <CAOQ4uxhdkhZup=ndukKCRtU13YVs8jQxT0zgOT_XN3_-tB8TfQ@mail.gmail.com>
- <CAOQ4uxhCjBA99X_C-GpEBf=jC4S_wSrxMwS6Ovj7BtWLK1GmUA@mail.gmail.com>
- <20180313131109.GB6260@lst.de>
- <CAOQ4uxiDHSC19-fRdZmXM5BJB3-p9_LdPgSmxpjGrdCzhV2W2Q@mail.gmail.com>
- <20180313215028.GE18129@dastard>
- <CAOQ4uxgsMwtQRCkpJTJoVO-mbU1yRz7F0pMOAVcJphEEKq8SHA@mail.gmail.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:35828 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750779AbeCNN55 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Mar 2018 09:57:57 -0400
+Date: Wed, 14 Mar 2018 14:57:52 +0100
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
+Message-ID: <20180314135752.5a2vmjr7cuavusiw@rh_laptop>
+References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
+ <20180313042126.GB18129@dastard>
+ <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
+ <20180313224522.GZ7000@dastard>
+ <20180314131659.wnmt5zxfhrfsld7n@rh_laptop>
+ <20180314133258.GB7000@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgsMwtQRCkpJTJoVO-mbU1yRz7F0pMOAVcJphEEKq8SHA@mail.gmail.com>
+In-Reply-To: <20180314133258.GB7000@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
 
-On Wed, Mar 14, 2018 at 08:24:30AM +0200, Amir Goldstein wrote:
-> On Tue, Mar 13, 2018 at 11:50 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > AS I always say: if you want to maintain a stable backport kernel
-> > with all the fixes that go into the bleeding edge, you're more than
-> > welcome to do it.
-> >
-> > Everyone else is flat out just keeping up with on going development
-> > and fixing bugs in the kernel as it's moving forward. So if you have
-> > the need for stable backports, please keep backporting patches you
-> > need, testing them and asking the stable maintainers to include
-> > them.
-
-[....]
-
-> Dave,
+On Thu, Mar 15, 2018 at 12:32:58AM +1100, Dave Chinner wrote:
+> On Wed, Mar 14, 2018 at 02:16:59PM +0100, Lukas Czerner wrote:
+> > On Wed, Mar 14, 2018 at 09:45:22AM +1100, Dave Chinner wrote:
+> > > On Tue, Mar 13, 2018 at 11:57:21AM -0500, Jayashree Mohan wrote:
+> > > > Hi Dave,
+> > > > 
+> > > > Thanks for the response. CrashMonkey assumes the following behavior of
+> > > > disk cache. Let me know if any of this sounds unreasonable.
+> > > > 
+> > > > Whenever the underlying storage device has an associated cache, the IO
+> > > > is marked completed the moment it reaches the disk cache. This does
+> > > > not guarantee that the disk cache would persist them in the same
+> > > > order, unless there is a Flush/FUA. The order of completed writes as
+> > > > seen by the user could be A, B, C, *Flush* D, E. However the disk
+> > > > cache could write these back to the persistent storage in the order
+> > > > say B, A, C, E, D. The only invariant it ensures is that writing in an
+> > > > order like  A, C, E, B, D is
+> > > > not possible because, writes A,B,C have to strictly happen before D
+> > > > and E. However you cannot ensure that (A, B, C) is written to the
+> > > > persistent storage in the same order.
+> > > > 
+> > > > CrashMonkey reorders bios in conformance to the guarantees provided by
+> > > > disk cache; we do not make any extra assumptions and we respect the
+> > > > barrier operations.
+> > > 
+> > > I think your model is wrong. caches do not randomly re-order
+> > > completed IO operations to the *same LBA*. When a block is overwritten
+> > > the cache contains the overwrite data and the previous data is
+> > > discarded. THe previous data may be on disk, but it's no longer in
+> > > the cache.
+> > > 
+> > > e.g. take a dependent filesystem read-modify-write cycle (I'm
+> > > choosing this because that's the problem this fzero/fsync
+> > > "bug" is apparently demonstrating) where we write data to disk,
+> > > invalidate the kernel cache, read the data back off disk, zero it
+> > > in memory, then write it back to disk, all in the one LBA:
+> > > 
+> > > 	<flush>
+> > > 	write A to disk, invalidate kernel cache
+> > > 	......
+> > > 	read A from disk into kernel cache
+> > > 	A' = <modify A>
+> > > 	write A' to disk
+> > > 	......
+> > > 	<flush>
+> > > 
+> > > The disk cache model you are describing allows writes
+> > > to be reordered anywhere in the flush window regardless of their
+> > > inter-IO completion dependencies. Hence you're allowing temporally
+> > > ordered filesystem IO to the same LBA be reorded like so:
+> > > 
+> > > 
+> > > 	<flush>
+> > > 	......
+> > > 	write A'
+> > > 	......
+> > > 	read A
+> > > 	A' = <modify A>
+> > > 	......
+> > > 	write A
+> > > 	......
+> > > 	<flush>
+> > > 
+> > > This violates causality. it's simply *not possible for the disk
+> > > cache to contain A' before either "write A", "read A" or the
+> > > in-memory modification of A has been completed by the OS. Hence
+> > > there is no way for a crash situation to have the disk cache or the
+> > > physical storage medium to contain corruption that indicates it
+> > > stored A' on disk before stored A.
+> > > 
+> > > > CrashMonkey therefore respects the guarantees provided by the disk
+> > > > cache, and assumes nothing more than that. I hope this provides more
+> > > > clarity on what
+> > > > CrashMonkey is trying to do, and why we think it is reasonable to do so.
+> > > 
+> > > It clearly demonstrates to me where CrashMonkey is broken and needs
+> > > fixing - it needs to respect the ordering of temporally separate IO
+> > > to the same LBA and not violate causality. Simulators that assume
+> > > time travel is possible are not useful to us.
+> > > 
+> > > Cheers,
+> > 
+> > Hi Dave,
+> > 
+> > just FYI the 042 xfstest does fail on xfs with what I think is stale
+> > data exposure. It might not be related at all to what crashmonkey is
+> > reporting but there is something wrong nevertheless.
 > 
-> It is often the case, though maybe not always, that the author of a patch
-> has the knowledge of the 'Fixes' commit and/or the stable kernel version
-> patch is relevant to or would easily apply to.
+> generic/042 is unreliable and certain operations result in a
+> non-zero length file because of metadata commits/writeback that
+> occur as a result of the fallocate operations. It got removed from
+> the auto group because it isn't a reliable test about 3 years ago:
 
-In my experience (especially from my time as the maintainer) working
-out where a bug was introduced usually takes more time than it
-does to notice the bug, fix, test, post and review the patch.
+Sure, I just that it clearly exposes stale data on xfs. That is, the
+resulting file contains data that was previously written to the
+underlying image file to catch the exposure. I am aware of the non-zero
+length file problem, that's not what I am pointing out though.
 
-> It is therefore a relatively low effort for a developer to include
-> this information
+-Lukas
 
-If it were easy, then everyone would just do it and everything would
-be magically backported and it would all just work and everyone
-would be happy.
-
-Back in reality, however, it takes a *lot* of time and knowledge to
-isolate where a bug was introduced and whether the fix is even
-something we want to backport to older kernels . If you don't know
-the code, a git bisect is the only resort and even then there's a
-chance it doesn't isolate the cause because of some other bug or
-change. And a bisect is even more time and resource intensive than
-examining code history, especially for bugs introduced a long time
-ago.
-
-Hence asking developers to do this for every bug the fix ....
-
-> as courtesy to stable maintainers,
-
-.... is an unreasonable burden to place on developers and reviewers,
-especially those that don't really know the code they are fixing in
-any significant detail.
-
-> whether they are maintaining kernel.org
-> stable kernels or distro stable kernels.
-
-I've done my fair share of distro kernel maintenance and 500+ patch
-backports in the past. Doing backports requires looking at every
-patch that isn't in the older kernel, working out if the change is
-necessary and then working out all the dependencies that set of
-necessary patches requires. It's time consuming, complex, and easy
-to screw up, especially if you just blindly rely on "fixes" or
-"stable" comments in commits.
-
-IOWs, if all you're doing is relying on "fixes" tags to determine
-what /might/ be needed in a stable kernel.org update, then your
-stable backport process is fundamentally broken. You're going to
-break things and make stable kernels worse for your users, not
-better.
-
-And that's ignoring the elephant in the room. The big difference
-between distro backports and upstream stable kernels is the months
-of QA and bug fixing spent on the distro backports before any user
-gets near them.  "stable" kernels might only get a couple of days of
-high level integration testing - it's really only enough to smoke
-test everything.
-
-We have never had the time and resources to do properly maintained
-stable backports for upstream kernels because they move so fast and
-there are so many of them.  It's a full time job in itself, and it's
-substantially wasted effort because the upstream process throws most
-of that work away every 3 months.
-
-IOWs, if you want to maintain a long term stable upstream kernel
-backport for XFS, then go and put the effort into doing it properly.
-Don't demand that upstream developers do extra work on every change
-they make just so you're not inconvenienced in the future by having
-to do a little extra work when a one-off fix needs to be backported
-to a stable kernel.org kernel.
-
-> That's just my opinion.
-
-Yup, everyone has one.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> commit 7721b85016081cf6651d139e8af26267eceb23d3
+> Author: Jeff Moyer <jmoyer@redhat.com>
+> Date:   Mon Dec 21 18:01:47 2015 +1100
+> 
+>     generic/042: remove from the 'auto' group
+>     
+>     This test fails 100% of the time for me on xfs and current git head, and
+>     is not run for ext4 since ext4 does not support shutdown.  After talking
+>     with bfoster, it isn't expected to succeed right now.  Since the auto
+>     group is for tests that *are* expected to succeed, let's move this one
+>     out.
+>     
+>     Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+>     Reviewed-by: Brian Foster <bfoster@redhat.com>
+>     Signed-off-by: Dave Chinner <david@fromorbit.com>
+> 
+> This is what it used to be testing - it was an XFS only test:
+> 
+> commit cf1438248c0f62f3b64013d23e9e6d6bc23ca24b
+> Author: Brian Foster <bfoster@redhat.com>
+> Date:   Tue Oct 14 22:59:39 2014 +1100
+> 
+>     xfs/053: test for stale data exposure via falloc/writeback interaction
+>     
+>     XFS buffered I/O writeback has a subtle race condition that leads to
+>     stale data exposure if the filesystem happens to crash after delayed
+>     allocation blocks are converted on disk and before data is written back
+>     to said blocks.
+>     
+>     Use file allocation commands to attempt to reproduce a related, but
+>     slightly different variant of this problem. The associated falloc
+>     commands can lead to partial writeback that converts an extent larger
+>     than the range affected by falloc. If the filesystem crashes after the
+>     extent conversion but before all other cached data is written to the
+>     extent, stale data can be exposed.
+>     
+>     Signed-off-by: Brian Foster <bfoster@redhat.com>
+>     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>     Signed-off-by: Dave Chinner <david@fromorbit.com>
+> 
+> So, generic/042 was written to expose unwritten extent conversion
+> issues in the XFS writeback path and has nothing to do with mutliple
+> writes being reordered. It's failure detection is unreliable and not
+> indicative of an actual failure or data corruption, and that's why
+> it was removed from the auto group....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
