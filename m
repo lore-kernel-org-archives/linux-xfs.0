@@ -1,97 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:35422 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750934AbeCNGYc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 02:24:32 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:59498 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751447AbeCNP2a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 11:28:30 -0400
+Date: Wed, 14 Mar 2018 08:28:23 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH RFC] xfs: convert between packed and unpacked agfls
+ on-demand
+Message-ID: <20180314152823.GQ4865@magnolia>
+References: <20180309131628.GA3445@bfoster.bfoster>
+ <20180309173318.GD18989@magnolia>
+ <20180309183727.GA17046@bfoster.bfoster>
+ <20180309190832.GH18989@magnolia>
+ <20180309212031.GA19019@bfoster.bfoster>
+ <20180309223757.GA4865@magnolia>
+ <20180312131157.GA29810@bfoster.bfoster>
+ <20180312173552.GA30332@bfoster.bfoster>
+ <CAC=E7cXzyhJKGn2m2HGo6178R0_Ju_iMy4_wFBiYTd8wLVfhMw@mail.gmail.com>
+ <20180314110232.GA39793@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180313215028.GE18129@dastard>
-References: <CAOQ4uxjMfZGMtbq2vRN8dL5QvgC0=UD-yWDbNib=dckDTFR0Nw@mail.gmail.com>
- <20180201003511.GK4849@magnolia> <CAOQ4uxjE31j7XDpEGnnym7cgD_kqsPnio4KN2gphajsCNMrG1g@mail.gmail.com>
- <20180311162442.GB2013@kroah.com> <20180312162744.GB4865@magnolia>
- <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
- <CAOQ4uxhdkhZup=ndukKCRtU13YVs8jQxT0zgOT_XN3_-tB8TfQ@mail.gmail.com>
- <CAOQ4uxhCjBA99X_C-GpEBf=jC4S_wSrxMwS6Ovj7BtWLK1GmUA@mail.gmail.com>
- <20180313131109.GB6260@lst.de> <CAOQ4uxiDHSC19-fRdZmXM5BJB3-p9_LdPgSmxpjGrdCzhV2W2Q@mail.gmail.com>
- <20180313215028.GE18129@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 14 Mar 2018 08:24:30 +0200
-Message-ID: <CAOQ4uxgsMwtQRCkpJTJoVO-mbU1yRz7F0pMOAVcJphEEKq8SHA@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable inode
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180314110232.GA39793@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chiluk <chiluk+linuxxfs@indeed.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 
-On Tue, Mar 13, 2018 at 11:50 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Mar 13, 2018 at 04:33:15PM +0200, Amir Goldstein wrote:
->> On Tue, Mar 13, 2018 at 3:11 PM, Christoph Hellwig <hch@lst.de> wrote:
->> > On Tue, Mar 13, 2018 at 02:46:09PM +0200, Amir Goldstein wrote:
->> >> OK, found the patches the fix soft lockups in generic/269 and
->> >> assertion in generic/232, so expunging those 2 tests from v4.15.y
->> >> test runs.
->> >
->> > Which patches are those?  We should probably backport them to 4.15-stable.
->>
->> Probably, but I guess Darrick has those in his TODO.
->>
->> There is this series that refers to failure in generic/232:
->> https://marc.info/?l=linux-xfs&m=151701545720824&w=2
->>
->> These 2 commits refer to generic/269 specifically in commit message:
->>  70c57dcd606f xfs: skip CoW writes past EOF when writeback races with truncate
->>  be78ff0e7277 xfs: recheck reflink / dirty page status before freeing
->> CoW reservations
->> and the thread on the second commit also mentions generic/270
->> (I found out the hard way that it also soft locks).
->>
->> But there are surely more patches for stable in master.
->> I recon CC: stable and/or Fixes: tags could have been helpful,
->> but I don't see any of those in v4.16-rcX from the core xfs developers.
->
-> AS I always say: if you want to maintain a stable backport kernel
-> with all the fixes that go into the bleeding edge, you're more than
-> welcome to do it.
->
-> Everyone else is flat out just keeping up with on going development
-> and fixing bugs in the kernel as it's moving forward. So if you have
-> the need for stable backports, please keep backporting patches you
-> need, testing them and asking the stable maintainers to include
-> them.
->
+On Wed, Mar 14, 2018 at 07:02:33AM -0400, Brian Foster wrote:
+> On Tue, Mar 13, 2018 at 10:07:27PM -0500, Dave Chiluk wrote:
+> > On Mon, Mar 12, 2018 at 12:35 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > >
+> > > On Mon, Mar 12, 2018 at 09:11:58AM -0400, Brian Foster wrote:
+> > > Here's a variant of that patch that does a reset. It's definitely much
+> > > simpler. Thoughts?
+> > >
+> > > Brian
+> > >
+> > > --- 8< ---
+> > >
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index c02781a4c091..7d313bb4677d 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -2053,6 +2053,59 @@ xfs_alloc_space_available(
+> > >         return true;
+> > >  }
+> > >
+> > > +static bool
+> > > +xfs_agf_verify_flcount(
+> > > +       struct xfs_mount        *mp,
+> > > +       struct xfs_agf          *agf)
+> > > +{
+> > > +       int                     f = be32_to_cpu(agf->agf_flfirst);
+> > > +       int                     l = be32_to_cpu(agf->agf_fllast);
+> > > +       int                     c = be32_to_cpu(agf->agf_flcount);
+> > > +       int                     active = c;
+> > > +       int                     agfl_size = XFS_AGFL_SIZE(mp);
+> > > +
+> > > +       if (!xfs_sb_version_hascrc(&mp->m_sb))
+> > > +               return true;
+> > > +
+> > > +       if (c && l >= f)
+> > > +               active = l - f + 1;
+> > > +       else if (c)
+> > > +               active = agfl_size - f + l + 1;
+> > > +
+> > > +       if (active != c)
+> > > +               return false;
+> > > +       if (f >= agfl_size || l >= agfl_size)
+> > > +               return false;
+> > > +
+> > > +       return true;
+> > > +}
+> > > +
+> > > +static void
+> > > +xfs_agfl_reset(
+> > > +       struct xfs_trans        *tp,
+> > > +       struct xfs_buf          *agbp,
+> > > +       struct xfs_perag        *pag)
+> > > +{
+> > > +       struct xfs_mount        *mp = tp->t_mountp;
+> > > +       struct xfs_agf          *agf = XFS_BUF_TO_AGF(agbp);
+> > > +
+> > > +       if (!pag->pagf_needreset)
+> > > +               return;
+> > > +
+> > > +       trace_xfs_agfl_reset(pag);
+> > > +       xfs_warn(mp, "agfl reset agno %u flcount %d", pag->pag_agno,
+> > > +                pag->pagf_flcount);
+> > > +
+> > 
+> > Before completely leaking the entirety of the agfl couldn't we nicely
+> > release and recover all blocks but the 119th first?  That way we'd
+> > only be leaking the possibly problematic 119th item?  I understand we
+> > would lose the benefit of being able to recover from otherwise corrupt
+> > AGFLs.
+> > 
+> 
+> This is mostly covered in the discussions over the previously explored
+> methods. The synopsis is that yes, we could try to do something like
+> that, but the point of this approach is that we don't have to trust the
+> agfl content at all. This simplifies and genericizes the logic because
+> every kernel already knows how to populate a sane agfl from an empty
+> one.
+> 
+> > If we are going to blindly leak blocks wouldn't an xfs_repair recover
+> > these leaked blocks?  I think it would be perfectly fine to leak these
+> > blocks if it means not crashing and then recover them at one's
+> > convenience with an xfs_repair.
+> > 
+> 
+> Yes, an xfs_repair is necessary. An xfs_repair was already necessary to
+> fix the padding mismatch or whatever else might have been wrong. This
+> changes the side effect of the problem from a crash into a free space
+> accounting inconsistency.
+> 
+> > > +       agf->agf_flfirst = 0;
+> > > +       agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+> > > +       agf->agf_flcount = 0;
+> > 
+> > Also I was under the impression that we should pre-allocate blocks in
+> > the agfl for fast allocation of free b+tree nodes.  Wouldn't we want
+> > to pre-allocate some blocks as would be done by xfs_repair (I have a
+> > feeling someone is going to tell me where this happens elsewhere in
+> > the codebase or can be handled at block run time with little ill
+> > effect)?
+> > 
+> 
+> The function that calls the reset (xfs_alloc_fix_freelist()) will
+> repopulate it once it sees that it is empty.
+> 
+> > If I'm correct in either case I'd appreciate a
+> > Reviewed by: Dave Chiluk <chiluk+linuxxfs@indeed.com>
+> > 
+> 
+> I'm going to defer this until posting a legitimate patch because it has
+> changed a bit (though not fundamentally). This post was more of a first
+> pass to sanity check the idea. I'd appreciate another look once a
+> legitimate v1 is posted.. thanks!
 
-Greg,
+While you're at it, I already applied the xfs_agfl_size decapitalization
+to for-next, so please do that here too.
 
-I tested the patch in question per Darrick's request.
-I found no regressions with full "auto" run on xfs with reflinks enabled.
-Please include this patch in stable 4.15.
+--D
 
-
-Dave,
-
-It is often the case, though maybe not always, that the author of a patch
-has the knowledge of the 'Fixes' commit and/or the stable kernel version
-patch is relevant to or would easily apply to.
-It is therefore a relatively low effort for a developer to include
-this information
-as courtesy to stable maintainers, whether they are maintaining kernel.org
-stable kernels or distro stable kernels.
-
-That's just my opinion.
-
-Christoph/Darrick,
-
-FYI, with stable kernel 4.15.y, I found the following failures with -g auto:
-
-Assert (mostly on quota related):
-generic/232 xfs/222 xfs/305 xfs/440 xfs/442
-
-Soft lockup (likely fixed by be78ff0e7277):
-generic/269 generic/270 xfs/442
-
-Failures (output mismatch):
-xfs/170 xfs/191-input-validation xfs/348
-
-Thanks,
-Amir.
+> Brian
+> 
+> > Thanks,
+> > Dave
+> > 
+> > 
+> > > +       xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLFIRST | XFS_AGF_FLLAST |
+> > > +                                   XFS_AGF_FLCOUNT);
+> > > +
+> > > +       pag->pagf_flcount = 0;
+> > > +       pag->pagf_needreset = false;
+> > > +}
+> > > +
+> > >  /*
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
