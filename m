@@ -1,219 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:42306 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751618AbeCNSfp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 14:35:45 -0400
-Date: Wed, 14 Mar 2018 11:35:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/8] xfs: refactor xfs_log_force_lsn
-Message-ID: <20180314183540.GT4865@magnolia>
-References: <20180313104927.12926-1-hch@lst.de>
- <20180313104927.12926-8-hch@lst.de>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:34398 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750902AbeCNEM7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 00:12:59 -0400
+Received: by mail-ot0-f194.google.com with SMTP id n74-v6so1965751ota.1
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Mar 2018 21:12:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180313104927.12926-8-hch@lst.de>
+In-Reply-To: <20180313102056.GJ4043@hirez.programming.kicks-ass.net>
+References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180311112725.GC4043@hirez.programming.kicks-ass.net> <CAPcyv4jr53dqVTzdEQ6Ln1Qg7nWVMQSVTkf6uc+Lg6Y-xruhuw@mail.gmail.com>
+ <20180313102056.GJ4043@hirez.programming.kicks-ass.net>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 13 Mar 2018 21:12:58 -0700
+Message-ID: <CAPcyv4h3SPqx879nnvQt0rvwanKksxLTqChCQa9ZQH8hsd_7yg@mail.gmail.com>
+Subject: Re: [RFC][PATCH] sched/wait_bit: Introduce wait_var_event()/wake_up_var()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Ingo Molnar <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, david <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, David Howells <dhowells@redhat.com>, Ralf Baechle <ralf@linux-mips.org>
 
-On Tue, Mar 13, 2018 at 11:49:26AM +0100, Christoph Hellwig wrote:
-> Use the the smallest possible loop as preable to find the correct iclog
-> buffer, and then use gotos for unwinding to straighten the code.
+On Tue, Mar 13, 2018 at 3:20 AM, Peter Zijlstra <peterz@infradead.org> wrote:
+> On Sun, Mar 11, 2018 at 10:15:55AM -0700, Dan Williams wrote:
+>> On Sun, Mar 11, 2018 at 4:27 AM, Peter Zijlstra <peterz@infradead.org> wrote:
+>> > On Fri, Mar 09, 2018 at 10:55:32PM -0800, Dan Williams wrote:
+>> >> Add a generic facility for awaiting an atomic_t to reach a value of 1.
+>> >>
+>> >> Page reference counts typically need to reach 0 to be considered a
+>> >> free / inactive page. However, ZONE_DEVICE pages allocated via
+>> >> devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
+>> >> done at init time to assign pages to the page allocator is skipped.
+>> >>
+>> >> These pages will have their reference count elevated > 1 by
+>> >> get_user_pages() when they are under DMA. In order to coordinate DMA to
+>> >> these pages vs filesytem operations like hole-punch and truncate the
+>> >> filesystem-dax implementation needs to capture the DMA-idle event i.e.
+>> >> the 2 to 1 count transition).
+>> >>
+>> >> For now, this implementation does not have functional behavior change,
+>> >> follow-on patches will add waiters for these page-idle events.
+>> >
+>> > Argh, no no no.. That whole wait_for_atomic_t thing is a giant
+>> > trainwreck already and now you're making it worse still.
+>> >
+>> > Please have a look here:
+>> >
+>> >   https://lkml.kernel.org/r/20171101190644.chwhfpoz3ywxx2m7@hirez.programming.kicks-ass.net
+>>
+>> That thread seems to be worried about the object disappearing the
+>> moment it's reference count reaches a target. That isn't the case with
+>> the memmap / struct page objects for ZONE_DEVICE pages. I understand
+>> wait_for_atomic_one() is broken in the general case, but as far as I
+>> can see it works fine specifically for ZONE_DEVICE page busy tracking,
+>> just not generic object lifetime.
+>
+> How's this, compile tested (x86_64-allmodconfig) only.
+>
+> This allows you to write:
+>
+>         wait_var_event(&your_atomic, atomic_read(&your_atomic) == 1);
 
-"Use the smallest possible loop to find the correct iclog..." ?
+Nice!
 
-> 
-> Also fix the top of function comment while we're at it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c | 142 ++++++++++++++++++++++++-------------------------------
->  1 file changed, 62 insertions(+), 80 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index a37a8defcd39..b6c6f227b2d7 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3404,11 +3404,10 @@ xfs_log_force(
->   *		state and go to sleep or return.
->   *	If it is in any other state, go to sleep or return.
->   *
-> - * Synchronous forces are implemented with a signal variable. All callers
-> - * to force a given lsn to disk will wait on a the sv attached to the
-> - * specific in-core log.  When given in-core log finally completes its
-> - * write to disk, that thread will wake up all threads waiting on the
-> - * sv.
-> + * Synchronous forces are implemented with a wait queue.  All callers to force a
-> + * given lsn to disk will wait on a the queue attached to the specific in-core
-
-"All callers trying to force a given lsn to disk must wait on the queue
-attached to the specific in-core log."... I think?
-
---D
-
-> + * log.  When given in-core log finally completes its write to disk, that thread
-> + * will wake up all threads waiting on the queue.
->   */
->  int
->  xfs_log_force_lsn(
-> @@ -3433,92 +3432,75 @@ xfs_log_force_lsn(
->  try_again:
->  	spin_lock(&log->l_icloglock);
->  	iclog = log->l_iclog;
-> -	if (iclog->ic_state & XLOG_STATE_IOERROR) {
-> -		spin_unlock(&log->l_icloglock);
-> -		return -EIO;
-> -	}
-> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
-> +		goto out_error;
->  
-> -	do {
-> -		if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
-> -			iclog = iclog->ic_next;
-> -			continue;
-> -		}
-> +	while (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
-> +		iclog = iclog->ic_next;
-> +		if (iclog == log->l_iclog)
-> +			goto out_unlock;
-> +	}
->  
-> -		if (iclog->ic_state == XLOG_STATE_DIRTY) {
-> -			spin_unlock(&log->l_icloglock);
-> -			return 0;
-> -		}
-> +	if (iclog->ic_state == XLOG_STATE_DIRTY)
-> +		goto out_unlock;
->  
-> -		if (iclog->ic_state == XLOG_STATE_ACTIVE) {
-> -			/*
-> -			 * We sleep here if we haven't already slept (e.g.
-> -			 * this is the first time we've looked at the correct
-> -			 * iclog buf) and the buffer before us is going to
-> -			 * be sync'ed. The reason for this is that if we
-> -			 * are doing sync transactions here, by waiting for
-> -			 * the previous I/O to complete, we can allow a few
-> -			 * more transactions into this iclog before we close
-> -			 * it down.
-> -			 *
-> -			 * Otherwise, we mark the buffer WANT_SYNC, and bump
-> -			 * up the refcnt so we can release the log (which
-> -			 * drops the ref count).  The state switch keeps new
-> -			 * transaction commits from using this buffer.  When
-> -			 * the current commits finish writing into the buffer,
-> -			 * the refcount will drop to zero and the buffer will
-> -			 * go out then.
-> -			 */
-> -			if (!already_slept &&
-> -			    (iclog->ic_prev->ic_state &
-> -			     (XLOG_STATE_WANT_SYNC | XLOG_STATE_SYNCING))) {
-> -				ASSERT(!(iclog->ic_state & XLOG_STATE_IOERROR));
-> +	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
-> +		/*
-> +		 * We sleep here if we haven't already slept (e.g. this is the
-> +		 * first time we've looked at the correct iclog buf) and the
-> +		 * buffer before us is going to be sync'ed.  The reason for this
-> +		 * is that if we are doing sync transactions here, by waiting
-> +		 * for the previous I/O to complete, we can allow a few more
-> +		 * transactions into this iclog before we close it down.
-> +		 *
-> +		 * Otherwise, we mark the buffer WANT_SYNC, and bump up the
-> +		 * refcnt so we can release the log (which drops the ref count).
-> +		 * The state switch keeps new transaction commits from using
-> +		 * this buffer.  When the current commits finish writing into
-> +		 * the buffer, the refcount will drop to zero and the buffer
-> +		 * will go out then.
-> +		 */
-> +		if (!already_slept &&
-> +		    (iclog->ic_prev->ic_state &
-> +		     (XLOG_STATE_WANT_SYNC | XLOG_STATE_SYNCING))) {
-> +			ASSERT(!(iclog->ic_state & XLOG_STATE_IOERROR));
->  
-> -				XFS_STATS_INC(mp, xs_log_force_sleep);
-> +			XFS_STATS_INC(mp, xs_log_force_sleep);
->  
-> -				xlog_wait(&iclog->ic_prev->ic_write_wait,
-> -							&log->l_icloglock);
-> -				already_slept = 1;
-> -				goto try_again;
-> -			}
-> -			atomic_inc(&iclog->ic_refcnt);
-> -			xlog_state_switch_iclogs(log, iclog, 0);
-> -			spin_unlock(&log->l_icloglock);
-> -			if (xlog_state_release_iclog(log, iclog))
-> -				return -EIO;
-> -			if (log_flushed)
-> -				*log_flushed = 1;
-> -			spin_lock(&log->l_icloglock);
-> +			xlog_wait(&iclog->ic_prev->ic_write_wait,
-> +					&log->l_icloglock);
-> +			already_slept = 1;
-> +			goto try_again;
->  		}
-> +		atomic_inc(&iclog->ic_refcnt);
-> +		xlog_state_switch_iclogs(log, iclog, 0);
-> +		spin_unlock(&log->l_icloglock);
-> +		if (xlog_state_release_iclog(log, iclog))
-> +			return -EIO;
-> +		if (log_flushed)
-> +			*log_flushed = 1;
-> +		spin_lock(&log->l_icloglock);
-> +	}
->  
-> -		if ((flags & XFS_LOG_SYNC) && /* sleep */
-> -		    !(iclog->ic_state &
-> -		      (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))) {
-> -			/*
-> -			 * Don't wait on completion if we know that we've
-> -			 * gotten a log write error.
-> -			 */
-> -			if (iclog->ic_state & XLOG_STATE_IOERROR) {
-> -				spin_unlock(&log->l_icloglock);
-> -				return -EIO;
-> -			}
-> -			XFS_STATS_INC(mp, xs_log_force_sleep);
-> -			xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
-> -			/*
-> -			 * No need to grab the log lock here since we're
-> -			 * only deciding whether or not to return EIO
-> -			 * and the memory read should be atomic.
-> -			 */
-> -			if (iclog->ic_state & XLOG_STATE_IOERROR)
-> -				return -EIO;
-> -		} else {		/* just return */
-> -			spin_unlock(&log->l_icloglock);
-> -		}
-> +	if (!(flags & XFS_LOG_SYNC) ||
-> +	    (iclog->ic_state & (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY)))
-> +		goto out_unlock;
->  
-> -		return 0;
-> -	} while (iclog != log->l_iclog);
-> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
-> +		goto out_error;
-> +
-> +	XFS_STATS_INC(mp, xs_log_force_sleep);
-> +	xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
-> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
-> +		return -EIO;
-> +	return 0;
->  
-> +out_unlock:
->  	spin_unlock(&log->l_icloglock);
->  	return 0;
-> +out_error:
-> +	spin_unlock(&log->l_icloglock);
-> +	return -EIO;
->  }
->  
->  /*
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'll give this a shot. I will need to add
+wait_var_event_interruptible(), but other than that it looks workable
+to me.
