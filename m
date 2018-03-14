@@ -1,144 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50005 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:41466 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751362AbeCNRTD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Mar 2018 13:19:03 -0400
-Date: Wed, 14 Mar 2018 17:19:01 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
- our own parser
-Message-ID: <20180314171901.GI4449@wotan.suse.de>
-References: <20180313205911.26082-1-mcgrof@kernel.org>
- <20180313213916.GD18129@dastard>
- <20180313235227.GH4449@wotan.suse.de>
- <20180314035531.GF18129@dastard>
+        id S1751005AbeCNLCh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Mar 2018 07:02:37 -0400
+Date: Wed, 14 Mar 2018 07:02:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH RFC] xfs: convert between packed and unpacked agfls
+ on-demand
+Message-ID: <20180314110232.GA39793@bfoster.bfoster>
+References: <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
+ <20180309131628.GA3445@bfoster.bfoster>
+ <20180309173318.GD18989@magnolia>
+ <20180309183727.GA17046@bfoster.bfoster>
+ <20180309190832.GH18989@magnolia>
+ <20180309212031.GA19019@bfoster.bfoster>
+ <20180309223757.GA4865@magnolia>
+ <20180312131157.GA29810@bfoster.bfoster>
+ <20180312173552.GA30332@bfoster.bfoster>
+ <CAC=E7cXzyhJKGn2m2HGo6178R0_Ju_iMy4_wFBiYTd8wLVfhMw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180314035531.GF18129@dastard>
+In-Reply-To: <CAC=E7cXzyhJKGn2m2HGo6178R0_Ju_iMy4_wFBiYTd8wLVfhMw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@sandeen.net, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu
+To: Dave Chiluk <chiluk+linuxxfs@indeed.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 
-On Wed, Mar 14, 2018 at 02:55:31PM +1100, Dave Chinner wrote:
-> On Tue, Mar 13, 2018 at 11:52:27PM +0000, Luis R. Rodriguez wrote:
-> > On Wed, Mar 14, 2018 at 08:39:16AM +1100, Dave Chinner wrote:
-> > > Just one obvious comment from a brief glance - you changed this from
-> > > "-t" to "-T", but ....
-> > > > +directory by using the -t parameter and secifying the type. Alternatively
-> > > 
-> > > Not here, or ....
-> > >
-> > > > +If you use -t the type configuration file must be present under
-> > > 
-> > > here, or ....
-> > > 
-> > > > +#define MKFS_XFS_CONF_DIR	ROOT_SYSCONFDIR "/mkfs.xfs.d/"
-> > > > +#define CONFIG_MAX_KEY		1024
-> > > > +#define CONFIG_MAX_VALUE	PATH_MAX
-> > > > +#define CONFIG_MAX_BUFFER	CONFIG_MAX_KEY + CONFIG_MAX_VALUE + 3
-> > > > +#define PARAM_OPTS		"T:b:d:i:l:L:m:n:KNp:qr:s:CfV"
-> > > 
-> > > [ Please don't obfuscate parsing options like this ]
-> > 
-> > The reason was we use them twice.
+On Tue, Mar 13, 2018 at 10:07:27PM -0500, Dave Chiluk wrote:
+> On Mon, Mar 12, 2018 at 12:35 PM, Brian Foster <bfoster@redhat.com> wrote:
+> >
+> > On Mon, Mar 12, 2018 at 09:11:58AM -0400, Brian Foster wrote:
+> > Here's a variant of that patch that does a reset. It's definitely much
+> > simpler. Thoughts?
+> >
+> > Brian
+> >
+> > --- 8< ---
+> >
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index c02781a4c091..7d313bb4677d 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -2053,6 +2053,59 @@ xfs_alloc_space_available(
+> >         return true;
+> >  }
+> >
+> > +static bool
+> > +xfs_agf_verify_flcount(
+> > +       struct xfs_mount        *mp,
+> > +       struct xfs_agf          *agf)
+> > +{
+> > +       int                     f = be32_to_cpu(agf->agf_flfirst);
+> > +       int                     l = be32_to_cpu(agf->agf_fllast);
+> > +       int                     c = be32_to_cpu(agf->agf_flcount);
+> > +       int                     active = c;
+> > +       int                     agfl_size = XFS_AGFL_SIZE(mp);
+> > +
+> > +       if (!xfs_sb_version_hascrc(&mp->m_sb))
+> > +               return true;
+> > +
+> > +       if (c && l >= f)
+> > +               active = l - f + 1;
+> > +       else if (c)
+> > +               active = agfl_size - f + l + 1;
+> > +
+> > +       if (active != c)
+> > +               return false;
+> > +       if (f >= agfl_size || l >= agfl_size)
+> > +               return false;
+> > +
+> > +       return true;
+> > +}
+> > +
+> > +static void
+> > +xfs_agfl_reset(
+> > +       struct xfs_trans        *tp,
+> > +       struct xfs_buf          *agbp,
+> > +       struct xfs_perag        *pag)
+> > +{
+> > +       struct xfs_mount        *mp = tp->t_mountp;
+> > +       struct xfs_agf          *agf = XFS_BUF_TO_AGF(agbp);
+> > +
+> > +       if (!pag->pagf_needreset)
+> > +               return;
+> > +
+> > +       trace_xfs_agfl_reset(pag);
+> > +       xfs_warn(mp, "agfl reset agno %u flcount %d", pag->pag_agno,
+> > +                pag->pagf_flcount);
+> > +
 > 
-> Which is not necessary. You don't need to change the option parsing
-> loop at all - the default config file can be parsed at any time as
-> a normal option. The default structure is not used for calculations
-> until after all the CLI options are parsed, so it can just be
-> treated as another CLI option in any location on the CLI.
-
-Alright.
-
-> > > I'll spend some more time looking at it, but my initial impression
-> > > is that there's a bit of work to be done yet...
-> > 
-> > You're right, we should decide if we want to allow for -T to be used
-> > only in the beginning or if we want to allow for it anywhere on the
-> > command line.
+> Before completely leaking the entirety of the agfl couldn't we nicely
+> release and recover all blocks but the 119th first?  That way we'd
+> only be leaking the possibly problematic 119th item?  I understand we
+> would lose the benefit of being able to recover from otherwise corrupt
+> AGFLs.
 > 
-> That's not what I meant. I meant the code needs a lot of work, not
-> that we needed to decide where on the CLI the config file option
-> should be placed.
+
+This is mostly covered in the discussions over the previously explored
+methods. The synopsis is that yes, we could try to do something like
+that, but the point of this approach is that we don't have to trust the
+agfl content at all. This simplifies and genericizes the logic because
+every kernel already knows how to populate a sane agfl from an empty
+one.
+
+> If we are going to blindly leak blocks wouldn't an xfs_repair recover
+> these leaked blocks?  I think it would be perfectly fine to leak these
+> blocks if it means not crashing and then recover them at one's
+> convenience with an xfs_repair.
 > 
-> Basically:
+
+Yes, an xfs_repair is necessary. An xfs_repair was already necessary to
+fix the padding mismatch or whatever else might have been wrong. This
+changes the side effect of the problem from a crash into a free space
+accounting inconsistency.
+
+> > +       agf->agf_flfirst = 0;
+> > +       agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
+> > +       agf->agf_flcount = 0;
 > 
-> 1. the default file parsing code needs to go into it's own file.
-> xfs_mkfs.c is too large and needs to be split into smaller files, so
-> lets not make it worse by shovelling another 500 lines of code into
-> it...
+> Also I was under the impression that we should pre-allocate blocks in
+> the agfl for fast allocation of free b+tree nodes.  Wouldn't we want
+> to pre-allocate some blocks as would be done by xfs_repair (I have a
+> feeling someone is going to tell me where this happens elsewhere in
+> the codebase or can be handled at block run time with little ill
+> effect)?
+> 
 
-Sure.
+The function that calls the reset (xfs_alloc_fix_freelist()) will
+repopulate it once it sees that it is empty.
 
-> 2. The default option should not share option table parsing with the
-> CLI options, because all that means is you add extra code to convert
-> config file sections to CLI sections before using the common parsing
-> code.
+> If I'm correct in either case I'd appreciate a
+> Reviewed by: Dave Chiluk <chiluk+linuxxfs@indeed.com>
+> 
 
-Sure.
+I'm going to defer this until posting a legitimate patch because it has
+changed a bit (though not fundamentally). This post was more of a first
+pass to sanity check the idea. I'd appreciate another look once a
+legitimate v1 is posted.. thanks!
 
-> 3. it needs to support more than just boolean options e.g. for
-> setting a default log size
+Brian
 
-Log size is not part of struct mkfs_default_params, do we reaally
-want to be able to set that via the configuration file?
-
-sectorsize and blocksize are though.
-Then struct mkfs_default_params has a struct sb_feat_args, of
-which non-bools are (and their corresponding mapping):
-
-	int log_version L_VERSION
-	int attr_version I_ATTR
-	int dir_version N_VERSION
-
-So sure, I can add support for these, and sectorsize and blocksize.  It just
-didn't seem worth it given most of the others were bool, so if we restrict the
-parser to bool its much simpler.
-
-BTW I see we have bool parent_pointers, and that maps to setting
-XFS_SB_VERSION2_PARENTBIT, but we have no respective specific CLI
-param, so of these:
-
-[data]
-[inode]
-[log]
-[metadata]
-[naming]
-[rtdev]
-
-Where does parent_pointers map to? I'd only enable "parent_pointers=0|parent_pointers=1"
-as its a bool.
-
-> 4. it needs default values to be range checked for sanity. These
-> values can be different to the min/max values the can be specified
-> on CLI as defaults need to be more forgiving when combined with
-> other random options.
-
-Alright.
-
-> There will be other things when I look at the code, but those are
-> the first ones that come to mind....
-
-I can address most of what you describe rather easily, the biggest
-issue is ensuring that our goal here is only to modify struct
-mkfs_default_params values, inclusive of what is in struct sb_feat_args.
-
-Note that struct mkfs_default_params also has a struct fsxattr... do we
-want to modify all those (this struct is defined per OS), for Linux we have:
-
-struct fsxattr {                                                                
-        __u32           fsx_xflags;     /* xflags field value (get/set) */      
-        __u32           fsx_extsize;    /* extsize field value (get/set)*/      
-        __u32           fsx_nextents;   /* nextents field value (get)   */      
-        __u32           fsx_projid;     /* project identifier (get/set) */      
-        __u32           fsx_cowextsize; /* cow extsize field value (get/set) */ 
-        unsigned char   fsx_pad[8];                                             
-};
-
-I didn't enable parsing support for these, do we want to parse each of these
-as well?
-
-  Luis
+> Thanks,
+> Dave
+> 
+> 
+> > +       xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLFIRST | XFS_AGF_FLLAST |
+> > +                                   XFS_AGF_FLCOUNT);
+> > +
+> > +       pag->pagf_flcount = 0;
+> > +       pag->pagf_needreset = false;
+> > +}
+> > +
+> >  /*
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
