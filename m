@@ -1,159 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41466 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751005AbeCNLCh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Mar 2018 07:02:37 -0400
-Date: Wed, 14 Mar 2018 07:02:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC] xfs: convert between packed and unpacked agfls
- on-demand
-Message-ID: <20180314110232.GA39793@bfoster.bfoster>
-References: <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
- <20180309131628.GA3445@bfoster.bfoster>
- <20180309173318.GD18989@magnolia>
- <20180309183727.GA17046@bfoster.bfoster>
- <20180309190832.GH18989@magnolia>
- <20180309212031.GA19019@bfoster.bfoster>
- <20180309223757.GA4865@magnolia>
- <20180312131157.GA29810@bfoster.bfoster>
- <20180312173552.GA30332@bfoster.bfoster>
- <CAC=E7cXzyhJKGn2m2HGo6178R0_Ju_iMy4_wFBiYTd8wLVfhMw@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:35496 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751901AbeCNSbM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 14:31:12 -0400
+Date: Wed, 14 Mar 2018 11:31:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/8] xfs: refactor xfs_log_force
+Message-ID: <20180314183105.GS4865@magnolia>
+References: <20180313104927.12926-1-hch@lst.de>
+ <20180313104927.12926-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAC=E7cXzyhJKGn2m2HGo6178R0_Ju_iMy4_wFBiYTd8wLVfhMw@mail.gmail.com>
+In-Reply-To: <20180313104927.12926-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chiluk <chiluk+linuxxfs@indeed.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 13, 2018 at 10:07:27PM -0500, Dave Chiluk wrote:
-> On Mon, Mar 12, 2018 at 12:35 PM, Brian Foster <bfoster@redhat.com> wrote:
-> >
-> > On Mon, Mar 12, 2018 at 09:11:58AM -0400, Brian Foster wrote:
-> > Here's a variant of that patch that does a reset. It's definitely much
-> > simpler. Thoughts?
-> >
-> > Brian
-> >
-> > --- 8< ---
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index c02781a4c091..7d313bb4677d 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2053,6 +2053,59 @@ xfs_alloc_space_available(
-> >         return true;
-> >  }
-> >
-> > +static bool
-> > +xfs_agf_verify_flcount(
-> > +       struct xfs_mount        *mp,
-> > +       struct xfs_agf          *agf)
-> > +{
-> > +       int                     f = be32_to_cpu(agf->agf_flfirst);
-> > +       int                     l = be32_to_cpu(agf->agf_fllast);
-> > +       int                     c = be32_to_cpu(agf->agf_flcount);
-> > +       int                     active = c;
-> > +       int                     agfl_size = XFS_AGFL_SIZE(mp);
-> > +
-> > +       if (!xfs_sb_version_hascrc(&mp->m_sb))
-> > +               return true;
-> > +
-> > +       if (c && l >= f)
-> > +               active = l - f + 1;
-> > +       else if (c)
-> > +               active = agfl_size - f + l + 1;
-> > +
-> > +       if (active != c)
-> > +               return false;
-> > +       if (f >= agfl_size || l >= agfl_size)
-> > +               return false;
-> > +
-> > +       return true;
-> > +}
-> > +
-> > +static void
-> > +xfs_agfl_reset(
-> > +       struct xfs_trans        *tp,
-> > +       struct xfs_buf          *agbp,
-> > +       struct xfs_perag        *pag)
-> > +{
-> > +       struct xfs_mount        *mp = tp->t_mountp;
-> > +       struct xfs_agf          *agf = XFS_BUF_TO_AGF(agbp);
-> > +
-> > +       if (!pag->pagf_needreset)
-> > +               return;
-> > +
-> > +       trace_xfs_agfl_reset(pag);
-> > +       xfs_warn(mp, "agfl reset agno %u flcount %d", pag->pag_agno,
-> > +                pag->pagf_flcount);
-> > +
+On Tue, Mar 13, 2018 at 11:49:25AM +0100, Christoph Hellwig wrote:
+> Streamline the conditionals so that it is more obvious which specific case
+> form the top of the function comments is being handled.  Use gotos only
+> for early returns.
 > 
-> Before completely leaking the entirety of the agfl couldn't we nicely
-> release and recover all blocks but the 119th first?  That way we'd
-> only be leaking the possibly problematic 119th item?  I understand we
-> would lose the benefit of being able to recover from otherwise corrupt
-> AGFLs.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Well, that made my brain hurt... :)
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_log.c | 144 ++++++++++++++++++++++++-------------------------------
+>  1 file changed, 63 insertions(+), 81 deletions(-)
 > 
-
-This is mostly covered in the discussions over the previously explored
-methods. The synopsis is that yes, we could try to do something like
-that, but the point of this approach is that we don't have to trust the
-agfl content at all. This simplifies and genericizes the logic because
-every kernel already knows how to populate a sane agfl from an empty
-one.
-
-> If we are going to blindly leak blocks wouldn't an xfs_repair recover
-> these leaked blocks?  I think it would be perfectly fine to leak these
-> blocks if it means not crashing and then recover them at one's
-> convenience with an xfs_repair.
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 14ab660a0bae..a37a8defcd39 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3318,99 +3318,81 @@ xfs_log_force(
+>  	xlog_cil_force(log);
+>  
+>  	spin_lock(&log->l_icloglock);
+> -
+>  	iclog = log->l_iclog;
+> -	if (iclog->ic_state & XLOG_STATE_IOERROR) {
+> -		spin_unlock(&log->l_icloglock);
+> -		return -EIO;
+> -	}
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +		goto out_error;
+>  
+> -	/* If the head iclog is not active nor dirty, we just attach
+> -	 * ourselves to the head and go to sleep.
+> -	 */
+> -	if (iclog->ic_state == XLOG_STATE_ACTIVE ||
+> -	    iclog->ic_state == XLOG_STATE_DIRTY) {
+> +	if (iclog->ic_state == XLOG_STATE_DIRTY ||
+> +	    (iclog->ic_state == XLOG_STATE_ACTIVE &&
+> +	     atomic_read(&iclog->ic_refcnt) == 0 && iclog->ic_offset == 0)) {
+>  		/*
+> -		 * If the head is dirty or (active and empty), then
+> -		 * we need to look at the previous iclog.  If the previous
+> -		 * iclog is active or dirty we are done.  There is nothing
+> -		 * to sync out.  Otherwise, we attach ourselves to the
+> +		 * If the head is dirty or (active and empty), then we need to
+> +		 * look at the previous iclog.
+> +		 *
+> +		 * If the previous iclog is active or dirty we are done.  There
+> +		 * is nothing to sync out. Otherwise, we attach ourselves to the
+>  		 * previous iclog and go to sleep.
+>  		 */
+> -		if (iclog->ic_state == XLOG_STATE_DIRTY ||
+> -		    (atomic_read(&iclog->ic_refcnt) == 0
+> -		     && iclog->ic_offset == 0)) {
+> -			iclog = iclog->ic_prev;
+> -			if (iclog->ic_state == XLOG_STATE_ACTIVE ||
+> -			    iclog->ic_state == XLOG_STATE_DIRTY)
+> -				goto no_sleep;
+> -			else
+> -				goto maybe_sleep;
+> -		} else {
+> -			if (atomic_read(&iclog->ic_refcnt) == 0) {
+> -				/* We are the only one with access to this
+> -				 * iclog.  Flush it out now.  There should
+> -				 * be a roundoff of zero to show that someone
+> -				 * has already taken care of the roundoff from
+> -				 * the previous sync.
+> -				 */
+> -				atomic_inc(&iclog->ic_refcnt);
+> -				lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+> -				xlog_state_switch_iclogs(log, iclog, 0);
+> -				spin_unlock(&log->l_icloglock);
+> -
+> -				if (xlog_state_release_iclog(log, iclog))
+> -					return -EIO;
+> +		iclog = iclog->ic_prev;
+> +		if (iclog->ic_state == XLOG_STATE_ACTIVE ||
+> +		    iclog->ic_state == XLOG_STATE_DIRTY)
+> +			goto out_unlock;
+> +	} else if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+> +		if (atomic_read(&iclog->ic_refcnt) == 0) {
+> +			/*
+> +			 * We are the only one with access to this iclog.
+> +			 *
+> +			 * Flush it out now.  There should be a roundoff of zero
+> +			 * to show that someone has already taken care of the
+> +			 * roundoff from the previous sync.
+> +			 */
+> +			atomic_inc(&iclog->ic_refcnt);
+> +			lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+> +			xlog_state_switch_iclogs(log, iclog, 0);
+> +			spin_unlock(&log->l_icloglock);
+>  
+> -				spin_lock(&log->l_icloglock);
+> -				if (be64_to_cpu(iclog->ic_header.h_lsn) == lsn &&
+> -				    iclog->ic_state != XLOG_STATE_DIRTY)
+> -					goto maybe_sleep;
+> -				else
+> -					goto no_sleep;
+> -			} else {
+> -				/* Someone else is writing to this iclog.
+> -				 * Use its call to flush out the data.  However,
+> -				 * the other thread may not force out this LR,
+> -				 * so we mark it WANT_SYNC.
+> -				 */
+> -				xlog_state_switch_iclogs(log, iclog, 0);
+> -				goto maybe_sleep;
+> -			}
+> -		}
+> -	}
+> +			if (xlog_state_release_iclog(log, iclog))
+> +				return -EIO;
+>  
+> -	/* By the time we come around again, the iclog could've been filled
+> -	 * which would give it another lsn.  If we have a new lsn, just
+> -	 * return because the relevant data has been flushed.
+> -	 */
+> -maybe_sleep:
+> -	if (flags & XFS_LOG_SYNC) {
+> -		/*
+> -		 * We must check if we're shutting down here, before
+> -		 * we wait, while we're holding the l_icloglock.
+> -		 * Then we check again after waking up, in case our
+> -		 * sleep was disturbed by a bad news.
+> -		 */
+> -		if (iclog->ic_state & XLOG_STATE_IOERROR) {
+> -			spin_unlock(&log->l_icloglock);
+> -			return -EIO;
+> +			spin_lock(&log->l_icloglock);
+> +			if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn ||
+> +			    iclog->ic_state == XLOG_STATE_DIRTY)
+> +				goto out_unlock;
+> +		} else {
+> +			/*
+> +			 * Someone else is writing to this iclog.
+> +			 *
+> +			 * Use its call to flush out the data.  However, the
+> +			 * other thread may not force out this LR, so we mark
+> +			 * it WANT_SYNC.
+> +			 */
+> +			xlog_state_switch_iclogs(log, iclog, 0);
+>  		}
+> -		XFS_STATS_INC(mp, xs_log_force_sleep);
+> -		xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+> +	} else {
+>  		/*
+> -		 * No need to grab the log lock here since we're
+> -		 * only deciding whether or not to return EIO
+> -		 * and the memory read should be atomic.
+> +		 * If the head iclog is not active nor dirty, we just attach
+> +		 * ourselves to the head and go to sleep if necessary.
+>  		 */
+> -		if (iclog->ic_state & XLOG_STATE_IOERROR)
+> -			return -EIO;
+> -	} else {
+> -
+> -no_sleep:
+> -		spin_unlock(&log->l_icloglock);
+> +		;
+>  	}
+> +
+> +	if (!(flags & XFS_LOG_SYNC))
+> +		goto out_unlock;
+> +
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +		goto out_error;
+> +	XFS_STATS_INC(mp, xs_log_force_sleep);
+> +	xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +		return -EIO;
+>  	return 0;
+> +
+> +out_unlock:
+> +	spin_unlock(&log->l_icloglock);
+> +	return 0;
+> +out_error:
+> +	spin_unlock(&log->l_icloglock);
+> +	return -EIO;
+>  }
+>  
+>  /*
+> -- 
+> 2.14.2
 > 
-
-Yes, an xfs_repair is necessary. An xfs_repair was already necessary to
-fix the padding mismatch or whatever else might have been wrong. This
-changes the side effect of the problem from a crash into a free space
-accounting inconsistency.
-
-> > +       agf->agf_flfirst = 0;
-> > +       agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
-> > +       agf->agf_flcount = 0;
-> 
-> Also I was under the impression that we should pre-allocate blocks in
-> the agfl for fast allocation of free b+tree nodes.  Wouldn't we want
-> to pre-allocate some blocks as would be done by xfs_repair (I have a
-> feeling someone is going to tell me where this happens elsewhere in
-> the codebase or can be handled at block run time with little ill
-> effect)?
-> 
-
-The function that calls the reset (xfs_alloc_fix_freelist()) will
-repopulate it once it sees that it is empty.
-
-> If I'm correct in either case I'd appreciate a
-> Reviewed by: Dave Chiluk <chiluk+linuxxfs@indeed.com>
-> 
-
-I'm going to defer this until posting a legitimate patch because it has
-changed a bit (though not fundamentally). This post was more of a first
-pass to sanity check the idea. I'd appreciate another look once a
-legitimate v1 is posted.. thanks!
-
-Brian
-
-> Thanks,
-> Dave
-> 
-> 
-> > +       xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLFIRST | XFS_AGF_FLLAST |
-> > +                                   XFS_AGF_FLCOUNT);
-> > +
-> > +       pag->pagf_flcount = 0;
-> > +       pag->pagf_needreset = false;
-> > +}
-> > +
-> >  /*
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
