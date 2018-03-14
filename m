@@ -1,95 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35789 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:36484 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752885AbeCMXw2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Mar 2018 19:52:28 -0400
-Date: Tue, 13 Mar 2018 23:52:27 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
- our own parser
-Message-ID: <20180313235227.GH4449@wotan.suse.de>
-References: <20180313205911.26082-1-mcgrof@kernel.org>
- <20180313213916.GD18129@dastard>
+        id S1752205AbeCNPq4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Mar 2018 11:46:56 -0400
+Date: Wed, 14 Mar 2018 16:46:55 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable
+        inode
+Message-ID: <20180314154655.GA4937@lst.de>
+References: <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com> <CAOQ4uxhdkhZup=ndukKCRtU13YVs8jQxT0zgOT_XN3_-tB8TfQ@mail.gmail.com> <CAOQ4uxhCjBA99X_C-GpEBf=jC4S_wSrxMwS6Ovj7BtWLK1GmUA@mail.gmail.com> <20180313131109.GB6260@lst.de> <CAOQ4uxiDHSC19-fRdZmXM5BJB3-p9_LdPgSmxpjGrdCzhV2W2Q@mail.gmail.com> <20180313215028.GE18129@dastard> <CAOQ4uxgsMwtQRCkpJTJoVO-mbU1yRz7F0pMOAVcJphEEKq8SHA@mail.gmail.com> <20180314123314.GG18129@dastard> <20180314124913.GA936@lst.de> <CAOQ4uxi0j=S+6zZo8YSzJQ4aSjdK02U2zxuOue7W3NtCrcKmSQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180313213916.GD18129@dastard>
+In-Reply-To: <CAOQ4uxi0j=S+6zZo8YSzJQ4aSjdK02U2zxuOue7W3NtCrcKmSQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@sandeen.net, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>
 
-On Wed, Mar 14, 2018 at 08:39:16AM +1100, Dave Chinner wrote:
-> Just one obvious comment from a brief glance - you changed this from
-> "-t" to "-T", but ....
-> > +directory by using the -t parameter and secifying the type. Alternatively
-> 
-> Not here, or ....
->
-> > +If you use -t the type configuration file must be present under
-> 
-> here, or ....
-> 
-> > +#define MKFS_XFS_CONF_DIR	ROOT_SYSCONFDIR "/mkfs.xfs.d/"
-> > +#define CONFIG_MAX_KEY		1024
-> > +#define CONFIG_MAX_VALUE	PATH_MAX
-> > +#define CONFIG_MAX_BUFFER	CONFIG_MAX_KEY + CONFIG_MAX_VALUE + 3
-> > +#define PARAM_OPTS		"T:b:d:i:l:L:m:n:KNp:qr:s:CfV"
-> 
-> [ Please don't obfuscate parsing options like this ]
+On Wed, Mar 14, 2018 at 05:45:40PM +0200, Amir Goldstein wrote:
+> I also read between the lines that the responsibility of herding the stable
+> patches has shifted from you to Darrick in the last development cycle.
 
-The reason was we use them twice.
-
-> > @@ -3827,25 +4198,47 @@ main(
-> >  	textdomain(PACKAGE);
-> >  
-> >  	/*
-> > -	 * TODO: Sourcing defaults from a config file
-> > -	 *
-> >  	 * Before anything else, see if there's a config file with different
-> > -	 * defaults. If a file exists in <package location>, read in the new
-> > +	 * defaults. If a file exists in MKFS_XFS_CONF_DIR/default, read the new
-> >  	 * default values and overwrite them in the &dft structure. This way the
-> >  	 * new defaults will apply before we parse the CLI, and the CLI will
-> >  	 * still be able to override them. When more than one source is
-> >  	 * implemented, emit a message to indicate where the defaults being
-> >  	 * used came from.
-> > -	 *
-> > -	 * printf(_("Default configuration sourced from %s\n"), dft.source);
-> >  	 */
-> > +	tmp_config = getenv("MKFS_XFS_CONFIG");
-> > +	if (tmp_config != NULL) {
-> > +		dft.config_file = tmp_config;
-> > +		dft.type = DEFAULTS_ENVIRONMENT_CONFIG;
-> > +	}
-> > +
-> > +	c = getopt(argc, argv, PARAM_OPTS);
-> > +	if (c != EOF && c == 't') {
-> 
-> Here. Did you test this?
-
-I forgot to test -T after we bike-shed from -t to -T, sorry. Will fix.
-I had however tested -t for sure.
-
-> And, well, I have my doubts about this method of option parsing.
-> Where does it say in the getopt(3) man page that CLI options are
-> always parsed and returned in order of the option string rather than
-> the order the appear on the CLI?
-
-You are right. Its rather unclear. If -t is passed at the end this may
-not work.
-
-> I'll spend some more time looking at it, but my initial impression
-> is that there's a bit of work to be done yet...
-
-You're right, we should decide if we want to allow for -T to be used
-only in the beginning or if we want to allow for it anywhere on the
-command line. If we allow for it only at the beginning of the command
-line it may be easier and cleaner to support: we'd just check argv[1]
-for -T manually and if passed just bump argv down two slots. So we
-leave getopt() usage only for the other stuff.
-
-Thoughts?
-
-  Luis
+I have no idea if anyone is taking care of the stable tree at the moment,
+maybe we'll need a volunteer..
