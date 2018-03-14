@@ -1,149 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47730 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751302AbeCNNRD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Mar 2018 09:17:03 -0400
-Date: Wed, 14 Mar 2018 14:16:59 +0100
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
-Message-ID: <20180314131659.wnmt5zxfhrfsld7n@rh_laptop>
-References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
- <20180313042126.GB18129@dastard>
- <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
- <20180313224522.GZ7000@dastard>
+Received: from aserp2130.oracle.com ([141.146.126.79]:42306 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751618AbeCNSfp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 14:35:45 -0400
+Date: Wed, 14 Mar 2018 11:35:40 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 7/8] xfs: refactor xfs_log_force_lsn
+Message-ID: <20180314183540.GT4865@magnolia>
+References: <20180313104927.12926-1-hch@lst.de>
+ <20180313104927.12926-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180313224522.GZ7000@dastard>
+In-Reply-To: <20180313104927.12926-8-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 14, 2018 at 09:45:22AM +1100, Dave Chinner wrote:
-> On Tue, Mar 13, 2018 at 11:57:21AM -0500, Jayashree Mohan wrote:
-> > Hi Dave,
-> > 
-> > Thanks for the response. CrashMonkey assumes the following behavior of
-> > disk cache. Let me know if any of this sounds unreasonable.
-> > 
-> > Whenever the underlying storage device has an associated cache, the IO
-> > is marked completed the moment it reaches the disk cache. This does
-> > not guarantee that the disk cache would persist them in the same
-> > order, unless there is a Flush/FUA. The order of completed writes as
-> > seen by the user could be A, B, C, *Flush* D, E. However the disk
-> > cache could write these back to the persistent storage in the order
-> > say B, A, C, E, D. The only invariant it ensures is that writing in an
-> > order like  A, C, E, B, D is
-> > not possible because, writes A,B,C have to strictly happen before D
-> > and E. However you cannot ensure that (A, B, C) is written to the
-> > persistent storage in the same order.
-> > 
-> > CrashMonkey reorders bios in conformance to the guarantees provided by
-> > disk cache; we do not make any extra assumptions and we respect the
-> > barrier operations.
-> 
-> I think your model is wrong. caches do not randomly re-order
-> completed IO operations to the *same LBA*. When a block is overwritten
-> the cache contains the overwrite data and the previous data is
-> discarded. THe previous data may be on disk, but it's no longer in
-> the cache.
-> 
-> e.g. take a dependent filesystem read-modify-write cycle (I'm
-> choosing this because that's the problem this fzero/fsync
-> "bug" is apparently demonstrating) where we write data to disk,
-> invalidate the kernel cache, read the data back off disk, zero it
-> in memory, then write it back to disk, all in the one LBA:
-> 
-> 	<flush>
-> 	write A to disk, invalidate kernel cache
-> 	......
-> 	read A from disk into kernel cache
-> 	A' = <modify A>
-> 	write A' to disk
-> 	......
-> 	<flush>
-> 
-> The disk cache model you are describing allows writes
-> to be reordered anywhere in the flush window regardless of their
-> inter-IO completion dependencies. Hence you're allowing temporally
-> ordered filesystem IO to the same LBA be reorded like so:
-> 
-> 
-> 	<flush>
-> 	......
-> 	write A'
-> 	......
-> 	read A
-> 	A' = <modify A>
-> 	......
-> 	write A
-> 	......
-> 	<flush>
-> 
-> This violates causality. it's simply *not possible for the disk
-> cache to contain A' before either "write A", "read A" or the
-> in-memory modification of A has been completed by the OS. Hence
-> there is no way for a crash situation to have the disk cache or the
-> physical storage medium to contain corruption that indicates it
-> stored A' on disk before stored A.
-> 
-> > CrashMonkey therefore respects the guarantees provided by the disk
-> > cache, and assumes nothing more than that. I hope this provides more
-> > clarity on what
-> > CrashMonkey is trying to do, and why we think it is reasonable to do so.
-> 
-> It clearly demonstrates to me where CrashMonkey is broken and needs
-> fixing - it needs to respect the ordering of temporally separate IO
-> to the same LBA and not violate causality. Simulators that assume
-> time travel is possible are not useful to us.
-> 
-> Cheers,
+On Tue, Mar 13, 2018 at 11:49:26AM +0100, Christoph Hellwig wrote:
+> Use the the smallest possible loop as preable to find the correct iclog
+> buffer, and then use gotos for unwinding to straighten the code.
 
-Hi Dave,
-
-just FYI the 042 xfstest does fail on xfs with what I think is stale
-data exposure. It might not be related at all to what crashmonkey is
-reporting but there is something wrong nevertheless.
-
-SECTION       -- ext4
-RECREATING    -- xfs on /dev/vdc1
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 rhel7 4.16.0-rc5+
-MKFS_OPTIONS  -- -f -f /dev/vdb1
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb1 /mnt/test1
-
-generic/042	 - output mismatch (see /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad)
-    --- tests/generic/042.out	2018-03-14 05:56:38.619124060 -0400
-    +++ /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad	2018-03-14 09:14:54.825969765 -0400
-    @@ -5,6 +5,16 @@
-     fpunch
-     wrote 65536/65536 bytes at offset 0
-     XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-    +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-    +*
-    +000f000 0000 0000 0000 0000 0000 0000 0000 0000
-    +*
-    ...
-    (Run 'diff -u tests/generic/042.out /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad'  to see the entire diff)
-Ran: generic/042
-Failures: generic/042
-Failed 1 of 1 tests
-
-
-ext4 fails as well, however it looks to be a problem with the test
-itself where it is expecting the file to remain of a zero length which
-it might not be the case.
-
--Lukas
+"Use the smallest possible loop to find the correct iclog..." ?
 
 > 
-> Dave.
+> Also fix the top of function comment while we're at it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_log.c | 142 ++++++++++++++++++++++++-------------------------------
+>  1 file changed, 62 insertions(+), 80 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index a37a8defcd39..b6c6f227b2d7 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3404,11 +3404,10 @@ xfs_log_force(
+>   *		state and go to sleep or return.
+>   *	If it is in any other state, go to sleep or return.
+>   *
+> - * Synchronous forces are implemented with a signal variable. All callers
+> - * to force a given lsn to disk will wait on a the sv attached to the
+> - * specific in-core log.  When given in-core log finally completes its
+> - * write to disk, that thread will wake up all threads waiting on the
+> - * sv.
+> + * Synchronous forces are implemented with a wait queue.  All callers to force a
+> + * given lsn to disk will wait on a the queue attached to the specific in-core
+
+"All callers trying to force a given lsn to disk must wait on the queue
+attached to the specific in-core log."... I think?
+
+--D
+
+> + * log.  When given in-core log finally completes its write to disk, that thread
+> + * will wake up all threads waiting on the queue.
+>   */
+>  int
+>  xfs_log_force_lsn(
+> @@ -3433,92 +3432,75 @@ xfs_log_force_lsn(
+>  try_again:
+>  	spin_lock(&log->l_icloglock);
+>  	iclog = log->l_iclog;
+> -	if (iclog->ic_state & XLOG_STATE_IOERROR) {
+> -		spin_unlock(&log->l_icloglock);
+> -		return -EIO;
+> -	}
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +		goto out_error;
+>  
+> -	do {
+> -		if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
+> -			iclog = iclog->ic_next;
+> -			continue;
+> -		}
+> +	while (be64_to_cpu(iclog->ic_header.h_lsn) != lsn) {
+> +		iclog = iclog->ic_next;
+> +		if (iclog == log->l_iclog)
+> +			goto out_unlock;
+> +	}
+>  
+> -		if (iclog->ic_state == XLOG_STATE_DIRTY) {
+> -			spin_unlock(&log->l_icloglock);
+> -			return 0;
+> -		}
+> +	if (iclog->ic_state == XLOG_STATE_DIRTY)
+> +		goto out_unlock;
+>  
+> -		if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+> -			/*
+> -			 * We sleep here if we haven't already slept (e.g.
+> -			 * this is the first time we've looked at the correct
+> -			 * iclog buf) and the buffer before us is going to
+> -			 * be sync'ed. The reason for this is that if we
+> -			 * are doing sync transactions here, by waiting for
+> -			 * the previous I/O to complete, we can allow a few
+> -			 * more transactions into this iclog before we close
+> -			 * it down.
+> -			 *
+> -			 * Otherwise, we mark the buffer WANT_SYNC, and bump
+> -			 * up the refcnt so we can release the log (which
+> -			 * drops the ref count).  The state switch keeps new
+> -			 * transaction commits from using this buffer.  When
+> -			 * the current commits finish writing into the buffer,
+> -			 * the refcount will drop to zero and the buffer will
+> -			 * go out then.
+> -			 */
+> -			if (!already_slept &&
+> -			    (iclog->ic_prev->ic_state &
+> -			     (XLOG_STATE_WANT_SYNC | XLOG_STATE_SYNCING))) {
+> -				ASSERT(!(iclog->ic_state & XLOG_STATE_IOERROR));
+> +	if (iclog->ic_state == XLOG_STATE_ACTIVE) {
+> +		/*
+> +		 * We sleep here if we haven't already slept (e.g. this is the
+> +		 * first time we've looked at the correct iclog buf) and the
+> +		 * buffer before us is going to be sync'ed.  The reason for this
+> +		 * is that if we are doing sync transactions here, by waiting
+> +		 * for the previous I/O to complete, we can allow a few more
+> +		 * transactions into this iclog before we close it down.
+> +		 *
+> +		 * Otherwise, we mark the buffer WANT_SYNC, and bump up the
+> +		 * refcnt so we can release the log (which drops the ref count).
+> +		 * The state switch keeps new transaction commits from using
+> +		 * this buffer.  When the current commits finish writing into
+> +		 * the buffer, the refcount will drop to zero and the buffer
+> +		 * will go out then.
+> +		 */
+> +		if (!already_slept &&
+> +		    (iclog->ic_prev->ic_state &
+> +		     (XLOG_STATE_WANT_SYNC | XLOG_STATE_SYNCING))) {
+> +			ASSERT(!(iclog->ic_state & XLOG_STATE_IOERROR));
+>  
+> -				XFS_STATS_INC(mp, xs_log_force_sleep);
+> +			XFS_STATS_INC(mp, xs_log_force_sleep);
+>  
+> -				xlog_wait(&iclog->ic_prev->ic_write_wait,
+> -							&log->l_icloglock);
+> -				already_slept = 1;
+> -				goto try_again;
+> -			}
+> -			atomic_inc(&iclog->ic_refcnt);
+> -			xlog_state_switch_iclogs(log, iclog, 0);
+> -			spin_unlock(&log->l_icloglock);
+> -			if (xlog_state_release_iclog(log, iclog))
+> -				return -EIO;
+> -			if (log_flushed)
+> -				*log_flushed = 1;
+> -			spin_lock(&log->l_icloglock);
+> +			xlog_wait(&iclog->ic_prev->ic_write_wait,
+> +					&log->l_icloglock);
+> +			already_slept = 1;
+> +			goto try_again;
+>  		}
+> +		atomic_inc(&iclog->ic_refcnt);
+> +		xlog_state_switch_iclogs(log, iclog, 0);
+> +		spin_unlock(&log->l_icloglock);
+> +		if (xlog_state_release_iclog(log, iclog))
+> +			return -EIO;
+> +		if (log_flushed)
+> +			*log_flushed = 1;
+> +		spin_lock(&log->l_icloglock);
+> +	}
+>  
+> -		if ((flags & XFS_LOG_SYNC) && /* sleep */
+> -		    !(iclog->ic_state &
+> -		      (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))) {
+> -			/*
+> -			 * Don't wait on completion if we know that we've
+> -			 * gotten a log write error.
+> -			 */
+> -			if (iclog->ic_state & XLOG_STATE_IOERROR) {
+> -				spin_unlock(&log->l_icloglock);
+> -				return -EIO;
+> -			}
+> -			XFS_STATS_INC(mp, xs_log_force_sleep);
+> -			xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+> -			/*
+> -			 * No need to grab the log lock here since we're
+> -			 * only deciding whether or not to return EIO
+> -			 * and the memory read should be atomic.
+> -			 */
+> -			if (iclog->ic_state & XLOG_STATE_IOERROR)
+> -				return -EIO;
+> -		} else {		/* just return */
+> -			spin_unlock(&log->l_icloglock);
+> -		}
+> +	if (!(flags & XFS_LOG_SYNC) ||
+> +	    (iclog->ic_state & (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY)))
+> +		goto out_unlock;
+>  
+> -		return 0;
+> -	} while (iclog != log->l_iclog);
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +		goto out_error;
+> +
+> +	XFS_STATS_INC(mp, xs_log_force_sleep);
+> +	xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +		return -EIO;
+> +	return 0;
+>  
+> +out_unlock:
+>  	spin_unlock(&log->l_icloglock);
+>  	return 0;
+> +out_error:
+> +	spin_unlock(&log->l_icloglock);
+> +	return -EIO;
+>  }
+>  
+>  /*
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.14.2
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
