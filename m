@@ -1,398 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:34502 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932217AbeCOU2a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 16:28:30 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2FKFGgX053715
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:28:30 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2gqyq001q5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:28:30 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w2FKSTa8002926
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:28:29 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2FKSSGU016626
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:28:29 GMT
-Subject: [PATCH 20/20] xfs: repair damaged symlinks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Mar 2018 13:28:27 -0700
-Message-ID: <152114570763.22742.15924289906279973579.stgit@magnolia>
-In-Reply-To: <152114558216.22742.6635423816559130061.stgit@magnolia>
-References: <152114558216.22742.6635423816559130061.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:52392 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751362AbeCNPTQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Mar 2018 11:19:16 -0400
+Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
+References: <20180305150546.32191-1-jtulak@redhat.com>
+ <20180305215659.GE18129@dastard>
+ <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net>
+ <20180305223148.GG18129@dastard>
+ <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net>
+ <CACj3i73y_ZWvgdv3aKTKaKGuo+6uhcfy1465T3CD2uQDLE3=xQ@mail.gmail.com>
+ <20180306213915.GJ18129@dastard>
+ <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
+ <e7a132d5-33de-736f-840a-8de45910846c@sandeen.net>
+ <CACj3i73Zb04iHUSS7LNnvegGMe1xaTXwxBjCPnNQg9JmEwQQtQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c1da5bba-3abb-7b14-d5e9-2d326af542bc@sandeen.net>
+Date: Wed, 14 Mar 2018 11:19:13 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CACj3i73Zb04iHUSS7LNnvegGMe1xaTXwxBjCPnNQg9JmEwQQtQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 3/14/18 9:30 AM, Jan Tulak wrote:
+> On Fri, Mar 9, 2018 at 12:28 AM, Eric Sandeen <sandeen@sandeen.net>
+> wrote:
+>> 
+>> If it's critical to report whether errors were fixed, it would be
+>> trivial to add a new option to xfs_repair which causes it to test
+>> fs_is_dirty for runs without "-n", and exit with a different
+>> value.
+> 
+> I have toyed with it a bit and this seems to be the best option. A 
+> flag that changes the exit code on a successful run. Is exit code 3 
+> ok? According to man page, only 1 and 2 are currently used and the 
+> "everything is ok now, but an issue was there" should not be mixed 
+> with the existing ones. I also thought about a flag that would
+> change all exit codes to fsck ones, but that seems too complicated
+> and completely unnecessary.
 
-Repair inconsistent symbolic link data.
+Hm, I guess we'll have to.
+ 
+> [...] always return a  status  code of  0  if it completes without
+> problems.  If a runtime error is encoun- tered during operation, it
+> will return a status of 1.   In  this  case, xfs_repair should be
+> restarted.  If xfs_repair is unable to proceed due to a dirty log, it
+> will return a status of 2.
+> 
+> As for the flag, how about -e? It is not used yet and it makes some 
+> sense as "e-exit code."
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile               |    1 
- fs/xfs/scrub/repair.h         |    2 
- fs/xfs/scrub/scrub.c          |    1 
- fs/xfs/scrub/symlink.c        |    2 
- fs/xfs/scrub/symlink_repair.c |  285 +++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 290 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/scrub/symlink_repair.c
+sure, sounds fine.
 
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index c3f9e19..2bc350b 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -181,6 +181,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   refcount_repair.o \
- 				   repair.o \
- 				   rmap_repair.o \
-+				   symlink_repair.o \
- 				   )
- endif
- endif
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 1c5d562..928fb37 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -124,6 +124,7 @@ int xfs_repair_refcountbt(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_inode(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_bmap_data(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_bmap_attr(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
-+int xfs_repair_symlink(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- 
- #else
- 
-@@ -159,6 +160,7 @@ xfs_repair_calc_ag_resblks(
- # define xfs_repair_inode		(NULL)
- # define xfs_repair_bmap_data		(NULL)
- # define xfs_repair_bmap_attr		(NULL)
-+# define xfs_repair_symlink		(NULL)
- 
- #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 2a3a292..889f1f9 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -318,6 +318,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_INODE,
- 		.setup	= xfs_scrub_setup_symlink,
- 		.scrub	= xfs_scrub_symlink,
-+		.repair	= xfs_repair_symlink,
- 	},
- 	[XFS_SCRUB_TYPE_PARENT] = {	/* parent pointers */
- 		.type	= ST_INODE,
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-index 3aa3d60..a370aad 100644
---- a/fs/xfs/scrub/symlink.c
-+++ b/fs/xfs/scrub/symlink.c
-@@ -48,7 +48,7 @@ xfs_scrub_setup_symlink(
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip, XFS_SYMLINK_MAPS);
- }
- 
- /* Symbolic links. */
-diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
-new file mode 100644
-index 0000000..edd9942
---- /dev/null
-+++ b/fs/xfs/scrub/symlink_repair.c
-@@ -0,0 +1,285 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_symlink.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+
-+/* Blow out the whole symlink; replace contents. */
-+STATIC int
-+xfs_repair_symlink_rewrite(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	const char		*target_path,
-+	int			pathlen)
-+{
-+	struct xfs_defer_ops	dfops;
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	struct xfs_ifork	*ifp;
-+	const char		*cur_chunk;
-+	struct xfs_mount	*mp = (*tpp)->t_mountp;
-+	struct xfs_buf		*bp;
-+	xfs_fsblock_t		first_block;
-+	xfs_fileoff_t		first_fsb;
-+	xfs_filblks_t		fs_blocks;
-+	xfs_daddr_t		d;
-+	int			byte_cnt;
-+	int			n;
-+	int			nmaps;
-+	int			offset;
-+	int			error = 0;
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+
-+	/* Truncate the whole data fork if it wasn't inline. */
-+	if (!(ifp->if_flags & XFS_IFINLINE)) {
-+		error = xfs_itruncate_extents(tpp, ip, XFS_DATA_FORK, 0);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Blow out the in-core fork and zero the on-disk fork. */
-+	xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
-+	ip->i_d.di_nextents = 0;
-+	memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
-+	ip->i_df.if_flags |= XFS_IFEXTENTS;
-+
-+	/* Rewrite an inline symlink. */
-+	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
-+		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
-+
-+		i_size_write(VFS_I(ip), pathlen);
-+		ip->i_d.di_size = pathlen;
-+		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
-+		xfs_trans_log_inode(*tpp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
-+		goto out;
-+
-+	}
-+
-+	/* Rewrite a remote symlink. */
-+	fs_blocks = xfs_symlink_blocks(mp, pathlen);
-+	first_fsb = 0;
-+	nmaps = XFS_SYMLINK_MAPS;
-+
-+	/* Reserve quota for new blocks. */
-+	error = xfs_trans_reserve_quota_nblks(*tpp, ip, fs_blocks, 0,
-+			XFS_QMOPT_RES_REGBLKS);
-+	if (error)
-+		goto out;
-+
-+	/* Map blocks, write symlink target. */
-+	xfs_defer_init(&dfops, &first_block);
-+
-+	error = xfs_bmapi_write(*tpp, ip, first_fsb, fs_blocks,
-+			  XFS_BMAPI_METADATA, &first_block, fs_blocks,
-+			  mval, &nmaps, &dfops);
-+	if (error)
-+		goto out_bmap_cancel;
-+
-+	ip->i_d.di_size = pathlen;
-+	i_size_write(VFS_I(ip), pathlen);
-+	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+
-+	cur_chunk = target_path;
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		char	*buf;
-+
-+		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
-+		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-+		bp = xfs_trans_get_buf(*tpp, mp->m_ddev_targp, d,
-+				       BTOBB(byte_cnt), 0);
-+		if (!bp) {
-+			error = -ENOMEM;
-+			goto out_bmap_cancel;
-+		}
-+		bp->b_ops = &xfs_symlink_buf_ops;
-+
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
-+		byte_cnt = min(byte_cnt, pathlen);
-+
-+		buf = bp->b_addr;
-+		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
-+					   byte_cnt, bp);
-+
-+		memcpy(buf, cur_chunk, byte_cnt);
-+
-+		cur_chunk += byte_cnt;
-+		pathlen -= byte_cnt;
-+		offset += byte_cnt;
-+
-+		xfs_trans_buf_set_type(*tpp, bp, XFS_BLFT_SYMLINK_BUF);
-+		xfs_trans_log_buf(*tpp, bp, 0, (buf + byte_cnt - 1) -
-+						(char *)bp->b_addr);
-+	}
-+	ASSERT(pathlen == 0);
-+
-+	error = xfs_defer_finish(tpp, &dfops);
-+	if (error)
-+		goto out_bmap_cancel;
-+
-+	return 0;
-+
-+out_bmap_cancel:
-+	xfs_defer_cancel(&dfops);
-+out:
-+	return error;
-+}
-+
-+/* Fix everything that fails the verifiers in the remote blocks. */
-+STATIC int
-+xfs_repair_symlink_fix_remotes(
-+	struct xfs_scrub_context	*sc,
-+	loff_t				len)
-+{
-+	struct xfs_bmbt_irec		mval[XFS_SYMLINK_MAPS];
-+	struct xfs_buf			*bp;
-+	xfs_filblks_t			fsblocks;
-+	xfs_daddr_t			d;
-+	loff_t				offset;
-+	unsigned int			byte_cnt;
-+	int				n;
-+	int				nmaps = XFS_SYMLINK_MAPS;
-+	int				nr;
-+	int				error;
-+
-+	fsblocks = xfs_symlink_blocks(sc->mp, len);
-+	error = xfs_bmapi_read(sc->ip, 0, fsblocks, mval, &nmaps, 0);
-+	if (error)
-+		return error;
-+
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		d = XFS_FSB_TO_DADDR(sc->mp, mval[n].br_startblock);
-+		byte_cnt = XFS_FSB_TO_B(sc->mp, mval[n].br_blockcount);
-+
-+		error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
-+				d, BTOBB(byte_cnt), 0, &bp, NULL);
-+		if (error)
-+			return error;
-+		bp->b_ops = &xfs_symlink_buf_ops;
-+
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(sc->mp, byte_cnt);
-+		if (len < byte_cnt)
-+			byte_cnt = len;
-+
-+		nr = xfs_symlink_hdr_set(sc->mp, sc->ip->i_ino, offset,
-+				byte_cnt, bp);
-+
-+		len -= byte_cnt;
-+		offset += byte_cnt;
-+
-+		xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SYMLINK_BUF);
-+		xfs_trans_log_buf(sc->tp, bp, 0, nr - 1);
-+		xfs_trans_brelse(sc->tp, bp);
-+	}
-+	if (len != 0)
-+		return -EFSCORRUPTED;
-+
-+	return 0;
-+}
-+
-+int
-+xfs_repair_symlink(
-+	struct xfs_scrub_context	*sc,
-+	uint32_t			scrub_oflags)
-+{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	loff_t				len;
-+	size_t				newlen;
-+	int				error = 0;
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	len = i_size_read(VFS_I(ip));
-+	xfs_trans_ijoin(sc->tp, ip, 0);
-+
-+	/* Truncate the inode if there's a zero inside the length. */
-+	if (ifp->if_flags & XFS_IFINLINE) {
-+		if (ifp->if_u1.if_data)
-+			newlen = strnlen(ifp->if_u1.if_data,
-+					XFS_IFORK_DSIZE(ip));
-+		else {
-+			/* Zero length symlink becomes a root symlink. */
-+			ifp->if_u1.if_data = kmem_alloc(4, KM_SLEEP | KM_NOFS);
-+			snprintf(ifp->if_u1.if_data, 4, "/");
-+			newlen = 1;
-+		}
-+		if (len > newlen) {
-+			i_size_write(VFS_I(ip), newlen);
-+			ip->i_d.di_size = newlen;
-+			xfs_trans_log_inode(sc->tp, ip, XFS_ILOG_DDATA |
-+					XFS_ILOG_CORE);
-+		}
-+		goto out;
-+	}
-+
-+	error = xfs_repair_symlink_fix_remotes(sc, len);
-+	if (error)
-+		goto out;
-+
-+	/* Roll transaction, release buffers. */
-+	error = xfs_trans_roll_inode(&sc->tp, ip);
-+	if (error)
-+		goto out;
-+
-+	/* Size set correctly? */
-+	len = i_size_read(VFS_I(ip));
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	error = xfs_readlink(ip, sc->buf);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * Figure out the new target length.  We can't handle zero-length
-+	 * symlinks, so make sure that we don't write that out.
-+	 */
-+	newlen = strnlen(sc->buf, XFS_SYMLINK_MAXLEN);
-+	if (newlen == 0) {
-+		*((char *)sc->buf) = '/';
-+		newlen = 1;
-+	}
-+
-+	if (len > newlen)
-+		error = xfs_repair_symlink_rewrite(&sc->tp, ip, sc->buf,
-+				newlen);
-+out:
-+	return error;
-+}
+-Eric
 
