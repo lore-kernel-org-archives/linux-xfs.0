@@ -1,178 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:35828 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750779AbeCNN55 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Mar 2018 09:57:57 -0400
-Date: Wed, 14 Mar 2018 14:57:52 +0100
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
-Message-ID: <20180314135752.5a2vmjr7cuavusiw@rh_laptop>
-References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
- <20180313042126.GB18129@dastard>
- <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
- <20180313224522.GZ7000@dastard>
- <20180314131659.wnmt5zxfhrfsld7n@rh_laptop>
- <20180314133258.GB7000@dastard>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:55316 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751508AbeCNNwN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 09:52:13 -0400
+Received: by mail-wm0-f53.google.com with SMTP id q83so4244149wme.5
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Mar 2018 06:52:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180314133258.GB7000@dastard>
+In-Reply-To: <20180308223652.GT18129@dastard>
+References: <20180305150546.32191-1-jtulak@redhat.com> <20180305215659.GE18129@dastard>
+ <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net> <20180305223148.GG18129@dastard>
+ <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net> <CACj3i73y_ZWvgdv3aKTKaKGuo+6uhcfy1465T3CD2uQDLE3=xQ@mail.gmail.com>
+ <20180306213915.GJ18129@dastard> <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
+ <20180308162838.GY18989@magnolia> <20180308223652.GT18129@dastard>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 14 Mar 2018 14:51:51 +0100
+Message-ID: <CACj3i720ppnLEyF0k7Sv7Nf27SubnpC+N2A=7Y60st+ncGCG7w@mail.gmail.com>
+Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Mar 15, 2018 at 12:32:58AM +1100, Dave Chinner wrote:
-> On Wed, Mar 14, 2018 at 02:16:59PM +0100, Lukas Czerner wrote:
-> > On Wed, Mar 14, 2018 at 09:45:22AM +1100, Dave Chinner wrote:
-> > > On Tue, Mar 13, 2018 at 11:57:21AM -0500, Jayashree Mohan wrote:
-> > > > Hi Dave,
-> > > > 
-> > > > Thanks for the response. CrashMonkey assumes the following behavior of
-> > > > disk cache. Let me know if any of this sounds unreasonable.
-> > > > 
-> > > > Whenever the underlying storage device has an associated cache, the IO
-> > > > is marked completed the moment it reaches the disk cache. This does
-> > > > not guarantee that the disk cache would persist them in the same
-> > > > order, unless there is a Flush/FUA. The order of completed writes as
-> > > > seen by the user could be A, B, C, *Flush* D, E. However the disk
-> > > > cache could write these back to the persistent storage in the order
-> > > > say B, A, C, E, D. The only invariant it ensures is that writing in an
-> > > > order like  A, C, E, B, D is
-> > > > not possible because, writes A,B,C have to strictly happen before D
-> > > > and E. However you cannot ensure that (A, B, C) is written to the
-> > > > persistent storage in the same order.
-> > > > 
-> > > > CrashMonkey reorders bios in conformance to the guarantees provided by
-> > > > disk cache; we do not make any extra assumptions and we respect the
-> > > > barrier operations.
-> > > 
-> > > I think your model is wrong. caches do not randomly re-order
-> > > completed IO operations to the *same LBA*. When a block is overwritten
-> > > the cache contains the overwrite data and the previous data is
-> > > discarded. THe previous data may be on disk, but it's no longer in
-> > > the cache.
-> > > 
-> > > e.g. take a dependent filesystem read-modify-write cycle (I'm
-> > > choosing this because that's the problem this fzero/fsync
-> > > "bug" is apparently demonstrating) where we write data to disk,
-> > > invalidate the kernel cache, read the data back off disk, zero it
-> > > in memory, then write it back to disk, all in the one LBA:
-> > > 
-> > > 	<flush>
-> > > 	write A to disk, invalidate kernel cache
-> > > 	......
-> > > 	read A from disk into kernel cache
-> > > 	A' = <modify A>
-> > > 	write A' to disk
-> > > 	......
-> > > 	<flush>
-> > > 
-> > > The disk cache model you are describing allows writes
-> > > to be reordered anywhere in the flush window regardless of their
-> > > inter-IO completion dependencies. Hence you're allowing temporally
-> > > ordered filesystem IO to the same LBA be reorded like so:
-> > > 
-> > > 
-> > > 	<flush>
-> > > 	......
-> > > 	write A'
-> > > 	......
-> > > 	read A
-> > > 	A' = <modify A>
-> > > 	......
-> > > 	write A
-> > > 	......
-> > > 	<flush>
-> > > 
-> > > This violates causality. it's simply *not possible for the disk
-> > > cache to contain A' before either "write A", "read A" or the
-> > > in-memory modification of A has been completed by the OS. Hence
-> > > there is no way for a crash situation to have the disk cache or the
-> > > physical storage medium to contain corruption that indicates it
-> > > stored A' on disk before stored A.
-> > > 
-> > > > CrashMonkey therefore respects the guarantees provided by the disk
-> > > > cache, and assumes nothing more than that. I hope this provides more
-> > > > clarity on what
-> > > > CrashMonkey is trying to do, and why we think it is reasonable to do so.
-> > > 
-> > > It clearly demonstrates to me where CrashMonkey is broken and needs
-> > > fixing - it needs to respect the ordering of temporally separate IO
-> > > to the same LBA and not violate causality. Simulators that assume
-> > > time travel is possible are not useful to us.
-> > > 
-> > > Cheers,
-> > 
-> > Hi Dave,
-> > 
-> > just FYI the 042 xfstest does fail on xfs with what I think is stale
-> > data exposure. It might not be related at all to what crashmonkey is
-> > reporting but there is something wrong nevertheless.
-> 
-> generic/042 is unreliable and certain operations result in a
-> non-zero length file because of metadata commits/writeback that
-> occur as a result of the fallocate operations. It got removed from
-> the auto group because it isn't a reliable test about 3 years ago:
+On Thu, Mar 8, 2018 at 11:36 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Mar 08, 2018 at 08:28:38AM -0800, Darrick J. Wong wrote:
+>> On Thu, Mar 08, 2018 at 11:57:40AM +0100, Jan Tulak wrote:
+>> > On Tue, Mar 6, 2018 at 10:39 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > > On Tue, Mar 06, 2018 at 12:51:18PM +0100, Jan Tulak wrote:
+>> > >> On Tue, Mar 6, 2018 at 12:33 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> > >> > On 3/5/18 4:31 PM, Dave Chinner wrote:
+>> > >> >> On Mon, Mar 05, 2018 at 04:06:38PM -0600, Eric Sandeen wrote:
+>> > >> >>> As for running automatically and fix any problems, we may need to make
+>> > >> >>> a decision.  If it won't mount due to a log problem, do we automatically
+>> > >> >>> use -L or drop to a shell and punt to the admin?  (That's what we would
+>> > >> >>> do w/o any fsck -f invocation today...)
+>> > >> >>
+>> > >> >> Define the expected "forcefsck" semantics, and that will tell us
+>> > >> >> what we need to do. Is it automatic system recovery? What if the
+>> > >> >> root fs can't be mounted due to log replay problems?
+>> > >> >
+>> > >> > You're asking too much.  ;)  Semantics?  ;)  Best we can probably do
+>> > >> > is copy what e2fsck does - it tries to replay the log before running
+>> > >> > the actual fsck.  So ... what does e2fsck do if /it/ can't replay
+>> > >> > the log?
+>> > >>
+>> > >> As far as I can tell, in that case, e2fsck exit code indicates 4 -
+>> > >> File system errors left uncorrected, but I'm studying ext testing
+>> > >> tools and will try to verify it.
+>> > >> About the -L flag, I think it is a bad idea - we don't want anything
+>> > >> dangerous to happen here, so if it can't be fixed safely and in an
+>> > >> automated way, just bail out.
+>> > >> That being said, I added a log replay attempt in there (via mount/unmount).
+>> > >
+>> > > I really don't advise doing that for a forced filesystem check. If
+>> > > the log is corrupt, mounting it will trigger the problems we are
+>> > > trying to avoid/fix by running a forced filesystem check. As it is,
+>> > > we're probably being run in this mode because mounting has already
+>> > > failed and causing the system not to boot.
+>> > >
+>> > > What we need to do is list how the startup scripts work according to
+>> > > what error is returned, and then match the behaviour we want in a
+>> > > specific corruption case to the behaviour of a specific return
+>> > > value.
+>> > >
+>> > > i.e. if we have a dirty log, then really we need manual
+>> > > intervention. That means we need to return an error that will cause
+>> > > the startup script to stop and drop into an interactive shell for
+>> > > the admin to fix manually.
+>> > >
+>> > > This is what I mean by "define the expected forcefsck semantics" -
+>> > > describe the behaviour of the system in reponse to the errors we can
+>> > > return to it, and match them to the problem cases we need to resolve
+>> > > with fsck.xfs.
+>> >
+>> > I tested it on Fedora 27. Exit codes 2 and 4 ("File system errors
+>> > corrected, system should be rebooted" and "File system errors left
+>> > uncorrected") drop the user into the emergency shell. Anything else
+>> > and the boot continues.
+>>
+>> FWIW Debian seems to panic() if the exit code has (1 << 2) set, where
+>> "panic()" either drops to a shell if panic= is not given or actually
+>> reboots the machine if panic= is given.  All other cases proceed with
+>> boot, including 2 (errors fixed, reboot now).
+>>
+>> That said, the installer seems to set up root xfs as pass 0 in fstab so
+>> fsck is not included in the initramfs at all.
+>
+> Ok, so how do we deal with the "all distros are different, none
+> correctly follow documented fsck behaviour"?  It seems to me like we
+> need fsck to drop into an admin shell if anything goes wrong,
+> perhaps with the output saying what went wrong.
+>
+> e.g. if we corrected errors and need a reboot, then we return 4 to
+> get the system to drop into a shell with this:
+>
+> *** Errors corrected, You must reboot now! ***
+> #
 
-Sure, I just that it clearly exposes stale data on xfs. That is, the
-resulting file contains data that was previously written to the
-underlying image file to catch the exposure. I am aware of the non-zero
-length file problem, that's not what I am pointing out though.
+That makes a sense, but I have a question here. Can it happen with
+xfs, with on an unmounted fs, and can I detect it somehow? I can parse
+through -vvvv output, but that doesn't look like a sensible solution -
+too many things that could be missed if it is an issue and we need to
+watch out for corrections that requires a reboot.
 
--Lukas
+And another thing is that after we drop the user into the shell, they
+won't see any message directly I think but will have to read the logs
+to see the "Errors corrected, You must reboot now!"
 
-> 
-> commit 7721b85016081cf6651d139e8af26267eceb23d3
-> Author: Jeff Moyer <jmoyer@redhat.com>
-> Date:   Mon Dec 21 18:01:47 2015 +1100
-> 
->     generic/042: remove from the 'auto' group
->     
->     This test fails 100% of the time for me on xfs and current git head, and
->     is not run for ext4 since ext4 does not support shutdown.  After talking
->     with bfoster, it isn't expected to succeed right now.  Since the auto
->     group is for tests that *are* expected to succeed, let's move this one
->     out.
->     
->     Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
->     Reviewed-by: Brian Foster <bfoster@redhat.com>
->     Signed-off-by: Dave Chinner <david@fromorbit.com>
-> 
-> This is what it used to be testing - it was an XFS only test:
-> 
-> commit cf1438248c0f62f3b64013d23e9e6d6bc23ca24b
-> Author: Brian Foster <bfoster@redhat.com>
-> Date:   Tue Oct 14 22:59:39 2014 +1100
-> 
->     xfs/053: test for stale data exposure via falloc/writeback interaction
->     
->     XFS buffered I/O writeback has a subtle race condition that leads to
->     stale data exposure if the filesystem happens to crash after delayed
->     allocation blocks are converted on disk and before data is written back
->     to said blocks.
->     
->     Use file allocation commands to attempt to reproduce a related, but
->     slightly different variant of this problem. The associated falloc
->     commands can lead to partial writeback that converts an extent larger
->     than the range affected by falloc. If the filesystem crashes after the
->     extent conversion but before all other cached data is written to the
->     extent, stale data can be exposed.
->     
->     Signed-off-by: Brian Foster <bfoster@redhat.com>
->     Reviewed-by: Dave Chinner <dchinner@redhat.com>
->     Signed-off-by: Dave Chinner <david@fromorbit.com>
-> 
-> So, generic/042 was written to expose unwritten extent conversion
-> issues in the XFS writeback path and has nothing to do with mutliple
-> writes being reordered. It's failure detection is unreliable and not
-> indicative of an actual failure or data corruption, and that's why
-> it was removed from the auto group....
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>
+> If we had any other failure, then we drop to the shell with this:
+>
+> *** Failed to repair filesystem. Manual correction required! ***
+> #
+>
+> And only in the case that we have an unmounted, clean filesystem do
+> we continue to boot and mount the root filesystem?
+>
+>> > This happens before root volume is mounted during the boot, so I
+>> > propose this behaviour for fsck.xfs:
+>> > - if the volume/device is mounted, exit with 16 - usage or syntax
+>> > error (just to be sure)
+>
+> That's error 4 - requires manual intervention to repair.
+
+Mmh... yes, probably better to throw the shell at the user. If this
+happens, something has gone bad anyway, because the fsck should be run
+before systemd/init scripts attempts to mount the fs, so it should
+never happen in the boot environment.
+
+>
+>> > - if the volume/device has a dirty log, exit with 4 - errors left
+>> > uncorrected (drop to the shell)
+>
+> Yup.
+>
+>> > - if we find no errors, exit with 0 - no errors
+>
+> Yup, but only if the filesystem is not mounted, otherwise it's
+> "requires reboot" because repair with no errors still rewrites all
+> the per-ag metadata and so changes the on disk metadata layout.
+> Continuing at this point with a mounted filesystem is guaranteed to
+> corrupt the filesystem.
+
+We refuse to start with a mounted fs, so this is no issue.
+
+>
+>> > - if we find anything and xfs_repair ends successfully, exit with 1 -
+>> > errors corrected
+>
+> Same as the above case - needs reboot.
+
+Do we? The fs wasn't mounted at this point yet. Maybe there is a
+reason for a reboot, I just don't know about it. :-)
+
+>
+>> > - anything else and exit with 8 - operational error
+>
+> I'd argue that's "errors uncorrected" (i.e. error 4) because it
+> requires manual intervention to determine what the error was and
+> resolve the situation.
+>
+>> > And is there any other way how to get the "there were some errors, but
+>> > we corrected them" other than either 1) screenscrape xfs_repair or 2)
+>> > run xfs_repair twice, once with -n to detect and then without -n to
+>> > fix the found errors?
+>>
+>> I wouldn't run it twice, repair can take quite a while to run.
+>
+> Besides, we have to treat both cases the same because even if there
+> were no errors xfs_repair still modifies the metadata on disk....
+
+A small change in xfs_repair solves this, no issue for fsck anymore.
+
+>
+>> > I'm not aware of any script or tool that would refuse to work except
+>> > when started in a specific environment and noninteractively (doesn't
+>> > mean they don't exist, but it is not common). And because it seems
+>> > that fsck.xfs -f will do only what bare xfs_repair would do, no log
+>> > replay, nothing... then I really think that changing what the script
+>> > does (not just altering its output) based on environment tests is
+>> > unnecessary.
+>
+> This isn't a technical issue - this is a behaviour management issue.
+> We want people to always run xfs_repair when there's a problem that
+> needs fixing, not fsck.xfs. fsck.xfs is for startup scripts only and
+> has very limited scope in what we allow it to do. xfs_repair is the
+> tool users should be running to fix their filesystems, not trying to
+> do it indirectly through startup script infrastructure....
+>
+
+OK
+
+Cheers,
+Jan
