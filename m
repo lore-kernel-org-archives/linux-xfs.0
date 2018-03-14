@@ -1,87 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55950 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751788AbeCNQCH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 12:02:07 -0400
-Date: Wed, 14 Mar 2018 09:01:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable
- inode
-Message-ID: <20180314160152.GE4875@magnolia>
-References: <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
- <CAOQ4uxhdkhZup=ndukKCRtU13YVs8jQxT0zgOT_XN3_-tB8TfQ@mail.gmail.com>
- <CAOQ4uxhCjBA99X_C-GpEBf=jC4S_wSrxMwS6Ovj7BtWLK1GmUA@mail.gmail.com>
- <20180313131109.GB6260@lst.de>
- <CAOQ4uxiDHSC19-fRdZmXM5BJB3-p9_LdPgSmxpjGrdCzhV2W2Q@mail.gmail.com>
- <20180313215028.GE18129@dastard>
- <CAOQ4uxgsMwtQRCkpJTJoVO-mbU1yRz7F0pMOAVcJphEEKq8SHA@mail.gmail.com>
- <20180314123314.GG18129@dastard>
- <20180314124913.GA936@lst.de>
- <CAOQ4uxi0j=S+6zZo8YSzJQ4aSjdK02U2zxuOue7W3NtCrcKmSQ@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:50005 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751362AbeCNRTD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Mar 2018 13:19:03 -0400
+Date: Wed, 14 Mar 2018 17:19:01 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
+ our own parser
+Message-ID: <20180314171901.GI4449@wotan.suse.de>
+References: <20180313205911.26082-1-mcgrof@kernel.org>
+ <20180313213916.GD18129@dastard>
+ <20180313235227.GH4449@wotan.suse.de>
+ <20180314035531.GF18129@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi0j=S+6zZo8YSzJQ4aSjdK02U2zxuOue7W3NtCrcKmSQ@mail.gmail.com>
+In-Reply-To: <20180314035531.GF18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Greg KH <gregkh@linuxfoundation.org>, stable <stable@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@sandeen.net, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu
 
-On Wed, Mar 14, 2018 at 05:45:40PM +0200, Amir Goldstein wrote:
-> On Wed, Mar 14, 2018 at 2:49 PM, Christoph Hellwig <hch@lst.de> wrote:
-> > On Wed, Mar 14, 2018 at 11:33:14PM +1100, Dave Chinner wrote:
-> >> IOWs, if all you're doing is relying on "fixes" tags to determine
-> >> what /might/ be needed in a stable kernel.org update, then your
-> >> stable backport process is fundamentally broken. You're going to
-> >> break things and make stable kernels worse for your users, not
-> >> better.
-> >
-> > Agreed.  As someone who has done a fair share of -stable backports
-> > for a customer:  The backport to the last stable release is fairly
-> > easy, as it means picking everything that is not clearly a feature
-> > or cleanup, and you're generally still familiar with the code.  It
-> > still needs quite a lot of QA time.  Backports to older long-term
-> > stable bases can become much more hairy very quickly.
-> >
-> > In either case Fixes: tags don't help at all.  What helps is having
-> > one person doing the backports continiously so that they are in the
-> > loop.  So when I had a paying customer for the backports it was
-> > fairly easy for me as I knew where I left off, need to pick up again
-> > and remember the pitfalls of the old stable code.  Randomly Ccing
-> > stable or someone working from Fixes tags has none of those benefits.
-> > And espesically the CC stable is dangerous as there is no QA or
-> > detailed review performed.
+On Wed, Mar 14, 2018 at 02:55:31PM +1100, Dave Chinner wrote:
+> On Tue, Mar 13, 2018 at 11:52:27PM +0000, Luis R. Rodriguez wrote:
+> > On Wed, Mar 14, 2018 at 08:39:16AM +1100, Dave Chinner wrote:
+> > > Just one obvious comment from a brief glance - you changed this from
+> > > "-t" to "-T", but ....
+> > > > +directory by using the -t parameter and secifying the type. Alternatively
+> > > 
+> > > Not here, or ....
+> > >
+> > > > +If you use -t the type configuration file must be present under
+> > > 
+> > > here, or ....
+> > > 
+> > > > +#define MKFS_XFS_CONF_DIR	ROOT_SYSCONFDIR "/mkfs.xfs.d/"
+> > > > +#define CONFIG_MAX_KEY		1024
+> > > > +#define CONFIG_MAX_VALUE	PATH_MAX
+> > > > +#define CONFIG_MAX_BUFFER	CONFIG_MAX_KEY + CONFIG_MAX_VALUE + 3
+> > > > +#define PARAM_OPTS		"T:b:d:i:l:L:m:n:KNp:qr:s:CfV"
+> > > 
+> > > [ Please don't obfuscate parsing options like this ]
+> > 
+> > The reason was we use them twice.
 > 
-> Got it.
+> Which is not necessary. You don't need to change the option parsing
+> loop at all - the default config file can be parsed at any time as
+> a normal option. The default structure is not used for calculations
+> until after all the CLI options are parsed, so it can just be
+> treated as another CLI option in any location on the CLI.
+
+Alright.
+
+> > > I'll spend some more time looking at it, but my initial impression
+> > > is that there's a bit of work to be done yet...
+> > 
+> > You're right, we should decide if we want to allow for -T to be used
+> > only in the beginning or if we want to allow for it anywhere on the
+> > command line.
 > 
-> I also read between the lines that the responsibility of herding the stable
-> patches has shifted from you to Darrick in the last development cycle.
-
-"..from [Christoph] to /dev/null..." would be more accurate. :(
-
-At this point I must give up the fiction that between prepping/reviewing
-patches for the next kernel and fixing problems in the current rc I have
-any time for stable kernel stuff at all.
-
-So, it's open season for anyone who /does/ have the time to pick out
-fixes and their dependencies, massage them into the appropriate stable
-kernels, and do at least the minimum xfstests QA (testing a v4, a v5 +
-everything, and a v5 + everything + 1k block size would be a good
-start).
-
-> Eventually, I got my answer to how I should make sure my patch finds
-> its way to stable, so I'm good with that.
+> That's not what I meant. I meant the code needs a lot of work, not
+> that we needed to decide where on the CLI the config file option
+> should be placed.
 > 
-> Only wondering out loud if there should not be a process to expedite
-> last cycle regression fixes, such as my patch, to the stable tree.
-> After all, we are at 4.15.9 and I reported the regression even before
-> v4.15 was released.
+> Basically:
+> 
+> 1. the default file parsing code needs to go into it's own file.
+> xfs_mkfs.c is too large and needs to be split into smaller files, so
+> lets not make it worse by shovelling another 500 lines of code into
+> it...
 
-Aaaanyway, this i_rdev preservation fix is ok for 4.15, since (as Amir
-has pointed out) it originated in 4.15-rc1.
+Sure.
 
---D
+> 2. The default option should not share option table parsing with the
+> CLI options, because all that means is you add extra code to convert
+> config file sections to CLI sections before using the common parsing
+> code.
 
-> Thanks,
-> Amir.
+Sure.
+
+> 3. it needs to support more than just boolean options e.g. for
+> setting a default log size
+
+Log size is not part of struct mkfs_default_params, do we reaally
+want to be able to set that via the configuration file?
+
+sectorsize and blocksize are though.
+Then struct mkfs_default_params has a struct sb_feat_args, of
+which non-bools are (and their corresponding mapping):
+
+	int log_version L_VERSION
+	int attr_version I_ATTR
+	int dir_version N_VERSION
+
+So sure, I can add support for these, and sectorsize and blocksize.  It just
+didn't seem worth it given most of the others were bool, so if we restrict the
+parser to bool its much simpler.
+
+BTW I see we have bool parent_pointers, and that maps to setting
+XFS_SB_VERSION2_PARENTBIT, but we have no respective specific CLI
+param, so of these:
+
+[data]
+[inode]
+[log]
+[metadata]
+[naming]
+[rtdev]
+
+Where does parent_pointers map to? I'd only enable "parent_pointers=0|parent_pointers=1"
+as its a bool.
+
+> 4. it needs default values to be range checked for sanity. These
+> values can be different to the min/max values the can be specified
+> on CLI as defaults need to be more forgiving when combined with
+> other random options.
+
+Alright.
+
+> There will be other things when I look at the code, but those are
+> the first ones that come to mind....
+
+I can address most of what you describe rather easily, the biggest
+issue is ensuring that our goal here is only to modify struct
+mkfs_default_params values, inclusive of what is in struct sb_feat_args.
+
+Note that struct mkfs_default_params also has a struct fsxattr... do we
+want to modify all those (this struct is defined per OS), for Linux we have:
+
+struct fsxattr {                                                                
+        __u32           fsx_xflags;     /* xflags field value (get/set) */      
+        __u32           fsx_extsize;    /* extsize field value (get/set)*/      
+        __u32           fsx_nextents;   /* nextents field value (get)   */      
+        __u32           fsx_projid;     /* project identifier (get/set) */      
+        __u32           fsx_cowextsize; /* cow extsize field value (get/set) */ 
+        unsigned char   fsx_pad[8];                                             
+};
+
+I didn't enable parsing support for these, do we want to parse each of these
+as well?
+
+  Luis
