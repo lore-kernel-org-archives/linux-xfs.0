@@ -1,69 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:34398 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750902AbeCNEM7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 00:12:59 -0400
-Received: by mail-ot0-f194.google.com with SMTP id n74-v6so1965751ota.1
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Mar 2018 21:12:59 -0700 (PDT)
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:46246 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751348AbeCNNbE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 09:31:04 -0400
+Received: by mail-wr0-f182.google.com with SMTP id m12so4700646wrm.13
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Mar 2018 06:31:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180313102056.GJ4043@hirez.programming.kicks-ass.net>
-References: <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180311112725.GC4043@hirez.programming.kicks-ass.net> <CAPcyv4jr53dqVTzdEQ6Ln1Qg7nWVMQSVTkf6uc+Lg6Y-xruhuw@mail.gmail.com>
- <20180313102056.GJ4043@hirez.programming.kicks-ass.net>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 13 Mar 2018 21:12:58 -0700
-Message-ID: <CAPcyv4h3SPqx879nnvQt0rvwanKksxLTqChCQa9ZQH8hsd_7yg@mail.gmail.com>
-Subject: Re: [RFC][PATCH] sched/wait_bit: Introduce wait_var_event()/wake_up_var()
+In-Reply-To: <e7a132d5-33de-736f-840a-8de45910846c@sandeen.net>
+References: <20180305150546.32191-1-jtulak@redhat.com> <20180305215659.GE18129@dastard>
+ <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net> <20180305223148.GG18129@dastard>
+ <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net> <CACj3i73y_ZWvgdv3aKTKaKGuo+6uhcfy1465T3CD2uQDLE3=xQ@mail.gmail.com>
+ <20180306213915.GJ18129@dastard> <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
+ <e7a132d5-33de-736f-840a-8de45910846c@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 14 Mar 2018 14:30:42 +0100
+Message-ID: <CACj3i73Zb04iHUSS7LNnvegGMe1xaTXwxBjCPnNQg9JmEwQQtQ@mail.gmail.com>
+Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Ingo Molnar <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, david <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, David Howells <dhowells@redhat.com>, Ralf Baechle <ralf@linux-mips.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Mar 13, 2018 at 3:20 AM, Peter Zijlstra <peterz@infradead.org> wrote:
-> On Sun, Mar 11, 2018 at 10:15:55AM -0700, Dan Williams wrote:
->> On Sun, Mar 11, 2018 at 4:27 AM, Peter Zijlstra <peterz@infradead.org> wrote:
->> > On Fri, Mar 09, 2018 at 10:55:32PM -0800, Dan Williams wrote:
->> >> Add a generic facility for awaiting an atomic_t to reach a value of 1.
->> >>
->> >> Page reference counts typically need to reach 0 to be considered a
->> >> free / inactive page. However, ZONE_DEVICE pages allocated via
->> >> devm_memremap_pages() are never 'onlined', i.e. the put_page() typically
->> >> done at init time to assign pages to the page allocator is skipped.
->> >>
->> >> These pages will have their reference count elevated > 1 by
->> >> get_user_pages() when they are under DMA. In order to coordinate DMA to
->> >> these pages vs filesytem operations like hole-punch and truncate the
->> >> filesystem-dax implementation needs to capture the DMA-idle event i.e.
->> >> the 2 to 1 count transition).
->> >>
->> >> For now, this implementation does not have functional behavior change,
->> >> follow-on patches will add waiters for these page-idle events.
->> >
->> > Argh, no no no.. That whole wait_for_atomic_t thing is a giant
->> > trainwreck already and now you're making it worse still.
->> >
->> > Please have a look here:
->> >
->> >   https://lkml.kernel.org/r/20171101190644.chwhfpoz3ywxx2m7@hirez.programming.kicks-ass.net
->>
->> That thread seems to be worried about the object disappearing the
->> moment it's reference count reaches a target. That isn't the case with
->> the memmap / struct page objects for ZONE_DEVICE pages. I understand
->> wait_for_atomic_one() is broken in the general case, but as far as I
->> can see it works fine specifically for ZONE_DEVICE page busy tracking,
->> just not generic object lifetime.
+On Fri, Mar 9, 2018 at 12:28 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
 >
-> How's this, compile tested (x86_64-allmodconfig) only.
->
-> This allows you to write:
->
->         wait_var_event(&your_atomic, atomic_read(&your_atomic) == 1);
+> If it's critical to report whether errors were fixed, it would be trivial
+> to add a new option to xfs_repair which causes it to test fs_is_dirty for
+> runs without "-n", and exit with a different value.
 
-Nice!
+I have toyed with it a bit and this seems to be the best option. A
+flag that changes the exit code on a successful run. Is exit code 3
+ok? According to man page, only 1 and 2 are currently used and the
+"everything is ok now, but an issue was there" should not be mixed
+with the existing ones. I also thought about a flag that would change
+all exit codes to fsck ones, but that seems too complicated and
+completely unnecessary.
 
-I'll give this a shot. I will need to add
-wait_var_event_interruptible(), but other than that it looks workable
-to me.
+       [...] always return a  status  code
+       of  0  if it completes without problems.  If a runtime error is encoun-
+       tered during operation, it will return a status of 1.   In  this  case,
+       xfs_repair should be restarted.  If xfs_repair is unable to proceed due
+       to a dirty log, it will return a status of 2.
+
+As for the flag, how about -e? It is not used yet and it makes some
+sense as "e-exit code."
+
+>
+> The approach above looks ok in general.  The main motivation for this
+> is to be able to use some config management tool to push out a config
+> to a whole fleet of machines in a lab, and have them check/fix the
+> root fs without interaction.  If a filesystem is failing to mount due
+> to a dirty log, it's likely that the admin is in a more hands-on mode
+> by then anyway.
+>
+> A dirty log could also be "operational error" if we decree that forcefsck
+> and friends should only be used on a clean reboot - but I'm less certain
+> about that.
+
+I thought about it, but "errors left uncorrected" makes more sense here to me.
+>
+> Perhaps a guiding principal should be that we have no easy way to repair
+> the root fs today in /any/ situation, so any correct/safe improvement
+> to that situation is an improvement, even if not all cases are handled
+> at this point.
+>
+
+Agreed.
+
+Jan
