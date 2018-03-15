@@ -1,154 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44700 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751696AbeCNSjR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 14:39:17 -0400
-Date: Wed, 14 Mar 2018 11:39:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 8/8] xfs: unwind the try_again loop in xfs_log_force
-Message-ID: <20180314183912.GU4865@magnolia>
-References: <20180313104927.12926-1-hch@lst.de>
- <20180313104927.12926-9-hch@lst.de>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:50488 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752855AbeCOXE4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 19:04:56 -0400
+Date: Fri, 16 Mar 2018 10:03:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
+ case of global reclaim
+Message-ID: <20180315230313.GM18129@dastard>
+References: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
+ <20180315174903.GM23100@dhcp22.suse.cz>
+ <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180313104927.12926-9-hch@lst.de>
+In-Reply-To: <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Kirill Tkhai <ktkhai@virtuozzo.com>
+Cc: Michal Hocko <mhocko@kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-On Tue, Mar 13, 2018 at 11:49:27AM +0100, Christoph Hellwig wrote:
-> Instead split out a __xfs_log_fore_lsn helper that gets called again
-
-I assume you meant __xfs_log_force_lsn?
-
-Looks ok modulo fixing the tortured sentence in the comment in the
-previous patch that gets moved around in this one,
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-
-> with the already_slept flag set to true in case we had to sleep.
+On Thu, Mar 15, 2018 at 10:28:43PM +0300, Kirill Tkhai wrote:
+> On 15.03.2018 20:49, Michal Hocko wrote:
+> > On Thu 15-03-18 18:01:34, Kirill Tkhai wrote:
+> >> xfs_reclaim_inodes_count(XFS_M(sb)) does not care about memcg.
+> >> So, it's called for memcg reclaim too, e.g. this list is shrinked
+> >> disproportionality to another lists.
+> >>
+> >> This looks confusing, so I'm reporting about this.
+> >> Consider this patch as RFC.
+> > 
+> > Could you be more specific about the problem you are trying to solve?
+> > Because we do skip shrinkers which are not memcg aware by
+> > shrink_slab:
+> > 		/*
+> > 		 * If kernel memory accounting is disabled, we ignore
+> > 		 * SHRINKER_MEMCG_AWARE flag and call all shrinkers
+> > 		 * passing NULL for memcg.
+> > 		 */
+> > 		if (memcg_kmem_enabled() &&
+> > 		    !!memcg != !!(shrinker->flags & SHRINKER_MEMCG_AWARE))
+> > 			continue;
+> > 
+> > Or am I missing something?
 > 
-> This prepares for aio_fsync support.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_log.c | 72 +++++++++++++++++++++++++++++++++-----------------------
->  1 file changed, 42 insertions(+), 30 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index b6c6f227b2d7..9a2008646d57 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3395,41 +3395,17 @@ xfs_log_force(
->  	return -EIO;
->  }
->  
-> -/*
-> - * Force the in-core log to disk for a specific LSN.
-> - *
-> - * Find in-core log with lsn.
-> - *	If it is in the DIRTY state, just return.
-> - *	If it is in the ACTIVE state, move the in-core log into the WANT_SYNC
-> - *		state and go to sleep or return.
-> - *	If it is in any other state, go to sleep or return.
-> - *
-> - * Synchronous forces are implemented with a wait queue.  All callers to force a
-> - * given lsn to disk will wait on a the queue attached to the specific in-core
-> - * log.  When given in-core log finally completes its write to disk, that thread
-> - * will wake up all threads waiting on the queue.
-> - */
-> -int
-> -xfs_log_force_lsn(
-> +static int
-> +__xfs_log_force_lsn(
->  	struct xfs_mount	*mp,
->  	xfs_lsn_t		lsn,
->  	uint			flags,
-> -	int			*log_flushed)
-> +	int			*log_flushed,
-> +	bool			already_slept)
->  {
->  	struct xlog		*log = mp->m_log;
->  	struct xlog_in_core	*iclog;
-> -	int			already_slept = 0;
-> -
-> -	ASSERT(lsn != 0);
-> -
-> -	XFS_STATS_INC(mp, xs_log_force);
-> -	trace_xfs_log_force(mp, lsn, _RET_IP_);
-> -
-> -	lsn = xlog_cil_force_lsn(log, lsn);
-> -	if (lsn == NULLCOMMITLSN)
-> -		return 0;
->  
-> -try_again:
->  	spin_lock(&log->l_icloglock);
->  	iclog = log->l_iclog;
->  	if (iclog->ic_state & XLOG_STATE_IOERROR)
-> @@ -3469,8 +3445,7 @@ xfs_log_force_lsn(
->  
->  			xlog_wait(&iclog->ic_prev->ic_write_wait,
->  					&log->l_icloglock);
-> -			already_slept = 1;
-> -			goto try_again;
-> +			return -EAGAIN;
->  		}
->  		atomic_inc(&iclog->ic_refcnt);
->  		xlog_state_switch_iclogs(log, iclog, 0);
-> @@ -3503,6 +3478,43 @@ xfs_log_force_lsn(
->  	return -EIO;
->  }
->  
-> +/*
-> + * Force the in-core log to disk for a specific LSN.
-> + *
-> + * Find in-core log with lsn.
-> + *	If it is in the DIRTY state, just return.
-> + *	If it is in the ACTIVE state, move the in-core log into the WANT_SYNC
-> + *		state and go to sleep or return.
-> + *	If it is in any other state, go to sleep or return.
-> + *
-> + * Synchronous forces are implemented with a wait queue.  All callers to force a
-> + * given lsn to disk will wait on a the queue attached to the specific in-core
-> + * log.  When given in-core log finally completes its write to disk, that thread
-> + * will wake up all threads waiting on the queue.
-> + */
-> +int
-> +xfs_log_force_lsn(
-> +	struct xfs_mount	*mp,
-> +	xfs_lsn_t		lsn,
-> +	uint			flags,
-> +	int			*log_flushed)
-> +{
-> +	int			ret;
-> +	ASSERT(lsn != 0);
-> +
-> +	XFS_STATS_INC(mp, xs_log_force);
-> +	trace_xfs_log_force(mp, lsn, _RET_IP_);
-> +
-> +	lsn = xlog_cil_force_lsn(mp->m_log, lsn);
-> +	if (lsn == NULLCOMMITLSN)
-> +		return 0;
-> +
-> +	ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, false);
-> +	if (ret == -EAGAIN)
-> +		ret = __xfs_log_force_lsn(mp, lsn, flags, log_flushed, true);
-> +	return ret;
-> +}
-> +
->  /*
->   * Called when we want to mark the current iclog as being ready to sync to
->   * disk.
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> sb->s_op->nr_cached_objects is a sub-method of generic super_cache_count().
+> super_cache_count() is owned and only called by superblock's shrinker,
+> which does have SHRINKER_MEMCG_AWARE flag.
+
+Xfs inodes are accounted to memcgs when they are allocated.  All the
+memcg reclaim stuff is done at the VFS inode cache level - all the
+XFS inode cache shrinker does is clean up inodes that are not
+referenced by the VFS inode cache because the memcg aware reclaim
+has already freed them.
+
+i.e. what the XFS inode cache is doing is perfectly reasonable -
+memcg aware inode reclaim is occuring at the VFS level, but on XFS
+that does not free the inodes as they are still referenced
+internally by XFS. However, once the inode is removed from the VFS
+LRU, all memcg information about the inode is destroyed, so there's
+nothing in the XFS layers that cares about memcgs.
+
+Hence when the XFS inode shrinker then called to run a
+garbage collection pass on unreferenced inodes - the inodes that
+are now unreferenced in the memcg due to the VFS inode shrinker pass
+- it frees inodes regardless of the memcg context it was called from
+because that information is no longer present in the inode cache.
+Hence we just ignore memcgs at this level.
+
+So, is there a problem you are actually trying to fix, or is this
+simply a "I don't understand how the superblock shrinkers work,
+please explain" patch?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
