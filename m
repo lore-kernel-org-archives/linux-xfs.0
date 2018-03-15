@@ -1,65 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0092.outbound.protection.outlook.com ([104.47.1.92]:60774
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751414AbeCOTmY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 15:42:24 -0400
-Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
- case of global reclaim
-References: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
- <20180315174903.GM23100@dhcp22.suse.cz>
- <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
- <20180315193224.GV23100@dhcp22.suse.cz>
-From: Kirill Tkhai <ktkhai@virtuozzo.com>
-Message-ID: <4615a892-c179-9813-daff-ad371691731d@virtuozzo.com>
-Date: Thu, 15 Mar 2018 22:42:19 +0300
+Received: from userp2120.oracle.com ([156.151.31.85]:43316 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752594AbeCOU0n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 16:26:43 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2FKQdYc132889
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:43 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2gqyve000f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:42 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2FKQgXS005737
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:42 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2FKQglX021160
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:42 GMT
+Subject: [PATCH 03/20] xfs: add repair helpers for the reverse mapping btree
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 15 Mar 2018 13:26:40 -0700
+Message-ID: <152114560078.22742.16028974465759521566.stgit@magnolia>
+In-Reply-To: <152114558216.22742.6635423816559130061.stgit@magnolia>
+References: <152114558216.22742.6635423816559130061.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180315193224.GV23100@dhcp22.suse.cz>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On 15.03.2018 22:32, Michal Hocko wrote:
-> On Thu 15-03-18 22:28:43, Kirill Tkhai wrote:
->> On 15.03.2018 20:49, Michal Hocko wrote:
->>> On Thu 15-03-18 18:01:34, Kirill Tkhai wrote:
->>>> xfs_reclaim_inodes_count(XFS_M(sb)) does not care about memcg.
->>>> So, it's called for memcg reclaim too, e.g. this list is shrinked
->>>> disproportionality to another lists.
->>>>
->>>> This looks confusing, so I'm reporting about this.
->>>> Consider this patch as RFC.
->>>
->>> Could you be more specific about the problem you are trying to solve?
->>> Because we do skip shrinkers which are not memcg aware by
->>> shrink_slab:
->>> 		/*
->>> 		 * If kernel memory accounting is disabled, we ignore
->>> 		 * SHRINKER_MEMCG_AWARE flag and call all shrinkers
->>> 		 * passing NULL for memcg.
->>> 		 */
->>> 		if (memcg_kmem_enabled() &&
->>> 		    !!memcg != !!(shrinker->flags & SHRINKER_MEMCG_AWARE))
->>> 			continue;
->>>
->>> Or am I missing something?
->>
->> sb->s_op->nr_cached_objects is a sub-method of generic super_cache_count().
->> super_cache_count() is owned and only called by superblock's shrinker,
->> which does have SHRINKER_MEMCG_AWARE flag.
-> 
-> Ohh, I see. I thought it was a standard "top-level" shrinker.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-There are one more in addition (it has to go in this patch):
+Add a couple of functions to the reverse mapping btree that will be used
+to repair the rmapbt.
 
-.free_cached_objects    = xfs_fs_free_cached_objects
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_rmap.c |   79 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h |    4 ++
+ 2 files changed, 83 insertions(+)
 
-which is not memcg aware. It also needs to have the same fix,
-if xfs_reclaim_inodes_count() is need.
 
-Kirill
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 79822cf..c051d47 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2031,6 +2031,34 @@ xfs_rmap_map_shared(
+ 	return error;
+ }
+ 
++/* Insert a raw rmap into the rmapbt. */
++int
++xfs_rmap_map_raw(
++	struct xfs_btree_cur	*cur,
++	struct xfs_rmap_irec	*rmap)
++{
++	struct xfs_owner_info	oinfo;
++
++	oinfo.oi_owner = rmap->rm_owner;
++	oinfo.oi_offset = rmap->rm_offset;
++	oinfo.oi_flags = 0;
++	if (rmap->rm_flags & XFS_RMAP_ATTR_FORK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
++	if (rmap->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
++
++	if (rmap->rm_flags || XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
++		return xfs_rmap_map(cur, rmap->rm_startblock,
++				rmap->rm_blockcount,
++				rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++				&oinfo);
++
++	return xfs_rmap_map_shared(cur, rmap->rm_startblock,
++			rmap->rm_blockcount,
++			rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++			&oinfo);
++}
++
+ struct xfs_rmap_query_range_info {
+ 	xfs_rmap_query_range_fn	fn;
+ 	void				*priv;
+@@ -2454,3 +2482,54 @@ xfs_rmap_record_exists(
+ 		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+ 	return 0;
+ }
++
++struct xfs_rmap_has_other_keys {
++	uint64_t			owner;
++	uint64_t			offset;
++	bool				*has_rmap;
++	unsigned int			flags;
++};
++
++/* For each rmap given, figure out if it doesn't match the key we want. */
++STATIC int
++xfs_rmap_has_other_keys_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_rmap_has_other_keys	*rhok = priv;
++
++	if (rhok->owner == rec->rm_owner && rhok->offset == rec->rm_offset &&
++	    ((rhok->flags & rec->rm_flags) & XFS_RMAP_KEY_FLAGS) == rhok->flags)
++		return 0;
++	*rhok->has_rmap = true;
++	return XFS_BTREE_QUERY_RANGE_ABORT;
++}
++
++/*
++ * Given an extent and some owner info, can we find records overlapping
++ * the extent whose owner info does not match the given owner?
++ */
++int
++xfs_rmap_has_other_keys(
++	struct xfs_btree_cur		*cur,
++	xfs_agblock_t			bno,
++	xfs_extlen_t			len,
++	struct xfs_owner_info		*oinfo,
++	bool				*has_rmap)
++{
++	struct xfs_rmap_irec		low = {0};
++	struct xfs_rmap_irec		high;
++	struct xfs_rmap_has_other_keys	rhok;
++
++	xfs_owner_info_unpack(oinfo, &rhok.owner, &rhok.offset, &rhok.flags);
++	*has_rmap = false;
++	rhok.has_rmap = has_rmap;
++
++	low.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rm_startblock = bno + len - 1;
++
++	return xfs_rmap_query_range(cur, &low, &high,
++			xfs_rmap_has_other_keys_helper, &rhok);
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 380e53b..43e506f 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -238,5 +238,9 @@ int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
++int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, struct xfs_owner_info *oinfo,
++		bool *has_rmap);
++int xfs_rmap_map_raw(struct xfs_btree_cur *cur, struct xfs_rmap_irec *rmap);
+ 
+ #endif	/* __XFS_RMAP_H__ */
+
