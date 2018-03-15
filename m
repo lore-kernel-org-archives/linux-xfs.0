@@ -1,149 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:22979 "EHLO mga05.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:21918 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932475AbeCOQBk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 12:01:40 -0400
-Subject: [PATCH v6 12/15] xfs: require mmap lock for xfs_break_layouts()
+        id S932983AbeCOQBY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 12:01:24 -0400
+Subject: [PATCH v6 10/15] memremap: mark devm_memremap_pages()
+ EXPORT_SYMBOL_GPL
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 15 Mar 2018 08:52:29 -0700
-Message-ID: <152112914933.24669.5543317105428477772.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 15 Mar 2018 08:52:18 -0700
+Message-ID: <152112913855.24669.14758139703848244412.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
+Cc: Michal Hocko <mhocko@suse.com>, Christoph Hellwig <hch@lst.de>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-In preparation for adding coordination between truncate operations and
-busy dax-pages, extend xfs_break_layouts() to assume it must be called
-with the mmap lock held. This locking scheme will be required for
-coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
-pages mapped into the file's address space).
+The devm_memremap_pages() facility is tightly integrated with the
+kernel's memory hotplug functionality. It injects an altmap argument
+deep into the architecture specific vmemmap implementation to allow
+allocating from specific reserved pages, and it has Linux specific
+assumptions about page structure reference counting relative to
+get_user_pages() and get_user_pages_fast(). It was an oversight that
+this was not marked EXPORT_SYMBOL_GPL from the outset.
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Suggested-by: Christoph Hellwig <hch@lst.de>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "Jérôme Glisse" <jglisse@redhat.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/xfs/xfs_file.c  |   14 +++++++++-----
- fs/xfs/xfs_ioctl.c |    5 +----
- fs/xfs/xfs_iops.c  |   10 +++++++---
- fs/xfs/xfs_pnfs.c  |    6 ++++--
- 4 files changed, 21 insertions(+), 14 deletions(-)
+ kernel/memremap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9ea08326f876..ba969019bf26 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -350,9 +350,16 @@ xfs_file_aio_write_checks(
- 	if (error <= 0)
- 		return error;
+diff --git a/kernel/memremap.c b/kernel/memremap.c
+index 72d0bb6fc47d..766cb9a487ae 100644
+--- a/kernel/memremap.c
++++ b/kernel/memremap.c
+@@ -430,7 +430,7 @@ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
+ 	devres_free(pgmap);
+ 	return ERR_PTR(error);
+ }
+-EXPORT_SYMBOL(devm_memremap_pages);
++EXPORT_SYMBOL_GPL(devm_memremap_pages);
  
-+	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+	*iolock |= XFS_MMAPLOCK_EXCL;
- 	error = xfs_break_layouts(inode, iolock);
--	if (error)
-+	if (error) {
-+		*iolock &= ~XFS_MMAPLOCK_EXCL;
-+		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 		return error;
-+	}
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-+	*iolock &= ~XFS_MMAPLOCK_EXCL;
- 
- 	/*
- 	 * For changing security info in file_remove_privs() we need i_rwsem
-@@ -768,7 +775,7 @@ xfs_file_fallocate(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	long			error;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	loff_t			new_size = 0;
- 	bool			do_file_insert = false;
- 
-@@ -782,9 +789,6 @@ xfs_file_fallocate(
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	if (mode & FALLOC_FL_PUNCH_HOLE) {
- 		error = xfs_free_file_space(ip, offset, len);
- 		if (error)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89fb1eb80aae..4151fade4bb1 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -614,7 +614,7 @@ xfs_ioc_space(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct iattr		iattr;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	int			error;
- 
- 	/*
-@@ -648,9 +648,6 @@ xfs_ioc_space(
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	switch (bf->l_whence) {
- 	case 0: /*SEEK_SET*/
- 		break;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 951e84df5576..d23aa08426f9 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1028,13 +1028,17 @@ xfs_vn_setattr(
- 
- 	if (iattr->ia_valid & ATTR_SIZE) {
- 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
--		uint			iolock = XFS_IOLOCK_EXCL;
-+		uint			iolock;
-+
-+		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 
- 		error = xfs_break_layouts(d_inode(dentry), &iolock);
--		if (error)
-+		if (error) {
-+			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 			return error;
-+		}
- 
--		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- 		error = xfs_vn_setattr_size(dentry, iattr);
- 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	} else {
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index aa6c5c193f45..9fe661c2d59c 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -38,12 +38,14 @@ xfs_break_layouts(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	int			error;
- 
--	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
-+	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL
-+				| XFS_MMAPLOCK_EXCL));
- 
- 	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
- 		xfs_iunlock(ip, *iolock);
- 		error = break_layout(inode, true);
--		*iolock = XFS_IOLOCK_EXCL;
-+		*iolock &= ~XFS_IOLOCK_SHARED;
-+		*iolock |= XFS_IOLOCK_EXCL;
- 		xfs_ilock(ip, *iolock);
- 	}
- 
+ unsigned long vmem_altmap_offset(struct vmem_altmap *altmap)
+ {
 
