@@ -1,96 +1,187 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:42525 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751527AbeCOQ1e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 12:27:34 -0400
-Received: by mail-ot0-f195.google.com with SMTP id l5-v6so7461850otf.9
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 09:27:33 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:33340 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751864AbeCOSMS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 14:12:18 -0400
+Date: Thu, 15 Mar 2018 11:11:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] fsck.xfs: allow forced repairs using xfs_repair
+Message-ID: <20180315181120.GA4865@magnolia>
+References: <20180315174745.34308-1-jtulak@redhat.com>
+ <20180315175026.34779-1-jtulak@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180315154604.GX4865@magnolia>
-References: <20180314171724.41951-1-bfoster@redhat.com> <20180314181218.GR4865@magnolia>
- <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
- <20180315103839.GA44732@bfoster.bfoster> <20180315154604.GX4865@magnolia>
-From: Dave Chiluk <chiluk+linuxxfs@indeed.com>
-Date: Thu, 15 Mar 2018 11:27:02 -0500
-Message-ID: <CAC=E7cW7eae8Un++GQNchmPi2QA3sZFPF1BiVHW9bw7c8vj2tg@mail.gmail.com>
-Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180315175026.34779-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Mar 15, 2018 at 10:46 AM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Thu, Mar 15, 2018 at 06:38:39AM -0400, Brian Foster wrote:
->> On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
->> > On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
->> > <darrick.wong@oracle.com> wrote:
->> > > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
->> ...
->> >
->> > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
->> >
->> > I'm also assuming this will get submitted back to the linux-stable
->> > trees as the agfl packing change is already causing issues in the
->> > stable trees.  If you do not intend to push it into the linux-stable
->> > trees let me know and I'll take care of at least the major ones.
->> >
->>
->> Yeah, I can cc stable in the next post along with the other minor fixes.
->> My question is how far back should this fix go? Was the plan to only go
->> back to v4.5 because that is where the packing fix first went in? Or
->> should this go back further because it looks like the packing fix was
->> backported to v3.10:
->>
->> $ git show 96f859d52bcb1
->> commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
->> Author: Darrick J. Wong <darrick.wong@oracle.com>
->> Date:   Mon Jan 4 16:13:21 2016 +1100
->>
->>     libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
->>
->>     ...
->>
->>     cc: <stable@vger.kernel.org> # 3.10 - 4.4
->>     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>     Reviewed-by: Dave Chinner <dchinner@redhat.com>
->>     Signed-off-by: Dave Chinner <david@fromorbit.com>
->
-> Hmmm, I'm assuming that you'd want 3.10 at least for RHEL, but I'll let
-> you all figure that one out.
->
-> As far as the upstream kernels, 4.14.27, 4.9.87, 4.4.121, and 4.1.50
-> have that packing patch so I guess they'll all need some version of this.
->
-> --D
->
->>
->> Brian
->>
->> > Thanks,
->> > Dave
->> > --
+On Thu, Mar 15, 2018 at 06:50:26PM +0100, Jan Tulak wrote:
+> The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
+> run on every unclean shutdown. However, sometimes it may happen that the
+> root filesystem really requires the usage of xfs_repair and then it is a
+> hassle. This patch makes the situation a bit easier by detecting forced
+> checks (/forcefsck or fsck.mode=force), so user can require the repair,
+> without the repair being run all the time.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> 
+> ---
+> Changelog:
+> v3:
+> - too quick with fixing in v2... add line at the end of the file
+> v2:
+> - return the "exit 0" at the end
+> 
+> v1:
+> - test for xfs_repair binary
+> - run only in non-interactive session
+> - translate xfs_repair return codes to fsck ones
+> - run only if the filesystem is not mounted
+> - add manpage update
+> ---
+>  fsck/xfs_fsck.sh    | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  man/man8/fsck.xfs.8 | 12 +++++++++-
+>  2 files changed, 75 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+> index e52969e4..0ec6b049 100755
+> --- a/fsck/xfs_fsck.sh
+> +++ b/fsck/xfs_fsck.sh
+> @@ -3,11 +3,42 @@
+>  # Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+>  #
+>  
+> +NAME=$0
+> +
+> +# get the right return code for fsck
+> +function repair2fsck_code() {
+> +	case $1 in
+> +	0)  return 0 # everything is ok
+> +		;;
+> +	1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
+> +		return 4 # errors left uncorrected
+> +		;;
+> +	2)  echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
+> +		return 4 # it should not me mounted during boot, something is wrong
+> +		;;
+> +	3)  return 1 # The fs has been fixed
+> +		;;
+> +	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
+> +		return 4 # something went wrong with xfs_repair
+> +	esac
+> +}
+> +
+> +function ensure_not_mounted() {
+> +	local dev=$1
+> +	mounted=`grep -c "^$dev " /proc/mounts`
+> +	if [ $mounted -ne 0 ]; then
+> +		echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
+> +		exit 4
+> +	fi
+> +}
+> +
+>  AUTO=false
+> -while getopts ":aApy" c
+> +FORCE=false
+> +while getopts ":aApyf" c
+>  do
+>  	case $c in
+>  	a|A|p|y)	AUTO=true;;
+> +	f)      	FORCE=true;;
+>  	esac
+>  done
+>  eval DEV=\${$#}
+> @@ -15,6 +46,38 @@ if [ ! -e $DEV ]; then
+>  	echo "$0: $DEV does not exist"
+>  	exit 8
+>  fi
+> +
+> +# The flag -f is added by systemd/init scripts when /forcefsck file is present
+> +# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
+> +# this check, user has to explicitly require a forced fsck.
+> +# But first of all, test if it is a non-interactive session. Use multiple
+> +# methods to capture most of the cases:
+> +# The case for *i* and -n "$PS1" are commonly suggested in bash manual
+> +# and the -t 0 test checks stdin
+> +case $- in
+> +	*i*) FORCE=false ;;
+> +esac
+> +if [ -n "$PS1" -o -t 0 ]; then
+> +	FORCE=false
+> +fi
+> +
+> +if $FORCE; then
+> +	if [ -f /sbin/xfs_repair ]; then
+> +		BIN="/sbin/xfs_repair"
+> +	elif [ -f /usr/sbin/xfs_repair ]; then
+> +		BIN="/usr/sbin/xfs_repair"
 
-RHEL is actually fine for now, since they explicitly remove the
-packing patch in their kernel, and xfsprogs.  Once you submit the
-patches to linux-stable the ubuntu-kernel team monitors and includes
-patches for the releases that they are stable maintainers of *(they
-are downstream for 4.4 of gregkh, but currently maintain a 3.13, 4.13,
-and 4.15 tree).
+Can we just run xfs_repair and assume it's in the PATH?
 
-Also please add a Fixes line to your commit so it's obvious what patch
-it helps remediate.  Fixes is actually not a great word here, but that
-looks to be what the submitting-patches.txt doc calls for.
+> +	else
+> +		echo "$NAME error: xfs_repair was not found!" 1>&2
+> +		exit 4
+> +	fi
+> +
+> +	ensure_not_mounted $DEV
+> +
+> +	$BIN -e $DEV
+> +	repair2fsck_code $?
+> +	exit $?
+> +fi
+> +
+>  if $AUTO; then
+>  	echo "$0: XFS file system."
+>  else
+> diff --git a/man/man8/fsck.xfs.8 b/man/man8/fsck.xfs.8
+> index ace7252d..3eb3ad7f 100644
+> --- a/man/man8/fsck.xfs.8
+> +++ b/man/man8/fsck.xfs.8
+> @@ -1,6 +1,6 @@
+>  .TH fsck.xfs 8
+>  .SH NAME
+> -fsck.xfs \- do nothing, successfully
+> +fsck.xfs \- do nothing, successfuly
 
-Fixes: 96f859d52bcb libxfs: pack the agfl header structure so
-XFS_AGFL_SIZE is correct
+successfully has two 'l'.
 
-This way stable maintainers understand that the fix resolves an issue
-that was introduced by that patch, and can apply/not apply
-appropriately.  Although in all honesty the patch really applies to
-all stable kernels regardless of if the packing patch has been applied
-or not.
+>  .SH SYNOPSIS
+>  .B fsck.xfs
+>  [
+> @@ -21,6 +21,16 @@ If you wish to check the consistency of an XFS filesystem,
+>  or repair a damaged or corrupt XFS filesystem,
+>  see
+>  .BR xfs_repair (8).
+> +.PP
+> +However, it may happen that a forced repair is required and in makes sense to start
+> +.BR xfs_repair (8)
+> +on startup (either using /forcefsck file or fsck.mode=force kernel option). In this case
+> +.B fsck.xfs
+> +run
+> +.B xfs_repair
+> +for the user. But if run outside of boot environment or without the
+> +.B -f
+> +option, it does nothing.
 
-Dave.
+Bleh, I hate manpages.  I'll just ... do this without the formatting.
+
+However, the system administrator can force fsck.xfs to run
+xfs_repair(8) by creating a /forcefsck file, booting the system with
+"fsck.mode=force" on the kernel command line, or by running fsck.xfs -f.
+
+--D
+
+>  .
+>  .SH FILES
+>  .IR /etc/fstab .
+> -- 
+> 2.15.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
