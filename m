@@ -1,70 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:54023 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932279AbeCMBcW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Mar 2018 21:32:22 -0400
-Date: Tue, 13 Mar 2018 12:31:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fallocate on XFS for swap
-Message-ID: <20180313013144.GA18129@dastard>
-References: <8C28C1CB-47F1-48D1-85C9-5373D29EA13E@amazon.com>
- <20180309234422.GA4860@magnolia>
- <20180310005850.GW18129@dastard>
- <20180310011707.GA4875@magnolia>
- <20180310013646.GX18129@dastard>
- <A59B9E63-29A2-4C40-960B-E09809DE501F@amazon.com>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:45104 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751413AbeCOLRG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 07:17:06 -0400
+Received: by mail-wr0-f195.google.com with SMTP id h2so7810827wre.12
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 04:17:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <A59B9E63-29A2-4C40-960B-E09809DE501F@amazon.com>
+In-Reply-To: <c1da5bba-3abb-7b14-d5e9-2d326af542bc@sandeen.net>
+References: <20180305150546.32191-1-jtulak@redhat.com> <20180305215659.GE18129@dastard>
+ <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net> <20180305223148.GG18129@dastard>
+ <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net> <CACj3i73y_ZWvgdv3aKTKaKGuo+6uhcfy1465T3CD2uQDLE3=xQ@mail.gmail.com>
+ <20180306213915.GJ18129@dastard> <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
+ <e7a132d5-33de-736f-840a-8de45910846c@sandeen.net> <CACj3i73Zb04iHUSS7LNnvegGMe1xaTXwxBjCPnNQg9JmEwQQtQ@mail.gmail.com>
+ <c1da5bba-3abb-7b14-d5e9-2d326af542bc@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Thu, 15 Mar 2018 12:16:44 +0100
+Message-ID: <CACj3i711KdeV8ak5f67FLFzKGZFvRHQSO2VjA0Cxv2V0+hWrsA@mail.gmail.com>
+Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Besogonov, Aleksei" <cyberax@amazon.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-[Aleski, can you word wrap your email text at 72 columns? ]
+On Wed, Mar 14, 2018 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 3/14/18 9:30 AM, Jan Tulak wrote:
+>> On Fri, Mar 9, 2018 at 12:28 AM, Eric Sandeen <sandeen@sandeen.net>
+>> wrote:
+>>>
+>>> If it's critical to report whether errors were fixed, it would be
+>>> trivial to add a new option to xfs_repair which causes it to test
+>>> fs_is_dirty for runs without "-n", and exit with a different
+>>> value.
+>>
+>> I have toyed with it a bit and this seems to be the best option. A
+>> flag that changes the exit code on a successful run. Is exit code 3
+>> ok? According to man page, only 1 and 2 are currently used and the
+>> "everything is ok now, but an issue was there" should not be mixed
+>> with the existing ones. I also thought about a flag that would
+>> change all exit codes to fsck ones, but that seems too complicated
+>> and completely unnecessary.
+>
+> Hm, I guess we'll have to.
 
-On Mon, Mar 12, 2018 at 10:01:54PM +0000, Besogonov, Aleksei wrote:
-> [snip unrelated]
-> 
-> So I'm looking at the XFS code and it appears that the iomap is
-> limited to 1024*PAGE_SIZE blocks at a time,
+We can either map xfs_repair to fsck in the fsck.xfs script, or change
+xfs_repair to use the fsck exit codes. I'm for the first variant (just
+add a one new exit code for xfs_repair and remap it for fsck codes in
+the script) rather than complicate xfs_repair with two sets of exit
+codes.
 
-Take a closer look - that code is not used for reading file extents
-and returning them to the caller.
-
-> which is too small for
-> most of swap use-cases. I can of course just loop through the file
-> in 4Mb increments and, just like the bmap() code does today. But
-> this just doesn't look right and it's not atomic. And it looks
-> like iomap in ext2 doesn't have this limitation. 
-> 
-> The stated rationale for the XFS limit is:
-> >/*
-> > * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
-> > * to keep the chunks of work done where somewhat symmetric with the
-> > * work writeback does. This is a completely arbitrary number pulled
-> > * out of thin air as a best guess for initial testing.
-> > *
-> > * Note that the values needs to be less than 32-bits wide until
-> > * the lower level functions are updated.
-> > */
-
-Yeah, that's in the IOMAP_WRITE path used for block allocation. swap
-file mapping should not be asking for IOMAP_WRITE mappings that
-trigger extent allocation, so you should never hit this case.
-
-You should probably be using the IOMAP_REPORT path (i.e. basically
-very similar code to iomap_fiemap/iomap_fiemap_apply and rejecting
-any file that returns an iomap that is not IOMAP_MAPPED or
-IOMAP_UNWRITTEN. Also, you want to reject any file that returns
-IOMAP_F_SHARED in iomap->flags, too, because swapfiles can't do COW
-to break extent sharing on writes.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Jan
