@@ -1,111 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:6424 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751600AbeCOKGu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 06:06:50 -0400
-Date: Thu, 15 Mar 2018 21:06:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
-Message-ID: <20180315100646.GE7000@dastard>
-References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
- <20180313042126.GB18129@dastard>
- <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
- <20180313224522.GZ7000@dastard>
- <20180314131659.wnmt5zxfhrfsld7n@rh_laptop>
- <20180314133258.GB7000@dastard>
- <20180314135752.5a2vmjr7cuavusiw@rh_laptop>
- <20180314212441.GC7000@dastard>
- <20180315061557.5jajfodpkjdmcrld@rh_laptop>
+Received: from mx1.redhat.com ([209.132.183.28]:46732 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751532AbeCOKil (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 06:38:41 -0400
+Date: Thu, 15 Mar 2018 06:38:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
+Message-ID: <20180315103839.GA44732@bfoster.bfoster>
+References: <20180314171724.41951-1-bfoster@redhat.com>
+ <20180314181218.GR4865@magnolia>
+ <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180315061557.5jajfodpkjdmcrld@rh_laptop>
+In-Reply-To: <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: Dave Chiluk <chiluk+linuxxfs@indeed.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Mar 15, 2018 at 07:15:57AM +0100, Lukas Czerner wrote:
-> On Thu, Mar 15, 2018 at 08:24:41AM +1100, Dave Chinner wrote:
-> > On Wed, Mar 14, 2018 at 02:57:52PM +0100, Lukas Czerner wrote:
-> > > On Thu, Mar 15, 2018 at 12:32:58AM +1100, Dave Chinner wrote:
-> > > > On Wed, Mar 14, 2018 at 02:16:59PM +0100, Lukas Czerner wrote:
-> > > > > just FYI the 042 xfstest does fail on xfs with what I think is stale
-> > > > > data exposure. It might not be related at all to what crashmonkey is
-> > > > > reporting but there is something wrong nevertheless.
-> > > > 
-> > > > generic/042 is unreliable and certain operations result in a
-> > > > non-zero length file because of metadata commits/writeback that
-> > > > occur as a result of the fallocate operations. It got removed from
-> > > > the auto group because it isn't a reliable test about 3 years ago:
-> > > 
-> > > Sure, I just that it clearly exposes stale data on xfs. That is, the
-> > > resulting file contains data that was previously written to the
-> > > underlying image file to catch the exposure. I am aware of the non-zero
-> > > length file problem, that's not what I am pointing out though.
-> > 
-> > What setup are you testing on? I haven't seen it fail in some time.
-> > Here, on emulated pmem:
+On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
+> On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
+...
 > 
-> Virtual machine with Virtio devices backed by a linear lvs consisting of
-> SCSI drives, all local.
+> Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
 > 
-> > 
-> > SECTION       -- xfs
-> > FSTYP         -- xfs (debug)
-> > PLATFORM      -- Linux/x86_64 test4 4.16.0-rc5-dgc
-> > MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 /dev/pmem1
-> > MOUNT_OPTIONS -- /dev/pmem1 /mnt/scratch
-> > 
-> > xfs/042 10s ... 14s
+> I'm also assuming this will get submitted back to the linux-stable
+> trees as the agfl packing change is already causing issues in the
+> stable trees.  If you do not intend to push it into the linux-stable
+> trees let me know and I'll take care of at least the major ones.
 > 
-> We are talking about generic/042. xfs/042 is very much a different
-> test.
 
-Ugh copy-n-paste fail. Sorry.
+Yeah, I can cc stable in the next post along with the other minor fixes.
+My question is how far back should this fix go? Was the plan to only go
+back to v4.5 because that is where the packing fix first went in? Or
+should this go back further because it looks like the packing fix was
+backported to v3.10:
 
-I was looking at the right test, just running the wrong one.
+$ git show 96f859d52bcb1
+commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
+Author: Darrick J. Wong <darrick.wong@oracle.com>
+Date:   Mon Jan 4 16:13:21 2016 +1100
 
-Anyway, what makes you think this:
+    libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
+    
+    ...
+    
+    cc: <stable@vger.kernel.org> # 3.10 - 4.4
+    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-> 
-> SECTION       -- xfs
-> RECREATING    -- xfs on /dev/vdc1
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/x86_64 rhel7 4.16.0-rc5+
-> MKFS_OPTIONS  -- -f -f /dev/vdb1
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb1 /mnt/test1
-> 
-> generic/042	 - output mismatch (see /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad)
->     --- tests/generic/042.out	2018-03-14 05:56:38.619124060 -0400
->     +++ /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad	2018-03-15 02:15:02.872113819 -0400
->     @@ -5,6 +5,16 @@
->      fpunch
->      wrote 65536/65536 bytes at offset 0
->      XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
->     +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
->     +*
->     +000f000 0000 0000 0000 0000 0000 0000 0000 0000
->     +*
+Brian
 
-exposes stale data? The command is:
-
-$XFS_IO_PROG -f -c "pwrite -S 1 0 64k" -c "$cmd 60k 4k" $file
-
-i.e. We wrote bytes from 0 to 64k, then punched from 60k to 64k. if
-the file is 64k in length, then it should contain either all "cdcd"
-pattern, or there should be "cdcd" data except for the range from
-60k to 64k where there should be zeros.
-
-The later is exactly what the diff output is say - "cdcd" data from
-0-60k, zeros from 60 to 64k. So there's no stale data exposure
-occurring here (those bugs got fixed!), it's just the test output is
-unreliable and does not match the golden output.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Thanks,
+> Dave
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
