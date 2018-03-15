@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54152 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752594AbeCOU0g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 16:26:36 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2FK4r5I066585
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:36 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2gqyj902tr-1
+Received: from userp2130.oracle.com ([156.151.31.86]:41462 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752594AbeCOU1B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 16:27:01 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2FKL1hM035452
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:27:01 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2gqyss80sx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:36 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w2FKQZLb026226
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:27:01 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w2FKR0CE029458
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:35 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2FKQZuS021095
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:26:35 GMT
-Subject: [PATCH 02/20] xfs: expose various functions to repair code
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:27:00 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2FKR0qx015884
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 20:27:00 GMT
+Subject: [PATCH 06/20] xfs: halt auto-reclamation activities while
+ rebuilding rmap
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Mar 2018 13:26:34 -0700
-Message-ID: <152114559472.22742.16234075913307970177.stgit@magnolia>
+Date: Thu, 15 Mar 2018 13:26:59 -0700
+Message-ID: <152114561947.22742.7669958376744386077.stgit@magnolia>
 In-Reply-To: <152114558216.22742.6635423816559130061.stgit@magnolia>
 References: <152114558216.22742.6635423816559130061.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,79 +35,53 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Expose various helpers that the repair code will want to use.
+Rebuilding the reverse-mapping tree requires us to quiesce all inodes in
+the filesystem, so we must stop background reclamation of post-EOF and
+CoW prealloc blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c   |    2 +-
- fs/xfs/libxfs/xfs_ialloc.h   |    3 +++
- fs/xfs/libxfs/xfs_refcount.c |    4 ++--
- fs/xfs/libxfs/xfs_refcount.h |    5 +++++
- 4 files changed, 11 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_icache.c |   18 ++++++++++++++++++
+ fs/xfs/xfs_icache.h |    3 +++
+ 2 files changed, 21 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 0e2cf5f..fcbf09f 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -148,7 +148,7 @@ xfs_inobt_get_rec(
- /*
-  * Insert a single inobt record. Cursor must already point to desired location.
-  */
--STATIC int
-+int
- xfs_inobt_insert_rec(
- 	struct xfs_btree_cur	*cur,
- 	uint16_t		holemask,
-diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-index c5402bb..77fffce 100644
---- a/fs/xfs/libxfs/xfs_ialloc.h
-+++ b/fs/xfs/libxfs/xfs_ialloc.h
-@@ -176,6 +176,9 @@ int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
- 		xfs_agino_t high, bool *exists);
- int xfs_ialloc_count_inodes(struct xfs_btree_cur *cur, xfs_agino_t *count,
- 		xfs_agino_t *freecount);
-+int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
-+		uint8_t count, int32_t freecount, xfs_inofree_t free,
-+		int *stat);
- 
- int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
- void xfs_ialloc_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index bee68c2..100532d 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -89,7 +89,7 @@ xfs_refcount_lookup_ge(
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index d53a316..52f5ab0 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1781,3 +1781,21 @@ xfs_inode_clear_cowblocks_tag(
+ 	return __xfs_inode_clear_blocks_tag(ip,
+ 			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
  }
- 
- /* Convert on-disk record to in-core format. */
--static inline void
++
++/* Disable post-EOF and CoW block auto-reclamation. */
 +void
- xfs_refcount_btrec_to_irec(
- 	union xfs_btree_rec		*rec,
- 	struct xfs_refcount_irec	*irec)
-@@ -149,7 +149,7 @@ xfs_refcount_update(
-  * by [bno, len, refcount].
-  * This either works (return 0) or gets an EFSCORRUPTED error.
-  */
--STATIC int
-+int
- xfs_refcount_insert(
- 	struct xfs_btree_cur		*cur,
- 	struct xfs_refcount_irec	*irec,
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 2a731ac..5856abb 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -85,5 +85,10 @@ static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
++xfs_icache_disable_reclaim(
++	struct xfs_mount	*mp)
++{
++	cancel_delayed_work_sync(&mp->m_eofblocks_work);
++	cancel_delayed_work_sync(&mp->m_cowblocks_work);
++}
++
++/* Enable post-EOF and CoW block auto-reclamation. */
++void
++xfs_icache_enable_reclaim(
++	struct xfs_mount	*mp)
++{
++	xfs_queue_eofblocks(mp);
++	xfs_queue_cowblocks(mp);
++}
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index d4a7758..d69a0f5 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -131,4 +131,7 @@ xfs_fs_eofblocks_from_user(
+ int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
+ 				  xfs_ino_t ino, bool *inuse);
  
- extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
- 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
-+union xfs_btree_rec;
-+extern void xfs_refcount_btrec_to_irec(union xfs_btree_rec *rec,
-+		struct xfs_refcount_irec *irec);
-+extern int xfs_refcount_insert(struct xfs_btree_cur *cur,
-+		struct xfs_refcount_irec *irec, int *stat);
- 
- #endif	/* __XFS_REFCOUNT_H__ */
++void xfs_icache_disable_reclaim(struct xfs_mount *mp);
++void xfs_icache_enable_reclaim(struct xfs_mount *mp);
++
+ #endif
 
