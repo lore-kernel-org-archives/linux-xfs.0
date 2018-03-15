@@ -1,121 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33608 "EHLO mx1.redhat.com"
+Received: from mail-ve1eur01on0092.outbound.protection.outlook.com ([104.47.1.92]:60774
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750720AbeCOGQC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 02:16:02 -0400
-Date: Thu, 15 Mar 2018 07:15:57 +0100
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
-Message-ID: <20180315061557.5jajfodpkjdmcrld@rh_laptop>
-References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
- <20180313042126.GB18129@dastard>
- <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
- <20180313224522.GZ7000@dastard>
- <20180314131659.wnmt5zxfhrfsld7n@rh_laptop>
- <20180314133258.GB7000@dastard>
- <20180314135752.5a2vmjr7cuavusiw@rh_laptop>
- <20180314212441.GC7000@dastard>
+        id S1751414AbeCOTmY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 15:42:24 -0400
+Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
+ case of global reclaim
+References: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
+ <20180315174903.GM23100@dhcp22.suse.cz>
+ <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
+ <20180315193224.GV23100@dhcp22.suse.cz>
+From: Kirill Tkhai <ktkhai@virtuozzo.com>
+Message-ID: <4615a892-c179-9813-daff-ad371691731d@virtuozzo.com>
+Date: Thu, 15 Mar 2018 22:42:19 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180314212441.GC7000@dastard>
+In-Reply-To: <20180315193224.GV23100@dhcp22.suse.cz>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-On Thu, Mar 15, 2018 at 08:24:41AM +1100, Dave Chinner wrote:
-> On Wed, Mar 14, 2018 at 02:57:52PM +0100, Lukas Czerner wrote:
-> > On Thu, Mar 15, 2018 at 12:32:58AM +1100, Dave Chinner wrote:
-> > > On Wed, Mar 14, 2018 at 02:16:59PM +0100, Lukas Czerner wrote:
-> > > > just FYI the 042 xfstest does fail on xfs with what I think is stale
-> > > > data exposure. It might not be related at all to what crashmonkey is
-> > > > reporting but there is something wrong nevertheless.
-> > > 
-> > > generic/042 is unreliable and certain operations result in a
-> > > non-zero length file because of metadata commits/writeback that
-> > > occur as a result of the fallocate operations. It got removed from
-> > > the auto group because it isn't a reliable test about 3 years ago:
-> > 
-> > Sure, I just that it clearly exposes stale data on xfs. That is, the
-> > resulting file contains data that was previously written to the
-> > underlying image file to catch the exposure. I am aware of the non-zero
-> > length file problem, that's not what I am pointing out though.
+On 15.03.2018 22:32, Michal Hocko wrote:
+> On Thu 15-03-18 22:28:43, Kirill Tkhai wrote:
+>> On 15.03.2018 20:49, Michal Hocko wrote:
+>>> On Thu 15-03-18 18:01:34, Kirill Tkhai wrote:
+>>>> xfs_reclaim_inodes_count(XFS_M(sb)) does not care about memcg.
+>>>> So, it's called for memcg reclaim too, e.g. this list is shrinked
+>>>> disproportionality to another lists.
+>>>>
+>>>> This looks confusing, so I'm reporting about this.
+>>>> Consider this patch as RFC.
+>>>
+>>> Could you be more specific about the problem you are trying to solve?
+>>> Because we do skip shrinkers which are not memcg aware by
+>>> shrink_slab:
+>>> 		/*
+>>> 		 * If kernel memory accounting is disabled, we ignore
+>>> 		 * SHRINKER_MEMCG_AWARE flag and call all shrinkers
+>>> 		 * passing NULL for memcg.
+>>> 		 */
+>>> 		if (memcg_kmem_enabled() &&
+>>> 		    !!memcg != !!(shrinker->flags & SHRINKER_MEMCG_AWARE))
+>>> 			continue;
+>>>
+>>> Or am I missing something?
+>>
+>> sb->s_op->nr_cached_objects is a sub-method of generic super_cache_count().
+>> super_cache_count() is owned and only called by superblock's shrinker,
+>> which does have SHRINKER_MEMCG_AWARE flag.
 > 
-> What setup are you testing on? I haven't seen it fail in some time.
-> Here, on emulated pmem:
+> Ohh, I see. I thought it was a standard "top-level" shrinker.
 
-Virtual machine with Virtio devices backed by a linear lvs consisting of
-SCSI drives, all local.
+There are one more in addition (it has to go in this patch):
 
-> 
-> SECTION       -- xfs
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 test4 4.16.0-rc5-dgc
-> MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 /dev/pmem1
-> MOUNT_OPTIONS -- /dev/pmem1 /mnt/scratch
-> 
-> xfs/042 10s ... 14s
+.free_cached_objects    = xfs_fs_free_cached_objects
 
-We are talking about generic/042. xfs/042 is very much a different
-test.
+which is not memcg aware. It also needs to have the same fix,
+if xfs_reclaim_inodes_count() is need.
 
-SECTION       -- xfs
-RECREATING    -- xfs on /dev/vdc1
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 rhel7 4.16.0-rc5+
-MKFS_OPTIONS  -- -f -f /dev/vdb1
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb1 /mnt/test1
-
-generic/042	 - output mismatch (see /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad)
-    --- tests/generic/042.out	2018-03-14 05:56:38.619124060 -0400
-    +++ /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad	2018-03-15 02:15:02.872113819 -0400
-    @@ -5,6 +5,16 @@
-     fpunch
-     wrote 65536/65536 bytes at offset 0
-     XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-    +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-    +*
-    +000f000 0000 0000 0000 0000 0000 0000 0000 0000
-    +*
-    ...
-    (Run 'diff -u tests/generic/042.out /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad'  to see the entire diff)
-xfs/042 15s ... 15s
-Ran: generic/042 xfs/042
-Failures: generic/042
-Failed 1 of 2 tests
-
-
--Lukas
-
-> Passed all 1 tests
-> 
-> SECTION       -- xfs
-> =========================
-> Passed all 1 tests
-> 
-> And on a different machine, with iSCSI devices and a slightly older
-> kernel:
-> 
-> SECTION       -- xfs
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 test2 4.16.0-rc2-dgc
-> MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 /dev/sdg
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sdg /mnt/scratch
-> 
-> xfs/042 14s ... 14s
-> Passed all 1 tests
-> 
-> SECTION       -- xfs
-> =========================
-> Passed all 1 tests
-> 
-> It passes just fine.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Kirill
