@@ -1,64 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36040 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932686AbeCOPxU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 11:53:20 -0400
-Date: Thu, 15 Mar 2018 08:53:16 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:54930 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932705AbeCOPqL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 11:46:11 -0400
+Date: Thu, 15 Mar 2018 08:46:04 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
- case of global reclaim
-Message-ID: <20180315155316.GY4865@magnolia>
-References: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
+Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
+Message-ID: <20180315154604.GX4865@magnolia>
+References: <20180314171724.41951-1-bfoster@redhat.com>
+ <20180314181218.GR4865@magnolia>
+ <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
+ <20180315103839.GA44732@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
+In-Reply-To: <20180315103839.GA44732@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kirill Tkhai <ktkhai@virtuozzo.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chiluk <chiluk+linuxxfs@indeed.com>, linux-xfs@vger.kernel.org
 
-On Thu, Mar 15, 2018 at 06:01:34PM +0300, Kirill Tkhai wrote:
-> xfs_reclaim_inodes_count(XFS_M(sb)) does not care about memcg.
-> So, it's called for memcg reclaim too, e.g. this list is shrinked
-> disproportionality to another lists.
+On Thu, Mar 15, 2018 at 06:38:39AM -0400, Brian Foster wrote:
+> On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
+> > On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
+> > <darrick.wong@oracle.com> wrote:
+> > > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
+> ...
+> > 
+> > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
+> > 
+> > I'm also assuming this will get submitted back to the linux-stable
+> > trees as the agfl packing change is already causing issues in the
+> > stable trees.  If you do not intend to push it into the linux-stable
+> > trees let me know and I'll take care of at least the major ones.
+> > 
 > 
-> This looks confusing, so I'm reporting about this.
-> Consider this patch as RFC.
+> Yeah, I can cc stable in the next post along with the other minor fixes.
+> My question is how far back should this fix go? Was the plan to only go
+> back to v4.5 because that is where the packing fix first went in? Or
+> should this go back further because it looks like the packing fix was
+> backported to v3.10:
+> 
+> $ git show 96f859d52bcb1
+> commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
+> Author: Darrick J. Wong <darrick.wong@oracle.com>
+> Date:   Mon Jan 4 16:13:21 2016 +1100
+> 
+>     libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
+>     
+>     ...
+>     
+>     cc: <stable@vger.kernel.org> # 3.10 - 4.4
+>     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-So... I think the reasoning here is that xfs doesn't allocate inodes on
-behalf of any particular memcg (or put another way the cost of the
-inodes is shared by everything in the system) so if the shrinkers get
-called because a particular memcg is bumping up against its limits it
-makes no sense to try to purge xfs inodes?
+Hmmm, I'm assuming that you'd want 3.10 at least for RHEL, but I'll let
+you all figure that one out.
 
-Followup questions: does the same reasoning apply to the xfs buffer and
-quota shrinkers?  Do any filesystems associate their metadata memory
-allocations with a specific memcg?  If not, why not put this in
-super_cache_{scan,count}?
+As far as the upstream kernels, 4.14.27, 4.9.87, 4.4.121, and 4.1.50
+have that packing patch so I guess they'll all need some version of this.
 
 --D
 
-> Signed-off-by: Kirill Tkhai <ktkhai@virtuozzo.com>
-> ---
->  fs/xfs/xfs_super.c |    2 ++
->  1 file changed, 2 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 951271f57d00..124568aefa94 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1788,6 +1788,8 @@ xfs_fs_nr_cached_objects(
->  	struct super_block	*sb,
->  	struct shrink_control	*sc)
->  {
-> +	if (sc->memcg)
-> +		return 0;
->  	return xfs_reclaim_inodes_count(XFS_M(sb));
->  }
->  
+> Brian
 > 
+> > Thanks,
+> > Dave
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
