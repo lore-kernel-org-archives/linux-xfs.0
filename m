@@ -1,52 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:50802 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752279AbeCOOxy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 10:53:54 -0400
-Date: Thu, 15 Mar 2018 15:53:39 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [RFC][PATCH] sched/wait_bit: Introduce
- wait_var_event()/wake_up_var()
-Message-ID: <20180315145339.GE4082@hirez.programming.kicks-ass.net>
-References: <20180315115146.GX4064@hirez.programming.kicks-ass.net>
- <20180313102056.GJ4043@hirez.programming.kicks-ass.net>
- <152066488891.40260.14605734226832760468.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152066493247.40260.10849841915366086021.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180311112725.GC4043@hirez.programming.kicks-ass.net>
- <CAPcyv4jr53dqVTzdEQ6Ln1Qg7nWVMQSVTkf6uc+Lg6Y-xruhuw@mail.gmail.com>
- <3396.1521107922@warthog.procyon.org.uk>
- <18971.1521125120@warthog.procyon.org.uk>
+Received: from userp2130.oracle.com ([156.151.31.86]:36040 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932686AbeCOPxU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 11:53:20 -0400
+Date: Thu, 15 Mar 2018 08:53:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
+ case of global reclaim
+Message-ID: <20180315155316.GY4865@magnolia>
+References: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <18971.1521125120@warthog.procyon.org.uk>
+In-Reply-To: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Howells <dhowells@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Ingo Molnar <mingo@redhat.com>, Christoph Hellwig <hch@lst.de>, david <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ralf Baechle <ralf@linux-mips.org>
+To: Kirill Tkhai <ktkhai@virtuozzo.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-On Thu, Mar 15, 2018 at 02:45:20PM +0000, David Howells wrote:
-> Peter Zijlstra <peterz@infradead.org> wrote:
+On Thu, Mar 15, 2018 at 06:01:34PM +0300, Kirill Tkhai wrote:
+> xfs_reclaim_inodes_count(XFS_M(sb)) does not care about memcg.
+> So, it's called for memcg reclaim too, e.g. this list is shrinked
+> disproportionality to another lists.
 > 
-> > Does the below address things sufficiently clear?
+> This looks confusing, so I'm reporting about this.
+> Consider this patch as RFC.
+
+So... I think the reasoning here is that xfs doesn't allocate inodes on
+behalf of any particular memcg (or put another way the cost of the
+inodes is shared by everything in the system) so if the shrinkers get
+called because a particular memcg is bumping up against its limits it
+makes no sense to try to purge xfs inodes?
+
+Followup questions: does the same reasoning apply to the xfs buffer and
+quota shrinkers?  Do any filesystems associate their metadata memory
+allocations with a specific memcg?  If not, why not put this in
+super_cache_{scan,count}?
+
+--D
+
+> Signed-off-by: Kirill Tkhai <ktkhai@virtuozzo.com>
+> ---
+>  fs/xfs/xfs_super.c |    2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> Yep.
-
-Thanks!
-
-> > +wait_queue_head_t *__var_waitqueue(void *p)
-> > +{
-> > +	if (BITS_PER_LONG == 64) {
-> > +		unsigned long q = (unsigned long)p;
-> > +
-> > +		return bit_waitqueue((void *)(q & ~1), q & 1);
-> > +	}
-> > +	return bit_waitqueue(p, 0);
-> > +}
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 951271f57d00..124568aefa94 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1788,6 +1788,8 @@ xfs_fs_nr_cached_objects(
+>  	struct super_block	*sb,
+>  	struct shrink_control	*sc)
+>  {
+> +	if (sc->memcg)
+> +		return 0;
+>  	return xfs_reclaim_inodes_count(XFS_M(sb));
+>  }
+>  
 > 
-> You might be better off not using bit_waitqueue() but rather do the
-> calculation directly since you don't actually have a bit number.
-
-Yes, I did that in patch 11. The initial version uses the exact same
-stuff wait_on_atomic_t() uses to avoid spurious changes.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
