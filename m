@@ -1,79 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54930 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932705AbeCOPqL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 11:46:11 -0400
-Date: Thu, 15 Mar 2018 08:46:04 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
-Message-ID: <20180315154604.GX4865@magnolia>
-References: <20180314171724.41951-1-bfoster@redhat.com>
- <20180314181218.GR4865@magnolia>
- <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
- <20180315103839.GA44732@bfoster.bfoster>
+Received: from mga17.intel.com ([192.55.52.151]:50731 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933095AbeCOQB4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 12:01:56 -0400
+Subject: [PATCH v6 15/15] xfs, dax: introduce xfs_break_dax_layouts()
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 15 Mar 2018 08:52:50 -0700
+Message-ID: <152112917064.24669.8101553386217458496.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180315103839.GA44732@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chiluk <chiluk+linuxxfs@indeed.com>, linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.orgjack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-On Thu, Mar 15, 2018 at 06:38:39AM -0400, Brian Foster wrote:
-> On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
-> > On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
-> > <darrick.wong@oracle.com> wrote:
-> > > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
-> ...
-> > 
-> > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
-> > 
-> > I'm also assuming this will get submitted back to the linux-stable
-> > trees as the agfl packing change is already causing issues in the
-> > stable trees.  If you do not intend to push it into the linux-stable
-> > trees let me know and I'll take care of at least the major ones.
-> > 
-> 
-> Yeah, I can cc stable in the next post along with the other minor fixes.
-> My question is how far back should this fix go? Was the plan to only go
-> back to v4.5 because that is where the packing fix first went in? Or
-> should this go back further because it looks like the packing fix was
-> backported to v3.10:
-> 
-> $ git show 96f859d52bcb1
-> commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
-> Author: Darrick J. Wong <darrick.wong@oracle.com>
-> Date:   Mon Jan 4 16:13:21 2016 +1100
-> 
->     libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
->     
->     ...
->     
->     cc: <stable@vger.kernel.org> # 3.10 - 4.4
->     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->     Reviewed-by: Dave Chinner <dchinner@redhat.com>
->     Signed-off-by: Dave Chinner <david@fromorbit.com>
+xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
+for busy / pinned dax pages and waits for those pages to go idle before
+any potential extent unmap operation.
 
-Hmmm, I'm assuming that you'd want 3.10 at least for RHEL, but I'll let
-you all figure that one out.
+dax_layout_busy_page() handles synchronizing against new page-busy
+events (get_user_pages). It invalidates all mappings to trigger the
+get_user_pages slow path which will eventually block on the xfs inode
+log held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
+busy page it returns it for xfs to wait for the page-idle event that
+will fire when the page reference count reaches 1 (recall ZONE_DEVICE
+pages are idle at count 1).
 
-As far as the upstream kernels, 4.14.27, 4.9.87, 4.4.121, and 4.1.50
-have that packing patch so I guess they'll all need some version of this.
+While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
+deadlock the process that might be trying to elevate the page count of
+more pages before arranging for any of them to go idle. I.e. the typical
+case of submitting I/O is that iov_iter_get_pages() elevates the
+reference count of all pages in the I/O before starting I/O on the first
+page.
 
---D
+Cc: Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/xfs/xfs_file.c |   67 +++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 54 insertions(+), 13 deletions(-)
 
-> 
-> Brian
-> 
-> > Thanks,
-> > Dave
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 399c5221f101..2ccdbb19e31a 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -759,6 +759,38 @@ xfs_file_write_iter(
+ 	return ret;
+ }
+ 
++static void
++xfs_wait_var_event(
++	struct inode		*inode,
++	uint			iolock)
++{
++	struct xfs_inode        *ip = XFS_I(inode);
++
++	xfs_iunlock(ip, iolock);
++	schedule();
++	xfs_ilock(ip, iolock);
++}
++
++static int
++xfs_break_dax_layouts(
++	struct inode		*inode,
++	uint			iolock)
++{
++	struct page		*page;
++	int			ret;
++
++	page = dax_layout_busy_page(inode->i_mapping);
++	if (!page)
++		return 0;
++
++	ret = ___wait_var_event(&page->_refcount,
++			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
++			0, 0, xfs_wait_var_event(inode, iolock));
++	if (ret < 0)
++		return ret;
++	return 1;
++}
++
+ int
+ xfs_break_layouts(
+ 	struct inode		*inode,
+@@ -766,23 +798,32 @@ xfs_break_layouts(
+ 	enum layout_break_reason reason)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	int			ret;
++	int			ret = 0;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL
+ 				| XFS_MMAPLOCK_EXCL));
+ 
+-	switch (reason) {
+-	case BREAK_TRUNCATE:
+-		/* fall through */
+-	case BREAK_WRITE:
+-		ret = xfs_break_leased_layouts(inode, iolock);
+-		if (ret > 0)
+-			ret = 0;
+-		break;
+-	default:
+-		ret = -EINVAL;
+-		break;
+-	}
++	do {
++		switch (reason) {
++		case BREAK_TRUNCATE:
++			ret = xfs_break_dax_layouts(inode, *iolock);
++			/* fall through */
++		case BREAK_WRITE:
++			if (ret != 0)
++				break;
++			ret = xfs_break_leased_layouts(inode, iolock);
++			break;
++		default:
++			ret = -EINVAL;
++			break;
++		}
++		/*
++		 * This loop terminates when either layout break attempt
++		 * returns an error, or both layout break attempts
++		 * return 0, i.e. layouts are verified broken while
++		 * holding all required locks.
++		 */
++	} while (ret > 0);
+ 
+ 	return ret;
+ }
+
