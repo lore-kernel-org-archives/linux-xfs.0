@@ -1,357 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38312 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751475AbeCOQIv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 12:08:51 -0400
-Subject: [PATCH v6 09/15] mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 15 Mar 2018 08:52:12 -0700
-Message-ID: <152112913205.24669.12417777615718867473.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:42525 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751527AbeCOQ1e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 12:27:34 -0400
+Received: by mail-ot0-f195.google.com with SMTP id l5-v6so7461850otf.9
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 09:27:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180315154604.GX4865@magnolia>
+References: <20180314171724.41951-1-bfoster@redhat.com> <20180314181218.GR4865@magnolia>
+ <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
+ <20180315103839.GA44732@bfoster.bfoster> <20180315154604.GX4865@magnolia>
+From: Dave Chiluk <chiluk+linuxxfs@indeed.com>
+Date: Thu, 15 Mar 2018 11:27:02 -0500
+Message-ID: <CAC=E7cW7eae8Un++GQNchmPi2QA3sZFPF1BiVHW9bw7c8vj2tg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Michal Hocko <mhocko@suse.com>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, david@fromorbit.com, hch@lst.de, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-The HMM sub-system extended dev_pagemap to arrange a callback when a
-dev_pagemap managed page is freed. Since a dev_pagemap page is free /
-idle when its reference count is 1 it requires an additional branch to
-check the page-type at put_page() time. Given put_page() is a hot-path
-we do not want to incur that check if HMM is not in use, so a static
-branch is used to avoid that overhead when not necessary.
+On Thu, Mar 15, 2018 at 10:46 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Thu, Mar 15, 2018 at 06:38:39AM -0400, Brian Foster wrote:
+>> On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
+>> > On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
+>> > <darrick.wong@oracle.com> wrote:
+>> > > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
+>> ...
+>> >
+>> > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
+>> >
+>> > I'm also assuming this will get submitted back to the linux-stable
+>> > trees as the agfl packing change is already causing issues in the
+>> > stable trees.  If you do not intend to push it into the linux-stable
+>> > trees let me know and I'll take care of at least the major ones.
+>> >
+>>
+>> Yeah, I can cc stable in the next post along with the other minor fixes.
+>> My question is how far back should this fix go? Was the plan to only go
+>> back to v4.5 because that is where the packing fix first went in? Or
+>> should this go back further because it looks like the packing fix was
+>> backported to v3.10:
+>>
+>> $ git show 96f859d52bcb1
+>> commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
+>> Author: Darrick J. Wong <darrick.wong@oracle.com>
+>> Date:   Mon Jan 4 16:13:21 2016 +1100
+>>
+>>     libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
+>>
+>>     ...
+>>
+>>     cc: <stable@vger.kernel.org> # 3.10 - 4.4
+>>     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>>     Signed-off-by: Dave Chinner <david@fromorbit.com>
+>
+> Hmmm, I'm assuming that you'd want 3.10 at least for RHEL, but I'll let
+> you all figure that one out.
+>
+> As far as the upstream kernels, 4.14.27, 4.9.87, 4.4.121, and 4.1.50
+> have that packing patch so I guess they'll all need some version of this.
+>
+> --D
+>
+>>
+>> Brian
+>>
+>> > Thanks,
+>> > Dave
+>> > --
 
-Now, the FS_DAX implementation wants to reuse this mechanism for
-receiving dev_pagemap ->page_free() callbacks. Rework the HMM-specific
-static-key into a generic mechanism that either HMM or FS_DAX code paths
-can enable.
+RHEL is actually fine for now, since they explicitly remove the
+packing patch in their kernel, and xfsprogs.  Once you submit the
+patches to linux-stable the ubuntu-kernel team monitors and includes
+patches for the releases that they are stable maintainers of *(they
+are downstream for 4.4 of gregkh, but currently maintain a 3.13, 4.13,
+and 4.15 tree).
 
-Cc: Michal Hocko <mhocko@suse.com>
-Reviewed-by: "Jérôme Glisse" <jglisse@redhat.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/dax/super.c      |    2 ++
- fs/Kconfig               |    1 +
- include/linux/memremap.h |   20 ++-------------
- include/linux/mm.h       |   61 ++++++++++++++++++++++++++++++++--------------
- kernel/memremap.c        |   30 ++++++++++++++++++++---
- mm/Kconfig               |    5 ++++
- mm/hmm.c                 |   13 ++--------
- mm/swap.c                |    3 ++
- 8 files changed, 84 insertions(+), 51 deletions(-)
+Also please add a Fixes line to your commit so it's obvious what patch
+it helps remediate.  Fixes is actually not a great word here, but that
+looks to be what the submitting-patches.txt doc calls for.
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index ecefe9f7eb60..619b1ed6434c 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -191,6 +191,7 @@ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
- 		return NULL;
- 	}
- 
-+	dev_pagemap_get_ops();
- 	pgmap->type = MEMORY_DEVICE_FS_DAX;
- 	pgmap->page_free = generic_dax_pagefree;
- 	pgmap->data = owner;
-@@ -215,6 +216,7 @@ void fs_dax_release(struct dax_device *dax_dev, void *owner)
- 	pgmap->type = MEMORY_DEVICE_HOST;
- 	pgmap->page_free = NULL;
- 	pgmap->data = NULL;
-+	dev_pagemap_put_ops();
- 	mutex_unlock(&devmap_lock);
- }
- EXPORT_SYMBOL_GPL(fs_dax_release);
-diff --git a/fs/Kconfig b/fs/Kconfig
-index bc821a86d965..1f0832bbc32f 100644
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -38,6 +38,7 @@ config FS_DAX
- 	bool "Direct Access (DAX) support"
- 	depends on MMU
- 	depends on !(ARM || MIPS || SPARC)
-+	select DEV_PAGEMAP_OPS
- 	select FS_IOMAP
- 	select DAX
- 	help
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 02d6d042ee7f..9faf25d6abef 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -1,7 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 */
- #ifndef _LINUX_MEMREMAP_H_
- #define _LINUX_MEMREMAP_H_
--#include <linux/mm.h>
- #include <linux/ioport.h>
- #include <linux/percpu-refcount.h>
- 
-@@ -130,6 +129,9 @@ struct dev_pagemap {
- 	enum memory_type type;
- };
- 
-+void dev_pagemap_get_ops(void);
-+void dev_pagemap_put_ops(void);
-+
- #ifdef CONFIG_ZONE_DEVICE
- void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap);
- struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
-@@ -137,8 +139,6 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
- 
- unsigned long vmem_altmap_offset(struct vmem_altmap *altmap);
- void vmem_altmap_free(struct vmem_altmap *altmap, unsigned long nr_pfns);
--
--static inline bool is_zone_device_page(const struct page *page);
- #else
- static inline void *devm_memremap_pages(struct device *dev,
- 		struct dev_pagemap *pgmap)
-@@ -169,20 +169,6 @@ static inline void vmem_altmap_free(struct vmem_altmap *altmap,
- }
- #endif /* CONFIG_ZONE_DEVICE */
- 
--#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
--static inline bool is_device_private_page(const struct page *page)
--{
--	return is_zone_device_page(page) &&
--		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
--}
--
--static inline bool is_device_public_page(const struct page *page)
--{
--	return is_zone_device_page(page) &&
--		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
--}
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
--
- static inline void put_dev_pagemap(struct dev_pagemap *pgmap)
- {
- 	if (pgmap)
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ad06d42adb1a..088c76bce360 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -812,27 +812,55 @@ static inline bool is_zone_device_page(const struct page *page)
- }
- #endif
- 
--#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
--void put_zone_device_private_or_public_page(struct page *page);
--DECLARE_STATIC_KEY_FALSE(device_private_key);
--#define IS_HMM_ENABLED static_branch_unlikely(&device_private_key)
--static inline bool is_device_private_page(const struct page *page);
--static inline bool is_device_public_page(const struct page *page);
--#else /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
--static inline void put_zone_device_private_or_public_page(struct page *page)
-+#ifdef CONFIG_DEV_PAGEMAP_OPS
-+void __put_devmap_managed_page(struct page *page);
-+DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
-+static inline bool put_devmap_managed_page(struct page *page)
- {
-+	if (!static_branch_unlikely(&devmap_managed_key))
-+		return false;
-+	if (!is_zone_device_page(page))
-+		return false;
-+	switch (page->pgmap->type) {
-+	case MEMORY_DEVICE_PRIVATE:
-+	case MEMORY_DEVICE_PUBLIC:
-+	case MEMORY_DEVICE_FS_DAX:
-+		__put_devmap_managed_page(page);
-+		return true;
-+	default:
-+		break;
-+	}
-+	return false;
- }
--#define IS_HMM_ENABLED 0
-+
- static inline bool is_device_private_page(const struct page *page)
- {
--	return false;
-+	return is_zone_device_page(page) &&
-+		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
- }
-+
- static inline bool is_device_public_page(const struct page *page)
- {
-+	return is_zone_device_page(page) &&
-+		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
-+}
-+
-+#else /* CONFIG_DEV_PAGEMAP_OPS */
-+static inline bool put_devmap_managed_page(struct page *page)
-+{
- 	return false;
- }
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
- 
-+static inline bool is_device_private_page(const struct page *page)
-+{
-+	return false;
-+}
-+
-+static inline bool is_device_public_page(const struct page *page)
-+{
-+	return false;
-+}
-+#endif /* CONFIG_DEV_PAGEMAP_OPS */
- 
- static inline void get_page(struct page *page)
- {
-@@ -850,16 +878,13 @@ static inline void put_page(struct page *page)
- 	page = compound_head(page);
- 
- 	/*
--	 * For private device pages we need to catch refcount transition from
--	 * 2 to 1, when refcount reach one it means the private device page is
--	 * free and we need to inform the device driver through callback. See
-+	 * For devmap managed pages we need to catch refcount transition from
-+	 * 2 to 1, when refcount reach one it means the page is free and we
-+	 * need to inform the device driver through callback. See
- 	 * include/linux/memremap.h and HMM for details.
- 	 */
--	if (IS_HMM_ENABLED && unlikely(is_device_private_page(page) ||
--	    unlikely(is_device_public_page(page)))) {
--		put_zone_device_private_or_public_page(page);
-+	if (put_devmap_managed_page(page))
- 		return;
--	}
- 
- 	if (put_page_testzero(page))
- 		__put_page(page);
-diff --git a/kernel/memremap.c b/kernel/memremap.c
-index 4dd4274cabe2..72d0bb6fc47d 100644
---- a/kernel/memremap.c
-+++ b/kernel/memremap.c
-@@ -476,8 +476,30 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
- }
- #endif /* CONFIG_ZONE_DEVICE */
- 
--#if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
--void put_zone_device_private_or_public_page(struct page *page)
-+#ifdef CONFIG_DEV_PAGEMAP_OPS
-+DEFINE_STATIC_KEY_FALSE(devmap_managed_key);
-+EXPORT_SYMBOL_GPL(devmap_managed_key);
-+static atomic_t devmap_enable;
-+
-+/*
-+ * Toggle the static key for ->page_free() callbacks when dev_pagemap
-+ * pages go idle.
-+ */
-+void dev_pagemap_get_ops(void)
-+{
-+	if (atomic_inc_return(&devmap_enable) == 1)
-+		static_branch_enable(&devmap_managed_key);
-+}
-+EXPORT_SYMBOL_GPL(dev_pagemap_get_ops);
-+
-+void dev_pagemap_put_ops(void)
-+{
-+	if (atomic_dec_and_test(&devmap_enable))
-+		static_branch_disable(&devmap_managed_key);
-+}
-+EXPORT_SYMBOL_GPL(dev_pagemap_put_ops);
-+
-+void __put_devmap_managed_page(struct page *page)
- {
- 	int count = page_ref_dec_return(page);
- 
-@@ -497,5 +519,5 @@ void put_zone_device_private_or_public_page(struct page *page)
- 	} else if (!count)
- 		__put_page(page);
- }
--EXPORT_SYMBOL(put_zone_device_private_or_public_page);
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
-+EXPORT_SYMBOL_GPL(__put_devmap_managed_page);
-+#endif /* CONFIG_DEV_PAGEMAP_OPS */
-diff --git a/mm/Kconfig b/mm/Kconfig
-index c782e8fb7235..dc32828984a3 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -700,6 +700,9 @@ config ARCH_HAS_HMM
- config MIGRATE_VMA_HELPER
- 	bool
- 
-+config DEV_PAGEMAP_OPS
-+	bool
-+
- config HMM
- 	bool
- 	select MIGRATE_VMA_HELPER
-@@ -720,6 +723,7 @@ config DEVICE_PRIVATE
- 	bool "Unaddressable device memory (GPU memory, ...)"
- 	depends on ARCH_HAS_HMM
- 	select HMM
-+	select DEV_PAGEMAP_OPS
- 
- 	help
- 	  Allows creation of struct pages to represent unaddressable device
-@@ -730,6 +734,7 @@ config DEVICE_PUBLIC
- 	bool "Addressable device memory (like GPU memory)"
- 	depends on ARCH_HAS_HMM
- 	select HMM
-+	select DEV_PAGEMAP_OPS
- 
- 	help
- 	  Allows creation of struct pages to represent addressable device
-diff --git a/mm/hmm.c b/mm/hmm.c
-index 320545b98ff5..4aa554e76d06 100644
---- a/mm/hmm.c
-+++ b/mm/hmm.c
-@@ -35,15 +35,6 @@
- 
- #define PA_SECTION_SIZE (1UL << PA_SECTION_SHIFT)
- 
--#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
--/*
-- * Device private memory see HMM (Documentation/vm/hmm.txt) or hmm.h
-- */
--DEFINE_STATIC_KEY_FALSE(device_private_key);
--EXPORT_SYMBOL(device_private_key);
--#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
--
--
- #if IS_ENABLED(CONFIG_HMM_MIRROR)
- static const struct mmu_notifier_ops hmm_mmu_notifier_ops;
- 
-@@ -996,7 +987,7 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
- 	resource_size_t addr;
- 	int ret;
- 
--	static_branch_enable(&device_private_key);
-+	dev_pagemap_get_ops();
- 
- 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
- 				   GFP_KERNEL, dev_to_node(device));
-@@ -1090,7 +1081,7 @@ struct hmm_devmem *hmm_devmem_add_resource(const struct hmm_devmem_ops *ops,
- 	if (res->desc != IORES_DESC_DEVICE_PUBLIC_MEMORY)
- 		return ERR_PTR(-EINVAL);
- 
--	static_branch_enable(&device_private_key);
-+	dev_pagemap_get_ops();
- 
- 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
- 				   GFP_KERNEL, dev_to_node(device));
-diff --git a/mm/swap.c b/mm/swap.c
-index 0f17330dd0e5..eed846cfc8b8 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -29,6 +29,7 @@
- #include <linux/cpu.h>
- #include <linux/notifier.h>
- #include <linux/backing-dev.h>
-+#include <linux/memremap.h>
- #include <linux/memcontrol.h>
- #include <linux/gfp.h>
- #include <linux/uio.h>
-@@ -744,7 +745,7 @@ void release_pages(struct page **pages, int nr)
- 						       flags);
- 				locked_pgdat = NULL;
- 			}
--			put_zone_device_private_or_public_page(page);
-+			put_devmap_managed_page(page);
- 			continue;
- 		}
- 
+Fixes: 96f859d52bcb libxfs: pack the agfl header structure so
+XFS_AGFL_SIZE is correct
 
+This way stable maintainers understand that the fix resolves an issue
+that was introduced by that patch, and can apply/not apply
+appropriately.  Although in all honesty the patch really applies to
+all stable kernels regardless of if the packing patch has been applied
+or not.
+
+Dave.
