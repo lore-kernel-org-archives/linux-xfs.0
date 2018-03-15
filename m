@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39002 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751279AbeCOAaD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 20:30:03 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2F0RPVj158078
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:03 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2gqdhrg366-1
+Received: from aserp2130.oracle.com ([141.146.126.79]:39214 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751279AbeCOAaL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 20:30:11 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2F0R1qh083770
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:10 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2gqdf5049r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:02 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:10 +0000
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2F0U2OS028700
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w2F0U8sx014742
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:02 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2F0U11I014167
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:01 GMT
-Subject: [PATCH 5/9] xfs: bmap scrubber should do rmap xref with bmap for
- sparse files
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:09 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2F0U8Qx014234
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:30:08 GMT
+Subject: [PATCH 6/9] xfs: inode scrubber shouldn't bother with raw checks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 14 Mar 2018 17:30:00 -0700
-Message-ID: <152107380082.19571.10988218532838802248.stgit@magnolia>
+Date: Wed, 14 Mar 2018 17:30:07 -0700
+Message-ID: <152107380695.19571.2332304909071108710.stgit@magnolia>
 In-Reply-To: <152107377037.19571.8618901963505842632.stgit@magnolia>
 References: <152107377037.19571.8618901963505842632.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,219 +34,148 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When we're scanning an extent mapping inode fork, ensure that every rmap
-record for this ifork has a corresponding bmbt record too.  This
-(mostly) provides the ability to cross-reference rmap records with bmap
-data.  The rmap scrubber cannot do the xref on its own because that
-requires taking an ilock with the agf lock held, which violates our
-locking order rules (inode, then agf).
+The inode scrubber tries to _iget the inode prior to running checks.
+If that _iget call fails with corruption errors that's an automatic
+fail, regardless of whether it was the inode buffer read verifier,
+the ifork verifier, or the ifork formatter that errored out.
 
-Note that we only do this for forks that are in btree format due to the
-increased complexity; or forks that should have data but suspiciously
-have zero extents because the inode could have just had its iforks
-zapped by the inode repair code and now we need to reclaim the old
-extents.
+Therefore, get rid of the raw mode scrub code because it's not needed.
+Found by trying to fix some test failures in xfs/379 and xfs/415.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/bmap.c |  164 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 163 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/inode.c |   98 +++++---------------------------------------------
+ 1 file changed, 9 insertions(+), 89 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index d002821..2f38add 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -37,6 +37,7 @@
- #include "xfs_bmap_util.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
- #include "xfs_refcount.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
-@@ -423,6 +424,163 @@ xfs_scrub_bmap_btree(
- 	return error;
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 21297be..0332a01 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -515,72 +515,6 @@ xfs_scrub_dinode(
+ 	}
  }
  
-+struct xfs_scrub_bmap_check_rmap_info {
-+	struct xfs_scrub_context	*sc;
-+	int				whichfork;
-+	struct xfs_iext_cursor		icur;
-+};
-+
-+/* Can we find bmaps that fit this rmap? */
-+STATIC int
-+xfs_scrub_bmap_check_rmap(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_bmbt_irec		irec;
-+	struct xfs_scrub_bmap_check_rmap_info	*sbcri = priv;
-+	struct xfs_ifork		*ifp;
-+	struct xfs_scrub_context	*sc = sbcri->sc;
-+	bool				have_map;
-+
-+	/* Is this even the right fork? */
-+	if (rec->rm_owner != sc->ip->i_ino)
-+		return 0;
-+	if ((sbcri->whichfork == XFS_ATTR_FORK) ^
-+	    !!(rec->rm_flags & XFS_RMAP_ATTR_FORK))
-+		return 0;
-+	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+		return 0;
-+
-+	/* Now look up the bmbt record. */
-+	ifp = XFS_IFORK_PTR(sc->ip, sbcri->whichfork);
-+	if (!ifp) {
-+		xfs_scrub_fblock_set_corrupt(sc, sbcri->whichfork,
-+				rec->rm_offset);
-+		goto out;
-+	}
-+	have_map = xfs_iext_lookup_extent(sc->ip, ifp, rec->rm_offset,
-+			&sbcri->icur, &irec);
-+	if (!have_map)
-+		xfs_scrub_fblock_set_corrupt(sc, sbcri->whichfork,
-+				rec->rm_offset);
-+
-+	while (have_map) {
-+		if (irec.br_startoff != rec->rm_offset)
-+			xfs_scrub_fblock_set_corrupt(sc, sbcri->whichfork,
-+					rec->rm_offset);
-+		if (irec.br_startblock != XFS_AGB_TO_FSB(sc->mp,
-+				cur->bc_private.a.agno, rec->rm_startblock))
-+			xfs_scrub_fblock_set_corrupt(sc, sbcri->whichfork,
-+					rec->rm_offset);
-+		if (irec.br_blockcount > rec->rm_blockcount)
-+			xfs_scrub_fblock_set_corrupt(sc, sbcri->whichfork,
-+					rec->rm_offset);
-+		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			break;
-+		rec->rm_startblock += irec.br_blockcount;
-+		rec->rm_offset += irec.br_blockcount;
-+		rec->rm_blockcount -= irec.br_blockcount;
-+		if (rec->rm_blockcount == 0)
-+			break;
-+		have_map = xfs_iext_next_extent(ifp, &sbcri->icur, &irec);
-+		if (!have_map)
-+			xfs_scrub_fblock_set_corrupt(sc, sbcri->whichfork,
-+					rec->rm_offset);
-+	}
-+
-+out:
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return XFS_BTREE_QUERY_RANGE_ABORT;
-+	return 0;
-+}
-+
-+/* Make sure each rmap has a corresponding bmbt entry. */
-+STATIC int
-+xfs_scrub_bmap_check_ag_rmaps(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork,
-+	xfs_agnumber_t			agno)
-+{
-+	struct xfs_scrub_bmap_check_rmap_info	sbcri;
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_buf			*agf;
-+	int				error;
-+
-+	error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf);
-+	if (error)
-+		return error;
-+
-+	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, agno);
-+	if (!cur) {
-+		error = -ENOMEM;
-+		goto out_agf;
-+	}
-+
-+	sbcri.sc = sc;
-+	sbcri.whichfork = whichfork;
-+	error = xfs_rmap_query_all(cur, xfs_scrub_bmap_check_rmap, &sbcri);
-+	if (error == XFS_BTREE_QUERY_RANGE_ABORT)
-+		error = 0;
-+
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+out_agf:
-+	xfs_trans_brelse(sc->tp, agf);
-+	return error;
-+}
-+
-+/* Make sure each rmap has a corresponding bmbt entry. */
-+STATIC int
-+xfs_scrub_bmap_check_rmaps(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork)
-+{
-+	loff_t				size;
-+	xfs_agnumber_t			agno;
-+	int				error;
-+
-+	if (!xfs_sb_version_hasrmapbt(&sc->mp->m_sb) ||
-+	    whichfork == XFS_COW_FORK ||
-+	    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-+		return 0;
-+
-+	/* Don't support realtime rmap checks yet. */
-+	if (XFS_IS_REALTIME_INODE(sc->ip) && whichfork == XFS_DATA_FORK)
-+		return 0;
-+
-+	/*
-+	 * Only do this for complex maps that are in btree format, or for
-+	 * situations where we would seem to have a size but zero extents.
-+	 * The inode repair code can zap broken iforks, which means we have
-+	 * to flag this bmap as corrupt if there are rmaps that need to be
-+	 * reattached.
-+	 */
-+	switch (whichfork) {
-+	case XFS_DATA_FORK:
-+		size = i_size_read(VFS_I(sc->ip));
-+		break;
-+	case XFS_ATTR_FORK:
-+		size = XFS_IFORK_Q(sc->ip);
-+		break;
-+	default:
-+		size = 0;
-+		break;
-+	}
-+	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE &&
-+	    (size == 0 || XFS_IFORK_NEXTENTS(sc->ip, whichfork) > 0))
-+		return 0;
-+
-+	for (agno = 0; agno < sc->mp->m_sb.sb_agcount; agno++) {
-+		error = xfs_scrub_bmap_check_ag_rmaps(sc, whichfork, agno);
-+		if (error)
-+			return error;
-+		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			break;
-+	}
-+
-+	return 0;
-+}
-+
+-/* Map and read a raw inode. */
+-STATIC int
+-xfs_scrub_inode_map_raw(
+-	struct xfs_scrub_context	*sc,
+-	xfs_ino_t			ino,
+-	struct xfs_buf			**bpp,
+-	struct xfs_dinode		**dipp)
+-{
+-	struct xfs_imap			imap;
+-	struct xfs_mount		*mp = sc->mp;
+-	struct xfs_buf			*bp = NULL;
+-	struct xfs_dinode		*dip;
+-	int				error;
+-
+-	error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
+-	if (error == -EINVAL) {
+-		/*
+-		 * Inode could have gotten deleted out from under us;
+-		 * just forget about it.
+-		 */
+-		error = -ENOENT;
+-		goto out;
+-	}
+-	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+-			XFS_INO_TO_AGBNO(mp, ino), &error))
+-		goto out;
+-
+-	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+-			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
+-			NULL);
+-	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+-			XFS_INO_TO_AGBNO(mp, ino), &error))
+-		goto out;
+-
+-	/*
+-	 * Is this really an inode?  We disabled verifiers in the above
+-	 * xfs_trans_read_buf call because the inode buffer verifier
+-	 * fails on /any/ inode record in the inode cluster with a bad
+-	 * magic or version number, not just the one that we're
+-	 * checking.  Therefore, grab the buffer unconditionally, attach
+-	 * the inode verifiers by hand, and run the inode verifier only
+-	 * on the one inode we want.
+-	 */
+-	bp->b_ops = &xfs_inode_buf_ops;
+-	dip = xfs_buf_offset(bp, imap.im_boffset);
+-	if (xfs_dinode_verify(mp, ino, dip) != NULL ||
+-	    !xfs_dinode_good_version(mp, dip->di_version)) {
+-		xfs_scrub_ino_set_corrupt(sc, ino, bp);
+-		goto out_buf;
+-	}
+-
+-	/* ...and is it the one we asked for? */
+-	if (be32_to_cpu(dip->di_gen) != sc->sm->sm_gen) {
+-		error = -ENOENT;
+-		goto out_buf;
+-	}
+-
+-	*dipp = dip;
+-	*bpp = bp;
+-out:
+-	return error;
+-out_buf:
+-	xfs_trans_brelse(sc->tp, bp);
+-	return error;
+-}
+-
  /*
-  * Scrub an inode fork's block mappings.
-  *
-@@ -463,7 +621,7 @@ xfs_scrub_bmap(
- 		break;
- 	case XFS_ATTR_FORK:
- 		if (!ifp)
+  * Make sure the finobt doesn't think this inode is free.
+  * We don't have to check the inobt ourselves because we got the inode via
+@@ -727,43 +661,29 @@ xfs_scrub_inode(
+ 	struct xfs_scrub_context	*sc)
+ {
+ 	struct xfs_dinode		di;
+-	struct xfs_buf			*bp = NULL;
+-	struct xfs_dinode		*dip;
+-	xfs_ino_t			ino;
+ 	int				error = 0;
+ 
+-	/* Did we get the in-core inode, or are we doing this manually? */
+-	if (sc->ip) {
+-		ino = sc->ip->i_ino;
+-		xfs_inode_to_disk(sc->ip, &di, 0);
+-		dip = &di;
+-	} else {
+-		/* Map & read inode. */
+-		ino = sc->sm->sm_ino;
+-		error = xfs_scrub_inode_map_raw(sc, ino, &bp, &dip);
+-		if (error || !bp)
 -			goto out;
-+			goto out_check_rmap;
- 		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
- 		    !xfs_sb_version_hasattr2(&mp->m_sb))
- 			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
-@@ -534,6 +692,10 @@ xfs_scrub_bmap(
- 			goto out;
++	/* iget failed means automatic fail. */
++	if (!sc->ip) {
++		xfs_scrub_ino_set_corrupt(sc, sc->sm->sm_ino, NULL);
++		return 0;
  	}
  
-+out_check_rmap:
-+	error = xfs_scrub_bmap_check_rmaps(sc, whichfork);
-+	if (!xfs_scrub_fblock_xref_process_error(sc, whichfork, 0, &error))
-+		goto out;
+-	xfs_scrub_dinode(sc, bp, dip, ino);
++	/* Scrub the inode core. */
++	xfs_inode_to_disk(sc->ip, &di, 0);
++	xfs_scrub_dinode(sc, NULL, &di, sc->ip->i_ino);
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		goto out;
+ 
+-	/* Now let's do the things that require a live inode. */
+-	if (!sc->ip)
+-		goto out;
+-
+ 	/*
+ 	 * Look for discrepancies between file's data blocks and the reflink
+ 	 * iflag.  We already checked the iflag against the file mode when
+ 	 * we scrubbed the dinode.
+ 	 */
+ 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
+-		xfs_scrub_inode_check_reflink_iflag(sc, ino, bp);
++		xfs_scrub_inode_check_reflink_iflag(sc, sc->ip->i_ino, NULL);
+ 
+-	xfs_scrub_inode_xref(sc, ino, dip);
++	xfs_scrub_inode_xref(sc, sc->ip->i_ino, &di);
  out:
+-	if (bp)
+-		xfs_trans_brelse(sc->tp, bp);
  	return error;
  }
 
