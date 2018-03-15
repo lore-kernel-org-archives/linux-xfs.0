@@ -1,190 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:40086 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751390AbeCLXx6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Mar 2018 19:53:58 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:59064 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752249AbeCOOZv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 10:25:51 -0400
+Date: Thu, 15 Mar 2018 10:25:49 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC][PATCH] xfs: adjust size/used/avail information for quota-df
+Message-ID: <20180315142549.GC45325@bfoster.bfoster>
+References: <1520601355-180600-1-git-send-email-cgxu519@gmx.com>
 MIME-Version: 1.0
-In-Reply-To: <20180301014144.28892-1-david@fromorbit.com>
-References: <20180301014144.28892-1-david@fromorbit.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 12 Mar 2018 16:53:57 -0700
-Message-ID: <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
-Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1520601355-180600-1-git-send-email-cgxu519@gmx.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, rdorr@microsoft.com, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>
+To: Chengguang Xu <cgxu519@gmx.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-[ adding Robert who had a question about this patch, and Jan + Ted for
-the ext4 implications ]
-
-I talked with Robert offline and he had some questions about this
-patch that belong on the mailing list.
-
-On Wed, Feb 28, 2018 at 5:41 PM, Dave Chinner <david@fromorbit.com> wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> If we are doing direct IO writes with datasync semantics, we often
-> have to flush metadata changes along with the data write. However,
-> if we are overwriting existing data, there are no metadata changes
-> that we need to flush. In this case, optimising the IO by using
-> FUA write makes sense.
->
-> We know from teh IOMAP_F_DIRTY flag as to whether a specific inode
-> requires a metadata flush - this is currently used by DAX to ensure
-> extent modi$fication as stable in page fault operations. For direct
-> IO writes, we can use it to determine if we need to flush metadata
-> or not once the data is on disk.
->
-> Hence if we have been returned a mapped extent that is not new and
-> the IO mapping is not dirty, then we can use a FUA write to provide
-> datasync semantics. This allows us to short-cut the
-> generic_write_sync() call in IO completion and hence avoid
-> unnecessary operations. This makes pure direct IO data write
-> behaviour identical to the way block devices use REQ_FUA to provide
-> datasync semantics.
->
-> Now that iomap_dio_rw() is determining if REQ_FUA can be used, we
-> have to stop issuing generic_write_sync() calls from the XFS code
-> when REQ_FUA is issued, otherwise it will still throw a cache flush
-> to the device via xfs_file_fsync(). To do this, we need to make
-> iomap_dio_rw() always responsible for issuing generic_write_sync()
-> when necessary, not just for AIO calls. This means the filesystem
-> doesn't have to guess when cache flushes are necessary now.
->
-> On a FUA enabled device, a synchronous direct IO write workload
-> (sequential 4k overwrites in 32MB file) had the following results:
->
-> # xfs_io -fd -c "pwrite -V 1 -D 0 32m" /mnt/scratch/boo
->
-> kernel          time    write()s        write iops      Write b/w
-> ------          ----    --------        ----------      ---------
-> (no dsync)       4s     2173/s          2173            8.5MB/s
-> vanilla         22s      370/s           750            1.4MB/s
-> patched         19s      420/s           420            1.6MB/s
->
-> The patched code clearly doesn't send cache flushes anymore, but
-> instead uses FUA (confirmed via blktrace), and performance improves
-> a bit as a result. However, the benefits will be higher on workloads
-> that mix O_DSYNC overwrites with other write IO as we won't be
-> flushing the entire device cache on every DSYNC overwrite IO
-> anymore.
->
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+On Fri, Mar 09, 2018 at 09:15:55PM +0800, Chengguang Xu wrote:
+> In order to more accurately reflect size/used/avail information
+> for quota-df, slightly adjust related counting logic.
+> 
+> Signed-off-by: Chengguang Xu <cgxu519@gmx.com>
 > ---
->  fs/iomap.c        | 38 +++++++++++++++++++++++++++++++++-----
->  fs/xfs/xfs_file.c |  5 +++++
->  2 files changed, 38 insertions(+), 5 deletions(-)
->
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index afd163586aa0..bcc90e3a2e3f 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
->   * Private flags for iomap_dio, must not overlap with the public ones in
->   * iomap.h:
->   */
-> +#define IOMAP_DIO_WRITE_FUA    (1 << 29)
->  #define IOMAP_DIO_WRITE                (1 << 30)
->  #define IOMAP_DIO_DIRTY                (1 << 31)
->
-> @@ -760,8 +761,19 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
->         }
->
->         inode_dio_end(file_inode(iocb->ki_filp));
-> -       kfree(dio);
->
-> +       /*
-> +        * If a FUA write was done, then that is all we required for datasync
-> +        * semantics -. we don't need to call generic_write_sync() to complete
-> +        * the write.
-> +        */
-> +       if (ret > 0 &&
-> +           (dio->flags & (IOMAP_DIO_WRITE|IOMAP_DIO_WRITE_FUA)) ==
-> +                                                       IOMAP_DIO_WRITE) {
-> +               ret = generic_write_sync(iocb, ret);
-> +       }
+> 
+> Hello folks,
+> 
+> Recently I’m testing  project quota  for our container users and found
+> sometimes the result of df command could not exactly represent
+> block/inode usage amount. So I checked  the logic in function xfs_qm_statvfs()
+> and I think it might be better if slightly adjusting the counting logic.
+> What do you think?
+> 
+> Terms:
+> # Size(F)   - The size field  in df result of filesystem
+> # Size(Q) - The size field of in df result of pquota-dir
+> # Used(F) - The used field  in df result of filesystem
+> # Used(Q) - The used field  in df result of pquota-dir
+> # Avail(F)  - The avail field  in df result of filesystem
+> # Avail(Q)  - The avail field  in df result of pquota-dir
+> # Used(A) - Actual used
+> 
+> Problems that I found.
+> 1) Avail(Q) can be higher than Avail(F)
+
+Does this refer to a quota limit that exceeds the size of the fs? I'm
+not sure that's necessarily a problem.
+
+> 2) Used(A) can be higher than Used(Q)
+> 
+
+I'm not quite sure what this means.
+
+As it is, the commit log doesn't clearly explain the problem you're
+trying to solve. Perhaps you should provide some example commands and
+output that demonstrate the problem and solution.
+
+> 
+>  fs/xfs/xfs_qm_bhv.c | 40 ++++++++++++++++++++++++++++++----------
+>  1 file changed, 30 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+> index 2be6d27..cb2e6c9 100644
+> --- a/fs/xfs/xfs_qm_bhv.c
+> +++ b/fs/xfs/xfs_qm_bhv.c
+> @@ -38,21 +38,41 @@
+>  	limit = dqp->q_core.d_blk_softlimit ?
+>  		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
+>  		be64_to_cpu(dqp->q_core.d_blk_hardlimit);
+> -	if (limit && statp->f_blocks > limit) {
+> -		statp->f_blocks = limit;
+> -		statp->f_bfree = statp->f_bavail =
+> -			(statp->f_blocks > dqp->q_res_bcount) ?
+> -			 (statp->f_blocks - dqp->q_res_bcount) : 0;
+
+So the current logic is that if there's a quota limit and the limit is
+more restrictive than the fs, we clamp the stat size/free info to the
+pquota limit.
+
 > +
-> +       kfree(dio);
->         return ret;
->  }
->
-> @@ -769,12 +781,9 @@ static void iomap_dio_complete_work(struct work_struct *work)
->  {
->         struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
->         struct kiocb *iocb = dio->iocb;
-> -       bool is_write = (dio->flags & IOMAP_DIO_WRITE);
->         ssize_t ret;
->
->         ret = iomap_dio_complete(dio);
-> -       if (is_write && ret > 0)
-> -               ret = generic_write_sync(iocb, ret);
->         iocb->ki_complete(iocb, ret, 0);
->  }
->
-> @@ -883,6 +892,15 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->                         dio->flags |= IOMAP_DIO_COW;
->                 if (iomap->flags & IOMAP_F_NEW)
->                         need_zeroout = true;
-> +               /*
-> +                * Use a FUA write if we need datasync semantics and this is a
-> +                * pure data IO that doesn't require any metadata updates. This
-> +                * allows us to avoid cache flushes on IO completion.
-> +                */
-> +               else if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
-> +                        (dio->flags & IOMAP_DIO_WRITE) &&
-> +                        (dio->iocb->ki_flags & IOCB_DSYNC))
-> +                       dio->flags |= IOMAP_DIO_WRITE_FUA;
->                 break;
->         default:
->                 WARN_ON_ONCE(1);
-> @@ -930,7 +948,11 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->
->                 n = bio->bi_iter.bi_size;
->                 if (dio->flags & IOMAP_DIO_WRITE) {
-> -                       bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
-> +                       int op_flags = REQ_SYNC | REQ_IDLE;
+> +	if (limit) {
+> +		if (limit > dqp->q_res_bcount + statp->f_bavail)
+> +			statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
+> +		else
+> +			statp->f_blocks = limit;
+> +	} else {
+> +		statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
+> +	}
 > +
-> +                       if (dio->flags & IOMAP_DIO_WRITE_FUA)
-> +                               op_flags |= REQ_FUA;
-> +                       bio_set_op_attrs(bio, REQ_OP_WRITE, op_flags);
->                         task_io_account_write(n);
->                 } else {
->                         bio_set_op_attrs(bio, REQ_OP_READ, 0);
-> @@ -961,6 +983,12 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->         return copied;
+
+Now it looks like we fix up f_blocks regardless of whether there's a
+limit set. IOW:
+
+	if (limit && limit <= dqp->q_res_bcount + statp->f_bavail)
+		statp->f_blocks = limit;
+	else
+		statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
+
+The purpose of the original code was to make a subtree with a pquota
+appear like a smaller fs to a subtenant, for example. What is the
+additional purpose of the f_blocks adjustment?
+
+> +	if (dqp->q_res_bcount >= statp->f_blocks) {
+> +		statp->f_blocks = dqp->q_res_bcount;
+> +		statp->f_bfree = statp->f_bavail = 0;
+> +	} else {
+> +		statp->f_bfree = statp->f_bavail = statp->f_blocks - dqp->q_res_bcount;
+>  	}
+
+q_res_bcount is a component of f_blocks in the else case above, so I
+think the first case here turns the logic into something like:
+
+	if (limit && limit <= dqp->q_res_bcount + statp->f_bavail) {
+		if (dqp->q_res_bcount > limit)
+			limit = dqp->q_res_bcount;
+		statp->f_blocks = limit;
+	} else
+		statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
+	statp->f_bfree = statp->f_bavail = statp->f_blocks - dqp->q_res_bcount;
+
+Is the purpose here to deal with an over limit soft quota or something?
+
+Brian
+
+>  
+>  	limit = dqp->q_core.d_ino_softlimit ?
+>  		be64_to_cpu(dqp->q_core.d_ino_softlimit) :
+>  		be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+> -	if (limit && statp->f_files > limit) {
+> -		statp->f_files = limit;
+> -		statp->f_ffree =
+> -			(statp->f_files > dqp->q_res_icount) ?
+> -			 (statp->f_ffree - dqp->q_res_icount) : 0;
+> +
+> +	if (limit) {
+> +		if (limit > dqp->q_res_icount + statp->f_ffree)
+> +			statp->f_files = dqp->q_res_icount + statp->f_ffree;
+> +		else
+> +			statp->f_files = limit;
+> +	} else {
+> +		statp->f_files = dqp->q_res_icount + statp->f_ffree;
+> +	}
+> +
+> +	if (dqp->q_res_icount >= statp->f_files) {
+> +		statp->f_files = dqp->q_res_icount;
+> +		statp->f_ffree = 0;
+> +	} else {
+> +		statp->f_ffree = statp->f_files - dqp->q_res_icount;
+>  	}
 >  }
->
-> +/*
-> + * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
-> + * is being issued as AIO or not. This allows us to optimise pure data writes to
-> + * use REQ_FUA rather than requiring generic_write_sync() to issue a REQ_FLUSH
-> + * post write.
-> + */
->  ssize_t
->  iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->                 const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 260ff5e5c264..81aa3b73471e 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -732,6 +732,11 @@ xfs_file_write_iter(
->                 ret = xfs_file_dio_aio_write(iocb, from);
->                 if (ret == -EREMCHG)
->                         goto buffered;
-> +               /*
-> +                * Direct IO handles sync type writes internally on I/O
-> +                * completion.
-> +                */
-> +               return ret;
->         } else {
->  buffered:
->                 ret = xfs_file_buffered_aio_write(iocb, from);
-> --
-> 2.16.1
->
+>  
+> -- 
+> 1.8.3.1
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
