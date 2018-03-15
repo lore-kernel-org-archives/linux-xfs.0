@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39070 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751279AbeCOA3v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 20:29:51 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2F0RSjl083838
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:51 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2gqdf5048x-1
+Received: from userp2120.oracle.com ([156.151.31.85]:38928 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751279AbeCOA35 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Mar 2018 20:29:57 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2F0RMDr158062
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:56 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2gqdhrg35s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:51 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2F0Tn8e027812
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:56 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2F0TtLW005947
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:50 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w2F0TnWr013066
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:49 GMT
-Subject: [PATCH 3/9] xfs: refactor inode verifier error logging
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:55 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2F0TtWC014025
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 00:29:55 GMT
+Subject: [PATCH 4/9] xfs: refactor inode buffer verifier error logging
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 14 Mar 2018 17:29:48 -0700
-Message-ID: <152107378868.19571.6256278246118880952.stgit@magnolia>
+Date: Wed, 14 Mar 2018 17:29:54 -0700
+Message-ID: <152107379476.19571.15155451515464003337.stgit@magnolia>
 In-Reply-To: <152107377037.19571.8618901963505842632.stgit@magnolia>
 References: <152107377037.19571.8618901963505842632.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,73 +34,114 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor some of the inode verifier failure logging call sites to use
-the new xfs_inode_verifier_error method which dumps the offending buffer
-as well as the code location of the failed check.  This trims the
-output, makes it clearer to the admin that repair must be run, and gives
-the developers more details to work from.
+When the inode buffer verifier encounters an error, it's much more
+helpful to print a buffer from the offending inode instead of just the
+start of the inode chunk buffer.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       |    5 +++--
- fs/xfs/libxfs/xfs_inode_fork.c |   15 +++++++++------
- 2 files changed, 12 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |    4 +++-
+ fs/xfs/xfs_error.c            |   29 ++++++++++++++++++++++++-----
+ fs/xfs/xfs_error.h            |    3 +++
+ 3 files changed, 30 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5850e76..fe7534e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1244,8 +1244,9 @@ xfs_iread_extents(
- 			xfs_warn(ip->i_mount,
- 				"corrupt dinode %Lu, (btree extents).",
- 				(unsigned long long) ip->i_ino);
--			XFS_CORRUPTION_ERROR(__func__,
--				XFS_ERRLEVEL_LOW, ip->i_mount, block);
-+			xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+					__func__, block, sizeof(*block),
-+					__this_address);
- 			error = -EFSCORRUPTED;
- 			goto out_brelse;
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 4fe17b3..51019e5 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -115,13 +115,15 @@ xfs_inode_buf_verify(
+ 				return;
+ 			}
+ 
+-			xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
+ #ifdef DEBUG
+ 			xfs_alert(mp,
+ 				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+ 				(unsigned long long)bp->b_bn, i,
+ 				be16_to_cpu(dip->di_magic));
+ #endif
++			xfs_buf_verifier_error(bp, -EFSCORRUPTED,
++					__func__, dip, sizeof(*dip),
++					NULL);
  		}
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 613fba2..701c42a 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -195,8 +195,9 @@ xfs_iformat_local(
- 	"corrupt inode %Lu (bad size %d for local fork, size = %d).",
- 			(unsigned long long) ip->i_ino, size,
- 			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
--		XFS_CORRUPTION_ERROR("xfs_iformat_local", XFS_ERRLEVEL_LOW,
--				     ip->i_mount, dip);
-+		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+				"xfs_iformat_local", dip, sizeof(*dip),
-+				__this_address);
- 		return -EFSCORRUPTED;
+ 	}
+ 	xfs_inobp_check(mp, bp);
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index ccf520f..a63f508 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -347,27 +347,32 @@ xfs_corruption_error(
+  * values, and omit the stack trace unless the error level is tuned high.
+  */
+ void
+-xfs_verifier_error(
++xfs_buf_verifier_error(
+ 	struct xfs_buf		*bp,
+ 	int			error,
++	const char		*name,
++	void			*buf,
++	size_t			bufsz,
+ 	xfs_failaddr_t		failaddr)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	xfs_failaddr_t		fa;
++	int			sz;
+ 
+ 	fa = failaddr ? failaddr : __return_address;
+ 	__xfs_buf_ioerror(bp, error, fa);
+ 
+-	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx",
++	xfs_alert(mp, "Metadata %s detected at %pS, %s block 0x%llx %s",
+ 		  bp->b_error == -EFSBADCRC ? "CRC error" : "corruption",
+-		  fa, bp->b_ops->name, bp->b_bn);
++		  fa, bp->b_ops->name, bp->b_bn, name);
+ 
+ 	xfs_alert(mp, "Unmount and run xfs_repair");
+ 
+ 	if (xfs_error_level >= XFS_ERRLEVEL_LOW) {
++		sz = min_t(size_t, XFS_CORRUPTION_DUMP_LEN, bufsz);
+ 		xfs_alert(mp, "First %d bytes of corrupted metadata buffer:",
+-				XFS_CORRUPTION_DUMP_LEN);
+-		xfs_hex_dump(xfs_buf_offset(bp, 0), XFS_CORRUPTION_DUMP_LEN);
++				sz);
++		xfs_hex_dump(buf, sz);
  	}
  
-@@ -231,8 +232,9 @@ xfs_iformat_extents(
- 	if (unlikely(size < 0 || size > XFS_DFORK_SIZE(dip, mp, whichfork))) {
- 		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %d).",
- 			(unsigned long long) ip->i_ino, nex);
--		XFS_CORRUPTION_ERROR("xfs_iformat_extents(1)", XFS_ERRLEVEL_LOW,
--				     mp, dip);
-+		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+				"xfs_iformat_extents(1)", dip, sizeof(*dip),
-+				__this_address);
- 		return -EFSCORRUPTED;
- 	}
+ 	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
+@@ -375,6 +380,20 @@ xfs_verifier_error(
+ }
  
-@@ -309,8 +311,9 @@ xfs_iformat_btree(
- 		     level == 0 || level > XFS_BTREE_MAXLEVELS) {
- 		xfs_warn(mp, "corrupt inode %Lu (btree).",
- 					(unsigned long long) ip->i_ino);
--		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
--					 mp, dip);
-+		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+				"xfs_iformat_btree", dfp, size,
-+				__this_address);
- 		return -EFSCORRUPTED;
- 	}
- 
+ /*
++ * Warnings specifically for verifier errors.  Differentiate CRC vs. invalid
++ * values, and omit the stack trace unless the error level is tuned high.
++ */
++void
++xfs_verifier_error(
++	struct xfs_buf		*bp,
++	int			error,
++	xfs_failaddr_t		failaddr)
++{
++	return xfs_buf_verifier_error(bp, error, "", xfs_buf_offset(bp, 0),
++			XFS_CORRUPTION_DUMP_LEN, failaddr);
++}
++
++/*
+  * Warnings for inode corruption problems.  Don't bother with the stack
+  * trace unless the error level is turned up high.
+  */
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 7e728c5..ce39134 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -26,6 +26,9 @@ extern void xfs_error_report(const char *tag, int level, struct xfs_mount *mp,
+ extern void xfs_corruption_error(const char *tag, int level,
+ 			struct xfs_mount *mp, void *p, const char *filename,
+ 			int linenum, xfs_failaddr_t failaddr);
++extern void xfs_buf_verifier_error(struct xfs_buf *bp, int error,
++			const char *name, void *buf, size_t bufsz,
++			xfs_failaddr_t failaddr);
+ extern void xfs_verifier_error(struct xfs_buf *bp, int error,
+ 			xfs_failaddr_t failaddr);
+ extern void xfs_inode_verifier_error(struct xfs_inode *ip, int error,
 
