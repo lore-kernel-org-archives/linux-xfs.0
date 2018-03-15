@@ -1,20 +1,19 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49514 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56808 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751711AbeCORp1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 13:45:27 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        id S1752253AbeCORrr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 13:47:47 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BE8C64195F06
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 17:45:26 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 38626406E8DB
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 17:47:47 +0000 (UTC)
 From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 2/2 v1] fsck.xfs: allow forced repairs using xfs_repair
-Date: Thu, 15 Mar 2018 18:45:21 +0100
-Message-Id: <20180315174521.33897-2-jtulak@redhat.com>
-In-Reply-To: <20180315174521.33897-1-jtulak@redhat.com>
-References: <20180305150546.32191-1-jtulak@redhat.com>
- <20180315174521.33897-1-jtulak@redhat.com>
+Subject: [PATCH 2/2 v2] fsck.xfs: allow forced repairs using xfs_repair
+Date: Thu, 15 Mar 2018 18:47:45 +0100
+Message-Id: <20180315174745.34308-1-jtulak@redhat.com>
+In-Reply-To: <20180315174521.33897-2-jtulak@redhat.com>
+References: <20180315174521.33897-2-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -32,6 +31,9 @@ Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
 ---
 Changelog:
+v2:
+- return the "exit 0" at the end
+
 v1:
 - test for xfs_repair binary
 - run only in non-interactive session
@@ -39,12 +41,12 @@ v1:
 - run only if the filesystem is not mounted
 - add manpage update
 ---
- fsck/xfs_fsck.sh    | 66 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ fsck/xfs_fsck.sh    | 67 +++++++++++++++++++++++++++++++++++++++++++++++++++--
  man/man8/fsck.xfs.8 | 12 +++++++++-
- 2 files changed, 75 insertions(+), 3 deletions(-)
+ 2 files changed, 76 insertions(+), 3 deletions(-)
 
 diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-index e52969e4..92f246cf 100755
+index e52969e4..01561498 100755
 --- a/fsck/xfs_fsck.sh
 +++ b/fsck/xfs_fsck.sh
 @@ -3,11 +3,42 @@
@@ -91,7 +93,7 @@ index e52969e4..92f246cf 100755
  	esac
  done
  eval DEV=\${$#}
-@@ -15,10 +46,41 @@ if [ ! -e $DEV ]; then
+@@ -15,10 +46,42 @@ if [ ! -e $DEV ]; then
  	echo "$0: $DEV does not exist"
  	exit 8
  fi
@@ -134,6 +136,8 @@ index e52969e4..92f246cf 100755
  	echo "repair a damaged filesystem, see xfs_repair(8)."
  fi
 -exit 0
++exit 0
+\ No newline at end of file
 diff --git a/man/man8/fsck.xfs.8 b/man/man8/fsck.xfs.8
 index ace7252d..3eb3ad7f 100644
 --- a/man/man8/fsck.xfs.8
