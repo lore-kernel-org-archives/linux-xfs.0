@@ -1,25 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59874 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751551AbeCWB5D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 21:57:03 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:39582 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752052AbeCOSpC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 14:45:02 -0400
+Date: Thu, 15 Mar 2018 11:44:56 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH 1/2 v2] xfs_repair: add flag -e to detect corrected errors
+Message-ID: <20180315184456.GB4865@magnolia>
 References: <20180315174521.33897-1-jtulak@redhat.com>
  <20180315182308.36245-1-jtulak@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <669909a6-6976-04fc-7717-f109b58b9c5a@sandeen.net>
-Date: Thu, 22 Mar 2018 20:57:02 -0500
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20180315182308.36245-1-jtulak@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 3/15/18 1:23 PM, Jan Tulak wrote:
+On Thu, Mar 15, 2018 at 07:23:08PM +0100, Jan Tulak wrote:
 > xfs_repair ends with a return code 0 if it finished ok, no matter if
 > there were some errors in the fs, or not. The new flag -e means that we
 > can avoid screenscraping and parsing text output to detect if an error
@@ -30,25 +30,12 @@ On 3/15/18 1:23 PM, Jan Tulak wrote:
 > 
 > Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-A couple more minor things, sorry for chiming in late.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Can we make the changelog summary a little more specific, i.e.
+--D
 
-"xfs_repair: add flag -e to modify exit code for corrected errors"
-
-I had a late-breaking thought ;) that maybe we should skip up to exit
-code 4, so that if for some reason in the future we need to, we can
-OR together exit codes ala e2fsck to convey more information.
-I don't know what other exit codes we might need, but this might
-future-proof it a little.
-
-(Actually, I can see an use today:  1 | 4 = 5 could mean
-"we found and fixed some errors and then encountered an operational
-problem and exited." - but that can come later, not here.  Skipping
-to 4 would keep this option open.)
-
-more below
-
+> 
 > ---
 > v2:
 > - edit man page changes
@@ -79,15 +66,6 @@ more below
 > +.B \-e
 > +If any metadata corruption was found, the status returned is 3 instead of the
 > +usual 0.
-
-Sorry, I know Darrick already commented on this once, but I think
-it probably needs to distinguish from the -n case a little more.  Maybe:
-
-+If any metadata corruption was repaired, the status returned is 3 (4?) instead of the
-+usual 0.
-
-which makes it more clear that it's in repair mode, not dry-run mode?
-
 > +.TP
 >  .B \-V
 >  Prints the version number and exits.
@@ -122,9 +100,6 @@ which makes it more clear that it's in repair mode, not dry-run mode?
 >  static long	max_mem_specified;	/* in megabytes */
 >  static int	phase2_threads = 32;
 > +static bool report_corrected;
-
-tab that out please, to match lines above
-
 >  
 >  static void
 >  usage(void)
@@ -133,10 +108,6 @@ tab that out please, to match lines above
 >  "  -t interval  Reporting interval in seconds.\n"
 >  "  -d           Repair dangerously.\n"
 > +"  -e           Exit with a non-zero code even when all errors were repaired.\n"
-
-+"  -e           Exit with a non-zero code if any errors were repaired.\n"
-
-
 >  "  -V           Reports version and exits.\n"), progname);
 >  	exit(1);
 >  }
@@ -165,16 +136,6 @@ tab that out please, to match lines above
 >  		case '?':
 >  			usage();
 >  		}
-
-It looks like we can specify -e and -n together; I think they need to be
-mutually exclusive, because the combination has no valid meaning that
-I can see.
-
-(if so, I guess that needs a usage/summary/manpage update to reflect the change)
-
-Thanks,
--Eric
-
 > @@ -1096,5 +1102,7 @@ _("Repair of readonly mount complete.  Immediate reboot encouraged.\n"));
 >  
 >  	free(msgbuf);
@@ -183,4 +144,10 @@ Thanks,
 > +		return (3);
 >  	return (0);
 >  }
+> -- 
+> 2.15.0
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
