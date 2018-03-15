@@ -1,66 +1,168 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:53275 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751466AbeCOWTm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 18:19:42 -0400
-Date: Fri, 16 Mar 2018 09:19:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
-Message-ID: <20180315221939.GJ18129@dastard>
-References: <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net>
- <20180305223148.GG18129@dastard>
- <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net>
- <CACj3i73y_ZWvgdv3aKTKaKGuo+6uhcfy1465T3CD2uQDLE3=xQ@mail.gmail.com>
- <20180306213915.GJ18129@dastard>
- <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
- <e7a132d5-33de-736f-840a-8de45910846c@sandeen.net>
- <CACj3i73Zb04iHUSS7LNnvegGMe1xaTXwxBjCPnNQg9JmEwQQtQ@mail.gmail.com>
- <c1da5bba-3abb-7b14-d5e9-2d326af542bc@sandeen.net>
- <CACj3i711KdeV8ak5f67FLFzKGZFvRHQSO2VjA0Cxv2V0+hWrsA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACj3i711KdeV8ak5f67FLFzKGZFvRHQSO2VjA0Cxv2V0+hWrsA@mail.gmail.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49514 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751711AbeCORp1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 13:45:27 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BE8C64195F06
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 17:45:26 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 2/2 v1] fsck.xfs: allow forced repairs using xfs_repair
+Date: Thu, 15 Mar 2018 18:45:21 +0100
+Message-Id: <20180315174521.33897-2-jtulak@redhat.com>
+In-Reply-To: <20180315174521.33897-1-jtulak@redhat.com>
+References: <20180305150546.32191-1-jtulak@redhat.com>
+ <20180315174521.33897-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Mar 15, 2018 at 12:16:44PM +0100, Jan Tulak wrote:
-> On Wed, Mar 14, 2018 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> > On 3/14/18 9:30 AM, Jan Tulak wrote:
-> >> On Fri, Mar 9, 2018 at 12:28 AM, Eric Sandeen <sandeen@sandeen.net>
-> >> wrote:
-> >>>
-> >>> If it's critical to report whether errors were fixed, it would be
-> >>> trivial to add a new option to xfs_repair which causes it to test
-> >>> fs_is_dirty for runs without "-n", and exit with a different
-> >>> value.
-> >>
-> >> I have toyed with it a bit and this seems to be the best option. A
-> >> flag that changes the exit code on a successful run. Is exit code 3
-> >> ok? According to man page, only 1 and 2 are currently used and the
-> >> "everything is ok now, but an issue was there" should not be mixed
-> >> with the existing ones. I also thought about a flag that would
-> >> change all exit codes to fsck ones, but that seems too complicated
-> >> and completely unnecessary.
-> >
-> > Hm, I guess we'll have to.
-> 
-> We can either map xfs_repair to fsck in the fsck.xfs script, or change
-> xfs_repair to use the fsck exit codes. I'm for the first variant (just
-> add a one new exit code for xfs_repair and remap it for fsck codes in
-> the script) rather than complicate xfs_repair with two sets of exit
-> codes.
+The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
+run on every unclean shutdown. However, sometimes it may happen that the
+root filesystem really requires the usage of xfs_repair and then it is a
+hassle. This patch makes the situation a bit easier by detecting forced
+checks (/forcefsck or fsck.mode=force), so user can require the repair,
+without the repair being run all the time.
 
-Agreed, any fsck specific exit code mapping should be in the fsck
-script. Let's try to keep xfs_repair isolated from all the fsck
-interface bogosities....
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Cheers,
+---
+Changelog:
+v1:
+- test for xfs_repair binary
+- run only in non-interactive session
+- translate xfs_repair return codes to fsck ones
+- run only if the filesystem is not mounted
+- add manpage update
+---
+ fsck/xfs_fsck.sh    | 66 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ man/man8/fsck.xfs.8 | 12 +++++++++-
+ 2 files changed, 75 insertions(+), 3 deletions(-)
 
-Dave.
+diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+index e52969e4..92f246cf 100755
+--- a/fsck/xfs_fsck.sh
++++ b/fsck/xfs_fsck.sh
+@@ -3,11 +3,42 @@
+ # Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+ 
++NAME=$0
++
++# get the right return code for fsck
++function repair2fsck_code() {
++	case $1 in
++	0)  return 0 # everything is ok
++		;;
++	1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
++		return 4 # errors left uncorrected
++		;;
++	2)  echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
++		return 4 # it should not me mounted during boot, something is wrong
++		;;
++	3)  return 1 # The fs has been fixed
++		;;
++	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
++		return 4 # something went wrong with xfs_repair
++	esac
++}
++
++function ensure_not_mounted() {
++	local dev=$1
++	mounted=`grep -c "^$dev " /proc/mounts`
++	if [ $mounted -ne 0 ]; then
++		echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
++		exit 4
++	fi
++}
++
+ AUTO=false
+-while getopts ":aApy" c
++FORCE=false
++while getopts ":aApyf" c
+ do
+ 	case $c in
+ 	a|A|p|y)	AUTO=true;;
++	f)      	FORCE=true;;
+ 	esac
+ done
+ eval DEV=\${$#}
+@@ -15,10 +46,41 @@ if [ ! -e $DEV ]; then
+ 	echo "$0: $DEV does not exist"
+ 	exit 8
+ fi
++
++# The flag -f is added by systemd/init scripts when /forcefsck file is present
++# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
++# this check, user has to explicitly require a forced fsck.
++# But first of all, test if it is a non-interactive session. Use multiple
++# methods to capture most of the cases:
++# The case for *i* and -n "$PS1" are commonly suggested in bash manual
++# and the -t 0 test checks stdin
++case $- in
++	*i*) FORCE=false ;;
++esac
++if [ -n "$PS1" -o -t 0 ]; then
++	FORCE=false
++fi
++
++if $FORCE; then
++	if [ -f /sbin/xfs_repair ]; then
++		BIN="/sbin/xfs_repair"
++	elif [ -f /usr/sbin/xfs_repair ]; then
++		BIN="/usr/sbin/xfs_repair"
++	else
++		echo "$NAME error: xfs_repair was not found!" 1>&2
++		exit 4
++	fi
++
++	ensure_not_mounted $DEV
++
++	$BIN -e $DEV
++	repair2fsck_code $?
++	exit $?
++fi
++
+ if $AUTO; then
+ 	echo "$0: XFS file system."
+ else
+ 	echo "If you wish to check the consistency of an XFS filesystem or"
+ 	echo "repair a damaged filesystem, see xfs_repair(8)."
+ fi
+-exit 0
+diff --git a/man/man8/fsck.xfs.8 b/man/man8/fsck.xfs.8
+index ace7252d..3eb3ad7f 100644
+--- a/man/man8/fsck.xfs.8
++++ b/man/man8/fsck.xfs.8
+@@ -1,6 +1,6 @@
+ .TH fsck.xfs 8
+ .SH NAME
+-fsck.xfs \- do nothing, successfully
++fsck.xfs \- do nothing, successfuly
+ .SH SYNOPSIS
+ .B fsck.xfs
+ [
+@@ -21,6 +21,16 @@ If you wish to check the consistency of an XFS filesystem,
+ or repair a damaged or corrupt XFS filesystem,
+ see
+ .BR xfs_repair (8).
++.PP
++However, it may happen that a forced repair is required and in makes sense to start
++.BR xfs_repair (8)
++on startup (either using /forcefsck file or fsck.mode=force kernel option). In this case
++.B fsck.xfs
++run
++.B xfs_repair
++for the user. But if run outside of boot environment or without the
++.B -f
++option, it does nothing.
+ .
+ .SH FILES
+ .IR /etc/fstab .
 -- 
-Dave Chinner
-david@fromorbit.com
+2.15.0
+
