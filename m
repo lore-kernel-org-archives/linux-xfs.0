@@ -1,63 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:34342 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752802AbeCPAVW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 20:21:22 -0400
-Date: Fri, 16 Mar 2018 11:19:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
-Message-ID: <20180316001955.GN18129@dastard>
-References: <20180313042126.GB18129@dastard>
- <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
- <20180313224522.GZ7000@dastard>
- <20180314131659.wnmt5zxfhrfsld7n@rh_laptop>
- <20180314133258.GB7000@dastard>
- <20180314135752.5a2vmjr7cuavusiw@rh_laptop>
- <20180314212441.GC7000@dastard>
- <20180315061557.5jajfodpkjdmcrld@rh_laptop>
- <20180315100646.GE7000@dastard>
- <20180315103207.scrm5e4cvkj26m4k@rh_laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180315103207.scrm5e4cvkj26m4k@rh_laptop>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49512 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751372AbeCORpZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 13:45:25 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E2F804079F2C
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 17:45:24 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 1/2] xfs_repair: add flag -e to detect corrected errors
+Date: Thu, 15 Mar 2018 18:45:20 +0100
+Message-Id: <20180315174521.33897-1-jtulak@redhat.com>
+In-Reply-To: <20180305150546.32191-1-jtulak@redhat.com>
+References: <20180305150546.32191-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Mar 15, 2018 at 11:32:07AM +0100, Lukas Czerner wrote:
-> 
-> And where the "cdcd" data is comming from ? Not from the
-> 
-> "pwrite -S 1 0 64k"
-> 
-> that's producing "0101".
+xfs_repair ends with a return code 0 if it finished ok, no matter if
+there were some errors in the fs, or not. The new flag -e means that we
+can avoid screenscraping and parsing text output to detect if an error
+was found (and corrected).
 
-Ah, too much context switching. Makes me look like the village
-idiot...
+If something could not be corrected or in any other case than the "found
+something but fixed it all," the behaviour with this flag is unchanged.
 
-Ok, I just spent some time looking at this in detail (event traces,
-etc) and it is indeed as the test describes - an whole delalloc
-extent allocation on partial overwrite. THe partial overwrite is
-triggered by the fpunch/fzero code, and it appears the delalloc
-converison is not paying attention to the start offset of the
-writeback:
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
+---
+ man/man8/xfs_repair.8 | 14 ++++++++++----
+ repair/xfs_repair.c   | 17 +++++++++++++++--
+ 2 files changed, 25 insertions(+), 6 deletions(-)
 
-xfs_writepage:        dev 7:0 ino 0x7603 pgoff 0xf000 size 0x10000 delalloc 1
-.....
-xfs_alloc_near_greater: dev 7:0 agno 0 agbno 3784 minlen 16 maxlen 16
-.....
-xfs_write_extent:     dev 7:0 ino 0x7603 offset 0 block 3784 count 16 flag 0
-
-IOWs, as I've said from the start (based on the test description)
-this has nothing to do with the corruption issue CrashMonkey is
-creating.
-
-Cheers,
-
-Dave.
+diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
+index 85e4dc97..1b197571 100644
+--- a/man/man8/xfs_repair.8
++++ b/man/man8/xfs_repair.8
+@@ -4,7 +4,7 @@ xfs_repair \- repair an XFS filesystem
+ .SH SYNOPSIS
+ .B xfs_repair
+ [
+-.B \-dfLnPv
++.B \-defLnPv
+ ] [
+ .B \-m
+ .I maxmem
+@@ -168,6 +168,9 @@ Repair dangerously. Allow
+ to repair an XFS filesystem mounted read only. This is typically done
+ on a root filesystem from single user mode, immediately followed by a reboot.
+ .TP
++.B \-e
++If any error was found and repaired, the exit code is 3 instead of the usual 0.
++.TP
+ .B \-V
+ Prints the version number and exits.
+ .SS Checks Performed
+@@ -512,14 +515,17 @@ will return a status of 1 if filesystem corruption was detected and
+ 0 if no filesystem corruption was detected.
+ .B xfs_repair
+ run without the \-n option will always return a status code of 0 if
+-it completes without problems.  If a runtime error is encountered
+-during operation, it will return a status of 1.  In this case,
++it completes without problems, unless the flag
++.B -e
++is used. If it is used, then status code 3 is reported when any issue with the
++filesystem was found, but could be fixed. If a runtime error is encountered during
++operation, it will return a status of 1. In this case,
+ .B xfs_repair
+ should be restarted.  If
+ .B xfs_repair is unable
+ to proceed due to a dirty log, it will return a status of 2.  See below.
+ .SH DIRTY LOGS
+-Due to the design of the XFS log, a dirty log can only be replayed 
++Due to the design of the XFS log, a dirty log can only be replayed
+ by the kernel, on a machine having the same CPU architecture as the
+ machine which was writing to the log.
+ .B xfs_repair
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 312a0d08..94015da6 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -77,6 +77,7 @@ static char *c_opts[] = {
+ static int	bhash_option_used;
+ static long	max_mem_specified;	/* in megabytes */
+ static int	phase2_threads = 32;
++static int report_corrected = 0;
+ 
+ static void
+ usage(void)
+@@ -97,6 +98,7 @@ usage(void)
+ "  -o subopts   Override default behaviour, refer to man page.\n"
+ "  -t interval  Reporting interval in seconds.\n"
+ "  -d           Repair dangerously.\n"
++"  -e           Exit with a non-zero code even when all errors were repaired.\n"
+ "  -V           Reports version and exits.\n"), progname);
+ 	exit(1);
+ }
+@@ -214,12 +216,13 @@ process_args(int argc, char **argv)
+ 	ag_stride = 0;
+ 	thread_count = 1;
+ 	report_interval = PROG_RPT_DEFAULT;
++	report_corrected = 0;
+ 
+ 	/*
+ 	 * XXX have to add suboption processing here
+ 	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
+ 	 */
+-	while ((c = getopt(argc, argv, "c:o:fl:m:r:LnDvVdPt:")) != EOF)  {
++	while ((c = getopt(argc, argv, "c:o:fl:m:r:LnDvVdPet:")) != EOF)  {
+ 		switch (c) {
+ 		case 'D':
+ 			dumpcore = 1;
+@@ -329,6 +332,9 @@ process_args(int argc, char **argv)
+ 		case 't':
+ 			report_interval = (int)strtol(optarg, NULL, 0);
+ 			break;
++		case 'e':
++			report_corrected = 1;
++			break;
+ 		case '?':
+ 			usage();
+ 		}
+@@ -1096,5 +1102,12 @@ _("Repair of readonly mount complete.  Immediate reboot encouraged.\n"));
+ 
+ 	free(msgbuf);
+ 
+-	return (0);
++	if (report_corrected) {
++		if (fs_is_dirty)
++			return (3);
++		else
++			return (0);
++	} else {
++		return (0);
++	}
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+2.15.0
+
