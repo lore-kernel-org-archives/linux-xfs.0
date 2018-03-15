@@ -1,298 +1,393 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:4923 "EHLO mga09.intel.com"
+Received: from mga05.intel.com ([192.55.52.43]:22943 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932983AbeCOQB3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 12:01:29 -0400
-Subject: [PATCH v6 11/15] mm, fs,
- dax: handle layout changes to pinned dax mappings
+        id S932983AbeCOQBM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 12:01:12 -0400
+Subject: [PATCH v6 08/15] mm,
+ dax: enable filesystems to trigger dev_pagemap ->page_free callbacks
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 15 Mar 2018 08:52:24 -0700
-Message-ID: <152112914418.24669.11429662058087306821.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Thu, 15 Mar 2018 08:52:06 -0700
+Message-ID: <152112912628.24669.17233057052906651452.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.orgjack@suse.czross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
+Cc: Michal Hocko <mhocko@suse.com>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, ross.zwisler@linux.intel.comhch@lst.de, linux-kernel@vger.kernel.org
 
-Background:
+In order to resolve collisions between filesystem operations and DMA to
+DAX mapped pages we need a callback when DMA completes. With a callback
+we can hold off filesystem operations while DMA is in-flight and then
+resume those operations when the last put_page() occurs on a DMA page.
 
-get_user_pages() in the filesystem pins file backed memory pages for
-access by devices performing dma. However, it only pins the memory pages
-not the page-to-file offset association. If a file is truncated the
-pages are mapped out of the file and dma may continue indefinitely into
-a page that is owned by a device driver. This breaks coherency of the
-file vs dma, but the assumption is that if userspace wants the
-file-space truncated it does not matter what data is inbound from the
-device, it is not relevant anymore. The only expectation is that dma can
-safely continue while the filesystem reallocates the block(s).
+Recall that the 'struct page' entries for DAX memory are created with
+devm_memremap_pages(). That routine arranges for the pages to be
+allocated, but never onlined, so a DAX page is DMA-idle when its
+reference count reaches one.
 
-Problem:
+Also recall that the HMM sub-system added infrastructure to trap the
+page-idle (2-to-1 reference count) transition of the pages allocated by
+devm_memremap_pages() and trigger a callback via the 'struct
+dev_pagemap' associated with the page range. Whereas the HMM callbacks
+are going to a device driver to manage bounce pages in device-memory in
+the filesystem-dax case we will call back to filesystem specified
+callback.
 
-This expectation that dma can safely continue while the filesystem
-changes the block map is broken by dax. With dax the target dma page
-*is* the filesystem block. The model of leaving the page pinned for dma,
-but truncating the file block out of the file, means that the filesytem
-is free to reallocate a block under active dma to another file and now
-the expected data-incoherency situation has turned into active
-data-corruption.
+Since the callback is not known at devm_memremap_pages() time we arrange
+for the filesystem to install it at mount time. No functional changes
+are expected as this only registers a nop handler for the ->page_free()
+event for device-mapped pages.
 
-Solution:
-
-Defer all filesystem operations (fallocate(), truncate()) on a dax mode
-file while any page/block in the file is under active dma. This solution
-assumes that dma is transient. Cases where dma operations are known to
-not be transient, like RDMA, have been explicitly disabled via
-commits like 5f1d43de5416 "IB/core: disable memory registration of
-filesystem-dax vmas".
-
-The dax_layout_busy_page() routine is called by filesystems with a lock
-held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
-The process of looking up a busy page invalidates all mappings
-to trigger any subsequent get_user_pages() to block on i_mmap_lock.
-The filesystem continues to call dax_layout_busy_page() until it finally
-returns no more active pages. This approach assumes that the page
-pinning is transient, if that assumption is violated the system would
-have likely hung from the uncompleted I/O.
-
-Cc: Jan Kara <jack@suse.cz>
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Reported-by: Christoph Hellwig <hch@lst.de>
+Cc: Michal Hocko <mhocko@suse.com>
+Reviewed-by: "Jérôme Glisse" <jglisse@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/super.c |    2 +
- fs/dax.c            |   93 +++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/dax.h |   30 ++++++++++++++++
- mm/gup.c            |    5 +++
- 4 files changed, 129 insertions(+), 1 deletion(-)
+ drivers/dax/super.c      |   79 ++++++++++++++++++++++++++++++++++++++++------
+ drivers/nvdimm/pmem.c    |    3 +-
+ fs/ext2/super.c          |    6 ++-
+ fs/ext4/super.c          |    6 ++-
+ fs/xfs/xfs_super.c       |   20 ++++++------
+ include/linux/dax.h      |   17 +++++-----
+ include/linux/memremap.h |    8 +++++
+ 7 files changed, 103 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 619b1ed6434c..17323bc6d441 100644
+index 2b2332b605e4..ecefe9f7eb60 100644
 --- a/drivers/dax/super.c
 +++ b/drivers/dax/super.c
-@@ -167,7 +167,7 @@ struct dax_device {
- #if IS_ENABLED(CONFIG_FS_DAX)
- static void generic_dax_pagefree(struct page *page, void *data)
- {
--	/* TODO: wakeup page-idle waiters */
-+	wake_up_var(&page->_refcount);
- }
+@@ -29,6 +29,7 @@ static struct vfsmount *dax_mnt;
+ static DEFINE_IDA(dax_minor_ida);
+ static struct kmem_cache *dax_cache __read_mostly;
+ static struct super_block *dax_superblock __read_mostly;
++static DEFINE_MUTEX(devmap_lock);
  
- struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
-diff --git a/fs/dax.c b/fs/dax.c
-index 9ba043eb6294..29425c197154 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -348,6 +348,19 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
- 	}
+ #define DAX_HASH_SIZE (PAGE_SIZE / sizeof(struct hlist_head))
+ static struct hlist_head dax_host_list[DAX_HASH_SIZE];
+@@ -62,16 +63,6 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
  }
+ EXPORT_SYMBOL(bdev_dax_pgoff);
  
-+static struct page *dax_busy_page(void *entry)
+-#if IS_ENABLED(CONFIG_FS_DAX)
+-struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
+-{
+-	if (!blk_queue_dax(bdev->bd_queue))
+-		return NULL;
+-	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
+-}
+-EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+-#endif
+-
+ /**
+  * __bdev_dax_supported() - Check if the device supports dax for filesystem
+  * @sb: The superblock of the device
+@@ -169,9 +160,66 @@ struct dax_device {
+ 	const char *host;
+ 	void *private;
+ 	unsigned long flags;
++	struct dev_pagemap *pgmap;
+ 	const struct dax_operations *ops;
+ };
+ 
++#if IS_ENABLED(CONFIG_FS_DAX)
++static void generic_dax_pagefree(struct page *page, void *data)
 +{
-+	unsigned long pfn, end_pfn;
-+
-+	for_each_entry_pfn(entry, pfn, end_pfn) {
-+		struct page *page = pfn_to_page(pfn);
-+
-+		if (page_ref_count(page) > 1)
-+			return page;
-+	}
-+	return NULL;
++	/* TODO: wakeup page-idle waiters */
 +}
 +
- /*
-  * Find radix tree entry at given index. If it points to an exceptional entry,
-  * return it with the radix tree entry locked. If the radix tree doesn't
-@@ -489,6 +502,85 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 	return entry;
++struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
++{
++	struct dax_device *dax_dev;
++	struct dev_pagemap *pgmap;
++
++	if (!blk_queue_dax(bdev->bd_queue))
++		return NULL;
++	dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
++	if (!dax_dev->pgmap)
++		return dax_dev;
++	pgmap = dax_dev->pgmap;
++
++	mutex_lock(&devmap_lock);
++	if ((pgmap->data && pgmap->data != owner) || pgmap->page_free
++			|| pgmap->page_fault
++			|| pgmap->type != MEMORY_DEVICE_HOST) {
++		put_dax(dax_dev);
++		mutex_unlock(&devmap_lock);
++		return NULL;
++	}
++
++	pgmap->type = MEMORY_DEVICE_FS_DAX;
++	pgmap->page_free = generic_dax_pagefree;
++	pgmap->data = owner;
++	mutex_unlock(&devmap_lock);
++
++	return dax_dev;
++}
++EXPORT_SYMBOL_GPL(fs_dax_claim_bdev);
++
++void fs_dax_release(struct dax_device *dax_dev, void *owner)
++{
++	struct dev_pagemap *pgmap = dax_dev ? dax_dev->pgmap : NULL;
++
++	put_dax(dax_dev);
++	if (!pgmap)
++		return;
++	if (!pgmap->data)
++		return;
++
++	mutex_lock(&devmap_lock);
++	WARN_ON(pgmap->data != owner);
++	pgmap->type = MEMORY_DEVICE_HOST;
++	pgmap->page_free = NULL;
++	pgmap->data = NULL;
++	mutex_unlock(&devmap_lock);
++}
++EXPORT_SYMBOL_GPL(fs_dax_release);
++#endif
++
+ static ssize_t write_cache_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+@@ -499,6 +547,17 @@ struct dax_device *alloc_dax(void *private, const char *__host,
+ }
+ EXPORT_SYMBOL_GPL(alloc_dax);
+ 
++struct dax_device *alloc_dax_devmap(void *private, const char *host,
++		const struct dax_operations *ops, struct dev_pagemap *pgmap)
++{
++	struct dax_device *dax_dev = alloc_dax(private, host, ops);
++
++	if (dax_dev)
++		dax_dev->pgmap = pgmap;
++	return dax_dev;
++}
++EXPORT_SYMBOL_GPL(alloc_dax_devmap);
++
+ void put_dax(struct dax_device *dax_dev)
+ {
+ 	if (!dax_dev)
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 06f8dcc52ca6..e6d7351f3379 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -408,7 +408,8 @@ static int pmem_attach_disk(struct device *dev,
+ 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
+ 	disk->bb = &pmem->bb;
+ 
+-	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
++	dax_dev = alloc_dax_devmap(pmem, disk->disk_name, &pmem_dax_ops,
++			&pmem->pgmap);
+ 	if (!dax_dev) {
+ 		put_disk(disk);
+ 		return -ENOMEM;
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 7666c065b96f..6ae20e319bc4 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -172,7 +172,7 @@ static void ext2_put_super (struct super_block * sb)
+ 	brelse (sbi->s_sbh);
+ 	sb->s_fs_info = NULL;
+ 	kfree(sbi->s_blockgroup_lock);
+-	fs_put_dax(sbi->s_daxdev);
++	fs_dax_release(sbi->s_daxdev, sb);
+ 	kfree(sbi);
  }
  
-+/**
-+ * dax_layout_busy_page - find first pinned page in @mapping
-+ * @mapping: address space to scan for a page with ref count > 1
-+ *
-+ * DAX requires ZONE_DEVICE mapped pages. These pages are never
-+ * 'onlined' to the page allocator so they are considered idle when
-+ * page->count == 1. A filesystem uses this interface to determine if
-+ * any page in the mapping is busy, i.e. for DMA, or other
-+ * get_user_pages() usages.
-+ *
-+ * It is expected that the filesystem is holding locks to block the
-+ * establishment of new mappings in this address_space. I.e. it expects
-+ * to be able to run unmap_mapping_range() and subsequently not race
-+ * mapping_mapped() becoming true. It expects that get_user_pages() pte
-+ * walks are performed under rcu_read_lock().
-+ */
-+struct page *dax_layout_busy_page(struct address_space *mapping)
-+{
-+	pgoff_t	indices[PAGEVEC_SIZE];
-+	struct page *page = NULL;
-+	struct pagevec pvec;
-+	pgoff_t	index, end;
-+	unsigned i;
-+
-+	/*
-+	 * In the 'limited' case get_user_pages() for dax is disabled.
-+	 */
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-+		return NULL;
-+
-+	if (!dax_mapping(mapping) || !mapping_mapped(mapping))
-+		return NULL;
-+
-+	pagevec_init(&pvec);
-+	index = 0;
-+	end = -1;
-+	/*
-+	 * Flush dax_layout_lock() sections to ensure all possible page
-+	 * references have been taken, or otherwise arrange for faults
-+	 * to block on the filesystem lock that is taken for
-+	 * establishing new mappings.
-+	 */
-+	unmap_mapping_range(mapping, 0, 0, 1);
-+	synchronize_rcu();
-+
-+	while (index < end && pagevec_lookup_entries(&pvec, mapping, index,
-+				min(end - index, (pgoff_t)PAGEVEC_SIZE),
-+				indices)) {
-+		for (i = 0; i < pagevec_count(&pvec); i++) {
-+			struct page *pvec_ent = pvec.pages[i];
-+			void *entry;
-+
-+			index = indices[i];
-+			if (index >= end)
-+				break;
-+
-+			if (!radix_tree_exceptional_entry(pvec_ent))
-+				continue;
-+
-+			spin_lock_irq(&mapping->tree_lock);
-+			entry = get_unlocked_mapping_entry(mapping, index, NULL);
-+			if (entry)
-+				page = dax_busy_page(entry);
-+			put_unlocked_mapping_entry(mapping, index, entry);
-+			spin_unlock_irq(&mapping->tree_lock);
-+			if (page)
-+				break;
-+		}
-+		pagevec_remove_exceptionals(&pvec);
-+		pagevec_release(&pvec);
-+		index++;
-+
-+		if (page)
-+			break;
-+	}
-+	return page;
-+}
-+EXPORT_SYMBOL_GPL(dax_layout_busy_page);
-+
- static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 					  pgoff_t index, bool trunc)
+@@ -817,7 +817,7 @@ static unsigned long descriptor_loc(struct super_block *sb,
+ 
+ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
  {
-@@ -513,6 +605,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	spin_unlock_irq(&mapping->tree_lock);
+-	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
++	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
+ 	struct buffer_head * bh;
+ 	struct ext2_sb_info * sbi;
+ 	struct ext2_super_block * es;
+@@ -1213,7 +1213,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ 	kfree(sbi->s_blockgroup_lock);
+ 	kfree(sbi);
+ failed:
+-	fs_put_dax(dax_dev);
++	fs_dax_release(dax_dev, sb);
  	return ret;
  }
-+
+ 
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 39bf464c35f1..315a323729e3 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -952,7 +952,7 @@ static void ext4_put_super(struct super_block *sb)
+ 	if (sbi->s_chksum_driver)
+ 		crypto_free_shash(sbi->s_chksum_driver);
+ 	kfree(sbi->s_blockgroup_lock);
+-	fs_put_dax(sbi->s_daxdev);
++	fs_dax_release(sbi->s_daxdev, sb);
+ 	kfree(sbi);
+ }
+ 
+@@ -3398,7 +3398,7 @@ static void ext4_set_resv_clusters(struct super_block *sb)
+ 
+ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ {
+-	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
++	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
+ 	char *orig_data = kstrdup(data, GFP_KERNEL);
+ 	struct buffer_head *bh;
+ 	struct ext4_super_block *es = NULL;
+@@ -4408,7 +4408,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ out_free_base:
+ 	kfree(sbi);
+ 	kfree(orig_data);
+-	fs_put_dax(dax_dev);
++	fs_dax_release(dax_dev, sb);
+ 	return err ? err : ret;
+ }
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 93588ea3d3d2..ef7dd7148c0b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -724,7 +724,7 @@ xfs_close_devices(
+ 
+ 		xfs_free_buftarg(mp, mp->m_logdev_targp);
+ 		xfs_blkdev_put(logdev);
+-		fs_put_dax(dax_logdev);
++		fs_dax_release(dax_logdev, mp);
+ 	}
+ 	if (mp->m_rtdev_targp) {
+ 		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
+@@ -732,10 +732,10 @@ xfs_close_devices(
+ 
+ 		xfs_free_buftarg(mp, mp->m_rtdev_targp);
+ 		xfs_blkdev_put(rtdev);
+-		fs_put_dax(dax_rtdev);
++		fs_dax_release(dax_rtdev, mp);
+ 	}
+ 	xfs_free_buftarg(mp, mp->m_ddev_targp);
+-	fs_put_dax(dax_ddev);
++	fs_dax_release(dax_ddev, mp);
+ }
+ 
  /*
-  * Delete exceptional DAX entry at @index from @mapping. Wait for radix tree
-  * entry to get unlocked before deleting it.
+@@ -753,9 +753,9 @@ xfs_open_devices(
+ 	struct xfs_mount	*mp)
+ {
+ 	struct block_device	*ddev = mp->m_super->s_bdev;
+-	struct dax_device	*dax_ddev = fs_dax_get_by_bdev(ddev);
+-	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
++	struct dax_device	*dax_ddev = fs_dax_claim_bdev(ddev, mp);
+ 	struct block_device	*logdev = NULL, *rtdev = NULL;
++	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
+ 	int			error;
+ 
+ 	/*
+@@ -765,7 +765,7 @@ xfs_open_devices(
+ 		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
+ 		if (error)
+ 			goto out;
+-		dax_logdev = fs_dax_get_by_bdev(logdev);
++		dax_logdev = fs_dax_claim_bdev(logdev, mp);
+ 	}
+ 
+ 	if (mp->m_rtname) {
+@@ -779,7 +779,7 @@ xfs_open_devices(
+ 			error = -EINVAL;
+ 			goto out_close_rtdev;
+ 		}
+-		dax_rtdev = fs_dax_get_by_bdev(rtdev);
++		dax_rtdev = fs_dax_claim_bdev(rtdev, mp);
+ 	}
+ 
+ 	/*
+@@ -813,14 +813,14 @@ xfs_open_devices(
+ 	xfs_free_buftarg(mp, mp->m_ddev_targp);
+  out_close_rtdev:
+ 	xfs_blkdev_put(rtdev);
+-	fs_put_dax(dax_rtdev);
++	fs_dax_release(dax_rtdev, mp);
+  out_close_logdev:
+ 	if (logdev && logdev != ddev) {
+ 		xfs_blkdev_put(logdev);
+-		fs_put_dax(dax_logdev);
++		fs_dax_release(dax_logdev, mp);
+ 	}
+  out:
+-	fs_put_dax(dax_ddev);
++	fs_dax_release(dax_ddev, mp);
+ 	return error;
+ }
+ 
 diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 92a1d3ee1615..bf1f30c1c8cc 100644
+index ae27a7efe7ab..92a1d3ee1615 100644
 --- a/include/linux/dax.h
 +++ b/include/linux/dax.h
-@@ -56,6 +56,18 @@ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner);
- void fs_dax_release(struct dax_device *dax_dev, void *owner);
+@@ -52,12 +52,8 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+ 	return dax_get_by_host(host);
+ }
+ 
+-static inline void fs_put_dax(struct dax_device *dax_dev)
+-{
+-	put_dax(dax_dev);
+-}
+-
+-struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
++struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner);
++void fs_dax_release(struct dax_device *dax_dev, void *owner);
  int dax_writeback_mapping_range(struct address_space *mapping,
  		struct block_device *bdev, struct writeback_control *wbc);
-+
-+static inline void dax_layout_lock(void)
-+{
-+	rcu_read_lock();
-+}
-+
-+static inline void dax_layout_unlock(void)
-+{
-+	rcu_read_unlock();
-+}
-+
-+struct page *dax_layout_busy_page(struct address_space *mapping);
  #else
- static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
- {
-@@ -82,6 +94,19 @@ static inline int dax_writeback_mapping_range(struct address_space *mapping,
- {
- 	return -EOPNOTSUPP;
+@@ -71,13 +67,14 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
+ 	return NULL;
  }
-+
-+static inline void dax_layout_lock(void)
-+{
-+}
-+
-+static inline void dax_layout_unlock(void)
-+{
-+}
-+
-+static inline struct page *dax_layout_busy_page(struct address_space *mapping)
-+{
+ 
+-static inline void fs_put_dax(struct dax_device *dax_dev)
++static inline struct dax_device *fs_dax_claim_bdev(struct block_device *bdev,
++		void *owner)
+ {
 +	return NULL;
-+}
- #endif
+ }
  
- int dax_read_lock(void);
-@@ -111,6 +136,11 @@ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
+-static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
++static inline void fs_dax_release(struct dax_device *dax_dev, void *owner)
+ {
+-	return NULL;
+ }
  
-+static inline struct page *refcount_to_page(atomic_t *c)
-+{
-+	return container_of(c, struct page, _refcount);
-+}
-+
- #ifdef CONFIG_FS_DAX
- int __dax_zero_page_range(struct block_device *bdev,
- 		struct dax_device *dax_dev, sector_t sector,
-diff --git a/mm/gup.c b/mm/gup.c
-index 1b46e6e74881..a81efac6983a 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -13,6 +13,7 @@
- #include <linux/sched/signal.h>
- #include <linux/rwsem.h>
- #include <linux/hugetlb.h>
-+#include <linux/dax.h>
+ static inline int dax_writeback_mapping_range(struct address_space *mapping,
+@@ -91,6 +88,8 @@ int dax_read_lock(void);
+ void dax_read_unlock(int id);
+ struct dax_device *alloc_dax(void *private, const char *host,
+ 		const struct dax_operations *ops);
++struct dax_device *alloc_dax_devmap(void *private, const char *host,
++		const struct dax_operations *ops, struct dev_pagemap *pgmap);
+ bool dax_alive(struct dax_device *dax_dev);
+ void kill_dax(struct dax_device *dax_dev);
+ void *dax_get_private(struct dax_device *dax_dev);
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index 7b4899c06f49..02d6d042ee7f 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -53,11 +53,19 @@ struct vmem_altmap {
+  * driver can hotplug the device memory using ZONE_DEVICE and with that memory
+  * type. Any page of a process can be migrated to such memory. However no one
+  * should be allow to pin such memory so that it can always be evicted.
++ *
++ * MEMORY_DEVICE_FS_DAX:
++ * When MEMORY_DEVICE_HOST memory is represented by a device that can
++ * host a filesystem, for example /dev/pmem0, that filesystem can
++ * register for a callback when a page is idled. For the filesystem-dax
++ * case page idle callbacks are used to coordinate DMA vs
++ * hole-punch/truncate.
+  */
+ enum memory_type {
+ 	MEMORY_DEVICE_HOST = 0,
+ 	MEMORY_DEVICE_PRIVATE,
+ 	MEMORY_DEVICE_PUBLIC,
++	MEMORY_DEVICE_FS_DAX,
+ };
  
- #include <asm/mmu_context.h>
- #include <asm/pgtable.h>
-@@ -693,7 +694,9 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
- 		if (unlikely(fatal_signal_pending(current)))
- 			return i ? i : -ERESTARTSYS;
- 		cond_resched();
-+		dax_layout_lock();
- 		page = follow_page_mask(vma, start, foll_flags, &page_mask);
-+		dax_layout_unlock();
- 		if (!page) {
- 			int ret;
- 			ret = faultin_page(tsk, vma, start, &foll_flags,
-@@ -1809,7 +1812,9 @@ int get_user_pages_fast(unsigned long start, int nr_pages, int write,
- 
- 	if (gup_fast_permitted(start, nr_pages, write)) {
- 		local_irq_disable();
-+		dax_layout_lock();
- 		gup_pgd_range(addr, end, write, pages, &nr);
-+		dax_layout_unlock();
- 		local_irq_enable();
- 		ret = nr;
- 	}
+ /*
 
