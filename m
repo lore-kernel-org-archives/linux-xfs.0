@@ -1,135 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34112 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50972 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751638AbeCOKcL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 06:32:11 -0400
-Date: Thu, 15 Mar 2018 11:32:07 +0100
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: XFS crash consistency bug : Loss of fsynced metadata operation
-Message-ID: <20180315103207.scrm5e4cvkj26m4k@rh_laptop>
-References: <CA+EzBbCtp9wKC=KeN+N1iZDa2+TsWxVho3aUkeXJXguVswkChA@mail.gmail.com>
- <20180313042126.GB18129@dastard>
- <CA+EzBbC9yQyxqiPOTCymrbL=cW-KZq2b8hunf7KEpiNZ9f3s4Q@mail.gmail.com>
- <20180313224522.GZ7000@dastard>
- <20180314131659.wnmt5zxfhrfsld7n@rh_laptop>
- <20180314133258.GB7000@dastard>
- <20180314135752.5a2vmjr7cuavusiw@rh_laptop>
- <20180314212441.GC7000@dastard>
- <20180315061557.5jajfodpkjdmcrld@rh_laptop>
- <20180315100646.GE7000@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180315100646.GE7000@dastard>
+        id S932101AbeCOS24 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Mar 2018 14:28:56 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3FA3A20CC6
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Mar 2018 18:28:56 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 2/2 v4] fsck.xfs: allow forced repairs using xfs_repair
+Date: Thu, 15 Mar 2018 19:28:50 +0100
+Message-Id: <20180315182850.36783-1-jtulak@redhat.com>
+In-Reply-To: <20180315175026.34779-1-jtulak@redhat.com>
+References: <20180315175026.34779-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Vijaychidambaram Velayudhan Pillai <vijay@cs.utexas.edu>, Ashlie Martinez <ashmrtn@utexas.edu>, fstests@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Mar 15, 2018 at 09:06:46PM +1100, Dave Chinner wrote:
-> On Thu, Mar 15, 2018 at 07:15:57AM +0100, Lukas Czerner wrote:
-> > On Thu, Mar 15, 2018 at 08:24:41AM +1100, Dave Chinner wrote:
-> > > On Wed, Mar 14, 2018 at 02:57:52PM +0100, Lukas Czerner wrote:
-> > > > On Thu, Mar 15, 2018 at 12:32:58AM +1100, Dave Chinner wrote:
-> > > > > On Wed, Mar 14, 2018 at 02:16:59PM +0100, Lukas Czerner wrote:
-> > > > > > just FYI the 042 xfstest does fail on xfs with what I think is stale
-> > > > > > data exposure. It might not be related at all to what crashmonkey is
-> > > > > > reporting but there is something wrong nevertheless.
-> > > > > 
-> > > > > generic/042 is unreliable and certain operations result in a
-> > > > > non-zero length file because of metadata commits/writeback that
-> > > > > occur as a result of the fallocate operations. It got removed from
-> > > > > the auto group because it isn't a reliable test about 3 years ago:
-> > > > 
-> > > > Sure, I just that it clearly exposes stale data on xfs. That is, the
-> > > > resulting file contains data that was previously written to the
-> > > > underlying image file to catch the exposure. I am aware of the non-zero
-> > > > length file problem, that's not what I am pointing out though.
-> > > 
-> > > What setup are you testing on? I haven't seen it fail in some time.
-> > > Here, on emulated pmem:
-> > 
-> > Virtual machine with Virtio devices backed by a linear lvs consisting of
-> > SCSI drives, all local.
-> > 
-> > > 
-> > > SECTION       -- xfs
-> > > FSTYP         -- xfs (debug)
-> > > PLATFORM      -- Linux/x86_64 test4 4.16.0-rc5-dgc
-> > > MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 /dev/pmem1
-> > > MOUNT_OPTIONS -- /dev/pmem1 /mnt/scratch
-> > > 
-> > > xfs/042 10s ... 14s
-> > 
-> > We are talking about generic/042. xfs/042 is very much a different
-> > test.
-> 
-> Ugh copy-n-paste fail. Sorry.
-> 
-> I was looking at the right test, just running the wrong one.
-> 
-> Anyway, what makes you think this:
-> 
-> > 
-> > SECTION       -- xfs
-> > RECREATING    -- xfs on /dev/vdc1
-> > FSTYP         -- xfs (non-debug)
-> > PLATFORM      -- Linux/x86_64 rhel7 4.16.0-rc5+
-> > MKFS_OPTIONS  -- -f -f /dev/vdb1
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/vdb1 /mnt/test1
-> > 
-> > generic/042	 - output mismatch (see /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad)
-> >     --- tests/generic/042.out	2018-03-14 05:56:38.619124060 -0400
-> >     +++ /root/Projects/xfstests-dev/results//ext4/generic/042.out.bad	2018-03-15 02:15:02.872113819 -0400
-> >     @@ -5,6 +5,16 @@
-> >      fpunch
-> >      wrote 65536/65536 bytes at offset 0
-> >      XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> >     +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> >     +*
-> >     +000f000 0000 0000 0000 0000 0000 0000 0000 0000
-> >     +*
-> 
-> exposes stale data? The command is:
-> 
-> $XFS_IO_PROG -f -c "pwrite -S 1 0 64k" -c "$cmd 60k 4k" $file
-> 
-> i.e. We wrote bytes from 0 to 64k, then punched from 60k to 64k. if
-> the file is 64k in length, then it should contain either all "cdcd"
-> pattern, or there should be "cdcd" data except for the range from
-> 60k to 64k where there should be zeros.
+The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
+run on every unclean shutdown. However, sometimes it may happen that the
+root filesystem really requires the usage of xfs_repair and then it is a
+hassle. This patch makes the situation a bit easier by detecting forced
+checks (/forcefsck or fsck.mode=force), so user can require the repair,
+without the repair being run all the time.
 
-And where the "cdcd" data is comming from ? Not from the
+Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-"pwrite -S 1 0 64k"
+---
+I omitted the ", or by running fsck.xfs -f." part, Darrick, because it
+works only for non-interactive sessions. Running it manually should do
+nothing.
 
-that's producing "0101".
+---
+Changelog:
+v4:
+- man page changes
+v3:
+- too quick with fixing in v2... add line at the end of the file
+v2:
+- return the "exit 0" at the end
 
-(from man xfs_io)
- -S  used  to set the (repeated) fill pattern which is used when
-     the data to write is not coming from a file.  The default buffer
-     fill pattern value is 0xcdcdcdcd.
+v1:
+- test for xfs_repair binary
+- run only in non-interactive session
+- translate xfs_repair return codes to fsck ones
+- run only if the filesystem is not mounted
+- add manpage update
+---
+ fsck/xfs_fsck.sh    | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ man/man8/fsck.xfs.8 |  7 ++++++
+ 2 files changed, 71 insertions(+), 1 deletion(-)
 
+diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+index e52969e4..0ec6b049 100755
+--- a/fsck/xfs_fsck.sh
++++ b/fsck/xfs_fsck.sh
+@@ -3,11 +3,42 @@
+ # Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+ 
++NAME=$0
++
++# get the right return code for fsck
++function repair2fsck_code() {
++	case $1 in
++	0)  return 0 # everything is ok
++		;;
++	1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
++		return 4 # errors left uncorrected
++		;;
++	2)  echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
++		return 4 # it should not me mounted during boot, something is wrong
++		;;
++	3)  return 1 # The fs has been fixed
++		;;
++	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
++		return 4 # something went wrong with xfs_repair
++	esac
++}
++
++function ensure_not_mounted() {
++	local dev=$1
++	mounted=`grep -c "^$dev " /proc/mounts`
++	if [ $mounted -ne 0 ]; then
++		echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
++		exit 4
++	fi
++}
++
+ AUTO=false
+-while getopts ":aApy" c
++FORCE=false
++while getopts ":aApyf" c
+ do
+ 	case $c in
+ 	a|A|p|y)	AUTO=true;;
++	f)      	FORCE=true;;
+ 	esac
+ done
+ eval DEV=\${$#}
+@@ -15,6 +46,38 @@ if [ ! -e $DEV ]; then
+ 	echo "$0: $DEV does not exist"
+ 	exit 8
+ fi
++
++# The flag -f is added by systemd/init scripts when /forcefsck file is present
++# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
++# this check, user has to explicitly require a forced fsck.
++# But first of all, test if it is a non-interactive session. Use multiple
++# methods to capture most of the cases:
++# The case for *i* and -n "$PS1" are commonly suggested in bash manual
++# and the -t 0 test checks stdin
++case $- in
++	*i*) FORCE=false ;;
++esac
++if [ -n "$PS1" -o -t 0 ]; then
++	FORCE=false
++fi
++
++if $FORCE; then
++	if [ -f /sbin/xfs_repair ]; then
++		BIN="/sbin/xfs_repair"
++	elif [ -f /usr/sbin/xfs_repair ]; then
++		BIN="/usr/sbin/xfs_repair"
++	else
++		echo "$NAME error: xfs_repair was not found!" 1>&2
++		exit 4
++	fi
++
++	ensure_not_mounted $DEV
++
++	$BIN -e $DEV
++	repair2fsck_code $?
++	exit $?
++fi
++
+ if $AUTO; then
+ 	echo "$0: XFS file system."
+ else
+diff --git a/man/man8/fsck.xfs.8 b/man/man8/fsck.xfs.8
+index ace7252d..08812be8 100644
+--- a/man/man8/fsck.xfs.8
++++ b/man/man8/fsck.xfs.8
+@@ -21,6 +21,13 @@ If you wish to check the consistency of an XFS filesystem,
+ or repair a damaged or corrupt XFS filesystem,
+ see
+ .BR xfs_repair (8).
++.PP
++However, the system administrator can force
++.B fsck.xfs
++to run
++.BR xfs_repair (8)
++by creating a /forcefsck file or booting the system with
++"fsck.mode=force" on the kernel command line.
+ .
+ .SH FILES
+ .IR /etc/fstab .
+-- 
+2.15.0
 
-It's comming from
-
-$XFS_IO_PROG -f -c "truncate 0" -c "pwrite 0 25M" $img
-_mkfs_dev $img
-
-so it does expose data written to the device prior the mkfs.
-
--Lukas
-
-> 
-> The later is exactly what the diff output is say - "cdcd" data from
-> 0-60k, zeros from 60 to 64k. So there's no stale data exposure
-> occurring here (those bugs got fixed!), it's just the test output is
-> unreliable and does not match the golden output.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
