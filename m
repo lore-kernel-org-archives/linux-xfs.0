@@ -1,76 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37700 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753065AbeCFUtL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Mar 2018 15:49:11 -0500
-Date: Tue, 6 Mar 2018 12:49:04 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/16] xfs_db: add a superblock info command
-Message-ID: <20180306204904.GJ18989@magnolia>
-References: <151993157539.22223.6269629008244777191.stgit@magnolia>
- <151993165958.22223.10507415725288169958.stgit@magnolia>
- <20edb4dd-80c4-76e6-d63d-09c6553b5c29@sandeen.net>
- <777384a3-90de-4715-21fc-a3f7b45387d8@sandeen.net>
+Received: from guitar.tcltek.co.il ([192.115.133.116]:56836 "EHLO
+        mx.tkos.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750969AbeCPGIt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Mar 2018 02:08:49 -0400
+Date: Fri, 16 Mar 2018 08:08:46 +0200
+From: Baruch Siach <baruch@tkos.co.il>
+Subject: Re: [PATCH 1/2] workqueue: add missing pthreads header
+Message-ID: <20180316060846.imxc42urbsb222sn@tarshish>
+References: <c05fc32d43b3870b63539c57428e1c52e3e7c3cd.1521177696.git.baruch@tkos.co.il>
+ <20180316053016.GB1757@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <777384a3-90de-4715-21fc-a3f7b45387d8@sandeen.net>
+In-Reply-To: <20180316053016.GB1757@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org, djwong@kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 06, 2018 at 01:34:42PM -0600, Eric Sandeen wrote:
-> 
-> 
-> On 3/6/18 1:32 PM, Eric Sandeen wrote:
-> > On 3/1/18 1:14 PM, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> Add an 'info' command to pretty-print the superblock geometry.
-> > I'm on the fence about this; xfs_db generally just dumps representations
-> > of individual disk structures.  This seems like a bit of an expansion of
-> > its charter.  What is the use case for this?  Convince me that it's good
-> > to add this code?
+Hi Darrick,
 
-I occasionally (well ok pretty much every time) wish that when I'm
-debugging an umountable filesystem w/ xfs_db I could just have it spit
-out the familiar xfs_info output to figure out which features of the
-user-visible features are enabled.
-
-For xfstests there have been a few times where I'm writing some test and
-it would be helpful to be able to figure out if the formatted image has
-some feature enabled without having to mount the filesystem, and
-wouldn't it be nice if we could reuse the same code that turns mkfs
-output into environment variables?
-
-That's a pretty minor use case though since I've so far always found a
-way to code around the lack of it. :P  My primary itch is the debugging
-case.
-
+On Thu, Mar 15, 2018 at 10:30:16PM -0700, Darrick J. Wong wrote:
+> On Fri, Mar 16, 2018 at 07:21:35AM +0200, Baruch Siach wrote:
+> > Fix the following build failure with musl libc:
 > > 
-> > Thanks,
-> > -Eric
+> > In file included from read_verify.c:25:0:
+> > ../include/workqueue.h:39:2: error: unknown type name 'pthread_t'
+> >   pthread_t  *threads;
+> >   ^~~~~~~~~
+> > ../include/workqueue.h:42:2: error: unknown type name 'pthread_mutex_t'
+> >   pthread_mutex_t  lock;
+> >   ^~~~~~~~~~~~~~~
+> > ../include/workqueue.h:43:2: error: unknown type name 'pthread_cond_t'
+> >   pthread_cond_t  wakeup;
+> >   ^~~~~~~~~~~~~~
 > > 
+> > Signed-off-by: Baruch Siach <baruch@tkos.co.il>
+> > ---
+> >  include/workqueue.h | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/include/workqueue.h b/include/workqueue.h
+> > index b4b3541701df..edb2f8ac5991 100644
+> > --- a/include/workqueue.h
+> > +++ b/include/workqueue.h
+> > @@ -22,6 +22,8 @@
+> >  #ifndef	_WORKQUEUE_H_
+> >  #define	_WORKQUEUE_H_
+> >  
+> > +#include <pthread.h>
 > 
-> Sorry - of course later patches make xfs_info work offline, but still,
-> I'd like to see some rationale for why we need that capability.  I'm all
-> for the code reduction of the common printing routine but what's the big
-> picture rational for teaching all these other tools to print mkfs-like output?
+> Ooops, sorry about that.
+> 
+> Our convention within xfsprogs sources (I think) is for most header
+> files to avoid having headers include other headers.  Would you mind
+> adding this include to read_verify.c instead?
 
-Growing the filesystem falls under the umbrella of space management, so
-in the long run (like after I finish putting online repair in) I intend
-to make growfs a part of xfs_spaceman, and then the xfs_growfs command
-becomes a wrapper around that.  Looking forward towards Dave's subvolume
-thingy, I think it makes sense to be able to manage subvolumes entirely
-via spaceman commands.
+I don't mind. But requiring every user of workqueue.h to remember to have 
+pthread.h before, is error prone IMO.
 
---D
+> (That said, you probably ought to wait for the maintainer (Eric) to
+> weigh in on this before you do any more work.)
 
-> Thanks,
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+baruch
+
+-- 
+     http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
+=}------------------------------------------------ooO--U--Ooo------------{=
+   - baruch@tkos.co.il - tel: +972.52.368.4656, http://www.tkos.co.il -
