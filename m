@@ -1,62 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51508 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964911AbeCPPjQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Mar 2018 11:39:16 -0400
-Date: Fri, 16 Mar 2018 08:39:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2 v4] fsck.xfs: allow forced repairs using xfs_repair
-Message-ID: <20180316153912.GC1757@magnolia>
-References: <20180315175026.34779-1-jtulak@redhat.com>
- <20180315182850.36783-1-jtulak@redhat.com>
- <20180315184925.GC4865@magnolia>
- <CACj3i71yGDXq0SrpsM-VNwVwf=fZUcQi+1ve5kn_wdBmgt7KSA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46824 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751817AbeCPL7U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Mar 2018 07:59:20 -0400
+Date: Fri, 16 Mar 2018 07:59:11 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
+Message-ID: <20180316115910.GA51225@bfoster.bfoster>
+References: <20180314171724.41951-1-bfoster@redhat.com>
+ <20180314181218.GR4865@magnolia>
+ <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
+ <20180315103839.GA44732@bfoster.bfoster>
+ <20180315222605.GK18129@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACj3i71yGDXq0SrpsM-VNwVwf=fZUcQi+1ve5kn_wdBmgt7KSA@mail.gmail.com>
+In-Reply-To: <20180315222605.GK18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Chiluk <chiluk+linuxxfs@indeed.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Fri, Mar 16, 2018 at 11:19:50AM +0100, Jan Tulak wrote:
-> On Thu, Mar 15, 2018 at 7:49 PM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Thu, Mar 15, 2018 at 07:28:50PM +0100, Jan Tulak wrote:
-> >> +
-> >> +# get the right return code for fsck
-> >> +function repair2fsck_code() {
-> >> +     case $1 in
-> >> +     0)  return 0 # everything is ok
-> >> +             ;;
-> >> +     1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
-> >> +             return 4 # errors left uncorrected
-> >> +             ;;
-> >> +     2)  echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
-> >> +             return 4 # it should not me mounted during boot, something is wrong
-> >
-> > Sorry I missed this on the first go-round, but repair status 2 means the
-> > log is dirty, so the admin must mount the fs to try to replay the log or
-> > run xfs_repair -L to dump the log.  It does not mean that the fs is
-> > already mounted.
-> >
-> > "$NAME error: The filesystem log is dirty, either mount it to recover
-> > the log.  If that fails, run xfs_repair -L to clear the log."
-> >
+On Fri, Mar 16, 2018 at 09:26:05AM +1100, Dave Chinner wrote:
+> On Thu, Mar 15, 2018 at 06:38:39AM -0400, Brian Foster wrote:
+> > On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
+> > > On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
+> > > <darrick.wong@oracle.com> wrote:
+> > > > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
+> > ...
+> > > 
+> > > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
+> > > 
+> > > I'm also assuming this will get submitted back to the linux-stable
+> > > trees as the agfl packing change is already causing issues in the
+> > > stable trees.  If you do not intend to push it into the linux-stable
+> > > trees let me know and I'll take care of at least the major ones.
+> > > 
+> > 
+> > Yeah, I can cc stable in the next post along with the other minor fixes.
+> > My question is how far back should this fix go? Was the plan to only go
+> > back to v4.5 because that is where the packing fix first went in? Or
+> > should this go back further because it looks like the packing fix was
+> > backported to v3.10:
+> > 
+> > $ git show 96f859d52bcb1
+> > commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
+> > Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > Date:   Mon Jan 4 16:13:21 2016 +1100
+> > 
+> >     libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
+> >     
+> >     ...
+> >     
+> >     cc: <stable@vger.kernel.org> # 3.10 - 4.4
+> >     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> >     Signed-off-by: Dave Chinner <david@fromorbit.com>
 > 
-> Right, thanks for spotting it. But I wonder if telling the user to
-> blindly use -L is safe. Maybe something like "run xfs_repair -L (can
-> be dangerous, refer to manual pages)" would be better.
+> 3.10 was when the problem was first introduced. I have no idea
+> whether it got backported that far but the stable kernel
+> maintainers, so you'll have to manually audit all current long-term
+> stable kernels to determine what kernels need backports.
+> 
 
-Yes.  "The filesystem log is dirty, please mount the filesystem to
-recover the log.  If that fails, refer to the section DIRTY LOGS in the
-xfs_repair manual page." ?
+The earliest I saw it backported was to 3.16, which looks like Luis had
+perhaps done that one. Otherwise, the kernels Darrick pointed out seem
+to have the fix.
 
---D
+Brian
 
-> Jan
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
