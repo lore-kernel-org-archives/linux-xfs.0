@@ -1,126 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:3359 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750826AbeCPVjO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Mar 2018 17:39:14 -0400
-Date: Sat, 17 Mar 2018 08:39:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
- case of global reclaim
-Message-ID: <20180316213910.GF7000@dastard>
-References: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
- <20180315174903.GM23100@dhcp22.suse.cz>
- <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
- <20180315230313.GM18129@dastard>
- <6628c551-f607-367b-1ee6-f458266c1d92@virtuozzo.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:51508 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964911AbeCPPjQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Mar 2018 11:39:16 -0400
+Date: Fri, 16 Mar 2018 08:39:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2 v4] fsck.xfs: allow forced repairs using xfs_repair
+Message-ID: <20180316153912.GC1757@magnolia>
+References: <20180315175026.34779-1-jtulak@redhat.com>
+ <20180315182850.36783-1-jtulak@redhat.com>
+ <20180315184925.GC4865@magnolia>
+ <CACj3i71yGDXq0SrpsM-VNwVwf=fZUcQi+1ve5kn_wdBmgt7KSA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6628c551-f607-367b-1ee6-f458266c1d92@virtuozzo.com>
+In-Reply-To: <CACj3i71yGDXq0SrpsM-VNwVwf=fZUcQi+1ve5kn_wdBmgt7KSA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kirill Tkhai <ktkhai@virtuozzo.com>
-Cc: Michal Hocko <mhocko@kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Mar 16, 2018 at 11:55:30AM +0300, Kirill Tkhai wrote:
-> On 16.03.2018 02:03, Dave Chinner wrote:
-> > On Thu, Mar 15, 2018 at 10:28:43PM +0300, Kirill Tkhai wrote:
-> >> On 15.03.2018 20:49, Michal Hocko wrote:
-> >>> On Thu 15-03-18 18:01:34, Kirill Tkhai wrote:
-> >>>> xfs_reclaim_inodes_count(XFS_M(sb)) does not care about memcg.
-> >>>> So, it's called for memcg reclaim too, e.g. this list is shrinked
-> >>>> disproportionality to another lists.
-> >>>>
-> >>>> This looks confusing, so I'm reporting about this.
-> >>>> Consider this patch as RFC.
-> >>>
-> >>> Could you be more specific about the problem you are trying to solve?
-> >>> Because we do skip shrinkers which are not memcg aware by
-> >>> shrink_slab:
-> >>> 		/*
-> >>> 		 * If kernel memory accounting is disabled, we ignore
-> >>> 		 * SHRINKER_MEMCG_AWARE flag and call all shrinkers
-> >>> 		 * passing NULL for memcg.
-> >>> 		 */
-> >>> 		if (memcg_kmem_enabled() &&
-> >>> 		    !!memcg != !!(shrinker->flags & SHRINKER_MEMCG_AWARE))
-> >>> 			continue;
-> >>>
-> >>> Or am I missing something?
-> >>
-> >> sb->s_op->nr_cached_objects is a sub-method of generic super_cache_count().
-> >> super_cache_count() is owned and only called by superblock's shrinker,
-> >> which does have SHRINKER_MEMCG_AWARE flag.
-> > 
-> > Xfs inodes are accounted to memcgs when they are allocated.  All the
-> > memcg reclaim stuff is done at the VFS inode cache level - all the
-> > XFS inode cache shrinker does is clean up inodes that are not
-> > referenced by the VFS inode cache because the memcg aware reclaim
-> > has already freed them.
-> > 
-> > i.e. what the XFS inode cache is doing is perfectly reasonable -
-> > memcg aware inode reclaim is occuring at the VFS level, but on XFS
-> > that does not free the inodes as they are still referenced
-> > internally by XFS. However, once the inode is removed from the VFS
-> > LRU, all memcg information about the inode is destroyed, so there's
-> > nothing in the XFS layers that cares about memcgs.
+On Fri, Mar 16, 2018 at 11:19:50AM +0100, Jan Tulak wrote:
+> On Thu, Mar 15, 2018 at 7:49 PM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Thu, Mar 15, 2018 at 07:28:50PM +0100, Jan Tulak wrote:
+> >> +
+> >> +# get the right return code for fsck
+> >> +function repair2fsck_code() {
+> >> +     case $1 in
+> >> +     0)  return 0 # everything is ok
+> >> +             ;;
+> >> +     1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
+> >> +             return 4 # errors left uncorrected
+> >> +             ;;
+> >> +     2)  echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
+> >> +             return 4 # it should not me mounted during boot, something is wrong
+> >
+> > Sorry I missed this on the first go-round, but repair status 2 means the
+> > log is dirty, so the admin must mount the fs to try to replay the log or
+> > run xfs_repair -L to dump the log.  It does not mean that the fs is
+> > already mounted.
+> >
+> > "$NAME error: The filesystem log is dirty, either mount it to recover
+> > the log.  If that fails, run xfs_repair -L to clear the log."
+> >
 > 
-> So, after inode is removed from LRU, memory still remains accounted
-> to memcg till the time they are actually freed. I personally don't
-> care, just to mention.
->  
-> > Hence when the XFS inode shrinker then called to run a
-> > garbage collection pass on unreferenced inodes - the inodes that
-> > are now unreferenced in the memcg due to the VFS inode shrinker pass
-> > - it frees inodes regardless of the memcg context it was called from
-> > because that information is no longer present in the inode cache.
-> > Hence we just ignore memcgs at this level.
-> 
-> But xfs_fs_free_cached_objects() returns number of these freed object
-> as result to super_cache_scan(), so shrinker interprets them as related
-> to a memcg, while they may be related to another memcg. This introduces
-> a disproportion relatively to another shrinkers called to memcg.
+> Right, thanks for spotting it. But I wonder if telling the user to
+> blindly use -L is safe. Maybe something like "run xfs_repair -L (can
+> be dangerous, refer to manual pages)" would be better.
 
-In what way? All memcgs see tha same values from the backing cache
-and so try to do the same amount of scanning work. The shrinker
-accounting simply doesn't care where the objects are scanned from,
-as long as it comes from the same place as the calculation of the
-number of objects in the cache it's about to scan.
+Yes.  "The filesystem log is dirty, please mount the filesystem to
+recover the log.  If that fails, refer to the section DIRTY LOGS in the
+xfs_repair manual page." ?
 
-The memcg accounting, OTOH, is completely divorced from the
-shrinker, so if it's still got too much slab memory accounted to it,
-it will simply run the shrinker again and do some more memory
-reclaim.
+--D
 
-XFS does this for IO efficiency purposes, not because it's ideal
-behaviour for memcgs. If we start doing exact memcg-only inode
-reclaim, we're going back to the bad old days where inode reclaim
-causes really nasty small random write storms that essentially
-starve the storage subsystem of all other IO for seconds at a time.
-That is a *far worse problem* from a system performance POV than
-having the memcg memory reclaim run a couple more shrinker passes
-and do a little more work....
-
-> Is there a problem? This is what my patch about.
-
-You've described some theoretical issue, but not described any user
-visible or performance impacting behaviour that users actually care
-about. What reproducable, observable behaviour does it fix/change?
-
-> > So, is there a problem you are actually trying to fix, or is this
-> > simply a "I don't understand how the superblock shrinkers work,
-> > please explain" patch?
-> 
-> I work on some shrinker changes, and just want to understand they don't
-> touch anything. 
-
-Oh, goody, another person about to learn the hard way that shrinkers
-are far more varied and complex than page reclaim :P
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Jan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
