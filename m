@@ -1,18 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48337 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:48346 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751480AbeCPS7n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Mar 2018 14:59:43 -0400
-Date: Fri, 16 Mar 2018 19:59:42 +0100
+        id S1752567AbeCPS75 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Mar 2018 14:59:57 -0400
+Date: Fri, 16 Mar 2018 19:59:55 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v6 02/15] fs, dax: prepare for dax-specific
-        address_space_operations
-Message-ID: <20180316185942.GB3671@lst.de>
-References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com> <152112909383.24669.7898033239205318865.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: Re: [PATCH v6 03/15] block, dax: remove dead code in
+        blkdev_writepages()
+Message-ID: <20180316185955.GC3671@lst.de>
+References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com> <152112909958.24669.12976603063031646917.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152112909383.24669.7898033239205318865.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152112909958.24669.12976603063031646917.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
