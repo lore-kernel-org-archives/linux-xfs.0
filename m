@@ -1,81 +1,289 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46824 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59298 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751817AbeCPL7U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Mar 2018 07:59:20 -0400
-Date: Fri, 16 Mar 2018 07:59:11 -0400
+        id S1750748AbeCPMAD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Mar 2018 08:00:03 -0400
+Date: Fri, 16 Mar 2018 08:00:02 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: detect agfl count corruption and reset agfl
-Message-ID: <20180316115910.GA51225@bfoster.bfoster>
-References: <20180314171724.41951-1-bfoster@redhat.com>
- <20180314181218.GR4865@magnolia>
- <CAC=E7cUme5-0z9GjVOynD==nK5aG2athrHmm=WKA8HBFWX-hRQ@mail.gmail.com>
- <20180315103839.GA44732@bfoster.bfoster>
- <20180315222605.GK18129@dastard>
+Subject: Re: [PATCH v2] xfs: detect agfl count corruption and reset agfl
+Message-ID: <20180316120001.GB51225@bfoster.bfoster>
+References: <20180315174539.48142-1-bfoster@redhat.com>
+ <20180315193130.GD4865@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180315222605.GK18129@dastard>
+In-Reply-To: <20180315193130.GD4865@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Chiluk <chiluk+linuxxfs@indeed.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org, david@fromorbit.com
 
-On Fri, Mar 16, 2018 at 09:26:05AM +1100, Dave Chinner wrote:
-> On Thu, Mar 15, 2018 at 06:38:39AM -0400, Brian Foster wrote:
-> > On Wed, Mar 14, 2018 at 03:42:50PM -0500, Dave Chiluk wrote:
-> > > On Wed, Mar 14, 2018 at 1:12 PM, Darrick J. Wong
-> > > <darrick.wong@oracle.com> wrote:
-> > > > On Wed, Mar 14, 2018 at 01:17:24PM -0400, Brian Foster wrote:
-> > ...
-> > > 
-> > > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
-> > > 
-> > > I'm also assuming this will get submitted back to the linux-stable
-> > > trees as the agfl packing change is already causing issues in the
-> > > stable trees.  If you do not intend to push it into the linux-stable
-> > > trees let me know and I'll take care of at least the major ones.
-> > > 
+On Thu, Mar 15, 2018 at 12:31:30PM -0700, Darrick J. Wong wrote:
+> On Thu, Mar 15, 2018 at 01:45:39PM -0400, Brian Foster wrote:
+> > The struct xfs_agfl v5 header was originally introduced with
+> > unexpected padding that caused the AGFL to operate with one less
+> > slot than intended. The header has since been packed, but the fix
+> > left an incompatibility for users who upgrade from an old kernel
+> > with the unpacked header to a newer kernel with the packed header
+> > while the AGFL happens to wrap around the end. The newer kernel
+> > recognizes one extra slot at the physical end of the AGFL that the
+> > previous kernel did not. The new kernel will eventually attempt to
+> > allocate a block from that slot, which contains invalid data, and
+> > cause a crash.
 > > 
-> > Yeah, I can cc stable in the next post along with the other minor fixes.
-> > My question is how far back should this fix go? Was the plan to only go
-> > back to v4.5 because that is where the packing fix first went in? Or
-> > should this go back further because it looks like the packing fix was
-> > backported to v3.10:
+> > This condition can be detected by comparing the active range of the
+> > AGFL to the count. While this detects a padding mismatch, it can
+> > also trigger false positives for unrelated flcount corruption. Since
+> > we cannot distinguish a size mismatch due to padding from unrelated
+> > corruption, we can't trust the AGFL enough to simply repopulate the
+> > empty slot.
 > > 
-> > $ git show 96f859d52bcb1
-> > commit 96f859d52bcb1c6ea6f3388d39862bf7143e2f30
-> > Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > Date:   Mon Jan 4 16:13:21 2016 +1100
+> > Instead, avoid unnecessarily complex detection logic and and use a
+> > solution that can handle any form of flcount corruption that slips
+> > through read verifiers: distrust the entire AGFL and reset it to an
+> > empty state. Any valid blocks within the AGFL are intentionally
+> > leaked. This requires xfs_repair to rectify (which was already
+> > necessary based on the state the AGFL was found in). The reset
+> > mitigates the side effect of the padding mismatch problem from a
+> > filesystem crash to a free space accounting inconsistency. The
+> > generic approach also means that this patch can be safely backported
+> > to kernels with or without a packed struct xfs_agfl.
 > > 
-> >     libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct
-> >     
-> >     ...
-> >     
-> >     cc: <stable@vger.kernel.org> # 3.10 - 4.4
-> >     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >     Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> >     Signed-off-by: Dave Chinner <david@fromorbit.com>
+> > Check the AGF for an invalid freelist count on initial read from
+> > disk. If detected, set a flag on the xfs_perag to indicate that a
+> > reset is required before the AGFL can be used. In the first
+> > transaction that attempts to use a flagged AGFL, reset it to empty,
+> > warn the user about the inconsistency and allow the freelist fixup
+> > code to repopulate the AGFL with new blocks. The xfs_perag flag is
+> > cleared to eliminate the need for repeated checks on each block
+> > allocation operation.
+> > 
+> > Fixes: 96f859d52bcb ("libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct")
+> > CC: <stable@vger.kernel.org>
+> > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
 > 
-> 3.10 was when the problem was first introduced. I have no idea
-> whether it got backported that far but the stable kernel
-> maintainers, so you'll have to manually audit all current long-term
-> stable kernels to determine what kernels need backports.
+> Thanks, will test and apply to 4.17.
 > 
 
-The earliest I saw it backported was to 3.16, which looks like Luis had
-perhaps done that one. Otherwise, the kernels Darrick pointed out seem
-to have the fix.
+Thanks. Re: Dave's comment on the 'Fixes:' tag [1]...
+
+I've locally dropped the tag and appended the following sentence to the
+last paragraph in the commit log:
+
+"This allows kernels that include the packing fix commit 96f859d52bcb
+("libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct")
+to handle older unpacked AGFL formats without a filesystem crash."
+
+I think that demonstrates intent without making the (already long)
+commit log too much longer. Thoughts? I can send that as v3 if it's
+easier, but I'd prefer to get this nailed down first if there are no
+further comments on the patch.
 
 Brian
 
-> Cheers,
+[1] https://marc.info/?l=linux-xfs&m=152115408908495&w=2
+
+> --D
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > ---
+> > 
+> > v2:
+> > - Function rename and logic cleanup.
+> > - CC stable.
+> > v1: https://marc.info/?l=linux-xfs&m=152104784709048&w=2
+> > - Use a simplified AGFL reset mechanism.
+> > - Trigger on AGFL fixup rather than get/put.
+> > - Various refactors, cleanups and comments.
+> > rfc: https://marc.info/?l=linux-xfs&m=152045069616434&w=2
+> > 
+> >  fs/xfs/libxfs/xfs_alloc.c | 94 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_mount.h        |  1 +
+> >  fs/xfs/xfs_trace.h        |  9 ++++-
+> >  3 files changed, 103 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > index 3db90b707fb2..39387bdd225d 100644
+> > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > @@ -2063,6 +2063,93 @@ xfs_alloc_space_available(
+> >  }
+> >  
+> >  /*
+> > + * Check the agfl fields of the agf for inconsistency or corruption. The purpose
+> > + * is to detect an agfl header padding mismatch between current and early v5
+> > + * kernels. This problem manifests as a 1-slot size difference between the
+> > + * on-disk flcount and the active [first, last] range of a wrapped agfl. This
+> > + * may also catch variants of agfl count corruption unrelated to padding. Either
+> > + * way, we'll reset the agfl and warn the user.
+> > + *
+> > + * Return true if a reset is required before the agfl can be used, false
+> > + * otherwise.
+> > + */
+> > +static bool
+> > +xfs_agfl_needs_reset(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_agf		*agf)
+> > +{
+> > +	uint32_t		f = be32_to_cpu(agf->agf_flfirst);
+> > +	uint32_t		l = be32_to_cpu(agf->agf_fllast);
+> > +	uint32_t		c = be32_to_cpu(agf->agf_flcount);
+> > +	int			agfl_size = xfs_agfl_size(mp);
+> > +	int			active;
+> > +
+> > +	/* no agfl header on v4 supers */
+> > +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> > +		return false;
+> > +
+> > +	/*
+> > +	 * The agf read verifier catches severe corruption of these fields.
+> > +	 * Repeat some sanity checks to cover a packed -> unpacked mismatch if
+> > +	 * the verifier allows it.
+> > +	 */
+> > +	if (f >= agfl_size || l >= agfl_size)
+> > +		return true;
+> > +	if (c > agfl_size)
+> > +		return true;
+> > +
+> > +	/*
+> > +	 * Check consistency between the on-disk count and the active range. An
+> > +	 * agfl padding mismatch manifests as an inconsistent flcount.
+> > +	 */
+> > +	if (c && l >= f)
+> > +		active = l - f + 1;
+> > +	else if (c)
+> > +		active = agfl_size - f + l + 1;
+> > +	else
+> > +		active = 0;
+> > +
+> > +	return active != c;
+> > +}
+> > +
+> > +/*
+> > + * Reset the agfl to an empty state. Ignore/drop any existing blocks since the
+> > + * agfl content cannot be trusted. Warn the user that a repair is required to
+> > + * recover leaked blocks.
+> > + *
+> > + * The purpose of this mechanism is to handle filesystems affected by the agfl
+> > + * header padding mismatch problem. A reset keeps the filesystem online with a
+> > + * relatively minor free space accounting inconsistency rather than suffer the
+> > + * inevitable crash from use of an invalid agfl block.
+> > + */
+> > +static void
+> > +xfs_agfl_reset(
+> > +	struct xfs_trans	*tp,
+> > +	struct xfs_buf		*agbp,
+> > +	struct xfs_perag	*pag)
+> > +{
+> > +	struct xfs_mount	*mp = tp->t_mountp;
+> > +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+> > +
+> > +	ASSERT(pag->pagf_agflreset);
+> > +	trace_xfs_agfl_reset(mp, agf, 0, _RET_IP_);
+> > +
+> > +	xfs_warn(mp,
+> > +	       "WARNING: Reset corrupted AGFL on AG %u. %d blocks leaked. "
+> > +	       "Please unmount and run xfs_repair.",
+> > +	         pag->pag_agno, pag->pagf_flcount);
+> > +
+> > +	agf->agf_flfirst = 0;
+> > +	agf->agf_fllast = cpu_to_be32(xfs_agfl_size(mp) - 1);
+> > +	agf->agf_flcount = 0;
+> > +	xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLFIRST | XFS_AGF_FLLAST |
+> > +				    XFS_AGF_FLCOUNT);
+> > +
+> > +	pag->pagf_flcount = 0;
+> > +	pag->pagf_agflreset = false;
+> > +}
+> > +
+> > +/*
+> >   * Decide whether to use this allocation group for this allocation.
+> >   * If so, fix up the btree freelist's size.
+> >   */
+> > @@ -2123,6 +2210,10 @@ xfs_alloc_fix_freelist(
+> >  		}
+> >  	}
+> >  
+> > +	/* reset a padding mismatched agfl before final free space check */
+> > +	if (pag->pagf_agflreset)
+> > +		xfs_agfl_reset(tp, agbp, pag);
+> > +
+> >  	/* If there isn't enough total space or single-extent, reject it. */
+> >  	need = xfs_alloc_min_freelist(mp, pag);
+> >  	if (!xfs_alloc_space_available(args, need, flags))
+> > @@ -2279,6 +2370,7 @@ xfs_alloc_get_freelist(
+> >  		agf->agf_flfirst = 0;
+> >  
+> >  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> > +	ASSERT(!pag->pagf_agflreset);
+> >  	be32_add_cpu(&agf->agf_flcount, -1);
+> >  	xfs_trans_agflist_delta(tp, -1);
+> >  	pag->pagf_flcount--;
+> > @@ -2390,6 +2482,7 @@ xfs_alloc_put_freelist(
+> >  		agf->agf_fllast = 0;
+> >  
+> >  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
+> > +	ASSERT(!pag->pagf_agflreset);
+> >  	be32_add_cpu(&agf->agf_flcount, 1);
+> >  	xfs_trans_agflist_delta(tp, 1);
+> >  	pag->pagf_flcount++;
+> > @@ -2597,6 +2690,7 @@ xfs_alloc_read_agf(
+> >  		pag->pagb_count = 0;
+> >  		pag->pagb_tree = RB_ROOT;
+> >  		pag->pagf_init = 1;
+> > +		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
+> >  	}
+> >  #ifdef DEBUG
+> >  	else if (!XFS_FORCED_SHUTDOWN(mp)) {
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index 1808f56decaa..10b90bbc5162 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -353,6 +353,7 @@ typedef struct xfs_perag {
+> >  	char		pagi_inodeok;	/* The agi is ok for inodes */
+> >  	uint8_t		pagf_levels[XFS_BTNUM_AGF];
+> >  					/* # of levels in bno & cnt btree */
+> > +	bool		pagf_agflreset; /* agfl requires reset before use */
+> >  	uint32_t	pagf_flcount;	/* count of blocks in freelist */
+> >  	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
+> >  	xfs_extlen_t	pagf_longest;	/* longest free space */
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 945de08af7ba..a982c0b623d0 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -1477,7 +1477,7 @@ TRACE_EVENT(xfs_extent_busy_trim,
+> >  		  __entry->tlen)
+> >  );
+> >  
+> > -TRACE_EVENT(xfs_agf,
+> > +DECLARE_EVENT_CLASS(xfs_agf_class,
+> >  	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
+> >  		 unsigned long caller_ip),
+> >  	TP_ARGS(mp, agf, flags, caller_ip),
+> > @@ -1533,6 +1533,13 @@ TRACE_EVENT(xfs_agf,
+> >  		  __entry->longest,
+> >  		  (void *)__entry->caller_ip)
+> >  );
+> > +#define DEFINE_AGF_EVENT(name) \
+> > +DEFINE_EVENT(xfs_agf_class, name, \
+> > +	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags, \
+> > +		 unsigned long caller_ip), \
+> > +	TP_ARGS(mp, agf, flags, caller_ip))
+> > +DEFINE_AGF_EVENT(xfs_agf);
+> > +DEFINE_AGF_EVENT(xfs_agfl_reset);
+> >  
+> >  TRACE_EVENT(xfs_free_extent,
+> >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
+> > -- 
+> > 2.13.6
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
