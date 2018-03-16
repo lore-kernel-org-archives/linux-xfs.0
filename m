@@ -1,171 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54602 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751699AbeCOSEC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 14:04:02 -0400
-Date: Thu, 15 Mar 2018 11:03:57 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs_repair: add flag -e to detect corrected errors
-Message-ID: <20180315180356.GZ4865@magnolia>
-References: <20180305150546.32191-1-jtulak@redhat.com>
- <20180315174521.33897-1-jtulak@redhat.com>
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:38544 "EHLO
+        mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750921AbeCPR7D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Mar 2018 13:59:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180315174521.33897-1-jtulak@redhat.com>
+In-Reply-To: <CAOQ4uxg=tK7fBCVuh74jzfYs99bp3XOSEUphpC01saCdEooLBA@mail.gmail.com>
+References: <CAOQ4uxg=tK7fBCVuh74jzfYs99bp3XOSEUphpC01saCdEooLBA@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 16 Mar 2018 19:59:02 +0200
+Message-ID: <CAOQ4uxiLDK8Y90KaWjOD2A9gc1Hw37EwfFLiAKqthv2VqBWq6w@mail.gmail.com>
+Subject: Re: Question about XFS_MAXINUMBER
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, overlayfs <linux-unionfs@vger.kernel.org>
 
-On Thu, Mar 15, 2018 at 06:45:20PM +0100, Jan Tulak wrote:
-> xfs_repair ends with a return code 0 if it finished ok, no matter if
-> there were some errors in the fs, or not. The new flag -e means that we
-> can avoid screenscraping and parsing text output to detect if an error
-> was found (and corrected).
-> 
-> If something could not be corrected or in any other case than the "found
-> something but fixed it all," the behaviour with this flag is unchanged.
-> 
-> Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> ---
->  man/man8/xfs_repair.8 | 14 ++++++++++----
->  repair/xfs_repair.c   | 17 +++++++++++++++--
->  2 files changed, 25 insertions(+), 6 deletions(-)
-> 
-> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> index 85e4dc97..1b197571 100644
-> --- a/man/man8/xfs_repair.8
-> +++ b/man/man8/xfs_repair.8
-> @@ -4,7 +4,7 @@ xfs_repair \- repair an XFS filesystem
->  .SH SYNOPSIS
->  .B xfs_repair
->  [
-> -.B \-dfLnPv
-> +.B \-defLnPv
->  ] [
->  .B \-m
->  .I maxmem
-> @@ -168,6 +168,9 @@ Repair dangerously. Allow
->  to repair an XFS filesystem mounted read only. This is typically done
->  on a root filesystem from single user mode, immediately followed by a reboot.
->  .TP
-> +.B \-e
-> +If any error was found and repaired, the exit code is 3 instead of the usual 0.
+On Fri, Mar 16, 2018 at 4:05 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+> Hi guys,
+>
+> I am trying to get a lower bound for unused inode number MSB on
+> a mounted xfs super block, so I can publish it on struct super_block.
+>
+> This doesn't need to be a tight lower bound, but it needs to be
+> a loewr bound that cannot change with growfs nor when
+> remounting with different options (i.e. inode64).
+>
+> This is needed for overlayfs to be able to use the unused upper bits
+> for overlayfs inode number namespace (see [1]).
+>
+> I realize that for a given agcount, a "soft" lower bound of unused
+> upper bits is agno_log-agblklog-inopblog, which makes the "hard"
 
-"If any metadata corruption was found, the status returned is 3..."
+Hmm, I copied that typo from the comment in xfs_format.h.
+Unless I am missing something the amount of unused upper bits
+is 64 - agno_log - agblklog - inopblog. Hence the "hard" limit below:
 
-Clarifying exactly what kinds of errors generate status 3, and making
-the language more consistent with the EXIT STATUS section.
-
-> +.TP
->  .B \-V
->  Prints the version number and exits.
->  .SS Checks Performed
-> @@ -512,14 +515,17 @@ will return a status of 1 if filesystem corruption was detected and
->  0 if no filesystem corruption was detected.
->  .B xfs_repair
->  run without the \-n option will always return a status code of 0 if
-> -it completes without problems.  If a runtime error is encountered
-> -during operation, it will return a status of 1.  In this case,
-> +it completes without problems, unless the flag
-> +.B -e
-> +is used. If it is used, then status code 3 is reported when any issue with the
-
-"...status 3 is returned..."
-
-> +filesystem was found, but could be fixed. If a runtime error is encountered during
-> +operation, it will return a status of 1. In this case,
->  .B xfs_repair
->  should be restarted.  If
->  .B xfs_repair is unable
->  to proceed due to a dirty log, it will return a status of 2.  See below.
->  .SH DIRTY LOGS
-> -Due to the design of the XFS log, a dirty log can only be replayed 
-> +Due to the design of the XFS log, a dirty log can only be replayed
->  by the kernel, on a machine having the same CPU architecture as the
->  machine which was writing to the log.
->  .B xfs_repair
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 312a0d08..94015da6 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -77,6 +77,7 @@ static char *c_opts[] = {
->  static int	bhash_option_used;
->  static long	max_mem_specified;	/* in megabytes */
->  static int	phase2_threads = 32;
-> +static int report_corrected = 0;
-
-It is not necessary to initialize static global variables to zero.
-
-Also, bool not int because the value is boolean.
-
->  static void
->  usage(void)
-> @@ -97,6 +98,7 @@ usage(void)
->  "  -o subopts   Override default behaviour, refer to man page.\n"
->  "  -t interval  Reporting interval in seconds.\n"
->  "  -d           Repair dangerously.\n"
-> +"  -e           Exit with a non-zero code even when all errors were repaired.\n"
->  "  -V           Reports version and exits.\n"), progname);
->  	exit(1);
->  }
-> @@ -214,12 +216,13 @@ process_args(int argc, char **argv)
->  	ag_stride = 0;
->  	thread_count = 1;
->  	report_interval = PROG_RPT_DEFAULT;
-> +	report_corrected = 0;
-
-(or here)
-
->  
->  	/*
->  	 * XXX have to add suboption processing here
->  	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
->  	 */
-> -	while ((c = getopt(argc, argv, "c:o:fl:m:r:LnDvVdPt:")) != EOF)  {
-> +	while ((c = getopt(argc, argv, "c:o:fl:m:r:LnDvVdPet:")) != EOF)  {
->  		switch (c) {
->  		case 'D':
->  			dumpcore = 1;
-> @@ -329,6 +332,9 @@ process_args(int argc, char **argv)
->  		case 't':
->  			report_interval = (int)strtol(optarg, NULL, 0);
->  			break;
-> +		case 'e':
-> +			report_corrected = 1;
-> +			break;
->  		case '?':
->  			usage();
->  		}
-> @@ -1096,5 +1102,12 @@ _("Repair of readonly mount complete.  Immediate reboot encouraged.\n"));
->  
->  	free(msgbuf);
->  
-> -	return (0);
-> +	if (report_corrected) {
-> +		if (fs_is_dirty)
-> +			return (3);
-> +		else
-> +			return (0);
-> +	} else {
-> +		return (0);
-> +	}
-
-if (fs_is_dirty && report_corrected)
-	return (3);
-return (0);
-
-?
-
---D
-
->  }
-> -- 
-> 2.15.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> lower bound 32-agblklog-inopblog, so I think I can use this number.
+>
+> I was staring at this definition and tried to figure out where this
+> absolute limit of 56 used bits came from:
+>  #define XFS_MAXINUMBER          ((xfs_ino_t)((1ULL << 56) - 1ULL))
+>
+> Is this number really correct? If yes, then where does the constrain
+> on maximum 56 bits come from?
+>
+> Thanks,
+> Amir.
+>
+> [1] https://marc.info/?l=linux-unionfs&m=151007386419753&w=2
