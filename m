@@ -1,61 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:39483 "EHLO
-        mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751617AbeCQIYk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Mar 2018 04:24:40 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180317080425.GH7000@dastard>
-References: <CAOQ4uxg=tK7fBCVuh74jzfYs99bp3XOSEUphpC01saCdEooLBA@mail.gmail.com>
- <20180316222456.GG7000@dastard> <CAJfpegvoFwEVP6ijUW3iUpfc4_2xTiw=AfE8P6O6VDhrGiDEqw@mail.gmail.com>
- <20180317080425.GH7000@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sat, 17 Mar 2018 10:24:39 +0200
-Message-ID: <CAOQ4uxhubJhspfj+x7yRkTJ4rUXyhZoF0x3kjuFyv-0=Lxrctw@mail.gmail.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24589 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754026AbeCRXEs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Mar 2018 19:04:48 -0400
+Date: Mon, 19 Mar 2018 10:02:59 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Question about XFS_MAXINUMBER
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <20180318230259.GJ7000@dastard>
+References: <CAOQ4uxhubJhspfj+x7yRkTJ4rUXyhZoF0x3kjuFyv-0=Lxrctw@mail.gmail.com>
+ <CAOQ4uxh0H8mbbAZt0MEdLGRY-8Aqg2c9UFM56-KL2b90fLYCFQ@mail.gmail.com>
+ <20180317212814.GI7000@dastard>
+ <CAOQ4uxit=nHvd2C080QeM27icSFra+0Anwu8vXqs4sd=8tCCNg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxit=nHvd2C080QeM27icSFra+0Anwu8vXqs4sd=8tCCNg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Amir Goldstein <amir73il@gmail.com>
 Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>
 
-On Sat, Mar 17, 2018 at 10:04 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sat, Mar 17, 2018 at 06:40:23AM +0100, Miklos Szeredi wrote:
-[...]
->> I ask, because we've thought long and hard about what to do for
->> multiplexing inum space in overlayfs, and found no other sane options.
->> Ideas welcome, of course.
->
-> Why do you need to "multiplex" the inum space? perhaps you'd do
-> better to start with a description of why you want to play games
-> with inode numbers, rather than just posting a patch to steal bits
-> from other filesytem inode number spaces....
->
+On Sun, Mar 18, 2018 at 08:21:16AM +0200, Amir Goldstein wrote:
+> On Sat, Mar 17, 2018 at 11:28 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Sat, Mar 17, 2018 at 09:56:19AM +0200, Amir Goldstein wrote:
+> >> On Sat, Mar 17, 2018 at 7:40 AM, Miklos Szeredi <miklos@szeredi.hu> wrote:
+> >> > On Fri, Mar 16, 2018 at 11:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >> >> On Fri, Mar 16, 2018 at 04:05:22PM +0200, Amir Goldstein wrote:
+> >> >>> Hi guys,
+> >> >>>
+> >> >>> I am trying to get a lower bound for unused inode number MSB on
+> >> >>> a mounted xfs super block, so I can publish it on struct super_block.
+> >> >>
+> >> >> Sorry, what?
+> >> >>
+> >> >> The inode number is owned by the filesystem - nobody should be
+> >> >> touching it or making assumptions they can screw with it in any way.
+> >> >>
+> >>
+> >> Let me clarify with the simplest example:
+> >>
+> >> With overlay of 2 layers, lower and upper on 2 different xfs fs
+> >> assuming that stat(2) from xfs will not be using the 63 MSB:
+> >>
+> >> On stat(2) of an overlay upper inode we want to return:
+> >>   st_dev = <overlay anon bdev>
+> >>   st_ino = <real upper st_ino>
+> >>
+> >> On stat(2) of an overlay lower inode we want to return:
+> >>   st_dev = <overlay anon bdev>
+> >>   st_ino = <real lower st_ino> | 1 << 63
 
-I think this patch perhaps explains best what we want to do:
-https://marc.info/?l=linux-unionfs&m=151007386219743&w=2
+[....]
 
-I had already given a simple example in an earlier response.
+> I should have mentioned that "foo" is a pure upper - a file that was created
+> as upper and let's suppose the real ino of "foo" in upper fs is 10.
+> And let's suppose that the real ino of "bar" on lower fs is also 10, which is
+> possible when lower fs is a different fs than upper fs.
 
-As the the "why" question, we have several requirements for
-overlay inode numbers:
-1. st_ino is persistent
-2. st_ino/st_dev pair is unique in the system
-3. st_ino is consistent with d_ino
-4. st_ino doesn't change on copy up
-5. st_dev is uniform across all overlay inodes
+Ok, so to close the loop. The problem is that overlay has no inode
+number space of it's own, nor does it have any persistent inode
+number mapping scheme. Hence overlay has no way of providing users
+with a consistent, unique {dev,ino #} tuple to userspace when it's
+different directories lie on different filesystems.
 
-With upstream overlayfs we meet all requirements above for
-the case of all underlying layers on the same fs, by using a real
-underlying inode st_ino and the overlay st_dev.
+[....]
 
-With the 'xino' patch set [1], we can meet all requirements above
-also for the case of underlying layers on different fs, by multiplpexing
-the inum space, as long as we know about unused high ino bits.
-The ovl-xino branch already has the xfs patch (not yet posted) to publish
-max_ino_bits.
+> > across different superblocks? Why do you need special "inode number
+> > bits" exposed to userspace to identify upper->lower inode
+> > mappings that overlay should already have a persistent mapping
+> > mechanism for?
+> 
+> Because real pure upper inode and lower inode can have the same
+> inode number and we want to multiplex our way our of this collision.
+> 
+> Note that we do NOT maintain a data structure for looking up used
+> lower/upper inode numbers, nor do we want to maintain a persistent
+> data structure for persistent overlay inode numbers that map to
+> real underlying inodes. AFAIK, aufs can use a small db for it's 'xino'
+> feature. This is something that we wish to avoid.
 
-Cheers!
-Amir.
+SO instead of maintaining your own data structure to provide the
+necessary guarantees, the solution is to steal bits from the
+underlying filesystem inode numbers on the assumption they they will
+never user them?
 
-[1] https://github.com/amir73il/linux/commits/ovl-xino
+What happens when a user upgrades their kernel, the underlying fs
+changes all it's inode numbers because it's done some virtual
+mapping thing for, say, having different inode number ranges for
+separate mount namespaces? And so instead of having N bits of free
+inode number space before upgrade, it now has zero? How will overlay
+react to this sort of change, given it could expose duplicate inode
+numbers....
+
+Quite frankly, I think this "steal bits from the underlying
+filesystems" mechanism is a recipe for trouble. If you want play
+these games, you get to keep all the broken bits when filesystems
+change the number of available bits.
+
+Given that overlay has a persistent inode numbering problem, why
+doesn't overlay just allocate and store it's own inode numbers and
+other required persistent state in an xattr? 
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
