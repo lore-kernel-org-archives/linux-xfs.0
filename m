@@ -1,65 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f174.google.com ([74.125.82.174]:45634 "EHLO
-        mail-ot0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967769AbeCSSeV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 14:34:21 -0400
-Received: by mail-ot0-f174.google.com with SMTP id q5-v6so7767044oth.12
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Mar 2018 11:34:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180319181930.GH1757@magnolia>
-References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152112914933.24669.5543317105428477772.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180319173345.GF1757@magnolia> <CAPcyv4hsLSR=eG8=yLtOhrOaUjqjV5S8pwwmP3oOLrknWQS6Mg@mail.gmail.com>
- <20180319181930.GH1757@magnolia>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 19 Mar 2018 11:34:20 -0700
-Message-ID: <CAPcyv4jrQhVULvq9VayPZHQTxTf_Fy=jgXFVWkjbbeeCfBqnXw@mail.gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:32894 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966229AbeCSTpO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Mar 2018 15:45:14 -0400
+Date: Mon, 19 Mar 2018 20:45:13 +0100
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH v6 12/15] xfs: require mmap lock for xfs_break_layouts()
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <20180319194513.GA3160@lst.de>
+References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com> <152112914933.24669.5543317105428477772.stgit@dwillia2-desk3.amr.corp.intel.com> <20180319173345.GF1757@magnolia> <CAPcyv4hsLSR=eG8=yLtOhrOaUjqjV5S8pwwmP3oOLrknWQS6Mg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4hsLSR=eG8=yLtOhrOaUjqjV5S8pwwmP3oOLrknWQS6Mg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, Mar 19, 2018 at 11:19 AM, Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
-> On Mon, Mar 19, 2018 at 10:57:55AM -0700, Dan Williams wrote:
->> On Mon, Mar 19, 2018 at 10:33 AM, Darrick J. Wong
->> <darrick.wong@oracle.com> wrote:
->> > On Thu, Mar 15, 2018 at 08:52:29AM -0700, Dan Williams wrote:
->> >> In preparation for adding coordination between truncate operations and
->> >> busy dax-pages, extend xfs_break_layouts() to assume it must be called
->> >> with the mmap lock held. This locking scheme will be required for
->> >> coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
->> >> pages mapped into the file's address space).
->> >
->> > If I'm reading this right, you've added a requirement (for xfs anyway)
->> > that we have to have grabbed MMAPLOCK_EXCL before calling break_layout()
->> > so that the layout breaking process will block until active dmas have
->> > finished.
->> >
->> > In 4.16 we added xfs_iolock_two_inodes_and_break_layout (in
->> > xfs_reflink.c) to break pnfs leases for files that are about to be
->> > reflinked (since pnfs and reflink aren't compatible either).  I think
->> > that function will have to be adapted to take the appropriate mmap locks
->> > too -- definitely the exclusive mmap lock for the destination file
->> > because we anticipate punching out blocks.  I'm not sure about the
->> > source file; I think taking the shared mmap lock is fine for that?
->>
->> I don't see anything to adapt with respect to mmap locks since reflink
->> and dax are mutually exclusive. The new lock coordination and layout
->> breaking in xfs_break_dax_layouts() only applies to dax vs truncate,
->> so xfs_iolock_two_inodes_and_break_layout() looks ok to me as is.
->
-> I was aiming for DAX + reflink someday working together.  :)
+On Mon, Mar 19, 2018 at 10:57:55AM -0700, Dan Williams wrote:
+> I don't see anything to adapt with respect to mmap locks since reflink
+> and dax are mutually exclusive.
 
-Of course, but then fixing up xfs_iolock_two_inodes_and_break_layout()
-is a follow on consideration from this patch series.
-
-> As far as that goes, I think the only thing we really have to do is
-> figure out how to make iomap_begin do the cow operation before letting
-> userspace write to (or MAP_SYNC a writable region) pmem, right?
-
-Yes, I think so, trigger xfs_break_dax_layouts() on the destination
-inode on any write fault.
+For now.  I'll change that pretty soon.
