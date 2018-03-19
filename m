@@ -1,60 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60400 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752527AbeCUS71 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 14:59:27 -0400
-Subject: Re: [PATCH 5/4] misc: remove darwin, irix, and freebsd support
-References: <152151529988.18312.2660325658864402943.stgit@magnolia>
- <20180321031933.GO1757@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <da8feaae-b6a3-613e-71c8-38d16981d701@redhat.com>
-Date: Wed, 21 Mar 2018 13:59:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180321031933.GO1757@magnolia>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-cys01nam02on0108.outbound.protection.outlook.com ([104.47.37.108]:27776
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966944AbeCSQOT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Mar 2018 12:14:19 -0400
+From: Robert Dorr <rdorr@microsoft.com>
+Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+Date: Mon, 19 Mar 2018 16:14:16 +0000
+Message-ID: <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
+References: <20180301014144.28892-1-david@fromorbit.com>
+ <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
+ <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
+ <20180313051037.GC18129@dastard>
+ <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+ <20180313161242.GA11168@lst.de>
+ <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+ <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
+In-Reply-To: <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
 
-On 3/20/18 10:19 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Remove these ports since they're not actively maintained:
-> 
-> IRIX support was partially removed last year; the OS itself hasn't had a
-> release since 2006.
-> 
-> FreeBSD dropped XFS support in v9.3, which EOLd in January 2017.
-> 
-> Darwin/OSX has never supported XFS.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Probably should clean up more than just whole files, see bits & pieces
-sprinkled throughout:
-
-include/builddefs.in 
-include/platform_defs.h.in
-include/gnukfreebsd.h (?)
-include/xfs.h 
-libhandle/Makefile
-quota/Makefile
-io/Makefile
-*/Makefile
-m4/package_libcdev.m4 (AC_HAVE_GETMNTINFO)
-
-...maybe even a wholesale removal of all references to PKG_PLATFORM at this point?
-
-I suppose we can start with this and clean up more as we go.
-
-> ---
->  include/darwin.h  |  315 -----------------------------------------------------
->  include/freebsd.h |  210 -----------------------------------
->  libxfs/Makefile   |    2 
->  libxfs/darwin.c   |  144 ------------------------
->  libxfs/freebsd.c  |  201 ----------------------------------
->  libxfs/irix.c     |  111 -------------------
+QXdlc29tZSBuZXdzIG9uIHRoZSBzcGluLiAgIA0KDQpBcmUgeW91IGdvaW5nIHRvIGJlIGFibGUg
+dG8gbWFrZSBjaGFuZ2VzIHRvIEVYVDQgdG8gYWNjb21tb2RhdGUgUkVRX0ZVQSB3aXRob3V0IGdl
+bmVyaWNfd3JpdGVfZmx1c2ggdG8gaW1wcm92ZSBwZXJmb3JtYW5jZSBsaWtlIHdhcyBkb25lIGZv
+ciB4ZnM/DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW4gS2FyYSA8amFj
+a0BzdXNlLmN6PiANClNlbnQ6IE1vbmRheSwgTWFyY2ggMTksIDIwMTggMTE6MDcgQU0NClRvOiBS
+b2JlcnQgRG9yciA8cmRvcnJAbWljcm9zb2Z0LmNvbT4NCkNjOiBDaHJpc3RvcGggSGVsbHdpZyA8
+aGNoQGxzdC5kZT47IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT47IERhbiBXaWxs
+aWFtcyA8ZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tPjsgbGludXgteGZzQHZnZXIua2VybmVsLm9y
+ZzsgbGludXgtZnNkZXZlbCA8bGludXgtZnNkZXZlbEB2Z2VyLmtlcm5lbC5vcmc+OyBKYW4gS2Fy
+YSA8amFja0BzdXNlLmN6PjsgVGhlb2RvcmUgVHMnbyA8dHl0c29AbWl0LmVkdT47IE1hdHRoZXcg
+V2lsY294IDxtYXdpbGNveEBtaWNyb3NvZnQuY29tPjsgU2NvdHQgS29uZXJzbWFubiA8c2NvdHRr
+b25AbWljcm9zb2Z0LmNvbT47IFNsYXZhIE9rcyA8c2xhdmFvQG1pY3Jvc29mdC5jb20+OyBKYXNy
+YWogRGFuZ2UgPGphc3JhamRAbWljcm9zb2Z0LmNvbT47IE1pY2hhZWwgTmVsc29uIDxtaWNuQG1p
+Y3Jvc29mdC5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIXSBbUkZDXSBpb21hcDogVXNlIEZVQSBm
+b3IgcHVyZSBkYXRhIE9fRFNZTkMgRElPIHdyaXRlcw0KDQpPbiBUdWUgMTMtMDMtMTggMTg6NTI6
+NTcsIFJvYmVydCBEb3JyIHdyb3RlOg0KPiBJIHRyaWVkIHRoZSBSV0ZfT0RTWU5DIGFuZCB4ZnMg
+c2VlbXMgdG8gaG9ub3IgcHJvcGVybHkgYnV0IGl0IGNhdXNlcyANCj4gZXh0NCB0byBnbyBzcGlu
+IG91dCBhIHNpbmdsZSBDUFUgYW5kIGhhbmcgdGhlIHN5c3RlbS4g8J+Yig0KDQpZZWFoLCB0aGF0
+J3MgYSBidWcgaW4gZ2VuZXJpYyBkaXJlY3QgSU8gY29kZSB0aGF0IEkndmUganVzdCByZWNlbnRs
+eSBmaXhlZA0KKGQ5YzEwZTViODg2MyAiZGlyZWN0LWlvOiBGaXggc2xlZXAgaW4gYXRvbWljIGR1
+ZSB0byBzeW5jIEFJTyIgaW4gNC4xNi1yYzQpLg0KDQoJCQkJCQkJCUhvbnphDQoNCj4gDQo+IA0K
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDaHJpc3RvcGggSGVsbHdpZyA8
+aGNoQGxzdC5kZT4NCj4gU2VudDogVHVlc2RheSwgTWFyY2ggMTMsIDIwMTggMTE6MTMgQU0NCj4g
+VG86IFJvYmVydCBEb3JyIDxyZG9yckBtaWNyb3NvZnQuY29tPg0KPiBDYzogRGF2ZSBDaGlubmVy
+IDxkYXZpZEBmcm9tb3JiaXQuY29tPjsgRGFuIFdpbGxpYW1zIA0KPiA8ZGFuLmoud2lsbGlhbXNA
+aW50ZWwuY29tPjsgbGludXgteGZzQHZnZXIua2VybmVsLm9yZzsgQ2hyaXN0b3BoIA0KPiBIZWxs
+d2lnIDxoY2hAbHN0LmRlPjsgbGludXgtZnNkZXZlbCA8bGludXgtZnNkZXZlbEB2Z2VyLmtlcm5l
+bC5vcmc+OyANCj4gSmFuIEthcmEgPGphY2tAc3VzZS5jej47IFRoZW9kb3JlIFRzJ28gPHR5dHNv
+QG1pdC5lZHU+OyBNYXR0aGV3IFdpbGNveCANCj4gPG1hd2lsY294QG1pY3Jvc29mdC5jb20+OyBT
+Y290dCBLb25lcnNtYW5uIDxzY290dGtvbkBtaWNyb3NvZnQuY29tPjsgDQo+IFNsYXZhIE9rcyA8
+c2xhdmFvQG1pY3Jvc29mdC5jb20+OyBKYXNyYWogRGFuZ2UgDQo+IDxqYXNyYWpkQG1pY3Jvc29m
+dC5jb20+OyBNaWNoYWVsIE5lbHNvbiA8bWljbkBtaWNyb3NvZnQuY29tPg0KPiBTdWJqZWN0OiBS
+ZTogW1BBVENIXSBbUkZDXSBpb21hcDogVXNlIEZVQSBmb3IgcHVyZSBkYXRhIE9fRFNZTkMgRElP
+IA0KPiB3cml0ZXMNCj4gDQo+ID4gSSB0aGluayB0aGUgYW5zd2VyIGlzIHRoZSBpb21hcCogbG9n
+aWMgbWFrZXMgc3VyZSB0byBpc3N1ZSBnZW5lcmljX3dyaXRlX3N5bmMgZm9yIE9fRFNZTkMgVzEg
+YWZ0ZXIgVzEgaXMgY29tcGxldGVkIGJ5IGhhcmR3YXJlIGFuZCB0aGVuIHdhaXRzIGZvciBjb21w
+bGV0aW9uIG9mIHRoZSBmbHVzaCByZXF1ZXN0IChSRVFfUFJFRkxVU0gpIGJlZm9yZSBXMSBpcyBy
+ZXR1cm5lZCB0byB0aGUgQUlPIGNvbXBsZXRpb24gcmluZywgcHJldmVudGluZyBpb19nZXRldmVu
+dHMgZnJvbSBwcm9jZXNzaW5nIFcxIGJlZm9yZSB0aGUgZmx1c2ggb2NjdXJzIGFuZCBjb21wbGV0
+ZXMuICAgSSBqdXN0IG5lZWQgcHJvcGVyIGNvbmZpcm1hdGlvbiBmcm9tIHRoZSBleHBlcnRzIG9u
+IHRoaXMgY29kZSB0aGF0IHRoaXMgaXMgdGhlIGV4cGVjdGVkIGJlaGF2aW9yLg0KPiANCj4gWWVz
+LiB0aGF0IGlzIHRoZSBjYXNlLg0KPiANCj4gPiBGb3IgU1FMIFNlcnZlciB1c2luZyBPX0RJUkVD
+VCB8IE9fRFNZTkMgb24gY3VycmVudCBrZXJuZWxzIGlzIHZlcnkgcGVyZm9ybWFuY2UgaW1wYWN0
+aW5nLiAgIEluc3RlYWQgd2UgZW5hYmxlIGEgbW9kZSBmb3IgU1FMIHRoYXQgb3BlbnMgT19ESVJF
+Q1Qgb25seSBhbmQgaXNzdWVzIGZzeW5jL2ZkYXRhc3luYyB3aGVuIHdlIGFyZSBoYXJkZW5pbmcg
+bG9nIGZpbGVzIG9yIGNoZWNrcG9pbnRpbmcgZGF0YSBmaWxlcy4gICBUaGlzIHJlZHVjZXMgdGhl
+IHdyaXRlLCBmbHVzaCwgd3JpdGUsIGZsdXNoIHBhdHRlcm4gYWxsb3dpbmcgZm9yIHdyaXRlLCB3
+cml0ZSwgd3JpdGUsIC4uLiB0aGVuIGZsdXNoIGFzIHdlIG9ubHkgaXNzdWUgZmx1c2ggcmVxdWVz
+dHMgd2hlbiByZXF1aXJlZCB0byBtYWludGFpbiB0aGUgZGF0YSBpbnRlZ3JpdHkgYm91bmRhcmll
+cyBvZiBTUUwgU2VydmVyLiAgVGhlIHBlcmZvcm1hbmNlIGlzIHNpZ25pZmljYW50bHkgYmV0dGVy
+IHRoZW4gdGhlIGRldmljZSBmbHVzaCBmb3IgZWFjaCB3cml0ZSBhcyB5b3UgY2FuIGltYWdpbmUu
+DQo+ID4gDQo+ID4gVGVzdGluZyBzaG93cyB0aGUgRlVBIGVuaGFuY2VtZW50IGlzIGJldHRlciB0
+aGVuIHRoZSB3cml0ZSwgZmx1c2ggcGF0dGVybi4gICBGb3IgU1FMIFNlcnZlciB3ZSB3YW50IHRv
+IGR5bmFtaWNhbGx5IG9wZW4gd2l0aCBPX0RJUkVDVCB8IE9fRFNZTkMgd2hlbiBSRVFfRlVBIGNh
+biBiZSBwcm9wZXJseSB1c2VkIGFuZCBvcGVuIHdpdGggT19ESVJFQ1QgYW5kIGxldmVyYWdlIFNR
+TCBTZXJ2ZXIncyBhbHRlcm5hdGUgZmx1c2ggc2NoZW1lIHdoZW4gcnVubmluZyBvbiBvbGRlciBr
+ZXJuZWwgb3IgYSBzeXN0ZW0gdGhhdCBkb2VzIG5vdCBzdXBwb3J0IEZVQSAoU0FUQSwgSURFLCAu
+Li4pDQo+IA0KPiBUaGVyZSBpcyBubyByZWFsbHkgZ29vZCB3YXkgdG8gZmlndXJlIHRoaXMgb3V0
+IGV4Y2VwdCBmb3IgYmVuY2htYXJraW5nLCBnaXZlbiB0aGF0IHRoZSBGVUEgdXNlIGFuIGltcGxl
+bWVudGF0aW9uIGRldGFpbC4NCj4gDQo+IEJ0dywgYW5vdGhlciBmZWF0dXJlIHRoYXQgbWlnaHQg
+YmUgaW50ZXJlc3RpbmcgdG8geW91IGlzIHRoZSBSV0ZfRFNZTkMgZmxhZyB0byB0aGUgcHdyaXRl
+djIgc3lzY2FsbCwgd2hpY2ggYWxsb3dzIHRvIGFwcGx5IE9fRFNZTkMgc2VtYW50aWNzIG9uIGEg
+cGVyLUkvTyBiYXNpcyBpbnN0ZWFkIG9mIHVzaW5nIGl0IGF0IG9wZW4gdGltZS4NCi0tDQpKYW4g
+S2FyYSA8amFja0BzdXNlLmNvbT4NClNVU0UgTGFicywgQ1INCg==
