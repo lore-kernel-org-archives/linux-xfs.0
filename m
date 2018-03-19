@@ -1,153 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53916 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751873AbeCUQN1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 12:13:27 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 50B7F80462
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Mar 2018 16:13:27 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 20701611A0
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Mar 2018 16:13:27 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: clean up xfs_mount allocation and dynamic initializers
-Date: Wed, 21 Mar 2018 12:13:25 -0400
-Message-Id: <20180321161325.12773-1-bfoster@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:56660 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966080AbeCSRd7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 13:33:59 -0400
+Date: Mon, 19 Mar 2018 10:33:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v6 12/15] xfs: require mmap lock for xfs_break_layouts()
+Message-ID: <20180319173345.GF1757@magnolia>
+References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152112914933.24669.5543317105428477772.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152112914933.24669.5543317105428477772.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-kernel@vger.kernel.org
 
-Most of the generic data structures embedded in xfs_mount are
-dynamically initialized immediately after mp is allocated. A few
-fields are left out and initialized during the xfs_mountfs()
-sequence, after mp has been attached to the superblock.
+On Thu, Mar 15, 2018 at 08:52:29AM -0700, Dan Williams wrote:
+> In preparation for adding coordination between truncate operations and
+> busy dax-pages, extend xfs_break_layouts() to assume it must be called
+> with the mmap lock held. This locking scheme will be required for
+> coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
+> pages mapped into the file's address space).
 
-To clean this up and help prevent premature access of associated
-fields, refactor xfs_mount allocation and all dependent init calls
-into a new helper. This self-documents that all low level data
-structures (i.e., locks, trees, etc.) should be initialized before
-xfs_mount is attached to the superblock.
+If I'm reading this right, you've added a requirement (for xfs anyway)
+that we have to have grabbed MMAPLOCK_EXCL before calling break_layout()
+so that the layout breaking process will block until active dmas have
+finished.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+In 4.16 we added xfs_iolock_two_inodes_and_break_layout (in
+xfs_reflink.c) to break pnfs leases for files that are about to be
+reflinked (since pnfs and reflink aren't compatible either).  I think
+that function will have to be adapted to take the appropriate mmap locks
+too -- definitely the exclusive mmap lock for the destination file
+because we anticipate punching out blocks.  I'm not sure about the
+source file; I think taking the shared mmap lock is fine for that?
 
-I realized after the fact that this steps on the ability to instrument
-the use-before-init variant[1] of the problematic radix tree access on
-failed mount issue that Dave tracked down. This is because we'd
-immediately initialize the structure and thus a subsequent memset()
-would ultimately require another proper initialization.
+--D
 
-As Dave noted in that thread, we could alternatively instrument the
-use-after-free variant of the problem with a post-free delay of the mp.
-I actually wonder if a last step instrumented failure in fill_super()
-might be a more broadly useful test because it provides future coverage
-of the entire mount teardown sequence rather than just the bad radix
-tree access.
-
-On the flipside, this patch isn't the cleanup of the century so I'd be
-fine with dropping it in favor of [1], but I think it's worthy enough to
-consider.
-
-Brian
-
-[1] https://marc.info/?l=linux-xfs&m=152152202700598&w=2
-
- fs/xfs/libxfs/xfs_sb.c |  1 -
- fs/xfs/xfs_mount.c     |  2 --
- fs/xfs/xfs_super.c     | 39 +++++++++++++++++++++++++++++----------
- 3 files changed, 29 insertions(+), 13 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index a55f7a45fa78..53433cc024fd 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -731,7 +731,6 @@ xfs_sb_mount_common(
- 	struct xfs_sb	*sbp)
- {
- 	mp->m_agfrotor = mp->m_agirotor = 0;
--	spin_lock_init(&mp->m_agirotor_lock);
- 	mp->m_maxagi = mp->m_sb.sb_agcount;
- 	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
- 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 6f5a5e6764d8..a901b86772f8 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -817,8 +817,6 @@ xfs_mountfs(
- 	/*
- 	 * Allocate and initialize the per-ag data.
- 	 */
--	spin_lock_init(&mp->m_perag_lock);
--	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
- 	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
- 	if (error) {
- 		xfs_warn(mp, "Failed per-ag init: %d", error);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 951271f57d00..612c1d5348b3 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1579,29 +1579,48 @@ xfs_destroy_percpu_counters(
- 	percpu_counter_destroy(&mp->m_fdblocks);
- }
- 
--STATIC int
--xfs_fs_fill_super(
--	struct super_block	*sb,
--	void			*data,
--	int			silent)
-+static struct xfs_mount *
-+xfs_mount_alloc(
-+	struct super_block	*sb)
- {
--	struct inode		*root;
--	struct xfs_mount	*mp = NULL;
--	int			flags = 0, error = -ENOMEM;
-+	struct xfs_mount	*mp;
- 
- 	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
- 	if (!mp)
--		goto out;
-+		return NULL;
- 
-+	mp->m_super = sb;
- 	spin_lock_init(&mp->m_sb_lock);
-+	spin_lock_init(&mp->m_agirotor_lock);
-+	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
-+	spin_lock_init(&mp->m_perag_lock);
- 	mutex_init(&mp->m_growlock);
- 	atomic_set(&mp->m_active_trans, 0);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
- 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
- 	mp->m_kobj.kobject.kset = xfs_kset;
-+	return mp;
-+}
- 
--	mp->m_super = sb;
-+
-+STATIC int
-+xfs_fs_fill_super(
-+	struct super_block	*sb,
-+	void			*data,
-+	int			silent)
-+{
-+	struct inode		*root;
-+	struct xfs_mount	*mp = NULL;
-+	int			flags = 0, error = -ENOMEM;
-+
-+	/*
-+	 * allocate mp and do all low-level struct initializations before we
-+	 * attach it to the super
-+	 */
-+	mp = xfs_mount_alloc(sb);
-+	if (!mp)
-+		goto out;
- 	sb->s_fs_info = mp;
- 
- 	error = xfs_parseargs(mp, (char *)data);
--- 
-2.13.6
-
+> 
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  fs/xfs/xfs_file.c  |   14 +++++++++-----
+>  fs/xfs/xfs_ioctl.c |    5 +----
+>  fs/xfs/xfs_iops.c  |   10 +++++++---
+>  fs/xfs/xfs_pnfs.c  |    6 ++++--
+>  4 files changed, 21 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 9ea08326f876..ba969019bf26 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -350,9 +350,16 @@ xfs_file_aio_write_checks(
+>  	if (error <= 0)
+>  		return error;
+>  
+> +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> +	*iolock |= XFS_MMAPLOCK_EXCL;
+>  	error = xfs_break_layouts(inode, iolock);
+> -	if (error)
+> +	if (error) {
+> +		*iolock &= ~XFS_MMAPLOCK_EXCL;
+> +		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+>  		return error;
+> +	}
+> +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+> +	*iolock &= ~XFS_MMAPLOCK_EXCL;
+>  
+>  	/*
+>  	 * For changing security info in file_remove_privs() we need i_rwsem
+> @@ -768,7 +775,7 @@ xfs_file_fallocate(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	long			error;
+>  	enum xfs_prealloc_flags	flags = 0;
+> -	uint			iolock = XFS_IOLOCK_EXCL;
+> +	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+>  	loff_t			new_size = 0;
+>  	bool			do_file_insert = false;
+>  
+> @@ -782,9 +789,6 @@ xfs_file_fallocate(
+>  	if (error)
+>  		goto out_unlock;
+>  
+> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> -	iolock |= XFS_MMAPLOCK_EXCL;
+> -
+>  	if (mode & FALLOC_FL_PUNCH_HOLE) {
+>  		error = xfs_free_file_space(ip, offset, len);
+>  		if (error)
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 89fb1eb80aae..4151fade4bb1 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -614,7 +614,7 @@ xfs_ioc_space(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct iattr		iattr;
+>  	enum xfs_prealloc_flags	flags = 0;
+> -	uint			iolock = XFS_IOLOCK_EXCL;
+> +	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+>  	int			error;
+>  
+>  	/*
+> @@ -648,9 +648,6 @@ xfs_ioc_space(
+>  	if (error)
+>  		goto out_unlock;
+>  
+> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> -	iolock |= XFS_MMAPLOCK_EXCL;
+> -
+>  	switch (bf->l_whence) {
+>  	case 0: /*SEEK_SET*/
+>  		break;
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 951e84df5576..d23aa08426f9 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1028,13 +1028,17 @@ xfs_vn_setattr(
+>  
+>  	if (iattr->ia_valid & ATTR_SIZE) {
+>  		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+> -		uint			iolock = XFS_IOLOCK_EXCL;
+> +		uint			iolock;
+> +
+> +		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> +		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+>  
+>  		error = xfs_break_layouts(d_inode(dentry), &iolock);
+> -		if (error)
+> +		if (error) {
+> +			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+>  			return error;
+> +		}
+>  
+> -		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+>  		error = xfs_vn_setattr_size(dentry, iattr);
+>  		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+>  	} else {
+> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+> index aa6c5c193f45..9fe661c2d59c 100644
+> --- a/fs/xfs/xfs_pnfs.c
+> +++ b/fs/xfs/xfs_pnfs.c
+> @@ -38,12 +38,14 @@ xfs_break_layouts(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			error;
+>  
+> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL
+> +				| XFS_MMAPLOCK_EXCL));
+>  
+>  	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
+>  		xfs_iunlock(ip, *iolock);
+>  		error = break_layout(inode, true);
+> -		*iolock = XFS_IOLOCK_EXCL;
+> +		*iolock &= ~XFS_IOLOCK_SHARED;
+> +		*iolock |= XFS_IOLOCK_EXCL;
+>  		xfs_ilock(ip, *iolock);
+>  	}
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
