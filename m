@@ -1,104 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:62894 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753091AbeCTNIG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 09:08:06 -0400
-Date: Wed, 21 Mar 2018 00:08:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Question about XFS_MAXINUMBER
-Message-ID: <20180320130803.GQ18129@dastard>
-References: <CAOQ4uxhubJhspfj+x7yRkTJ4rUXyhZoF0x3kjuFyv-0=Lxrctw@mail.gmail.com>
- <CAOQ4uxh0H8mbbAZt0MEdLGRY-8Aqg2c9UFM56-KL2b90fLYCFQ@mail.gmail.com>
- <20180317212814.GI7000@dastard>
- <CAOQ4uxit=nHvd2C080QeM27icSFra+0Anwu8vXqs4sd=8tCCNg@mail.gmail.com>
- <20180318230259.GJ7000@dastard>
- <CAOQ4uxiHkW41RB4LogWi8+rp_NhoC+SHGNY9_ShdQi7OyJTTVA@mail.gmail.com>
- <20180320014709.GC1150@dastard>
- <CAOQ4uxh+90vyCOqhLXtNi0U+YTsi6nCYuZFJMPhBWUaRwSBDvQ@mail.gmail.com>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33770 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933303AbeCSVhn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 17:37:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxh+90vyCOqhLXtNi0U+YTsi6nCYuZFJMPhBWUaRwSBDvQ@mail.gmail.com>
+In-Reply-To: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com>
+References: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com>
+From: Cong Wang <xiyou.wangcong@gmail.com>
+Date: Mon, 19 Mar 2018 14:37:22 -0700
+Message-ID: <CAM_iQpVBmhiN05ZpxEZ2cNLSJpczc7z=Sz7a1tnUGeQimtDTYA@mail.gmail.com>
+Subject: Re: xfs: list corruption in xfs_setup_inode()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <dchinner@redhat.com>, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Tue, Mar 20, 2018 at 08:29:35AM +0200, Amir Goldstein wrote:
-> On Tue, Mar 20, 2018 at 3:47 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Mar 19, 2018 at 06:03:30AM +0200, Amir Goldstein wrote:
-> [...]
-> >> Well, it is not an assumption if filesystem is inclined to publish
-> >> s_max_ino_bits, which is not that different in concept from publishing
-> >> s_maxbytes and s_max_links, which are also limitations in current
-> >> kernel/sb that could be lifted in the future.
-> >
-> > It is different, because you're expecting to be able to publish
-> > persistent user visible information based on it.
-> >
-> > If we change s_max_ino_bits in the underlying filesystem, then
-> > overlay inode numbers change and that can cause all sorts of problem
-> > with things like filehandles, backups that use dev/inode number
-> > tuples to detect identical files, etc.  i.e. there's a heap of
-> > downstream impacts of changing inode numbers. If we have to
-> > publish s_max_ino_bits to the VFS, we essentially fix the ABI of the
-> > user visible inode number the filesysetm publishes. IOWs, we
-> > effectively can't change it without breaking external users.
-> >
-> 
-> You are right.
-> 
-> > I suspect you don't realise we already expose the full 64 bit
-> > inode number space completely to userspace through other ABIs. e.g.
-> > the bulkstat ioctls. We've already got applications that use the XFS
-> > inode number as a 64 bit value both to and from the kernel (e.g.
-> > xfs_dump, file handle encoding, etc), so the idea that we can now
-> > take bits back from what we've already agreed to expose to userspace
-> > is fraught with problems.
-> 
-> I'm sorry. There must be something I am missing.
-> Are users exposed to high ino bits via xfs tools other than NULLFSINO
-> NULLAGINO? If they are then I did not find where.
-> And w.r.t to NULLINO (-1), that ino is not exposed via getattr() and readdir(),
-> so not a problem for overlayfs.
+On Mon, Oct 30, 2017 at 2:55 PM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+> Hello,
+>
+> We triggered a list corruption (double add) warning below on our 4.9
+> kernel (the 4.9 kernel we use is based on -stable release, with only a
+> few unrelated networking backports):
 
-Bulkstat exposes the on-disk inode number directly to userspace, and
-other ioctls take those inode numbers back in as ioctl parameters
-(e.g.  as bulkstat iteration cookies) and as part of userspce
-constructed filehandles (i.e. in libhandle, xfs_fsr, xfsdump, etc).
-The filehandles are explicitly encoded with 64 bit inode numbers....
+We still keep getting this warning on 4.9 kernel. Looking into this again,
+it seems xfs_setup_inode() could be called twice if an XFS inode is gotten
+from disk? Once in xfs_iget() => xfs_setup_existing_inode(), and once
+in xfs_ialloc().
 
-> > That's the problem I see here - it's not that we /can't/ implement
-> > s_max_ino_bits, the problem is that once we publish it we can't
-> > change it because it will cause random breakage of applications
-> > using it. And because we've already effectively published it to
-> > userspace applications as s_max_ino_bits = 64, there's no scope for
-> > movement at all.
-> >
-> 
-> Agreed. So we can add an explicit compat feature bit to declare that user
-> would like to limit future use of high ino bits on his fs.
-> Makes me wonder, how come there is no feature to block "inode64"
-> mount option, so user can declare he wishes to keep the fs fully
-> compatible for mounting on 32bit systems?
+Does the following patch (compile-only) make any sense? Again, I don't
+want to pretend to understand XFS...
 
-Because inode64 was the original mechanism for allocating inodes.
-inode32 was introduced years after XFS was first shipped. You need
-to go ask the old Irix engineers why they implemented inode32 as a
-mount option and not an on-disk feature flag and created the mess
-that is the inode32 mount option.
 
-These days, inode32 reads 64 bit inode just fine - it just can't
-create new 64 bit inode numbers.  And if you *really* still need
-only 32 bit inodes in this day and age, there's that old xfs_reno
-tool:
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 604ee384a00a..6761b1f8fa2f 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -775,6 +775,7 @@ xfs_ialloc(
+        int             error;
+        struct timespec tv;
+        struct inode    *inode;
++       bool            had_imode;
 
-http://xfs.org/index.php/Unfinished_work#The_xfs_reno_tool
+        /*
+         * Call the space management code to pick
+@@ -801,6 +802,7 @@ xfs_ialloc(
+                return error;
+        ASSERT(ip != NULL);
+        inode = VFS_I(ip);
++       had_imode = !!inode->i_mode;
 
-CHeers,
+        /*
+         * We always convert v1 inodes to v2 now - we only support filesystems
+@@ -946,7 +948,8 @@ xfs_ialloc(
+        xfs_trans_log_inode(tp, ip, flags);
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+        /* now that we have an i_mode we can setup the inode structure */
+-       xfs_setup_inode(ip);
++       if (!had_imode)
++               xfs_setup_inode(ip);
+
+        *ipp = ip;
+        return 0;
