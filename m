@@ -1,248 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:36065 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751557AbeCTOtR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Mar 2018 10:49:17 -0400
-Content-Type: text/plain;
-        charset=gb2312
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Re: [RFC][PATCH] xfs: adjust size/used/avail information for quota-df
-From: cgxu519@gmx.com
-In-Reply-To: <20180315142549.GC45325@bfoster.bfoster>
-Date: Tue, 20 Mar 2018 22:49:00 +0800
-Content-Transfer-Encoding: 8BIT
-Message-Id: <F2C6F369-B24B-4383-8987-50C0F64155AD@gmx.com>
-References: <1520601355-180600-1-git-send-email-cgxu519@gmx.com>
- <20180315142549.GC45325@bfoster.bfoster>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:56184 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753019AbeCTNVR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 09:21:17 -0400
+Date: Wed, 21 Mar 2018 00:21:14 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: don't shrink the inode cache until after setup
+ completes
+Message-ID: <20180320132114.GS18129@dastard>
+References: <20180320050021.982-1-david@fromorbit.com>
+ <20180320050021.982-3-david@fromorbit.com>
+ <20180320120820.GB6107@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180320120820.GB6107@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: "cgxu519@gmx.com" <cgxu519@gmx.com>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hi Brian,
-
-I’m sorry for delayed reply, detail explanation is in inline mail.
-
-
-
-> 在 2018年3月15日，下午10:25，Brian Foster <bfoster@redhat.com> 写道：
+On Tue, Mar 20, 2018 at 08:08:20AM -0400, Brian Foster wrote:
+> On Tue, Mar 20, 2018 at 04:00:21PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We recently came across an oops on a 4.14 kernel in
+> > xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
+> > and so the m_perag_tree lookup walked into lala land.
+> > 
+> > We found a mount in a failed state, blocked on teh shrinker rwsem
+> > here:
+> > 
+> > mount_bdev()
+> >   deactivate_locked_super()
+> >     unregister_shrinker()
+> > 
+> > Essentially, the machine was under memory pressure when the mount
+> > was being run, xfs_fs_fill_super() failed after allocating the
+> > xfs_mount and attaching it to sb->s_fs_info. It then cleaned up and
+> > freed the xfs_mount, but the sb->s_fs_info field still pointed to
+> > the freed memory. Hence when the superblock shrinker then ran
+> > it fell off the bad pointer.
+> > 
 > 
-> On Fri, Mar 09, 2018 at 09:15:55PM +0800, Chengguang Xu wrote:
->> In order to more accurately reflect size/used/avail information
->> for quota-df, slightly adjust related counting logic.
->> 
->> Signed-off-by: Chengguang Xu <cgxu519@gmx.com>
->> ---
->> 
->> Hello folks,
->> 
->> Recently I’m testing  project quota  for our container users and found
->> sometimes the result of df command could not exactly represent
->> block/inode usage amount. So I checked  the logic in function xfs_qm_statvfs()
->> and I think it might be better if slightly adjusting the counting logic.
->> What do you think?
->> 
->> Terms:
->> # Size(F)   - The size field  in df result of filesystem
->> # Size(Q) - The size field of in df result of pquota-dir
->> # Used(F) - The used field  in df result of filesystem
->> # Used(Q) - The used field  in df result of pquota-dir
->> # Avail(F)  - The avail field  in df result of filesystem
->> # Avail(Q)  - The avail field  in df result of pquota-dir
->> # Used(A) - Actual used
->> 
->> Problems that I found.
->> 1) Avail(Q) can be higher than Avail(F)
+> So this sounds like the root cause of the crash is a use after free and
+> not necessarily a "use before initialized," correct? I see that
+> ->m_perag_tree should be zeroed on allocation, but I have no idea if the
+> radix tree code is robust enough to deal with that.
+
+Well, one symptom is use after free. It can also be used before it's
+initialised.
+
+> > Setting sb->s_fs_info to NULL in this case won't solve the problem;
+> > we'll still crash on a null pointer in xfs_reclaim_inodes_count().
 > 
-> Does this refer to a quota limit that exceeds the size of the fs? I'm
-> not sure that's necessarily a problem.
+> But the patch adds a NULL check..? I think this could be worded more
+> clearly.
 
-No, not really. Assume if we have 100GB xfs filesystem(/mnt/test2) and we have
-3 directories(pq1, pq2, pq3) inside the fs, each directory sets project quota. 
-(size limit up to 10GB)
+Yes, that catches the case would have been a user after free. :)
 
-When avail space of total filesystem is only left 3.2MB, but when running df for
-pg1,pg2,pg3 then avail space is 9.5GB, this is much more than real filesystem. 
-What do you think?
-
-Detail output [1]. (without this fix patch)
-
-$ df -h /mnt/test2
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2       100G  100G  3.2M 100% /mnt/test2
-
-$ df -h /mnt/test2/pq1
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2        10G  570M  9.5G   6% /mnt/test2
-
-$ df -h /mnt/test2/pq2
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2        10G  570M  9.5G   6% /mnt/test2
-
-$ df -h /mnt/test2/pq3
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2        10G  570M  9.5G   6% /mnt/test2
-
-
-Detail output [2]. (with this fix patch)
-
-$ df -h /mnt/test2
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2       100G  100G  3.2M 100% /mnt/test2
-
-$ df -h /mnt/test2/pq1
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2       574M  570M  3.2M 100% /mnt/test2
-
-$ df -h /mnt/test2/pq2
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2       574M  570M  3.2M 100% /mnt/test2
-
-$ df -h /mnt/test2/pq3
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/vdb2       574M  570M  3.2M 100% /mnt/test2
-
-
+> > The problem is that the superblock shrinker is running before the
+> > filesystem structures it depends on have been fully set up. i.e.
+> > the shrinker is registered in sget(), before ->fill_super() has been
+> > called, and the shrinker can call into the filesystem before
+> > fill_super() does it's setup work.
+> > 
+> > The twist here is that we need the sb shrinker to run in the XFS
+> > mount process because of the memory pressure that log recovery and
+> > quota check can create. Hence we need to prevent the indoe cache
+> > scanning from occurring until after we've set up the per-ag
+> > structures and caches that it depends on. We also need to ensure
+> > that we clear the flag and sb->s_fs_info on failure so that we
+> > can do the right thing in all cases in xfs_reclaim_inodes_count().
+> > 
 > 
->> 2) Used(A) can be higher than Used(Q)
->> 
+> Makes sense...
 > 
-> I'm not quite sure what this means.
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_mount.c | 2 ++
+> >  fs/xfs/xfs_mount.h | 1 +
+> >  fs/xfs/xfs_super.c | 9 +++++++++
+> >  3 files changed, 12 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index 6f5a5e6764d8..35a263c90fc0 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -155,6 +155,7 @@ xfs_free_perag(
+> >  	xfs_agnumber_t	agno;
+> >  	struct xfs_perag *pag;
+> >  
+> > +	mp->m_flags &= ~XFS_MOUNT_PERAG_DONE;
+> >  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> >  		spin_lock(&mp->m_perag_lock);
+> >  		pag = radix_tree_delete(&mp->m_perag_tree, agno);
+> > @@ -244,6 +245,7 @@ xfs_initialize_perag(
+> >  		*maxagi = index;
+> >  
+> >  	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+> > +	mp->m_flags |= XFS_MOUNT_PERAG_DONE;
 > 
-> As it is, the commit log doesn't clearly explain the problem you're
-> trying to solve. Perhaps you should provide some example commands and
-> output that demonstrate the problem and solution.
+> But why not just move the radix tree root (and lock) initialization to
+> where the rest of the xfs_mount static structure initializations occur
+> (or at least the ones we expect to be accessible)? It looks to me that
+> intentionally occurs before the mp is attached to the superblock and
+> essentially fixes the problem the flag is trying to fix.
+
+Could be done that way, but I still think we've got a general
+problem we need to deal with here. i.e. that we can't allow the
+shrinker to do anything until we actually initialised the parts of
+the xfs_mount that it uses.
+
+I need to look further, because I think we're actually in a state
+where the shrinker scan cannot run at all during ->fill_super, which
+means we might actually be able to fix this at the VFS level by
+checking the SB_ACTIVE flag. I need to look a bit further on that,
+and if that's the case all this XFS stuff goes away....
+
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -239,6 +239,7 @@ typedef struct xfs_mount {
+> >  #define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
+> >  						   allocator */
+> >  #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+> > +#define XFS_MOUNT_PERAG_DONE	(1ULL << 26)	/* perag icache init done */
 > 
->> 
->> fs/xfs/xfs_qm_bhv.c | 40 ++++++++++++++++++++++++++++++----------
->> 1 file changed, 30 insertions(+), 10 deletions(-)
->> 
->> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
->> index 2be6d27..cb2e6c9 100644
->> --- a/fs/xfs/xfs_qm_bhv.c
->> +++ b/fs/xfs/xfs_qm_bhv.c
->> @@ -38,21 +38,41 @@
->> 	limit = dqp->q_core.d_blk_softlimit ?
->> 		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
->> 		be64_to_cpu(dqp->q_core.d_blk_hardlimit);
->> -	if (limit && statp->f_blocks > limit) {
->> -		statp->f_blocks = limit;
->> -		statp->f_bfree = statp->f_bavail =
->> -			(statp->f_blocks > dqp->q_res_bcount) ?
->> -			 (statp->f_blocks - dqp->q_res_bcount) : 0;
+> PERAG_DONE sounds odd to me. XFS_MOUNT_PERAG_INIT perhaps?
+
+Tried to keep it short. INIT_DONE is what I firs thought, then I
+dropped the init bit...
+
+> >  {
+> > +	/*
+> > +	 * Don't do anything until the filesystem is fully set up, or in the
 > 
-> So the current logic is that if there's a quota limit and the limit is
-> more restrictive than the fs, we clamp the stat size/free info to the
-> pquota limit.
-
-Here, I think this logic has some problems.
-
-1. Limit is set to soft limit if it exists, but soft limit can be
-exceeded by temporarily, so the usage output might not exactly represent
-actual usage. Especially, when soft limit and hard limit are much different,
-then the usage output might be more confusing.
-
-2. When calculating free space, this logic does not consider the free space
-of real filesystem, so the output of free space sometimes much larger than free
-space of real filesystem. I have showed the detail in above explanation [1].
-
-
+> s/filesystem fully set up/perag infrastructure is initialized/ ?
 > 
->> +
->> +	if (limit) {
->> +		if (limit > dqp->q_res_bcount + statp->f_bavail)
->> +			statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
->> +		else
->> +			statp->f_blocks = limit;
->> +	} else {
->> +		statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
->> +	}
->> +
-> 
-> Now it looks like we fix up f_blocks regardless of whether there's a
-> limit set. IOW:
-> 
-> 	if (limit && limit <= dqp->q_res_bcount + statp->f_bavail)
-> 		statp->f_blocks = limit;
-> 	else
-> 		statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
-> 
-> The purpose of the original code was to make a subtree with a pquota
-> appear like a smaller fs to a subtenant, for example. What is the
-> additional purpose of the f_blocks adjustment?
+> "Fully set up" to me implies the mount is complete, where as noted in
+> the commit log the shrinker needs to be functional for log recovery and
+> quotacheck.
 
-The additional purpose of the f_blocks adjustment is for keeping below counting rule.
+Well, that used to be true (th equotacheck thing) but as I mentioned
+above, I'm not sure the shrinker runs at all during quotacheck...
 
-total = used + free(or avail) 
-
-
+> > +	 * process of being torn down due to a mount failure.
+> > +	 */
+> > +	if (!sb->s_fs_info)
+> > +		return 0;
+> > +	if (!(XFS_M(sb)->m_flags & XFS_MOUNT_PERAG_DONE))
+> > +		return 0;
 > 
->> +	if (dqp->q_res_bcount >= statp->f_blocks) {
->> +		statp->f_blocks = dqp->q_res_bcount;
->> +		statp->f_bfree = statp->f_bavail = 0;
->> +	} else {
->> +		statp->f_bfree = statp->f_bavail = statp->f_blocks - dqp->q_res_bcount;
->> 	}
+> 	struct xfs_mount	*mp = XFS_M(sb);
 > 
-> q_res_bcount is a component of f_blocks in the else case above, so I
-> think the first case here turns the logic into something like:
-> 
-> 	if (limit && limit <= dqp->q_res_bcount + statp->f_bavail) {
-> 		if (dqp->q_res_bcount > limit)
-> 			limit = dqp->q_res_bcount;
-> 		statp->f_blocks = limit;
-> 	} else
-> 		statp->f_blocks = dqp->q_res_bcount + statp->f_bavail;
-> 	statp->f_bfree = statp->f_bavail = statp->f_blocks - dqp->q_res_bcount;
-> 
-> Is the purpose here to deal with an over limit soft quota or something?
+> 	if (!mp || !(mp->m_flags & XFS_MOUNT_PERAG_DONE))
+> 		return 0;
 
-Yes, exactly.
+I'd much prefer an explicit check of s_fs_info here, because
+then it's obvious exactly what we expect to be null. XFS_M() could
+ahve more code in it than just a cast of sb->s_fs_info. BUt, like I
+said, this code might just go away....
 
-Thanks,
-Chengguang.
+Cheers,
 
-
-> 
-> Brian
-> 
->> 
->> 	limit = dqp->q_core.d_ino_softlimit ?
->> 		be64_to_cpu(dqp->q_core.d_ino_softlimit) :
->> 		be64_to_cpu(dqp->q_core.d_ino_hardlimit);
->> -	if (limit && statp->f_files > limit) {
->> -		statp->f_files = limit;
->> -		statp->f_ffree =
->> -			(statp->f_files > dqp->q_res_icount) ?
->> -			 (statp->f_ffree - dqp->q_res_icount) : 0;
->> +
->> +	if (limit) {
->> +		if (limit > dqp->q_res_icount + statp->f_ffree)
->> +			statp->f_files = dqp->q_res_icount + statp->f_ffree;
->> +		else
->> +			statp->f_files = limit;
->> +	} else {
->> +		statp->f_files = dqp->q_res_icount + statp->f_ffree;
->> +	}
->> +
->> +	if (dqp->q_res_icount >= statp->f_files) {
->> +		statp->f_files = dqp->q_res_icount;
->> +		statp->f_ffree = 0;
->> +	} else {
->> +		statp->f_ffree = statp->f_files - dqp->q_res_icount;
->> 	}
->> }
->> 
->> -- 
->> 1.8.3.1
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
