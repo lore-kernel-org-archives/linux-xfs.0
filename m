@@ -1,317 +1,240 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:54084 "EHLO
-        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751680AbeCUIBr (ORCPT
-        <rfc822;groupwise-linux-xfs@vger.kernel.org:0:0>);
-        Wed, 21 Mar 2018 04:01:47 -0400
-From: Qu Wenruo <wqu@suse.com>
-Subject: [PATCH 3/3] fstests: generic: Check the fs after each FUA writes
-Date: Wed, 21 Mar 2018 16:01:25 +0800
-Message-Id: <20180321080125.30404-3-wqu@suse.com>
-In-Reply-To: <20180321080125.30404-1-wqu@suse.com>
-References: <20180321080125.30404-1-wqu@suse.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46308 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750991AbeCTOVl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Mar 2018 10:21:41 -0400
+Date: Tue, 20 Mar 2018 10:21:40 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: don't shrink the inode cache until after setup
+ completes
+Message-ID: <20180320142140.GB6454@bfoster.bfoster>
+References: <20180320050021.982-1-david@fromorbit.com>
+ <20180320050021.982-3-david@fromorbit.com>
+ <20180320120820.GB6107@bfoster.bfoster>
+ <20180320132114.GS18129@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180320132114.GS18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-btrfs@vger.kernel.org, fstests@vger.kernel.org
-Cc: amir73il@gmail.com, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Basic test case which triggers fsstress with dm-log-writes, and then
-check the fs after each FUA writes.
-With needed infrastructure and special handlers for journal based fs.
+On Wed, Mar 21, 2018 at 12:21:14AM +1100, Dave Chinner wrote:
+> On Tue, Mar 20, 2018 at 08:08:20AM -0400, Brian Foster wrote:
+> > On Tue, Mar 20, 2018 at 04:00:21PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > We recently came across an oops on a 4.14 kernel in
+> > > xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
+> > > and so the m_perag_tree lookup walked into lala land.
+> > > 
+> > > We found a mount in a failed state, blocked on teh shrinker rwsem
+> > > here:
+> > > 
+> > > mount_bdev()
+> > >   deactivate_locked_super()
+> > >     unregister_shrinker()
+> > > 
+> > > Essentially, the machine was under memory pressure when the mount
+> > > was being run, xfs_fs_fill_super() failed after allocating the
+> > > xfs_mount and attaching it to sb->s_fs_info. It then cleaned up and
+> > > freed the xfs_mount, but the sb->s_fs_info field still pointed to
+> > > the freed memory. Hence when the superblock shrinker then ran
+> > > it fell off the bad pointer.
+> > > 
+> > 
+> > So this sounds like the root cause of the crash is a use after free and
+> > not necessarily a "use before initialized," correct? I see that
+> > ->m_perag_tree should be zeroed on allocation, but I have no idea if the
+> > radix tree code is robust enough to deal with that.
+> 
+> Well, one symptom is use after free. It can also be used before it's
+> initialised.
+> 
 
-Signed-off-by: Qu Wenruo <wqu@suse.com>
----
-Unfortunately, neither xfs nor ext4 survies this test for even single
-success, while btrfs survives.
-(Although not what I want, I'm just trying my luck
-to reproduce a serious btrfs corruption situation)
+Right.. but the user reproduced one was the use-after-free variant..?
 
-Although btrfs may be the fastest fs for the test, since it has fixed
-small amount of write in mkfs and almost nothing to replay, it still
-takes about 240s~300s to finish (the same level using snapshot).
+> > > Setting sb->s_fs_info to NULL in this case won't solve the problem;
+> > > we'll still crash on a null pointer in xfs_reclaim_inodes_count().
+> > 
+> > But the patch adds a NULL check..? I think this could be worded more
+> > clearly.
+> 
+> Yes, that catches the case would have been a user after free. :)
+> 
 
-It would take longer time for ext4 for its large amount of write during
-mkfs, if it can survive the test in the first space.
+So what you're saying is that setting s_fs_info to NULL at least partly
+solves the problem. ;P (But anyways, just wording confusion).
 
-As a comparison, btrfs takes about 5 seconds to replay log, mount,
-unmount and run fsck at the end of the test.
-But for ext4, it already takes about 5 seconds to do the same thing
-before triggering fsck error.
+> > > The problem is that the superblock shrinker is running before the
+> > > filesystem structures it depends on have been fully set up. i.e.
+> > > the shrinker is registered in sget(), before ->fill_super() has been
+> > > called, and the shrinker can call into the filesystem before
+> > > fill_super() does it's setup work.
+> > > 
+> > > The twist here is that we need the sb shrinker to run in the XFS
+> > > mount process because of the memory pressure that log recovery and
+> > > quota check can create. Hence we need to prevent the indoe cache
+> > > scanning from occurring until after we've set up the per-ag
+> > > structures and caches that it depends on. We also need to ensure
+> > > that we clear the flag and sb->s_fs_info on failure so that we
+> > > can do the right thing in all cases in xfs_reclaim_inodes_count().
+> > > 
+> > 
+> > Makes sense...
+> > 
+> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_mount.c | 2 ++
+> > >  fs/xfs/xfs_mount.h | 1 +
+> > >  fs/xfs/xfs_super.c | 9 +++++++++
+> > >  3 files changed, 12 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > > index 6f5a5e6764d8..35a263c90fc0 100644
+> > > --- a/fs/xfs/xfs_mount.c
+> > > +++ b/fs/xfs/xfs_mount.c
+> > > @@ -155,6 +155,7 @@ xfs_free_perag(
+> > >  	xfs_agnumber_t	agno;
+> > >  	struct xfs_perag *pag;
+> > >  
+> > > +	mp->m_flags &= ~XFS_MOUNT_PERAG_DONE;
+> > >  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> > >  		spin_lock(&mp->m_perag_lock);
+> > >  		pag = radix_tree_delete(&mp->m_perag_tree, agno);
+> > > @@ -244,6 +245,7 @@ xfs_initialize_perag(
+> > >  		*maxagi = index;
+> > >  
+> > >  	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
+> > > +	mp->m_flags |= XFS_MOUNT_PERAG_DONE;
+> > 
+> > But why not just move the radix tree root (and lock) initialization to
+> > where the rest of the xfs_mount static structure initializations occur
+> > (or at least the ones we expect to be accessible)? It looks to me that
+> > intentionally occurs before the mp is attached to the superblock and
+> > essentially fixes the problem the flag is trying to fix.
+> 
+> Could be done that way, but I still think we've got a general
+> problem we need to deal with here. i.e. that we can't allow the
+> shrinker to do anything until we actually initialised the parts of
+> the xfs_mount that it uses.
+> 
 
-Fsck fail for ext4:
-_check_generic_filesystem: filesystem on /dev/mapper/test-scratch1 is inconsistent
-*** fsck.ext4 output ***
-fsck from util-linux 2.31.1
-e2fsck 1.43.8 (1-Jan-2018)
-Pass 1: Checking inodes, blocks, and sizes
-Inode 131076 extent tree (at level 1) could be shorter.  Fix? no
+I actually think it might be useful to initialize the static/low-level
+data structures (i.e., locks, radix bits, etc.) as such regardless.
+There's only a couple places where we don't do that already (the perag
+radix tree root being one), and that doesn't preclude higher level XFS
+state management such as is being done by the XFS_MOUNT_PERAG_DONE flag,
+if necessary. See the appended diff for reference.
 
-Inode 131262, i_size is 0, should be 258048.  Fix? no
+I'm also wondering if there's value in doing a memset() (as your
+previous patch) over the entire xfs_mount in DEBUG mode, immediately
+after it's allocated, to facilitate catching this type of thing in the
+future. That would require more of an audit to verify that we don't rely
+on the kzalloc to correctly initialize certain fields (bools, ints,
+etc.) though..
 
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
+> I need to look further, because I think we're actually in a state
+> where the shrinker scan cannot run at all during ->fill_super, which
+> means we might actually be able to fix this at the VFS level by
+> checking the SB_ACTIVE flag. I need to look a bit further on that,
+> and if that's the case all this XFS stuff goes away....
+> 
 
-For xfs:
-_check_xfs_filesystem: filesystem on /dev/mapper/test-scratch1 is inconsistent (r)
-*** xfs_repair -n output ***
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-bad symlink header ino 8409190, file block 0, disk block 1051147
-problem with symbolic link in inode 8409190
-would have cleared inode 8409190
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 3
-        - agno = 2
-entry "lb" in shortform directory 8409188 references free inode 8409190
-would have junked entry "lb" in directory inode 8409188
-bad symlink header ino 8409190, file block 0, disk block 1051147
-problem with symbolic link in inode 8409190
-would have cleared inode 8409190
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "lb" in shortform directory inode 8409188 points to free inode 8409190
-would junk entry
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-Maximum metadata LSN (1:396) is ahead of log (1:63).
-Would format log to cycle 4.
-No modify flag set, skipping filesystem flush and exiting.
+I'm pretty sure the dquot shrinker can run during quotacheck because we
+had to make the previous delwri queue handling fixes to deal with that.
+Though that shrinker is registered dynamically and so may have nothing
+to do with the superblock inode shrinker for all I'm aware. Just a note,
+FWIW.
 
-And special note for XFS guys, I also hit an XFS internal metadata
-warning during journal replay:
-[ 7901.423659] XFS (dm-4): Starting recovery (logdev: internal)
-[ 7901.577511] XFS (dm-4): Metadata corruption detected at xfs_dinode_verify+0x467/0x570 [xfs], inode 0x805067 dinode
-[ 7901.580529] XFS (dm-4): Unmount and run xfs_repair
-[ 7901.581901] XFS (dm-4): First 128 bytes of corrupted metadata buffer:
-[ 7901.583205] 00000000b8963f41: 49 4e a1 ff 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
-[ 7901.584659] 00000000f35a50e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[ 7901.586075] 00000000386eea9e: 5a b2 0e 69 0a f3 43 27 5a b2 0e 69 0a f3 43 27  Z..i..C'Z..i..C'
-[ 7901.587561] 00000000ac636661: 5a b2 0e 69 0d 92 bc 00 00 00 00 00 00 00 00 00  Z..i............
-[ 7901.588969] 00000000d75f9093: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[ 7901.590475] 00000000d2af5688: 00 00 00 02 00 00 00 00 00 00 00 00 84 d7 6a e9  ..............j.
-[ 7901.591907] 00000000e8dd8211: ff ff ff ff 34 93 a9 3a 00 00 00 00 00 00 00 04  ....4..:........
-[ 7901.593319] 00000000b7610e4e: 00 00 00 01 00 00 00 45 00 00 00 00 00 00 00 00  .......E........
+Brian
 
----
- common/dmlogwrites    |  56 +++++++++++++++++++++++++++
- tests/generic/481     | 104 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/481.out |   2 +
- tests/generic/group   |   1 +
- 4 files changed, 163 insertions(+)
- create mode 100755 tests/generic/481
- create mode 100644 tests/generic/481.out
+--- 8< ---
 
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index 467b872e..bf643a77 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -126,3 +126,59 @@ _log_writes_cleanup()
- 	$UDEV_SETTLE_PROG >/dev/null 2>&1
- 	_log_writes_remove
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index a55f7a45fa78..53433cc024fd 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -731,7 +731,6 @@ xfs_sb_mount_common(
+ 	struct xfs_sb	*sbp)
+ {
+ 	mp->m_agfrotor = mp->m_agirotor = 0;
+-	spin_lock_init(&mp->m_agirotor_lock);
+ 	mp->m_maxagi = mp->m_sb.sb_agcount;
+ 	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+ 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 6f5a5e6764d8..a901b86772f8 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -817,8 +817,6 @@ xfs_mountfs(
+ 	/*
+ 	 * Allocate and initialize the per-ag data.
+ 	 */
+-	spin_lock_init(&mp->m_perag_lock);
+-	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+ 	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+ 	if (error) {
+ 		xfs_warn(mp, "Failed per-ag init: %d", error);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 951271f57d00..3dd9544be9ec 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1579,29 +1579,44 @@ xfs_destroy_percpu_counters(
+ 	percpu_counter_destroy(&mp->m_fdblocks);
  }
-+
-+# Convert log writes mark to entry number
-+# Result entry number is output to stdout, could be empty if not found
-+_log_writes_mark_to_entry_number()
-+{
-+	local mark=$1
-+	local ret
-+
-+	[ -z "$mark" ] && _fatal \
-+		"mark must be given for _log_writes_mark_to_entry_number"
-+
-+	ret=$($here/src/log-writes/replay-log --find --log $LOGWRITES_DEV \
-+		--end-mark $mark 2> /dev/null)
-+	[ -z "$ret" ] && return
-+	ret=$(echo "$ret" | cut -f1 -d\@)
-+	echo "mark $mark has entry number $ret" >> $seqres.full
-+	echo "$ret"
+ 
+-STATIC int
+-xfs_fs_fill_super(
+-	struct super_block	*sb,
+-	void			*data,
+-	int			silent)
++static struct xfs_mount *
++xfs_mount_alloc(
++	struct super_block	*sb)
+ {
+-	struct inode		*root;
+-	struct xfs_mount	*mp = NULL;
+-	int			flags = 0, error = -ENOMEM;
++	struct xfs_mount	*mp;
+ 
+ 	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
+ 	if (!mp)
+-		goto out;
++		return NULL;
+ 
++	mp->m_super = sb;
+ 	spin_lock_init(&mp->m_sb_lock);
++	spin_lock_init(&mp->m_agirotor_lock);
++	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
++	spin_lock_init(&mp->m_perag_lock);
+ 	mutex_init(&mp->m_growlock);
+ 	atomic_set(&mp->m_active_trans, 0);
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+ 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+ 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+ 	mp->m_kobj.kobject.kset = xfs_kset;
++	return mp;
 +}
+ 
+-	mp->m_super = sb;
 +
-+# Find next fua write entry number
-+# Result entry number is output to stdout, could be empty if not found
-+_log_writes_find_next_fua()
++STATIC int
++xfs_fs_fill_super(
++	struct super_block	*sb,
++	void			*data,
++	int			silent)
 +{
-+	local start_entry=$1
-+	local ret
++	struct inode		*root;
++	struct xfs_mount	*mp = NULL;
++	int			flags = 0, error = -ENOMEM;
 +
-+	[ -z "$start_entry" ] && start_entry=0
-+	ret=$($here/src/log-writes/replay-log --find --log $LOGWRITES_DEV \
-+	      --next-fua --start-entry $start_entry 2> /dev/null)
-+	[ -z "$ret" ] && return
-+
-+	# Result should be something like "1024@offset" where 1024 is the
-+	# entry number we need
-+	ret=$(echo "$ret" | cut -f1 -d\@)
-+	echo "next fua is entry number $ret" >> $seqres.full
-+	echo "$ret"
-+}
-+
-+# Replay log range to specified entry
-+# $1:	End entry. The entry with this number *WILL* be replayed
-+_log_writes_replay_log_range()
-+{
-+	local end=$1
-+
-+	[ -z "$end" ] && _fail \
-+	"end entry must be specified for _log_writes_replay_log_range"
-+
-+	# To ensure we replay the last entry,
-+	# we need to manually increase the end entry number to ensure
-+	# it's played
-+	echo "=== replay to $end ===" >> $seqres.full
-+	$here/src/log-writes/replay-log --log $LOGWRITES_DEV \
-+		--replay $SCRATCH_DEV --limit $(($end + 1)) \
-+		>> $seqres.full 2>&1
-+	[ $? -ne 0 ] && _fail "replay failed"
-+}
-diff --git a/tests/generic/481 b/tests/generic/481
-new file mode 100755
-index 00000000..148347fe
---- /dev/null
-+++ b/tests/generic/481
-@@ -0,0 +1,104 @@
-+#! /bin/bash
-+# FS QA Test 481
-+#
-+# Test filesystem consistency after each FUA operation
-+#
-+# Will do log replay and check the filesystem.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 SuSE.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	$KILLALL_PROG -KILL -q $FSSTRESS_PROG &> /dev/null
-+	_log_writes_cleanup &> /dev/null
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmlogwrites
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_command "$KILLALL_PROG" killall
-+# Use $SCRATCH_DEV as replay device
-+_require_scratch
-+# and we need extra device as log device
-+_require_log_writes
-+
-+
-+nr_cpus=$("$here/src/feature" -o)
-+fsstress_args=$(_scale_fsstress_args -w -d $SCRATCH_MNT -n 512 -p $nr_cpus \
-+		$FSSTRESS_AVOID)
-+
-+_test_unmount
-+_log_writes_init
-+_log_writes_mkfs >> $seqres.full 2>&1
-+_log_writes_mark mkfs
-+
-+_log_writes_mount
-+$FSSTRESS_PROG $fsstress_args > /dev/null 2>&1
-+_log_writes_unmount
-+
-+_log_writes_remove
-+prev=$(_log_writes_mark_to_entry_number mkfs)
-+[ -z "$prev" ] && _fail "failed to locate entry mark 'mkfs'"
-+cur=$(_log_writes_find_next_fua $prev)
-+[ -z "$cur" ] && _fail "failed to locate next FUA write"
-+
-+while [ ! -z "$cur" ]; do
-+	_log_writes_replay_log_range $cur >> $seqres.full
-+
-+	# Here we need extra mount to replay the log, mainly for journal based
-+	# fs, as their fsck will report dirty log as error.
-+	# We don't care to preserve any data on $SCRATCH_DEV, as we can replay
-+	# back to the point we need, and in fact sometimes creating/deleting
-+	# snapshots repeatedly can be slower than replaying the log.
-+	_scratch_mount
-+	_scratch_unmount
-+	_check_scratch_fs
-+
-+	prev=$cur
-+	cur=$(_log_writes_find_next_fua $(($cur + 1)))
-+	[ -z "$cur" ] && break
-+done
-+
-+echo "Silence is golden"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/481.out b/tests/generic/481.out
-new file mode 100644
-index 00000000..206e1163
---- /dev/null
-+++ b/tests/generic/481.out
-@@ -0,0 +1,2 @@
-+QA output created by 481
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index ea2056b1..c4cc800a 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -483,3 +483,4 @@
- 478 auto quick
- 479 auto quick metadata
- 480 auto quick metadata
-+481 auto replay
--- 
-2.15.1
-
++	mp = xfs_mount_alloc(sb);
++	if (!mp)
++		goto out;
+ 	sb->s_fs_info = mp;
+ 
+ 	error = xfs_parseargs(mp, (char *)data);
