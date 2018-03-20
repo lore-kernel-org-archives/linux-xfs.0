@@ -1,171 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:56660 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966080AbeCSRd7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 13:33:59 -0400
-Date: Mon, 19 Mar 2018 10:33:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v6 12/15] xfs: require mmap lock for xfs_break_layouts()
-Message-ID: <20180319173345.GF1757@magnolia>
-References: <152112908134.24669.10222746224538377035.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152112914933.24669.5543317105428477772.stgit@dwillia2-desk3.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152112914933.24669.5543317105428477772.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from sandeen.net ([63.231.237.45]:41480 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751186AbeCTQQb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Mar 2018 12:16:31 -0400
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (1.0)
+Subject: Re: 4.14.26 XFS: Assertion failed fs/xfs/xfs_message.c
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <6bb0952f-655a-d8a4-b10e-024f6a331722@excello.cz>
+Date: Tue, 20 Mar 2018 11:16:29 -0500
+Content-Transfer-Encoding: 8BIT
+Message-Id: <D2466B53-F038-4C7A-95A8-E2CB56484AD9@sandeen.net>
+References: <6913e48f-e4ee-0b88-80ec-ed3560cd8894@excello.cz> <d2ff7c02-3ec4-0ec0-ee36-bbfd68ac13a1@sandeen.net> <20180320154434.GC6454@bfoster.bfoster> <6bb0952f-655a-d8a4-b10e-024f6a331722@excello.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-kernel@vger.kernel.org
+To: Tomas Charvat <tc@excello.cz>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Mar 15, 2018 at 08:52:29AM -0700, Dan Williams wrote:
-> In preparation for adding coordination between truncate operations and
-> busy dax-pages, extend xfs_break_layouts() to assume it must be called
-> with the mmap lock held. This locking scheme will be required for
-> coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
-> pages mapped into the file's address space).
+If it is repeatable then I wonder if an xfs_metadump image might help us investigate, as well.
 
-If I'm reading this right, you've added a requirement (for xfs anyway)
-that we have to have grabbed MMAPLOCK_EXCL before calling break_layout()
-so that the layout breaking process will block until active dmas have
-finished.
+-Eric
 
-In 4.16 we added xfs_iolock_two_inodes_and_break_layout (in
-xfs_reflink.c) to break pnfs leases for files that are about to be
-reflinked (since pnfs and reflink aren't compatible either).  I think
-that function will have to be adapted to take the appropriate mmap locks
-too -- definitely the exclusive mmap lock for the destination file
-because we anticipate punching out blocks.  I'm not sure about the
-source file; I think taking the shared mmap lock is fine for that?
-
---D
-
+> On Mar 20, 2018, at 10:59 AM, Tomas Charvat <tc@excello.cz> wrote:
 > 
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Suggested-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  fs/xfs/xfs_file.c  |   14 +++++++++-----
->  fs/xfs/xfs_ioctl.c |    5 +----
->  fs/xfs/xfs_iops.c  |   10 +++++++---
->  fs/xfs/xfs_pnfs.c  |    6 ++++--
->  4 files changed, 21 insertions(+), 14 deletions(-)
+> meta-data=/dev/sda2              isize=512    agcount=4, agsize=1040320 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=4096   blocks=4161280, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal               bsize=4096   blocks=2560, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 9ea08326f876..ba969019bf26 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -350,9 +350,16 @@ xfs_file_aio_write_checks(
->  	if (error <= 0)
->  		return error;
->  
-> +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> +	*iolock |= XFS_MMAPLOCK_EXCL;
->  	error = xfs_break_layouts(inode, iolock);
-> -	if (error)
-> +	if (error) {
-> +		*iolock &= ~XFS_MMAPLOCK_EXCL;
-> +		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
->  		return error;
-> +	}
-> +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> +	*iolock &= ~XFS_MMAPLOCK_EXCL;
->  
->  	/*
->  	 * For changing security info in file_remove_privs() we need i_rwsem
-> @@ -768,7 +775,7 @@ xfs_file_fallocate(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	long			error;
->  	enum xfs_prealloc_flags	flags = 0;
-> -	uint			iolock = XFS_IOLOCK_EXCL;
-> +	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
->  	loff_t			new_size = 0;
->  	bool			do_file_insert = false;
->  
-> @@ -782,9 +789,6 @@ xfs_file_fallocate(
->  	if (error)
->  		goto out_unlock;
->  
-> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> -	iolock |= XFS_MMAPLOCK_EXCL;
-> -
->  	if (mode & FALLOC_FL_PUNCH_HOLE) {
->  		error = xfs_free_file_space(ip, offset, len);
->  		if (error)
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 89fb1eb80aae..4151fade4bb1 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -614,7 +614,7 @@ xfs_ioc_space(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct iattr		iattr;
->  	enum xfs_prealloc_flags	flags = 0;
-> -	uint			iolock = XFS_IOLOCK_EXCL;
-> +	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
->  	int			error;
->  
->  	/*
-> @@ -648,9 +648,6 @@ xfs_ioc_space(
->  	if (error)
->  		goto out_unlock;
->  
-> -	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> -	iolock |= XFS_MMAPLOCK_EXCL;
-> -
->  	switch (bf->l_whence) {
->  	case 0: /*SEEK_SET*/
->  		break;
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 951e84df5576..d23aa08426f9 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1028,13 +1028,17 @@ xfs_vn_setattr(
->  
->  	if (iattr->ia_valid & ATTR_SIZE) {
->  		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
-> -		uint			iolock = XFS_IOLOCK_EXCL;
-> +		uint			iolock;
-> +
-> +		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> +		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
->  
->  		error = xfs_break_layouts(d_inode(dentry), &iolock);
-> -		if (error)
-> +		if (error) {
-> +			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
->  			return error;
-> +		}
->  
-> -		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
->  		error = xfs_vn_setattr_size(dentry, iattr);
->  		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
->  	} else {
-> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-> index aa6c5c193f45..9fe661c2d59c 100644
-> --- a/fs/xfs/xfs_pnfs.c
-> +++ b/fs/xfs/xfs_pnfs.c
-> @@ -38,12 +38,14 @@ xfs_break_layouts(
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	int			error;
->  
-> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
-> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL
-> +				| XFS_MMAPLOCK_EXCL));
->  
->  	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
->  		xfs_iunlock(ip, *iolock);
->  		error = break_layout(inode, true);
-> -		*iolock = XFS_IOLOCK_EXCL;
-> +		*iolock &= ~XFS_IOLOCK_SHARED;
-> +		*iolock |= XFS_IOLOCK_EXCL;
->  		xfs_ilock(ip, *iolock);
->  	}
->  
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Uptime is 8 days, no large number of files has been changes.
+> I have just compiled 4.14.28 to give it a try.
+> If you give me hint how to get & apply referenced commit to vanilla I
+> will give it a try.
+> 
+> br
+> 
+> Tomas Charvat
+> EXCELLO | Virusfree
+> w: www.virusfree.cz
+> e: tc@excello.cz
+> 
+>> On 03/20/2018 04:44 PM, Brian Foster wrote:
+>>> On Tue, Mar 20, 2018 at 10:15:14AM -0500, Eric Sandeen wrote:
+>>>> On 3/20/18 9:37 AM, Tomas Charvat wrote:
+>>>> Hi in recent versions of kernle-4.14 I'm getting following error.
+>>> The unlink transaction overran its reservation.
+>>> 
+>>> I think this post-4.14 commit may fix it, but perhaps Brian can chime in?
+>>> 
+>>> commit a6f485908d5210a5662f7a031bd1deeb3867e466
+>>> Author: Brian Foster <bfoster@redhat.com>
+>>> Date:   Mon Jan 8 10:41:36 2018 -0800
+>>> 
+>>>    xfs: include inobt buffers in ifree tx log reservation
+>>> 
+>>> 
+>> This looks like a block reservation overrun rather than a log
+>> reservation overrun. The above commit addresses the latter and so
+>> probably won't help this case.
+>> 
+>> I'm wondering if you are affected by the metadata perag reservation leak
+>> fixed by commit ad90bb585c ("xfs: account finobt blocks properly in
+>> perag reservation"). I think that once the perag reservation is
+>> depleted, further block allocs might be accounted against the
+>> transaction such that an initial reservation is expected (which
+>> typically doesn't occur for this transaction).
+>> 
+>> What is the geometry (xfs_info) of the fs? Has it been mounted for a
+>> long time, or long enough to see a large number of inode allocations and
+>> frees? Are you able to test the above referenced commit?
+>> 
+>> Brian
+>> 
+>>>> [Tue Mar 20 14:31:39 2018] XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 331
+>>>> [Tue Mar 20 14:31:39 2018] ------------[ cut here ]------------
+>>>> [Tue Mar 20 14:31:39 2018] WARNING: CPU: 0 PID: 13025 at fs/xfs/xfs_message.c:105 asswarn+0x17/0x20
+>>>> [Tue Mar 20 14:31:39 2018] CPU: 0 PID: 13025 Comm: async_8 Tainted: G        W       4.14.26-gentoo #1
+>>>> [Tue Mar 20 14:31:39 2018] Hardware name: Xen HVM domU, BIOS 4.9.1 01/25/2018
+>>>> [Tue Mar 20 14:31:39 2018] task: ffff88003da7d940 task.stack: ffffc90008ba8000
+>>>> [Tue Mar 20 14:31:39 2018] RIP: 0010:asswarn+0x17/0x20
+>>>> [Tue Mar 20 14:31:39 2018] RSP: 0018:ffffc90008bab810 EFLAGS: 00010246
+>>>> [Tue Mar 20 14:31:39 2018] RAX: 0000000000000000 RBX: ffff8800d3f841e0 RCX: 0000000000000000
+>>>> [Tue Mar 20 14:31:39 2018] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff81d22af7
+>>>> [Tue Mar 20 14:31:39 2018] RBP: ffffffffffffffff R08: 0000000000000000 R09: 0000000000000000
+>>>> [Tue Mar 20 14:31:39 2018] R10: 000000000000000a R11: f000000000000000 R12: ffff880148594000
+>>>> [Tue Mar 20 14:31:39 2018] R13: 0000000000200007 R14: 00000000000fdfc0 R15: ffff880148594000
+>>>> [Tue Mar 20 14:31:39 2018] FS:  00007f7658155700(0000) GS:ffff88014f400000(0000) knlGS:0000000000000000
+>>>> [Tue Mar 20 14:31:39 2018] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>>> [Tue Mar 20 14:31:39 2018] CR2: 00007f327cc05010 CR3: 0000000016b76000 CR4: 00000000000406f0
+>>>> [Tue Mar 20 14:31:39 2018] Call Trace:
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_trans_mod_sb+0x226/0x2b0
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_alloc_ag_vextent+0x130/0x330
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_alloc_vextent+0x3ba/0x4b0
+>>>> [Tue Mar 20 14:31:39 2018]  __xfs_inobt_alloc_block.isra.1+0x9f/0x130
+>>>> [Tue Mar 20 14:31:39 2018]  __xfs_btree_split+0xfd/0x5c0
+>>>> [Tue Mar 20 14:31:39 2018]  ? xfs_trans_read_buf_map+0x265/0x2f0
+>>>> [Tue Mar 20 14:31:39 2018]  ? xfs_btree_read_buf_block.constprop.26+0xaf/0xf0
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_btree_split+0x66/0x110
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_btree_make_block_unfull+0x113/0x1d0
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_btree_insrec+0x419/0x500
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_btree_insert+0xe2/0x220
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_difree_finobt+0xd0/0x2d0
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_difree+0x162/0x220
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_ifree+0xd0/0x290
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_inactive_ifree+0xf6/0x290
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_inactive+0x112/0x2a0
+>>>> [Tue Mar 20 14:31:39 2018]  xfs_fs_destroy_inode+0x82/0x1f0
+>>>> [Tue Mar 20 14:31:39 2018]  do_unlinkat+0x1b9/0x320
+>>>> [Tue Mar 20 14:31:39 2018]  do_syscall_64+0x87/0x330
+>>>> [Tue Mar 20 14:31:39 2018]  ? schedule+0x2d/0x80
+>>>> [Tue Mar 20 14:31:39 2018]  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+>>>> [Tue Mar 20 14:31:39 2018] RIP: 0033:0x7f7698c17967
+>>>> [Tue Mar 20 14:31:39 2018] RSP: 002b:00007f7658154e28 EFLAGS: 00000246 ORIG_RAX: 0000000000000057
+>>>> [Tue Mar 20 14:31:39 2018] RAX: ffffffffffffffda RBX: 00007f7658781a74 RCX: 00007f7698c17967
+>>>> [Tue Mar 20 14:31:39 2018] RDX: 00007f7658781a20 RSI: 00007f7658781b30 RDI: 00007f7658781b30
+>>>> [Tue Mar 20 14:31:39 2018] RBP: 00007f7658154e90 R08: 0000000000000000 R09: 0000000000000000
+>>>> [Tue Mar 20 14:31:39 2018] R10: 0000000000000000 R11: 0000000000000246 R12: 00007f76587819e0
+>>>> [Tue Mar 20 14:31:39 2018] R13: 00007f7658154e80 R14: 0000000000000000 R15: 00007f7658600240
+>>>> [Tue Mar 20 14:31:39 2018] Code: 10 e8 8e f9 ff ff 0f 0b e8 67 06 db ff 0f 1f 80 00 00 00 00 48 89 f1 41 89 d0 48 c7 c6 68 1f d5 81 48 89 fa 31 ff e8 a9 fc ff ff <0f> 0b c3 66 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 68 1f d5
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
