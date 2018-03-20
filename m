@@ -1,39 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:37758 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751666AbeCUO1W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 10:27:22 -0400
-Date: Wed, 21 Mar 2018 22:27:15 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 3/3] fstests: generic: Check the fs after each FUA writes
-Message-ID: <20180321142715.GT30836@localhost.localdomain>
-References: <20180321080125.30404-1-wqu@suse.com>
- <20180321080125.30404-3-wqu@suse.com>
- <CAOQ4uxidqwrKvVZSPysY_Rz6=pmBNr4G6F=oA+1Qn+=NEYn85g@mail.gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:32912 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751411AbeCTVea (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 17:34:30 -0400
+Date: Tue, 20 Mar 2018 14:34:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_scrub: fix cross compile with libunistring
+Message-ID: <20180320213421.GJ1757@magnolia>
+References: <45d9ba0f01cceb75f72d157a9e4d9aaeb753a9c4.1521548516.git.baruch@tkos.co.il>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxidqwrKvVZSPysY_Rz6=pmBNr4G6F=oA+1Qn+=NEYn85g@mail.gmail.com>
+In-Reply-To: <45d9ba0f01cceb75f72d157a9e4d9aaeb753a9c4.1521548516.git.baruch@tkos.co.il>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Qu Wenruo <wqu@suse.com>, Linux Btrfs <linux-btrfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>
+To: Baruch Siach <baruch@tkos.co.il>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 21, 2018 at 02:22:29PM +0200, Amir Goldstein wrote:
-> > +
-> > +_log_writes_mount
-> > +$FSSTRESS_PROG $fsstress_args > /dev/null 2>&1
+On Tue, Mar 20, 2018 at 02:21:56PM +0200, Baruch Siach wrote:
+> Commit 4bbed4ecc2a (xfs_scrub: warn about normalized Unicode name collisions)
+> added -lunistring to the list of the xfs_scrub dependencies. When cross
+> compiling make fails to find the library on the target sysroot:
 > 
-> You should run fsstress with run_check() so output will go to $seqres.full
-> this way if you are able to catch a bug, you can take the random seed
-> from fsstress output and repeat the same event sequence, which
-> doesn't guaranty, but can increase the chances of reproducing the bug.
+> make[3]: *** No rule to make target `-lunistring', needed by `xfs_scrub'.  Stop.
+> 
+> Remove -lunistring from make dependencies of xfs_scrub to fix that.
+> 
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Baruch Siach <baruch@tkos.co.il>
+> ---
+>  scrub/Makefile | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/scrub/Makefile b/scrub/Makefile
+> index 949f6fd8ba94..979603f524ff 100644
+> --- a/scrub/Makefile
+> +++ b/scrub/Makefile
+> @@ -69,7 +69,7 @@ vfs.c \
+>  xfs_scrub.c
+>  
+>  LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUNISTRING) $(LIBRT)
+> -LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG) $(LIBUNISTRING) $(LIBRT)
+> +LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG) $(LIBRT)
 
-I suggested dropping run_check, as I don't think we care about the
-fsstress return value here (and I always try to avoid new run_check
-usage), but I agree that it might be useful to save the fsstress output
-to $seqres.full.
+I think we can drop the $LIBRT here too... but it's sort of moot since I
+was about to send a big series of xfs_scrub rewrites, one of which fixed
+this problem indirectly (by ripping out libunistring and replacing it
+with libicu).
 
-Thanks,
-Eryu
+Thanks for catching this and the musl bugs, though. :)
+
+--D
+
+>  LLDFLAGS = -static-libtool-libs
+>  
+>  ifeq ($(HAVE_MALLINFO),yes)
+> -- 
+> 2.16.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
