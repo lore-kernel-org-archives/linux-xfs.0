@@ -1,191 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36794 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751789AbeCULva (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 07:51:30 -0400
-Date: Wed, 21 Mar 2018 07:51:29 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC][PATCH] xfs: adjust size/used/avail information for quota-df
-Message-ID: <20180321115128.GB10602@bfoster.bfoster>
-References: <1520601355-180600-1-git-send-email-cgxu519@gmx.com>
- <20180315142549.GC45325@bfoster.bfoster>
- <F2C6F369-B24B-4383-8987-50C0F64155AD@gmx.com>
- <efc15a82-1b9b-3e58-136a-ac6c3468e35f@sandeen.net>
- <20180320191823.GE6454@bfoster.bfoster>
- <C681DC1C-0621-4EAC-B191-8ACE82124249@gmx.com>
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:37920 "EHLO
+        mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751790AbeCTI6A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 04:58:00 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <C681DC1C-0621-4EAC-B191-8ACE82124249@gmx.com>
+In-Reply-To: <3862e7b0-4136-b864-96f0-2880b05a8940@themaw.net>
+References: <CAOQ4uxhubJhspfj+x7yRkTJ4rUXyhZoF0x3kjuFyv-0=Lxrctw@mail.gmail.com>
+ <CAOQ4uxh0H8mbbAZt0MEdLGRY-8Aqg2c9UFM56-KL2b90fLYCFQ@mail.gmail.com>
+ <20180317212814.GI7000@dastard> <CAOQ4uxit=nHvd2C080QeM27icSFra+0Anwu8vXqs4sd=8tCCNg@mail.gmail.com>
+ <20180318230259.GJ7000@dastard> <CAOQ4uxiHkW41RB4LogWi8+rp_NhoC+SHGNY9_ShdQi7OyJTTVA@mail.gmail.com>
+ <20180320014709.GC1150@dastard> <CAOQ4uxh+90vyCOqhLXtNi0U+YTsi6nCYuZFJMPhBWUaRwSBDvQ@mail.gmail.com>
+ <3862e7b0-4136-b864-96f0-2880b05a8940@themaw.net>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 20 Mar 2018 10:57:58 +0200
+Message-ID: <CAOQ4uxgwFn0bswy9W2N396cAJ8k80azjjkcu1M6grLMfRNLOKg@mail.gmail.com>
+Subject: Re: Question about XFS_MAXINUMBER
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: cgxu519@gmx.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: Ian Kent <raven@themaw.net>
+Cc: Dave Chinner <david@fromorbit.com>, Miklos Szeredi <miklos@szeredi.hu>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Wed, Mar 21, 2018 at 11:36:08AM +0800, cgxu519@gmx.com wrote:
-> 在 2018年3月21日，上午3:18，Brian Foster <bfoster@redhat.com> 写道：
-> > 
-> > On Tue, Mar 20, 2018 at 12:41:50PM -0500, Eric Sandeen wrote:
-> >> On 3/20/18 9:49 AM, cgxu519@gmx.com wrote:
-> >> 
-> >> ...
-> >> 
-> >>> No, not really. Assume if we have 100GB xfs filesystem(/mnt/test2) and we have
-> >>> 3 directories(pq1, pq2, pq3) inside the fs, each directory sets project quota. 
-> >>> (size limit up to 10GB)
-> >>> 
-> >>> When avail space of total filesystem is only left 3.2MB, but when running df for
-> >>> pg1,pg2,pg3 then avail space is 9.5GB, this is much more than real filesystem. 
-> >>> What do you think?
-> >>> 
-> >>> Detail output [1]. (without this fix patch)
-> >>> 
-> >>> $ df -h /mnt/test2
-> >>> Filesystem      Size  Used Avail Use% Mounted on
-> >>> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
-> >>> 
-> >>> $ df -h /mnt/test2/pq1
-> >>> Filesystem      Size  Used Avail Use% Mounted on
-> >>> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
-> >>> 
-> >>> $ df -h /mnt/test2/pq2
-> >>> Filesystem      Size  Used Avail Use% Mounted on
-> >>> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
-> >>> 
-> >>> $ df -h /mnt/test2/pq3
-> >>> Filesystem      Size  Used Avail Use% Mounted on
-> >>> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
-> >> 
-> >> I agree that this is a confusing result.
-> >> 
-> > 
-> > Ditto. Thanks for the example Chengguang.
-> > 
-> >>> Detail output [2]. (with this fix patch)
-> >>> 
-> >>> $ df -h /mnt/test2
-> >>> Filesystem      Size  Used Avail Use% Mounted on
-> >>> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
-> >>> 
-> >>> $ df -h /mnt/test2/pq1
-> >>> Filesystem      Size  Used Avail Use% Mounted on
-> >>> /dev/vdb2       574M  570M  3.2M 100% /mnt/test2
-> >>                   ^           ^
-> >>                   |           |
-> >>                   |           +-- This makes sense 
-> >>                   |
-> >>                   +-- This is a little bit odd
-> >> 
-> >> So you cap the available project space to host filesystem
-> >> available space, and also use that to compute the
-> >> total size of the "project" by adding used+available.
-> >> 
-> > 
-> > I think I agree here too. Personally, I'd expect the fs size to remain
-> > static one way or another (i.e., whether it's the full fs or a sub-fs
-> > via project quota) and see the user/avail numbers change based on the
-> > current state rather than see the size float around due to just wanting
-> > to make the numbers add up. The latter makes it difficult to understand
-> > the (virtual) geometry of the project.
-> > 
-> >> The slightly strange result is that "size" will shrink
-> >> as more filesystem space gets used, but I'm not
-> >> sure I have a better suggestion here... would the below
-> >> result be too confusing?  It is truthful; the limit is 10G,
-> >> 570M are used, and only 3.2M is currently available due to
-> >> the host filesystem freespace constraint:
-> >> 
-> >> $ df -h /mnt/test2/pq1
-> >> Filesystem      Size  Used Avail Use% Mounted on
-> >> /dev/vdb2       10G   570M  3.2M 100% /mnt/test2
-> >> 
-> > 
-> > Slightly confusing, but I'd rather have accuracy than guarantee that
-> > size = used + avail. The above at least tells us that something is
-> > missing, even if it's not totally obvious that the missing space is
-> > unavailable due to the broader fs free space limitation. It's probably
-> > the type of thing you'd expect to see if space reporting were truly
-> > accurate on a thin volume, for example.
-> 
-> 
-> Personally, I agree with your suggestions, I’m more care about avail/used
-> not the size, but unfortunately, statfs seems only collecting f_blocks,
-> f_bfree, f_bavail then df calculate used space based on those variables,
-> so I think there is no chance directly specify used space. This is the
-> reason that I hope to guarantee 'total = used + avail'
-> 
-> 
-> If we remain static size 10GB and avail adjust to 3.2MB, then the result
-> looks like below. :(
-> 
-> $ df -h /mnt/test2
-> Filesystem      Size  Used Avail Use% Mounted on
-> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
-> 
-> $ df -h /mnt/test2/pq1
-> Filesystem      Size  Used Avail Use% Mounted on
-> /dev/vdb2        10G   10G  3.2M 100% /mnt/test2
-> 
+On Tue, Mar 20, 2018 at 10:04 AM, Ian Kent <raven@themaw.net> wrote:
+> Hi Amir, Miklos,
+>
+> On 20/03/18 14:29, Amir Goldstein wrote:
+>>
+>> And I do appreciate the time you've put into understanding the overlayfs
+>> problem and explaining the problems with my current proposal.
+>>
+>
+> For a while now I've been wondering why overlayfs is keen to avoid using
+> a local, persistent, inode number mapping cache?
+>
 
-Ah, I see. So used becomes inaccurate at that point. Hmm, it's starting
-to seem to me that maybe leaving this as is is the right approach. The
-output above is misleading because that much space has not been used by
-the quota. As previously noted, the floating size approach I personally
-just find confusing. It's not really clear at all what it's telling me
-as a user.
+A local persistent inode map is a more complex solution.
+If you remove re-factoring, my patch set adds less than 100 lines of code
+and it solves the problem for many real world setups.
+A more complex solution needs a use case in the real world to justify
+it over a less complex solution.
+I am not saying we can avoid the complex solution forever, but so far,
+I did not yet see the requests from users to justify it.
 
-The current approach directly maps the quota state to the stats fields
-so it clearly tells me 1.) the limit and 2.) how much of the limit I've
-used. If the parent filesystem is more restrictive and operations result
-in ENOSPC, then that's something the admin will have to resolve one way
-or another.
+> Sure there can be subtle problems with them but there are problems with
+> other alternatives too.
+>
 
-That's just my .02. Perhaps others feel differently and/or have better
-logic.
+There is a difference between "not applicable" and "problematic"
+The -o xino solution is not applicable to all setups, but I am not aware of
+any problems with this solution.
+Even without underlying filesystem declaring number of used ino bit,
+user can declare this with overlayfs mount option, so practically, the
+problem for overlayfs over xfs is already solved.
 
-> 
-> 
-> > 
-> > FWIW, the other option is just to leave the output as above where we
-> > presumably ignore the global free space cap and present 9.5GB available.
-> > I think it's fine to fix/limit that, but I'd prefer an inaccurate
-> > available number to an inaccurate/variable fs size either way.
-> > 
-> > With regard to a soft limit, it looks like we currently size the fs at
-> > the soft limit and simply call it 100% used if the limit is exceeded.
-> > That seems reasonable to me if only a soft limit is set, but I suppose
-> > that could hide some info if both hard/soft limits are set. Perhaps we
-> > should use the max of the soft/hard limit if both are set (or I guess
-> > prioritize a hard limit iff it's larger than the soft, to avoid
-> > insanity)? I suppose one could also argue that some admins might want to
-> > size an fs with the soft limit, give users a bit of landing room, then
-> > set a hard cap to protect the broader fs. :/
-> 
-> If we want to remain the size static then we need choose either soft or hard limit.
-> I think hard limit is a little bit better and meaningful because soft limit
-> might not directly cause write error even if the limit has already exceeded.
-> 
+The discussion about a VFS API for max_ino_bits is to make users
+life easier, but the API is not required to fix the overlayfs inode number
+problem.
 
-It seems reasonable enough to me to always use the hardlimit when both a
-hard and soft limit are set, but I don't really have a strong opinion
-either way.
-
-Brian
-
-> 
-> 
-> > 
-> > Brian
-> > 
-> >> -Eric
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Amir.
