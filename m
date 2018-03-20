@@ -1,15 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33466 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751687AbeCUDlL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:41:11 -0400
-Subject: [PATCH 14/14] xfs_scrub_all: use system encoding for lsblk output
- decoding
+Received: from userp2130.oracle.com ([156.151.31.86]:37652 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751022AbeCTDIt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 23:08:49 -0400
+Subject: [PATCH 4/4] mkfs: enable sparse inodes by default
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Mar 2018 20:41:07 -0700
-Message-ID: <152160366773.8288.6721882677866606943.stgit@magnolia>
-In-Reply-To: <152160358015.8288.2700156777231657519.stgit@magnolia>
-References: <152160358015.8288.2700156777231657519.stgit@magnolia>
+Date: Mon, 19 Mar 2018 20:08:44 -0700
+Message-ID: <152151532462.18312.14450864420601203976.stgit@magnolia>
+In-Reply-To: <152151529988.18312.2660325658864402943.stgit@magnolia>
+References: <152151529988.18312.2660325658864402943.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -21,26 +20,34 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't hardcode utf-8 as the decoding scheme for lsblk output, since the
-system could set it to anything else.
+Enable the sparse inode feature by default.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/xfs_scrub_all.in |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mkfs/xfs_mkfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 83c4e21..d374f92 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -48,7 +48,7 @@ def find_mounts():
- 	result.wait()
- 	if result.returncode != 0:
- 		return fs
--	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
-+	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
- 	output = ' '.join(sarray)
- 	bdevdata = json.loads(output)
- 	# The lsblk output had better be in disks-then-partitions order
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 1ca6a2d..78d0ce5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1996,7 +1996,7 @@ _("finobt not supported without CRC support\n"));
+ 		}
+ 		cli->sb_feat.finobt = false;
+ 
+-		if (cli->sb_feat.spinodes) {
++		if (cli->sb_feat.spinodes && cli_opt_set(&iopts, I_SPINODES)) {
+ 			fprintf(stderr,
+ _("sparse inodes not supported without CRC support\n"));
+ 			usage();
+@@ -3811,7 +3811,7 @@ main(
+ 			.crcs_enabled = true,
+ 			.dirftype = true,
+ 			.finobt = true,
+-			.spinodes = false,
++			.spinodes = true,
+ 			.rmapbt = false,
+ 			.reflink = false,
+ 			.parent_pointers = false,
 
