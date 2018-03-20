@@ -1,504 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47110 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933323AbeCTAIv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 20:08:51 -0400
-Date: Mon, 19 Mar 2018 17:08:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: test agfl reset on bad list wrapping
-Message-ID: <20180320000842.GC4866@magnolia>
-References: <20180316162602.GE1757@magnolia>
- <20180319173447.GB64748@bfoster.bfoster>
+Received: from mail-eopbgr50091.outbound.protection.outlook.com ([40.107.5.91]:6688
+        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753019AbeCTNPX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Mar 2018 09:15:23 -0400
+Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
+ case of global reclaim
+References: <152112607662.7371.16175767692798928059.stgit@localhost.localdomain>
+ <20180315174903.GM23100@dhcp22.suse.cz>
+ <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
+ <20180315230313.GM18129@dastard>
+ <6628c551-f607-367b-1ee6-f458266c1d92@virtuozzo.com>
+ <20180316213910.GF7000@dastard>
+ <18a031f3-2136-4ef9-6ede-05f5b835661c@virtuozzo.com>
+ <20180320001827.GB1150@dastard>
+From: Kirill Tkhai <ktkhai@virtuozzo.com>
+Message-ID: <ec116ce6-c22b-66e1-0e01-55f895997c7d@virtuozzo.com>
+Date: Tue, 20 Mar 2018 16:15:16 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180319173447.GB64748@bfoster.bfoster>
+In-Reply-To: <20180320001827.GB1150@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Michal Hocko <mhocko@kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-On Mon, Mar 19, 2018 at 01:34:47PM -0400, Brian Foster wrote:
-> On Fri, Mar 16, 2018 at 09:26:02AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > From the kernel patch that this test examines ("xfs: detect agfl count
-> > corruption and reset agfl"):
-> > 
-> > "The struct xfs_agfl v5 header was originally introduced with
-> > unexpected padding that caused the AGFL to operate with one less
-> > slot than intended. The header has since been packed, but the fix
-> > left an incompatibility for users who upgrade from an old kernel
-> > with the unpacked header to a newer kernel with the packed header
-> > while the AGFL happens to wrap around the end. The newer kernel
-> > recognizes one extra slot at the physical end of the AGFL that the
-> > previous kernel did not. The new kernel will eventually attempt to
-> > allocate a block from that slot, which contains invalid data, and
-> > cause a crash.
-> > 
-> > "This condition can be detected by comparing the active range of the
-> > AGFL to the count. While this detects a padding mismatch, it can
-> > also trigger false positives for unrelated flcount corruption. Since
-> > we cannot distinguish a size mismatch due to padding from unrelated
-> > corruption, we can't trust the AGFL enough to simply repopulate the
-> > empty slot.
-> > 
-> > "Instead, avoid unnecessarily complex detection logic and and use a
-> > solution that can handle any form of flcount corruption that slips
-> > through read verifiers: distrust the entire AGFL and reset it to an
-> > empty state. Any valid blocks within the AGFL are intentionally
-> > leaked. This requires xfs_repair to rectify (which was already
-> > necessary based on the state the AGFL was found in). The reset
-> > mitigates the side effect of the padding mismatch problem from a
-> > filesystem crash to a free space accounting inconsistency."
-> > 
-> > This test exercises the reset code by mutating a fresh filesystem to
-> > contain an agfl with various list configurations of correctly wrapped,
-> > incorrectly wrapped, not wrapped, and actually corrupt free lists; then
-> > checks the success of the reset operation by fragmenting the free space
-> > btrees to exercise the agfl.  Kernels without this reset fix will shut
-> > down the filesystem with corruption errors.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+On 20.03.2018 03:18, Dave Chinner wrote:
+> On Mon, Mar 19, 2018 at 02:06:01PM +0300, Kirill Tkhai wrote:
+>> On 17.03.2018 00:39, Dave Chinner wrote:
+>>> On Fri, Mar 16, 2018 at 11:55:30AM +0300, Kirill Tkhai wrote:
+>>>> On 16.03.2018 02:03, Dave Chinner wrote:
+>>>>> On Thu, Mar 15, 2018 at 10:28:43PM +0300, Kirill Tkhai wrote:
+>>>>>> On 15.03.2018 20:49, Michal Hocko wrote:
+>>>>>>> On Thu 15-03-18 18:01:34, Kirill Tkhai wrote:
+>>>>>>>> xfs_reclaim_inodes_count(XFS_M(sb)) does not care about memcg.
+>>>>>>>> So, it's called for memcg reclaim too, e.g. this list is shrinked
+>>>>>>>> disproportionality to another lists.
+>>>>>>>>
+>>>>>>>> This looks confusing, so I'm reporting about this.
+>>>>>>>> Consider this patch as RFC.
+>>>>>>>
+>>>>>>> Could you be more specific about the problem you are trying to solve?
+>>>>>>> Because we do skip shrinkers which are not memcg aware by
+>>>>>>> shrink_slab:
+>>>>>>> 		/*
+>>>>>>> 		 * If kernel memory accounting is disabled, we ignore
+>>>>>>> 		 * SHRINKER_MEMCG_AWARE flag and call all shrinkers
+>>>>>>> 		 * passing NULL for memcg.
+>>>>>>> 		 */
+>>>>>>> 		if (memcg_kmem_enabled() &&
+>>>>>>> 		    !!memcg != !!(shrinker->flags & SHRINKER_MEMCG_AWARE))
+>>>>>>> 			continue;
+>>>>>>>
+>>>>>>> Or am I missing something?
+>>>>>>
+>>>>>> sb->s_op->nr_cached_objects is a sub-method of generic super_cache_count().
+>>>>>> super_cache_count() is owned and only called by superblock's shrinker,
+>>>>>> which does have SHRINKER_MEMCG_AWARE flag.
+>>>>>
+>>>>> Xfs inodes are accounted to memcgs when they are allocated.  All the
+>>>>> memcg reclaim stuff is done at the VFS inode cache level - all the
+>>>>> XFS inode cache shrinker does is clean up inodes that are not
+>>>>> referenced by the VFS inode cache because the memcg aware reclaim
+>>>>> has already freed them.
+>>>>>
+>>>>> i.e. what the XFS inode cache is doing is perfectly reasonable -
+>>>>> memcg aware inode reclaim is occuring at the VFS level, but on XFS
+>>>>> that does not free the inodes as they are still referenced
+>>>>> internally by XFS. However, once the inode is removed from the VFS
+>>>>> LRU, all memcg information about the inode is destroyed, so there's
+>>>>> nothing in the XFS layers that cares about memcgs.
+>>>>
+>>>> So, after inode is removed from LRU, memory still remains accounted
+>>>> to memcg till the time they are actually freed. I personally don't
+>>>> care, just to mention.
+>>>>  
+>>>>> Hence when the XFS inode shrinker then called to run a
+>>>>> garbage collection pass on unreferenced inodes - the inodes that
+>>>>> are now unreferenced in the memcg due to the VFS inode shrinker pass
+>>>>> - it frees inodes regardless of the memcg context it was called from
+>>>>> because that information is no longer present in the inode cache.
+>>>>> Hence we just ignore memcgs at this level.
+>>>>
+>>>> But xfs_fs_free_cached_objects() returns number of these freed object
+>>>> as result to super_cache_scan(), so shrinker interprets them as related
+>>>> to a memcg, while they may be related to another memcg. This introduces
+>>>> a disproportion relatively to another shrinkers called to memcg.
+>>>
+>>> In what way? All memcgs see tha same values from the backing cache
+>>> and so try to do the same amount of scanning work. The shrinker
+>>> accounting simply doesn't care where the objects are scanned from,
+>>> as long as it comes from the same place as the calculation of the
+>>> number of objects in the cache it's about to scan.
+>>
+>> shrinker->count_objects() result is used to count number of objects,
+>> do_shrink_slab() should shrink during the call:
+>>
+>>         freeable = shrinker->count_objects(shrinker, shrinkctl);
+>>
+>> Then shrinker takes part of this value:
+>>
+>>         delta = freeable >> priority;
+>>         delta *= 4;
+>>         do_div(delta, shrinker->seeks);
+>>
+>> This is a number, the shrinker tries to shrink during the call.
+>> Let the priority is DEF_PRIORITY. Then, shrinker try to shrink
+>> freeable*4/(shrinker->seeks * 2^DEF_PRIORITY) enteties from every
+>> shrinker. Equal percent of every memcg shrinker.
+>>
+>> When XFS shows global number of cached objects in count_objects(),
+>> shrinker also tryes to shrink the same percent of global objects,
+>> as for other memcg shrinkers. So, when you have small memcg
+>> with 128Mb memory allowed and small number of tasks related to it,
+>> you may meet 1Gb of cached objects, which were queued by another
+>> big cgroup. So, the small cgroup may shrink number of objects of
+>> size more, then its own. It's not fair. That's all I'm worry in
+>> this message.
 > 
-> The test fails for me on a kernel with the agfl reset patch:
+> Actually, it is fair, because:
 > 
-> # diff -u tests/xfs/709.out /root/xfstests-dev/results//xfs/709.out.bad
-> --- tests/xfs/709.out   2018-03-19 12:05:20.146356068 -0400
-> +++ /root/xfstests-dev/results//xfs/709.out.bad 2018-03-19
-> 12:32:01.722735121 -0400
-> @@ -7,6 +7,16 @@
->  TEST good_start
->  TEST good_wrap
->  TEST bad_start
-> +/mnt/scratch/a: Input/output error
-> +Error: AG 0 free space header: Repairs are required.
-> +Error: AG 0 free list: Repairs are required.
-> +Error: AG 0 freesp by block btree: Repairs are required.
-> +Error: AG 0 freesp by length btree: Repairs are required.
-> +Error: AG 0 inode btree: Repairs are required.
-> +Error: AG 0 free inode btree: Repairs are required.
-> +Error: dev 253:3 AG 0 fsmap: Structure needs cleaning.
-> +/mnt/scratch: errors found: 7
-> +/mnt/scratch: Unmount and run xfs_repair.
->  expected flfirst < good_agfl_size - 1
->  expected flfirst < fllast
->  TEST no_move
+>         /* proportion the scan between the caches */
+>         dentries = mult_frac(sc->nr_to_scan, dentries, total_objects);
+>         inodes = mult_frac(sc->nr_to_scan, inodes, total_objects);
+>         fs_objects = mult_frac(sc->nr_to_scan, fs_objects, total_objects);
 > 
-> I think the errors are expected in this case, but the test probably
-> shouldn't fail..? (FYI, I didn't have CONFIG_XFS_DEBUG enabled at first.
-> I tried it again with CONFIG_XFS_DEBUG=y and the test passes.)
+> This means that if the number of objects in the memcg aware VFS
+> caches are tiny compared to the global XFS inode cache, then they
+> only get a tiny amount of the total scanning done by the shrinker.
 
-Hm, that's fun. :)
+This is just wrong. If you have two memcgs, the first is charged
+by xfs dentries and inodes, while the second is not charged by xfs
+dentries and inodes, the second will response for xfs shrink as well
+as the first.
 
-What kernel, xfsprogs, etc.?
+When we call shrink xfs partition of the second memcg, total_objects
+in super_cache_count() will consist only of cached objects.
 
-Or maybe it's easier just to remove the scrub parts until I get that
-part settled down since in theory the agfl scrubber could just detect
-the alignment error and return failure immediately.
+Then, we will call super_cache_scan() in the loop, and 
 
-> Some other random comments..
+total_objects = dentries + inodes + fs_objects + 1 = fs_objects
+s_objects = mult_frac(sc->nr_to_scan, fs_objects, total_objects) ~ almost equal to sc->nr_to_scan.
+
+So, if the first memcg is huge and it's charged 10GB to cached objects,
+the second memcg will shrink signify part of this objects (depending
+on do_shrink_slab() priority) in case of reclaim coming.
+
+> And because all of the memcg shrinkers walk the global inode cache,
+> the overall scanning is shared between all memcgs under memory
+> pressure evenly and so none are unfairly penalised by having to
+> scan the global inode cache to trigger final garbage collection.
+
+So, if there is single memcg using xfs, the rest of system is
+responsible for its shrinking. Completely unfair.
+Isn't this easy to understand?
+
+> If you just look at a single memcg and shrinker in isolation, then
+> you are missing the forest for the trees...
 > 
-> >  common/rc         |    6 +
-> >  tests/xfs/709     |  260 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/709.out |   13 +++
-> >  tests/xfs/group   |    1 
-> >  4 files changed, 280 insertions(+)
-> >  create mode 100755 tests/xfs/709
-> >  create mode 100644 tests/xfs/709.out
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 2c29d55..8f048f1 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3440,6 +3440,12 @@ _get_device_size()
-> >  	grep `_short_dev $1` /proc/partitions | awk '{print $3}'
-> >  }
-> >  
-> > +# check dmesg log for a specific string
-> > +_check_dmesg_for() {
-> > +	dmesg | tac | sed -ne "0,\#run fstests $seqnum at $date_time#p" | \
-> > +		tac | egrep -q "$1"
-> > +}
-> > +
-> >  # check dmesg log for WARNING/Oops/etc.
-> >  _check_dmesg()
-> >  {
-> > diff --git a/tests/xfs/709 b/tests/xfs/709
-> > new file mode 100755
-> > index 0000000..832a469
-> > --- /dev/null
-> > +++ b/tests/xfs/709
-> > @@ -0,0 +1,260 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 709
-> > +#
-> > +# Make sure XFS can fix a v5 AGFL that wraps over the last block.
-> > +# Refer to commit 96f859d52bcb ("libxfs: pack the agfl header structure so
-> > +# XFS_AGFL_SIZE is correct") for details on the original on-disk format error
-> > +# and the patch "xfs: detect agfl count corruption and reset agfl") for details
-> > +# about the fix.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2018 Oracle, Inc.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1
-> > +trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/xfs
-> > +. ./common/filter
-> > +. ./common/populate
-> > +
+>>> You've described some theoretical issue, but not described any user
+>>> visible or performance impacting behaviour that users actually care
+>>> about. What reproducable, observable behaviour does it fix/change?
+>>
+>> Strange question. Do you fix problems only when you meet a reproducable
+>> BUG()? This is the kernel, and many problem may be racy. But this
+>> does not mean, it's prohibited to discuss about them.
 > 
-> Do we need the xfs and populate includes?
-
-common/populate has the helpers for getting/setting metadata object fields.
-
-common/xfs has _require_scratch_xfs_crc
-
-> > +# real QA test starts here
-> > +_supported_fs xfs
-> > +_supported_os Linux
-> > +
-> > +_require_freeze
+> That's a bit extreme.
 > 
-> Or this?
-
-Yeah that can go away.
-
-> > +_require_scratch_nocheck
-> > +_require_test_program "punch-alternating"
-> > +
-> > +# This is only a v5 filesystem problem
-> > +_require_scratch_xfs_crc
-> > +
-> > +mount_loop() {
-> > +	if ! _try_scratch_mount >> $seqres.full 2>&1; then
-> > +		echo "scratch mount failed" >> $seqres.full
-> > +		return
-> > +	fi
-> > +
-> > +	# Trigger agfl fixing by fragmenting free space
-> > +	rm -rf $SCRATCH_MNT/a
-> > +	dd if=/dev/zero of=$SCRATCH_MNT/a bs=8192k >> $seqres.full 2>&1
+> I expect people who are trying to fix bugs in complex subsystems
+> to be able to explain what the bug is they are fixing, what impact
+> it has and how they observed/measured the impact. Especially for
+> somethign as critical as shrinker infrastructure - if we screw up the
+> calculations we'll break systems everywhere and when we have to fix
+> those bugs we need to know why those changes were made. That means
+> the reasons for making the change (i.e. what problem was being
+> fixed) needs to be documented in the commit message.
 > 
-> I guess we aren't really writing a lot, but fallocate might be more
-> efficient...
+>>>>> So, is there a problem you are actually trying to fix, or is this
+>>>>> simply a "I don't understand how the superblock shrinkers work,
+>>>>> please explain" patch?
+>>>>
+>>>> I work on some shrinker changes, and just want to understand they don't
+>>>> touch anything. 
+>>>
+>>> Oh, goody, another person about to learn the hard way that shrinkers
+>>> are far more varied and complex than page reclaim :P
+>>
+>> It may be a surprise, but I have to say, that all memcg-aware shrinkers
+>> are based on list_lrus. XFS is exception. So, your words are not about
+>> shrinkers in general, just about XFS.
 > 
-> > +	./src/punch-alternating $SCRATCH_MNT/a
-> > +	sync
+> Speaking as the original author of the list_lru infrastructure for
+> shrinkers, you've got that all back to front. The list_lru was
+> developed specifically for XFS scalibilty and performance reasons
+> i.e. SHRINKER_NUMA_AWARE.
 > 
-> ... and perhaps fsync.
+> The memcg stuff was tacked onto the side of the list-lrus later on
+> as it was a convenient abstraction to hide the bogosities of memcg
+> accounting and reclaim from the rest of the mm subsystem.  IOWs, the
+> memcg infrastructure is the exception case here, not XFS....
 
-Heh, I could skip this entirely since punch-alternating does the
-fsync for us already.
+I don't reduce someone's merits. And this patch is RFC about the
+unfairness, I described. If xfs people are not interested in this
+theme, then I am not interested even more.
 
-> > +	rm -rf $SCRATCH_MNT/a
-> > +
-> > +	# See if scrub complains...
-> > +	if [ -n "$(_is_mounted $SCRATCH_DEV 2>&1)" ] && \
-> > +	   _supports_xfs_scrub $SCRATCH_MNT $SCRATCH_DEV; then
-> > +		echo "SCRUB" >> $seqres.full
-> > +		"$XFS_SCRUB_PROG" -n $SCRATCH_MNT >> $seqres.full
-> > +	fi
-> 
-> Is a scrub necessary for the test? Either way, I wonder if this is
-> something that is better paired with the repair in runtest().
-
-Probably can be omitted for now.
-
-> > +
-> > +	_scratch_unmount 2>&1 | _filter_scratch
-> > +}
-> > +
-> > +runtest() {
-> > +	cmd="$1"
-> > +
-> > +	# Format filesystem
-> > +	echo "TEST $cmd" | tee /dev/ttyprintk
-> > +	echo "TEST $cmd" >> $seqres.full
-> > +	_scratch_unmount >> /dev/null 2>&1
-> > +	_scratch_mkfs_sized $((32 * 1048576)) >> $seqres.full
-> > +
-> > +	# Record what was here before
-> > +	echo "FS BEFORE" >> $seqres.full
-> > +	_scratch_xfs_db -c 'sb 0' -c 'p' -c 'agf 0' -c 'p' -c 'agfl 0' -c 'p' > $tmp.before
-> > +	cat $tmp.before >> $seqres.full
-> > +
-> > +	sectsize=$(_scratch_xfs_get_metadata_field "sectsize" "sb 0")
-> > +	flfirst=$(_scratch_xfs_get_metadata_field "flfirst" "agf 0")
-> > +	fllast=$(_scratch_xfs_get_metadata_field "fllast" "agf 0")
-> > +	flcount=$(_scratch_xfs_get_metadata_field "flcount" "agf 0")
-> > +
-> > +	# Due to a padding bug in the original v5 struct xfs_agfl,
-> > +	# XFS_AGFL_SIZE could be 36 on 32-bit or 40 on 64-bit.  On a system
-> > +	# with 512b sectors, this means that the AGFL length could be
-> > +	# ((512 - 36) / 4) = 119 entries on 32-bit or ((512 - 40) / 4) = 118
-> > +	# entries on 64-bit.
-> > +	#
-> > +	# We now have code to figure out if the AGFL list wraps incorrectly
-> > +	# according to the kernel's agfl size and fix it by resetting the agfl
-> > +	# to zero length.  Mutate ag 0's agfl to be in various configurations
-> > +	# and see if we can trigger the reset.
-> > +	#
-> > +	# Don't hardcode the numbers, calculate them.
-> > +
-> > +	# Have to have at least three agfl items to test full wrap
-> > +	test "$flcount" -ge 3 || _notrun "insufficient agfl flcount"
-> > +
-> > +	# mkfs should be able to make us a nice neat flfirst < fllast setup
-> > +	test "$flfirst" -lt "$fllast" || _notrun "fresh agfl already wrapped?"
-> > +
-> > +	bad_agfl_size=$(( (sectsize - 40) / 4 ))
-> > +	good_agfl_size=$(( (sectsize - 36) / 4 ))
-> > +	agfl_size=
-> > +	case "$1" in
-> > +	"fix_end")	# fllast points to the end w/ 40-byte padding
-> > +		new_flfirst=$(( bad_agfl_size - flcount ))
-> > +		agfl_size=$bad_agfl_size;;
-> > +	"fix_start")	# flfirst points to the end w/ 40-byte padding
-> > +		new_flfirst=$(( bad_agfl_size - 1))
-> > +		agfl_size=$bad_agfl_size;;
-> > +	"fix_wrap")	# list wraps around end w/ 40-byte padding
-> > +		new_flfirst=$(( bad_agfl_size - (flcount / 2) ))
-> > +		agfl_size=$bad_agfl_size;;
-> > +	"start_zero")	# flfirst points to the start
-> > +		new_flfirst=0
-> > +		agfl_size=$good_agfl_size;;
-> > +	"good_end")	# fllast points to the end w/ 36-byte padding
-> > +		new_flfirst=$(( good_agfl_size - flcount ))
-> > +		agfl_size=$good_agfl_size;;
-> > +	"good_start")	# flfirst points to the end w/ 36-byte padding
-> > +		new_flfirst=$(( good_agfl_size - 1 ))
-> > +		agfl_size=$good_agfl_size;;
-> > +	"good_wrap")	# list wraps around end w/ 36-byte padding
-> > +		new_flfirst=$(( good_agfl_size - (flcount / 2) ))
-> > +		agfl_size=$good_agfl_size;;
-> > +	"bad_start")	# flfirst points off the end
-> > +		new_flfirst=$good_agfl_size
-> > +		agfl_size=$good_agfl_size;;
-> > +	"no_move")	# whatever mkfs formats (flfirst points to start)
-> > +		new_flfirst=$flfirst
-> > +		agfl_size=$good_agfl_size;;
-> > +	"simple_move")	# move list arbitrarily
-> > +		new_flfirst=$((fllast + 1))
-> > +		agfl_size=$good_agfl_size;;
-> > +	*)
-> > +		_fail "Internal test error";;
-> > +	esac
-> > +	new_fllast=$(( (new_flfirst + flcount - 1) % agfl_size ))
-> > +
-> > +	# Log what we're doing...
-> > +	cat >> $seqres.full << ENDL
-> > +sector size: $sectsize
-> > +bad_agfl_size: $bad_agfl_size [0 - $((bad_agfl_size - 1))]
-> > +good_agfl_size: $good_agfl_size [0 - $((good_agfl_size - 1))]
-> > +agfl_size: $agfl_size
-> > +flfirst: $flfirst
-> > +fllast: $fllast
-> > +flcount: $flcount
-> > +new_flfirst: $new_flfirst
-> > +new_fllast: $new_fllast
-> > +ENDL
-> > +
-> > +	# Remap the agfl blocks
-> > +	echo "$((good_agfl_size - 1)) 0xffffffff" > $tmp.remap
-> > +	seq "$flfirst" "$fllast" | while read f; do
-> > +		list_pos=$((f - flfirst))
-> > +		dest_pos=$(( (new_flfirst + list_pos) % agfl_size ))
-> > +		bno=$(_scratch_xfs_get_metadata_field "bno[$f]" "agfl 0")
-> > +		echo "$dest_pos $bno" >> $tmp.remap
-> > +	done
-> > +
-> > +	cat $tmp.remap | while read dest_pos bno junk; do
-> > +		_scratch_xfs_set_metadata_field "bno[$dest_pos]" "$bno" "agfl 0" >> $seqres.full
-> > +	done
-> > +
-> 
-> Might be worth factoring the above into a function. Also, do we need all
-> of the $seqres.full redirection if we dump the $tmp.corrupt bits right
-> after?
-
-Probably not, but I like to preserve the log of what xfs_db did vs. what
-ended up on disk just to confirm that the
-_scratch_xfs_set_metadata_field are behaving like they're supposed to.
-
-> > +	# Set new flfirst/fllast
-> > +	_scratch_xfs_set_metadata_field "fllast" "$new_fllast" "agf 0" >> $seqres.full
-> > +	_scratch_xfs_set_metadata_field "flfirst" "$new_flfirst" "agf 0" >> $seqres.full
-> > +
-> > +	echo "FS AFTER" >> $seqres.full
-> > +	_scratch_xfs_db -c 'sb 0' -c 'p' -c 'agf 0' -c 'p' -c 'agfl 0' -c 'p' > $tmp.corrupt 2> /dev/null
-> > +	diff -u $tmp.before $tmp.corrupt >> $seqres.full
-> > +
-> > +	# Mount and see what happens
-> > +	mount_loop
-> > +
-> > +	# Did we end up with a non-wrapped list?
-> > +	flfirst=$(_scratch_xfs_get_metadata_field "flfirst" "agf 0" 2>/dev/null)
-> > +	fllast=$(_scratch_xfs_get_metadata_field "fllast" "agf 0" 2>/dev/null)
-> > +	if [ "${flfirst}" -ge "$((good_agfl_size - 1))" ]; then
-> > +		echo "expected flfirst < good_agfl_size - 1"
-> > +		echo "expected flfirst(${flfirst}) < good_agfl_size - 1($((good_agfl_size - 1)))" >> $seqres.full
-> > +	fi
-> > +	if [ "${fllast}" -ge "$((good_agfl_size - 1))" ]; then
-> > +		echo "expected fllast < good_agfl_size - 1"
-> > +		echo "expected fllast(${fllast}) < good_agfl_size - 1($((good_agfl_size - 1)))" >> $seqres.full
-> > +	fi
-> > +	if [ "${flfirst}" -ge "${fllast}" ]; then
-> > +		echo "expected flfirst < fllast"
-> > +		echo "expected flfirst(${flfirst}) < fllast(${fllast})" >> $seqres.full
-> > +	fi
-> 
-> Might be able to use tee here to avoid some of the echo duplication. It
-> looks like we already dump the raw agf/agfl structures to $seqres.full
-> below.
-> 
-> Also note that there are a bunch of lines beyond 80 chars.
-> 
-> > +
-> > +	echo "FS MOUNTLOOP" >> $seqres.full
-> > +	_scratch_xfs_db -c 'sb 0' -c 'p' -c 'agf 0' -c 'p' -c 'agfl 0' -c 'p' > $tmp.mountloop 2> /dev/null
-> > +	diff -u $tmp.corrupt $tmp.mountloop >> $seqres.full
-> > +
-> > +	# Let's see what repair thinks
-> > +	echo "REPAIR" >> $seqres.full
-> > +	_scratch_xfs_repair >> $seqres.full 2>&1
-> 
-> I guess we don't need _require_scratch_nocheck if we repair before the
-> test returns.
-
-Yep.
-
-> > +
-> > +	echo "FS REPAIR" >> $seqres.full
-> > +	_scratch_xfs_db -c 'sb 0' -c 'p' -c 'agf 0' -c 'p' -c 'agfl 0' -c 'p' > $tmp.repair 2> /dev/null
-> > +	diff -u $tmp.mountloop $tmp.repair >> $seqres.full
-> > +
-> > +	# Try mount/unmount one more time.
-> > +	mount_loop
-> > +
-> > +	echo "FS REMOUNT" >> $seqres.full
-> > +	_scratch_xfs_db -c 'sb 0' -c 'p' -c 'agf 0' -c 'p' -c 'agfl 0' -c 'p' > $tmp.remount 2> /dev/null
-> > +	diff -u $tmp.repair $tmp.remount >> $seqres.full
-> 
-> These last couple of hunks seem superfluous. What's the purpose, just to
-> work out the fs some more? I suppose that makes sense. The comment could
-> be made more clear.
-
-# Exercise the filesystem again to make sure there aren't any lasting
-# ill effects from either the agfl reset or the recommended subsequent
-# repair run.
-
-> > +}
-> > +
-> > +runtest fix_end
-> > +runtest fix_start
-> > +runtest fix_wrap
-> > +runtest start_zero
-> > +runtest good_end
-> > +runtest good_start
-> > +runtest good_wrap
-> > +runtest bad_start
-> > +runtest no_move
-> > +runtest simple_move
-> > +
-> > +_scratch_unmount >> $seqres.full 2>&1
-> > +
-> 
-> The scratch mounting/unmounting seems unbalanced. runtest() unmounts the
-> fs at the start, but it doesn't appear we ever call it with scratch
-> already mounted. The mount loop cycles the mount, so it seems it should
-> already be unmounted by the time we get here as well.
-
-I think that's a desperate last gasp attempt to scrape the fs off the
-system when I was working on my version of the patch.  It can go away.
-
-Thanks for the review! :)
-
---D
-
-> Brian
-> 
-> > +# Did we get the kernel warning too?
-> > +warn_str='WARNING: Reset corrupted AGFL'
-> > +_check_dmesg_for "${warn_str}" || echo "Missing kernel log message \"${warn_str}\"."
-> > +
-> > +# Now run the regular dmesg check, filtering out the agfl warning
-> > +filter_agfl_reset_printk() {
-> > +	grep -v "${warn_str}"
-> > +}
-> > +_check_dmesg filter_agfl_reset_printk
-> > +
-> > +status=0
-> > +exit 0
-> > diff --git a/tests/xfs/709.out b/tests/xfs/709.out
-> > new file mode 100644
-> > index 0000000..980b4d1
-> > --- /dev/null
-> > +++ b/tests/xfs/709.out
-> > @@ -0,0 +1,13 @@
-> > +QA output created by 709
-> > +TEST fix_end
-> > +TEST fix_start
-> > +TEST fix_wrap
-> > +TEST start_zero
-> > +TEST good_end
-> > +TEST good_start
-> > +TEST good_wrap
-> > +TEST bad_start
-> > +expected flfirst < good_agfl_size - 1
-> > +expected flfirst < fllast
-> > +TEST no_move
-> > +TEST simple_move
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index e2397fe..472120e 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -441,3 +441,4 @@
-> >  441 auto quick clone quota
-> >  442 auto stress clone quota
-> >  443 auto quick ioctl fsr
-> > +709 auto quick
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Kirill
