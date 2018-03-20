@@ -1,132 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f173.google.com ([209.85.213.173]:43819 "EHLO
-        mail-yb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751768AbeCTG3m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 02:29:42 -0400
+Received: from sandeen.net ([63.231.237.45]:48860 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751269AbeCTRlw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Mar 2018 13:41:52 -0400
+Subject: Re: [RFC][PATCH] xfs: adjust size/used/avail information for quota-df
+References: <1520601355-180600-1-git-send-email-cgxu519@gmx.com>
+ <20180315142549.GC45325@bfoster.bfoster>
+ <F2C6F369-B24B-4383-8987-50C0F64155AD@gmx.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <efc15a82-1b9b-3e58-136a-ac6c3468e35f@sandeen.net>
+Date: Tue, 20 Mar 2018 12:41:50 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180320014709.GC1150@dastard>
-References: <CAOQ4uxhubJhspfj+x7yRkTJ4rUXyhZoF0x3kjuFyv-0=Lxrctw@mail.gmail.com>
- <CAOQ4uxh0H8mbbAZt0MEdLGRY-8Aqg2c9UFM56-KL2b90fLYCFQ@mail.gmail.com>
- <20180317212814.GI7000@dastard> <CAOQ4uxit=nHvd2C080QeM27icSFra+0Anwu8vXqs4sd=8tCCNg@mail.gmail.com>
- <20180318230259.GJ7000@dastard> <CAOQ4uxiHkW41RB4LogWi8+rp_NhoC+SHGNY9_ShdQi7OyJTTVA@mail.gmail.com>
- <20180320014709.GC1150@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 20 Mar 2018 08:29:35 +0200
-Message-ID: <CAOQ4uxh+90vyCOqhLXtNi0U+YTsi6nCYuZFJMPhBWUaRwSBDvQ@mail.gmail.com>
-Subject: Re: Question about XFS_MAXINUMBER
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <F2C6F369-B24B-4383-8987-50C0F64155AD@gmx.com>
+Content-Type: text/plain; charset=gbk
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: cgxu519@gmx.com, Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Tue, Mar 20, 2018 at 3:47 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Mar 19, 2018 at 06:03:30AM +0200, Amir Goldstein wrote:
-[...]
->> Well, it is not an assumption if filesystem is inclined to publish
->> s_max_ino_bits, which is not that different in concept from publishing
->> s_maxbytes and s_max_links, which are also limitations in current
->> kernel/sb that could be lifted in the future.
->
-> It is different, because you're expecting to be able to publish
-> persistent user visible information based on it.
->
-> If we change s_max_ino_bits in the underlying filesystem, then
-> overlay inode numbers change and that can cause all sorts of problem
-> with things like filehandles, backups that use dev/inode number
-> tuples to detect identical files, etc.  i.e. there's a heap of
-> downstream impacts of changing inode numbers. If we have to
-> publish s_max_ino_bits to the VFS, we essentially fix the ABI of the
-> user visible inode number the filesysetm publishes. IOWs, we
-> effectively can't change it without breaking external users.
->
+On 3/20/18 9:49 AM, cgxu519@gmx.com wrote:
 
-You are right.
+...
 
-> I suspect you don't realise we already expose the full 64 bit
-> inode number space completely to userspace through other ABIs. e.g.
-> the bulkstat ioctls. We've already got applications that use the XFS
-> inode number as a 64 bit value both to and from the kernel (e.g.
-> xfs_dump, file handle encoding, etc), so the idea that we can now
-> take bits back from what we've already agreed to expose to userspace
-> is fraught with problems.
+> No, not really. Assume if we have 100GB xfs filesystem(/mnt/test2) and we have
+> 3 directories(pq1, pq2, pq3) inside the fs, each directory sets project quota. 
+> (size limit up to 10GB)
+> 
+> When avail space of total filesystem is only left 3.2MB, but when running df for
+> pg1,pg2,pg3 then avail space is 9.5GB, this is much more than real filesystem. 
+> What do you think?
+> 
+> Detail output [1]. (without this fix patch)
+> 
+> $ df -h /mnt/test2
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
+> 
+> $ df -h /mnt/test2/pq1
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
+> 
+> $ df -h /mnt/test2/pq2
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
+> 
+> $ df -h /mnt/test2/pq3
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
 
-I'm sorry. There must be something I am missing.
-Are users exposed to high ino bits via xfs tools other than NULLFSINO
-NULLAGINO? If they are then I did not find where.
-And w.r.t to NULLINO (-1), that ino is not exposed via getattr() and readdir(),
-so not a problem for overlayfs.
+I agree that this is a confusing result.
+ 
+> Detail output [2]. (with this fix patch)
+> 
+> $ df -h /mnt/test2
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
+> 
+> $ df -h /mnt/test2/pq1
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2       574M  570M  3.2M 100% /mnt/test2
+                   ^           ^
+                   |           |
+                   |           +-- This makes sense 
+                   |
+                   +-- This is a little bit odd
 
->
-> That's the problem I see here - it's not that we /can't/ implement
-> s_max_ino_bits, the problem is that once we publish it we can't
-> change it because it will cause random breakage of applications
-> using it. And because we've already effectively published it to
-> userspace applications as s_max_ino_bits = 64, there's no scope for
-> movement at all.
->
+So you cap the available project space to host filesystem
+available space, and also use that to compute the
+total size of the "project" by adding used+available.
 
-Agreed. So we can add an explicit compat feature bit to declare that user
-would like to limit future use of high ino bits on his fs.
-Makes me wonder, how come there is no feature to block "inode64"
-mount option, so user can declare he wishes to keep the fs fully
-compatible for mounting on 32bit systems?
+The slightly strange result is that "size" will shrink
+as more filesystem space gets used, but I'm not
+sure I have a better suggestion here... would the below
+result be too confusing?  It is truthful; the limit is 10G,
+570M are used, and only 3.2M is currently available due to
+the host filesystem freespace constraint:
 
-[...]
+$ df -h /mnt/test2/pq1
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vdb2       10G   570M  3.2M 100% /mnt/test2
 
-> We've done this many times in the past. e.g. we changed the default
-> inode allocation policy from inode32 to inode64 back in 2012. That
-> means users, on kernel upgrade, silently went from 32 bit inodes to
-> 64 bit inodes. We've done this because of the fact that the
-> *filesystem owns the entire inode number space* and as long as we
-> don't change individual inode numbers that users see for a specific
-> inode, we can do whatever we want inside that inode number space.
->
-
-Right. My main point is that, unless I am missing something, never in
-xfs history, was a non NULL inode number exposed to user with high
-8 bits used, so at least forward/backward compat for "inode56" feature
-is not going to be a big challenge.
-
->> > Given that overlay has a persistent inode numbering problem, why
->> > doesn't overlay just allocate and store it's own inode numbers and
->> > other required persistent state in an xattr?
->> >
->>
->> First, this is not as simple as it sounds.
->
-> Sure, just like s_max_ino_bits is not as simple as it sounds.
-
-It never is ;-)
-
->
-> If we want to explicitly reserve part of the inode number space for
-> other layers to use for their own purposes, then we need to
-> explicitly and persistently support that in the underlying
-> filesystem. That means mkfs, repair, db, growfs, etc all need to
-> understand that inode numbers have a size limit and do the right
-> thing...
->
-> That makes it an opt-in configuration that we can test and support
-> without having to care about overlay implementations or backwards
-> compatibility across applications on existing filesystems.
->
-
-OK. I'll work on a proposal.
-
->> Second, and this may be a revolutionary argument, I would like to
->> believe that we are all working together for a "greater good".
->
-> I don't say no for the fun of saying no. I say no because I think
-> something is a bad idea. Just because I say no doesn't mean I don't
-> don't want to solve the problem. It just means that I think the
-> solution being presented is a bad idea and we need to explore the
-> problem space for a more robust solution.
->
-
-And I do appreciate the time you've put into understanding the overlayfs
-problem and explaining the problems with my current proposal.
-
-Thanks,
-Amir.
+-Eric
