@@ -1,38 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58722 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750888AbeCTDI0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 23:08:26 -0400
-Subject: [PATCH 0/4] xfsprogs: more misc fixes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 19 Mar 2018 20:08:19 -0700
-Message-ID: <152151529988.18312.2660325658864402943.stgit@magnolia>
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:34550 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751790AbeCTRwp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 13:52:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180319233913.GA1150@dastard>
+References: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com>
+ <CAM_iQpVBmhiN05ZpxEZ2cNLSJpczc7z=Sz7a1tnUGeQimtDTYA@mail.gmail.com> <20180319233913.GA1150@dastard>
+From: Cong Wang <xiyou.wangcong@gmail.com>
+Date: Tue, 20 Mar 2018 10:52:24 -0700
+Message-ID: <CAM_iQpUgstCYjfqHdmoPf0PniMwXPU=uGkDmfYOtb4hwi_XN9Q@mail.gmail.com>
+Subject: Re: xfs: list corruption in xfs_setup_inode()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Chinner <dchinner@redhat.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
 
-Hi all,
+On Mon, Mar 19, 2018 at 4:39 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Mar 19, 2018 at 02:37:22PM -0700, Cong Wang wrote:
+>> On Mon, Oct 30, 2017 at 2:55 PM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+>> > Hello,
+>> >
+>> > We triggered a list corruption (double add) warning below on our 4.9
+>> > kernel (the 4.9 kernel we use is based on -stable release, with only a
+>> > few unrelated networking backports):
+>>
+>> We still keep getting this warning on 4.9 kernel. Looking into this again,
+>> it seems xfs_setup_inode() could be called twice if an XFS inode is gotten
+>> from disk? Once in xfs_iget() => xfs_setup_existing_inode(), and once
+>> in xfs_ialloc().
+>
+> AFAICT, the only way this can happen is that if the inode ->i_mode
+> has been corrupted in some way. i.e. there is either on-disk or
+> in-memory corruption occurring.
+>
+>> Does the following patch (compile-only) make any sense? Again, I don't
+>> want to pretend to understand XFS...
+>
+> No, it doesn't make sense because a newly allocated inode should
+> always have a zero i_mode.
 
-Here's a bunch more patches for xfsprogs 4.16.
+Got it.
 
-The first patch implements a custom ifork verifier for repair phase 6
-so that we can mark directories with invalid parents and later _iget
-them so that we can reattach them to whatever parent we find (or
-lost+found).
+>
+> Have you turned on memory poisoning to try to identify where the
+> corruption is coming from?
+>
 
-The next couple of patches fix some mountpoint finding bugs so that
-users can pass "/home" or "/home/" to programs that take file paths.
+I don't consider it as a memory corruption until you point it out.
+Will try to add slub_debug.
 
-The fourth patch enables sparse inodes by default in mkfs.
 
-This probably won't eat your data, and the branch[1] should apply
-against for-next.  More patches tomorrow.
+> And given that it might actually be on-disk corruption that is
+> causing this, have you run xfs_repair on these filesystems to
+> determine if they are free from on-disk corruption?
 
---D
+Not yet, I can try when it happens again.
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+
+>
+> Indeed, that makes me wonder format are you running on these
+> filesystems, because on the more recent v5 format we don't read
+
+Seems I can't check the format on a mounted fs?
+
+$ xfs_db -x /dev/sda1
+xfs_db: /dev/sda1 contains a mounted filesystem
+
+fatal error -- couldn't initialize XFS library
+
+
+> newly allocated inodes from disk. Can you provide the info listed
+> here:
+>
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>
+> as that will tell us what code paths are executing on inode
+> allocation.
+>
+
+The machine is already rebooted after that warning, so I don't know if
+it is too late to collect xfs information, but here it is:
+
+$ xfs_repair -V
+xfs_repair version 4.5.0
+
+$ xfs_info /
+meta-data=/dev/sda1              isize=256    agcount=4, agsize=1310720 blks
+         =                       sectsz=512   attr=2, projid32bit=0
+         =                       crc=0        finobt=0 spinodes=0
+data     =                       bsize=4096   blocks=5242880, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
