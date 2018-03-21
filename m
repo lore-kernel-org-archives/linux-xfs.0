@@ -1,89 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:42890 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755327AbeCSPTy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 11:19:54 -0400
-Date: Mon, 19 Mar 2018 16:19:53 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v2] xfs: preserve i_rdev when recycling a reclaimable
- inode
-Message-ID: <20180319151953.GA13859@kroah.com>
-References: <20180312162744.GB4865@magnolia>
- <CAOQ4uxjn8UN2-Hzr8u404ydKf8s41yVpMA93-n7r6Dr2VBz3dA@mail.gmail.com>
- <CAOQ4uxhdkhZup=ndukKCRtU13YVs8jQxT0zgOT_XN3_-tB8TfQ@mail.gmail.com>
- <CAOQ4uxhCjBA99X_C-GpEBf=jC4S_wSrxMwS6Ovj7BtWLK1GmUA@mail.gmail.com>
- <20180313131109.GB6260@lst.de>
- <CAOQ4uxiDHSC19-fRdZmXM5BJB3-p9_LdPgSmxpjGrdCzhV2W2Q@mail.gmail.com>
- <20180313215028.GE18129@dastard>
- <CAOQ4uxgsMwtQRCkpJTJoVO-mbU1yRz7F0pMOAVcJphEEKq8SHA@mail.gmail.com>
- <20180319134013.GE27855@kroah.com>
- <CAOQ4uxjdXLzAd7eTgq5dcVmWSUH=xPWhQN_j8UFF8gsZx3J5wQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjdXLzAd7eTgq5dcVmWSUH=xPWhQN_j8UFF8gsZx3J5wQ@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53916 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751873AbeCUQN1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 12:13:27 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 50B7F80462
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Mar 2018 16:13:27 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 20701611A0
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Mar 2018 16:13:27 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: clean up xfs_mount allocation and dynamic initializers
+Date: Wed, 21 Mar 2018 12:13:25 -0400
+Message-Id: <20180321161325.12773-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <eguan@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, stable <stable@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Mar 19, 2018 at 04:59:00PM +0200, Amir Goldstein wrote:
-> On Mon, Mar 19, 2018 at 3:40 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > On Wed, Mar 14, 2018 at 08:24:30AM +0200, Amir Goldstein wrote:
-> >> On Tue, Mar 13, 2018 at 11:50 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> > On Tue, Mar 13, 2018 at 04:33:15PM +0200, Amir Goldstein wrote:
-> >> >> On Tue, Mar 13, 2018 at 3:11 PM, Christoph Hellwig <hch@lst.de> wrote:
-> >> >> > On Tue, Mar 13, 2018 at 02:46:09PM +0200, Amir Goldstein wrote:
-> >> >> >> OK, found the patches the fix soft lockups in generic/269 and
-> >> >> >> assertion in generic/232, so expunging those 2 tests from v4.15.y
-> >> >> >> test runs.
-> >> >> >
-> >> >> > Which patches are those?  We should probably backport them to 4.15-stable.
-> >> >>
-> >> >> Probably, but I guess Darrick has those in his TODO.
-> >> >>
-> >> >> There is this series that refers to failure in generic/232:
-> >> >> https://marc.info/?l=linux-xfs&m=151701545720824&w=2
-> >> >>
-> >> >> These 2 commits refer to generic/269 specifically in commit message:
-> >> >>  70c57dcd606f xfs: skip CoW writes past EOF when writeback races with truncate
-> >> >>  be78ff0e7277 xfs: recheck reflink / dirty page status before freeing
-> >> >> CoW reservations
-> >> >> and the thread on the second commit also mentions generic/270
-> >> >> (I found out the hard way that it also soft locks).
-> >> >>
-> >> >> But there are surely more patches for stable in master.
-> >> >> I recon CC: stable and/or Fixes: tags could have been helpful,
-> >> >> but I don't see any of those in v4.16-rcX from the core xfs developers.
-> >> >
-> >> > AS I always say: if you want to maintain a stable backport kernel
-> >> > with all the fixes that go into the bleeding edge, you're more than
-> >> > welcome to do it.
-> >> >
-> >> > Everyone else is flat out just keeping up with on going development
-> >> > and fixing bugs in the kernel as it's moving forward. So if you have
-> >> > the need for stable backports, please keep backporting patches you
-> >> > need, testing them and asking the stable maintainers to include
-> >> > them.
-> >> >
-> >>
-> >> Greg,
-> >>
-> >> I tested the patch in question per Darrick's request.
-> >> I found no regressions with full "auto" run on xfs with reflinks enabled.
-> >> Please include this patch in stable 4.15.
-> >
-> > I have no idea anymore what "this patch" means here :(
-> >
-> > Please resend the git commit id of what I need to apply to where.
-> >
-> 
-> Please apply commit
-> acd1d71598f7 xfs: preserve i_rdev when recycling a reclaimable inode
-> 
-> to stable kernel v4.15
+Most of the generic data structures embedded in xfs_mount are
+dynamically initialized immediately after mp is allocated. A few
+fields are left out and initialized during the xfs_mountfs()
+sequence, after mp has been attached to the superblock.
 
-Now applied, thanks.
+To clean this up and help prevent premature access of associated
+fields, refactor xfs_mount allocation and all dependent init calls
+into a new helper. This self-documents that all low level data
+structures (i.e., locks, trees, etc.) should be initialized before
+xfs_mount is attached to the superblock.
 
-greg k-h
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+I realized after the fact that this steps on the ability to instrument
+the use-before-init variant[1] of the problematic radix tree access on
+failed mount issue that Dave tracked down. This is because we'd
+immediately initialize the structure and thus a subsequent memset()
+would ultimately require another proper initialization.
+
+As Dave noted in that thread, we could alternatively instrument the
+use-after-free variant of the problem with a post-free delay of the mp.
+I actually wonder if a last step instrumented failure in fill_super()
+might be a more broadly useful test because it provides future coverage
+of the entire mount teardown sequence rather than just the bad radix
+tree access.
+
+On the flipside, this patch isn't the cleanup of the century so I'd be
+fine with dropping it in favor of [1], but I think it's worthy enough to
+consider.
+
+Brian
+
+[1] https://marc.info/?l=linux-xfs&m=152152202700598&w=2
+
+ fs/xfs/libxfs/xfs_sb.c |  1 -
+ fs/xfs/xfs_mount.c     |  2 --
+ fs/xfs/xfs_super.c     | 39 +++++++++++++++++++++++++++++----------
+ 3 files changed, 29 insertions(+), 13 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index a55f7a45fa78..53433cc024fd 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -731,7 +731,6 @@ xfs_sb_mount_common(
+ 	struct xfs_sb	*sbp)
+ {
+ 	mp->m_agfrotor = mp->m_agirotor = 0;
+-	spin_lock_init(&mp->m_agirotor_lock);
+ 	mp->m_maxagi = mp->m_sb.sb_agcount;
+ 	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+ 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 6f5a5e6764d8..a901b86772f8 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -817,8 +817,6 @@ xfs_mountfs(
+ 	/*
+ 	 * Allocate and initialize the per-ag data.
+ 	 */
+-	spin_lock_init(&mp->m_perag_lock);
+-	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+ 	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+ 	if (error) {
+ 		xfs_warn(mp, "Failed per-ag init: %d", error);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 951271f57d00..612c1d5348b3 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1579,29 +1579,48 @@ xfs_destroy_percpu_counters(
+ 	percpu_counter_destroy(&mp->m_fdblocks);
+ }
+ 
+-STATIC int
+-xfs_fs_fill_super(
+-	struct super_block	*sb,
+-	void			*data,
+-	int			silent)
++static struct xfs_mount *
++xfs_mount_alloc(
++	struct super_block	*sb)
+ {
+-	struct inode		*root;
+-	struct xfs_mount	*mp = NULL;
+-	int			flags = 0, error = -ENOMEM;
++	struct xfs_mount	*mp;
+ 
+ 	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
+ 	if (!mp)
+-		goto out;
++		return NULL;
+ 
++	mp->m_super = sb;
+ 	spin_lock_init(&mp->m_sb_lock);
++	spin_lock_init(&mp->m_agirotor_lock);
++	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
++	spin_lock_init(&mp->m_perag_lock);
+ 	mutex_init(&mp->m_growlock);
+ 	atomic_set(&mp->m_active_trans, 0);
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+ 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+ 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+ 	mp->m_kobj.kobject.kset = xfs_kset;
++	return mp;
++}
+ 
+-	mp->m_super = sb;
++
++STATIC int
++xfs_fs_fill_super(
++	struct super_block	*sb,
++	void			*data,
++	int			silent)
++{
++	struct inode		*root;
++	struct xfs_mount	*mp = NULL;
++	int			flags = 0, error = -ENOMEM;
++
++	/*
++	 * allocate mp and do all low-level struct initializations before we
++	 * attach it to the super
++	 */
++	mp = xfs_mount_alloc(sb);
++	if (!mp)
++		goto out;
+ 	sb->s_fs_info = mp;
+ 
+ 	error = xfs_parseargs(mp, (char *)data);
+-- 
+2.13.6
+
