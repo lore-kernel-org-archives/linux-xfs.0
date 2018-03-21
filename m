@@ -1,53 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56926 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1163203AbeCBDMf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 22:12:35 -0500
-Subject: Re: [PATCH] xfs_io: Add missing perror for write_once (-O)
-References: <20171206183633.2415-1-rgoldwyn@suse.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8d1f1d59-c741-7e16-d88c-eebabc4f8077@sandeen.net>
-Date: Thu, 1 Mar 2018 21:12:33 -0600
-MIME-Version: 1.0
-In-Reply-To: <20171206183633.2415-1-rgoldwyn@suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:5280 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751546AbeCUHwz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 03:52:55 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eyYYF-0003W5-Ad
+        for linux-xfs@vger.kernel.org; Wed, 21 Mar 2018 18:52:51 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.90_1)
+        (envelope-from <david@fromorbit.com>)
+        id 1eyYYF-00021P-9B
+        for linux-xfs@vger.kernel.org; Wed, 21 Mar 2018 18:52:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: remove dead inode version setting code
+Date: Wed, 21 Mar 2018 18:52:48 +1100
+Message-Id: <20180321075248.7677-3-david@fromorbit.com>
+In-Reply-To: <20180321075248.7677-1-david@fromorbit.com>
+References: <20180321075248.7677-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-xfs@vger.kernel.org
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
+To: linux-xfs@vger.kernel.org
 
-On 12/6/17 12:36 PM, Goldwyn Rodrigues wrote:
-> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> 
-> This got missed in the last set of patches.
-> 
-> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Sorry for missing this until now.
+We can only get into the branch if CRCs are enabled, so there's no
+need to check inside the branch for CRCs being enabled....
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-> ---
->  io/pwrite.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index a89edfd0..afbe4284 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -271,8 +271,10 @@ write_once(
->  {
->  	ssize_t bytes;
->  	bytes = do_pwrite(file->fd, offset, count, count, pwritev2_flags);
-> -	if (bytes < 0)
-> +	if (bytes < 0) {
-> +		perror("pwrite");
->  		return -1;
-> +	}
->  	*total = bytes;
->  	return 1;
->  }
-> 
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 4fe17b368316..b646bf633f66 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -564,10 +564,7 @@ xfs_iread(
+ 		/* initialise the on-disk inode core */
+ 		memset(&ip->i_d, 0, sizeof(ip->i_d));
+ 		VFS_I(ip)->i_generation = prandom_u32();
+-		if (xfs_sb_version_hascrc(&mp->m_sb))
+-			ip->i_d.di_version = 3;
+-		else
+-			ip->i_d.di_version = 2;
++		ip->i_d.di_version = 3;
+ 		return 0;
+ 	}
+ 
+-- 
+2.16.1
+
