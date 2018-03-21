@@ -1,91 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:21617 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753210AbeCUVKd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 17:10:33 -0400
-Date: Thu, 22 Mar 2018 08:10:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: catch inode allocation state mismatch corruption
-Message-ID: <20180321211022.GV18129@dastard>
-References: <20180321075248.7677-1-david@fromorbit.com>
- <20180321075248.7677-2-david@fromorbit.com>
- <20180321170640.GC4818@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:53700 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753534AbeCUVbo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 17:31:44 -0400
+Date: Wed, 21 Mar 2018 14:31:38 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/4] misc: remove darwin, irix, and freebsd support
+Message-ID: <20180321213138.GA7140@magnolia>
+References: <152151529988.18312.2660325658864402943.stgit@magnolia>
+ <20180321031933.GO1757@magnolia>
+ <da8feaae-b6a3-613e-71c8-38d16981d701@redhat.com>
+ <20180321212617.GX18129@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180321170640.GC4818@magnolia>
+In-Reply-To: <20180321212617.GX18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
 
-On Wed, Mar 21, 2018 at 10:06:40AM -0700, Darrick J. Wong wrote:
-> On Wed, Mar 21, 2018 at 06:52:47PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Thu, Mar 22, 2018 at 08:26:17AM +1100, Dave Chinner wrote:
+> On Wed, Mar 21, 2018 at 01:59:26PM -0500, Eric Sandeen wrote:
+> > On 3/20/18 10:19 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Remove these ports since they're not actively maintained:
+> > > 
+> > > IRIX support was partially removed last year; the OS itself hasn't had a
+> > > release since 2006.
+> > > 
+> > > FreeBSD dropped XFS support in v9.3, which EOLd in January 2017.
+> > > 
+> > > Darwin/OSX has never supported XFS.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > We recently came across a V4 filesystem causing memory corruption
-> > due to a newly allocated inode being setup twice and being added to
-> > the superblock inode list twice. From code inspection, the only way
-> > this could happen is if a newly allocated inode was not marked as
-> > free on disk (i.e. di_mode wasn't zero).
-.....
-> > Note that this crash is only possible on v4 filesystemsi or v5
-> > filesystems mounted with the ikeep mount option. For all other V5
-> > filesystems, this problem cannot occur because we don't read inodes
-> > we are allocating from disk - we simply overwrite them with the new
-> > inode information.
+> > Probably should clean up more than just whole files, see bits & pieces
+> > sprinkled throughout:
+> > 
+> > include/builddefs.in 
+> > include/platform_defs.h.in
+> > include/gnukfreebsd.h (?)
 > 
-> Got a test case for this scenario? :)
+> So, this makes me wonder. IIRC, that's the header for the debian
+> distro on a freebsd kernel. That's a thing, and we package xfsprogs
+> in debian. Do they build xfsprogs for that platform, and if they do
+> do we care if we break it?
 
-No, because I haven't had time to build an xfs_db script to corrupt
-an inode and allocate it reliably yet.  I've only been using the
-supplied metadump image to reproduce it so far. i.e.  I posted the
-patch the moment I confirmed that it fixes the problem....
+>From the looks of it[1] they (Debian) don't package xfsprogs for
+kfreebsd (not even the wheezy release that supposedly had an xfs driver
+in the kernle) so I doubt anyone would care.
 
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 1dc37b72b6ea..98b7a4ae15e4 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -484,7 +484,28 @@ xfs_iget_cache_miss(
-> >  
-> >  	trace_xfs_iget_miss(ip);
-> >  
-> > -	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
-> > +
-> > +	/*
-> > +	 * If we are allocating a new inode, then check what was returned is
-> > +	 * actually a free, empty inode. If we are not allocating an inode,
-> > +	 * the check we didn't find a free inode.
-> > +	 */
-> > +	if (flags & XFS_IGET_CREATE) {
-> > +		if (VFS_I(ip)->i_mode != 0) {
-> > +			xfs_warn(mp,
-> > +"Corruption detected! Free inode 0x%llx not marked free on disk",
-> > +				ino);
-> > +			error = -EFSCORRUPTED;
-> > +			goto out_destroy;
-> > +		}
-> > +		if (ip->i_d.di_nblocks != 0) {
-> > +			xfs_warn(mp,
-> > +"Corruption detected! Free inode 0x%llx has blocks allocated!",
-> > +				ino);
-> > +			error = -EFSCORRUPTED;
-> > +			goto out_destroy;
+--D
+
+[1] https://packages.debian.org/search?keywords=xfsprogs
+
+> Cheers,
 > 
-> I've a patch out for review that adds a xfs_inode_verifier_error
-> function that spits out a standardized corruption warning, a hex dump of
-> the bad dinode, and tells the user to run repair.  This seems like a
-> good candidate for that.
-
-Sure, but that can be done as a separate commit - this fix is almost
-certainly going to be backported to a distro kernel or two, so
-keeping the initial commit as just the fix makes that whole process
-much easier...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
