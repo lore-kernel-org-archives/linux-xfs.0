@@ -1,141 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40432 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751550AbeCURZP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 13:25:15 -0400
-Date: Wed, 21 Mar 2018 10:25:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: don't shrink the inode cache until after setup
- completes
-Message-ID: <20180321172511.GE4818@magnolia>
-References: <20180320050021.982-1-david@fromorbit.com>
- <20180320050021.982-3-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36794 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751789AbeCULva (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 07:51:30 -0400
+Date: Wed, 21 Mar 2018 07:51:29 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC][PATCH] xfs: adjust size/used/avail information for quota-df
+Message-ID: <20180321115128.GB10602@bfoster.bfoster>
+References: <1520601355-180600-1-git-send-email-cgxu519@gmx.com>
+ <20180315142549.GC45325@bfoster.bfoster>
+ <F2C6F369-B24B-4383-8987-50C0F64155AD@gmx.com>
+ <efc15a82-1b9b-3e58-136a-ac6c3468e35f@sandeen.net>
+ <20180320191823.GE6454@bfoster.bfoster>
+ <C681DC1C-0621-4EAC-B191-8ACE82124249@gmx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180320050021.982-3-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <C681DC1C-0621-4EAC-B191-8ACE82124249@gmx.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: cgxu519@gmx.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Tue, Mar 20, 2018 at 04:00:21PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Mar 21, 2018 at 11:36:08AM +0800, cgxu519@gmx.com wrote:
+> 在 2018年3月21日，上午3:18，Brian Foster <bfoster@redhat.com> 写道：
+> > 
+> > On Tue, Mar 20, 2018 at 12:41:50PM -0500, Eric Sandeen wrote:
+> >> On 3/20/18 9:49 AM, cgxu519@gmx.com wrote:
+> >> 
+> >> ...
+> >> 
+> >>> No, not really. Assume if we have 100GB xfs filesystem(/mnt/test2) and we have
+> >>> 3 directories(pq1, pq2, pq3) inside the fs, each directory sets project quota. 
+> >>> (size limit up to 10GB)
+> >>> 
+> >>> When avail space of total filesystem is only left 3.2MB, but when running df for
+> >>> pg1,pg2,pg3 then avail space is 9.5GB, this is much more than real filesystem. 
+> >>> What do you think?
+> >>> 
+> >>> Detail output [1]. (without this fix patch)
+> >>> 
+> >>> $ df -h /mnt/test2
+> >>> Filesystem      Size  Used Avail Use% Mounted on
+> >>> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
+> >>> 
+> >>> $ df -h /mnt/test2/pq1
+> >>> Filesystem      Size  Used Avail Use% Mounted on
+> >>> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
+> >>> 
+> >>> $ df -h /mnt/test2/pq2
+> >>> Filesystem      Size  Used Avail Use% Mounted on
+> >>> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
+> >>> 
+> >>> $ df -h /mnt/test2/pq3
+> >>> Filesystem      Size  Used Avail Use% Mounted on
+> >>> /dev/vdb2        10G  570M  9.5G   6% /mnt/test2
+> >> 
+> >> I agree that this is a confusing result.
+> >> 
+> > 
+> > Ditto. Thanks for the example Chengguang.
+> > 
+> >>> Detail output [2]. (with this fix patch)
+> >>> 
+> >>> $ df -h /mnt/test2
+> >>> Filesystem      Size  Used Avail Use% Mounted on
+> >>> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
+> >>> 
+> >>> $ df -h /mnt/test2/pq1
+> >>> Filesystem      Size  Used Avail Use% Mounted on
+> >>> /dev/vdb2       574M  570M  3.2M 100% /mnt/test2
+> >>                   ^           ^
+> >>                   |           |
+> >>                   |           +-- This makes sense 
+> >>                   |
+> >>                   +-- This is a little bit odd
+> >> 
+> >> So you cap the available project space to host filesystem
+> >> available space, and also use that to compute the
+> >> total size of the "project" by adding used+available.
+> >> 
+> > 
+> > I think I agree here too. Personally, I'd expect the fs size to remain
+> > static one way or another (i.e., whether it's the full fs or a sub-fs
+> > via project quota) and see the user/avail numbers change based on the
+> > current state rather than see the size float around due to just wanting
+> > to make the numbers add up. The latter makes it difficult to understand
+> > the (virtual) geometry of the project.
+> > 
+> >> The slightly strange result is that "size" will shrink
+> >> as more filesystem space gets used, but I'm not
+> >> sure I have a better suggestion here... would the below
+> >> result be too confusing?  It is truthful; the limit is 10G,
+> >> 570M are used, and only 3.2M is currently available due to
+> >> the host filesystem freespace constraint:
+> >> 
+> >> $ df -h /mnt/test2/pq1
+> >> Filesystem      Size  Used Avail Use% Mounted on
+> >> /dev/vdb2       10G   570M  3.2M 100% /mnt/test2
+> >> 
+> > 
+> > Slightly confusing, but I'd rather have accuracy than guarantee that
+> > size = used + avail. The above at least tells us that something is
+> > missing, even if it's not totally obvious that the missing space is
+> > unavailable due to the broader fs free space limitation. It's probably
+> > the type of thing you'd expect to see if space reporting were truly
+> > accurate on a thin volume, for example.
 > 
-> We recently came across an oops on a 4.14 kernel in
-> xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
-> and so the m_perag_tree lookup walked into lala land.
 > 
-> We found a mount in a failed state, blocked on teh shrinker rwsem
-> here:
+> Personally, I agree with your suggestions, I’m more care about avail/used
+> not the size, but unfortunately, statfs seems only collecting f_blocks,
+> f_bfree, f_bavail then df calculate used space based on those variables,
+> so I think there is no chance directly specify used space. This is the
+> reason that I hope to guarantee 'total = used + avail'
 > 
-> mount_bdev()
->   deactivate_locked_super()
->     unregister_shrinker()
 > 
-> Essentially, the machine was under memory pressure when the mount
-> was being run, xfs_fs_fill_super() failed after allocating the
-> xfs_mount and attaching it to sb->s_fs_info. It then cleaned up and
-> freed the xfs_mount, but the sb->s_fs_info field still pointed to
-> the freed memory. Hence when the superblock shrinker then ran
-> it fell off the bad pointer.
+> If we remain static size 10GB and avail adjust to 3.2MB, then the result
+> looks like below. :(
 > 
-> Setting sb->s_fs_info to NULL in this case won't solve the problem;
-> we'll still crash on a null pointer in xfs_reclaim_inodes_count().
-> The problem is that the superblock shrinker is running before the
-> filesystem structures it depends on have been fully set up. i.e.
-> the shrinker is registered in sget(), before ->fill_super() has been
-> called, and the shrinker can call into the filesystem before
-> fill_super() does it's setup work.
+> $ df -h /mnt/test2
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2       100G  100G  3.2M 100% /mnt/test2
 > 
-> The twist here is that we need the sb shrinker to run in the XFS
-> mount process because of the memory pressure that log recovery and
-> quota check can create. Hence we need to prevent the indoe cache
-> scanning from occurring until after we've set up the per-ag
-> structures and caches that it depends on. We also need to ensure
-> that we clear the flag and sb->s_fs_info on failure so that we
-> can do the right thing in all cases in xfs_reclaim_inodes_count().
+> $ df -h /mnt/test2/pq1
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb2        10G   10G  3.2M 100% /mnt/test2
 > 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_mount.c | 2 ++
->  fs/xfs/xfs_mount.h | 1 +
->  fs/xfs/xfs_super.c | 9 +++++++++
->  3 files changed, 12 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 6f5a5e6764d8..35a263c90fc0 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -155,6 +155,7 @@ xfs_free_perag(
->  	xfs_agnumber_t	agno;
->  	struct xfs_perag *pag;
->  
-> +	mp->m_flags &= ~XFS_MOUNT_PERAG_DONE;
->  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
->  		spin_lock(&mp->m_perag_lock);
->  		pag = radix_tree_delete(&mp->m_perag_tree, agno);
-> @@ -244,6 +245,7 @@ xfs_initialize_perag(
->  		*maxagi = index;
->  
->  	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
-> +	mp->m_flags |= XFS_MOUNT_PERAG_DONE;
->  	return 0;
->  
->  out_hash_destroy:
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 1808f56decaa..3cf7309b615d 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -239,6 +239,7 @@ typedef struct xfs_mount {
->  #define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
->  						   allocator */
->  #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
-> +#define XFS_MOUNT_PERAG_DONE	(1ULL << 26)	/* perag icache init done */
->  
->  #define XFS_MOUNT_DAX		(1ULL << 62)	/* TEST ONLY! */
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index ee26437dc567..d3283e8c2ce2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1755,6 +1755,7 @@ xfs_fs_fill_super(
->   out_close_devices:
->  	xfs_close_devices(mp);
->   out_free_fsname:
-> +	sb->s_fs_info = NULL;
->  	xfs_free_fsname(mp);
->  	kfree(mp);
->   out:
-> @@ -1800,6 +1801,14 @@ xfs_fs_nr_cached_objects(
->  	struct super_block	*sb,
->  	struct shrink_control	*sc)
->  {
-> +	/*
-> +	 * Don't do anything until the filesystem is fully set up, or in the
-> +	 * process of being torn down due to a mount failure.
-> +	 */
-> +	if (!sb->s_fs_info)
-> +		return 0;
-> +	if (!(XFS_M(sb)->m_flags & XFS_MOUNT_PERAG_DONE))
-> +		return 0;
 
-I wonder, if we apply Brian's patch to kzalloc-and-init the mp, can we
-replace XFS_MOUNT_PERAG_DONE flag checking with
+Ah, I see. So used becomes inaccurate at that point. Hmm, it's starting
+to seem to me that maybe leaving this as is is the right approach. The
+output above is misleading because that much space has not been used by
+the quota. As previously noted, the floating size approach I personally
+just find confusing. It's not really clear at all what it's telling me
+as a user.
 
-	if (radix_tree_empty(&mp->m_perag_tree))
-		return 0;
+The current approach directly maps the quota state to the stats fields
+so it clearly tells me 1.) the limit and 2.) how much of the limit I've
+used. If the parent filesystem is more restrictive and operations result
+in ENOSPC, then that's something the admin will have to resolve one way
+or another.
 
-instead?
+That's just my .02. Perhaps others feel differently and/or have better
+logic.
 
---D
+> 
+> 
+> > 
+> > FWIW, the other option is just to leave the output as above where we
+> > presumably ignore the global free space cap and present 9.5GB available.
+> > I think it's fine to fix/limit that, but I'd prefer an inaccurate
+> > available number to an inaccurate/variable fs size either way.
+> > 
+> > With regard to a soft limit, it looks like we currently size the fs at
+> > the soft limit and simply call it 100% used if the limit is exceeded.
+> > That seems reasonable to me if only a soft limit is set, but I suppose
+> > that could hide some info if both hard/soft limits are set. Perhaps we
+> > should use the max of the soft/hard limit if both are set (or I guess
+> > prioritize a hard limit iff it's larger than the soft, to avoid
+> > insanity)? I suppose one could also argue that some admins might want to
+> > size an fs with the soft limit, give users a bit of landing room, then
+> > set a hard cap to protect the broader fs. :/
+> 
+> If we want to remain the size static then we need choose either soft or hard limit.
+> I think hard limit is a little bit better and meaningful because soft limit
+> might not directly cause write error even if the limit has already exceeded.
+> 
 
->  	return xfs_reclaim_inodes_count(XFS_M(sb));
->  }
->  
-> -- 
-> 2.16.1
+It seems reasonable enough to me to always use the hardlimit when both a
+hard and soft limit are set, but I don't really have a strong opinion
+either way.
+
+Brian
+
+> 
+> 
+> > 
+> > Brian
+> > 
+> >> -Eric
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
