@@ -1,349 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51912 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751464AbeCVSDa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 14:03:30 -0400
-Date: Thu, 22 Mar 2018 14:03:28 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: file corruptions, 2nd half of 512b block
-Message-ID: <20180322180327.GI16617@bfoster.bfoster>
-References: <20180322150226.GA31029@onthe.net.au>
+Received: from userp2130.oracle.com ([156.151.31.86]:33416 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751416AbeCUR1e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 13:27:34 -0400
+Date: Wed, 21 Mar 2018 10:27:28 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: clean up xfs_mount allocation and dynamic
+ initializers
+Message-ID: <20180321172728.GF4818@magnolia>
+References: <20180321161325.12773-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180322150226.GA31029@onthe.net.au>
+In-Reply-To: <20180321161325.12773-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Dunlop <chris@onthe.net.au>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Mar 23, 2018 at 02:02:26AM +1100, Chris Dunlop wrote:
-> Hi,
+On Wed, Mar 21, 2018 at 12:13:25PM -0400, Brian Foster wrote:
+> Most of the generic data structures embedded in xfs_mount are
+> dynamically initialized immediately after mp is allocated. A few
+> fields are left out and initialized during the xfs_mountfs()
+> sequence, after mp has been attached to the superblock.
 > 
-> I'm experiencing 256-byte corruptions in files on XFS on 4.9.76.
+> To clean this up and help prevent premature access of associated
+> fields, refactor xfs_mount allocation and all dependent init calls
+> into a new helper. This self-documents that all low level data
+> structures (i.e., locks, trees, etc.) should be initialized before
+> xfs_mount is attached to the superblock.
 > 
-> System configuration details below.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
-> For those cases where the corrupt file can be regenerated from other
-> data and the new file compared to the corrupt file (15 files in all),
-> the corruptions are invariably in the 2nd 256b half of a 512b sector,
-> part way through the file. That's pretty odd! Perhaps some kind of
-> buffer tail problem?
-> 
-> Are there any known issues that might cause this?
-> 
+> I realized after the fact that this steps on the ability to instrument
+> the use-before-init variant[1] of the problematic radix tree access on
+> failed mount issue that Dave tracked down. This is because we'd
+> immediately initialize the structure and thus a subsequent memset()
+> would ultimately require another proper initialization.
 
-Nothing that I can think of. A quick look through the writeback changes
-shows this[1] commit, but I'd expect any corruption in that case to
-manifest as page size (4k) rather than at 256b granularity.
+That's simply a matter of re-calling
 
-[1] 40214d128e ("xfs: trim writepage mapping to within eof")
+	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
 
-> ------
-> Late addendum... this is the same system, but different FS, where I
-> experienced this:
-> 
-> https://www.spinics.net/lists/linux-xfs/msg14876.html
-> 
-> To my vast surprise I see the box is still on the same kernel without
-> the patch per that message. (I must have been sleep deprived, I would
-> have sworn that it was upgraded.) Is this possibly the same underlying
-> problem?
-> ------
-> 
-> Further details...
-> 
-> The corruptions are being flagged by a mismatched md5. The file
-> generator calculates the md5 of the data as it's being generated (i.e.
-> before it hits storage), and saves the md5 in a separate file alongside
-> the data file. The corruptions are being found by comparing the
-> previously calculated md5 with the current file contents. The xfs sits
-> on raid6 which checks clean, so it seems like it's not a hdd problem.
-> 
-> The box was upgraded from 3.18.25 to 4.9.76 on 2018-01-15. There's a
-> good chance this was when the corruptions started as the earliest
-> confirmed corruption is in a file generated 2018-02-04, and there may
-> have been another on 2018-01-23. However it's also possible there were
-> earlier (and maybe even much earlier) corruptions which weren't being
-> picked up.
-> 
-> A scan through the commit log between 4.9.76 and current stable (.88)
-> for xfs bits doesn't show anything that stands out as relevant, at least
-> to my eyes. I've also looked between 4.9 and current HEAD, but there
-> are of course a /lot/ of xfs updates there and I'm afraid it's way too
-> easy for me to miss any relevant changes.
-> 
-> The file generator either runs remotely, and the data (and md5) arrives
-> via FTP, or runs locally, and the data (and md5) is written via NFS. The
-> corruptions have occurred in both cases.
-> 
-> These files are generally in the 10s of GB range, with a few at 1-3GB,
-> and a few in the low 100s of GB. All but one of the corrupt files have a
-> single 256b corruption, with the other having two separate corruptions
-> (each in the 2nd half of a 512b sector).
-> 
-> Overall we've received ~33k files since the o/s change, and have
-> identified about 34 corrupt files amongst those. Unfortunately some
-> parts of the generator aren't deterministic so we can't compare corrupt
-> files with regenerated files in all cases - per above, we've been able
-> to compare 15 of these files, with no discernible pattern other than the
-> corruption always occurring in the 2nd 256b of a 512b block.
-> 
-> Using xfs_bmap to investigate the corrupt files and where the corrupt
-> data sits, and digging down further into the LV, PV, md and hdd levels,
-> there's no consistency or discernible pattern of placement of the
-> corruptions at any level: ag, md, hdd.
-> 
-> Eyeballing the corrupted blocks and matching good blocks doesn't show
-> any obvious pattern. The files themselves contain compressed data so
-> it's all highly random at the block level, and the corruptions
-> themselves similarly look like random bytes.
-> 
-> The corrupt blocks are not a copy of other data in the file within the
-> surrounding 256k of the corrupt block.
-> 
+after the msleep, right?
 
-So you obviously have a fairly large/complex storage configuration. I
-think you have to assume that this corruption could be introduced pretty
-much anywhere in the stack (network, mm, fs, block layer, md) until it
-can be narrowed down.
+> As Dave noted in that thread, we could alternatively instrument the
+> use-after-free variant of the problem with a post-free delay of the mp.
+> I actually wonder if a last step instrumented failure in fill_super()
+> might be a more broadly useful test because it provides future coverage
+> of the entire mount teardown sequence rather than just the bad radix
+> tree access.
 
-> ----------------------------------------------------------------------
-> System configuration
-> ----------------------------------------------------------------------
-> 
-> linux-4.9.76
-> xfsprogs 4.10
-> CPU: 2 x E5620 (16 cores total)
-> 192G RAM
-> 
-> # grep bigfs /etc/mtab
-> /dev/mapper/vg00-bigfs /bigfs xfs rw,noatime,attr2,inode64,logbsize=256k,sunit=1024,swidth=9216,noquota 0 0
-> # xfs_info /bigfs
-> meta-data=/dev/mapper/vg00-bigfs isize=512    agcount=246, agsize=268435328 blks
->         =                       sectsz=4096  attr=2, projid32bit=1
->         =                       crc=1        finobt=1 spinodes=0 rmapbt=0
->         =                       reflink=0
-> data     =                       bsize=4096   blocks=65929101312, imaxpct=5
->         =                       sunit=128    swidth=1152 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal               bsize=4096   blocks=521728, version=2
->         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> XFS on LVM on 6 x PVs, each PV is md raid-6, each with 11 x hdd.
-> 
-> The raids all check clean.
-> 
-> The XFS has been expanded a number of times.
-> 
-> ----------------------------------------------------------------------
-> Explicit example...
-> ----------------------------------------------------------------------
-> 
-> 2018-03-04 21:40:44 data + md5 files written
-> 2018-03-04 22:43:33 checksum mismatch detected
-> 
+That sounds like a very good idea, there's a lot of complex stuff that
+has to be unwound and at least I've stumbled over getting it right.
 
-Seems like the corruption is detected fairly soon after creation. How
-often are these files explicitly checked/read? I also assume the files
-aren't ever modified..?
+> On the flipside, this patch isn't the cleanup of the century so I'd be
+> fine with dropping it in favor of [1], but I think it's worthy enough to
+> consider.
+> 
+> Brian
+> 
+> [1] https://marc.info/?l=linux-xfs&m=152152202700598&w=2
+> 
+>  fs/xfs/libxfs/xfs_sb.c |  1 -
+>  fs/xfs/xfs_mount.c     |  2 --
+>  fs/xfs/xfs_super.c     | 39 +++++++++++++++++++++++++++++----------
+>  3 files changed, 29 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index a55f7a45fa78..53433cc024fd 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -731,7 +731,6 @@ xfs_sb_mount_common(
+>  	struct xfs_sb	*sbp)
+>  {
+>  	mp->m_agfrotor = mp->m_agirotor = 0;
 
-FWIW, the patterns that you have shown so far do seem to suggest
-something higher level than a physical storage problem. Otherwise, I'd
-expect these instances wouldn't always necessarily land in file data.
-Have you run 'xfs_repair -n' on the fs to confirm there aren't any other
-problems?
+Can this be removed since we're using kzalloc now?
 
-OTOH, a 256b corruption seems quite unusual for a filesystem with 4k
-blocks. I suppose that could suggest some kind of memory/cache
-corruption as opposed to a bad page/extent state or something of that
-nature.
+Mostly looks ok to me, though I wonder if the INIT_DONE flag can be
+replaced with radix_tree_empty() now that we're guaranteed never to see
+an mp with an uninitialized perag radix tree?
 
-Hmm, I guess the only productive thing I can think of right now is to
-see if you can try and detect the problem as soon as possible. For e.g.,
-it sounds like this is a closed system. If so, could you follow up every
-file creation with an immediate md5 verification (perhaps followed by an
-fadvise(DONTNEED) and another md5 check to try and catch an inconsistent
-pagecache)? Perhaps others might have further ideas..
+--D
 
-> file size: 31232491008 bytes
+> -	spin_lock_init(&mp->m_agirotor_lock);
+>  	mp->m_maxagi = mp->m_sb.sb_agcount;
+>  	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+>  	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 6f5a5e6764d8..a901b86772f8 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -817,8 +817,6 @@ xfs_mountfs(
+>  	/*
+>  	 * Allocate and initialize the per-ag data.
+>  	 */
+> -	spin_lock_init(&mp->m_perag_lock);
+> -	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+>  	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+>  	if (error) {
+>  		xfs_warn(mp, "Failed per-ag init: %d", error);
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 951271f57d00..612c1d5348b3 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1579,29 +1579,48 @@ xfs_destroy_percpu_counters(
+>  	percpu_counter_destroy(&mp->m_fdblocks);
+>  }
+>  
+> -STATIC int
+> -xfs_fs_fill_super(
+> -	struct super_block	*sb,
+> -	void			*data,
+> -	int			silent)
+> +static struct xfs_mount *
+> +xfs_mount_alloc(
+> +	struct super_block	*sb)
+>  {
+> -	struct inode		*root;
+> -	struct xfs_mount	*mp = NULL;
+> -	int			flags = 0, error = -ENOMEM;
+> +	struct xfs_mount	*mp;
+>  
+>  	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
+>  	if (!mp)
+> -		goto out;
+> +		return NULL;
+>  
+> +	mp->m_super = sb;
+>  	spin_lock_init(&mp->m_sb_lock);
+> +	spin_lock_init(&mp->m_agirotor_lock);
+> +	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+> +	spin_lock_init(&mp->m_perag_lock);
+>  	mutex_init(&mp->m_growlock);
+>  	atomic_set(&mp->m_active_trans, 0);
+>  	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+>  	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+>  	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
+>  	mp->m_kobj.kobject.kset = xfs_kset;
+> +	return mp;
+> +}
+>  
+> -	mp->m_super = sb;
+> +
+> +STATIC int
+> +xfs_fs_fill_super(
+> +	struct super_block	*sb,
+> +	void			*data,
+> +	int			silent)
+> +{
+> +	struct inode		*root;
+> +	struct xfs_mount	*mp = NULL;
+> +	int			flags = 0, error = -ENOMEM;
+> +
+> +	/*
+> +	 * allocate mp and do all low-level struct initializations before we
+> +	 * attach it to the super
+> +	 */
+> +	mp = xfs_mount_alloc(sb);
+> +	if (!mp)
+> +		goto out;
+>  	sb->s_fs_info = mp;
+>  
+>  	error = xfs_parseargs(mp, (char *)data);
+> -- 
+> 2.13.6
 > 
-> The file is moved to "badfile", and the file regenerated from source
-> data as "goodfile".
-> 
-> "cmp -l badfile goodfile" shows there are 256 bytes differing, in the
-> 2nd half of (512b) block 53906431.
-> 
-
-FWIW, that's the last (512b) sector of the associated (4k) page. Does
-that happen to be consistent across whatever other instances you have a
-record of?
-
-Brian
-
-> $ dd if=badfile bs=512 skip=53906431 count=1 | od -t x2
-> 0000000 4579 df86 376e a4dd 22d6 0a6a 845d c6c3
-> 0000020 78c2 56b1 6344 e371 8ed3 f16e 691b b329
-> 0000040 cee2 ab84 bfb5 f9f3 1a3c 23b8 33d1 e70c
-> 0000060 8135 9dbb aaf8 be26 fea7 8446 bd39 6b28
-> 0000100 7895 3f84 c07d 95a3 c79b 11e3 28cb dcdd
-> 0000120 5e75 b945 cd8e 46c6 53b8 a0f2 dad3 a68b
-> 0000140 5361 b5b4 09c9 8264 bf18 ede5 4177 0a5c
-> 0000160 ddc7 4927 6b24 80c9 8f4c 76ac 1ae3 1df9
-> 0000200 b477 3be0 c60a 9355 53e0 925f 4b8d 162c
-> 0000220 2431 788f 4024 16ae 226e 51c4 6b85 392d
-> 0000240 5283 a918 b97a c85c 7b34 e341 7689 0468
-> 0000260 a4f1 a94a 0798 e5e3 435a 5ee4 3ab4 af1c
-> 0000300 426a e484 7d2e 4e37 f2ef 95b3 fcf5 8fc8
-> 0000320 a9d2 e50d 61ae 76bd 5ad9 6d00 67c3 3fcc
-> 0000340 a610 7edd fe05 46bf 78c1 c70b 1829 11b7
-> 0000360 9a34 c496 5161 c546 43cd 7eb8 ff70 473a
-> x
-> 0000400 11d2 8c94 00ed c9cc d299 5fcf 38ee 5358
-> 0000420 6da3 f8fd 8495 906e cf6f 3c12 94d7 a236
-> 0000440 4150 98ce 22a6 68b0 f6f3 b2e0 f857 0719
-> 0000460 58c9 abbf 059f 1092 c122 7592 a95e c736
-> 0000500 aca4 4bd6 2ce0 1d4e 6097 9054 6f25 519c
-> 0000520 187b 2598 8c1d 33ba 49fa 9cb6 e55c 779d
-> 0000540 347f e1f2 8c6d fc06 5398 d675 ae49 4206
-> 0000560 e343 7e08 b24a ed18 504b 4f28 5479 d492
-> 0000600 1a88 fe80 6d19 0982 629a e06b e24a c78e
-> 0000620 c2a9 370d f249 41ab 103b 0256 d0b2 b545
-> 0000640 736d 430f c8a4 cf19 e5fb 5378 5889 7f3a
-> 0000660 0dee e401 abcf 1d0d 5af2 5abe 0cbb 07a5
-> 0000700 79ee 75d0 1bb7 68ee 5566 c057 45f9 a8ca
-> 0000720 ee5d 3d86 b557 8d11 92cc 9b21 d421 fe81
-> 0000740 8657 ffd6 e20d 01be 4e02 6049 540e b7f7
-> 0000760 dfd4 4a0b 2a60 978c a6b1 2a8a 3e98 bcc5
-> 0001000
-> 
-> $ dd if=goodfile bs=512 skip=53906431 count=1 | od -t x2
-> 0000000 4579 df86 376e a4dd 22d6 0a6a 845d c6c3
-> 0000020 78c2 56b1 6344 e371 8ed3 f16e 691b b329
-> 0000040 cee2 ab84 bfb5 f9f3 1a3c 23b8 33d1 e70c
-> 0000060 8135 9dbb aaf8 be26 fea7 8446 bd39 6b28
-> 0000100 7895 3f84 c07d 95a3 c79b 11e3 28cb dcdd
-> 0000120 5e75 b945 cd8e 46c6 53b8 a0f2 dad3 a68b
-> 0000140 5361 b5b4 09c9 8264 bf18 ede5 4177 0a5c
-> 0000160 ddc7 4927 6b24 80c9 8f4c 76ac 1ae3 1df9
-> 0000200 b477 3be0 c60a 9355 53e0 925f 4b8d 162c
-> 0000220 2431 788f 4024 16ae 226e 51c4 6b85 392d
-> 0000240 5283 a918 b97a c85c 7b34 e341 7689 0468
-> 0000260 a4f1 a94a 0798 e5e3 435a 5ee4 3ab4 af1c
-> 0000300 426a e484 7d2e 4e37 f2ef 95b3 fcf5 8fc8
-> 0000320 a9d2 e50d 61ae 76bd 5ad9 6d00 67c3 3fcc
-> 0000340 a610 7edd fe05 46bf 78c1 c70b 1829 11b7
-> 0000360 9a34 c496 5161 c546 43cd 7eb8 ff70 473a
-> x
-> 0000400 3bf1 6176 7e4b f1ce 1e3c b747 4b16 8406
-> 0000420 1e48 d38f ad9d edf0 11c6 fa63 6a7f b973
-> 0000440 c90b 6745 be94 8090 d547 3c78 a8c9 ea94
-> 0000460 498d 3115 cc88 8fb7 4f1d 8c1e f947 64d2
-> 0000500 278f 2899 d2f1 d22f fcf0 7523 e3c7 a66e
-> 0000520 a269 cac4 ae3d e551 1339 4d14 c0aa 52bc
-> 0000540 b320 e0ed 46a7 bb93 1397 574c 1ed5 278f
-> 0000560 8487 48d8 e24b 8882 9eef f64c 4c9a d916
-> 0000600 d391 ddf8 4e13 4572 58e4 abcc 6f48 9c7e
-> 0000620 4dda 2aa6 c8f2 4ac8 7002 a33b db8d fd00
-> 0000640 3f4c 1cd1 89cf fa98 5692 b426 5b53 5e7e
-> 0000660 7129 cf5f e3c8 fcf1 b378 1e31 de4f a0d7
-> 0000700 9276 532d 3885 3bb1 93ca 87b8 2804 7d0b
-> 0000720 68ec bc9b 624a 7249 3788 4d20 d5ac ecf6
-> 0000740 2122 bbb8 dc49 2759 27b9 03a8 7ffa 5b6a
-> 0000760 7ad1 a846 d795 6cfe bc1e c014 442a a93d
-> 0001000
-> 
-> $ xfs_bmap -v badfile
-> badfile:
-> EXT: FILE-OFFSET           BLOCK-RANGE                 AG AG-OFFSET                   TOTAL FLAGS
->   0: [0..31743]:           281349379072..281349410815 131 (29155328..29187071)        31744 000011
->   1: [31744..64511]:       281351100416..281351133183 131 (30876672..30909439)        32768 000011
->   2: [64512..130047]:      281383613440..281383678975 131 (63389696..63455231)        65536 000011
->   3: [130048..523263]:     281479251968..281479645183 131 (159028224..159421439)     393216 000011
->   4: [523264..1047551]:    281513342976..281513867263 131 (193119232..193643519)     524288 000011
->   5: [1047552..2096127]:   281627355136..281628403711 131 (307131392..308179967)    1048576 000011
->   6: [2096128..5421055]:   281882829824..281886154751 131 (562606080..565931007)    3324928 000011
->   7: [5421056..8386943]:   281904449536..281907415423 131 (584225792..587191679)    2965888 000111
->   8: [8386944..8388543]:   281970693120..281970694719 131 (650469376..650470975)       1600 000111
->   9: [8388544..8585215]:   281974888448..281975085119 131 (654664704..654861375)     196672 000111
->  10: [8585216..9371647]:   281977619456..281978405887 131 (657395712..658182143)     786432 000011
->  11: [9371648..12517375]:  281970695168..281973840895 131 (650471424..653617151)    3145728 000011
->  12: [12517376..16465919]: 282179899392..282183847935 131 (859675648..863624191)    3948544 000011
->  13: [16465920..20660223]: 282295112704..282299307007 131 (974888960..979083263)    4194304 000011
->  14: [20660224..29048831]: 282533269504..282541658111 131 (1213045760..1221434367)  8388608 000010
->  15: [29048832..45826039]: 286146131968..286162909175 133 (530942976..547720183)   16777208 000111
->  16: [45826040..58243047]: 289315926016..289328343023 134 (1553254400..1565671407) 12417008 000111
->  17: [58243048..61000959]: 294169719808..294172477719 136 (2112082944..2114840855)  2757912 000111
-> 
-> I.e. the corruption (in 512b sector 53906431) occurs part way through
-> extent 16, and not on an ag boundary.
-> 
-> Just to make sure we're not hitting some other boundary on the
-> underlying infrastructure, which might hint the problem could be there,
-> let's see where the file sector lies...
-> 
-> From extent 16, the actual corrupt sector offset within the lv device
-> underneath xfs is:
-> 
-> 289315926016 + (53906431 - 45826040) == 289324006407
-> 
-> Then we can look at the devices underneath the lv:
-> 
-> # lvs --units s -o lv_name,seg_start,seg_size,devices
->  LV    Start         SSize         Devices
->  bigfs            0S 105486999552S /dev/md0(0)
->  bigfs 105486999552S 105487007744S /dev/md4(0)
->  bigfs 210974007296S 105487007744S /dev/md9(0)
->  bigfs 316461015040S  35160866816S /dev/md1(0)
->  bigfs 351621881856S 105487007744S /dev/md5(0)
->  bigfs 457108889600S  70323920896S /dev/md3(0)
-> 
-> Comparing our corrupt sector lv offset with the start sector of each md
-> device, we can see the corrupt sector is within /dev/md9 and not at a
-> boundary. The corrupt sector offset within the lv data on md9 is given
-> by:
-> 
-> 289324006407 - 210974007296 == 78349999111
-> 
-> The lv data itself is offset within /dev/md9 and the offset can be seen
-> by:
-> 
-> # pvs --unit s -o pv_name,pe_start
->  PV         1st PE
->  /dev/md0     9216S
->  /dev/md1     9216S
->  /dev/md3     9216S
->  /dev/md4     9216S
->  /dev/md5     9216S
->  /dev/md9     9216S
-> 
-> ...so the lv data starts at sector 9216 of the md, which means the
-> corrupt sector is at this offset within /dev/md9:
-> 
-> 9216 + 78349999111 == 78350008327
-> 
-> Confirm the calculations are correct by comparing the corrupt sector
-> from the file with the calculated sector on the md device:
-> 
-> # {
->  dd if=badfile of=/tmp/foo.1 bs=512 skip=53906431 count=1
->  dd if=/dev/md9 of=/tmp/foo.2 bs=512 skip=78350008327 count=1
->  cmp /tmp/foo.{1,2} && echo "got it" || echo "try again"
-> }
-> got it
-> 
-> ----------------------------------------------------------------------
-> 
-> 
-> I'd appreciate some pointers towards tracking down what's going on - or
-> even better, which version of linux I should upgrade to to make the
-> problem disappear!
-> 
-> Cheers,
-> 
-> Chris.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
