@@ -1,98 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47654 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753414AbeCUUwS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 16:52:18 -0400
-Date: Wed, 21 Mar 2018 13:52:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/9] xfs: don't accept inode buffers with suspicious
- unlinked chains
-Message-ID: <20180321205214.GN4818@magnolia>
-References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <20180321032136.GQ1757@magnolia>
- <20180321174323.GL11127@bfoster.bfoster>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:21617 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753210AbeCUVKd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 17:10:33 -0400
+Date: Thu, 22 Mar 2018 08:10:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: catch inode allocation state mismatch corruption
+Message-ID: <20180321211022.GV18129@dastard>
+References: <20180321075248.7677-1-david@fromorbit.com>
+ <20180321075248.7677-2-david@fromorbit.com>
+ <20180321170640.GC4818@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180321174323.GL11127@bfoster.bfoster>
+In-Reply-To: <20180321170640.GC4818@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 21, 2018 at 01:43:24PM -0400, Brian Foster wrote:
-> On Tue, Mar 20, 2018 at 08:21:36PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 21, 2018 at 10:06:40AM -0700, Darrick J. Wong wrote:
+> On Wed, Mar 21, 2018 at 06:52:47PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > When we're verifying inode buffers, sanity-check the unlinked pointer.
-> > We don't want to run the risk of trying to purge something that's
-> > obviously broken.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+> > We recently came across a V4 filesystem causing memory corruption
+> > due to a newly allocated inode being setup twice and being added to
+> > the superblock inode list twice. From code inspection, the only way
+> > this could happen is if a newly allocated inode was not marked as
+> > free on disk (i.e. di_mode wasn't zero).
+.....
+> > Note that this crash is only possible on v4 filesystemsi or v5
+> > filesystems mounted with the ikeep mount option. For all other V5
+> > filesystems, this problem cannot occur because we don't read inodes
+> > we are allocating from disk - we simply overwrite them with the new
+> > inode information.
 > 
-> FYI this doesn't seem to apply to for-next (HEAD is commit
-> df79b81b2e)...
+> Got a test case for this scenario? :)
 
-Yeah, I think I have some cleaning to do, and then I'll resend this
-series with all the fixed up stuff.
+No, because I haven't had time to build an xfs_db script to corrupt
+an inode and allocate it reliably yet.  I've only been using the
+supplied metadump image to reproduce it so far. i.e.  I posted the
+patch the moment I confirmed that it fixes the problem....
 
---D
-
-> Brian
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index 1dc37b72b6ea..98b7a4ae15e4 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -484,7 +484,28 @@ xfs_iget_cache_miss(
+> >  
+> >  	trace_xfs_iget_miss(ip);
+> >  
+> > -	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
+> > +
+> > +	/*
+> > +	 * If we are allocating a new inode, then check what was returned is
+> > +	 * actually a free, empty inode. If we are not allocating an inode,
+> > +	 * the check we didn't find a free inode.
+> > +	 */
+> > +	if (flags & XFS_IGET_CREATE) {
+> > +		if (VFS_I(ip)->i_mode != 0) {
+> > +			xfs_warn(mp,
+> > +"Corruption detected! Free inode 0x%llx not marked free on disk",
+> > +				ino);
+> > +			error = -EFSCORRUPTED;
+> > +			goto out_destroy;
+> > +		}
+> > +		if (ip->i_d.di_nblocks != 0) {
+> > +			xfs_warn(mp,
+> > +"Corruption detected! Free inode 0x%llx has blocks allocated!",
+> > +				ino);
+> > +			error = -EFSCORRUPTED;
+> > +			goto out_destroy;
 > 
-> >  fs/xfs/libxfs/xfs_inode_buf.c |   10 ++++++++--
-> >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > index 4fe17b3..f216d5b 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -93,20 +93,26 @@ xfs_inode_buf_verify(
-> >  	bool		readahead)
-> >  {
-> >  	struct xfs_mount *mp = bp->b_target->bt_mount;
-> > +	xfs_agnumber_t	agno;
-> >  	int		i;
-> >  	int		ni;
-> >  
-> >  	/*
-> >  	 * Validate the magic number and version of every inode in the buffer
-> >  	 */
-> > +	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
-> >  	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
-> >  	for (i = 0; i < ni; i++) {
-> >  		int		di_ok;
-> >  		xfs_dinode_t	*dip;
-> > +		xfs_agino_t	unlinked_ino;
-> >  
-> >  		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
-> > +		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
-> >  		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
-> > -			xfs_dinode_good_version(mp, dip->di_version);
-> > +			xfs_dinode_good_version(mp, dip->di_version) &&
-> > +			(unlinked_ino == NULLAGINO ||
-> > +			 xfs_verify_agino(mp, agno, unlinked_ino));
-> >  		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
-> >  						XFS_ERRTAG_ITOBP_INOTOBP))) {
-> >  			if (readahead) {
-> > @@ -122,9 +128,9 @@ xfs_inode_buf_verify(
-> >  				(unsigned long long)bp->b_bn, i,
-> >  				be16_to_cpu(dip->di_magic));
-> >  #endif
-> > +			return;
-> >  		}
-> >  	}
-> > -	xfs_inobp_check(mp, bp);
-> >  }
-> >  
-> >  
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I've a patch out for review that adds a xfs_inode_verifier_error
+> function that spits out a standardized corruption warning, a hex dump of
+> the bad dinode, and tells the user to run repair.  This seems like a
+> good candidate for that.
+
+Sure, but that can be done as a separate commit - this fix is almost
+certainly going to be backported to a distro kernel or two, so
+keeping the initial commit as just the fix makes that whole process
+much easier...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
