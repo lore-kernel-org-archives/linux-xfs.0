@@ -1,107 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:21395 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751948AbeCVFCa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 01:02:30 -0400
-Date: Thu, 22 Mar 2018 16:01:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
- case of global reclaim
-Message-ID: <20180322050152.GA18129@dastard>
-References: <20180315174903.GM23100@dhcp22.suse.cz>
- <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
- <20180315230313.GM18129@dastard>
- <6628c551-f607-367b-1ee6-f458266c1d92@virtuozzo.com>
- <20180316213910.GF7000@dastard>
- <18a031f3-2136-4ef9-6ede-05f5b835661c@virtuozzo.com>
- <20180320001827.GB1150@dastard>
- <ec116ce6-c22b-66e1-0e01-55f895997c7d@virtuozzo.com>
- <20180320143452.GT18129@dastard>
- <5eb88165-c108-5989-3cb5-1f260cec5e53@virtuozzo.com>
+Received: from mga18.intel.com ([134.134.136.126]:41352 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753980AbeCUXG2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 19:06:28 -0400
+Subject: [PATCH v7 02/14] fs,
+ dax: prepare for dax-specific address_space_operations
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 21 Mar 2018 15:57:21 -0700
+Message-ID: <152167304153.5268.5998667213622821211.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5eb88165-c108-5989-3cb5-1f260cec5e53@virtuozzo.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kirill Tkhai <ktkhai@virtuozzo.com>
-Cc: Michal Hocko <mhocko@kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: linux-nvdimm@lists.01.org
+Cc: Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz
 
-On Wed, Mar 21, 2018 at 07:15:14PM +0300, Kirill Tkhai wrote:
-> On 20.03.2018 17:34, Dave Chinner wrote:
-> > On Tue, Mar 20, 2018 at 04:15:16PM +0300, Kirill Tkhai wrote:
-> >> On 20.03.2018 03:18, Dave Chinner wrote:
-> >>> On Mon, Mar 19, 2018 at 02:06:01PM +0300, Kirill Tkhai wrote:
-> >>>> On 17.03.2018 00:39, Dave Chinner wrote:
-> >>> Actually, it is fair, because:
-> >>>
-> >>>         /* proportion the scan between the caches */
-> >>>         dentries = mult_frac(sc->nr_to_scan, dentries, total_objects);
-> >>>         inodes = mult_frac(sc->nr_to_scan, inodes, total_objects);
-> >>>         fs_objects = mult_frac(sc->nr_to_scan, fs_objects, total_objects);
-> >>>
-> >>> This means that if the number of objects in the memcg aware VFS
-> >>> caches are tiny compared to the global XFS inode cache, then they
-> >>> only get a tiny amount of the total scanning done by the shrinker.
-> >>
-> >> This is just wrong. If you have two memcgs, the first is charged
-> >> by xfs dentries and inodes, while the second is not charged by xfs
-> >> dentries and inodes, the second will response for xfs shrink as well
-> >> as the first.
-> > 
-> > That makes no sense to me. Shrinkers are per-sb, so they only
-> > shrink per-filesystem dentries and inodes. If your memcgs are on
-> > different filesystems, then they'll behave according to the size of
-> > that filesystem's caches, not the cache of some other filesystem.
-> 
-> But this break the isolation purpose of memcg. When someone places
-> different services in different pairs of memcg and cpu cgroup, he
-> wants do not do foreign work.
+In preparation for the dax implementation to start associating dax pages
+to inodes via page->mapping, we need to provide a 'struct
+address_space_operations' instance for dax. Define some generic VFS aops
+helpers for dax. These noop implementations are there in the dax case to
+prevent the VFS from falling back to operations with page-cache
+assumptions, dax_writeback_mapping_range() may not be referenced in the
+FS_DAX=n case.
 
-Too bad. Filesystems *break memcg isolation all the time*.
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Matthew Wilcox <mawilcox@microsoft.com>
+Suggested-by: Jan Kara <jack@suse.cz>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/libfs.c          |   27 +++++++++++++++++++++++++++
+ include/linux/dax.h |   12 +++++++++---
+ include/linux/fs.h  |    3 +++
+ 3 files changed, 39 insertions(+), 3 deletions(-)
 
-Think about it. The filesystem journal is owned by the filesystem,
-not the memcg that is writing a transaction to it.  If one memcg
-does lots of metadata modifications, it can use all the journal
-space and starve iitself and all other memcgs of journal space while
-the filesystem does writeback to clear it out.
+diff --git a/fs/libfs.c b/fs/libfs.c
+index 7ff3cb904acd..e49d0ac6f800 100644
+--- a/fs/libfs.c
++++ b/fs/libfs.c
+@@ -1060,6 +1060,33 @@ int noop_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+ }
+ EXPORT_SYMBOL(noop_fsync);
+ 
++int noop_set_page_dirty(struct page *page)
++{
++	/*
++	 * Unlike __set_page_dirty_no_writeback that handles dirty page
++	 * tracking in the page object, dax does all dirty tracking in
++	 * the inode address_space in response to mkwrite faults. In the
++	 * dax case we only need to worry about potentially dirty CPU
++	 * caches, not dirty page cache pages to write back.
++	 *
++	 * This callback is defined to prevent fallback to
++	 * __set_page_dirty_buffers() in set_page_dirty().
++	 */
++	return 0;
++}
++EXPORT_SYMBOL_GPL(noop_set_page_dirty);
++
++void noop_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length)
++{
++	/*
++	 * There is no page cache to invalidate in the dax case, however
++	 * we need this callback defined to prevent falling back to
++	 * block_invalidatepage() in do_invalidatepage().
++	 */
++}
++EXPORT_SYMBOL_GPL(noop_invalidatepage);
++
+ /* Because kfree isn't assignment-compatible with void(void*) ;-/ */
+ void kfree_link(void *p)
+ {
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 0185ecdae135..ae27a7efe7ab 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -38,6 +38,7 @@ static inline void put_dax(struct dax_device *dax_dev)
+ }
+ #endif
+ 
++struct writeback_control;
+ int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
+ #if IS_ENABLED(CONFIG_FS_DAX)
+ int __bdev_dax_supported(struct super_block *sb, int blocksize);
+@@ -57,6 +58,8 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
+ }
+ 
+ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
++int dax_writeback_mapping_range(struct address_space *mapping,
++		struct block_device *bdev, struct writeback_control *wbc);
+ #else
+ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
+ {
+@@ -76,6 +79,12 @@ static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
+ {
+ 	return NULL;
+ }
++
++static inline int dax_writeback_mapping_range(struct address_space *mapping,
++		struct block_device *bdev, struct writeback_control *wbc)
++{
++	return -EOPNOTSUPP;
++}
+ #endif
+ 
+ int dax_read_lock(void);
+@@ -121,7 +130,4 @@ static inline bool dax_mapping(struct address_space *mapping)
+ 	return mapping->host && IS_DAX(mapping->host);
+ }
+ 
+-struct writeback_control;
+-int dax_writeback_mapping_range(struct address_space *mapping,
+-		struct block_device *bdev, struct writeback_control *wbc);
+ #endif
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 79c413985305..b57db31d294d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3129,6 +3129,9 @@ extern int simple_rmdir(struct inode *, struct dentry *);
+ extern int simple_rename(struct inode *, struct dentry *,
+ 			 struct inode *, struct dentry *, unsigned int);
+ extern int noop_fsync(struct file *, loff_t, loff_t, int);
++extern int noop_set_page_dirty(struct page *page);
++extern void noop_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length);
+ extern int simple_empty(struct dentry *);
+ extern int simple_readpage(struct file *file, struct page *page);
+ extern int simple_write_begin(struct file *file, struct address_space *mapping,
 
-Another example: if one memcg is manipulating free space in a
-particular allocation group, other memcgs that need to manipulate
-space in those allocation groups will block and be prevented from
-operating until the other memcg finishes it's work.
-
-Another example: inode IO in XFS are done in clusters of 32. read or
-write any inode in the cluster, and we read/write all the other
-inodes in that cluster, too. Hence if we need to read an inode and
-the cluster is busy because the filesystem journal needed flushing
-or another inode in the cluster is being unlinked (e.g. by a process
-in a different memcg), then the read in the first memcg will block
-until whatever is being done on the buffer is complete. IOWs, even
-at the physical on-disk inode level we violate memcg resource 
-isolation principles.
-
-I can go on, but I think you get the picture: Filesystems are full
-of global structures whose access arbitration mechanisms
-fundamentally break the concept of operational memcg isolation.
-
-With that in mind, we really don't care that the shrinker does
-global work and violate memcg isolation principles because we
-violately them everywhere. IOWs, if we try to enforce memcg
-isolation in the shrinker, then we can't guarantee forwards progress
-in memory reclaim because we end up with multi-dimensional memcg
-dependencies at the physical layers of the filesystem structure....
-
-I don't expect people who know nothing about XFS or filesystems to
-understand the complexity of the interactions we are dealing with
-here. Everything is a compromise when it comes to the memory reclaim
-code as tehre are so many corner cases we have to handle. In this
-situation, perfect is the enemy of good....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
