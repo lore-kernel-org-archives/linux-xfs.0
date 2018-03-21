@@ -1,403 +1,195 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48032 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:54630 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751548AbeCUQ5Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 12:57:24 -0400
-Date: Wed, 21 Mar 2018 09:57:16 -0700
+        with ESMTP id S1751319AbeCURGo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 13:06:44 -0400
+Date: Wed, 21 Mar 2018 10:06:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3] xfs: test agfl reset on bad list wrapping
-Message-ID: <20180321165716.GB4818@magnolia>
+Subject: Re: [PATCH 1/2] xfs: catch inode allocation state mismatch corruption
+Message-ID: <20180321170640.GC4818@magnolia>
+References: <20180321075248.7677-1-david@fromorbit.com>
+ <20180321075248.7677-2-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180321075248.7677-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 21, 2018 at 06:52:47PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> We recently came across a V4 filesystem causing memory corruption
+> due to a newly allocated inode being setup twice and being added to
+> the superblock inode list twice. From code inspection, the only way
+> this could happen is if a newly allocated inode was not marked as
+> free on disk (i.e. di_mode wasn't zero).
+> 
+> Running the metadump on an upstream debug kernel fails during inode
+> allocation like so:
+> 
+> XFS: Assertion failed: ip->i_d.di_nblocks == 0, file: fs/xfs/xfs_inode.c, line: 838
+> ------------[ cut here ]------------
+> kernel BUG at fs/xfs/xfs_message.c:114!
+> invalid opcode: 0000 [#1] PREEMPT SMP
+> CPU: 11 PID: 3496 Comm: mkdir Not tainted 4.16.0-rc5-dgc #442
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+> RIP: 0010:assfail+0x28/0x30
+> RSP: 0018:ffffc9000236fc80 EFLAGS: 00010202
+> RAX: 00000000ffffffea RBX: 0000000000004000 RCX: 0000000000000000
+> RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff8227211b
+> RBP: ffffc9000236fce8 R08: 0000000000000000 R09: 0000000000000000
+> R10: 0000000000000bec R11: f000000000000000 R12: ffffc9000236fd30
+> R13: ffff8805c76bab80 R14: ffff8805c77ac800 R15: ffff88083fb12e10
+> FS:  00007fac8cbff040(0000) GS:ffff88083fd00000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007fffa6783ff8 CR3: 00000005c6e2b003 CR4: 00000000000606e0
+> Call Trace:
+>  xfs_ialloc+0x383/0x570
+>  xfs_dir_ialloc+0x6a/0x2a0
+>  xfs_create+0x412/0x670
+>  xfs_generic_create+0x1f7/0x2c0
+>  ? capable_wrt_inode_uidgid+0x3f/0x50
+>  vfs_mkdir+0xfb/0x1b0
+>  SyS_mkdir+0xcf/0xf0
+>  do_syscall_64+0x73/0x1a0
+>  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+> 
+> Extracting the inode number we crashed on from an event trace and
+> looking at it with xfs_db:
+> 
+> xfs_db> inode 184452204
+> xfs_db> p
+> core.magic = 0x494e
+> core.mode = 0100644
+> core.version = 2
+> core.format = 2 (extents)
+> core.nlinkv2 = 1
+> core.onlink = 0
+> .....
+> 
+> Confirms that it is not a free inode on disk. xfs_repair
+> also trips over this inode:
+> 
+> .....
+> zero length extent (off = 0, fsbno = 0) in ino 184452204
+> correcting nextents for inode 184452204
+> bad attribute fork in inode 184452204, would clear attr fork
+> bad nblocks 1 for inode 184452204, would reset to 0
+> bad anextents 1 for inode 184452204, would reset to 0
+> imap claims in-use inode 184452204 is free, would correct imap
+> would have cleared inode 184452204
+> .....
+> disconnected inode 184452204, would move to lost+found
+> 
+> And so we have a situation where the directory structure and the
+> inobt thinks the inode is free, but the inode on disk thinks it is
+> still in use. Where this corruption came from is not possible to
+> diagnose, but we can detect it and prevent the kernel from oopsing
+> on lookup. The reproducer now results in:
+> 
+> $ sudo mkdir /mnt/scratch/{0,1,2,3,4,5}{0,1,2,3,4,5}
+> mkdir: cannot create directory ‘/mnt/scratch/00’: File exists
+> mkdir: cannot create directory ‘/mnt/scratch/01’: File exists
+> mkdir: cannot create directory ‘/mnt/scratch/03’: Structure needs cleaning
+> mkdir: cannot create directory ‘/mnt/scratch/04’: Input/output error
+> mkdir: cannot create directory ‘/mnt/scratch/05’: Input/output error
+> ....
+> 
+> And this corruption shutdown:
+> 
+> [   54.843517] XFS (loop0): Corruption detected! Free inode 0xafe846c not marked free on disk
+> [   54.845885] XFS (loop0): Internal error xfs_trans_cancel at line 1023 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x425/0x670
+> [   54.848994] CPU: 10 PID: 3541 Comm: mkdir Not tainted 4.16.0-rc5-dgc #443
+> [   54.850753] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+> [   54.852859] Call Trace:
+> [   54.853531]  dump_stack+0x85/0xc5
+> [   54.854385]  xfs_trans_cancel+0x197/0x1c0
+> [   54.855421]  xfs_create+0x425/0x670
+> [   54.856314]  xfs_generic_create+0x1f7/0x2c0
+> [   54.857390]  ? capable_wrt_inode_uidgid+0x3f/0x50
+> [   54.858586]  vfs_mkdir+0xfb/0x1b0
+> [   54.859458]  SyS_mkdir+0xcf/0xf0
+> [   54.860254]  do_syscall_64+0x73/0x1a0
+> [   54.861193]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+> [   54.862492] RIP: 0033:0x7fb73bddf547
+> [   54.863358] RSP: 002b:00007ffdaa553338 EFLAGS: 00000246 ORIG_RAX: 0000000000000053
+> [   54.865133] RAX: ffffffffffffffda RBX: 00007ffdaa55449a RCX: 00007fb73bddf547
+> [   54.866766] RDX: 0000000000000001 RSI: 00000000000001ff RDI: 00007ffdaa55449a
+> [   54.868432] RBP: 00007ffdaa55449a R08: 00000000000001ff R09: 00005623a8670dd0
+> [   54.870110] R10: 00007fb73be72d5b R11: 0000000000000246 R12: 00000000000001ff
+> [   54.871752] R13: 00007ffdaa5534b0 R14: 0000000000000000 R15: 00007ffdaa553500
+> [   54.873429] XFS (loop0): xfs_do_force_shutdown(0x8) called from line 1024 of file fs/xfs/xfs_trans.c.  Return address = ffffffff814cd050
+> [   54.882790] XFS (loop0): Corruption of in-memory data detected.  Shutting down filesystem
+> [   54.884597] XFS (loop0): Please umount the filesystem and rectify the problem(s)
+> 
+> Note that this crash is only possible on v4 filesystemsi or v5
+> filesystems mounted with the ikeep mount option. For all other V5
+> filesystems, this problem cannot occur because we don't read inodes
+> we are allocating from disk - we simply overwrite them with the new
+> inode information.
 
->From the kernel patch that this test examines ("xfs: detect agfl count
-corruption and reset agfl"):
+Got a test case for this scenario? :)
 
-"The struct xfs_agfl v5 header was originally introduced with
-unexpected padding that caused the AGFL to operate with one less
-slot than intended. The header has since been packed, but the fix
-left an incompatibility for users who upgrade from an old kernel
-with the unpacked header to a newer kernel with the packed header
-while the AGFL happens to wrap around the end. The newer kernel
-recognizes one extra slot at the physical end of the AGFL that the
-previous kernel did not. The new kernel will eventually attempt to
-allocate a block from that slot, which contains invalid data, and
-cause a crash.
+The patch looks ok, but I'd rather have some sort of reproducer so I can
+verify that it works (and that scrub will notice the broken state) even
+if we have to mkfs + db to check it.
 
-"This condition can be detected by comparing the active range of the
-AGFL to the count. While this detects a padding mismatch, it can
-also trigger false positives for unrelated flcount corruption. Since
-we cannot distinguish a size mismatch due to padding from unrelated
-corruption, we can't trust the AGFL enough to simply repopulate the
-empty slot.
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_icache.c | 23 ++++++++++++++++++++++-
+>  1 file changed, 22 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 1dc37b72b6ea..98b7a4ae15e4 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -484,7 +484,28 @@ xfs_iget_cache_miss(
+>  
+>  	trace_xfs_iget_miss(ip);
+>  
+> -	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
+> +
+> +	/*
+> +	 * If we are allocating a new inode, then check what was returned is
+> +	 * actually a free, empty inode. If we are not allocating an inode,
+> +	 * the check we didn't find a free inode.
+> +	 */
+> +	if (flags & XFS_IGET_CREATE) {
+> +		if (VFS_I(ip)->i_mode != 0) {
+> +			xfs_warn(mp,
+> +"Corruption detected! Free inode 0x%llx not marked free on disk",
+> +				ino);
+> +			error = -EFSCORRUPTED;
+> +			goto out_destroy;
+> +		}
+> +		if (ip->i_d.di_nblocks != 0) {
+> +			xfs_warn(mp,
+> +"Corruption detected! Free inode 0x%llx has blocks allocated!",
+> +				ino);
+> +			error = -EFSCORRUPTED;
+> +			goto out_destroy;
 
-"Instead, avoid unnecessarily complex detection logic and and use a
-solution that can handle any form of flcount corruption that slips
-through read verifiers: distrust the entire AGFL and reset it to an
-empty state. Any valid blocks within the AGFL are intentionally
-leaked. This requires xfs_repair to rectify (which was already
-necessary based on the state the AGFL was found in). The reset
-mitigates the side effect of the padding mismatch problem from a
-filesystem crash to a free space accounting inconsistency."
+I've a patch out for review that adds a xfs_inode_verifier_error
+function that spits out a standardized corruption warning, a hex dump of
+the bad dinode, and tells the user to run repair.  This seems like a
+good candidate for that.
 
-This test exercises the reset code by mutating a fresh filesystem to
-contain an agfl with various list configurations of correctly wrapped,
-incorrectly wrapped, not wrapped, and actually corrupt free lists; then
-checks the success of the reset operation by fragmenting the free space
-btrees to exercise the agfl.  Kernels without this reset fix will shut
-down the filesystem with corruption errors.
+--D
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v3: use fallocate instead of dd write, more factoring of common code
-v2: remove unncessary umounts, refactor long lines into helpers
----
- common/rc         |   23 ++++-
- tests/xfs/709     |  258 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/709.out |   13 +++
- tests/xfs/group   |    1 
- 4 files changed, 293 insertions(+), 2 deletions(-)
- create mode 100755 tests/xfs/709
- create mode 100644 tests/xfs/709.out
-
-diff --git a/common/rc b/common/rc
-index 2c29d55..f7eb72d 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3440,6 +3440,26 @@ _get_device_size()
- 	grep `_short_dev $1` /proc/partitions | awk '{print $3}'
- }
- 
-+# Make sure we actually have dmesg checking set up.
-+_require_check_dmesg() {
-+	test -w /dev/kmsg || \
-+		_notrun "Test requires writable /dev/kmsg."
-+}
-+
-+# Return the dmesg log since the start of this test.  Caller must ensure that
-+# /dev/kmsg was writable when the test was started so that we can find the
-+# beginning of this test's log messages; _require_check_dmesg does this.
-+_dmesg_since_test_start() {
-+	dmesg | tac | sed -ne "0,\#run fstests $seqnum at $date_time#p" | \
-+		tac
-+}
-+
-+# check dmesg log for a specific string, subject to the same requirements as
-+# _dmesg_since_test_start.
-+_check_dmesg_for() {
-+	_dmesg_since_test_start | egrep -q "$1"
-+}
-+
- # check dmesg log for WARNING/Oops/etc.
- _check_dmesg()
- {
-@@ -3455,8 +3475,7 @@ _check_dmesg()
- 
- 	# search the dmesg log of last run of $seqnum for possible failures
- 	# use sed \cregexpc address type, since $seqnum contains "/"
--	dmesg | tac | sed -ne "0,\#run fstests $seqnum at $date_time#p" | \
--		tac | $filter >$seqres.dmesg
-+	_dmesg_since_test_start | $filter >$seqres.dmesg
- 	egrep -q -e "kernel BUG at" \
- 	     -e "WARNING:" \
- 	     -e "BUG:" \
-diff --git a/tests/xfs/709 b/tests/xfs/709
-new file mode 100755
-index 0000000..78cefe5
---- /dev/null
-+++ b/tests/xfs/709
-@@ -0,0 +1,258 @@
-+#! /bin/bash
-+# FS QA Test No. 709
-+#
-+# Make sure XFS can fix a v5 AGFL that wraps over the last block.
-+# Refer to commit 96f859d52bcb ("libxfs: pack the agfl header structure so
-+# XFS_AGFL_SIZE is correct") for details on the original on-disk format error
-+# and the patch "xfs: detect agfl count corruption and reset agfl") for details
-+# about the fix.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle, Inc.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1
-+trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+rm -f $seqres.full
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_check_dmesg
-+_require_scratch
-+_require_test_program "punch-alternating"
-+
-+# This is only a v5 filesystem problem
-+_require_scratch_xfs_crc
-+
-+mount_loop() {
-+	if ! _try_scratch_mount >> $seqres.full 2>&1; then
-+		echo "scratch mount failed" >> $seqres.full
-+		return
-+	fi
-+
-+	# Trigger agfl fixing by fragmenting free space enough to cause
-+	# a bnobt split
-+	blksz=$(_get_file_block_size ${SCRATCH_MNT})
-+	bno_maxrecs=$(( blksz / 8 ))
-+	filesz=$((bno_maxrecs * 3 * blksz))
-+	rm -rf $SCRATCH_MNT/a
-+	$XFS_IO_PROG -f -c "falloc 0 $filesz" $SCRATCH_MNT/a
-+	test -e $SCRATCH_MNT/a && ./src/punch-alternating $SCRATCH_MNT/a
-+	rm -rf $SCRATCH_MNT/a
-+
-+	_scratch_unmount 2>&1 | _filter_scratch
-+}
-+
-+dump_ag0() {
-+	_scratch_xfs_db -c 'sb 0' -c 'p' -c 'agf 0' -c 'p' -c 'agfl 0' -c 'p'
-+}
-+
-+runtest() {
-+	cmd="$1"
-+
-+	# Format filesystem
-+	echo "TEST $cmd" | tee /dev/ttyprintk
-+	echo "TEST $cmd" >> $seqres.full
-+	_scratch_mkfs >> $seqres.full
-+
-+	# Record what was here before
-+	echo "FS BEFORE" >> $seqres.full
-+	dump_ag0 > $tmp.before
-+	cat $tmp.before >> $seqres.full
-+
-+	sectsize=$(_scratch_xfs_get_metadata_field "sectsize" "sb 0")
-+	flfirst=$(_scratch_xfs_get_metadata_field "flfirst" "agf 0")
-+	fllast=$(_scratch_xfs_get_metadata_field "fllast" "agf 0")
-+	flcount=$(_scratch_xfs_get_metadata_field "flcount" "agf 0")
-+
-+	# Due to a padding bug in the original v5 struct xfs_agfl,
-+	# XFS_AGFL_SIZE could be 36 on 32-bit or 40 on 64-bit.  On a system
-+	# with 512b sectors, this means that the AGFL length could be
-+	# ((512 - 36) / 4) = 119 entries on 32-bit or ((512 - 40) / 4) = 118
-+	# entries on 64-bit.
-+	#
-+	# We now have code to figure out if the AGFL list wraps incorrectly
-+	# according to the kernel's agfl size and fix it by resetting the agfl
-+	# to zero length.  Mutate ag 0's agfl to be in various configurations
-+	# and see if we can trigger the reset.
-+	#
-+	# Don't hardcode the numbers, calculate them.
-+
-+	# Have to have at least three agfl items to test full wrap
-+	test "$flcount" -ge 3 || _notrun "insufficient agfl flcount"
-+
-+	# mkfs should be able to make us a nice neat flfirst < fllast setup
-+	test "$flfirst" -lt "$fllast" || _notrun "fresh agfl already wrapped?"
-+
-+	bad_agfl_size=$(( (sectsize - 40) / 4 ))
-+	good_agfl_size=$(( (sectsize - 36) / 4 ))
-+	agfl_size=
-+	case "$1" in
-+	"fix_end")	# fllast points to the end w/ 40-byte padding
-+		new_flfirst=$(( bad_agfl_size - flcount ))
-+		agfl_size=$bad_agfl_size;;
-+	"fix_start")	# flfirst points to the end w/ 40-byte padding
-+		new_flfirst=$(( bad_agfl_size - 1))
-+		agfl_size=$bad_agfl_size;;
-+	"fix_wrap")	# list wraps around end w/ 40-byte padding
-+		new_flfirst=$(( bad_agfl_size - (flcount / 2) ))
-+		agfl_size=$bad_agfl_size;;
-+	"start_zero")	# flfirst points to the start
-+		new_flfirst=0
-+		agfl_size=$good_agfl_size;;
-+	"good_end")	# fllast points to the end w/ 36-byte padding
-+		new_flfirst=$(( good_agfl_size - flcount ))
-+		agfl_size=$good_agfl_size;;
-+	"good_start")	# flfirst points to the end w/ 36-byte padding
-+		new_flfirst=$(( good_agfl_size - 1 ))
-+		agfl_size=$good_agfl_size;;
-+	"good_wrap")	# list wraps around end w/ 36-byte padding
-+		new_flfirst=$(( good_agfl_size - (flcount / 2) ))
-+		agfl_size=$good_agfl_size;;
-+	"bad_start")	# flfirst points off the end
-+		new_flfirst=$good_agfl_size
-+		agfl_size=$good_agfl_size;;
-+	"no_move")	# whatever mkfs formats (flfirst points to start)
-+		new_flfirst=$flfirst
-+		agfl_size=$good_agfl_size;;
-+	"simple_move")	# move list arbitrarily
-+		new_flfirst=$((fllast + 1))
-+		agfl_size=$good_agfl_size;;
-+	*)
-+		_fail "Internal test error";;
-+	esac
-+	new_fllast=$(( (new_flfirst + flcount - 1) % agfl_size ))
-+
-+	# Log what we're doing...
-+	cat >> $seqres.full << ENDL
-+sector size: $sectsize
-+bad_agfl_size: $bad_agfl_size [0 - $((bad_agfl_size - 1))]
-+good_agfl_size: $good_agfl_size [0 - $((good_agfl_size - 1))]
-+agfl_size: $agfl_size
-+flfirst: $flfirst
-+fllast: $fllast
-+flcount: $flcount
-+new_flfirst: $new_flfirst
-+new_fllast: $new_fllast
-+ENDL
-+
-+	# Remap the agfl blocks
-+	echo "$((good_agfl_size - 1)) 0xffffffff" > $tmp.remap
-+	seq "$flfirst" "$fllast" | while read f; do
-+		list_pos=$((f - flfirst))
-+		dest_pos=$(( (new_flfirst + list_pos) % agfl_size ))
-+		bno=$(_scratch_xfs_get_metadata_field "bno[$f]" "agfl 0")
-+		echo "$dest_pos $bno" >> $tmp.remap
-+	done
-+
-+	cat $tmp.remap | while read dest_pos bno junk; do
-+		_scratch_xfs_set_metadata_field "bno[$dest_pos]" "$bno" \
-+				"agfl 0" >> $seqres.full
-+	done
-+
-+	# Set new flfirst/fllast
-+	_scratch_xfs_set_metadata_field "fllast" "$new_fllast" \
-+			"agf 0" >> $seqres.full
-+	_scratch_xfs_set_metadata_field "flfirst" "$new_flfirst" \
-+			"agf 0" >> $seqres.full
-+
-+	echo "FS AFTER" >> $seqres.full
-+	dump_ag0 > $tmp.corrupt 2> /dev/null
-+	diff -u $tmp.before $tmp.corrupt >> $seqres.full
-+
-+	# Mount and see what happens
-+	mount_loop
-+
-+	# Did we end up with a non-wrapped list?
-+	flfirst=$(_scratch_xfs_get_metadata_field "flfirst" "agf 0" 2>/dev/null)
-+	fllast=$(_scratch_xfs_get_metadata_field "fllast" "agf 0" 2>/dev/null)
-+	echo "flfirst=${flfirst} fllast=${fllast}" >> $seqres.full
-+	if [ "${flfirst}" -ge "$((good_agfl_size - 1))" ]; then
-+		echo "ASSERT flfirst < good_agfl_size - 1" | tee -a $seqres.full
-+	fi
-+	if [ "${fllast}" -ge "$((good_agfl_size - 1))" ]; then
-+		echo "ASSERT fllast < good_agfl_size - 1" | tee -a $seqres.full
-+	fi
-+	if [ "${flfirst}" -ge "${fllast}" ]; then
-+		echo "ASSERT flfirst < fllast" | tee -a $seqres.full
-+	fi
-+
-+	echo "FS MOUNTLOOP" >> $seqres.full
-+	dump_ag0 > $tmp.mountloop 2> /dev/null
-+	diff -u $tmp.corrupt $tmp.mountloop >> $seqres.full
-+
-+	# Let's see what repair thinks
-+	echo "REPAIR" >> $seqres.full
-+	_scratch_xfs_repair >> $seqres.full 2>&1
-+
-+	echo "FS REPAIR" >> $seqres.full
-+	dump_ag0 > $tmp.repair 2> /dev/null
-+	diff -u $tmp.mountloop $tmp.repair >> $seqres.full
-+
-+	# Exercise the filesystem again to make sure there aren't any lasting
-+	# ill effects from either the agfl reset or the recommended subsequent
-+	# repair run.
-+	mount_loop
-+
-+	echo "FS REMOUNT" >> $seqres.full
-+	dump_ag0 > $tmp.remount 2> /dev/null
-+	diff -u $tmp.repair $tmp.remount >> $seqres.full
-+}
-+
-+runtest fix_end
-+runtest fix_start
-+runtest fix_wrap
-+runtest start_zero
-+runtest good_end
-+runtest good_start
-+runtest good_wrap
-+runtest bad_start
-+runtest no_move
-+runtest simple_move
-+
-+# Did we get the kernel warning too?
-+warn_str='WARNING: Reset corrupted AGFL'
-+_check_dmesg_for "${warn_str}" || echo "Missing dmesg string \"${warn_str}\"."
-+
-+# Now run the regular dmesg check, filtering out the agfl warning
-+filter_agfl_reset_printk() {
-+	grep -v "${warn_str}"
-+}
-+_check_dmesg filter_agfl_reset_printk
-+
-+status=0
-+exit 0
-diff --git a/tests/xfs/709.out b/tests/xfs/709.out
-new file mode 100644
-index 0000000..f1fa9a3
---- /dev/null
-+++ b/tests/xfs/709.out
-@@ -0,0 +1,13 @@
-+QA output created by 709
-+TEST fix_end
-+TEST fix_start
-+TEST fix_wrap
-+TEST start_zero
-+TEST good_end
-+TEST good_start
-+TEST good_wrap
-+TEST bad_start
-+ASSERT flfirst < good_agfl_size - 1
-+ASSERT flfirst < fllast
-+TEST no_move
-+TEST simple_move
-diff --git a/tests/xfs/group b/tests/xfs/group
-index e2397fe..472120e 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -441,3 +441,4 @@
- 441 auto quick clone quota
- 442 auto stress clone quota
- 443 auto quick ioctl fsr
-+709 auto quick
+> +		}
+> +	} else if (VFS_I(ip)->i_mode == 0) {
+>  		error = -ENOENT;
+>  		goto out_destroy;
+>  	}
+> -- 
+> 2.16.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
