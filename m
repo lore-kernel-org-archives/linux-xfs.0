@@ -1,88 +1,1070 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:41346 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751745AbeCXAwJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Mar 2018 20:52:09 -0400
-Date: Fri, 23 Mar 2018 17:52:03 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:51686 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbeCUDTj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:19:39 -0400
+Date: Tue, 20 Mar 2018 20:19:33 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: clean up xfs_mount allocation and dynamic
- initializers
-Message-ID: <20180324005203.GM4818@magnolia>
-References: <20180321161325.12773-1-bfoster@redhat.com>
- <20180321172728.GF4818@magnolia>
- <20180321180738.GM11127@bfoster.bfoster>
- <20180322001945.GZ18129@dastard>
+Subject: [PATCH 5/4] misc: remove darwin, irix, and freebsd support
+Message-ID: <20180321031933.GO1757@magnolia>
+References: <152151529988.18312.2660325658864402943.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180322001945.GZ18129@dastard>
+In-Reply-To: <152151529988.18312.2660325658864402943.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Mar 22, 2018 at 11:19:45AM +1100, Dave Chinner wrote:
-> On Wed, Mar 21, 2018 at 02:07:38PM -0400, Brian Foster wrote:
-> > On Wed, Mar 21, 2018 at 10:27:28AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Mar 21, 2018 at 12:13:25PM -0400, Brian Foster wrote:
-> > > > Most of the generic data structures embedded in xfs_mount are
-> > > > dynamically initialized immediately after mp is allocated. A few
-> > > > fields are left out and initialized during the xfs_mountfs()
-> > > > sequence, after mp has been attached to the superblock.
-> > > > 
-> > > > To clean this up and help prevent premature access of associated
-> > > > fields, refactor xfs_mount allocation and all dependent init calls
-> > > > into a new helper. This self-documents that all low level data
-> > > > structures (i.e., locks, trees, etc.) should be initialized before
-> > > > xfs_mount is attached to the superblock.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > > 
-> > > > I realized after the fact that this steps on the ability to instrument
-> > > > the use-before-init variant[1] of the problematic radix tree access on
-> > > > failed mount issue that Dave tracked down. This is because we'd
-> > > > immediately initialize the structure and thus a subsequent memset()
-> > > > would ultimately require another proper initialization.
-> > > 
-> > > That's simply a matter of re-calling
-> > > 
-> > > 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
-> > > 
-> > > after the msleep, right?
-> > > 
-> > 
-> > I suppose that may work (I'll let Dave chime in)...
-> 
-> Well, to tell the truth, this whole "VFS accesses the fs during
-> mount: problem is isolated to only the inode cache shrinker, and it
-> while a mount is in progress it does not run inode cache scans
-> (can't lock s_umount because the mount holds it locked).
-> 
-> IOWs, this crash can be fixed entirely by modifying the VFS code as
-> I mentioned to avoid super_cache_count() doing any work during mount
-> and unmount.
-> 
-> So, really, none of these XFS changes are necessary to fix the
-> problem that was reported. I'm not opposed to it as a cleanup, but
-> let's not conflate it with the VFS superblock shrinker bug that
-> needs to be fixed....
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Are you working on such a patch?  I guessed that one could change the
-vfs to avoid register_shrinker until after fill_super returns?  Or
-possibly just have super_cache_count bail out if !SB_ACTIVE, though that
-could be messy given that xfs (and others) mess with that flag.
+Remove these ports since they're not actively maintained:
 
---D
+IRIX support was partially removed last year; the OS itself hasn't had a
+release since 2006.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+FreeBSD dropped XFS support in v9.3, which EOLd in January 2017.
+
+Darwin/OSX has never supported XFS.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/darwin.h  |  315 -----------------------------------------------------
+ include/freebsd.h |  210 -----------------------------------
+ libxfs/Makefile   |    2 
+ libxfs/darwin.c   |  144 ------------------------
+ libxfs/freebsd.c  |  201 ----------------------------------
+ libxfs/irix.c     |  111 -------------------
+ 6 files changed, 1 insertion(+), 982 deletions(-)
+ delete mode 100644 include/darwin.h
+ delete mode 100644 include/freebsd.h
+ delete mode 100644 libxfs/darwin.c
+ delete mode 100644 libxfs/freebsd.c
+ delete mode 100644 libxfs/irix.c
+
+diff --git a/include/darwin.h b/include/darwin.h
+deleted file mode 100644
+index 2632e1d..0000000
+--- a/include/darwin.h
++++ /dev/null
+@@ -1,315 +0,0 @@
+-/*
+- * Copyright (c) 2004-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU Lesser General Public License
+- * as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU Lesser General Public License for more details.
+- *
+- * You should have received a copy of the GNU Lesser General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_DARWIN_H__
+-#define __XFS_DARWIN_H__
+-
+-#include <unistd.h>
+-#include <sys/types.h>
+-#include <string.h>
+-#include <uuid/uuid.h>
+-#include <libgen.h>
+-#include <sys/vm.h>
+-#include <sys/stat.h>
+-#include <sys/ioctl.h>
+-#include <sys/mount.h>
+-#include <sys/types.h>
+-#include <sys/time.h>
+-#include <ftw.h>
+-#include <mach/mach_time.h>
+-#include <inttypes.h>
+-#include <stdio.h>
+-#include <sys/mman.h>
+-
+-#include <machine/endian.h>
+-#define __BYTE_ORDER	BYTE_ORDER
+-#define __BIG_ENDIAN	BIG_ENDIAN
+-#define __LITTLE_ENDIAN	LITTLE_ENDIAN
+-
+-#include <sys/syscall.h>
+-# ifndef SYS_fsctl
+-#  define SYS_fsctl	242
+-# endif
+-
+-#ifndef XATTR_LIST_MAX
+-#define XATTR_LIST_MAX  65536
+-#endif
+-
+-static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+-{
+-	return syscall(SYS_fsctl, path, cmd, p, 0);
+-}
+-
+-static __inline__ int platform_test_xfs_fd(int fd)
+-{
+-	struct statfs buf;
+-	if (fstatfs(fd, &buf) < 0)
+-		return 0;
+-	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
+-}
+-
+-static __inline__ int platform_test_xfs_path(const char *path)
+-{
+-	struct statfs buf;
+-	if (statfs(path, &buf) < 0)
+-		return 0;
+-	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
+-}
+-
+-static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
+-{
+-	return fstatfs(fd, buf);
+-}
+-
+-static __inline__ void platform_getoptreset(void)
+-{
+-	extern int optreset;
+-	optreset = 0;
+-}
+-
+-static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
+-{
+-	return uuid_compare(*uu1, *uu2);
+-}
+-
+-static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
+-{
+-	uuid_unparse(*uu, buffer);
+-}
+-
+-static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
+-{
+-	return uuid_parse(buffer, *uu);
+-}
+-
+-static __inline__ int platform_uuid_is_null(uuid_t *uu)
+-{
+-	return uuid_is_null(*uu);
+-}
+-
+-static __inline__ void platform_uuid_generate(uuid_t *uu)
+-{
+-	uuid_generate(*uu);
+-}
+-
+-static __inline__ void platform_uuid_clear(uuid_t *uu)
+-{
+-	uuid_clear(*uu);
+-}
+-
+-static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+-{
+-	uuid_copy(*dst, *src);
+-}
+-
+-typedef unsigned char		__u8;
+-typedef signed char		__s8;
+-typedef unsigned short		__u16;
+-typedef signed short		__s16;
+-typedef unsigned int		__u32;
+-typedef signed int		__s32;
+-typedef unsigned long long int	__u64;
+-typedef signed long long int	__s64;
+-
+-#define int8_t		int8_t
+-#define int16_t		int16_t
+-#define int32_t		int32_t
+-#define int32_t		int32_t
+-#define int64_t		int64_t
+-
+-typedef off_t		xfs_off_t;
+-typedef uint64_t	xfs_ino_t;
+-typedef uint32_t	xfs_dev_t;
+-typedef int64_t		xfs_daddr_t;
+-typedef __u32		xfs_nlink_t;
+-
+-#define fdatasync	fsync
+-#define memalign(a,sz)	valloc(sz)
+-
+-#define O_LARGEFILE     0
+-#ifndef O_DIRECT
+-#define O_DIRECT        0
+-#endif
+-#ifndef O_SYNC
+-#define O_SYNC          0
+-#endif
+-
+-#define EFSCORRUPTED	990	/* Filesystem is corrupted */
+-#define EFSBADCRC	991	/* Bad CRC detected */
+-
+-#define HAVE_FID	1
+-
+-static __inline__ int
+-platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+-{
+-	return 0;
+-}
+-
+-/*
+- * POSIX timer replacement.
+- * It really just do the minimum we need for xfs_repair.
+- * Also, as setitimer can't create multiple timers,
+- * the timerid things are useless - we have only one ITIMER_REAL
+- * timer.
+- */
+-#define CLOCK_REALTIME ITIMER_REAL
+-#define itimerspec itimerval
+-typedef uint64_t timer_t;
+-typedef double   timer_c;
+-typedef clock_id_t clockid_t;
+-
+-
+-static inline int timer_create (clockid_t __clock_id,
+-                         struct sigevent *__restrict __evp,
+-                         timer_t *__restrict timer)
+-{
+-	// set something, to initialize the variable, just in case
+-	*timer = 0;
+-	return 0;
+-}
+-
+-static inline int timer_settime (timer_t timerid, int flags,
+-                          const struct itimerspec *__restrict timerspec,
+-                          struct itimerspec *__restrict ovalue)
+-{
+-	return setitimer(ITIMER_REAL, timerspec, ovalue);
+-}
+-
+-static inline int timer_delete (timer_t timerid)
+-{
+-	struct itimerspec timespec;
+-
+-	timespec.it_interval.tv_sec=0;
+-	timespec.it_interval.tv_usec=0;
+-	timespec.it_value.tv_sec=0;
+-	timespec.it_value.tv_usec=0;
+-
+-	return setitimer(ITIMER_REAL, &timespec, NULL);
+-}
+-
+-static inline int timer_gettime (timer_t timerid, struct itimerspec *value)
+-{
+-	return getitimer(ITIMER_REAL, value);
+-}
+-
+-/* FSR */
+-
+-#  include <sys/mount.h>
+-#  include <sys/param.h>
+-#include <sys/ucred.h>
+-#include <errno.h>
+-#define		_PATH_MOUNTED   "/etc/mtab"
+-
+-struct mntent
+-{
+-	char *mnt_fsname;
+-	char *mnt_dir;
+-	char *mnt_type;
+-	char *mnt_opts;
+-	int mnt_freq;
+-	int mnt_passno;
+-};
+-
+-static inline void mntinfo2mntent (struct statfs * stats, struct mntent * mnt) {
+-	mnt->mnt_fsname = stats->f_mntfromname;
+-	mnt->mnt_dir = stats->f_mntonname;
+-	mnt->mnt_type = stats->f_fstypename;
+-}
+-
+-
+-
+-/**
+- * Abstraction of mountpoints.
+- */
+-struct mntent_cursor {
+-	FILE *mtabp;
+-	struct statfs *stats;
+-	int count;
+-	int i;
+-};
+-
+-/**
+- * OS X uses getmntinfo, which doesn't use a mtab file. So we just ignore it.
+- */
+-static inline int platform_mntent_open(struct mntent_cursor * cursor, char *mtab)
+-{
+-	if ((cursor->count = getmntinfo(&cursor->stats, 0)) < 0) {
+-		fprintf(stderr, "Error: getmntinfo() failed: %s\n", strerror(errno));
+-		return 1;
+-	}
+-	cursor->i = 0;
+-	return 0;
+-}
+-
+-static inline struct mntent * platform_mntent_next(struct mntent_cursor * cursor)
+-{
+-	struct mntent * t = NULL;
+-	if (cursor->i >= cursor->count){
+-		return NULL;
+-	}
+-	mntinfo2mntent(&cursor->stats[cursor->i], t);
+-	cursor->i++;
+-	return t;
+-}
+-
+-static inline void platform_mntent_close(struct mntent_cursor * cursor)
+-{
+-	cursor->count = 0;
+-	cursor->i = 0;
+-}
+-
+-/* check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves */
+-#ifndef HAVE_FSXATTR
+-struct fsxattr {
+-	__u32		fsx_xflags;	/* xflags field value (get/set) */
+-	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+-	__u32		fsx_nextents;	/* nextents field value (get)	*/
+-	__u32		fsx_projid;	/* project identifier (get/set) */
+-	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
+-	unsigned char	fsx_pad[8];
+-};
+-
+-/*
+- * Flags for the fsx_xflags field
+- */
+-#define FS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
+-#define FS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
+-#define FS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
+-#define FS_XFLAG_APPEND		0x00000010	/* all writes append */
+-#define FS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
+-#define FS_XFLAG_NOATIME	0x00000040	/* do not update access time */
+-#define FS_XFLAG_NODUMP		0x00000080	/* do not include in backups */
+-#define FS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
+-#define FS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
+-#define FS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
+-#define FS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
+-#define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+-#define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+-#define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+-#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+-#define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+-
+-#define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+-#define FS_IOC_FSSETXATTR     _IOW ('X', 32, struct fsxattr)
+-
+-#endif
+-
+-#ifndef FS_XFLAG_COWEXTSIZE
+-#define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+-#endif
+-
+-#endif	/* __XFS_DARWIN_H__ */
+diff --git a/include/freebsd.h b/include/freebsd.h
+deleted file mode 100644
+index f52ed0a..0000000
+--- a/include/freebsd.h
++++ /dev/null
+@@ -1,210 +0,0 @@
+-/*
+- * Copyright (c) 2004-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU Lesser General Public License
+- * as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU Lesser General Public License for more details.
+- *
+- * You should have received a copy of the GNU Lesser General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_FREEBSD_H__
+-#define __XFS_FREEBSD_H__
+-
+-#include <sys/stat.h>
+-#include <sys/param.h>
+-#include <sys/ioccom.h>
+-#include <sys/mount.h>
+-#include <ctype.h>
+-#include <libgen.h>
+-#include <paths.h>
+-#include <uuid.h>
+-#include <mntent.h>
+-
+-#include <sys/endian.h>
+-#define __BYTE_ORDER	BYTE_ORDER
+-#define __BIG_ENDIAN	BIG_ENDIAN
+-#define __LITTLE_ENDIAN	LITTLE_ENDIAN
+-
+-/* FreeBSD file API is 64-bit aware */
+-#define fdatasync	fsync
+-#define memalign(a,sz)	valloc(sz)
+-
+-#define EFSCORRUPTED	990	/* Filesystem is corrupted */
+-#define EFSBADCRC	991	/* Bad CRC detected */
+-
+-typedef unsigned char		__u8;
+-typedef signed char		__s8;
+-typedef unsigned short		__u16;
+-typedef signed short		__s16;
+-typedef unsigned int		__u32;
+-typedef signed int		__s32;
+-typedef unsigned long long int	__u64;
+-typedef signed long long int	__s64;
+-
+-typedef off_t		xfs_off_t;
+-typedef uint64_t	xfs_ino_t;
+-typedef uint32_t	xfs_dev_t;
+-typedef int64_t		xfs_daddr_t;
+-typedef __u32		xfs_nlink_t;
+-
+-#define	O_LARGEFILE	0
+-
+-#define HAVE_FID	1
+-
+-static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
+-{
+-	return ioctl(fd, cmd, p);
+-}
+-
+-static __inline__ int platform_test_xfs_fd(int fd)
+-{
+-	struct statfs buf;
+-	if (fstatfs(fd, &buf) < 0)
+-		return 0;
+-	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
+-}
+-
+-static __inline__ int platform_test_xfs_path(const char *path)
+-{
+-	struct statfs buf;
+-	if (statfs(path, &buf) < 0)
+-		return 0;
+-	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
+-}
+-
+-static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
+-{
+-	return fstatfs(fd, buf);
+-}
+-
+-static __inline__ void platform_getoptreset(void)
+-{
+-	extern int optind;
+-	optind = 0;
+-}
+-
+-static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
+-{
+-	return uuid_compare(uu1, uu2, NULL);
+-}
+-
+-static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
+-{
+-	uint32_t status;
+-	char *s;
+-	uuid_to_string(uu, &s, &status);
+-	if (status == uuid_s_ok)
+-		strcpy(buffer, s);
+-	else buffer[0] = '\0';
+-	free(s);
+-}
+-
+-static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
+-{
+-	uint32_t status;
+-	uuid_from_string(buffer, uu, &status);
+-	return (status == uuid_s_ok);
+-}
+-
+-static __inline__ int platform_uuid_is_null(uuid_t *uu)
+-{
+-	return uuid_is_nil(uu, NULL);
+-}
+-
+-static __inline__ void platform_uuid_generate(uuid_t *uu)
+-{
+-	uuid_create(uu, NULL);
+-}
+-
+-static __inline__ void platform_uuid_clear(uuid_t *uu)
+-{
+-	uuid_create_nil(uu, NULL);
+-}
+-
+-static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
+-{
+-	memcpy(dst, src, sizeof(uuid_t));
+-}
+-
+-static __inline__ int
+-platform_discard_blocks(int fd, uint64_t start, uint64_t len)
+-{
+-	return 0;
+-}
+-
+-/**
+- * Abstraction of mountpoints.
+- */
+-struct mntent_cursor {
+-	FILE *mtabp;
+-};
+-
+-static inline int platform_mntent_open(struct mntent_cursor * cursor, char *mtab)
+-{
+-	cursor->mtabp = setmntent(mtab, "r");
+-	if (!cursor->mtabp) {
+-		fprintf(stderr, "Error: cannot read %s\n", mtab);
+-		return 1;
+-	}
+-	return 0;
+-}
+-
+-static inline  struct mntent * platform_mntent_next(struct mntent_cursor * cursor)
+-{
+-	return getmntent(cursor->mtabp);
+-}
+-
+-static inline void platform_mntent_close(struct mntent_cursor * cursor)
+-{
+-	endmntent(cursor->mtabp);
+-}
+-
+-/* check whether we have to define FS_IOC_FS[GS]ETXATTR ourselves */
+-#ifndef HAVE_FSXATTR
+-struct fsxattr {
+-	__u32		fsx_xflags;	/* xflags field value (get/set) */
+-	__u32		fsx_extsize;	/* extsize field value (get/set)*/
+-	__u32		fsx_nextents;	/* nextents field value (get)	*/
+-	__u32		fsx_projid;	/* project identifier (get/set) */
+-	__u32		fsx_cowextsize;	/* cow extsize field value (get/set) */
+-	unsigned char	fsx_pad[8];
+-};
+-
+-/*
+- * Flags for the fsx_xflags field
+- */
+-#define FS_XFLAG_REALTIME	0x00000001	/* data in realtime volume */
+-#define FS_XFLAG_PREALLOC	0x00000002	/* preallocated file extents */
+-#define FS_XFLAG_IMMUTABLE	0x00000008	/* file cannot be modified */
+-#define FS_XFLAG_APPEND		0x00000010	/* all writes append */
+-#define FS_XFLAG_SYNC		0x00000020	/* all writes synchronous */
+-#define FS_XFLAG_NOATIME	0x00000040	/* do not update access time */
+-#define FS_XFLAG_NODUMP		0x00000080	/* do not include in backups */
+-#define FS_XFLAG_RTINHERIT	0x00000100	/* create with rt bit set */
+-#define FS_XFLAG_PROJINHERIT	0x00000200	/* create with parents projid */
+-#define FS_XFLAG_NOSYMLINKS	0x00000400	/* disallow symlink creation */
+-#define FS_XFLAG_EXTSIZE	0x00000800	/* extent size allocator hint */
+-#define FS_XFLAG_EXTSZINHERIT	0x00001000	/* inherit inode extent size */
+-#define FS_XFLAG_NODEFRAG	0x00002000	/* do not defragment */
+-#define FS_XFLAG_FILESTREAM	0x00004000	/* use filestream allocator */
+-#define FS_XFLAG_DAX		0x00008000	/* use DAX for IO */
+-#define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+-
+-#define FS_IOC_FSGETXATTR     _IOR ('X', 31, struct fsxattr)
+-#define FS_IOC_FSSETXATTR     _IOW ('X', 32, struct fsxattr)
+-
+-#endif
+-
+-#ifndef FS_XFLAG_COWEXTSIZE
+-#define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+-#endif
+-
+-#endif	/* __XFS_FREEBSD_H__ */
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 0470f5f..00df418 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -98,7 +98,7 @@ CFILES = cache.c \
+ 	xfs_trans_resv.c
+ 
+ CFILES += $(PKG_PLATFORM).c
+-PCFILES = darwin.c freebsd.c irix.c linux.c
++PCFILES = linux.c
+ LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
+ LSRCFILES += gen_crc32table.c
+ 
+diff --git a/libxfs/darwin.c b/libxfs/darwin.c
+deleted file mode 100644
+index 16d2c35..0000000
+--- a/libxfs/darwin.c
++++ /dev/null
+@@ -1,144 +0,0 @@
+-/*
+- * Copyright (c) 2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-
+-#include <sys/disk.h>
+-#include <sys/stat.h>
+-#include <sys/mount.h>
+-#include <sys/ioctl.h>
+-#include <sys/sysctl.h>
+-#include "libxfs.h"
+-
+-int platform_has_uuid = 1;
+-extern char *progname;
+-
+-int
+-platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
+-{
+-	return 0;
+-}
+-
+-int
+-platform_check_iswritable(char *name, char *block, struct stat *s)
+-{
+-	int	fd, writable;
+-
+-	if ((fd = open(block, O_RDONLY, 0)) < 0) {
+-		fprintf(stderr, _("%s: "
+-			"error opening the device special file \"%s\": %s\n"),
+-			progname, block, strerror(errno));
+-		exit(1);
+-	}
+-
+-	if (ioctl(fd, DKIOCISWRITABLE, &writable) < 0) {
+-		fprintf(stderr, _("%s: can't tell if \"%s\" is writable: %s\n"),
+-			progname, block, strerror(errno));
+-		exit(1);
+-	}
+-	close(fd);
+-	return writable == 0;
+-}
+-
+-int
+-platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fatal)
+-{
+-	return fatal;
+-}
+-
+-void
+-platform_flush_device(int fd, dev_t device)
+-{
+-	ioctl(fd, DKIOCSYNCHRONIZECACHE, NULL);
+-}
+-
+-void
+-platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+-{
+-	uint64_t	size;
+-	struct stat	st;
+-
+-	if (fstat(fd, &st) < 0) {
+-		fprintf(stderr,
+-			_("%s: cannot stat the device file \"%s\": %s\n"),
+-			progname, path, strerror(errno));
+-		exit(1);
+-	}
+-	if ((st.st_mode & S_IFMT) == S_IFREG) {
+-		*sz = (long long)(st.st_size >> 9);
+-		*bsz = BBSIZE;
+-		return;
+-	}
+-	if (ioctl(fd, DKIOCGETBLOCKCOUNT, &size) < 0) {
+-		fprintf(stderr, _("%s: can't determine device size: %s\n"),
+-			progname, strerror(errno));
+-		exit(1);
+-	}
+-	*sz = (long long)size;
+-	*bsz = BBSIZE;
+-}
+-
+-char *
+-platform_findrawpath(char *path)
+-{
+-	return path;
+-}
+-
+-char *
+-platform_findblockpath(char *path)
+-{
+-	return path;
+-}
+-
+-int
+-platform_direct_blockdev(void)
+-{
+-	return 0;
+-}
+-
+-int
+-platform_align_blockdev(void)
+-{
+-	return sizeof(void *);
+-}
+-
+-int
+-platform_nproc(void)
+-{
+-	int		ncpu;
+-	size_t		len = sizeof(ncpu);
+-	static int	mib[2] = {CTL_HW, HW_NCPU};
+-
+-	if (sysctl(mib, 2, &ncpu, &len, NULL, 0) < 0)
+-		ncpu = 1;
+-
+-	return ncpu;
+-}
+-
+-unsigned long
+-platform_physmem(void)
+-{
+-	unsigned long	physmem;
+-	size_t		len = sizeof(physmem);
+-	static int	mib[2] = {CTL_HW, HW_PHYSMEM};
+-
+-	if (sysctl(mib, 2, &physmem, &len, NULL, 0) < 0) {
+-		fprintf(stderr, _("%s: can't determine memory size\n"),
+-			progname);
+-		exit(1);
+-	}
+-	return physmem >> 10;
+-}
+diff --git a/libxfs/freebsd.c b/libxfs/freebsd.c
+deleted file mode 100644
+index 5b9ef29..0000000
+--- a/libxfs/freebsd.c
++++ /dev/null
+@@ -1,201 +0,0 @@
+-/*
+- * Copyright (c) 2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-
+-#include "libxfs.h"
+-#include <sys/stat.h>
+-#include <sys/disk.h>
+-#include <sys/mount.h>
+-#include <sys/ioctl.h>
+-#include <sys/sysctl.h>
+-
+-int platform_has_uuid = 1;
+-extern char *progname;
+-
+-int
+-platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
+-{
+-	struct stat	st;
+-        int cnt, i;
+-        struct statfs *fsinfo;
+-
+-	if (!s) {
+-		if (stat(block, &st) < 0)
+-			return 0;
+-		s = &st;
+-	}
+-
+-	/* Remember, FreeBSD can now mount char devices! -- adrian */
+-	if (((st.st_mode & S_IFMT) != S_IFBLK) &&
+-	    ((st.st_mode & S_IFMT) != S_IFCHR))
+-		return 0;
+-
+-	if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
+-		fprintf(stderr,
+-		    _("%s: %s possibly contains a mounted filesystem\n"),
+-		    progname, name);
+-		return 1;
+-	}
+-
+-        for (i = 0; i < cnt; i++) {
+-                if (strcmp (name, fsinfo[i].f_mntfromname) != 0)
+-			continue;
+-
+-		if (verbose)
+-			fprintf(stderr,
+-			    _("%s: %s contains a mounted filesystem\n"),
+-			    progname, name);
+-		break;
+-	}
+-
+-        return i < cnt;
+-}
+-
+-int
+-platform_check_iswritable(char *name, char *block, struct stat *s)
+-{
+-        int cnt, i;
+-        struct statfs *fsinfo;
+-
+-        if ((cnt = getmntinfo(&fsinfo, MNT_NOWAIT)) == 0) {
+-		fprintf(stderr, _("%s: %s contains a possibly writable, "
+-				"mounted filesystem\n"), progname, name);
+-			return 1;
+-	}
+-
+-        for (i = 0; i < cnt; i++) {
+-                if (strcmp (name, fsinfo[i].f_mntfromname) != 0)
+-			continue;
+-
+-		if (fsinfo[i].f_flags &= MNT_RDONLY)
+-			break;
+-	}
+-
+-        if (i == cnt) {
+-		fprintf(stderr, _("%s: %s contains a mounted and writable "
+-				"filesystem\n"), progname, name);
+-		return 1;
+-	}
+-	return 0;
+-}
+-
+-int
+-platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fatal)
+-{
+-	return fatal;
+-}
+-
+-void
+-platform_flush_device(int fd, dev_t device)
+-{
+-	return;
+-}
+-
+-void
+-platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+-{
+-	struct stat	st;
+-	int64_t		size;
+-	uint		ssize;
+-
+-	if (fstat(fd, &st) < 0) {
+-		fprintf(stderr, _("%s: "
+-			"cannot stat the device file \"%s\": %s\n"),
+-			progname, path, strerror(errno));
+-		exit(1);
+-	}
+-
+-	if ((st.st_mode & S_IFMT) == S_IFREG) {
+-		*sz = (long long)(st.st_size >> 9);
+-		*bsz = 512;
+-		return;
+-	}
+-
+-	if ((st.st_mode & S_IFMT) != S_IFCHR) {
+-		fprintf(stderr, _("%s: Not a device or file: \"%s\"\n"),
+-			progname, path);
+-		exit(1);
+-	}
+-
+-	if (ioctl(fd, DIOCGMEDIASIZE, &size) != 0) {
+-		fprintf(stderr, _("%s: DIOCGMEDIASIZE failed on \"%s\": %s\n"),
+-			progname, path, strerror(errno));
+-		exit(1);
+-	}
+-
+-	if (ioctl(fd, DIOCGSECTORSIZE, &ssize) != 0) {
+-		fprintf(stderr, _("%s: "
+-			"DIOCGSECTORSIZE failed on \"%s\": %s\n"),
+-			progname, path, strerror(errno));
+-		exit(1);
+-	}
+-
+-	*sz = (long long) (size / ssize);
+-	*bsz = (int)ssize;
+-}
+-
+-char *
+-platform_findrawpath(char *path)
+-{
+-	return path;
+-}
+-
+-char *
+-platform_findblockpath(char *path)
+-{
+-	return path;
+-}
+-
+-int
+-platform_direct_blockdev(void)
+-{
+-	return 0;
+-}
+-
+-int
+-platform_align_blockdev(void)
+-{
+-	return sizeof(void *);
+-}
+-
+-int
+-platform_nproc(void)
+-{
+-	int		ncpu;
+-	size_t		len = sizeof(ncpu);
+-	static int	mib[2] = {CTL_HW, HW_NCPU};
+-
+-	if (sysctl(mib, 2, &ncpu, &len, NULL, 0) < 0)
+-		ncpu = 1;
+-
+-	return ncpu;
+-}
+-
+-unsigned long
+-platform_physmem(void)
+-{
+-	unsigned long	physmem;
+-	size_t		len = sizeof(physmem);
+-	static int	mib[2] = {CTL_HW, HW_PHYSMEM};
+-
+-	if (sysctl(mib, 2, &physmem, &len, NULL, 0) < 0) {
+-		fprintf(stderr, _("%s: can't determine memory size\n"),
+-			progname);
+-		exit(1);
+-	}
+-	return physmem >> 10;
+-}
+diff --git a/libxfs/irix.c b/libxfs/irix.c
+deleted file mode 100644
+index 0f14aec..0000000
+--- a/libxfs/irix.c
++++ /dev/null
+@@ -1,111 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-
+-#include "libxfs.h"
+-#include <diskinfo.h>
+-#include <sys/sysmp.h>
+-
+-int platform_has_uuid = 0;
+-extern char *progname;
+-extern int64_t findsize(char *);
+-
+-int
+-platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
+-{
+-	return 0;
+-}
+-
+-int
+-platform_check_iswritable(char *name, char *block, struct stat *s)
+-{
+-	return 1;
+-}
+-
+-int
+-platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fatal)
+-{
+-	return fatal;
+-}
+-
+-void
+-platform_flush_device(int fd, dev_t device)
+-{
+-	return;
+-}
+-
+-void
+-platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+-{
+-	struct stat		st;
+-
+-	if (fstat(fd, &st) < 0) {
+-		fprintf(stderr,
+-			_("%s: cannot stat the device file \"%s\": %s\n"),
+-			progname, path, strerror(errno));
+-		exit(1);
+-	}
+-	if ((st.st_mode & S_IFMT) == S_IFREG) {
+-		*sz = (long long)(st.st_size >> 9);
+-	} else {
+-		*sz = findsize(path);
+-	}
+-	*bsz = BBSIZE;
+-}
+-
+-char *
+-platform_findrawpath(char *path)
+-{
+-	return findrawpath(path);
+-}
+-
+-char *
+-platform_findblockpath(char *path)
+-{
+-	return findblockpath(path);
+-}
+-
+-int
+-platform_direct_blockdev(void)
+-{
+-	return 0;
+-}
+-
+-int
+-platform_align_blockdev(void)
+-{
+-	return sizeof(void *);
+-}
+-
+-int
+-platform_nproc(void)
+-{
+-	return sysmp(MP_NPROCS);
+-}
+-
+-unsigned long
+-platform_physmem(void)
+-{
+-	struct rminfo ri;
+-
+-	if (sysmp(MP_SAGET, MPSA_RMINFO, &ri, sizeof(ri)) < 0)
+-		fprintf(stderr, _("%s: can't determine memory size\n"),
+-			progname);
+-		exit(1);
+-	}
+-	return (ri.physmem >> 10) * getpagesize();	/* kilobytes */
+-}
