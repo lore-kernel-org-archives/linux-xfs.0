@@ -1,133 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58742 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751022AbeCTDIa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 23:08:30 -0400
-Subject: [PATCH 1/4] xfs_repair: implement custom ifork verifiers
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 19 Mar 2018 20:08:26 -0700
-Message-ID: <152151530602.18312.5227395146899805650.stgit@magnolia>
-In-Reply-To: <152151529988.18312.2660325658864402943.stgit@magnolia>
-References: <152151529988.18312.2660325658864402943.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from victor.provo.novell.com ([137.65.250.26]:36782 "EHLO
+        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751626AbeCUIBc (ORCPT
+        <rfc822;groupwise-linux-xfs@vger.kernel.org:0:0>);
+        Wed, 21 Mar 2018 04:01:32 -0400
+From: Qu Wenruo <wqu@suse.com>
+Subject: [PATCH 1/3] fstests: log-writes: Add support to output human readable flags
+Date: Wed, 21 Mar 2018 16:01:23 +0800
+Message-Id: <20180321080125.30404-1-wqu@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-btrfs@vger.kernel.org, fstests@vger.kernel.org
+Cc: amir73il@gmail.com, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Also change the flag numeric output to hex.
 
-There are a few cases where an early stage of xfs_repair will write an
-invalid inode fork buffer to signal to a later stage that it needs to
-correct the value.  This happens in phase 4 when we detect an inline
-format directory with an invalid .. pointer.  To avoid triggering the
-ifork verifiers on this, inject a custom verifier for phase 6 that lets
-this pass for now.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Qu Wenruo <wqu@suse.com>
 ---
- libxfs/libxfs_api_defs.h |    2 +
- repair/phase6.c          |   66 +++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 67 insertions(+), 1 deletion(-)
+ src/log-writes/log-writes.c | 70 ++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 63 insertions(+), 7 deletions(-)
 
-
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 5d56340..78daca0 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -150,5 +150,7 @@
- #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
- #define xfs_refc_block			libxfs_refc_block
- #define xfs_rmap_compare		libxfs_rmap_compare
-+#define xfs_dir_get_ops			libxfs_dir_get_ops
-+#define xfs_default_ifork_ops		libxfs_default_ifork_ops
+diff --git a/src/log-writes/log-writes.c b/src/log-writes/log-writes.c
+index 09391574..a872429d 100644
+--- a/src/log-writes/log-writes.c
++++ b/src/log-writes/log-writes.c
+@@ -120,6 +120,58 @@ int log_discard(struct log *log, struct log_write_entry *entry)
+ 	return 0;
+ }
  
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/repair/phase6.c b/repair/phase6.c
-index aff83bc..e9189af 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -39,6 +39,70 @@ static struct xfs_name		xfs_name_dot = {(unsigned char *)".",
- 						XFS_DIR3_FT_DIR};
- 
- /*
-+ * When we're checking directory inodes, we're allowed to set a directory's
-+ * dotdot entry to zero to signal that the parent needs to be reconnected
-+ * during phase 6.  The ifork verifiers would normally fail that, but we'll
-+ * accept this canary so that we can fix the dir.
-+ */
-+static xfs_failaddr_t
-+phase6_verify_dir(
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_mount		*mp = ip->i_mount;
-+	const struct xfs_dir_ops	*dops;
-+	struct xfs_ifork		*ifp;
-+	struct xfs_dir2_sf_hdr		*sfp;
-+	xfs_failaddr_t			fa;
-+	xfs_ino_t			old_parent;
-+	bool				parent_bypass = false;
-+	int				size;
++#define DEFINE_LOG_FLAGS_STR_ENTRY(x)	\
++	{LOG_##x##_FLAG, #x}
 +
-+	dops = libxfs_dir_get_ops(mp, NULL);
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
-+	size = ifp->if_bytes;
-+
-+	/* Don't let the NULLFSINO .. entry blow everything up. */
-+	if (size > offsetof(struct xfs_dir2_sf_hdr, parent) &&
-+	    size >= xfs_dir2_sf_hdr_size(sfp->i8count)) {
-+		old_parent = dops->sf_get_parent_ino(sfp);
-+		if (old_parent == 0) {
-+			dops->sf_put_parent_ino(sfp, mp->m_sb.sb_rootino);
-+			parent_bypass = true;
-+		}
-+	}
-+
-+	fa = libxfs_default_ifork_ops.verify_dir(ip);
-+
-+	/* Put it back. */
-+	if (parent_bypass)
-+		dops->sf_put_parent_ino(sfp, old_parent);
-+
-+	return fa;
-+}
-+
-+static xfs_failaddr_t
-+phase6_verify_attr(
-+	struct xfs_inode		*ip)
-+{
-+	return libxfs_default_ifork_ops.verify_attr(ip);
-+}
-+
-+static xfs_failaddr_t
-+phase6_verify_symlink(
-+	struct xfs_inode		*ip)
-+{
-+	return libxfs_default_ifork_ops.verify_symlink(ip);
-+}
-+
-+struct xfs_ifork_ops phase6_default_ifork_ops = {
-+	.verify_attr	= phase6_verify_attr,
-+	.verify_dir	= phase6_verify_dir,
-+	.verify_symlink	= phase6_verify_symlink,
++struct flags_to_str_entry {
++	u64 flags;
++	const char *str;
++} log_flags_table[] = {
++	DEFINE_LOG_FLAGS_STR_ENTRY(FLUSH),
++	DEFINE_LOG_FLAGS_STR_ENTRY(FUA),
++	DEFINE_LOG_FLAGS_STR_ENTRY(DISCARD),
++	DEFINE_LOG_FLAGS_STR_ENTRY(MARK)
 +};
 +
++#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
++#define LOG_FLAGS_BUF_SIZE	128
 +/*
-  * Data structures used to keep track of directories where the ".."
-  * entries are updated. These must be rebuilt after the initial pass
-  */
-@@ -2833,7 +2897,7 @@ process_dir_inode(
++ * Convert numeric flags to human readable flags.
++ * @flags:	numeric flags
++ * @buf:	output buffer for human readable string.
++ * 		must have enough space (LOG_FLAGS_BUF_SIZE) to contain all
++ * 		the string
++ */
++static void entry_flags_to_str(u64 flags, char *buf)
++{
++	int empty = 1;
++	int left_len;
++	int i;
++
++	buf[0] = '\0';
++	for (i = 0; i < ARRAY_SIZE(log_flags_table); i++) {
++		if (flags & log_flags_table[i].flags) {
++			if (!empty)
++				strncat(buf, "|", LOG_FLAGS_BUF_SIZE);
++			empty = 0;
++			strncat(buf, log_flags_table[i].str, LOG_FLAGS_BUF_SIZE);
++			flags &= ~log_flags_table[i].flags;
++		}
++	}
++	if (flags) {
++		if (!empty)
++			strncat(buf, "|", LOG_FLAGS_BUF_SIZE);
++		empty = 0;
++		left_len = LOG_FLAGS_BUF_SIZE - strnlen(buf,
++						        LOG_FLAGS_BUF_SIZE);
++		if (left_len > 0)
++			snprintf(buf + strnlen(buf, LOG_FLAGS_BUF_SIZE),
++				 left_len, "UNKNOWN.0x%llx", flags);
++	}
++	if (empty)
++		strncpy(buf, "NONE", LOG_FLAGS_BUF_SIZE);
++}
++
+ /*
+  * @log: the log we are replaying.
+  * @entry: entry to be replayed.
+@@ -179,6 +231,7 @@ int log_replay_next_entry(struct log *log, struct log_write_entry *entry,
+ 	size_t read_size = read_data ? log->sectorsize :
+ 		sizeof(struct log_write_entry);
+ 	char *buf;
++	char flags_buf[LOG_FLAGS_BUF_SIZE];
+ 	ssize_t ret;
+ 	off_t offset;
+ 	int skip = 0;
+@@ -210,19 +263,20 @@ int log_replay_next_entry(struct log *log, struct log_write_entry *entry,
+ 		log->cur_pos += read_size;
+ 	}
  
- 	ASSERT(!is_inode_refchecked(irec, ino_offset) || dotdot_update);
++	flags = le64_to_cpu(entry->flags);
++	entry_flags_to_str(flags, flags_buf);
+ 	skip = log_should_skip(log, entry);
+ 	if (log_writes_verbose > 1 || (log_writes_verbose && !skip)) {
+-		printf("%s %d@%llu: sector %llu, size %llu, flags %llu\n",
++		printf("%s %d@%llu: sector %llu, size %llu, flags 0x%llx(%s)\n",
+ 		       skip ? "skipping" : "replaying",
+ 		       (int)log->cur_entry - 1, log->cur_pos / log->sectorsize,
+ 		       (unsigned long long)le64_to_cpu(entry->sector),
+ 		       (unsigned long long)size,
+-		       (unsigned long long)le64_to_cpu(entry->flags));
++		       (unsigned long long)flags, flags_buf);
+ 	}
+ 	if (!size)
+ 		return 0;
  
--	error = -libxfs_iget(mp, NULL, ino, 0, &ip, NULL);
-+	error = -libxfs_iget(mp, NULL, ino, 0, &ip, &phase6_default_ifork_ops);
- 	if (error) {
- 		if (!no_modify)
- 			do_error(
+-	flags = le64_to_cpu(entry->flags);
+ 	if (flags & LOG_DISCARD_FLAG)
+ 		return log_discard(log, entry);
+ 
+@@ -301,7 +355,7 @@ int log_seek_entry(struct log *log, u64 entry_num)
+ 			return -1;
+ 		}
+ 		if (log_writes_verbose > 1)
+-			printf("seek entry %d@%llu: %llu, size %llu, flags %llu\n",
++			printf("seek entry %d@%llu: %llu, size %llu, flags 0x%llx\n",
+ 			       (int)i, log->cur_pos / log->sectorsize,
+ 			       (unsigned long long)le64_to_cpu(entry.sector),
+ 			       (unsigned long long)le64_to_cpu(entry.nr_sectors),
+@@ -339,6 +393,7 @@ int log_seek_next_entry(struct log *log, struct log_write_entry *entry,
+ 	size_t read_size = read_data ? log->sectorsize :
+ 		sizeof(struct log_write_entry);
+ 	u64 flags;
++	char flags_buf[LOG_FLAGS_BUF_SIZE];
+ 	ssize_t ret;
+ 
+ 	if (log->cur_entry >= log->nr_entries)
+@@ -366,14 +421,15 @@ int log_seek_next_entry(struct log *log, struct log_write_entry *entry,
+ 	} else {
+ 		log->cur_pos += read_size;
+ 	}
++	flags = le64_to_cpu(entry->flags);
++	entry_flags_to_str(flags, flags_buf);
+ 	if (log_writes_verbose > 1)
+-		printf("seek entry %d@%llu: %llu, size %llu, flags %llu\n",
++		printf("seek entry %d@%llu: %llu, size %llu, flags 0x%llx(%s)\n",
+ 		       (int)log->cur_entry - 1, log->cur_pos / log->sectorsize,
+ 		       (unsigned long long)le64_to_cpu(entry->sector),
+ 		       (unsigned long long)le64_to_cpu(entry->nr_sectors),
+-		       (unsigned long long)le64_to_cpu(entry->flags));
++		       (unsigned long long)flags, flags_buf);
+ 
+-	flags = le64_to_cpu(entry->flags);
+ 	read_size = le64_to_cpu(entry->nr_sectors) * log->sectorsize;
+ 	if (!read_size || (flags & LOG_DISCARD_FLAG))
+ 		return 0;
+-- 
+2.15.1
 
