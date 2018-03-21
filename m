@@ -1,66 +1,151 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42456 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:18976 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754475AbeCVOel (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 10:34:41 -0400
-Date: Thu, 22 Mar 2018 10:34:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 12/9] xfs: xfs_scrub_iallocbt_xref_rmap_inodes should use
- xref_set_corrupt
-Message-ID: <20180322143439.GH16617@bfoster.bfoster>
-References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <20180322061916.GT4818@magnolia>
+        id S1754225AbeCUXGz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 19:06:55 -0400
+Subject: [PATCH v7 07/14] fs,
+ dax: use page->mapping to warn if truncate collides with a busy page
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 21 Mar 2018 15:57:48 -0700
+Message-ID: <152167306807.5268.8483232024444414342.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180322061916.GT4818@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz
 
-On Wed, Mar 21, 2018 at 11:19:16PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In xfs_scrub_iallocbt_xref_rmap_inodes we're checking inodes against
-> rmap records, so we should use xfs_scrub_btree_xref_set_corrupt if we
-> encounter discrepancies here so that we know that it's a cross
-> referencing error, not necessarily a corruption in the inobt itself.
-> 
-> The userspace xfs_scrub program will try to repair outright corruptions
-> in the agi/inobt prior to phase 3 so that the inode scan will proceed.
-> If only a cross-referencing error is noted, the repair program defers
-> the repair attempt until it can check the other space metadata at least
-> once.
-> 
-> It is therefore essential that the inobt scrubber can correctly
-> distinguish between corruptions and "unable to cross-reference something
-> else with this inobt".  The same reasoning applies to "xfs: record inode
-> buf errors as a xref error in inobt scrubber".
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+Catch cases where extent unmap operations encounter pages that are
+pinned / busy. Typically this is pinned pages that are under active dma.
+This warning is a canary for potential data corruption as truncated
+blocks could be allocated to a new file while the device is still
+performing i/o.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Here is an example of a collision that this implementation catches:
 
->  fs/xfs/scrub/ialloc.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-> index 32e0d1a..106ca4b 100644
-> --- a/fs/xfs/scrub/ialloc.c
-> +++ b/fs/xfs/scrub/ialloc.c
-> @@ -434,7 +434,7 @@ xfs_scrub_iallocbt_xref_rmap_inodes(
->  	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
->  		return;
->  	if (blocks != inode_blocks)
-> -		xfs_scrub_btree_set_corrupt(sc, sc->sa.ino_cur, 0);
-> +		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
->  }
->  
->  /* Scrub the inode btrees for some AG. */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ WARNING: CPU: 2 PID: 1286 at fs/dax.c:343 dax_disassociate_entry+0x55/0x80
+ [..]
+ Call Trace:
+  __dax_invalidate_mapping_entry+0x6c/0xf0
+  dax_delete_mapping_entry+0xf/0x20
+  truncate_exceptional_pvec_entries.part.12+0x1af/0x200
+  truncate_inode_pages_range+0x268/0x970
+  ? tlb_gather_mmu+0x10/0x20
+  ? up_write+0x1c/0x40
+  ? unmap_mapping_range+0x73/0x140
+  xfs_free_file_space+0x1b6/0x5b0 [xfs]
+  ? xfs_file_fallocate+0x7f/0x320 [xfs]
+  ? down_write_nested+0x40/0x70
+  ? xfs_ilock+0x21d/0x2f0 [xfs]
+  xfs_file_fallocate+0x162/0x320 [xfs]
+  ? rcu_read_lock_sched_held+0x3f/0x70
+  ? rcu_sync_lockdep_assert+0x2a/0x50
+  ? __sb_start_write+0xd0/0x1b0
+  ? vfs_fallocate+0x20c/0x270
+  vfs_fallocate+0x154/0x270
+  SyS_fallocate+0x43/0x80
+  entry_SYSCALL_64_fastpath+0x1f/0x96
+
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/dax.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/fs/dax.c b/fs/dax.c
+index b646a46e4d12..f21a8e7e47f6 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -298,6 +298,56 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
+ 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+ }
+ 
++static unsigned long dax_entry_size(void *entry)
++{
++	if (dax_is_zero_entry(entry))
++		return 0;
++	else if (dax_is_empty_entry(entry))
++		return 0;
++	else if (dax_is_pmd_entry(entry))
++		return PMD_SIZE;
++	else
++		return PAGE_SIZE;
++}
++
++#define for_each_entry_pfn(entry, pfn, end_pfn) \
++	for (pfn = dax_radix_pfn(entry), \
++			end_pfn = pfn + dax_entry_size(entry) / PAGE_SIZE; \
++			pfn < end_pfn; \
++			pfn++)
++
++static void dax_associate_entry(void *entry, struct address_space *mapping)
++{
++	unsigned long pfn, end_pfn;
++
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return;
++
++	for_each_entry_pfn(entry, pfn, end_pfn) {
++		struct page *page = pfn_to_page(pfn);
++
++		WARN_ON_ONCE(page->mapping);
++		page->mapping = mapping;
++	}
++}
++
++static void dax_disassociate_entry(void *entry, struct address_space *mapping,
++		bool trunc)
++{
++	unsigned long pfn, end_pfn;
++
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return;
++
++	for_each_entry_pfn(entry, pfn, end_pfn) {
++		struct page *page = pfn_to_page(pfn);
++
++		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
++		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
++		page->mapping = NULL;
++	}
++}
++
+ /*
+  * Find radix tree entry at given index. If it points to an exceptional entry,
+  * return it with the radix tree entry locked. If the radix tree doesn't
+@@ -404,6 +454,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		}
+ 
+ 		if (pmd_downgrade) {
++			dax_disassociate_entry(entry, mapping, false);
+ 			radix_tree_delete(&mapping->page_tree, index);
+ 			mapping->nrexceptional--;
+ 			dax_wake_mapping_entry_waiter(mapping, index, entry,
+@@ -453,6 +504,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 	    (radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_DIRTY) ||
+ 	     radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
++	dax_disassociate_entry(entry, mapping, trunc);
+ 	radix_tree_delete(page_tree, index);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+@@ -547,6 +599,10 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 
+ 	spin_lock_irq(&mapping->tree_lock);
+ 	new_entry = dax_radix_locked_entry(pfn, flags);
++	if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
++		dax_disassociate_entry(entry, mapping, false);
++		dax_associate_entry(new_entry, mapping);
++	}
+ 
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+ 		/*
+
