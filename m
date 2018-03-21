@@ -1,105 +1,279 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59838 "EHLO sandeen.net"
+Received: from mga05.intel.com ([192.55.52.43]:14210 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753799AbeCVOlp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 10:41:45 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C8B0A11649
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Mar 2018 09:41:27 -0500 (CDT)
-Subject: [PATCH V2] metadump/restore: don't use errno after fwrite/fread
- failures
-References: <f40f7d1b-31b5-e5a0-4077-9480530ebf0d@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7e510e30-3922-98d7-75c9-19f8e90610d0@sandeen.net>
-Date: Thu, 22 Mar 2018 09:41:43 -0500
+        id S1754343AbeCUXHU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 19:07:20 -0400
+Subject: [PATCH v7 11/14] mm, fs,
+ dax: handle layout changes to pinned dax mappings
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 21 Mar 2018 15:58:10 -0700
+Message-ID: <152167308992.5268.8657781389311269075.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <f40f7d1b-31b5-e5a0-4077-9480530ebf0d@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-nvdimm@lists.01.org
+Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz
 
-fread/fwrite don't set errno, so printing out strerror(errno)
-after a failure leads to incorrect and confusing messages:
+Background:
 
-# xfs_mdrestore pre_repair.meta pre_repair.img
-xfs_mdrestore: error reading from file: Success
+get_user_pages() in the filesystem pins file backed memory pages for
+access by devices performing dma. However, it only pins the memory pages
+not the page-to-file offset association. If a file is truncated the
+pages are mapped out of the file and dma may continue indefinitely into
+a page that is owned by a device driver. This breaks coherency of the
+file vs dma, but the assumption is that if userspace wants the
+file-space truncated it does not matter what data is inbound from the
+device, it is not relevant anymore. The only expectation is that dma can
+safely continue while the filesystem reallocates the block(s).
 
-Don't return unset errno from write_index, either.
+Problem:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+This expectation that dma can safely continue while the filesystem
+changes the block map is broken by dax. With dax the target dma page
+*is* the filesystem block. The model of leaving the page pinned for dma,
+but truncating the file block out of the file, means that the filesytem
+is free to reallocate a block under active dma to another file and now
+the expected data-incoherency situation has turned into active
+data-corruption.
+
+Solution:
+
+Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+file while any page/block in the file is under active dma. This solution
+assumes that dma is transient. Cases where dma operations are known to
+not be transient, like RDMA, have been explicitly disabled via
+commits like 5f1d43de5416 "IB/core: disable memory registration of
+filesystem-dax vmas".
+
+The dax_layout_busy_page() routine is called by filesystems with a lock
+held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
+The process of looking up a busy page invalidates all mappings
+to trigger any subsequent get_user_pages() to block on i_mmap_lock.
+The filesystem continues to call dax_layout_busy_page() until it finally
+returns no more active pages. This approach assumes that the page
+pinning is transient, if that assumption is violated the system would
+have likely hung from the uncompleted I/O.
+
+Cc: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Reported-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/dax/super.c |    2 +
+ fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h |   25 ++++++++++++++
+ mm/gup.c            |    5 +++
+ 4 files changed, 123 insertions(+), 1 deletion(-)
 
-V2: don't return errno, either.
-
-diff --git a/db/metadump.c b/db/metadump.c
-index 9d62958..d33f901 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -161,8 +161,8 @@ write_index(void)
- 	 */
- 	metablock->mb_count = cpu_to_be16(cur_index);
- 	if (fwrite(metablock, (cur_index + 1) << BBSHIFT, 1, outf) != 1) {
--		print_warning("error writing to file: %s", strerror(errno));
--		return -errno;
-+		print_warning("error writing to target file");
-+		return -1;
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 619b1ed6434c..17323bc6d441 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -167,7 +167,7 @@ struct dax_device {
+ #if IS_ENABLED(CONFIG_FS_DAX)
+ static void generic_dax_pagefree(struct page *page, void *data)
+ {
+-	/* TODO: wakeup page-idle waiters */
++	wake_up_var(&page->_refcount);
+ }
+ 
+ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
+diff --git a/fs/dax.c b/fs/dax.c
+index f21a8e7e47f6..fc9c6bf82bcc 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -348,6 +348,19 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
  	}
+ }
  
- 	memset(block_index, 0, num_indices * sizeof(__be64));
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index c9d4b0c..262a385 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -93,15 +93,14 @@ perform_restore(
- 	block_buffer = (char *)metablock + block_size;
++static struct page *dax_busy_page(void *entry)
++{
++	unsigned long pfn, end_pfn;
++
++	for_each_entry_pfn(entry, pfn, end_pfn) {
++		struct page *page = pfn_to_page(pfn);
++
++		if (page_ref_count(page) > 1)
++			return page;
++	}
++	return NULL;
++}
++
+ /*
+  * Find radix tree entry at given index. If it points to an exceptional entry,
+  * return it with the radix tree entry locked. If the radix tree doesn't
+@@ -489,6 +502,85 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 	return entry;
+ }
  
- 	if (fread(block_index, block_size - sizeof(struct xfs_metablock), 1, src_f) != 1)
--		fatal("error reading from file: %s\n", strerror(errno));
-+		fatal("error reading from metadump file\n");
++/**
++ * dax_layout_busy_page - find first pinned page in @mapping
++ * @mapping: address space to scan for a page with ref count > 1
++ *
++ * DAX requires ZONE_DEVICE mapped pages. These pages are never
++ * 'onlined' to the page allocator so they are considered idle when
++ * page->count == 1. A filesystem uses this interface to determine if
++ * any page in the mapping is busy, i.e. for DMA, or other
++ * get_user_pages() usages.
++ *
++ * It is expected that the filesystem is holding locks to block the
++ * establishment of new mappings in this address_space. I.e. it expects
++ * to be able to run unmap_mapping_range() and subsequently not race
++ * mapping_mapped() becoming true. It expects that get_user_pages() pte
++ * walks are performed under rcu_read_lock().
++ */
++struct page *dax_layout_busy_page(struct address_space *mapping)
++{
++	pgoff_t	indices[PAGEVEC_SIZE];
++	struct page *page = NULL;
++	struct pagevec pvec;
++	pgoff_t	index, end;
++	unsigned i;
++
++	/*
++	 * In the 'limited' case get_user_pages() for dax is disabled.
++	 */
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return NULL;
++
++	if (!dax_mapping(mapping) || !mapping_mapped(mapping))
++		return NULL;
++
++	pagevec_init(&pvec);
++	index = 0;
++	end = -1;
++	/*
++	 * Flush dax_layout_lock() sections to ensure all possible page
++	 * references have been taken, or otherwise arrange for faults
++	 * to block on the filesystem lock that is taken for
++	 * establishing new mappings.
++	 */
++	unmap_mapping_range(mapping, 0, 0, 1);
++	synchronize_rcu();
++
++	while (index < end && pagevec_lookup_entries(&pvec, mapping, index,
++				min(end - index, (pgoff_t)PAGEVEC_SIZE),
++				indices)) {
++		for (i = 0; i < pagevec_count(&pvec); i++) {
++			struct page *pvec_ent = pvec.pages[i];
++			void *entry;
++
++			index = indices[i];
++			if (index >= end)
++				break;
++
++			if (!radix_tree_exceptional_entry(pvec_ent))
++				continue;
++
++			spin_lock_irq(&mapping->tree_lock);
++			entry = get_unlocked_mapping_entry(mapping, index, NULL);
++			if (entry)
++				page = dax_busy_page(entry);
++			put_unlocked_mapping_entry(mapping, index, entry);
++			spin_unlock_irq(&mapping->tree_lock);
++			if (page)
++				break;
++		}
++		pagevec_remove_exceptionals(&pvec);
++		pagevec_release(&pvec);
++		index++;
++
++		if (page)
++			break;
++	}
++	return page;
++}
++EXPORT_SYMBOL_GPL(dax_layout_busy_page);
++
+ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 					  pgoff_t index, bool trunc)
+ {
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 92a1d3ee1615..fc854674323f 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -56,6 +56,18 @@ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner);
+ void fs_dax_release(struct dax_device *dax_dev, void *owner);
+ int dax_writeback_mapping_range(struct address_space *mapping,
+ 		struct block_device *bdev, struct writeback_control *wbc);
++
++static inline void dax_layout_lock(void)
++{
++	rcu_read_lock();
++}
++
++static inline void dax_layout_unlock(void)
++{
++	rcu_read_unlock();
++}
++
++struct page *dax_layout_busy_page(struct address_space *mapping);
+ #else
+ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
+ {
+@@ -82,6 +94,19 @@ static inline int dax_writeback_mapping_range(struct address_space *mapping,
+ {
+ 	return -EOPNOTSUPP;
+ }
++
++static inline void dax_layout_lock(void)
++{
++}
++
++static inline void dax_layout_unlock(void)
++{
++}
++
++static inline struct page *dax_layout_busy_page(struct address_space *mapping)
++{
++	return NULL;
++}
+ #endif
  
- 	if (block_index[0] != 0)
- 		fatal("first block is not the primary superblock\n");
+ int dax_read_lock(void);
+diff --git a/mm/gup.c b/mm/gup.c
+index 1b46e6e74881..a81efac6983a 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -13,6 +13,7 @@
+ #include <linux/sched/signal.h>
+ #include <linux/rwsem.h>
+ #include <linux/hugetlb.h>
++#include <linux/dax.h>
  
+ #include <asm/mmu_context.h>
+ #include <asm/pgtable.h>
+@@ -693,7 +694,9 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
+ 		if (unlikely(fatal_signal_pending(current)))
+ 			return i ? i : -ERESTARTSYS;
+ 		cond_resched();
++		dax_layout_lock();
+ 		page = follow_page_mask(vma, start, foll_flags, &page_mask);
++		dax_layout_unlock();
+ 		if (!page) {
+ 			int ret;
+ 			ret = faultin_page(tsk, vma, start, &foll_flags,
+@@ -1809,7 +1812,9 @@ int get_user_pages_fast(unsigned long start, int nr_pages, int write,
  
--	if (fread(block_buffer, mb_count << mbp->mb_blocklog,
--			1, src_f) != 1)
--		fatal("error reading from file: %s\n", strerror(errno));
-+	if (fread(block_buffer, mb_count << mbp->mb_blocklog, 1, src_f) != 1)
-+		fatal("error reading from metadump file\n");
- 
- 	libxfs_sb_from_disk(&sb, (xfs_dsb_t *)block_buffer);
- 
-@@ -157,7 +156,7 @@ perform_restore(
- 			break;
- 
- 		if (fread(metablock, block_size, 1, src_f) != 1)
--			fatal("error reading from file: %s\n", strerror(errno));
-+			fatal("error reading from metadump file\n");
- 
- 		mb_count = be16_to_cpu(metablock->mb_count);
- 		if (mb_count == 0)
-@@ -167,7 +166,7 @@ perform_restore(
- 
- 		if (fread(block_buffer, mb_count << mbp->mb_blocklog,
- 								1, src_f) != 1)
--			fatal("error reading from file: %s\n", strerror(errno));
-+			fatal("error reading from metadump file\n");
- 
- 		bytes_read += block_size + (mb_count << mbp->mb_blocklog);
+ 	if (gup_fast_permitted(start, nr_pages, write)) {
+ 		local_irq_disable();
++		dax_layout_lock();
+ 		gup_pgd_range(addr, end, write, pages, &nr);
++		dax_layout_unlock();
+ 		local_irq_enable();
+ 		ret = nr;
  	}
-@@ -253,7 +252,7 @@ main(
- 	}
- 
- 	if (fread(&mb, sizeof(mb), 1, src_f) != 1)
--		fatal("error reading from file: %s\n", strerror(errno));
-+		fatal("error reading from metadump file\n");
- 	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
- 		fatal("specified file is not a metadata dump\n");
- 
 
