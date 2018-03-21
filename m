@@ -1,74 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55324 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752167AbeCXQVA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Mar 2018 12:21:00 -0400
-Date: Sat, 24 Mar 2018 09:20:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: don't dirty snapshot logs for unlinked inode
- recovery
-Message-ID: <20180324162049.GP4818@magnolia>
-References: <83696ce6-4054-0e77-b4b8-e82a1a9fbbc3@redhat.com>
- <896a0202-aac8-e43f-7ea6-3718591e32aa@sandeen.net>
+Received: from mail-sn1nam01on0123.outbound.protection.outlook.com ([104.47.32.123]:8800
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753485AbeCUXwl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 19:52:41 -0400
+From: Robert Dorr <rdorr@microsoft.com>
+Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+Date: Wed, 21 Mar 2018 23:52:38 +0000
+Message-ID: <BN6PR21MB07408142546CB86F6C052076B8AA0@BN6PR21MB0740.namprd21.prod.outlook.com>
+References: <20180301014144.28892-1-david@fromorbit.com>
+ <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
+ <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
+ <20180313051037.GC18129@dastard>
+ <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+ <20180313161242.GA11168@lst.de>
+ <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+ <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
+ <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
+In-Reply-To: <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <896a0202-aac8-e43f-7ea6-3718591e32aa@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
 
-On Wed, Mar 07, 2018 at 05:33:48PM -0600, Eric Sandeen wrote:
-> Now that unlinked inode recovery is done outside of
-> log recovery, there is no need to dirty the log on
-> snapshots just to handle unlinked inodes.  This means
-> that readonly snapshots can be mounted without requiring
-> -o ro,norecovery to avoid the log replay that can't happen
-> on a readonly block device.
-> 
-> (unlinked inodes will just hang out in the agi buckets until
-> the next writable mount)
-
-FWIW I put these two in a test kernel to see what would happen and
-generic/311 failures popped up.  It looked like the _check_scratch_fs
-found incorrect block counts on the snapshot(?)
-
---D
-
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 93588ea..5669525 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1419,9 +1419,10 @@ struct proc_xfs_info {
->  
->  /*
->   * Second stage of a freeze. The data is already frozen so we only
-> - * need to take care of the metadata. Once that's done sync the superblock
-> - * to the log to dirty it in case of a crash while frozen. This ensures that we
-> - * will recover the unlinked inode lists on the next mount.
-> + * need to take care of the metadata.
-> + * Any unlinked inode lists will remain at this point, and be recovered
-> + * on the next writable mount if we crash while frozen, or create
-> + * a snapshot from the frozen filesystem.
->   */
->  STATIC int
->  xfs_fs_freeze(
-> @@ -1431,7 +1432,7 @@ struct proc_xfs_info {
->  
->  	xfs_save_resvblks(mp);
->  	xfs_quiesce_attr(mp);
-> -	return xfs_sync_sb(mp, true);
-> +	return 0;
->  }
->  
->  STATIC int
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SmFuIC0gYXJlIHlvdSBhYmxlIHRvIG1ha2UgdGhlIGV4dDQgcGVyZm9ybWFuY2UgY2hhbmdlcz8N
+Cg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogUm9iZXJ0IERvcnIgDQpTZW50
+OiBNb25kYXksIE1hcmNoIDE5LCAyMDE4IDExOjE0IEFNDQpUbzogSmFuIEthcmEgPGphY2tAc3Vz
+ZS5jej4NCkNjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT47IERhdmUgQ2hpbm5lciA8
+ZGF2aWRAZnJvbW9yYml0LmNvbT47IERhbiBXaWxsaWFtcyA8ZGFuLmoud2lsbGlhbXNAaW50ZWwu
+Y29tPjsgbGludXgteGZzQHZnZXIua2VybmVsLm9yZzsgbGludXgtZnNkZXZlbCA8bGludXgtZnNk
+ZXZlbEB2Z2VyLmtlcm5lbC5vcmc+OyBUaGVvZG9yZSBUcydvIDx0eXRzb0BtaXQuZWR1PjsgTWF0
+dGhldyBXaWxjb3ggPG1hd2lsY294QG1pY3Jvc29mdC5jb20+OyBTY290dCBLb25lcnNtYW5uIDxz
+Y290dGtvbkBtaWNyb3NvZnQuY29tPjsgU2xhdmEgT2tzIDxzbGF2YW9AbWljcm9zb2Z0LmNvbT47
+IEphc3JhaiBEYW5nZSA8amFzcmFqZEBtaWNyb3NvZnQuY29tPjsgTWljaGFlbCBOZWxzb24gPG1p
+Y25AbWljcm9zb2Z0LmNvbT4NClN1YmplY3Q6IFJFOiBbUEFUQ0hdIFtSRkNdIGlvbWFwOiBVc2Ug
+RlVBIGZvciBwdXJlIGRhdGEgT19EU1lOQyBESU8gd3JpdGVzDQoNCkF3ZXNvbWUgbmV3cyBvbiB0
+aGUgc3Bpbi4gICANCg0KQXJlIHlvdSBnb2luZyB0byBiZSBhYmxlIHRvIG1ha2UgY2hhbmdlcyB0
+byBFWFQ0IHRvIGFjY29tbW9kYXRlIFJFUV9GVUEgd2l0aG91dCBnZW5lcmljX3dyaXRlX2ZsdXNo
+IHRvIGltcHJvdmUgcGVyZm9ybWFuY2UgbGlrZSB3YXMgZG9uZSBmb3IgeGZzPw0KDQotLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSmFuIEthcmEgPGphY2tAc3VzZS5jej4NClNlbnQ6
+IE1vbmRheSwgTWFyY2ggMTksIDIwMTggMTE6MDcgQU0NClRvOiBSb2JlcnQgRG9yciA8cmRvcnJA
+bWljcm9zb2Z0LmNvbT4NCkNjOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT47IERhdmUg
+Q2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT47IERhbiBXaWxsaWFtcyA8ZGFuLmoud2lsbGlh
+bXNAaW50ZWwuY29tPjsgbGludXgteGZzQHZnZXIua2VybmVsLm9yZzsgbGludXgtZnNkZXZlbCA8
+bGludXgtZnNkZXZlbEB2Z2VyLmtlcm5lbC5vcmc+OyBKYW4gS2FyYSA8amFja0BzdXNlLmN6Pjsg
+VGhlb2RvcmUgVHMnbyA8dHl0c29AbWl0LmVkdT47IE1hdHRoZXcgV2lsY294IDxtYXdpbGNveEBt
+aWNyb3NvZnQuY29tPjsgU2NvdHQgS29uZXJzbWFubiA8c2NvdHRrb25AbWljcm9zb2Z0LmNvbT47
+IFNsYXZhIE9rcyA8c2xhdmFvQG1pY3Jvc29mdC5jb20+OyBKYXNyYWogRGFuZ2UgPGphc3JhamRA
+bWljcm9zb2Z0LmNvbT47IE1pY2hhZWwgTmVsc29uIDxtaWNuQG1pY3Jvc29mdC5jb20+DQpTdWJq
+ZWN0OiBSZTogW1BBVENIXSBbUkZDXSBpb21hcDogVXNlIEZVQSBmb3IgcHVyZSBkYXRhIE9fRFNZ
+TkMgRElPIHdyaXRlcw0KDQpPbiBUdWUgMTMtMDMtMTggMTg6NTI6NTcsIFJvYmVydCBEb3JyIHdy
+b3RlOg0KPiBJIHRyaWVkIHRoZSBSV0ZfT0RTWU5DIGFuZCB4ZnMgc2VlbXMgdG8gaG9ub3IgcHJv
+cGVybHkgYnV0IGl0IGNhdXNlcw0KPiBleHQ0IHRvIGdvIHNwaW4gb3V0IGEgc2luZ2xlIENQVSBh
+bmQgaGFuZyB0aGUgc3lzdGVtLiDwn5iKDQoNClllYWgsIHRoYXQncyBhIGJ1ZyBpbiBnZW5lcmlj
+IGRpcmVjdCBJTyBjb2RlIHRoYXQgSSd2ZSBqdXN0IHJlY2VudGx5IGZpeGVkDQooZDljMTBlNWI4
+ODYzICJkaXJlY3QtaW86IEZpeCBzbGVlcCBpbiBhdG9taWMgZHVlIHRvIHN5bmMgQUlPIiBpbiA0
+LjE2LXJjNCkuDQoNCgkJCQkJCQkJSG9uemENCg0KPiANCj4gDQo+IC0tLS0tT3JpZ2luYWwgTWVz
+c2FnZS0tLS0tDQo+IEZyb206IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiBTZW50
+OiBUdWVzZGF5LCBNYXJjaCAxMywgMjAxOCAxMToxMyBBTQ0KPiBUbzogUm9iZXJ0IERvcnIgPHJk
+b3JyQG1pY3Jvc29mdC5jb20+DQo+IENjOiBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5j
+b20+OyBEYW4gV2lsbGlhbXMgDQo+IDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+OyBsaW51eC14
+ZnNAdmdlci5rZXJuZWwub3JnOyBDaHJpc3RvcGggDQo+IEhlbGx3aWcgPGhjaEBsc3QuZGU+OyBs
+aW51eC1mc2RldmVsIDxsaW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9yZz47IA0KPiBKYW4gS2Fy
+YSA8amFja0BzdXNlLmN6PjsgVGhlb2RvcmUgVHMnbyA8dHl0c29AbWl0LmVkdT47IE1hdHRoZXcg
+V2lsY294IA0KPiA8bWF3aWxjb3hAbWljcm9zb2Z0LmNvbT47IFNjb3R0IEtvbmVyc21hbm4gPHNj
+b3R0a29uQG1pY3Jvc29mdC5jb20+OyANCj4gU2xhdmEgT2tzIDxzbGF2YW9AbWljcm9zb2Z0LmNv
+bT47IEphc3JhaiBEYW5nZSANCj4gPGphc3JhamRAbWljcm9zb2Z0LmNvbT47IE1pY2hhZWwgTmVs
+c29uIDxtaWNuQG1pY3Jvc29mdC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIFtSRkNdIGlv
+bWFwOiBVc2UgRlVBIGZvciBwdXJlIGRhdGEgT19EU1lOQyBESU8gDQo+IHdyaXRlcw0KPiANCj4g
+PiBJIHRoaW5rIHRoZSBhbnN3ZXIgaXMgdGhlIGlvbWFwKiBsb2dpYyBtYWtlcyBzdXJlIHRvIGlz
+c3VlIGdlbmVyaWNfd3JpdGVfc3luYyBmb3IgT19EU1lOQyBXMSBhZnRlciBXMSBpcyBjb21wbGV0
+ZWQgYnkgaGFyZHdhcmUgYW5kIHRoZW4gd2FpdHMgZm9yIGNvbXBsZXRpb24gb2YgdGhlIGZsdXNo
+IHJlcXVlc3QgKFJFUV9QUkVGTFVTSCkgYmVmb3JlIFcxIGlzIHJldHVybmVkIHRvIHRoZSBBSU8g
+Y29tcGxldGlvbiByaW5nLCBwcmV2ZW50aW5nIGlvX2dldGV2ZW50cyBmcm9tIHByb2Nlc3Npbmcg
+VzEgYmVmb3JlIHRoZSBmbHVzaCBvY2N1cnMgYW5kIGNvbXBsZXRlcy4gICBJIGp1c3QgbmVlZCBw
+cm9wZXIgY29uZmlybWF0aW9uIGZyb20gdGhlIGV4cGVydHMgb24gdGhpcyBjb2RlIHRoYXQgdGhp
+cyBpcyB0aGUgZXhwZWN0ZWQgYmVoYXZpb3IuDQo+IA0KPiBZZXMuIHRoYXQgaXMgdGhlIGNhc2Uu
+DQo+IA0KPiA+IEZvciBTUUwgU2VydmVyIHVzaW5nIE9fRElSRUNUIHwgT19EU1lOQyBvbiBjdXJy
+ZW50IGtlcm5lbHMgaXMgdmVyeSBwZXJmb3JtYW5jZSBpbXBhY3RpbmcuICAgSW5zdGVhZCB3ZSBl
+bmFibGUgYSBtb2RlIGZvciBTUUwgdGhhdCBvcGVucyBPX0RJUkVDVCBvbmx5IGFuZCBpc3N1ZXMg
+ZnN5bmMvZmRhdGFzeW5jIHdoZW4gd2UgYXJlIGhhcmRlbmluZyBsb2cgZmlsZXMgb3IgY2hlY2tw
+b2ludGluZyBkYXRhIGZpbGVzLiAgIFRoaXMgcmVkdWNlcyB0aGUgd3JpdGUsIGZsdXNoLCB3cml0
+ZSwgZmx1c2ggcGF0dGVybiBhbGxvd2luZyBmb3Igd3JpdGUsIHdyaXRlLCB3cml0ZSwgLi4uIHRo
+ZW4gZmx1c2ggYXMgd2Ugb25seSBpc3N1ZSBmbHVzaCByZXF1ZXN0cyB3aGVuIHJlcXVpcmVkIHRv
+IG1haW50YWluIHRoZSBkYXRhIGludGVncml0eSBib3VuZGFyaWVzIG9mIFNRTCBTZXJ2ZXIuICBU
+aGUgcGVyZm9ybWFuY2UgaXMgc2lnbmlmaWNhbnRseSBiZXR0ZXIgdGhlbiB0aGUgZGV2aWNlIGZs
+dXNoIGZvciBlYWNoIHdyaXRlIGFzIHlvdSBjYW4gaW1hZ2luZS4NCj4gPiANCj4gPiBUZXN0aW5n
+IHNob3dzIHRoZSBGVUEgZW5oYW5jZW1lbnQgaXMgYmV0dGVyIHRoZW4gdGhlIHdyaXRlLCBmbHVz
+aCBwYXR0ZXJuLiAgIEZvciBTUUwgU2VydmVyIHdlIHdhbnQgdG8gZHluYW1pY2FsbHkgb3BlbiB3
+aXRoIE9fRElSRUNUIHwgT19EU1lOQyB3aGVuIFJFUV9GVUEgY2FuIGJlIHByb3Blcmx5IHVzZWQg
+YW5kIG9wZW4gd2l0aCBPX0RJUkVDVCBhbmQgbGV2ZXJhZ2UgU1FMIFNlcnZlcidzIGFsdGVybmF0
+ZSBmbHVzaCBzY2hlbWUgd2hlbiBydW5uaW5nIG9uIG9sZGVyIGtlcm5lbCBvciBhIHN5c3RlbSB0
+aGF0IGRvZXMgbm90IHN1cHBvcnQgRlVBIChTQVRBLCBJREUsIC4uLikNCj4gDQo+IFRoZXJlIGlz
+IG5vIHJlYWxseSBnb29kIHdheSB0byBmaWd1cmUgdGhpcyBvdXQgZXhjZXB0IGZvciBiZW5jaG1h
+cmtpbmcsIGdpdmVuIHRoYXQgdGhlIEZVQSB1c2UgYW4gaW1wbGVtZW50YXRpb24gZGV0YWlsLg0K
+PiANCj4gQnR3LCBhbm90aGVyIGZlYXR1cmUgdGhhdCBtaWdodCBiZSBpbnRlcmVzdGluZyB0byB5
+b3UgaXMgdGhlIFJXRl9EU1lOQyBmbGFnIHRvIHRoZSBwd3JpdGV2MiBzeXNjYWxsLCB3aGljaCBh
+bGxvd3MgdG8gYXBwbHkgT19EU1lOQyBzZW1hbnRpY3Mgb24gYSBwZXItSS9PIGJhc2lzIGluc3Rl
+YWQgb2YgdXNpbmcgaXQgYXQgb3BlbiB0aW1lLg0KLS0NCkphbiBLYXJhIDxqYWNrQHN1c2UuY29t
+Pg0KU1VTRSBMYWJzLCBDUg0K
