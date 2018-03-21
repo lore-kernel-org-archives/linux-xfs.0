@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:2553 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:12344 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754225AbeCUXG7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 19:06:59 -0400
-Subject: [PATCH v7 08/14] mm,
- dax: enable filesystems to trigger dev_pagemap ->page_free callbacks
+        id S1754287AbeCUXHF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 19:07:05 -0400
+Subject: [PATCH v7 09/14] mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 21 Mar 2018 15:57:53 -0700
-Message-ID: <152167307372.5268.6763116136733564047.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Wed, 21 Mar 2018 15:57:59 -0700
+Message-ID: <152167307925.5268.8460609293976880720.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -17,377 +16,342 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Michal Hocko <mhocko@suse.com>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz
+Cc: Michal Hocko <mhocko@suse.com>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz
 
-In order to resolve collisions between filesystem operations and DMA to
-DAX mapped pages we need a callback when DMA completes. With a callback
-we can hold off filesystem operations while DMA is in-flight and then
-resume those operations when the last put_page() occurs on a DMA page.
+The HMM sub-system extended dev_pagemap to arrange a callback when a
+dev_pagemap managed page is freed. Since a dev_pagemap page is free /
+idle when its reference count is 1 it requires an additional branch to
+check the page-type at put_page() time. Given put_page() is a hot-path
+we do not want to incur that check if HMM is not in use, so a static
+branch is used to avoid that overhead when not necessary.
 
-Recall that the 'struct page' entries for DAX memory are created with
-devm_memremap_pages(). That routine arranges for the pages to be
-allocated, but never onlined, so a DAX page is DMA-idle when its
-reference count reaches one.
-
-Also recall that the HMM sub-system added infrastructure to trap the
-page-idle (2-to-1 reference count) transition of the pages allocated by
-devm_memremap_pages() and trigger a callback via the 'struct
-dev_pagemap' associated with the page range. Whereas the HMM callbacks
-are going to a device driver to manage bounce pages in device-memory in
-the filesystem-dax case we will call back to filesystem specified
-callback.
-
-Since the callback is not known at devm_memremap_pages() time we arrange
-for the filesystem to install it at mount time. No functional changes
-are expected as this only registers a nop handler for the ->page_free()
-event for device-mapped pages.
+Now, the FS_DAX implementation wants to reuse this mechanism for
+receiving dev_pagemap ->page_free() callbacks. Rework the HMM-specific
+static-key into a generic mechanism that either HMM or FS_DAX code paths
+can enable.
 
 Cc: Michal Hocko <mhocko@suse.com>
 Reviewed-by: "Jérôme Glisse" <jglisse@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/super.c      |   79 ++++++++++++++++++++++++++++++++++++++++------
- drivers/nvdimm/pmem.c    |    3 +-
- fs/ext2/super.c          |    6 ++-
- fs/ext4/super.c          |    6 ++-
- fs/xfs/xfs_super.c       |   20 ++++++------
- include/linux/dax.h      |   17 +++++-----
- include/linux/memremap.h |    8 +++++
- 7 files changed, 103 insertions(+), 36 deletions(-)
+ drivers/dax/super.c      |    2 ++
+ fs/Kconfig               |    1 +
+ include/linux/memremap.h |   20 ++-------------
+ include/linux/mm.h       |   61 ++++++++++++++++++++++++++++++++--------------
+ kernel/memremap.c        |   30 ++++++++++++++++++++---
+ mm/Kconfig               |    5 ++++
+ mm/hmm.c                 |   13 ++--------
+ mm/swap.c                |    3 ++
+ 8 files changed, 84 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 2b2332b605e4..ecefe9f7eb60 100644
+index ecefe9f7eb60..619b1ed6434c 100644
 --- a/drivers/dax/super.c
 +++ b/drivers/dax/super.c
-@@ -29,6 +29,7 @@ static struct vfsmount *dax_mnt;
- static DEFINE_IDA(dax_minor_ida);
- static struct kmem_cache *dax_cache __read_mostly;
- static struct super_block *dax_superblock __read_mostly;
-+static DEFINE_MUTEX(devmap_lock);
- 
- #define DAX_HASH_SIZE (PAGE_SIZE / sizeof(struct hlist_head))
- static struct hlist_head dax_host_list[DAX_HASH_SIZE];
-@@ -62,16 +63,6 @@ int bdev_dax_pgoff(struct block_device *bdev, sector_t sector, size_t size,
- }
- EXPORT_SYMBOL(bdev_dax_pgoff);
- 
--#if IS_ENABLED(CONFIG_FS_DAX)
--struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
--{
--	if (!blk_queue_dax(bdev->bd_queue))
--		return NULL;
--	return fs_dax_get_by_host(bdev->bd_disk->disk_name);
--}
--EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
--#endif
--
- /**
-  * __bdev_dax_supported() - Check if the device supports dax for filesystem
-  * @sb: The superblock of the device
-@@ -169,9 +160,66 @@ struct dax_device {
- 	const char *host;
- 	void *private;
- 	unsigned long flags;
-+	struct dev_pagemap *pgmap;
- 	const struct dax_operations *ops;
- };
- 
-+#if IS_ENABLED(CONFIG_FS_DAX)
-+static void generic_dax_pagefree(struct page *page, void *data)
-+{
-+	/* TODO: wakeup page-idle waiters */
-+}
-+
-+struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
-+{
-+	struct dax_device *dax_dev;
-+	struct dev_pagemap *pgmap;
-+
-+	if (!blk_queue_dax(bdev->bd_queue))
-+		return NULL;
-+	dax_dev = fs_dax_get_by_host(bdev->bd_disk->disk_name);
-+	if (!dax_dev->pgmap)
-+		return dax_dev;
-+	pgmap = dax_dev->pgmap;
-+
-+	mutex_lock(&devmap_lock);
-+	if ((pgmap->data && pgmap->data != owner) || pgmap->page_free
-+			|| pgmap->page_fault
-+			|| pgmap->type != MEMORY_DEVICE_HOST) {
-+		put_dax(dax_dev);
-+		mutex_unlock(&devmap_lock);
-+		return NULL;
-+	}
-+
-+	pgmap->type = MEMORY_DEVICE_FS_DAX;
-+	pgmap->page_free = generic_dax_pagefree;
-+	pgmap->data = owner;
-+	mutex_unlock(&devmap_lock);
-+
-+	return dax_dev;
-+}
-+EXPORT_SYMBOL_GPL(fs_dax_claim_bdev);
-+
-+void fs_dax_release(struct dax_device *dax_dev, void *owner)
-+{
-+	struct dev_pagemap *pgmap = dax_dev ? dax_dev->pgmap : NULL;
-+
-+	put_dax(dax_dev);
-+	if (!pgmap)
-+		return;
-+	if (!pgmap->data)
-+		return;
-+
-+	mutex_lock(&devmap_lock);
-+	WARN_ON(pgmap->data != owner);
-+	pgmap->type = MEMORY_DEVICE_HOST;
-+	pgmap->page_free = NULL;
-+	pgmap->data = NULL;
-+	mutex_unlock(&devmap_lock);
-+}
-+EXPORT_SYMBOL_GPL(fs_dax_release);
-+#endif
-+
- static ssize_t write_cache_show(struct device *dev,
- 		struct device_attribute *attr, char *buf)
- {
-@@ -499,6 +547,17 @@ struct dax_device *alloc_dax(void *private, const char *__host,
- }
- EXPORT_SYMBOL_GPL(alloc_dax);
- 
-+struct dax_device *alloc_dax_devmap(void *private, const char *host,
-+		const struct dax_operations *ops, struct dev_pagemap *pgmap)
-+{
-+	struct dax_device *dax_dev = alloc_dax(private, host, ops);
-+
-+	if (dax_dev)
-+		dax_dev->pgmap = pgmap;
-+	return dax_dev;
-+}
-+EXPORT_SYMBOL_GPL(alloc_dax_devmap);
-+
- void put_dax(struct dax_device *dax_dev)
- {
- 	if (!dax_dev)
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 06f8dcc52ca6..e6d7351f3379 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -408,7 +408,8 @@ static int pmem_attach_disk(struct device *dev,
- 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
- 	disk->bb = &pmem->bb;
- 
--	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
-+	dax_dev = alloc_dax_devmap(pmem, disk->disk_name, &pmem_dax_ops,
-+			&pmem->pgmap);
- 	if (!dax_dev) {
- 		put_disk(disk);
- 		return -ENOMEM;
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index 7666c065b96f..6ae20e319bc4 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -172,7 +172,7 @@ static void ext2_put_super (struct super_block * sb)
- 	brelse (sbi->s_sbh);
- 	sb->s_fs_info = NULL;
- 	kfree(sbi->s_blockgroup_lock);
--	fs_put_dax(sbi->s_daxdev);
-+	fs_dax_release(sbi->s_daxdev, sb);
- 	kfree(sbi);
- }
- 
-@@ -817,7 +817,7 @@ static unsigned long descriptor_loc(struct super_block *sb,
- 
- static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- {
--	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
-+	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
- 	struct buffer_head * bh;
- 	struct ext2_sb_info * sbi;
- 	struct ext2_super_block * es;
-@@ -1213,7 +1213,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- 	kfree(sbi->s_blockgroup_lock);
- 	kfree(sbi);
- failed:
--	fs_put_dax(dax_dev);
-+	fs_dax_release(dax_dev, sb);
- 	return ret;
- }
- 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 39bf464c35f1..315a323729e3 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -952,7 +952,7 @@ static void ext4_put_super(struct super_block *sb)
- 	if (sbi->s_chksum_driver)
- 		crypto_free_shash(sbi->s_chksum_driver);
- 	kfree(sbi->s_blockgroup_lock);
--	fs_put_dax(sbi->s_daxdev);
-+	fs_dax_release(sbi->s_daxdev, sb);
- 	kfree(sbi);
- }
- 
-@@ -3398,7 +3398,7 @@ static void ext4_set_resv_clusters(struct super_block *sb)
- 
- static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- {
--	struct dax_device *dax_dev = fs_dax_get_by_bdev(sb->s_bdev);
-+	struct dax_device *dax_dev = fs_dax_claim_bdev(sb->s_bdev, sb);
- 	char *orig_data = kstrdup(data, GFP_KERNEL);
- 	struct buffer_head *bh;
- 	struct ext4_super_block *es = NULL;
-@@ -4408,7 +4408,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- out_free_base:
- 	kfree(sbi);
- 	kfree(orig_data);
--	fs_put_dax(dax_dev);
-+	fs_dax_release(dax_dev, sb);
- 	return err ? err : ret;
- }
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 93588ea3d3d2..ef7dd7148c0b 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -724,7 +724,7 @@ xfs_close_devices(
- 
- 		xfs_free_buftarg(mp, mp->m_logdev_targp);
- 		xfs_blkdev_put(logdev);
--		fs_put_dax(dax_logdev);
-+		fs_dax_release(dax_logdev, mp);
- 	}
- 	if (mp->m_rtdev_targp) {
- 		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
-@@ -732,10 +732,10 @@ xfs_close_devices(
- 
- 		xfs_free_buftarg(mp, mp->m_rtdev_targp);
- 		xfs_blkdev_put(rtdev);
--		fs_put_dax(dax_rtdev);
-+		fs_dax_release(dax_rtdev, mp);
- 	}
- 	xfs_free_buftarg(mp, mp->m_ddev_targp);
--	fs_put_dax(dax_ddev);
-+	fs_dax_release(dax_ddev, mp);
- }
- 
- /*
-@@ -753,9 +753,9 @@ xfs_open_devices(
- 	struct xfs_mount	*mp)
- {
- 	struct block_device	*ddev = mp->m_super->s_bdev;
--	struct dax_device	*dax_ddev = fs_dax_get_by_bdev(ddev);
--	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
-+	struct dax_device	*dax_ddev = fs_dax_claim_bdev(ddev, mp);
- 	struct block_device	*logdev = NULL, *rtdev = NULL;
-+	struct dax_device	*dax_logdev = NULL, *dax_rtdev = NULL;
- 	int			error;
- 
- 	/*
-@@ -765,7 +765,7 @@ xfs_open_devices(
- 		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
- 		if (error)
- 			goto out;
--		dax_logdev = fs_dax_get_by_bdev(logdev);
-+		dax_logdev = fs_dax_claim_bdev(logdev, mp);
+@@ -191,6 +191,7 @@ struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner)
+ 		return NULL;
  	}
  
- 	if (mp->m_rtname) {
-@@ -779,7 +779,7 @@ xfs_open_devices(
- 			error = -EINVAL;
- 			goto out_close_rtdev;
- 		}
--		dax_rtdev = fs_dax_get_by_bdev(rtdev);
-+		dax_rtdev = fs_dax_claim_bdev(rtdev, mp);
- 	}
- 
- 	/*
-@@ -813,14 +813,14 @@ xfs_open_devices(
- 	xfs_free_buftarg(mp, mp->m_ddev_targp);
-  out_close_rtdev:
- 	xfs_blkdev_put(rtdev);
--	fs_put_dax(dax_rtdev);
-+	fs_dax_release(dax_rtdev, mp);
-  out_close_logdev:
- 	if (logdev && logdev != ddev) {
- 		xfs_blkdev_put(logdev);
--		fs_put_dax(dax_logdev);
-+		fs_dax_release(dax_logdev, mp);
- 	}
-  out:
--	fs_put_dax(dax_ddev);
-+	fs_dax_release(dax_ddev, mp);
- 	return error;
++	dev_pagemap_get_ops();
+ 	pgmap->type = MEMORY_DEVICE_FS_DAX;
+ 	pgmap->page_free = generic_dax_pagefree;
+ 	pgmap->data = owner;
+@@ -215,6 +216,7 @@ void fs_dax_release(struct dax_device *dax_dev, void *owner)
+ 	pgmap->type = MEMORY_DEVICE_HOST;
+ 	pgmap->page_free = NULL;
+ 	pgmap->data = NULL;
++	dev_pagemap_put_ops();
+ 	mutex_unlock(&devmap_lock);
  }
- 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index ae27a7efe7ab..92a1d3ee1615 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -52,12 +52,8 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
- 	return dax_get_by_host(host);
- }
- 
--static inline void fs_put_dax(struct dax_device *dax_dev)
--{
--	put_dax(dax_dev);
--}
--
--struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
-+struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *owner);
-+void fs_dax_release(struct dax_device *dax_dev, void *owner);
- int dax_writeback_mapping_range(struct address_space *mapping,
- 		struct block_device *bdev, struct writeback_control *wbc);
- #else
-@@ -71,13 +67,14 @@ static inline struct dax_device *fs_dax_get_by_host(const char *host)
- 	return NULL;
- }
- 
--static inline void fs_put_dax(struct dax_device *dax_dev)
-+static inline struct dax_device *fs_dax_claim_bdev(struct block_device *bdev,
-+		void *owner)
- {
-+	return NULL;
- }
- 
--static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
-+static inline void fs_dax_release(struct dax_device *dax_dev, void *owner)
- {
--	return NULL;
- }
- 
- static inline int dax_writeback_mapping_range(struct address_space *mapping,
-@@ -91,6 +88,8 @@ int dax_read_lock(void);
- void dax_read_unlock(int id);
- struct dax_device *alloc_dax(void *private, const char *host,
- 		const struct dax_operations *ops);
-+struct dax_device *alloc_dax_devmap(void *private, const char *host,
-+		const struct dax_operations *ops, struct dev_pagemap *pgmap);
- bool dax_alive(struct dax_device *dax_dev);
- void kill_dax(struct dax_device *dax_dev);
- void *dax_get_private(struct dax_device *dax_dev);
+ EXPORT_SYMBOL_GPL(fs_dax_release);
+diff --git a/fs/Kconfig b/fs/Kconfig
+index bc821a86d965..1f0832bbc32f 100644
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -38,6 +38,7 @@ config FS_DAX
+ 	bool "Direct Access (DAX) support"
+ 	depends on MMU
+ 	depends on !(ARM || MIPS || SPARC)
++	select DEV_PAGEMAP_OPS
+ 	select FS_IOMAP
+ 	select DAX
+ 	help
 diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 7b4899c06f49..02d6d042ee7f 100644
+index 02d6d042ee7f..9faf25d6abef 100644
 --- a/include/linux/memremap.h
 +++ b/include/linux/memremap.h
-@@ -53,11 +53,19 @@ struct vmem_altmap {
-  * driver can hotplug the device memory using ZONE_DEVICE and with that memory
-  * type. Any page of a process can be migrated to such memory. However no one
-  * should be allow to pin such memory so that it can always be evicted.
-+ *
-+ * MEMORY_DEVICE_FS_DAX:
-+ * When MEMORY_DEVICE_HOST memory is represented by a device that can
-+ * host a filesystem, for example /dev/pmem0, that filesystem can
-+ * register for a callback when a page is idled. For the filesystem-dax
-+ * case page idle callbacks are used to coordinate DMA vs
-+ * hole-punch/truncate.
-  */
- enum memory_type {
- 	MEMORY_DEVICE_HOST = 0,
- 	MEMORY_DEVICE_PRIVATE,
- 	MEMORY_DEVICE_PUBLIC,
-+	MEMORY_DEVICE_FS_DAX,
+@@ -1,7 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ #ifndef _LINUX_MEMREMAP_H_
+ #define _LINUX_MEMREMAP_H_
+-#include <linux/mm.h>
+ #include <linux/ioport.h>
+ #include <linux/percpu-refcount.h>
+ 
+@@ -130,6 +129,9 @@ struct dev_pagemap {
+ 	enum memory_type type;
  };
  
- /*
++void dev_pagemap_get_ops(void);
++void dev_pagemap_put_ops(void);
++
+ #ifdef CONFIG_ZONE_DEVICE
+ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap);
+ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
+@@ -137,8 +139,6 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
+ 
+ unsigned long vmem_altmap_offset(struct vmem_altmap *altmap);
+ void vmem_altmap_free(struct vmem_altmap *altmap, unsigned long nr_pfns);
+-
+-static inline bool is_zone_device_page(const struct page *page);
+ #else
+ static inline void *devm_memremap_pages(struct device *dev,
+ 		struct dev_pagemap *pgmap)
+@@ -169,20 +169,6 @@ static inline void vmem_altmap_free(struct vmem_altmap *altmap,
+ }
+ #endif /* CONFIG_ZONE_DEVICE */
+ 
+-#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
+-static inline bool is_device_private_page(const struct page *page)
+-{
+-	return is_zone_device_page(page) &&
+-		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
+-}
+-
+-static inline bool is_device_public_page(const struct page *page)
+-{
+-	return is_zone_device_page(page) &&
+-		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
+-}
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+-
+ static inline void put_dev_pagemap(struct dev_pagemap *pgmap)
+ {
+ 	if (pgmap)
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index ad06d42adb1a..088c76bce360 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -812,27 +812,55 @@ static inline bool is_zone_device_page(const struct page *page)
+ }
+ #endif
+ 
+-#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
+-void put_zone_device_private_or_public_page(struct page *page);
+-DECLARE_STATIC_KEY_FALSE(device_private_key);
+-#define IS_HMM_ENABLED static_branch_unlikely(&device_private_key)
+-static inline bool is_device_private_page(const struct page *page);
+-static inline bool is_device_public_page(const struct page *page);
+-#else /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+-static inline void put_zone_device_private_or_public_page(struct page *page)
++#ifdef CONFIG_DEV_PAGEMAP_OPS
++void __put_devmap_managed_page(struct page *page);
++DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
++static inline bool put_devmap_managed_page(struct page *page)
+ {
++	if (!static_branch_unlikely(&devmap_managed_key))
++		return false;
++	if (!is_zone_device_page(page))
++		return false;
++	switch (page->pgmap->type) {
++	case MEMORY_DEVICE_PRIVATE:
++	case MEMORY_DEVICE_PUBLIC:
++	case MEMORY_DEVICE_FS_DAX:
++		__put_devmap_managed_page(page);
++		return true;
++	default:
++		break;
++	}
++	return false;
+ }
+-#define IS_HMM_ENABLED 0
++
+ static inline bool is_device_private_page(const struct page *page)
+ {
+-	return false;
++	return is_zone_device_page(page) &&
++		page->pgmap->type == MEMORY_DEVICE_PRIVATE;
+ }
++
+ static inline bool is_device_public_page(const struct page *page)
+ {
++	return is_zone_device_page(page) &&
++		page->pgmap->type == MEMORY_DEVICE_PUBLIC;
++}
++
++#else /* CONFIG_DEV_PAGEMAP_OPS */
++static inline bool put_devmap_managed_page(struct page *page)
++{
+ 	return false;
+ }
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+ 
++static inline bool is_device_private_page(const struct page *page)
++{
++	return false;
++}
++
++static inline bool is_device_public_page(const struct page *page)
++{
++	return false;
++}
++#endif /* CONFIG_DEV_PAGEMAP_OPS */
+ 
+ static inline void get_page(struct page *page)
+ {
+@@ -850,16 +878,13 @@ static inline void put_page(struct page *page)
+ 	page = compound_head(page);
+ 
+ 	/*
+-	 * For private device pages we need to catch refcount transition from
+-	 * 2 to 1, when refcount reach one it means the private device page is
+-	 * free and we need to inform the device driver through callback. See
++	 * For devmap managed pages we need to catch refcount transition from
++	 * 2 to 1, when refcount reach one it means the page is free and we
++	 * need to inform the device driver through callback. See
+ 	 * include/linux/memremap.h and HMM for details.
+ 	 */
+-	if (IS_HMM_ENABLED && unlikely(is_device_private_page(page) ||
+-	    unlikely(is_device_public_page(page)))) {
+-		put_zone_device_private_or_public_page(page);
++	if (put_devmap_managed_page(page))
+ 		return;
+-	}
+ 
+ 	if (put_page_testzero(page))
+ 		__put_page(page);
+diff --git a/kernel/memremap.c b/kernel/memremap.c
+index 4dd4274cabe2..72d0bb6fc47d 100644
+--- a/kernel/memremap.c
++++ b/kernel/memremap.c
+@@ -476,8 +476,30 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
+ }
+ #endif /* CONFIG_ZONE_DEVICE */
+ 
+-#if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
+-void put_zone_device_private_or_public_page(struct page *page)
++#ifdef CONFIG_DEV_PAGEMAP_OPS
++DEFINE_STATIC_KEY_FALSE(devmap_managed_key);
++EXPORT_SYMBOL_GPL(devmap_managed_key);
++static atomic_t devmap_enable;
++
++/*
++ * Toggle the static key for ->page_free() callbacks when dev_pagemap
++ * pages go idle.
++ */
++void dev_pagemap_get_ops(void)
++{
++	if (atomic_inc_return(&devmap_enable) == 1)
++		static_branch_enable(&devmap_managed_key);
++}
++EXPORT_SYMBOL_GPL(dev_pagemap_get_ops);
++
++void dev_pagemap_put_ops(void)
++{
++	if (atomic_dec_and_test(&devmap_enable))
++		static_branch_disable(&devmap_managed_key);
++}
++EXPORT_SYMBOL_GPL(dev_pagemap_put_ops);
++
++void __put_devmap_managed_page(struct page *page)
+ {
+ 	int count = page_ref_dec_return(page);
+ 
+@@ -497,5 +519,5 @@ void put_zone_device_private_or_public_page(struct page *page)
+ 	} else if (!count)
+ 		__put_page(page);
+ }
+-EXPORT_SYMBOL(put_zone_device_private_or_public_page);
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
++EXPORT_SYMBOL_GPL(__put_devmap_managed_page);
++#endif /* CONFIG_DEV_PAGEMAP_OPS */
+diff --git a/mm/Kconfig b/mm/Kconfig
+index c782e8fb7235..dc32828984a3 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -700,6 +700,9 @@ config ARCH_HAS_HMM
+ config MIGRATE_VMA_HELPER
+ 	bool
+ 
++config DEV_PAGEMAP_OPS
++	bool
++
+ config HMM
+ 	bool
+ 	select MIGRATE_VMA_HELPER
+@@ -720,6 +723,7 @@ config DEVICE_PRIVATE
+ 	bool "Unaddressable device memory (GPU memory, ...)"
+ 	depends on ARCH_HAS_HMM
+ 	select HMM
++	select DEV_PAGEMAP_OPS
+ 
+ 	help
+ 	  Allows creation of struct pages to represent unaddressable device
+@@ -730,6 +734,7 @@ config DEVICE_PUBLIC
+ 	bool "Addressable device memory (like GPU memory)"
+ 	depends on ARCH_HAS_HMM
+ 	select HMM
++	select DEV_PAGEMAP_OPS
+ 
+ 	help
+ 	  Allows creation of struct pages to represent addressable device
+diff --git a/mm/hmm.c b/mm/hmm.c
+index 320545b98ff5..4aa554e76d06 100644
+--- a/mm/hmm.c
++++ b/mm/hmm.c
+@@ -35,15 +35,6 @@
+ 
+ #define PA_SECTION_SIZE (1UL << PA_SECTION_SHIFT)
+ 
+-#if defined(CONFIG_DEVICE_PRIVATE) || defined(CONFIG_DEVICE_PUBLIC)
+-/*
+- * Device private memory see HMM (Documentation/vm/hmm.txt) or hmm.h
+- */
+-DEFINE_STATIC_KEY_FALSE(device_private_key);
+-EXPORT_SYMBOL(device_private_key);
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
+-
+-
+ #if IS_ENABLED(CONFIG_HMM_MIRROR)
+ static const struct mmu_notifier_ops hmm_mmu_notifier_ops;
+ 
+@@ -996,7 +987,7 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+ 	resource_size_t addr;
+ 	int ret;
+ 
+-	static_branch_enable(&device_private_key);
++	dev_pagemap_get_ops();
+ 
+ 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
+ 				   GFP_KERNEL, dev_to_node(device));
+@@ -1090,7 +1081,7 @@ struct hmm_devmem *hmm_devmem_add_resource(const struct hmm_devmem_ops *ops,
+ 	if (res->desc != IORES_DESC_DEVICE_PUBLIC_MEMORY)
+ 		return ERR_PTR(-EINVAL);
+ 
+-	static_branch_enable(&device_private_key);
++	dev_pagemap_get_ops();
+ 
+ 	devmem = devres_alloc_node(&hmm_devmem_release, sizeof(*devmem),
+ 				   GFP_KERNEL, dev_to_node(device));
+diff --git a/mm/swap.c b/mm/swap.c
+index 0f17330dd0e5..eed846cfc8b8 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -29,6 +29,7 @@
+ #include <linux/cpu.h>
+ #include <linux/notifier.h>
+ #include <linux/backing-dev.h>
++#include <linux/memremap.h>
+ #include <linux/memcontrol.h>
+ #include <linux/gfp.h>
+ #include <linux/uio.h>
+@@ -744,7 +745,7 @@ void release_pages(struct page **pages, int nr)
+ 						       flags);
+ 				locked_pgdat = NULL;
+ 			}
+-			put_zone_device_private_or_public_page(page);
++			put_devmap_managed_page(page);
+ 			continue;
+ 		}
+ 
 
