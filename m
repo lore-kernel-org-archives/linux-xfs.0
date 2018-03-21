@@ -1,18 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:40958 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbeCUDkL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:40:11 -0400
-Subject: [PATCH 04/14] xfs_scrub: communicate name problems via flagset
- instead of booleans
+Received: from userp2130.oracle.com ([156.151.31.86]:55302 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751687AbeCUDkx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:40:53 -0400
+Subject: [PATCH 11/14] xfs_scrub_all: report version
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Mar 2018 20:40:04 -0700
-Message-ID: <152160360472.8288.12725342216863079202.stgit@magnolia>
+Date: Tue, 20 Mar 2018 20:40:48 -0700
+Message-ID: <152160364815.8288.2405559533299403970.stgit@magnolia>
 In-Reply-To: <152160358015.8288.2700156777231657519.stgit@magnolia>
 References: <152160358015.8288.2700156777231657519.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -21,118 +20,83 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use an unsigned int to pass around name error flags instead of booleans.
+Make xfs_scrub_all -V report its version like the other xfs tools.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/unicrash.c |   43 ++++++++++++++++++++++++++++++-------------
- 1 file changed, 30 insertions(+), 13 deletions(-)
+ man/man8/xfs_scrub_all.8 |   10 ++++++++++
+ scrub/Makefile           |    1 +
+ scrub/xfs_scrub_all.in   |   11 +++++++++++
+ 3 files changed, 22 insertions(+)
 
 
-diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-index 10d7c14..3538a60 100644
---- a/scrub/unicrash.c
-+++ b/scrub/unicrash.c
-@@ -77,6 +77,14 @@ struct unicrash {
- #define UNICRASH_SZ(nr)		(sizeof(struct unicrash) + \
- 				 (nr * sizeof(struct name_entry *)))
+diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
+index 5e1420b..7454880 100644
+--- a/man/man8/xfs_scrub_all.8
++++ b/man/man8/xfs_scrub_all.8
+@@ -3,6 +3,9 @@
+ xfs_scrub_all \- scrub all mounted XFS filesystems
+ .SH SYNOPSIS
+ .B xfs_scrub_all
++[
++.B \-hV
++]
+ .SH DESCRIPTION
+ .B xfs_scrub_all
+ attempts to read and check all the metadata on all mounted XFS filesystems.
+@@ -13,6 +16,13 @@ in a restricted fashion.
+ Mounted filesystems are mapped to physical storage devices so that scrub
+ operations can be run in parallel so long as no two scrubbers access
+ the same device simultaneously.
++.SH OPTIONS
++.TP
++.B \-h
++Display help.
++.TP
++.B \-V
++Prints the version number and exits.
+ .SH EXIT CODE
+ The exit code returned by
+ .B xfs_scrub_all
+diff --git a/scrub/Makefile b/scrub/Makefile
+index bcc05a0..482e8a7 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -102,6 +102,7 @@ default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
+ xfs_scrub_all: xfs_scrub_all.in
+ 	@echo "    [SED]    $@"
+ 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
++		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
+ 		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
+ 	$(Q)chmod a+x $@
  
-+/* Things to complain about in Unicode naming. */
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index 80f07d5..aed66a1 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -26,6 +26,7 @@ import threading
+ import time
+ import sys
+ import os
++import argparse
+ 
+ retcode = 0
+ terminate = False
+@@ -139,6 +140,16 @@ def main():
+ 		thr.start()
+ 	global retcode, terminate
+ 
++	parser = argparse.ArgumentParser( \
++			description = "Scrub all mounted XFS filesystems.")
++	parser.add_argument("-V", help = "Report version and exit.", \
++			action = "store_true")
++	args = parser.parse_args()
 +
-+/*
-+ * Multiple names resolve to the same normalized string and therefore render
-+ * identically.
-+ */
-+#define UNICRASH_NOT_UNIQUE	(1 << 0)
++	if args.V:
++		print("xfs_scrub_all version @pkg_version@")
++		sys.exit(0)
 +
- /*
-  * We only care about validating utf8 collisions if the underlying
-  * system configuration says we're using utf8.  If the language
-@@ -256,7 +264,7 @@ unicrash_complain(
- 	struct unicrash		*uc,
- 	const char		*descr,
- 	const char		*what,
--	bool			unique,
-+	unsigned int		badflags,
- 	const char		*name,
- 	uint8_t			*uniname)
- {
-@@ -266,11 +274,20 @@ unicrash_complain(
- 	bad1 = string_escape(name);
- 	bad2 = string_escape((char *)uniname);
+ 	fs = find_mounts()
  
--	if (!unique)
-+	/*
-+	 * Two names that normalize to the same string will render
-+	 * identically even though the filesystem considers them unique
-+	 * names.  "cafe\xcc\x81" and "caf\xc3\xa9" have different byte
-+	 * sequences, but they both appear as "café".
-+	 */
-+	if (badflags & UNICRASH_NOT_UNIQUE) {
- 		str_warn(uc->ctx, descr,
--_("Duplicate normalized Unicode name \"%s\" found in %s."),
--				bad1, what);
-+_("Unicode name \"%s\" in %s renders identically to \"%s\"."),
-+				bad1, what, bad2);
-+		goto out;
-+	}
- 
-+out:
- 	free(bad1);
- 	free(bad2);
- }
-@@ -291,7 +308,7 @@ unicrash_add(
- 	struct unicrash		*uc,
- 	uint8_t			*uniname,
- 	xfs_ino_t		ino,
--	bool			*unique)
-+	unsigned int		*badflags)
- {
- 	struct name_entry	*ne;
- 	struct name_entry	*x;
-@@ -304,8 +321,9 @@ unicrash_add(
- 	hash = unicrash_hashname(uniname, uninamelen);
- 	bucket = hash % uc->nr_buckets;
- 	for (nep = &uc->buckets[bucket], ne = *nep; ne != NULL; ne = x) {
--		if (u8_strcmp(uniname, ne->uniname) == 0) {
--			*unique = uc->compare_ino ? ne->ino == ino : false;
-+		if (u8_strcmp(uniname, ne->uniname) == 0 &&
-+		    (uc->compare_ino ? ino != ne->ino : true)) {
-+			*badflags |= UNICRASH_NOT_UNIQUE;
- 			return true;
- 		}
- 		nep = &ne->next;
-@@ -321,7 +339,6 @@ unicrash_add(
- 	x->uninamelen = uninamelen;
- 	memcpy(x->uniname, uniname, uninamelen + 1);
- 	*nep = x;
--	*unique = true;
- 
- 	return true;
- }
-@@ -336,19 +353,19 @@ __unicrash_check_name(
- 	xfs_ino_t		ino)
- {
- 	uint8_t			uniname[(NAME_MAX * 2) + 1];
-+	unsigned int		badflags = 0;
- 	bool			moveon;
--	bool			unique;
- 
- 	memset(uniname, 0, (NAME_MAX * 2) + 1);
- 	unicrash_normalize(name, uniname, NAME_MAX * 2);
--	moveon = unicrash_add(uc, uniname, ino, &unique);
-+	moveon = unicrash_add(uc, uniname, ino, &badflags);
- 	if (!moveon)
- 		return false;
- 
--	if (unique)
--		return true;
-+	if (badflags)
-+		unicrash_complain(uc, descr, namedescr, badflags, name,
-+				uniname);
- 
--	unicrash_complain(uc, descr, namedescr, unique, name, uniname);
- 	return true;
- }
- 
+ 	# Tail the journal if we ourselves aren't a service...
 
