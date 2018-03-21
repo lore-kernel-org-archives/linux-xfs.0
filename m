@@ -1,84 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:50575 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752024AbeCVGzF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 02:55:05 -0400
-Date: Thu, 22 Mar 2018 17:54:24 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the nvdimm tree with the xfs tree
-Message-ID: <20180322175424.032cf417@canb.auug.org.au>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:29197 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753565AbeCUV0U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 17:26:20 -0400
+Date: Thu, 22 Mar 2018 08:26:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/4] misc: remove darwin, irix, and freebsd support
+Message-ID: <20180321212617.GX18129@dastard>
+References: <152151529988.18312.2660325658864402943.stgit@magnolia>
+ <20180321031933.GO1757@magnolia>
+ <da8feaae-b6a3-613e-71c8-38d16981d701@redhat.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/zhlqNwi8=c7E+bgT2RVlLmj"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <da8feaae-b6a3-613e-71c8-38d16981d701@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
---Sig_/zhlqNwi8=c7E+bgT2RVlLmj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, Mar 21, 2018 at 01:59:26PM -0500, Eric Sandeen wrote:
+> On 3/20/18 10:19 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Remove these ports since they're not actively maintained:
+> > 
+> > IRIX support was partially removed last year; the OS itself hasn't had a
+> > release since 2006.
+> > 
+> > FreeBSD dropped XFS support in v9.3, which EOLd in January 2017.
+> > 
+> > Darwin/OSX has never supported XFS.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Probably should clean up more than just whole files, see bits & pieces
+> sprinkled throughout:
+> 
+> include/builddefs.in 
+> include/platform_defs.h.in
+> include/gnukfreebsd.h (?)
 
-Hi Dan,
+So, this makes me wonder. IIRC, that's the header for the debian
+distro on a freebsd kernel. That's a thing, and we package xfsprogs
+in debian. Do they build xfsprogs for that platform, and if they do
+do we care if we break it?
 
-Today's linux-next merge of the nvdimm tree got a conflict in:
-
-  fs/xfs/xfs_inode.h
-
-between commit:
-
-  f5c54717bf2b ("xfs: remove xfs_zero_range")
-
-from the xfs tree and commit:
-
-  6ea4108852e9 ("xfs: prepare xfs_break_layouts() for another layout type")
-
-from the nvdimm tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
---=20
 Cheers,
-Stephen Rothwell
 
-diff --cc fs/xfs/xfs_inode.h
-index 132d8aa2afc4,6951d57aae71..000000000000
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@@ -443,6 -457,12 +457,8 @@@ enum xfs_prealloc_flags=20
- =20
-  int	xfs_update_prealloc_flags(struct xfs_inode *ip,
-  				  enum xfs_prealloc_flags flags);
- -int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
- -		     xfs_fsize_t isize, bool *did_zeroing);
- -int	xfs_zero_range(struct xfs_inode *ip, xfs_off_t pos, xfs_off_t count,
- -		bool *did_zero);
-+ int	xfs_break_layouts(struct inode *inode, uint *iolock,
-+ 		enum layout_break_reason reason);
- =20
-  /* from xfs_iops.c */
-  extern void xfs_setup_inode(struct xfs_inode *ip);
-
---Sig_/zhlqNwi8=c7E+bgT2RVlLmj
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlqzUyAACgkQAVBC80lX
-0Gw9xAf/XuOHM+g8CadIj8I7WyuqazqOWlDHqJzlgTYJNkTLFAkBm1Z6JpxohFCl
-uEmbYfRwtq90appMzVbPpQeidXPaEAN56gDYQ1CP1ZDeLKbXJMm8DYkVXINx5Ucn
-shpeF+M1/uJPkpwiRrdiujhiErM7ECeGW84TCqWO4qJFtt4OVRK+gmLBSCU0VXy9
-jAKFC4qPR3wlBMQUcXvQczqo8qmIWXvd5HSbBP7TIkdqnasf6N/qv7pPgyur0gJs
-53YyvOrH6mI7fbyplT6981gFVzv/lF3LbnJFXEISIlkx61iyPGExKWHCPg9J0sKI
-oIo+LAwc79423uw8o6V8iuJGrA32GQ==
-=JL83
------END PGP SIGNATURE-----
-
---Sig_/zhlqNwi8=c7E+bgT2RVlLmj--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
