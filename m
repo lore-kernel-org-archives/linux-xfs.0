@@ -1,29 +1,262 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:50172 "EHLO ms.lwn.net"
+Received: from mx1.redhat.com ([209.132.183.28]:47298 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752560AbeCUPdx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 11:33:53 -0400
-Date: Wed, 21 Mar 2018 09:33:50 -0600
-From: Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH] xfs: Change URL for the project in xfs.txt
-Message-ID: <20180321093350.03cd7b9c@lwn.net>
-In-Reply-To: <20180302133013.9744-1-standby24x7@gmail.com>
-References: <20180302133013.9744-1-standby24x7@gmail.com>
+        id S1752527AbeCUStl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 14:49:41 -0400
+Subject: Re: [PATCH v2 3/4] xfs_fsr: refactor mountpoint finding to use
+ libfrog paths functions
+References: <152151529988.18312.2660325658864402943.stgit@magnolia>
+ <152151531831.18312.9201377632555740636.stgit@magnolia>
+ <20180321031903.GN1757@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <d5422c3c-0791-185b-09e8-fa3898c00a73@redhat.com>
+Date: Wed, 21 Mar 2018 13:49:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180321031903.GN1757@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri,  2 Mar 2018 22:30:13 +0900
-Masanari Iida <standby24x7@gmail.com> wrote:
+On 3/20/18 10:19 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Refactor the mount-point finding code in fsr to use the libfrog helpers
+> instead of open-coding yet another routine.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> The oss.sgi.com doesn't exist any more.
-> Change it to current project URL, https://xfs.wiki.kernel.org/
+Seems fine, I'll test further but:
 
-Applied to the docs tree, thanks.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-jon
+> ---
+> v2: fix obvious brokenness w/ path testing
+> ---
+>  fsr/Makefile    |    4 ++-
+>  fsr/xfs_fsr.c   |   73 ++++++-------------------------------------------------
+>  include/path.h  |    1 +
+>  libfrog/paths.c |   48 ++++++++++++++++++++++++++----------
+>  4 files changed, 47 insertions(+), 79 deletions(-)
+> 
+> diff --git a/fsr/Makefile b/fsr/Makefile
+> index d3521b2..4201b38 100644
+> --- a/fsr/Makefile
+> +++ b/fsr/Makefile
+> @@ -7,7 +7,9 @@ include $(TOPDIR)/include/builddefs
+>  
+>  LTCOMMAND = xfs_fsr
+>  CFILES = xfs_fsr.c
+> -LLDLIBS = $(LIBHANDLE)
+> +LLDLIBS = $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBBLKID)
+> +LTDEPENDENCIES = $(LIBHANDLE) $(LIBFROG)
+> +LLDFLAGS = -static-libtool-libs
+>  
+>  ifeq ($(HAVE_GETMNTENT),yes)
+>  LCFLAGS += -DHAVE_GETMNTENT
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 2a18ce0..b74a70b 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -22,6 +22,7 @@
+>  #include "jdm.h"
+>  #include "xfs_bmap_btree.h"
+>  #include "xfs_attr_sf.h"
+> +#include "path.h"
+>  
+>  #include <fcntl.h>
+>  #include <errno.h>
+> @@ -167,73 +168,13 @@ aborter(int unused)
+>  	exit(1);
+>  }
+>  
+> -/*
+> - * Check if the argument is either the device name or mountpoint of an XFS
+> - * filesystem.  Note that we do not care about bind mounted regular files
+> - * here - the code that handles defragmentation of invidual files takes care
+> - * of that.
+> - */
+> -static char *
+> -find_mountpoint_check(struct stat *sb, struct mntent *t)
+> -{
+> -	struct stat ms;
+> -
+> -	if (S_ISDIR(sb->st_mode)) {		/* mount point */
+> -		if (stat(t->mnt_dir, &ms) < 0)
+> -			return NULL;
+> -		if (sb->st_ino != ms.st_ino)
+> -			return NULL;
+> -		if (sb->st_dev != ms.st_dev)
+> -			return NULL;
+> -		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
+> -			return NULL;
+> -	} else {				/* device */
+> -		if (stat(t->mnt_fsname, &ms) < 0)
+> -			return NULL;
+> -		if (sb->st_rdev != ms.st_rdev)
+> -			return NULL;
+> -		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
+> -			return NULL;
+> -		/*
+> -		 * Make sure the mountpoint given by mtab is accessible
+> -		 * before using it.
+> -		 */
+> -		if (stat(t->mnt_dir, &ms) < 0)
+> -			return NULL;
+> -	}
+> -
+> -	return t->mnt_dir;
+> -}
+> -
+> -static char *
+> -find_mountpoint(char *mtab, char *argname, struct stat *sb)
+> -{
+> -	struct mntent_cursor cursor;
+> -	struct mntent *t = NULL;
+> -	char *mntp = NULL;
+> -
+> -	if (platform_mntent_open(&cursor, mtab) != 0){
+> -		fprintf(stderr, "Error: can't get mntent entries.\n");
+> -		exit(1);
+> -	}
+> -
+> -	while ((t = platform_mntent_next(&cursor)) != NULL) {
+> -		mntp = find_mountpoint_check(sb, t);
+> -		if (mntp == NULL)
+> -			continue;
+> -		break;
+> -	}
+> -	platform_mntent_close(&cursor);
+> -	return mntp;
+> -}
+> -
+>  int
+>  main(int argc, char **argv)
+>  {
+>  	struct stat sb;
+>  	char *argname;
+>  	int c;
+> -	char *mntp;
+> +	struct fs_path	*fsp;
+>  	char *mtab = NULL;
+>  
+>  	setlinebuf(stdout);
+> @@ -322,7 +263,7 @@ main(int argc, char **argv)
+>  	RealUid = getuid();
+>  
+>  	pagesize = getpagesize();
+> -
+> +	fs_table_initialise(0, NULL, 0, NULL);
+>  	if (optind < argc) {
+>  		for (; optind < argc; optind++) {
+>  			argname = argv[optind];
+> @@ -343,9 +284,11 @@ main(int argc, char **argv)
+>  				sb = sb2;
+>  			}
+>  
+> -			mntp = find_mountpoint(mtab, argname, &sb);
+> -			if (mntp != NULL) {
+> -				fsrfs(mntp, 0, 100);
+> +			fsp = fs_table_lookup_mount(argname);
+> +			if (!fsp)
+> +				fsp = fs_table_lookup_blkdev(argname);
+> +			if (fsp != NULL) {
+> +				fsrfs(fsp->fs_dir, 0, 100);
+>  			} else if (S_ISCHR(sb.st_mode)) {
+>  				fprintf(stderr, _(
+>  					"%s: char special not supported: %s\n"),
+> diff --git a/include/path.h b/include/path.h
+> index 1d3a902..88dc44b 100644
+> --- a/include/path.h
+> +++ b/include/path.h
+> @@ -57,6 +57,7 @@ extern void fs_table_insert_project_path(char *__dir, uint __projid);
+>  
+>  extern fs_path_t *fs_table_lookup(const char *__dir, uint __flags);
+>  extern fs_path_t *fs_table_lookup_mount(const char *__dir);
+> +extern fs_path_t *fs_table_lookup_blkdev(const char *bdev);
+>  
+>  typedef struct fs_cursor {
+>  	uint		count;		/* total count of mount entries	*/
+> diff --git a/libfrog/paths.c b/libfrog/paths.c
+> index 19ee1ea..318b48f 100644
+> --- a/libfrog/paths.c
+> +++ b/libfrog/paths.c
+> @@ -89,30 +89,26 @@ fs_table_lookup(
+>  	return NULL;
+>  }
+>  
+> -/*
+> - * Find the FS table entry describing an actual mount for the given path.
+> - * Unlike fs_table_lookup(), fs_table_lookup_mount() compares the "dir"
+> - * argument to actual mount point entries in the table. Accordingly, it
+> - * will find matches only if the "dir" argument is indeed mounted.
+> - */
+> -struct fs_path *
+> -fs_table_lookup_mount(
+> -	const char	*dir)
+> +static struct fs_path *
+> +__fs_table_lookup_mount(
+> +	const char	*dir,
+> +	const char	*blkdev)
+>  {
+>  	uint		i;
+> -	dev_t		dev = 0;
+>  	char		rpath[PATH_MAX];
+>  	char		dpath[PATH_MAX];
+>  
+> -	if (fs_device_number(dir, &dev))
+> +	if (dir && !realpath(dir, dpath))
+>  		return NULL;
+> -	if (!realpath(dir, dpath))
+> +	if (blkdev && !realpath(blkdev, dpath))
+>  		return NULL;
+>  
+>  	for (i = 0; i < fs_count; i++) {
+>  		if (fs_table[i].fs_flags != FS_MOUNT_POINT)
+>  			continue;
+> -		if (!realpath(fs_table[i].fs_dir, rpath))
+> +		if (dir && !realpath(fs_table[i].fs_dir, rpath))
+> +			continue;
+> +		if (blkdev && !realpath(fs_table[i].fs_name, rpath))
+>  			continue;
+>  		if (strcmp(rpath, dpath) == 0)
+>  			return &fs_table[i];
+> @@ -120,6 +116,32 @@ fs_table_lookup_mount(
+>  	return NULL;
+>  }
+>  
+> +/*
+> + * Find the FS table entry describing an actual mount for the given path.
+> + * Unlike fs_table_lookup(), fs_table_lookup_mount() compares the "dir"
+> + * argument to actual mount point entries in the table. Accordingly, it
+> + * will find matches only if the "dir" argument is indeed mounted.
+> + */
+> +struct fs_path *
+> +fs_table_lookup_mount(
+> +	const char	*dir)
+> +{
+> +	return __fs_table_lookup_mount(dir, NULL);
+> +}
+> +
+> +/*
+> + * Find the FS table entry describing an actual mount for the block device.
+> + * Unlike fs_table_lookup(), fs_table_lookup_blkdev() compares the "bdev"
+> + * argument to actual mount point names in the table. Accordingly, it
+> + * will find matches only if the "bdev" argument is indeed mounted.
+> + */
+> +struct fs_path *
+> +fs_table_lookup_blkdev(
+> +	const char	*bdev)
+> +{
+> +	return __fs_table_lookup_mount(NULL, bdev);
+> +}
+> +
+>  static int
+>  fs_table_insert(
+>  	char		*dir,
+> 
+
