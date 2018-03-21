@@ -1,65 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33770 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933303AbeCSVhn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Mar 2018 17:37:43 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:47660 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751851AbeCUNz0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 09:55:26 -0400
+Date: Wed, 21 Mar 2018 09:55:25 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/9] xfs: refactor inode verifier error logging
+Message-ID: <20180321135525.GD11127@bfoster.bfoster>
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <152107378868.19571.6256278246118880952.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com>
-References: <CAM_iQpU9A+KpSdXceUuz-cUX+f91bttKwJCOE91LnTZmKofk_Q@mail.gmail.com>
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Date: Mon, 19 Mar 2018 14:37:22 -0700
-Message-ID: <CAM_iQpVBmhiN05ZpxEZ2cNLSJpczc7z=Sz7a1tnUGeQimtDTYA@mail.gmail.com>
-Subject: Re: xfs: list corruption in xfs_setup_inode()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152107378868.19571.6256278246118880952.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <dchinner@redhat.com>, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 30, 2017 at 2:55 PM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
-> Hello,
->
-> We triggered a list corruption (double add) warning below on our 4.9
-> kernel (the 4.9 kernel we use is based on -stable release, with only a
-> few unrelated networking backports):
+On Wed, Mar 14, 2018 at 05:29:48PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Refactor some of the inode verifier failure logging call sites to use
+> the new xfs_inode_verifier_error method which dumps the offending buffer
+> as well as the code location of the failed check.  This trims the
+> output, makes it clearer to the admin that repair must be run, and gives
+> the developers more details to work from.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-We still keep getting this warning on 4.9 kernel. Looking into this again,
-it seems xfs_setup_inode() could be called twice if an XFS inode is gotten
-from disk? Once in xfs_iget() => xfs_setup_existing_inode(), and once
-in xfs_ialloc().
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Does the following patch (compile-only) make any sense? Again, I don't
-want to pretend to understand XFS...
-
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 604ee384a00a..6761b1f8fa2f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -775,6 +775,7 @@ xfs_ialloc(
-        int             error;
-        struct timespec tv;
-        struct inode    *inode;
-+       bool            had_imode;
-
-        /*
-         * Call the space management code to pick
-@@ -801,6 +802,7 @@ xfs_ialloc(
-                return error;
-        ASSERT(ip != NULL);
-        inode = VFS_I(ip);
-+       had_imode = !!inode->i_mode;
-
-        /*
-         * We always convert v1 inodes to v2 now - we only support filesystems
-@@ -946,7 +948,8 @@ xfs_ialloc(
-        xfs_trans_log_inode(tp, ip, flags);
-
-        /* now that we have an i_mode we can setup the inode structure */
--       xfs_setup_inode(ip);
-+       if (!had_imode)
-+               xfs_setup_inode(ip);
-
-        *ipp = ip;
-        return 0;
+>  fs/xfs/libxfs/xfs_bmap.c       |    5 +++--
+>  fs/xfs/libxfs/xfs_inode_fork.c |   15 +++++++++------
+>  2 files changed, 12 insertions(+), 8 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 5850e76..fe7534e 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1244,8 +1244,9 @@ xfs_iread_extents(
+>  			xfs_warn(ip->i_mount,
+>  				"corrupt dinode %Lu, (btree extents).",
+>  				(unsigned long long) ip->i_ino);
+> -			XFS_CORRUPTION_ERROR(__func__,
+> -				XFS_ERRLEVEL_LOW, ip->i_mount, block);
+> +			xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+> +					__func__, block, sizeof(*block),
+> +					__this_address);
+>  			error = -EFSCORRUPTED;
+>  			goto out_brelse;
+>  		}
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 613fba2..701c42a 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -195,8 +195,9 @@ xfs_iformat_local(
+>  	"corrupt inode %Lu (bad size %d for local fork, size = %d).",
+>  			(unsigned long long) ip->i_ino, size,
+>  			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork));
+> -		XFS_CORRUPTION_ERROR("xfs_iformat_local", XFS_ERRLEVEL_LOW,
+> -				     ip->i_mount, dip);
+> +		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+> +				"xfs_iformat_local", dip, sizeof(*dip),
+> +				__this_address);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> @@ -231,8 +232,9 @@ xfs_iformat_extents(
+>  	if (unlikely(size < 0 || size > XFS_DFORK_SIZE(dip, mp, whichfork))) {
+>  		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %d).",
+>  			(unsigned long long) ip->i_ino, nex);
+> -		XFS_CORRUPTION_ERROR("xfs_iformat_extents(1)", XFS_ERRLEVEL_LOW,
+> -				     mp, dip);
+> +		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+> +				"xfs_iformat_extents(1)", dip, sizeof(*dip),
+> +				__this_address);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> @@ -309,8 +311,9 @@ xfs_iformat_btree(
+>  		     level == 0 || level > XFS_BTREE_MAXLEVELS) {
+>  		xfs_warn(mp, "corrupt inode %Lu (btree).",
+>  					(unsigned long long) ip->i_ino);
+> -		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
+> -					 mp, dip);
+> +		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+> +				"xfs_iformat_btree", dfp, size,
+> +				__this_address);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
