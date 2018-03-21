@@ -1,212 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55080 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752954AbeCUUay (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 16:30:54 -0400
-Date: Wed, 21 Mar 2018 13:30:48 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:38484 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752954AbeCUUhR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 16:37:17 -0400
+Date: Wed, 21 Mar 2018 13:37:11 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/9] xfs: refactor bmap record valiation
-Message-ID: <20180321203048.GK4818@magnolia>
+Subject: Re: [PATCH 6/9] xfs: inode scrubber shouldn't bother with raw checks
+Message-ID: <20180321203711.GL4818@magnolia>
 References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <152107378261.19571.1457221354115584570.stgit@magnolia>
- <20180321135519.GC11127@bfoster.bfoster>
+ <152107380695.19571.2332304909071108710.stgit@magnolia>
+ <20180321174239.GH11127@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180321135519.GC11127@bfoster.bfoster>
+In-Reply-To: <20180321174239.GH11127@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 21, 2018 at 09:55:20AM -0400, Brian Foster wrote:
-> On Wed, Mar 14, 2018 at 05:29:42PM -0700, Darrick J. Wong wrote:
+On Wed, Mar 21, 2018 at 01:42:39PM -0400, Brian Foster wrote:
+> On Wed, Mar 14, 2018 at 05:30:07PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Refactor the bmap validator into a more complete helper that looks for
-> > extents that run off the end of the device, overflow into the next AG,
-> > or have invalid flag states, leaving a raw helper so that the inode
-> > repair can check things even if iget fails.
+> > The inode scrubber tries to _iget the inode prior to running checks.
+> > If that _iget call fails with corruption errors that's an automatic
+> > fail, regardless of whether it was the inode buffer read verifier,
+> > the ifork verifier, or the ifork formatter that errored out.
+> > 
+> > Therefore, get rid of the raw mode scrub code because it's not needed.
+> > Found by trying to fix some test failures in xfs/379 and xfs/415.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_bmap.c       |   55 ++++++++++++++++++++++++++++++++++++++--
-> >  fs/xfs/libxfs/xfs_bmap.h       |    5 ++++
-> >  fs/xfs/libxfs/xfs_bmap_btree.h |   14 ----------
-> >  fs/xfs/libxfs/xfs_inode_fork.c |   12 ++++++---
-> >  4 files changed, 65 insertions(+), 21 deletions(-)
+> >  fs/xfs/scrub/inode.c |   98 +++++---------------------------------------------
+> >  1 file changed, 9 insertions(+), 89 deletions(-)
 > > 
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index daae00e..5850e76 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -1261,11 +1261,15 @@ xfs_iread_extents(
-> >  		 */
-> >  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
-> >  		for (j = 0; j < num_recs; j++, frp++, i++) {
-> > +			xfs_failaddr_t	fa;
-> > +
-> >  			xfs_bmbt_disk_get_all(frp, &new);
-> > -			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
-> > -				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
-> > -						 XFS_ERRLEVEL_LOW, mp);
-> > +			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
-> > +			if (fa) {
-> >  				error = -EFSCORRUPTED;
-> > +				xfs_inode_verifier_error(ip, error,
-> > +						"xfs_bmap_read_extents(2)",
-> 
-> Might as well fix up the stale function name string.
-
-Ok.
-
-> > +						frp, sizeof(*frp), fa);
-> >  				goto out_brelse;
-> >  			}
-> >  			xfs_iext_insert(ip, &icur, &new, state);
-> > @@ -6154,3 +6158,48 @@ xfs_bmap_finish_one(
-> >  
-> >  	return error;
-> >  }
-> > +
-> > +/* Check that an extent does not have invalid flags or bad ranges. */
-> > +xfs_failaddr_t
-> > +xfs_bmbt_validate_extent(
-> > +	struct xfs_mount	*mp,
-> > +	bool			isrt,
-> > +	int			whichfork,
-> > +	struct xfs_bmbt_irec	*irec)
-> > +{
-> > +	xfs_fsblock_t		endfsb;
-> > +
-> > +	endfsb = irec->br_startblock + irec->br_blockcount - 1;
-> > +	if (isrt) {
-> > +		if (!xfs_verify_rtbno(mp, irec->br_startblock))
-> > +			return __this_address;
-> > +		if (!xfs_verify_rtbno(mp, endfsb))
-> > +			return __this_address;
-> > +	} else {
-> > +		if (!xfs_verify_fsbno(mp, irec->br_startblock))
-> > +			return __this_address;
-> > +		if (!xfs_verify_fsbno(mp, endfsb))
-> > +			return __this_address;
-> > +		if (XFS_FSB_TO_AGNO(mp, irec->br_startblock) !=
-> > +		    XFS_FSB_TO_AGNO(mp, endfsb))
-> > +			return __this_address;
-> > +	}
-> > +	if (irec->br_state != XFS_EXT_NORM) {
-> > +		if (whichfork != XFS_DATA_FORK)
-> > +			return __this_address;
-> > +		if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
-> > +			return __this_address;
-> > +	}
-> > +	return NULL;
-> > +}
-> > +
-> > +/* Check that an inode's extent does not have invalid flags or bad ranges. */
-> > +xfs_failaddr_t
-> > +xfs_bmap_validate_extent(
-> > +	struct xfs_inode	*ip,
-> > +	int			whichfork,
-> > +	struct xfs_bmbt_irec	*irec)
-> > +{
-> > +	return xfs_bmbt_validate_extent(ip->i_mount, XFS_IS_REALTIME_INODE(ip),
-> > +			whichfork, irec);
-> > +}
-> 
-> Do we really need this wrapper just for an rt check? Why not just pass
-> ip down to xfs_bmbt_validate_extent() and pull isrt from there (if
-> present)?
-> 
-> The commit log implies the helper could be left around for future repair
-> code. If that's the case, I think it's more appropriate to refactor it
-> as such in whatever patch the helper is first used. Otherwise looks
-> fine.
-
-Ok.  FWIW the intended usage for xfs_bmbt_validate_extent is that if the
-user asks us to repair an inode for which _iget returns EFSCORRUPTED
-we'll walk through all the inode fork sanity checks; if an
-extents-format fork has bad bmbt records, we reset the inode fork and
-indicate that a bmbt rebuild (via the rmapbt) is necessary.  In that
-case there is no xfs_inode hence the need for a raw function.
-
-However... I'll move the creation of the wrapper to that patch and we
-can argue about it there. :)
-
---D
-
-> Brian
-> 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> > index e36d757..e0fef89 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.h
-> > +++ b/fs/xfs/libxfs/xfs_bmap.h
-> > @@ -274,4 +274,9 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
+> > diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> > index 21297be..0332a01 100644
+> > --- a/fs/xfs/scrub/inode.c
+> > +++ b/fs/xfs/scrub/inode.c
+> > @@ -515,72 +515,6 @@ xfs_scrub_dinode(
 > >  	}
 > >  }
 > >  
-> > +xfs_failaddr_t xfs_bmbt_validate_extent(struct xfs_mount *mp, bool isrt,
-> > +		int whichfork, struct xfs_bmbt_irec *irec);
-> > +xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
-> > +		struct xfs_bmbt_irec *irec);
-> > +
-> >  #endif	/* __XFS_BMAP_H__ */
-> > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > index 135b8c5..e450574 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> > @@ -118,18 +118,4 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
-> >  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
-> >  		struct xfs_trans *, struct xfs_inode *, int);
-> >  
-> > -/*
-> > - * Check that the extent does not contain an invalid unwritten extent flag.
-> > - */
-> > -static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> > -		struct xfs_bmbt_irec *irec)
+> > -/* Map and read a raw inode. */
+> > -STATIC int
+> > -xfs_scrub_inode_map_raw(
+> > -	struct xfs_scrub_context	*sc,
+> > -	xfs_ino_t			ino,
+> > -	struct xfs_buf			**bpp,
+> > -	struct xfs_dinode		**dipp)
 > > -{
-> > -	if (irec->br_state == XFS_EXT_NORM)
-> > -		return true;
-> > -	if (whichfork == XFS_DATA_FORK &&
-> > -	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-> > -		return true;
-> > -	return false;
+> > -	struct xfs_imap			imap;
+> > -	struct xfs_mount		*mp = sc->mp;
+> > -	struct xfs_buf			*bp = NULL;
+> > -	struct xfs_dinode		*dip;
+> > -	int				error;
+> > -
+> > -	error = xfs_imap(mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
+> > -	if (error == -EINVAL) {
+> > -		/*
+> > -		 * Inode could have gotten deleted out from under us;
+> > -		 * just forget about it.
+> > -		 */
+> > -		error = -ENOENT;
+> > -		goto out;
+> > -	}
+> > -	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+> > -			XFS_INO_TO_AGBNO(mp, ino), &error))
+> > -		goto out;
+> > -
+> > -	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > -			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp,
+> > -			NULL);
+> > -	if (!xfs_scrub_process_error(sc, XFS_INO_TO_AGNO(mp, ino),
+> > -			XFS_INO_TO_AGBNO(mp, ino), &error))
+> > -		goto out;
+> > -
+> > -	/*
+> > -	 * Is this really an inode?  We disabled verifiers in the above
+> > -	 * xfs_trans_read_buf call because the inode buffer verifier
+> > -	 * fails on /any/ inode record in the inode cluster with a bad
+> > -	 * magic or version number, not just the one that we're
+> > -	 * checking.  Therefore, grab the buffer unconditionally, attach
+> > -	 * the inode verifiers by hand, and run the inode verifier only
+> > -	 * on the one inode we want.
+> > -	 */
+> > -	bp->b_ops = &xfs_inode_buf_ops;
+> > -	dip = xfs_buf_offset(bp, imap.im_boffset);
+> > -	if (xfs_dinode_verify(mp, ino, dip) != NULL ||
+> > -	    !xfs_dinode_good_version(mp, dip->di_version)) {
+> > -		xfs_scrub_ino_set_corrupt(sc, ino, bp);
+> > -		goto out_buf;
+> > -	}
+> > -
+> > -	/* ...and is it the one we asked for? */
+> > -	if (be32_to_cpu(dip->di_gen) != sc->sm->sm_gen) {
+> > -		error = -ENOENT;
+> > -		goto out_buf;
+> > -	}
+> > -
+> > -	*dipp = dip;
+> > -	*bpp = bp;
+> > -out:
+> > -	return error;
+> > -out_buf:
+> > -	xfs_trans_brelse(sc->tp, bp);
+> > -	return error;
 > > -}
 > > -
-> >  #endif	/* __XFS_BMAP_BTREE_H__ */
-> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> > index 866d2861..613fba2 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> > @@ -245,10 +245,14 @@ xfs_iformat_extents(
+> >  /*
+> >   * Make sure the finobt doesn't think this inode is free.
+> >   * We don't have to check the inobt ourselves because we got the inode via
+> > @@ -727,43 +661,29 @@ xfs_scrub_inode(
+> >  	struct xfs_scrub_context	*sc)
+> >  {
+> >  	struct xfs_dinode		di;
+> > -	struct xfs_buf			*bp = NULL;
+> > -	struct xfs_dinode		*dip;
+> > -	xfs_ino_t			ino;
+> >  	int				error = 0;
 > >  
-> >  		xfs_iext_first(ifp, &icur);
-> >  		for (i = 0; i < nex; i++, dp++) {
-> > +			xfs_failaddr_t	fa;
-> > +
-> >  			xfs_bmbt_disk_get_all(dp, &new);
-> > -			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
-> > -				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
-> > -						 XFS_ERRLEVEL_LOW, mp);
-> > +			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
-> > +			if (fa) {
-> > +				xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-> > +						"xfs_iformat_extents(2)",
-> > +						dp, sizeof(*dp), fa);
-> >  				return -EFSCORRUPTED;
-> >  			}
+> > -	/* Did we get the in-core inode, or are we doing this manually? */
+> > -	if (sc->ip) {
+> > -		ino = sc->ip->i_ino;
+> > -		xfs_inode_to_disk(sc->ip, &di, 0);
+> > -		dip = &di;
+> > -	} else {
+> > -		/* Map & read inode. */
+> > -		ino = sc->sm->sm_ino;
+> > -		error = xfs_scrub_inode_map_raw(sc, ino, &bp, &dip);
+> > -		if (error || !bp)
+> > -			goto out;
+> > +	/* iget failed means automatic fail. */
+> > +	if (!sc->ip) {
+> > +		xfs_scrub_ino_set_corrupt(sc, sc->sm->sm_ino, NULL);
+> > +		return 0;
+> >  	}
+> 
+> Ok, so the setup function will attempt to lookup the inode number that's
+> passed in. If the lookup fails with a corruption error, we'd have ip ==
+> NULL but return 0 from that setup call because it's not a scrub
+> operational error. Hence, we get here without an inode and call it an fs
+> corruption. Seems fine as long as I'm following this correctly:
+
+Correct.  I'll change the comment to read:
+
+/*
+ * If sc->ip is NULL, that means that the setup function called xfs_iget
+ * to look up the inode.  xfs_iget returned a EFSCORRUPTED and a NULL
+ * inode, so flag the corruption error and return.
+ */
+
+--D
+
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> 
 > >  
-> > @@ -595,7 +599,7 @@ xfs_iextents_copy(
-> >  	for_each_xfs_iext(ifp, &icur, &rec) {
-> >  		if (isnullstartblock(rec.br_startblock))
-> >  			continue;
-> > -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, &rec));
-> > +		ASSERT(xfs_bmap_validate_extent(ip, whichfork, &rec) == NULL);
-> >  		xfs_bmbt_disk_set_all(dp, &rec);
-> >  		trace_xfs_write_extent(ip, &icur, state, _RET_IP_);
-> >  		copied += sizeof(struct xfs_bmbt_rec);
+> > -	xfs_scrub_dinode(sc, bp, dip, ino);
+> > +	/* Scrub the inode core. */
+> > +	xfs_inode_to_disk(sc->ip, &di, 0);
+> > +	xfs_scrub_dinode(sc, NULL, &di, sc->ip->i_ino);
+> >  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> >  		goto out;
+> >  
+> > -	/* Now let's do the things that require a live inode. */
+> > -	if (!sc->ip)
+> > -		goto out;
+> > -
+> >  	/*
+> >  	 * Look for discrepancies between file's data blocks and the reflink
+> >  	 * iflag.  We already checked the iflag against the file mode when
+> >  	 * we scrubbed the dinode.
+> >  	 */
+> >  	if (S_ISREG(VFS_I(sc->ip)->i_mode))
+> > -		xfs_scrub_inode_check_reflink_iflag(sc, ino, bp);
+> > +		xfs_scrub_inode_check_reflink_iflag(sc, sc->ip->i_ino, NULL);
+> >  
+> > -	xfs_scrub_inode_xref(sc, ino, dip);
+> > +	xfs_scrub_inode_xref(sc, sc->ip->i_ino, &di);
+> >  out:
+> > -	if (bp)
+> > -		xfs_trans_brelse(sc->tp, bp);
+> >  	return error;
+> >  }
 > > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
