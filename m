@@ -1,389 +1,330 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50598 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752740AbeCUTm3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 15:42:29 -0400
-Subject: [PATCH 5.5/4] misc: remove darwin, irix, and freebsd support
+Received: from userp2120.oracle.com ([156.151.31.85]:43768 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751630AbeCUDUL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:20:11 -0400
+Date: Tue, 20 Mar 2018 20:20:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 6/4] libfrog: absorb platform specific code
+Message-ID: <20180321032000.GP1757@magnolia>
 References: <152151529988.18312.2660325658864402943.stgit@magnolia>
- <20180321031933.GO1757@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5b3de5aa-9cee-6e43-5d70-beb4974eb5b9@sandeen.net>
-Date: Wed, 21 Mar 2018 14:42:28 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180321031933.GO1757@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152151529988.18312.2660325658864402943.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-Remove even more unsupported platform bits.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Move the linux support code to libfrog, which should remove the final
+dependency of libfrog on libxfs.  libfrog is the runtime support library
+anyway.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ libfrog/Makefile |    4 +
+ libfrog/linux.c  |  265 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/Makefile  |    3 -
+ libxfs/linux.c   |  265 ------------------------------------------------------
+ 4 files changed, 269 insertions(+), 268 deletions(-)
+ create mode 100644 libfrog/linux.c
+ delete mode 100644 libxfs/linux.c
 
-diff --git a/Makefile b/Makefile
-index 7ddfa31..4ff2cac 100644
---- a/Makefile
-+++ b/Makefile
-@@ -47,13 +47,9 @@ HDR_SUBDIRS = include libxfs
- LIBFROG_SUBDIR = libfrog
- DLIB_SUBDIRS = libxlog libxcmd libhandle
- LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
--TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
-+TOOL_SUBDIRS = copy db estimate fsck fsr growfs io logprint mkfs quota \
- 		mdrestore repair rtcp m4 man doc debian spaceman scrub
+diff --git a/libfrog/Makefile b/libfrog/Makefile
+index 230b08f..e3065e6 100644
+--- a/libfrog/Makefile
++++ b/libfrog/Makefile
+@@ -22,6 +22,10 @@ topology.c \
+ util.c \
+ workqueue.c
  
--ifneq ("$(PKG_PLATFORM)","darwin")
--TOOL_SUBDIRS += fsr
--endif
--
- ifneq ("$(XGETTEXT)","")
- TOOL_SUBDIRS += po
- endif
-diff --git a/include/Makefile b/include/Makefile
-index 6077507..09fe42c 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -47,14 +47,12 @@ LIBHFILES = libxfs.h \
- 
- HFILES = handle.h \
- 	jdm.h \
--	$(PKG_PLATFORM).h \
-+	linux.h \
- 	xfs.h \
- 	xqm.h \
- 	xfs_arch.h
- 
--PHFILES = darwin.h freebsd.h linux.h gnukfreebsd.h
--LSRCFILES = $(shell echo $(PHFILES) | sed -e "s/$(PKG_PLATFORM).h//g")
--LSRCFILES += platform_defs.h.in builddefs.in buildmacros buildrules install-sh
-+LSRCFILES = platform_defs.h.in builddefs.in buildmacros buildrules install-sh
- LSRCFILES += $(DKHFILES) $(LIBHFILES)
- LDIRT = disk
- LDIRDIRT = xfs
-diff --git a/include/builddefs.in b/include/builddefs.in
-index df76b2c..7f1f58c 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -48,7 +48,6 @@ PKG_USER	= @pkg_user@
- PKG_GROUP	= @pkg_group@
- PKG_RELEASE	= @pkg_release@
- PKG_VERSION	= @pkg_version@
--PKG_PLATFORM	= @pkg_platform@
- PKG_DISTRIBUTION= @pkg_distribution@
- 
- prefix		= @prefix@
-@@ -135,25 +134,12 @@ CROND_DIR = @crond_dir@
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
- 
--ifeq ($(PKG_PLATFORM),linux)
- PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
- ifeq ($(HAVE_UMODE_T),yes)
- PCFLAGS += -DHAVE_UMODE_T
- endif
- DEPENDFLAGS = -D__linux__
--endif
--ifeq ($(PKG_PLATFORM),gnukfreebsd)
--PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
--endif
--ifeq ($(PKG_PLATFORM),darwin)
--PCFLAGS = $(GCCFLAGS)
--DEPENDFLAGS = -D__APPLE__ -D_DARWIN_FEATURE_64_BIT_INODE
--endif
--ifeq ($(PKG_PLATFORM),freebsd)
--PLDLIBS = -L/usr/local/lib -lintl
--PCFLAGS = -I/usr/local/include $(GCCFLAGS)
--DEPENDFLAGS = -D__FreeBSD__
--endif
++CFILES += $(PKG_PLATFORM).c
++PCFILES = linux.c
++LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
 +
- ifeq ($(HAVE_FLS),yes)
- LCFLAGS+= -DHAVE_FLS
+ ifeq ($(HAVE_GETMNTENT),yes)
+ LCFLAGS += -DHAVE_GETMNTENT
  endif
-diff --git a/include/gnukfreebsd.h b/include/gnukfreebsd.h
-deleted file mode 100644
-index 1db3f4f..0000000
---- a/include/gnukfreebsd.h
-+++ /dev/null
-@@ -1,156 +0,0 @@
--/*
-- * Copyright (c) 2004-2006 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU Lesser General Public License
-- * as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU Lesser General Public License for more details.
-- *
-- * You should have received a copy of the GNU Lesser General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_KFREEBSD_H__
--#define __XFS_KFREEBSD_H__
--
--#include <uuid/uuid.h>
--#include <sys/vfs.h>
--#include <sys/ioctl.h>
--#include <sys/sysmacros.h>
--#include <malloc.h>
--#include <getopt.h>
--#include <endian.h>
--#include <sys/stat.h>
--#include <sys/param.h>
--#include <sys/mount.h>
--#include <ctype.h>
--#include <libgen.h>
--#include <paths.h>
--#include <mntent.h>
--
--#define EFSCORRUPTED	990	/* Filesystem is corrupted */
--#define EFSBADCRC	991	/* Bad CRC detected */
--
--typedef unsigned char		__u8;
--typedef signed char		__s8;
--typedef unsigned short		__u16;
--typedef signed short		__s16;
--typedef unsigned int		__u32;
--typedef signed int		__s32;
--typedef unsigned long long int	__u64;
--typedef signed long long int	__s64;
--
--typedef off_t		xfs_off_t;
--typedef uint64_t	xfs_ino_t;
--typedef uint32_t	xfs_dev_t;
--typedef int64_t		xfs_daddr_t;
--typedef __u32		xfs_nlink_t;
--
--#define HAVE_FID	1
--
--static __inline__ int xfsctl(const char *path, int fd, int cmd, void *p)
--{
--	return ioctl(fd, cmd, p);
--}
--
--static __inline__ int platform_test_xfs_fd(int fd)
--{
--	struct statfs buf;
--	if (fstatfs(fd, &buf) < 0)
--		return 0;
--	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
--}
--
--static __inline__ int platform_test_xfs_path(const char *path)
--{
--	struct statfs buf;
--	if (statfs(path, &buf) < 0)
--		return 0;
--	return strncmp(buf.f_fstypename, "xfs", 4) == 0;
--}
--
--static __inline__ int platform_fstatfs(int fd, struct statfs *buf)
--{
--	return fstatfs(fd, buf);
--}
--
--static __inline__ void platform_getoptreset(void)
--{
--	extern int optind;
--	optind = 0;
--}
--
--static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
--{
--	return uuid_compare(*uu1, *uu2);
--}
--
--static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
--{
--	uuid_unparse(*uu, buffer);
--}
--
--static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
--{
--	return uuid_parse(buffer, *uu);
--}
--
--static __inline__ int platform_uuid_is_null(uuid_t *uu)
--{
--	return uuid_is_null(*uu);
--}
--
--static __inline__ void platform_uuid_generate(uuid_t *uu)
--{
--	uuid_generate(*uu);
--}
--
--static __inline__ void platform_uuid_clear(uuid_t *uu)
--{
--	uuid_clear(*uu);
--}
--
--static __inline__ void platform_uuid_copy(uuid_t *dst, uuid_t *src)
--{
--	uuid_copy(*dst, *src);
--}
--
--static __inline__ int
--platform_discard_blocks(int fd, uint64_t start, uint64_t len)
--{
--	return 0;
--}
--
--/**
-- * Abstraction of mountpoints.
-- */
--struct mntent_cursor {
--	FILE *mtabp;
--};
--
--static inline int platform_mntent_open(struct mntent_cursor * cursor, char *mtab)
--{
--	cursor->mtabp = setmntent(mtab, "r");
--	if (!cursor->mtabp) {
--		fprintf(stderr, "Error: cannot read %s\n", mtab);
--		return 1;
--	}
--	return 0;
--}
--
--static inline struct mntent * platform_mntent_next(struct mntent_cursor * cursor)
--{
--	return getmntent(cursor->mtabp);
--}
--
--static inline void platform_mntent_close(struct mntent_cursor * cursor)
--{
--	endmntent(cursor->mtabp);
--}
--
--#endif	/* __XFS_KFREEBSD_H__ */
-diff --git a/include/xfs.h b/include/xfs.h
-index a40ca0c..1cbe3ad 100644
---- a/include/xfs.h
-+++ b/include/xfs.h
-@@ -35,12 +35,6 @@
- 
- #if defined(__linux__)
- #include <xfs/linux.h>
--#elif defined(__FreeBSD__)
--#include <xfs/freebsd.h>
--#elif defined(__FreeBSD_kernel__)
--#include <xfs/gnukfreebsd.h>
--#elif defined(__APPLE__)
--#include <xfs/darwin.h>
- #else
- # error unknown platform... have fun porting!
- #endif
-diff --git a/io/Makefile b/io/Makefile
-index 8055d4b..a251b28 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -9,10 +9,10 @@ LTCOMMAND = xfs_io
- LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
- HFILES = init.h io.h
- CFILES = init.c \
--	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
--	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
--	pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c sync.c truncate.c \
--	utimes.c
-+	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsmap.c fsync.c \
-+	getrusage.c imap.c inject.c link.c mmap.c open.c parent.c pread.c \
-+	prealloc.c pwrite.c reflink.c resblks.c scrub.c seek.c shutdown.c \
-+	stat.c sync.c truncate.c utimes.c
- 
- LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
-@@ -53,13 +53,6 @@ else
- LSRCFILES += fiemap.c
- endif
- 
--ifeq ($(PKG_PLATFORM),irix)
--LSRCFILES += inject.c resblks.c
--else
--CFILES += inject.c resblks.c
--LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS
--endif
--
- ifeq ($(HAVE_COPY_FILE_RANGE),yes)
- CFILES += copy_file_range.c
- LCFLAGS += -DHAVE_COPY_FILE_RANGE
-@@ -114,13 +107,6 @@ LLDLIBS += $(LIBDEVMAPPER)
- LCFLAGS += -DHAVE_DEVMAPPER
- endif
- 
--# On linux we get fsmap from the system or define it ourselves
--# so include this based on platform type.  If this reverts to only
--# the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
--ifeq ($(PKG_PLATFORM),linux)
--CFILES += fsmap.c
--endif
--
- ifeq ($(HAVE_STATFS_FLAGS),yes)
- LCFLAGS += -DHAVE_STATFS_FLAGS
- endif
-diff --git a/io/io.h b/io/io.h
-index 5cf7c30..4516554 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -116,6 +116,7 @@ extern void		pread_init(void);
- extern void		prealloc_init(void);
- extern void		pwrite_init(void);
- extern void		quit_init(void);
-+extern void		resblks_init(void);
- extern void		seek_init(void);
- extern void		shutdown_init(void);
- extern void		stat_init(void);
-@@ -129,12 +130,6 @@ extern void		fadvise_init(void);
- #define fadvise_init()	do { } while (0)
- #endif
- 
--#ifdef HAVE_RESBLKS
--extern void		resblks_init(void);
--#else
--#define resblks_init()	do { } while (0)
--#endif
--
- #ifdef HAVE_SENDFILE
- extern void		sendfile_init(void);
- #else
-diff --git a/libhandle/Makefile b/libhandle/Makefile
-index fe1a2af..cc4ad1d 100644
---- a/libhandle/Makefile
-+++ b/libhandle/Makefile
-@@ -10,11 +10,7 @@ LT_CURRENT = 1
- LT_REVISION = 3
- LT_AGE = 0
- 
--ifeq ($(PKG_PLATFORM),darwin)
--LTLDFLAGS += -Wl,libhandle.sym
--else
- LTLDFLAGS += -Wl,--version-script,libhandle.sym
--endif
- 
- CFILES = handle.c jdm.c
- LSRCFILES = libhandle.sym
+diff --git a/libfrog/linux.c b/libfrog/linux.c
+new file mode 100644
+index 0000000..0bace3e
+--- /dev/null
++++ b/libfrog/linux.c
+@@ -0,0 +1,265 @@
++/*
++ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include <mntent.h>
++#include <sys/stat.h>
++#include <sys/mount.h>
++#include <sys/ioctl.h>
++#include <sys/sysinfo.h>
++
++#include "libxfs_priv.h"
++#include "xfs_fs.h"
++
++int platform_has_uuid = 1;
++extern char *progname;
++static int max_block_alignment;
++
++#ifndef BLKGETSIZE64
++# define BLKGETSIZE64	_IOR(0x12,114,size_t)
++#endif
++#ifndef BLKBSZSET
++# define BLKBSZSET	_IOW(0x12,113,size_t)
++#endif
++#ifndef BLKSSZGET
++# define BLKSSZGET	_IO(0x12,104)
++#endif
++
++#ifndef RAMDISK_MAJOR
++#define RAMDISK_MAJOR	1	/* ramdisk major number */
++#endif
++
++#define PROC_MOUNTED	"/proc/mounts"
++
++/*
++ * Check if the filesystem is mounted.  Be verbose if asked, and
++ * optionally restrict check to /writable/ mounts (i.e. RO is OK)
++ */
++#define	CHECK_MOUNT_VERBOSE	0x1
++#define	CHECK_MOUNT_WRITABLE	0x2
++
++static int
++platform_check_mount(char *name, char *block, struct stat *s, int flags)
++{
++	FILE		*f;
++	struct stat	st, mst;
++	struct mntent	*mnt;
++	char		mounts[MAXPATHLEN];
++
++	if (!s) {
++		/* If either fails we are not mounted */
++		if (stat(block, &st) < 0)
++			return 0;
++		if ((st.st_mode & S_IFMT) != S_IFBLK)
++			return 0;
++		s = &st;
++	}
++
++	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
++	if ((f = setmntent(mounts, "r")) == NULL) {
++		/* Unexpected failure, warn unconditionally */
++		fprintf(stderr,
++		    _("%s: %s possibly contains a mounted filesystem\n"),
++		    progname, name);
++		return 1;
++	}
++	while ((mnt = getmntent(f)) != NULL) {
++		if (stat(mnt->mnt_dir, &mst) < 0)
++			continue;
++		if (mst.st_dev != s->st_rdev)
++			continue;
++		/* Found our device, is RO OK? */
++		if ((flags & CHECK_MOUNT_WRITABLE) && hasmntopt(mnt, MNTOPT_RO))
++			continue;
++		else
++			break;
++	}
++	endmntent(f);
++
++	/* No mounts contained the condition we were looking for */
++	if (mnt == NULL)
++		return 0;
++
++	if (flags & CHECK_MOUNT_VERBOSE) {
++		if (flags & CHECK_MOUNT_WRITABLE) {
++			fprintf(stderr,
++_("%s: %s contains a mounted and writable filesystem\n"),
++				progname, name);
++		} else {
++			fprintf(stderr,
++_("%s: %s contains a mounted filesystem\n"),
++				progname, name);
++		}
++	}
++	return 1;
++}
++
++int
++platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
++{
++	int flags;
++
++	flags = verbose ? CHECK_MOUNT_VERBOSE : 0;
++	return platform_check_mount(name, block, s, flags);
++}
++
++int
++platform_check_iswritable(char *name, char *block, struct stat *s)
++{
++	int flags;
++
++	/* Writable checks are always verbose */
++	flags = CHECK_MOUNT_WRITABLE | CHECK_MOUNT_VERBOSE;
++	return platform_check_mount(name, block, s, flags);
++}
++
++int
++platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fatal)
++{
++	int error = 0;
++
++	if (major(device) != RAMDISK_MAJOR) {
++		if ((error = ioctl(fd, BLKBSZSET, &blocksize)) < 0) {
++			fprintf(stderr, _("%s: %s - cannot set blocksize "
++					"%d on block device %s: %s\n"),
++				progname, fatal ? "error": "warning",
++				blocksize, path, strerror(errno));
++		}
++	}
++	return error;
++}
++
++void
++platform_flush_device(int fd, dev_t device)
++{
++	struct stat	st;
++	if (major(device) == RAMDISK_MAJOR)
++		return;
++
++	if (fstat(fd, &st) < 0)
++		return;
++
++	if (S_ISREG(st.st_mode))
++		fsync(fd);
++	else
++		ioctl(fd, BLKFLSBUF, 0);
++}
++
++void
++platform_findsizes(char *path, int fd, long long *sz, int *bsz)
++{
++	struct stat	st;
++	uint64_t	size;
++	int		error;
++
++	if (fstat(fd, &st) < 0) {
++		fprintf(stderr, _("%s: "
++			"cannot stat the device file \"%s\": %s\n"),
++			progname, path, strerror(errno));
++		exit(1);
++	}
++
++	if ((st.st_mode & S_IFMT) == S_IFREG) {
++		struct dioattr	da;
++
++		*sz = (long long)(st.st_size >> 9);
++
++		if (ioctl(fd, XFS_IOC_DIOINFO, &da) < 0) {
++			/*
++			 * fall back to BBSIZE; mkfs might fail if there's a
++			 * size mismatch between the image & the host fs...
++			 */
++			*bsz = BBSIZE;
++		} else
++			*bsz = da.d_miniosz;
++
++		if (*bsz > max_block_alignment)
++			max_block_alignment = *bsz;
++		return;
++	}
++
++	error = ioctl(fd, BLKGETSIZE64, &size);
++	if (error >= 0) {
++		/* BLKGETSIZE64 returns size in bytes not 512-byte blocks */
++		*sz = (long long)(size >> 9);
++	} else {
++		/* If BLKGETSIZE64 fails, try BLKGETSIZE */
++		unsigned long tmpsize;
++
++		error = ioctl(fd, BLKGETSIZE, &tmpsize);
++		if (error < 0) {
++			fprintf(stderr, _("%s: can't determine device size\n"),
++				progname);
++			exit(1);
++		}
++		*sz = (long long)tmpsize;
++	}
++
++	if (ioctl(fd, BLKSSZGET, bsz) < 0) {
++		fprintf(stderr, _("%s: warning - cannot get sector size "
++				"from block device %s: %s\n"),
++			progname, path, strerror(errno));
++		*bsz = BBSIZE;
++	}
++	if (*bsz > max_block_alignment)
++		max_block_alignment = *bsz;
++}
++
++char *
++platform_findrawpath(char *path)
++{
++	return path;
++}
++
++char *
++platform_findblockpath(char *path)
++{
++	return path;
++}
++
++int
++platform_direct_blockdev(void)
++{
++	return 1;
++}
++
++int
++platform_align_blockdev(void)
++{
++	if (!max_block_alignment)
++		return getpagesize();
++	return max_block_alignment;
++}
++
++int
++platform_nproc(void)
++{
++	return sysconf(_SC_NPROCESSORS_ONLN);
++}
++
++unsigned long
++platform_physmem(void)
++{
++	struct sysinfo  si;
++
++	if (sysinfo(&si) < 0) {
++		fprintf(stderr, _("%s: can't determine memory size\n"),
++			progname);
++		exit(1);
++	}
++	return (si.totalram >> 10) * si.mem_unit;	/* kilobytes */
++}
 diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 00df418..48f66d4 100644
+index 00df418..7cde18d 100644
 --- a/libxfs/Makefile
 +++ b/libxfs/Makefile
-@@ -58,6 +58,7 @@ CFILES = cache.c \
- 	defer_item.c \
- 	init.c \
- 	kmem.c \
-+	linux.c \
- 	logitem.c \
- 	rdwr.c \
- 	trans.c \
-@@ -97,9 +98,6 @@ CFILES = cache.c \
+@@ -97,9 +97,6 @@ CFILES = cache.c \
  	xfs_symlink_remote.c \
  	xfs_trans_resv.c
  
@@ -393,44 +334,14 @@ index 00df418..48f66d4 100644
  LSRCFILES += gen_crc32table.c
  
  #
-diff --git a/m4/package_globals.m4 b/m4/package_globals.m4
-index e469671..892e3bd 100644
---- a/m4/package_globals.m4
-+++ b/m4/package_globals.m4
-@@ -40,8 +40,4 @@ AC_DEFUN([AC_PACKAGE_GLOBALS],
-     pkg_distribution=`uname -s`
-     test -z "$DISTRIBUTION" || pkg_distribution="$DISTRIBUTION"
-     AC_SUBST(pkg_distribution)
--
--    pkg_platform=`uname -s | tr 'A-Z' 'a-z' | tr -d / | sed -e 's/irix64/irix/'`
--    test -z "$PLATFORM" || pkg_platform="$PLATFORM"
--    AC_SUBST(pkg_platform)
-   ])
-diff --git a/quota/Makefile b/quota/Makefile
-index 120af2e..62cc8a0 100644
---- a/quota/Makefile
-+++ b/quota/Makefile
-@@ -8,11 +8,7 @@ include $(TOPDIR)/include/builddefs
- LTCOMMAND = xfs_quota
- HFILES = init.h quota.h
- CFILES = init.c util.c \
--	edit.c free.c path.c project.c quot.c quota.c report.c state.c
--
--CFILES += $(PKG_PLATFORM).c
--PCFILES = darwin.c freebsd.c irix.c linux.c
--LSRCFILES = $(shell echo $(PCFILES) | sed -e "s/$(PKG_PLATFORM).c//g")
-+	edit.c free.c linux.c path.c project.c quot.c quota.c report.c state.c
- 
- LLDLIBS = $(LIBXCMD) $(LIBFROG)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
-diff --git a/quota/darwin.c b/quota/darwin.c
+diff --git a/libxfs/linux.c b/libxfs/linux.c
 deleted file mode 100644
-index fb81f7f..0000000
---- a/quota/darwin.c
+index 0bace3e..0000000
+--- a/libxfs/linux.c
 +++ /dev/null
-@@ -1,33 +0,0 @@
+@@ -1,265 +0,0 @@
 -/*
-- * Copyright (c) 2005 Silicon Graphics, Inc.
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
 - * All Rights Reserved.
 - *
 - * This program is free software; you can redistribute it and/or
@@ -447,171 +358,250 @@ index fb81f7f..0000000
 - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
 -
--#include "quota.h"
--#include <sys/quota.h>
+-#include <mntent.h>
+-#include <sys/stat.h>
+-#include <sys/mount.h>
+-#include <sys/ioctl.h>
+-#include <sys/sysinfo.h>
 -
--int
--xfsquotactl(
--	int		command,
--	const char	*device,
--	uint		type,
--	uint		id,
--	void		*addr)
--{
--	/* return quotactl(device, QCMD(command, type), id, addr); */
--	errno = -ENOSYS;
--	return -1;
--}
-diff --git a/quota/freebsd.c b/quota/freebsd.c
-deleted file mode 100644
-index 7770b3c..0000000
---- a/quota/freebsd.c
-+++ /dev/null
-@@ -1,31 +0,0 @@
+-#include "libxfs_priv.h"
+-#include "xfs_fs.h"
+-
+-int platform_has_uuid = 1;
+-extern char *progname;
+-static int max_block_alignment;
+-
+-#ifndef BLKGETSIZE64
+-# define BLKGETSIZE64	_IOR(0x12,114,size_t)
+-#endif
+-#ifndef BLKBSZSET
+-# define BLKBSZSET	_IOW(0x12,113,size_t)
+-#endif
+-#ifndef BLKSSZGET
+-# define BLKSSZGET	_IO(0x12,104)
+-#endif
+-
+-#ifndef RAMDISK_MAJOR
+-#define RAMDISK_MAJOR	1	/* ramdisk major number */
+-#endif
+-
+-#define PROC_MOUNTED	"/proc/mounts"
+-
 -/*
-- * Copyright (c) 2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- * Check if the filesystem is mounted.  Be verbose if asked, and
+- * optionally restrict check to /writable/ mounts (i.e. RO is OK)
 - */
--
--#include "quota.h"
--
--int
--xfsquotactl(
--	int		command,
--	const char	*device,
--	uint		type,
--	uint		id,
--	void		*addr)
--{
--	errno = -ENOSYS;
--	return -1;
--}
-diff --git a/quota/irix.c b/quota/irix.c
-deleted file mode 100644
-index bbbcd18..0000000
---- a/quota/irix.c
-+++ /dev/null
-@@ -1,66 +0,0 @@
--/*
-- * Copyright (c) 2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--
--#include "quota.h"
--#include <sys/quota.h>
+-#define	CHECK_MOUNT_VERBOSE	0x1
+-#define	CHECK_MOUNT_WRITABLE	0x2
 -
 -static int
--xcommand_to_qcommand(
--	uint		command,
--	uint		type)
+-platform_check_mount(char *name, char *block, struct stat *s, int flags)
 -{
--	switch (command) {
--	case XFS_QUOTAON:
--		return Q_XQUOTAON;
--	case XFS_QUOTAOFF:
--		return Q_XQUOTAOFF;
--	case XFS_GETQUOTA:
--		if (type == XFS_GROUP_QUOTA)
--			return Q_XGETGQUOTA;
--		if (type == XFS_PROJ_QUOTA)
--			return Q_XGETPQUOTA;
--		return Q_XGETQUOTA;
--	case XFS_SETQLIM:
--		if (type == XFS_GROUP_QUOTA)
--			return Q_XSETGQLIM;
--		if (type == XFS_PROJ_QUOTA)
--			return Q_XSETPQLIM;
--		return Q_XSETQLIM;
--	case XFS_GETQSTAT:
--		return Q_XGETQSTAT;
--	case XFS_QUOTARM:
--		return Q_XQUOTARM;
--	case XFS_QSYNC:
--		return Q_SYNC;
+-	FILE		*f;
+-	struct stat	st, mst;
+-	struct mntent	*mnt;
+-	char		mounts[MAXPATHLEN];
+-
+-	if (!s) {
+-		/* If either fails we are not mounted */
+-		if (stat(block, &st) < 0)
+-			return 0;
+-		if ((st.st_mode & S_IFMT) != S_IFBLK)
+-			return 0;
+-		s = &st;
 -	}
--	return 0;
+-
+-	strcpy(mounts, (!access(PROC_MOUNTED, R_OK)) ? PROC_MOUNTED : MOUNTED);
+-	if ((f = setmntent(mounts, "r")) == NULL) {
+-		/* Unexpected failure, warn unconditionally */
+-		fprintf(stderr,
+-		    _("%s: %s possibly contains a mounted filesystem\n"),
+-		    progname, name);
+-		return 1;
+-	}
+-	while ((mnt = getmntent(f)) != NULL) {
+-		if (stat(mnt->mnt_dir, &mst) < 0)
+-			continue;
+-		if (mst.st_dev != s->st_rdev)
+-			continue;
+-		/* Found our device, is RO OK? */
+-		if ((flags & CHECK_MOUNT_WRITABLE) && hasmntopt(mnt, MNTOPT_RO))
+-			continue;
+-		else
+-			break;
+-	}
+-	endmntent(f);
+-
+-	/* No mounts contained the condition we were looking for */
+-	if (mnt == NULL)
+-		return 0;
+-
+-	if (flags & CHECK_MOUNT_VERBOSE) {
+-		if (flags & CHECK_MOUNT_WRITABLE) {
+-			fprintf(stderr,
+-_("%s: %s contains a mounted and writable filesystem\n"),
+-				progname, name);
+-		} else {
+-			fprintf(stderr,
+-_("%s: %s contains a mounted filesystem\n"),
+-				progname, name);
+-		}
+-	}
+-	return 1;
 -}
 -
 -int
--xfsquotactl(
--	int		command,
--	const char	*device,
--	uint		type,
--	uint		id,
--	void		*addr)
+-platform_check_ismounted(char *name, char *block, struct stat *s, int verbose)
 -{
--	int		qcommand;
+-	int flags;
 -
--	qcommand = xcommand_to_qcommand(command, type);
--	return quotactl(qcommand, (char *)device, id, addr);
+-	flags = verbose ? CHECK_MOUNT_VERBOSE : 0;
+-	return platform_check_mount(name, block, s, flags);
 -}
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 0632794..94c6313 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -8,9 +8,9 @@ include $(TOPDIR)/include/builddefs
- # On linux we get fsmap from the system or define it ourselves
- # so include this based on platform type.  If this reverts to only
- # the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
--SCRUB_PREREQS=$(PKG_PLATFORM)$(HAVE_OPENAT)$(HAVE_FSTATAT)
-+SCRUB_PREREQS=$(HAVE_OPENAT)$(HAVE_FSTATAT)
- 
--ifeq ($(SCRUB_PREREQS),linuxyesyes)
-+ifeq ($(SCRUB_PREREQS),yesyes)
- LTCOMMAND = xfs_scrub
- INSTALL_SCRUB = install-scrub
- XFS_SCRUB_ALL_PROG = xfs_scrub_all
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index 8b31030..a137efc 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
- 
- LTCOMMAND = xfs_spaceman
- HFILES = init.h space.h
--CFILES = init.c file.c prealloc.c trim.c
-+CFILES = freesp.c init.c file.c prealloc.c trim.c
- 
- LLDLIBS = $(LIBXCMD) $(LIBFROG)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
-@@ -21,13 +21,6 @@ ifeq ($(ENABLE_EDITLINE),yes)
- LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
- endif
- 
--# On linux we get fsmap from the system or define it ourselves
--# so include this based on platform type.  If this reverts to only
--# the autoconf check w/o local definition, change to testing HAVE_GETFSMAP
--ifeq ($(PKG_PLATFORM),linux)
--CFILES += freesp.c
--endif
 -
- default: depend $(LTCOMMAND)
- 
- include $(BUILDRULES)
-
+-int
+-platform_check_iswritable(char *name, char *block, struct stat *s)
+-{
+-	int flags;
+-
+-	/* Writable checks are always verbose */
+-	flags = CHECK_MOUNT_WRITABLE | CHECK_MOUNT_VERBOSE;
+-	return platform_check_mount(name, block, s, flags);
+-}
+-
+-int
+-platform_set_blocksize(int fd, char *path, dev_t device, int blocksize, int fatal)
+-{
+-	int error = 0;
+-
+-	if (major(device) != RAMDISK_MAJOR) {
+-		if ((error = ioctl(fd, BLKBSZSET, &blocksize)) < 0) {
+-			fprintf(stderr, _("%s: %s - cannot set blocksize "
+-					"%d on block device %s: %s\n"),
+-				progname, fatal ? "error": "warning",
+-				blocksize, path, strerror(errno));
+-		}
+-	}
+-	return error;
+-}
+-
+-void
+-platform_flush_device(int fd, dev_t device)
+-{
+-	struct stat	st;
+-	if (major(device) == RAMDISK_MAJOR)
+-		return;
+-
+-	if (fstat(fd, &st) < 0)
+-		return;
+-
+-	if (S_ISREG(st.st_mode))
+-		fsync(fd);
+-	else
+-		ioctl(fd, BLKFLSBUF, 0);
+-}
+-
+-void
+-platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+-{
+-	struct stat	st;
+-	uint64_t	size;
+-	int		error;
+-
+-	if (fstat(fd, &st) < 0) {
+-		fprintf(stderr, _("%s: "
+-			"cannot stat the device file \"%s\": %s\n"),
+-			progname, path, strerror(errno));
+-		exit(1);
+-	}
+-
+-	if ((st.st_mode & S_IFMT) == S_IFREG) {
+-		struct dioattr	da;
+-
+-		*sz = (long long)(st.st_size >> 9);
+-
+-		if (ioctl(fd, XFS_IOC_DIOINFO, &da) < 0) {
+-			/*
+-			 * fall back to BBSIZE; mkfs might fail if there's a
+-			 * size mismatch between the image & the host fs...
+-			 */
+-			*bsz = BBSIZE;
+-		} else
+-			*bsz = da.d_miniosz;
+-
+-		if (*bsz > max_block_alignment)
+-			max_block_alignment = *bsz;
+-		return;
+-	}
+-
+-	error = ioctl(fd, BLKGETSIZE64, &size);
+-	if (error >= 0) {
+-		/* BLKGETSIZE64 returns size in bytes not 512-byte blocks */
+-		*sz = (long long)(size >> 9);
+-	} else {
+-		/* If BLKGETSIZE64 fails, try BLKGETSIZE */
+-		unsigned long tmpsize;
+-
+-		error = ioctl(fd, BLKGETSIZE, &tmpsize);
+-		if (error < 0) {
+-			fprintf(stderr, _("%s: can't determine device size\n"),
+-				progname);
+-			exit(1);
+-		}
+-		*sz = (long long)tmpsize;
+-	}
+-
+-	if (ioctl(fd, BLKSSZGET, bsz) < 0) {
+-		fprintf(stderr, _("%s: warning - cannot get sector size "
+-				"from block device %s: %s\n"),
+-			progname, path, strerror(errno));
+-		*bsz = BBSIZE;
+-	}
+-	if (*bsz > max_block_alignment)
+-		max_block_alignment = *bsz;
+-}
+-
+-char *
+-platform_findrawpath(char *path)
+-{
+-	return path;
+-}
+-
+-char *
+-platform_findblockpath(char *path)
+-{
+-	return path;
+-}
+-
+-int
+-platform_direct_blockdev(void)
+-{
+-	return 1;
+-}
+-
+-int
+-platform_align_blockdev(void)
+-{
+-	if (!max_block_alignment)
+-		return getpagesize();
+-	return max_block_alignment;
+-}
+-
+-int
+-platform_nproc(void)
+-{
+-	return sysconf(_SC_NPROCESSORS_ONLN);
+-}
+-
+-unsigned long
+-platform_physmem(void)
+-{
+-	struct sysinfo  si;
+-
+-	if (sysinfo(&si) < 0) {
+-		fprintf(stderr, _("%s: can't determine memory size\n"),
+-			progname);
+-		exit(1);
+-	}
+-	return (si.totalram >> 10) * si.mem_unit;	/* kilobytes */
+-}
