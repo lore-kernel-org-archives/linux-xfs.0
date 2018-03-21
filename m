@@ -1,102 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58686 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751671AbeCUQRw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 12:17:52 -0400
-Date: Wed, 21 Mar 2018 09:17:45 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:37004 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752970AbeCUQmj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 12:42:39 -0400
+Date: Wed, 21 Mar 2018 09:41:29 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: test agfl reset on bad list wrapping
-Message-ID: <20180321161745.GB4810@magnolia>
-References: <20180321031746.GF4866@magnolia>
- <20180321144532.GU30836@localhost.localdomain>
+Subject: Re: [PATCH] xfs: Change URL for the project in xfs.txt
+Message-ID: <20180321164129.GA4818@magnolia>
+References: <20180302133013.9744-1-standby24x7@gmail.com>
+ <20180302172401.GT19312@magnolia>
+ <20180302215731.GT30854@dastard>
+ <27d9f522-fa75-6766-3ca6-79f99522e861@sandeen.net>
+ <20180302224310.GV30854@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180321144532.GU30836@localhost.localdomain>
+In-Reply-To: <20180302224310.GV30854@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, fstests <fstests@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Masanari Iida <standby24x7@gmail.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org
 
-On Wed, Mar 21, 2018 at 10:45:32PM +0800, Eryu Guan wrote:
-> On Tue, Mar 20, 2018 at 08:17:46PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Mar 03, 2018 at 09:43:10AM +1100, Dave Chinner wrote:
+> On Fri, Mar 02, 2018 at 04:08:24PM -0600, Eric Sandeen wrote:
 > > 
-> > From the kernel patch that this test examines ("xfs: detect agfl count
-> > corruption and reset agfl"):
 > > 
-> > "The struct xfs_agfl v5 header was originally introduced with
-> > unexpected padding that caused the AGFL to operate with one less
-> > slot than intended. The header has since been packed, but the fix
-> > left an incompatibility for users who upgrade from an old kernel
-> > with the unpacked header to a newer kernel with the packed header
-> > while the AGFL happens to wrap around the end. The newer kernel
-> > recognizes one extra slot at the physical end of the AGFL that the
-> > previous kernel did not. The new kernel will eventually attempt to
-> > allocate a block from that slot, which contains invalid data, and
-> > cause a crash.
+> > On 3/2/18 3:57 PM, Dave Chinner wrote:
+> > > On Fri, Mar 02, 2018 at 09:24:01AM -0800, Darrick J. Wong wrote:
+> > >> On Fri, Mar 02, 2018 at 10:30:13PM +0900, Masanari Iida wrote:
+> > >>> The oss.sgi.com doesn't exist any more.
+> > >>> Change it to current project URL, https://xfs.wiki.kernel.org/
+> > >>>
+> > >>> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> > >>> ---
+> > >>>  Documentation/filesystems/xfs.txt | 2 +-
+> > >>>  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >>>
+> > >>> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> > >>> index 3b9b5c149f32..4d9ff0a7f8e1 100644
+> > >>> --- a/Documentation/filesystems/xfs.txt
+> > >>> +++ b/Documentation/filesystems/xfs.txt
+> > >>> @@ -9,7 +9,7 @@ variable block sizes, is extent based, and makes extensive use of
+> > >>>  Btrees (directories, extents, free space) to aid both performance
+> > >>>  and scalability.
+> > >>>  
+> > >>> -Refer to the documentation at http://oss.sgi.com/projects/xfs/
+> > >>> +Refer to the documentation at https://xfs.wiki.kernel.org/
+> > > 
+> > > Did I miss a memo?
 > > 
-> > "This condition can be detected by comparing the active range of the
-> > AGFL to the count. While this detects a padding mismatch, it can
-> > also trigger false positives for unrelated flcount corruption. Since
-> > we cannot distinguish a size mismatch due to padding from unrelated
-> > corruption, we can't trust the AGFL enough to simply repopulate the
-> > empty slot.
+> > About which part, the loss of oss.sgi or the addition of the kernel.org wiki?
 > > 
-> > "Instead, avoid unnecessarily complex detection logic and and use a
-> > solution that can handle any form of flcount corruption that slips
-> > through read verifiers: distrust the entire AGFL and reset it to an
-> > empty state. Any valid blocks within the AGFL are intentionally
-> > leaked. This requires xfs_repair to rectify (which was already
-> > necessary based on the state the AGFL was found in). The reset
-> > mitigates the side effect of the padding mismatch problem from a
-> > filesystem crash to a free space accounting inconsistency."
-> > 
-> > This test exercises the reset code by mutating a fresh filesystem to
-> > contain an agfl with various list configurations of correctly wrapped,
-> > incorrectly wrapped, not wrapped, and actually corrupt free lists; then
-> > checks the success of the reset operation by fragmenting the free space
-> > btrees to exercise the agfl.  Kernels without this reset fix will shut
-> > down the filesystem with corruption errors.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/rc         |    6 +
-> >  tests/xfs/709     |  254 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/709.out |   13 +++
-> >  tests/xfs/group   |    1 
-> >  4 files changed, 274 insertions(+)
-> >  create mode 100755 tests/xfs/709
-> >  create mode 100644 tests/xfs/709.out
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 2c29d55..8f048f1 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3440,6 +3440,12 @@ _get_device_size()
-> >  	grep `_short_dev $1` /proc/partitions | awk '{print $3}'
-> >  }
-> >  
-> > +# check dmesg log for a specific string
-> > +_check_dmesg_for() {
-> > +	dmesg | tac | sed -ne "0,\#run fstests $seqnum at $date_time#p" | \
-> > +		tac | egrep -q "$1"
+> > The kernel.org wiki is pretty bare though.  OTOH xfs.org is a bit less
+> > official.  We really need to resolve this issue.
 > 
-> Hmm, searching dmesg log for a specific test this way requires a
-> writable /dev/kmsg, we have checked it in 'check', otherwise we won't
-> write such logs to dmesg. Need a _require_check_dmesg or something?
-> 
-> And it seems this "dmesg | tac ... | tac" sequence can be factored out
-> to a helper and reused in _check_dmesg too.
+> Moving everything to kernel.org wiki. As I mentioned on IRC, I'd
+> much prefer we move away from wiki's to something we can edit
+> locally, review via email, has proper revision control and a
+> "publish" mechanism that pushes built documentation out to the
+> public website.
 
-Ok.
+Makes sense, it's sort of annoying to have to build the pdfs from
+documentation repo and kup them to k.org manually.  In the meantime I'd
+rather have a scribble-me-elmo wiki over a dead url.
+
+Also afaik the only people who actually have write access to that wiki
+are Luis, Eric, and me, so hopefully we won't have to deal with
+vandalism in the interim.
+
+I wonder if we could just make the existing dokiwiki use
+xfs-documentation.git as its backend and control the publishing that
+way...?
 
 --D
 
-> Thanks,
-> Eryu
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
