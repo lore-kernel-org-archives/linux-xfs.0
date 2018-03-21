@@ -1,45 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:41304 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751687AbeCUDk6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:40:58 -0400
-Subject: [PATCH 12/14] xfs_scrub: disable private /tmp for scrub service
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Mar 2018 20:40:54 -0700
-Message-ID: <152160365430.8288.18072489901853791592.stgit@magnolia>
-In-Reply-To: <152160358015.8288.2700156777231657519.stgit@magnolia>
-References: <152160358015.8288.2700156777231657519.stgit@magnolia>
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:37758 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751666AbeCUO1W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 10:27:22 -0400
+Date: Wed, 21 Mar 2018 22:27:15 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 3/3] fstests: generic: Check the fs after each FUA writes
+Message-ID: <20180321142715.GT30836@localhost.localdomain>
+References: <20180321080125.30404-1-wqu@suse.com>
+ <20180321080125.30404-3-wqu@suse.com>
+ <CAOQ4uxidqwrKvVZSPysY_Rz6=pmBNr4G6F=oA+1Qn+=NEYn85g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxidqwrKvVZSPysY_Rz6=pmBNr4G6F=oA+1Qn+=NEYn85g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Qu Wenruo <wqu@suse.com>, Linux Btrfs <linux-btrfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 21, 2018 at 02:22:29PM +0200, Amir Goldstein wrote:
+> > +
+> > +_log_writes_mount
+> > +$FSSTRESS_PROG $fsstress_args > /dev/null 2>&1
+> 
+> You should run fsstress with run_check() so output will go to $seqres.full
+> this way if you are able to catch a bug, you can take the random seed
+> from fsstress output and repeat the same event sequence, which
+> doesn't guaranty, but can increase the chances of reproducing the bug.
 
-Don't make /tmp private when invoking xfs_scrub as a service, because
-/tmp might contain or itself be an xfs filesystem mountpoint.
+I suggested dropping run_check, as I don't think we care about the
+fsstress return value here (and I always try to avoid new run_check
+usage), but I agree that it might be useful to save the fsstress output
+to $seqres.full.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/xfs_scrub@.service.in |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-index c14f813..9e6206a 100644
---- a/scrub/xfs_scrub@.service.in
-+++ b/scrub/xfs_scrub@.service.in
-@@ -9,7 +9,7 @@ WorkingDirectory=%I
- PrivateNetwork=true
- ProtectSystem=full
- ProtectHome=read-only
--PrivateTmp=yes
-+PrivateTmp=no
- AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
- NoNewPrivileges=yes
- User=nobody
-
+Thanks,
+Eryu
