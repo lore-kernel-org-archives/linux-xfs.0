@@ -1,90 +1,270 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46716 "EHLO mx2.suse.de"
+Received: from mga01.intel.com ([192.55.52.88]:30738 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753342AbeCVOgE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 10:36:04 -0400
-Date: Thu, 22 Mar 2018 15:35:59 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Message-ID: <20180322143559.pmwwwz4gic4wkq7r@quack2.suse.cz>
-References: <20180301014144.28892-1-david@fromorbit.com>
- <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
- <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
- <20180313051037.GC18129@dastard>
- <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180313161242.GA11168@lst.de>
- <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
- <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
+        id S1754175AbeCUXGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Mar 2018 19:06:21 -0400
+Subject: [PATCH v7 01/14] dax: store pfns in the radix
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 21 Mar 2018 15:57:15 -0700
+Message-ID: <152167303564.5268.1688659101150820042.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Robert Dorr <rdorr@microsoft.com>
-Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
+To: linux-nvdimm@lists.01.org
+Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz
 
-On Mon 19-03-18 16:14:16, Robert Dorr wrote:
-> Awesome news on the spin.   
-> 
-> Are you going to be able to make changes to EXT4 to accommodate REQ_FUA
-> without generic_write_flush to improve performance like was done for xfs?
+In preparation for examining the busy state of dax pages in the truncate
+path, switch from sectors to pfns in the radix.
 
-I'm currently on a sick leave so I'm slow on replies. Sorry. I don't see a
-reason why ext4 could not have the same optimization as XFS for that case
-of direct IO. However I'm not sure when I get to implementing that.
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/dax/super.c |   15 +++++++--
+ fs/dax.c            |   83 +++++++++++++++++++--------------------------------
+ 2 files changed, 43 insertions(+), 55 deletions(-)
 
-								Honza
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index ecdc292aa4e4..2b2332b605e4 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -124,10 +124,19 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
+ 		return len < 0 ? len : -EIO;
+ 	}
+ 
+-	if ((IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn))
+-			|| pfn_t_devmap(pfn))
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn)) {
++		/*
++		 * An arch that has enabled the pmem api should also
++		 * have its drivers support pfn_t_devmap()
++		 *
++		 * This is a developer warning and should not trigger in
++		 * production. dax_flush() will crash since it depends
++		 * on being able to do (page_address(pfn_to_page())).
++		 */
++		WARN_ON(IS_ENABLED(CONFIG_ARCH_HAS_PMEM_API));
++	} else if (pfn_t_devmap(pfn)) {
+ 		/* pass */;
+-	else {
++	} else {
+ 		pr_debug("VFS (%s): error: dax support not enabled\n",
+ 				sb->s_id);
+ 		return -EOPNOTSUPP;
+diff --git a/fs/dax.c b/fs/dax.c
+index 0276df90e86c..b646a46e4d12 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -73,16 +73,15 @@ fs_initcall(init_dax_wait_table);
+ #define RADIX_DAX_ZERO_PAGE	(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
+ #define RADIX_DAX_EMPTY		(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
+ 
+-static unsigned long dax_radix_sector(void *entry)
++static unsigned long dax_radix_pfn(void *entry)
+ {
+ 	return (unsigned long)entry >> RADIX_DAX_SHIFT;
+ }
+ 
+-static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
++static void *dax_radix_locked_entry(unsigned long pfn, unsigned long flags)
+ {
+ 	return (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | flags |
+-			((unsigned long)sector << RADIX_DAX_SHIFT) |
+-			RADIX_DAX_ENTRY_LOCK);
++			(pfn << RADIX_DAX_SHIFT) | RADIX_DAX_ENTRY_LOCK);
+ }
+ 
+ static unsigned int dax_radix_order(void *entry)
+@@ -526,12 +525,13 @@ static int copy_user_dax(struct block_device *bdev, struct dax_device *dax_dev,
+  */
+ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 				      struct vm_fault *vmf,
+-				      void *entry, sector_t sector,
++				      void *entry, pfn_t pfn_t,
+ 				      unsigned long flags, bool dirty)
+ {
+ 	struct radix_tree_root *page_tree = &mapping->page_tree;
+-	void *new_entry;
++	unsigned long pfn = pfn_t_to_pfn(pfn_t);
+ 	pgoff_t index = vmf->pgoff;
++	void *new_entry;
+ 
+ 	if (dirty)
+ 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+@@ -546,7 +546,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+ 	}
+ 
+ 	spin_lock_irq(&mapping->tree_lock);
+-	new_entry = dax_radix_locked_entry(sector, flags);
++	new_entry = dax_radix_locked_entry(pfn, flags);
+ 
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+ 		/*
+@@ -657,17 +657,14 @@ static void dax_mapping_entry_mkclean(struct address_space *mapping,
+ 	i_mmap_unlock_read(mapping);
+ }
+ 
+-static int dax_writeback_one(struct block_device *bdev,
+-		struct dax_device *dax_dev, struct address_space *mapping,
+-		pgoff_t index, void *entry)
++static int dax_writeback_one(struct dax_device *dax_dev,
++		struct address_space *mapping, pgoff_t index, void *entry)
+ {
+ 	struct radix_tree_root *page_tree = &mapping->page_tree;
+-	void *entry2, **slot, *kaddr;
+-	long ret = 0, id;
+-	sector_t sector;
+-	pgoff_t pgoff;
++	void *entry2, **slot;
++	unsigned long pfn;
++	long ret = 0;
+ 	size_t size;
+-	pfn_t pfn;
+ 
+ 	/*
+ 	 * A page got tagged dirty in DAX mapping? Something is seriously
+@@ -683,10 +680,10 @@ static int dax_writeback_one(struct block_device *bdev,
+ 		goto put_unlocked;
+ 	/*
+ 	 * Entry got reallocated elsewhere? No need to writeback. We have to
+-	 * compare sectors as we must not bail out due to difference in lockbit
++	 * compare pfns as we must not bail out due to difference in lockbit
+ 	 * or entry type.
+ 	 */
+-	if (dax_radix_sector(entry2) != dax_radix_sector(entry))
++	if (dax_radix_pfn(entry2) != dax_radix_pfn(entry))
+ 		goto put_unlocked;
+ 	if (WARN_ON_ONCE(dax_is_empty_entry(entry) ||
+ 				dax_is_zero_entry(entry))) {
+@@ -712,33 +709,15 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	/*
+ 	 * Even if dax_writeback_mapping_range() was given a wbc->range_start
+ 	 * in the middle of a PMD, the 'index' we are given will be aligned to
+-	 * the start index of the PMD, as will the sector we pull from
+-	 * 'entry'.  This allows us to flush for PMD_SIZE and not have to
+-	 * worry about partial PMD writebacks.
++	 * the start index of the PMD, as will the pfn we pull from 'entry'.
++	 * This allows us to flush for PMD_SIZE and not have to worry about
++	 * partial PMD writebacks.
+ 	 */
+-	sector = dax_radix_sector(entry);
++	pfn = dax_radix_pfn(entry);
+ 	size = PAGE_SIZE << dax_radix_order(entry);
+ 
+-	id = dax_read_lock();
+-	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
+-	if (ret)
+-		goto dax_unlock;
+-
+-	/*
+-	 * dax_direct_access() may sleep, so cannot hold tree_lock over
+-	 * its invocation.
+-	 */
+-	ret = dax_direct_access(dax_dev, pgoff, size / PAGE_SIZE, &kaddr, &pfn);
+-	if (ret < 0)
+-		goto dax_unlock;
+-
+-	if (WARN_ON_ONCE(ret < size / PAGE_SIZE)) {
+-		ret = -EIO;
+-		goto dax_unlock;
+-	}
+-
+-	dax_mapping_entry_mkclean(mapping, index, pfn_t_to_pfn(pfn));
+-	dax_flush(dax_dev, kaddr, size);
++	dax_mapping_entry_mkclean(mapping, index, pfn);
++	dax_flush(dax_dev, page_address(pfn_to_page(pfn)), size);
+ 	/*
+ 	 * After we have flushed the cache, we can clear the dirty tag. There
+ 	 * cannot be new dirty data in the pfn after the flush has completed as
+@@ -749,8 +728,6 @@ static int dax_writeback_one(struct block_device *bdev,
+ 	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_DIRTY);
+ 	spin_unlock_irq(&mapping->tree_lock);
+ 	trace_dax_writeback_one(mapping->host, index, size >> PAGE_SHIFT);
+- dax_unlock:
+-	dax_read_unlock(id);
+ 	put_locked_mapping_entry(mapping, index);
+ 	return ret;
+ 
+@@ -808,8 +785,8 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 				break;
+ 			}
+ 
+-			ret = dax_writeback_one(bdev, dax_dev, mapping,
+-					indices[i], pvec.pages[i]);
++			ret = dax_writeback_one(dax_dev, mapping, indices[i],
++					pvec.pages[i]);
+ 			if (ret < 0) {
+ 				mapping_set_error(mapping, ret);
+ 				goto out;
+@@ -877,6 +854,7 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
+ 	int ret = VM_FAULT_NOPAGE;
+ 	struct page *zero_page;
+ 	void *entry2;
++	pfn_t pfn;
+ 
+ 	zero_page = ZERO_PAGE(0);
+ 	if (unlikely(!zero_page)) {
+@@ -884,14 +862,15 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
+ 		goto out;
+ 	}
+ 
+-	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, 0,
++	pfn = page_to_pfn_t(zero_page);
++	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
+ 			RADIX_DAX_ZERO_PAGE, false);
+ 	if (IS_ERR(entry2)) {
+ 		ret = VM_FAULT_SIGBUS;
+ 		goto out;
+ 	}
+ 
+-	vm_insert_mixed(vmf->vma, vaddr, page_to_pfn_t(zero_page));
++	vm_insert_mixed(vmf->vma, vaddr, pfn);
+ out:
+ 	trace_dax_load_hole(inode, vmf, ret);
+ 	return ret;
+@@ -1200,8 +1179,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 		if (error < 0)
+ 			goto error_finish_iomap;
+ 
+-		entry = dax_insert_mapping_entry(mapping, vmf, entry,
+-						 dax_iomap_sector(&iomap, pos),
++		entry = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
+ 						 0, write && !sync);
+ 		if (IS_ERR(entry)) {
+ 			error = PTR_ERR(entry);
+@@ -1280,13 +1258,15 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
+ 	void *ret = NULL;
+ 	spinlock_t *ptl;
+ 	pmd_t pmd_entry;
++	pfn_t pfn;
+ 
+ 	zero_page = mm_get_huge_zero_page(vmf->vma->vm_mm);
+ 
+ 	if (unlikely(!zero_page))
+ 		goto fallback;
+ 
+-	ret = dax_insert_mapping_entry(mapping, vmf, entry, 0,
++	pfn = page_to_pfn_t(zero_page);
++	ret = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
+ 			RADIX_DAX_PMD | RADIX_DAX_ZERO_PAGE, false);
+ 	if (IS_ERR(ret))
+ 		goto fallback;
+@@ -1409,8 +1389,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ 		if (error < 0)
+ 			goto finish_iomap;
+ 
+-		entry = dax_insert_mapping_entry(mapping, vmf, entry,
+-						dax_iomap_sector(&iomap, pos),
++		entry = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
+ 						RADIX_DAX_PMD, write && !sync);
+ 		if (IS_ERR(entry))
+ 			goto finish_iomap;
 
-> -----Original Message-----
-> From: Jan Kara <jack@suse.cz> 
-> Sent: Monday, March 19, 2018 11:07 AM
-> To: Robert Dorr <rdorr@microsoft.com>
-> Cc: Christoph Hellwig <hch@lst.de>; Dave Chinner <david@fromorbit.com>; Dan Williams <dan.j.williams@intel.com>; linux-xfs@vger.kernel.org; linux-fsdevel <linux-fsdevel@vger.kernel.org>; Jan Kara <jack@suse.cz>; Theodore Ts'o <tytso@mit.edu>; Matthew Wilcox <mawilcox@microsoft.com>; Scott Konersmann <scottkon@microsoft.com>; Slava Oks <slavao@microsoft.com>; Jasraj Dange <jasrajd@microsoft.com>; Michael Nelson <micn@microsoft.com>
-> Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-> 
-> On Tue 13-03-18 18:52:57, Robert Dorr wrote:
-> > I tried the RWF_ODSYNC and xfs seems to honor properly but it causes 
-> > ext4 to go spin out a single CPU and hang the system. 😊
-> 
-> Yeah, that's a bug in generic direct IO code that I've just recently fixed
-> (d9c10e5b8863 "direct-io: Fix sleep in atomic due to sync AIO" in 4.16-rc4).
-> 
-> 								Honza
-> 
-> > 
-> > 
-> > -----Original Message-----
-> > From: Christoph Hellwig <hch@lst.de>
-> > Sent: Tuesday, March 13, 2018 11:13 AM
-> > To: Robert Dorr <rdorr@microsoft.com>
-> > Cc: Dave Chinner <david@fromorbit.com>; Dan Williams 
-> > <dan.j.williams@intel.com>; linux-xfs@vger.kernel.org; Christoph 
-> > Hellwig <hch@lst.de>; linux-fsdevel <linux-fsdevel@vger.kernel.org>; 
-> > Jan Kara <jack@suse.cz>; Theodore Ts'o <tytso@mit.edu>; Matthew Wilcox 
-> > <mawilcox@microsoft.com>; Scott Konersmann <scottkon@microsoft.com>; 
-> > Slava Oks <slavao@microsoft.com>; Jasraj Dange 
-> > <jasrajd@microsoft.com>; Michael Nelson <micn@microsoft.com>
-> > Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO 
-> > writes
-> > 
-> > > I think the answer is the iomap* logic makes sure to issue generic_write_sync for O_DSYNC W1 after W1 is completed by hardware and then waits for completion of the flush request (REQ_PREFLUSH) before W1 is returned to the AIO completion ring, preventing io_getevents from processing W1 before the flush occurs and completes.   I just need proper confirmation from the experts on this code that this is the expected behavior.
-> > 
-> > Yes. that is the case.
-> > 
-> > > For SQL Server using O_DIRECT | O_DSYNC on current kernels is very performance impacting.   Instead we enable a mode for SQL that opens O_DIRECT only and issues fsync/fdatasync when we are hardening log files or checkpointing data files.   This reduces the write, flush, write, flush pattern allowing for write, write, write, ... then flush as we only issue flush requests when required to maintain the data integrity boundaries of SQL Server.  The performance is significantly better then the device flush for each write as you can imagine.
-> > > 
-> > > Testing shows the FUA enhancement is better then the write, flush pattern.   For SQL Server we want to dynamically open with O_DIRECT | O_DSYNC when REQ_FUA can be properly used and open with O_DIRECT and leverage SQL Server's alternate flush scheme when running on older kernel or a system that does not support FUA (SATA, IDE, ...)
-> > 
-> > There is no really good way to figure this out except for benchmarking, given that the FUA use an implementation detail.
-> > 
-> > Btw, another feature that might be interesting to you is the RWF_DSYNC flag to the pwritev2 syscall, which allows to apply O_DSYNC semantics on a per-I/O basis instead of using it at open time.
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
