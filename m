@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55302 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751687AbeCUDkx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:40:53 -0400
-Subject: [PATCH 11/14] xfs_scrub_all: report version
+Received: from aserp2120.oracle.com ([141.146.126.78]:33466 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751687AbeCUDlL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:41:11 -0400
+Subject: [PATCH 14/14] xfs_scrub_all: use system encoding for lsblk output
+ decoding
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Mar 2018 20:40:48 -0700
-Message-ID: <152160364815.8288.2405559533299403970.stgit@magnolia>
+Date: Tue, 20 Mar 2018 20:41:07 -0700
+Message-ID: <152160366773.8288.6721882677866606943.stgit@magnolia>
 In-Reply-To: <152160358015.8288.2700156777231657519.stgit@magnolia>
 References: <152160358015.8288.2700156777231657519.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,83 +21,26 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Make xfs_scrub_all -V report its version like the other xfs tools.
+Don't hardcode utf-8 as the decoding scheme for lsblk output, since the
+system could set it to anything else.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man8/xfs_scrub_all.8 |   10 ++++++++++
- scrub/Makefile           |    1 +
- scrub/xfs_scrub_all.in   |   11 +++++++++++
- 3 files changed, 22 insertions(+)
+ scrub/xfs_scrub_all.in |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
-index 5e1420b..7454880 100644
---- a/man/man8/xfs_scrub_all.8
-+++ b/man/man8/xfs_scrub_all.8
-@@ -3,6 +3,9 @@
- xfs_scrub_all \- scrub all mounted XFS filesystems
- .SH SYNOPSIS
- .B xfs_scrub_all
-+[
-+.B \-hV
-+]
- .SH DESCRIPTION
- .B xfs_scrub_all
- attempts to read and check all the metadata on all mounted XFS filesystems.
-@@ -13,6 +16,13 @@ in a restricted fashion.
- Mounted filesystems are mapped to physical storage devices so that scrub
- operations can be run in parallel so long as no two scrubbers access
- the same device simultaneously.
-+.SH OPTIONS
-+.TP
-+.B \-h
-+Display help.
-+.TP
-+.B \-V
-+Prints the version number and exits.
- .SH EXIT CODE
- The exit code returned by
- .B xfs_scrub_all
-diff --git a/scrub/Makefile b/scrub/Makefile
-index bcc05a0..482e8a7 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -102,6 +102,7 @@ default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
- xfs_scrub_all: xfs_scrub_all.in
- 	@echo "    [SED]    $@"
- 	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-+		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
- 		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
- 	$(Q)chmod a+x $@
- 
 diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 80f07d5..aed66a1 100644
+index 83c4e21..d374f92 100644
 --- a/scrub/xfs_scrub_all.in
 +++ b/scrub/xfs_scrub_all.in
-@@ -26,6 +26,7 @@ import threading
- import time
- import sys
- import os
-+import argparse
- 
- retcode = 0
- terminate = False
-@@ -139,6 +140,16 @@ def main():
- 		thr.start()
- 	global retcode, terminate
- 
-+	parser = argparse.ArgumentParser( \
-+			description = "Scrub all mounted XFS filesystems.")
-+	parser.add_argument("-V", help = "Report version and exit.", \
-+			action = "store_true")
-+	args = parser.parse_args()
-+
-+	if args.V:
-+		print("xfs_scrub_all version @pkg_version@")
-+		sys.exit(0)
-+
- 	fs = find_mounts()
- 
- 	# Tail the journal if we ourselves aren't a service...
+@@ -48,7 +48,7 @@ def find_mounts():
+ 	result.wait()
+ 	if result.returncode != 0:
+ 		return fs
+-	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
++	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
+ 	output = ' '.join(sarray)
+ 	bdevdata = json.loads(output)
+ 	# The lsblk output had better be in disks-then-partitions order
 
