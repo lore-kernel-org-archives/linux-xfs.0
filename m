@@ -1,159 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:41870 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751553AbeCWOh2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Mar 2018 10:37:28 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0AEB14068051
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Mar 2018 14:37:28 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 2/2 v6] fsck.xfs: allow forced repairs using xfs_repair
-Date: Fri, 23 Mar 2018 15:33:13 +0100
-Message-Id: <20180323143313.31277-1-jtulak@redhat.com>
-In-Reply-To: <20180316170720.44227-1-jtulak@redhat.com>
-References: <20180316170720.44227-1-jtulak@redhat.com>
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:35451 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751680AbeCUOpn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 10:45:43 -0400
+Date: Wed, 21 Mar 2018 22:45:32 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH v2] xfs: test agfl reset on bad list wrapping
+Message-ID: <20180321144532.GU30836@localhost.localdomain>
+References: <20180321031746.GF4866@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180321031746.GF4866@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, david@fromorbit.com, fstests <fstests@vger.kernel.org>
 
-The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
-run on every unclean shutdown. However, sometimes it may happen that the
-root filesystem really requires the usage of xfs_repair and then it is a
-hassle. This patch makes the situation a bit easier by detecting forced
-checks (/forcefsck or fsck.mode=force) and invoking xfs_repair.
+On Tue, Mar 20, 2018 at 08:17:46PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> From the kernel patch that this test examines ("xfs: detect agfl count
+> corruption and reset agfl"):
+> 
+> "The struct xfs_agfl v5 header was originally introduced with
+> unexpected padding that caused the AGFL to operate with one less
+> slot than intended. The header has since been packed, but the fix
+> left an incompatibility for users who upgrade from an old kernel
+> with the unpacked header to a newer kernel with the packed header
+> while the AGFL happens to wrap around the end. The newer kernel
+> recognizes one extra slot at the physical end of the AGFL that the
+> previous kernel did not. The new kernel will eventually attempt to
+> allocate a block from that slot, which contains invalid data, and
+> cause a crash.
+> 
+> "This condition can be detected by comparing the active range of the
+> AGFL to the count. While this detects a padding mismatch, it can
+> also trigger false positives for unrelated flcount corruption. Since
+> we cannot distinguish a size mismatch due to padding from unrelated
+> corruption, we can't trust the AGFL enough to simply repopulate the
+> empty slot.
+> 
+> "Instead, avoid unnecessarily complex detection logic and and use a
+> solution that can handle any form of flcount corruption that slips
+> through read verifiers: distrust the entire AGFL and reset it to an
+> empty state. Any valid blocks within the AGFL are intentionally
+> leaked. This requires xfs_repair to rectify (which was already
+> necessary based on the state the AGFL was found in). The reset
+> mitigates the side effect of the padding mismatch problem from a
+> filesystem crash to a free space accounting inconsistency."
+> 
+> This test exercises the reset code by mutating a fresh filesystem to
+> contain an agfl with various list configurations of correctly wrapped,
+> incorrectly wrapped, not wrapped, and actually corrupt free lists; then
+> checks the success of the reset operation by fragmenting the free space
+> btrees to exercise the agfl.  Kernels without this reset fix will shut
+> down the filesystem with corruption errors.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/rc         |    6 +
+>  tests/xfs/709     |  254 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/709.out |   13 +++
+>  tests/xfs/group   |    1 
+>  4 files changed, 274 insertions(+)
+>  create mode 100755 tests/xfs/709
+>  create mode 100644 tests/xfs/709.out
+> 
+> diff --git a/common/rc b/common/rc
+> index 2c29d55..8f048f1 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -3440,6 +3440,12 @@ _get_device_size()
+>  	grep `_short_dev $1` /proc/partitions | awk '{print $3}'
+>  }
+>  
+> +# check dmesg log for a specific string
+> +_check_dmesg_for() {
+> +	dmesg | tac | sed -ne "0,\#run fstests $seqnum at $date_time#p" | \
+> +		tac | egrep -q "$1"
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
+Hmm, searching dmesg log for a specific test this way requires a
+writable /dev/kmsg, we have checked it in 'check', otherwise we won't
+write such logs to dmesg. Need a _require_check_dmesg or something?
 
----
-Changelog:
-v6:
-- update exit code 3->4
-- avoid hardcoding xfs_repair path
-- rename $BIN->$xfs_repair
-- remove mounted check - xfs_repair does it on its own
-- small manpage edit
-- better explanation in the comment
-v5:
-- Change the message for xfs_repair code 2
-v4:
-- man page changes
-v3:
-- too quick with fixing in v2... add line at the end of the file
-v2:
-- return the "exit 0" at the end
+And it seems this "dmesg | tac ... | tac" sequence can be factored out
+to a helper and reused in _check_dmesg too.
 
-v1:
-- test for xfs_repair binary
-- run only in non-interactive session
-- translate xfs_repair return codes to fsck ones
-- run only if the filesystem is not mounted
-- add manpage update
----
- fsck/xfs_fsck.sh    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- man/man8/fsck.xfs.8 |  7 +++++++
- 2 files changed, 63 insertions(+), 1 deletion(-)
-
-diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-index e52969e4..c9fc3eb3 100755
---- a/fsck/xfs_fsck.sh
-+++ b/fsck/xfs_fsck.sh
-@@ -3,11 +3,35 @@
- # Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
- #
- 
-+NAME=$0
-+
-+# get the right return code for fsck
-+function repair2fsck_code() {
-+	case $1 in
-+	0)  return 0 # everything is ok
-+		;;
-+	1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
-+		return 4 # errors left uncorrected
-+		;;
-+	2)  echo "$NAME error: The filesystem log is dirty, mount it to recover" \
-+		     "the log. If that fails, refer to the section DIRTY LOGS in the" \
-+		     "xfs_repair manual page." 1>&2
-+		return 4 # dirty log, don't do anything and let the user solve it
-+		;;
-+	4)  return 1 # The fs has been fixed
-+		;;
-+	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
-+		return 4 # something went wrong with xfs_repair
-+	esac
-+}
-+
- AUTO=false
--while getopts ":aApy" c
-+FORCE=false
-+while getopts ":aApyf" c
- do
- 	case $c in
- 	a|A|p|y)	AUTO=true;;
-+	f)      	FORCE=true;;
- 	esac
- done
- eval DEV=\${$#}
-@@ -15,6 +39,37 @@ if [ ! -e $DEV ]; then
- 	echo "$0: $DEV does not exist"
- 	exit 8
- fi
-+
-+# The flag -f is added by systemd/init scripts when /forcefsck file is present
-+# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
-+# this check, user has to explicitly require a forced fsck.
-+# But first of all, test if it is a non-interactive session.
-+# Invoking xfs_repair via fsck.xfs is only intended to happen via initscripts.
-+# Normal administrative filesystem repairs should always invoke xfs_repair
-+# directly.
-+#
-+# Use multiple methods to capture most of the cases:
-+# The case for *i* and -n "$PS1" are commonly suggested in bash manual
-+# and the -t 0 test checks stdin
-+case $- in
-+	*i*) FORCE=false ;;
-+esac
-+if [ -n "$PS1" -o -t 0 ]; then
-+	FORCE=false
-+fi
-+
-+if $FORCE; then
-+	XFS_REPAIR=`command -v xfs_repair`
-+	if [ ! -x "$XFS_REPAIR" ] ; then
-+		echo "$NAME error: xfs_repair was not found!" 1>&2
-+		exit 4
-+	fi
-+
-+	$XFS_REPAIR -e $DEV
-+	repair2fsck_code $?
-+	exit $?
-+fi
-+
- if $AUTO; then
- 	echo "$0: XFS file system."
- else
-diff --git a/man/man8/fsck.xfs.8 b/man/man8/fsck.xfs.8
-index ace7252d..a51baf7c 100644
---- a/man/man8/fsck.xfs.8
-+++ b/man/man8/fsck.xfs.8
-@@ -21,6 +21,13 @@ If you wish to check the consistency of an XFS filesystem,
- or repair a damaged or corrupt XFS filesystem,
- see
- .BR xfs_repair (8).
-+.PP
-+However, the system administrator can force
-+.B fsck.xfs
-+to run
-+.BR xfs_repair (8)
-+at boot time by creating a /forcefsck file or booting the system with
-+"fsck.mode=force" on the kernel command line.
- .
- .SH FILES
- .IR /etc/fstab .
--- 
-2.16.2
-
+Thanks,
+Eryu
