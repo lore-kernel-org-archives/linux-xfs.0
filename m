@@ -1,141 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53482 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751774AbeCOVZv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Mar 2018 17:25:51 -0400
-Subject: Re: [PATCH 4/9] build: update AC_PACKAGE_WANT_GDBM() and src/dbtest.c
- to build
-References: <20171213004519.29340-1-mcgrof@kernel.org>
- <20171213004519.29340-5-mcgrof@kernel.org>
- <20171214055102.GE2749@eguan.usersys.redhat.com>
-From: Jeff Mahoney <jeffm@suse.com>
-Message-ID: <ead4a973-966a-1c79-4301-4090a4dbc974@suse.com>
-Date: Thu, 15 Mar 2018 17:25:46 -0400
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:19657 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751459AbeCUHwz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 03:52:55 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1eyYYF-0003W2-9N
+        for linux-xfs@vger.kernel.org; Wed, 21 Mar 2018 18:52:51 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.90_1)
+        (envelope-from <david@fromorbit.com>)
+        id 1eyYYF-00021M-7f
+        for linux-xfs@vger.kernel.org; Wed, 21 Mar 2018 18:52:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: catch inode allocation state mismatch corruption
+Date: Wed, 21 Mar 2018 18:52:47 +1100
+Message-Id: <20180321075248.7677-2-david@fromorbit.com>
+In-Reply-To: <20180321075248.7677-1-david@fromorbit.com>
+References: <20180321075248.7677-1-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20171214055102.GE2749@eguan.usersys.redhat.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="bwZntOFkZ55s58S8wKDvxzWwdyzdHJWSD"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <eguan@redhat.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---bwZntOFkZ55s58S8wKDvxzWwdyzdHJWSD
-Content-Type: multipart/mixed; boundary="ZmX7fn7A10ivvFP31IJGHDo2W1oj8znGk";
- protected-headers="v1"
-From: Jeff Mahoney <jeffm@suse.com>
-To: Eryu Guan <eguan@redhat.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Message-ID: <ead4a973-966a-1c79-4301-4090a4dbc974@suse.com>
-Subject: Re: [PATCH 4/9] build: update AC_PACKAGE_WANT_GDBM() and src/dbtest.c
- to build
-References: <20171213004519.29340-1-mcgrof@kernel.org>
- <20171213004519.29340-5-mcgrof@kernel.org>
- <20171214055102.GE2749@eguan.usersys.redhat.com>
-In-Reply-To: <20171214055102.GE2749@eguan.usersys.redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
---ZmX7fn7A10ivvFP31IJGHDo2W1oj8znGk
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+We recently came across a V4 filesystem causing memory corruption
+due to a newly allocated inode being setup twice and being added to
+the superblock inode list twice. From code inspection, the only way
+this could happen is if a newly allocated inode was not marked as
+free on disk (i.e. di_mode wasn't zero).
 
-On 12/14/17 12:51 AM, Eryu Guan wrote:
-> On Tue, Dec 12, 2017 at 04:45:14PM -0800, Luis R. Rodriguez wrote:
->> Modern gdbm-devel packages bundle together gdbm.h and ndbm.h.
->> The old m4 macro had detection support for some old gdbm libraries
->> but not for new ones.
->>
->> We fix compilation of src/dbtest.c by making the autoconf helper
->> check for this new arrangement:
->>
->> If both gdbm.h and gdbm.h are found define set both gdbm_ndbm_=3Dtrue,=
+Running the metadump on an upstream debug kernel fails during inode
+allocation like so:
 
->                      ^^^^^^ ndbm.h?
->> and have_db=3Dtrue, and define HAVE_GDBM_H. The src/dbtest.c already
->> had a HAVE_GDBM_H but there was never a respective autoconf settter fo=
-r
->> it. We can just re-use this and fix it for new arrangement.
->>
->> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
->=20
-> This looks fine to me.
->=20
-> The only system I have by hand that have both <gdbm.h> and <ndbm.h> but=
+XFS: Assertion failed: ip->i_d.di_nblocks == 0, file: fs/xfs/xfs_inode.c, line: 838
+------------[ cut here ]------------
+kernel BUG at fs/xfs/xfs_message.c:114!
+invalid opcode: 0000 [#1] PREEMPT SMP
+CPU: 11 PID: 3496 Comm: mkdir Not tainted 4.16.0-rc5-dgc #442
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+RIP: 0010:assfail+0x28/0x30
+RSP: 0018:ffffc9000236fc80 EFLAGS: 00010202
+RAX: 00000000ffffffea RBX: 0000000000004000 RCX: 0000000000000000
+RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff8227211b
+RBP: ffffc9000236fce8 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000bec R11: f000000000000000 R12: ffffc9000236fd30
+R13: ffff8805c76bab80 R14: ffff8805c77ac800 R15: ffff88083fb12e10
+FS:  00007fac8cbff040(0000) GS:ffff88083fd00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fffa6783ff8 CR3: 00000005c6e2b003 CR4: 00000000000606e0
+Call Trace:
+ xfs_ialloc+0x383/0x570
+ xfs_dir_ialloc+0x6a/0x2a0
+ xfs_create+0x412/0x670
+ xfs_generic_create+0x1f7/0x2c0
+ ? capable_wrt_inode_uidgid+0x3f/0x50
+ vfs_mkdir+0xfb/0x1b0
+ SyS_mkdir+0xcf/0xf0
+ do_syscall_64+0x73/0x1a0
+ entry_SYSCALL_64_after_hwframe+0x42/0xb7
 
-> not any <gdbm/[gn]dbm.h> is openSUSE Tumbleweed. Without this patch,
-> dbtest was not built on openSUSE, and was built successfully with this
-> patch applied. And dbtest is still built on RHEL6/7 and Fedora.
->=20
-> BTW, I'll queue patch 3 and this patch for next fstests release, while
-> other patches seem not necessary, I agreed with Dave that groups are no=
-t
-> for excluding tests, the required tools and environments should be
-> detected by tests and _notrun if not met. (The README change looks fine=
-,
-> but it doesn't apply due to the "fsgqa-381" change, so I drop it too fo=
-r
-> now.)
+Extracting the inode number we crashed on from an event trace and
+looking at it with xfs_db:
 
-Hi guys -
+xfs_db> inode 184452204
+xfs_db> p
+core.magic = 0x494e
+core.mode = 0100644
+core.version = 2
+core.format = 2 (extents)
+core.nlinkv2 = 1
+core.onlink = 0
+.....
 
-This change breaks on older releases like SLES 11 where both <ndbm.h>
-and <gdbm.h> define datum, so we get build failures.  The failure is
-new, but not because it used to pass and now doesn't.  It's apparently
-never built on SLES releases since we ship /usr/include/ndbm.h and then
-we notrun the test that uses.  Now that we're looking for gdbm.h and
-find it, we attempt to build src/dbtest and fail.
+Confirms that it is not a free inode on disk. xfs_repair
+also trips over this inode:
 
-This fix isn't the right solution.  The problem is that we have a couple
-layers of old cruft that needs to be cleaned out.
+.....
+zero length extent (off = 0, fsbno = 0) in ino 184452204
+correcting nextents for inode 184452204
+bad attribute fork in inode 184452204, would clear attr fork
+bad nblocks 1 for inode 184452204, would reset to 0
+bad anextents 1 for inode 184452204, would reset to 0
+imap claims in-use inode 184452204 is free, would correct imap
+would have cleared inode 184452204
+.....
+disconnected inode 184452204, would move to lost+found
 
-1) As Luis notes, nothing sets HAVE_GDBM_H.  The thing is that there is
-no version of gdbm.h that exports the NDBM interface.  Further, looking
-at the git history, nothing has ever set HAVE_GDBM_H.  It was dead code
-when it was committed initially as best I can tell.
-2) openSUSE Tumbleweed doesn't need <gdbm.h> at all.  It needs <ndbm.h>
-and this fix works because Luis added it to the HAVE_GDBM_H stanza.
-3) AC_PACKAGE_WANT_NDBM used to check for <ndbm.h> but it was a check
-for IRIX and the caller was removed ages ago.  It wouldn't matter if it
-were called anyway since libndbm is an IRIX library.  Linux, IIRC, has
-never shipped a libndbm.
+And so we have a situation where the directory structure and the
+inobt thinks the inode is free, but the inode on disk thinks it is
+still in use. Where this corruption came from is not possible to
+diagnose, but we can detect it and prevent the kernel from oopsing
+on lookup. The reproducer now results in:
 
-I'll post a few patches following this to clean it up and get it working
-on SLES11.
+$ sudo mkdir /mnt/scratch/{0,1,2,3,4,5}{0,1,2,3,4,5}
+mkdir: cannot create directory ‘/mnt/scratch/00’: File exists
+mkdir: cannot create directory ‘/mnt/scratch/01’: File exists
+mkdir: cannot create directory ‘/mnt/scratch/03’: Structure needs cleaning
+mkdir: cannot create directory ‘/mnt/scratch/04’: Input/output error
+mkdir: cannot create directory ‘/mnt/scratch/05’: Input/output error
+....
 
--Jeff
+And this corruption shutdown:
 
---=20
-Jeff Mahoney
-SUSE Labs
+[   54.843517] XFS (loop0): Corruption detected! Free inode 0xafe846c not marked free on disk
+[   54.845885] XFS (loop0): Internal error xfs_trans_cancel at line 1023 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x425/0x670
+[   54.848994] CPU: 10 PID: 3541 Comm: mkdir Not tainted 4.16.0-rc5-dgc #443
+[   54.850753] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+[   54.852859] Call Trace:
+[   54.853531]  dump_stack+0x85/0xc5
+[   54.854385]  xfs_trans_cancel+0x197/0x1c0
+[   54.855421]  xfs_create+0x425/0x670
+[   54.856314]  xfs_generic_create+0x1f7/0x2c0
+[   54.857390]  ? capable_wrt_inode_uidgid+0x3f/0x50
+[   54.858586]  vfs_mkdir+0xfb/0x1b0
+[   54.859458]  SyS_mkdir+0xcf/0xf0
+[   54.860254]  do_syscall_64+0x73/0x1a0
+[   54.861193]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+[   54.862492] RIP: 0033:0x7fb73bddf547
+[   54.863358] RSP: 002b:00007ffdaa553338 EFLAGS: 00000246 ORIG_RAX: 0000000000000053
+[   54.865133] RAX: ffffffffffffffda RBX: 00007ffdaa55449a RCX: 00007fb73bddf547
+[   54.866766] RDX: 0000000000000001 RSI: 00000000000001ff RDI: 00007ffdaa55449a
+[   54.868432] RBP: 00007ffdaa55449a R08: 00000000000001ff R09: 00005623a8670dd0
+[   54.870110] R10: 00007fb73be72d5b R11: 0000000000000246 R12: 00000000000001ff
+[   54.871752] R13: 00007ffdaa5534b0 R14: 0000000000000000 R15: 00007ffdaa553500
+[   54.873429] XFS (loop0): xfs_do_force_shutdown(0x8) called from line 1024 of file fs/xfs/xfs_trans.c.  Return address = ffffffff814cd050
+[   54.882790] XFS (loop0): Corruption of in-memory data detected.  Shutting down filesystem
+[   54.884597] XFS (loop0): Please umount the filesystem and rectify the problem(s)
 
+Note that this crash is only possible on v4 filesystemsi or v5
+filesystems mounted with the ikeep mount option. For all other V5
+filesystems, this problem cannot occur because we don't read inodes
+we are allocating from disk - we simply overwrite them with the new
+inode information.
 
---ZmX7fn7A10ivvFP31IJGHDo2W1oj8znGk--
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_icache.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
---bwZntOFkZ55s58S8wKDvxzWwdyzdHJWSD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 1dc37b72b6ea..98b7a4ae15e4 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -484,7 +484,28 @@ xfs_iget_cache_miss(
+ 
+ 	trace_xfs_iget_miss(ip);
+ 
+-	if ((VFS_I(ip)->i_mode == 0) && !(flags & XFS_IGET_CREATE)) {
++
++	/*
++	 * If we are allocating a new inode, then check what was returned is
++	 * actually a free, empty inode. If we are not allocating an inode,
++	 * the check we didn't find a free inode.
++	 */
++	if (flags & XFS_IGET_CREATE) {
++		if (VFS_I(ip)->i_mode != 0) {
++			xfs_warn(mp,
++"Corruption detected! Free inode 0x%llx not marked free on disk",
++				ino);
++			error = -EFSCORRUPTED;
++			goto out_destroy;
++		}
++		if (ip->i_d.di_nblocks != 0) {
++			xfs_warn(mp,
++"Corruption detected! Free inode 0x%llx has blocks allocated!",
++				ino);
++			error = -EFSCORRUPTED;
++			goto out_destroy;
++		}
++	} else if (VFS_I(ip)->i_mode == 0) {
+ 		error = -ENOENT;
+ 		goto out_destroy;
+ 	}
+-- 
+2.16.1
 
------BEGIN PGP SIGNATURE-----
-
-iQJDBAEBCAAtFiEE8wzgbmZ74SnKPwtDHntLYyF55bIFAlqq5NsPHGplZmZtQHN1
-c2UuY29tAAoJEB57S2MheeWyRwYP/1xIKbEot0ylNjy4ZUUcDWXJl0DPbssDrjSW
-gU3yCEZuimZda9vz2lr9n8/DAyQGQXM7sWtST9DLsjWU4OuxoE+jXT9G0biZB2h3
-02L3ywCve5jhDiS4y97Q4+2BNgXCNu3dHG0vbqTCKib/V+gT/VGaTpfpgaHdyNYG
-J5HRZUihd7hflIhHPc0SQScNKm9YDPWwMwNRzTPE9gxoxdX6xHMEuu0LZZ3DmIYr
-t2QNcqM+cZTUduliKOcPAK0pG6MAzj02/iCf2HKtzcHF/gK/s+c0Jrr0PNzeVhpX
-d0tRzd9pQbLu1U4xpT2RGHy/XGauL1jgJV5/Pqkoe47BlrPLPtihyeGBO8HFHAgh
-pupzRM39zYh7Jkcmgf+pCn8xdXgmOo1W4b15P2j4Y+F8qWt7O3cUtecBLlRKhzOv
-jleV4zjKpYgf/emWNBeXAqx0Yssg6YqhknTo8mqBMWVh2Cw3QbYOgPsKH3Syb/sF
-prQ6sFt9loRKS0+KxgrVlH0Kvyfw9Fh6PMpT7WRn+h5ELGu8VxWGrDeiXNPLj9bB
-//MJmk4cdUFFXkddjUBAuAEYVmIQYdCl0uVdshTcsHrwcUY/VrlFgAhRfKP5lag4
-LCGg8GZosBMFrbYfvcB6+kGPsOYoZ+LKNmw2kaKqClvcxrZ4FnihIKzB8IZ4qXln
-BHHKwLDL
-=mR1E
------END PGP SIGNATURE-----
-
---bwZntOFkZ55s58S8wKDvxzWwdyzdHJWSD--
