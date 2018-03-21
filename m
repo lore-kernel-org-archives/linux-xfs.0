@@ -1,262 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47298 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752527AbeCUStl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 14:49:41 -0400
-Subject: Re: [PATCH v2 3/4] xfs_fsr: refactor mountpoint finding to use
- libfrog paths functions
-References: <152151529988.18312.2660325658864402943.stgit@magnolia>
- <152151531831.18312.9201377632555740636.stgit@magnolia>
- <20180321031903.GN1757@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <d5422c3c-0791-185b-09e8-fa3898c00a73@redhat.com>
-Date: Wed, 21 Mar 2018 13:49:40 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:55080 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752954AbeCUUay (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Mar 2018 16:30:54 -0400
+Date: Wed, 21 Mar 2018 13:30:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/9] xfs: refactor bmap record valiation
+Message-ID: <20180321203048.GK4818@magnolia>
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <152107378261.19571.1457221354115584570.stgit@magnolia>
+ <20180321135519.GC11127@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180321031903.GN1757@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180321135519.GC11127@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 3/20/18 10:19 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 21, 2018 at 09:55:20AM -0400, Brian Foster wrote:
+> On Wed, Mar 14, 2018 at 05:29:42PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Refactor the bmap validator into a more complete helper that looks for
+> > extents that run off the end of the device, overflow into the next AG,
+> > or have invalid flag states, leaving a raw helper so that the inode
+> > repair can check things even if iget fails.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c       |   55 ++++++++++++++++++++++++++++++++++++++--
+> >  fs/xfs/libxfs/xfs_bmap.h       |    5 ++++
+> >  fs/xfs/libxfs/xfs_bmap_btree.h |   14 ----------
+> >  fs/xfs/libxfs/xfs_inode_fork.c |   12 ++++++---
+> >  4 files changed, 65 insertions(+), 21 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index daae00e..5850e76 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -1261,11 +1261,15 @@ xfs_iread_extents(
+> >  		 */
+> >  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
+> >  		for (j = 0; j < num_recs; j++, frp++, i++) {
+> > +			xfs_failaddr_t	fa;
+> > +
+> >  			xfs_bmbt_disk_get_all(frp, &new);
+> > -			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
+> > -				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
+> > -						 XFS_ERRLEVEL_LOW, mp);
+> > +			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
+> > +			if (fa) {
+> >  				error = -EFSCORRUPTED;
+> > +				xfs_inode_verifier_error(ip, error,
+> > +						"xfs_bmap_read_extents(2)",
 > 
-> Refactor the mount-point finding code in fsr to use the libfrog helpers
-> instead of open-coding yet another routine.
+> Might as well fix up the stale function name string.
+
+Ok.
+
+> > +						frp, sizeof(*frp), fa);
+> >  				goto out_brelse;
+> >  			}
+> >  			xfs_iext_insert(ip, &icur, &new, state);
+> > @@ -6154,3 +6158,48 @@ xfs_bmap_finish_one(
+> >  
+> >  	return error;
+> >  }
+> > +
+> > +/* Check that an extent does not have invalid flags or bad ranges. */
+> > +xfs_failaddr_t
+> > +xfs_bmbt_validate_extent(
+> > +	struct xfs_mount	*mp,
+> > +	bool			isrt,
+> > +	int			whichfork,
+> > +	struct xfs_bmbt_irec	*irec)
+> > +{
+> > +	xfs_fsblock_t		endfsb;
+> > +
+> > +	endfsb = irec->br_startblock + irec->br_blockcount - 1;
+> > +	if (isrt) {
+> > +		if (!xfs_verify_rtbno(mp, irec->br_startblock))
+> > +			return __this_address;
+> > +		if (!xfs_verify_rtbno(mp, endfsb))
+> > +			return __this_address;
+> > +	} else {
+> > +		if (!xfs_verify_fsbno(mp, irec->br_startblock))
+> > +			return __this_address;
+> > +		if (!xfs_verify_fsbno(mp, endfsb))
+> > +			return __this_address;
+> > +		if (XFS_FSB_TO_AGNO(mp, irec->br_startblock) !=
+> > +		    XFS_FSB_TO_AGNO(mp, endfsb))
+> > +			return __this_address;
+> > +	}
+> > +	if (irec->br_state != XFS_EXT_NORM) {
+> > +		if (whichfork != XFS_DATA_FORK)
+> > +			return __this_address;
+> > +		if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
+> > +			return __this_address;
+> > +	}
+> > +	return NULL;
+> > +}
+> > +
+> > +/* Check that an inode's extent does not have invalid flags or bad ranges. */
+> > +xfs_failaddr_t
+> > +xfs_bmap_validate_extent(
+> > +	struct xfs_inode	*ip,
+> > +	int			whichfork,
+> > +	struct xfs_bmbt_irec	*irec)
+> > +{
+> > +	return xfs_bmbt_validate_extent(ip->i_mount, XFS_IS_REALTIME_INODE(ip),
+> > +			whichfork, irec);
+> > +}
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Seems fine, I'll test further but:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
-> v2: fix obvious brokenness w/ path testing
-> ---
->  fsr/Makefile    |    4 ++-
->  fsr/xfs_fsr.c   |   73 ++++++-------------------------------------------------
->  include/path.h  |    1 +
->  libfrog/paths.c |   48 ++++++++++++++++++++++++++----------
->  4 files changed, 47 insertions(+), 79 deletions(-)
+> Do we really need this wrapper just for an rt check? Why not just pass
+> ip down to xfs_bmbt_validate_extent() and pull isrt from there (if
+> present)?
 > 
-> diff --git a/fsr/Makefile b/fsr/Makefile
-> index d3521b2..4201b38 100644
-> --- a/fsr/Makefile
-> +++ b/fsr/Makefile
-> @@ -7,7 +7,9 @@ include $(TOPDIR)/include/builddefs
->  
->  LTCOMMAND = xfs_fsr
->  CFILES = xfs_fsr.c
-> -LLDLIBS = $(LIBHANDLE)
-> +LLDLIBS = $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBBLKID)
-> +LTDEPENDENCIES = $(LIBHANDLE) $(LIBFROG)
-> +LLDFLAGS = -static-libtool-libs
->  
->  ifeq ($(HAVE_GETMNTENT),yes)
->  LCFLAGS += -DHAVE_GETMNTENT
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 2a18ce0..b74a70b 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -22,6 +22,7 @@
->  #include "jdm.h"
->  #include "xfs_bmap_btree.h"
->  #include "xfs_attr_sf.h"
-> +#include "path.h"
->  
->  #include <fcntl.h>
->  #include <errno.h>
-> @@ -167,73 +168,13 @@ aborter(int unused)
->  	exit(1);
->  }
->  
-> -/*
-> - * Check if the argument is either the device name or mountpoint of an XFS
-> - * filesystem.  Note that we do not care about bind mounted regular files
-> - * here - the code that handles defragmentation of invidual files takes care
-> - * of that.
-> - */
-> -static char *
-> -find_mountpoint_check(struct stat *sb, struct mntent *t)
-> -{
-> -	struct stat ms;
-> -
-> -	if (S_ISDIR(sb->st_mode)) {		/* mount point */
-> -		if (stat(t->mnt_dir, &ms) < 0)
-> -			return NULL;
-> -		if (sb->st_ino != ms.st_ino)
-> -			return NULL;
-> -		if (sb->st_dev != ms.st_dev)
-> -			return NULL;
-> -		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
-> -			return NULL;
-> -	} else {				/* device */
-> -		if (stat(t->mnt_fsname, &ms) < 0)
-> -			return NULL;
-> -		if (sb->st_rdev != ms.st_rdev)
-> -			return NULL;
-> -		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
-> -			return NULL;
-> -		/*
-> -		 * Make sure the mountpoint given by mtab is accessible
-> -		 * before using it.
-> -		 */
-> -		if (stat(t->mnt_dir, &ms) < 0)
-> -			return NULL;
-> -	}
-> -
-> -	return t->mnt_dir;
-> -}
-> -
-> -static char *
-> -find_mountpoint(char *mtab, char *argname, struct stat *sb)
-> -{
-> -	struct mntent_cursor cursor;
-> -	struct mntent *t = NULL;
-> -	char *mntp = NULL;
-> -
-> -	if (platform_mntent_open(&cursor, mtab) != 0){
-> -		fprintf(stderr, "Error: can't get mntent entries.\n");
-> -		exit(1);
-> -	}
-> -
-> -	while ((t = platform_mntent_next(&cursor)) != NULL) {
-> -		mntp = find_mountpoint_check(sb, t);
-> -		if (mntp == NULL)
-> -			continue;
-> -		break;
-> -	}
-> -	platform_mntent_close(&cursor);
-> -	return mntp;
-> -}
-> -
->  int
->  main(int argc, char **argv)
->  {
->  	struct stat sb;
->  	char *argname;
->  	int c;
-> -	char *mntp;
-> +	struct fs_path	*fsp;
->  	char *mtab = NULL;
->  
->  	setlinebuf(stdout);
-> @@ -322,7 +263,7 @@ main(int argc, char **argv)
->  	RealUid = getuid();
->  
->  	pagesize = getpagesize();
-> -
-> +	fs_table_initialise(0, NULL, 0, NULL);
->  	if (optind < argc) {
->  		for (; optind < argc; optind++) {
->  			argname = argv[optind];
-> @@ -343,9 +284,11 @@ main(int argc, char **argv)
->  				sb = sb2;
->  			}
->  
-> -			mntp = find_mountpoint(mtab, argname, &sb);
-> -			if (mntp != NULL) {
-> -				fsrfs(mntp, 0, 100);
-> +			fsp = fs_table_lookup_mount(argname);
-> +			if (!fsp)
-> +				fsp = fs_table_lookup_blkdev(argname);
-> +			if (fsp != NULL) {
-> +				fsrfs(fsp->fs_dir, 0, 100);
->  			} else if (S_ISCHR(sb.st_mode)) {
->  				fprintf(stderr, _(
->  					"%s: char special not supported: %s\n"),
-> diff --git a/include/path.h b/include/path.h
-> index 1d3a902..88dc44b 100644
-> --- a/include/path.h
-> +++ b/include/path.h
-> @@ -57,6 +57,7 @@ extern void fs_table_insert_project_path(char *__dir, uint __projid);
->  
->  extern fs_path_t *fs_table_lookup(const char *__dir, uint __flags);
->  extern fs_path_t *fs_table_lookup_mount(const char *__dir);
-> +extern fs_path_t *fs_table_lookup_blkdev(const char *bdev);
->  
->  typedef struct fs_cursor {
->  	uint		count;		/* total count of mount entries	*/
-> diff --git a/libfrog/paths.c b/libfrog/paths.c
-> index 19ee1ea..318b48f 100644
-> --- a/libfrog/paths.c
-> +++ b/libfrog/paths.c
-> @@ -89,30 +89,26 @@ fs_table_lookup(
->  	return NULL;
->  }
->  
-> -/*
-> - * Find the FS table entry describing an actual mount for the given path.
-> - * Unlike fs_table_lookup(), fs_table_lookup_mount() compares the "dir"
-> - * argument to actual mount point entries in the table. Accordingly, it
-> - * will find matches only if the "dir" argument is indeed mounted.
-> - */
-> -struct fs_path *
-> -fs_table_lookup_mount(
-> -	const char	*dir)
-> +static struct fs_path *
-> +__fs_table_lookup_mount(
-> +	const char	*dir,
-> +	const char	*blkdev)
->  {
->  	uint		i;
-> -	dev_t		dev = 0;
->  	char		rpath[PATH_MAX];
->  	char		dpath[PATH_MAX];
->  
-> -	if (fs_device_number(dir, &dev))
-> +	if (dir && !realpath(dir, dpath))
->  		return NULL;
-> -	if (!realpath(dir, dpath))
-> +	if (blkdev && !realpath(blkdev, dpath))
->  		return NULL;
->  
->  	for (i = 0; i < fs_count; i++) {
->  		if (fs_table[i].fs_flags != FS_MOUNT_POINT)
->  			continue;
-> -		if (!realpath(fs_table[i].fs_dir, rpath))
-> +		if (dir && !realpath(fs_table[i].fs_dir, rpath))
-> +			continue;
-> +		if (blkdev && !realpath(fs_table[i].fs_name, rpath))
->  			continue;
->  		if (strcmp(rpath, dpath) == 0)
->  			return &fs_table[i];
-> @@ -120,6 +116,32 @@ fs_table_lookup_mount(
->  	return NULL;
->  }
->  
-> +/*
-> + * Find the FS table entry describing an actual mount for the given path.
-> + * Unlike fs_table_lookup(), fs_table_lookup_mount() compares the "dir"
-> + * argument to actual mount point entries in the table. Accordingly, it
-> + * will find matches only if the "dir" argument is indeed mounted.
-> + */
-> +struct fs_path *
-> +fs_table_lookup_mount(
-> +	const char	*dir)
-> +{
-> +	return __fs_table_lookup_mount(dir, NULL);
-> +}
-> +
-> +/*
-> + * Find the FS table entry describing an actual mount for the block device.
-> + * Unlike fs_table_lookup(), fs_table_lookup_blkdev() compares the "bdev"
-> + * argument to actual mount point names in the table. Accordingly, it
-> + * will find matches only if the "bdev" argument is indeed mounted.
-> + */
-> +struct fs_path *
-> +fs_table_lookup_blkdev(
-> +	const char	*bdev)
-> +{
-> +	return __fs_table_lookup_mount(NULL, bdev);
-> +}
-> +
->  static int
->  fs_table_insert(
->  	char		*dir,
-> 
+> The commit log implies the helper could be left around for future repair
+> code. If that's the case, I think it's more appropriate to refactor it
+> as such in whatever patch the helper is first used. Otherwise looks
+> fine.
 
+Ok.  FWIW the intended usage for xfs_bmbt_validate_extent is that if the
+user asks us to repair an inode for which _iget returns EFSCORRUPTED
+we'll walk through all the inode fork sanity checks; if an
+extents-format fork has bad bmbt records, we reset the inode fork and
+indicate that a bmbt rebuild (via the rmapbt) is necessary.  In that
+case there is no xfs_inode hence the need for a raw function.
+
+However... I'll move the creation of the wrapper to that patch and we
+can argue about it there. :)
+
+--D
+
+> Brian
+> 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> > index e36d757..e0fef89 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.h
+> > +++ b/fs/xfs/libxfs/xfs_bmap.h
+> > @@ -274,4 +274,9 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
+> >  	}
+> >  }
+> >  
+> > +xfs_failaddr_t xfs_bmbt_validate_extent(struct xfs_mount *mp, bool isrt,
+> > +		int whichfork, struct xfs_bmbt_irec *irec);
+> > +xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
+> > +		struct xfs_bmbt_irec *irec);
+> > +
+> >  #endif	/* __XFS_BMAP_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+> > index 135b8c5..e450574 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap_btree.h
+> > +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+> > @@ -118,18 +118,4 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
+> >  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+> >  		struct xfs_trans *, struct xfs_inode *, int);
+> >  
+> > -/*
+> > - * Check that the extent does not contain an invalid unwritten extent flag.
+> > - */
+> > -static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
+> > -		struct xfs_bmbt_irec *irec)
+> > -{
+> > -	if (irec->br_state == XFS_EXT_NORM)
+> > -		return true;
+> > -	if (whichfork == XFS_DATA_FORK &&
+> > -	    xfs_sb_version_hasextflgbit(&mp->m_sb))
+> > -		return true;
+> > -	return false;
+> > -}
+> > -
+> >  #endif	/* __XFS_BMAP_BTREE_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > index 866d2861..613fba2 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > @@ -245,10 +245,14 @@ xfs_iformat_extents(
+> >  
+> >  		xfs_iext_first(ifp, &icur);
+> >  		for (i = 0; i < nex; i++, dp++) {
+> > +			xfs_failaddr_t	fa;
+> > +
+> >  			xfs_bmbt_disk_get_all(dp, &new);
+> > -			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
+> > -				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
+> > -						 XFS_ERRLEVEL_LOW, mp);
+> > +			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
+> > +			if (fa) {
+> > +				xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+> > +						"xfs_iformat_extents(2)",
+> > +						dp, sizeof(*dp), fa);
+> >  				return -EFSCORRUPTED;
+> >  			}
+> >  
+> > @@ -595,7 +599,7 @@ xfs_iextents_copy(
+> >  	for_each_xfs_iext(ifp, &icur, &rec) {
+> >  		if (isnullstartblock(rec.br_startblock))
+> >  			continue;
+> > -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, &rec));
+> > +		ASSERT(xfs_bmap_validate_extent(ip, whichfork, &rec) == NULL);
+> >  		xfs_bmbt_disk_set_all(dp, &rec);
+> >  		trace_xfs_write_extent(ip, &icur, state, _RET_IP_);
+> >  		copied += sizeof(struct xfs_bmbt_rec);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
