@@ -1,128 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:16583 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754351AbeCUXH0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 19:07:26 -0400
-Subject: [PATCH v7 12/14] xfs: prepare xfs_break_layouts() to be called with
- XFS_MMAPLOCK_EXCL
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 21 Mar 2018 15:58:20 -0700
-Message-ID: <152167310017.5268.8654419042128713101.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:52246 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752024AbeCVGI2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 02:08:28 -0400
+Date: Wed, 21 Mar 2018 23:08:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 10/9] xfs: don't accept inode buffers with suspicious
+ unlinked chains
+Message-ID: <20180322060822.GS4818@magnolia>
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <20180321032136.GQ1757@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180321032136.GQ1757@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>
 
-In preparation for adding coordination between extent unmap operations
-and busy dax-pages, update xfs_break_layouts() to permit it to be called
-with the mmap lock held. This lock scheme will be required for
-coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
-pages mapped into the file's address space). Breaking dax layouts will
-be added to xfs_break_layouts() in a future patch, for now this preps
-the unmap call sites to take and hold XFS_MMAPLOCK_EXCL over the call to
-xfs_break_layouts().
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+When we're verifying inode buffers, sanity-check the unlinked pointer.
+We don't want to run the risk of trying to purge something that's
+obviously broken.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_file.c  |    5 +----
- fs/xfs/xfs_ioctl.c |    5 +----
- fs/xfs/xfs_iops.c  |   10 +++++++---
- fs/xfs/xfs_pnfs.c  |    3 ++-
- 4 files changed, 11 insertions(+), 12 deletions(-)
+v2: fix merge problems, hopefully; this accidentally landed in the wrong
+place in my patch stack
+---
+ fs/xfs/libxfs/xfs_inode_buf.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9ea08326f876..18edf04811d0 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -768,7 +768,7 @@ xfs_file_fallocate(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	long			error;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	loff_t			new_size = 0;
- 	bool			do_file_insert = false;
- 
-@@ -782,9 +782,6 @@ xfs_file_fallocate(
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	if (mode & FALLOC_FL_PUNCH_HOLE) {
- 		error = xfs_free_file_space(ip, offset, len);
- 		if (error)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89fb1eb80aae..4151fade4bb1 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -614,7 +614,7 @@ xfs_ioc_space(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct iattr		iattr;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	int			error;
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index cdd4c1d..f0cfcd79 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -93,20 +93,26 @@ xfs_inode_buf_verify(
+ 	bool		readahead)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
++	xfs_agnumber_t	agno;
+ 	int		i;
+ 	int		ni;
  
  	/*
-@@ -648,9 +648,6 @@ xfs_ioc_space(
- 	if (error)
- 		goto out_unlock;
+ 	 * Validate the magic number and version of every inode in the buffer
+ 	 */
++	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
+ 	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
+ 	for (i = 0; i < ni; i++) {
+ 		int		di_ok;
+ 		xfs_dinode_t	*dip;
++		xfs_agino_t	unlinked_ino;
  
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	switch (bf->l_whence) {
- 	case 0: /*SEEK_SET*/
- 		break;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 951e84df5576..d23aa08426f9 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1028,13 +1028,17 @@ xfs_vn_setattr(
- 
- 	if (iattr->ia_valid & ATTR_SIZE) {
- 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
--		uint			iolock = XFS_IOLOCK_EXCL;
-+		uint			iolock;
-+
-+		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 
- 		error = xfs_break_layouts(d_inode(dentry), &iolock);
--		if (error)
-+		if (error) {
-+			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 			return error;
-+		}
- 
--		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- 		error = xfs_vn_setattr_size(dentry, iattr);
- 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	} else {
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index aa6c5c193f45..6ea7b0b55d02 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -43,7 +43,8 @@ xfs_break_layouts(
- 	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
- 		xfs_iunlock(ip, *iolock);
- 		error = break_layout(inode, true);
--		*iolock = XFS_IOLOCK_EXCL;
-+		*iolock &= ~XFS_IOLOCK_SHARED;
-+		*iolock |= XFS_IOLOCK_EXCL;
- 		xfs_ilock(ip, *iolock);
+ 		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
++		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
+ 		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
+-			xfs_dinode_good_version(mp, dip->di_version);
++			xfs_dinode_good_version(mp, dip->di_version) &&
++			(unlinked_ino == NULLAGINO ||
++			 xfs_verify_agino(mp, agno, unlinked_ino));
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP))) {
+ 			if (readahead) {
+@@ -124,9 +130,9 @@ xfs_inode_buf_verify(
+ 			xfs_buf_verifier_error(bp, -EFSCORRUPTED,
+ 					__func__, dip, sizeof(*dip),
+ 					NULL);
++			return;
+ 		}
  	}
+-	xfs_inobp_check(mp, bp);
+ }
  
-
+ 
