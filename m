@@ -1,332 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33856 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751796AbeCVRXX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 13:23:23 -0400
-Date: Thu, 22 Mar 2018 10:23:15 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:50418 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751674AbeCVRf0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 13:35:26 -0400
+Date: Thu, 22 Mar 2018 10:35:20 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/9] xfs: sanity-check the unused space before trying
- to use it
-Message-ID: <20180322172315.GW4818@magnolia>
+Subject: Re: [PATCH v2 5/9] xfs: bmap scrubber should do rmap xref with bmap
+ for sparse files
+Message-ID: <20180322173520.GX4818@magnolia>
 References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <152107377649.19571.3126019873391787136.stgit@magnolia>
- <20180322055912.GP4818@magnolia>
- <20180322143339.GA16617@bfoster.bfoster>
+ <152107380082.19571.10988218532838802248.stgit@magnolia>
+ <20180322060218.GR4818@magnolia>
+ <20180322143357.GC16617@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180322143339.GA16617@bfoster.bfoster>
+In-Reply-To: <20180322143357.GC16617@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Mar 22, 2018 at 10:33:40AM -0400, Brian Foster wrote:
-> On Wed, Mar 21, 2018 at 10:59:12PM -0700, Darrick J. Wong wrote:
+On Thu, Mar 22, 2018 at 10:33:58AM -0400, Brian Foster wrote:
+> On Wed, Mar 21, 2018 at 11:02:18PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > In xfs_dir2_data_use_free, we examine on-disk metadata and ASSERT if
-> > it doesn't make sense.  Since a carefully crafted fuzzed image can cause
-> > the kernel to crash after blowing a bunch of assertions, let's move
-> > those checks into a validator function and rig everything up to return
-> > EFSCORRUPTED to userspace.  Found by lastbit fuzzing ltail.bestcount via
-> > xfs/391.
+> > When we're scanning an extent mapping inode fork, ensure that every rmap
+> > record for this ifork has a corresponding bmbt record too.  This
+> > (mostly) provides the ability to cross-reference rmap records with bmap
+> > data.  The rmap scrubber cannot do the xref on its own because that
+> > requires taking an ilock with the agf lock held, which violates our
+> > locking order rules (inode, then agf).
+> > 
+> > Note that we only do this for forks that are in btree format due to the
+> > increased complexity; or forks that should have data but suspiciously
+> > have zero extents because the inode could have just had its iforks
+> > zapped by the inode repair code and now we need to reclaim the old
+> > extents.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> > v2: release buffers defensively, fix some formatting weirdness
+> > v2: enhance comments, fix XFS_BTREE_ERROR usage
 > > ---
-> >  fs/xfs/libxfs/xfs_dir2.h       |    2 +
-> >  fs/xfs/libxfs/xfs_dir2_block.c |   49 +++++++++++++++----------
-> >  fs/xfs/libxfs/xfs_dir2_data.c  |   78 +++++++++++++++++++++++++++++++---------
-> >  fs/xfs/libxfs/xfs_dir2_leaf.c  |    6 +++
-> >  fs/xfs/libxfs/xfs_dir2_node.c  |    9 ++++-
-> >  5 files changed, 103 insertions(+), 41 deletions(-)
+> >  fs/xfs/scrub/bmap.c |  170 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 169 insertions(+), 1 deletion(-)
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> > index 388d67c..989e95a 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2.h
-> > +++ b/fs/xfs/libxfs/xfs_dir2.h
-> > @@ -173,7 +173,7 @@ extern void xfs_dir2_data_log_unused(struct xfs_da_args *args,
-> >  extern void xfs_dir2_data_make_free(struct xfs_da_args *args,
-> >  		struct xfs_buf *bp, xfs_dir2_data_aoff_t offset,
-> >  		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
-> > -extern void xfs_dir2_data_use_free(struct xfs_da_args *args,
-> > +extern int xfs_dir2_data_use_free(struct xfs_da_args *args,
-> >  		struct xfs_buf *bp, struct xfs_dir2_data_unused *dup,
-> >  		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
-> >  		int *needlogp, int *needscanp);
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> > index 2da86a3..e8256e2 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_block.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> > index d002821..75ea2d6 100644
+> > --- a/fs/xfs/scrub/bmap.c
+> > +++ b/fs/xfs/scrub/bmap.c
+> > @@ -37,6 +37,7 @@
+> >  #include "xfs_bmap_util.h"
+> >  #include "xfs_bmap_btree.h"
+> >  #include "xfs_rmap.h"
+> > +#include "xfs_rmap_btree.h"
+> >  #include "xfs_refcount.h"
+> >  #include "scrub/xfs_scrub.h"
+> >  #include "scrub/scrub.h"
+> > @@ -423,6 +424,169 @@ xfs_scrub_bmap_btree(
+> >  	return error;
+> >  }
+> >  
 > ...
-> > @@ -541,9 +545,11 @@ xfs_dir2_block_addname(
-> >  	/*
-> >  	 * Mark space for the data entry used.
-> >  	 */
-> > -	xfs_dir2_data_use_free(args, bp, dup,
-> > +	error = xfs_dir2_data_use_free(args, bp, dup,
-> >  		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
-> >  		(xfs_dir2_data_aoff_t)len, &needlog, &needscan);
+> > +/* Make sure each rmap has a corresponding bmbt entry. */
+> > +STATIC int
+> > +xfs_scrub_bmap_check_ag_rmaps(
+> > +	struct xfs_scrub_context	*sc,
+> > +	int				whichfork,
+> > +	xfs_agnumber_t			agno)
+> > +{
+> > +	struct xfs_scrub_bmap_check_rmap_info	sbcri;
+> > +	struct xfs_btree_cur		*cur;
+> > +	struct xfs_buf			*agf;
+> > +	int				error;
+> > +
+> > +	error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, agno);
+> > +	if (!cur) {
+> > +		error = -ENOMEM;
+> > +		goto out_agf;
+> > +	}
+> > +
+> > +	sbcri.sc = sc;
+> > +	sbcri.whichfork = whichfork;
+> > +	error = xfs_rmap_query_all(cur, xfs_scrub_bmap_check_rmap, &sbcri);
+> > +	if (error == XFS_BTREE_QUERY_RANGE_ABORT)
+> > +		error = 0;
+> > +
+> > +	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
 > 
-> Still several of these broken alignments (i.e., the ones where the
-> 'error = ...' indents the first line).
+> So I assume it's intentional that we don't care about _QUERY_RANGE_ABORT
+> here? Otherwise looks fine.
 
-Ok, will fix them all up.
+Yes.  The only difference between XFS_BTREE_ERROR and XFS_BTREE_NOERROR
+is that _ERROR forces _del_cursor to scan every bc_bufs entry for
+buffers to release, whereas _NOERROR stops after the first NULL it finds
+while going from level 0 to level n.  I've had half a mind to remove
+that parameter since it clutters up the callsites and most of the time
+all the btree pointers fit in a single cacheline.
+
+That said, the btree query_range/query_all functions only return
+_QUERY_RANGE_ABORT if the helper function (i.e. xfs_scrub_bmap_check_rmap)
+returns _ABORT.  The helper only gets called if we find a record in the
+btree which means that we can use _NOERROR since bc_bufs[0] is set.
 
 --D
 
 > Brian
 > 
-> > +	if (error)
-> > +		return error;
-> >  	/*
-> >  	 * Create the new data entry.
-> >  	 */
-> > @@ -997,8 +1003,10 @@ xfs_dir2_leaf_to_block(
-> >  	/*
-> >  	 * Use up the space at the end of the block (blp/btp).
-> >  	 */
-> > -	xfs_dir2_data_use_free(args, dbp, dup, args->geo->blksize - size, size,
-> > -		&needlog, &needscan);
-> > +	error = xfs_dir2_data_use_free(args, dbp, dup,
-> > +		args->geo->blksize - size, size, &needlog, &needscan);
-> > +	if (error)
-> > +		return error;
-> >  	/*
-> >  	 * Initialize the block tail.
-> >  	 */
-> > @@ -1110,18 +1118,14 @@ xfs_dir2_sf_to_block(
-> >  	 * Add block 0 to the inode.
-> >  	 */
-> >  	error = xfs_dir2_grow_inode(args, XFS_DIR2_DATA_SPACE, &blkno);
-> > -	if (error) {
-> > -		kmem_free(sfp);
-> > -		return error;
-> > -	}
-> > +	if (error)
-> > +		goto out_free;
-> >  	/*
-> >  	 * Initialize the data block, then convert it to block format.
-> >  	 */
-> >  	error = xfs_dir3_data_init(args, blkno, &bp);
-> > -	if (error) {
-> > -		kmem_free(sfp);
-> > -		return error;
-> > -	}
-> > +	if (error)
-> > +		goto out_free;
-> >  	xfs_dir3_block_init(mp, tp, bp, dp);
-> >  	hdr = bp->b_addr;
-> >  
-> > @@ -1136,8 +1140,10 @@ xfs_dir2_sf_to_block(
-> >  	 */
-> >  	dup = dp->d_ops->data_unused_p(hdr);
-> >  	needlog = needscan = 0;
-> > -	xfs_dir2_data_use_free(args, bp, dup, args->geo->blksize - i,
-> > +	error = xfs_dir2_data_use_free(args, bp, dup, args->geo->blksize - i,
-> >  			       i, &needlog, &needscan);
-> > +	if (error)
-> > +		goto out_free;
-> >  	ASSERT(needscan == 0);
-> >  	/*
-> >  	 * Fill in the tail.
-> > @@ -1150,9 +1156,11 @@ xfs_dir2_sf_to_block(
-> >  	/*
-> >  	 * Remove the freespace, we'll manage it.
-> >  	 */
-> > -	xfs_dir2_data_use_free(args, bp, dup,
-> > +	error = xfs_dir2_data_use_free(args, bp, dup,
-> >  		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
-> >  		be16_to_cpu(dup->length), &needlog, &needscan);
-> > +	if (error)
-> > +		goto out_free;
-> >  	/*
-> >  	 * Create entry for .
-> >  	 */
-> > @@ -1256,4 +1264,7 @@ xfs_dir2_sf_to_block(
-> >  	xfs_dir2_block_log_tail(tp, bp);
-> >  	xfs_dir3_data_check(dp, bp);
-> >  	return 0;
-> > +out_free:
-> > +	kmem_free(sfp);
+> > +out_agf:
+> > +	xfs_trans_brelse(sc->tp, agf);
 > > +	return error;
-> >  }
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-> > index 9202794..167503d 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_data.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_data.c
-> > @@ -932,10 +932,51 @@ xfs_dir2_data_make_free(
-> >  	*needscanp = needscan;
-> >  }
-> >  
-> > +/* Check our free data for obvious signs of corruption. */
-> > +static inline xfs_failaddr_t
-> > +xfs_dir2_data_check_free(
-> > +	struct xfs_dir2_data_hdr	*hdr,
-> > +	struct xfs_dir2_data_unused	*dup,
-> > +	xfs_dir2_data_aoff_t		offset,
-> > +	xfs_dir2_data_aoff_t		len)
-> > +{
-> > +	if (hdr->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC) &&
-> > +	    hdr->magic != cpu_to_be32(XFS_DIR3_DATA_MAGIC) &&
-> > +	    hdr->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) &&
-> > +	    hdr->magic != cpu_to_be32(XFS_DIR3_BLOCK_MAGIC))
-> > +		return __this_address;
-> > +	if (be16_to_cpu(dup->freetag) != XFS_DIR2_DATA_FREE_TAG)
-> > +		return __this_address;
-> > +	if (offset < (char *)dup - (char *)hdr)
-> > +		return __this_address;
-> > +	if (offset + len > (char *)dup + be16_to_cpu(dup->length) - (char *)hdr)
-> > +		return __this_address;
-> > +	if ((char *)dup - (char *)hdr !=
-> > +	    be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)))
-> > +		return __this_address;
-> > +	return NULL;
 > > +}
 > > +
-> > +/* Sanity-check a new bestfree entry. */
-> > +static inline xfs_failaddr_t
-> > +xfs_dir2_data_check_new_free(
-> > +	struct xfs_dir2_data_hdr	*hdr,
-> > +	struct xfs_dir2_data_free	*dfp,
-> > +	struct xfs_dir2_data_unused	*newdup)
+> > +/* Make sure each rmap has a corresponding bmbt entry. */
+> > +STATIC int
+> > +xfs_scrub_bmap_check_rmaps(
+> > +	struct xfs_scrub_context	*sc,
+> > +	int				whichfork)
 > > +{
-> > +	if (dfp == NULL)
-> > +		return __this_address;
-> > +	if (dfp->length != newdup->length)
-> > +		return __this_address;
-> > +	if (be16_to_cpu(dfp->offset) != (char *)newdup - (char *)hdr)
-> > +		return __this_address;
-> > +	return NULL;
+> > +	loff_t				size;
+> > +	xfs_agnumber_t			agno;
+> > +	int				error;
+> > +
+> > +	if (!xfs_sb_version_hasrmapbt(&sc->mp->m_sb) ||
+> > +	    whichfork == XFS_COW_FORK ||
+> > +	    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+> > +		return 0;
+> > +
+> > +	/* Don't support realtime rmap checks yet. */
+> > +	if (XFS_IS_REALTIME_INODE(sc->ip) && whichfork == XFS_DATA_FORK)
+> > +		return 0;
+> > +
+> > +	/*
+> > +	 * Only do this for complex maps that are in btree format, or for
+> > +	 * situations where we would seem to have a size but zero extents.
+> > +	 * The inode repair code can zap broken iforks, which means we have
+> > +	 * to flag this bmap as corrupt if there are rmaps that need to be
+> > +	 * reattached.
+> > +	 */
+> > +	switch (whichfork) {
+> > +	case XFS_DATA_FORK:
+> > +		size = i_size_read(VFS_I(sc->ip));
+> > +		break;
+> > +	case XFS_ATTR_FORK:
+> > +		size = XFS_IFORK_Q(sc->ip);
+> > +		break;
+> > +	default:
+> > +		size = 0;
+> > +		break;
+> > +	}
+> > +	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+> > +	    (size == 0 || XFS_IFORK_NEXTENTS(sc->ip, whichfork) > 0))
+> > +		return 0;
+> > +
+> > +	for (agno = 0; agno < sc->mp->m_sb.sb_agcount; agno++) {
+> > +		error = xfs_scrub_bmap_check_ag_rmaps(sc, whichfork, agno);
+> > +		if (error)
+> > +			return error;
+> > +		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > +			break;
+> > +	}
+> > +
+> > +	return 0;
 > > +}
 > > +
 > >  /*
-> >   * Take a byte range out of an existing unused space and make it un-free.
-> >   */
-> > -void
-> > +int
-> >  xfs_dir2_data_use_free(
-> >  	struct xfs_da_args	*args,
-> >  	struct xfs_buf		*bp,
-> > @@ -947,23 +988,19 @@ xfs_dir2_data_use_free(
-> >  {
-> >  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
-> >  	xfs_dir2_data_free_t	*dfp;		/* bestfree pointer */
-> > +	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
-> > +	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
-> > +	struct xfs_dir2_data_free *bf;
-> > +	xfs_failaddr_t		fa;
-> >  	int			matchback;	/* matches end of freespace */
-> >  	int			matchfront;	/* matches start of freespace */
-> >  	int			needscan;	/* need to regen bestfree */
-> > -	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
-> > -	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
-> >  	int			oldlen;		/* old unused entry's length */
-> > -	struct xfs_dir2_data_free *bf;
-> >  
-> >  	hdr = bp->b_addr;
-> > -	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-> > -	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
-> > -	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-> > -	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
-> > -	ASSERT(be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG);
-> > -	ASSERT(offset >= (char *)dup - (char *)hdr);
-> > -	ASSERT(offset + len <= (char *)dup + be16_to_cpu(dup->length) - (char *)hdr);
-> > -	ASSERT((char *)dup - (char *)hdr == be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
-> > +	fa = xfs_dir2_data_check_free(hdr, dup, offset, len);
-> > +	if (fa)
-> > +		goto corrupt;
-> >  	/*
-> >  	 * Look up the entry in the bestfree table.
-> >  	 */
-> > @@ -1008,9 +1045,9 @@ xfs_dir2_data_use_free(
-> >  			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
-> >  			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
-> >  						       needlogp);
-> > -			ASSERT(dfp != NULL);
-> > -			ASSERT(dfp->length == newdup->length);
-> > -			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
-> > +			fa = xfs_dir2_data_check_new_free(hdr, dfp, newdup);
-> > +			if (fa)
-> > +				goto corrupt;
-> >  			/*
-> >  			 * If we got inserted at the last slot,
-> >  			 * that means we don't know if there was a better
-> > @@ -1036,9 +1073,9 @@ xfs_dir2_data_use_free(
-> >  			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
-> >  			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
-> >  						       needlogp);
-> > -			ASSERT(dfp != NULL);
-> > -			ASSERT(dfp->length == newdup->length);
-> > -			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
-> > +			fa = xfs_dir2_data_check_new_free(hdr, dfp, newdup);
-> > +			if (fa)
-> > +				goto corrupt;
-> >  			/*
-> >  			 * If we got inserted at the last slot,
-> >  			 * that means we don't know if there was a better
-> > @@ -1084,6 +1121,11 @@ xfs_dir2_data_use_free(
-> >  		}
+> >   * Scrub an inode fork's block mappings.
+> >   *
+> > @@ -463,7 +627,7 @@ xfs_scrub_bmap(
+> >  		break;
+> >  	case XFS_ATTR_FORK:
+> >  		if (!ifp)
+> > -			goto out;
+> > +			goto out_check_rmap;
+> >  		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
+> >  		    !xfs_sb_version_hasattr2(&mp->m_sb))
+> >  			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
+> > @@ -534,6 +698,10 @@ xfs_scrub_bmap(
+> >  			goto out;
 > >  	}
-> >  	*needscanp = needscan;
-> > +	return 0;
-> > +corrupt:
-> > +	xfs_corruption_error(__func__, XFS_ERRLEVEL_LOW, args->dp->i_mount,
-> > +			hdr, __FILE__, __LINE__, fa);
-> > +	return -EFSCORRUPTED;
+> >  
+> > +out_check_rmap:
+> > +	error = xfs_scrub_bmap_check_rmaps(sc, whichfork);
+> > +	if (!xfs_scrub_fblock_xref_process_error(sc, whichfork, 0, &error))
+> > +		goto out;
+> >  out:
+> >  	return error;
 > >  }
-> >  
-> >  /* Find the end of the entry data in a data/block format dir block. */
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> > index d61d52d..f746921 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> > @@ -877,9 +877,13 @@ xfs_dir2_leaf_addname(
-> >  	/*
-> >  	 * Mark the initial part of our freespace in use for the new entry.
-> >  	 */
-> > -	xfs_dir2_data_use_free(args, dbp, dup,
-> > +	error = xfs_dir2_data_use_free(args, dbp, dup,
-> >  		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
-> >  		&needlog, &needscan);
-> > +	if (error) {
-> > +		xfs_trans_brelse(tp, lbp);
-> > +		return error;
-> > +	}
-> >  	/*
-> >  	 * Initialize our new entry (at last).
-> >  	 */
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> > index 0839ffe..57b6c4fa 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> > @@ -1729,6 +1729,7 @@ xfs_dir2_node_addname_int(
-> >  	__be16			*bests;
-> >  	struct xfs_dir3_icfree_hdr freehdr;
-> >  	struct xfs_dir2_data_free *bf;
-> > +	xfs_dir2_data_aoff_t	aoff;
-> >  
-> >  	dp = args->dp;
-> >  	mp = dp->i_mount;
-> > @@ -2023,9 +2024,13 @@ xfs_dir2_node_addname_int(
-> >  	/*
-> >  	 * Mark the first part of the unused space, inuse for us.
-> >  	 */
-> > -	xfs_dir2_data_use_free(args, dbp, dup,
-> > -		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
-> > +	aoff = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
-> > +	error = xfs_dir2_data_use_free(args, dbp, dup, aoff, length,
-> >  		&needlog, &needscan);
-> > +	if (error) {
-> > +		xfs_trans_brelse(tp, dbp);
-> > +		return error;
-> > +	}
-> >  	/*
-> >  	 * Fill in the new entry and log it.
-> >  	 */
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
