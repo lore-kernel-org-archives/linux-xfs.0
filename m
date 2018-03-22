@@ -1,56 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44884 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751632AbeCWQyk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Mar 2018 12:54:40 -0400
-Subject: [PATCH 2/4] common/xfs: fix various problems with
- _supports_xfs_scrub
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 23 Mar 2018 09:54:35 -0700
-Message-ID: <152182407507.14523.13692488779696151853.stgit@magnolia>
-In-Reply-To: <152182406249.14523.2186010254497227366.stgit@magnolia>
-References: <152182406249.14523.2186010254497227366.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail.kernel.org ([198.145.29.99]:49702 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751531AbeCVVMw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 17:12:52 -0400
+From: Shaohua Li <shli@kernel.org>
+Subject: [PATCH V2] xfs: implement cgroup writeback support
+Date: Thu, 22 Mar 2018 14:11:45 -0700
+Message-Id: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: eguan@linux.alibaba.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Kernel-team@fb.com, bfoster@redhat.com, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Shaohua Li <shli@fb.com>
 
-The _supports_xfs_scrub helper is called with a mountpoint (a working
-mountpoint is required for scrub) and a block device (used to detect
-norecovery mounts).  If either of these conditions aren't satisfied we
-should return failure status to the caller, not unilaterally decide to
-bail out of the test.
+Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
+writeback support). Tested with a fio test, verified writeback is
+throttled against cgroup io.max write bandwidth, also verified moving
+the fio test to another cgroup and the writeback is throttled against
+new cgroup setting.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This only controls the file data write for cgroup. For metadata, since
+xfs dispatches the metadata write in specific threads, it's possible low
+prio app's metadata could harm high prio app's metadata. A while back,
+Tejun has a patch to force metadata belonging to root cgroup for btrfs.
+I had a similiar patch for xfs too. But Since Tejun's patch isn't in
+upstream, I'll delay post the xfs patch.
+
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- common/xfs |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c  | 13 +++++++++++--
+ fs/xfs/xfs_super.c |  1 +
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-
-diff --git a/common/xfs b/common/xfs
-index 1d98ba1..3b71e02 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -305,9 +305,13 @@ _supports_xfs_scrub()
- 	local mountpoint="$1"
- 	local device="$2"
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 19eadc8..5f70584 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -589,7 +589,8 @@ xfs_alloc_ioend(
+ 	struct inode		*inode,
+ 	unsigned int		type,
+ 	xfs_off_t		offset,
+-	struct buffer_head	*bh)
++	struct buffer_head	*bh,
++	struct writeback_control *wbc)
+ {
+ 	struct xfs_ioend	*ioend;
+ 	struct bio		*bio;
+@@ -606,6 +607,8 @@ xfs_alloc_ioend(
+ 	INIT_WORK(&ioend->io_work, xfs_end_io);
+ 	ioend->io_append_trans = NULL;
+ 	ioend->io_bio = bio;
++	/* attach new bio to its cgroup */
++	wbc_init_bio(wbc, bio);
+ 	return ioend;
+ }
  
--	if [ ! -b "$device" ] || [ ! -e "$mountpoint" ]; then
-+	if [ -z "$device" ] || [ -z "$mountpoint" ]; then
- 		echo "Usage: _supports_xfs_scrub mountpoint device"
--		exit 1
-+		return 1
-+	fi
+@@ -633,6 +636,8 @@ xfs_chain_bio(
+ 	ioend->io_bio->bi_write_hint = ioend->io_inode->i_write_hint;
+ 	submit_bio(ioend->io_bio);
+ 	ioend->io_bio = new;
++	/* attach new bio to its cgroup */
++	wbc_init_bio(wbc, new);
+ }
+ 
+ /*
+@@ -656,7 +661,8 @@ xfs_add_to_ioend(
+ 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+ 		if (wpc->ioend)
+ 			list_add(&wpc->ioend->io_list, iolist);
+-		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
++		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset,
++					     bh, wbc);
+ 	}
+ 
+ 	/*
+@@ -666,6 +672,9 @@ xfs_add_to_ioend(
+ 	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
+ 		xfs_chain_bio(wpc->ioend, wbc, bh);
+ 
++	/* Charge write size to its cgroup for cgroup switching track */
++	wbc_account_io(wbc, bh->b_page, bh->b_size);
 +
-+	if [ ! -b "$device" ] || [ ! -e "$mountpoint" ]; then
-+		return 1
- 	fi
+ 	wpc->ioend->io_size += bh->b_size;
+ 	wpc->last_block = bh->b_blocknr;
+ 	xfs_start_buffer_writeback(bh);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 951271f..95c2d3d 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1666,6 +1666,7 @@ xfs_fs_fill_super(
+ 	sb->s_max_links = XFS_MAXLINK;
+ 	sb->s_time_gran = 1;
+ 	set_posix_acl_flag(sb);
++	sb->s_iflags |= SB_I_CGROUPWB;
  
- 	test "$FSTYP" = "xfs" || return 1
+ 	/* version 5 superblocks support inode version counters. */
+ 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+-- 
+2.9.5
 
