@@ -1,151 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18976 "EHLO mga09.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:46716 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754225AbeCUXGz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 19:06:55 -0400
-Subject: [PATCH v7 07/14] fs,
- dax: use page->mapping to warn if truncate collides with a busy page
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 21 Mar 2018 15:57:48 -0700
-Message-ID: <152167306807.5268.8483232024444414342.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1753342AbeCVOgE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 10:36:04 -0400
+Date: Thu, 22 Mar 2018 15:35:59 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+Message-ID: <20180322143559.pmwwwz4gic4wkq7r@quack2.suse.cz>
+References: <20180301014144.28892-1-david@fromorbit.com>
+ <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
+ <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
+ <20180313051037.GC18129@dastard>
+ <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+ <20180313161242.GA11168@lst.de>
+ <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
+ <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
+ <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz
+To: Robert Dorr <rdorr@microsoft.com>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
 
-Catch cases where extent unmap operations encounter pages that are
-pinned / busy. Typically this is pinned pages that are under active dma.
-This warning is a canary for potential data corruption as truncated
-blocks could be allocated to a new file while the device is still
-performing i/o.
+On Mon 19-03-18 16:14:16, Robert Dorr wrote:
+> Awesome news on the spin.   
+> 
+> Are you going to be able to make changes to EXT4 to accommodate REQ_FUA
+> without generic_write_flush to improve performance like was done for xfs?
 
-Here is an example of a collision that this implementation catches:
+I'm currently on a sick leave so I'm slow on replies. Sorry. I don't see a
+reason why ext4 could not have the same optimization as XFS for that case
+of direct IO. However I'm not sure when I get to implementing that.
 
- WARNING: CPU: 2 PID: 1286 at fs/dax.c:343 dax_disassociate_entry+0x55/0x80
- [..]
- Call Trace:
-  __dax_invalidate_mapping_entry+0x6c/0xf0
-  dax_delete_mapping_entry+0xf/0x20
-  truncate_exceptional_pvec_entries.part.12+0x1af/0x200
-  truncate_inode_pages_range+0x268/0x970
-  ? tlb_gather_mmu+0x10/0x20
-  ? up_write+0x1c/0x40
-  ? unmap_mapping_range+0x73/0x140
-  xfs_free_file_space+0x1b6/0x5b0 [xfs]
-  ? xfs_file_fallocate+0x7f/0x320 [xfs]
-  ? down_write_nested+0x40/0x70
-  ? xfs_ilock+0x21d/0x2f0 [xfs]
-  xfs_file_fallocate+0x162/0x320 [xfs]
-  ? rcu_read_lock_sched_held+0x3f/0x70
-  ? rcu_sync_lockdep_assert+0x2a/0x50
-  ? __sb_start_write+0xd0/0x1b0
-  ? vfs_fallocate+0x20c/0x270
-  vfs_fallocate+0x154/0x270
-  SyS_fallocate+0x43/0x80
-  entry_SYSCALL_64_fastpath+0x1f/0x96
+								Honza
 
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/dax.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
-
-diff --git a/fs/dax.c b/fs/dax.c
-index b646a46e4d12..f21a8e7e47f6 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -298,6 +298,56 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
- 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
- }
- 
-+static unsigned long dax_entry_size(void *entry)
-+{
-+	if (dax_is_zero_entry(entry))
-+		return 0;
-+	else if (dax_is_empty_entry(entry))
-+		return 0;
-+	else if (dax_is_pmd_entry(entry))
-+		return PMD_SIZE;
-+	else
-+		return PAGE_SIZE;
-+}
-+
-+#define for_each_entry_pfn(entry, pfn, end_pfn) \
-+	for (pfn = dax_radix_pfn(entry), \
-+			end_pfn = pfn + dax_entry_size(entry) / PAGE_SIZE; \
-+			pfn < end_pfn; \
-+			pfn++)
-+
-+static void dax_associate_entry(void *entry, struct address_space *mapping)
-+{
-+	unsigned long pfn, end_pfn;
-+
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-+		return;
-+
-+	for_each_entry_pfn(entry, pfn, end_pfn) {
-+		struct page *page = pfn_to_page(pfn);
-+
-+		WARN_ON_ONCE(page->mapping);
-+		page->mapping = mapping;
-+	}
-+}
-+
-+static void dax_disassociate_entry(void *entry, struct address_space *mapping,
-+		bool trunc)
-+{
-+	unsigned long pfn, end_pfn;
-+
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-+		return;
-+
-+	for_each_entry_pfn(entry, pfn, end_pfn) {
-+		struct page *page = pfn_to_page(pfn);
-+
-+		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
-+		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
-+		page->mapping = NULL;
-+	}
-+}
-+
- /*
-  * Find radix tree entry at given index. If it points to an exceptional entry,
-  * return it with the radix tree entry locked. If the radix tree doesn't
-@@ -404,6 +454,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		}
- 
- 		if (pmd_downgrade) {
-+			dax_disassociate_entry(entry, mapping, false);
- 			radix_tree_delete(&mapping->page_tree, index);
- 			mapping->nrexceptional--;
- 			dax_wake_mapping_entry_waiter(mapping, index, entry,
-@@ -453,6 +504,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	    (radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_DIRTY) ||
- 	     radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE)))
- 		goto out;
-+	dax_disassociate_entry(entry, mapping, trunc);
- 	radix_tree_delete(page_tree, index);
- 	mapping->nrexceptional--;
- 	ret = 1;
-@@ -547,6 +599,10 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 
- 	spin_lock_irq(&mapping->tree_lock);
- 	new_entry = dax_radix_locked_entry(pfn, flags);
-+	if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
-+		dax_disassociate_entry(entry, mapping, false);
-+		dax_associate_entry(new_entry, mapping);
-+	}
- 
- 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
- 		/*
-
+> -----Original Message-----
+> From: Jan Kara <jack@suse.cz> 
+> Sent: Monday, March 19, 2018 11:07 AM
+> To: Robert Dorr <rdorr@microsoft.com>
+> Cc: Christoph Hellwig <hch@lst.de>; Dave Chinner <david@fromorbit.com>; Dan Williams <dan.j.williams@intel.com>; linux-xfs@vger.kernel.org; linux-fsdevel <linux-fsdevel@vger.kernel.org>; Jan Kara <jack@suse.cz>; Theodore Ts'o <tytso@mit.edu>; Matthew Wilcox <mawilcox@microsoft.com>; Scott Konersmann <scottkon@microsoft.com>; Slava Oks <slavao@microsoft.com>; Jasraj Dange <jasrajd@microsoft.com>; Michael Nelson <micn@microsoft.com>
+> Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
+> 
+> On Tue 13-03-18 18:52:57, Robert Dorr wrote:
+> > I tried the RWF_ODSYNC and xfs seems to honor properly but it causes 
+> > ext4 to go spin out a single CPU and hang the system. 😊
+> 
+> Yeah, that's a bug in generic direct IO code that I've just recently fixed
+> (d9c10e5b8863 "direct-io: Fix sleep in atomic due to sync AIO" in 4.16-rc4).
+> 
+> 								Honza
+> 
+> > 
+> > 
+> > -----Original Message-----
+> > From: Christoph Hellwig <hch@lst.de>
+> > Sent: Tuesday, March 13, 2018 11:13 AM
+> > To: Robert Dorr <rdorr@microsoft.com>
+> > Cc: Dave Chinner <david@fromorbit.com>; Dan Williams 
+> > <dan.j.williams@intel.com>; linux-xfs@vger.kernel.org; Christoph 
+> > Hellwig <hch@lst.de>; linux-fsdevel <linux-fsdevel@vger.kernel.org>; 
+> > Jan Kara <jack@suse.cz>; Theodore Ts'o <tytso@mit.edu>; Matthew Wilcox 
+> > <mawilcox@microsoft.com>; Scott Konersmann <scottkon@microsoft.com>; 
+> > Slava Oks <slavao@microsoft.com>; Jasraj Dange 
+> > <jasrajd@microsoft.com>; Michael Nelson <micn@microsoft.com>
+> > Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO 
+> > writes
+> > 
+> > > I think the answer is the iomap* logic makes sure to issue generic_write_sync for O_DSYNC W1 after W1 is completed by hardware and then waits for completion of the flush request (REQ_PREFLUSH) before W1 is returned to the AIO completion ring, preventing io_getevents from processing W1 before the flush occurs and completes.   I just need proper confirmation from the experts on this code that this is the expected behavior.
+> > 
+> > Yes. that is the case.
+> > 
+> > > For SQL Server using O_DIRECT | O_DSYNC on current kernels is very performance impacting.   Instead we enable a mode for SQL that opens O_DIRECT only and issues fsync/fdatasync when we are hardening log files or checkpointing data files.   This reduces the write, flush, write, flush pattern allowing for write, write, write, ... then flush as we only issue flush requests when required to maintain the data integrity boundaries of SQL Server.  The performance is significantly better then the device flush for each write as you can imagine.
+> > > 
+> > > Testing shows the FUA enhancement is better then the write, flush pattern.   For SQL Server we want to dynamically open with O_DIRECT | O_DSYNC when REQ_FUA can be properly used and open with O_DIRECT and leverage SQL Server's alternate flush scheme when running on older kernel or a system that does not support FUA (SATA, IDE, ...)
+> > 
+> > There is no really good way to figure this out except for benchmarking, given that the FUA use an implementation detail.
+> > 
+> > Btw, another feature that might be interesting to you is the RWF_DSYNC flag to the pwritev2 syscall, which allows to apply O_DSYNC semantics on a per-I/O basis instead of using it at open time.
+> --
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
