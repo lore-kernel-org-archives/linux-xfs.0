@@ -1,166 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48384 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752004AbeCVGBR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 02:01:17 -0400
-Date: Wed, 21 Mar 2018 23:01:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 2/9] xfs: refactor bmap record valiation
-Message-ID: <20180322060113.GQ4818@magnolia>
-References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <152107378261.19571.1457221354115584570.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:59838 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753799AbeCVOlp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 10:41:45 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id C8B0A11649
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Mar 2018 09:41:27 -0500 (CDT)
+Subject: [PATCH V2] metadump/restore: don't use errno after fwrite/fread
+ failures
+References: <f40f7d1b-31b5-e5a0-4077-9480530ebf0d@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7e510e30-3922-98d7-75c9-19f8e90610d0@sandeen.net>
+Date: Thu, 22 Mar 2018 09:41:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152107378261.19571.1457221354115584570.stgit@magnolia>
+In-Reply-To: <f40f7d1b-31b5-e5a0-4077-9480530ebf0d@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+fread/fwrite don't set errno, so printing out strerror(errno)
+after a failure leads to incorrect and confusing messages:
 
-Refactor the bmap validator into a more complete helper that looks for
-extents that run off the end of the device, overflow into the next AG,
-or have invalid flag states.
+# xfs_mdrestore pre_repair.meta pre_repair.img
+xfs_mdrestore: error reading from file: Success
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Don't return unset errno from write_index, either.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
-v2: defer repair-oriented wrappers until they're needed
----
- fs/xfs/libxfs/xfs_bmap.c       |   46 +++++++++++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_bmap.h       |    3 +++
- fs/xfs/libxfs/xfs_bmap_btree.h |   14 ------------
- fs/xfs/libxfs/xfs_inode_fork.c |   12 +++++++---
- 4 files changed, 54 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index daae00e..91214f2 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1261,11 +1261,15 @@ xfs_iread_extents(
- 		 */
- 		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
- 		for (j = 0; j < num_recs; j++, frp++, i++) {
-+			xfs_failaddr_t	fa;
-+
- 			xfs_bmbt_disk_get_all(frp, &new);
--			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
--				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
--						 XFS_ERRLEVEL_LOW, mp);
-+			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
-+			if (fa) {
- 				error = -EFSCORRUPTED;
-+				xfs_inode_verifier_error(ip, error,
-+						"xfs_iread_extents(2)",
-+						frp, sizeof(*frp), fa);
- 				goto out_brelse;
- 			}
- 			xfs_iext_insert(ip, &icur, &new, state);
-@@ -6154,3 +6158,39 @@ xfs_bmap_finish_one(
- 
- 	return error;
- }
-+
-+/* Check that an inode's extent does not have invalid flags or bad ranges. */
-+xfs_failaddr_t
-+xfs_bmap_validate_extent(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	struct xfs_bmbt_irec	*irec)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fsblock_t		endfsb;
-+	bool			isrt;
-+
-+	isrt = XFS_IS_REALTIME_INODE(ip);
-+	endfsb = irec->br_startblock + irec->br_blockcount - 1;
-+	if (isrt) {
-+		if (!xfs_verify_rtbno(mp, irec->br_startblock))
-+			return __this_address;
-+		if (!xfs_verify_rtbno(mp, endfsb))
-+			return __this_address;
-+	} else {
-+		if (!xfs_verify_fsbno(mp, irec->br_startblock))
-+			return __this_address;
-+		if (!xfs_verify_fsbno(mp, endfsb))
-+			return __this_address;
-+		if (XFS_FSB_TO_AGNO(mp, irec->br_startblock) !=
-+		    XFS_FSB_TO_AGNO(mp, endfsb))
-+			return __this_address;
-+	}
-+	if (irec->br_state != XFS_EXT_NORM) {
-+		if (whichfork != XFS_DATA_FORK)
-+			return __this_address;
-+		if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
-+			return __this_address;
-+	}
-+	return NULL;
-+}
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index e36d757..f3be641 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -274,4 +274,7 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
+V2: don't return errno, either.
+
+diff --git a/db/metadump.c b/db/metadump.c
+index 9d62958..d33f901 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -161,8 +161,8 @@ write_index(void)
+ 	 */
+ 	metablock->mb_count = cpu_to_be16(cur_index);
+ 	if (fwrite(metablock, (cur_index + 1) << BBSHIFT, 1, outf) != 1) {
+-		print_warning("error writing to file: %s", strerror(errno));
+-		return -errno;
++		print_warning("error writing to target file");
++		return -1;
  	}
- }
  
-+xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
-+		struct xfs_bmbt_irec *irec);
-+
- #endif	/* __XFS_BMAP_H__ */
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-index 135b8c5..e450574 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-@@ -118,18 +118,4 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
- extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_inode *, int);
+ 	memset(block_index, 0, num_indices * sizeof(__be64));
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index c9d4b0c..262a385 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -93,15 +93,14 @@ perform_restore(
+ 	block_buffer = (char *)metablock + block_size;
  
--/*
-- * Check that the extent does not contain an invalid unwritten extent flag.
-- */
--static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
--		struct xfs_bmbt_irec *irec)
--{
--	if (irec->br_state == XFS_EXT_NORM)
--		return true;
--	if (whichfork == XFS_DATA_FORK &&
--	    xfs_sb_version_hasextflgbit(&mp->m_sb))
--		return true;
--	return false;
--}
--
- #endif	/* __XFS_BMAP_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 866d2861..613fba2 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -245,10 +245,14 @@ xfs_iformat_extents(
+ 	if (fread(block_index, block_size - sizeof(struct xfs_metablock), 1, src_f) != 1)
+-		fatal("error reading from file: %s\n", strerror(errno));
++		fatal("error reading from metadump file\n");
  
- 		xfs_iext_first(ifp, &icur);
- 		for (i = 0; i < nex; i++, dp++) {
-+			xfs_failaddr_t	fa;
-+
- 			xfs_bmbt_disk_get_all(dp, &new);
--			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
--				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
--						 XFS_ERRLEVEL_LOW, mp);
-+			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
-+			if (fa) {
-+				xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-+						"xfs_iformat_extents(2)",
-+						dp, sizeof(*dp), fa);
- 				return -EFSCORRUPTED;
- 			}
+ 	if (block_index[0] != 0)
+ 		fatal("first block is not the primary superblock\n");
  
-@@ -595,7 +599,7 @@ xfs_iextents_copy(
- 	for_each_xfs_iext(ifp, &icur, &rec) {
- 		if (isnullstartblock(rec.br_startblock))
- 			continue;
--		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, &rec));
-+		ASSERT(xfs_bmap_validate_extent(ip, whichfork, &rec) == NULL);
- 		xfs_bmbt_disk_set_all(dp, &rec);
- 		trace_xfs_write_extent(ip, &icur, state, _RET_IP_);
- 		copied += sizeof(struct xfs_bmbt_rec);
+ 
+-	if (fread(block_buffer, mb_count << mbp->mb_blocklog,
+-			1, src_f) != 1)
+-		fatal("error reading from file: %s\n", strerror(errno));
++	if (fread(block_buffer, mb_count << mbp->mb_blocklog, 1, src_f) != 1)
++		fatal("error reading from metadump file\n");
+ 
+ 	libxfs_sb_from_disk(&sb, (xfs_dsb_t *)block_buffer);
+ 
+@@ -157,7 +156,7 @@ perform_restore(
+ 			break;
+ 
+ 		if (fread(metablock, block_size, 1, src_f) != 1)
+-			fatal("error reading from file: %s\n", strerror(errno));
++			fatal("error reading from metadump file\n");
+ 
+ 		mb_count = be16_to_cpu(metablock->mb_count);
+ 		if (mb_count == 0)
+@@ -167,7 +166,7 @@ perform_restore(
+ 
+ 		if (fread(block_buffer, mb_count << mbp->mb_blocklog,
+ 								1, src_f) != 1)
+-			fatal("error reading from file: %s\n", strerror(errno));
++			fatal("error reading from metadump file\n");
+ 
+ 		bytes_read += block_size + (mb_count << mbp->mb_blocklog);
+ 	}
+@@ -253,7 +252,7 @@ main(
+ 	}
+ 
+ 	if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+-		fatal("error reading from file: %s\n", strerror(errno));
++		fatal("error reading from metadump file\n");
+ 	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
+ 		fatal("specified file is not a metadata dump\n");
+ 
+
