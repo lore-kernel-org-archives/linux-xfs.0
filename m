@@ -1,137 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:41346 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753980AbeCUXGQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 19:06:16 -0400
-Subject: [PATCH v7 00/14] dax: fix dma vs truncate/hole-punch
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 21 Mar 2018 15:57:10 -0700
-Message-ID: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:48384 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752004AbeCVGBR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 02:01:17 -0400
+Date: Wed, 21 Mar 2018 23:01:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/9] xfs: refactor bmap record valiation
+Message-ID: <20180322060113.GQ4818@magnolia>
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <152107378261.19571.1457221354115584570.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152107378261.19571.1457221354115584570.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Dave Hansen <dave.hansen@linux.intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Jeff Moyer <jmoyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andreas Dilger <adilger.kernel@dilger.ca>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, Michal Hocko <mhocko@suse.com>, kbuild test robot <lkp@intel.com>, Christoph Hellwig <hch@lst.de>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Dave Chinner <david@fromorbit.com>, =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>
 
-Changes since v6 [1]:
-* Collect some more reviewed-by's from Christoph, thanks Christoph!
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-* Rework XFS_MMAPLOCK_EXCL handling to *permit* rather than require
-  XFS_MMAPLOCK_EXCL to be held over calls to xfs_break_layouts()
-  (Christoph)
+Refactor the bmap validator into a more complete helper that looks for
+extents that run off the end of the device, overflow into the next AG,
+or have invalid flag states.
 
-* Clean up kbuild robot reports against "ext2, dax: introduce ext2_dax_aops"
-  and "fs, dax: use page->mapping to warn if truncate collides with a
-  busy page".
-
-* Squash the xfs_break_leased_layouts() 'did_unlock' rework into "xfs:
-  prepare xfs_break_layouts() for another layout type" (Christoph)
-
-* Communicate the 'did_unlock' condition with an out parameter rather
-  than a positive error code (Christoph). A few other small / welcome
-  clean ups fell out as a result.
-
-* Rename BREAK_TRUNCATE to BREAK_UNMAPI to make it clear the
-  implementation is concerned with any and all inode extent unmap
-  events, not just truncate(2). (Darrick)
-
-* Rebase the branch on commit 6b2bb7265f0b "sched/wait: Introduce
-  wait_var_event()" from tip.git/sched/wait. Thanks Peter!
-
-[1]: https://lists.01.org/pipermail/linux-nvdimm/2018-March/014806.html
-
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-
-Background:
-
-get_user_pages() in the filesystem pins file backed memory pages for
-access by devices performing dma. However, it only pins the memory pages
-not the page-to-file offset association. If a file is truncated the
-pages are mapped out of the file and dma may continue indefinitely into
-a page that is owned by a device driver. This breaks coherency of the
-file vs dma, but the assumption is that if userspace wants the
-file-space truncated it does not matter what data is inbound from the
-device, it is not relevant anymore. The only expectation is that dma can
-safely continue while the filesystem reallocates the block(s).
-
-Problem:
-
-This expectation that dma can safely continue while the filesystem
-changes the block map is broken by dax. With dax the target dma page
-*is* the filesystem block. The model of leaving the page pinned for dma,
-but truncating the file block out of the file, means that the filesytem
-is free to reallocate a block under active dma to another file and now
-the expected data-incoherency situation has turned into active
-data-corruption.
-
-Solution:
-
-Defer all filesystem operations (fallocate(), truncate()) on a dax mode
-file while any page/block in the file is under active dma. This solution
-assumes that dma is transient. Cases where dma operations are known to
-not be transient, like RDMA, have been explicitly disabled via
-commits like 5f1d43de5416 "IB/core: disable memory registration of
-filesystem-dax vmas".
-
-The dax_layout_busy_page() routine is called by filesystems with a lock
-held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
-The process of looking up a busy page invalidates all mappings
-to trigger any subsequent get_user_pages() to block on i_mmap_lock.
-The filesystem continues to call dax_layout_busy_page() until it finally
-returns no more active pages. This approach assumes that the page
-pinning is transient, if that assumption is violated the system would
-have likely hung from the uncompleted I/O.
-
+v2: defer repair-oriented wrappers until they're needed
 ---
+ fs/xfs/libxfs/xfs_bmap.c       |   46 +++++++++++++++++++++++++++++++++++++---
+ fs/xfs/libxfs/xfs_bmap.h       |    3 +++
+ fs/xfs/libxfs/xfs_bmap_btree.h |   14 ------------
+ fs/xfs/libxfs/xfs_inode_fork.c |   12 +++++++---
+ 4 files changed, 54 insertions(+), 21 deletions(-)
 
-Dan Williams (14):
-      dax: store pfns in the radix
-      fs, dax: prepare for dax-specific address_space_operations
-      block, dax: remove dead code in blkdev_writepages()
-      xfs, dax: introduce xfs_dax_aops
-      ext4, dax: introduce ext4_dax_aops
-      ext2, dax: introduce ext2_dax_aops
-      fs, dax: use page->mapping to warn if truncate collides with a busy page
-      mm, dax: enable filesystems to trigger dev_pagemap ->page_free callbacks
-      mm, dev_pagemap: introduce CONFIG_DEV_PAGEMAP_OPS
-      memremap: mark devm_memremap_pages() EXPORT_SYMBOL_GPL
-      mm, fs, dax: handle layout changes to pinned dax mappings
-      xfs: prepare xfs_break_layouts() to be called with XFS_MMAPLOCK_EXCL
-      xfs: prepare xfs_break_layouts() for another layout type
-      xfs, dax: introduce xfs_break_dax_layouts()
-
-
- drivers/dax/super.c      |   96 +++++++++++++++++--
- drivers/nvdimm/pmem.c    |    3 -
- fs/Kconfig               |    1 
- fs/block_dev.c           |    5 -
- fs/dax.c                 |  231 ++++++++++++++++++++++++++++++++++++----------
- fs/ext2/ext2.h           |    1 
- fs/ext2/inode.c          |   43 +++++----
- fs/ext2/namei.c          |   18 ----
- fs/ext2/super.c          |    6 +
- fs/ext4/inode.c          |   38 ++++++--
- fs/ext4/super.c          |    6 +
- fs/libfs.c               |   27 +++++
- fs/xfs/xfs_aops.c        |   21 +++-
- fs/xfs/xfs_aops.h        |    1 
- fs/xfs/xfs_file.c        |   76 ++++++++++++++-
- fs/xfs/xfs_inode.h       |   16 +++
- fs/xfs/xfs_ioctl.c       |    8 --
- fs/xfs/xfs_iops.c        |   21 +++-
- fs/xfs/xfs_pnfs.c        |   16 ++-
- fs/xfs/xfs_pnfs.h        |    6 +
- fs/xfs/xfs_super.c       |   20 ++--
- include/linux/dax.h      |   46 ++++++++-
- include/linux/fs.h       |    3 +
- include/linux/memremap.h |   28 ++----
- include/linux/mm.h       |   61 +++++++++---
- kernel/memremap.c        |   32 +++++-
- mm/Kconfig               |    5 +
- mm/gup.c                 |    5 +
- mm/hmm.c                 |   13 ---
- mm/swap.c                |    3 -
- 30 files changed, 638 insertions(+), 218 deletions(-)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index daae00e..91214f2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1261,11 +1261,15 @@ xfs_iread_extents(
+ 		 */
+ 		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
+ 		for (j = 0; j < num_recs; j++, frp++, i++) {
++			xfs_failaddr_t	fa;
++
+ 			xfs_bmbt_disk_get_all(frp, &new);
+-			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
+-				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
+-						 XFS_ERRLEVEL_LOW, mp);
++			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
++			if (fa) {
+ 				error = -EFSCORRUPTED;
++				xfs_inode_verifier_error(ip, error,
++						"xfs_iread_extents(2)",
++						frp, sizeof(*frp), fa);
+ 				goto out_brelse;
+ 			}
+ 			xfs_iext_insert(ip, &icur, &new, state);
+@@ -6154,3 +6158,39 @@ xfs_bmap_finish_one(
+ 
+ 	return error;
+ }
++
++/* Check that an inode's extent does not have invalid flags or bad ranges. */
++xfs_failaddr_t
++xfs_bmap_validate_extent(
++	struct xfs_inode	*ip,
++	int			whichfork,
++	struct xfs_bmbt_irec	*irec)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fsblock_t		endfsb;
++	bool			isrt;
++
++	isrt = XFS_IS_REALTIME_INODE(ip);
++	endfsb = irec->br_startblock + irec->br_blockcount - 1;
++	if (isrt) {
++		if (!xfs_verify_rtbno(mp, irec->br_startblock))
++			return __this_address;
++		if (!xfs_verify_rtbno(mp, endfsb))
++			return __this_address;
++	} else {
++		if (!xfs_verify_fsbno(mp, irec->br_startblock))
++			return __this_address;
++		if (!xfs_verify_fsbno(mp, endfsb))
++			return __this_address;
++		if (XFS_FSB_TO_AGNO(mp, irec->br_startblock) !=
++		    XFS_FSB_TO_AGNO(mp, endfsb))
++			return __this_address;
++	}
++	if (irec->br_state != XFS_EXT_NORM) {
++		if (whichfork != XFS_DATA_FORK)
++			return __this_address;
++		if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
++			return __this_address;
++	}
++	return NULL;
++}
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index e36d757..f3be641 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -274,4 +274,7 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
+ 	}
+ }
+ 
++xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
++		struct xfs_bmbt_irec *irec);
++
+ #endif	/* __XFS_BMAP_H__ */
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index 135b8c5..e450574 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -118,18 +118,4 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
+ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_inode *, int);
+ 
+-/*
+- * Check that the extent does not contain an invalid unwritten extent flag.
+- */
+-static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
+-		struct xfs_bmbt_irec *irec)
+-{
+-	if (irec->br_state == XFS_EXT_NORM)
+-		return true;
+-	if (whichfork == XFS_DATA_FORK &&
+-	    xfs_sb_version_hasextflgbit(&mp->m_sb))
+-		return true;
+-	return false;
+-}
+-
+ #endif	/* __XFS_BMAP_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 866d2861..613fba2 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -245,10 +245,14 @@ xfs_iformat_extents(
+ 
+ 		xfs_iext_first(ifp, &icur);
+ 		for (i = 0; i < nex; i++, dp++) {
++			xfs_failaddr_t	fa;
++
+ 			xfs_bmbt_disk_get_all(dp, &new);
+-			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
+-				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
+-						 XFS_ERRLEVEL_LOW, mp);
++			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
++			if (fa) {
++				xfs_inode_verifier_error(ip, -EFSCORRUPTED,
++						"xfs_iformat_extents(2)",
++						dp, sizeof(*dp), fa);
+ 				return -EFSCORRUPTED;
+ 			}
+ 
+@@ -595,7 +599,7 @@ xfs_iextents_copy(
+ 	for_each_xfs_iext(ifp, &icur, &rec) {
+ 		if (isnullstartblock(rec.br_startblock))
+ 			continue;
+-		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, &rec));
++		ASSERT(xfs_bmap_validate_extent(ip, whichfork, &rec) == NULL);
+ 		xfs_bmbt_disk_set_all(dp, &rec);
+ 		trace_xfs_write_extent(ip, &icur, state, _RET_IP_);
+ 		copied += sizeof(struct xfs_bmbt_rec);
