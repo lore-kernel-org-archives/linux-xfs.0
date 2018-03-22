@@ -1,73 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51208 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753223AbeC1WMp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Mar 2018 18:12:45 -0400
-Subject: [PATCH V3] xfs: do not log/recover swapext extent owner changes for
- deleted inodes
-References: <f2dcef25-01f2-d7fe-3b2d-f54a809215a5@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0b3a812e-9bab-aa93-f16b-081a91eddbef@sandeen.net>
-Date: Wed, 28 Mar 2018 17:12:44 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:56440 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751632AbeCVTtI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 15:49:08 -0400
+Date: Thu, 22 Mar 2018 12:49:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1.5/4] xfs_repair: use custom ifork verifier in
+ mv_orphanage
+Message-ID: <20180322194902.GB4818@magnolia>
+References: <152151529988.18312.2660325658864402943.stgit@magnolia>
+ <152151530602.18312.5227395146899805650.stgit@magnolia>
+ <9cf10ff8-878a-b4dc-1e32-c657c0d2354a@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <f2dcef25-01f2-d7fe-3b2d-f54a809215a5@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9cf10ff8-878a-b4dc-1e32-c657c0d2354a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-Today if we run xfs_fsr and crash[1], log replay can fail because
-the recovery code tries to instantiate the donor inode from
-disk to replay the swapext, but it's been deleted and we get
-verifier failures when we try to read the inode off disk with
-i_mode == 0.
+On Thu, Mar 22, 2018 at 02:35:34PM -0500, Eric Sandeen wrote:
+> Now that we have a custom verifier which can ignore parent
+> inode numbers, use it in mv_orphanage() as well; orphan inodes
+> may have invalid parents, and we're about to reconnect
+> them anyway, so override that test when we get them off disk.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-This fixes both sides: We don't log the swapext change if the
-inode has been deleted, and we don't try to recover it either.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-[1] or if systemd doesn't uncleanly unmount root, as is its wont
-    to do ...
+--D
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: Move the fix to xfs_ifree per bfoster's suggestion
-V3: Fix my eeeediot logic thinko, and add back in replay fix
-    so that people already in this situation can recover.
-    Tidy up commit log a bit.
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 604ee38..d17e2d5 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2470,6 +2470,10 @@
- 	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
- 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
- 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-+
-+	/* Don't attempt to replay owner changes for a deleted inode */
-+	ip->i_itemp->ili_fields &= ~(XFS_ILOG_AOWNER|XFS_ILOG_DOWNER);
-+
- 	/*
- 	 * Bump the generation count so no one will be confused
- 	 * by reincarnations of this inode.
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 5e219d9..d0e33b9 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3199,7 +3199,9 @@ xlog_recover_inode_pass2(
- 	}
- 
- out_owner_change:
--	if (in_f->ilf_fields & (XFS_ILOG_DOWNER|XFS_ILOG_AOWNER))
-+	/* Recover the swapext owner change unless inode has been deleted */
-+	if ((in_f->ilf_fields & (XFS_ILOG_DOWNER|XFS_ILOG_AOWNER)) &&
-+	    (dip->di_mode != 0))
- 		error = xfs_recover_inode_owner_change(mp, dip, in_f,
- 						       buffer_list);
- 	/* re-generate the checksum. */
-
-
+> ---
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index ed005e8..498a3b5 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1138,7 +1138,8 @@ mv_orphanage(
+>  		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
+>  					(unsigned long long)ino, ++incr);
+>  
+> -	err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, &xfs_default_ifork_ops);
+> +	/* Orphans may not have a proper parent, so use custom ops here */
+> +	err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, &phase6_ifork_ops);
+>  	if (err)
+>  		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
