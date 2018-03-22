@@ -1,107 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49702 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751531AbeCVVMw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 17:12:52 -0400
-From: Shaohua Li <shli@kernel.org>
-Subject: [PATCH V2] xfs: implement cgroup writeback support
-Date: Thu, 22 Mar 2018 14:11:45 -0700
-Message-Id: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:54712 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752266AbeCVUVG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 16:21:06 -0400
+Received: by mail-wm0-f65.google.com with SMTP id h76so18330136wme.4
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Mar 2018 13:21:05 -0700 (PDT)
+Date: Thu, 22 Mar 2018 21:21:02 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [RFC] xfsprogs: remove irix, darwin, freebsd support
+Message-ID: <20180322202102.wpff347scdmfpv62@odin.usersys.redhat.com>
+References: <20180321001456.GM1757@magnolia>
+ <17870b11-8567-7938-e510-dbc22fd107f6@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <17870b11-8567-7938-e510-dbc22fd107f6@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Kernel-team@fb.com, bfoster@redhat.com, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
 
-From: Shaohua Li <shli@fb.com>
+On Thu, Mar 22, 2018 at 02:49:42PM -0500, Eric Sandeen wrote:
+> On 3/20/18 7:14 PM, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > This is a metapatch proposing that we drop all the non-Linux xfsprogs
+> > ports.
+> > 
+> > Irix hasn't had a release since August 2006.
+> > 
+> > OSX doesn't support XFS and (afaict) never has.
+> > 
+> > FreeBSD EOL'd v9.3 (which was the last one to support XFS) in January
+> > 2017.
+> > 
+> > So, can we git rm {include,libxfs}/{irix,darwin,freebsd}.[ch] ?
+> 
+> I sent out the same query in May 2017,
+> "RFC: removing non-linux platform support from xfsprogs"
+> 
+> and nobody really chimed in to keep any of it.  I'm happy to nuke it,
+> and if someone comes back with a tail of woe, we can always put it back
+> in place if it's deemed wise.
+> 
 
-Basically this is a copy of commit 001e4a8775f6(ext4: implement cgroup
-writeback support). Tested with a fio test, verified writeback is
-throttled against cgroup io.max write bandwidth, also verified moving
-the fio test to another cgroup and the writeback is throttled against
-new cgroup setting.
++1, FreeBSD never meant to actually have a 'fully supported' XFS port anyway,
+and nobody was interested in updating it to comply with their VFS changes
+between 9 and 10, so they just decided to drop it. And Irix is EOL, so I believe
+it's safe to remove it.
 
-This only controls the file data write for cgroup. For metadata, since
-xfs dispatches the metadata write in specific threads, it's possible low
-prio app's metadata could harm high prio app's metadata. A while back,
-Tejun has a patch to force metadata belonging to root cgroup for btrfs.
-I had a similiar patch for xfs too. But Since Tejun's patch isn't in
-upstream, I'll delay post the xfs patch.
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- fs/xfs/xfs_aops.c  | 13 +++++++++++--
- fs/xfs/xfs_super.c |  1 +
- 2 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 19eadc8..5f70584 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -589,7 +589,8 @@ xfs_alloc_ioend(
- 	struct inode		*inode,
- 	unsigned int		type,
- 	xfs_off_t		offset,
--	struct buffer_head	*bh)
-+	struct buffer_head	*bh,
-+	struct writeback_control *wbc)
- {
- 	struct xfs_ioend	*ioend;
- 	struct bio		*bio;
-@@ -606,6 +607,8 @@ xfs_alloc_ioend(
- 	INIT_WORK(&ioend->io_work, xfs_end_io);
- 	ioend->io_append_trans = NULL;
- 	ioend->io_bio = bio;
-+	/* attach new bio to its cgroup */
-+	wbc_init_bio(wbc, bio);
- 	return ioend;
- }
- 
-@@ -633,6 +636,8 @@ xfs_chain_bio(
- 	ioend->io_bio->bi_write_hint = ioend->io_inode->i_write_hint;
- 	submit_bio(ioend->io_bio);
- 	ioend->io_bio = new;
-+	/* attach new bio to its cgroup */
-+	wbc_init_bio(wbc, new);
- }
- 
- /*
-@@ -656,7 +661,8 @@ xfs_add_to_ioend(
- 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
- 		if (wpc->ioend)
- 			list_add(&wpc->ioend->io_list, iolist);
--		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
-+		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset,
-+					     bh, wbc);
- 	}
- 
- 	/*
-@@ -666,6 +672,9 @@ xfs_add_to_ioend(
- 	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
- 		xfs_chain_bio(wpc->ioend, wbc, bh);
- 
-+	/* Charge write size to its cgroup for cgroup switching track */
-+	wbc_account_io(wbc, bh->b_page, bh->b_size);
-+
- 	wpc->ioend->io_size += bh->b_size;
- 	wpc->last_block = bh->b_blocknr;
- 	xfs_start_buffer_writeback(bh);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 951271f..95c2d3d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1666,6 +1666,7 @@ xfs_fs_fill_super(
- 	sb->s_max_links = XFS_MAXLINK;
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
-+	sb->s_iflags |= SB_I_CGROUPWB;
- 
- 	/* version 5 superblocks support inode version counters. */
- 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
 -- 
-2.9.5
-
+Carlos
