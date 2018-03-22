@@ -1,65 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:32912 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751411AbeCTVea (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 17:34:30 -0400
-Date: Tue, 20 Mar 2018 14:34:21 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_scrub: fix cross compile with libunistring
-Message-ID: <20180320213421.GJ1757@magnolia>
-References: <45d9ba0f01cceb75f72d157a9e4d9aaeb753a9c4.1521548516.git.baruch@tkos.co.il>
+Received: from sandeen.net ([63.231.237.45]:56060 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751853AbeCVTff (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 15:35:35 -0400
+Subject: [PATCH 1.5/4] xfs_repair: use custom ifork verifier in mv_orphanage
+References: <152151529988.18312.2660325658864402943.stgit@magnolia>
+ <152151530602.18312.5227395146899805650.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9cf10ff8-878a-b4dc-1e32-c657c0d2354a@sandeen.net>
+Date: Thu, 22 Mar 2018 14:35:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <45d9ba0f01cceb75f72d157a9e4d9aaeb753a9c4.1521548516.git.baruch@tkos.co.il>
+In-Reply-To: <152151530602.18312.5227395146899805650.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Baruch Siach <baruch@tkos.co.il>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 20, 2018 at 02:21:56PM +0200, Baruch Siach wrote:
-> Commit 4bbed4ecc2a (xfs_scrub: warn about normalized Unicode name collisions)
-> added -lunistring to the list of the xfs_scrub dependencies. When cross
-> compiling make fails to find the library on the target sysroot:
-> 
-> make[3]: *** No rule to make target `-lunistring', needed by `xfs_scrub'.  Stop.
-> 
-> Remove -lunistring from make dependencies of xfs_scrub to fix that.
-> 
-> Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Baruch Siach <baruch@tkos.co.il>
-> ---
->  scrub/Makefile | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/scrub/Makefile b/scrub/Makefile
-> index 949f6fd8ba94..979603f524ff 100644
-> --- a/scrub/Makefile
-> +++ b/scrub/Makefile
-> @@ -69,7 +69,7 @@ vfs.c \
->  xfs_scrub.c
->  
->  LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUNISTRING) $(LIBRT)
-> -LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG) $(LIBUNISTRING) $(LIBRT)
-> +LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG) $(LIBRT)
+Now that we have a custom verifier which can ignore parent
+inode numbers, use it in mv_orphanage() as well; orphan inodes
+may have invalid parents, and we're about to reconnect
+them anyway, so override that test when we get them off disk.
 
-I think we can drop the $LIBRT here too... but it's sort of moot since I
-was about to send a big series of xfs_scrub rewrites, one of which fixed
-this problem indirectly (by ripping out libunistring and replacing it
-with libicu).
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Thanks for catching this and the musl bugs, though. :)
+diff --git a/repair/phase6.c b/repair/phase6.c
+index ed005e8..498a3b5 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1138,7 +1138,8 @@ mv_orphanage(
+ 		xname.len = snprintf((char *)fname, sizeof(fname), "%llu.%d",
+ 					(unsigned long long)ino, ++incr);
+ 
+-	err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, &xfs_default_ifork_ops);
++	/* Orphans may not have a proper parent, so use custom ops here */
++	err = -libxfs_iget(mp, NULL, ino, 0, &ino_p, &phase6_ifork_ops);
+ 	if (err)
+ 		do_error(_("%d - couldn't iget disconnected inode\n"), err);
+ 
 
---D
-
->  LLDFLAGS = -static-libtool-libs
->  
->  ifeq ($(HAVE_MALLINFO),yes)
-> -- 
-> 2.16.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
