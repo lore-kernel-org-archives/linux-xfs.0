@@ -1,270 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30738 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33784 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754175AbeCUXGV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 19:06:21 -0400
-Subject: [PATCH v7 01/14] dax: store pfns in the radix
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 21 Mar 2018 15:57:15 -0700
-Message-ID: <152167303564.5268.1688659101150820042.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1752913AbeCVOng (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 10:43:36 -0400
+Date: Thu, 22 Mar 2018 10:34:15 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 8/9] xfs: record inode buf errors as a xref error in
+ inode scrubber
+Message-ID: <20180322143414.GD16617@bfoster.bfoster>
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <152107382051.19571.2865600595521884732.stgit@magnolia>
+ <20180321174248.GJ11127@bfoster.bfoster>
+ <20180321205008.GM4818@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180321205008.GM4818@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-In preparation for examining the busy state of dax pages in the truncate
-path, switch from sectors to pfns in the radix.
+On Wed, Mar 21, 2018 at 01:50:08PM -0700, Darrick J. Wong wrote:
+> On Wed, Mar 21, 2018 at 01:42:49PM -0400, Brian Foster wrote:
+> > On Wed, Mar 14, 2018 at 05:30:20PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > During the inode btree scrubs we try to confirm the freemask bits
+> > > against the inode records.  If the inode buffer read fails, this is a
+> > > cross-referencing error, not a corruption of the inode btree itself.
+> > > Use the xref_process_error call here.  Found via core.version middlebit
+> > > fuzz in xfs/415.
+> > > 
+> > 
+> > What's the difference/consequence of this change?
+> 
+> For now, more accurate reporting of the outcome of scrubbing the inobt.
+> If xfs_imap_to_bp returns EFSCORRUPTED that means that it found the
+> inode buffer, loaded it, and the verifier for the inode records failed.
+> Therefore, we need to communicate to userspace that the inobt looks ok
+> but we were unable to confirm that something the inobt points to (the
+> inode chunk) agrees with the the pointer.  That's an xref error, not a
+> corruption error.
+> 
+> Once we start on the xfs_scrub repair support, you'll see in the patches
+> that prior to scanning the inodes in the filesystem, we need to know
+> whether or not the agi and the inobt are ok.  If the agi or inobt scan
+> shows corruption, we need to rebuild them (or abort).  If however, the
+> scan only says cross-referencing error, then we conclude that the inobt
+> is ok but the inodes are not, and proceed with the inode scan to find
+> the bad inode and repair it.
+> 
 
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/dax/super.c |   15 +++++++--
- fs/dax.c            |   83 +++++++++++++++++++--------------------------------
- 2 files changed, 43 insertions(+), 55 deletions(-)
+Ok, so it's a reporting/conceptual thing. Seems fine, it's just hard to
+confirm that from deep in the scrub code unless the commit log explains
+why the change is made (which looks like v2 does...).
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index ecdc292aa4e4..2b2332b605e4 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -124,10 +124,19 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 		return len < 0 ? len : -EIO;
- 	}
- 
--	if ((IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn))
--			|| pfn_t_devmap(pfn))
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn)) {
-+		/*
-+		 * An arch that has enabled the pmem api should also
-+		 * have its drivers support pfn_t_devmap()
-+		 *
-+		 * This is a developer warning and should not trigger in
-+		 * production. dax_flush() will crash since it depends
-+		 * on being able to do (page_address(pfn_to_page())).
-+		 */
-+		WARN_ON(IS_ENABLED(CONFIG_ARCH_HAS_PMEM_API));
-+	} else if (pfn_t_devmap(pfn)) {
- 		/* pass */;
--	else {
-+	} else {
- 		pr_debug("VFS (%s): error: dax support not enabled\n",
- 				sb->s_id);
- 		return -EOPNOTSUPP;
-diff --git a/fs/dax.c b/fs/dax.c
-index 0276df90e86c..b646a46e4d12 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -73,16 +73,15 @@ fs_initcall(init_dax_wait_table);
- #define RADIX_DAX_ZERO_PAGE	(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
- #define RADIX_DAX_EMPTY		(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
- 
--static unsigned long dax_radix_sector(void *entry)
-+static unsigned long dax_radix_pfn(void *entry)
- {
- 	return (unsigned long)entry >> RADIX_DAX_SHIFT;
- }
- 
--static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
-+static void *dax_radix_locked_entry(unsigned long pfn, unsigned long flags)
- {
- 	return (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | flags |
--			((unsigned long)sector << RADIX_DAX_SHIFT) |
--			RADIX_DAX_ENTRY_LOCK);
-+			(pfn << RADIX_DAX_SHIFT) | RADIX_DAX_ENTRY_LOCK);
- }
- 
- static unsigned int dax_radix_order(void *entry)
-@@ -526,12 +525,13 @@ static int copy_user_dax(struct block_device *bdev, struct dax_device *dax_dev,
-  */
- static void *dax_insert_mapping_entry(struct address_space *mapping,
- 				      struct vm_fault *vmf,
--				      void *entry, sector_t sector,
-+				      void *entry, pfn_t pfn_t,
- 				      unsigned long flags, bool dirty)
- {
- 	struct radix_tree_root *page_tree = &mapping->page_tree;
--	void *new_entry;
-+	unsigned long pfn = pfn_t_to_pfn(pfn_t);
- 	pgoff_t index = vmf->pgoff;
-+	void *new_entry;
- 
- 	if (dirty)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-@@ -546,7 +546,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 	}
- 
- 	spin_lock_irq(&mapping->tree_lock);
--	new_entry = dax_radix_locked_entry(sector, flags);
-+	new_entry = dax_radix_locked_entry(pfn, flags);
- 
- 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
- 		/*
-@@ -657,17 +657,14 @@ static void dax_mapping_entry_mkclean(struct address_space *mapping,
- 	i_mmap_unlock_read(mapping);
- }
- 
--static int dax_writeback_one(struct block_device *bdev,
--		struct dax_device *dax_dev, struct address_space *mapping,
--		pgoff_t index, void *entry)
-+static int dax_writeback_one(struct dax_device *dax_dev,
-+		struct address_space *mapping, pgoff_t index, void *entry)
- {
- 	struct radix_tree_root *page_tree = &mapping->page_tree;
--	void *entry2, **slot, *kaddr;
--	long ret = 0, id;
--	sector_t sector;
--	pgoff_t pgoff;
-+	void *entry2, **slot;
-+	unsigned long pfn;
-+	long ret = 0;
- 	size_t size;
--	pfn_t pfn;
- 
- 	/*
- 	 * A page got tagged dirty in DAX mapping? Something is seriously
-@@ -683,10 +680,10 @@ static int dax_writeback_one(struct block_device *bdev,
- 		goto put_unlocked;
- 	/*
- 	 * Entry got reallocated elsewhere? No need to writeback. We have to
--	 * compare sectors as we must not bail out due to difference in lockbit
-+	 * compare pfns as we must not bail out due to difference in lockbit
- 	 * or entry type.
- 	 */
--	if (dax_radix_sector(entry2) != dax_radix_sector(entry))
-+	if (dax_radix_pfn(entry2) != dax_radix_pfn(entry))
- 		goto put_unlocked;
- 	if (WARN_ON_ONCE(dax_is_empty_entry(entry) ||
- 				dax_is_zero_entry(entry))) {
-@@ -712,33 +709,15 @@ static int dax_writeback_one(struct block_device *bdev,
- 	/*
- 	 * Even if dax_writeback_mapping_range() was given a wbc->range_start
- 	 * in the middle of a PMD, the 'index' we are given will be aligned to
--	 * the start index of the PMD, as will the sector we pull from
--	 * 'entry'.  This allows us to flush for PMD_SIZE and not have to
--	 * worry about partial PMD writebacks.
-+	 * the start index of the PMD, as will the pfn we pull from 'entry'.
-+	 * This allows us to flush for PMD_SIZE and not have to worry about
-+	 * partial PMD writebacks.
- 	 */
--	sector = dax_radix_sector(entry);
-+	pfn = dax_radix_pfn(entry);
- 	size = PAGE_SIZE << dax_radix_order(entry);
- 
--	id = dax_read_lock();
--	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
--	if (ret)
--		goto dax_unlock;
--
--	/*
--	 * dax_direct_access() may sleep, so cannot hold tree_lock over
--	 * its invocation.
--	 */
--	ret = dax_direct_access(dax_dev, pgoff, size / PAGE_SIZE, &kaddr, &pfn);
--	if (ret < 0)
--		goto dax_unlock;
--
--	if (WARN_ON_ONCE(ret < size / PAGE_SIZE)) {
--		ret = -EIO;
--		goto dax_unlock;
--	}
--
--	dax_mapping_entry_mkclean(mapping, index, pfn_t_to_pfn(pfn));
--	dax_flush(dax_dev, kaddr, size);
-+	dax_mapping_entry_mkclean(mapping, index, pfn);
-+	dax_flush(dax_dev, page_address(pfn_to_page(pfn)), size);
- 	/*
- 	 * After we have flushed the cache, we can clear the dirty tag. There
- 	 * cannot be new dirty data in the pfn after the flush has completed as
-@@ -749,8 +728,6 @@ static int dax_writeback_one(struct block_device *bdev,
- 	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_DIRTY);
- 	spin_unlock_irq(&mapping->tree_lock);
- 	trace_dax_writeback_one(mapping->host, index, size >> PAGE_SHIFT);
-- dax_unlock:
--	dax_read_unlock(id);
- 	put_locked_mapping_entry(mapping, index);
- 	return ret;
- 
-@@ -808,8 +785,8 @@ int dax_writeback_mapping_range(struct address_space *mapping,
- 				break;
- 			}
- 
--			ret = dax_writeback_one(bdev, dax_dev, mapping,
--					indices[i], pvec.pages[i]);
-+			ret = dax_writeback_one(dax_dev, mapping, indices[i],
-+					pvec.pages[i]);
- 			if (ret < 0) {
- 				mapping_set_error(mapping, ret);
- 				goto out;
-@@ -877,6 +854,7 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
- 	int ret = VM_FAULT_NOPAGE;
- 	struct page *zero_page;
- 	void *entry2;
-+	pfn_t pfn;
- 
- 	zero_page = ZERO_PAGE(0);
- 	if (unlikely(!zero_page)) {
-@@ -884,14 +862,15 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
- 		goto out;
- 	}
- 
--	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, 0,
-+	pfn = page_to_pfn_t(zero_page);
-+	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 			RADIX_DAX_ZERO_PAGE, false);
- 	if (IS_ERR(entry2)) {
- 		ret = VM_FAULT_SIGBUS;
- 		goto out;
- 	}
- 
--	vm_insert_mixed(vmf->vma, vaddr, page_to_pfn_t(zero_page));
-+	vm_insert_mixed(vmf->vma, vaddr, pfn);
- out:
- 	trace_dax_load_hole(inode, vmf, ret);
- 	return ret;
-@@ -1200,8 +1179,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		if (error < 0)
- 			goto error_finish_iomap;
- 
--		entry = dax_insert_mapping_entry(mapping, vmf, entry,
--						 dax_iomap_sector(&iomap, pos),
-+		entry = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 						 0, write && !sync);
- 		if (IS_ERR(entry)) {
- 			error = PTR_ERR(entry);
-@@ -1280,13 +1258,15 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
- 	void *ret = NULL;
- 	spinlock_t *ptl;
- 	pmd_t pmd_entry;
-+	pfn_t pfn;
- 
- 	zero_page = mm_get_huge_zero_page(vmf->vma->vm_mm);
- 
- 	if (unlikely(!zero_page))
- 		goto fallback;
- 
--	ret = dax_insert_mapping_entry(mapping, vmf, entry, 0,
-+	pfn = page_to_pfn_t(zero_page);
-+	ret = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 			RADIX_DAX_PMD | RADIX_DAX_ZERO_PAGE, false);
- 	if (IS_ERR(ret))
- 		goto fallback;
-@@ -1409,8 +1389,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		if (error < 0)
- 			goto finish_iomap;
- 
--		entry = dax_insert_mapping_entry(mapping, vmf, entry,
--						dax_iomap_sector(&iomap, pos),
-+		entry = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 						RADIX_DAX_PMD, write && !sync);
- 		if (IS_ERR(entry))
- 			goto finish_iomap;
+Brian
 
+> --D
+> 
+> > Brian
+> > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/scrub/ialloc.c |    3 ++-
+> > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> > > index 63ab3f9..32e0d1a 100644
+> > > --- a/fs/xfs/scrub/ialloc.c
+> > > +++ b/fs/xfs/scrub/ialloc.c
+> > > @@ -259,7 +259,8 @@ xfs_scrub_iallocbt_check_freemask(
+> > >  
+> > >  		error = xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap,
+> > >  				&dip, &bp, 0, 0);
+> > > -		if (!xfs_scrub_btree_process_error(bs->sc, bs->cur, 0, &error))
+> > > +		if (!xfs_scrub_btree_xref_process_error(bs->sc, bs->cur, 0,
+> > > +				&error))
+> > >  			continue;
+> > >  
+> > >  		/* Which inodes are free? */
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
