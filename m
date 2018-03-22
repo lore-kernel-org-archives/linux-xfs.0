@@ -1,174 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44406 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59778 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752048AbeCVOng (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 10:43:36 -0400
-Date: Thu, 22 Mar 2018 10:33:46 -0400
+        id S1752494AbeCVOd7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 10:33:59 -0400
+Date: Thu, 22 Mar 2018 10:33:58 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 2/9] xfs: refactor bmap record valiation
-Message-ID: <20180322143345.GB16617@bfoster.bfoster>
+Subject: Re: [PATCH v2 5/9] xfs: bmap scrubber should do rmap xref with bmap
+ for sparse files
+Message-ID: <20180322143357.GC16617@bfoster.bfoster>
 References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <152107378261.19571.1457221354115584570.stgit@magnolia>
- <20180322060113.GQ4818@magnolia>
+ <152107380082.19571.10988218532838802248.stgit@magnolia>
+ <20180322060218.GR4818@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180322060113.GQ4818@magnolia>
+In-Reply-To: <20180322060218.GR4818@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 21, 2018 at 11:01:13PM -0700, Darrick J. Wong wrote:
+On Wed, Mar 21, 2018 at 11:02:18PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Refactor the bmap validator into a more complete helper that looks for
-> extents that run off the end of the device, overflow into the next AG,
-> or have invalid flag states.
+> When we're scanning an extent mapping inode fork, ensure that every rmap
+> record for this ifork has a corresponding bmbt record too.  This
+> (mostly) provides the ability to cross-reference rmap records with bmap
+> data.  The rmap scrubber cannot do the xref on its own because that
+> requires taking an ilock with the agf lock held, which violates our
+> locking order rules (inode, then agf).
+> 
+> Note that we only do this for forks that are in btree format due to the
+> increased complexity; or forks that should have data but suspiciously
+> have zero extents because the inode could have just had its iforks
+> zapped by the inode repair code and now we need to reclaim the old
+> extents.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> v2: defer repair-oriented wrappers until they're needed
+> v2: enhance comments, fix XFS_BTREE_ERROR usage
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_bmap.c       |   46 +++++++++++++++++++++++++++++++++++++---
->  fs/xfs/libxfs/xfs_bmap.h       |    3 +++
->  fs/xfs/libxfs/xfs_bmap_btree.h |   14 ------------
->  fs/xfs/libxfs/xfs_inode_fork.c |   12 +++++++---
->  4 files changed, 54 insertions(+), 21 deletions(-)
+>  fs/xfs/scrub/bmap.c |  170 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 169 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index daae00e..91214f2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1261,11 +1261,15 @@ xfs_iread_extents(
->  		 */
->  		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
->  		for (j = 0; j < num_recs; j++, frp++, i++) {
-> +			xfs_failaddr_t	fa;
-> +
->  			xfs_bmbt_disk_get_all(frp, &new);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
-> -				XFS_ERROR_REPORT("xfs_bmap_read_extents(2)",
-> -						 XFS_ERRLEVEL_LOW, mp);
-> +			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
-> +			if (fa) {
->  				error = -EFSCORRUPTED;
-> +				xfs_inode_verifier_error(ip, error,
-> +						"xfs_iread_extents(2)",
-> +						frp, sizeof(*frp), fa);
->  				goto out_brelse;
->  			}
->  			xfs_iext_insert(ip, &icur, &new, state);
-> @@ -6154,3 +6158,39 @@ xfs_bmap_finish_one(
->  
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index d002821..75ea2d6 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -37,6 +37,7 @@
+>  #include "xfs_bmap_util.h"
+>  #include "xfs_bmap_btree.h"
+>  #include "xfs_rmap.h"
+> +#include "xfs_rmap_btree.h"
+>  #include "xfs_refcount.h"
+>  #include "scrub/xfs_scrub.h"
+>  #include "scrub/scrub.h"
+> @@ -423,6 +424,169 @@ xfs_scrub_bmap_btree(
 >  	return error;
 >  }
-> +
-> +/* Check that an inode's extent does not have invalid flags or bad ranges. */
-> +xfs_failaddr_t
-> +xfs_bmap_validate_extent(
-> +	struct xfs_inode	*ip,
-> +	int			whichfork,
-> +	struct xfs_bmbt_irec	*irec)
+>  
+...
+> +/* Make sure each rmap has a corresponding bmbt entry. */
+> +STATIC int
+> +xfs_scrub_bmap_check_ag_rmaps(
+> +	struct xfs_scrub_context	*sc,
+> +	int				whichfork,
+> +	xfs_agnumber_t			agno)
 > +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	xfs_fsblock_t		endfsb;
-> +	bool			isrt;
+> +	struct xfs_scrub_bmap_check_rmap_info	sbcri;
+> +	struct xfs_btree_cur		*cur;
+> +	struct xfs_buf			*agf;
+> +	int				error;
 > +
-> +	isrt = XFS_IS_REALTIME_INODE(ip);
-> +	endfsb = irec->br_startblock + irec->br_blockcount - 1;
-> +	if (isrt) {
-> +		if (!xfs_verify_rtbno(mp, irec->br_startblock))
-> +			return __this_address;
-> +		if (!xfs_verify_rtbno(mp, endfsb))
-> +			return __this_address;
-> +	} else {
-> +		if (!xfs_verify_fsbno(mp, irec->br_startblock))
-> +			return __this_address;
-> +		if (!xfs_verify_fsbno(mp, endfsb))
-> +			return __this_address;
-> +		if (XFS_FSB_TO_AGNO(mp, irec->br_startblock) !=
-> +		    XFS_FSB_TO_AGNO(mp, endfsb))
-> +			return __this_address;
+> +	error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf);
+> +	if (error)
+> +		return error;
+> +
+> +	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf, agno);
+> +	if (!cur) {
+> +		error = -ENOMEM;
+> +		goto out_agf;
 > +	}
-> +	if (irec->br_state != XFS_EXT_NORM) {
-> +		if (whichfork != XFS_DATA_FORK)
-> +			return __this_address;
-> +		if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
-> +			return __this_address;
-> +	}
-> +	return NULL;
+> +
+> +	sbcri.sc = sc;
+> +	sbcri.whichfork = whichfork;
+> +	error = xfs_rmap_query_all(cur, xfs_scrub_bmap_check_rmap, &sbcri);
+> +	if (error == XFS_BTREE_QUERY_RANGE_ABORT)
+> +		error = 0;
+> +
+> +	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+
+So I assume it's intentional that we don't care about _QUERY_RANGE_ABORT
+here? Otherwise looks fine.
+
+Brian
+
+> +out_agf:
+> +	xfs_trans_brelse(sc->tp, agf);
+> +	return error;
 > +}
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index e36d757..f3be641 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -274,4 +274,7 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
+> +
+> +/* Make sure each rmap has a corresponding bmbt entry. */
+> +STATIC int
+> +xfs_scrub_bmap_check_rmaps(
+> +	struct xfs_scrub_context	*sc,
+> +	int				whichfork)
+> +{
+> +	loff_t				size;
+> +	xfs_agnumber_t			agno;
+> +	int				error;
+> +
+> +	if (!xfs_sb_version_hasrmapbt(&sc->mp->m_sb) ||
+> +	    whichfork == XFS_COW_FORK ||
+> +	    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+> +		return 0;
+> +
+> +	/* Don't support realtime rmap checks yet. */
+> +	if (XFS_IS_REALTIME_INODE(sc->ip) && whichfork == XFS_DATA_FORK)
+> +		return 0;
+> +
+> +	/*
+> +	 * Only do this for complex maps that are in btree format, or for
+> +	 * situations where we would seem to have a size but zero extents.
+> +	 * The inode repair code can zap broken iforks, which means we have
+> +	 * to flag this bmap as corrupt if there are rmaps that need to be
+> +	 * reattached.
+> +	 */
+> +	switch (whichfork) {
+> +	case XFS_DATA_FORK:
+> +		size = i_size_read(VFS_I(sc->ip));
+> +		break;
+> +	case XFS_ATTR_FORK:
+> +		size = XFS_IFORK_Q(sc->ip);
+> +		break;
+> +	default:
+> +		size = 0;
+> +		break;
+> +	}
+> +	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+> +	    (size == 0 || XFS_IFORK_NEXTENTS(sc->ip, whichfork) > 0))
+> +		return 0;
+> +
+> +	for (agno = 0; agno < sc->mp->m_sb.sb_agcount; agno++) {
+> +		error = xfs_scrub_bmap_check_ag_rmaps(sc, whichfork, agno);
+> +		if (error)
+> +			return error;
+> +		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> +			break;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Scrub an inode fork's block mappings.
+>   *
+> @@ -463,7 +627,7 @@ xfs_scrub_bmap(
+>  		break;
+>  	case XFS_ATTR_FORK:
+>  		if (!ifp)
+> -			goto out;
+> +			goto out_check_rmap;
+>  		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
+>  		    !xfs_sb_version_hasattr2(&mp->m_sb))
+>  			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino, NULL);
+> @@ -534,6 +698,10 @@ xfs_scrub_bmap(
+>  			goto out;
 >  	}
+>  
+> +out_check_rmap:
+> +	error = xfs_scrub_bmap_check_rmaps(sc, whichfork);
+> +	if (!xfs_scrub_fblock_xref_process_error(sc, whichfork, 0, &error))
+> +		goto out;
+>  out:
+>  	return error;
 >  }
->  
-> +xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
-> +		struct xfs_bmbt_irec *irec);
-> +
->  #endif	/* __XFS_BMAP_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
-> index 135b8c5..e450574 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.h
-> @@ -118,18 +118,4 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
->  extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
->  		struct xfs_trans *, struct xfs_inode *, int);
->  
-> -/*
-> - * Check that the extent does not contain an invalid unwritten extent flag.
-> - */
-> -static inline bool xfs_bmbt_validate_extent(struct xfs_mount *mp, int whichfork,
-> -		struct xfs_bmbt_irec *irec)
-> -{
-> -	if (irec->br_state == XFS_EXT_NORM)
-> -		return true;
-> -	if (whichfork == XFS_DATA_FORK &&
-> -	    xfs_sb_version_hasextflgbit(&mp->m_sb))
-> -		return true;
-> -	return false;
-> -}
-> -
->  #endif	/* __XFS_BMAP_BTREE_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 866d2861..613fba2 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -245,10 +245,14 @@ xfs_iformat_extents(
->  
->  		xfs_iext_first(ifp, &icur);
->  		for (i = 0; i < nex; i++, dp++) {
-> +			xfs_failaddr_t	fa;
-> +
->  			xfs_bmbt_disk_get_all(dp, &new);
-> -			if (!xfs_bmbt_validate_extent(mp, whichfork, &new)) {
-> -				XFS_ERROR_REPORT("xfs_iformat_extents(2)",
-> -						 XFS_ERRLEVEL_LOW, mp);
-> +			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
-> +			if (fa) {
-> +				xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-> +						"xfs_iformat_extents(2)",
-> +						dp, sizeof(*dp), fa);
->  				return -EFSCORRUPTED;
->  			}
->  
-> @@ -595,7 +599,7 @@ xfs_iextents_copy(
->  	for_each_xfs_iext(ifp, &icur, &rec) {
->  		if (isnullstartblock(rec.br_startblock))
->  			continue;
-> -		ASSERT(xfs_bmbt_validate_extent(ip->i_mount, whichfork, &rec));
-> +		ASSERT(xfs_bmap_validate_extent(ip, whichfork, &rec) == NULL);
->  		xfs_bmbt_disk_set_all(dp, &rec);
->  		trace_xfs_write_extent(ip, &icur, state, _RET_IP_);
->  		copied += sizeof(struct xfs_bmbt_rec);
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
