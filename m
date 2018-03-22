@@ -1,161 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:16553 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754241AbeCUXGs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Mar 2018 19:06:48 -0400
-Subject: [PATCH v7 06/14] ext2, dax: introduce ext2_dax_aops
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 21 Mar 2018 15:57:43 -0700
-Message-ID: <152167306296.5268.6656046711107190095.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:21395 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751948AbeCVFCa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 01:02:30 -0400
+Date: Thu, 22 Mar 2018 16:01:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
+ case of global reclaim
+Message-ID: <20180322050152.GA18129@dastard>
+References: <20180315174903.GM23100@dhcp22.suse.cz>
+ <c6a9bf24-50e6-8e60-94af-28e99c51f516@virtuozzo.com>
+ <20180315230313.GM18129@dastard>
+ <6628c551-f607-367b-1ee6-f458266c1d92@virtuozzo.com>
+ <20180316213910.GF7000@dastard>
+ <18a031f3-2136-4ef9-6ede-05f5b835661c@virtuozzo.com>
+ <20180320001827.GB1150@dastard>
+ <ec116ce6-c22b-66e1-0e01-55f895997c7d@virtuozzo.com>
+ <20180320143452.GT18129@dastard>
+ <5eb88165-c108-5989-3cb5-1f260cec5e53@virtuozzo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5eb88165-c108-5989-3cb5-1f260cec5e53@virtuozzo.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.com>, kbuild test robot <lkp@intel.com>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz
+To: Kirill Tkhai <ktkhai@virtuozzo.com>
+Cc: Michal Hocko <mhocko@kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-In preparation for the dax implementation to start associating dax pages
-to inodes via page->mapping, we need to provide a 'struct
-address_space_operations' instance for dax. Otherwise, direct-I/O
-triggers incorrect page cache assumptions and warnings.
+On Wed, Mar 21, 2018 at 07:15:14PM +0300, Kirill Tkhai wrote:
+> On 20.03.2018 17:34, Dave Chinner wrote:
+> > On Tue, Mar 20, 2018 at 04:15:16PM +0300, Kirill Tkhai wrote:
+> >> On 20.03.2018 03:18, Dave Chinner wrote:
+> >>> On Mon, Mar 19, 2018 at 02:06:01PM +0300, Kirill Tkhai wrote:
+> >>>> On 17.03.2018 00:39, Dave Chinner wrote:
+> >>> Actually, it is fair, because:
+> >>>
+> >>>         /* proportion the scan between the caches */
+> >>>         dentries = mult_frac(sc->nr_to_scan, dentries, total_objects);
+> >>>         inodes = mult_frac(sc->nr_to_scan, inodes, total_objects);
+> >>>         fs_objects = mult_frac(sc->nr_to_scan, fs_objects, total_objects);
+> >>>
+> >>> This means that if the number of objects in the memcg aware VFS
+> >>> caches are tiny compared to the global XFS inode cache, then they
+> >>> only get a tiny amount of the total scanning done by the shrinker.
+> >>
+> >> This is just wrong. If you have two memcgs, the first is charged
+> >> by xfs dentries and inodes, while the second is not charged by xfs
+> >> dentries and inodes, the second will response for xfs shrink as well
+> >> as the first.
+> > 
+> > That makes no sense to me. Shrinkers are per-sb, so they only
+> > shrink per-filesystem dentries and inodes. If your memcgs are on
+> > different filesystems, then they'll behave according to the size of
+> > that filesystem's caches, not the cache of some other filesystem.
+> 
+> But this break the isolation purpose of memcg. When someone places
+> different services in different pairs of memcg and cpu cgroup, he
+> wants do not do foreign work.
 
-Cc: Jan Kara <jack@suse.com>
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/ext2/ext2.h  |    1 +
- fs/ext2/inode.c |   43 +++++++++++++++++++++++++++----------------
- fs/ext2/namei.c |   18 ++----------------
- 3 files changed, 30 insertions(+), 32 deletions(-)
+Too bad. Filesystems *break memcg isolation all the time*.
 
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index 032295e1d386..cc40802ddfa8 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -814,6 +814,7 @@ extern const struct inode_operations ext2_file_inode_operations;
- extern const struct file_operations ext2_file_operations;
- 
- /* inode.c */
-+extern void ext2_set_file_ops(struct inode *inode);
- extern const struct address_space_operations ext2_aops;
- extern const struct address_space_operations ext2_nobh_aops;
- extern const struct iomap_ops ext2_iomap_ops;
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 9b2ac55ac34f..8ea394c8ffce 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -952,17 +952,16 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- static int
- ext2_writepages(struct address_space *mapping, struct writeback_control *wbc)
- {
--#ifdef CONFIG_FS_DAX
--	if (dax_mapping(mapping)) {
--		return dax_writeback_mapping_range(mapping,
--						   mapping->host->i_sb->s_bdev,
--						   wbc);
--	}
--#endif
--
- 	return mpage_writepages(mapping, wbc, ext2_get_block);
- }
- 
-+static int
-+ext2_dax_writepages(struct address_space *mapping, struct writeback_control *wbc)
-+{
-+	return dax_writeback_mapping_range(mapping,
-+			mapping->host->i_sb->s_bdev, wbc);
-+}
-+
- const struct address_space_operations ext2_aops = {
- 	.readpage		= ext2_readpage,
- 	.readpages		= ext2_readpages,
-@@ -990,6 +989,13 @@ const struct address_space_operations ext2_nobh_aops = {
- 	.error_remove_page	= generic_error_remove_page,
- };
- 
-+static const struct address_space_operations ext2_dax_aops = {
-+	.direct_IO		= ext2_direct_IO,
-+	.writepages		= ext2_dax_writepages,
-+	.set_page_dirty		= noop_set_page_dirty,
-+	.invalidatepage		= noop_invalidatepage,
-+};
-+
- /*
-  * Probably it should be a library function... search for first non-zero word
-  * or memcmp with zero_page, whatever is better for particular architecture.
-@@ -1388,6 +1394,18 @@ void ext2_set_inode_flags(struct inode *inode)
- 		inode->i_flags |= S_DAX;
- }
- 
-+void ext2_set_file_ops(struct inode *inode)
-+{
-+	inode->i_op = &ext2_file_inode_operations;
-+	inode->i_fop = &ext2_file_operations;
-+	if (IS_DAX(inode))
-+		inode->i_mapping->a_ops = &ext2_dax_aops;
-+	else if (test_opt(inode->i_sb, NOBH))
-+		inode->i_mapping->a_ops = &ext2_nobh_aops;
-+	else
-+		inode->i_mapping->a_ops = &ext2_aops;
-+}
-+
- struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
- {
- 	struct ext2_inode_info *ei;
-@@ -1480,14 +1498,7 @@ struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
- 		ei->i_data[n] = raw_inode->i_block[n];
- 
- 	if (S_ISREG(inode->i_mode)) {
--		inode->i_op = &ext2_file_inode_operations;
--		if (test_opt(inode->i_sb, NOBH)) {
--			inode->i_mapping->a_ops = &ext2_nobh_aops;
--			inode->i_fop = &ext2_file_operations;
--		} else {
--			inode->i_mapping->a_ops = &ext2_aops;
--			inode->i_fop = &ext2_file_operations;
--		}
-+		ext2_set_file_ops(inode);
- 	} else if (S_ISDIR(inode->i_mode)) {
- 		inode->i_op = &ext2_dir_inode_operations;
- 		inode->i_fop = &ext2_dir_operations;
-diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
-index e078075dc66f..55f7caadb093 100644
---- a/fs/ext2/namei.c
-+++ b/fs/ext2/namei.c
-@@ -107,14 +107,7 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
- 	if (IS_ERR(inode))
- 		return PTR_ERR(inode);
- 
--	inode->i_op = &ext2_file_inode_operations;
--	if (test_opt(inode->i_sb, NOBH)) {
--		inode->i_mapping->a_ops = &ext2_nobh_aops;
--		inode->i_fop = &ext2_file_operations;
--	} else {
--		inode->i_mapping->a_ops = &ext2_aops;
--		inode->i_fop = &ext2_file_operations;
--	}
-+	ext2_set_file_ops(inode);
- 	mark_inode_dirty(inode);
- 	return ext2_add_nondir(dentry, inode);
- }
-@@ -125,14 +118,7 @@ static int ext2_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 	if (IS_ERR(inode))
- 		return PTR_ERR(inode);
- 
--	inode->i_op = &ext2_file_inode_operations;
--	if (test_opt(inode->i_sb, NOBH)) {
--		inode->i_mapping->a_ops = &ext2_nobh_aops;
--		inode->i_fop = &ext2_file_operations;
--	} else {
--		inode->i_mapping->a_ops = &ext2_aops;
--		inode->i_fop = &ext2_file_operations;
--	}
-+	ext2_set_file_ops(inode);
- 	mark_inode_dirty(inode);
- 	d_tmpfile(dentry, inode);
- 	unlock_new_inode(inode);
+Think about it. The filesystem journal is owned by the filesystem,
+not the memcg that is writing a transaction to it.  If one memcg
+does lots of metadata modifications, it can use all the journal
+space and starve iitself and all other memcgs of journal space while
+the filesystem does writeback to clear it out.
 
+Another example: if one memcg is manipulating free space in a
+particular allocation group, other memcgs that need to manipulate
+space in those allocation groups will block and be prevented from
+operating until the other memcg finishes it's work.
+
+Another example: inode IO in XFS are done in clusters of 32. read or
+write any inode in the cluster, and we read/write all the other
+inodes in that cluster, too. Hence if we need to read an inode and
+the cluster is busy because the filesystem journal needed flushing
+or another inode in the cluster is being unlinked (e.g. by a process
+in a different memcg), then the read in the first memcg will block
+until whatever is being done on the buffer is complete. IOWs, even
+at the physical on-disk inode level we violate memcg resource 
+isolation principles.
+
+I can go on, but I think you get the picture: Filesystems are full
+of global structures whose access arbitration mechanisms
+fundamentally break the concept of operational memcg isolation.
+
+With that in mind, we really don't care that the shrinker does
+global work and violate memcg isolation principles because we
+violately them everywhere. IOWs, if we try to enforce memcg
+isolation in the shrinker, then we can't guarantee forwards progress
+in memory reclaim because we end up with multi-dimensional memcg
+dependencies at the physical layers of the filesystem structure....
+
+I don't expect people who know nothing about XFS or filesystems to
+understand the complexity of the interactions we are dealing with
+here. Everything is a compromise when it comes to the memory reclaim
+code as tehre are so many corner cases we have to handle. In this
+situation, perfect is the enemy of good....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
