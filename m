@@ -1,79 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52246 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752024AbeCVGI2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 02:08:28 -0400
-Date: Wed, 21 Mar 2018 23:08:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 10/9] xfs: don't accept inode buffers with suspicious
- unlinked chains
-Message-ID: <20180322060822.GS4818@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:42456 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754475AbeCVOel (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 10:34:41 -0400
+Date: Thu, 22 Mar 2018 10:34:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 12/9] xfs: xfs_scrub_iallocbt_xref_rmap_inodes should use
+ xref_set_corrupt
+Message-ID: <20180322143439.GH16617@bfoster.bfoster>
 References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <20180321032136.GQ1757@magnolia>
+ <20180322061916.GT4818@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180321032136.GQ1757@magnolia>
+In-Reply-To: <20180322061916.GT4818@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 21, 2018 at 11:19:16PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In xfs_scrub_iallocbt_xref_rmap_inodes we're checking inodes against
+> rmap records, so we should use xfs_scrub_btree_xref_set_corrupt if we
+> encounter discrepancies here so that we know that it's a cross
+> referencing error, not necessarily a corruption in the inobt itself.
+> 
+> The userspace xfs_scrub program will try to repair outright corruptions
+> in the agi/inobt prior to phase 3 so that the inode scan will proceed.
+> If only a cross-referencing error is noted, the repair program defers
+> the repair attempt until it can check the other space metadata at least
+> once.
+> 
+> It is therefore essential that the inobt scrubber can correctly
+> distinguish between corruptions and "unable to cross-reference something
+> else with this inobt".  The same reasoning applies to "xfs: record inode
+> buf errors as a xref error in inobt scrubber".
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-When we're verifying inode buffers, sanity-check the unlinked pointer.
-We don't want to run the risk of trying to purge something that's
-obviously broken.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix merge problems, hopefully; this accidentally landed in the wrong
-place in my patch stack
----
- fs/xfs/libxfs/xfs_inode_buf.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index cdd4c1d..f0cfcd79 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -93,20 +93,26 @@ xfs_inode_buf_verify(
- 	bool		readahead)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	xfs_agnumber_t	agno;
- 	int		i;
- 	int		ni;
- 
- 	/*
- 	 * Validate the magic number and version of every inode in the buffer
- 	 */
-+	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
- 	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
- 	for (i = 0; i < ni; i++) {
- 		int		di_ok;
- 		xfs_dinode_t	*dip;
-+		xfs_agino_t	unlinked_ino;
- 
- 		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
-+		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
- 		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
--			xfs_dinode_good_version(mp, dip->di_version);
-+			xfs_dinode_good_version(mp, dip->di_version) &&
-+			(unlinked_ino == NULLAGINO ||
-+			 xfs_verify_agino(mp, agno, unlinked_ino));
- 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
- 						XFS_ERRTAG_ITOBP_INOTOBP))) {
- 			if (readahead) {
-@@ -124,9 +130,9 @@ xfs_inode_buf_verify(
- 			xfs_buf_verifier_error(bp, -EFSCORRUPTED,
- 					__func__, dip, sizeof(*dip),
- 					NULL);
-+			return;
- 		}
- 	}
--	xfs_inobp_check(mp, bp);
- }
- 
- 
+>  fs/xfs/scrub/ialloc.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 32e0d1a..106ca4b 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -434,7 +434,7 @@ xfs_scrub_iallocbt_xref_rmap_inodes(
+>  	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
+>  		return;
+>  	if (blocks != inode_blocks)
+> -		xfs_scrub_btree_set_corrupt(sc, sc->sa.ino_cur, 0);
+> +		xfs_scrub_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
+>  }
+>  
+>  /* Scrub the inode btrees for some AG. */
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
