@@ -1,107 +1,350 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:53698 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750959AbeCYWRr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Mar 2018 18:17:47 -0400
-Date: Mon, 26 Mar 2018 09:17:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: clean up xfs_mount allocation and dynamic
- initializers
-Message-ID: <20180325221744.GI18129@dastard>
-References: <20180321161325.12773-1-bfoster@redhat.com>
- <20180321172728.GF4818@magnolia>
- <20180321180738.GM11127@bfoster.bfoster>
- <20180322001945.GZ18129@dastard>
- <20180324005203.GM4818@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:60460 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751303AbeCVWVu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 18:21:50 -0400
+Date: Thu, 22 Mar 2018 15:21:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v4 1/9] xfs: sanity-check the unused space before trying to
+ use it
+Message-ID: <20180322222143.GD4818@magnolia>
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <152107377649.19571.3126019873391787136.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180324005203.GM4818@magnolia>
+In-Reply-To: <152107377649.19571.3126019873391787136.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
 
-On Fri, Mar 23, 2018 at 05:52:03PM -0700, Darrick J. Wong wrote:
-> On Thu, Mar 22, 2018 at 11:19:45AM +1100, Dave Chinner wrote:
-> > On Wed, Mar 21, 2018 at 02:07:38PM -0400, Brian Foster wrote:
-> > > On Wed, Mar 21, 2018 at 10:27:28AM -0700, Darrick J. Wong wrote:
-> > > > On Wed, Mar 21, 2018 at 12:13:25PM -0400, Brian Foster wrote:
-> > > > > Most of the generic data structures embedded in xfs_mount are
-> > > > > dynamically initialized immediately after mp is allocated. A few
-> > > > > fields are left out and initialized during the xfs_mountfs()
-> > > > > sequence, after mp has been attached to the superblock.
-> > > > > 
-> > > > > To clean this up and help prevent premature access of associated
-> > > > > fields, refactor xfs_mount allocation and all dependent init calls
-> > > > > into a new helper. This self-documents that all low level data
-> > > > > structures (i.e., locks, trees, etc.) should be initialized before
-> > > > > xfs_mount is attached to the superblock.
-> > > > > 
-> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > ---
-> > > > > 
-> > > > > I realized after the fact that this steps on the ability to instrument
-> > > > > the use-before-init variant[1] of the problematic radix tree access on
-> > > > > failed mount issue that Dave tracked down. This is because we'd
-> > > > > immediately initialize the structure and thus a subsequent memset()
-> > > > > would ultimately require another proper initialization.
-> > > > 
-> > > > That's simply a matter of re-calling
-> > > > 
-> > > > 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
-> > > > 
-> > > > after the msleep, right?
-> > > > 
-> > > 
-> > > I suppose that may work (I'll let Dave chime in)...
-> > 
-> > Well, to tell the truth, this whole "VFS accesses the fs during
-> > mount: problem is isolated to only the inode cache shrinker, and it
-> > while a mount is in progress it does not run inode cache scans
-> > (can't lock s_umount because the mount holds it locked).
-> > 
-> > IOWs, this crash can be fixed entirely by modifying the VFS code as
-> > I mentioned to avoid super_cache_count() doing any work during mount
-> > and unmount.
-> > 
-> > So, really, none of these XFS changes are necessary to fix the
-> > problem that was reported. I'm not opposed to it as a cleanup, but
-> > let's not conflate it with the VFS superblock shrinker bug that
-> > needs to be fixed....
-> 
-> Are you working on such a patch?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes.
+In xfs_dir2_data_use_free, we examine on-disk metadata and ASSERT if
+it doesn't make sense.  Since a carefully crafted fuzzed image can cause
+the kernel to crash after blowing a bunch of assertions, let's move
+those checks into a validator function and rig everything up to return
+EFSCORRUPTED to userspace.  Found by lastbit fuzzing ltail.bestcount via
+xfs/391.
 
-> I guessed that one could change the
-> vfs to avoid register_shrinker until after fill_super returns?  Or
-> possibly just have super_cache_count bail out if !SB_ACTIVE, though that
-> could be messy given that xfs (and others) mess with that flag.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v4: fix harder the formatting weirdness
+v3: fix all the formatting weirdness
+v2: release buffers defensively, fix some formatting weirdness
+---
+ fs/xfs/libxfs/xfs_dir2.h       |    2 +
+ fs/xfs/libxfs/xfs_dir2_block.c |   59 ++++++++++++++++++------------
+ fs/xfs/libxfs/xfs_dir2_data.c  |   78 +++++++++++++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |   10 ++++-
+ fs/xfs/libxfs/xfs_dir2_node.c  |   11 ++++--
+ 5 files changed, 111 insertions(+), 49 deletions(-)
 
-I think it's fine for the shrinker to check SB_ACTIVE, because if
-it's not set then then inodes are not placed on thr LRUs that the
-shrinker works on.  The problem is that the shrinker can run before
-filesystems assert SB_ACTIVE, even though there will be nothing for
-it to do and the filesystem has not set everything up. As such, I
-think it's the right thing to do to match SB_ACTIVE checks from
-iput_final() to super_cache_cache().
-
-FWIW, if a filesystem is setting SB_ACTIVE earlier than the VFS,
-then it better make sure it's already done all the setup it needs
-to. The filesystem has to do that setup anyway (as the VFS requires
-it), so it's just a matter of what order we do things in
-->fill_super.
-
-In XFS we have finished all the setup of the structures the shrinker
-is dependent on by the time we set SB_ACTIVE in log recovery. Hence
-I don't really see any problems with XFS or any of the other 
-filesystems that set SB_ACTIVE in their mount routines.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 388d67c..989e95a 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -173,7 +173,7 @@ extern void xfs_dir2_data_log_unused(struct xfs_da_args *args,
+ extern void xfs_dir2_data_make_free(struct xfs_da_args *args,
+ 		struct xfs_buf *bp, xfs_dir2_data_aoff_t offset,
+ 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+-extern void xfs_dir2_data_use_free(struct xfs_da_args *args,
++extern int xfs_dir2_data_use_free(struct xfs_da_args *args,
+ 		struct xfs_buf *bp, struct xfs_dir2_data_unused *dup,
+ 		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
+ 		int *needlogp, int *needscanp);
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 2da86a3..875893d 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -451,15 +451,19 @@ xfs_dir2_block_addname(
+ 	 * No stale entries, will use enddup space to hold new leaf.
+ 	 */
+ 	if (!btp->stale) {
++		xfs_dir2_data_aoff_t	aoff;
++
+ 		/*
+ 		 * Mark the space needed for the new leaf entry, now in use.
+ 		 */
+-		xfs_dir2_data_use_free(args, bp, enddup,
+-			(xfs_dir2_data_aoff_t)
+-			((char *)enddup - (char *)hdr + be16_to_cpu(enddup->length) -
+-			 sizeof(*blp)),
+-			(xfs_dir2_data_aoff_t)sizeof(*blp),
+-			&needlog, &needscan);
++		aoff = (xfs_dir2_data_aoff_t)((char *)enddup - (char *)hdr +
++				be16_to_cpu(enddup->length) - sizeof(*blp));
++		error = xfs_dir2_data_use_free(args, bp, enddup, aoff,
++				(xfs_dir2_data_aoff_t)sizeof(*blp), &needlog,
++				&needscan);
++		if (error)
++			return error;
++
+ 		/*
+ 		 * Update the tail (entry count).
+ 		 */
+@@ -541,9 +545,11 @@ xfs_dir2_block_addname(
+ 	/*
+ 	 * Mark space for the data entry used.
+ 	 */
+-	xfs_dir2_data_use_free(args, bp, dup,
+-		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+-		(xfs_dir2_data_aoff_t)len, &needlog, &needscan);
++	error = xfs_dir2_data_use_free(args, bp, dup,
++			(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
++			(xfs_dir2_data_aoff_t)len, &needlog, &needscan);
++	if (error)
++		return error;
+ 	/*
+ 	 * Create the new data entry.
+ 	 */
+@@ -997,8 +1003,10 @@ xfs_dir2_leaf_to_block(
+ 	/*
+ 	 * Use up the space at the end of the block (blp/btp).
+ 	 */
+-	xfs_dir2_data_use_free(args, dbp, dup, args->geo->blksize - size, size,
+-		&needlog, &needscan);
++	error = xfs_dir2_data_use_free(args, dbp, dup,
++			args->geo->blksize - size, size, &needlog, &needscan);
++	if (error)
++		return error;
+ 	/*
+ 	 * Initialize the block tail.
+ 	 */
+@@ -1110,18 +1118,14 @@ xfs_dir2_sf_to_block(
+ 	 * Add block 0 to the inode.
+ 	 */
+ 	error = xfs_dir2_grow_inode(args, XFS_DIR2_DATA_SPACE, &blkno);
+-	if (error) {
+-		kmem_free(sfp);
+-		return error;
+-	}
++	if (error)
++		goto out_free;
+ 	/*
+ 	 * Initialize the data block, then convert it to block format.
+ 	 */
+ 	error = xfs_dir3_data_init(args, blkno, &bp);
+-	if (error) {
+-		kmem_free(sfp);
+-		return error;
+-	}
++	if (error)
++		goto out_free;
+ 	xfs_dir3_block_init(mp, tp, bp, dp);
+ 	hdr = bp->b_addr;
+ 
+@@ -1136,8 +1140,10 @@ xfs_dir2_sf_to_block(
+ 	 */
+ 	dup = dp->d_ops->data_unused_p(hdr);
+ 	needlog = needscan = 0;
+-	xfs_dir2_data_use_free(args, bp, dup, args->geo->blksize - i,
+-			       i, &needlog, &needscan);
++	error = xfs_dir2_data_use_free(args, bp, dup, args->geo->blksize - i,
++			i, &needlog, &needscan);
++	if (error)
++		goto out_free;
+ 	ASSERT(needscan == 0);
+ 	/*
+ 	 * Fill in the tail.
+@@ -1150,9 +1156,11 @@ xfs_dir2_sf_to_block(
+ 	/*
+ 	 * Remove the freespace, we'll manage it.
+ 	 */
+-	xfs_dir2_data_use_free(args, bp, dup,
+-		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+-		be16_to_cpu(dup->length), &needlog, &needscan);
++	error = xfs_dir2_data_use_free(args, bp, dup,
++			(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
++			be16_to_cpu(dup->length), &needlog, &needscan);
++	if (error)
++		goto out_free;
+ 	/*
+ 	 * Create entry for .
+ 	 */
+@@ -1256,4 +1264,7 @@ xfs_dir2_sf_to_block(
+ 	xfs_dir2_block_log_tail(tp, bp);
+ 	xfs_dir3_data_check(dp, bp);
+ 	return 0;
++out_free:
++	kmem_free(sfp);
++	return error;
+ }
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index 9202794..cb67ec7 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -932,10 +932,51 @@ xfs_dir2_data_make_free(
+ 	*needscanp = needscan;
+ }
+ 
++/* Check our free data for obvious signs of corruption. */
++static inline xfs_failaddr_t
++xfs_dir2_data_check_free(
++	struct xfs_dir2_data_hdr	*hdr,
++	struct xfs_dir2_data_unused	*dup,
++	xfs_dir2_data_aoff_t		offset,
++	xfs_dir2_data_aoff_t		len)
++{
++	if (hdr->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC) &&
++	    hdr->magic != cpu_to_be32(XFS_DIR3_DATA_MAGIC) &&
++	    hdr->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) &&
++	    hdr->magic != cpu_to_be32(XFS_DIR3_BLOCK_MAGIC))
++		return __this_address;
++	if (be16_to_cpu(dup->freetag) != XFS_DIR2_DATA_FREE_TAG)
++		return __this_address;
++	if (offset < (char *)dup - (char *)hdr)
++		return __this_address;
++	if (offset + len > (char *)dup + be16_to_cpu(dup->length) - (char *)hdr)
++		return __this_address;
++	if ((char *)dup - (char *)hdr !=
++			be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)))
++		return __this_address;
++	return NULL;
++}
++
++/* Sanity-check a new bestfree entry. */
++static inline xfs_failaddr_t
++xfs_dir2_data_check_new_free(
++	struct xfs_dir2_data_hdr	*hdr,
++	struct xfs_dir2_data_free	*dfp,
++	struct xfs_dir2_data_unused	*newdup)
++{
++	if (dfp == NULL)
++		return __this_address;
++	if (dfp->length != newdup->length)
++		return __this_address;
++	if (be16_to_cpu(dfp->offset) != (char *)newdup - (char *)hdr)
++		return __this_address;
++	return NULL;
++}
++
+ /*
+  * Take a byte range out of an existing unused space and make it un-free.
+  */
+-void
++int
+ xfs_dir2_data_use_free(
+ 	struct xfs_da_args	*args,
+ 	struct xfs_buf		*bp,
+@@ -947,23 +988,19 @@ xfs_dir2_data_use_free(
+ {
+ 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_free_t	*dfp;		/* bestfree pointer */
++	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
++	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
++	struct xfs_dir2_data_free *bf;
++	xfs_failaddr_t		fa;
+ 	int			matchback;	/* matches end of freespace */
+ 	int			matchfront;	/* matches start of freespace */
+ 	int			needscan;	/* need to regen bestfree */
+-	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
+-	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
+ 	int			oldlen;		/* old unused entry's length */
+-	struct xfs_dir2_data_free *bf;
+ 
+ 	hdr = bp->b_addr;
+-	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+-	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+-	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+-	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
+-	ASSERT(be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG);
+-	ASSERT(offset >= (char *)dup - (char *)hdr);
+-	ASSERT(offset + len <= (char *)dup + be16_to_cpu(dup->length) - (char *)hdr);
+-	ASSERT((char *)dup - (char *)hdr == be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
++	fa = xfs_dir2_data_check_free(hdr, dup, offset, len);
++	if (fa)
++		goto corrupt;
+ 	/*
+ 	 * Look up the entry in the bestfree table.
+ 	 */
+@@ -1008,9 +1045,9 @@ xfs_dir2_data_use_free(
+ 			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
+ 			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
+ 						       needlogp);
+-			ASSERT(dfp != NULL);
+-			ASSERT(dfp->length == newdup->length);
+-			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
++			fa = xfs_dir2_data_check_new_free(hdr, dfp, newdup);
++			if (fa)
++				goto corrupt;
+ 			/*
+ 			 * If we got inserted at the last slot,
+ 			 * that means we don't know if there was a better
+@@ -1036,9 +1073,9 @@ xfs_dir2_data_use_free(
+ 			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
+ 			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
+ 						       needlogp);
+-			ASSERT(dfp != NULL);
+-			ASSERT(dfp->length == newdup->length);
+-			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
++			fa = xfs_dir2_data_check_new_free(hdr, dfp, newdup);
++			if (fa)
++				goto corrupt;
+ 			/*
+ 			 * If we got inserted at the last slot,
+ 			 * that means we don't know if there was a better
+@@ -1084,6 +1121,11 @@ xfs_dir2_data_use_free(
+ 		}
+ 	}
+ 	*needscanp = needscan;
++	return 0;
++corrupt:
++	xfs_corruption_error(__func__, XFS_ERRLEVEL_LOW, args->dp->i_mount,
++			hdr, __FILE__, __LINE__, fa);
++	return -EFSCORRUPTED;
+ }
+ 
+ /* Find the end of the entry data in a data/block format dir block. */
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index d61d52d..50fc9c0 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -877,9 +877,13 @@ xfs_dir2_leaf_addname(
+ 	/*
+ 	 * Mark the initial part of our freespace in use for the new entry.
+ 	 */
+-	xfs_dir2_data_use_free(args, dbp, dup,
+-		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+-		&needlog, &needscan);
++	error = xfs_dir2_data_use_free(args, dbp, dup,
++			(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
++			length, &needlog, &needscan);
++	if (error) {
++		xfs_trans_brelse(tp, lbp);
++		return error;
++	}
+ 	/*
+ 	 * Initialize our new entry (at last).
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 0839ffe..9df096c 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -1729,6 +1729,7 @@ xfs_dir2_node_addname_int(
+ 	__be16			*bests;
+ 	struct xfs_dir3_icfree_hdr freehdr;
+ 	struct xfs_dir2_data_free *bf;
++	xfs_dir2_data_aoff_t	aoff;
+ 
+ 	dp = args->dp;
+ 	mp = dp->i_mount;
+@@ -2023,9 +2024,13 @@ xfs_dir2_node_addname_int(
+ 	/*
+ 	 * Mark the first part of the unused space, inuse for us.
+ 	 */
+-	xfs_dir2_data_use_free(args, dbp, dup,
+-		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+-		&needlog, &needscan);
++	aoff = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
++	error = xfs_dir2_data_use_free(args, dbp, dup, aoff, length,
++			&needlog, &needscan);
++	if (error) {
++		xfs_trans_brelse(tp, dbp);
++		return error;
++	}
+ 	/*
+ 	 * Fill in the new entry and log it.
+ 	 */
