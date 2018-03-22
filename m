@@ -1,118 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:48448 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750839AbeCYWeS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Mar 2018 18:34:18 -0400
-Date: Mon, 26 Mar 2018 09:33:57 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:17651 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751548AbeCVXq7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Mar 2018 19:46:59 -0400
+Date: Fri, 23 Mar 2018 10:46:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
- during ifree
-Message-ID: <20180325223357.GJ18129@dastard>
-References: <20171123060137.GL2135@magnolia>
- <20180323013037.GA9190@wotan.suse.de>
- <20180323034145.GH4818@magnolia>
- <20180323170813.GD30543@wotan.suse.de>
- <20180323172620.GK4818@magnolia>
- <20180323182302.GB9190@wotan.suse.de>
+Subject: Re: [PATCH RFC] xfs, memcg: Call xfs_fs_nr_cached_objects() only in
+ case of global reclaim
+Message-ID: <20180322234613.GD18129@dastard>
+References: <20180315230313.GM18129@dastard>
+ <6628c551-f607-367b-1ee6-f458266c1d92@virtuozzo.com>
+ <20180316213910.GF7000@dastard>
+ <18a031f3-2136-4ef9-6ede-05f5b835661c@virtuozzo.com>
+ <20180320001827.GB1150@dastard>
+ <ec116ce6-c22b-66e1-0e01-55f895997c7d@virtuozzo.com>
+ <20180320143452.GT18129@dastard>
+ <5eb88165-c108-5989-3cb5-1f260cec5e53@virtuozzo.com>
+ <20180322050152.GA18129@dastard>
+ <3320c962-35c5-c5ed-2a9f-0acb2b875579@virtuozzo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180323182302.GB9190@wotan.suse.de>
+In-Reply-To: <3320c962-35c5-c5ed-2a9f-0acb2b875579@virtuozzo.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, linux-kernel@vger.kernel.org, Sasha Levin <alexander.levin@microsoft.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Michal Hocko <mhocko@kernel.org>, Joerg Roedel <joro@8bytes.org>
+To: Kirill Tkhai <ktkhai@virtuozzo.com>
+Cc: Michal Hocko <mhocko@kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-On Fri, Mar 23, 2018 at 06:23:02PM +0000, Luis R. Rodriguez wrote:
-> On Fri, Mar 23, 2018 at 10:26:20AM -0700, Darrick J. Wong wrote:
-> > On Fri, Mar 23, 2018 at 05:08:13PM +0000, Luis R. Rodriguez wrote:
-> > > On Thu, Mar 22, 2018 at 08:41:45PM -0700, Darrick J. Wong wrote:
-> > > > On Fri, Mar 23, 2018 at 01:30:37AM +0000, Luis R. Rodriguez wrote:
-> > > > > On Wed, Nov 22, 2017 at 10:01:37PM -0800, Darrick J. Wong wrote:
-> > > > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > > > > index 61d1cb7..8012741 100644
-> > > > > > --- a/fs/xfs/xfs_inode.c
-> > > > > > +++ b/fs/xfs/xfs_inode.c
-> > > > > > @@ -2401,6 +2401,24 @@ xfs_ifree_cluster(
-> > > > > >  }
-> > > > > >  
-> > > > > >  /*
-> > > > > > + * Free any local-format buffers sitting around before we reset to
-> > > > > > + * extents format.
-> > > > > > + */
-> > > > > > +static inline void
-> > > > > > +xfs_ifree_local_data(
-> > > > > > +	struct xfs_inode	*ip,
-> > > > > > +	int			whichfork)
-> > > > > > +{
-> > > > > > +	struct xfs_ifork	*ifp;
-> > > > > > +
-> > > > > > +	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
-> > > > > > +		return;
-> > > > > 
-> > > > > I'm new to all this so this was a bit hard to follow. I'm confused with how
-> > > > > commit 43518812d2 ("xfs: remove support for inlining data/extents into the
-> > > > > inode fork") exacerbated the leak, isn't that commit about
-> > > > > XFS_DINODE_FMT_EXTENTS?
-> > > > 
-> > > > Not specifically _EXTENTS, merely any fork (EXTENTS or LOCAL) whose
-> > > > incore data was small enough to fit in if_inline_ata.
-> > > 
-> > > Got it, I thought those were XFS_DINODE_FMT_EXTENTS by definition.
-> > > 
-> > > > > Did we have cases where the format was XFS_DINODE_FMT_LOCAL and yet
-> > > > > ifp->if_u1.if_data == ifp->if_u2.if_inline_data ?
-> > > > 
-> > > > An empty directory is 6 bytes, which is what you get with a fresh mkdir
-> > > > or after deleting everything in the directory.  Prior to the 43518812d2
-> > > > patch we could get away with not even checking if we had to free if_data
-> > > > when deleting a directory because it fit within if_inline_data.
-> > > 
-> > > Ah got it. So your fix *is* also applicable even prior to commit 43518812d2.
-> > 
-> > You'd have to modify the patch so that it doesn't try to kmem_free
-> > if_data if if_data == if_inline_data but otherwise (in theory) I think
-> > that the concept applies to pre-4.15 kernels.
-> > 
-> > (YMMV, please do run this through QA/kmemleak just in case I'm wrong, etc...)
-> 
-> Well... so we need a resolution and better get testing this already given that
-> *I believe* the new auto-selection algorithm used to cherry pick patches onto
-> stable for linux-4.14.y (covered on a paper [0] and when used, stable patches
-> are prefixed with AUTOSEL, a recent discussion covered this in November 2017
-> [1]) recommended to merge your commit 98c4f78dcdd8 ("xfs: always free inline
-> data before resetting inode fork during ifree") as stable commit 1eccdbd4836a41
-> on v4.14.17 *without* merging commit 43518812d2 ("xfs: remove support for
-> inlining data/extents into the inode fork").
+On Thu, Mar 22, 2018 at 07:52:37PM +0300, Kirill Tkhai wrote:
+> Here is the problem I'm solving: https://lkml.org/lkml/2018/3/21/365.
 
-Yikes. That sets off all my "how to break filesysetms for fun and
-profit" alarm bells. This is like playing russian roulette with all
-our user's data.  XFS fixes that look like they are simple often
-have subtle dependencies in them that automated backports won't ever
-be able to understand, and if we don't get that right, we break
-stuff.
+Oh, finally you tell me what the problem is that you're trying to
+solve. I *asked this several times* and got no response. Thank you
+for wasting so much of my time.
 
-Filesystems aren't like drivers or memory management - you can't
-reboot to fix a filesystem corruption or data loss bug. User's tend
-to care a lot more about their data and cat photos than they do
-about how often the dodgy hardware they bought on ebay needs OS
-rebooting to get working again..
+> Current shrinker is not scalable. Then there are many memcg and mounts,
+> the time of iteration shrink_slab() in case of global reclaim can
+> take much time. There is times of shrink_slab() by the link. A node
+> with 200 containers may waste 4 seconds on global reclaim just to
+> iterate over all shrinkers for all cgroups, call shrinker::count_objects()
+> and receive 0 zero objects.
 
-> I do wonder if other XFS folks are *at least* aware that the auto-selection
-> algorithm now currently merging patches onto stable for XFS?
+So, your problem is the way the memcgs were tacked onto the side
+of the list_lru infrastructure and are iterated, which has basically
+nothing to do with the way the low level XFS inode shrinker behaves.
 
-No I wasn't aware that this was happening.  I'm kinda shit scared
-right now hearing about how automated backports of random kernel
-patches are being done with minimal oversight and no visibility to
-the subsystem developers. When did this start happening?
+/me looks at the patches
 
-At this point I'd be much more comfortable if XFS was blacklisted
-until there's solid subsystem developer visibility of the iautomated
-backports, not to mention a solid set of automated regression
-testing backing this automated backport proceedure.
+/me shudders at the thought of external "cache has freeable items"
+control for the shrinking of vfs caches.
 
-Cheers,
+Biggest problem I see with this is the scope for coherency bugs ini
+the "memcg shrinker has freeable items" tracking. If that happens,
+there's no way of getting that memcg to run it's shrinker ever
+again. That seems very, very fragile and likely to be an endless
+source of OOM bugs. The whole point of the shrinker polling
+infrastructure is that it is not susceptible to this sort of bug.
+
+Really, the problem is that there's no separate list of memcg aware
+shrinkers, so every registered shrinker has to be iterated just to
+find the one shrinker that is memcg aware.
+
+So why not just do the simple thing which is create a separate
+"memcg-aware" shrinker list (i.e. create shrinker_list_memcg
+alongside shrinker_list) and only iterate the shrinker_list_memcg
+when a memcg is passed to shrink_slab()?
+
+That means we'll only run 2 shrinkers per memcg at most (sueprblock
+and working set) per memcg reclaim call. That's a simple 10-20 line
+change, not a whole mess of new code and issues...
+
+> Can't we call shrink of shared objects only for top memcg? Something like
+> this:
+
+What's a "shared object", and how is it any different to a normal
+slab cache object?
+
+CHeers,
 
 Dave.
 -- 
