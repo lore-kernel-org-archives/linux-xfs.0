@@ -1,292 +1,358 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35178 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42688 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751599AbeCWLqY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Mar 2018 07:46:24 -0400
-Date: Fri, 23 Mar 2018 07:46:22 -0400
+        id S1751828AbeCWM3k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Mar 2018 08:29:40 -0400
+Date: Fri, 23 Mar 2018 08:29:39 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2] xfs: detect agfl count corruption and reset agfl
-Message-ID: <20180323114622.GA20654@bfoster.bfoster>
-References: <20180315174539.48142-1-bfoster@redhat.com>
- <20180323051138.GY30836@localhost.localdomain>
+Subject: Re: [PATCH v4 1/9] xfs: sanity-check the unused space before trying
+ to use it
+Message-ID: <20180323122938.GA22357@bfoster.bfoster>
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <152107377649.19571.3126019873391787136.stgit@magnolia>
+ <20180322222143.GD4818@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180323051138.GY30836@localhost.localdomain>
+In-Reply-To: <20180322222143.GD4818@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, stable@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
 
-On Fri, Mar 23, 2018 at 01:11:38PM +0800, Eryu Guan wrote:
-> Hi Brian,
+On Thu, Mar 22, 2018 at 03:21:43PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> On Thu, Mar 15, 2018 at 01:45:39PM -0400, Brian Foster wrote:
-> > The struct xfs_agfl v5 header was originally introduced with
-> > unexpected padding that caused the AGFL to operate with one less
-> > slot than intended. The header has since been packed, but the fix
-> > left an incompatibility for users who upgrade from an old kernel
-> > with the unpacked header to a newer kernel with the packed header
-> > while the AGFL happens to wrap around the end. The newer kernel
-> > recognizes one extra slot at the physical end of the AGFL that the
-> > previous kernel did not. The new kernel will eventually attempt to
-> > allocate a block from that slot, which contains invalid data, and
-> > cause a crash.
-> > 
-> > This condition can be detected by comparing the active range of the
-> > AGFL to the count. While this detects a padding mismatch, it can
-> > also trigger false positives for unrelated flcount corruption. Since
-> > we cannot distinguish a size mismatch due to padding from unrelated
-> > corruption, we can't trust the AGFL enough to simply repopulate the
-> > empty slot.
-> > 
-> > Instead, avoid unnecessarily complex detection logic and and use a
-> > solution that can handle any form of flcount corruption that slips
-> > through read verifiers: distrust the entire AGFL and reset it to an
-> > empty state. Any valid blocks within the AGFL are intentionally
-> > leaked. This requires xfs_repair to rectify (which was already
-> > necessary based on the state the AGFL was found in). The reset
-> > mitigates the side effect of the padding mismatch problem from a
-> > filesystem crash to a free space accounting inconsistency. The
-> > generic approach also means that this patch can be safely backported
-> > to kernels with or without a packed struct xfs_agfl.
-> > 
-> > Check the AGF for an invalid freelist count on initial read from
-> > disk. If detected, set a flag on the xfs_perag to indicate that a
-> > reset is required before the AGFL can be used. In the first
-> > transaction that attempts to use a flagged AGFL, reset it to empty,
-> > warn the user about the inconsistency and allow the freelist fixup
-> > code to repopulate the AGFL with new blocks. The xfs_perag flag is
-> > cleared to eliminate the need for repeated checks on each block
-> > allocation operation.
-> > 
-> > Fixes: 96f859d52bcb ("libxfs: pack the agfl header structure so XFS_AGFL_SIZE is correct")
-> > CC: <stable@vger.kernel.org>
-> > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by Dave Chiluk <chiluk+linuxxfs@indeed.com>
-> > ---
-> > 
-> > v2:
-> > - Function rename and logic cleanup.
-> > - CC stable.
-> > v1: https://marc.info/?l=linux-xfs&m=152104784709048&w=2
-> > - Use a simplified AGFL reset mechanism.
-> > - Trigger on AGFL fixup rather than get/put.
-> > - Various refactors, cleanups and comments.
-> > rfc: https://marc.info/?l=linux-xfs&m=152045069616434&w=2
-> > 
-> >  fs/xfs/libxfs/xfs_alloc.c | 94 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_mount.h        |  1 +
-> >  fs/xfs/xfs_trace.h        |  9 ++++-
-> >  3 files changed, 103 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 3db90b707fb2..39387bdd225d 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2063,6 +2063,93 @@ xfs_alloc_space_available(
-> >  }
-> >  
-> >  /*
-> > + * Check the agfl fields of the agf for inconsistency or corruption. The purpose
-> > + * is to detect an agfl header padding mismatch between current and early v5
-> > + * kernels. This problem manifests as a 1-slot size difference between the
-> > + * on-disk flcount and the active [first, last] range of a wrapped agfl. This
-> > + * may also catch variants of agfl count corruption unrelated to padding. Either
-> > + * way, we'll reset the agfl and warn the user.
-> > + *
-> > + * Return true if a reset is required before the agfl can be used, false
-> > + * otherwise.
-> > + */
-> > +static bool
-> > +xfs_agfl_needs_reset(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_agf		*agf)
-> > +{
-> > +	uint32_t		f = be32_to_cpu(agf->agf_flfirst);
-> > +	uint32_t		l = be32_to_cpu(agf->agf_fllast);
-> > +	uint32_t		c = be32_to_cpu(agf->agf_flcount);
-> > +	int			agfl_size = xfs_agfl_size(mp);
->                                             ^^^^^^^^^^^^^
-> Should this be XFS_AGFL_SIZE(mp)? Otherwise I got compile error (based
-> on 4.15-rc5 kernel):
+> In xfs_dir2_data_use_free, we examine on-disk metadata and ASSERT if
+> it doesn't make sense.  Since a carefully crafted fuzzed image can cause
+> the kernel to crash after blowing a bunch of assertions, let's move
+> those checks into a validator function and rig everything up to return
+> EFSCORRUPTED to userspace.  Found by lastbit fuzzing ltail.bestcount via
+> xfs/391.
 > 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v4: fix harder the formatting weirdness
+> v3: fix all the formatting weirdness
+> v2: release buffers defensively, fix some formatting weirdness
+> ---
 
-This patch was rebased onto for-next which now includes commit
-a78ee256c325e ("xfs: convert XFS_AGFL_SIZE to a helper function"). That
-commit refactors the macro into a helper function.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Brian
-
-> fs/xfs/libxfs/xfs_alloc.c: In function ‘xfs_agfl_needs_reset’:
-> fs/xfs/libxfs/xfs_alloc.c:2075:20: error: implicit declaration of function ‘xfs_agfl_size’; did you mean ‘xfs_agfl_verify’? [-Werror=implicit-function-declaration]
->   int   agfl_size = xfs_agfl_size(mp);
->                     ^~~~~~~~~~~~~
->                     xfs_agfl_verify
-> cc1: some warnings being treated as errors
+>  fs/xfs/libxfs/xfs_dir2.h       |    2 +
+>  fs/xfs/libxfs/xfs_dir2_block.c |   59 ++++++++++++++++++------------
+>  fs/xfs/libxfs/xfs_dir2_data.c  |   78 +++++++++++++++++++++++++++++++---------
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  |   10 ++++-
+>  fs/xfs/libxfs/xfs_dir2_node.c  |   11 ++++--
+>  5 files changed, 111 insertions(+), 49 deletions(-)
 > 
-> > +	int			active;
-> > +
-> > +	/* no agfl header on v4 supers */
-> > +	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> > +		return false;
-> > +
-> > +	/*
-> > +	 * The agf read verifier catches severe corruption of these fields.
-> > +	 * Repeat some sanity checks to cover a packed -> unpacked mismatch if
-> > +	 * the verifier allows it.
-> > +	 */
-> > +	if (f >= agfl_size || l >= agfl_size)
-> > +		return true;
-> > +	if (c > agfl_size)
-> > +		return true;
-> > +
-> > +	/*
-> > +	 * Check consistency between the on-disk count and the active range. An
-> > +	 * agfl padding mismatch manifests as an inconsistent flcount.
-> > +	 */
-> > +	if (c && l >= f)
-> > +		active = l - f + 1;
-> > +	else if (c)
-> > +		active = agfl_size - f + l + 1;
-> > +	else
-> > +		active = 0;
-> > +
-> > +	return active != c;
-> > +}
-> > +
-> > +/*
-> > + * Reset the agfl to an empty state. Ignore/drop any existing blocks since the
-> > + * agfl content cannot be trusted. Warn the user that a repair is required to
-> > + * recover leaked blocks.
-> > + *
-> > + * The purpose of this mechanism is to handle filesystems affected by the agfl
-> > + * header padding mismatch problem. A reset keeps the filesystem online with a
-> > + * relatively minor free space accounting inconsistency rather than suffer the
-> > + * inevitable crash from use of an invalid agfl block.
-> > + */
-> > +static void
-> > +xfs_agfl_reset(
-> > +	struct xfs_trans	*tp,
-> > +	struct xfs_buf		*agbp,
-> > +	struct xfs_perag	*pag)
-> > +{
-> > +	struct xfs_mount	*mp = tp->t_mountp;
-> > +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
-> > +
-> > +	ASSERT(pag->pagf_agflreset);
-> > +	trace_xfs_agfl_reset(mp, agf, 0, _RET_IP_);
-> > +
-> > +	xfs_warn(mp,
-> > +	       "WARNING: Reset corrupted AGFL on AG %u. %d blocks leaked. "
-> > +	       "Please unmount and run xfs_repair.",
-> > +	         pag->pag_agno, pag->pagf_flcount);
-> > +
-> > +	agf->agf_flfirst = 0;
-> > +	agf->agf_fllast = cpu_to_be32(xfs_agfl_size(mp) - 1);
-> 
-> Same here.
-> 
-> Thanks,
-> Eryu
-> 
-> > +	agf->agf_flcount = 0;
-> > +	xfs_alloc_log_agf(tp, agbp, XFS_AGF_FLFIRST | XFS_AGF_FLLAST |
-> > +				    XFS_AGF_FLCOUNT);
-> > +
-> > +	pag->pagf_flcount = 0;
-> > +	pag->pagf_agflreset = false;
-> > +}
-> > +
-> > +/*
-> >   * Decide whether to use this allocation group for this allocation.
-> >   * If so, fix up the btree freelist's size.
-> >   */
-> > @@ -2123,6 +2210,10 @@ xfs_alloc_fix_freelist(
-> >  		}
-> >  	}
-> >  
-> > +	/* reset a padding mismatched agfl before final free space check */
-> > +	if (pag->pagf_agflreset)
-> > +		xfs_agfl_reset(tp, agbp, pag);
-> > +
-> >  	/* If there isn't enough total space or single-extent, reject it. */
-> >  	need = xfs_alloc_min_freelist(mp, pag);
-> >  	if (!xfs_alloc_space_available(args, need, flags))
-> > @@ -2279,6 +2370,7 @@ xfs_alloc_get_freelist(
-> >  		agf->agf_flfirst = 0;
-> >  
-> >  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> > +	ASSERT(!pag->pagf_agflreset);
-> >  	be32_add_cpu(&agf->agf_flcount, -1);
-> >  	xfs_trans_agflist_delta(tp, -1);
-> >  	pag->pagf_flcount--;
-> > @@ -2390,6 +2482,7 @@ xfs_alloc_put_freelist(
-> >  		agf->agf_fllast = 0;
-> >  
-> >  	pag = xfs_perag_get(mp, be32_to_cpu(agf->agf_seqno));
-> > +	ASSERT(!pag->pagf_agflreset);
-> >  	be32_add_cpu(&agf->agf_flcount, 1);
-> >  	xfs_trans_agflist_delta(tp, 1);
-> >  	pag->pagf_flcount++;
-> > @@ -2597,6 +2690,7 @@ xfs_alloc_read_agf(
-> >  		pag->pagb_count = 0;
-> >  		pag->pagb_tree = RB_ROOT;
-> >  		pag->pagf_init = 1;
-> > +		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
-> >  	}
-> >  #ifdef DEBUG
-> >  	else if (!XFS_FORCED_SHUTDOWN(mp)) {
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index 1808f56decaa..10b90bbc5162 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -353,6 +353,7 @@ typedef struct xfs_perag {
-> >  	char		pagi_inodeok;	/* The agi is ok for inodes */
-> >  	uint8_t		pagf_levels[XFS_BTNUM_AGF];
-> >  					/* # of levels in bno & cnt btree */
-> > +	bool		pagf_agflreset; /* agfl requires reset before use */
-> >  	uint32_t	pagf_flcount;	/* count of blocks in freelist */
-> >  	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
-> >  	xfs_extlen_t	pagf_longest;	/* longest free space */
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index 945de08af7ba..a982c0b623d0 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -1477,7 +1477,7 @@ TRACE_EVENT(xfs_extent_busy_trim,
-> >  		  __entry->tlen)
-> >  );
-> >  
-> > -TRACE_EVENT(xfs_agf,
-> > +DECLARE_EVENT_CLASS(xfs_agf_class,
-> >  	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags,
-> >  		 unsigned long caller_ip),
-> >  	TP_ARGS(mp, agf, flags, caller_ip),
-> > @@ -1533,6 +1533,13 @@ TRACE_EVENT(xfs_agf,
-> >  		  __entry->longest,
-> >  		  (void *)__entry->caller_ip)
-> >  );
-> > +#define DEFINE_AGF_EVENT(name) \
-> > +DEFINE_EVENT(xfs_agf_class, name, \
-> > +	TP_PROTO(struct xfs_mount *mp, struct xfs_agf *agf, int flags, \
-> > +		 unsigned long caller_ip), \
-> > +	TP_ARGS(mp, agf, flags, caller_ip))
-> > +DEFINE_AGF_EVENT(xfs_agf);
-> > +DEFINE_AGF_EVENT(xfs_agfl_reset);
-> >  
-> >  TRACE_EVENT(xfs_free_extent,
-> >  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-> > -- 
-> > 2.13.6
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index 388d67c..989e95a 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -173,7 +173,7 @@ extern void xfs_dir2_data_log_unused(struct xfs_da_args *args,
+>  extern void xfs_dir2_data_make_free(struct xfs_da_args *args,
+>  		struct xfs_buf *bp, xfs_dir2_data_aoff_t offset,
+>  		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+> -extern void xfs_dir2_data_use_free(struct xfs_da_args *args,
+> +extern int xfs_dir2_data_use_free(struct xfs_da_args *args,
+>  		struct xfs_buf *bp, struct xfs_dir2_data_unused *dup,
+>  		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
+>  		int *needlogp, int *needscanp);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index 2da86a3..875893d 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -451,15 +451,19 @@ xfs_dir2_block_addname(
+>  	 * No stale entries, will use enddup space to hold new leaf.
+>  	 */
+>  	if (!btp->stale) {
+> +		xfs_dir2_data_aoff_t	aoff;
+> +
+>  		/*
+>  		 * Mark the space needed for the new leaf entry, now in use.
+>  		 */
+> -		xfs_dir2_data_use_free(args, bp, enddup,
+> -			(xfs_dir2_data_aoff_t)
+> -			((char *)enddup - (char *)hdr + be16_to_cpu(enddup->length) -
+> -			 sizeof(*blp)),
+> -			(xfs_dir2_data_aoff_t)sizeof(*blp),
+> -			&needlog, &needscan);
+> +		aoff = (xfs_dir2_data_aoff_t)((char *)enddup - (char *)hdr +
+> +				be16_to_cpu(enddup->length) - sizeof(*blp));
+> +		error = xfs_dir2_data_use_free(args, bp, enddup, aoff,
+> +				(xfs_dir2_data_aoff_t)sizeof(*blp), &needlog,
+> +				&needscan);
+> +		if (error)
+> +			return error;
+> +
+>  		/*
+>  		 * Update the tail (entry count).
+>  		 */
+> @@ -541,9 +545,11 @@ xfs_dir2_block_addname(
+>  	/*
+>  	 * Mark space for the data entry used.
+>  	 */
+> -	xfs_dir2_data_use_free(args, bp, dup,
+> -		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+> -		(xfs_dir2_data_aoff_t)len, &needlog, &needscan);
+> +	error = xfs_dir2_data_use_free(args, bp, dup,
+> +			(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+> +			(xfs_dir2_data_aoff_t)len, &needlog, &needscan);
+> +	if (error)
+> +		return error;
+>  	/*
+>  	 * Create the new data entry.
+>  	 */
+> @@ -997,8 +1003,10 @@ xfs_dir2_leaf_to_block(
+>  	/*
+>  	 * Use up the space at the end of the block (blp/btp).
+>  	 */
+> -	xfs_dir2_data_use_free(args, dbp, dup, args->geo->blksize - size, size,
+> -		&needlog, &needscan);
+> +	error = xfs_dir2_data_use_free(args, dbp, dup,
+> +			args->geo->blksize - size, size, &needlog, &needscan);
+> +	if (error)
+> +		return error;
+>  	/*
+>  	 * Initialize the block tail.
+>  	 */
+> @@ -1110,18 +1118,14 @@ xfs_dir2_sf_to_block(
+>  	 * Add block 0 to the inode.
+>  	 */
+>  	error = xfs_dir2_grow_inode(args, XFS_DIR2_DATA_SPACE, &blkno);
+> -	if (error) {
+> -		kmem_free(sfp);
+> -		return error;
+> -	}
+> +	if (error)
+> +		goto out_free;
+>  	/*
+>  	 * Initialize the data block, then convert it to block format.
+>  	 */
+>  	error = xfs_dir3_data_init(args, blkno, &bp);
+> -	if (error) {
+> -		kmem_free(sfp);
+> -		return error;
+> -	}
+> +	if (error)
+> +		goto out_free;
+>  	xfs_dir3_block_init(mp, tp, bp, dp);
+>  	hdr = bp->b_addr;
+>  
+> @@ -1136,8 +1140,10 @@ xfs_dir2_sf_to_block(
+>  	 */
+>  	dup = dp->d_ops->data_unused_p(hdr);
+>  	needlog = needscan = 0;
+> -	xfs_dir2_data_use_free(args, bp, dup, args->geo->blksize - i,
+> -			       i, &needlog, &needscan);
+> +	error = xfs_dir2_data_use_free(args, bp, dup, args->geo->blksize - i,
+> +			i, &needlog, &needscan);
+> +	if (error)
+> +		goto out_free;
+>  	ASSERT(needscan == 0);
+>  	/*
+>  	 * Fill in the tail.
+> @@ -1150,9 +1156,11 @@ xfs_dir2_sf_to_block(
+>  	/*
+>  	 * Remove the freespace, we'll manage it.
+>  	 */
+> -	xfs_dir2_data_use_free(args, bp, dup,
+> -		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+> -		be16_to_cpu(dup->length), &needlog, &needscan);
+> +	error = xfs_dir2_data_use_free(args, bp, dup,
+> +			(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+> +			be16_to_cpu(dup->length), &needlog, &needscan);
+> +	if (error)
+> +		goto out_free;
+>  	/*
+>  	 * Create entry for .
+>  	 */
+> @@ -1256,4 +1264,7 @@ xfs_dir2_sf_to_block(
+>  	xfs_dir2_block_log_tail(tp, bp);
+>  	xfs_dir3_data_check(dp, bp);
+>  	return 0;
+> +out_free:
+> +	kmem_free(sfp);
+> +	return error;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+> index 9202794..cb67ec7 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_data.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
+> @@ -932,10 +932,51 @@ xfs_dir2_data_make_free(
+>  	*needscanp = needscan;
+>  }
+>  
+> +/* Check our free data for obvious signs of corruption. */
+> +static inline xfs_failaddr_t
+> +xfs_dir2_data_check_free(
+> +	struct xfs_dir2_data_hdr	*hdr,
+> +	struct xfs_dir2_data_unused	*dup,
+> +	xfs_dir2_data_aoff_t		offset,
+> +	xfs_dir2_data_aoff_t		len)
+> +{
+> +	if (hdr->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC) &&
+> +	    hdr->magic != cpu_to_be32(XFS_DIR3_DATA_MAGIC) &&
+> +	    hdr->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) &&
+> +	    hdr->magic != cpu_to_be32(XFS_DIR3_BLOCK_MAGIC))
+> +		return __this_address;
+> +	if (be16_to_cpu(dup->freetag) != XFS_DIR2_DATA_FREE_TAG)
+> +		return __this_address;
+> +	if (offset < (char *)dup - (char *)hdr)
+> +		return __this_address;
+> +	if (offset + len > (char *)dup + be16_to_cpu(dup->length) - (char *)hdr)
+> +		return __this_address;
+> +	if ((char *)dup - (char *)hdr !=
+> +			be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)))
+> +		return __this_address;
+> +	return NULL;
+> +}
+> +
+> +/* Sanity-check a new bestfree entry. */
+> +static inline xfs_failaddr_t
+> +xfs_dir2_data_check_new_free(
+> +	struct xfs_dir2_data_hdr	*hdr,
+> +	struct xfs_dir2_data_free	*dfp,
+> +	struct xfs_dir2_data_unused	*newdup)
+> +{
+> +	if (dfp == NULL)
+> +		return __this_address;
+> +	if (dfp->length != newdup->length)
+> +		return __this_address;
+> +	if (be16_to_cpu(dfp->offset) != (char *)newdup - (char *)hdr)
+> +		return __this_address;
+> +	return NULL;
+> +}
+> +
+>  /*
+>   * Take a byte range out of an existing unused space and make it un-free.
+>   */
+> -void
+> +int
+>  xfs_dir2_data_use_free(
+>  	struct xfs_da_args	*args,
+>  	struct xfs_buf		*bp,
+> @@ -947,23 +988,19 @@ xfs_dir2_data_use_free(
+>  {
+>  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+>  	xfs_dir2_data_free_t	*dfp;		/* bestfree pointer */
+> +	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
+> +	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
+> +	struct xfs_dir2_data_free *bf;
+> +	xfs_failaddr_t		fa;
+>  	int			matchback;	/* matches end of freespace */
+>  	int			matchfront;	/* matches start of freespace */
+>  	int			needscan;	/* need to regen bestfree */
+> -	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
+> -	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
+>  	int			oldlen;		/* old unused entry's length */
+> -	struct xfs_dir2_data_free *bf;
+>  
+>  	hdr = bp->b_addr;
+> -	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+> -	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+> -	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+> -	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
+> -	ASSERT(be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG);
+> -	ASSERT(offset >= (char *)dup - (char *)hdr);
+> -	ASSERT(offset + len <= (char *)dup + be16_to_cpu(dup->length) - (char *)hdr);
+> -	ASSERT((char *)dup - (char *)hdr == be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)));
+> +	fa = xfs_dir2_data_check_free(hdr, dup, offset, len);
+> +	if (fa)
+> +		goto corrupt;
+>  	/*
+>  	 * Look up the entry in the bestfree table.
+>  	 */
+> @@ -1008,9 +1045,9 @@ xfs_dir2_data_use_free(
+>  			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
+>  			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
+>  						       needlogp);
+> -			ASSERT(dfp != NULL);
+> -			ASSERT(dfp->length == newdup->length);
+> -			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
+> +			fa = xfs_dir2_data_check_new_free(hdr, dfp, newdup);
+> +			if (fa)
+> +				goto corrupt;
+>  			/*
+>  			 * If we got inserted at the last slot,
+>  			 * that means we don't know if there was a better
+> @@ -1036,9 +1073,9 @@ xfs_dir2_data_use_free(
+>  			xfs_dir2_data_freeremove(hdr, bf, dfp, needlogp);
+>  			dfp = xfs_dir2_data_freeinsert(hdr, bf, newdup,
+>  						       needlogp);
+> -			ASSERT(dfp != NULL);
+> -			ASSERT(dfp->length == newdup->length);
+> -			ASSERT(be16_to_cpu(dfp->offset) == (char *)newdup - (char *)hdr);
+> +			fa = xfs_dir2_data_check_new_free(hdr, dfp, newdup);
+> +			if (fa)
+> +				goto corrupt;
+>  			/*
+>  			 * If we got inserted at the last slot,
+>  			 * that means we don't know if there was a better
+> @@ -1084,6 +1121,11 @@ xfs_dir2_data_use_free(
+>  		}
+>  	}
+>  	*needscanp = needscan;
+> +	return 0;
+> +corrupt:
+> +	xfs_corruption_error(__func__, XFS_ERRLEVEL_LOW, args->dp->i_mount,
+> +			hdr, __FILE__, __LINE__, fa);
+> +	return -EFSCORRUPTED;
+>  }
+>  
+>  /* Find the end of the entry data in a data/block format dir block. */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index d61d52d..50fc9c0 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -877,9 +877,13 @@ xfs_dir2_leaf_addname(
+>  	/*
+>  	 * Mark the initial part of our freespace in use for the new entry.
+>  	 */
+> -	xfs_dir2_data_use_free(args, dbp, dup,
+> -		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+> -		&needlog, &needscan);
+> +	error = xfs_dir2_data_use_free(args, dbp, dup,
+> +			(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr),
+> +			length, &needlog, &needscan);
+> +	if (error) {
+> +		xfs_trans_brelse(tp, lbp);
+> +		return error;
+> +	}
+>  	/*
+>  	 * Initialize our new entry (at last).
+>  	 */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 0839ffe..9df096c 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -1729,6 +1729,7 @@ xfs_dir2_node_addname_int(
+>  	__be16			*bests;
+>  	struct xfs_dir3_icfree_hdr freehdr;
+>  	struct xfs_dir2_data_free *bf;
+> +	xfs_dir2_data_aoff_t	aoff;
+>  
+>  	dp = args->dp;
+>  	mp = dp->i_mount;
+> @@ -2023,9 +2024,13 @@ xfs_dir2_node_addname_int(
+>  	/*
+>  	 * Mark the first part of the unused space, inuse for us.
+>  	 */
+> -	xfs_dir2_data_use_free(args, dbp, dup,
+> -		(xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr), length,
+> -		&needlog, &needscan);
+> +	aoff = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
+> +	error = xfs_dir2_data_use_free(args, dbp, dup, aoff, length,
+> +			&needlog, &needscan);
+> +	if (error) {
+> +		xfs_trans_brelse(tp, dbp);
+> +		return error;
+> +	}
+>  	/*
+>  	 * Fill in the new entry and log it.
+>  	 */
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
