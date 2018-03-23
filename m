@@ -1,153 +1,223 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39582 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752052AbeCOSpC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Mar 2018 14:45:02 -0400
-Date: Thu, 15 Mar 2018 11:44:56 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2 v2] xfs_repair: add flag -e to detect corrected errors
-Message-ID: <20180315184456.GB4865@magnolia>
-References: <20180315174521.33897-1-jtulak@redhat.com>
- <20180315182308.36245-1-jtulak@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:35096 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751667AbeCWChK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Mar 2018 22:37:10 -0400
+Subject: Re: [PATCH 2/2 v5] fsck.xfs: allow forced repairs using xfs_repair
+References: <20180315182850.36783-1-jtulak@redhat.com>
+ <20180316170720.44227-1-jtulak@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <709ab06b-4efc-2925-6621-f17ed4c048c6@sandeen.net>
+Date: Thu, 22 Mar 2018 21:37:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180315182308.36245-1-jtulak@redhat.com>
+In-Reply-To: <20180316170720.44227-1-jtulak@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, Mar 15, 2018 at 07:23:08PM +0100, Jan Tulak wrote:
-> xfs_repair ends with a return code 0 if it finished ok, no matter if
-> there were some errors in the fs, or not. The new flag -e means that we
-> can avoid screenscraping and parsing text output to detect if an error
-> was found (and corrected).
-> 
-> If something could not be corrected or in any other case than the "found
-> something but fixed it all," the behaviour with this flag is unchanged.
+On 3/16/18 12:07 PM, Jan Tulak wrote:
+> The fsck.xfs script did nothing, because xfs doesn't need a fsck to be
+> run on every unclean shutdown. However, sometimes it may happen that the
+> root filesystem really requires the usage of xfs_repair and then it is a
+> hassle. This patch makes the situation a bit easier by detecting forced
+> checks (/forcefsck or fsck.mode=force)
+
+and invoking xfs_repair.
+
+(and then can strike the rest below)
+
+>, so user can require the repair,
+> without the repair being run all the time.
 > 
 > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
 > 
 > ---
+> Changelog:
+> v5:
+> - Change the message for xfs_repair code 2
+> v4:
+> - man page changes
+> v3:
+> - too quick with fixing in v2... add line at the end of the file
 > v2:
-> - edit man page changes
-> - report_corrected is now bool
-> - minor code simplification
+> - return the "exit 0" at the end
+> v1:
+> - test for xfs_repair binary
+> - run only in non-interactive session
+> - translate xfs_repair return codes to fsck ones
+> - run only if the filesystem is not mounted
+> - add manpage update
 > ---
->  man/man8/xfs_repair.8 | 15 +++++++++++----
->  repair/xfs_repair.c   | 10 +++++++++-
->  2 files changed, 20 insertions(+), 5 deletions(-)
+>  fsck/xfs_fsck.sh    | 67 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  man/man8/fsck.xfs.8 |  7 ++++++
+>  2 files changed, 73 insertions(+), 1 deletion(-)
 > 
-> diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-> index 85e4dc97..1ca3b614 100644
-> --- a/man/man8/xfs_repair.8
-> +++ b/man/man8/xfs_repair.8
-> @@ -4,7 +4,7 @@ xfs_repair \- repair an XFS filesystem
->  .SH SYNOPSIS
->  .B xfs_repair
->  [
-> -.B \-dfLnPv
-> +.B \-defLnPv
->  ] [
->  .B \-m
->  .I maxmem
-> @@ -168,6 +168,10 @@ Repair dangerously. Allow
->  to repair an XFS filesystem mounted read only. This is typically done
->  on a root filesystem from single user mode, immediately followed by a reboot.
->  .TP
-> +.B \-e
-> +If any metadata corruption was found, the status returned is 3 instead of the
-> +usual 0.
-> +.TP
->  .B \-V
->  Prints the version number and exits.
->  .SS Checks Performed
-> @@ -512,14 +516,17 @@ will return a status of 1 if filesystem corruption was detected and
->  0 if no filesystem corruption was detected.
->  .B xfs_repair
->  run without the \-n option will always return a status code of 0 if
-> -it completes without problems.  If a runtime error is encountered
-> -during operation, it will return a status of 1.  In this case,
-> +it completes without problems, unless the flag
-> +.B -e
-> +is used. If it is used, then status 3 is reported when any issue with the
-> +filesystem was found, but could be fixed. If a runtime error is encountered during
-> +operation, it will return a status of 1. In this case,
->  .B xfs_repair
->  should be restarted.  If
->  .B xfs_repair is unable
->  to proceed due to a dirty log, it will return a status of 2.  See below.
->  .SH DIRTY LOGS
-> -Due to the design of the XFS log, a dirty log can only be replayed 
-> +Due to the design of the XFS log, a dirty log can only be replayed
->  by the kernel, on a machine having the same CPU architecture as the
->  machine which was writing to the log.
->  .B xfs_repair
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 312a0d08..a65709ce 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -77,6 +77,7 @@ static char *c_opts[] = {
->  static int	bhash_option_used;
->  static long	max_mem_specified;	/* in megabytes */
->  static int	phase2_threads = 32;
-> +static bool report_corrected;
+> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+> index e52969e4..2ac09aeb 100755
+> --- a/fsck/xfs_fsck.sh
+> +++ b/fsck/xfs_fsck.sh
+> @@ -3,11 +3,44 @@
+>  # Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+>  #
 >  
->  static void
->  usage(void)
-> @@ -97,6 +98,7 @@ usage(void)
->  "  -o subopts   Override default behaviour, refer to man page.\n"
->  "  -t interval  Reporting interval in seconds.\n"
->  "  -d           Repair dangerously.\n"
-> +"  -e           Exit with a non-zero code even when all errors were repaired.\n"
->  "  -V           Reports version and exits.\n"), progname);
->  	exit(1);
->  }
-> @@ -214,12 +216,13 @@ process_args(int argc, char **argv)
->  	ag_stride = 0;
->  	thread_count = 1;
->  	report_interval = PROG_RPT_DEFAULT;
-> +	report_corrected = false;
->  
->  	/*
->  	 * XXX have to add suboption processing here
->  	 * attributes, quotas, nlinks, aligned_inos, sb_fbits
->  	 */
-> -	while ((c = getopt(argc, argv, "c:o:fl:m:r:LnDvVdPt:")) != EOF)  {
-> +	while ((c = getopt(argc, argv, "c:o:fl:m:r:LnDvVdPet:")) != EOF)  {
->  		switch (c) {
->  		case 'D':
->  			dumpcore = 1;
-> @@ -329,6 +332,9 @@ process_args(int argc, char **argv)
->  		case 't':
->  			report_interval = (int)strtol(optarg, NULL, 0);
->  			break;
-> +		case 'e':
-> +			report_corrected = true;
-> +			break;
->  		case '?':
->  			usage();
->  		}
-> @@ -1096,5 +1102,7 @@ _("Repair of readonly mount complete.  Immediate reboot encouraged.\n"));
->  
->  	free(msgbuf);
->  
-> +	if (fs_is_dirty && report_corrected)
-> +		return (3);
->  	return (0);
->  }
-> -- 
-> 2.15.0
+> +NAME=$0
+> +
+> +# get the right return code for fsck
+> +function repair2fsck_code() {
+> +	case $1 in
+> +	0)  return 0 # everything is ok
+> +		;;
+> +	1)  echo "$NAME error: xfs_repair could not fix the filesystem." 1>&2
+> +		return 4 # errors left uncorrected
+> +		;;
+> +	2)  echo "$NAME error: The filesystem log is dirty, mount it to recover" \
+> +		     "the log. If that fails, refer to the section DIRTY LOGS in the" \
+> +		     "xfs_repair manual page." 1>&2
+> +		return 4 # dirty log, don't do anything and let the user solve it
+> +		;;
+> +	3)  return 1 # The fs has been fixed
+
+(4, if patch 1/2 changes ...)
+
+> +		;;
+> +	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
+> +		return 4 # something went wrong with xfs_repair
+> +	esac
+> +}
+> +
+> +function ensure_not_mounted() {
+> +	local dev=$1
+> +	mounted=`grep -c "^$dev " /proc/mounts`
+> +	if [ $mounted -ne 0 ]; then
+> +		echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
+> +		exit 4
+> +	fi
+> +}
+
+Is this necessary?  Doesn't xfs_repair already check this?
+
+# xfs_repair /dev/loop0
+xfs_repair: /dev/loop0 contains a mounted filesystem
+xfs_repair: /dev/loop0 contains a mounted and writable filesystem
+
+fatal error -- couldn't initialize XFS library
+
+# echo $?
+1
+
+(script would then say "error: xfs_repair could not fix the filesystem."
+and exit with 4.)
+
+It might be nice to have the cleaner message above, but I wonder about
+the wisdom and safety of hand-rolling another simplistic mount check in a bash
+script.... thoughts?
+
+> +
+>  AUTO=false
+> -while getopts ":aApy" c
+> +FORCE=false
+> +while getopts ":aApyf" c
+>  do
+>  	case $c in
+>  	a|A|p|y)	AUTO=true;;
+> +	f)      	FORCE=true;;
+>  	esac
+>  done
+>  eval DEV=\${$#}
+> @@ -15,6 +48,38 @@ if [ ! -e $DEV ]; then
+>  	echo "$0: $DEV does not exist"
+>  	exit 8
+>  fi
+> +
+> +# The flag -f is added by systemd/init scripts when /forcefsck file is present
+> +# or fsck.mode=force is used during boot; an unclean shutdown won't trigger
+> +# this check, user has to explicitly require a forced fsck.
+> +# But first of all, test if it is a non-interactive session.
+
+Let's say why, here:
+
+"Invoking xfs_repair via fsck.xfs is only intended to happen via initscripts.
+Normal administrative filesystem repairs should always invoke xfs_repair directly."
+
+or something like that.
+
+> Use multiple
+> +# methods to capture most of the cases:
+> +# The case for *i* and -n "$PS1" are commonly suggested in bash manual
+> +# and the -t 0 test checks stdin
+> +case $- in
+> +	*i*) FORCE=false ;;
+> +esac
+> +if [ -n "$PS1" -o -t 0 ]; then
+> +	FORCE=false
+> +fi
+
+Ok - I thought maybe we should be noisy about ignoring -f, but on
+second thought, I like hiding it.
+
+> +
+> +if $FORCE; then
+> +	if [ -f /sbin/xfs_repair ]; then
+> +		BIN="/sbin/xfs_repair"
+> +	elif [ -f /usr/sbin/xfs_repair ]; then
+> +		BIN="/usr/sbin/xfs_repair"
+> +	else
+> +		echo "$NAME error: xfs_repair was not found!" 1>&2
+> +		exit 4
+> +	fi
+
+Ok, similar question as Darrick had - why hardcode paths?  Seems reasonable
+to assume that xfs_repair will be in the path, and who knows what the
+path may be in any given initrd...
+
+Could just do:
+
+XFS_REPAIR=$(command -v xfs_repair)
+if [ ! -x "$XFS_REPAIR" ] ; then
+	echo "$NAME error: xfs_repair was not found!" 1>&2
+	exit 4
+fi
+
+It make sense to check that it's available before running it, but I think
+hardcoding paths runs the risk of missing it if it's somewhere unique.
+
+> +
+> +	ensure_not_mounted $DEV
+> +
+> +	$BIN -e $DEV
+
+please rename $BIN as $XFS_REPAIR for clarity?
+
+> +	repair2fsck_code $?
+> +	exit $?
+> +fi
+> +
+>  if $AUTO; then
+>  	echo "$0: XFS file system."
+>  else
+> diff --git a/man/man8/fsck.xfs.8 b/man/man8/fsck.xfs.8
+> index ace7252d..08812be8 100644
+> --- a/man/man8/fsck.xfs.8
+> +++ b/man/man8/fsck.xfs.8
+> @@ -21,6 +21,13 @@ If you wish to check the consistency of an XFS filesystem,
+>  or repair a damaged or corrupt XFS filesystem,
+>  see
+>  .BR xfs_repair (8).
+> +.PP
+> +However, the system administrator can force
+> +.B fsck.xfs
+> +to run
+> +.BR xfs_repair (8)
+
+at boot time
+
+> +by creating a /forcefsck file or booting the system with
+> +"fsck.mode=force" on the kernel command line.
+>  .
+>  .SH FILES
+>  .IR /etc/fstab .
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
