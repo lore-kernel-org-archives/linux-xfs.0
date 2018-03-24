@@ -1,59 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60704 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:59776 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164701AbeCBEFK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Mar 2018 23:05:10 -0500
-Subject: Re: [PATCH] xfs_scrub: make interpreter explicit to python3
-References: <20180224021512.23819-1-mcgrof@kernel.org>
- <20180224044018.GA19312@magnolia>
+        id S1751632AbeCXANo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Mar 2018 20:13:44 -0400
+Subject: [PATCH V2] xfs: do not log swapext extent owner changes for deleted
+ inodes
+References: <f2dcef25-01f2-d7fe-3b2d-f54a809215a5@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4f0ac49f-8a87-4b69-8b06-43ca6b9930a0@sandeen.net>
-Date: Thu, 1 Mar 2018 22:05:09 -0600
+Message-ID: <b7a4250a-b348-0381-683b-74059c397a7d@sandeen.net>
+Date: Fri, 23 Mar 2018 19:13:43 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180224044018.GA19312@magnolia>
+In-Reply-To: <f2dcef25-01f2-d7fe-3b2d-f54a809215a5@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
 
+Today if we run fsr and crash, log replay can fail because
+the recovery code tries to instantiate the donor inode from
+disk to replay the swapext, but it's been deleted and we get
+verifier failures when we try to read it off disk with
+i_mode == 0.
 
+Strip the extent owner changes out of the logged fields when
+we're freeing the inode to avoid this.
 
-On 2/23/18 10:40 PM, Darrick J. Wong wrote:
-> On Fri, Feb 23, 2018 at 06:15:12PM -0800, Luis R. Rodriguez wrote:
->> Using #!/usr/bin/env makes some package dependency tools
->> such as rpm complain given that it cannot verify package
->> dependencies. Making it explicit resolves this lint rant.
->>
->> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> 
-> Looks ok,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-intereting, my rpmbuild actually converts this on the fly.  ;)
-But fine by me to hardcode it if Darrick says ok.  :)
+V2: Move the fix to xfs_ifree per bfoster's suggestion
 
-Thanks,
--Eric
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 604ee38..d17e2d5 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2470,6 +2470,10 @@
+ 	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
+ 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
++
++	/* Don't attempt to replay owner changes for a deleted inode */
++	ip->i_itemp->ili_fields &= !(XFS_ILOG_AOWNER|XFS_ILOG_DOWNER);
++
+ 	/*
+ 	 * Bump the generation count so no one will be confused
+ 	 * by reincarnations of this inode.
 
-> --D
-> 
->> ---
->>  scrub/xfs_scrub_all.in | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
->> index fff05da3ea7a..80f07d5c8b02 100644
->> --- a/scrub/xfs_scrub_all.in
->> +++ b/scrub/xfs_scrub_all.in
->> @@ -1,4 +1,4 @@
->> -#!/usr/bin/env python3
->> +#!/usr/bin/python3
->>  
->>  # Run online scrubbers in parallel, but avoid thrashing.
->>  #
->> -- 
->> 2.16.2
