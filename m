@@ -1,151 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49650 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751242AbeCLN0s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Mar 2018 09:26:48 -0400
-Date: Mon, 12 Mar 2018 09:26:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH RFC] xfs: convert between packed and unpacked agfls
- on-demand
-Message-ID: <20180312132646.GB29810@bfoster.bfoster>
-References: <20180307192451.24196-1-bfoster@redhat.com>
- <20180308140354.pk25gd54cqjzbecs@odin.usersys.redhat.com>
- <20180309131628.GA3445@bfoster.bfoster>
- <20180309173318.GD18989@magnolia>
- <20180309183727.GA17046@bfoster.bfoster>
- <20180309221045.GU18129@dastard>
+Received: from aserp2130.oracle.com ([141.146.126.79]:41346 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751745AbeCXAwJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Mar 2018 20:52:09 -0400
+Date: Fri, 23 Mar 2018 17:52:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: clean up xfs_mount allocation and dynamic
+ initializers
+Message-ID: <20180324005203.GM4818@magnolia>
+References: <20180321161325.12773-1-bfoster@redhat.com>
+ <20180321172728.GF4818@magnolia>
+ <20180321180738.GM11127@bfoster.bfoster>
+ <20180322001945.GZ18129@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180309221045.GU18129@dastard>
+In-Reply-To: <20180322001945.GZ18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Sat, Mar 10, 2018 at 09:10:45AM +1100, Dave Chinner wrote:
-> On Fri, Mar 09, 2018 at 01:37:28PM -0500, Brian Foster wrote:
-> > On Fri, Mar 09, 2018 at 09:33:18AM -0800, Darrick J. Wong wrote:
-> > > On Fri, Mar 09, 2018 at 08:16:28AM -0500, Brian Foster wrote:
-> > > > On Thu, Mar 08, 2018 at 03:03:54PM +0100, Carlos Maiolino wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > On Wed, Mar 07, 2018 at 02:24:51PM -0500, Brian Foster wrote:
-> > > > > > Disliked-by: Brian Foster <bfoster@redhat.com>
-> > > > > > ---
-> > > > > > 
-> > > > > > Sent as RFC for the time being. This tests Ok on a straight xfstests run
-> > > > > > and also seems to pass Darrick's agfl fixup tester (thanks) both on
-> > > > > > upstream and on a rhel7 kernel with some minor supporting hacks.
-> > > > > > 
-> > > > > > I tried to tighten up the logic a bit to reduce the odds of mistaking
-> > > > > > actual corruption for a padding mismatch as much as possible. E.g.,
-> > > > > > limit to cases where the agfl is wrapped, make sure we don't mistake a
-> > > > > > corruption that looks like an agfl with 120 entries on a packed kernel,
-> > > > > > etc.
-> > > > > > 
-> > > > > > While I do prefer an on-demand fixup approach to a mount time scan, ISTM
-> > > > > > that in either case it's impossible to completely eliminate the risk of
-> > > > > > confusing corruption with a padding mismatch so long as we're doing a
-> > > > > > manual agfl fixup. The more I think about that the more I really dislike
-> > > > > > doing this. :(
-> > > > > > 
-> > > > > > After some IRC discussion with djwong and sandeen, I'm wondering if the
-> > > > > > existence of 'xfs_repair -d' is a good enough last resort for those
-> > > > > > users who might be bit by unexpected padding issues on a typical
-> > > > > > upgrade. If so, we could fall back to a safer mount-time detection model
-> > > > > > that enforces a read-only mount and let the user run repair. The
-> > > > > > supposition is that those who aren't prepared to repair via a ramdisk or
-> > > > > > whatever should be able to 'xfs_repair -d' a rootfs that is mounted
-> > > > > > read-only provided agfl padding is the only inconsistency. 
-> > > > > > 
-> > > > > > Eric points out that we can still write an unmount record for a
-> > > > > > read-only mount, but I'm not sure that would be a problem if repair only
-> > > > > > needs to fix the agfl. xfs_repair shouldn't touch the log unless there's
-> > > > > > a recovery issue or it needs to be reformatted to update the LSN, both
-> > > > > > of which seem to qualify as "you have more problems than agfl padding
-> > > > > > and need to run repair anyways" to me. Thoughts?
-> > > > > > 
-> > > > > 
-> > > > > Sorry if this may sound stupid, but in the possibility this can help the issue,
-> > > > > or at least me learning something new.
-> > > > > 
-> > > > > ISTM this issue is all related to the way xfs_agfl packing. I read the commit
-> > > > > log where packed attribute was added to xfs_agfl, and I was wondering...
-> > > > > 
-> > > > > What are the implications of breaking up the lsn field in xfs_agfl, in 2 __be32?
-> > > > > Merge it together in a 64bit field when reading it from disk, or split it when
-> > > > > writing to?
-> > > > > It seems to me this would avoid the size difference we are seeing now in 32/64
-> > > > > bit systems, and avoid such risk of confusion when trying to discern between a
-> > > > > corrupted agfl and a padding mismatch.
-> > > > > 
+On Thu, Mar 22, 2018 at 11:19:45AM +1100, Dave Chinner wrote:
+> On Wed, Mar 21, 2018 at 02:07:38PM -0400, Brian Foster wrote:
+> > On Wed, Mar 21, 2018 at 10:27:28AM -0700, Darrick J. Wong wrote:
+> > > On Wed, Mar 21, 2018 at 12:13:25PM -0400, Brian Foster wrote:
+> > > > Most of the generic data structures embedded in xfs_mount are
+> > > > dynamically initialized immediately after mp is allocated. A few
+> > > > fields are left out and initialized during the xfs_mountfs()
+> > > > sequence, after mp has been attached to the superblock.
 > > > > 
-> > > > I'm not following how you'd accomplish the latter..? We already have the
-> > > > packed attribute in place, so the padding is fixed with that. This
-> > > > effort has to do with trying to fix up an agfl written by an older
-> > > > kernel without the padding fix. My understanding is that the xfs_agfl
-> > > > header looks exactly the same on-disk in either case, the issue is a
-> > > > broken size calculation that causes the older kernel to not see/use one
-> > > > last slot in the agfl. If the agfl has wrapped and a newer kernel loads
-> > > > the same on-disk structure, it has no means to know whether the content
-> > > > of the final slot is a valid block or a "gap" left by an older kernel
-> > > > other than to check whether flcount matches the active count from
-> > > > flfirst -> fllast (and that's where potential confusion over a padding
-> > > > issue vs other corruption comes into play).
+> > > > To clean this up and help prevent premature access of associated
+> > > > fields, refactor xfs_mount allocation and all dependent init calls
+> > > > into a new helper. This self-documents that all low level data
+> > > > structures (i.e., locks, trees, etc.) should be initialized before
+> > > > xfs_mount is attached to the superblock.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > > 
+> > > > I realized after the fact that this steps on the ability to instrument
+> > > > the use-before-init variant[1] of the problematic radix tree access on
+> > > > failed mount issue that Dave tracked down. This is because we'd
+> > > > immediately initialize the structure and thus a subsequent memset()
+> > > > would ultimately require another proper initialization.
 > > > 
-> > > Your understanding is correct.
+> > > That's simply a matter of re-calling
 > > > 
-> > > Sez me, who is watching the fsck.xfs -f discussion just in case that can
-> > > be turned into a viable option quickly.
+> > > 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
 > > > 
-> > 
-> > Thanks.
-> > 
-> > > ..and wondering what if we /did/ just implement Dave's suggestion from
-> > > years ago where if the flcount doesn't match we just reset the agfl and
-> > > call fix_freelist to refill it with fresh blocks... it would suck to
-> > > leak blocks, though.  Obviously, if the fs has rmap enabled then we can
-> > > just rebuild it on the spot via xfs_repair_agfl() (see patch on mailing
-> > > list).
+> > > after the msleep, right?
 > > > 
 > > 
-> > I wasn't initially too fond of this idea, but thinking about it a bit
-> > more, there is definitely some value in terms of determinism. We know
-> > we'll just leak some blocks vs. riskily swizzling around a corrupted
-> > agfl.
+> > I suppose that may work (I'll let Dave chime in)...
 > 
-> And, most importantly: it's trivial to backport to other kernels.
-> The we simply don't have to worry where the filesystem has been
-> mounted - if we detect a suspect situation for the running kernel,
-> we just let go of the free list and rebuild it.
+> Well, to tell the truth, this whole "VFS accesses the fs during
+> mount: problem is isolated to only the inode cache shrinker, and it
+> while a mount is in progress it does not run inode cache scans
+> (can't lock s_umount because the mount holds it locked).
 > 
-
-Yeah.. an "agfl is corrupted" condition is much more simple to reason
-about in the various situations and the fixup is generic.
-
-> > Given that, perhaps an on-demand reset with a "Corrupted AGFL, tossed
-> > $flcount blocks, unmount and run xfs_repair if you ever want to see them
-> > again" warning might not be so bad. It works the same whether the kernel
-> > is packed, unpacked or the agfl is just borked, and therefore the test
-> > matrix is much simpler as well. Hmmmm...
+> IOWs, this crash can be fixed entirely by modifying the VFS code as
+> I mentioned to avoid super_cache_count() doing any work during mount
+> and unmount.
 > 
-> Yup, exactly my thoughts. The more I read about the hoops we're
-> considering jumping through to work around this problem, the more I
-> like this solution....
-> 
+> So, really, none of these XFS changes are necessary to fix the
+> problem that was reported. I'm not opposed to it as a cleanup, but
+> let's not conflate it with the VFS superblock shrinker bug that
+> needs to be fixed....
 
-I think I agree. We're essentially broadening the scope of the fixup
-mechanism to cover runtime abandonment of a corrupted agfl. The padding
-issue is just a particular variant of corruption that we happened to
-cause ourselves and thus motivated a runtime fixup. In all such cases, a
-corrupted agfl leads to fs corruption, an eventual crash or leaking
-blocks, so throwing away some number of blocks intentionally isn't much
-worse in the best case (and is distinctly better in the common case).
-Thanks for the idea and feedback.
+Are you working on such a patch?  I guessed that one could change the
+vfs to avoid register_shrinker until after fill_super returns?  Or
+possibly just have super_cache_count bail out if !SB_ACTIVE, though that
+could be messy given that xfs (and others) mess with that flag.
 
-Brian
+--D
 
 > Cheers,
 > 
