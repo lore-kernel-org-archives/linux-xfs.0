@@ -1,44 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57166 "EHLO sandeen.net"
+Received: from mout.gmx.net ([212.227.15.18]:45951 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751713AbeCVTtn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Mar 2018 15:49:43 -0400
-Subject: Re: [RFC] xfsprogs: remove irix, darwin, freebsd support
-References: <20180321001456.GM1757@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <17870b11-8567-7938-e510-dbc22fd107f6@sandeen.net>
-Date: Thu, 22 Mar 2018 14:49:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180321001456.GM1757@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1750989AbeCYFRK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 25 Mar 2018 01:17:10 -0400
+From: Chengguang Xu <cgxu519@gmx.com>
+Subject: [PATCH] xfs: use hardlimit as sub-fs size if both hard/soft limits are set
+Date: Sun, 25 Mar 2018 13:16:36 +0800
+Message-Id: <1521954996-203628-1-git-send-email-cgxu519@gmx.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, bfoster@redhat.com, sandeen@sandeen.net, Chengguang Xu <cgxu519@gmx.com>
 
-On 3/20/18 7:14 PM, Darrick J. Wong wrote:
-> Hi all,
-> 
-> This is a metapatch proposing that we drop all the non-Linux xfsprogs
-> ports.
-> 
-> Irix hasn't had a release since August 2006.
-> 
-> OSX doesn't support XFS and (afaict) never has.
-> 
-> FreeBSD EOL'd v9.3 (which was the last one to support XFS) in January
-> 2017.
-> 
-> So, can we git rm {include,libxfs}/{irix,darwin,freebsd}.[ch] ?
+In current implementation, we size the fs(sub-fs via project quota) at
+the soft limit and simply call it 100% used if the limit is exceeded.
+It is reasonable when only a soft limit is set, but we should use the
+hard limit if both hard/soft limits are set, so that quota-df reflects
+the usage information more accurately.
 
-I sent out the same query in May 2017,
-"RFC: removing non-linux platform support from xfsprogs"
+Signed-off-by: Chengguang Xu <cgxu519@gmx.com>
+---
+ fs/xfs/xfs_qm_bhv.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-and nobody really chimed in to keep any of it.  I'm happy to nuke it,
-and if someone comes back with a tail of woe, we can always put it back
-in place if it's deemed wise.
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index 2be6d27..43b0fe8 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -35,9 +35,9 @@
+ {
+ 	uint64_t		limit;
+ 
+-	limit = dqp->q_core.d_blk_softlimit ?
+-		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
+-		be64_to_cpu(dqp->q_core.d_blk_hardlimit);
++	limit = dqp->q_core.d_blk_hardlimit ?
++		be64_to_cpu(dqp->q_core.d_blk_hardlimit) :
++		be64_to_cpu(dqp->q_core.d_blk_softlimit);
+ 	if (limit && statp->f_blocks > limit) {
+ 		statp->f_blocks = limit;
+ 		statp->f_bfree = statp->f_bavail =
+@@ -45,9 +45,9 @@
+ 			 (statp->f_blocks - dqp->q_res_bcount) : 0;
+ 	}
+ 
+-	limit = dqp->q_core.d_ino_softlimit ?
+-		be64_to_cpu(dqp->q_core.d_ino_softlimit) :
+-		be64_to_cpu(dqp->q_core.d_ino_hardlimit);
++	limit = dqp->q_core.d_ino_hardlimit ?
++		be64_to_cpu(dqp->q_core.d_ino_hardlimit) :
++		be64_to_cpu(dqp->q_core.d_ino_softlimit);
+ 	if (limit && statp->f_files > limit) {
+ 		statp->f_files = limit;
+ 		statp->f_ffree =
+-- 
+1.8.3.1
 
--Eric
