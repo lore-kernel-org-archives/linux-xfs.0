@@ -1,48 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:32798 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751970AbeCUDjp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Mar 2018 23:39:45 -0400
-Subject: [PATCH 00/14] xfsprogs: online scrub fixes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 20 Mar 2018 20:39:40 -0700
-Message-ID: <152160358015.8288.2700156777231657519.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:2135 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752112AbeCYV7H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Mar 2018 17:59:07 -0400
+Date: Mon, 26 Mar 2018 08:59:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
+Message-ID: <20180325215904.GH18129@dastard>
+References: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
+ <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>
+Cc: Shaohua Li <shli@kernel.org>, linux-xfs@vger.kernel.org
 
-Hi all,
+On Fri, Mar 23, 2018 at 10:24:03PM +0800, 张本龙 wrote:
+> Hi Shaohua and XFS,
+> 
+> May I ask how are we gonna handle REQ_META issued from XFS? As you
+> mentioned about charging to root cgroup (also in an earlier email
+> discussion), and seems the 4.16.0-rc6 code is not handling it
+> separately.
+> 
+> In our case to support XFS cgroup writeback control, which was ported
+> and slightly adapted to 3.10.0, ignoring xfs log bios resulted in
+> trouble. Threads from throttled docker might submit_bio in following
+> path by its own identity, this docker blkcg accumulated large amounts
+> of data (e.g., 20GB), thus such log gets blocked.
 
-Here's a bunch of fixes for the xfs_scrub program that was introduced in
-xfsprogs 4.15.
+And thus displaying the reason why I originally refused to merge
+this code until regression tests were added to fstests to exercise
+these sorts of issues. This stuff adds new internal filesystem IO
+ordering constraints, so we need tests that exercise it and ensure
+we don't accidentally break it in future.
 
-The first nine patches replace the weak name collision scanner of the
-original xfs_scrub with a much more powerful one based on a well known
-collision finding strategy.  The name scanner still checks all entries
-in a directory and all extended attribute keys in a file for names
-containing control characters and names with utf8 sequences that
-normalize into the same unicode points, which are common methods that
-spoofers use to create malicious names.  However, we add in more
-powerful scanning capabilities -- first, we can now look for names that
-are identical except for zero-width spaces; second, we look for names
-with bidirectional overrides; and third, we can warn about long names
-that contain well known confusable characters in the same place in both
-names (think 'f0' vs 'fO').  As a result of this rewrite, a few buffer
-underruns that caused truncated comparisons have been fixed.
 
-The last five patches fix various minor bugs in the xfs_scrub_all
-wrapper and service.
+> Not familiar with XFS, but seems log bios are partially stuck in
+> throttled cgroups, leaving other innocent groups waiting for
+> completion. To cope with this we bypassed REQ_META log bios in
+> blk_throtl_bio().
 
-If you're going to start using this mess, you probably ought to just
-pull from my git tree for xfsprogs[1].
+Yup, the log is global and should not be throttled. Metadata is less
+obvious as to what the correct thing to do is, because writes are
+always done from internal kernel threads but reads are done from a
+mix of kernel threads, user cgroup contexts and user data IO
+completions. Hence there are situations where metadata reads may
+need to be throttled because they are cgroup context only (e.g.
+filesystem directory traversal) but others where reads should not
+be throttled because they have global context (e.g. inside a
+transaction when other buffers are already locked).
 
-Comments and questions are, as always, welcome.
+Getting this right and keeping it working requires regression tests
+that get run on every release, whether it be upstream or distro
+kernels, and that means we need tests in fstests to cover cgroup IO
+control....
 
---D
+Cheers,
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
