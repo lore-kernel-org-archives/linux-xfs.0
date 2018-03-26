@@ -1,117 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50892 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752232AbeC0WWj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 18:22:39 -0400
-Date: Tue, 27 Mar 2018 15:22:30 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:59098 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbeCZX4P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:56:15 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNpuFG005302
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:15 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2gyawe808p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:15 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNuE3f008634
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:14 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNuEbr022766
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:14 GMT
+Subject: [PATCH 03/20] xfs: add repair helpers for the reverse mapping btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs_scrub: synchronize error levels & logging
-Message-ID: <20180327222230.GF4818@magnolia>
-References: <f7ab3da2-618c-dc1c-6d95-3890cdac2b43@redhat.com>
- <3b8c1fd3-46bb-39ea-fca9-63d308cbe6b4@redhat.com>
- <20180327221403.GC4818@magnolia>
- <c1f36c29-092e-4f81-47fa-cf272186f09f@sandeen.net>
+Date: Mon, 26 Mar 2018 16:56:13 -0700
+Message-ID: <152210857318.13184.219852203461550085.stgit@magnolia>
+In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
+References: <152210855435.13184.6475770131389744177.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c1f36c29-092e-4f81-47fa-cf272186f09f@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 27, 2018 at 05:20:36PM -0500, Eric Sandeen wrote:
-> On 3/27/18 5:14 PM, Darrick J. Wong wrote:
-> > On Tue, Mar 27, 2018 at 05:08:54PM -0500, Eric Sandeen wrote:
-> >> Having only a subset of the five error_levels present in
-> >> the log_level[] array is asking for trouble when someone
-> >> tries to __str_log(S_PREEN ...) and overruns the array.
-> >>
-> >> Tie it all together in a single structure that's
-> >> initialized together to make the mapping more obvious and
-> >> idiot-proof.
-> >>
-> >> Fixes-coverity-id: 1433618
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> diff --git a/scrub/common.c b/scrub/common.c
-> >> index 5a37a98..02c6c9d 100644
-> >> --- a/scrub/common.c
-> >> +++ b/scrub/common.c
-> >> @@ -56,18 +56,15 @@ xfs_scrub_excessive_errors(
-> >>  	return ret;
-> >>  }
-> >>  
-> >> -static const char *err_str[] = {
-> >> -	[S_ERROR]	= "Error",
-> >> -	[S_WARN]	= "Warning",
-> >> -	[S_REPAIR]	= "Repaired",
-> >> -	[S_INFO]	= "Info",
-> >> -	[S_PREEN]	= "Optimized",
-> >> -};
-> >> -
-> >> -static int log_level[] = {
-> >> -	[S_ERROR]	= LOG_ERR,
-> >> -	[S_WARN]	= LOG_WARNING,
-> >> -	[S_INFO]	= LOG_INFO,
-> >> +static struct {
-> >> +	const char *string;
-> >> +	int loglevel;
-> >> +} err_levels[] = {
-> >> +	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
-> >> +	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
-> >> +	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
-> >> +	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
-> >> +	[S_PREEN]  = { .string = "Optimized",	.loglevel = LOG_INFO }
-> >>  };
-> >>  
-> >>  /* If stream is a tty, clear to end of line to clean up progress bar. */
-> >> @@ -106,8 +103,8 @@ __str_out(
-> >>  	if (level == S_PREEN && !debug && !verbose)
-> >>  		goto out_record;
-> >>  
-> >> -	fprintf(stream, "%s%s: %s: ", stream_start(stream), _(err_str[level]),
-> >> -			descr);
-> >> +	fprintf(stream, "%s%s: %s: ", stream_start(stream),
-> >> +			err_levels[level].string, descr);
-> > 
-> > _(err_levels[level]) here ^^^^^^^^^^^^
-> > 
-> > Otherwise we end up with:
-> > 
-> > Error: 你吃饭了吗？你多吃一点。
-> 
-> oops
-> 
-> but: _(err_levels[level].string) right ...
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Er, right.
+Add a couple of functions to the reverse mapping btree that will be used
+to repair the rmapbt.
 
-> > 
-> >>  	if (error) {
-> >>  		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
-> >>  	} else {
-> >> @@ -152,10 +149,6 @@ __str_log(
-> >>  	char			buf[LOG_BUFSZ];
-> >>  	int			sz;
-> >>  
-> >> -	/* We only want to hear about optimizing when in debug/verbose mode. */
-> >> -	if (level == S_PREEN && !debug && !verbose)
-> >> -		return;
-> > 
-> > Why is this being removed?
-> 
-> It seemed like a cut & paste error originally but ... it's a leftover, sorry. 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_rmap.c |   79 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h |    4 ++
+ 2 files changed, 83 insertions(+)
 
-:)
 
---D
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 79822cf..c051d47 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2031,6 +2031,34 @@ xfs_rmap_map_shared(
+ 	return error;
+ }
+ 
++/* Insert a raw rmap into the rmapbt. */
++int
++xfs_rmap_map_raw(
++	struct xfs_btree_cur	*cur,
++	struct xfs_rmap_irec	*rmap)
++{
++	struct xfs_owner_info	oinfo;
++
++	oinfo.oi_owner = rmap->rm_owner;
++	oinfo.oi_offset = rmap->rm_offset;
++	oinfo.oi_flags = 0;
++	if (rmap->rm_flags & XFS_RMAP_ATTR_FORK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
++	if (rmap->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
++
++	if (rmap->rm_flags || XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
++		return xfs_rmap_map(cur, rmap->rm_startblock,
++				rmap->rm_blockcount,
++				rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++				&oinfo);
++
++	return xfs_rmap_map_shared(cur, rmap->rm_startblock,
++			rmap->rm_blockcount,
++			rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++			&oinfo);
++}
++
+ struct xfs_rmap_query_range_info {
+ 	xfs_rmap_query_range_fn	fn;
+ 	void				*priv;
+@@ -2454,3 +2482,54 @@ xfs_rmap_record_exists(
+ 		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+ 	return 0;
+ }
++
++struct xfs_rmap_has_other_keys {
++	uint64_t			owner;
++	uint64_t			offset;
++	bool				*has_rmap;
++	unsigned int			flags;
++};
++
++/* For each rmap given, figure out if it doesn't match the key we want. */
++STATIC int
++xfs_rmap_has_other_keys_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_rmap_has_other_keys	*rhok = priv;
++
++	if (rhok->owner == rec->rm_owner && rhok->offset == rec->rm_offset &&
++	    ((rhok->flags & rec->rm_flags) & XFS_RMAP_KEY_FLAGS) == rhok->flags)
++		return 0;
++	*rhok->has_rmap = true;
++	return XFS_BTREE_QUERY_RANGE_ABORT;
++}
++
++/*
++ * Given an extent and some owner info, can we find records overlapping
++ * the extent whose owner info does not match the given owner?
++ */
++int
++xfs_rmap_has_other_keys(
++	struct xfs_btree_cur		*cur,
++	xfs_agblock_t			bno,
++	xfs_extlen_t			len,
++	struct xfs_owner_info		*oinfo,
++	bool				*has_rmap)
++{
++	struct xfs_rmap_irec		low = {0};
++	struct xfs_rmap_irec		high;
++	struct xfs_rmap_has_other_keys	rhok;
++
++	xfs_owner_info_unpack(oinfo, &rhok.owner, &rhok.offset, &rhok.flags);
++	*has_rmap = false;
++	rhok.has_rmap = has_rmap;
++
++	low.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rm_startblock = bno + len - 1;
++
++	return xfs_rmap_query_range(cur, &low, &high,
++			xfs_rmap_has_other_keys_helper, &rhok);
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 380e53b..43e506f 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -238,5 +238,9 @@ int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
++int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, struct xfs_owner_info *oinfo,
++		bool *has_rmap);
++int xfs_rmap_map_raw(struct xfs_btree_cur *cur, struct xfs_rmap_irec *rmap);
+ 
+ #endif	/* __XFS_RMAP_H__ */
 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
