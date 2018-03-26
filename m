@@ -1,70 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48032 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751220AbeC0Az2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Mar 2018 20:55:28 -0400
-Date: Mon, 26 Mar 2018 17:55:26 -0700
-From: Shaohua Li <shli@kernel.org>
-Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
-Message-ID: <20180327005526.qa5dnkdzaxyardd7@kernel.org>
-References: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
- <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
- <20180325215904.GH18129@dastard>
- <20180326162830.GF34912@bfoster.bfoster>
+Received: from userp2130.oracle.com ([156.151.31.86]:36962 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752562AbeCZSJz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 14:09:55 -0400
+Date: Mon, 26 Mar 2018 11:09:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_scrub: fix build with older kernel headers
+Message-ID: <20180326180946.GT4818@magnolia>
+References: <7ea1df02d0f2549b6249c8bee1f6ae02bf1251a9.1521925697.git.baruch@tkos.co.il>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180326162830.GF34912@bfoster.bfoster>
+In-Reply-To: <7ea1df02d0f2549b6249c8bee1f6ae02bf1251a9.1521925697.git.baruch@tkos.co.il>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>, linux-xfs@vger.kernel.org
+To: Baruch Siach <baruch@tkos.co.il>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Mar 26, 2018 at 12:28:31PM -0400, Brian Foster wrote:
-> On Mon, Mar 26, 2018 at 08:59:04AM +1100, Dave Chinner wrote:
-> > On Fri, Mar 23, 2018 at 10:24:03PM +0800, 张本龙 wrote:
-> > > Hi Shaohua and XFS,
-> > > 
-> > > May I ask how are we gonna handle REQ_META issued from XFS? As you
-> > > mentioned about charging to root cgroup (also in an earlier email
-> > > discussion), and seems the 4.16.0-rc6 code is not handling it
-> > > separately.
-> > > 
-> > > In our case to support XFS cgroup writeback control, which was ported
-> > > and slightly adapted to 3.10.0, ignoring xfs log bios resulted in
-> > > trouble. Threads from throttled docker might submit_bio in following
-> > > path by its own identity, this docker blkcg accumulated large amounts
-> > > of data (e.g., 20GB), thus such log gets blocked.
-> > 
-> > And thus displaying the reason why I originally refused to merge
-> > this code until regression tests were added to fstests to exercise
-> > these sorts of issues. This stuff adds new internal filesystem IO
-> > ordering constraints, so we need tests that exercise it and ensure
-> > we don't accidentally break it in future.
-> > 
+On Sun, Mar 25, 2018 at 12:08:17AM +0300, Baruch Siach wrote:
+> The OVERRIDE_SYSTEM_FSXATTR macro in include/linux.h is meant to
+> override the linux/fs.h kernel header provided struct fsxattr for
+> kernels older than v4.7. A few source files include linux/fs.h before
+> the local linux.h, making this override ineffective. Remove these header
+> includes from the source files, and rely on the linux.h include alone.
 > 
-> Hmm, but if the user issues fsync from the throttled cgroup then won't
-> that throttling occur today, regardless of cgroup aware writeback? My
-> understanding is that cgawb just accurately accounts writeback I/Os to
-> the owner of the cached pages. IOW, if the buffered writer and fsync
-> call are in the same throttled cgroup, then the throttling works just as
-> it would with cgawb and the writer being in a throttled cgroup.
+> This fixes the following build failures:
 > 
-> So ISTM that this is an independent problem. What am I missing?
+> In file included from ../include/xfs.h:37:0,
+>                  from disk.c:40:
+> ../include/xfs/linux.h:185:8: error: redefinition of 'struct fsxattr'
+>  struct fsxattr {
+>         ^~~~~~~
 > 
-> Shaohua,
+> In file included from ../include/xfs.h:37:0,
+>                  from ../include/project.h:22,
+>                  from ../include/input.h:24,
+>                  from phase1.c:38:
+> ../include/xfs/linux.h:185:8: error: redefinition of 'struct fsxattr'
+>  struct fsxattr {
+>         ^~~~~~~
 > 
-> Do you have a reference to the older metadata related patch mentioned in
-> the commit log that presumably addressed this?
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Baruch Siach <baruch@tkos.co.il>
 
-The problem is about priority reversion. Say you do a fsync in a low prio
-cgroup, the IO will be submitted with low prio. Now you do a fsync in a high
-prio cgroup, the cgroup will wait for fsync IO finished, which is already
-submitted by the low prio cgroup and run in low prio. This makes the high prio
-cgroup run slow. The proposed patch is to force all metadata write submitted
-from root cgroup regardless which task submitted, which can fix this issue.
+Looks ok, but I think this is already fixed by commit a440f8773794
+("xfs_scrub: fix #include ordering to avoid build failure") in for-next.
 
-Thanks,
-Shaohua
+--D
+
+> ---
+>  scrub/disk.c   | 1 -
+>  scrub/phase1.c | 1 -
+>  2 files changed, 2 deletions(-)
+> 
+> diff --git a/scrub/disk.c b/scrub/disk.c
+> index e12175c8656c..54d7a2a77c45 100644
+> --- a/scrub/disk.c
+> +++ b/scrub/disk.c
+> @@ -28,7 +28,6 @@
+>  #include <sys/ioctl.h>
+>  #include <sys/statvfs.h>
+>  #include <sys/vfs.h>
+> -#include <linux/fs.h>
+>  #ifdef HAVE_SG_IO
+>  # include <scsi/sg.h>
+>  #endif
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index 6cd544233c94..d15689e1b544 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -32,7 +32,6 @@
+>  #include <stdbool.h>
+>  #include <pthread.h>
+>  #include <errno.h>
+> -#include <linux/fs.h>
+>  #include "libfrog.h"
+>  #include "workqueue.h"
+>  #include "input.h"
+> -- 
+> 2.16.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
