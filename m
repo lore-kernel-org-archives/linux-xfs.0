@@ -1,56 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37922 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751070AbeC0WQO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 18:16:14 -0400
-Date: Tue, 27 Mar 2018 15:14:37 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:58874 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbeCZX4K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:56:10 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNdWrB148843
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:09 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2gyaqt811m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:09 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNu8fo008527
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:08 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2QNu8V1010586
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:08 GMT
+Subject: [PATCH 02/20] xfs: expose various functions to repair code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs_scrub: initialize movon in
-Message-ID: <20180327221437.GD4818@magnolia>
-References: <f7ab3da2-618c-dc1c-6d95-3890cdac2b43@redhat.com>
- <6fe699ea-cb0d-f7c6-4736-54138db30cef@redhat.com>
+Date: Mon, 26 Mar 2018 16:56:07 -0700
+Message-ID: <152210856701.13184.3986610182558546743.stgit@magnolia>
+In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
+References: <152210855435.13184.6475770131389744177.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6fe699ea-cb0d-f7c6-4736-54138db30cef@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 27, 2018 at 05:11:49PM -0500, Eric Sandeen wrote:
-> Given the logic in xfs_scrub_connections, it's possible to
-> fail all 3 tests and wind up checking an uninitialized moveon
-> variable at the end.  Start out with "true" to avoid this and
-> move on even if all the conditions in the function are false.
-> 
-> Fixes-coverity-id: 1433617
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Subject line needs typo fix, but otherwise:
+Expose various helpers that the repair code will want to use.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c   |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.h   |    3 +++
+ fs/xfs/libxfs/xfs_refcount.c |    4 ++--
+ fs/xfs/libxfs/xfs_refcount.h |    5 +++++
+ 4 files changed, 11 insertions(+), 3 deletions(-)
 
---D
 
-> ---
-> 
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index 8e0a1be..5f2a1a7 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -244,7 +244,7 @@ xfs_scrub_connections(
->  {
->  	bool			*pmoveon = arg;
->  	char			descr[DESCR_BUFSZ];
-> -	bool			moveon;
-> +	bool			moveon = true;
->  	xfs_agnumber_t		agno;
->  	xfs_agino_t		agino;
->  	int			fd = -1;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 0e2cf5f..fcbf09f 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -148,7 +148,7 @@ xfs_inobt_get_rec(
+ /*
+  * Insert a single inobt record. Cursor must already point to desired location.
+  */
+-STATIC int
++int
+ xfs_inobt_insert_rec(
+ 	struct xfs_btree_cur	*cur,
+ 	uint16_t		holemask,
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index c5402bb..77fffce 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -176,6 +176,9 @@ int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
+ 		xfs_agino_t high, bool *exists);
+ int xfs_ialloc_count_inodes(struct xfs_btree_cur *cur, xfs_agino_t *count,
+ 		xfs_agino_t *freecount);
++int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
++		uint8_t count, int32_t freecount, xfs_inofree_t free,
++		int *stat);
+ 
+ int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
+ void xfs_ialloc_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index bee68c2..100532d 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -89,7 +89,7 @@ xfs_refcount_lookup_ge(
+ }
+ 
+ /* Convert on-disk record to in-core format. */
+-static inline void
++void
+ xfs_refcount_btrec_to_irec(
+ 	union xfs_btree_rec		*rec,
+ 	struct xfs_refcount_irec	*irec)
+@@ -149,7 +149,7 @@ xfs_refcount_update(
+  * by [bno, len, refcount].
+  * This either works (return 0) or gets an EFSCORRUPTED error.
+  */
+-STATIC int
++int
+ xfs_refcount_insert(
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_refcount_irec	*irec,
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 2a731ac..5856abb 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -85,5 +85,10 @@ static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
+ 
+ extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
++union xfs_btree_rec;
++extern void xfs_refcount_btrec_to_irec(union xfs_btree_rec *rec,
++		struct xfs_refcount_irec *irec);
++extern int xfs_refcount_insert(struct xfs_btree_cur *cur,
++		struct xfs_refcount_irec *irec, int *stat);
+ 
+ #endif	/* __XFS_REFCOUNT_H__ */
+
