@@ -1,258 +1,563 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55810 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752455AbeC1SJS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Mar 2018 14:09:18 -0400
-Date: Wed, 28 Mar 2018 14:09:16 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: file corruptions, 2nd half of 512b block
-Message-ID: <20180328180916.GC37735@bfoster.bfoster>
-References: <20180322150226.GA31029@onthe.net.au>
- <20180322180327.GI16617@bfoster.bfoster>
- <20180327223310.GA4461@onthe.net.au>
+Received: from aserp2130.oracle.com ([141.146.126.79]:59174 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbeCZX4t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:56:49 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNdSO1148833
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:48 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2gyaqt8139-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:48 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNulSL006436
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:48 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNulpj023030
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:47 GMT
+Subject: [PATCH 08/20] xfs: implement the metadata repair ioctl flag
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 26 Mar 2018 16:56:46 -0700
+Message-ID: <152210860614.13184.13848520110703401019.stgit@magnolia>
+In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
+References: <152210855435.13184.6475770131389744177.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180327223310.GA4461@onthe.net.au>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Dunlop <chris@onthe.net.au>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Mar 28, 2018 at 09:33:10AM +1100, Chris Dunlop wrote:
-> On Thu, Mar 22, 2018 at 02:03:28PM -0400, Brian Foster wrote:
-> > On Fri, Mar 23, 2018 at 02:02:26AM +1100, Chris Dunlop wrote:
-> > > Hi,
-> > > 
-> > > I'm experiencing 256-byte corruptions in files on XFS on 4.9.76.
-> > > 
-> > > System configuration details below.
-> > > 
-> > > For those cases where the corrupt file can be regenerated from other
-> > > data and the new file compared to the corrupt file (15 files in all),
-> > > the corruptions are invariably in the 2nd 256b half of a 512b sector,
-> > > part way through the file. That's pretty odd! Perhaps some kind of
-> > > buffer tail problem?
-> > > 
-> > > Are there any known issues that might cause this?
-> > 
-> > Nothing that I can think of. A quick look through the writeback changes
-> > shows this[1] commit, but I'd expect any corruption in that case to
-> > manifest as page size (4k) rather than at 256b granularity.
-> > 
-> > [1] 40214d128e ("xfs: trim writepage mapping to within eof")
-> 
-> Looks like that issue can occur if the file is closed, then reopened and
-> appended to. That's possible with the files written via ftp (the ftp upload
-> allows for continuation of partial files), but not the files written via NFS
-> - if they're incomplete they're removed and started from scratch.
-> 
-> > So you obviously have a fairly large/complex storage configuration. I
-> > think you have to assume that this corruption could be introduced pretty
-> > much anywhere in the stack (network, mm, fs, block layer, md) until it
-> > can be narrowed down.
-> 
-> Yup.
-> 
-> Per below I'm seeing a good checksum a bit after arrival and bad checksum
-> some time later, so looks like it's not network.
-> 
-> > > 2018-03-04 21:40:44 data + md5 files written
-> > > 2018-03-04 22:43:33 checksum mismatch detected
-> > 
-> > Seems like the corruption is detected fairly soon after creation. How
-> > often are these files explicitly checked/read? I also assume the files
-> > aren't ever modified..?
-> 
-> Correct, the files aren't ever (deliberately) modified.
-> 
-> The files are generally checked once, some time (minutes to hours) after
-> landing. After the first check I've been (perhaps foolishly) relying on
-> raid6 scrubs to keep the data intact.
-> 
-> The files may be read a few times more over the course of a month, then
-> they're either removed or just sit there quietly for months to years.
-> 
-> > FWIW, the patterns that you have shown so far do seem to suggest
-> > something higher level than a physical storage problem. Otherwise, I'd
-> > expect these instances wouldn't always necessarily land in file data.
-> > Have you run 'xfs_repair -n' on the fs to confirm there aren't any other
-> > problems?
-> 
-> I haven't tried xfs_repair yet. At 181T used and high but unknown at this
-> point number of dirs and files, I imagine it will take quite a while and the
-> filesystem shouldn't really be unavailable for more than low numbers of
-> hours. I can use an LVM snapshot to do the 'xfs_repair -n', but I need to
-> add enough spare capacity to hold the amount of data that arrives (at
-> 0.5-1TB/day) during life of the check / snapshot. That might take a bit of
-> fiddling because the system is getting short on drive bays.
-> 
-> Is it possible to work out approximately how long the check might take?
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It will probably depend more on the amount of metadata than the size of
-the fs. That said, it's not critical if downtime is an issue. It's more
-something to check when convenient just to be sure there aren't other
-issues in play.
+Plumb in the pieces necessary to make the "scrub" subfunction of
+the scrub ioctl actually work.
 
-> > OTOH, a 256b corruption seems quite unusual for a filesystem with 4k
-> > blocks. I suppose that could suggest some kind of memory/cache
-> > corruption as opposed to a bad page/extent state or something of that
-> > nature.
-> 
-> I should have mentioned in the system summary: it's ECC RAM, with no EDAC
-> errors coming up. So it shouldn't be memory corruption due to a bad stick or
-> whatever. But, yes, there can be other causes.
-> 
-> > Hmm, I guess the only productive thing I can think of right now is to
-> > see if you can try and detect the problem as soon as possible. For e.g.,
-> > it sounds like this is a closed system. If so, could you follow up every
-> > file creation with an immediate md5 verification (perhaps followed by an
-> > fadvise(DONTNEED) and another md5 check to try and catch an inconsistent
-> > pagecache)? Perhaps others might have further ideas..
-> 
-> The check runs "soon" after file arrival (usually minutes), but not
-> immediately. I could potentially alter the ftp receiver to calculate the md5
-> as the file data is received and cross check with the md5 file at the end,
-> but doing same with the files that arrive via NFS would be difficult.
-> 
-> The great majority of the corruptions have been in the files arriving via
-> NFS - possibly because those files tend to be much larger so random
-> corruptions simply hit them more, but also I guess possibly because NFS is
-> more susceptible to whatever is causing the problem.
-> 
-> I have a number of instances where it definitely looks like the file has
-> made it to the filesystem (but not necessarily disk) and checked ok, only to
-> later fail the md5 check, e.g.:
-> 
-> 2018-03-12 07:36:56 created
-> 2018-03-12 07:50:05 check ok
-> 2018-03-26 19:02:14 check bad
-> 
-> 2018-03-13 08:13:10 created
-> 2018-03-13 08:36:56 check ok
-> 2018-03-26 14:58:39 check bad
-> 
-> 2018-03-13 21:06:34 created
-> 2018-03-13 21:11:18 check ok
-> 2018-03-26 19:24:24 check bad
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Kconfig               |   17 ++++
+ fs/xfs/Makefile              |    7 ++
+ fs/xfs/libxfs/xfs_errortag.h |    4 +
+ fs/xfs/libxfs/xfs_fs.h       |    9 ++
+ fs/xfs/scrub/repair.c        |   66 ++++++++++++++++
+ fs/xfs/scrub/repair.h        |   59 +++++++++++++++
+ fs/xfs/scrub/scrub.c         |  169 ++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/scrub/scrub.h         |    7 ++
+ fs/xfs/xfs_error.c           |    3 +
+ 9 files changed, 332 insertions(+), 9 deletions(-)
+ create mode 100644 fs/xfs/scrub/repair.c
+ create mode 100644 fs/xfs/scrub/repair.h
 
-How much is known about possible events related to the file between the
-time the check passes and when the md5 goes bad? For example, do we know
-for certain nothing read or otherwise acted on the file in that time?
 
-If so, it certainly seems like the difference between check ok and check
-bad could be due to cache effects.
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 46bcf0e6..45566a1 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -85,6 +85,23 @@ config XFS_ONLINE_SCRUB
+ 
+ 	  If unsure, say N.
+ 
++config XFS_ONLINE_REPAIR
++	bool "XFS online metadata repair support"
++	default n
++	depends on XFS_FS && XFS_ONLINE_SCRUB
++	help
++	  If you say Y here you will be able to repair metadata on a
++	  mounted XFS filesystem.  This feature is intended to reduce
++	  filesystem downtime even further by fixing minor problems
++	  before they cause the filesystem to go down.  However, it
++	  requires that the filesystem be formatted with secondary
++	  metadata, such as reverse mappings and inode parent pointers.
++
++	  This feature is considered EXPERIMENTAL.  Use with caution!
++
++	  See the xfs_scrub man page in section 8 for additional information.
++
++	  If unsure, say N.
+ config XFS_WARN
+ 	bool "XFS Verbose Warnings"
+ 	depends on XFS_FS && !XFS_DEBUG
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index b03c77e..9175d51 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -169,4 +169,11 @@ xfs-y				+= $(addprefix scrub/, \
+ 
+ xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
+ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
++
++# online repair
++ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
++xfs-y				+= $(addprefix scrub/, \
++				   repair.o \
++				   )
++endif
+ endif
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index bc1789d..d47b916 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -65,7 +65,8 @@
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
+ #define XFS_ERRTAG_LOG_ITEM_PIN				30
+ #define XFS_ERRTAG_BUF_LRU_REF				31
+-#define XFS_ERRTAG_MAX					32
++#define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
++#define XFS_ERRTAG_MAX					33
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -102,5 +103,6 @@
+ #define XFS_RANDOM_LOG_BAD_CRC				1
+ #define XFS_RANDOM_LOG_ITEM_PIN				1
+ #define XFS_RANDOM_BUF_LRU_REF				2
++#define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+ 
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index faf1a4e..8bf3ded 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -542,13 +542,20 @@ struct xfs_scrub_metadata {
+ /* o: Metadata object looked funny but isn't corrupt. */
+ #define XFS_SCRUB_OFLAG_WARNING		(1 << 6)
+ 
++/*
++ * o: IFLAG_REPAIR was set but metadata object did not need fixing or
++ *    optimization and has therefore not been altered.
++ */
++#define XFS_SCRUB_OFLAG_UNTOUCHED	(1 << 7)
++
+ #define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR)
+ #define XFS_SCRUB_FLAGS_OUT	(XFS_SCRUB_OFLAG_CORRUPT | \
+ 				 XFS_SCRUB_OFLAG_PREEN | \
+ 				 XFS_SCRUB_OFLAG_XFAIL | \
+ 				 XFS_SCRUB_OFLAG_XCORRUPT | \
+ 				 XFS_SCRUB_OFLAG_INCOMPLETE | \
+-				 XFS_SCRUB_OFLAG_WARNING)
++				 XFS_SCRUB_OFLAG_WARNING | \
++				 XFS_SCRUB_OFLAG_UNTOUCHED)
+ #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
+ 
+ /*
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+new file mode 100644
+index 0000000..f6752e9
+--- /dev/null
++++ b/fs/xfs/scrub/repair.c
+@@ -0,0 +1,66 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_icache.h"
++#include "xfs_alloc.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_ialloc.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_rmap.h"
++#include "xfs_rmap_btree.h"
++#include "xfs_refcount.h"
++#include "xfs_refcount_btree.h"
++#include "xfs_extent_busy.h"
++#include "xfs_ag_resv.h"
++#include "xfs_trans_space.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++
++/*
++ * Repair probe -- userspace uses this to probe if we're willing to repair a
++ * given mountpoint.
++ */
++int
++xfs_repair_probe(
++	struct xfs_scrub_context	*sc,
++	uint32_t			scrub_oflags)
++{
++	int				error = 0;
++
++	if (xfs_scrub_should_terminate(sc, &error))
++		return error;
++
++	return 0;
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+new file mode 100644
+index 0000000..4c49171
+--- /dev/null
++++ b/fs/xfs/scrub/repair.h
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#ifndef __XFS_SCRUB_REPAIR_H__
++#define __XFS_SCRUB_REPAIR_H__
++
++#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
++
++/* Online repair only works for v5 filesystems. */
++static inline bool xfs_repair_can_fix(struct xfs_mount *mp)
++{
++	return xfs_sb_version_hascrc(&mp->m_sb);
++}
++
++/* Did userspace want us to repair /and/ we found something to fix? */
++static inline bool xfs_repair_should_fix(struct xfs_scrub_metadata *sm)
++{
++	return (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
++	       (sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++				XFS_SCRUB_OFLAG_XCORRUPT |
++				XFS_SCRUB_OFLAG_PREEN));
++}
++
++/* Did userspace tell us to fix something and it didn't get fixed? */
++static inline bool xfs_repair_unfixed(struct xfs_scrub_metadata *sm)
++{
++	return (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
++	       (sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++				XFS_SCRUB_OFLAG_XCORRUPT));
++}
++
++int xfs_repair_probe(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
++
++#else
++
++# define xfs_repair_can_fix(mp)		(false)
++# define xfs_repair_should_fix(sm)	(false)
++# define xfs_repair_probe		(NULL)
++# define xfs_repair_unfixed(sm)		(false)
++
++#endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
++
++#endif	/* __XFS_SCRUB_REPAIR_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 26c7596..2f801e9 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -42,11 +42,16 @@
+ #include "xfs_refcount_btree.h"
+ #include "xfs_rmap.h"
+ #include "xfs_rmap_btree.h"
++#include "xfs_errortag.h"
++#include "xfs_error.h"
++#include "xfs_log.h"
++#include "xfs_trans_priv.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+ #include "scrub/btree.h"
++#include "scrub/repair.h"
+ 
+ /*
+  * Online Scrub and Repair
+@@ -120,6 +125,24 @@
+  * XCORRUPT flag; btree query function errors are noted by setting the
+  * XFAIL flag and deleting the cursor to prevent further attempts to
+  * cross-reference with a defective btree.
++ *
++ * If a piece of metadata proves corrupt or suboptimal, the userspace
++ * program can ask the kernel to apply some tender loving care (TLC) to
++ * the metadata object by setting the REPAIR flag and re-calling the
++ * scrub ioctl.  "Corruption" is defined by metadata violating the
++ * on-disk specification; operations cannot continue if the violation is
++ * left untreated.  It is possible for XFS to continue if an object is
++ * "suboptimal", however performance may be degraded.  Repairs are
++ * usually performed by rebuilding the metadata entirely out of
++ * redundant metadata.  Optimizing, on the other hand, can sometimes be
++ * done without rebuilding entire structures.
++ *
++ * Generally speaking, the repair code has the following code structure:
++ * Lock -> scrub -> repair -> commit -> re-lock -> re-scrub -> unlock.
++ * The first check helps us figure out if we need to rebuild or simply
++ * optimize the structure so that the rebuild knows what to do.  The
++ * second check evaluates the completeness of the repair; that is what
++ * is reported to userspace.
+  */
+ 
+ /*
+@@ -155,7 +178,10 @@ xfs_scrub_teardown(
+ {
+ 	xfs_scrub_ag_free(sc, &sc->sa);
+ 	if (sc->tp) {
+-		xfs_trans_cancel(sc->tp);
++		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
++			error = xfs_trans_commit(sc->tp);
++		else
++			xfs_trans_cancel(sc->tp);
+ 		sc->tp = NULL;
+ 	}
+ 	if (sc->ip) {
+@@ -180,6 +206,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_NONE,
+ 		.setup	= xfs_scrub_setup_fs,
+ 		.scrub	= xfs_scrub_probe,
++		.repair = xfs_repair_probe,
+ 	},
+ 	[XFS_SCRUB_TYPE_SB] = {		/* superblock */
+ 		.type	= ST_PERAG,
+@@ -379,15 +406,107 @@ xfs_scrub_validate_inputs(
+ 	if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
+ 		goto out;
+ 
+-	/* We don't know how to repair anything yet. */
+-	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
+-		goto out;
++	/*
++	 * We only want to repair read-write v5+ filesystems.  Defer the check
++	 * for ops->repair until after our scrub confirms that we need to
++	 * perform repairs so that we avoid failing due to not supporting
++	 * repairing an object that doesn't need repairs.
++	 */
++	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
++		error = -EOPNOTSUPP;
++		if (!xfs_repair_can_fix(mp))
++			goto out;
++
++		error = -EROFS;
++		if (mp->m_flags & XFS_MOUNT_RDONLY)
++			goto out;
++	}
+ 
+ 	error = 0;
+ out:
+ 	return error;
+ }
+ 
++/*
++ * Attempt to repair some metadata, if the metadata is corrupt and userspace
++ * told us to fix it.  This function returns -EAGAIN to mean "re-run scrub",
++ * and will set *fixed if it thinks it repaired anything.
++ */
++STATIC int
++xfs_repair_attempt(
++	struct xfs_inode		*ip,
++	struct xfs_scrub_context	*sc,
++	bool				*fixed)
++{
++	uint32_t			scrub_oflags;
++	int				error = 0;
++
++	trace_xfs_repair_attempt(ip, sc->sm, error);
++
++	/* Repair needed but not supported, just exit. */
++	if (!sc->ops->repair) {
++		error = -EOPNOTSUPP;
++		trace_xfs_repair_done(ip, sc->sm, error);
++		return error;
++	}
++
++	xfs_scrub_ag_btcur_free(&sc->sa);
++
++	/*
++	 * Repair whatever's broken.  We have to clear the out flags during the
++	 * repair call because some of our iterator functions abort if any of
++	 * the corruption flags are set.
++	 */
++	scrub_oflags = sc->sm->sm_flags & XFS_SCRUB_FLAGS_OUT;
++	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
++	error = sc->ops->repair(sc, scrub_oflags);
++	trace_xfs_repair_done(ip, sc->sm, error);
++	sc->sm->sm_flags |= scrub_oflags;
++
++	switch (error) {
++	case 0:
++		/*
++		 * Repair succeeded.  Commit the fixes and perform a second
++		 * scrub so that we can tell userspace if we fixed the problem.
++		 */
++		sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
++		*fixed = true;
++		return -EAGAIN;
++	case -EDEADLOCK:
++	case -EAGAIN:
++		/* Tell the caller to try again having grabbed all the locks. */
++		if (!sc->try_harder) {
++			sc->try_harder = true;
++			return -EAGAIN;
++		}
++		/*
++		 * We tried harder but still couldn't grab all the resources
++		 * we needed to fix it.  The corruption has not been fixed,
++		 * so report back to userspace.
++		 */
++		return -EFSCORRUPTED;
++	default:
++		return error;
++	}
++}
++
++/*
++ * Complain about unfixable problems in the filesystem.  We don't log
++ * corruptions when IFLAG_REPAIR wasn't set on the assumption that the driver
++ * program is xfs_scrub, which will call back with IFLAG_REPAIR set if the
++ * administrator isn't running xfs_scrub in no-repairs mode.
++ *
++ * Use this helper function because _ratelimited silently declares a static
++ * structure to track rate limiting information.
++ */
++static void
++xfs_repair_failure(
++	struct xfs_mount		*mp)
++{
++	xfs_alert_ratelimited(mp,
++"Corruption not fixed during online repair.  Unmount and run xfs_repair.");
++}
++
+ /* Dispatch metadata scrubbing. */
+ int
+ xfs_scrub_metadata(
+@@ -397,6 +516,7 @@ xfs_scrub_metadata(
+ 	struct xfs_scrub_context	sc;
+ 	struct xfs_mount		*mp = ip->i_mount;
+ 	bool				try_harder = false;
++	bool				already_fixed = false;
+ 	int				error = 0;
+ 
+ 	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
+@@ -446,9 +566,44 @@ xfs_scrub_metadata(
+ 	} else if (error)
+ 		goto out_teardown;
+ 
+-	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
+-			       XFS_SCRUB_OFLAG_XCORRUPT))
+-		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
++	/* Let debug users force us into the repair routines. */
++	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed &&
++			XFS_TEST_ERROR(false, mp,
++					XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
++		sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++	}
++
++	/*
++	 * If userspace asked for a repair but it wasn't necessary, report
++	 * that back to userspace.
++	 */
++	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed &&
++	    !(sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++				 XFS_SCRUB_OFLAG_XCORRUPT |
++				 XFS_SCRUB_OFLAG_PREEN)))
++		sc.sm->sm_flags |= XFS_SCRUB_OFLAG_UNTOUCHED;
++
++	/*
++	 * If it's broken, userspace wants us to fix it, and we haven't already
++	 * tried to fix it, then attempt a repair.
++	 */
++	if (xfs_repair_should_fix(sc.sm) && !already_fixed) {
++		error = xfs_repair_attempt(ip, &sc, &already_fixed);
++		if (error == -EAGAIN) {
++			if (sc.try_harder)
++				try_harder = true;
++			error = xfs_scrub_teardown(&sc, ip, 0);
++			if (error) {
++				xfs_repair_failure(mp);
++				goto out;
++			}
++			goto retry_op;
++		}
++	}
++
++	/* Still broken, repairs still wanted; complain. */
++	if (xfs_repair_unfixed(sc.sm))
++		xfs_repair_failure(mp);
+ 
+ out_teardown:
+ 	error = xfs_scrub_teardown(&sc, ip, error);
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 0d92af8..9c3d345 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -38,6 +38,13 @@ struct xfs_scrub_meta_ops {
+ 	/* Examine metadata for errors. */
+ 	int		(*scrub)(struct xfs_scrub_context *);
+ 
++	/*
++	 * Repair the metadata.  The outflags are cleared from the scrub
++	 * context (so that the iterator functions will not abort early) and
++	 * passed in as the second argument.
++	 */
++	int		(*repair)(struct xfs_scrub_context *, uint32_t);
++
+ 	/* Decide if we even have this piece of metadata. */
+ 	bool		(*has)(struct xfs_sb *);
+ 
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index a63f508..7975634 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -61,6 +61,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_LOG_BAD_CRC,
+ 	XFS_RANDOM_LOG_ITEM_PIN,
+ 	XFS_RANDOM_BUF_LRU_REF,
++	XFS_RANDOM_FORCE_SCRUB_REPAIR,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -167,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+ XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
++XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -201,6 +203,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
+ 	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
+ 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
++	XFS_ERRORTAG_ATTR_LIST(force_repair),
+ 	NULL,
+ };
+ 
 
-> I've now (subsequent to those instances above) updated to your suggestion:
-> do the check first (without DONTNEED), then if the file had pages in the vm
-> before the first check (seen using 'vmtouch' Resident Pages), use DONTNEED
-> (via 'vmtouch -e') and do the check again.
-> 
-> I haven't yet seen any corrupt files with this new scheme (it's now been in
-> place for only 24 hours).
-> 
-> I've not played with vmtouch before so I'm not sure what's normal, but there
-> seems to be some odd behaviour. Most of the time, 'vmtouch -e' clears the
-> file from buffers immediately, but sometimes it leaves a single page
-> resident, even in the face of repeated calls. I understand that
-> fadvise(DONTNEED) is advisory (and of course there's always a chance
-> something else can bring file pages back into vm), so I had it in a loop:
-> 
-> check_pages_buffered
-> checksum
-> if pages_were_buffered
->  fadvise(DONTNEED)
->  whilst pages_buffered
->    fadvise(DONTNEED)
->    sleep 2
->  done
->  checksum
-> fi
-> 
-> I had a case where that loop was running for 2.5 hours before self
-> terminating, in the absence of anything else touching the file (that I could
-> find), and another case where it continued for 1.5 hours before I killed it.
-> It seems a single page can persist in memory (I don't know if it's the same
-> page) for *hours* even with many, many fadvise(DONTNEED) calls. In testing,
-> I was finally able to clear that file from vm using:
-> 
->  echo 3 > /proc/sys/vm/drop_caches
-> 
-> ...but that's a wee bit heavy to use to clear single pages so I'm now
-> breaking the loop if pages_buffered <= 1.
-> 
-> Any idea what that impressively persistent page is about?
-> 
-
-Hm, not sure. I see that behavior on one file that was recently cached
-in my dev tree. A local copy of the same file shows the same thing. If I
-copy to a separate fs on another vm (with a newer kernel), I don't see
-that behavior. I'm not sure off hand what the difference is, perhaps it
-has something to do with the kernel. But this is all debug logic so I
-wouldn't worry too much about doing excessive numbers of loops and
-whatnot unless this behavior proves to be somehow relevant to the
-problem.
-
-FWIW, 'vmtouch -v' shows a little table of which pages are actually
-present in the file. In my test, the tail page is the one that persists.
-More importantly, it might be useful to use 'vmtouch -v' in your checks
-above. That way we actually have a record of whether the particular
-corrupted page was cached between a 'check ok' -> 'check bad'
-transition.
-
-> > > "cmp -l badfile goodfile" shows there are 256 bytes differing, in the
-> > > 2nd half of (512b) block 53906431.
-> > 
-> > FWIW, that's the last (512b) sector of the associated (4k) page. Does
-> > that happen to be consistent across whatever other instances you have a
-> > record of?
-> 
-> Huh, I should have noticed that! Yes, all corruptions are the last 256b of a
-> 4k page. And in fact all are the last 256b in the first 4k page of an 8k
-> block. That's odd as well!
-> 
-
-Ok, that's potentially interesting. But what exactly do you mean by an
-8k block? This is a 4k block filesystem, correct? Are you just saying
-that the pages that contain the corruption all happen to be at 8k
-aligned offsets?
-
-Brian
-
-> FYI, these are the 256b offsets now I'm now working with (there have been a
-> few more since I started):
-> 
-> 310799
-> 876559
-> 1400335
-> 1676815
-> 3516271
-> 4243471
-> 4919311
-> 6267919
-> 10212879
-> 11520527
-> 11842175
-> 16179215
-> 18018367
-> 22609935
-> 45314111
-> 51365903
-> 60588047
-> 69212175
-> 82352143
-> 107812863
-> 165136351
-> 227067839
-> 527947775
-> 
-> Thanks for your time!
-> 
-> Chris
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
