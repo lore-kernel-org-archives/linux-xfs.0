@@ -1,105 +1,306 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59054 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751220AbeC0WI6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Mar 2018 18:08:58 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B272E13A9A
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Mar 2018 22:08:58 +0000 (UTC)
-Subject: [PATCH 1/3] xfs_scrub: synchronize error levels & logging
-References: <f7ab3da2-618c-dc1c-6d95-3890cdac2b43@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <3b8c1fd3-46bb-39ea-fca9-63d308cbe6b4@redhat.com>
-Date: Tue, 27 Mar 2018 17:08:54 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:57512 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbeCZX4m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:56:42 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNkVVQ130571
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2gyau3g0nc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNuf6g006308
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2QNufOj010852
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 GMT
+Subject: [PATCH 07/20] xfs: create tracepoints for online repair
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 26 Mar 2018 16:56:39 -0700
+Message-ID: <152210859969.13184.7680455998362125254.stgit@magnolia>
+In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
+References: <152210855435.13184.6475770131389744177.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <f7ab3da2-618c-dc1c-6d95-3890cdac2b43@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Having only a subset of the five error_levels present in
-the log_level[] array is asking for trouble when someone
-tries to __str_log(S_PREEN ...) and overruns the array.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Tie it all together in a single structure that's
-initialized together to make the mapping more obvious and
-idiot-proof.
+These tracepoints will be used to debug the online repair routines.
 
-Fixes-coverity-id: 1433618
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/scrub/trace.h |  243 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 243 insertions(+)
 
-diff --git a/scrub/common.c b/scrub/common.c
-index 5a37a98..02c6c9d 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -56,18 +56,15 @@ xfs_scrub_excessive_errors(
- 	return ret;
- }
+
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 5d2b1c2..8238882 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -69,6 +69,8 @@ DEFINE_EVENT(xfs_scrub_class, name, \
+ DEFINE_SCRUB_EVENT(xfs_scrub_start);
+ DEFINE_SCRUB_EVENT(xfs_scrub_done);
+ DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
++DEFINE_SCRUB_EVENT(xfs_repair_attempt);
++DEFINE_SCRUB_EVENT(xfs_repair_done);
  
--static const char *err_str[] = {
--	[S_ERROR]	= "Error",
--	[S_WARN]	= "Warning",
--	[S_REPAIR]	= "Repaired",
--	[S_INFO]	= "Info",
--	[S_PREEN]	= "Optimized",
--};
--
--static int log_level[] = {
--	[S_ERROR]	= LOG_ERR,
--	[S_WARN]	= LOG_WARNING,
--	[S_INFO]	= LOG_INFO,
-+static struct {
-+	const char *string;
-+	int loglevel;
-+} err_levels[] = {
-+	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
-+	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
-+	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
-+	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
-+	[S_PREEN]  = { .string = "Optimized",	.loglevel = LOG_INFO }
- };
+ TRACE_EVENT(xfs_scrub_op_error,
+ 	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+@@ -492,6 +494,247 @@ TRACE_EVENT(xfs_scrub_xref_error,
+ 		  __entry->ret_ip)
+ );
  
- /* If stream is a tty, clear to end of line to clean up progress bar. */
-@@ -106,8 +103,8 @@ __str_out(
- 	if (level == S_PREEN && !debug && !verbose)
- 		goto out_record;
++/* repair tracepoints */
++#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
++
++DECLARE_EVENT_CLASS(xfs_repair_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len),
++	TP_ARGS(mp, agno, agbno, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len)
++);
++#define DEFINE_REPAIR_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_repair_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len), \
++	TP_ARGS(mp, agno, agbno, len))
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_free_or_unmap_extent);
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_collect_btree_extent);
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_agfl_insert);
++
++DECLARE_EVENT_CLASS(xfs_repair_rmap_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len,
++		 uint64_t owner, uint64_t offset, unsigned int flags),
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++		__field(uint64_t, owner)
++		__field(uint64_t, offset)
++		__field(unsigned int, flags)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++		__entry->owner = owner;
++		__entry->offset = offset;
++		__entry->flags = flags;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset,
++		  __entry->flags)
++);
++#define DEFINE_REPAIR_RMAP_EVENT(name) \
++DEFINE_EVENT(xfs_repair_rmap_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len, \
++		 uint64_t owner, uint64_t offset, unsigned int flags), \
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_alloc_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_ialloc_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_rmap_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_bmap_extent_fn);
++
++TRACE_EVENT(xfs_repair_refcount_extent_fn,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *irec),
++	TP_ARGS(mp, agno, irec),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, startblock)
++		__field(xfs_extlen_t, blockcount)
++		__field(xfs_nlink_t, refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startblock = irec->rc_startblock;
++		__entry->blockcount = irec->rc_blockcount;
++		__entry->refcount = irec->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startblock,
++		  __entry->blockcount,
++		  __entry->refcount)
++)
++
++TRACE_EVENT(xfs_repair_init_btblock,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 xfs_btnum_t btnum),
++	TP_ARGS(mp, agno, agbno, btnum),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, btnum)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->btnum = btnum;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->agbno, __entry->btnum)
++)
++TRACE_EVENT(xfs_repair_find_ag_btree_roots_helper,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 uint32_t magic, uint16_t level),
++	TP_ARGS(mp, agno, agbno, magic, level),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, magic)
++		__field(uint16_t, level)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->magic = magic;
++		__entry->level = level;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->agbno, __entry->magic, __entry->level)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
++		 xfs_agblock_t usedlen),
++	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, icount)
++		__field(xfs_agblock_t, aglen)
++		__field(xfs_agblock_t, freelen)
++		__field(xfs_agblock_t, usedlen)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->icount = icount;
++		__entry->aglen = aglen;
++		__entry->freelen = freelen;
++		__entry->usedlen = usedlen;
++	),
++	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->icount, __entry->aglen, __entry->freelen,
++		  __entry->usedlen)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
++		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
++	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bnobt_sz)
++		__field(xfs_agblock_t, inobt_sz)
++		__field(xfs_agblock_t, rmapbt_sz)
++		__field(xfs_agblock_t, refcbt_sz)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bnobt_sz = bnobt_sz;
++		__entry->inobt_sz = inobt_sz;
++		__entry->rmapbt_sz = rmapbt_sz;
++		__entry->refcbt_sz = refcbt_sz;
++	),
++	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->bnobt_sz, __entry->inobt_sz, __entry->rmapbt_sz,
++		  __entry->refcbt_sz)
++)
++TRACE_EVENT(xfs_repair_reset_counters,
++	TP_PROTO(struct xfs_mount *mp),
++	TP_ARGS(mp),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++	),
++	TP_printk("dev %d:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev))
++)
++
++TRACE_EVENT(xfs_repair_ialloc_insert,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
++		 uint8_t freecount, uint64_t freemask),
++	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, startino)
++		__field(uint16_t, holemask)
++		__field(uint8_t, count)
++		__field(uint8_t, freecount)
++		__field(uint64_t, freemask)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startino = startino;
++		__entry->holemask = holemask;
++		__entry->count = count;
++		__entry->freecount = freecount;
++		__entry->freemask = freemask;
++	),
++	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
++		  __entry->startino, __entry->holemask, __entry->count,
++		  __entry->freecount, __entry->freemask)
++)
++
++#endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
++
+ #endif /* _TRACE_XFS_SCRUB_TRACE_H */
  
--	fprintf(stream, "%s%s: %s: ", stream_start(stream), _(err_str[level]),
--			descr);
-+	fprintf(stream, "%s%s: %s: ", stream_start(stream),
-+			err_levels[level].string, descr);
- 	if (error) {
- 		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
- 	} else {
-@@ -152,10 +149,6 @@ __str_log(
- 	char			buf[LOG_BUFSZ];
- 	int			sz;
- 
--	/* We only want to hear about optimizing when in debug/verbose mode. */
--	if (level == S_PREEN && !debug && !verbose)
--		return;
--
- 	/*
- 	 * Skip logging if we're being run as a service (presumably the
- 	 * service will log stdout/stderr); if we're being run in a non
-@@ -168,11 +161,11 @@ __str_log(
- 	snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname, ctx->mntpoint);
- 	openlog(logname, LOG_PID, LOG_DAEMON);
- 
--	sz = snprintf(buf, LOG_BUFSZ, "%s: ", _(err_str[level]));
-+	sz = snprintf(buf, LOG_BUFSZ, "%s: ", _(err_levels[level].string));
- 	va_start(args, format);
- 	vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
- 	va_end(args);
--	syslog(log_level[level], "%s", buf);
-+	syslog(err_levels[level].loglevel, "%s", buf);
- 
- 	closelog();
- }
+ #undef TRACE_INCLUDE_PATH
+
