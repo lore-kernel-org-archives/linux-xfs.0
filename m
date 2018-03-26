@@ -1,61 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:55170 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751409AbeCWOOo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Mar 2018 10:14:44 -0400
-Received: by mail-wm0-f43.google.com with SMTP id h76so3842737wme.4
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Mar 2018 07:14:44 -0700 (PDT)
+Received: from zeniv.linux.org.uk ([195.92.253.2]:39520 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750783AbeCZFvj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 01:51:39 -0400
+Date: Mon, 26 Mar 2018 06:51:37 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH] fs: don't scan the inode cache before SB_ACTIVE is set
+Message-ID: <20180326055137.GP30522@ZenIV.linux.org.uk>
+References: <20180326043503.17828-1-david@fromorbit.com>
+ <20180326053151.GO30522@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <709ab06b-4efc-2925-6621-f17ed4c048c6@sandeen.net>
-References: <20180315182850.36783-1-jtulak@redhat.com> <20180316170720.44227-1-jtulak@redhat.com>
- <709ab06b-4efc-2925-6621-f17ed4c048c6@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 23 Mar 2018 15:14:22 +0100
-Message-ID: <CACj3i72900vOY52-6sH+abpKcT5Sp0VSygdG1yVNW4fKUof8FQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2 v5] fsck.xfs: allow forced repairs using xfs_repair
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180326053151.GO30522@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Fri, Mar 23, 2018 at 3:37 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> +function ensure_not_mounted() {
->> +     local dev=$1
->> +     mounted=`grep -c "^$dev " /proc/mounts`
->> +     if [ $mounted -ne 0 ]; then
->> +             echo "$NAME error: The filesystem to be checked must not be mounted." 1>&2
->> +             exit 4
->> +     fi
->> +}
->
-> Is this necessary?  Doesn't xfs_repair already check this?
->
-> # xfs_repair /dev/loop0
-> xfs_repair: /dev/loop0 contains a mounted filesystem
-> xfs_repair: /dev/loop0 contains a mounted and writable filesystem
->
-> fatal error -- couldn't initialize XFS library
->
-> # echo $?
-> 1
->
-> (script would then say "error: xfs_repair could not fix the filesystem."
-> and exit with 4.)
->
-> It might be nice to have the cleaner message above, but I wonder about
-> the wisdom and safety of hand-rolling another simplistic mount check in a bash
-> script.... thoughts?
->
+On Mon, Mar 26, 2018 at 06:31:51AM +0100, Al Viro wrote:
+> On Mon, Mar 26, 2018 at 03:35:03PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We recently had an oops reported on a 4.14 kernel in
+> > xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
+> > and so the m_perag_tree lookup walked into lala land.
+> > 
+> > We found a mount in a failed state, blocked on teh shrinker rwsem
+> > here:
+> > 
+> > mount_bdev()
+> >   deactivate_locked_super()
+> >     unregister_shrinker()
+> > 
+> > Essentially, the machine was under memory pressure when the mount
+> > was being run, xfs_fs_fill_super() failed after allocating the
+> > xfs_mount and attaching it to sb->s_fs_info. It then cleaned up and
+> > freed the xfs_mount, but the sb->s_fs_info field still pointed to
+> > the freed memory. Hence when the superblock shrinker then ran
+> > it fell off the bad pointer.
+> > 
+> > This is reproduced by using the mount_delay sysfs control as added
+> > in teh previous patch. It produces an oops down this path during the
+> > stalled mount:
+> 
+> > The problem is that the superblock shrinker is running before the
+> > filesystem structures it depends on have been fully set up. i.e.
+> > the shrinker is registered in sget(), before ->fill_super() has been
+> > called, and the shrinker can call into the filesystem before
+> > fill_super() does it's setup work.
+> 
+> Wait a sec...  How the hell does it get through trylock_super() before
+> ->s_root is set and ->s_umount is unlocked?
 
-Mmm, we are not hiding the message, so I guess it doesn't really
-matter, the xfs_repair errors are going to be visible. This testing
-remained there from when I wanted to use another exit code for mounted
-fs and xfs_repair failures. But I'm removing the check now, with the
-merged exit code it is not useful.
+I see...  So basically the story is
 
-Other stuff: ok, changed.
+* super_cache_count() lacks trylock_super(), making it possible that it'll
+be called too early on half-set superblock.
+* it can't be called too late (during fs shutdown), since the shrinker is
+unregistered before the call of ->kill_sb()
+* making sure it won't get called too early can be done by checking SB_ACTIVE.
 
-Thanks,
-Jan
+It's potentially racy, though - don't we need a barrier between setting the
+things up and setting SB_ACTIVE?
+
+And that, BTW, means that we want SB_BORN instead of SB_ACTIVE - unlike the
+latter, the former is set only in one place.  So I'd suggest switching to
+checking that, with a barrier pair added (in mount_fs() before setting the
+sucker, another in super_cache_count() (before doing the
+scan).
