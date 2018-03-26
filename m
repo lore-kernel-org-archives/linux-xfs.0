@@ -1,62 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:52402 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751400AbeCXBDM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Mar 2018 21:03:12 -0400
-Date: Fri, 23 Mar 2018 18:03:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH V2] xfs: do not log swapext extent owner changes for
- deleted inodes
-Message-ID: <20180324010306.GO4818@magnolia>
-References: <f2dcef25-01f2-d7fe-3b2d-f54a809215a5@redhat.com>
- <b7a4250a-b348-0381-683b-74059c397a7d@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:45246 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752131AbeCZQ2c (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Mar 2018 12:28:32 -0400
+Date: Mon, 26 Mar 2018 12:28:31 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
+Message-ID: <20180326162830.GF34912@bfoster.bfoster>
+References: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
+ <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
+ <20180325215904.GH18129@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <b7a4250a-b348-0381-683b-74059c397a7d@sandeen.net>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180325215904.GH18129@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>, Shaohua Li <shli@kernel.org>, linux-xfs@vger.kernel.org
 
-On Fri, Mar 23, 2018 at 07:13:43PM -0500, Eric Sandeen wrote:
-> Today if we run fsr and crash, log replay can fail because
-> the recovery code tries to instantiate the donor inode from
-> disk to replay the swapext, but it's been deleted and we get
-> verifier failures when we try to read it off disk with
-> i_mode == 0.
+On Mon, Mar 26, 2018 at 08:59:04AM +1100, Dave Chinner wrote:
+> On Fri, Mar 23, 2018 at 10:24:03PM +0800, 张本龙 wrote:
+> > Hi Shaohua and XFS,
+> > 
+> > May I ask how are we gonna handle REQ_META issued from XFS? As you
+> > mentioned about charging to root cgroup (also in an earlier email
+> > discussion), and seems the 4.16.0-rc6 code is not handling it
+> > separately.
+> > 
+> > In our case to support XFS cgroup writeback control, which was ported
+> > and slightly adapted to 3.10.0, ignoring xfs log bios resulted in
+> > trouble. Threads from throttled docker might submit_bio in following
+> > path by its own identity, this docker blkcg accumulated large amounts
+> > of data (e.g., 20GB), thus such log gets blocked.
 > 
-> Strip the extent owner changes out of the logged fields when
-> we're freeing the inode to avoid this.
+> And thus displaying the reason why I originally refused to merge
+> this code until regression tests were added to fstests to exercise
+> these sorts of issues. This stuff adds new internal filesystem IO
+> ordering constraints, so we need tests that exercise it and ensure
+> we don't accidentally break it in future.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hmm, but if the user issues fsync from the throttled cgroup then won't
+that throttling occur today, regardless of cgroup aware writeback? My
+understanding is that cgawb just accurately accounts writeback I/Os to
+the owner of the cached pages. IOW, if the buffered writer and fsync
+call are in the same throttled cgroup, then the throttling works just as
+it would with cgawb and the writer being in a throttled cgroup.
 
---D
+So ISTM that this is an independent problem. What am I missing?
 
-> ---
+Shaohua,
+
+Do you have a reference to the older metadata related patch mentioned in
+the commit log that presumably addressed this?
+
+Brian
+
 > 
-> V2: Move the fix to xfs_ifree per bfoster's suggestion
+> > Not familiar with XFS, but seems log bios are partially stuck in
+> > throttled cgroups, leaving other innocent groups waiting for
+> > completion. To cope with this we bypassed REQ_META log bios in
+> > blk_throtl_bio().
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 604ee38..d17e2d5 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2470,6 +2470,10 @@
->  	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
->  	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
->  	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-> +
-> +	/* Don't attempt to replay owner changes for a deleted inode */
-> +	ip->i_itemp->ili_fields &= !(XFS_ILOG_AOWNER|XFS_ILOG_DOWNER);
-> +
->  	/*
->  	 * Bump the generation count so no one will be confused
->  	 * by reincarnations of this inode.
+> Yup, the log is global and should not be throttled. Metadata is less
+> obvious as to what the correct thing to do is, because writes are
+> always done from internal kernel threads but reads are done from a
+> mix of kernel threads, user cgroup contexts and user data IO
+> completions. Hence there are situations where metadata reads may
+> need to be throttled because they are cgroup context only (e.g.
+> filesystem directory traversal) but others where reads should not
+> be throttled because they have global context (e.g. inside a
+> transaction when other buffers are already locked).
 > 
+> Getting this right and keeping it working requires regression tests
+> that get run on every release, whether it be upstream or distro
+> kernels, and that means we need tests in fstests to cover cgroup IO
+> control....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
