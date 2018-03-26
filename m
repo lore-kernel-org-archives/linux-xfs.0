@@ -1,119 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36282 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751020AbeC0WOu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 18:14:50 -0400
-Date: Tue, 27 Mar 2018 15:14:03 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:57410 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751765AbeCZX4W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:56:22 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNknSm130841
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:22 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2gyau3g0mk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:22 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNuLaW029403
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:21 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNuKv0020491
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:21 GMT
+Subject: [PATCH 04/20] xfs: add repair helpers for the reference count btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] xfs_scrub: synchronize error levels & logging
-Message-ID: <20180327221403.GC4818@magnolia>
-References: <f7ab3da2-618c-dc1c-6d95-3890cdac2b43@redhat.com>
- <3b8c1fd3-46bb-39ea-fca9-63d308cbe6b4@redhat.com>
+Date: Mon, 26 Mar 2018 16:56:19 -0700
+Message-ID: <152210857946.13184.11202190514229464537.stgit@magnolia>
+In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
+References: <152210855435.13184.6475770131389744177.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3b8c1fd3-46bb-39ea-fca9-63d308cbe6b4@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Mar 27, 2018 at 05:08:54PM -0500, Eric Sandeen wrote:
-> Having only a subset of the five error_levels present in
-> the log_level[] array is asking for trouble when someone
-> tries to __str_log(S_PREEN ...) and overruns the array.
-> 
-> Tie it all together in a single structure that's
-> initialized together to make the mapping more obvious and
-> idiot-proof.
-> 
-> Fixes-coverity-id: 1433618
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/scrub/common.c b/scrub/common.c
-> index 5a37a98..02c6c9d 100644
-> --- a/scrub/common.c
-> +++ b/scrub/common.c
-> @@ -56,18 +56,15 @@ xfs_scrub_excessive_errors(
->  	return ret;
->  }
->  
-> -static const char *err_str[] = {
-> -	[S_ERROR]	= "Error",
-> -	[S_WARN]	= "Warning",
-> -	[S_REPAIR]	= "Repaired",
-> -	[S_INFO]	= "Info",
-> -	[S_PREEN]	= "Optimized",
-> -};
-> -
-> -static int log_level[] = {
-> -	[S_ERROR]	= LOG_ERR,
-> -	[S_WARN]	= LOG_WARNING,
-> -	[S_INFO]	= LOG_INFO,
-> +static struct {
-> +	const char *string;
-> +	int loglevel;
-> +} err_levels[] = {
-> +	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
-> +	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
-> +	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
-> +	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
-> +	[S_PREEN]  = { .string = "Optimized",	.loglevel = LOG_INFO }
->  };
->  
->  /* If stream is a tty, clear to end of line to clean up progress bar. */
-> @@ -106,8 +103,8 @@ __str_out(
->  	if (level == S_PREEN && !debug && !verbose)
->  		goto out_record;
->  
-> -	fprintf(stream, "%s%s: %s: ", stream_start(stream), _(err_str[level]),
-> -			descr);
-> +	fprintf(stream, "%s%s: %s: ", stream_start(stream),
-> +			err_levels[level].string, descr);
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-_(err_levels[level]) here ^^^^^^^^^^^^
+Add a couple of functions to the refcount btree and generic btree code
+that will be used to repair the refcountbt.
 
-Otherwise we end up with:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_btree.c    |   21 +++++++++++++++++++++
+ fs/xfs/libxfs/xfs_btree.h    |    1 +
+ fs/xfs/libxfs/xfs_refcount.c |   17 +++++++++++++++++
+ fs/xfs/libxfs/xfs_refcount.h |    2 ++
+ 4 files changed, 41 insertions(+)
 
-Error: 你吃饭了吗？你多吃一点。
 
->  	if (error) {
->  		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
->  	} else {
-> @@ -152,10 +149,6 @@ __str_log(
->  	char			buf[LOG_BUFSZ];
->  	int			sz;
->  
-> -	/* We only want to hear about optimizing when in debug/verbose mode. */
-> -	if (level == S_PREEN && !debug && !verbose)
-> -		return;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index ec6a464..07bc8bd 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -5028,3 +5028,24 @@ xfs_btree_has_record(
+ 	*exists = false;
+ 	return error;
+ }
++
++/* Are there more records in this btree? */
++bool
++xfs_btree_has_more_records(
++	struct xfs_btree_cur	*cur)
++{
++	struct xfs_btree_block	*block;
++	struct xfs_buf		*bp;
++
++	block = xfs_btree_get_block(cur, 0, &bp);
++
++	/* There are still records in this block. */
++	if (cur->bc_ptrs[0] < xfs_btree_get_numrecs(block))
++		return true;
++
++	/* There are more record blocks. */
++	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
++		return block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK);
++	else
++		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
++}
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 7b5f1db..3d094ed 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -549,5 +549,6 @@ union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
+ 		union xfs_btree_key *key);
+ int xfs_btree_has_record(struct xfs_btree_cur *cur, union xfs_btree_irec *low,
+ 		union xfs_btree_irec *high, bool *exists);
++bool xfs_btree_has_more_records(struct xfs_btree_cur *cur);
+ 
+ #endif	/* __XFS_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 100532d..9103be0 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -88,6 +88,23 @@ xfs_refcount_lookup_ge(
+ 	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
+ }
+ 
++/*
++ * Look up the first record equal to [bno, len] in the btree
++ * given by cur.
++ */
++int
++xfs_refcount_lookup_eq(
++	struct xfs_btree_cur	*cur,
++	xfs_agblock_t		bno,
++	int			*stat)
++{
++	trace_xfs_refcount_lookup(cur->bc_mp, cur->bc_private.a.agno, bno,
++			XFS_LOOKUP_LE);
++	cur->bc_rec.rc.rc_startblock = bno;
++	cur->bc_rec.rc.rc_blockcount = 0;
++	return xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
++}
++
+ /* Convert on-disk record to in-core format. */
+ void
+ xfs_refcount_btrec_to_irec(
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 5856abb..a92ad90 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -24,6 +24,8 @@ extern int xfs_refcount_lookup_le(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, int *stat);
+ extern int xfs_refcount_lookup_ge(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, int *stat);
++extern int xfs_refcount_lookup_eq(struct xfs_btree_cur *cur,
++		xfs_agblock_t bno, int *stat);
+ extern int xfs_refcount_get_rec(struct xfs_btree_cur *cur,
+ 		struct xfs_refcount_irec *irec, int *stat);
+ 
 
-Why is this being removed?
-
---D
-
-> -
->  	/*
->  	 * Skip logging if we're being run as a service (presumably the
->  	 * service will log stdout/stderr); if we're being run in a non
-> @@ -168,11 +161,11 @@ __str_log(
->  	snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname, ctx->mntpoint);
->  	openlog(logname, LOG_PID, LOG_DAEMON);
->  
-> -	sz = snprintf(buf, LOG_BUFSZ, "%s: ", _(err_str[level]));
-> +	sz = snprintf(buf, LOG_BUFSZ, "%s: ", _(err_levels[level].string));
->  	va_start(args, format);
->  	vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
->  	va_end(args);
-> -	syslog(log_level[level], "%s", buf);
-> +	syslog(err_levels[level].loglevel, "%s", buf);
->  
->  	closelog();
->  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
