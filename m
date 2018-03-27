@@ -1,605 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37450 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751713AbeCZX57 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:57:59 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNr2Y1056767
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:57:58 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2gyaweg0c1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:57:58 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNvvB7032362
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:57:58 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2QNvvku011567
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:57:57 GMT
-Subject: [PATCH 19/20] xfs: repair inode block maps
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 26 Mar 2018 16:57:56 -0700
-Message-ID: <152210867644.13184.13940723267521330059.stgit@magnolia>
-In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
-References: <152210855435.13184.6475770131389744177.stgit@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:61293 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751020AbeC0V4W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 17:56:22 -0400
+Date: Wed, 28 Mar 2018 08:56:14 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
+Message-ID: <20180327215614.GQ18129@dastard>
+References: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
+ <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
+ <20180325215904.GH18129@dastard>
+ <20180326162830.GF34912@bfoster.bfoster>
+ <20180327005526.qa5dnkdzaxyardd7@kernel.org>
+ <20180327113648.GA3498@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180327113648.GA3498@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Shaohua Li <shli@kernel.org>, =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Mar 27, 2018 at 07:36:48AM -0400, Brian Foster wrote:
+> On Mon, Mar 26, 2018 at 05:55:26PM -0700, Shaohua Li wrote:
+> > On Mon, Mar 26, 2018 at 12:28:31PM -0400, Brian Foster wrote:
+> > > On Mon, Mar 26, 2018 at 08:59:04AM +1100, Dave Chinner wrote:
+> > > > On Fri, Mar 23, 2018 at 10:24:03PM +0800, 张本龙 wrote:
+> > > > > Hi Shaohua and XFS,
+> > > > > 
+> > > > > May I ask how are we gonna handle REQ_META issued from XFS? As you
+> > > > > mentioned about charging to root cgroup (also in an earlier email
+> > > > > discussion), and seems the 4.16.0-rc6 code is not handling it
+> > > > > separately.
+> > > > > 
+> > > > > In our case to support XFS cgroup writeback control, which was ported
+> > > > > and slightly adapted to 3.10.0, ignoring xfs log bios resulted in
+> > > > > trouble. Threads from throttled docker might submit_bio in following
+> > > > > path by its own identity, this docker blkcg accumulated large amounts
+> > > > > of data (e.g., 20GB), thus such log gets blocked.
+> > > > 
+> > > > And thus displaying the reason why I originally refused to merge
+> > > > this code until regression tests were added to fstests to exercise
+> > > > these sorts of issues. This stuff adds new internal filesystem IO
+> > > > ordering constraints, so we need tests that exercise it and ensure
+> > > > we don't accidentally break it in future.
+> > > > 
+> > > 
+> > > Hmm, but if the user issues fsync from the throttled cgroup then won't
+> > > that throttling occur today, regardless of cgroup aware writeback? My
+> > > understanding is that cgawb just accurately accounts writeback I/Os to
+> > > the owner of the cached pages. IOW, if the buffered writer and fsync
+> > > call are in the same throttled cgroup, then the throttling works just as
+> > > it would with cgawb and the writer being in a throttled cgroup.
+> > > 
+> > > So ISTM that this is an independent problem. What am I missing?
+> > > 
+> > > Shaohua,
+> > > 
+> > > Do you have a reference to the older metadata related patch mentioned in
+> > > the commit log that presumably addressed this?
+> > 
+> > The problem is about priority reversion. Say you do a fsync in a low prio
+> > cgroup, the IO will be submitted with low prio. Now you do a fsync in a high
+> > prio cgroup, the cgroup will wait for fsync IO finished, which is already
+> > submitted by the low prio cgroup and run in low prio. This makes the high prio
+> > cgroup run slow. The proposed patch is to force all metadata write submitted
+> > from root cgroup regardless which task submitted, which can fix this issue.
+> > 
+> 
+> Right, but it seems to me that this can happen with or without cgroup
+> aware writeback. This patch just introduces the final bits required to
+> carry the page owner from however it is tracked in the writeback machine
+> to the bio submitted by the fs. It doesn't introduce/enable/implement
+> I/O throttling itself, which is already in place and usable (outside of
+> the buffered write page owner problem fixed by this patch), right?
+> 
+> So without this patch, if a task in throttled cgroup A does a bunch of
+> buffered writes and calls fsync, then another task in unthrottled cgroup
+> B calls fsync, aren't we (XFS) susceptible to priority inversion via
+> these same log I/O serialization points? If not, then what am I missing?
 
-Use the reverse-mapping btree information to rebuild an inode fork.
+Well, I was originally told that bios send by a filesystem without
+cgroup info would be accounted to the root cgroup and hence not
+throttled at all. i.e. metadata, and any untagged data IO. In that
+case, there should be no problems what-so-ever as all XFS IO should
+be issued at the same priority
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile            |    1 
- fs/xfs/scrub/bmap.c        |    8 +
- fs/xfs/scrub/bmap_repair.c |  398 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h      |    4 
- fs/xfs/scrub/scrub.c       |    2 
- fs/xfs/xfs_trans.c         |   54 ++++++
- fs/xfs/xfs_trans.h         |    2 
- 7 files changed, 469 insertions(+)
- create mode 100644 fs/xfs/scrub/bmap_repair.c
+However, given the way people are talking about needing to bypass
+block cgroup throttling via REQ_META hacks, I'm guessing that it
+doesn't actually work that way. i.e. somewhere in the block layer it
+attaches the current task cgroup to bios without existing cgroup
+information, and so we end up with priority inversion problems
+whenever cgroups and throttling are in use regardless of whether the
+filesystem supports it or not....
 
+Ah, yeah, the task cgroup gets added through this path:
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 4324586..c3f9e19 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -175,6 +175,7 @@ ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
- xfs-y				+= $(addprefix scrub/, \
- 				   agheader_repair.o \
- 				   alloc_repair.o \
-+				   bmap_repair.o \
- 				   ialloc_repair.o \
- 				   inode_repair.o \
- 				   refcount_repair.o \
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index cecc447..e39ee74 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -72,6 +72,14 @@ xfs_scrub_setup_inode_bmap(
- 		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
- 		if (error)
- 			goto out;
-+
-+		/* Drop the page cache if we're repairing block mappings. */
-+		if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
-+			error = invalidate_inode_pages2(
-+					VFS_I(sc->ip)->i_mapping);
-+			if (error)
-+				goto out;
-+		}
- 	}
- 
- 	error = xfs_scrub_trans_alloc(sc->sm, mp, 0, &sc->tp);
-diff --git a/fs/xfs/scrub/bmap_repair.c b/fs/xfs/scrub/bmap_repair.c
-new file mode 100644
-index 0000000..9e04366
---- /dev/null
-+++ b/fs/xfs/scrub/bmap_repair.c
-@@ -0,0 +1,398 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_refcount.h"
-+#include "xfs_quota.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/btree.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+
-+/* Inode fork block mapping (BMBT) repair. */
-+
-+struct xfs_repair_bmap_extent {
-+	struct list_head		list;
-+	struct xfs_rmap_irec		rmap;
-+	xfs_agnumber_t			agno;
-+};
-+
-+struct xfs_repair_bmap {
-+	struct list_head		extlist;
-+	struct xfs_repair_extent_list	btlist;
-+	struct xfs_repair_bmap_extent	ext;	/* most files have 1 extent */
-+	struct xfs_scrub_context	*sc;
-+	xfs_ino_t			ino;
-+	xfs_rfsblock_t			otherfork_blocks;
-+	xfs_rfsblock_t			bmbt_blocks;
-+	xfs_extnum_t			extents;
-+	int				whichfork;
-+};
-+
-+/* Record extents that belong to this inode's fork. */
-+STATIC int
-+xfs_repair_bmap_extent_fn(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_repair_bmap		*rb = priv;
-+	struct xfs_repair_bmap_extent	*rbe;
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	xfs_fsblock_t			fsbno;
-+	int				error = 0;
-+
-+	if (xfs_scrub_should_terminate(rb->sc, &error))
-+		return error;
-+
-+	/* Skip extents which are not owned by this inode and fork. */
-+	if (rec->rm_owner != rb->ino) {
-+		return 0;
-+	} else if (rb->whichfork == XFS_DATA_FORK &&
-+		 (rec->rm_flags & XFS_RMAP_ATTR_FORK)) {
-+		rb->otherfork_blocks += rec->rm_blockcount;
-+		return 0;
-+	} else if (rb->whichfork == XFS_ATTR_FORK &&
-+		 !(rec->rm_flags & XFS_RMAP_ATTR_FORK)) {
-+		rb->otherfork_blocks += rec->rm_blockcount;
-+		return 0;
-+	}
-+
-+	rb->extents++;
-+
-+	/* Delete the old bmbt blocks later. */
-+	if (rec->rm_flags & XFS_RMAP_BMBT_BLOCK) {
-+		fsbno = XFS_AGB_TO_FSB(mp, cur->bc_private.a.agno,
-+				rec->rm_startblock);
-+		rb->bmbt_blocks += rec->rm_blockcount;
-+		return xfs_repair_collect_btree_extent(rb->sc, &rb->btlist,
-+				fsbno, rec->rm_blockcount);
-+	}
-+
-+	/* Remember this rmap. */
-+	trace_xfs_repair_bmap_extent_fn(mp, cur->bc_private.a.agno,
-+			rec->rm_startblock, rec->rm_blockcount, rec->rm_owner,
-+			rec->rm_offset, rec->rm_flags);
-+
-+	if (list_empty(&rb->extlist)) {
-+		rbe = &rb->ext;
-+	} else {
-+		rbe = kmem_alloc(sizeof(struct xfs_repair_bmap_extent),
-+				KM_MAYFAIL | KM_NOFS);
-+		if (!rbe)
-+			return -ENOMEM;
-+	}
-+
-+	INIT_LIST_HEAD(&rbe->list);
-+	rbe->rmap = *rec;
-+	rbe->agno = cur->bc_private.a.agno;
-+	list_add_tail(&rbe->list, &rb->extlist);
-+
-+	return 0;
-+}
-+
-+/* Compare two bmap extents. */
-+static int
-+xfs_repair_bmap_extent_cmp(
-+	void				*priv,
-+	struct list_head		*a,
-+	struct list_head		*b)
-+{
-+	struct xfs_repair_bmap_extent	*ap;
-+	struct xfs_repair_bmap_extent	*bp;
-+
-+	ap = container_of(a, struct xfs_repair_bmap_extent, list);
-+	bp = container_of(b, struct xfs_repair_bmap_extent, list);
-+
-+	if (ap->rmap.rm_offset > bp->rmap.rm_offset)
-+		return 1;
-+	else if (ap->rmap.rm_offset < bp->rmap.rm_offset)
-+		return -1;
-+	return 0;
-+}
-+
-+/* Scan one AG for reverse mappings that we can turn into extent maps. */
-+STATIC int
-+xfs_repair_bmap_scan_ag(
-+	struct xfs_repair_bmap		*rb,
-+	xfs_agnumber_t			agno)
-+{
-+	struct xfs_scrub_context	*sc = rb->sc;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*agf_bp = NULL;
-+	struct xfs_btree_cur		*cur;
-+	int				error;
-+
-+	error = xfs_alloc_read_agf(mp, sc->tp, agno, 0, &agf_bp);
-+	if (error)
-+		return error;
-+	if (!agf_bp)
-+		return -ENOMEM;
-+	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, agno);
-+	error = xfs_rmap_query_all(cur, xfs_repair_bmap_extent_fn, rb);
-+	if (error == XFS_BTREE_QUERY_RANGE_ABORT)
-+		error = 0;
-+	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+			XFS_BTREE_NOERROR);
-+	xfs_trans_brelse(sc->tp, agf_bp);
-+	return error;
-+}
-+
-+/* Insert bmap records into an inode fork, given an rmap. */
-+STATIC int
-+xfs_repair_bmap_insert_rec(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_repair_bmap_extent	*rbe,
-+	int				baseflags)
-+{
-+	struct xfs_bmbt_irec		bmap;
-+	struct xfs_defer_ops		dfops;
-+	xfs_fsblock_t			firstfsb;
-+	xfs_extlen_t			extlen;
-+	int				flags;
-+	int				error = 0;
-+
-+	/* Form the "new" mapping... */
-+	bmap.br_startblock = XFS_AGB_TO_FSB(sc->mp, rbe->agno,
-+			rbe->rmap.rm_startblock);
-+	bmap.br_startoff = rbe->rmap.rm_offset;
-+
-+	flags = 0;
-+	if (rbe->rmap.rm_flags & XFS_RMAP_UNWRITTEN)
-+		flags = XFS_BMAPI_PREALLOC;
-+	while (rbe->rmap.rm_blockcount > 0) {
-+		xfs_defer_init(&dfops, &firstfsb);
-+		extlen = min_t(xfs_extlen_t, rbe->rmap.rm_blockcount,
-+				MAXEXTLEN);
-+		bmap.br_blockcount = extlen;
-+
-+		/* Re-add the extent to the fork. */
-+		error = xfs_bmapi_remap(sc->tp, sc->ip,
-+				bmap.br_startoff, extlen,
-+				bmap.br_startblock, &dfops,
-+				baseflags | flags);
-+		if (error)
-+			goto out_cancel;
-+
-+		bmap.br_startblock += extlen;
-+		bmap.br_startoff += extlen;
-+		rbe->rmap.rm_blockcount -= extlen;
-+		error = xfs_defer_ijoin(&dfops, sc->ip);
-+		if (error)
-+			goto out_cancel;
-+		error = xfs_defer_finish(&sc->tp, &dfops);
-+		if (error)
-+			goto out;
-+		/* Make sure we roll the transaction. */
-+		error = xfs_trans_roll_inode(&sc->tp, sc->ip);
-+		if (error)
-+			goto out;
-+	}
-+
-+	return 0;
-+out_cancel:
-+	xfs_defer_cancel(&dfops);
-+out:
-+	return error;
-+}
-+
-+/* Repair an inode fork. */
-+STATIC int
-+xfs_repair_bmap(
-+	struct xfs_scrub_context	*sc,
-+	int				whichfork)
-+{
-+	struct xfs_repair_bmap		rb;
-+	struct xfs_owner_info		oinfo;
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_mount		*mp = ip->i_mount;
-+	struct xfs_repair_bmap_extent	*rbe;
-+	struct xfs_repair_bmap_extent	*n;
-+	xfs_agnumber_t			agno;
-+	unsigned int			resblks;
-+	int				baseflags;
-+	int				error = 0;
-+
-+	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
-+
-+	/* Don't know how to repair the other fork formats. */
-+	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE)
-+		return -EOPNOTSUPP;
-+
-+	/* Only files, symlinks, and directories get to have data forks. */
-+	if (whichfork == XFS_DATA_FORK && !S_ISREG(VFS_I(ip)->i_mode) &&
-+	    !S_ISDIR(VFS_I(ip)->i_mode) && !S_ISLNK(VFS_I(ip)->i_mode))
-+		return -EINVAL;
-+
-+	/* If we somehow have delalloc extents, forget it. */
-+	if (whichfork == XFS_DATA_FORK && ip->i_delayed_blks)
-+		return -EBUSY;
-+
-+	/*
-+	 * If there's no attr fork area in the inode, there's
-+	 * no attr fork to rebuild.
-+	 */
-+	if (whichfork == XFS_ATTR_FORK && !XFS_IFORK_Q(ip))
-+		return -ENOENT;
-+
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
-+	/* Don't know how to rebuild realtime data forks. */
-+	if (XFS_IS_REALTIME_INODE(ip) && whichfork == XFS_DATA_FORK)
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * If this is a file data fork, wait for all pending directio to
-+	 * complete, then tear everything out of the page cache.
-+	 */
-+	if (S_ISREG(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK) {
-+		inode_dio_wait(VFS_I(ip));
-+		truncate_inode_pages(VFS_I(ip)->i_mapping, 0);
-+	}
-+
-+	/* Collect all reverse mappings for this fork's extents. */
-+	memset(&rb, 0, sizeof(rb));
-+	INIT_LIST_HEAD(&rb.extlist);
-+	xfs_repair_init_extent_list(&rb.btlist);
-+	rb.ino = ip->i_ino;
-+	rb.whichfork = whichfork;
-+	rb.sc = sc;
-+
-+	/* Iterate the rmaps for extents. */
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		error = xfs_repair_bmap_scan_ag(&rb, agno);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/*
-+	 * Guess how many blocks we're going to need to rebuild an entire bmap
-+	 * from the number of extents we found, and get ourselves a new
-+	 * transaction with proper block reservations.
-+	 */
-+	resblks = xfs_bmbt_calc_size(mp, rb.extents);
-+	error = xfs_trans_reserve_more(sc->tp, resblks, 0);
-+	if (error)
-+		goto out;
-+
-+	/* Blow out the in-core fork and zero the on-disk fork. */
-+	sc->ip->i_d.di_nblocks = rb.otherfork_blocks;
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+	if (XFS_IFORK_PTR(ip, whichfork) != NULL)
-+		xfs_idestroy_fork(sc->ip, whichfork);
-+	XFS_IFORK_FMT_SET(sc->ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-+	XFS_IFORK_NEXT_SET(sc->ip, whichfork, 0);
-+
-+	/* Reinitialize the on-disk fork. */
-+	if (whichfork == XFS_DATA_FORK) {
-+		memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
-+		ip->i_df.if_flags |= XFS_IFEXTENTS;
-+	} else if (whichfork == XFS_ATTR_FORK) {
-+		if (list_empty(&rb.extlist))
-+			ip->i_afp = NULL;
-+		else {
-+			ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_NOFS);
-+			ip->i_afp->if_flags |= XFS_IFEXTENTS;
-+		}
-+	}
-+	xfs_trans_log_inode(sc->tp, sc->ip, XFS_ILOG_CORE);
-+	error = xfs_trans_roll_inode(&sc->tp, sc->ip);
-+	if (error)
-+		goto out;
-+
-+	baseflags = XFS_BMAPI_NORMAP;
-+	if (whichfork == XFS_ATTR_FORK)
-+		baseflags |= XFS_BMAPI_ATTRFORK;
-+
-+	/* Release quota counts for the old bmbt blocks. */
-+	if (rb.bmbt_blocks) {
-+		xfs_trans_mod_dquot_byino(sc->tp, sc->ip, XFS_TRANS_DQ_BCOUNT,
-+				-rb.bmbt_blocks);
-+		error = xfs_trans_roll_inode(&sc->tp, sc->ip);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* "Remap" the extents into the fork. */
-+	list_sort(NULL, &rb.extlist, xfs_repair_bmap_extent_cmp);
-+	list_for_each_entry_safe(rbe, n, &rb.extlist, list) {
-+		error = xfs_repair_bmap_insert_rec(sc, rbe, baseflags);
-+		if (error)
-+			goto out;
-+		list_del(&rbe->list);
-+		if (rbe != &rb.ext)
-+			kmem_free(rbe);
-+	}
-+
-+	/* Dispose of all the old bmbt blocks. */
-+	xfs_rmap_ino_bmbt_owner(&oinfo, sc->ip->i_ino, whichfork);
-+	return xfs_repair_reap_btree_extents(sc, &rb.btlist, &oinfo,
-+			XFS_AG_RESV_NONE);
-+out:
-+	xfs_repair_cancel_btree_extents(sc, &rb.btlist);
-+	list_for_each_entry_safe(rbe, n, &rb.extlist, list) {
-+		list_del(&rbe->list);
-+		if (rbe != &rb.ext)
-+			kmem_free(rbe);
-+	}
-+	return error;
-+}
-+
-+/* Repair an inode's data fork. */
-+int
-+xfs_repair_bmap_data(
-+	struct xfs_scrub_context	*sc,
-+	uint32_t			scrub_oflags)
-+{
-+	return xfs_repair_bmap(sc, XFS_DATA_FORK);
-+}
-+
-+/* Repair an inode's attr fork. */
-+int
-+xfs_repair_bmap_attr(
-+	struct xfs_scrub_context	*sc,
-+	uint32_t			scrub_oflags)
-+{
-+	return xfs_repair_bmap(sc, XFS_ATTR_FORK);
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 4ab0581..48b8104 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -130,6 +130,8 @@ int xfs_repair_iallocbt(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_rmapbt(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_refcountbt(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- int xfs_repair_inode(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
-+int xfs_repair_bmap_data(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
-+int xfs_repair_bmap_attr(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
- 
- #else
- 
-@@ -164,6 +166,8 @@ xfs_repair_calc_ag_resblks(
- # define xfs_repair_fs_thaw		xfs_repair_fail
- # define xfs_repair_refcountbt		(NULL)
- # define xfs_repair_inode		(NULL)
-+# define xfs_repair_bmap_data		(NULL)
-+# define xfs_repair_bmap_attr		(NULL)
- 
- #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 7406438..8ad1a41 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -291,11 +291,13 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_INODE,
- 		.setup	= xfs_scrub_setup_inode_bmap,
- 		.scrub	= xfs_scrub_bmap_data,
-+		.repair	= xfs_repair_bmap_data,
- 	},
- 	[XFS_SCRUB_TYPE_BMBTA] = {	/* inode attr fork */
- 		.type	= ST_INODE,
- 		.setup	= xfs_scrub_setup_inode_bmap,
- 		.scrub	= xfs_scrub_bmap_attr,
-+		.repair	= xfs_repair_bmap_attr,
- 	},
- 	[XFS_SCRUB_TYPE_BMBTC] = {	/* inode CoW fork */
- 		.type	= ST_INODE,
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 86f92df..e961435 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -132,6 +132,60 @@ xfs_trans_dup(
- }
- 
- /*
-+ * Try to reserve more blocks for a transaction.  The single use case we
-+ * support is for online repair -- use a transaction to gather data without
-+ * fear of btree cycle deadlocks; calculate how many blocks we really need
-+ * from that data; and only then start modifying data.  This can fail due to
-+ * ENOSPC, so we have to be able to cancel the transaction.
-+ */
-+int
-+xfs_trans_reserve_more(
-+	struct xfs_trans	*tp,
-+	uint			blocks,
-+	uint			rtextents)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
-+	int			error = 0;
-+
-+	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
-+
-+	/*
-+	 * Attempt to reserve the needed disk blocks by decrementing
-+	 * the number needed from the number available.  This will
-+	 * fail if the count would go below zero.
-+	 */
-+	if (blocks > 0) {
-+		error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
-+		if (error != 0)
-+			return -ENOSPC;
-+		tp->t_blk_res += blocks;
-+	}
-+
-+	/*
-+	 * Attempt to reserve the needed realtime extents by decrementing
-+	 * the number needed from the number available.  This will
-+	 * fail if the count would go below zero.
-+	 */
-+	if (rtextents > 0) {
-+		error = xfs_mod_frextents(mp, -((int64_t)rtextents));
-+		if (error) {
-+			error = -ENOSPC;
-+			goto out_blocks;
-+		}
-+		tp->t_rtx_res += rtextents;
-+	}
-+
-+	return 0;
-+out_blocks:
-+	if (blocks > 0) {
-+		xfs_mod_fdblocks(mp, (int64_t)blocks, rsvd);
-+		tp->t_blk_res -= blocks;
-+	}
-+	return error;
-+}
-+
-+/*
-  * This is called to reserve free disk blocks and log space for the
-  * given transaction.  This must be done before allocating any resources
-  * within the transaction.
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 9d542df..1dcf8e2 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -158,6 +158,8 @@ typedef struct xfs_trans {
- int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
- 			uint blocks, uint rtextents, uint flags,
- 			struct xfs_trans **tpp);
-+int		xfs_trans_reserve_more(struct xfs_trans *tp, uint blocks,
-+			uint rtextents);
- int		xfs_trans_alloc_empty(struct xfs_mount *mp,
- 			struct xfs_trans **tpp);
- void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
+submit_bio
+  generic_make_request
+    generic_make_request_checks
+      blkcg_bio_issue_check
+        bio_blkcg
 
+> I'm not saying this isn't a problem that needs fixing, I just want to
+> make sure I understand the fundamental problem(s), what this cgawb patch
+> actually does and doesn't do and whether there is a logical dependency
+> between this patch and the proposed metadata filtering patch.
+
+Seems like there's a lot more work to be done to make this stuff
+work reliably than anyone has been telling us. Without regression
+tests, we're never going to know if it actually works or not....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
