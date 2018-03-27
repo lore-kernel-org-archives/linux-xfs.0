@@ -1,96 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751096AbeC0Lgt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Mar 2018 07:36:49 -0400
-Date: Tue, 27 Mar 2018 07:36:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
-Message-ID: <20180327113648.GA3498@bfoster.bfoster>
-References: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
- <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
- <20180325215904.GH18129@dastard>
- <20180326162830.GF34912@bfoster.bfoster>
- <20180327005526.qa5dnkdzaxyardd7@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180327005526.qa5dnkdzaxyardd7@kernel.org>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60813 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752105AbeC0HHW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 03:07:22 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/3] xfs: move generic_write_sync calls inwards
+Date: Tue, 27 Mar 2018 18:07:15 +1100
+Message-Id: <20180327070717.7107-2-david@fromorbit.com>
+In-Reply-To: <20180327070717.7107-1-david@fromorbit.com>
+References: <20180327070717.7107-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shaohua Li <shli@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-On Mon, Mar 26, 2018 at 05:55:26PM -0700, Shaohua Li wrote:
-> On Mon, Mar 26, 2018 at 12:28:31PM -0400, Brian Foster wrote:
-> > On Mon, Mar 26, 2018 at 08:59:04AM +1100, Dave Chinner wrote:
-> > > On Fri, Mar 23, 2018 at 10:24:03PM +0800, 张本龙 wrote:
-> > > > Hi Shaohua and XFS,
-> > > > 
-> > > > May I ask how are we gonna handle REQ_META issued from XFS? As you
-> > > > mentioned about charging to root cgroup (also in an earlier email
-> > > > discussion), and seems the 4.16.0-rc6 code is not handling it
-> > > > separately.
-> > > > 
-> > > > In our case to support XFS cgroup writeback control, which was ported
-> > > > and slightly adapted to 3.10.0, ignoring xfs log bios resulted in
-> > > > trouble. Threads from throttled docker might submit_bio in following
-> > > > path by its own identity, this docker blkcg accumulated large amounts
-> > > > of data (e.g., 20GB), thus such log gets blocked.
-> > > 
-> > > And thus displaying the reason why I originally refused to merge
-> > > this code until regression tests were added to fstests to exercise
-> > > these sorts of issues. This stuff adds new internal filesystem IO
-> > > ordering constraints, so we need tests that exercise it and ensure
-> > > we don't accidentally break it in future.
-> > > 
-> > 
-> > Hmm, but if the user issues fsync from the throttled cgroup then won't
-> > that throttling occur today, regardless of cgroup aware writeback? My
-> > understanding is that cgawb just accurately accounts writeback I/Os to
-> > the owner of the cached pages. IOW, if the buffered writer and fsync
-> > call are in the same throttled cgroup, then the throttling works just as
-> > it would with cgawb and the writer being in a throttled cgroup.
-> > 
-> > So ISTM that this is an independent problem. What am I missing?
-> > 
-> > Shaohua,
-> > 
-> > Do you have a reference to the older metadata related patch mentioned in
-> > the commit log that presumably addressed this?
-> 
-> The problem is about priority reversion. Say you do a fsync in a low prio
-> cgroup, the IO will be submitted with low prio. Now you do a fsync in a high
-> prio cgroup, the cgroup will wait for fsync IO finished, which is already
-> submitted by the low prio cgroup and run in low prio. This makes the high prio
-> cgroup run slow. The proposed patch is to force all metadata write submitted
-> from root cgroup regardless which task submitted, which can fix this issue.
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-Right, but it seems to me that this can happen with or without cgroup
-aware writeback. This patch just introduces the final bits required to
-carry the page owner from however it is tracked in the writeback machine
-to the bio submitted by the fs. It doesn't introduce/enable/implement
-I/O throttling itself, which is already in place and usable (outside of
-the buffered write page owner problem fixed by this patch), right?
+To prepare for iomap iinfrastructure based DSYNC optimisations.
 
-So without this patch, if a task in throttled cgroup A does a bunch of
-buffered writes and calls fsync, then another task in unthrottled cgroup
-B calls fsync, aren't we (XFS) susceptible to priority inversion via
-these same log I/O serialization points? If not, then what am I missing?
+While moving the code araound, move the XFS write bytes metric
+update for direct IO into xfs_dio_write_end_io callback so that we
+always capture the amount of data written via AIO+DIO. This fixes
+the problem where queued AIO+DIO writes are not accounted to this
+metric.
 
-I'm not saying this isn't a problem that needs fixing, I just want to
-make sure I understand the fundamental problem(s), what this cgawb patch
-actually does and doesn't do and whether there is a logical dependency
-between this patch and the proposed metadata filtering patch.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c | 48 +++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 33 insertions(+), 15 deletions(-)
 
-Brian
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a5b6973bf15a..6c30f410ca0c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -416,6 +416,12 @@ xfs_dio_write_end_io(
+ 	if (size <= 0)
+ 		return size;
+ 
++	/*
++	 * capture amount written on completion as we can't reliably account
++	 * for it on submission
++	 */
++	XFS_STATS_ADD(ip->i_mount, xs_write_bytes, size);
++
+ 	if (flags & IOMAP_DIO_COW) {
+ 		error = xfs_reflink_end_cow(ip, offset, size);
+ 		if (error)
+@@ -564,6 +570,11 @@ xfs_file_dio_aio_write(
+ 	 * complete fully or fail.
+ 	 */
+ 	ASSERT(ret < 0 || ret == count);
++
++	if (ret > 0) {
++		/* Handle various SYNC-type writes */
++		ret = generic_write_sync(iocb, ret);
++	}
+ 	return ret;
+ }
+ 
+@@ -601,7 +612,16 @@ xfs_file_dax_write(
+ 	}
+ out:
+ 	xfs_iunlock(ip, iolock);
+-	return error ? error : ret;
++	if (error)
++		return error;
++
++	if (ret > 0) {
++		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
++
++		/* Handle various SYNC-type writes */
++		ret = generic_write_sync(iocb, ret);
++	}
++	return ret;
+ }
+ 
+ STATIC ssize_t
+@@ -671,6 +691,12 @@ xfs_file_buffered_aio_write(
+ out:
+ 	if (iolock)
+ 		xfs_iunlock(ip, iolock);
++
++	if (ret > 0) {
++		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
++		/* Handle various SYNC-type writes */
++		ret = generic_write_sync(iocb, ret);
++	}
+ 	return ret;
+ }
+ 
+@@ -695,8 +721,9 @@ xfs_file_write_iter(
+ 		return -EIO;
+ 
+ 	if (IS_DAX(inode))
+-		ret = xfs_file_dax_write(iocb, from);
+-	else if (iocb->ki_flags & IOCB_DIRECT) {
++		return xfs_file_dax_write(iocb, from);
++
++	if (iocb->ki_flags & IOCB_DIRECT) {
+ 		/*
+ 		 * Allow a directio write to fall back to a buffered
+ 		 * write *only* in the case that we're doing a reflink
+@@ -704,20 +731,11 @@ xfs_file_write_iter(
+ 		 * allow an operation to fall back to buffered mode.
+ 		 */
+ 		ret = xfs_file_dio_aio_write(iocb, from);
+-		if (ret == -EREMCHG)
+-			goto buffered;
+-	} else {
+-buffered:
+-		ret = xfs_file_buffered_aio_write(iocb, from);
++		if (ret != -EREMCHG)
++			return ret;
+ 	}
+ 
+-	if (ret > 0) {
+-		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
+-
+-		/* Handle various SYNC-type writes */
+-		ret = generic_write_sync(iocb, ret);
+-	}
+-	return ret;
++	return xfs_file_buffered_aio_write(iocb, from);
+ }
+ 
+ #define	XFS_FALLOC_FL_SUPPORTED						\
+-- 
+2.16.1
 
-> Thanks,
-> Shaohua
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
