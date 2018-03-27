@@ -1,98 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53958 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752611AbeC1TlL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 15:41:11 -0400
-Date: Wed, 28 Mar 2018 12:40:17 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
- during ifree
-Message-ID: <20180328194017.GM4818@magnolia>
-References: <20171123060137.GL2135@magnolia>
- <20180323013037.GA9190@wotan.suse.de>
- <20180323034145.GH4818@magnolia>
- <20180323170813.GD30543@wotan.suse.de>
- <20180323172620.GK4818@magnolia>
- <20180323182302.GB9190@wotan.suse.de>
- <20180325223357.GJ18129@dastard>
- <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
- <20180328033228.GA18129@dastard>
- <20180328193004.GB7561@sasha-vm>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:63264 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752230AbeC0WcW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 18:32:22 -0400
+Date: Wed, 28 Mar 2018 09:32:01 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: FreeBSD and xfsprogs ?
+Message-ID: <20180327223201.GR18129@dastard>
+References: <cem@freebsd.org>
+ <CAG6CVpU3qe10UUY6B-N4fs9WTwwUerVcJh0CrP22D8hvB4Z14Q@mail.gmail.com>
+ <201803261953.w2QJrYQm028227@slippy.cwsent.com>
+ <CAG6CVpXi3rb-NfLUXQqzStipmwRviKJPMpgKeQA9DfBmOWJ5oQ@mail.gmail.com>
+ <20180327160714.GB4818@magnolia>
+ <8396fd92-3a64-a84f-b110-7edc6f0844b0@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180328193004.GB7561@sasha-vm>
+In-Reply-To: <8396fd92-3a64-a84f-b110-7edc6f0844b0@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sasha Levin <Alexander.Levin@microsoft.com>
-Cc: Dave Chinner <david@fromorbit.com>, Sasha Levin <levinsasha928@gmail.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Michal Hocko <mhocko@kernel.org>, Joerg Roedel <joro@8bytes.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Conrad Meyer <cem@freebsd.org>, Cy Schubert <Cy.Schubert@cschubert.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Carlos Maiolino <cmaiolino@redhat.com>, "freebsd-arch@freebsd.org" <freebsd-arch@freebsd.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Mar 28, 2018 at 07:30:06PM +0000, Sasha Levin wrote:
-> On Wed, Mar 28, 2018 at 02:32:28PM +1100, Dave Chinner wrote:
-> >How much time are your test rigs going to be able to spend running
-> >xfstests? A single pass on a single filesysetm config on spinning
-> >disks will take 3-4 hours of run time. And we have at least 4 common
-> >configs that need validation (v4, v4 w/ 512b block size, v5
-> >(defaults), and v5 w/ reflink+rmap) and so you're looking at a
-> >minimum 12-24 hours of machine test time per kernel you'd need to
-> >test.
+On Tue, Mar 27, 2018 at 11:48:29AM -0500, Eric Sandeen wrote:
+> On 3/27/18 11:07 AM, Darrick J. Wong wrote:
+> > [cc the xfsprogs maintainer]
+> > [cc xfs list]
 > 
-> No reason they can't run in parallel, right?
-
-Correct, parallelizing them turns horrifying long test runs into
-manageable quantities.
-
-> >> > From: Sasha Levin <alexander.levin@microsoft.com>
-> >> > To: Sasha Levin <alexander.levin@microsoft.com>
-> >> > To: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
-> >> > Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
-> >> > Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
-> >> > In-Reply-To: <20180306102638.25322-1-vbendel@redhat.com>
-> >> > References: <20180306102638.25322-1-vbendel@redhat.com>
-> >> >
-> >> > Hi Vratislav Bendel,
-> >> >
-> >> > [This is an automated email]
-> >> >
-> >> > This commit has been processed by the -stable helper bot and determined
-> >> > to be a high probability candidate for -stable trees. (score: 6.4845)
-> >> >
-> >> > The bot has tested the following trees: v4.15.12, v4.14.29, v4.9.89, v4.4.123, v4.1.50, v3.18.101.
-> >> >
-> >> > v4.15.12: OK!
-> >> > v4.14.29: OK!
-> >> > v4.9.89: OK!
-> >> > v4.4.123: OK!
-> >> > v4.1.50: OK!
-> >> > v3.18.101: OK!
-> >> >
-> >> > Please reply with "ack" to have this patch included in the appropriate stable trees.
-> >
-> >That might help, but the testing and validation is completely
-> >opaque. If I wanted to know what that "OK!" actually meant, where
-> >do I go to find that out?
+> Yes, thanks.
 > 
-> This is actually something I want maintainers to dictate. What sort of
-> testing would make the XFS folks happy here? Right now I'm doing
-> "./check 'xfs/*'" with xfstests. Is it sufficient? Anything else you'd like to see?
-
-FWIW /me usually runs ./check '-g auto,quick,clone,dedupe,fsmap,rmap'
-with the following four mkfs configs:
-
-MKFS_OPTIONS='-m reflink=1,rmapbt=1, -i sparse=1, -b size=1024,'
-MKFS_OPTIONS='-m reflink=1,rmapbt=1, -i sparse=1,'
-MKFS_OPTIONS='-m crc=0,reflink=0,rmapbt=0, -i sparse=0,'
-MKFS_OPTIONS='-m crc=0,reflink=0,rmapbt=0, -i sparse=0, -b size=512,'
-
-Eventually I'll turn quotas on all the time too, time permitting.
-
---D
-
+> > On Mon, Mar 26, 2018 at 12:57:55PM -0700, Conrad Meyer wrote:
+> >> Yeah, someone broke the build recently via a base toolchain change or
+> >> a ports framework/compiler change.  I don't think that changes
+> >> anything.
+> >>
+> >> On Mon, Mar 26, 2018 at 12:53 PM, Cy Schubert <Cy.Schubert@cschubert.com> wrote:
+> >>> In message <CAG6CVpU3qe10UUY6B-N4fs9WTwwUerVcJh0CrP22D8hvB4Z14Q@mail.gma
+> >>> il.com>
+> >>> , Conrad Meyer writes:
+> >>>> On Fri, Mar 23, 2018 at 12:18 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote
+> >>>> :
+> >>>>> On the Linux xfs development list there is an RFC to remove IRIX,
+> >>>>> Darwin, and FreeBSD support from xfsprogs, the userspace program used
+> >>>>> to create/interact with XFS filesystems. Just wanted to poke and check
+> >>>>> to ensure that FreeBSD is not interested in XFS, if this is incorrect
+> >>>>> now would be the good time to chime into the list and discussion.
+> >>>>>
+> >>>>> [0] https://lkml.kernel.org/r/20180322202102.wpff347scdmfpv62@odin.usersys.
+> >>>> redhat.com
+> >>>>
+> >>>> Hi Luis,
+> >>>>
+> >>>> FreeBSD 11+ can mount XFS filesystems read and write via a FUSE port
+> >>>> incorporating LKL[0] (sysutils/fusefs-lkl).  I would appreciate
+> > Yikes.  I'm curious, how many people use fusefs-lkl?
+> > 
+> > Eric will have more to say about this, but is your xfsprogs port still
+> > on 3.2.4 because ./configure can't find libblkid?
 > 
-> --
-> Thanks,
-> Sasha--
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> So: At this point, it seems like if you're still on a 4 year old xfsprogs
+> release with custom patches due to build problems we've never heard about,
+> there doesn't seem to be a very strong effort to keep XFS on FreeBSD thriving.
+> 
+> And, given that you're stuck on 3.2.4, removing support from 4.16.0 won't
+> change your situation anyway.
+> 
+> Are people using this?  Is anyone dedicated to maintaining it, or is it
+> just kind of floating along at this point?
+> 
+> I'd rather not keep non-building freebsd code around just in case; I'd like
+> to either see someone take ownership to get freebsd properly building upstream,
+> or just drop it and let FreeBSD keep patching on the side as you've been doing
+> for a few years anyway.
+> 
+> Thoughts?
+
+We don't support fuse-lkl XFS filesystems on Linux, so I'm not sure
+that using it on some other platform compels us to maintain a
+current userspace tool port to those platforms...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
