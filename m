@@ -1,95 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:37799 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751187AbeC2TCO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Mar 2018 15:02:14 -0400
-Received: by mail-ot0-f196.google.com with SMTP id y46-v6so7473234otd.4
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Mar 2018 12:02:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180329160215.glnrmyunujcc4vwg@quack2.suse.cz>
-References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152167306807.5268.8483232024444414342.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180329160215.glnrmyunujcc4vwg@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 29 Mar 2018 12:02:13 -0700
-Message-ID: <CAPcyv4h8CgZmiDLh5p8Vnt0SjB2FvZgGuRMZ+ZYRO=H3mkES_A@mail.gmail.com>
-Subject: Re: [PATCH v7 07/14] fs, dax: use page->mapping to warn if truncate
- collides with a busy page
-Content-Type: text/plain; charset="UTF-8"
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60813 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752069AbeC0HHa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 03:07:30 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/3] iomap: iomap_dio_rw() handles all sync writes
+Date: Tue, 27 Mar 2018 18:07:16 +1100
+Message-Id: <20180327070717.7107-3-david@fromorbit.com>
+In-Reply-To: <20180327070717.7107-1-david@fromorbit.com>
+References: <20180327070717.7107-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, david <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-On Thu, Mar 29, 2018 at 9:02 AM, Jan Kara <jack@suse.cz> wrote:
-> On Wed 21-03-18 15:57:48, Dan Williams wrote:
->> Catch cases where extent unmap operations encounter pages that are
->> pinned / busy. Typically this is pinned pages that are under active dma.
->> This warning is a canary for potential data corruption as truncated
->> blocks could be allocated to a new file while the device is still
->> performing i/o.
->>
->> Here is an example of a collision that this implementation catches:
->>
->>  WARNING: CPU: 2 PID: 1286 at fs/dax.c:343 dax_disassociate_entry+0x55/0x80
->>  [..]
->>  Call Trace:
->>   __dax_invalidate_mapping_entry+0x6c/0xf0
->>   dax_delete_mapping_entry+0xf/0x20
->>   truncate_exceptional_pvec_entries.part.12+0x1af/0x200
->>   truncate_inode_pages_range+0x268/0x970
->>   ? tlb_gather_mmu+0x10/0x20
->>   ? up_write+0x1c/0x40
->>   ? unmap_mapping_range+0x73/0x140
->>   xfs_free_file_space+0x1b6/0x5b0 [xfs]
->>   ? xfs_file_fallocate+0x7f/0x320 [xfs]
->>   ? down_write_nested+0x40/0x70
->>   ? xfs_ilock+0x21d/0x2f0 [xfs]
->>   xfs_file_fallocate+0x162/0x320 [xfs]
->>   ? rcu_read_lock_sched_held+0x3f/0x70
->>   ? rcu_sync_lockdep_assert+0x2a/0x50
->>   ? __sb_start_write+0xd0/0x1b0
->>   ? vfs_fallocate+0x20c/0x270
->>   vfs_fallocate+0x154/0x270
->>   SyS_fallocate+0x43/0x80
->>   entry_SYSCALL_64_fastpath+0x1f/0x96
->>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
->> Cc: Matthew Wilcox <mawilcox@microsoft.com>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Reviewed-by: Jan Kara <jack@suse.cz>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->
-> Two comments when looking at this now:
->
->> +#define for_each_entry_pfn(entry, pfn, end_pfn) \
->> +     for (pfn = dax_radix_pfn(entry), \
->> +                     end_pfn = pfn + dax_entry_size(entry) / PAGE_SIZE; \
->> +                     pfn < end_pfn; \
->> +                     pfn++)
->
-> Why don't you declare 'end_pfn' inside the for() block? That way you don't
-> have to pass the variable as an argument to for_each_entry_pfn(). It's not
-> like you need end_pfn anywhere in the loop body, you just use it to cache
-> loop termination index.
+From: Dave Chinner <dchinner@redhat.com>
 
-Agreed, good catch.
+Currently iomap_dio_rw() only handles (data)sync write completions
+for AIO. This means we can't optimised non-AIO IO to minimise device
+flushes as we can't tell the caller whether a flush is required or
+not.
 
->
->> @@ -547,6 +599,10 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
->>
->>       spin_lock_irq(&mapping->tree_lock);
->>       new_entry = dax_radix_locked_entry(pfn, flags);
->> +     if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
->> +             dax_disassociate_entry(entry, mapping, false);
->> +             dax_associate_entry(new_entry, mapping);
->> +     }
->
-> I find it quite tricky that in case we pass zero page / empty entry into
-> dax_[dis]associate_entry(), it will not do anything because
-> dax_entry_size() will return 0. Can we add an explicit check into
-> dax_[dis]associate_entry() or at least a comment there?
+To solve this problem and enable further optimisations, make
+iomap_dio_rw responsible for data sync behaviour for all IO, not
+just AIO.
 
-Ok, will do.
+In doing so, the sync operation is now accounted as part of the DIO
+IO by inode_dio_end(), hence post-IO data stability updates will no
+long race against operations that serialise via inode_dio_wait()
+such as truncate or hole punch.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/iomap.c        | 17 ++++++++++++++---
+ fs/xfs/xfs_file.c |  5 -----
+ 2 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index afd163586aa0..f5d4e348bc9b 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+  */
++#define IOMAP_DIO_WRITE_SYNC	(1 << 29)
+ #define IOMAP_DIO_WRITE		(1 << 30)
+ #define IOMAP_DIO_DIRTY		(1 << 31)
+ 
+@@ -759,6 +760,13 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 			dio_warn_stale_pagecache(iocb->ki_filp);
+ 	}
+ 
++	/*
++	 * If this is a DSYNC write, make sure we push it to stable storage now
++	 * that we've written data.
++	 */
++	if (ret > 0 && (dio->flags & IOMAP_DIO_WRITE_SYNC))
++		ret = generic_write_sync(iocb, ret);
++
+ 	inode_dio_end(file_inode(iocb->ki_filp));
+ 	kfree(dio);
+ 
+@@ -769,12 +777,9 @@ static void iomap_dio_complete_work(struct work_struct *work)
+ {
+ 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
+ 	struct kiocb *iocb = dio->iocb;
+-	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
+ 	ssize_t ret;
+ 
+ 	ret = iomap_dio_complete(dio);
+-	if (is_write && ret > 0)
+-		ret = generic_write_sync(iocb, ret);
+ 	iocb->ki_complete(iocb, ret, 0);
+ }
+ 
+@@ -961,6 +966,10 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	return copied;
+ }
+ 
++/*
++ * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
++ * is being issued as AIO or not.
++ */
+ ssize_t
+ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
+@@ -1006,6 +1015,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 			dio->flags |= IOMAP_DIO_DIRTY;
+ 	} else {
+ 		dio->flags |= IOMAP_DIO_WRITE;
++		if (iocb->ki_flags & IOCB_DSYNC)
++			dio->flags |= IOMAP_DIO_WRITE_SYNC;
+ 		flags |= IOMAP_WRITE;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 6c30f410ca0c..33b1e8b5dc5c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -570,11 +570,6 @@ xfs_file_dio_aio_write(
+ 	 * complete fully or fail.
+ 	 */
+ 	ASSERT(ret < 0 || ret == count);
+-
+-	if (ret > 0) {
+-		/* Handle various SYNC-type writes */
+-		ret = generic_write_sync(iocb, ret);
+-	}
+ 	return ret;
+ }
+ 
+-- 
+2.16.1
+
