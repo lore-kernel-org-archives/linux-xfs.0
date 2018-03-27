@@ -1,136 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:59778 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751054AbeC0XaD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 19:30:03 -0400
-Date: Tue, 27 Mar 2018 16:29:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 03/20] xfs: add repair helpers for the reverse mapping
- btree
-Message-ID: <20180327232958.GI4818@magnolia>
-References: <152210855435.13184.6475770131389744177.stgit@magnolia>
- <152210857318.13184.219852203461550085.stgit@magnolia>
- <20180327230327.GU18129@dastard>
+Received: from mail.kernel.org ([198.145.29.99]:48032 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751220AbeC0Az2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Mar 2018 20:55:28 -0400
+Date: Mon, 26 Mar 2018 17:55:26 -0700
+From: Shaohua Li <shli@kernel.org>
+Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
+Message-ID: <20180327005526.qa5dnkdzaxyardd7@kernel.org>
+References: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
+ <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
+ <20180325215904.GH18129@dastard>
+ <20180326162830.GF34912@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180327230327.GU18129@dastard>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180326162830.GF34912@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>, linux-xfs@vger.kernel.org
 
-On Wed, Mar 28, 2018 at 10:03:27AM +1100, Dave Chinner wrote:
-> On Mon, Mar 26, 2018 at 04:56:13PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Mar 26, 2018 at 12:28:31PM -0400, Brian Foster wrote:
+> On Mon, Mar 26, 2018 at 08:59:04AM +1100, Dave Chinner wrote:
+> > On Fri, Mar 23, 2018 at 10:24:03PM +0800, 张本龙 wrote:
+> > > Hi Shaohua and XFS,
+> > > 
+> > > May I ask how are we gonna handle REQ_META issued from XFS? As you
+> > > mentioned about charging to root cgroup (also in an earlier email
+> > > discussion), and seems the 4.16.0-rc6 code is not handling it
+> > > separately.
+> > > 
+> > > In our case to support XFS cgroup writeback control, which was ported
+> > > and slightly adapted to 3.10.0, ignoring xfs log bios resulted in
+> > > trouble. Threads from throttled docker might submit_bio in following
+> > > path by its own identity, this docker blkcg accumulated large amounts
+> > > of data (e.g., 20GB), thus such log gets blocked.
 > > 
-> > Add a couple of functions to the reverse mapping btree that will be used
-> > to repair the rmapbt.
+> > And thus displaying the reason why I originally refused to merge
+> > this code until regression tests were added to fstests to exercise
+> > these sorts of issues. This stuff adds new internal filesystem IO
+> > ordering constraints, so we need tests that exercise it and ensure
+> > we don't accidentally break it in future.
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Not exactly sure how/what these will be used for yet, so it's hard
-> to say if they are correct or not. :P
+> Hmm, but if the user issues fsync from the throttled cgroup then won't
+> that throttling occur today, regardless of cgroup aware writeback? My
+> understanding is that cgawb just accurately accounts writeback I/Os to
+> the owner of the cached pages. IOW, if the buffered writer and fsync
+> call are in the same throttled cgroup, then the throttling works just as
+> it would with cgawb and the writer being in a throttled cgroup.
 > 
-> Couple of things, though.
+> So ISTM that this is an independent problem. What am I missing?
 > 
-> > @@ -2454,3 +2482,54 @@ xfs_rmap_record_exists(
-> >  		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
-> >  	return 0;
-> >  }
-> > +
-> > +struct xfs_rmap_has_other_keys {
-> > +	uint64_t			owner;
-> > +	uint64_t			offset;
-> > +	bool				*has_rmap;
+> Shaohua,
 > 
-> Seems very strange this is a pointer, given we are passing the
-> structure.
-> 
-> > +	unsigned int			flags;
-> > +};
-> 
-> struct xfs_rmap_key_state
+> Do you have a reference to the older metadata related patch mentioned in
+> the commit log that presumably addressed this?
 
-Ok.
+The problem is about priority reversion. Say you do a fsync in a low prio
+cgroup, the IO will be submitted with low prio. Now you do a fsync in a high
+prio cgroup, the cgroup will wait for fsync IO finished, which is already
+submitted by the low prio cgroup and run in low prio. This makes the high prio
+cgroup run slow. The proposed patch is to force all metadata write submitted
+from root cgroup regardless which task submitted, which can fix this issue.
 
-> > +/* For each rmap given, figure out if it doesn't match the key we want. */
-> > +STATIC int
-> > +xfs_rmap_has_other_keys_helper(
-> > +	struct xfs_btree_cur		*cur,
-> > +	struct xfs_rmap_irec		*rec,
-> > +	void				*priv)
-> 
-> And this can become just xfs_rmap_has_other_keys()
-
-Uh... did you mean (struct xfs_rmap_key_state *) ?
-
-The awkward void *priv argument + type conversion is there because
-xfs_rmap_query_range takes a function with a void pointer as its third
-parameter, and changing it here causes gcc complaints.
-
-> > +{
-> > +	struct xfs_rmap_has_other_keys	*rhok = priv;
-> > +
-> > +	if (rhok->owner == rec->rm_owner && rhok->offset == rec->rm_offset &&
-> > +	    ((rhok->flags & rec->rm_flags) & XFS_RMAP_KEY_FLAGS) == rhok->flags)
-> > +		return 0;
-> > +	*rhok->has_rmap = true;
-> > +	return XFS_BTREE_QUERY_RANGE_ABORT;
-> > +}
-> > +
-> > +/*
-> > + * Given an extent and some owner info, can we find records overlapping
-> > + * the extent whose owner info does not match the given owner?
-> > + */
-> > +int
-> > +xfs_rmap_has_other_keys(
-> > +	struct xfs_btree_cur		*cur,
-> > +	xfs_agblock_t			bno,
-> > +	xfs_extlen_t			len,
-> > +	struct xfs_owner_info		*oinfo,
-> > +	bool				*has_rmap)
-> > +{
-> > +	struct xfs_rmap_irec		low = {0};
-> > +	struct xfs_rmap_irec		high;
-> > +	struct xfs_rmap_has_other_keys	rhok;
-> > +
-> > +	xfs_owner_info_unpack(oinfo, &rhok.owner, &rhok.offset, &rhok.flags);
-> > +	*has_rmap = false;
-> > +	rhok.has_rmap = has_rmap;
-> 
-> Oh, you're embedding another bool variable in it. I think it would
-> be better to copy in/out of the internal structure rather than
-> pass a pointer of unknown scope around....
-> 
-> 	rhok.has_rmap = *has_rmap;
-
-Fair 'enough.
-
-> > +
-> > +	low.rm_startblock = bno;
-> > +	memset(&high, 0xFF, sizeof(high));
-> > +	high.rm_startblock = bno + len - 1;
-> > +
-> > +	return xfs_rmap_query_range(cur, &low, &high,
-> > +			xfs_rmap_has_other_keys_helper, &rhok);
-> 
-> 	error = xfs_rmap_query_range(..., &rhok)
-> 	*has_rmap = rhok.has_rmap;
-> 	return error;
-
-Done.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Shaohua
