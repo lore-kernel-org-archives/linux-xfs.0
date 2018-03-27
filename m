@@ -1,96 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43382 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751935AbeC2Pev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Mar 2018 11:34:51 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 02/10] xfs_repair: remove unused fs_attributes2_allowed
-Date: Thu, 29 Mar 2018 10:34:14 -0500
-Message-Id: <1522337662-26260-3-git-send-email-sandeen@sandeen.net>
-In-Reply-To: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
-References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+Received: from userp2130.oracle.com ([156.151.31.86]:49416 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751901AbeC0Wfb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 18:35:31 -0400
+Date: Tue, 27 Mar 2018 15:31:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/3 V2] xfs_scrub: synchronize error levels & logging
+Message-ID: <20180327223144.GG4818@magnolia>
+References: <f7ab3da2-618c-dc1c-6d95-3890cdac2b43@redhat.com>
+ <3b8c1fd3-46bb-39ea-fca9-63d308cbe6b4@redhat.com>
+ <5606e2aa-8978-290b-15f0-7042b5a4863c@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5606e2aa-8978-290b-15f0-7042b5a4863c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-fs_attributes2_allowed is never set to anything but 1;
-remove it and all associated code.
+On Tue, Mar 27, 2018 at 05:27:04PM -0500, Eric Sandeen wrote:
+> Having only a subset of the five error_levels present in
+> the log_level[] array is asking for trouble when someone
+> tries to __str_log(S_PREEN ...) and overruns the array.
+> 
+> Tie it all together in a single structure that's
+> initialized together to make the mapping more obvious and
+> idiot-proof.
+> 
+> Fixes-coverity-id: 1433618
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
- repair/versions.c   | 23 +++--------------------
- repair/versions.h   |  1 -
- repair/xfs_repair.c |  1 -
- 3 files changed, 3 insertions(+), 22 deletions(-)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/repair/versions.c b/repair/versions.c
-index cbf660d..1fe0dbc 100644
---- a/repair/versions.c
-+++ b/repair/versions.c
-@@ -34,10 +34,8 @@ update_sb_version(xfs_mount_t *mp)
- 	if (fs_attributes && !xfs_sb_version_hasattr(sb))
- 		xfs_sb_version_addattr(sb);
- 
--	if (fs_attributes2 && !xfs_sb_version_hasattr2(sb))  {
--		ASSERT(fs_attributes2_allowed);
-+	if (fs_attributes2 && !xfs_sb_version_hasattr2(sb))
- 		xfs_sb_version_addattr2(sb);
--	}
- 
- 	/* V2 inode conversion is now always going to happen */
- 	if (!(sb->sb_versionnum & XFS_SB_VERSION_NLINKBIT))
-@@ -188,23 +186,8 @@ _("Superblock has unknown compat/rocompat/incompat features (0x%x/0x%x/0x%x).\n"
- 	if (xfs_sb_version_hasattr(sb))
- 		fs_attributes = 1;
- 
--	if (xfs_sb_version_hasattr2(sb))  {
--		if (!fs_attributes2_allowed)  {
--			if (!no_modify)  {
--				do_warn(
--_("WARNING:  you have disallowed attr2 attributes but this filesystem\n"
--  "\thas attributes.  The filesystem will be downgraded and\n"
--  "\tall attr2 attributes will be removed.\n"));
--			} else  {
--				do_warn(
--_("WARNING:  you have disallowed attr2 attributes but this filesystem\n"
--  "\thas attributes.  The filesystem would be downgraded and\n"
--  "\tall attr2 attributes would be removed.\n"));
--			}
--		} else   {
--			fs_attributes2 = 1;
--		}
--	}
-+	if (xfs_sb_version_hasattr2(sb))
-+		fs_attributes2 = 1;
- 
- 	if (!(sb->sb_versionnum & XFS_SB_VERSION_NLINKBIT)) {
- 		if (!no_modify) {
-diff --git a/repair/versions.h b/repair/versions.h
-index 354a797..c487976 100644
---- a/repair/versions.h
-+++ b/repair/versions.h
-@@ -39,7 +39,6 @@
-  * options
-  */
- 
--EXTERN int		fs_attributes2_allowed;
- EXTERN int		fs_quotas_allowed;
- EXTERN int		fs_aligned_inodes_allowed;
- EXTERN int		fs_sb_feature_bits_allowed;
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 137a39c..006f6cc 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -207,7 +207,6 @@ process_args(int argc, char **argv)
- 	sb_inoalignmt = 0;
- 	sb_unit = 0;
- 	sb_width = 0;
--	fs_attributes2_allowed = 1;
- 	fs_quotas_allowed = 1;
- 	fs_aligned_inodes_allowed = 1;
- 	fs_sb_feature_bits_allowed = 1;
--- 
-1.8.3.1
+--D
 
+> ---
+> 
+> V2: i8n, keep test for PREEN in __str_log
+> 
+> diff --git a/scrub/common.c b/scrub/common.c
+> index 5a37a98..02c6c9d 100644
+> --- a/scrub/common.c
+> +++ b/scrub/common.c
+> @@ -56,18 +56,15 @@ xfs_scrub_excessive_errors(
+>  	return ret;
+>  }
+>  
+> -static const char *err_str[] = {
+> -	[S_ERROR]	= "Error",
+> -	[S_WARN]	= "Warning",
+> -	[S_REPAIR]	= "Repaired",
+> -	[S_INFO]	= "Info",
+> -	[S_PREEN]	= "Optimized",
+> -};
+> -
+> -static int log_level[] = {
+> -	[S_ERROR]	= LOG_ERR,
+> -	[S_WARN]	= LOG_WARNING,
+> -	[S_INFO]	= LOG_INFO,
+> +static struct {
+> +	const char *string;
+> +	int loglevel;
+> +} err_levels[] = {
+> +	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
+> +	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
+> +	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
+> +	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
+> +	[S_PREEN]  = { .string = "Optimized",	.loglevel = LOG_INFO }
+>  };
+>  
+>  /* If stream is a tty, clear to end of line to clean up progress bar. */
+> @@ -106,8 +103,8 @@ __str_out(
+>  	if (level == S_PREEN && !debug && !verbose)
+>  		goto out_record;
+>  
+> -	fprintf(stream, "%s%s: %s: ", stream_start(stream), _(err_str[level]),
+> -			descr);
+> +	fprintf(stream, "%s%s: %s: ", stream_start(stream),
+> +			_(err_levels[level].string), descr);
+>  	if (error) {
+>  		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
+>  	} else {
+> @@ -168,11 +161,11 @@ __str_log(
+>  	snprintf(logname, LOGNAME_BUFSZ, "%s@%s", progname, ctx->mntpoint);
+>  	openlog(logname, LOG_PID, LOG_DAEMON);
+>  
+> -	sz = snprintf(buf, LOG_BUFSZ, "%s: ", _(err_str[level]));
+> +	sz = snprintf(buf, LOG_BUFSZ, "%s: ", _(err_levels[level].string));
+>  	va_start(args, format);
+>  	vsnprintf(buf + sz, LOG_BUFSZ - sz, format, args);
+>  	va_end(args);
+> -	syslog(log_level[level], "%s", buf);
+> +	syslog(err_levels[level].loglevel, "%s", buf);
+>  
+>  	closelog();
+>  }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
