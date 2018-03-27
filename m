@@ -1,112 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58874 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:50892 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751765AbeCZX4K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:56:10 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNdWrB148843
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:09 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2gyaqt811m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:09 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNu8fo008527
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:08 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2QNu8V1010586
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:08 GMT
-Subject: [PATCH 02/20] xfs: expose various functions to repair code
+        with ESMTP id S1752232AbeC0WWj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 18:22:39 -0400
+Date: Tue, 27 Mar 2018 15:22:30 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 26 Mar 2018 16:56:07 -0700
-Message-ID: <152210856701.13184.3986610182558546743.stgit@magnolia>
-In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
-References: <152210855435.13184.6475770131389744177.stgit@magnolia>
+Subject: Re: [PATCH 1/3] xfs_scrub: synchronize error levels & logging
+Message-ID: <20180327222230.GF4818@magnolia>
+References: <f7ab3da2-618c-dc1c-6d95-3890cdac2b43@redhat.com>
+ <3b8c1fd3-46bb-39ea-fca9-63d308cbe6b4@redhat.com>
+ <20180327221403.GC4818@magnolia>
+ <c1f36c29-092e-4f81-47fa-cf272186f09f@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c1f36c29-092e-4f81-47fa-cf272186f09f@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Mar 27, 2018 at 05:20:36PM -0500, Eric Sandeen wrote:
+> On 3/27/18 5:14 PM, Darrick J. Wong wrote:
+> > On Tue, Mar 27, 2018 at 05:08:54PM -0500, Eric Sandeen wrote:
+> >> Having only a subset of the five error_levels present in
+> >> the log_level[] array is asking for trouble when someone
+> >> tries to __str_log(S_PREEN ...) and overruns the array.
+> >>
+> >> Tie it all together in a single structure that's
+> >> initialized together to make the mapping more obvious and
+> >> idiot-proof.
+> >>
+> >> Fixes-coverity-id: 1433618
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> >>
+> >> diff --git a/scrub/common.c b/scrub/common.c
+> >> index 5a37a98..02c6c9d 100644
+> >> --- a/scrub/common.c
+> >> +++ b/scrub/common.c
+> >> @@ -56,18 +56,15 @@ xfs_scrub_excessive_errors(
+> >>  	return ret;
+> >>  }
+> >>  
+> >> -static const char *err_str[] = {
+> >> -	[S_ERROR]	= "Error",
+> >> -	[S_WARN]	= "Warning",
+> >> -	[S_REPAIR]	= "Repaired",
+> >> -	[S_INFO]	= "Info",
+> >> -	[S_PREEN]	= "Optimized",
+> >> -};
+> >> -
+> >> -static int log_level[] = {
+> >> -	[S_ERROR]	= LOG_ERR,
+> >> -	[S_WARN]	= LOG_WARNING,
+> >> -	[S_INFO]	= LOG_INFO,
+> >> +static struct {
+> >> +	const char *string;
+> >> +	int loglevel;
+> >> +} err_levels[] = {
+> >> +	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
+> >> +	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
+> >> +	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
+> >> +	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
+> >> +	[S_PREEN]  = { .string = "Optimized",	.loglevel = LOG_INFO }
+> >>  };
+> >>  
+> >>  /* If stream is a tty, clear to end of line to clean up progress bar. */
+> >> @@ -106,8 +103,8 @@ __str_out(
+> >>  	if (level == S_PREEN && !debug && !verbose)
+> >>  		goto out_record;
+> >>  
+> >> -	fprintf(stream, "%s%s: %s: ", stream_start(stream), _(err_str[level]),
+> >> -			descr);
+> >> +	fprintf(stream, "%s%s: %s: ", stream_start(stream),
+> >> +			err_levels[level].string, descr);
+> > 
+> > _(err_levels[level]) here ^^^^^^^^^^^^
+> > 
+> > Otherwise we end up with:
+> > 
+> > Error: 你吃饭了吗？你多吃一点。
+> 
+> oops
+> 
+> but: _(err_levels[level].string) right ...
 
-Expose various helpers that the repair code will want to use.
+Er, right.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_ialloc.c   |    2 +-
- fs/xfs/libxfs/xfs_ialloc.h   |    3 +++
- fs/xfs/libxfs/xfs_refcount.c |    4 ++--
- fs/xfs/libxfs/xfs_refcount.h |    5 +++++
- 4 files changed, 11 insertions(+), 3 deletions(-)
+> > 
+> >>  	if (error) {
+> >>  		fprintf(stream, _("%s."), strerror_r(error, buf, DESCR_BUFSZ));
+> >>  	} else {
+> >> @@ -152,10 +149,6 @@ __str_log(
+> >>  	char			buf[LOG_BUFSZ];
+> >>  	int			sz;
+> >>  
+> >> -	/* We only want to hear about optimizing when in debug/verbose mode. */
+> >> -	if (level == S_PREEN && !debug && !verbose)
+> >> -		return;
+> > 
+> > Why is this being removed?
+> 
+> It seemed like a cut & paste error originally but ... it's a leftover, sorry. 
 
+:)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 0e2cf5f..fcbf09f 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -148,7 +148,7 @@ xfs_inobt_get_rec(
- /*
-  * Insert a single inobt record. Cursor must already point to desired location.
-  */
--STATIC int
-+int
- xfs_inobt_insert_rec(
- 	struct xfs_btree_cur	*cur,
- 	uint16_t		holemask,
-diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-index c5402bb..77fffce 100644
---- a/fs/xfs/libxfs/xfs_ialloc.h
-+++ b/fs/xfs/libxfs/xfs_ialloc.h
-@@ -176,6 +176,9 @@ int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
- 		xfs_agino_t high, bool *exists);
- int xfs_ialloc_count_inodes(struct xfs_btree_cur *cur, xfs_agino_t *count,
- 		xfs_agino_t *freecount);
-+int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
-+		uint8_t count, int32_t freecount, xfs_inofree_t free,
-+		int *stat);
- 
- int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
- void xfs_ialloc_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index bee68c2..100532d 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -89,7 +89,7 @@ xfs_refcount_lookup_ge(
- }
- 
- /* Convert on-disk record to in-core format. */
--static inline void
-+void
- xfs_refcount_btrec_to_irec(
- 	union xfs_btree_rec		*rec,
- 	struct xfs_refcount_irec	*irec)
-@@ -149,7 +149,7 @@ xfs_refcount_update(
-  * by [bno, len, refcount].
-  * This either works (return 0) or gets an EFSCORRUPTED error.
-  */
--STATIC int
-+int
- xfs_refcount_insert(
- 	struct xfs_btree_cur		*cur,
- 	struct xfs_refcount_irec	*irec,
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 2a731ac..5856abb 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -85,5 +85,10 @@ static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
- 
- extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
- 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
-+union xfs_btree_rec;
-+extern void xfs_refcount_btrec_to_irec(union xfs_btree_rec *rec,
-+		struct xfs_refcount_irec *irec);
-+extern int xfs_refcount_insert(struct xfs_btree_cur *cur,
-+		struct xfs_refcount_irec *irec, int *stat);
- 
- #endif	/* __XFS_REFCOUNT_H__ */
+--D
 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
