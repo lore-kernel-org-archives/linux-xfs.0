@@ -1,81 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0126.outbound.protection.outlook.com ([104.47.37.126]:56288
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752594AbeC1BL6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Mar 2018 21:11:58 -0400
-From: Sasha Levin <Alexander.Levin@microsoft.com>
-Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
- during ifree
-Date: Wed, 28 Mar 2018 01:11:55 +0000
-Message-ID: <20180328011152.GA7561@sasha-vm>
-References: <20171123060137.GL2135@magnolia>
- <20180323013037.GA9190@wotan.suse.de> <20180323034145.GH4818@magnolia>
- <20180323170813.GD30543@wotan.suse.de> <20180323172620.GK4818@magnolia>
- <20180323182302.GB9190@wotan.suse.de> <20180325223357.GJ18129@dastard>
- <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
- <20180327070637.GX5652@dhcp22.suse.cz>
-In-Reply-To: <20180327070637.GX5652@dhcp22.suse.cz>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <7B03628C6FB3BF4084DBE7795852B767@namprd21.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:5010 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750946AbeC1XhA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 19:37:00 -0400
+Date: Thu, 29 Mar 2018 10:36:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 3/3] fstests: generic: Check the fs after each FUA
+ writes
+Message-ID: <20180328233657.GD1150@dastard>
+References: <20180328044023.22078-1-wqu@suse.com>
+ <20180328044023.22078-3-wqu@suse.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180328044023.22078-3-wqu@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Sasha Levin <levinsasha928@gmail.com>, Dave Chinner <david@fromorbit.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Joerg Roedel <joro@8bytes.org>
+To: Qu Wenruo <wqu@suse.com>
+Cc: linux-btrfs@vger.kernel.org, fstests@vger.kernel.org, amir73il@gmail.com, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Tue, Mar 27, 2018 at 09:06:37AM +0200, Michal Hocko wrote:
->On Mon 26-03-18 19:54:31, Sasha Levin wrote:
->[...]
->> About half a year ago. I'm not sure about the no visibility part -
->> maintainers and authors would receive at least 3 mails for each patch
->> that got in this way, and would have at least a week (usually a lot
->> more) to object to the inclusion. Did you not receive any mails from
->> me?
->
->Well, I was aware of your emails yet my free time didn't really allow me
->to follow those patch bombs. I responded only when some email subject
->hit my eyes as being non-stable candidate. So by no means the MM
->backports were reviewed by me. And considering how hard it is to get any
->review for MM patches in general I strongly suspect that others didn't
->review either.
+On Wed, Mar 28, 2018 at 12:40:23PM +0800, Qu Wenruo wrote:
+> Basic test case which triggers fsstress with dm-log-writes, and then
+> check the fs after each FUA writes.
+> With needed infrastructure and special handlers for journal based fs.
+> 
+> Signed-off-by: Qu Wenruo <wqu@suse.com>
+.....
+> For xfs:
+> _check_xfs_filesystem: filesystem on /dev/mapper/test-scratch1 is inconsistent (r)
+> *** xfs_repair -n output ***
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan (but don't clear) agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+> bad symlink header ino 8409190, file block 0, disk block 1051147
+> problem with symbolic link in inode 8409190
+> would have cleared inode 8409190
+>         - agno = 3
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 3
+>         - agno = 2
+> entry "lb" in shortform directory 8409188 references free inode 8409190
+> would have junked entry "lb" in directory inode 8409188
+> bad symlink header ino 8409190, file block 0, disk block 1051147
+> problem with symbolic link in inode 8409190
+> would have cleared inode 8409190
+> No modify flag set, skipping phase 5
+> Phase 6 - check inode connectivity...
+>         - traversing filesystem ...
+> entry "lb" in shortform directory inode 8409188 points to free inode 8409190
+> would junk entry
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify link counts...
+> Maximum metadata LSN (1:396) is ahead of log (1:63).
 
-Being aware is different than saying it was snuck in without anyone
-knowing.
+That warning implies a write ordering problem - there's a write with
+an LSN on disk that does not yet exist in the log. i.e. the last FUA
+write to the log had 1:63 in it, yet there's metadata on disk that
+could only be *issued* after a REQ_FLUSH|REQ_FUA log write with
+1:396 in it was *completed*. If we've only replayed up to the
+FUA write with 1:63 in it, then no metadata writes should have been
+*issued* with 1:396 in it as the LSN that is stamped into metadata
+is only updated on log IO completion....
 
->In general I am quite skeptical about the automagic backports
->selections, to be honest. MM patches should be reasonably good at
->selecting stable backports and adding more patches on top just risks
->regressions.
+On first glance, this implies a bug in the underlying device write
+replay code....
 
-Okay, let's take mm/ as a subsystem that is doing a good job with
-submitting stuff to -stable.
+Cheers,
 
-There were 40 patches in total going into the 4.14 LTS tree that touched
-mm/. Out of those, 5 were selected via the "automagic" process:
-
-> 647a37ec1a17 mm/frame_vector.c: release a semaphore in 'get_vaddr_frames(=
-)'
-> d91c3f2e540f mm/early_ioremap: Fix boot hang with earlyprintk=3Defi,keep
-> b2ba0bd34695 kmemleak: add scheduling point to kmemleak_scan()
-> 5ca94e03675a slub: fix sysfs duplicate filename creation when slub_debug=
-=3DO
-> 342ee8775800 mm, x86/mm: Fix performance regression in get_user_pages_fas=
-t()
-
-The only "questionable" one here I see is the performance regression
-one, which I decided to keep in because it's a rather severe one in a
-common code path.
-
-Even good subsystems might sometimes miss a patch or two.
-
-But yes, I've received less response from maintainers than I expected,
-so I'll switch it to an opt-in model for new patches that go upstream.
-
-
---
-Thanks,
-Sasha=
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
