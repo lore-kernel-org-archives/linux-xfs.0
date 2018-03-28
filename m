@@ -1,186 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:35974 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754612AbeCHQ2t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Mar 2018 11:28:49 -0500
-Date: Thu, 8 Mar 2018 08:28:38 -0800
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fsck.xfs: allow forced repairs using xfs_repair
-Message-ID: <20180308162838.GY18989@magnolia>
-References: <20180305150546.32191-1-jtulak@redhat.com>
- <20180305215659.GE18129@dastard>
- <2d50aa97-a03b-128f-f4f6-4a6416fac69b@sandeen.net>
- <20180305223148.GG18129@dastard>
- <421d1afd-5af1-aef9-e6bb-3addcdeeff3f@sandeen.net>
- <CACj3i73y_ZWvgdv3aKTKaKGuo+6uhcfy1465T3CD2uQDLE3=xQ@mail.gmail.com>
- <20180306213915.GJ18129@dastard>
- <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:56351 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752782AbeC1NUs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Mar 2018 09:20:48 -0400
+Date: Wed, 28 Mar 2018 15:20:44 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
+ during ifree
+Message-ID: <20180328132044.GM9275@dhcp22.suse.cz>
+References: <20171123060137.GL2135@magnolia>
+ <20180323013037.GA9190@wotan.suse.de>
+ <20180323034145.GH4818@magnolia>
+ <20180323170813.GD30543@wotan.suse.de>
+ <20180323172620.GK4818@magnolia>
+ <20180323182302.GB9190@wotan.suse.de>
+ <20180325223357.GJ18129@dastard>
+ <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
+ <20180327070637.GX5652@dhcp22.suse.cz>
+ <20180328011152.GA7561@sasha-vm>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACj3i71SHP90DOAhpS3kWyY_6gnx9OzTqgHy7=uxAZH0cfUKMw@mail.gmail.com>
+In-Reply-To: <20180328011152.GA7561@sasha-vm>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Sasha Levin <Alexander.Levin@microsoft.com>
+Cc: Sasha Levin <levinsasha928@gmail.com>, Dave Chinner <david@fromorbit.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Joerg Roedel <joro@8bytes.org>
 
-On Thu, Mar 08, 2018 at 11:57:40AM +0100, Jan Tulak wrote:
-> On Tue, Mar 6, 2018 at 10:39 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Tue, Mar 06, 2018 at 12:51:18PM +0100, Jan Tulak wrote:
-> >> On Tue, Mar 6, 2018 at 12:33 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> >> > On 3/5/18 4:31 PM, Dave Chinner wrote:
-> >> >> On Mon, Mar 05, 2018 at 04:06:38PM -0600, Eric Sandeen wrote:
-> >> >>> As for running automatically and fix any problems, we may need to make
-> >> >>> a decision.  If it won't mount due to a log problem, do we automatically
-> >> >>> use -L or drop to a shell and punt to the admin?  (That's what we would
-> >> >>> do w/o any fsck -f invocation today...)
-> >> >>
-> >> >> Define the expected "forcefsck" semantics, and that will tell us
-> >> >> what we need to do. Is it automatic system recovery? What if the
-> >> >> root fs can't be mounted due to log replay problems?
-> >> >
-> >> > You're asking too much.  ;)  Semantics?  ;)  Best we can probably do
-> >> > is copy what e2fsck does - it tries to replay the log before running
-> >> > the actual fsck.  So ... what does e2fsck do if /it/ can't replay
-> >> > the log?
-> >>
-> >> As far as I can tell, in that case, e2fsck exit code indicates 4 -
-> >> File system errors left uncorrected, but I'm studying ext testing
-> >> tools and will try to verify it.
-> >> About the -L flag, I think it is a bad idea - we don't want anything
-> >> dangerous to happen here, so if it can't be fixed safely and in an
-> >> automated way, just bail out.
-> >> That being said, I added a log replay attempt in there (via mount/unmount).
+On Wed 28-03-18 01:11:55, Sasha Levin wrote:
+> On Tue, Mar 27, 2018 at 09:06:37AM +0200, Michal Hocko wrote:
+> >On Mon 26-03-18 19:54:31, Sasha Levin wrote:
+> >[...]
+> >> About half a year ago. I'm not sure about the no visibility part -
+> >> maintainers and authors would receive at least 3 mails for each patch
+> >> that got in this way, and would have at least a week (usually a lot
+> >> more) to object to the inclusion. Did you not receive any mails from
+> >> me?
 > >
-> > I really don't advise doing that for a forced filesystem check. If
-> > the log is corrupt, mounting it will trigger the problems we are
-> > trying to avoid/fix by running a forced filesystem check. As it is,
-> > we're probably being run in this mode because mounting has already
-> > failed and causing the system not to boot.
-> >
-> > What we need to do is list how the startup scripts work according to
-> > what error is returned, and then match the behaviour we want in a
-> > specific corruption case to the behaviour of a specific return
-> > value.
-> >
-> > i.e. if we have a dirty log, then really we need manual
-> > intervention. That means we need to return an error that will cause
-> > the startup script to stop and drop into an interactive shell for
-> > the admin to fix manually.
-> >
-> > This is what I mean by "define the expected forcefsck semantics" -
-> > describe the behaviour of the system in reponse to the errors we can
-> > return to it, and match them to the problem cases we need to resolve
-> > with fsck.xfs.
+> >Well, I was aware of your emails yet my free time didn't really allow me
+> >to follow those patch bombs. I responded only when some email subject
+> >hit my eyes as being non-stable candidate. So by no means the MM
+> >backports were reviewed by me. And considering how hard it is to get any
+> >review for MM patches in general I strongly suspect that others didn't
+> >review either.
 > 
-> I tested it on Fedora 27. Exit codes 2 and 4 ("File system errors
-> corrected, system should be rebooted" and "File system errors left
-> uncorrected") drop the user into the emergency shell. Anything else
-> and the boot continues.
+> Being aware is different than saying it was snuck in without anyone
+> knowing.
 
-FWIW Debian seems to panic() if the exit code has (1 << 2) set, where
-"panic()" either drops to a shell if panic= is not given or actually
-reboots the machine if panic= is given.  All other cases proceed with
-boot, including 2 (errors fixed, reboot now).
+Well, you have to realize that we are receiving tons of emails and if
+there are large piles appearing in my inbox I tend to delete them all if
+they fall into certain pattern categories.
 
-That said, the installer seems to set up root xfs as pass 0 in fstab so
-fsck is not included in the initramfs at all.
+But just to be absolutely clear. I do not want to accuse anybody from
+sneaking changes into the stable tree behind maintainers backs.
 
-> This happens before root volume is mounted during the boot, so I
-> propose this behaviour for fsck.xfs:
-> - if the volume/device is mounted, exit with 16 - usage or syntax
-> error (just to be sure)
-> - if the volume/device has a dirty log, exit with 4 - errors left
-> uncorrected (drop to the shell)
-> - if we find no errors, exit with 0 - no errors
-> - if we find anything and xfs_repair ends successfully, exit with 1 -
-> errors corrected
-> - anything else and exit with 8 - operational error
 > 
-> And is there any other way how to get the "there were some errors, but
-> we corrected them" other than either 1) screenscrape xfs_repair or 2)
-> run xfs_repair twice, once with -n to detect and then without -n to
-> fix the found errors?
+> >In general I am quite skeptical about the automagic backports
+> >selections, to be honest. MM patches should be reasonably good at
+> >selecting stable backports and adding more patches on top just risks
+> >regressions.
+> 
+> Okay, let's take mm/ as a subsystem that is doing a good job with
+> submitting stuff to -stable.
+> 
+> There were 40 patches in total going into the 4.14 LTS tree that touched
+> mm/. Out of those, 5 were selected via the "automagic" process:
+> 
+> > 647a37ec1a17 mm/frame_vector.c: release a semaphore in 'get_vaddr_frames()'
+> > d91c3f2e540f mm/early_ioremap: Fix boot hang with earlyprintk=efi,keep
+> > b2ba0bd34695 kmemleak: add scheduling point to kmemleak_scan()
+> > 5ca94e03675a slub: fix sysfs duplicate filename creation when slub_debug=O
+> > 342ee8775800 mm, x86/mm: Fix performance regression in get_user_pages_fast()
+> 
+> The only "questionable" one here I see is the performance regression
+> one, which I decided to keep in because it's a rather severe one in a
+> common code path.
+> 
+> Even good subsystems might sometimes miss a patch or two.
 
-I wouldn't run it twice, repair can take quite a while to run.
+Ohh, absolutely. But if anybody is going to hit the issue, it would be
+easier to spot with the upstream kernel having the fix already. Most of
+above patches have good chance of never being hit or at least not that
+harmful.
 
---D
+> But yes, I've received less response from maintainers than I expected,
+> so I'll switch it to an opt-in model for new patches that go upstream.
 
-> >
-> >> >>>> I also wonder if we can limit this to just the boot infrastructure,
-> >> >>>> because I really don't like the idea of users using fsck.xfs -f to
-> >> >>>> repair damage filesystems because "that's what I do to repair ext4
-> >> >>>> filesystems"....
-> >> >>>
-> >> >>> Depending on how this gets fleshed out, fsck.xfs -f isn't any different
-> >> >>> than bare xfs_repair...  (Unless all of the above suggestions about dirty
-> >> >>> logs get added, then it certainly is!)  So, yeah...
-> >> >>>
-> >> >>> How would you propose limiting it to the boot environment?
-> >> >>
-> >> >> I have no idea - this is all way outside my area of expertise...
-> >> >
-> >> > A halfway measure would be to test whether the script is interactive, perhaps?
-> >> >
-> >> > https://www.tldp.org/LDP/abs/html/intandnonint.html
-> >> >
-> >> > case $- in
-> >> > *i*)    # interactive shell
-> >> > ;;
-> >> > *)      # non-interactive shell
-> >> > ;;
-> >> >
-> >>
-> >> IMO, any such test would make fsck.xfs behave unpredictably for the
-> >> user. If anyone wants to run fsck.xfs -f instead of xfs_repair, it is
-> >> their choice.
-> >
-> > We limit user choices all the time. Default values, config options,
-> > tuning variables, etc, IOWs, it's our choice as developers to allow
-> > users to do something or not.  And in this case, we made this choice
-> > to limit what fsck.xfs could do a long time ago:
-> >
-> > # man fsck.xfs
-> > .....
-> >         If you wish to check the consistency of an XFS filesystem,
-> >         or repair a damaged or corrupt XFS filesystem, see
-> >         xfs_repair(8).
-> > .....
-> > # fsck.xfs
-> > If you wish to check the consistency of an XFS filesystem or
-> > repair a damaged filesystem, see xfs_repair(8).
-> > #
-> >
-> 
-> At that point, it was a consistent behaviour, do nothing all the time,
-> no matter what.
-> 
-> >
-> >> We can print something "next time use xfs_repair
-> >> directly" for an interactive session, but I don't like the idea of the
-> >> script doing different things based on some (for the user) hidden
-> >> variables.
-> >
-> > What hidden variable are you talking about here? Having a script
-> > determine behaviour based on whether it is in an interactive
-> > sessions or not is a common thing to do. There's nothing tricky or
-> > unusual about it....
-> >
-> 
-> I'm not aware of any script or tool that would refuse to work except
-> when started in a specific environment and noninteractively (doesn't
-> mean they don't exist, but it is not common). And because it seems
-> that fsck.xfs -f will do only what bare xfs_repair would do, no log
-> replay, nothing... then I really think that changing what the script
-> does (not just altering its output) based on environment tests is
-> unnecessary. And for anyone without this specific knowledge, it would
-> be confusing - people expect that for the same input the application
-> or script does the same thing at the end.
-> 
-> Cheers,
-> Jan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+OK, that would certainly be more conservative and to some degree safer.
+I have had that feeling that stable simply has to rely on maintainers
+others we are operating on the pure luck mode. Just the fact that the
+patch applies doesn't mean it is correct to be backported and it is out
+of reasonable to expect stable tree maintainers to evaluate that.
+
+So as much as I appreciate the work you and others are doing (the
+automagic part is actually and interesting concept for sure) the less is
+sometimes more...
+-- 
+Michal Hocko
+SUSE Labs
