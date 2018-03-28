@@ -1,57 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0130.outbound.protection.outlook.com ([104.47.41.130]:63206
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752654AbeC1TdJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Mar 2018 15:33:09 -0400
-From: Sasha Levin <Alexander.Levin@microsoft.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:53958 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752611AbeC1TlL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 15:41:11 -0400
+Date: Wed, 28 Mar 2018 12:40:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
  during ifree
-Date: Wed, 28 Mar 2018 19:33:06 +0000
-Message-ID: <20180328193304.GC7561@sasha-vm>
-References: <20180323013037.GA9190@wotan.suse.de>
- <20180323034145.GH4818@magnolia> <20180323170813.GD30543@wotan.suse.de>
- <20180323172620.GK4818@magnolia> <20180323182302.GB9190@wotan.suse.de>
+Message-ID: <20180328194017.GM4818@magnolia>
+References: <20171123060137.GL2135@magnolia>
+ <20180323013037.GA9190@wotan.suse.de>
+ <20180323034145.GH4818@magnolia>
+ <20180323170813.GD30543@wotan.suse.de>
+ <20180323172620.GK4818@magnolia>
+ <20180323182302.GB9190@wotan.suse.de>
  <20180325223357.GJ18129@dastard>
  <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
- <20180327070637.GX5652@dhcp22.suse.cz> <20180327195435.GE9190@wotan.suse.de>
- <20180328132148.GN9275@dhcp22.suse.cz>
-In-Reply-To: <20180328132148.GN9275@dhcp22.suse.cz>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <9B5140F3BB2D1E4CB24230C00239FFE4@namprd21.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+ <20180328033228.GA18129@dastard>
+ <20180328193004.GB7561@sasha-vm>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180328193004.GB7561@sasha-vm>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Sasha Levin <levinsasha928@gmail.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Joerg Roedel <joro@8bytes.org>
+To: Sasha Levin <Alexander.Levin@microsoft.com>
+Cc: Dave Chinner <david@fromorbit.com>, Sasha Levin <levinsasha928@gmail.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Michal Hocko <mhocko@kernel.org>, Joerg Roedel <joro@8bytes.org>
 
-On Wed, Mar 28, 2018 at 03:21:48PM +0200, Michal Hocko wrote:
->On Tue 27-03-18 19:54:35, Luis R. Rodriguez wrote:
->> On Tue, Mar 27, 2018 at 09:06:37AM +0200, Michal Hocko wrote:
->> > So by no means the MM backports were reviewed by me. And considering h=
-ow hard
->> > it is to get any review for MM patches in general I strongly suspect t=
-hat
->> > others didn't review either.
->> >
->> > In general I am quite skeptical about the automagic backports
->> > selections, to be honest. MM patches should be reasonably good at
->> > selecting stable backports and adding more patches on top just risks
->> > regressions.
->>
->> BTW other than suggesting we needing *actual review* of the MM patches, =
-are
->> there known unit tests which could be run as well? Thinking long term.
->
->There are some in selftests but most fixes are quite hard to get a
->specialized testcase for. Rememeber the MM is a pile of heuristics to
->handle large scale of workloads.
+On Wed, Mar 28, 2018 at 07:30:06PM +0000, Sasha Levin wrote:
+> On Wed, Mar 28, 2018 at 02:32:28PM +1100, Dave Chinner wrote:
+> >How much time are your test rigs going to be able to spend running
+> >xfstests? A single pass on a single filesysetm config on spinning
+> >disks will take 3-4 hours of run time. And we have at least 4 common
+> >configs that need validation (v4, v4 w/ 512b block size, v5
+> >(defaults), and v5 w/ reflink+rmap) and so you're looking at a
+> >minimum 12-24 hours of machine test time per kernel you'd need to
+> >test.
+> 
+> No reason they can't run in parallel, right?
 
-Would running mmtests for each patch help here at all?
+Correct, parallelizing them turns horrifying long test runs into
+manageable quantities.
 
---
-Thanks,
-Sasha=
+> >> > From: Sasha Levin <alexander.levin@microsoft.com>
+> >> > To: Sasha Levin <alexander.levin@microsoft.com>
+> >> > To: linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>
+> >> > Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
+> >> > Subject: Re: [PATCH] xfs: Correctly invert xfs_buftarg LRU isolation logic
+> >> > In-Reply-To: <20180306102638.25322-1-vbendel@redhat.com>
+> >> > References: <20180306102638.25322-1-vbendel@redhat.com>
+> >> >
+> >> > Hi Vratislav Bendel,
+> >> >
+> >> > [This is an automated email]
+> >> >
+> >> > This commit has been processed by the -stable helper bot and determined
+> >> > to be a high probability candidate for -stable trees. (score: 6.4845)
+> >> >
+> >> > The bot has tested the following trees: v4.15.12, v4.14.29, v4.9.89, v4.4.123, v4.1.50, v3.18.101.
+> >> >
+> >> > v4.15.12: OK!
+> >> > v4.14.29: OK!
+> >> > v4.9.89: OK!
+> >> > v4.4.123: OK!
+> >> > v4.1.50: OK!
+> >> > v3.18.101: OK!
+> >> >
+> >> > Please reply with "ack" to have this patch included in the appropriate stable trees.
+> >
+> >That might help, but the testing and validation is completely
+> >opaque. If I wanted to know what that "OK!" actually meant, where
+> >do I go to find that out?
+> 
+> This is actually something I want maintainers to dictate. What sort of
+> testing would make the XFS folks happy here? Right now I'm doing
+> "./check 'xfs/*'" with xfstests. Is it sufficient? Anything else you'd like to see?
+
+FWIW /me usually runs ./check '-g auto,quick,clone,dedupe,fsmap,rmap'
+with the following four mkfs configs:
+
+MKFS_OPTIONS='-m reflink=1,rmapbt=1, -i sparse=1, -b size=1024,'
+MKFS_OPTIONS='-m reflink=1,rmapbt=1, -i sparse=1,'
+MKFS_OPTIONS='-m crc=0,reflink=0,rmapbt=0, -i sparse=0,'
+MKFS_OPTIONS='-m crc=0,reflink=0,rmapbt=0, -i sparse=0, -b size=512,'
+
+Eventually I'll turn quotas on all the time too, time permitting.
+
+--D
+
+> 
+> --
+> Thanks,
+> Sasha--
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
