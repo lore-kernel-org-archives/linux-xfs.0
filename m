@@ -1,420 +1,347 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54502 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbeC1E6R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 00:58:17 -0400
-Date: Tue, 27 Mar 2018 21:58:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/20] xfs: implement the metadata repair ioctl flag
-Message-ID: <20180328045812.GL4818@magnolia>
-References: <152210855435.13184.6475770131389744177.stgit@magnolia>
- <152210860614.13184.13848520110703401019.stgit@magnolia>
- <20180327235514.GZ18129@dastard>
+Received: from mail-yb0-f180.google.com ([209.85.213.180]:34432 "EHLO
+        mail-yb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750703AbeC1FE3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 01:04:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180327235514.GZ18129@dastard>
+In-Reply-To: <20180328044023.22078-3-wqu@suse.com>
+References: <20180328044023.22078-1-wqu@suse.com> <20180328044023.22078-3-wqu@suse.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 28 Mar 2018 08:04:28 +0300
+Message-ID: <CAOQ4uxj5ff5-AhoACxZGG+ZeHRh0Qr_=uPqyzMUv5h934dicuQ@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] fstests: generic: Check the fs after each FUA writes
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Qu Wenruo <wqu@suse.com>
+Cc: Linux Btrfs <linux-btrfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>
 
-On Wed, Mar 28, 2018 at 10:55:14AM +1100, Dave Chinner wrote:
-> On Mon, Mar 26, 2018 at 04:56:46PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Plumb in the pieces necessary to make the "scrub" subfunction of
-> > the scrub ioctl actually work.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Can you list the pieces here - the ioctl, the errtag for debug, etc?
+On Wed, Mar 28, 2018 at 7:40 AM, Qu Wenruo <wqu@suse.com> wrote:
+> Basic test case which triggers fsstress with dm-log-writes, and then
+> check the fs after each FUA writes.
+> With needed infrastructure and special handlers for journal based fs.
+>
+> Signed-off-by: Qu Wenruo <wqu@suse.com>
+> ---
+> changelog:
+> v2:
+>   Use proper "SUSE Linux Products GmbH" instead of "SuSE"
+>   Get rid of dm-snapshot which is pretty slow if we're creating and
+>   deleting snapshots repeatedly.
+>   (Maybe LVM thin provision would be much better, but current replay
+>    solution is good so far, and no slower than dm-snapshot)
+>   Add back run_check so that we can get the seed.
+> ---
+> Unfortunately, neither xfs nor ext4 survies this test for even single
+> success, while btrfs survives.
+> (Although not what I want, I'm just trying my luck
+> to reproduce a serious btrfs corruption situation)
+>
+> Although btrfs may be the fastest fs for the test, since it has fixed
+> small amount of write in mkfs and almost nothing to replay, it still
+> takes about 240s~300s to finish (the same level using snapshot).
+>
+> It would take longer time for ext4 for its large amount of write during
+> mkfs, if it can survive the test in the first space.
 
-"This means that we make XFS_SCRUB_IFLAG_REPAIR actually do something
-when userspace calls the scrub ioctl and add a debugging error tag so
-that xfstests can force the kernel to repair things even when it's not
-necessary."
+Hmm, how much time would the total test would take if you don't fail
+it on fsck? I am asking because it may be possible to improve this with
+only a single snapshot after mkfs.
 
-> 
-> ....
-> 
-> > +config XFS_ONLINE_REPAIR
-> > +	bool "XFS online metadata repair support"
-> > +	default n
-> > +	depends on XFS_FS && XFS_ONLINE_SCRUB
-> > +	help
-> > +	  If you say Y here you will be able to repair metadata on a
-> > +	  mounted XFS filesystem.  This feature is intended to reduce
-> > +	  filesystem downtime even further by fixing minor problems
-> 
-> s/even further//
+Anyway, if total test run time is expected to be under 10min I wouldn't
+bother with this optimization, at least not right now. IMO it is more
+important to get the test out there to get the corruption bugs floating.
 
-Ok.
+Thanks for working on this!
+You can add
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-> > +	  before they cause the filesystem to go down.  However, it
-> > +	  requires that the filesystem be formatted with secondary
-> > +	  metadata, such as reverse mappings and inode parent pointers.
-> > +
-> > +	  This feature is considered EXPERIMENTAL.  Use with caution!
-> > +
-> > +	  See the xfs_scrub man page in section 8 for additional information.
-> > +
-> > +	  If unsure, say N.
-> 
-> .....
-> 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index faf1a4e..8bf3ded 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -542,13 +542,20 @@ struct xfs_scrub_metadata {
-> >  /* o: Metadata object looked funny but isn't corrupt. */
-> >  #define XFS_SCRUB_OFLAG_WARNING		(1 << 6)
-> >  
-> > +/*
-> > + * o: IFLAG_REPAIR was set but metadata object did not need fixing or
-> > + *    optimization and has therefore not been altered.
-> > + */
-> > +#define XFS_SCRUB_OFLAG_UNTOUCHED	(1 << 7)
-> 
-> bikeshed: CLEAN rather than UNTOUCHED?
 
-The thing I don't like about using 'CLEAN' is that we only set this flag
-if userspace told us to touch (i.e. repair) the structure and the kernel
-decides to leave it alone.
+>
+> As a comparison, btrfs takes about 5 seconds to replay log, mount,
+> unmount and run fsck at the end of the test.
+> But for ext4, it already takes about 5 seconds to do the same thing
+> before triggering fsck error.
+>
+> Fsck fail for ext4:
+> _check_generic_filesystem: filesystem on /dev/mapper/test-scratch1 is inconsistent
+> *** fsck.ext4 output ***
+> fsck from util-linux 2.31.1
+> e2fsck 1.43.8 (1-Jan-2018)
+> Pass 1: Checking inodes, blocks, and sizes
+> Inode 131076 extent tree (at level 1) could be shorter.  Fix? no
+>
+> Inode 131262, i_size is 0, should be 258048.  Fix? no
+>
+> Pass 2: Checking directory structure
+> Pass 3: Checking directory connectivity
+> Pass 4: Checking reference counts
+> Pass 5: Checking group summary information
+>
+> For xfs:
+> _check_xfs_filesystem: filesystem on /dev/mapper/test-scratch1 is inconsistent (r)
+> *** xfs_repair -n output ***
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan (but don't clear) agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+> bad symlink header ino 8409190, file block 0, disk block 1051147
+> problem with symbolic link in inode 8409190
+> would have cleared inode 8409190
+>         - agno = 3
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 3
+>         - agno = 2
+> entry "lb" in shortform directory 8409188 references free inode 8409190
+> would have junked entry "lb" in directory inode 8409188
+> bad symlink header ino 8409190, file block 0, disk block 1051147
+> problem with symbolic link in inode 8409190
+> would have cleared inode 8409190
+> No modify flag set, skipping phase 5
+> Phase 6 - check inode connectivity...
+>         - traversing filesystem ...
+> entry "lb" in shortform directory inode 8409188 points to free inode 8409190
+> would junk entry
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify link counts...
+> Maximum metadata LSN (1:396) is ahead of log (1:63).
+> Would format log to cycle 4.
+> No modify flag set, skipping filesystem flush and exiting.
+>
+> And special note for XFS guys, I also hit an XFS internal metadata
+> warning during journal replay:
+> [ 7901.423659] XFS (dm-4): Starting recovery (logdev: internal)
+> [ 7901.577511] XFS (dm-4): Metadata corruption detected at xfs_dinode_verify+0x467/0x570 [xfs], inode 0x805067 dinode
+> [ 7901.580529] XFS (dm-4): Unmount and run xfs_repair
+> [ 7901.581901] XFS (dm-4): First 128 bytes of corrupted metadata buffer:
+> [ 7901.583205] 00000000b8963f41: 49 4e a1 ff 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
+> [ 7901.584659] 00000000f35a50e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [ 7901.586075] 00000000386eea9e: 5a b2 0e 69 0a f3 43 27 5a b2 0e 69 0a f3 43 27  Z..i..C'Z..i..C'
+> [ 7901.587561] 00000000ac636661: 5a b2 0e 69 0d 92 bc 00 00 00 00 00 00 00 00 00  Z..i............
+> [ 7901.588969] 00000000d75f9093: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [ 7901.590475] 00000000d2af5688: 00 00 00 02 00 00 00 00 00 00 00 00 84 d7 6a e9  ..............j.
+> [ 7901.591907] 00000000e8dd8211: ff ff ff ff 34 93 a9 3a 00 00 00 00 00 00 00 04  ....4..:........
+> [ 7901.593319] 00000000b7610e4e: 00 00 00 01 00 00 00 45 00 00 00 00 00 00 00 00  .......E........
+> ---
+>
+>  common/dmlogwrites    |  56 +++++++++++++++++++++++++++
+>  tests/generic/481     | 104 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/481.out |   2 +
+>  tests/generic/group   |   1 +
+>  4 files changed, 163 insertions(+)
+>  create mode 100755 tests/generic/481
+>  create mode 100644 tests/generic/481.out
+>
+> diff --git a/common/dmlogwrites b/common/dmlogwrites
+> index 467b872e246f..bf643a77ad09 100644
+> --- a/common/dmlogwrites
+> +++ b/common/dmlogwrites
+> @@ -126,3 +126,59 @@ _log_writes_cleanup()
+>         $UDEV_SETTLE_PROG >/dev/null 2>&1
+>         _log_writes_remove
+>  }
+> +
+> +# Convert log writes mark to entry number
+> +# Result entry number is output to stdout, could be empty if not found
+> +_log_writes_mark_to_entry_number()
+> +{
+> +       local mark=$1
+> +       local ret
+> +
+> +       [ -z "$mark" ] && _fatal \
+> +               "mark must be given for _log_writes_mark_to_entry_number"
+> +
+> +       ret=$($here/src/log-writes/replay-log --find --log $LOGWRITES_DEV \
+> +               --end-mark $mark 2> /dev/null)
+> +       [ -z "$ret" ] && return
+> +       ret=$(echo "$ret" | cut -f1 -d\@)
+> +       echo "mark $mark has entry number $ret" >> $seqres.full
+> +       echo "$ret"
+> +}
+> +
+> +# Find next fua write entry number
+> +# Result entry number is output to stdout, could be empty if not found
+> +_log_writes_find_next_fua()
+> +{
+> +       local start_entry=$1
+> +       local ret
+> +
+> +       [ -z "$start_entry" ] && start_entry=0
+> +       ret=$($here/src/log-writes/replay-log --find --log $LOGWRITES_DEV \
+> +             --next-fua --start-entry $start_entry 2> /dev/null)
+> +       [ -z "$ret" ] && return
+> +
+> +       # Result should be something like "1024@offset" where 1024 is the
+> +       # entry number we need
+> +       ret=$(echo "$ret" | cut -f1 -d\@)
+> +       echo "next fua is entry number $ret" >> $seqres.full
+> +       echo "$ret"
+> +}
+> +
+> +# Replay log range to specified entry
+> +# $1:  End entry. The entry with this number *WILL* be replayed
+> +_log_writes_replay_log_range()
+> +{
+> +       local end=$1
+> +
+> +       [ -z "$end" ] && _fail \
+> +       "end entry must be specified for _log_writes_replay_log_range"
+> +
+> +       # To ensure we replay the last entry,
+> +       # we need to manually increase the end entry number to ensure
+> +       # it's played
+> +       echo "=== replay to $end ===" >> $seqres.full
+> +       $here/src/log-writes/replay-log --log $LOGWRITES_DEV \
+> +               --replay $SCRATCH_DEV --limit $(($end + 1)) \
+> +               >> $seqres.full 2>&1
+> +       [ $? -ne 0 ] && _fail "replay failed"
+> +}
+> diff --git a/tests/generic/481 b/tests/generic/481
+> new file mode 100755
+> index 000000000000..6b03786c8cb4
+> --- /dev/null
+> +++ b/tests/generic/481
+> @@ -0,0 +1,104 @@
+> +#! /bin/bash
+> +# FS QA Test 481
+> +#
+> +# Test filesystem consistency after each FUA operation
+> +#
+> +# Will do log replay and check the filesystem.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 SUSE Linux Products GmbH.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1       # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +       cd /
+> +       $KILLALL_PROG -KILL -q $FSSTRESS_PROG &> /dev/null
+> +       _log_writes_cleanup &> /dev/null
+> +       rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/dmlogwrites
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_command "$KILLALL_PROG" killall
+> +# Use $SCRATCH_DEV as replay device
+> +_require_scratch
+> +# and we need extra device as log device
+> +_require_log_writes
+> +
+> +
+> +nr_cpus=$("$here/src/feature" -o)
+> +fsstress_args=$(_scale_fsstress_args -w -d $SCRATCH_MNT -n 512 -p $nr_cpus \
+> +               $FSSTRESS_AVOID)
+> +
+> +_test_unmount
+> +_log_writes_init
+> +_log_writes_mkfs >> $seqres.full 2>&1
+> +_log_writes_mark mkfs
+> +
+> +_log_writes_mount
+> +run_check $FSSTRESS_PROG $fsstress_args > /dev/null 2>&1
 
-> > +#ifndef __XFS_SCRUB_REPAIR_H__
-> > +#define __XFS_SCRUB_REPAIR_H__
-> > +
-> > +#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
-> 
-> Don't we use the form 
-> 
-> #ifdef XFS_ONLINE_REPAIR
-> 
-> elsewhere? We should be consistent on how we detect config options,
-> if IS_ENABLED() is the prefered way of doing it now, should we
-> change everything to do this?
+I am not sure that is what Eryu meant, but he can fix that on commit.
 
-Yeah, I could do that.  Originally I intended someday to rip out the
-Kconfig option stuff entirely, but now I'm starting to wonder if we
-should leave it forever for people who consider it too hot to handle (or
-kernel tinyfication types)...
+> +_log_writes_unmount
+> +
+> +_log_writes_remove
+> +prev=$(_log_writes_mark_to_entry_number mkfs)
+> +[ -z "$prev" ] && _fail "failed to locate entry mark 'mkfs'"
+> +cur=$(_log_writes_find_next_fua $prev)
+> +[ -z "$cur" ] && _fail "failed to locate next FUA write"
+> +
+> +while [ ! -z "$cur" ]; do
+> +       _log_writes_replay_log_range $cur >> $seqres.full
+> +
+> +       # Here we need extra mount to replay the log, mainly for journal based
+> +       # fs, as their fsck will report dirty log as error.
+> +       # We don't care to preserve any data on $SCRATCH_DEV, as we can replay
+> +       # back to the point we need, and in fact sometimes creating/deleting
+> +       # snapshots repeatedly can be slower than replaying the log.
+> +       _scratch_mount
+> +       _scratch_unmount
+> +       _check_scratch_fs
+> +
+> +       prev=$cur
+> +       cur=$(_log_writes_find_next_fua $(($cur + 1)))
+> +       [ -z "$cur" ] && break
+> +done
+> +
+> +echo "Silence is golden"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/481.out b/tests/generic/481.out
+> new file mode 100644
+> index 000000000000..206e11635bd6
+> --- /dev/null
+> +++ b/tests/generic/481.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 481
+> +Silence is golden
+> diff --git a/tests/generic/group b/tests/generic/group
+> index ea2056b1e93c..c4cc800aa2aa 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -483,3 +483,4 @@
+>  478 auto quick
+>  479 auto quick metadata
+>  480 auto quick metadata
+> +481 auto replay
 
-...anyway, I'll migrate it to the conventional
+IMO metadata group is also appropriate.
 
-#ifdef CONFIG_XFS_ONLINE_REPAIR
-
-phraseology.
-
-> > +/* Online repair only works for v5 filesystems. */
-> > +static inline bool xfs_repair_can_fix(struct xfs_mount *mp)
-> > +{
-> > +	return xfs_sb_version_hascrc(&mp->m_sb);
-> > +}
-> > +
-> > +/* Did userspace want us to repair /and/ we found something to fix? */
-> > +static inline bool xfs_repair_should_fix(struct xfs_scrub_metadata *sm)
-> > +{
-> > +	return (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-> > +	       (sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> > +				XFS_SCRUB_OFLAG_XCORRUPT |
-> > +				XFS_SCRUB_OFLAG_PREEN));
-> > +}
-> > +
-> > +/* Did userspace tell us to fix something and it didn't get fixed? */
-> > +static inline bool xfs_repair_unfixed(struct xfs_scrub_metadata *sm)
-> > +{
-> > +	return (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-> > +	       (sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> > +				XFS_SCRUB_OFLAG_XCORRUPT));
-> > +}
-> 
-> Ok, so I don't understand how these determine whether something
-> wants repair and then didn't get repaired? Clearly there's some
-> context related thing I'm not seeing in the way these are called,
-> but looking at the code I don't understand the difference between
-> "want to do" and "did not do".
-
-The distinction is almost entirely in /when/ they're called.  Maybe it's
-easier (as Christoph occasionally nags me) to avoid hiding this all in
-single-use helpers and put them directly in xfs_scrub_metadata() along
-with more comments.
-
-> > +int xfs_repair_probe(struct xfs_scrub_context *sc, uint32_t scrub_oflags);
-> > +
-> > +#else
-> > +
-> > +# define xfs_repair_can_fix(mp)		(false)
-> > +# define xfs_repair_should_fix(sm)	(false)
-> > +# define xfs_repair_probe		(NULL)
-> > +# define xfs_repair_unfixed(sm)		(false)
-> 
-> static inline is preffered for these, right? So we still get type
-> checking even when they aren't enabled?
-
-Ok.
-
-> > @@ -120,6 +125,24 @@
-> >   * XCORRUPT flag; btree query function errors are noted by setting the
-> >   * XFAIL flag and deleting the cursor to prevent further attempts to
-> >   * cross-reference with a defective btree.
-> > + *
-> > + * If a piece of metadata proves corrupt or suboptimal, the userspace
-> > + * program can ask the kernel to apply some tender loving care (TLC) to
-> > + * the metadata object by setting the REPAIR flag and re-calling the
-> > + * scrub ioctl.  "Corruption" is defined by metadata violating the
-> > + * on-disk specification; operations cannot continue if the violation is
-> > + * left untreated.  It is possible for XFS to continue if an object is
-> > + * "suboptimal", however performance may be degraded.  Repairs are
-> > + * usually performed by rebuilding the metadata entirely out of
-> > + * redundant metadata.  Optimizing, on the other hand, can sometimes be
-> > + * done without rebuilding entire structures.
-> > + *
-> > + * Generally speaking, the repair code has the following code structure:
-> > + * Lock -> scrub -> repair -> commit -> re-lock -> re-scrub -> unlock.
-> > + * The first check helps us figure out if we need to rebuild or simply
-> > + * optimize the structure so that the rebuild knows what to do.  The
-> > + * second check evaluates the completeness of the repair; that is what
-> > + * is reported to userspace.
-> >   */
-> >  
-> >  /*
-> > @@ -155,7 +178,10 @@ xfs_scrub_teardown(
-> >  {
-> >  	xfs_scrub_ag_free(sc, &sc->sa);
-> >  	if (sc->tp) {
-> > -		xfs_trans_cancel(sc->tp);
-> > +		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
-> > +			error = xfs_trans_commit(sc->tp);
-> > +		else
-> > +			xfs_trans_cancel(sc->tp);
-> >  		sc->tp = NULL;
-> >  	}
-> >  	if (sc->ip) {
-> > @@ -180,6 +206,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
-> >  		.type	= ST_NONE,
-> >  		.setup	= xfs_scrub_setup_fs,
-> >  		.scrub	= xfs_scrub_probe,
-> > +		.repair = xfs_repair_probe,
-> >  	},
-> >  	[XFS_SCRUB_TYPE_SB] = {		/* superblock */
-> >  		.type	= ST_PERAG,
-> > @@ -379,15 +406,107 @@ xfs_scrub_validate_inputs(
-> >  	if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
-> >  		goto out;
-> >  
-> > -	/* We don't know how to repair anything yet. */
-> > -	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-> > -		goto out;
-> > +	/*
-> > +	 * We only want to repair read-write v5+ filesystems.  Defer the check
-> > +	 * for ops->repair until after our scrub confirms that we need to
-> > +	 * perform repairs so that we avoid failing due to not supporting
-> > +	 * repairing an object that doesn't need repairs.
-> > +	 */
-> > +	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
-> > +		error = -EOPNOTSUPP;
-> > +		if (!xfs_repair_can_fix(mp))
-> > +			goto out;
-> > +
-> > +		error = -EROFS;
-> > +		if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > +			goto out;
-> > +	}
-> >  
-> >  	error = 0;
-> >  out:
-> >  	return error;
-> >  }
-> >  
-> > +/*
-> > + * Attempt to repair some metadata, if the metadata is corrupt and userspace
-> > + * told us to fix it.  This function returns -EAGAIN to mean "re-run scrub",
-> > + * and will set *fixed if it thinks it repaired anything.
-> > + */
-> > +STATIC int
-> > +xfs_repair_attempt(
-> > +	struct xfs_inode		*ip,
-> > +	struct xfs_scrub_context	*sc,
-> > +	bool				*fixed)
-> > +{
-> > +	uint32_t			scrub_oflags;
-> > +	int				error = 0;
-> > +
-> > +	trace_xfs_repair_attempt(ip, sc->sm, error);
-> > +
-> > +	/* Repair needed but not supported, just exit. */
-> > +	if (!sc->ops->repair) {
-> > +		error = -EOPNOTSUPP;
-> > +		trace_xfs_repair_done(ip, sc->sm, error);
-> > +		return error;
-> > +	}
-> > +
-> > +	xfs_scrub_ag_btcur_free(&sc->sa);
-> > +
-> > +	/*
-> > +	 * Repair whatever's broken.  We have to clear the out flags during the
-> > +	 * repair call because some of our iterator functions abort if any of
-> > +	 * the corruption flags are set.
-> > +	 */
-> > +	scrub_oflags = sc->sm->sm_flags & XFS_SCRUB_FLAGS_OUT;
-> > +	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-> > +	error = sc->ops->repair(sc, scrub_oflags);
-> 
-> Urk, that's a bit messy. Shouldn't we drive that inwards to just the
-> iterator methods that have this problem? Then we can slowly work
-> over the iterators that are problematic and fix them?
-
-Hmm, I'll have a closer look tomorrow at which ones actually trigger
-this...
-
-> > +	trace_xfs_repair_done(ip, sc->sm, error);
-> > +	sc->sm->sm_flags |= scrub_oflags;
-> > +
-> > +	switch (error) {
-> > +	case 0:
-> > +		/*
-> > +		 * Repair succeeded.  Commit the fixes and perform a second
-> > +		 * scrub so that we can tell userspace if we fixed the problem.
-> > +		 */
-> > +		sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-> > +		*fixed = true;
-> > +		return -EAGAIN;
-> > +	case -EDEADLOCK:
-> > +	case -EAGAIN:
-> > +		/* Tell the caller to try again having grabbed all the locks. */
-> > +		if (!sc->try_harder) {
-> > +			sc->try_harder = true;
-> > +			return -EAGAIN;
-> > +		}
-> > +		/*
-> > +		 * We tried harder but still couldn't grab all the resources
-> > +		 * we needed to fix it.  The corruption has not been fixed,
-> > +		 * so report back to userspace.
-> > +		 */
-> > +		return -EFSCORRUPTED;
-> > +	default:
-> > +		return error;
-> > +	}
-> > +}
-> > +
-> > +/*
-> > + * Complain about unfixable problems in the filesystem.  We don't log
-> > + * corruptions when IFLAG_REPAIR wasn't set on the assumption that the driver
-> > + * program is xfs_scrub, which will call back with IFLAG_REPAIR set if the
-> > + * administrator isn't running xfs_scrub in no-repairs mode.
-> > + *
-> > + * Use this helper function because _ratelimited silently declares a static
-> > + * structure to track rate limiting information.
-> > + */
-> > +static void
-> > +xfs_repair_failure(
-> > +	struct xfs_mount		*mp)
-> > +{
-> > +	xfs_alert_ratelimited(mp,
-> > +"Corruption not fixed during online repair.  Unmount and run xfs_repair.");
-> > +}
-> 
-> Using the general rate limiting message functions means this message
-> can be dropped when there is lots of other ratelimited alert level
-> messages being emitted. IMO, this is not a message we want dropped,
-> so if it needs rate limiting, it should use it's own private
-> ratelimit structure.
-
-Uh... isn't that what xfs_alert_ratelimited already does?
-
-#define xfs_alert_ratelimited(dev, fmt, ...) \
-	xfs_printk_ratelimited(xfs_alert, dev, fmt, ##__VA_ARGS__)
-
-#define xfs_printk_ratelimited(func, dev, fmt, ...)		\
-do { \
-	static DEFINE_RATELIMIT_STATE(_rs, \
-				      DEFAULT_RATELIMIT_INTERVAL, \
-				      DEFAULT_RATELIMIT_BURST); \
-	if (__ratelimit(&_rs)) \
-		func(dev, fmt, ##__VA_ARGS__);			\
-} while (0)
-
-That declares a static ratelimit structure inside xfs_repair_failure,
-right?
-
-> >  /* Dispatch metadata scrubbing. */
-> >  int
-> >  xfs_scrub_metadata(
-> > @@ -397,6 +516,7 @@ xfs_scrub_metadata(
-> >  	struct xfs_scrub_context	sc;
-> >  	struct xfs_mount		*mp = ip->i_mount;
-> >  	bool				try_harder = false;
-> > +	bool				already_fixed = false;
-> >  	int				error = 0;
-> >  
-> >  	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
-> > @@ -446,9 +566,44 @@ xfs_scrub_metadata(
-> >  	} else if (error)
-> >  		goto out_teardown;
-> >  
-> > -	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> > -			       XFS_SCRUB_OFLAG_XCORRUPT))
-> > -		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
-> > +	/* Let debug users force us into the repair routines. */
-> > +	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed &&
-> > +			XFS_TEST_ERROR(false, mp,
-> > +					XFS_ERRTAG_FORCE_SCRUB_REPAIR)) {
-> > +		sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> > +	}
-> > +
-> > +	/*
-> > +	 * If userspace asked for a repair but it wasn't necessary, report
-> > +	 * that back to userspace.
-> > +	 */
-> > +	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed &&
-> > +	    !(sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-> > +				 XFS_SCRUB_OFLAG_XCORRUPT |
-> > +				 XFS_SCRUB_OFLAG_PREEN)))
-> > +		sc.sm->sm_flags |= XFS_SCRUB_OFLAG_UNTOUCHED;
-> 
-> Duplicate checks, could be done like this:
-> 
-> 	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed) {
-> 		/* Let debug users force us into the repair routines. */
-> 		if (XFS_TEST_ERROR(false, mp,
-> 			.....
-> 
-> 		/*
-> 		 * If userspace asked for a repair but it wasn't
-> 		 * necessary,
-> 		.....
-> 	}
-
-Yeah.  I think I'll rip out the helpers so it'll be easier to tell from
-the position of the OFLAG check relative to the ops->repair call what
-the difference is between "want to fix" and "tried to fix and couldn't"
-
-> > +	/*
-> > +	 * If it's broken, userspace wants us to fix it, and we haven't already
-> > +	 * tried to fix it, then attempt a repair.
-> > +	 */
-> > +	if (xfs_repair_should_fix(sc.sm) && !already_fixed) {
-> 
-> You could reduce indent by doing:
-> 
-> 	if (!xfs_repair_should_fix(sc.sm) || already_fixed)
-> 		goto out_check_unfixed;
-
-<nod>  Thanks for taking on the review of this. :)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Amir.
