@@ -1,53 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:39312 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750783AbeCZFbw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 01:31:52 -0400
-Date: Mon, 26 Mar 2018 06:31:51 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH] fs: don't scan the inode cache before SB_ACTIVE is set
-Message-ID: <20180326053151.GO30522@ZenIV.linux.org.uk>
-References: <20180326043503.17828-1-david@fromorbit.com>
+Received: from verein.lst.de ([213.95.11.211]:44287 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753329AbeC1His (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Mar 2018 03:38:48 -0400
+Date: Wed, 28 Mar 2018 09:38:47 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] iomap: iomap_dio_rw() handles all sync writes
+Message-ID: <20180328073847.GC18726@lst.de>
+References: <20180327070717.7107-1-david@fromorbit.com> <20180327070717.7107-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180326043503.17828-1-david@fromorbit.com>
+In-Reply-To: <20180327070717.7107-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-On Mon, Mar 26, 2018 at 03:35:03PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> We recently had an oops reported on a 4.14 kernel in
-> xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
-> and so the m_perag_tree lookup walked into lala land.
-> 
-> We found a mount in a failed state, blocked on teh shrinker rwsem
-> here:
-> 
-> mount_bdev()
->   deactivate_locked_super()
->     unregister_shrinker()
-> 
-> Essentially, the machine was under memory pressure when the mount
-> was being run, xfs_fs_fill_super() failed after allocating the
-> xfs_mount and attaching it to sb->s_fs_info. It then cleaned up and
-> freed the xfs_mount, but the sb->s_fs_info field still pointed to
-> the freed memory. Hence when the superblock shrinker then ran
-> it fell off the bad pointer.
-> 
-> This is reproduced by using the mount_delay sysfs control as added
-> in teh previous patch. It produces an oops down this path during the
-> stalled mount:
+> @@ -769,12 +777,9 @@ static void iomap_dio_complete_work(struct work_struct *work)
+>  {
+>  	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
+>  	struct kiocb *iocb = dio->iocb;
+> -	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
+>  	ssize_t ret;
+>  
+>  	ret = iomap_dio_complete(dio);
+> -	if (is_write && ret > 0)
+> -		ret = generic_write_sync(iocb, ret);
+>  	iocb->ki_complete(iocb, ret, 0);
 
-> The problem is that the superblock shrinker is running before the
-> filesystem structures it depends on have been fully set up. i.e.
-> the shrinker is registered in sget(), before ->fill_super() has been
-> called, and the shrinker can call into the filesystem before
-> fill_super() does it's setup work.
+Could be simplified to:
 
-Wait a sec...  How the hell does it get through trylock_super() before
-->s_root is set and ->s_umount is unlocked?
+{
+ 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
+
+ 	iocb->ki_complete(dio->iocb, iomap_dio_complete(dio); 0);
+}
+
+Otherwise looks good:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
