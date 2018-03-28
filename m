@@ -1,37 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f170.google.com ([74.125.82.170]:39076 "EHLO
-        mail-ot0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbeC2Wr4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Mar 2018 18:47:56 -0400
-Received: by mail-ot0-f170.google.com with SMTP id h8-v6so7998426oti.6
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Mar 2018 15:47:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180329180927.GA16055@lst.de>
-References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152167305782.5268.13485258587227210521.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180329154035.lvsepjvt6vcplshw@quack2.suse.cz> <20180329180927.GA16055@lst.de>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 29 Mar 2018 15:47:55 -0700
-Message-ID: <CAPcyv4gknYC3WUEEfGjNH8ufFvokdZarSaZUm-cczCXyEz_D0w@mail.gmail.com>
-Subject: Re: [PATCH v7 05/14] ext4, dax: introduce ext4_dax_aops
-Content-Type: text/plain; charset="UTF-8"
+Received: from victor.provo.novell.com ([137.65.250.26]:38139 "EHLO
+        prv3-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750753AbeC1Ekj (ORCPT
+        <rfc822;groupwise-linux-xfs@vger.kernel.org:0:0>);
+        Wed, 28 Mar 2018 00:40:39 -0400
+From: Qu Wenruo <wqu@suse.com>
+Subject: [PATCH v2 2/3] fstests: log-writes: Add support for METADATA flag
+Date: Wed, 28 Mar 2018 12:40:22 +0800
+Message-Id: <20180328044023.22078-2-wqu@suse.com>
+In-Reply-To: <20180328044023.22078-1-wqu@suse.com>
+References: <20180328044023.22078-1-wqu@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4 <linux-ext4@vger.kernel.org>, david <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-btrfs@vger.kernel.org, fstests@vger.kernel.org
+Cc: amir73il@gmail.com, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Thu, Mar 29, 2018 at 11:09 AM, Christoph Hellwig <hch@lst.de> wrote:
-> On Thu, Mar 29, 2018 at 05:40:35PM +0200, Jan Kara wrote:
->> So ext4_direct_IO() for IS_DAX() files will just bail out. So could you
->> just provide ext4_dax_direct_IO() which will bail out and use it here? With
->> a similar comment as in xfs_vm_direct_IO() that open still needs this
->> method set... Thanks!
->
-> In fact a common noop_direct_IO might make sense.
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+---
+changelog:
+v2:
+  Add Amir's reviewed-by tag.
+---
+ src/log-writes/log-writes.c | 3 ++-
+ src/log-writes/log-writes.h | 9 +++++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-Ok, I introduced noop_direct_IO() in "fs, dax: prepare for
-dax-specific address_space_operations", and cleaned up xfs, ext4, and
-ext2 accordingly. Let me know if you want to see a resend of the
-series with those changes. Otherwise this will appear in -next
-shortly.
+diff --git a/src/log-writes/log-writes.c b/src/log-writes/log-writes.c
+index a872429d3f41..5dc22c244cea 100644
+--- a/src/log-writes/log-writes.c
++++ b/src/log-writes/log-writes.c
+@@ -130,7 +130,8 @@ struct flags_to_str_entry {
+ 	DEFINE_LOG_FLAGS_STR_ENTRY(FLUSH),
+ 	DEFINE_LOG_FLAGS_STR_ENTRY(FUA),
+ 	DEFINE_LOG_FLAGS_STR_ENTRY(DISCARD),
+-	DEFINE_LOG_FLAGS_STR_ENTRY(MARK)
++	DEFINE_LOG_FLAGS_STR_ENTRY(MARK),
++	DEFINE_LOG_FLAGS_STR_ENTRY(METADATA)
+ };
+ 
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+diff --git a/src/log-writes/log-writes.h b/src/log-writes/log-writes.h
+index 35ca35838aac..75fb8ac0bf79 100644
+--- a/src/log-writes/log-writes.h
++++ b/src/log-writes/log-writes.h
+@@ -20,10 +20,11 @@ typedef __u32 u32;
+ /*
+  * Constants copied from kernel file drivers/md/dm-log-writes.c
+  */
+-#define LOG_FLUSH_FLAG (1 << 0)
+-#define LOG_FUA_FLAG (1 << 1)
+-#define LOG_DISCARD_FLAG (1 << 2)
+-#define LOG_MARK_FLAG (1 << 3)
++#define LOG_FLUSH_FLAG		(1 << 0)
++#define LOG_FUA_FLAG		(1 << 1)
++#define LOG_DISCARD_FLAG	(1 << 2)
++#define LOG_MARK_FLAG		(1 << 3)
++#define LOG_METADATA_FLAG	(1 << 4)
+ 
+ #define WRITE_LOG_VERSION 1
+ #define WRITE_LOG_MAGIC 0x6a736677736872
+-- 
+2.16.2
+
