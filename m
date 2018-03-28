@@ -1,306 +1,258 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57512 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751765AbeCZX4m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Mar 2018 19:56:42 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w2QNkVVQ130571
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2gyau3g0nc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w2QNuf6g006308
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w2QNufOj010852
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Mar 2018 23:56:41 GMT
-Subject: [PATCH 07/20] xfs: create tracepoints for online repair
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 26 Mar 2018 16:56:39 -0700
-Message-ID: <152210859969.13184.7680455998362125254.stgit@magnolia>
-In-Reply-To: <152210855435.13184.6475770131389744177.stgit@magnolia>
-References: <152210855435.13184.6475770131389744177.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:55810 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752455AbeC1SJS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Mar 2018 14:09:18 -0400
+Date: Wed, 28 Mar 2018 14:09:16 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: file corruptions, 2nd half of 512b block
+Message-ID: <20180328180916.GC37735@bfoster.bfoster>
+References: <20180322150226.GA31029@onthe.net.au>
+ <20180322180327.GI16617@bfoster.bfoster>
+ <20180327223310.GA4461@onthe.net.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180327223310.GA4461@onthe.net.au>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: Chris Dunlop <chris@onthe.net.au>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Mar 28, 2018 at 09:33:10AM +1100, Chris Dunlop wrote:
+> On Thu, Mar 22, 2018 at 02:03:28PM -0400, Brian Foster wrote:
+> > On Fri, Mar 23, 2018 at 02:02:26AM +1100, Chris Dunlop wrote:
+> > > Hi,
+> > > 
+> > > I'm experiencing 256-byte corruptions in files on XFS on 4.9.76.
+> > > 
+> > > System configuration details below.
+> > > 
+> > > For those cases where the corrupt file can be regenerated from other
+> > > data and the new file compared to the corrupt file (15 files in all),
+> > > the corruptions are invariably in the 2nd 256b half of a 512b sector,
+> > > part way through the file. That's pretty odd! Perhaps some kind of
+> > > buffer tail problem?
+> > > 
+> > > Are there any known issues that might cause this?
+> > 
+> > Nothing that I can think of. A quick look through the writeback changes
+> > shows this[1] commit, but I'd expect any corruption in that case to
+> > manifest as page size (4k) rather than at 256b granularity.
+> > 
+> > [1] 40214d128e ("xfs: trim writepage mapping to within eof")
+> 
+> Looks like that issue can occur if the file is closed, then reopened and
+> appended to. That's possible with the files written via ftp (the ftp upload
+> allows for continuation of partial files), but not the files written via NFS
+> - if they're incomplete they're removed and started from scratch.
+> 
+> > So you obviously have a fairly large/complex storage configuration. I
+> > think you have to assume that this corruption could be introduced pretty
+> > much anywhere in the stack (network, mm, fs, block layer, md) until it
+> > can be narrowed down.
+> 
+> Yup.
+> 
+> Per below I'm seeing a good checksum a bit after arrival and bad checksum
+> some time later, so looks like it's not network.
+> 
+> > > 2018-03-04 21:40:44 data + md5 files written
+> > > 2018-03-04 22:43:33 checksum mismatch detected
+> > 
+> > Seems like the corruption is detected fairly soon after creation. How
+> > often are these files explicitly checked/read? I also assume the files
+> > aren't ever modified..?
+> 
+> Correct, the files aren't ever (deliberately) modified.
+> 
+> The files are generally checked once, some time (minutes to hours) after
+> landing. After the first check I've been (perhaps foolishly) relying on
+> raid6 scrubs to keep the data intact.
+> 
+> The files may be read a few times more over the course of a month, then
+> they're either removed or just sit there quietly for months to years.
+> 
+> > FWIW, the patterns that you have shown so far do seem to suggest
+> > something higher level than a physical storage problem. Otherwise, I'd
+> > expect these instances wouldn't always necessarily land in file data.
+> > Have you run 'xfs_repair -n' on the fs to confirm there aren't any other
+> > problems?
+> 
+> I haven't tried xfs_repair yet. At 181T used and high but unknown at this
+> point number of dirs and files, I imagine it will take quite a while and the
+> filesystem shouldn't really be unavailable for more than low numbers of
+> hours. I can use an LVM snapshot to do the 'xfs_repair -n', but I need to
+> add enough spare capacity to hold the amount of data that arrives (at
+> 0.5-1TB/day) during life of the check / snapshot. That might take a bit of
+> fiddling because the system is getting short on drive bays.
+> 
+> Is it possible to work out approximately how long the check might take?
+> 
 
-These tracepoints will be used to debug the online repair routines.
+It will probably depend more on the amount of metadata than the size of
+the fs. That said, it's not critical if downtime is an issue. It's more
+something to check when convenient just to be sure there aren't other
+issues in play.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/trace.h |  243 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 243 insertions(+)
+> > OTOH, a 256b corruption seems quite unusual for a filesystem with 4k
+> > blocks. I suppose that could suggest some kind of memory/cache
+> > corruption as opposed to a bad page/extent state or something of that
+> > nature.
+> 
+> I should have mentioned in the system summary: it's ECC RAM, with no EDAC
+> errors coming up. So it shouldn't be memory corruption due to a bad stick or
+> whatever. But, yes, there can be other causes.
+> 
+> > Hmm, I guess the only productive thing I can think of right now is to
+> > see if you can try and detect the problem as soon as possible. For e.g.,
+> > it sounds like this is a closed system. If so, could you follow up every
+> > file creation with an immediate md5 verification (perhaps followed by an
+> > fadvise(DONTNEED) and another md5 check to try and catch an inconsistent
+> > pagecache)? Perhaps others might have further ideas..
+> 
+> The check runs "soon" after file arrival (usually minutes), but not
+> immediately. I could potentially alter the ftp receiver to calculate the md5
+> as the file data is received and cross check with the md5 file at the end,
+> but doing same with the files that arrive via NFS would be difficult.
+> 
+> The great majority of the corruptions have been in the files arriving via
+> NFS - possibly because those files tend to be much larger so random
+> corruptions simply hit them more, but also I guess possibly because NFS is
+> more susceptible to whatever is causing the problem.
+> 
+> I have a number of instances where it definitely looks like the file has
+> made it to the filesystem (but not necessarily disk) and checked ok, only to
+> later fail the md5 check, e.g.:
+> 
+> 2018-03-12 07:36:56 created
+> 2018-03-12 07:50:05 check ok
+> 2018-03-26 19:02:14 check bad
+> 
+> 2018-03-13 08:13:10 created
+> 2018-03-13 08:36:56 check ok
+> 2018-03-26 14:58:39 check bad
+> 
+> 2018-03-13 21:06:34 created
+> 2018-03-13 21:11:18 check ok
+> 2018-03-26 19:24:24 check bad
+> 
 
+How much is known about possible events related to the file between the
+time the check passes and when the md5 goes bad? For example, do we know
+for certain nothing read or otherwise acted on the file in that time?
 
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 5d2b1c2..8238882 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -69,6 +69,8 @@ DEFINE_EVENT(xfs_scrub_class, name, \
- DEFINE_SCRUB_EVENT(xfs_scrub_start);
- DEFINE_SCRUB_EVENT(xfs_scrub_done);
- DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
-+DEFINE_SCRUB_EVENT(xfs_repair_attempt);
-+DEFINE_SCRUB_EVENT(xfs_repair_done);
- 
- TRACE_EVENT(xfs_scrub_op_error,
- 	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-@@ -492,6 +494,247 @@ TRACE_EVENT(xfs_scrub_xref_error,
- 		  __entry->ret_ip)
- );
- 
-+/* repair tracepoints */
-+#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
-+
-+DECLARE_EVENT_CLASS(xfs_repair_extent_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_extlen_t len),
-+	TP_ARGS(mp, agno, agbno, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len)
-+);
-+#define DEFINE_REPAIR_EXTENT_EVENT(name) \
-+DEFINE_EVENT(xfs_repair_extent_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_extlen_t len), \
-+	TP_ARGS(mp, agno, agbno, len))
-+DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_free_or_unmap_extent);
-+DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_collect_btree_extent);
-+DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_agfl_insert);
-+
-+DECLARE_EVENT_CLASS(xfs_repair_rmap_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_extlen_t len,
-+		 uint64_t owner, uint64_t offset, unsigned int flags),
-+	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
-+		__field(uint64_t, owner)
-+		__field(uint64_t, offset)
-+		__field(unsigned int, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
-+		__entry->owner = owner;
-+		__entry->offset = offset;
-+		__entry->flags = flags;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len,
-+		  __entry->owner,
-+		  __entry->offset,
-+		  __entry->flags)
-+);
-+#define DEFINE_REPAIR_RMAP_EVENT(name) \
-+DEFINE_EVENT(xfs_repair_rmap_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_extlen_t len, \
-+		 uint64_t owner, uint64_t offset, unsigned int flags), \
-+	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_alloc_extent_fn);
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_ialloc_extent_fn);
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_rmap_extent_fn);
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_bmap_extent_fn);
-+
-+TRACE_EVENT(xfs_repair_refcount_extent_fn,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 struct xfs_refcount_irec *irec),
-+	TP_ARGS(mp, agno, irec),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, startblock)
-+		__field(xfs_extlen_t, blockcount)
-+		__field(xfs_nlink_t, refcount)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->startblock = irec->rc_startblock;
-+		__entry->blockcount = irec->rc_blockcount;
-+		__entry->refcount = irec->rc_refcount;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->startblock,
-+		  __entry->blockcount,
-+		  __entry->refcount)
-+)
-+
-+TRACE_EVENT(xfs_repair_init_btblock,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		 xfs_btnum_t btnum),
-+	TP_ARGS(mp, agno, agbno, btnum),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(uint32_t, btnum)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->btnum = btnum;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->agbno, __entry->btnum)
-+)
-+TRACE_EVENT(xfs_repair_find_ag_btree_roots_helper,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		 uint32_t magic, uint16_t level),
-+	TP_ARGS(mp, agno, agbno, magic, level),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(uint32_t, magic)
-+		__field(uint16_t, level)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->magic = magic;
-+		__entry->level = level;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->agbno, __entry->magic, __entry->level)
-+)
-+TRACE_EVENT(xfs_repair_calc_ag_resblks,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
-+		 xfs_agblock_t usedlen),
-+	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agino_t, icount)
-+		__field(xfs_agblock_t, aglen)
-+		__field(xfs_agblock_t, freelen)
-+		__field(xfs_agblock_t, usedlen)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->icount = icount;
-+		__entry->aglen = aglen;
-+		__entry->freelen = freelen;
-+		__entry->usedlen = usedlen;
-+	),
-+	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->icount, __entry->aglen, __entry->freelen,
-+		  __entry->usedlen)
-+)
-+TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
-+		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
-+	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bnobt_sz)
-+		__field(xfs_agblock_t, inobt_sz)
-+		__field(xfs_agblock_t, rmapbt_sz)
-+		__field(xfs_agblock_t, refcbt_sz)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->bnobt_sz = bnobt_sz;
-+		__entry->inobt_sz = inobt_sz;
-+		__entry->rmapbt_sz = rmapbt_sz;
-+		__entry->refcbt_sz = refcbt_sz;
-+	),
-+	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->bnobt_sz, __entry->inobt_sz, __entry->rmapbt_sz,
-+		  __entry->refcbt_sz)
-+)
-+TRACE_EVENT(xfs_repair_reset_counters,
-+	TP_PROTO(struct xfs_mount *mp),
-+	TP_ARGS(mp),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+	),
-+	TP_printk("dev %d:%d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev))
-+)
-+
-+TRACE_EVENT(xfs_repair_ialloc_insert,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
-+		 uint8_t freecount, uint64_t freemask),
-+	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agino_t, startino)
-+		__field(uint16_t, holemask)
-+		__field(uint8_t, count)
-+		__field(uint8_t, freecount)
-+		__field(uint64_t, freemask)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->startino = startino;
-+		__entry->holemask = holemask;
-+		__entry->count = count;
-+		__entry->freecount = freecount;
-+		__entry->freemask = freemask;
-+	),
-+	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-+		  __entry->startino, __entry->holemask, __entry->count,
-+		  __entry->freecount, __entry->freemask)
-+)
-+
-+#endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
-+
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
- 
- #undef TRACE_INCLUDE_PATH
+If so, it certainly seems like the difference between check ok and check
+bad could be due to cache effects.
 
+> I've now (subsequent to those instances above) updated to your suggestion:
+> do the check first (without DONTNEED), then if the file had pages in the vm
+> before the first check (seen using 'vmtouch' Resident Pages), use DONTNEED
+> (via 'vmtouch -e') and do the check again.
+> 
+> I haven't yet seen any corrupt files with this new scheme (it's now been in
+> place for only 24 hours).
+> 
+> I've not played with vmtouch before so I'm not sure what's normal, but there
+> seems to be some odd behaviour. Most of the time, 'vmtouch -e' clears the
+> file from buffers immediately, but sometimes it leaves a single page
+> resident, even in the face of repeated calls. I understand that
+> fadvise(DONTNEED) is advisory (and of course there's always a chance
+> something else can bring file pages back into vm), so I had it in a loop:
+> 
+> check_pages_buffered
+> checksum
+> if pages_were_buffered
+>  fadvise(DONTNEED)
+>  whilst pages_buffered
+>    fadvise(DONTNEED)
+>    sleep 2
+>  done
+>  checksum
+> fi
+> 
+> I had a case where that loop was running for 2.5 hours before self
+> terminating, in the absence of anything else touching the file (that I could
+> find), and another case where it continued for 1.5 hours before I killed it.
+> It seems a single page can persist in memory (I don't know if it's the same
+> page) for *hours* even with many, many fadvise(DONTNEED) calls. In testing,
+> I was finally able to clear that file from vm using:
+> 
+>  echo 3 > /proc/sys/vm/drop_caches
+> 
+> ...but that's a wee bit heavy to use to clear single pages so I'm now
+> breaking the loop if pages_buffered <= 1.
+> 
+> Any idea what that impressively persistent page is about?
+> 
+
+Hm, not sure. I see that behavior on one file that was recently cached
+in my dev tree. A local copy of the same file shows the same thing. If I
+copy to a separate fs on another vm (with a newer kernel), I don't see
+that behavior. I'm not sure off hand what the difference is, perhaps it
+has something to do with the kernel. But this is all debug logic so I
+wouldn't worry too much about doing excessive numbers of loops and
+whatnot unless this behavior proves to be somehow relevant to the
+problem.
+
+FWIW, 'vmtouch -v' shows a little table of which pages are actually
+present in the file. In my test, the tail page is the one that persists.
+More importantly, it might be useful to use 'vmtouch -v' in your checks
+above. That way we actually have a record of whether the particular
+corrupted page was cached between a 'check ok' -> 'check bad'
+transition.
+
+> > > "cmp -l badfile goodfile" shows there are 256 bytes differing, in the
+> > > 2nd half of (512b) block 53906431.
+> > 
+> > FWIW, that's the last (512b) sector of the associated (4k) page. Does
+> > that happen to be consistent across whatever other instances you have a
+> > record of?
+> 
+> Huh, I should have noticed that! Yes, all corruptions are the last 256b of a
+> 4k page. And in fact all are the last 256b in the first 4k page of an 8k
+> block. That's odd as well!
+> 
+
+Ok, that's potentially interesting. But what exactly do you mean by an
+8k block? This is a 4k block filesystem, correct? Are you just saying
+that the pages that contain the corruption all happen to be at 8k
+aligned offsets?
+
+Brian
+
+> FYI, these are the 256b offsets now I'm now working with (there have been a
+> few more since I started):
+> 
+> 310799
+> 876559
+> 1400335
+> 1676815
+> 3516271
+> 4243471
+> 4919311
+> 6267919
+> 10212879
+> 11520527
+> 11842175
+> 16179215
+> 18018367
+> 22609935
+> 45314111
+> 51365903
+> 60588047
+> 69212175
+> 82352143
+> 107812863
+> 165136351
+> 227067839
+> 527947775
+> 
+> Thanks for your time!
+> 
+> Chris
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
