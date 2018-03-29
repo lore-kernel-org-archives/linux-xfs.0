@@ -1,130 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52624 "EHLO mga02.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:48370 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753034AbeCaENc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Mar 2018 00:13:32 -0400
-Subject: [PATCH v8 16/18] xfs: prepare xfs_break_layouts() to be called with
- XFS_MMAPLOCK_EXCL
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 30 Mar 2018 21:03:35 -0700
-Message-ID: <152246901577.36038.3837971666969319217.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1750709AbeC2HBz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Mar 2018 03:01:55 -0400
+Date: Thu, 29 Mar 2018 09:01:53 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
+ during ifree
+Message-ID: <20180329070153.GC31039@dhcp22.suse.cz>
+References: <20180323034145.GH4818@magnolia>
+ <20180323170813.GD30543@wotan.suse.de>
+ <20180323172620.GK4818@magnolia>
+ <20180323182302.GB9190@wotan.suse.de>
+ <20180325223357.GJ18129@dastard>
+ <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
+ <20180327070637.GX5652@dhcp22.suse.cz>
+ <20180327195435.GE9190@wotan.suse.de>
+ <20180328132148.GN9275@dhcp22.suse.cz>
+ <20180328193304.GC7561@sasha-vm>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180328193304.GC7561@sasha-vm>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>Christoph Hellwig <hch@lst.de>"Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz, snitzer@redhat.com
+To: Sasha Levin <Alexander.Levin@microsoft.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Sasha Levin <levinsasha928@gmail.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Joerg Roedel <joro@8bytes.org>
 
-In preparation for adding coordination between extent unmap operations
-and busy dax-pages, update xfs_break_layouts() to permit it to be called
-with the mmap lock held. This lock scheme will be required for
-coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
-pages mapped into the file's address space). Breaking dax layouts will
-be added to xfs_break_layouts() in a future patch, for now this preps
-the unmap call sites to take and hold XFS_MMAPLOCK_EXCL over the call to
-xfs_break_layouts().
+On Wed 28-03-18 19:33:06, Sasha Levin wrote:
+> On Wed, Mar 28, 2018 at 03:21:48PM +0200, Michal Hocko wrote:
+> >On Tue 27-03-18 19:54:35, Luis R. Rodriguez wrote:
+> >> On Tue, Mar 27, 2018 at 09:06:37AM +0200, Michal Hocko wrote:
+> >> > So by no means the MM backports were reviewed by me. And considering how hard
+> >> > it is to get any review for MM patches in general I strongly suspect that
+> >> > others didn't review either.
+> >> >
+> >> > In general I am quite skeptical about the automagic backports
+> >> > selections, to be honest. MM patches should be reasonably good at
+> >> > selecting stable backports and adding more patches on top just risks
+> >> > regressions.
+> >>
+> >> BTW other than suggesting we needing *actual review* of the MM patches, are
+> >> there known unit tests which could be run as well? Thinking long term.
+> >
+> >There are some in selftests but most fixes are quite hard to get a
+> >specialized testcase for. Rememeber the MM is a pile of heuristics to
+> >handle large scale of workloads.
+> 
+> Would running mmtests for each patch help here at all?
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: "Darrick J. Wong" <darrick.wong@oracle.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/xfs_file.c  |    5 +----
- fs/xfs/xfs_ioctl.c |    5 +----
- fs/xfs/xfs_iops.c  |   10 +++++++---
- fs/xfs/xfs_pnfs.c  |    3 ++-
- 4 files changed, 11 insertions(+), 12 deletions(-)
+mmtests are more for performance than regression/correctness testing
+AFAIR.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9ea08326f876..18edf04811d0 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -768,7 +768,7 @@ xfs_file_fallocate(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	long			error;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	loff_t			new_size = 0;
- 	bool			do_file_insert = false;
- 
-@@ -782,9 +782,6 @@ xfs_file_fallocate(
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	if (mode & FALLOC_FL_PUNCH_HOLE) {
- 		error = xfs_free_file_space(ip, offset, len);
- 		if (error)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89fb1eb80aae..4151fade4bb1 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -614,7 +614,7 @@ xfs_ioc_space(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct iattr		iattr;
- 	enum xfs_prealloc_flags	flags = 0;
--	uint			iolock = XFS_IOLOCK_EXCL;
-+	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	int			error;
- 
- 	/*
-@@ -648,9 +648,6 @@ xfs_ioc_space(
- 	if (error)
- 		goto out_unlock;
- 
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
--	iolock |= XFS_MMAPLOCK_EXCL;
--
- 	switch (bf->l_whence) {
- 	case 0: /*SEEK_SET*/
- 		break;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 951e84df5576..d23aa08426f9 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1028,13 +1028,17 @@ xfs_vn_setattr(
- 
- 	if (iattr->ia_valid & ATTR_SIZE) {
- 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
--		uint			iolock = XFS_IOLOCK_EXCL;
-+		uint			iolock;
-+
-+		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 
- 		error = xfs_break_layouts(d_inode(dentry), &iolock);
--		if (error)
-+		if (error) {
-+			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 			return error;
-+		}
- 
--		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- 		error = xfs_vn_setattr_size(dentry, iattr);
- 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	} else {
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index aa6c5c193f45..6ea7b0b55d02 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -43,7 +43,8 @@ xfs_break_layouts(
- 	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
- 		xfs_iunlock(ip, *iolock);
- 		error = break_layout(inode, true);
--		*iolock = XFS_IOLOCK_EXCL;
-+		*iolock &= ~XFS_IOLOCK_SHARED;
-+		*iolock |= XFS_IOLOCK_EXCL;
- 		xfs_ilock(ip, *iolock);
- 	}
- 
-
+-- 
+Michal Hocko
+SUSE Labs
