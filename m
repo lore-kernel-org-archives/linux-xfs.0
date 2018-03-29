@@ -1,62 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28601 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:43394 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751116AbeCZMNq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Mar 2018 08:13:46 -0400
-Date: Mon, 26 Mar 2018 08:13:42 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V2] xfs: do not log swapext extent owner changes for
- deleted inodes
-Message-ID: <20180326121339.GB34912@bfoster.bfoster>
-References: <f2dcef25-01f2-d7fe-3b2d-f54a809215a5@redhat.com>
- <b7a4250a-b348-0381-683b-74059c397a7d@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b7a4250a-b348-0381-683b-74059c397a7d@sandeen.net>
+        id S1751994AbeC2Pew (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Mar 2018 11:34:52 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 08/10] xfs_repair: remove pre_65_beta option
+Date: Thu, 29 Mar 2018 10:34:20 -0500
+Message-Id: <1522337662-26260-9-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Mar 23, 2018 at 07:13:43PM -0500, Eric Sandeen wrote:
-> Today if we run fsr and crash, log replay can fail because
-> the recovery code tries to instantiate the donor inode from
-> disk to replay the swapext, but it's been deleted and we get
-> verifier failures when we try to read it off disk with
-> i_mode == 0.
-> 
-> Strip the extent owner changes out of the logged fields when
-> we're freeing the inode to avoid this.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> V2: Move the fix to xfs_ifree per bfoster's suggestion
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 604ee38..d17e2d5 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2470,6 +2470,10 @@
->  	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
->  	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
->  	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
-> +
-> +	/* Don't attempt to replay owner changes for a deleted inode */
-> +	ip->i_itemp->ili_fields &= !(XFS_ILOG_AOWNER|XFS_ILOG_DOWNER);
+Irix 6.5 was released 20 years ago.  Remove this option from
+the code.  (nb: it's not present in the manpage.)
 
-				   ~(XFS_ILOG_AOWNER|XFS_ILOG_DOWNER)
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+ repair/globals.h    |  1 -
+ repair/xfs_repair.c | 11 -----------
+ 2 files changed, 12 deletions(-)
 
-Brian
+diff --git a/repair/globals.h b/repair/globals.h
+index c7bbe6f..5192542 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -97,7 +97,6 @@ EXTERN int	dumpcore;		/* abort, not exit on fatal errs */
+ EXTERN int	delete_attr_ok;		/* can clear attrs w/o clearing files */
+ EXTERN int	force_geo;		/* can set geo on low confidence info */
+ EXTERN int	assume_xfs;		/* assume we have an xfs fs */
+-EXTERN int	pre_65_beta;		/* fs was mkfs'ed by a version earlier * than 6.5-beta */
+ EXTERN char	*log_name;		/* Name of log device */
+ EXTERN int	log_spec;		/* Log dev specified as option */
+ EXTERN char	*rt_name;		/* Name of realtime device */
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 3caf9bb..c2106e4 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -49,8 +49,6 @@
+ static char *o_opts[] = {
+ #define ASSUME_XFS	0
+ 	"assume_xfs",
+-#define PRE_65_BETA	1
+-	"fs_is_pre_65_beta",
+ #define	IHASH_SIZE	2
+ 	"ihash",
+ #define	BHASH_SIZE	3
+@@ -207,7 +205,6 @@ process_args(int argc, char **argv)
+ 	sb_inoalignmt = 0;
+ 	sb_unit = 0;
+ 	sb_width = 0;
+-	pre_65_beta = 0;
+ 	ag_stride = 0;
+ 	thread_count = 1;
+ 	report_interval = PROG_RPT_DEFAULT;
+@@ -235,14 +232,6 @@ process_args(int argc, char **argv)
+ 						respec('o', o_opts, ASSUME_XFS);
+ 					assume_xfs = 1;
+ 					break;
+-				case PRE_65_BETA:
+-					if (val)
+-						noval('o', o_opts, PRE_65_BETA);
+-					if (pre_65_beta)
+-						respec('o', o_opts,
+-							PRE_65_BETA);
+-					pre_65_beta = 1;
+-					break;
+ 				case IHASH_SIZE:
+ 					do_warn(
+ 		_("-o ihash option has been removed and will be ignored\n"));
+-- 
+1.8.3.1
 
-> +
->  	/*
->  	 * Bump the generation count so no one will be confused
->  	 * by reincarnations of this inode.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
