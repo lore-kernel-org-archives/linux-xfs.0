@@ -1,117 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60813 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752069AbeC0HHa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Mar 2018 03:07:30 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] iomap: iomap_dio_rw() handles all sync writes
-Date: Tue, 27 Mar 2018 18:07:16 +1100
-Message-Id: <20180327070717.7107-3-david@fromorbit.com>
-In-Reply-To: <20180327070717.7107-1-david@fromorbit.com>
-References: <20180327070717.7107-1-david@fromorbit.com>
+Received: from sandeen.net ([63.231.237.45]:43384 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751938AbeC2Pev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Mar 2018 11:34:51 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 03/10] xfs_repair: remove unused fs_has_extflgbit_allowed
+Date: Thu, 29 Mar 2018 10:34:15 -0500
+Message-Id: <1522337662-26260-4-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-From: Dave Chinner <dchinner@redhat.com>
+fs_has_extflgbit_allowed is never set to anything but 1;
+remove it and all associated code.
 
-Currently iomap_dio_rw() only handles (data)sync write completions
-for AIO. This means we can't optimised non-AIO IO to minimise device
-flushes as we can't tell the caller whether a flush is required or
-not.
-
-To solve this problem and enable further optimisations, make
-iomap_dio_rw responsible for data sync behaviour for all IO, not
-just AIO.
-
-In doing so, the sync operation is now accounted as part of the DIO
-IO by inode_dio_end(), hence post-IO data stability updates will no
-long race against operations that serialise via inode_dio_wait()
-such as truncate or hole punch.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 ---
- fs/iomap.c        | 17 ++++++++++++++---
- fs/xfs/xfs_file.c |  5 -----
- 2 files changed, 14 insertions(+), 8 deletions(-)
+ repair/versions.c   | 35 ++++++++---------------------------
+ repair/versions.h   |  2 --
+ repair/xfs_repair.c |  1 -
+ 3 files changed, 8 insertions(+), 30 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index afd163586aa0..f5d4e348bc9b 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
-  * Private flags for iomap_dio, must not overlap with the public ones in
-  * iomap.h:
-  */
-+#define IOMAP_DIO_WRITE_SYNC	(1 << 29)
- #define IOMAP_DIO_WRITE		(1 << 30)
- #define IOMAP_DIO_DIRTY		(1 << 31)
- 
-@@ -759,6 +760,13 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 			dio_warn_stale_pagecache(iocb->ki_filp);
- 	}
- 
-+	/*
-+	 * If this is a DSYNC write, make sure we push it to stable storage now
-+	 * that we've written data.
-+	 */
-+	if (ret > 0 && (dio->flags & IOMAP_DIO_WRITE_SYNC))
-+		ret = generic_write_sync(iocb, ret);
-+
- 	inode_dio_end(file_inode(iocb->ki_filp));
- 	kfree(dio);
- 
-@@ -769,12 +777,9 @@ static void iomap_dio_complete_work(struct work_struct *work)
- {
- 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
- 	struct kiocb *iocb = dio->iocb;
--	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
- 	ssize_t ret;
- 
- 	ret = iomap_dio_complete(dio);
--	if (is_write && ret > 0)
--		ret = generic_write_sync(iocb, ret);
- 	iocb->ki_complete(iocb, ret, 0);
- }
- 
-@@ -961,6 +966,10 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 	return copied;
- }
- 
-+/*
-+ * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
-+ * is being issued as AIO or not.
-+ */
- ssize_t
- iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
-@@ -1006,6 +1015,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 			dio->flags |= IOMAP_DIO_DIRTY;
- 	} else {
- 		dio->flags |= IOMAP_DIO_WRITE;
-+		if (iocb->ki_flags & IOCB_DSYNC)
-+			dio->flags |= IOMAP_DIO_WRITE_SYNC;
- 		flags |= IOMAP_WRITE;
- 	}
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 6c30f410ca0c..33b1e8b5dc5c 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -570,11 +570,6 @@ xfs_file_dio_aio_write(
- 	 * complete fully or fail.
+diff --git a/repair/versions.c b/repair/versions.c
+index 1fe0dbc..930ed98 100644
+--- a/repair/versions.c
++++ b/repair/versions.c
+@@ -47,10 +47,8 @@ update_sb_version(xfs_mount_t *mp)
+ 	 * have quotas.
  	 */
- 	ASSERT(ret < 0 || ret == count);
--
--	if (ret > 0) {
--		/* Handle various SYNC-type writes */
--		ret = generic_write_sync(iocb, ret);
--	}
- 	return ret;
- }
+ 	if (fs_quotas)  {
+-		if (!xfs_sb_version_hasquota(sb))  {
+-			ASSERT(fs_quotas_allowed);
++		if (!xfs_sb_version_hasquota(sb))
+ 			xfs_sb_version_addquota(sb);
+-		}
  
+ 		/*
+ 		 * protect against stray bits in the quota flag field
+@@ -204,33 +202,16 @@ _("WARNING: you have a V1 inode filesystem. It would be converted to a\n"
+ 	}
+ 
+ 	if (xfs_sb_version_hasquota(sb))  {
+-		if (!fs_quotas_allowed)  {
+-			if (!no_modify)  {
+-				do_warn(
+-_("WARNING:  you have disallowed quotas but this filesystem\n"
+-  "\thas quotas.  The filesystem will be downgraded and\n"
+-  "\tall quota information will be removed.\n"));
+-			} else  {
+-				do_warn(
+-_("WARNING:  you have disallowed quotas but this filesystem\n"
+-  "\thas quotas.  The filesystem would be downgraded and\n"
+-  "\tall quota information would be removed.\n"));
+-			}
+-		} else   {
+-			fs_quotas = 1;
++		fs_quotas = 1;
+ 
+-			if (sb->sb_uquotino != 0 &&
+-					sb->sb_uquotino != NULLFSINO)
+-				have_uquotino = 1;
++		if (sb->sb_uquotino != 0 && sb->sb_uquotino != NULLFSINO)
++			have_uquotino = 1;
+ 
+-			if (sb->sb_gquotino != 0 &&
+-					sb->sb_gquotino != NULLFSINO)
+-				have_gquotino = 1;
++		if (sb->sb_gquotino != 0 && sb->sb_gquotino != NULLFSINO)
++			have_gquotino = 1;
+ 
+-			if (sb->sb_pquotino != 0 &&
+-					sb->sb_pquotino != NULLFSINO)
+-				have_pquotino = 1;
+-		}
++		if (sb->sb_pquotino != 0 && sb->sb_pquotino != NULLFSINO)
++			have_pquotino = 1;
+ 	}
+ 
+ 	if (xfs_sb_version_hasalign(sb))  {
+diff --git a/repair/versions.h b/repair/versions.h
+index c487976..1ce51bd 100644
+--- a/repair/versions.h
++++ b/repair/versions.h
+@@ -27,7 +27,6 @@
+  * possible XFS filesystem features
+  *
+  * inode version 2 (32-bit link counts)		(6.2)
+- * quotas					(6.2+)
+  * aligned inodes				(6.2+)
+  *
+  * bitmask fields happend after 6.2.
+@@ -39,7 +38,6 @@
+  * options
+  */
+ 
+-EXTERN int		fs_quotas_allowed;
+ EXTERN int		fs_aligned_inodes_allowed;
+ EXTERN int		fs_sb_feature_bits_allowed;
+ EXTERN int		fs_has_extflgbit_allowed;
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 006f6cc..20a587c 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -207,7 +207,6 @@ process_args(int argc, char **argv)
+ 	sb_inoalignmt = 0;
+ 	sb_unit = 0;
+ 	sb_width = 0;
+-	fs_quotas_allowed = 1;
+ 	fs_aligned_inodes_allowed = 1;
+ 	fs_sb_feature_bits_allowed = 1;
+ 	fs_has_extflgbit_allowed = 1;
 -- 
-2.16.1
+1.8.3.1
 
