@@ -1,104 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp1.onthe.net.au ([203.22.196.249]:48159 "EHLO
-        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbeC2BJL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 21:09:11 -0400
-Date: Thu, 29 Mar 2018 12:09:09 +1100
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: Re: file corruptions, 2nd half of 512b block
-Message-ID: <20180329010909.GA22702@onthe.net.au>
-References: <20180322150226.GA31029@onthe.net.au>
- <20180322180327.GI16617@bfoster.bfoster>
- <20180322230450.GT1150@dastard>
- <20180328151959.GA6247@onthe.net.au>
- <20180328222754.GC18129@dastard>
+Received: from mx2.suse.de ([195.135.220.15]:34070 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750979AbeC2P2s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Mar 2018 11:28:48 -0400
+Date: Thu, 29 Mar 2018 17:28:45 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v7 02/14] fs, dax: prepare for dax-specific
+ address_space_operations
+Message-ID: <20180329152845.wvskcbhremndtuzg@quack2.suse.cz>
+References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152167304153.5268.5998667213622821211.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180328222754.GC18129@dastard>
+In-Reply-To: <152167304153.5268.5998667213622821211.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Mar 29, 2018 at 09:27:54AM +1100, Dave Chinner wrote:
-> On Thu, Mar 29, 2018 at 02:20:00AM +1100, Chris Dunlop wrote:
->> On Fri, Mar 23, 2018 at 10:04:50AM +1100, Dave Chinner wrote:
->>> On Thu, Mar 22, 2018 at 02:03:28PM -0400, Brian Foster wrote:
->>>> On Fri, Mar 23, 2018 at 02:02:26AM +1100, Chris Dunlop wrote:
->>>>> XFS on LVM on 6 x PVs, each PV is md raid-6, each with 11 x hdd.
->>>
->>> Are these all on the one raid controller? i.e. what's the physical
->>> layout of all these disks?
->>
->> Yep, one controller. Physical layout:
->>
->> c0 LSI 9211-8i (SAS2008)
->> |
->> + SAS expander w/ SATA HDD x 12
->> |   + SAS expander w/ SATA HDD x 24
->> |       + SAS expander w/ SATA HDD x 24
->> |
->> + SAS expander w/ SATA HDD x 24
->>     + SAS expander w/ SATA HDD x 24
->
-> Ok, that's good to know. I've seen misdirected writes in a past life
-> because a controller had a firmware bug when it hit it's maximum CTQ
-> depth of 2048 (controller max, not per-lun max) and the 2049th
-> queued write got written to a random lun on the controller. That
-> causes random, unpredicatble data corruptions in a similar manner to
-> what you are seeing.
+On Wed 21-03-18 15:57:21, Dan Williams wrote:
+> In preparation for the dax implementation to start associating dax pages
+> to inodes via page->mapping, we need to provide a 'struct
+> address_space_operations' instance for dax. Define some generic VFS aops
+> helpers for dax. These noop implementations are there in the dax case to
+> prevent the VFS from falling back to operations with page-cache
+> assumptions, dax_writeback_mapping_range() may not be referenced in the
+> FS_DAX=n case.
+> 
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Suggested-by: Matthew Wilcox <mawilcox@microsoft.com>
+> Suggested-by: Jan Kara <jack@suse.cz>
+> Suggested-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-Ouch!
+Looks good to me. I'm just wondering whether we should not add also some
+stubs calling WARN_ON() and bailing out for stuff like ->migratepage(),
+->releasepage(). But probably it is very unlikely we'll introduce bugs that
+would trigger those paths so feel free to add:
 
-> So don't rule out a hardware problem yet.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-OK. I'm not sure which of hardware or kernel I'd prefer it to be 
-at this point!
+								Honza
 
->> Whilst that hardware side of things is interesting, and that md4
->> could bear some more investigation, as previously suggested, and now
->> with more evidence (older files checked clean), it's looking like
->> this issue really started with the upgrade from v3.18.25 to v4.9.76
->> on 2018-01-15. I.e. less likely to be hardware related - unless the
->> new kernel is stressing the hardware in new exciting ways.
->
-> Right, that's entirely possible the new kernel is doing something
-> the old kernel didn't, like loading it up with more concurrent IO
-> across more disks. Do you have the latest firmware on the
-> controller?
-
-Not quite: it's on 19.00.00.00, looks like latest is 20.00.06.00 or 
-20.00.07.00, depending on where you look.
-
-I can't find a comprehensive set of release notes. Sigh.
-
-We originally held off going to 20 because there were reports of 
-problems, but it looks like they've since been resolved in the minor 
-updates. Unfortunately we won't be able to update the BIOS in the next 
-week or so.
-
-> The next steps are to validate the data is getting through each
-> layer of the OS intact. This really needs a more predictable test
-> case - can you reproduce and detect this corruption using
-> genstream/checkstream?
->
-> If so, the first step is to move to direct IO to rule out a page
-> cache related data corruption. If direct IO still shows the
-> corruption, we need to rule out things like file extension and
-> zeroing causing issues. e.g. preallocate the entire files, then
-> write via direct IO. If that still generates corruption then we need
-> to add code into the bottom of the filesystem IO path to validate
-> the data being sent by the filesystem is not corrupt.
->
-> If we get that far with correct write data, but still get
-> corruptions on read, it's not a filesystem created data corruption.
-> Let's see if we can get to that point first...
-
-I'll see what I can do - and/or I'll try v4.14.latest: even if that
-makes the problem goes away, that will tell us ...something, right?!
-
-Cheers,
-
-Chris
+> ---
+>  fs/libfs.c          |   27 +++++++++++++++++++++++++++
+>  include/linux/dax.h |   12 +++++++++---
+>  include/linux/fs.h  |    3 +++
+>  3 files changed, 39 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/libfs.c b/fs/libfs.c
+> index 7ff3cb904acd..e49d0ac6f800 100644
+> --- a/fs/libfs.c
+> +++ b/fs/libfs.c
+> @@ -1060,6 +1060,33 @@ int noop_fsync(struct file *file, loff_t start, loff_t end, int datasync)
+>  }
+>  EXPORT_SYMBOL(noop_fsync);
+>  
+> +int noop_set_page_dirty(struct page *page)
+> +{
+> +	/*
+> +	 * Unlike __set_page_dirty_no_writeback that handles dirty page
+> +	 * tracking in the page object, dax does all dirty tracking in
+> +	 * the inode address_space in response to mkwrite faults. In the
+> +	 * dax case we only need to worry about potentially dirty CPU
+> +	 * caches, not dirty page cache pages to write back.
+> +	 *
+> +	 * This callback is defined to prevent fallback to
+> +	 * __set_page_dirty_buffers() in set_page_dirty().
+> +	 */
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(noop_set_page_dirty);
+> +
+> +void noop_invalidatepage(struct page *page, unsigned int offset,
+> +		unsigned int length)
+> +{
+> +	/*
+> +	 * There is no page cache to invalidate in the dax case, however
+> +	 * we need this callback defined to prevent falling back to
+> +	 * block_invalidatepage() in do_invalidatepage().
+> +	 */
+> +}
+> +EXPORT_SYMBOL_GPL(noop_invalidatepage);
+> +
+>  /* Because kfree isn't assignment-compatible with void(void*) ;-/ */
+>  void kfree_link(void *p)
+>  {
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index 0185ecdae135..ae27a7efe7ab 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -38,6 +38,7 @@ static inline void put_dax(struct dax_device *dax_dev)
+>  }
+>  #endif
+>  
+> +struct writeback_control;
+>  int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
+>  #if IS_ENABLED(CONFIG_FS_DAX)
+>  int __bdev_dax_supported(struct super_block *sb, int blocksize);
+> @@ -57,6 +58,8 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
+>  }
+>  
+>  struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
+> +int dax_writeback_mapping_range(struct address_space *mapping,
+> +		struct block_device *bdev, struct writeback_control *wbc);
+>  #else
+>  static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
+>  {
+> @@ -76,6 +79,12 @@ static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
+>  {
+>  	return NULL;
+>  }
+> +
+> +static inline int dax_writeback_mapping_range(struct address_space *mapping,
+> +		struct block_device *bdev, struct writeback_control *wbc)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+>  #endif
+>  
+>  int dax_read_lock(void);
+> @@ -121,7 +130,4 @@ static inline bool dax_mapping(struct address_space *mapping)
+>  	return mapping->host && IS_DAX(mapping->host);
+>  }
+>  
+> -struct writeback_control;
+> -int dax_writeback_mapping_range(struct address_space *mapping,
+> -		struct block_device *bdev, struct writeback_control *wbc);
+>  #endif
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 79c413985305..b57db31d294d 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -3129,6 +3129,9 @@ extern int simple_rmdir(struct inode *, struct dentry *);
+>  extern int simple_rename(struct inode *, struct dentry *,
+>  			 struct inode *, struct dentry *, unsigned int);
+>  extern int noop_fsync(struct file *, loff_t, loff_t, int);
+> +extern int noop_set_page_dirty(struct page *page);
+> +extern void noop_invalidatepage(struct page *page, unsigned int offset,
+> +		unsigned int length);
+>  extern int simple_empty(struct dentry *);
+>  extern int simple_readpage(struct file *file, struct page *page);
+>  extern int simple_write_begin(struct file *file, struct address_space *mapping,
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
