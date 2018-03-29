@@ -1,27 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43378 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:43926 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751099AbeC2Pev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Mar 2018 11:34:51 -0400
+        id S1752374AbeC2PnD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Mar 2018 11:43:03 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 4383F479AF5
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Mar 2018 10:42:36 -0500 (CDT)
+Subject: [PATCH 11/10] xfsprogs: remove unused delete_attr_ok
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 0/10] xfsprogs: remove old cruft
-Date: Thu, 29 Mar 2018 10:34:12 -0500
-Message-Id: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+Message-ID: <9521811b-dc58-d756-e525-8ca428f1b806@sandeen.net>
+Date: Thu, 29 Mar 2018 10:43:02 -0500
+MIME-Version: 1.0
+In-Reply-To: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This is mostly removing old hardcoded "feature" flags which were
-settable via the commandline long, long ago but have been lingering
-as hardcoded globals since.  Just get rid of them and all the
-associated code.
+delete_attr_ok is never set to anything but 1;
+remove it and all associated code.
 
-The last 3 remove an option for 20-year-old irix filesystems,
-a weirdly triplicated test, and finally adds some #warnings
-followed by #error to get the attention of anyone building on
-platforms we want to deprecate.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Thanks,
--Eric
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 07bcf80..9af4f05 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2093,14 +2093,9 @@ process_inode_attr_fork(
+ 		do_warn(_("bad attribute fork in inode %" PRIu64), lino);
+ 
+ 		if (!no_modify)  {
+-			if (delete_attr_ok)  {
+-				do_warn(_(", clearing attr fork\n"));
+-				*dirty += clear_dinode_attr(mp, dino, lino);
+-				dino->di_aformat = XFS_DINODE_FMT_LOCAL;
+-			} else  {
+-				do_warn("\n");
+-				*dirty += clear_dinode(mp, dino, lino);
+-			}
++			do_warn(_(", clearing attr fork\n"));
++			*dirty += clear_dinode_attr(mp, dino, lino);
++			dino->di_aformat = XFS_DINODE_FMT_LOCAL;
+ 			ASSERT(*dirty > 0);
+ 		} else  {
+ 			do_warn(_(", would clear attr fork\n"));
+@@ -2111,7 +2106,7 @@ process_inode_attr_fork(
+ 		blkmap_free(ablkmap);
+ 		*retval = 1;
+ 
+-		return delete_attr_ok ? 0 : 1;
++		return 0;
+ 	}
+ 
+ 	if (check_dups)  {
+diff --git a/repair/globals.h b/repair/globals.h
+index 5192542..e777ba2 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -94,7 +94,6 @@ EXTERN int	dangerously;		/* live dangerously ... fix ro mount */
+ EXTERN int	isa_file;
+ EXTERN int	zap_log;
+ EXTERN int	dumpcore;		/* abort, not exit on fatal errs */
+-EXTERN int	delete_attr_ok;		/* can clear attrs w/o clearing files */
+ EXTERN int	force_geo;		/* can set geo on low confidence info */
+ EXTERN int	assume_xfs;		/* assume we have an xfs fs */
+ EXTERN char	*log_name;		/* Name of log device */
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index c2106e4..b2a2432 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -198,7 +198,6 @@ process_args(int argc, char **argv)
+ 	zap_log = 0;
+ 	dumpcore = 0;
+ 	full_ino_ex_data = 0;
+-	delete_attr_ok = 1;
+ 	force_geo = 0;
+ 	assume_xfs = 0;
+ 	copied_sunit = 0;
 
