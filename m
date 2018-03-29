@@ -1,116 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:31108 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751580AbeCaEMc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Mar 2018 00:12:32 -0400
-Subject: [PATCH v8 05/18] ext4, dax: introduce ext4_dax_aops
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 30 Mar 2018 21:02:36 -0700
-Message-ID: <152246895649.36038.5391043415273091960.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:41364 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751249AbeC2PxF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Mar 2018 11:53:05 -0400
+Date: Thu, 29 Mar 2018 08:53:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/10] xfsprogs: remove unused delete_attr_ok
+Message-ID: <20180329155301.GA13552@magnolia>
+References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+ <9521811b-dc58-d756-e525-8ca428f1b806@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9521811b-dc58-d756-e525-8ca428f1b806@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-In preparation for the dax implementation to start associating dax pages
-to inodes via page->mapping, we need to provide a 'struct
-address_space_operations' instance for dax. Otherwise, direct-I/O
-triggers incorrect page cache assumptions and warnings.
+On Thu, Mar 29, 2018 at 10:43:02AM -0500, Eric Sandeen wrote:
+> delete_attr_ok is never set to anything but 1;
+> remove it and all associated code.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Cc: "Theodore Ts'o" <tytso@mit.edu>
-Cc: Andreas Dilger <adilger.kernel@dilger.ca>
-Cc: linux-ext4@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/ext4/inode.c |   42 +++++++++++++++++++++++++++++++-----------
- 1 file changed, 31 insertions(+), 11 deletions(-)
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index c94780075b04..249a97b19181 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -2725,12 +2725,6 @@ static int ext4_writepages(struct address_space *mapping,
- 	percpu_down_read(&sbi->s_journal_flag_rwsem);
- 	trace_ext4_writepages(inode, wbc);
- 
--	if (dax_mapping(mapping)) {
--		ret = dax_writeback_mapping_range(mapping, inode->i_sb->s_bdev,
--						  wbc);
--		goto out_writepages;
--	}
--
- 	/*
- 	 * No pages to write? This is mainly a kludge to avoid starting
- 	 * a transaction for special inodes like journal inode on last iput()
-@@ -2955,6 +2949,27 @@ static int ext4_writepages(struct address_space *mapping,
- 	return ret;
- }
- 
-+static int ext4_dax_writepages(struct address_space *mapping,
-+			       struct writeback_control *wbc)
-+{
-+	int ret;
-+	long nr_to_write = wbc->nr_to_write;
-+	struct inode *inode = mapping->host;
-+	struct ext4_sb_info *sbi = EXT4_SB(mapping->host->i_sb);
-+
-+	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
-+		return -EIO;
-+
-+	percpu_down_read(&sbi->s_journal_flag_rwsem);
-+	trace_ext4_writepages(inode, wbc);
-+
-+	ret = dax_writeback_mapping_range(mapping, inode->i_sb->s_bdev, wbc);
-+	trace_ext4_writepages_result(inode, wbc, ret,
-+				     nr_to_write - wbc->nr_to_write);
-+	percpu_up_read(&sbi->s_journal_flag_rwsem);
-+	return ret;
-+}
-+
- static int ext4_nonda_switch(struct super_block *sb)
- {
- 	s64 free_clusters, dirty_clusters;
-@@ -3857,10 +3872,6 @@ static ssize_t ext4_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 	if (ext4_has_inline_data(inode))
- 		return 0;
- 
--	/* DAX uses iomap path now */
--	if (WARN_ON_ONCE(IS_DAX(inode)))
--		return 0;
--
- 	trace_ext4_direct_IO_enter(inode, offset, count, iov_iter_rw(iter));
- 	if (iov_iter_rw(iter) == READ)
- 		ret = ext4_direct_IO_read(iocb, iter);
-@@ -3946,6 +3957,13 @@ static const struct address_space_operations ext4_da_aops = {
- 	.error_remove_page	= generic_error_remove_page,
- };
- 
-+static const struct address_space_operations ext4_dax_aops = {
-+	.writepages		= ext4_dax_writepages,
-+	.direct_IO		= noop_direct_IO,
-+	.set_page_dirty		= noop_set_page_dirty,
-+	.invalidatepage		= noop_invalidatepage,
-+};
-+
- void ext4_set_aops(struct inode *inode)
- {
- 	switch (ext4_inode_journal_mode(inode)) {
-@@ -3958,7 +3976,9 @@ void ext4_set_aops(struct inode *inode)
- 	default:
- 		BUG();
- 	}
--	if (test_opt(inode->i_sb, DELALLOC))
-+	if (IS_DAX(inode))
-+		inode->i_mapping->a_ops = &ext4_dax_aops;
-+	else if (test_opt(inode->i_sb, DELALLOC))
- 		inode->i_mapping->a_ops = &ext4_da_aops;
- 	else
- 		inode->i_mapping->a_ops = &ext4_aops;
+--D
 
+> ---
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 07bcf80..9af4f05 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2093,14 +2093,9 @@ process_inode_attr_fork(
+>  		do_warn(_("bad attribute fork in inode %" PRIu64), lino);
+>  
+>  		if (!no_modify)  {
+> -			if (delete_attr_ok)  {
+> -				do_warn(_(", clearing attr fork\n"));
+> -				*dirty += clear_dinode_attr(mp, dino, lino);
+> -				dino->di_aformat = XFS_DINODE_FMT_LOCAL;
+> -			} else  {
+> -				do_warn("\n");
+> -				*dirty += clear_dinode(mp, dino, lino);
+> -			}
+> +			do_warn(_(", clearing attr fork\n"));
+> +			*dirty += clear_dinode_attr(mp, dino, lino);
+> +			dino->di_aformat = XFS_DINODE_FMT_LOCAL;
+>  			ASSERT(*dirty > 0);
+>  		} else  {
+>  			do_warn(_(", would clear attr fork\n"));
+> @@ -2111,7 +2106,7 @@ process_inode_attr_fork(
+>  		blkmap_free(ablkmap);
+>  		*retval = 1;
+>  
+> -		return delete_attr_ok ? 0 : 1;
+> +		return 0;
+>  	}
+>  
+>  	if (check_dups)  {
+> diff --git a/repair/globals.h b/repair/globals.h
+> index 5192542..e777ba2 100644
+> --- a/repair/globals.h
+> +++ b/repair/globals.h
+> @@ -94,7 +94,6 @@ EXTERN int	dangerously;		/* live dangerously ... fix ro mount */
+>  EXTERN int	isa_file;
+>  EXTERN int	zap_log;
+>  EXTERN int	dumpcore;		/* abort, not exit on fatal errs */
+> -EXTERN int	delete_attr_ok;		/* can clear attrs w/o clearing files */
+>  EXTERN int	force_geo;		/* can set geo on low confidence info */
+>  EXTERN int	assume_xfs;		/* assume we have an xfs fs */
+>  EXTERN char	*log_name;		/* Name of log device */
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index c2106e4..b2a2432 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -198,7 +198,6 @@ process_args(int argc, char **argv)
+>  	zap_log = 0;
+>  	dumpcore = 0;
+>  	full_ino_ex_data = 0;
+> -	delete_attr_ok = 1;
+>  	force_geo = 0;
+>  	assume_xfs = 0;
+>  	copied_sunit = 0;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
