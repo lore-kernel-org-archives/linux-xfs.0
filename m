@@ -1,134 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp1.onthe.net.au ([203.22.196.249]:43353 "EHLO
-        smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750733AbeC2AQC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 20:16:02 -0400
-Date: Thu, 29 Mar 2018 11:15:59 +1100
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: Re: file corruptions, 2nd half of 512b block
-Message-ID: <20180329001559.GA21914@onthe.net.au>
-References: <20180322150226.GA31029@onthe.net.au>
- <20180322180327.GI16617@bfoster.bfoster>
- <20180327223310.GA4461@onthe.net.au>
- <20180328180916.GC37735@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20180328180916.GC37735@bfoster.bfoster>
+Received: from sandeen.net ([63.231.237.45]:43386 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751968AbeC2Pev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Mar 2018 11:34:51 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 04/10] xfs_repair: remove unused fs_aligned_inodes_allowed
+Date: Thu, 29 Mar 2018 10:34:16 -0500
+Message-Id: <1522337662-26260-5-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Mar 28, 2018 at 02:09:16PM -0400, Brian Foster wrote:
-> On Wed, Mar 28, 2018 at 09:33:10AM +1100, Chris Dunlop wrote:
->> On Thu, Mar 22, 2018 at 02:03:28PM -0400, Brian Foster wrote:
->>> On Fri, Mar 23, 2018 at 02:02:26AM +1100, Chris Dunlop wrote:
->>>> Hi,
->>>>
->>>> I'm experiencing 256-byte corruptions in files on XFS on 4.9.76.
+fs_aligned_inodes_allowed is never set to anything but 1;
+remove it and all associated code.
 
->>> FWIW, the patterns that you have shown so far do seem to suggest
->>> something higher level than a physical storage problem. Otherwise, I'd
->>> expect these instances wouldn't always necessarily land in file data.
->>> Have you run 'xfs_repair -n' on the fs to confirm there aren't any other
->>> problems?
->>
->> I haven't tried xfs_repair yet. At 181T used and high but unknown at this
->> point number of dirs and files, I imagine it will take quite a while and the
->> filesystem shouldn't really be unavailable for more than low numbers of
->> hours. I can use an LVM snapshot to do the 'xfs_repair -n', but I need to
->> add enough spare capacity to hold the amount of data that arrives (at
->> 0.5-1TB/day) during life of the check / snapshot. That might take a bit of
->> fiddling because the system is getting short on drive bays.
->>
->> Is it possible to work out approximately how long the check might take?
->
-> It will probably depend more on the amount of metadata than the size of
-> the fs. That said, it's not critical if downtime is an issue. It's more
-> something to check when convenient just to be sure there aren't other
-> issues in play.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+ repair/versions.c   | 18 ++----------------
+ repair/versions.h   |  2 --
+ repair/xfs_repair.c |  1 -
+ 3 files changed, 2 insertions(+), 19 deletions(-)
 
-It's not looking too good in terms of how much metadata: I've had 
-"dircnt" (https://github.com/ChristopherSchultz/fast-file-count) running 
-for over 24 hours now and it's still going... (unfortunately it doesn't 
-allow for SIGUSR1 to report current stats a la dd). I guess a simple 
-directory scan like that is going to be significantly quicker than the 
-'xfs_repair -n' - unless 'xfs_repair' uses optimisations not available 
-to a simple directory scan?
+diff --git a/repair/versions.c b/repair/versions.c
+index 930ed98..d2c5844 100644
+--- a/repair/versions.c
++++ b/repair/versions.c
+@@ -215,22 +215,8 @@ _("WARNING: you have a V1 inode filesystem. It would be converted to a\n"
+ 	}
+ 
+ 	if (xfs_sb_version_hasalign(sb))  {
+-		if (fs_aligned_inodes_allowed)  {
+-			fs_aligned_inodes = 1;
+-			fs_ino_alignment = sb->sb_inoalignmt;
+-		} else   {
+-			if (!no_modify)  {
+-				do_warn(
+-_("WARNING:  you have disallowed aligned inodes but this filesystem\n"
+-  "\thas aligned inodes.  The filesystem will be downgraded.\n"
+-  "\tThis will permanently degrade the performance of this filesystem.\n"));
+-			} else  {
+-				do_warn(
+-_("WARNING:  you have disallowed aligned inodes but this filesystem\n"
+-  "\thas aligned inodes.  The filesystem would be downgraded.\n"
+-  "\tThis would permanently degrade the performance of this filesystem.\n"));
+-			}
+-		}
++		fs_aligned_inodes = 1;
++		fs_ino_alignment = sb->sb_inoalignmt;
+ 	}
+ 
+ 	/*
+diff --git a/repair/versions.h b/repair/versions.h
+index 1ce51bd..a0688f8 100644
+--- a/repair/versions.h
++++ b/repair/versions.h
+@@ -27,7 +27,6 @@
+  * possible XFS filesystem features
+  *
+  * inode version 2 (32-bit link counts)		(6.2)
+- * aligned inodes				(6.2+)
+  *
+  * bitmask fields happend after 6.2.
+  */
+@@ -38,7 +37,6 @@
+  * options
+  */
+ 
+-EXTERN int		fs_aligned_inodes_allowed;
+ EXTERN int		fs_sb_feature_bits_allowed;
+ EXTERN int		fs_has_extflgbit_allowed;
+ EXTERN int		fs_shared_allowed;
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 20a587c..0b19208 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -207,7 +207,6 @@ process_args(int argc, char **argv)
+ 	sb_inoalignmt = 0;
+ 	sb_unit = 0;
+ 	sb_width = 0;
+-	fs_aligned_inodes_allowed = 1;
+ 	fs_sb_feature_bits_allowed = 1;
+ 	fs_has_extflgbit_allowed = 1;
+ 	pre_65_beta = 0;
+-- 
+1.8.3.1
 
->> I have a number of instances where it definitely looks like the file has
->> made it to the filesystem (but not necessarily disk) and checked ok, only to
->> later fail the md5 check, e.g.:
->>
->> 2018-03-12 07:36:56 created
->> 2018-03-12 07:50:05 check ok
->> 2018-03-26 19:02:14 check bad
->>
->> 2018-03-13 08:13:10 created
->> 2018-03-13 08:36:56 check ok
->> 2018-03-26 14:58:39 check bad
->>
->> 2018-03-13 21:06:34 created
->> 2018-03-13 21:11:18 check ok
->> 2018-03-26 19:24:24 check bad
->
-> How much is known about possible events related to the file between the
-> time the check passes and when the md5 goes bad? For example, do we know
-> for certain nothing read or otherwise acted on the file in that time?
->
-> If so, it certainly seems like the difference between check ok and check
-> bad could be due to cache effects.
-
-At least some of the files were read between the ok and bad checks. In 
-at least one case the reader complained about a decompression error - in 
-fact that that was what started me looking into this in detail.
-
->>                             ... Most of the time, 'vmtouch -e' clears the
->> file from buffers immediately, but sometimes it leaves a single page
->> resident, even in the face of repeated calls. ...
->>
->> Any idea what that impressively persistent page is about?
->
-> Hm, not sure. I see that behavior on one file that was recently cached
-> in my dev tree. A local copy of the same file shows the same thing. If I
-> copy to a separate fs on another vm (with a newer kernel), I don't see
-> that behavior. I'm not sure off hand what the difference is, perhaps it
-> has something to do with the kernel. But this is all debug logic so I
-> wouldn't worry too much about doing excessive numbers of loops and
-> whatnot unless this behavior proves to be somehow relevant to the
-> problem.
->
-> FWIW, 'vmtouch -v' shows a little table of which pages are actually
-> present in the file. In my test, the tail page is the one that persists.
-> More importantly, it might be useful to use 'vmtouch -v' in your checks
-> above. That way we actually have a record of whether the particular
-> corrupted page was cached between a 'check ok' -> 'check bad'
-> transition.
-
-Tks, I'll add that to the check script.
-
->>>> "cmp -l badfile goodfile" shows there are 256 bytes differing, in the
->>>> 2nd half of (512b) block 53906431.
->>>
->>> FWIW, that's the last (512b) sector of the associated (4k) page. Does
->>> that happen to be consistent across whatever other instances you have a
->>> record of?
->>
->> Huh, I should have noticed that! Yes, all corruptions are the last 256b of a
->> 4k page. And in fact all are the last 256b in the first 4k page of an 8k
->> block. That's odd as well!
->
-> Ok, that's potentially interesting. But what exactly do you mean by an
-> 8k block? This is a 4k block filesystem, correct? Are you just saying
-> that the pages that contain the corruption all happen to be at 8k
-> aligned offsets?
-
-Yes, I meant 8k aligned offsets. But it turns out I was wrong, they're 
-not consistently placed within 8k aligned offsets - sorry for the false 
-alarm. See also the file/source/corrupt table in email to Dave.
-
-> Brian
-
-Chris
