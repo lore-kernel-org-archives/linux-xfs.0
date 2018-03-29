@@ -1,93 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41364 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751249AbeC2PxF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Mar 2018 11:53:05 -0400
-Date: Thu, 29 Mar 2018 08:53:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/10] xfsprogs: remove unused delete_attr_ok
-Message-ID: <20180329155301.GA13552@magnolia>
-References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
- <9521811b-dc58-d756-e525-8ca428f1b806@sandeen.net>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:37799 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751187AbeC2TCO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Mar 2018 15:02:14 -0400
+Received: by mail-ot0-f196.google.com with SMTP id y46-v6so7473234otd.4
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Mar 2018 12:02:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9521811b-dc58-d756-e525-8ca428f1b806@sandeen.net>
+In-Reply-To: <20180329160215.glnrmyunujcc4vwg@quack2.suse.cz>
+References: <152167302988.5268.4370226749268662682.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152167306807.5268.8483232024444414342.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180329160215.glnrmyunujcc4vwg@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 29 Mar 2018 12:02:13 -0700
+Message-ID: <CAPcyv4h8CgZmiDLh5p8Vnt0SjB2FvZgGuRMZ+ZYRO=H3mkES_A@mail.gmail.com>
+Subject: Re: [PATCH v7 07/14] fs, dax: use page->mapping to warn if truncate
+ collides with a busy page
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, david <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Thu, Mar 29, 2018 at 10:43:02AM -0500, Eric Sandeen wrote:
-> delete_attr_ok is never set to anything but 1;
-> remove it and all associated code.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Thu, Mar 29, 2018 at 9:02 AM, Jan Kara <jack@suse.cz> wrote:
+> On Wed 21-03-18 15:57:48, Dan Williams wrote:
+>> Catch cases where extent unmap operations encounter pages that are
+>> pinned / busy. Typically this is pinned pages that are under active dma.
+>> This warning is a canary for potential data corruption as truncated
+>> blocks could be allocated to a new file while the device is still
+>> performing i/o.
+>>
+>> Here is an example of a collision that this implementation catches:
+>>
+>>  WARNING: CPU: 2 PID: 1286 at fs/dax.c:343 dax_disassociate_entry+0x55/0x80
+>>  [..]
+>>  Call Trace:
+>>   __dax_invalidate_mapping_entry+0x6c/0xf0
+>>   dax_delete_mapping_entry+0xf/0x20
+>>   truncate_exceptional_pvec_entries.part.12+0x1af/0x200
+>>   truncate_inode_pages_range+0x268/0x970
+>>   ? tlb_gather_mmu+0x10/0x20
+>>   ? up_write+0x1c/0x40
+>>   ? unmap_mapping_range+0x73/0x140
+>>   xfs_free_file_space+0x1b6/0x5b0 [xfs]
+>>   ? xfs_file_fallocate+0x7f/0x320 [xfs]
+>>   ? down_write_nested+0x40/0x70
+>>   ? xfs_ilock+0x21d/0x2f0 [xfs]
+>>   xfs_file_fallocate+0x162/0x320 [xfs]
+>>   ? rcu_read_lock_sched_held+0x3f/0x70
+>>   ? rcu_sync_lockdep_assert+0x2a/0x50
+>>   ? __sb_start_write+0xd0/0x1b0
+>>   ? vfs_fallocate+0x20c/0x270
+>>   vfs_fallocate+0x154/0x270
+>>   SyS_fallocate+0x43/0x80
+>>   entry_SYSCALL_64_fastpath+0x1f/0x96
+>>
+>> Cc: Jeff Moyer <jmoyer@redhat.com>
+>> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+>> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> Reviewed-by: Jan Kara <jack@suse.cz>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>
+> Two comments when looking at this now:
+>
+>> +#define for_each_entry_pfn(entry, pfn, end_pfn) \
+>> +     for (pfn = dax_radix_pfn(entry), \
+>> +                     end_pfn = pfn + dax_entry_size(entry) / PAGE_SIZE; \
+>> +                     pfn < end_pfn; \
+>> +                     pfn++)
+>
+> Why don't you declare 'end_pfn' inside the for() block? That way you don't
+> have to pass the variable as an argument to for_each_entry_pfn(). It's not
+> like you need end_pfn anywhere in the loop body, you just use it to cache
+> loop termination index.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Agreed, good catch.
 
---D
+>
+>> @@ -547,6 +599,10 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
+>>
+>>       spin_lock_irq(&mapping->tree_lock);
+>>       new_entry = dax_radix_locked_entry(pfn, flags);
+>> +     if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
+>> +             dax_disassociate_entry(entry, mapping, false);
+>> +             dax_associate_entry(new_entry, mapping);
+>> +     }
+>
+> I find it quite tricky that in case we pass zero page / empty entry into
+> dax_[dis]associate_entry(), it will not do anything because
+> dax_entry_size() will return 0. Can we add an explicit check into
+> dax_[dis]associate_entry() or at least a comment there?
 
-> ---
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 07bcf80..9af4f05 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2093,14 +2093,9 @@ process_inode_attr_fork(
->  		do_warn(_("bad attribute fork in inode %" PRIu64), lino);
->  
->  		if (!no_modify)  {
-> -			if (delete_attr_ok)  {
-> -				do_warn(_(", clearing attr fork\n"));
-> -				*dirty += clear_dinode_attr(mp, dino, lino);
-> -				dino->di_aformat = XFS_DINODE_FMT_LOCAL;
-> -			} else  {
-> -				do_warn("\n");
-> -				*dirty += clear_dinode(mp, dino, lino);
-> -			}
-> +			do_warn(_(", clearing attr fork\n"));
-> +			*dirty += clear_dinode_attr(mp, dino, lino);
-> +			dino->di_aformat = XFS_DINODE_FMT_LOCAL;
->  			ASSERT(*dirty > 0);
->  		} else  {
->  			do_warn(_(", would clear attr fork\n"));
-> @@ -2111,7 +2106,7 @@ process_inode_attr_fork(
->  		blkmap_free(ablkmap);
->  		*retval = 1;
->  
-> -		return delete_attr_ok ? 0 : 1;
-> +		return 0;
->  	}
->  
->  	if (check_dups)  {
-> diff --git a/repair/globals.h b/repair/globals.h
-> index 5192542..e777ba2 100644
-> --- a/repair/globals.h
-> +++ b/repair/globals.h
-> @@ -94,7 +94,6 @@ EXTERN int	dangerously;		/* live dangerously ... fix ro mount */
->  EXTERN int	isa_file;
->  EXTERN int	zap_log;
->  EXTERN int	dumpcore;		/* abort, not exit on fatal errs */
-> -EXTERN int	delete_attr_ok;		/* can clear attrs w/o clearing files */
->  EXTERN int	force_geo;		/* can set geo on low confidence info */
->  EXTERN int	assume_xfs;		/* assume we have an xfs fs */
->  EXTERN char	*log_name;		/* Name of log device */
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index c2106e4..b2a2432 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -198,7 +198,6 @@ process_args(int argc, char **argv)
->  	zap_log = 0;
->  	dumpcore = 0;
->  	full_ino_ex_data = 0;
-> -	delete_attr_ok = 1;
->  	force_geo = 0;
->  	assume_xfs = 0;
->  	copied_sunit = 0;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ok, will do.
