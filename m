@@ -1,167 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:34487 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753732AbeC1Wgc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Mar 2018 18:36:32 -0400
-Date: Thu, 29 Mar 2018 09:35:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfs: implement cgroup writeback support
-Message-ID: <20180328223552.GD18129@dastard>
-References: <f13839700d372a4663a08a11883e9c89b13056ca.1521752282.git.shli@fb.com>
- <CAJDdQW29Vjs9=PqREJZa_xHyA33Qdjf6NN95yGyan3ENwDfGZw@mail.gmail.com>
- <20180325215904.GH18129@dastard>
- <20180326162830.GF34912@bfoster.bfoster>
- <20180327005526.qa5dnkdzaxyardd7@kernel.org>
- <20180327113648.GA3498@bfoster.bfoster>
- <20180327215614.GQ18129@dastard>
- <20180328113231.GB37272@bfoster.bfoster>
+Received: from mx2.suse.de ([195.135.220.15]:44866 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752259AbeC3Tts (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Mar 2018 15:49:48 -0400
+Date: Fri, 30 Mar 2018 19:49:46 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
+ during ifree
+Message-ID: <20180330194946.GF9190@wotan.suse.de>
+References: <20180323034145.GH4818@magnolia>
+ <20180323170813.GD30543@wotan.suse.de>
+ <20180323172620.GK4818@magnolia>
+ <20180323182302.GB9190@wotan.suse.de>
+ <20180325223357.GJ18129@dastard>
+ <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
+ <20180328033228.GA18129@dastard>
+ <20180328193004.GB7561@sasha-vm>
+ <20180328230535.GE18129@dastard>
+ <20180330024704.GE7561@sasha-vm>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180328113231.GB37272@bfoster.bfoster>
+In-Reply-To: <20180330024704.GE7561@sasha-vm>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Shaohua Li <shli@kernel.org>, =?utf-8?B?5byg5pys6b6Z?= <zbl.lkml@gmail.com>, linux-xfs@vger.kernel.org
+To: Sasha Levin <Alexander.Levin@microsoft.com>
+Cc: Dave Chinner <david@fromorbit.com>, Sasha Levin <levinsasha928@gmail.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Michal Hocko <mhocko@kernel.org>, Joerg Roedel <joro@8bytes.org>
 
-On Wed, Mar 28, 2018 at 07:32:32AM -0400, Brian Foster wrote:
-> On Wed, Mar 28, 2018 at 08:56:14AM +1100, Dave Chinner wrote:
-> > On Tue, Mar 27, 2018 at 07:36:48AM -0400, Brian Foster wrote:
-> > > On Mon, Mar 26, 2018 at 05:55:26PM -0700, Shaohua Li wrote:
-> > > > On Mon, Mar 26, 2018 at 12:28:31PM -0400, Brian Foster wrote:
-> > > > > On Mon, Mar 26, 2018 at 08:59:04AM +1100, Dave Chinner wrote:
-> > > > > > On Fri, Mar 23, 2018 at 10:24:03PM +0800, 张本龙 wrote:
-> > > > > > > Hi Shaohua and XFS,
-> > > > > > > 
-> > > > > > > May I ask how are we gonna handle REQ_META issued from XFS? As you
-> > > > > > > mentioned about charging to root cgroup (also in an earlier email
-> > > > > > > discussion), and seems the 4.16.0-rc6 code is not handling it
-> > > > > > > separately.
-> > > > > > > 
-> > > > > > > In our case to support XFS cgroup writeback control, which was ported
-> > > > > > > and slightly adapted to 3.10.0, ignoring xfs log bios resulted in
-> > > > > > > trouble. Threads from throttled docker might submit_bio in following
-> > > > > > > path by its own identity, this docker blkcg accumulated large amounts
-> > > > > > > of data (e.g., 20GB), thus such log gets blocked.
-> > > > > > 
-> > > > > > And thus displaying the reason why I originally refused to merge
-> > > > > > this code until regression tests were added to fstests to exercise
-> > > > > > these sorts of issues. This stuff adds new internal filesystem IO
-> > > > > > ordering constraints, so we need tests that exercise it and ensure
-> > > > > > we don't accidentally break it in future.
-> > > > > > 
-> > > > > 
-> > > > > Hmm, but if the user issues fsync from the throttled cgroup then won't
-> > > > > that throttling occur today, regardless of cgroup aware writeback? My
-> > > > > understanding is that cgawb just accurately accounts writeback I/Os to
-> > > > > the owner of the cached pages. IOW, if the buffered writer and fsync
-> > > > > call are in the same throttled cgroup, then the throttling works just as
-> > > > > it would with cgawb and the writer being in a throttled cgroup.
-> > > > > 
-> > > > > So ISTM that this is an independent problem. What am I missing?
-> > > > > 
-> > > > > Shaohua,
-> > > > > 
-> > > > > Do you have a reference to the older metadata related patch mentioned in
-> > > > > the commit log that presumably addressed this?
-> > > > 
-> > > > The problem is about priority reversion. Say you do a fsync in a low prio
-> > > > cgroup, the IO will be submitted with low prio. Now you do a fsync in a high
-> > > > prio cgroup, the cgroup will wait for fsync IO finished, which is already
-> > > > submitted by the low prio cgroup and run in low prio. This makes the high prio
-> > > > cgroup run slow. The proposed patch is to force all metadata write submitted
-> > > > from root cgroup regardless which task submitted, which can fix this issue.
-> > > > 
-> > > 
-> > > Right, but it seems to me that this can happen with or without cgroup
-> > > aware writeback. This patch just introduces the final bits required to
-> > > carry the page owner from however it is tracked in the writeback machine
-> > > to the bio submitted by the fs. It doesn't introduce/enable/implement
-> > > I/O throttling itself, which is already in place and usable (outside of
-> > > the buffered write page owner problem fixed by this patch), right?
-> > > 
-> > > So without this patch, if a task in throttled cgroup A does a bunch of
-> > > buffered writes and calls fsync, then another task in unthrottled cgroup
-> > > B calls fsync, aren't we (XFS) susceptible to priority inversion via
-> > > these same log I/O serialization points? If not, then what am I missing?
-> > 
-> > Well, I was originally told that bios send by a filesystem without
-> > cgroup info would be accounted to the root cgroup and hence not
-> > throttled at all. i.e. metadata, and any untagged data IO. In that
-> > case, there should be no problems what-so-ever as all XFS IO should
-> > be issued at the same priority
-> > 
+On Fri, Mar 30, 2018 at 02:47:05AM +0000, Sasha Levin wrote:
+> On Thu, Mar 29, 2018 at 10:05:35AM +1100, Dave Chinner wrote:
+> >On Wed, Mar 28, 2018 at 07:30:06PM +0000, Sasha Levin wrote:
+> >"./check -g auto" runs the full "expected to pass" regression test
+> >suite for all configured test configurations. (i.e. all config
+> >sections listed in the configs/<host>.config file)
 > 
-> It sounds like this was actually the plan at some point but the
-> associated patch (to which there is still no reference?) was never
-> committed. I have no idea why that is.. whether it was just lost or
-> nacked with outstanding issues..?
+> Great! With information from Darrick and yourself I've modified tests to
+> be more relevant. Right now I run 4 configs for each stable kernel, but
+> can add more or remove any - depends on what helps people analyse the
+> results.
+>
+> This brings me to the sad part of this mail: not a single stable kernel
+> survived a run. Most are paniced, some are hanging, 
 
-I've never seen the patch that is being spoken of. I'm guessing it
-lives in some dark corner of FB's internal kernel tree and they have
-no motivation to push stuff like this upstream....
+I expected this. The semantics over -g auto yielding "expected to pass"
+are relative. Perhaps its better described as "should pass"?
 
-> > However, given the way people are talking about needing to bypass
-> > block cgroup throttling via REQ_META hacks, I'm guessing that it
-> > doesn't actually work that way. i.e. somewhere in the block layer it
-> > attaches the current task cgroup to bios without existing cgroup
-> > information, and so we end up with priority inversion problems
-> > whenever cgroups and throttling are in use regardless of whether the
-> > filesystem supports it or not....
-> > 
-> > Ah, yeah, the task cgroup gets added through this path:
-> > 
-> > submit_bio
-> >   generic_make_request
-> >     generic_make_request_checks
-> >       blkcg_bio_issue_check
-> >         bio_blkcg
-> > 
+> and some were killed
+> because of KASan.
 > 
-> Right, this is what I thought based on the code. For anything not
-> explicitly associated with a cgroup, it pretty much depends on the user
-> context of the I/O submission.
-
-I suspect that the code when originally proposed didn't have this
-"fall back to task context" code in it. i.e.  it was added later,
-thereby changing the default behaviour and introducing all these
-filesystem level issues.
-
-> > > I'm not saying this isn't a problem that needs fixing, I just want to
-> > > make sure I understand the fundamental problem(s), what this cgawb patch
-> > > actually does and doesn't do and whether there is a logical dependency
-> > > between this patch and the proposed metadata filtering patch.
-> > 
-> > Seems like there's a lot more work to be done to make this stuff
-> > work reliably than anyone has been telling us. Without regression
-> > tests, we're never going to know if it actually works or not....
-> > 
+> All have hit various warnings in fs/iomap.c, and kernels accross several
+> versions hit the BUG at fs/xfs/xfs_message.c:113 (+-1 line)
 > 
-> I'm wondering if there's something simple/high-level we can do in the
-> filesystem to sort of flip the default block layer condition above on
-> its head with regard to metadata.
+> 4.15.12 is hitting a use-after-free in xfs_efi_release().
+> 4.14.29 and 4.9.89 seems to end up with corrupted memory (KASAN
+> warnings) at or before generic/027.
+> And finally, 3.18.101 is pretty unhappy with sleeping functions called
+> from atomic context.
 
-I'm guessing that's what the patches that look at REQ_META and
-assign it to the root cgroup does - it makes them global scope
-rather than whatever is attached to them and prevents them from
-being throttled by the existing/default cgroup configuration.
+>From my limited experience you have no option but to create an expunge list for
+each failure for now, and then pass the expunge lists -- that in essence would
+define the stable baseline and you should expect this to be different per
+kernel release. If you upgrade tooling, it can also change the results, and
+likewise if you upgrade fstests.
 
-> For example, forcibly associate all
-> metadata bios to the root cgroup somewhere down in the xfs_buf_submit()
-> path. So rather than doing metadata I/O on behalf of a variety of random
-> cgroups based purely on userspace configuration and activity, we start
-> with a consistent and predictable base behavior.
+If you define an expunge list you can then pass the list with the -E parameter,
+you can for instance categorize then failures by type and use a file for each
+type of failure, whether that's a triage list or a type of common failure.
+Format can be:
 
-I'd prefer the block layer does that by default when it comes across
-an untagged REQ_META bio. That way we don't have to sprinkle magic
-cgroup pixie dust through every single filesystem to deal with this
-same problem....
+test # comments are ignored
 
-Cheers,
+Since you may want to database this somehow, perhaps a format that lists
+some tracking for it or other heuristics:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+generic/388 # bug#12345 - 1/300 run fails
+
+I'd recommend to just add all failures to one large expunge list for now,
+and later you can split / sort them them as needed.
+
+The idea later is that any failure later would be a regression. What would
+be good is to test a stable kernel prior to the auto-selection and use that
+as baseline, then bump the kernel and ensure no regressions were created.
+
+A dicey corner issue is that of tests which are supposed to "pass" but yet
+can fail every blue moon. For instance I've been running into one-off failures
+with generic/388 -- but only if I run it over 300 times.
+
+As such the baseline IMHO should also track these as just failures, however it
+will be often picked up as a regression first. The only way to rule this out
+is to loop test the same test prior to a kernel update and ensure it wasn't
+a regression -- ie, that it *was* still failing before.
+
+This is why all this work is rather full time'ish. There is no way around it,
+it will take time to establish a baseline from fstests for a filesystem. There
+will also be a lot of odd ins and outs of each filesystem.
+
+  Luis
