@@ -1,44 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45572 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752082AbeC2Pkr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Mar 2018 11:40:47 -0400
-Date: Thu, 29 Mar 2018 08:40:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/10] xfsprogs: remove old cruft
-Message-ID: <20180329154043.GA29748@magnolia>
-References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+Received: from mga02.intel.com ([134.134.136.20]:52624 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753034AbeCaENc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 31 Mar 2018 00:13:32 -0400
+Subject: [PATCH v8 16/18] xfs: prepare xfs_break_layouts() to be called with
+ XFS_MMAPLOCK_EXCL
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 30 Mar 2018 21:03:35 -0700
+Message-ID: <152246901577.36038.3837971666969319217.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>Christoph Hellwig <hch@lst.de>"Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz, snitzer@redhat.com
 
-On Thu, Mar 29, 2018 at 10:34:12AM -0500, Eric Sandeen wrote:
-> This is mostly removing old hardcoded "feature" flags which were
-> settable via the commandline long, long ago but have been lingering
-> as hardcoded globals since.  Just get rid of them and all the
-> associated code.
-> 
-> The last 3 remove an option for 20-year-old irix filesystems,
-> a weirdly triplicated test, and finally adds some #warnings
-> followed by #error to get the attention of anyone building on
-> platforms we want to deprecate.
-> 
-> Thanks,
-> -Eric
+In preparation for adding coordination between extent unmap operations
+and busy dax-pages, update xfs_break_layouts() to permit it to be called
+with the mmap lock held. This lock scheme will be required for
+coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
+pages mapped into the file's address space). Breaking dax layouts will
+be added to xfs_break_layouts() in a future patch, for now this preps
+the unmap call sites to take and hold XFS_MMAPLOCK_EXCL over the call to
+xfs_break_layouts().
 
-Yay cruft dumping!  For the whole series,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/xfs/xfs_file.c  |    5 +----
+ fs/xfs/xfs_ioctl.c |    5 +----
+ fs/xfs/xfs_iops.c  |   10 +++++++---
+ fs/xfs/xfs_pnfs.c  |    3 ++-
+ 4 files changed, 11 insertions(+), 12 deletions(-)
 
---D
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 9ea08326f876..18edf04811d0 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -768,7 +768,7 @@ xfs_file_fallocate(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	long			error;
+ 	enum xfs_prealloc_flags	flags = 0;
+-	uint			iolock = XFS_IOLOCK_EXCL;
++	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	loff_t			new_size = 0;
+ 	bool			do_file_insert = false;
+ 
+@@ -782,9 +782,6 @@ xfs_file_fallocate(
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
+-
+ 	if (mode & FALLOC_FL_PUNCH_HOLE) {
+ 		error = xfs_free_file_space(ip, offset, len);
+ 		if (error)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89fb1eb80aae..4151fade4bb1 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -614,7 +614,7 @@ xfs_ioc_space(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct iattr		iattr;
+ 	enum xfs_prealloc_flags	flags = 0;
+-	uint			iolock = XFS_IOLOCK_EXCL;
++	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	int			error;
+ 
+ 	/*
+@@ -648,9 +648,6 @@ xfs_ioc_space(
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
+-
+ 	switch (bf->l_whence) {
+ 	case 0: /*SEEK_SET*/
+ 		break;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 951e84df5576..d23aa08426f9 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1028,13 +1028,17 @@ xfs_vn_setattr(
+ 
+ 	if (iattr->ia_valid & ATTR_SIZE) {
+ 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+-		uint			iolock = XFS_IOLOCK_EXCL;
++		uint			iolock;
++
++		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
++		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 
+ 		error = xfs_break_layouts(d_inode(dentry), &iolock);
+-		if (error)
++		if (error) {
++			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 			return error;
++		}
+ 
+-		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 		error = xfs_vn_setattr_size(dentry, iattr);
+ 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	} else {
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index aa6c5c193f45..6ea7b0b55d02 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -43,7 +43,8 @@ xfs_break_layouts(
+ 	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
+ 		xfs_iunlock(ip, *iolock);
+ 		error = break_layout(inode, true);
+-		*iolock = XFS_IOLOCK_EXCL;
++		*iolock &= ~XFS_IOLOCK_SHARED;
++		*iolock |= XFS_IOLOCK_EXCL;
+ 		xfs_ilock(ip, *iolock);
+ 	}
+ 
 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
