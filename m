@@ -1,91 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43386 "EHLO sandeen.net"
+Received: from mga03.intel.com ([134.134.136.65]:25317 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751968AbeC2Pev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Mar 2018 11:34:51 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 04/10] xfs_repair: remove unused fs_aligned_inodes_allowed
-Date: Thu, 29 Mar 2018 10:34:16 -0500
-Message-Id: <1522337662-26260-5-git-send-email-sandeen@sandeen.net>
-In-Reply-To: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
-References: <1522337662-26260-1-git-send-email-sandeen@sandeen.net>
+        id S1753103AbeCaENl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 31 Mar 2018 00:13:41 -0400
+Subject: [PATCH v8 18/18] xfs, dax: introduce xfs_break_dax_layouts()
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 30 Mar 2018 21:03:46 -0700
+Message-ID: <152246902607.36038.15813002361509305325.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
 
-fs_aligned_inodes_allowed is never set to anything but 1;
-remove it and all associated code.
+xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
+for busy / pinned dax pages and waits for those pages to go idle before
+any potential extent unmap operation.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+dax_layout_busy_page() handles synchronizing against new page-busy
+events (get_user_pages). It invalidates all mappings to trigger the
+get_user_pages slow path which will eventually block on the xfs inode
+lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
+busy page it returns it for xfs to wait for the page-idle event that
+will fire when the page reference count reaches 1 (recall ZONE_DEVICE
+pages are idle at count 1, see generic_dax_pagefree()).
+
+While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
+deadlock the process that might be trying to elevate the page count of
+more pages before arranging for any of them to go idle. I.e. the typical
+case of submitting I/O is that iov_iter_get_pages() elevates the
+reference count of all pages in the I/O before starting I/O on the first
+page. The process of elevating the reference count of all pages involved
+in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
+
+Cc: Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- repair/versions.c   | 18 ++----------------
- repair/versions.h   |  2 --
- repair/xfs_repair.c |  1 -
- 3 files changed, 2 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_file.c |   60 +++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 49 insertions(+), 11 deletions(-)
 
-diff --git a/repair/versions.c b/repair/versions.c
-index 930ed98..d2c5844 100644
---- a/repair/versions.c
-+++ b/repair/versions.c
-@@ -215,22 +215,8 @@ _("WARNING: you have a V1 inode filesystem. It would be converted to a\n"
- 	}
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 51e6506bdcb1..0342f6fb782f 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -752,6 +752,38 @@ xfs_file_write_iter(
+ 	return ret;
+ }
  
- 	if (xfs_sb_version_hasalign(sb))  {
--		if (fs_aligned_inodes_allowed)  {
--			fs_aligned_inodes = 1;
--			fs_ino_alignment = sb->sb_inoalignmt;
--		} else   {
--			if (!no_modify)  {
--				do_warn(
--_("WARNING:  you have disallowed aligned inodes but this filesystem\n"
--  "\thas aligned inodes.  The filesystem will be downgraded.\n"
--  "\tThis will permanently degrade the performance of this filesystem.\n"));
--			} else  {
--				do_warn(
--_("WARNING:  you have disallowed aligned inodes but this filesystem\n"
--  "\thas aligned inodes.  The filesystem would be downgraded.\n"
--  "\tThis would permanently degrade the performance of this filesystem.\n"));
--			}
--		}
-+		fs_aligned_inodes = 1;
-+		fs_ino_alignment = sb->sb_inoalignmt;
- 	}
++static void
++xfs_wait_var_event(
++	struct inode		*inode,
++	uint			iolock,
++	bool			*did_unlock)
++{
++	struct xfs_inode        *ip = XFS_I(inode);
++
++	*did_unlock = true;
++	xfs_iunlock(ip, iolock);
++	schedule();
++	xfs_ilock(ip, iolock);
++}
++
++static int
++xfs_break_dax_layouts(
++	struct inode		*inode,
++	uint			iolock,
++	bool			*did_unlock)
++{
++	struct page		*page;
++
++	*did_unlock = false;
++	page = dax_layout_busy_page(inode->i_mapping);
++	if (!page)
++		return 0;
++
++	return ___wait_var_event(&page->_refcount,
++			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
++			0, 0, xfs_wait_var_event(inode, iolock, did_unlock));
++}
++
+ int
+ xfs_break_layouts(
+ 	struct inode		*inode,
+@@ -763,17 +795,23 @@ xfs_break_layouts(
  
- 	/*
-diff --git a/repair/versions.h b/repair/versions.h
-index 1ce51bd..a0688f8 100644
---- a/repair/versions.h
-+++ b/repair/versions.h
-@@ -27,7 +27,6 @@
-  * possible XFS filesystem features
-  *
-  * inode version 2 (32-bit link counts)		(6.2)
-- * aligned inodes				(6.2+)
-  *
-  * bitmask fields happend after 6.2.
-  */
-@@ -38,7 +37,6 @@
-  * options
-  */
+ 	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
  
--EXTERN int		fs_aligned_inodes_allowed;
- EXTERN int		fs_sb_feature_bits_allowed;
- EXTERN int		fs_has_extflgbit_allowed;
- EXTERN int		fs_shared_allowed;
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 20a587c..0b19208 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -207,7 +207,6 @@ process_args(int argc, char **argv)
- 	sb_inoalignmt = 0;
- 	sb_unit = 0;
- 	sb_width = 0;
--	fs_aligned_inodes_allowed = 1;
- 	fs_sb_feature_bits_allowed = 1;
- 	fs_has_extflgbit_allowed = 1;
- 	pre_65_beta = 0;
--- 
-1.8.3.1
+-	switch (reason) {
+-	case BREAK_UNMAP:
+-		ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
+-		/* fall through */
+-	case BREAK_WRITE:
+-		error = xfs_break_leased_layouts(inode, iolock, &retry);
+-		break;
+-	default:
+-		WARN_ON_ONCE(1);
+-		return -EINVAL;
+-	}
++	do {
++		switch (reason) {
++		case BREAK_UNMAP:
++			ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
++
++			error = xfs_break_dax_layouts(inode, *iolock, &retry);
++			/* fall through */
++		case BREAK_WRITE:
++			if (error || retry)
++				break;
++			error = xfs_break_leased_layouts(inode, iolock, &retry);
++			break;
++		default:
++			WARN_ON_ONCE(1);
++			return -EINVAL;
++		}
++	} while (error == 0 && retry);
+ 
+ 	return error;
+ }
 
