@@ -1,270 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:21158 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750718AbeCaEMM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Mar 2018 00:12:12 -0400
-Subject: [PATCH v8 01/18] dax: store pfns in the radix
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 30 Mar 2018 21:02:16 -0700
-Message-ID: <152246893595.36038.15805464840943409874.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:13318 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752366AbeCaWCt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 31 Mar 2018 18:02:49 -0400
+Date: Sun, 1 Apr 2018 08:02:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: always free inline data before resetting inode fork
+ during ifree
+Message-ID: <20180331220245.GG1150@dastard>
+References: <20180323034145.GH4818@magnolia>
+ <20180323170813.GD30543@wotan.suse.de>
+ <20180323172620.GK4818@magnolia>
+ <20180323182302.GB9190@wotan.suse.de>
+ <20180325223357.GJ18129@dastard>
+ <CA+1xoqdWBumgCn9iw7FH_6VtDnEmd5_Hyw=cY4b9zB=Avhx-4g@mail.gmail.com>
+ <20180328033228.GA18129@dastard>
+ <20180328193004.GB7561@sasha-vm>
+ <20180328230535.GE18129@dastard>
+ <20180330024704.GE7561@sasha-vm>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180330024704.GE7561@sasha-vm>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
+To: Sasha Levin <Alexander.Levin@microsoft.com>
+Cc: Sasha Levin <levinsasha928@gmail.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, xfs <linux-xfs@vger.kernel.org>, "linux-kernel@vger.kernel.org List" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Julia Lawall <julia.lawall@lip6.fr>, Josh Triplett <josh@joshtriplett.org>, Takashi Iwai <tiwai@suse.de>, Michal Hocko <mhocko@kernel.org>, Joerg Roedel <joro@8bytes.org>
 
-In preparation for examining the busy state of dax pages in the truncate
-path, switch from sectors to pfns in the radix.
+On Fri, Mar 30, 2018 at 02:47:05AM +0000, Sasha Levin wrote:
+> On Thu, Mar 29, 2018 at 10:05:35AM +1100, Dave Chinner wrote:
+> >On Wed, Mar 28, 2018 at 07:30:06PM +0000, Sasha Levin wrote:
+> > This commit has been processed by the -stable helper bot and determined
+> > to be a high probability candidate for -stable trees. (score: 6.4845)
+> >
+> > The bot has tested the following trees: v4.15.12, v4.14.29, v4.9.89, v4.4.123, v4.1.50, v3.18.101.
+> >
+> > v4.15.12: Build OK!
+> > v4.14.29: Build OK!
+> > v4.9.89: Build OK!
+> > v4.4.123: Build OK!
+> > v4.1.50: Build OK!
+> > v3.18.101: Build OK!
+> >
+> > XFS Specific tests:
+> >
+> > v4.15.12 (http://stable-bot.westus2.cloudapp.azure.com/test/v4.15.12/tests/):
+> >     No tests completed!
 
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/dax/super.c |   15 +++++++--
- fs/dax.c            |   83 +++++++++++++++++++--------------------------------
- 2 files changed, 43 insertions(+), 55 deletions(-)
+Can you capture the actual check command output into it's own file?
+That tells us at a glance which tests succeed or failed.
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index ecdc292aa4e4..2b2332b605e4 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -124,10 +124,19 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 		return len < 0 ? len : -EIO;
- 	}
- 
--	if ((IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn))
--			|| pfn_t_devmap(pfn))
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn)) {
-+		/*
-+		 * An arch that has enabled the pmem api should also
-+		 * have its drivers support pfn_t_devmap()
-+		 *
-+		 * This is a developer warning and should not trigger in
-+		 * production. dax_flush() will crash since it depends
-+		 * on being able to do (page_address(pfn_to_page())).
-+		 */
-+		WARN_ON(IS_ENABLED(CONFIG_ARCH_HAS_PMEM_API));
-+	} else if (pfn_t_devmap(pfn)) {
- 		/* pass */;
--	else {
-+	} else {
- 		pr_debug("VFS (%s): error: dax support not enabled\n",
- 				sb->s_id);
- 		return -EOPNOTSUPP;
-diff --git a/fs/dax.c b/fs/dax.c
-index 0276df90e86c..b646a46e4d12 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -73,16 +73,15 @@ fs_initcall(init_dax_wait_table);
- #define RADIX_DAX_ZERO_PAGE	(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 2))
- #define RADIX_DAX_EMPTY		(1 << (RADIX_TREE_EXCEPTIONAL_SHIFT + 3))
- 
--static unsigned long dax_radix_sector(void *entry)
-+static unsigned long dax_radix_pfn(void *entry)
- {
- 	return (unsigned long)entry >> RADIX_DAX_SHIFT;
- }
- 
--static void *dax_radix_locked_entry(sector_t sector, unsigned long flags)
-+static void *dax_radix_locked_entry(unsigned long pfn, unsigned long flags)
- {
- 	return (void *)(RADIX_TREE_EXCEPTIONAL_ENTRY | flags |
--			((unsigned long)sector << RADIX_DAX_SHIFT) |
--			RADIX_DAX_ENTRY_LOCK);
-+			(pfn << RADIX_DAX_SHIFT) | RADIX_DAX_ENTRY_LOCK);
- }
- 
- static unsigned int dax_radix_order(void *entry)
-@@ -526,12 +525,13 @@ static int copy_user_dax(struct block_device *bdev, struct dax_device *dax_dev,
-  */
- static void *dax_insert_mapping_entry(struct address_space *mapping,
- 				      struct vm_fault *vmf,
--				      void *entry, sector_t sector,
-+				      void *entry, pfn_t pfn_t,
- 				      unsigned long flags, bool dirty)
- {
- 	struct radix_tree_root *page_tree = &mapping->page_tree;
--	void *new_entry;
-+	unsigned long pfn = pfn_t_to_pfn(pfn_t);
- 	pgoff_t index = vmf->pgoff;
-+	void *new_entry;
- 
- 	if (dirty)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-@@ -546,7 +546,7 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
- 	}
- 
- 	spin_lock_irq(&mapping->tree_lock);
--	new_entry = dax_radix_locked_entry(sector, flags);
-+	new_entry = dax_radix_locked_entry(pfn, flags);
- 
- 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
- 		/*
-@@ -657,17 +657,14 @@ static void dax_mapping_entry_mkclean(struct address_space *mapping,
- 	i_mmap_unlock_read(mapping);
- }
- 
--static int dax_writeback_one(struct block_device *bdev,
--		struct dax_device *dax_dev, struct address_space *mapping,
--		pgoff_t index, void *entry)
-+static int dax_writeback_one(struct dax_device *dax_dev,
-+		struct address_space *mapping, pgoff_t index, void *entry)
- {
- 	struct radix_tree_root *page_tree = &mapping->page_tree;
--	void *entry2, **slot, *kaddr;
--	long ret = 0, id;
--	sector_t sector;
--	pgoff_t pgoff;
-+	void *entry2, **slot;
-+	unsigned long pfn;
-+	long ret = 0;
- 	size_t size;
--	pfn_t pfn;
- 
- 	/*
- 	 * A page got tagged dirty in DAX mapping? Something is seriously
-@@ -683,10 +680,10 @@ static int dax_writeback_one(struct block_device *bdev,
- 		goto put_unlocked;
- 	/*
- 	 * Entry got reallocated elsewhere? No need to writeback. We have to
--	 * compare sectors as we must not bail out due to difference in lockbit
-+	 * compare pfns as we must not bail out due to difference in lockbit
- 	 * or entry type.
- 	 */
--	if (dax_radix_sector(entry2) != dax_radix_sector(entry))
-+	if (dax_radix_pfn(entry2) != dax_radix_pfn(entry))
- 		goto put_unlocked;
- 	if (WARN_ON_ONCE(dax_is_empty_entry(entry) ||
- 				dax_is_zero_entry(entry))) {
-@@ -712,33 +709,15 @@ static int dax_writeback_one(struct block_device *bdev,
- 	/*
- 	 * Even if dax_writeback_mapping_range() was given a wbc->range_start
- 	 * in the middle of a PMD, the 'index' we are given will be aligned to
--	 * the start index of the PMD, as will the sector we pull from
--	 * 'entry'.  This allows us to flush for PMD_SIZE and not have to
--	 * worry about partial PMD writebacks.
-+	 * the start index of the PMD, as will the pfn we pull from 'entry'.
-+	 * This allows us to flush for PMD_SIZE and not have to worry about
-+	 * partial PMD writebacks.
- 	 */
--	sector = dax_radix_sector(entry);
-+	pfn = dax_radix_pfn(entry);
- 	size = PAGE_SIZE << dax_radix_order(entry);
- 
--	id = dax_read_lock();
--	ret = bdev_dax_pgoff(bdev, sector, size, &pgoff);
--	if (ret)
--		goto dax_unlock;
--
--	/*
--	 * dax_direct_access() may sleep, so cannot hold tree_lock over
--	 * its invocation.
--	 */
--	ret = dax_direct_access(dax_dev, pgoff, size / PAGE_SIZE, &kaddr, &pfn);
--	if (ret < 0)
--		goto dax_unlock;
--
--	if (WARN_ON_ONCE(ret < size / PAGE_SIZE)) {
--		ret = -EIO;
--		goto dax_unlock;
--	}
--
--	dax_mapping_entry_mkclean(mapping, index, pfn_t_to_pfn(pfn));
--	dax_flush(dax_dev, kaddr, size);
-+	dax_mapping_entry_mkclean(mapping, index, pfn);
-+	dax_flush(dax_dev, page_address(pfn_to_page(pfn)), size);
- 	/*
- 	 * After we have flushed the cache, we can clear the dirty tag. There
- 	 * cannot be new dirty data in the pfn after the flush has completed as
-@@ -749,8 +728,6 @@ static int dax_writeback_one(struct block_device *bdev,
- 	radix_tree_tag_clear(page_tree, index, PAGECACHE_TAG_DIRTY);
- 	spin_unlock_irq(&mapping->tree_lock);
- 	trace_dax_writeback_one(mapping->host, index, size >> PAGE_SHIFT);
-- dax_unlock:
--	dax_read_unlock(id);
- 	put_locked_mapping_entry(mapping, index);
- 	return ret;
- 
-@@ -808,8 +785,8 @@ int dax_writeback_mapping_range(struct address_space *mapping,
- 				break;
- 			}
- 
--			ret = dax_writeback_one(bdev, dax_dev, mapping,
--					indices[i], pvec.pages[i]);
-+			ret = dax_writeback_one(dax_dev, mapping, indices[i],
-+					pvec.pages[i]);
- 			if (ret < 0) {
- 				mapping_set_error(mapping, ret);
- 				goto out;
-@@ -877,6 +854,7 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
- 	int ret = VM_FAULT_NOPAGE;
- 	struct page *zero_page;
- 	void *entry2;
-+	pfn_t pfn;
- 
- 	zero_page = ZERO_PAGE(0);
- 	if (unlikely(!zero_page)) {
-@@ -884,14 +862,15 @@ static int dax_load_hole(struct address_space *mapping, void *entry,
- 		goto out;
- 	}
- 
--	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, 0,
-+	pfn = page_to_pfn_t(zero_page);
-+	entry2 = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 			RADIX_DAX_ZERO_PAGE, false);
- 	if (IS_ERR(entry2)) {
- 		ret = VM_FAULT_SIGBUS;
- 		goto out;
- 	}
- 
--	vm_insert_mixed(vmf->vma, vaddr, page_to_pfn_t(zero_page));
-+	vm_insert_mixed(vmf->vma, vaddr, pfn);
- out:
- 	trace_dax_load_hole(inode, vmf, ret);
- 	return ret;
-@@ -1200,8 +1179,7 @@ static int dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		if (error < 0)
- 			goto error_finish_iomap;
- 
--		entry = dax_insert_mapping_entry(mapping, vmf, entry,
--						 dax_iomap_sector(&iomap, pos),
-+		entry = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 						 0, write && !sync);
- 		if (IS_ERR(entry)) {
- 			error = PTR_ERR(entry);
-@@ -1280,13 +1258,15 @@ static int dax_pmd_load_hole(struct vm_fault *vmf, struct iomap *iomap,
- 	void *ret = NULL;
- 	spinlock_t *ptl;
- 	pmd_t pmd_entry;
-+	pfn_t pfn;
- 
- 	zero_page = mm_get_huge_zero_page(vmf->vma->vm_mm);
- 
- 	if (unlikely(!zero_page))
- 		goto fallback;
- 
--	ret = dax_insert_mapping_entry(mapping, vmf, entry, 0,
-+	pfn = page_to_pfn_t(zero_page);
-+	ret = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 			RADIX_DAX_PMD | RADIX_DAX_ZERO_PAGE, false);
- 	if (IS_ERR(ret))
- 		goto fallback;
-@@ -1409,8 +1389,7 @@ static int dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		if (error < 0)
- 			goto finish_iomap;
- 
--		entry = dax_insert_mapping_entry(mapping, vmf, entry,
--						dax_iomap_sector(&iomap, pos),
-+		entry = dax_insert_mapping_entry(mapping, vmf, entry, pfn,
- 						RADIX_DAX_PMD, write && !sync);
- 		if (IS_ERR(entry))
- 			goto finish_iomap;
+So I'm looking at the v5.log file:
 
+....
+echo 'export MKFS_OPTIONS='\''-m crc=0,reflink=0,rmapbt=0, -i sparse=0,'\'''
+....
+
+
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 autosel 4.15.12+
+MKFS_OPTIONS  -- -f -m crc=0,reflink=0,rmapbt=0, -i sparse=0,
+/dev/vdb
+MOUNT_OPTIONS -- /dev/vdb /mnt2
+
+That's not testing v5 filesystems. That's turned off crcs, and
+so is testing a v4 filesystem. You'll see this on filesysetms that
+don't support reflink:
+
+ [not run] Reflink not supported by test filesystem type: xfs
+
+Also, you need to make the test filesystem to match the options
+the test run is configured with (i.e. v4, v5, reflink, etc)
+otherwise half the tests don't exercise the expected config.
+
+[not run] src/dbtest not built
+
+ [not run] chacl command not found
+
+ [not run] xfs_io set_encpolicy support is missing
+
+You need to update your userspace.
+
+And the test run has not completed. It's run to:
+
+generic/430	[11172.480621] run fstests generic/430 at 2018-03-30 00:20:12
++ scp -i /home/sasha/ssh/id_rsa -P 10022 -r root@10.3.38.7:/root/xfstests-dev/results /home/sasha/data/results/test/v4.15.12/tests//v5/
++ az vm delete -y --resource-group sasha-auto-stable --name sasha-worker-629016242-vm
+
+generic/430 and then stopped. There's still another ~50 tests in the
+generic group to run, and then there's the shared and XFS subdirs to
+run, too. So there's still something wrong in the way you are
+setting up/installing fstests here....
+
+> > v4.14.29 (http://stable-bot.westus2.cloudapp.azure.com/test/v4.14.29/tests/):
+> >     No tests completed!
+> > v4.9.89 (http://stable-bot.westus2.cloudapp.azure.com/test/v4.9.89/tests/):
+> >     No tests completed!
+> > v4.4.123 (http://stable-bot.westus2.cloudapp.azure.com/test/v4.4.123/tests/):
+> >     v4:
+> >         Thu Mar 29 21:23:57 UTC 2018
+> >         Interrupted!
+> >         Passed all 0 tests
+> >     v4_reflink:
+
+There's no such configuration as "v4 reflink". reflink is only
+available on v5 (crc enabled) filesystems on kernels >=4.10 (IIRC).
+Perhaps you've mislabelled them?
+
+> Let me know if this would be good enough for now, and if there's
+> anything else to add that'll be useful.
+> 
+> This brings me to the sad part of this mail: not a single stable kernel
+> survived a run. Most are paniced, some are hanging, and some were killed
+> because of KASan.
+> 
+> All have hit various warnings in fs/iomap.c,
+
+Normal - the dmesg filter in the test harness catches those and
+ignores them if they are known/expected to occur.
+
+> and kernels accross several
+> versions hit the BUG at fs/xfs/xfs_message.c:113 (+-1 line)
+
+That's an ASSERT() failure, indicating a fatal error. e.g:
+
+Stuff like this (from
+http://stable-bot.westus2.cloudapp.azure.com/test/v4.9.89/tests/v4_reflink.log)
+
+.....
+generic/083	[ 4443.536212] run fstests generic/083 at 2018-03-29 22:32:17
+[ 4444.557989] XFS (vdb): Unmounting Filesystem
+[ 4445.498461] XFS (vdb): EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!
+[ 4445.505860] XFS (vdb): EXPERIMENTAL reflink feature enabled. Use at your own risk!
+[ 4445.513090] XFS (vdb): Mounting V5 Filesystem
+[ 4445.531284] XFS (vdb): Ending clean mount
+[ 4458.087406] XFS: Assertion failed: xfs_is_reflink_inode(ip), file: fs/xfs/xfs_reflink.c, line: 509
+
+[snip stack trace]
+
+Indicate a problem that should not be occurring. It's debug an
+triage time - there's some problem that needs backports to fix. I
+doubt anyone in XFS land has time to do this on top of everything
+else we alreayd have to do...
+
+> 4.15.12 is hitting a use-after-free in xfs_efi_release().
+
+Debug and triage time.
+
+> 4.14.29 and 4.9.89 seems to end up with corrupted memory (KASAN
+> warnings) at or before generic/027.
+
+More debug and triage time.
+
+> And finally, 3.18.101 is pretty unhappy with sleeping functions called
+> from atomic context.
+
+Needle in a haystack :/
+
+So this is just basic XFS validation, and it's throwing problems up
+all over the place. Now do you see why we've been saying maintaining
+stable backports for XFS is pretty much a full time job for someone?
+
+And keep in mind this is just one filesystem. You're going to end up
+with the same issues on ext4 and btrfs - the regression tests are
+going to show up all sorts of problems that have been fixed in the
+upstream kernels but never backported....
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
