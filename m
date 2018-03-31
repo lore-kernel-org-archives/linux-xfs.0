@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:31119 "EHLO mga06.intel.com"
+Received: from mga17.intel.com ([192.55.52.151]:34268 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752483AbeCaEMt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Mar 2018 00:12:49 -0400
-Subject: [PATCH v8 08/18] dax: introduce CONFIG_DAX_DRIVER
+        id S1752320AbeCaEMn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 31 Mar 2018 00:12:43 -0400
+Subject: [PATCH v8 07/18] fs,
+ dax: use page->mapping to warn if truncate collides with a busy page
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 30 Mar 2018 21:02:52 -0700
-Message-ID: <152246897244.36038.14718237765737542802.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 30 Mar 2018 21:02:46 -0700
+Message-ID: <152246896677.36038.13246248154525745894.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,70 +17,142 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Mike Snitzer <snitzer@redhat.com>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.czsnitzer@redhat.com
+Cc: Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
 
-In support of allowing device-mapper to compile out idle/dead code when
-there are no dax providers in the system, introduce the DAX_DRIVER
-symbol. This is selected by all leaf drivers that device-mapper might be
-layered on top. This allows device-mapper to conditionally 'select DAX'
-only when a provider is present.
+Catch cases where extent unmap operations encounter pages that are
+pinned / busy. Typically this is pinned pages that are under active dma.
+This warning is a canary for potential data corruption as truncated
+blocks could be allocated to a new file while the device is still
+performing i/o.
 
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Reported-by: Bart Van Assche <Bart.VanAssche@wdc.com>
-Reviewed-by: Mike Snitzer <snitzer@redhat.com>
+Here is an example of a collision that this implementation catches:
+
+ WARNING: CPU: 2 PID: 1286 at fs/dax.c:343 dax_disassociate_entry+0x55/0x80
+ [..]
+ Call Trace:
+  __dax_invalidate_mapping_entry+0x6c/0xf0
+  dax_delete_mapping_entry+0xf/0x20
+  truncate_exceptional_pvec_entries.part.12+0x1af/0x200
+  truncate_inode_pages_range+0x268/0x970
+  ? tlb_gather_mmu+0x10/0x20
+  ? up_write+0x1c/0x40
+  ? unmap_mapping_range+0x73/0x140
+  xfs_free_file_space+0x1b6/0x5b0 [xfs]
+  ? xfs_file_fallocate+0x7f/0x320 [xfs]
+  ? down_write_nested+0x40/0x70
+  ? xfs_ilock+0x21d/0x2f0 [xfs]
+  xfs_file_fallocate+0x162/0x320 [xfs]
+  ? rcu_read_lock_sched_held+0x3f/0x70
+  ? rcu_sync_lockdep_assert+0x2a/0x50
+  ? __sb_start_write+0xd0/0x1b0
+  ? vfs_fallocate+0x20c/0x270
+  vfs_fallocate+0x154/0x270
+  SyS_fallocate+0x43/0x80
+  entry_SYSCALL_64_fastpath+0x1f/0x96
+
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/Kconfig        |    5 ++++-
- drivers/nvdimm/Kconfig     |    2 +-
- drivers/s390/block/Kconfig |    2 +-
- 3 files changed, 6 insertions(+), 3 deletions(-)
+ fs/dax.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
 
-diff --git a/drivers/dax/Kconfig b/drivers/dax/Kconfig
-index b79aa8f7a497..e0700bf4893a 100644
---- a/drivers/dax/Kconfig
-+++ b/drivers/dax/Kconfig
-@@ -1,3 +1,7 @@
-+config DAX_DRIVER
-+	select DAX
-+	bool
+diff --git a/fs/dax.c b/fs/dax.c
+index b646a46e4d12..a77394fe586e 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -298,6 +298,63 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
+ 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+ }
+ 
++static unsigned long dax_entry_size(void *entry)
++{
++	if (dax_is_zero_entry(entry))
++		return 0;
++	else if (dax_is_empty_entry(entry))
++		return 0;
++	else if (dax_is_pmd_entry(entry))
++		return PMD_SIZE;
++	else
++		return PAGE_SIZE;
++}
 +
- menuconfig DAX
- 	tristate "DAX: direct access to differentiated memory"
- 	select SRCU
-@@ -16,7 +20,6 @@ config DEV_DAX
- 	  baseline memory pool.  Mappings of a /dev/daxX.Y device impose
- 	  restrictions that make the mapping behavior deterministic.
++static unsigned long dax_radix_end_pfn(void *entry)
++{
++	return dax_radix_pfn(entry) + dax_entry_size(entry) / PAGE_SIZE;
++}
++
++/*
++ * Iterate through all mapped pfns represented by an entry, i.e. skip
++ * 'empty' and 'zero' entries.
++ */
++#define for_each_mapped_pfn(entry, pfn) \
++	for (pfn = dax_radix_pfn(entry); \
++			pfn < dax_radix_end_pfn(entry); pfn++)
++
++static void dax_associate_entry(void *entry, struct address_space *mapping)
++{
++	unsigned long pfn;
++
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return;
++
++	for_each_mapped_pfn(entry, pfn) {
++		struct page *page = pfn_to_page(pfn);
++
++		WARN_ON_ONCE(page->mapping);
++		page->mapping = mapping;
++	}
++}
++
++static void dax_disassociate_entry(void *entry, struct address_space *mapping,
++		bool trunc)
++{
++	unsigned long pfn;
++
++	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
++		return;
++
++	for_each_mapped_pfn(entry, pfn) {
++		struct page *page = pfn_to_page(pfn);
++
++		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
++		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
++		page->mapping = NULL;
++	}
++}
++
+ /*
+  * Find radix tree entry at given index. If it points to an exceptional entry,
+  * return it with the radix tree entry locked. If the radix tree doesn't
+@@ -404,6 +461,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
+ 		}
  
--
- config DEV_DAX_PMEM
- 	tristate "PMEM DAX: direct access to persistent memory"
- 	depends on LIBNVDIMM && NVDIMM_DAX && DEV_DAX
-diff --git a/drivers/nvdimm/Kconfig b/drivers/nvdimm/Kconfig
-index a65f2e1d9f53..40cbdb16e23e 100644
---- a/drivers/nvdimm/Kconfig
-+++ b/drivers/nvdimm/Kconfig
-@@ -20,7 +20,7 @@ if LIBNVDIMM
- config BLK_DEV_PMEM
- 	tristate "PMEM: Persistent memory block device support"
- 	default LIBNVDIMM
--	select DAX
-+	select DAX_DRIVER
- 	select ND_BTT if BTT
- 	select ND_PFN if NVDIMM_PFN
- 	help
-diff --git a/drivers/s390/block/Kconfig b/drivers/s390/block/Kconfig
-index 1444333210c7..9ac7574e3cfb 100644
---- a/drivers/s390/block/Kconfig
-+++ b/drivers/s390/block/Kconfig
-@@ -15,8 +15,8 @@ config BLK_DEV_XPRAM
+ 		if (pmd_downgrade) {
++			dax_disassociate_entry(entry, mapping, false);
+ 			radix_tree_delete(&mapping->page_tree, index);
+ 			mapping->nrexceptional--;
+ 			dax_wake_mapping_entry_waiter(mapping, index, entry,
+@@ -453,6 +511,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+ 	    (radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_DIRTY) ||
+ 	     radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
++	dax_disassociate_entry(entry, mapping, trunc);
+ 	radix_tree_delete(page_tree, index);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+@@ -547,6 +606,10 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
  
- config DCSSBLK
- 	def_tristate m
--	select DAX
- 	select FS_DAX_LIMITED
-+	select DAX_DRIVER
- 	prompt "DCSSBLK support"
- 	depends on S390 && BLOCK
- 	help
+ 	spin_lock_irq(&mapping->tree_lock);
+ 	new_entry = dax_radix_locked_entry(pfn, flags);
++	if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
++		dax_disassociate_entry(entry, mapping, false);
++		dax_associate_entry(new_entry, mapping);
++	}
+ 
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+ 		/*
 
