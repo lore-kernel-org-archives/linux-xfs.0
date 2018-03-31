@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:34268 "EHLO mga17.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:50550 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752320AbeCaEMn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Mar 2018 00:12:43 -0400
-Subject: [PATCH v8 07/18] fs,
- dax: use page->mapping to warn if truncate collides with a busy page
+        id S1751580AbeCaEMh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 31 Mar 2018 00:12:37 -0400
+Subject: [PATCH v8 06/18] ext2, dax: introduce ext2_dax_aops
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 30 Mar 2018 21:02:46 -0700
-Message-ID: <152246896677.36038.13246248154525745894.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 30 Mar 2018 21:02:41 -0700
+Message-ID: <152246896163.36038.15934876342603748972.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -17,142 +16,156 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, david@fromorbit.com, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
+Cc: Jan Kara <jack@suse.com>, kbuild test robot <lkp@intel.com>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz, snitzer@redhat.com
 
-Catch cases where extent unmap operations encounter pages that are
-pinned / busy. Typically this is pinned pages that are under active dma.
-This warning is a canary for potential data corruption as truncated
-blocks could be allocated to a new file while the device is still
-performing i/o.
+In preparation for the dax implementation to start associating dax pages
+to inodes via page->mapping, we need to provide a 'struct
+address_space_operations' instance for dax. Otherwise, direct-I/O
+triggers incorrect page cache assumptions and warnings.
 
-Here is an example of a collision that this implementation catches:
-
- WARNING: CPU: 2 PID: 1286 at fs/dax.c:343 dax_disassociate_entry+0x55/0x80
- [..]
- Call Trace:
-  __dax_invalidate_mapping_entry+0x6c/0xf0
-  dax_delete_mapping_entry+0xf/0x20
-  truncate_exceptional_pvec_entries.part.12+0x1af/0x200
-  truncate_inode_pages_range+0x268/0x970
-  ? tlb_gather_mmu+0x10/0x20
-  ? up_write+0x1c/0x40
-  ? unmap_mapping_range+0x73/0x140
-  xfs_free_file_space+0x1b6/0x5b0 [xfs]
-  ? xfs_file_fallocate+0x7f/0x320 [xfs]
-  ? down_write_nested+0x40/0x70
-  ? xfs_ilock+0x21d/0x2f0 [xfs]
-  xfs_file_fallocate+0x162/0x320 [xfs]
-  ? rcu_read_lock_sched_held+0x3f/0x70
-  ? rcu_sync_lockdep_assert+0x2a/0x50
-  ? __sb_start_write+0xd0/0x1b0
-  ? vfs_fallocate+0x20c/0x270
-  vfs_fallocate+0x154/0x270
-  SyS_fallocate+0x43/0x80
-  entry_SYSCALL_64_fastpath+0x1f/0x96
-
-Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.com>
+Reported-by: kbuild test robot <lkp@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/dax.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
+ fs/ext2/ext2.h  |    1 +
+ fs/ext2/inode.c |   46 +++++++++++++++++++++++++++-------------------
+ fs/ext2/namei.c |   18 ++----------------
+ 3 files changed, 30 insertions(+), 35 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index b646a46e4d12..a77394fe586e 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -298,6 +298,63 @@ static void put_unlocked_mapping_entry(struct address_space *mapping,
- 	dax_wake_mapping_entry_waiter(mapping, index, entry, false);
+diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
+index 032295e1d386..cc40802ddfa8 100644
+--- a/fs/ext2/ext2.h
++++ b/fs/ext2/ext2.h
+@@ -814,6 +814,7 @@ extern const struct inode_operations ext2_file_inode_operations;
+ extern const struct file_operations ext2_file_operations;
+ 
+ /* inode.c */
++extern void ext2_set_file_ops(struct inode *inode);
+ extern const struct address_space_operations ext2_aops;
+ extern const struct address_space_operations ext2_nobh_aops;
+ extern const struct iomap_ops ext2_iomap_ops;
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 9b2ac55ac34f..1e01fabef130 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -940,9 +940,6 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 	loff_t offset = iocb->ki_pos;
+ 	ssize_t ret;
+ 
+-	if (WARN_ON_ONCE(IS_DAX(inode)))
+-		return -EIO;
+-
+ 	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
+ 	if (ret < 0 && iov_iter_rw(iter) == WRITE)
+ 		ext2_write_failed(mapping, offset + count);
+@@ -952,17 +949,16 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ static int
+ ext2_writepages(struct address_space *mapping, struct writeback_control *wbc)
+ {
+-#ifdef CONFIG_FS_DAX
+-	if (dax_mapping(mapping)) {
+-		return dax_writeback_mapping_range(mapping,
+-						   mapping->host->i_sb->s_bdev,
+-						   wbc);
+-	}
+-#endif
+-
+ 	return mpage_writepages(mapping, wbc, ext2_get_block);
  }
  
-+static unsigned long dax_entry_size(void *entry)
++static int
++ext2_dax_writepages(struct address_space *mapping, struct writeback_control *wbc)
 +{
-+	if (dax_is_zero_entry(entry))
-+		return 0;
-+	else if (dax_is_empty_entry(entry))
-+		return 0;
-+	else if (dax_is_pmd_entry(entry))
-+		return PMD_SIZE;
-+	else
-+		return PAGE_SIZE;
++	return dax_writeback_mapping_range(mapping,
++			mapping->host->i_sb->s_bdev, wbc);
 +}
 +
-+static unsigned long dax_radix_end_pfn(void *entry)
-+{
-+	return dax_radix_pfn(entry) + dax_entry_size(entry) / PAGE_SIZE;
-+}
-+
-+/*
-+ * Iterate through all mapped pfns represented by an entry, i.e. skip
-+ * 'empty' and 'zero' entries.
-+ */
-+#define for_each_mapped_pfn(entry, pfn) \
-+	for (pfn = dax_radix_pfn(entry); \
-+			pfn < dax_radix_end_pfn(entry); pfn++)
-+
-+static void dax_associate_entry(void *entry, struct address_space *mapping)
-+{
-+	unsigned long pfn;
-+
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-+		return;
-+
-+	for_each_mapped_pfn(entry, pfn) {
-+		struct page *page = pfn_to_page(pfn);
-+
-+		WARN_ON_ONCE(page->mapping);
-+		page->mapping = mapping;
-+	}
-+}
-+
-+static void dax_disassociate_entry(void *entry, struct address_space *mapping,
-+		bool trunc)
-+{
-+	unsigned long pfn;
-+
-+	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-+		return;
-+
-+	for_each_mapped_pfn(entry, pfn) {
-+		struct page *page = pfn_to_page(pfn);
-+
-+		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
-+		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
-+		page->mapping = NULL;
-+	}
-+}
+ const struct address_space_operations ext2_aops = {
+ 	.readpage		= ext2_readpage,
+ 	.readpages		= ext2_readpages,
+@@ -990,6 +986,13 @@ const struct address_space_operations ext2_nobh_aops = {
+ 	.error_remove_page	= generic_error_remove_page,
+ };
+ 
++static const struct address_space_operations ext2_dax_aops = {
++	.writepages		= ext2_dax_writepages,
++	.direct_IO		= noop_direct_IO,
++	.set_page_dirty		= noop_set_page_dirty,
++	.invalidatepage		= noop_invalidatepage,
++};
 +
  /*
-  * Find radix tree entry at given index. If it points to an exceptional entry,
-  * return it with the radix tree entry locked. If the radix tree doesn't
-@@ -404,6 +461,7 @@ static void *grab_mapping_entry(struct address_space *mapping, pgoff_t index,
- 		}
+  * Probably it should be a library function... search for first non-zero word
+  * or memcmp with zero_page, whatever is better for particular architecture.
+@@ -1388,6 +1391,18 @@ void ext2_set_inode_flags(struct inode *inode)
+ 		inode->i_flags |= S_DAX;
+ }
  
- 		if (pmd_downgrade) {
-+			dax_disassociate_entry(entry, mapping, false);
- 			radix_tree_delete(&mapping->page_tree, index);
- 			mapping->nrexceptional--;
- 			dax_wake_mapping_entry_waiter(mapping, index, entry,
-@@ -453,6 +511,7 @@ static int __dax_invalidate_mapping_entry(struct address_space *mapping,
- 	    (radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_DIRTY) ||
- 	     radix_tree_tag_get(page_tree, index, PAGECACHE_TAG_TOWRITE)))
- 		goto out;
-+	dax_disassociate_entry(entry, mapping, trunc);
- 	radix_tree_delete(page_tree, index);
- 	mapping->nrexceptional--;
- 	ret = 1;
-@@ -547,6 +606,10 @@ static void *dax_insert_mapping_entry(struct address_space *mapping,
++void ext2_set_file_ops(struct inode *inode)
++{
++	inode->i_op = &ext2_file_inode_operations;
++	inode->i_fop = &ext2_file_operations;
++	if (IS_DAX(inode))
++		inode->i_mapping->a_ops = &ext2_dax_aops;
++	else if (test_opt(inode->i_sb, NOBH))
++		inode->i_mapping->a_ops = &ext2_nobh_aops;
++	else
++		inode->i_mapping->a_ops = &ext2_aops;
++}
++
+ struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
+ {
+ 	struct ext2_inode_info *ei;
+@@ -1480,14 +1495,7 @@ struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
+ 		ei->i_data[n] = raw_inode->i_block[n];
  
- 	spin_lock_irq(&mapping->tree_lock);
- 	new_entry = dax_radix_locked_entry(pfn, flags);
-+	if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
-+		dax_disassociate_entry(entry, mapping, false);
-+		dax_associate_entry(new_entry, mapping);
-+	}
+ 	if (S_ISREG(inode->i_mode)) {
+-		inode->i_op = &ext2_file_inode_operations;
+-		if (test_opt(inode->i_sb, NOBH)) {
+-			inode->i_mapping->a_ops = &ext2_nobh_aops;
+-			inode->i_fop = &ext2_file_operations;
+-		} else {
+-			inode->i_mapping->a_ops = &ext2_aops;
+-			inode->i_fop = &ext2_file_operations;
+-		}
++		ext2_set_file_ops(inode);
+ 	} else if (S_ISDIR(inode->i_mode)) {
+ 		inode->i_op = &ext2_dir_inode_operations;
+ 		inode->i_fop = &ext2_dir_operations;
+diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
+index e078075dc66f..55f7caadb093 100644
+--- a/fs/ext2/namei.c
++++ b/fs/ext2/namei.c
+@@ -107,14 +107,7 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
+ 	if (IS_ERR(inode))
+ 		return PTR_ERR(inode);
  
- 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
- 		/*
+-	inode->i_op = &ext2_file_inode_operations;
+-	if (test_opt(inode->i_sb, NOBH)) {
+-		inode->i_mapping->a_ops = &ext2_nobh_aops;
+-		inode->i_fop = &ext2_file_operations;
+-	} else {
+-		inode->i_mapping->a_ops = &ext2_aops;
+-		inode->i_fop = &ext2_file_operations;
+-	}
++	ext2_set_file_ops(inode);
+ 	mark_inode_dirty(inode);
+ 	return ext2_add_nondir(dentry, inode);
+ }
+@@ -125,14 +118,7 @@ static int ext2_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
+ 	if (IS_ERR(inode))
+ 		return PTR_ERR(inode);
+ 
+-	inode->i_op = &ext2_file_inode_operations;
+-	if (test_opt(inode->i_sb, NOBH)) {
+-		inode->i_mapping->a_ops = &ext2_nobh_aops;
+-		inode->i_fop = &ext2_file_operations;
+-	} else {
+-		inode->i_mapping->a_ops = &ext2_aops;
+-		inode->i_fop = &ext2_file_operations;
+-	}
++	ext2_set_file_ops(inode);
+ 	mark_inode_dirty(inode);
+ 	d_tmpfile(dentry, inode);
+ 	unlock_new_inode(inode);
 
