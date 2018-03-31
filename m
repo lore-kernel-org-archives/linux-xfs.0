@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50550 "EHLO mga09.intel.com"
+Received: from mga17.intel.com ([192.55.52.151]:34261 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751580AbeCaEMh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Mar 2018 00:12:37 -0400
-Subject: [PATCH v8 06/18] ext2, dax: introduce ext2_dax_aops
+        id S1751580AbeCaEM3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 31 Mar 2018 00:12:29 -0400
+Subject: [PATCH v8 04/18] xfs, dax: introduce xfs_dax_aops
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 30 Mar 2018 21:02:41 -0700
-Message-ID: <152246896163.36038.15934876342603748972.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 30 Mar 2018 21:02:31 -0700
+Message-ID: <152246895136.36038.419954203239973310.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,156 +16,144 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jan Kara <jack@suse.com>, kbuild test robot <lkp@intel.com>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz, snitzer@redhat.com
+Cc: Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
 
 In preparation for the dax implementation to start associating dax pages
 to inodes via page->mapping, we need to provide a 'struct
 address_space_operations' instance for dax. Otherwise, direct-I/O
-triggers incorrect page cache assumptions and warnings.
+triggers incorrect page cache assumptions and warnings like the
+following:
 
-Cc: Jan Kara <jack@suse.com>
-Reported-by: kbuild test robot <lkp@intel.com>
+ WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
+ xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
+ [..]
+ CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O 4.15.0-rc2+ #984
+ [..]
+ Call Trace:
+  set_page_dirty_lock+0x40/0x60
+  bio_set_pages_dirty+0x37/0x50
+  iomap_dio_actor+0x2b7/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  iomap_apply+0xa4/0x110
+  iomap_dio_rw+0x29e/0x3b0
+  ? iomap_dio_zero+0x110/0x110
+  ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
+  xfs_file_read_iter+0xa0/0xc0 [xfs]
+  __vfs_read+0xf9/0x170
+  vfs_read+0xa6/0x150
+  SyS_pread64+0x93/0xb0
+  entry_SYSCALL_64_fastpath+0x1f/0x96
+
+...where the default set_page_dirty() handler assumes that dirty state
+is being tracked in 'struct page' flags.
+
+Cc: Jeff Moyer <jmoyer@redhat.com>
+Cc: Matthew Wilcox <mawilcox@microsoft.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Jan Kara <jack@suse.cz>
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/ext2/ext2.h  |    1 +
- fs/ext2/inode.c |   46 +++++++++++++++++++++++++++-------------------
- fs/ext2/namei.c |   18 ++----------------
- 3 files changed, 30 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_aops.c |   34 ++++++++++++++++++----------------
+ fs/xfs/xfs_aops.h |    1 +
+ fs/xfs/xfs_iops.c |    5 ++++-
+ 3 files changed, 23 insertions(+), 17 deletions(-)
 
-diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-index 032295e1d386..cc40802ddfa8 100644
---- a/fs/ext2/ext2.h
-+++ b/fs/ext2/ext2.h
-@@ -814,6 +814,7 @@ extern const struct inode_operations ext2_file_inode_operations;
- extern const struct file_operations ext2_file_operations;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 9c6a830da0ee..e7a56c4786ff 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1194,16 +1194,22 @@ xfs_vm_writepages(
+ 	int			ret;
  
- /* inode.c */
-+extern void ext2_set_file_ops(struct inode *inode);
- extern const struct address_space_operations ext2_aops;
- extern const struct address_space_operations ext2_nobh_aops;
- extern const struct iomap_ops ext2_iomap_ops;
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 9b2ac55ac34f..1e01fabef130 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -940,9 +940,6 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 	loff_t offset = iocb->ki_pos;
- 	ssize_t ret;
- 
--	if (WARN_ON_ONCE(IS_DAX(inode)))
--		return -EIO;
--
- 	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
- 	if (ret < 0 && iov_iter_rw(iter) == WRITE)
- 		ext2_write_failed(mapping, offset + count);
-@@ -952,17 +949,16 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- static int
- ext2_writepages(struct address_space *mapping, struct writeback_control *wbc)
- {
--#ifdef CONFIG_FS_DAX
--	if (dax_mapping(mapping)) {
+ 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
+-	if (dax_mapping(mapping))
 -		return dax_writeback_mapping_range(mapping,
--						   mapping->host->i_sb->s_bdev,
--						   wbc);
--	}
--#endif
+-				xfs_find_bdev_for_inode(mapping->host), wbc);
 -
- 	return mpage_writepages(mapping, wbc, ext2_get_block);
+ 	ret = write_cache_pages(mapping, wbc, xfs_do_writepage, &wpc);
+ 	if (wpc.ioend)
+ 		ret = xfs_submit_ioend(wbc, wpc.ioend, ret);
+ 	return ret;
  }
  
-+static int
-+ext2_dax_writepages(struct address_space *mapping, struct writeback_control *wbc)
++STATIC int
++xfs_dax_writepages(
++	struct address_space	*mapping,
++	struct writeback_control *wbc)
 +{
++	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
 +	return dax_writeback_mapping_range(mapping,
-+			mapping->host->i_sb->s_bdev, wbc);
++			xfs_find_bdev_for_inode(mapping->host), wbc);
 +}
 +
- const struct address_space_operations ext2_aops = {
- 	.readpage		= ext2_readpage,
- 	.readpages		= ext2_readpages,
-@@ -990,6 +986,13 @@ const struct address_space_operations ext2_nobh_aops = {
+ /*
+  * Called to move a page into cleanable state - and from there
+  * to be released. The page should already be clean. We always
+@@ -1367,17 +1373,6 @@ xfs_get_blocks(
+ 	return error;
+ }
+ 
+-STATIC ssize_t
+-xfs_vm_direct_IO(
+-	struct kiocb		*iocb,
+-	struct iov_iter		*iter)
+-{
+-	/*
+-	 * We just need the method present so that open/fcntl allow direct I/O.
+-	 */
+-	return -EINVAL;
+-}
+-
+ STATIC sector_t
+ xfs_vm_bmap(
+ 	struct address_space	*mapping,
+@@ -1500,8 +1495,15 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.releasepage		= xfs_vm_releasepage,
+ 	.invalidatepage		= xfs_vm_invalidatepage,
+ 	.bmap			= xfs_vm_bmap,
+-	.direct_IO		= xfs_vm_direct_IO,
++	.direct_IO		= noop_direct_IO,
+ 	.migratepage		= buffer_migrate_page,
+ 	.is_partially_uptodate  = block_is_partially_uptodate,
  	.error_remove_page	= generic_error_remove_page,
  };
- 
-+static const struct address_space_operations ext2_dax_aops = {
-+	.writepages		= ext2_dax_writepages,
++
++const struct address_space_operations xfs_dax_aops = {
++	.writepages		= xfs_dax_writepages,
 +	.direct_IO		= noop_direct_IO,
 +	.set_page_dirty		= noop_set_page_dirty,
 +	.invalidatepage		= noop_invalidatepage,
 +};
-+
- /*
-  * Probably it should be a library function... search for first non-zero word
-  * or memcmp with zero_page, whatever is better for particular architecture.
-@@ -1388,6 +1391,18 @@ void ext2_set_inode_flags(struct inode *inode)
- 		inode->i_flags |= S_DAX;
- }
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 88c85ea63da0..69346d460dfa 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -54,6 +54,7 @@ struct xfs_ioend {
+ };
  
-+void ext2_set_file_ops(struct inode *inode)
-+{
-+	inode->i_op = &ext2_file_inode_operations;
-+	inode->i_fop = &ext2_file_operations;
-+	if (IS_DAX(inode))
-+		inode->i_mapping->a_ops = &ext2_dax_aops;
-+	else if (test_opt(inode->i_sb, NOBH))
-+		inode->i_mapping->a_ops = &ext2_nobh_aops;
-+	else
-+		inode->i_mapping->a_ops = &ext2_aops;
-+}
-+
- struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
- {
- 	struct ext2_inode_info *ei;
-@@ -1480,14 +1495,7 @@ struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
- 		ei->i_data[n] = raw_inode->i_block[n];
+ extern const struct address_space_operations xfs_address_space_operations;
++extern const struct address_space_operations xfs_dax_aops;
  
- 	if (S_ISREG(inode->i_mode)) {
--		inode->i_op = &ext2_file_inode_operations;
--		if (test_opt(inode->i_sb, NOBH)) {
--			inode->i_mapping->a_ops = &ext2_nobh_aops;
--			inode->i_fop = &ext2_file_operations;
--		} else {
--			inode->i_mapping->a_ops = &ext2_aops;
--			inode->i_fop = &ext2_file_operations;
--		}
-+		ext2_set_file_ops(inode);
- 	} else if (S_ISDIR(inode->i_mode)) {
- 		inode->i_op = &ext2_dir_inode_operations;
- 		inode->i_fop = &ext2_dir_operations;
-diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
-index e078075dc66f..55f7caadb093 100644
---- a/fs/ext2/namei.c
-+++ b/fs/ext2/namei.c
-@@ -107,14 +107,7 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
- 	if (IS_ERR(inode))
- 		return PTR_ERR(inode);
+ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
  
--	inode->i_op = &ext2_file_inode_operations;
--	if (test_opt(inode->i_sb, NOBH)) {
--		inode->i_mapping->a_ops = &ext2_nobh_aops;
--		inode->i_fop = &ext2_file_operations;
--	} else {
--		inode->i_mapping->a_ops = &ext2_aops;
--		inode->i_fop = &ext2_file_operations;
--	}
-+	ext2_set_file_ops(inode);
- 	mark_inode_dirty(inode);
- 	return ext2_add_nondir(dentry, inode);
- }
-@@ -125,14 +118,7 @@ static int ext2_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
- 	if (IS_ERR(inode))
- 		return PTR_ERR(inode);
- 
--	inode->i_op = &ext2_file_inode_operations;
--	if (test_opt(inode->i_sb, NOBH)) {
--		inode->i_mapping->a_ops = &ext2_nobh_aops;
--		inode->i_fop = &ext2_file_operations;
--	} else {
--		inode->i_mapping->a_ops = &ext2_aops;
--		inode->i_fop = &ext2_file_operations;
--	}
-+	ext2_set_file_ops(inode);
- 	mark_inode_dirty(inode);
- 	d_tmpfile(dentry, inode);
- 	unlock_new_inode(inode);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 56475fcd76f2..951e84df5576 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1272,7 +1272,10 @@ xfs_setup_iops(
+ 	case S_IFREG:
+ 		inode->i_op = &xfs_inode_operations;
+ 		inode->i_fop = &xfs_file_operations;
+-		inode->i_mapping->a_ops = &xfs_address_space_operations;
++		if (IS_DAX(inode))
++			inode->i_mapping->a_ops = &xfs_dax_aops;
++		else
++			inode->i_mapping->a_ops = &xfs_address_space_operations;
+ 		break;
+ 	case S_IFDIR:
+ 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
 
