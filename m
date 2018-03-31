@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:34261 "EHLO mga17.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:57710 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751580AbeCaEM3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 31 Mar 2018 00:12:29 -0400
-Subject: [PATCH v8 04/18] xfs, dax: introduce xfs_dax_aops
+        id S1750718AbeCaEMR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 31 Mar 2018 00:12:17 -0400
+Subject: [PATCH v8 02/18] fs,
+ dax: prepare for dax-specific address_space_operations
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 30 Mar 2018 21:02:31 -0700
-Message-ID: <152246895136.36038.419954203239973310.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date: Fri, 30 Mar 2018 21:02:21 -0700
+Message-ID: <152246894108.36038.6687731709071362598.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
@@ -16,144 +17,136 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-nvdimm@lists.01.org
-Cc: Jeff Moyer <jmoyer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
+Cc: Jeff Moyer <jmoyer@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>Christoph Hellwig <hch@lst.de>Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.orgjack@suse.cz, snitzer@redhat.com
 
 In preparation for the dax implementation to start associating dax pages
 to inodes via page->mapping, we need to provide a 'struct
-address_space_operations' instance for dax. Otherwise, direct-I/O
-triggers incorrect page cache assumptions and warnings like the
-following:
-
- WARNING: CPU: 27 PID: 1783 at fs/xfs/xfs_aops.c:1468
- xfs_vm_set_page_dirty+0xf3/0x1b0 [xfs]
- [..]
- CPU: 27 PID: 1783 Comm: dma-collision Tainted: G           O 4.15.0-rc2+ #984
- [..]
- Call Trace:
-  set_page_dirty_lock+0x40/0x60
-  bio_set_pages_dirty+0x37/0x50
-  iomap_dio_actor+0x2b7/0x3b0
-  ? iomap_dio_zero+0x110/0x110
-  iomap_apply+0xa4/0x110
-  iomap_dio_rw+0x29e/0x3b0
-  ? iomap_dio_zero+0x110/0x110
-  ? xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
-  xfs_file_dio_aio_read+0x7c/0x1a0 [xfs]
-  xfs_file_read_iter+0xa0/0xc0 [xfs]
-  __vfs_read+0xf9/0x170
-  vfs_read+0xa6/0x150
-  SyS_pread64+0x93/0xb0
-  entry_SYSCALL_64_fastpath+0x1f/0x96
-
-...where the default set_page_dirty() handler assumes that dirty state
-is being tracked in 'struct page' flags.
+address_space_operations' instance for dax. Define some generic VFS aops
+helpers for dax. These noop implementations are there in the dax case to
+prevent the VFS from falling back to operations with page-cache
+assumptions, dax_writeback_mapping_range() may not be referenced in the
+FS_DAX=n case.
 
 Cc: Jeff Moyer <jmoyer@redhat.com>
-Cc: Matthew Wilcox <mawilcox@microsoft.com>
 Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Suggested-by: Matthew Wilcox <mawilcox@microsoft.com>
 Suggested-by: Jan Kara <jack@suse.cz>
-Suggested-by: Dave Chinner <david@fromorbit.com>
+Suggested-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
+Suggested-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- fs/xfs/xfs_aops.c |   34 ++++++++++++++++++----------------
- fs/xfs/xfs_aops.h |    1 +
- fs/xfs/xfs_iops.c |    5 ++++-
- 3 files changed, 23 insertions(+), 17 deletions(-)
+ fs/libfs.c          |   39 +++++++++++++++++++++++++++++++++++++++
+ include/linux/dax.h |   12 +++++++++---
+ include/linux/fs.h  |    4 ++++
+ 3 files changed, 52 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 9c6a830da0ee..e7a56c4786ff 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1194,16 +1194,22 @@ xfs_vm_writepages(
- 	int			ret;
- 
- 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
--	if (dax_mapping(mapping))
--		return dax_writeback_mapping_range(mapping,
--				xfs_find_bdev_for_inode(mapping->host), wbc);
--
- 	ret = write_cache_pages(mapping, wbc, xfs_do_writepage, &wpc);
- 	if (wpc.ioend)
- 		ret = xfs_submit_ioend(wbc, wpc.ioend, ret);
- 	return ret;
+diff --git a/fs/libfs.c b/fs/libfs.c
+index 7ff3cb904acd..0fb590d79f30 100644
+--- a/fs/libfs.c
++++ b/fs/libfs.c
+@@ -1060,6 +1060,45 @@ int noop_fsync(struct file *file, loff_t start, loff_t end, int datasync)
  }
+ EXPORT_SYMBOL(noop_fsync);
  
-+STATIC int
-+xfs_dax_writepages(
-+	struct address_space	*mapping,
-+	struct writeback_control *wbc)
++int noop_set_page_dirty(struct page *page)
 +{
-+	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-+	return dax_writeback_mapping_range(mapping,
-+			xfs_find_bdev_for_inode(mapping->host), wbc);
++	/*
++	 * Unlike __set_page_dirty_no_writeback that handles dirty page
++	 * tracking in the page object, dax does all dirty tracking in
++	 * the inode address_space in response to mkwrite faults. In the
++	 * dax case we only need to worry about potentially dirty CPU
++	 * caches, not dirty page cache pages to write back.
++	 *
++	 * This callback is defined to prevent fallback to
++	 * __set_page_dirty_buffers() in set_page_dirty().
++	 */
++	return 0;
 +}
++EXPORT_SYMBOL_GPL(noop_set_page_dirty);
 +
- /*
-  * Called to move a page into cleanable state - and from there
-  * to be released. The page should already be clean. We always
-@@ -1367,17 +1373,6 @@ xfs_get_blocks(
- 	return error;
++void noop_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length)
++{
++	/*
++	 * There is no page cache to invalidate in the dax case, however
++	 * we need this callback defined to prevent falling back to
++	 * block_invalidatepage() in do_invalidatepage().
++	 */
++}
++EXPORT_SYMBOL_GPL(noop_invalidatepage);
++
++ssize_t noop_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
++{
++	/*
++	 * iomap based filesystems support direct I/O without need for
++	 * this callback. However, it still needs to be set in
++	 * inode->a_ops so that open/fcntl know that direct I/O is
++	 * generally supported.
++	 */
++	return -EINVAL;
++}
++EXPORT_SYMBOL_GPL(noop_direct_IO);
++
+ /* Because kfree isn't assignment-compatible with void(void*) ;-/ */
+ void kfree_link(void *p)
+ {
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 0185ecdae135..ae27a7efe7ab 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -38,6 +38,7 @@ static inline void put_dax(struct dax_device *dax_dev)
+ }
+ #endif
+ 
++struct writeback_control;
+ int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
+ #if IS_ENABLED(CONFIG_FS_DAX)
+ int __bdev_dax_supported(struct super_block *sb, int blocksize);
+@@ -57,6 +58,8 @@ static inline void fs_put_dax(struct dax_device *dax_dev)
  }
  
--STATIC ssize_t
--xfs_vm_direct_IO(
--	struct kiocb		*iocb,
--	struct iov_iter		*iter)
--{
--	/*
--	 * We just need the method present so that open/fcntl allow direct I/O.
--	 */
--	return -EINVAL;
--}
--
- STATIC sector_t
- xfs_vm_bmap(
- 	struct address_space	*mapping,
-@@ -1500,8 +1495,15 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.releasepage		= xfs_vm_releasepage,
- 	.invalidatepage		= xfs_vm_invalidatepage,
- 	.bmap			= xfs_vm_bmap,
--	.direct_IO		= xfs_vm_direct_IO,
-+	.direct_IO		= noop_direct_IO,
- 	.migratepage		= buffer_migrate_page,
- 	.is_partially_uptodate  = block_is_partially_uptodate,
- 	.error_remove_page	= generic_error_remove_page,
- };
+ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
++int dax_writeback_mapping_range(struct address_space *mapping,
++		struct block_device *bdev, struct writeback_control *wbc);
+ #else
+ static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
+ {
+@@ -76,6 +79,12 @@ static inline struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev)
+ {
+ 	return NULL;
+ }
 +
-+const struct address_space_operations xfs_dax_aops = {
-+	.writepages		= xfs_dax_writepages,
-+	.direct_IO		= noop_direct_IO,
-+	.set_page_dirty		= noop_set_page_dirty,
-+	.invalidatepage		= noop_invalidatepage,
-+};
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 88c85ea63da0..69346d460dfa 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -54,6 +54,7 @@ struct xfs_ioend {
- };
++static inline int dax_writeback_mapping_range(struct address_space *mapping,
++		struct block_device *bdev, struct writeback_control *wbc)
++{
++	return -EOPNOTSUPP;
++}
+ #endif
  
- extern const struct address_space_operations xfs_address_space_operations;
-+extern const struct address_space_operations xfs_dax_aops;
+ int dax_read_lock(void);
+@@ -121,7 +130,4 @@ static inline bool dax_mapping(struct address_space *mapping)
+ 	return mapping->host && IS_DAX(mapping->host);
+ }
  
- int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 56475fcd76f2..951e84df5576 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1272,7 +1272,10 @@ xfs_setup_iops(
- 	case S_IFREG:
- 		inode->i_op = &xfs_inode_operations;
- 		inode->i_fop = &xfs_file_operations;
--		inode->i_mapping->a_ops = &xfs_address_space_operations;
-+		if (IS_DAX(inode))
-+			inode->i_mapping->a_ops = &xfs_dax_aops;
-+		else
-+			inode->i_mapping->a_ops = &xfs_address_space_operations;
- 		break;
- 	case S_IFDIR:
- 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
+-struct writeback_control;
+-int dax_writeback_mapping_range(struct address_space *mapping,
+-		struct block_device *bdev, struct writeback_control *wbc);
+ #endif
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 79c413985305..44f7f7080faa 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3129,6 +3129,10 @@ extern int simple_rmdir(struct inode *, struct dentry *);
+ extern int simple_rename(struct inode *, struct dentry *,
+ 			 struct inode *, struct dentry *, unsigned int);
+ extern int noop_fsync(struct file *, loff_t, loff_t, int);
++extern int noop_set_page_dirty(struct page *page);
++extern void noop_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int length);
++extern ssize_t noop_direct_IO(struct kiocb *iocb, struct iov_iter *iter);
+ extern int simple_empty(struct dentry *);
+ extern int simple_readpage(struct file *file, struct page *page);
+ extern int simple_write_begin(struct file *file, struct address_space *mapping,
 
