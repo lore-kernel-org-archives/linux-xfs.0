@@ -1,139 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:51020 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:40994 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754072AbeDBCoz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Apr 2018 22:44:55 -0400
-Date: Sun, 1 Apr 2018 19:44:48 -0700
+        with ESMTP id S1753459AbeDBT43 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:56:29 -0400
+Subject: [PATCH 02/21] xfs: expose various functions to repair code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfs_scrub: call for testing
-Message-ID: <20180402024448.GD13552@magnolia>
-References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
- <CAJCQCtTA4YPxYupZjeb41dYxJGjZm1=W30mtfMPDuusNp6XjLA@mail.gmail.com>
+Date: Mon, 02 Apr 2018 12:56:24 -0700
+Message-ID: <152269898471.16346.2591849751121221226.stgit@magnolia>
+In-Reply-To: <152269897182.16346.1710955088267364781.stgit@magnolia>
+References: <152269897182.16346.1710955088267364781.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJCQCtTA4YPxYupZjeb41dYxJGjZm1=W30mtfMPDuusNp6XjLA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Dave Chinner <dchinner@redhat.com>
 
-On Sun, Apr 01, 2018 at 06:10:26PM -0600, Chris Murphy wrote:
-> On Fri, Feb 2, 2018 at 2:36 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> 
-> 
-> >
-> > I'd really value feedback on scrub as it stand at this point -
-> > Is the documentation clear?  Is the output correct?  Do the
-> > tool's arguments make sense?  Does it segfault?  Does it
-> > find real errors?  Does it crash your kernel? Does it
-> > eat your data?
-> 
-> xfsprogs-4.15.1-1.fc27.x86_64
-> I've built mainline 4.16.0-rc7 with CONFIG_XFS_ONLINE_SCRUB=y but I get this:
-> 
-> [chris@f27s ~]$ sudo xfs_scrub -T -v /mnt/fourth
-> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-> Phase 1: Find filesystem geometry.
-> /mnt/fourth: using 4 threads to scrub.
-> Info: /mnt/fourth: Kernel metadata repair facility not detected.
-> Info: /mnt/fourth: Kernel metadata repair facility is not available.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yeah, xfs_scrub without -n requires the online repair code to be in the
-kernel, which likely missed 4.17.  Previous drafts of this program would
-automatically move to -n mode if repair wasn't found, but Eric argued
-that we shouldn't downgrade modes on the user like that.
+Expose various helpers that the repair code will want to use.
 
-> Use -n to scrub.
-> Info: /mnt/fourth: Scrub aborted after phase 1.
-> /mnt/fourth: errors found: 1
-> Memory used: 132k/0k (17k/116k), time:  0.40/ 0.00/ 0.01s
-> I/O: 84.0KiB in, 0.0B out, 84.0KiB tot
-> I/O rate: 211.4KiB/s in, 0.0B/s out, 211.4KiB/s tot
-> 
-> Kernel message
-> 
-> mount
-> [  329.930644] SGI XFS with ACLs, security attributes, scrub, no debug enabled
-> [  329.940197] XFS (dm-16): Mounting V5 Filesystem
-> [  330.553888] XFS (dm-16): Ending clean mount
-> 
-> scrub command
-> [  373.941951] XFS (dm-16): EXPERIMENTAL online scrub feature in use.
-> Use at your own risk!
-> 
-> 
-> [chris@f27s ~]$ grep XFS linux/.config
-> CONFIG_XFS_FS=m
-> CONFIG_XFS_QUOTA=y
-> CONFIG_XFS_POSIX_ACL=y
-> # CONFIG_XFS_RT is not set
-> CONFIG_XFS_ONLINE_SCRUB=y
-> CONFIG_XFS_WARN=y
-> # CONFIG_XFS_DEBUG is not set
-> # CONFIG_VXFS_FS is not set
-> [chris@f27s ~]$
-> 
-> 
-> When I try it with just -n then I get entries
-> 
-> Info: AG 2 superblock: Optimization is possible.
-> 
-> that appears to be working but it's also a noop.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c   |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.h   |    3 +++
+ fs/xfs/libxfs/xfs_refcount.c |    4 ++--
+ fs/xfs/libxfs/xfs_refcount.h |    5 +++++
+ 4 files changed, 11 insertions(+), 3 deletions(-)
 
-Right, it's observing that some of the secondary sb fields don't match
-the primary, which is ok since xfs_repair will set them if it ever
-decides to use them to repair the primary.
 
-(And yes it will spew corruption errors if the fields that repair can't/
-doesn't fix up don't match.)
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 0e2cf5f..fcbf09f 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -148,7 +148,7 @@ xfs_inobt_get_rec(
+ /*
+  * Insert a single inobt record. Cursor must already point to desired location.
+  */
+-STATIC int
++int
+ xfs_inobt_insert_rec(
+ 	struct xfs_btree_cur	*cur,
+ 	uint16_t		holemask,
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index c5402bb..77fffce 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -176,6 +176,9 @@ int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
+ 		xfs_agino_t high, bool *exists);
+ int xfs_ialloc_count_inodes(struct xfs_btree_cur *cur, xfs_agino_t *count,
+ 		xfs_agino_t *freecount);
++int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
++		uint8_t count, int32_t freecount, xfs_inofree_t free,
++		int *stat);
+ 
+ int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
+ void xfs_ialloc_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index bee68c2..100532d 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -89,7 +89,7 @@ xfs_refcount_lookup_ge(
+ }
+ 
+ /* Convert on-disk record to in-core format. */
+-static inline void
++void
+ xfs_refcount_btrec_to_irec(
+ 	union xfs_btree_rec		*rec,
+ 	struct xfs_refcount_irec	*irec)
+@@ -149,7 +149,7 @@ xfs_refcount_update(
+  * by [bno, len, refcount].
+  * This either works (return 0) or gets an EFSCORRUPTED error.
+  */
+-STATIC int
++int
+ xfs_refcount_insert(
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_refcount_irec	*irec,
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 2a731ac..5856abb 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -85,5 +85,10 @@ static inline xfs_fileoff_t xfs_refcount_max_unmap(int log_res)
+ 
+ extern int xfs_refcount_has_record(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
++union xfs_btree_rec;
++extern void xfs_refcount_btrec_to_irec(union xfs_btree_rec *rec,
++		struct xfs_refcount_irec *irec);
++extern int xfs_refcount_insert(struct xfs_btree_cur *cur,
++		struct xfs_refcount_irec *irec, int *stat);
+ 
+ #endif	/* __XFS_REFCOUNT_H__ */
 
-> Also the -n output has many unicode complaints with full filenames in
-> the output. e.g.
-> 
-> Info: inode 1815560251 (27/3620923): Unicode name
-> "Chapter\xc2\xa02.\xc2\xa0Securing Your Network.webloc" in directory
-> should be normalized as "Chapter 2. Securing Your Network.webloc".
-> 
-> This should be less verbose by default. Perhaps something generic
-
-All that's being replaced in 4.16 with something less chatty (see below).
-
-> like, "Some unicode filenames should be normalized, use -v for verbose
-> output."  I don't want to have to report a scrub with a bunch of
-> filenames interlaced in the output. Plus that's nothing I can or even
-> want to do anything about. That file likely came from a Mac using
-> netatalk or samba. Hopefully the repair mode for scrub doesn't
-> normalize these files, I don't really want to find out the hard way
-
-xfs_scrub doesn't do anything with weird filenames (or anything tagged
-Warning: or Info:), since those aren't fs corruptions; they're merely
-things that depending on the circumstance could be fishy or could be
-fine and require administrator review.
-
-Hmmm, 0xc2a0, that's two nonbreaking spaces in the filename.  Yeah that
-probably did come from a Mac. :)
-
-As for xfs_scrub in 4.16, I'm replacing the Unicode scanning engine with
-a more robust one that only complains about filenames if there are
-multiple in the same directory that actually look kinda similar.  In
-other words it'll shut up unless that directory contains (for example)
-"Chapter\xc2\xa02.txt" and "Chapter 2.txt" and they don't both point to
-the same inode.
-
-> that corrected files then can't be properly read over that same
-> network connection or otherwise have filenames apparently mangled.
-
-Thanks for testing! :)
-
---D
-
-> 
-> 
-> -- 
-> Chris Murphy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
