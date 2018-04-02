@@ -1,419 +1,252 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53468 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752318AbeDDWws (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 18:52:48 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 13871C00F7C9
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 22:52:48 +0000 (UTC)
-Subject: [PATCH 1/2] xfs: scrub - remove unused function parameters
-References: <b2b1aa4b-9ba9-eb4d-c91c-889a25fdd61e@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <a8926c11-ea41-e021-9da0-4fb73f6baece@redhat.com>
-Date: Wed, 4 Apr 2018 17:52:41 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:40282 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754686AbeDBTzo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:55:44 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w32JicCg019769
+        for <linux-xfs@vger.kernel.org>; Mon, 2 Apr 2018 19:55:43 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2h3txp01kp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 02 Apr 2018 19:55:43 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w32JtgeS027486
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 2 Apr 2018 19:55:42 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w32Jtg4Q007533
+        for <linux-xfs@vger.kernel.org>; Mon, 2 Apr 2018 19:55:42 GMT
+Subject: [PATCH 2/2] xfs: hoist xfs_scrub_agfl_walk to libxfs as
+ xfs_agfl_walk
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 02 Apr 2018 12:55:42 -0700
+Message-ID: <152269894202.16253.2257249480679291752.stgit@magnolia>
+In-Reply-To: <152269892987.16253.3900560313483881560.stgit@magnolia>
+References: <152269892987.16253.3900560313483881560.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <b2b1aa4b-9ba9-eb4d-c91c-889a25fdd61e@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
+This function is basically a generic AGFL block iterator, so promote it
+to libxfs ahead of online repair wanting to use it.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c |   37 +++++++++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |    5 +++
+ fs/xfs/scrub/agheader.c   |   78 ++++++++-------------------------------------
+ fs/xfs/scrub/common.h     |    4 --
+ 4 files changed, 55 insertions(+), 69 deletions(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 4c03ec2..d860116 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3128,3 +3128,40 @@ xfs_alloc_has_record(
+ 
+ 	return xfs_btree_has_record(cur, &low, &high, exists);
+ }
++
++/*
++ * Walk all the blocks in the AGFL.  The fn function can return any negative
++ * error code or XFS_BTREE_QUERY_RANGE_ABORT.
++ */
++int
++xfs_agfl_walk(
++	struct xfs_mount	*mp,
++	struct xfs_agf		*agf,
++	struct xfs_buf		*agflbp,
++	xfs_agfl_walk_fn	fn,
++	void			*priv)
++{
++	__be32			*agfl_bno;
++	unsigned int		i;
++	int			error;
++
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
++	i = be32_to_cpu(agf->agf_flfirst);
++
++	/* Nothing to walk in an empty AGFL. */
++	if (agf->agf_flcount == cpu_to_be32(0))
++		return 0;
++
++	/* Otherwise, walk from first to last, wrapping as needed. */
++	for (;;) {
++		error = fn(mp, be32_to_cpu(agfl_bno[i]), priv);
++		if (error)
++			return error;
++		if (i == be32_to_cpu(agf->agf_fllast))
++			break;
++		if (++i == xfs_agfl_size(mp))
++			i = 0;
++	}
++
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index a311a24..d4b83d1 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -249,4 +249,9 @@ bool xfs_verify_fsbno(struct xfs_mount *mp, xfs_fsblock_t fsbno);
+ int xfs_alloc_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, bool *exist);
+ 
++typedef int (*xfs_agfl_walk_fn)(struct xfs_mount *mp, xfs_agblock_t bno,
++		void *priv);
++int xfs_agfl_walk(struct xfs_mount *mp, struct xfs_agf *agf,
++		struct xfs_buf *agflbp, xfs_agfl_walk_fn fn, void *priv);
++
+ #endif	/* __XFS_ALLOC_H__ */
 diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 018aabbd..4ad8877 100644
+index 018aabbd..9bf1a1a 100644
 --- a/fs/xfs/scrub/agheader.c
 +++ b/fs/xfs/scrub/agheader.c
-@@ -105,8 +105,7 @@
- /* Cross-reference with the other btrees. */
- STATIC void
- xfs_scrub_superblock_xref(
+@@ -38,68 +38,6 @@
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+ 
+-/*
+- * Walk all the blocks in the AGFL.  The fn function can return any negative
+- * error code or XFS_BTREE_QUERY_RANGE_ABORT.
+- */
+-int
+-xfs_scrub_walk_agfl(
 -	struct xfs_scrub_context	*sc,
--	struct xfs_buf			*bp)
-+	struct xfs_scrub_context	*sc)
+-	int				(*fn)(struct xfs_scrub_context *,
+-					      xfs_agblock_t bno, void *),
+-	void				*priv)
+-{
+-	struct xfs_agf			*agf;
+-	__be32				*agfl_bno;
+-	struct xfs_mount		*mp = sc->mp;
+-	unsigned int			flfirst;
+-	unsigned int			fllast;
+-	int				i;
+-	int				error;
+-
+-	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+-	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, sc->sa.agfl_bp);
+-	flfirst = be32_to_cpu(agf->agf_flfirst);
+-	fllast = be32_to_cpu(agf->agf_fllast);
+-
+-	/* Nothing to walk in an empty AGFL. */
+-	if (agf->agf_flcount == cpu_to_be32(0))
+-		return 0;
+-
+-	/* first to last is a consecutive list. */
+-	if (fllast >= flfirst) {
+-		for (i = flfirst; i <= fllast; i++) {
+-			error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+-			if (error)
+-				return error;
+-			if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-				return error;
+-		}
+-
+-		return 0;
+-	}
+-
+-	/* first to the end */
+-	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
+-		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+-		if (error)
+-			return error;
+-		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-			return error;
+-	}
+-
+-	/* the start to last. */
+-	for (i = 0; i <= fllast; i++) {
+-		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+-		if (error)
+-			return error;
+-		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-			return error;
+-	}
+-
+-	return 0;
+-}
+-
+ /* Superblock */
+ 
+ /* Cross-reference with the other btrees. */
+@@ -680,6 +618,7 @@ struct xfs_scrub_agfl_info {
+ 	unsigned int			sz_entries;
+ 	unsigned int			nr_entries;
+ 	xfs_agblock_t			*entries;
++	struct xfs_scrub_context	*sc;
+ };
+ 
+ /* Cross-reference with the other btrees. */
+@@ -701,12 +640,12 @@ xfs_scrub_agfl_block_xref(
+ /* Scrub an AGFL block. */
+ STATIC int
+ xfs_scrub_agfl_block(
+-	struct xfs_scrub_context	*sc,
++	struct xfs_mount		*mp,
+ 	xfs_agblock_t			agbno,
+ 	void				*priv)
  {
- 	struct xfs_owner_info		oinfo;
- 	struct xfs_mount		*mp = sc->mp;
-@@ -420,7 +419,7 @@
- 			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
- 		xfs_scrub_block_set_corrupt(sc, bp);
+-	struct xfs_mount		*mp = sc->mp;
+ 	struct xfs_scrub_agfl_info	*sai = priv;
++	struct xfs_scrub_context	*sc = sai->sc;
+ 	xfs_agnumber_t			agno = sc->sa.agno;
  
--	xfs_scrub_superblock_xref(sc, bp);
-+	xfs_scrub_superblock_xref(sc);
+ 	if (xfs_verify_agbno(mp, agno, agbno) &&
+@@ -717,6 +656,9 @@ xfs_scrub_agfl_block(
  
- 	return error;
- }
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 127575f..b0d6720 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -64,7 +64,7 @@
- 	if (!sc->buf)
- 		return -ENOMEM;
+ 	xfs_scrub_agfl_block_xref(sc, agbno, priv);
  
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return XFS_BTREE_QUERY_RANGE_ABORT;
++
+ 	return 0;
  }
  
- /* Extended Attributes */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 639d14b..c4e85ac 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -75,7 +75,7 @@
+@@ -796,6 +738,7 @@ xfs_scrub_agfl(
+ 		goto out;
  	}
+ 	memset(&sai, 0, sizeof(sai));
++	sai.sc = sc;
+ 	sai.sz_entries = agflcount;
+ 	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount, KM_NOFS);
+ 	if (!sai.entries) {
+@@ -805,7 +748,12 @@ xfs_scrub_agfl(
  
- 	/* Got the inode, lock it and we're ready to go. */
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(mp, &sc->tp);
+ 	/* Check the blocks in the AGFL. */
+ 	xfs_rmap_ag_owner(&sai.oinfo, XFS_RMAP_OWN_AG);
+-	error = xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sai);
++	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
++			sc->sa.agfl_bp, xfs_scrub_agfl_block, &sai);
++	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
++		error = 0;
++		goto out_free;
++	}
  	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-@@ -684,7 +684,7 @@ struct xfs_scrub_bmap_check_rmap_info {
- 	info.lastoff = 0;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	for_each_xfs_iext(ifp, &icur, &irec) {
--		if (xfs_scrub_should_terminate(sc, &error))
-+		if (xfs_scrub_should_terminate(&error))
- 			break;
- 		if (isnullstartblock(irec.br_startblock))
- 			continue;
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 5421816..583a4b7 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -628,7 +628,7 @@ struct check_owner {
- 			error = bs.scrub_rec(&bs, recp);
- 			if (error)
- 				break;
--			if (xfs_scrub_should_terminate(sc, &error) ||
-+			if (xfs_scrub_should_terminate(&error) ||
- 			    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
- 				break;
+ 		goto out_free;
  
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 8ed91d5..7067c94 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -356,7 +356,6 @@ struct xfs_scrub_rmap_ownedby_info {
-  */
- int
- xfs_scrub_count_rmap_ownedby_ag(
--	struct xfs_scrub_context		*sc,
- 	struct xfs_btree_cur			*cur,
- 	struct xfs_owner_info			*oinfo,
- 	xfs_filblks_t				*blocks)
-@@ -574,7 +573,7 @@ struct xfs_scrub_rmap_ownedby_info {
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_trans_alloc(sc->sm, sc->mp, &sc->tp);
-+	return xfs_scrub_trans_alloc(sc->mp, &sc->tp);
- }
- 
- /* Set us up with AG headers and btree cursors. */
-@@ -692,8 +691,7 @@ struct xfs_scrub_rmap_ownedby_info {
- int
- xfs_scrub_setup_inode_contents(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_inode		*ip,
--	unsigned int			resblks)
-+	struct xfs_inode		*ip)
- {
- 	struct xfs_mount		*mp = sc->mp;
- 	int				error;
-@@ -705,7 +703,7 @@ struct xfs_scrub_rmap_ownedby_info {
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(mp, &sc->tp);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index deaf604..8b6b83d 100644
+index deaf604..140e90c 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -27,7 +27,6 @@
-  */
- static inline bool
- xfs_scrub_should_terminate(
--	struct xfs_scrub_context	*sc,
- 	int				*error)
- {
- 	if (fatal_signal_pending(current)) {
-@@ -44,7 +43,6 @@
-  */
- static inline int
- xfs_scrub_trans_alloc(
--	struct xfs_scrub_metadata	*sm,
- 	struct xfs_mount		*mp,
- 	struct xfs_trans		**tpp)
- {
-@@ -145,8 +143,7 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
- 			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
- 				  void *),
- 			void *priv);
--int xfs_scrub_count_rmap_ownedby_ag(struct xfs_scrub_context *sc,
--				    struct xfs_btree_cur *cur,
-+int xfs_scrub_count_rmap_ownedby_ag(struct xfs_btree_cur *cur,
+@@ -141,10 +141,6 @@ int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ void xfs_scrub_ag_btcur_free(struct xfs_scrub_ag *sa);
+ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
+ 			    struct xfs_scrub_ag *sa);
+-int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+-			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
+-				  void *),
+-			void *priv);
+ int xfs_scrub_count_rmap_ownedby_ag(struct xfs_scrub_context *sc,
+ 				    struct xfs_btree_cur *cur,
  				    struct xfs_owner_info *oinfo,
- 				    xfs_filblks_t *blocks);
- 
-@@ -154,7 +151,7 @@ int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
- 			     struct xfs_inode *ip, bool force_log);
- int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
- int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
--				   struct xfs_inode *ip, unsigned int resblks);
-+				   struct xfs_inode *ip);
- void xfs_scrub_buffer_recheck(struct xfs_scrub_context *sc, struct xfs_buf *bp);
- 
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index bffdb7d..db90c85 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -561,7 +561,7 @@
- 			error = scrub_fn(&ds, level, rec);
- 			if (error)
- 				break;
--			if (xfs_scrub_should_terminate(sc, &error) ||
-+			if (xfs_scrub_should_terminate(&error) ||
- 			    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
- 				break;
- 
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 38f2980..01126aa 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -49,7 +49,7 @@
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
- }
- 
- /* Directories */
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 106ca4b..26b67a3 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -157,7 +157,7 @@
- 	bool				inuse;
- 	int				error = 0;
- 
--	if (xfs_scrub_should_terminate(bs->sc, &error))
-+	if (xfs_scrub_should_terminate(&error))
- 		return error;
- 
- 	dip = xfs_buf_offset(bp, clusterino * mp->m_sb.sb_inodesize);
-@@ -377,8 +377,7 @@
-  */
- STATIC void
- xfs_scrub_iallocbt_xref_rmap_btreeblks(
--	struct xfs_scrub_context	*sc,
--	int				which)
-+	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_owner_info		oinfo;
- 	xfs_filblks_t			blocks;
-@@ -402,7 +401,7 @@
- 	}
- 
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, &oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, &oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-@@ -417,7 +416,6 @@
- STATIC void
- xfs_scrub_iallocbt_xref_rmap_inodes(
- 	struct xfs_scrub_context	*sc,
--	int				which,
- 	xfs_filblks_t			inode_blocks)
- {
- 	struct xfs_owner_info		oinfo;
-@@ -429,7 +427,7 @@
- 
- 	/* Check that we saw as many inode blocks as the rmap knows about. */
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, &oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, &oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-@@ -455,7 +453,7 @@
- 	if (error)
- 		return error;
- 
--	xfs_scrub_iallocbt_xref_rmap_btreeblks(sc, which);
-+	xfs_scrub_iallocbt_xref_rmap_btreeblks(sc);
- 
- 	/*
- 	 * If we're scrubbing the inode btree, inode_blocks is the number of
-@@ -465,7 +463,7 @@
- 	 * to inode chunks with free inodes.
- 	 */
- 	if (which == XFS_BTNUM_INO)
--		xfs_scrub_iallocbt_xref_rmap_inodes(sc, which, inode_blocks);
-+		xfs_scrub_iallocbt_xref_rmap_inodes(sc, inode_blocks);
- 
- 	return error;
- }
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index df14930..481cbdb 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -68,7 +68,7 @@
- 		break;
- 	case -EFSCORRUPTED:
- 	case -EFSBADCRC:
--		return xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+		return xfs_scrub_trans_alloc(mp, &sc->tp);
- 	default:
- 		return error;
- 	}
-@@ -76,7 +76,7 @@
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(mp, &sc->tp);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-@@ -134,7 +134,6 @@
- STATIC void
- xfs_scrub_inode_flags(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
- 	uint16_t			flags)
-@@ -179,7 +178,6 @@
- STATIC void
- xfs_scrub_inode_flags2(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
- 	uint16_t			flags,
-@@ -372,7 +370,7 @@
- 			xfs_scrub_ino_set_corrupt(sc, ino);
- 	}
- 
--	xfs_scrub_inode_flags(sc, dip, ino, mode, flags);
-+	xfs_scrub_inode_flags(sc, ino, mode, flags);
- 
- 	xfs_scrub_inode_extsize(sc, dip, ino, mode, flags);
- 
-@@ -428,7 +426,7 @@
- 	if (dip->di_version >= 3) {
- 		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
- 			xfs_scrub_ino_set_corrupt(sc, ino);
--		xfs_scrub_inode_flags2(sc, dip, ino, mode, flags, flags2);
-+		xfs_scrub_inode_flags2(sc, ino, mode, flags, flags2);
- 		xfs_scrub_inode_cowextsize(sc, dip, ino, mode, flags,
- 				flags2);
- 	}
-diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index 1fb88c1..03110eb 100644
---- a/fs/xfs/scrub/parent.c
-+++ b/fs/xfs/scrub/parent.c
-@@ -45,7 +45,7 @@
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
- }
- 
- /* Parent pointers */
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 6ba465e..eda174f 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -224,7 +224,7 @@
- 	}
- 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
- 	while (1) {
--		if (xfs_scrub_should_terminate(sc, &error))
-+		if (xfs_scrub_should_terminate(&error))
- 			break;
- 
- 		off = irec.br_startoff + irec.br_blockcount;
-@@ -265,7 +265,7 @@
- 
- 	/* Check all the quota items. */
- 	while (id < ((xfs_dqid_t)-1ULL)) {
--		if (xfs_scrub_should_terminate(sc, &error))
-+		if (xfs_scrub_should_terminate(&error))
- 			break;
- 
- 		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 400f156..b8d12bb 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -124,7 +124,7 @@ struct xfs_scrub_refcnt_check {
- 	xfs_agblock_t			rc_last;
- 	int				error = 0;
- 
--	if (xfs_scrub_should_terminate(refchk->sc, &error))
-+	if (xfs_scrub_should_terminate(&error))
- 		return error;
- 
- 	rm_last = rec->rm_startblock + rec->rm_blockcount - 1;
-@@ -411,7 +411,7 @@ struct xfs_scrub_refcnt_check {
- 	error = xfs_btree_count_blocks(sc->sa.refc_cur, &refcbt_blocks);
- 	if (!xfs_scrub_btree_process_error(sc, sc->sa.refc_cur, 0, &error))
- 		return;
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-@@ -420,7 +420,7 @@ struct xfs_scrub_refcnt_check {
- 
- 	/* Check that we saw as many cow blocks as the rmap knows about. */
- 	xfs_rmap_ag_owner(oinfo, XFS_RMAP_OWN_COW);
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 26c7596..46e7bf1 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -138,7 +138,7 @@
- {
- 	int				error = 0;
- 
--	if (xfs_scrub_should_terminate(sc, &error))
-+	if (xfs_scrub_should_terminate(&error))
- 		return error;
- 
- 	return 0;
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-index 3aa3d60..7af7981 100644
---- a/fs/xfs/scrub/symlink.c
-+++ b/fs/xfs/scrub/symlink.c
-@@ -48,7 +48,7 @@
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
- }
- 
- /* Symbolic links. */
 
