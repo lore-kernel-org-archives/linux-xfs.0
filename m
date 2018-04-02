@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45178 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754392AbeDBT4q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:56:46 -0400
-Subject: [PATCH 04/21] xfs: add repair helpers for the reference count btree
+Received: from aserp2120.oracle.com ([141.146.126.78]:50224 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754420AbeDBT4u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:56:50 -0400
+Subject: [PATCH 05/21] xfs: add BMAPI_NORMAP flag to perform block remapping
+ without updating rmapbt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 02 Apr 2018 12:56:37 -0700
-Message-ID: <152269899709.16346.12078821955419762598.stgit@magnolia>
+Date: Mon, 02 Apr 2018 12:56:47 -0700
+Message-ID: <152269900729.16346.3322708934701882860.stgit@magnolia>
 In-Reply-To: <152269897182.16346.1710955088267364781.stgit@magnolia>
 References: <152269897182.16346.1710955088267364781.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,102 +17,108 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a couple of functions to the refcount btree and generic btree code
-that will be used to repair the refcountbt.
+Add a new flag, XFS_BMAPI_NORMAP, which will perform file block
+remapping without updating the rmapbt.  This will be used by the repair
+code to reconstruct bmbts from the rmapbt, in which case we don't want
+the rmapbt update.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_btree.c    |   21 +++++++++++++++++++++
- fs/xfs/libxfs/xfs_btree.h    |    1 +
- fs/xfs/libxfs/xfs_refcount.c |   17 +++++++++++++++++
- fs/xfs/libxfs/xfs_refcount.h |    2 ++
- 4 files changed, 41 insertions(+)
+ fs/xfs/libxfs/xfs_bmap.c |   25 ++++++++++++++++---------
+ fs/xfs/libxfs/xfs_bmap.h |    6 +++++-
+ 2 files changed, 21 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index ec6a464..07bc8bd 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -5028,3 +5028,24 @@ xfs_btree_has_record(
- 	*exists = false;
- 	return error;
- }
-+
-+/* Are there more records in this btree? */
-+bool
-+xfs_btree_has_more_records(
-+	struct xfs_btree_cur	*cur)
-+{
-+	struct xfs_btree_block	*block;
-+	struct xfs_buf		*bp;
-+
-+	block = xfs_btree_get_block(cur, 0, &bp);
-+
-+	/* There are still records in this block. */
-+	if (cur->bc_ptrs[0] < xfs_btree_get_numrecs(block))
-+		return true;
-+
-+	/* There are more record blocks. */
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
-+		return block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK);
-+	else
-+		return block->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK);
-+}
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 7b5f1db..3d094ed 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -549,5 +549,6 @@ union xfs_btree_key *xfs_btree_high_key_from_key(struct xfs_btree_cur *cur,
- 		union xfs_btree_key *key);
- int xfs_btree_has_record(struct xfs_btree_cur *cur, union xfs_btree_irec *low,
- 		union xfs_btree_irec *high, bool *exists);
-+bool xfs_btree_has_more_records(struct xfs_btree_cur *cur);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 3b03d88..519ef9c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1998,9 +1998,12 @@ xfs_bmap_add_extent_delay_real(
+ 	}
  
- #endif	/* __XFS_BTREE_H__ */
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 100532d..9103be0 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -88,6 +88,23 @@ xfs_refcount_lookup_ge(
- 	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
- }
+ 	/* add reverse mapping */
+-	error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip, whichfork, new);
+-	if (error)
+-		goto done;
++	if (!(bma->flags & XFS_BMAPI_NORMAP)) {
++		error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip,
++				whichfork, new);
++		if (error)
++			goto done;
++	}
  
-+/*
-+ * Look up the first record equal to [bno, len] in the btree
-+ * given by cur.
-+ */
-+int
-+xfs_refcount_lookup_eq(
-+	struct xfs_btree_cur	*cur,
-+	xfs_agblock_t		bno,
-+	int			*stat)
-+{
-+	trace_xfs_refcount_lookup(cur->bc_mp, cur->bc_private.a.agno, bno,
-+			XFS_LOOKUP_LE);
-+	cur->bc_rec.rc.rc_startblock = bno;
-+	cur->bc_rec.rc.rc_blockcount = 0;
-+	return xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
-+}
+ 	/* convert to a btree if necessary */
+ 	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+@@ -2664,7 +2667,8 @@ xfs_bmap_add_extent_hole_real(
+ 	struct xfs_bmbt_irec	*new,
+ 	xfs_fsblock_t		*first,
+ 	struct xfs_defer_ops	*dfops,
+-	int			*logflagsp)
++	int			*logflagsp,
++	int			flags)
+ {
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -2842,9 +2846,11 @@ xfs_bmap_add_extent_hole_real(
+ 	}
+ 
+ 	/* add reverse mapping */
+-	error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
+-	if (error)
+-		goto done;
++	if (!(flags & XFS_BMAPI_NORMAP)) {
++		error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
++		if (error)
++			goto done;
++	}
+ 
+ 	/* convert to a btree if necessary */
+ 	if (xfs_bmap_needs_btree(ip, whichfork)) {
+@@ -4119,7 +4125,8 @@ xfs_bmapi_allocate(
+ 	else
+ 		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
+ 				whichfork, &bma->icur, &bma->cur, &bma->got,
+-				bma->firstblock, bma->dfops, &bma->logflags);
++				bma->firstblock, bma->dfops, &bma->logflags,
++				bma->flags);
+ 
+ 	bma->logflags |= tmp_logflags;
+ 	if (error)
+@@ -4565,7 +4572,7 @@ xfs_bmapi_remap(
+ 	got.br_state = XFS_EXT_NORM;
+ 
+ 	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &icur,
+-			&cur, &got, &firstblock, dfops, &logflags);
++			&cur, &got, &firstblock, dfops, &logflags, 0);
+ 	if (error)
+ 		goto error0;
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index f3be641..7cbc9c0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -116,6 +116,9 @@ struct xfs_extent_free_item
+ /* Only convert unwritten extents, don't allocate new blocks */
+ #define XFS_BMAPI_CONVERT_ONLY	0x800
+ 
++/* Do not update the rmap btree.  Used for reconstructing bmbt from rmapbt. */
++#define XFS_BMAPI_NORMAP	0x1000
 +
- /* Convert on-disk record to in-core format. */
- void
- xfs_refcount_btrec_to_irec(
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 5856abb..a92ad90 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -24,6 +24,8 @@ extern int xfs_refcount_lookup_le(struct xfs_btree_cur *cur,
- 		xfs_agblock_t bno, int *stat);
- extern int xfs_refcount_lookup_ge(struct xfs_btree_cur *cur,
- 		xfs_agblock_t bno, int *stat);
-+extern int xfs_refcount_lookup_eq(struct xfs_btree_cur *cur,
-+		xfs_agblock_t bno, int *stat);
- extern int xfs_refcount_get_rec(struct xfs_btree_cur *cur,
- 		struct xfs_refcount_irec *irec, int *stat);
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -128,7 +131,8 @@ struct xfs_extent_free_item
+ 	{ XFS_BMAPI_REMAP,	"REMAP" }, \
+ 	{ XFS_BMAPI_COWFORK,	"COWFORK" }, \
+ 	{ XFS_BMAPI_DELALLOC,	"DELALLOC" }, \
+-	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }
++	{ XFS_BMAPI_CONVERT_ONLY, "CONVERT_ONLY" }, \
++	{ XFS_BMAPI_NORMAP,	"NORMAP" }
  
+ 
+ static inline int xfs_bmapi_aflag(int w)
 
