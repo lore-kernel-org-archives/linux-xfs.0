@@ -1,123 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36240 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754036AbeDBCBN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 1 Apr 2018 22:01:13 -0400
-Subject: Re: xfs_scrub: call for testing
-References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
- <CAJCQCtTA4YPxYupZjeb41dYxJGjZm1=W30mtfMPDuusNp6XjLA@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <85489e2c-6527-33a8-39ea-6e66e30b3b92@sandeen.net>
-Date: Sun, 1 Apr 2018 21:01:12 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:44800 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753189AbeDBT4X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:56:23 -0400
+Subject: [PATCH 01/21] xfs: add helpers to calculate btree size
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 02 Apr 2018 12:56:18 -0700
+Message-ID: <152269897832.16346.15675011645422733615.stgit@magnolia>
+In-Reply-To: <152269897182.16346.1710955088267364781.stgit@magnolia>
+References: <152269897182.16346.1710955088267364781.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CAJCQCtTA4YPxYupZjeb41dYxJGjZm1=W30mtfMPDuusNp6XjLA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, Dave Chinner <dchinner@redhat.com>
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Add a bunch of helper functions that calculate the sizes of various
+btrees.  These will be used to repair btrees and btree headers.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc_btree.c  |    9 +++++++++
+ fs/xfs/libxfs/xfs_alloc_btree.h  |    2 ++
+ fs/xfs/libxfs/xfs_bmap_btree.c   |    9 +++++++++
+ fs/xfs/libxfs/xfs_bmap_btree.h   |    3 +++
+ fs/xfs/libxfs/xfs_btree.c        |    4 ++--
+ fs/xfs/libxfs/xfs_btree.h        |    2 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    9 +++++++++
+ fs/xfs/libxfs/xfs_ialloc_btree.h |    2 ++
+ 8 files changed, 37 insertions(+), 3 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 6840b58..224dfe0 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -553,3 +553,12 @@ xfs_allocbt_maxrecs(
+ 		return blocklen / sizeof(xfs_alloc_rec_t);
+ 	return blocklen / (sizeof(xfs_alloc_key_t) + sizeof(xfs_alloc_ptr_t));
+ }
++
++/* Calculate the freespace btree size for some records. */
++xfs_extlen_t
++xfs_allocbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_alloc_mnr, len);
++}
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.h b/fs/xfs/libxfs/xfs_alloc_btree.h
+index 45e189e..2fd5472 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.h
++++ b/fs/xfs/libxfs/xfs_alloc_btree.h
+@@ -61,5 +61,7 @@ extern struct xfs_btree_cur *xfs_allocbt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_buf *,
+ 		xfs_agnumber_t, xfs_btnum_t);
+ extern int xfs_allocbt_maxrecs(struct xfs_mount *, int, int);
++extern xfs_extlen_t xfs_allocbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
+ 
+ #endif	/* __XFS_ALLOC_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 9faf479..42ca02c 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -662,3 +662,12 @@ xfs_bmbt_change_owner(
+ 	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+ 	return error;
+ }
++
++/* Calculate the bmap btree size for some records. */
++unsigned long long
++xfs_bmbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_bmap_dmnr, len);
++}
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index e450574..fb3cd2d 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -118,4 +118,7 @@ extern int xfs_bmbt_change_owner(struct xfs_trans *tp, struct xfs_inode *ip,
+ extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
+ 		struct xfs_trans *, struct xfs_inode *, int);
+ 
++extern unsigned long long xfs_bmbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
++
+ #endif	/* __XFS_BMAP_BTREE_H__ */
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 79ee4a1..ec6a464 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4944,7 +4944,7 @@ xfs_btree_query_all(
+  * Calculate the number of blocks needed to store a given number of records
+  * in a short-format (per-AG metadata) btree.
+  */
+-xfs_extlen_t
++unsigned long long
+ xfs_btree_calc_size(
+ 	struct xfs_mount	*mp,
+ 	uint			*limits,
+@@ -4952,7 +4952,7 @@ xfs_btree_calc_size(
+ {
+ 	int			level;
+ 	int			maxrecs;
+-	xfs_extlen_t		rval;
++	unsigned long long	rval;
+ 
+ 	maxrecs = limits[0];
+ 	for (level = 0, rval = 0; len > 1; level++) {
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 50440b5..7b5f1db 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -502,7 +502,7 @@ xfs_failaddr_t xfs_btree_lblock_verify(struct xfs_buf *bp,
+ 
+ uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
+ 				 unsigned long len);
+-xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
++unsigned long long xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
+ 		unsigned long long len);
+ 
+ /* return codes */
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index af197a5..559fc68 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -613,3 +613,12 @@ xfs_finobt_calc_reserves(
+ 	*used += tree_len;
+ 	return 0;
+ }
++
++/* Calculate the inobt btree size for some records. */
++xfs_extlen_t
++xfs_iallocbt_calc_size(
++	struct xfs_mount	*mp,
++	unsigned long long	len)
++{
++	return xfs_btree_calc_size(mp, mp->m_inobt_mnr, len);
++}
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+index aa81e2e..4acdd54 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.h
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+@@ -74,5 +74,7 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
+ 
+ int xfs_finobt_calc_reserves(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		xfs_extlen_t *ask, xfs_extlen_t *used);
++extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
++		unsigned long long len);
+ 
+ #endif	/* __XFS_IALLOC_BTREE_H__ */
 
-On 4/1/18 7:10 PM, Chris Murphy wrote:
-> On Fri, Feb 2, 2018 at 2:36 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> 
-> 
->>
->> I'd really value feedback on scrub as it stand at this point -
->> Is the documentation clear?  Is the output correct?  Do the
->> tool's arguments make sense?  Does it segfault?  Does it
->> find real errors?  Does it crash your kernel? Does it
->> eat your data?
-> 
-> xfsprogs-4.15.1-1.fc27.x86_64
-> I've built mainline 4.16.0-rc7 with CONFIG_XFS_ONLINE_SCRUB=y but I get this:
-> 
-> [chris@f27s ~]$ sudo xfs_scrub -T -v /mnt/fourth
-> EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-> Phase 1: Find filesystem geometry.
-> /mnt/fourth: using 4 threads to scrub.
-> Info: /mnt/fourth: Kernel metadata repair facility not detected.
-> Info: /mnt/fourth: Kernel metadata repair facility is not available.
-> Use -n to scrub.
-
-Yup, that's all it can do in that kernel.
-
-> Info: /mnt/fourth: Scrub aborted after phase 1.
-> /mnt/fourth: errors found: 1
-
-I think we've fixed it now to not call this an error.
-
-> Memory used: 132k/0k (17k/116k), time:  0.40/ 0.00/ 0.01s
-> I/O: 84.0KiB in, 0.0B out, 84.0KiB tot
-> I/O rate: 211.4KiB/s in, 0.0B/s out, 211.4KiB/s tot
-> 
-> Kernel message
-> 
-> mount
-> [  329.930644] SGI XFS with ACLs, security attributes, scrub, no debug enabled
-> [  329.940197] XFS (dm-16): Mounting V5 Filesystem
-> [  330.553888] XFS (dm-16): Ending clean mount
-> 
-> scrub command
-> [  373.941951] XFS (dm-16): EXPERIMENTAL online scrub feature in use.
-> Use at your own risk!
-> 
-> 
-> [chris@f27s ~]$ grep XFS linux/.config
-> CONFIG_XFS_FS=m
-> CONFIG_XFS_QUOTA=y
-> CONFIG_XFS_POSIX_ACL=y
-> # CONFIG_XFS_RT is not set
-> CONFIG_XFS_ONLINE_SCRUB=y
-> CONFIG_XFS_WARN=y
-> # CONFIG_XFS_DEBUG is not set
-> # CONFIG_VXFS_FS is not set
-> [chris@f27s ~]$
-> 
-> 
-> When I try it with just -n then I get entries
-> 
-> Info: AG 2 superblock: Optimization is possible.
-> 
-> that appears to be working but it's also a noop.
-
-So essentially it found nothing to worry about.  But it seems that
-this is not particularly obvious or informative to the user when
-presented this way ...
-
-> Also the -n output has many unicode complaints with full filenames in
-> the output. e.g.
-> 
-> Info: inode 1815560251 (27/3620923): Unicode name
-> "Chapter\xc2\xa02.\xc2\xa0Securing Your Network.webloc" in directory
-> should be normalized as "Chapter 2. Securing Your Network.webloc".
-
-TBH, I don't quite understand the "should" - should according to
-who, and why?  It's very difficult to determine which oddly-encoded
-names are actually security risks (which is, I think, the intention
-here.)
-
-> This should be less verbose by default. Perhaps something generic
-> like, "Some unicode filenames should be normalized, use -v for verbose
-> output."  I don't want to have to report a scrub with a bunch of
-> filenames interlaced in the output. Plus that's nothing I can or even
-> want to do anything about. That file likely came from a Mac using
-> netatalk or samba. Hopefully the repair mode for scrub doesn't
-> normalize these files, I don't really want to find out the hard way
-> that corrected files then can't be properly read over that same
-> network connection or otherwise have filenames apparently mangled.
-
-Very good points.
-
-Personally, I've been conflicted about the whole name-checking thing.
-On the one hand, you don't want to have to make two passes, because
-that's not very efficient.  On the other hand, mingling name 'suggestions'
-in with possible corruption errors is a good way to miss critical
-information...
-
-Thanks,
--Eric
