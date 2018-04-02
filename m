@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45338 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754420AbeDBT4z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:56:55 -0400
-Subject: [PATCH 06/21] xfs: make xfs_bmapi_remapi work with attribute forks
+Received: from aserp2120.oracle.com ([141.146.126.78]:50362 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754420AbeDBT5C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:57:02 -0400
+Subject: [PATCH 07/21] xfs: halt auto-reclamation activities while
+ rebuilding rmap
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 02 Apr 2018 12:56:53 -0700
-Message-ID: <152269901338.16346.3950698529446189331.stgit@magnolia>
+Date: Mon, 02 Apr 2018 12:56:59 -0700
+Message-ID: <152269901947.16346.4613132998047134020.stgit@magnolia>
 In-Reply-To: <152269897182.16346.1710955088267364781.stgit@magnolia>
 References: <152269897182.16346.1710955088267364781.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,131 +21,135 @@ Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a new flags argument to xfs_bmapi_remapi so that we can pass BMAPI
-flags into the function.  This enables us to pass in BMAPI_ATTRFORK so
-that we can remap things into the attribute fork.  Eventually the
-online repair code will use this to rebuild attribute forks, so make it
-non-static.
+Rebuilding the reverse-mapping tree requires us to quiesce all inodes in
+the filesystem, so we must stop background reclamation of post-EOF and
+CoW prealloc blocks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   36 +++++++++++++++++++++++-------------
- fs/xfs/libxfs/xfs_bmap.h |    4 ++++
- 2 files changed, 27 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_icache.c |   18 ++++++++++++++++++
+ fs/xfs/xfs_icache.h |    3 +++
+ fs/xfs/xfs_mount.c  |    4 +---
+ fs/xfs/xfs_super.c  |   18 +++++++++---------
+ 4 files changed, 31 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 519ef9c..c676d5c 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4512,30 +4512,37 @@ xfs_bmapi_write(
- 	return error;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index d53a316..52f5ab0 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1781,3 +1781,21 @@ xfs_inode_clear_cowblocks_tag(
+ 	return __xfs_inode_clear_blocks_tag(ip,
+ 			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
+ }
++
++/* Disable post-EOF and CoW block auto-reclamation. */
++void
++xfs_icache_disable_reclaim(
++	struct xfs_mount	*mp)
++{
++	cancel_delayed_work_sync(&mp->m_eofblocks_work);
++	cancel_delayed_work_sync(&mp->m_cowblocks_work);
++}
++
++/* Enable post-EOF and CoW block auto-reclamation. */
++void
++xfs_icache_enable_reclaim(
++	struct xfs_mount	*mp)
++{
++	xfs_queue_eofblocks(mp);
++	xfs_queue_cowblocks(mp);
++}
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index d4a7758..d69a0f5 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -131,4 +131,7 @@ xfs_fs_eofblocks_from_user(
+ int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
+ 				  xfs_ino_t ino, bool *inuse);
+ 
++void xfs_icache_disable_reclaim(struct xfs_mount *mp);
++void xfs_icache_enable_reclaim(struct xfs_mount *mp);
++
+ #endif
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 98fd41c..fb950fc 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1076,9 +1076,7 @@ xfs_unmountfs(
+ 	uint64_t		resblks;
+ 	int			error;
+ 
+-	cancel_delayed_work_sync(&mp->m_eofblocks_work);
+-	cancel_delayed_work_sync(&mp->m_cowblocks_work);
+-
++	xfs_icache_disable_reclaim(mp);
+ 	xfs_fs_unreserve_ag_blocks(mp);
+ 	xfs_qm_unmount_quotas(mp);
+ 	xfs_rtunmount_inodes(mp);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index faefba0..33f0dd9 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1351,7 +1351,6 @@ xfs_fs_remount(
+ 		 */
+ 		xfs_restore_resvblks(mp);
+ 		xfs_log_work_queue(mp);
+-		xfs_queue_eofblocks(mp);
+ 
+ 		/* Recover any CoW blocks that never got remapped. */
+ 		error = xfs_reflink_recover_cow(mp);
+@@ -1361,7 +1360,7 @@ xfs_fs_remount(
+ 			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ 			return error;
+ 		}
+-		xfs_queue_cowblocks(mp);
++		xfs_icache_enable_reclaim(mp);
+ 
+ 		/* Create the per-AG metadata reservation pool .*/
+ 		error = xfs_fs_reserve_ag_blocks(mp);
+@@ -1371,8 +1370,13 @@ xfs_fs_remount(
+ 
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
++		/*
++		 * Cancel background eofb scanning so it cannot race with the
++		 * final log force+buftarg wait and deadlock the remount.
++		 */
++		xfs_icache_disable_reclaim(mp);
++
+ 		/* Get rid of any leftover CoW reservations... */
+-		cancel_delayed_work_sync(&mp->m_cowblocks_work);
+ 		error = xfs_icache_free_cowblocks(mp, NULL);
+ 		if (error) {
+ 			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+@@ -1395,12 +1399,6 @@ xfs_fs_remount(
+ 		 */
+ 		xfs_save_resvblks(mp);
+ 
+-		/*
+-		 * Cancel background eofb scanning so it cannot race with the
+-		 * final log force+buftarg wait and deadlock the remount.
+-		 */
+-		cancel_delayed_work_sync(&mp->m_eofblocks_work);
+-
+ 		xfs_quiesce_attr(mp);
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
+ 	}
+@@ -1420,6 +1418,7 @@ xfs_fs_freeze(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
++	xfs_icache_disable_reclaim(mp);
+ 	xfs_save_resvblks(mp);
+ 	xfs_quiesce_attr(mp);
+ 	return xfs_sync_sb(mp, true);
+@@ -1433,6 +1432,7 @@ xfs_fs_unfreeze(
+ 
+ 	xfs_restore_resvblks(mp);
+ 	xfs_log_work_queue(mp);
++	xfs_icache_enable_reclaim(mp);
+ 	return 0;
  }
  
--static int
-+int
- xfs_bmapi_remap(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	xfs_fileoff_t		bno,
- 	xfs_filblks_t		len,
- 	xfs_fsblock_t		startblock,
--	struct xfs_defer_ops	*dfops)
-+	struct xfs_defer_ops	*dfops,
-+	int			flags)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	struct xfs_ifork	*ifp;
- 	struct xfs_btree_cur	*cur = NULL;
- 	xfs_fsblock_t		firstblock = NULLFSBLOCK;
- 	struct xfs_bmbt_irec	got;
- 	struct xfs_iext_cursor	icur;
-+	int			whichfork = xfs_bmapi_whichfork(flags);
- 	int			logflags = 0, error;
- 
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(len > 0);
- 	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(!(flags & (XFS_BMAPI_DELALLOC | XFS_BMAPI_COWFORK |
-+			  XFS_BMAPI_ZERO | XFS_BMAPI_CONVERT |
-+			  XFS_BMAPI_IGSTATE | XFS_BMAPI_METADATA |
-+			  XFS_BMAPI_ENTIRE | XFS_BMAPI_CONVERT_ONLY)));
- 
- 	if (unlikely(XFS_TEST_ERROR(
--	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
--	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-+	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
- 	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
- 		XFS_ERROR_REPORT("xfs_bmapi_remap", XFS_ERRLEVEL_LOW, mp);
- 		return -EFSCORRUPTED;
-@@ -4545,7 +4552,7 @@ xfs_bmapi_remap(
- 		return -EIO;
- 
- 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
--		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+		error = xfs_iread_extents(tp, ip, whichfork);
- 		if (error)
- 			return error;
- 	}
-@@ -4560,7 +4567,7 @@ xfs_bmapi_remap(
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	if (ifp->if_flags & XFS_IFBROOT) {
--		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-+		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
- 		cur->bc_private.b.firstblock = firstblock;
- 		cur->bc_private.b.dfops = dfops;
- 		cur->bc_private.b.flags = 0;
-@@ -4569,18 +4576,21 @@ xfs_bmapi_remap(
- 	got.br_startoff = bno;
- 	got.br_startblock = startblock;
- 	got.br_blockcount = len;
--	got.br_state = XFS_EXT_NORM;
-+	if (flags & XFS_BMAPI_PREALLOC)
-+		got.br_state = XFS_EXT_UNWRITTEN;
-+	else
-+		got.br_state = XFS_EXT_NORM;
- 
--	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &icur,
--			&cur, &got, &firstblock, dfops, &logflags, 0);
-+	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
-+			&cur, &got, &firstblock, dfops, &logflags, flags);
- 	if (error)
- 		goto error0;
- 
--	if (xfs_bmap_wants_extents(ip, XFS_DATA_FORK)) {
-+	if (xfs_bmap_wants_extents(ip, whichfork)) {
- 		int		tmp_logflags = 0;
- 
- 		error = xfs_bmap_btree_to_extents(tp, ip, cur,
--			&tmp_logflags, XFS_DATA_FORK);
-+			&tmp_logflags, whichfork);
- 		logflags |= tmp_logflags;
- 	}
- 
-@@ -6152,7 +6162,7 @@ xfs_bmap_finish_one(
- 	switch (type) {
- 	case XFS_BMAP_MAP:
- 		error = xfs_bmapi_remap(tp, ip, startoff, *blockcount,
--				startblock, dfops);
-+				startblock, dfops, 0);
- 		*blockcount = 0;
- 		break;
- 	case XFS_BMAP_UNMAP:
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 7cbc9c0..a08ee28 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -281,4 +281,8 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
- xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
- 		struct xfs_bmbt_irec *irec);
- 
-+int	xfs_bmapi_remap(struct xfs_trans *tp, struct xfs_inode *ip,
-+		xfs_fileoff_t bno, xfs_filblks_t len, xfs_fsblock_t startblock,
-+		struct xfs_defer_ops *dfops, int flags);
-+
- #endif	/* __XFS_BMAP_H__ */
 
