@@ -1,150 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:37907 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751432AbeDDOMC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Apr 2018 10:12:02 -0400
-Received: by mail-ot0-f194.google.com with SMTP id o9-v6so23481345otj.5
-        for <linux-xfs@vger.kernel.org>; Wed, 04 Apr 2018 07:12:02 -0700 (PDT)
+Received: from mail-ot0-f175.google.com ([74.125.82.175]:32837 "EHLO
+        mail-ot0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751874AbeDBAK1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Apr 2018 20:10:27 -0400
+Received: by mail-ot0-f175.google.com with SMTP id 23-v6so14184790otj.0
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Apr 2018 17:10:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 4 Apr 2018 07:12:01 -0700
-Message-ID: <CAPcyv4jnKeVpXXLOqG9exXBRSCyS_c9AAiogg9bb_AnZv-3gWQ@mail.gmail.com>
-Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned dax mappings
+In-Reply-To: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
+References: <e0ada9ef-aafb-5179-2729-447d67bd6265@sandeen.net>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Sun, 1 Apr 2018 18:10:26 -0600
+Message-ID: <CAJCQCtTA4YPxYupZjeb41dYxJGjZm1=W30mtfMPDuusNp6XjLA@mail.gmail.com>
+Subject: Re: xfs_scrub: call for testing
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Apr 4, 2018 at 2:46 AM, Jan Kara <jack@suse.cz> wrote:
-> On Fri 30-03-18 21:03:30, Dan Williams wrote:
->> Background:
->>
->> get_user_pages() in the filesystem pins file backed memory pages for
->> access by devices performing dma. However, it only pins the memory pages
->> not the page-to-file offset association. If a file is truncated the
->> pages are mapped out of the file and dma may continue indefinitely into
->> a page that is owned by a device driver. This breaks coherency of the
->> file vs dma, but the assumption is that if userspace wants the
->> file-space truncated it does not matter what data is inbound from the
->> device, it is not relevant anymore. The only expectation is that dma can
->> safely continue while the filesystem reallocates the block(s).
->>
->> Problem:
->>
->> This expectation that dma can safely continue while the filesystem
->> changes the block map is broken by dax. With dax the target dma page
->> *is* the filesystem block. The model of leaving the page pinned for dma,
->> but truncating the file block out of the file, means that the filesytem
->> is free to reallocate a block under active dma to another file and now
->> the expected data-incoherency situation has turned into active
->> data-corruption.
->>
->> Solution:
->>
->> Defer all filesystem operations (fallocate(), truncate()) on a dax mode
->> file while any page/block in the file is under active dma. This solution
->> assumes that dma is transient. Cases where dma operations are known to
->> not be transient, like RDMA, have been explicitly disabled via
->> commits like 5f1d43de5416 "IB/core: disable memory registration of
->> filesystem-dax vmas".
->>
->> The dax_layout_busy_page() routine is called by filesystems with a lock
->> held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
->> The process of looking up a busy page invalidates all mappings
->> to trigger any subsequent get_user_pages() to block on i_mmap_lock.
->> The filesystem continues to call dax_layout_busy_page() until it finally
->> returns no more active pages. This approach assumes that the page
->> pinning is transient, if that assumption is violated the system would
->> have likely hung from the uncompleted I/O.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
->> Cc: Dave Chinner <david@fromorbit.com>
->> Cc: Matthew Wilcox <mawilcox@microsoft.com>
->> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
->> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Cc: Dave Hansen <dave.hansen@linux.intel.com>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Reported-by: Christoph Hellwig <hch@lst.de>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  drivers/dax/super.c |    2 +
->>  fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/dax.h |   25 ++++++++++++++
->>  mm/gup.c            |    5 +++
->>  4 files changed, 123 insertions(+), 1 deletion(-)
->
-> ...
->
->> +/**
->> + * dax_layout_busy_page - find first pinned page in @mapping
->> + * @mapping: address space to scan for a page with ref count > 1
->> + *
->> + * DAX requires ZONE_DEVICE mapped pages. These pages are never
->> + * 'onlined' to the page allocator so they are considered idle when
->> + * page->count == 1. A filesystem uses this interface to determine if
->> + * any page in the mapping is busy, i.e. for DMA, or other
->> + * get_user_pages() usages.
->> + *
->> + * It is expected that the filesystem is holding locks to block the
->> + * establishment of new mappings in this address_space. I.e. it expects
->> + * to be able to run unmap_mapping_range() and subsequently not race
->> + * mapping_mapped() becoming true. It expects that get_user_pages() pte
->> + * walks are performed under rcu_read_lock().
->> + */
->> +struct page *dax_layout_busy_page(struct address_space *mapping)
->> +{
->> +     pgoff_t indices[PAGEVEC_SIZE];
->> +     struct page *page = NULL;
->> +     struct pagevec pvec;
->> +     pgoff_t index, end;
->> +     unsigned i;
->> +
->> +     /*
->> +      * In the 'limited' case get_user_pages() for dax is disabled.
->> +      */
->> +     if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
->> +             return NULL;
->> +
->> +     if (!dax_mapping(mapping) || !mapping_mapped(mapping))
->> +             return NULL;
->> +
->> +     pagevec_init(&pvec);
->> +     index = 0;
->> +     end = -1;
->> +     /*
->> +      * Flush dax_layout_lock() sections to ensure all possible page
->> +      * references have been taken, or otherwise arrange for faults
->> +      * to block on the filesystem lock that is taken for
->> +      * establishing new mappings.
->> +      */
->> +     unmap_mapping_range(mapping, 0, 0, 1);
->> +     synchronize_rcu();
->
-> So I still don't like the use of RCU for this. It just seems as an abuse to
-> use RCU like that. Furthermore it has a hefty latency cost for the truncate
-> path. A trivial test to truncate 100 times the last page of a 16k file that
-> is mmaped (only the first page):
->
-> DAX+your patches        3.899s
-> non-DAX                 0.015s
->
-> So you can see synchronize_rcu() increased time to run truncate(2) more
-> than 200 times (the process is indeed sitting in __wait_rcu_gp all the
-> time). IMHO that's just too costly.
+On Fri, Feb 2, 2018 at 2:36 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 
-Agree. I was quietly hoping that it wouldn't be that bad, but numbers
-are numbers.
 
-At this point I think we should just go with the
-address_space_operations conversions and the sector-to-pfn conversion
-for what's stored in the dax radix for 4.17-rc1, and circle back on a
-better way to do this synchronization for 4.18.
+>
+> I'd really value feedback on scrub as it stand at this point -
+> Is the documentation clear?  Is the output correct?  Do the
+> tool's arguments make sense?  Does it segfault?  Does it
+> find real errors?  Does it crash your kernel? Does it
+> eat your data?
+
+xfsprogs-4.15.1-1.fc27.x86_64
+I've built mainline 4.16.0-rc7 with CONFIG_XFS_ONLINE_SCRUB=y but I get this:
+
+[chris@f27s ~]$ sudo xfs_scrub -T -v /mnt/fourth
+EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+Phase 1: Find filesystem geometry.
+/mnt/fourth: using 4 threads to scrub.
+Info: /mnt/fourth: Kernel metadata repair facility not detected.
+Info: /mnt/fourth: Kernel metadata repair facility is not available.
+Use -n to scrub.
+Info: /mnt/fourth: Scrub aborted after phase 1.
+/mnt/fourth: errors found: 1
+Memory used: 132k/0k (17k/116k), time:  0.40/ 0.00/ 0.01s
+I/O: 84.0KiB in, 0.0B out, 84.0KiB tot
+I/O rate: 211.4KiB/s in, 0.0B/s out, 211.4KiB/s tot
+
+Kernel message
+
+mount
+[  329.930644] SGI XFS with ACLs, security attributes, scrub, no debug enabled
+[  329.940197] XFS (dm-16): Mounting V5 Filesystem
+[  330.553888] XFS (dm-16): Ending clean mount
+
+scrub command
+[  373.941951] XFS (dm-16): EXPERIMENTAL online scrub feature in use.
+Use at your own risk!
+
+
+[chris@f27s ~]$ grep XFS linux/.config
+CONFIG_XFS_FS=m
+CONFIG_XFS_QUOTA=y
+CONFIG_XFS_POSIX_ACL=y
+# CONFIG_XFS_RT is not set
+CONFIG_XFS_ONLINE_SCRUB=y
+CONFIG_XFS_WARN=y
+# CONFIG_XFS_DEBUG is not set
+# CONFIG_VXFS_FS is not set
+[chris@f27s ~]$
+
+
+When I try it with just -n then I get entries
+
+Info: AG 2 superblock: Optimization is possible.
+
+that appears to be working but it's also a noop.
+
+Also the -n output has many unicode complaints with full filenames in
+the output. e.g.
+
+Info: inode 1815560251 (27/3620923): Unicode name
+"Chapter\xc2\xa02.\xc2\xa0Securing Your Network.webloc" in directory
+should be normalized as "Chapter 2. Securing Your Network.webloc".
+
+This should be less verbose by default. Perhaps something generic
+like, "Some unicode filenames should be normalized, use -v for verbose
+output."  I don't want to have to report a scrub with a bunch of
+filenames interlaced in the output. Plus that's nothing I can or even
+want to do anything about. That file likely came from a Mac using
+netatalk or samba. Hopefully the repair mode for scrub doesn't
+normalize these files, I don't really want to find out the hard way
+that corrected files then can't be properly read over that same
+network connection or otherwise have filenames apparently mangled.
+
+
+
+-- 
+Chris Murphy
