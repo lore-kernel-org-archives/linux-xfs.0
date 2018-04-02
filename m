@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50362 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:50406 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754420AbeDBT5C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:57:02 -0400
-Subject: [PATCH 07/21] xfs: halt auto-reclamation activities while
- rebuilding rmap
+        with ESMTP id S1754420AbeDBT5I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:57:08 -0400
+Subject: [PATCH 08/21] xfs: create tracepoints for online repair
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 02 Apr 2018 12:56:59 -0700
-Message-ID: <152269901947.16346.4613132998047134020.stgit@magnolia>
+Date: Mon, 02 Apr 2018 12:57:05 -0700
+Message-ID: <152269902560.16346.8884310220405291359.stgit@magnolia>
 In-Reply-To: <152269897182.16346.1710955088267364781.stgit@magnolia>
 References: <152269897182.16346.1710955088267364781.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,135 +20,288 @@ Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Rebuilding the reverse-mapping tree requires us to quiesce all inodes in
-the filesystem, so we must stop background reclamation of post-EOF and
-CoW prealloc blocks.
+These tracepoints will be used to debug the online repair routines.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c |   18 ++++++++++++++++++
- fs/xfs/xfs_icache.h |    3 +++
- fs/xfs/xfs_mount.c  |    4 +---
- fs/xfs/xfs_super.c  |   18 +++++++++---------
- 4 files changed, 31 insertions(+), 12 deletions(-)
+ fs/xfs/scrub/trace.h |  258 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 258 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d53a316..52f5ab0 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1781,3 +1781,21 @@ xfs_inode_clear_cowblocks_tag(
- 	return __xfs_inode_clear_blocks_tag(ip,
- 			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
- }
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 5d2b1c2..5b7036b 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -69,6 +69,8 @@ DEFINE_EVENT(xfs_scrub_class, name, \
+ DEFINE_SCRUB_EVENT(xfs_scrub_start);
+ DEFINE_SCRUB_EVENT(xfs_scrub_done);
+ DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
++DEFINE_SCRUB_EVENT(xfs_repair_attempt);
++DEFINE_SCRUB_EVENT(xfs_repair_done);
+ 
+ TRACE_EVENT(xfs_scrub_op_error,
+ 	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+@@ -492,6 +494,262 @@ TRACE_EVENT(xfs_scrub_xref_error,
+ 		  __entry->ret_ip)
+ );
+ 
++/* repair tracepoints */
++#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
 +
-+/* Disable post-EOF and CoW block auto-reclamation. */
-+void
-+xfs_icache_disable_reclaim(
-+	struct xfs_mount	*mp)
-+{
-+	cancel_delayed_work_sync(&mp->m_eofblocks_work);
-+	cancel_delayed_work_sync(&mp->m_cowblocks_work);
-+}
++DECLARE_EVENT_CLASS(xfs_repair_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len),
++	TP_ARGS(mp, agno, agbno, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len)
++);
++#define DEFINE_REPAIR_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_repair_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len), \
++	TP_ARGS(mp, agno, agbno, len))
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_free_or_unmap_extent);
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_collect_btree_extent);
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_agfl_insert);
 +
-+/* Enable post-EOF and CoW block auto-reclamation. */
-+void
-+xfs_icache_enable_reclaim(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_queue_eofblocks(mp);
-+	xfs_queue_cowblocks(mp);
-+}
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index d4a7758..d69a0f5 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -131,4 +131,7 @@ xfs_fs_eofblocks_from_user(
- int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
- 				  xfs_ino_t ino, bool *inuse);
- 
-+void xfs_icache_disable_reclaim(struct xfs_mount *mp);
-+void xfs_icache_enable_reclaim(struct xfs_mount *mp);
++DECLARE_EVENT_CLASS(xfs_repair_rmap_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len,
++		 uint64_t owner, uint64_t offset, unsigned int flags),
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++		__field(uint64_t, owner)
++		__field(uint64_t, offset)
++		__field(unsigned int, flags)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++		__entry->owner = owner;
++		__entry->offset = offset;
++		__entry->flags = flags;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset,
++		  __entry->flags)
++);
++#define DEFINE_REPAIR_RMAP_EVENT(name) \
++DEFINE_EVENT(xfs_repair_rmap_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len, \
++		 uint64_t owner, uint64_t offset, unsigned int flags), \
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_alloc_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_ialloc_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_rmap_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_bmap_extent_fn);
 +
- #endif
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 98fd41c..fb950fc 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1076,9 +1076,7 @@ xfs_unmountfs(
- 	uint64_t		resblks;
- 	int			error;
- 
--	cancel_delayed_work_sync(&mp->m_eofblocks_work);
--	cancel_delayed_work_sync(&mp->m_cowblocks_work);
--
-+	xfs_icache_disable_reclaim(mp);
- 	xfs_fs_unreserve_ag_blocks(mp);
- 	xfs_qm_unmount_quotas(mp);
- 	xfs_rtunmount_inodes(mp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index faefba0..33f0dd9 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1351,7 +1351,6 @@ xfs_fs_remount(
- 		 */
- 		xfs_restore_resvblks(mp);
- 		xfs_log_work_queue(mp);
--		xfs_queue_eofblocks(mp);
- 
- 		/* Recover any CoW blocks that never got remapped. */
- 		error = xfs_reflink_recover_cow(mp);
-@@ -1361,7 +1360,7 @@ xfs_fs_remount(
- 			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 			return error;
- 		}
--		xfs_queue_cowblocks(mp);
-+		xfs_icache_enable_reclaim(mp);
- 
- 		/* Create the per-AG metadata reservation pool .*/
- 		error = xfs_fs_reserve_ag_blocks(mp);
-@@ -1371,8 +1370,13 @@ xfs_fs_remount(
- 
- 	/* rw -> ro */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
-+		/*
-+		 * Cancel background eofb scanning so it cannot race with the
-+		 * final log force+buftarg wait and deadlock the remount.
-+		 */
-+		xfs_icache_disable_reclaim(mp);
++TRACE_EVENT(xfs_repair_refcount_extent_fn,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *irec),
++	TP_ARGS(mp, agno, irec),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, startblock)
++		__field(xfs_extlen_t, blockcount)
++		__field(xfs_nlink_t, refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startblock = irec->rc_startblock;
++		__entry->blockcount = irec->rc_blockcount;
++		__entry->refcount = irec->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startblock,
++		  __entry->blockcount,
++		  __entry->refcount)
++)
 +
- 		/* Get rid of any leftover CoW reservations... */
--		cancel_delayed_work_sync(&mp->m_cowblocks_work);
- 		error = xfs_icache_free_cowblocks(mp, NULL);
- 		if (error) {
- 			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-@@ -1395,12 +1399,6 @@ xfs_fs_remount(
- 		 */
- 		xfs_save_resvblks(mp);
++TRACE_EVENT(xfs_repair_init_btblock,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 xfs_btnum_t btnum),
++	TP_ARGS(mp, agno, agbno, btnum),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, btnum)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->btnum = btnum;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->btnum)
++)
++TRACE_EVENT(xfs_repair_find_ag_btree_roots_helper,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 uint32_t magic, uint16_t level),
++	TP_ARGS(mp, agno, agbno, magic, level),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, magic)
++		__field(uint16_t, level)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->magic = magic;
++		__entry->level = level;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->magic,
++		  __entry->level)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
++		 xfs_agblock_t usedlen),
++	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, icount)
++		__field(xfs_agblock_t, aglen)
++		__field(xfs_agblock_t, freelen)
++		__field(xfs_agblock_t, usedlen)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->icount = icount;
++		__entry->aglen = aglen;
++		__entry->freelen = freelen;
++		__entry->usedlen = usedlen;
++	),
++	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->icount,
++		  __entry->aglen,
++		  __entry->freelen,
++		  __entry->usedlen)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
++		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
++	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bnobt_sz)
++		__field(xfs_agblock_t, inobt_sz)
++		__field(xfs_agblock_t, rmapbt_sz)
++		__field(xfs_agblock_t, refcbt_sz)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bnobt_sz = bnobt_sz;
++		__entry->inobt_sz = inobt_sz;
++		__entry->rmapbt_sz = rmapbt_sz;
++		__entry->refcbt_sz = refcbt_sz;
++	),
++	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bnobt_sz,
++		  __entry->inobt_sz,
++		  __entry->rmapbt_sz,
++		  __entry->refcbt_sz)
++)
++TRACE_EVENT(xfs_repair_reset_counters,
++	TP_PROTO(struct xfs_mount *mp),
++	TP_ARGS(mp),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++	),
++	TP_printk("dev %d:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev))
++)
++
++TRACE_EVENT(xfs_repair_ialloc_insert,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
++		 uint8_t freecount, uint64_t freemask),
++	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, startino)
++		__field(uint16_t, holemask)
++		__field(uint8_t, count)
++		__field(uint8_t, freecount)
++		__field(uint64_t, freemask)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startino = startino;
++		__entry->holemask = holemask;
++		__entry->count = count;
++		__entry->freecount = freecount;
++		__entry->freemask = freemask;
++	),
++	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startino,
++		  __entry->holemask,
++		  __entry->count,
++		  __entry->freecount,
++		  __entry->freemask)
++)
++
++#endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
++
+ #endif /* _TRACE_XFS_SCRUB_TRACE_H */
  
--		/*
--		 * Cancel background eofb scanning so it cannot race with the
--		 * final log force+buftarg wait and deadlock the remount.
--		 */
--		cancel_delayed_work_sync(&mp->m_eofblocks_work);
--
- 		xfs_quiesce_attr(mp);
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
- 	}
-@@ -1420,6 +1418,7 @@ xfs_fs_freeze(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
-+	xfs_icache_disable_reclaim(mp);
- 	xfs_save_resvblks(mp);
- 	xfs_quiesce_attr(mp);
- 	return xfs_sync_sb(mp, true);
-@@ -1433,6 +1432,7 @@ xfs_fs_unfreeze(
- 
- 	xfs_restore_resvblks(mp);
- 	xfs_log_work_queue(mp);
-+	xfs_icache_enable_reclaim(mp);
- 	return 0;
- }
- 
+ #undef TRACE_INCLUDE_PATH
 
