@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50460 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754420AbeDBT5P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:57:15 -0400
-Subject: [PATCH 09/21] xfs: implement the metadata repair ioctl flag
+Received: from userp2130.oracle.com ([156.151.31.86]:45656 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756573AbeDBT51 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:57:27 -0400
+Subject: [PATCH 11/21] xfs: repair superblocks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 02 Apr 2018 12:57:11 -0700
-Message-ID: <152269903184.16346.15038651436338921730.stgit@magnolia>
+Date: Mon, 02 Apr 2018 12:57:24 -0700
+Message-ID: <152269904439.16346.10122475346850875266.stgit@magnolia>
 In-Reply-To: <152269897182.16346.1710955088267364781.stgit@magnolia>
 References: <152269897182.16346.1710955088267364781.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,126 +20,37 @@ Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Plumb in the pieces necessary to make the "scrub" subfunction of
-the scrub ioctl actually work.  This means that we make the IFLAG_REPAIR
-flag to the scrub ioctl actually do something, and we add an errortag
-knob so that xfstests can force the kernel to rebuild a metadata
-structure even if there's nothing wrong with it.
+If one of the backup superblocks is found to differ seriously from
+superblock 0, write out a fresh copy from the in-core sb.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Kconfig               |   18 +++++
- fs/xfs/Makefile              |    7 ++
- fs/xfs/libxfs/xfs_errortag.h |    4 +
- fs/xfs/libxfs/xfs_fs.h       |    9 ++
- fs/xfs/scrub/repair.c        |   65 ++++++++++++++++
- fs/xfs/scrub/repair.h        |   33 ++++++++
- fs/xfs/scrub/scrub.c         |  168 ++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/scrub/scrub.h         |    3 +
- fs/xfs/xfs_error.c           |    3 +
- 9 files changed, 301 insertions(+), 9 deletions(-)
- create mode 100644 fs/xfs/scrub/repair.c
- create mode 100644 fs/xfs/scrub/repair.h
+ fs/xfs/Makefile                |    1 +
+ fs/xfs/scrub/agheader_repair.c |   76 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h          |    3 ++
+ fs/xfs/scrub/scrub.c           |    1 +
+ 4 files changed, 81 insertions(+)
+ create mode 100644 fs/xfs/scrub/agheader_repair.c
 
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 46bcf0e6..457ac9f 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -85,6 +85,24 @@ config XFS_ONLINE_SCRUB
- 
- 	  If unsure, say N.
- 
-+config XFS_ONLINE_REPAIR
-+	bool "XFS online metadata repair support"
-+	default n
-+	depends on XFS_FS && XFS_ONLINE_SCRUB
-+	help
-+	  If you say Y here you will be able to repair metadata on a
-+	  mounted XFS filesystem.  This feature is intended to reduce
-+	  filesystem downtime by fixing minor problems before they cause the
-+	  filesystem to go down.  However, it requires that the filesystem be
-+	  formatted with secondary metadata, such as reverse mappings and inode
-+	  parent pointers.
-+
-+	  This feature is considered EXPERIMENTAL.  Use with caution!
-+
-+	  See the xfs_scrub man page in section 8 for additional information.
-+
-+	  If unsure, say N.
-+
- config XFS_WARN
- 	bool "XFS Verbose Warnings"
- 	depends on XFS_FS && !XFS_DEBUG
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index b03c77e..9175d51 100644
+index 9175d51..cf64415 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -169,4 +169,11 @@ xfs-y				+= $(addprefix scrub/, \
- 
- xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
- xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
-+
-+# online repair
-+ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
-+xfs-y				+= $(addprefix scrub/, \
-+				   repair.o \
-+				   )
-+endif
+@@ -173,6 +173,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+ # online repair
+ ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+ xfs-y				+= $(addprefix scrub/, \
++				   agheader_repair.o \
+ 				   repair.o \
+ 				   )
  endif
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index bc1789d..d47b916 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -65,7 +65,8 @@
- #define XFS_ERRTAG_LOG_BAD_CRC				29
- #define XFS_ERRTAG_LOG_ITEM_PIN				30
- #define XFS_ERRTAG_BUF_LRU_REF				31
--#define XFS_ERRTAG_MAX					32
-+#define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
-+#define XFS_ERRTAG_MAX					33
- 
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -102,5 +103,6 @@
- #define XFS_RANDOM_LOG_BAD_CRC				1
- #define XFS_RANDOM_LOG_ITEM_PIN				1
- #define XFS_RANDOM_BUF_LRU_REF				2
-+#define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
- 
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index faf1a4e..dddc75e 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -542,13 +542,20 @@ struct xfs_scrub_metadata {
- /* o: Metadata object looked funny but isn't corrupt. */
- #define XFS_SCRUB_OFLAG_WARNING		(1 << 6)
- 
-+/*
-+ * o: IFLAG_REPAIR was set but metadata object did not need fixing or
-+ *    optimization and has therefore not been altered.
-+ */
-+#define XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED (1 << 7)
-+
- #define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR)
- #define XFS_SCRUB_FLAGS_OUT	(XFS_SCRUB_OFLAG_CORRUPT | \
- 				 XFS_SCRUB_OFLAG_PREEN | \
- 				 XFS_SCRUB_OFLAG_XFAIL | \
- 				 XFS_SCRUB_OFLAG_XCORRUPT | \
- 				 XFS_SCRUB_OFLAG_INCOMPLETE | \
--				 XFS_SCRUB_OFLAG_WARNING)
-+				 XFS_SCRUB_OFLAG_WARNING | \
-+				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
- 
- /*
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
 new file mode 100644
-index 0000000..69ffb94
+index 0000000..4bd0d79
 --- /dev/null
-+++ b/fs/xfs/scrub/repair.c
-@@ -0,0 +1,65 @@
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -0,0 +1,76 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -172,350 +83,81 @@ index 0000000..69ffb94
 +#include "xfs_trans.h"
 +#include "xfs_sb.h"
 +#include "xfs_inode.h"
-+#include "xfs_icache.h"
 +#include "xfs_alloc.h"
-+#include "xfs_alloc_btree.h"
 +#include "xfs_ialloc.h"
-+#include "xfs_ialloc_btree.h"
 +#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_refcount.h"
-+#include "xfs_refcount_btree.h"
-+#include "xfs_extent_busy.h"
-+#include "xfs_ag_resv.h"
-+#include "xfs_trans_space.h"
 +#include "scrub/xfs_scrub.h"
 +#include "scrub/scrub.h"
 +#include "scrub/common.h"
 +#include "scrub/trace.h"
-+#include "scrub/repair.h"
 +
-+/*
-+ * Repair probe -- userspace uses this to probe if we're willing to repair a
-+ * given mountpoint.
-+ */
++/* Superblock */
++
++/* Repair the superblock. */
 +int
-+xfs_repair_probe(
++xfs_repair_superblock(
 +	struct xfs_scrub_context	*sc)
 +{
-+	int				error = 0;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_buf			*bp;
++	struct xfs_dsb			*sbp;
++	xfs_agnumber_t			agno;
++	int				error;
 +
-+	if (xfs_scrub_should_terminate(sc, &error))
++	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
++	agno = sc->sm->sm_agno;
++	if (agno == 0)
++		return -EOPNOTSUPP;
++
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++		  XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
++		  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
++	if (error)
 +		return error;
++	bp->b_ops = &xfs_sb_buf_ops;
 +
-+	return 0;
++	/* Copy AG 0's superblock to this one. */
++	sbp = XFS_BUF_TO_SBP(bp);
++	memset(sbp, 0, mp->m_sb.sb_sectsize);
++	xfs_sb_to_disk(sbp, &mp->m_sb);
++	sbp->sb_bad_features2 = sbp->sb_features2;
++
++	/* Write this to disk. */
++	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
++	xfs_trans_log_buf(sc->tp, bp, 0, mp->m_sb.sb_sectsize - 1);
++	return error;
 +}
 diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-new file mode 100644
-index 0000000..660ab3a
---- /dev/null
+index 6872359..b474e9a 100644
+--- a/fs/xfs/scrub/repair.h
 +++ b/fs/xfs/scrub/repair.h
-@@ -0,0 +1,33 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#ifndef __XFS_SCRUB_REPAIR_H__
-+#define __XFS_SCRUB_REPAIR_H__
-+
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+
-+int xfs_repair_probe(struct xfs_scrub_context *sc);
-+
-+#else
-+
-+#define xfs_repair_probe		(NULL)
-+
-+#endif /* CONFIG_XFS_ONLINE_REPAIR */
-+
-+#endif	/* __XFS_SCRUB_REPAIR_H__ */
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 26c7596..888ab2a 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -42,11 +42,16 @@
- #include "xfs_refcount_btree.h"
- #include "xfs_rmap.h"
- #include "xfs_rmap_btree.h"
-+#include "xfs_errortag.h"
-+#include "xfs_error.h"
-+#include "xfs_log.h"
-+#include "xfs_trans_priv.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
- #include "scrub/btree.h"
-+#include "scrub/repair.h"
+@@ -87,6 +87,7 @@ xfs_extlen_t xfs_repair_calc_ag_resblks(struct xfs_scrub_context *sc);
+ int xfs_repair_setup_btree_extent_collection(struct xfs_scrub_context *sc);
  
- /*
-  * Online Scrub and Repair
-@@ -120,6 +125,24 @@
-  * XCORRUPT flag; btree query function errors are noted by setting the
-  * XFAIL flag and deleting the cursor to prevent further attempts to
-  * cross-reference with a defective btree.
-+ *
-+ * If a piece of metadata proves corrupt or suboptimal, the userspace
-+ * program can ask the kernel to apply some tender loving care (TLC) to
-+ * the metadata object by setting the REPAIR flag and re-calling the
-+ * scrub ioctl.  "Corruption" is defined by metadata violating the
-+ * on-disk specification; operations cannot continue if the violation is
-+ * left untreated.  It is possible for XFS to continue if an object is
-+ * "suboptimal", however performance may be degraded.  Repairs are
-+ * usually performed by rebuilding the metadata entirely out of
-+ * redundant metadata.  Optimizing, on the other hand, can sometimes be
-+ * done without rebuilding entire structures.
-+ *
-+ * Generally speaking, the repair code has the following code structure:
-+ * Lock -> scrub -> repair -> commit -> re-lock -> re-scrub -> unlock.
-+ * The first check helps us figure out if we need to rebuild or simply
-+ * optimize the structure so that the rebuild knows what to do.  The
-+ * second check evaluates the completeness of the repair; that is what
-+ * is reported to userspace.
-  */
+ /* Metadata repairers */
++int xfs_repair_superblock(struct xfs_scrub_context *sc);
  
- /*
-@@ -155,7 +178,10 @@ xfs_scrub_teardown(
- {
- 	xfs_scrub_ag_free(sc, &sc->sa);
- 	if (sc->tp) {
--		xfs_trans_cancel(sc->tp);
-+		if (error == 0 && (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
-+			error = xfs_trans_commit(sc->tp);
-+		else
-+			xfs_trans_cancel(sc->tp);
- 		sc->tp = NULL;
- 	}
- 	if (sc->ip) {
-@@ -180,6 +206,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_NONE,
- 		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_probe,
-+		.repair = xfs_repair_probe,
- 	},
- 	[XFS_SCRUB_TYPE_SB] = {		/* superblock */
- 		.type	= ST_PERAG,
-@@ -379,15 +406,98 @@ xfs_scrub_validate_inputs(
- 	if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
- 		goto out;
+ #else
  
--	/* We don't know how to repair anything yet. */
--	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
--		goto out;
-+	/*
-+	 * We only want to repair read-write v5+ filesystems.  Defer the check
-+	 * for ops->repair until after our scrub confirms that we need to
-+	 * perform repairs so that we avoid failing due to not supporting
-+	 * repairing an object that doesn't need repairs.
-+	 */
-+	if (sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) {
-+		error = -EOPNOTSUPP;
-+		if (!xfs_sb_version_hascrc(&mp->m_sb))
-+			goto out;
-+
-+		error = -EROFS;
-+		if (mp->m_flags & XFS_MOUNT_RDONLY)
-+			goto out;
-+	}
- 
- 	error = 0;
- out:
- 	return error;
+@@ -106,6 +107,8 @@ xfs_repair_calc_ag_resblks(
+ 	return 0;
  }
  
-+/*
-+ * Attempt to repair some metadata, if the metadata is corrupt and userspace
-+ * told us to fix it.  This function returns -EAGAIN to mean "re-run scrub",
-+ * and will set *fixed to true if it thinks it repaired anything.
-+ */
-+STATIC int
-+xfs_repair_attempt(
-+	struct xfs_inode		*ip,
-+	struct xfs_scrub_context	*sc,
-+	bool				*fixed)
-+{
-+	int				error = 0;
++#define xfs_repair_superblock		(NULL)
 +
-+	trace_xfs_repair_attempt(ip, sc->sm, error);
-+
-+	/* Repair needed but not supported, just exit. */
-+	if (!sc->ops->repair) {
-+		error = -EOPNOTSUPP;
-+		trace_xfs_repair_done(ip, sc->sm, error);
-+		return error;
-+	}
-+
-+	xfs_scrub_ag_btcur_free(&sc->sa);
-+
-+	/* Repair whatever's broken. */
-+	error = sc->ops->repair(sc);
-+	trace_xfs_repair_done(ip, sc->sm, error);
-+	switch (error) {
-+	case 0:
-+		/*
-+		 * Repair succeeded.  Commit the fixes and perform a second
-+		 * scrub so that we can tell userspace if we fixed the problem.
-+		 */
-+		sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+		*fixed = true;
-+		return -EAGAIN;
-+	case -EDEADLOCK:
-+	case -EAGAIN:
-+		/* Tell the caller to try again having grabbed all the locks. */
-+		if (!sc->try_harder) {
-+			sc->try_harder = true;
-+			return -EAGAIN;
-+		}
-+		/*
-+		 * We tried harder but still couldn't grab all the resources
-+		 * we needed to fix it.  The corruption has not been fixed,
-+		 * so report back to userspace.
-+		 */
-+		return -EFSCORRUPTED;
-+	default:
-+		return error;
-+	}
-+}
-+
-+/*
-+ * Complain about unfixable problems in the filesystem.  We don't log
-+ * corruptions when IFLAG_REPAIR wasn't set on the assumption that the driver
-+ * program is xfs_scrub, which will call back with IFLAG_REPAIR set if the
-+ * administrator isn't running xfs_scrub in no-repairs mode.
-+ *
-+ * Use this helper function because _ratelimited silently declares a static
-+ * structure to track rate limiting information.
-+ */
-+static void
-+xfs_repair_failure(
-+	struct xfs_mount		*mp)
-+{
-+	xfs_alert_ratelimited(mp,
-+"Corruption not fixed during online repair.  Unmount and run xfs_repair.");
-+}
-+
- /* Dispatch metadata scrubbing. */
- int
- xfs_scrub_metadata(
-@@ -397,6 +507,7 @@ xfs_scrub_metadata(
- 	struct xfs_scrub_context	sc;
- 	struct xfs_mount		*mp = ip->i_mount;
- 	bool				try_harder = false;
-+	bool				already_fixed = false;
- 	int				error = 0;
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
  
- 	BUILD_BUG_ON(sizeof(meta_scrub_ops) !=
-@@ -446,9 +557,52 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
- 
--	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
--			       XFS_SCRUB_OFLAG_XCORRUPT))
--		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
-+	if ((sc.sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) && !already_fixed) {
-+		bool needs_fix;
-+
-+		/* Let debug users force us into the repair routines. */
-+		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
-+			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-+
-+		needs_fix = (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+						XFS_SCRUB_OFLAG_XCORRUPT |
-+						XFS_SCRUB_OFLAG_PREEN));
-+		/*
-+		 * If userspace asked for a repair but it wasn't necessary,
-+		 * report that back to userspace.
-+		 */
-+		if (!needs_fix) {
-+			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED;
-+			goto out_nofix;
-+		}
-+
-+		/*
-+		 * If it's broken, userspace wants us to fix it, and we haven't
-+		 * already tried to fix it, then attempt a repair.
-+		 */
-+		error = xfs_repair_attempt(ip, &sc, &already_fixed);
-+		if (error == -EAGAIN) {
-+			if (sc.try_harder)
-+				try_harder = true;
-+			error = xfs_scrub_teardown(&sc, ip, 0);
-+			if (error) {
-+				xfs_repair_failure(mp);
-+				goto out;
-+			}
-+			goto retry_op;
-+		}
-+	}
-+
-+out_nofix:
-+	/*
-+	 * Userspace asked us to repair something, we repaired it, rescanned
-+	 * it, and the rescan says it's still broken.  Scream about this in
-+	 * the system logs.
-+	 */
-+	if ((sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-+	    (sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+			     XFS_SCRUB_OFLAG_XCORRUPT)))
-+		xfs_repair_failure(mp);
- 
- out_teardown:
- 	error = xfs_scrub_teardown(&sc, ip, error);
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 0d92af8..9ab8ef8 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -38,6 +38,9 @@ struct xfs_scrub_meta_ops {
- 	/* Examine metadata for errors. */
- 	int		(*scrub)(struct xfs_scrub_context *);
- 
-+	/* Repair or optimize the metadata. */
-+	int		(*repair)(struct xfs_scrub_context *);
-+
- 	/* Decide if we even have this piece of metadata. */
- 	bool		(*has)(struct xfs_sb *);
- 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index a63f508..7975634 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -61,6 +61,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_LOG_BAD_CRC,
- 	XFS_RANDOM_LOG_ITEM_PIN,
- 	XFS_RANDOM_BUF_LRU_REF,
-+	XFS_RANDOM_FORCE_SCRUB_REPAIR,
- };
- 
- struct xfs_errortag_attr {
-@@ -167,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
- XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
- XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
- XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
-+XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -201,6 +203,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
- 	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
- 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
-+	XFS_ERRORTAG_ATTR_LIST(force_repair),
- 	NULL,
- };
- 
+ #endif	/* __XFS_SCRUB_REPAIR_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 9a8fa78..8695ef9 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -214,6 +214,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_PERAG,
+ 		.setup	= xfs_scrub_setup_fs,
+ 		.scrub	= xfs_scrub_superblock,
++		.repair	= xfs_repair_superblock,
+ 	},
+ 	[XFS_SCRUB_TYPE_AGF] = {	/* agf */
+ 		.type	= ST_PERAG,
 
