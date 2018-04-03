@@ -1,85 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14884 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:59578 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751442AbeDDTAY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 15:00:24 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2CC8021BAD
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 19:00:24 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E17B07D64B
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 19:00:23 +0000 (UTC)
-Subject: [PATCH 3/6] xfs: validate UUID and type in xfs_dquot_verify
-From: Eric Sandeen <sandeen@redhat.com>
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
-Message-ID: <59cde702-21d5-3465-12b0-29dad978186d@redhat.com>
-Date: Wed, 4 Apr 2018 14:00:22 -0500
+        id S932066AbeDCLuH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Apr 2018 07:50:07 -0400
+Date: Tue, 3 Apr 2018 13:50:03 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 05/18] ext4, dax: introduce ext4_dax_aops
+Message-ID: <20180403115003.qfbedsjtxwirqkh6@quack2.suse.cz>
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152246895649.36038.5391043415273091960.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152246895649.36038.5391043415273091960.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, snitzer@redhat.com
 
-Today the xfs_dqblk UUID is only checked in
-xfs_dquot_buf_verify_crc, which is a bit odd in itself; normally
-a CRC is checked on its own, separate from other metadata.
+On Fri 30-03-18 21:02:36, Dan Williams wrote:
+> In preparation for the dax implementation to start associating dax pages
+> to inodes via page->mapping, we need to provide a 'struct
+> address_space_operations' instance for dax. Otherwise, direct-I/O
+> triggers incorrect page cache assumptions and warnings.
+> 
+> Cc: "Theodore Ts'o" <tytso@mit.edu>
+> Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+> Cc: linux-ext4@vger.kernel.org
+> Cc: Jan Kara <jack@suse.cz>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-And by not checking the UUID in xfs_dquot_verify, this means
-that future read/write verifiers will continue to choke on
-mismatched UUID errors which are never seen or repaired when
-quotacheck calls xfs_dquot_verify to validate a disk dquot.
+Looks good. You can add:
 
-Move the uuid check from xfs_dquot_buf_verify_crc to
-xfs_dquot_verify so that this piece of metadata is more consistently
-checked.  If we have a type sent in as well, validate that too -
-it was unused until now.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/libxfs/xfs_dquot_buf.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+								Honza
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index f94e8c2..9f8b2c5 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -66,11 +66,20 @@
- 	 * This is all fine; things are still consistent, and we haven't lost
- 	 * any quota information. Just don't complain about bad dquot blks.
- 	 */
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		struct xfs_dqblk *dqb = (struct xfs_dqblk *)ddq;
-+
-+		if (!uuid_equal(&dqb->dd_uuid, &mp->m_sb.sb_meta_uuid))
-+			return __this_address;
-+	}
-+
- 	if (ddq->d_magic != cpu_to_be16(XFS_DQUOT_MAGIC))
- 		return __this_address;
- 	if (ddq->d_version != XFS_DQUOT_VERSION)
- 		return __this_address;
- 
-+	if (type && ddq->d_flags != type)
-+		return __this_address;
- 	if (ddq->d_flags != XFS_DQ_USER &&
- 	    ddq->d_flags != XFS_DQ_PROJ &&
- 	    ddq->d_flags != XFS_DQ_GROUP)
-@@ -156,8 +165,6 @@
- 		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
- 				 XFS_DQUOT_CRC_OFF))
- 			return false;
--		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
--			return false;
- 	}
- 	return true;
- }
+> ---
+>  fs/ext4/inode.c |   42 +++++++++++++++++++++++++++++++-----------
+>  1 file changed, 31 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index c94780075b04..249a97b19181 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -2725,12 +2725,6 @@ static int ext4_writepages(struct address_space *mapping,
+>  	percpu_down_read(&sbi->s_journal_flag_rwsem);
+>  	trace_ext4_writepages(inode, wbc);
+>  
+> -	if (dax_mapping(mapping)) {
+> -		ret = dax_writeback_mapping_range(mapping, inode->i_sb->s_bdev,
+> -						  wbc);
+> -		goto out_writepages;
+> -	}
+> -
+>  	/*
+>  	 * No pages to write? This is mainly a kludge to avoid starting
+>  	 * a transaction for special inodes like journal inode on last iput()
+> @@ -2955,6 +2949,27 @@ static int ext4_writepages(struct address_space *mapping,
+>  	return ret;
+>  }
+>  
+> +static int ext4_dax_writepages(struct address_space *mapping,
+> +			       struct writeback_control *wbc)
+> +{
+> +	int ret;
+> +	long nr_to_write = wbc->nr_to_write;
+> +	struct inode *inode = mapping->host;
+> +	struct ext4_sb_info *sbi = EXT4_SB(mapping->host->i_sb);
+> +
+> +	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
+> +		return -EIO;
+> +
+> +	percpu_down_read(&sbi->s_journal_flag_rwsem);
+> +	trace_ext4_writepages(inode, wbc);
+> +
+> +	ret = dax_writeback_mapping_range(mapping, inode->i_sb->s_bdev, wbc);
+> +	trace_ext4_writepages_result(inode, wbc, ret,
+> +				     nr_to_write - wbc->nr_to_write);
+> +	percpu_up_read(&sbi->s_journal_flag_rwsem);
+> +	return ret;
+> +}
+> +
+>  static int ext4_nonda_switch(struct super_block *sb)
+>  {
+>  	s64 free_clusters, dirty_clusters;
+> @@ -3857,10 +3872,6 @@ static ssize_t ext4_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+>  	if (ext4_has_inline_data(inode))
+>  		return 0;
+>  
+> -	/* DAX uses iomap path now */
+> -	if (WARN_ON_ONCE(IS_DAX(inode)))
+> -		return 0;
+> -
+>  	trace_ext4_direct_IO_enter(inode, offset, count, iov_iter_rw(iter));
+>  	if (iov_iter_rw(iter) == READ)
+>  		ret = ext4_direct_IO_read(iocb, iter);
+> @@ -3946,6 +3957,13 @@ static const struct address_space_operations ext4_da_aops = {
+>  	.error_remove_page	= generic_error_remove_page,
+>  };
+>  
+> +static const struct address_space_operations ext4_dax_aops = {
+> +	.writepages		= ext4_dax_writepages,
+> +	.direct_IO		= noop_direct_IO,
+> +	.set_page_dirty		= noop_set_page_dirty,
+> +	.invalidatepage		= noop_invalidatepage,
+> +};
+> +
+>  void ext4_set_aops(struct inode *inode)
+>  {
+>  	switch (ext4_inode_journal_mode(inode)) {
+> @@ -3958,7 +3976,9 @@ void ext4_set_aops(struct inode *inode)
+>  	default:
+>  		BUG();
+>  	}
+> -	if (test_opt(inode->i_sb, DELALLOC))
+> +	if (IS_DAX(inode))
+> +		inode->i_mapping->a_ops = &ext4_dax_aops;
+> +	else if (test_opt(inode->i_sb, DELALLOC))
+>  		inode->i_mapping->a_ops = &ext4_da_aops;
+>  	else
+>  		inode->i_mapping->a_ops = &ext4_aops;
+> 
 -- 
-1.8.3.1
-
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
