@@ -1,167 +1,317 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32998 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751298AbeDFRBS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Apr 2018 13:01:18 -0400
-Date: Fri, 6 Apr 2018 13:01:16 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: reset xfs_inode struct on reclaim in debug mode
-Message-ID: <20180406170116.GA5703@bfoster.bfoster>
-References: <20180405121147.60897-1-bfoster@redhat.com>
- <20180405211437.GD23861@dastard>
- <20180406132806.GA5189@bfoster.bfoster>
- <20180406161348.GG7500@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180406161348.GG7500@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:36390 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752109AbeDCBpB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 21:45:01 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1f3B0M-0004Xl-CI
+        for linux-xfs@vger.kernel.org; Tue, 03 Apr 2018 11:44:58 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.90_1)
+        (envelope-from <david@fromorbit.com>)
+        id 1f3B0M-0005lE-AA
+        for linux-xfs@vger.kernel.org; Tue, 03 Apr 2018 11:44:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fix intent use-after-free on abort
+Date: Tue,  3 Apr 2018 11:44:58 +1000
+Message-Id: <20180403014458.22105-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Apr 06, 2018 at 09:13:48AM -0700, Darrick J. Wong wrote:
-> On Fri, Apr 06, 2018 at 09:28:07AM -0400, Brian Foster wrote:
-> > On Fri, Apr 06, 2018 at 07:14:37AM +1000, Dave Chinner wrote:
-> > > On Thu, Apr 05, 2018 at 08:11:46AM -0400, Brian Foster wrote:
-> > > > A test case to reproduce a filestream/MRU use-after-free of a
-> > > > reclaimed inode requires bits (e.g., ip->i_mount) of the inode to be
-> > > > reset/reused once the inode memory is freed. This normally only
-> > > > occurs when a new page is cycled into the zone, however.
-> > > > 
-> > > > Perform the "one-time" inode init immediately prior to freeing
-> > > > inodes when in DEBUG mode. This will zero the inode, init the low
-> > > > level structures (locks, lists, etc.) and otherwise ensure each
-> > > > inode is in a purely uninitialized state while sitting in the zone
-> > > > as free memory.
-> > > 
-> > > Does KASAN catch this use-after-free? i.e. Given that people
-> > > regularly run fstests with KASAN enabled, do we need to change the
-> > > code for the test to trigger detection?
-> > > 
-> > 
-> > I had tried with page poisoning without much luck, I suspect because my
-> > test doesn't involve cycling pages in and out of the kmem cache. I
-> > hadn't tried with KASAN though. I just gave it a try with my current
-> > test and it looks like it detected it[1]. I guess KASAN is doing some
-> > kind of higher level/out-of-band tracking of slab/cache objects that
-> > allows this to work.
-> > 
-> > So perhaps we don't need this patch after all... I'll just document in
-> > the test that KASAN may be necessary to reproduce the problem.
-> > 
-> > Brian
-> > 
-> > [1] KASAN splat:
-> > 
-> > [   66.389454] BUG: KASAN: use-after-free in xfs_fstrm_free_func+0x33/0x1b0 [xfs]
-> > [   66.390432] Read of size 8 at addr ffff8800b02dde40 by task rmdir/1939
-> > [   66.391268] 
-> > [   66.391470] CPU: 2 PID: 1939 Comm: rmdir Not tainted 4.16.0-rc5 #111
-> > [   66.392228] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-> 
-> Yay!  This'll make for a nice juicy commit log. :)
-> 
-> Ok, so at this point this series consists of Christoph's replacement for
-> patch 2, and a revision of this patch to memzero/init_once?
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-It's Christoph's variant and just dropping this one atm. KASAN detects
-the problem with the current test (posted a bit ago), so it probably
-doesn't make sense to reinvent the wheel.
+When an intent is aborted during it's initial commit through
+xfs_defer_trans_abort(), there is a use after free. The current
+report is for a RUI  through this path in generic/388:
 
-> Hm, I wonder if there's a way to tell from sysfs if kasan is enabled.
-> 
+ Freed by task 6274:
+  __kasan_slab_free+0x136/0x180
+  kmem_cache_free+0xe7/0x4b0
+  xfs_trans_free_items+0x198/0x2e0
+  __xfs_trans_commit+0x27f/0xcc0
+  xfs_trans_roll+0x17b/0x2a0
+  xfs_defer_trans_roll+0x6ad/0xe60
+  xfs_defer_finish+0x2a6/0x2140
+  xfs_alloc_file_space+0x53a/0xf90
+  xfs_file_fallocate+0x5c6/0xac0
+  vfs_fallocate+0x2f5/0x930
+  ioctl_preallocate+0x1dc/0x320
+  do_vfs_ioctl+0xfe4/0x1690
 
-Hmm, from fishing around a bit it looks like you could possibly surmise
-it from /sys/kernel/debug/page_tables/kernel since it shows the KASAN
-shadow range. I'm not sure if there are other hints or anything more
-direct though..
+The problem is that the RUI has two active references - one in the
+current transaction, and another held by the defer_ops structure
+that is passed to the RUD (intent done) so that both the intent and
+the intent done structures are freed on commit of the intent done.
 
-Are you hinting at checking for KASAN via the test..?
+Hence during abort, we need to release the intent item, because the
+defer_ops reference is released separately via ->abort_intent
+callback. Fix all the intent code to do this correctly.
 
-Brian
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap_item.c     | 39 ++++++++++++++++++++-------------------
+ fs/xfs/xfs_extfree_item.c  | 38 +++++++++++++++++++-------------------
+ fs/xfs/xfs_refcount_item.c | 39 ++++++++++++++++++++-------------------
+ fs/xfs/xfs_rmap_item.c     | 38 +++++++++++++++++++-------------------
+ 4 files changed, 78 insertions(+), 76 deletions(-)
 
-> --D
-> 
-> > [   66.392925] Call Trace:
-> > [   66.393243]  dump_stack+0x85/0xc0
-> > [   66.393683]  print_address_description+0x65/0x270
-> > [   66.394190]  kasan_report+0x253/0x380
-> > [   66.394681]  ? xfs_fstrm_free_func+0x33/0x1b0 [xfs]
-> > [   66.395352]  xfs_fstrm_free_func+0x33/0x1b0 [xfs]
-> > [   66.395987]  xfs_remove+0x60a/0x670 [xfs]
-> > [   66.396567]  ? xfs_iunpin_wait+0x30/0x30 [xfs]
-> > [   66.397077]  ? lock_acquire+0xc0/0x220
-> > [   66.397463]  ? d_walk+0x1b3/0x580
-> > [   66.397803]  ? do_raw_spin_unlock+0x8c/0x120
-> > [   66.398353]  xfs_vn_unlink+0xac/0x130 [xfs]
-> > [   66.398915]  ? xfs_vn_rename+0x230/0x230 [xfs]
-> > [   66.399369]  vfs_rmdir+0x12a/0x1e0
-> > [   66.399736]  do_rmdir+0x258/0x2c0
-> > [   66.400159]  ? user_path_create+0x30/0x30
-> > [   66.400622]  ? up_read+0x17/0x30
-> > [   66.400941]  ? __do_page_fault+0x64a/0x710
-> > [   66.401385]  ? mark_held_locks+0x1b/0xa0
-> > [   66.401766]  ? mark_held_locks+0x1b/0xa0
-> > [   66.402181]  ? do_syscall_64+0x39/0x310
-> > [   66.402592]  ? SyS_mkdir+0x170/0x170
-> > [   66.402938]  do_syscall_64+0xf1/0x310
-> > [   66.403352]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
-> > [   66.403920] RIP: 0033:0x7fad1a8f4ec7
-> > [   66.404327] RSP: 002b:00007fffb10c8ca8 EFLAGS: 00000246 ORIG_RAX: 0000000000000054
-> > [   66.405173] RAX: ffffffffffffffda RBX: 00007fffb10cab1b RCX: 00007fad1a8f4ec7
-> > [   66.405864] RDX: 00007fad1abc4000 RSI: 0000000000000001 RDI: 00007fffb10cab1b
-> > [   66.406592] RBP: 00007fffb10c8dd8 R08: 0000000000000000 R09: 0000000000000000
-> > [   66.407332] R10: 0000564cf39f0010 R11: 0000000000000246 R12: 0000000000000002
-> > [   66.408090] R13: 00007fad1abc1344 R14: 0000000000000000 R15: 0000000000000000
-> > [   66.408819] 
-> > [   66.408977] Allocated by task 1929:
-> > [   66.409340]  kasan_kmalloc+0xa0/0xd0
-> > [   66.409732]  kmem_cache_alloc+0xe8/0x2e0
-> > [   66.410250]  kmem_zone_alloc+0x5e/0xf0 [xfs]
-> > [   66.410808]  xfs_inode_alloc+0x2d/0x2b0 [xfs]
-> > [   66.411358]  xfs_iget+0x616/0x1740 [xfs]
-> > [   66.411860]  xfs_ialloc+0x18b/0xb10 [xfs]
-> > [   66.412423]  xfs_dir_ialloc+0x21e/0x3f0 [xfs]
-> > [   66.413032]  xfs_create+0x7b4/0xb60 [xfs]
-> > [   66.413608]  xfs_generic_create+0x303/0x3f0 [xfs]
-> > [   66.414127]  vfs_mkdir+0x1d2/0x2e0
-> > [   66.414465]  SyS_mkdir+0xda/0x170
-> > [   66.414790]  do_syscall_64+0xf1/0x310
-> > [   66.415141]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
-> > [   66.415636] 
-> > [   66.415790] Freed by task 0:
-> > [   66.416070]  __kasan_slab_free+0x136/0x180
-> > [   66.416467]  kmem_cache_free+0xc9/0x340
-> > [   66.416839]  rcu_process_callbacks+0x2ef/0x9c0
-> > [   66.417262]  __do_softirq+0x11a/0x5b9
-> > [   66.417654] 
-> > [   66.417878] The buggy address belongs to the object at ffff8800b02dde40
-> > [   66.417878]  which belongs to the cache xfs_inode of size 1696
-> > [   66.419219] The buggy address is located 0 bytes inside of
-> > [   66.419219]  1696-byte region [ffff8800b02dde40, ffff8800b02de4e0)
-> > [   66.420437] The buggy address belongs to the page:
-> > [   66.420948] page:ffffea0002c0b600 count:1 mapcount:0 mapping:0000000000000000 index:0x0 compound_mapcount: 0
-> > [   66.422024] flags: 0xfffffc0008100(slab|head)
-> > [   66.422466] raw: 000fffffc0008100 0000000000000000 0000000000000000 0000000180110011
-> > [   66.423223] raw: dead000000000100 dead000000000200 ffff8800c5207480 0000000000000000
-> > [   66.424013] page dumped because: kasan: bad access detected
-> > [   66.424602] 
-> > [   66.424895] Memory state around the buggy address:
-> > [   66.425369]  ffff8800b02ddd00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> > [   66.426070]  ffff8800b02ddd80: 00 00 00 00 fc fc fc fc fc fc fc fc fc fc fc fc
-> > [   66.426815] >ffff8800b02dde00: fc fc fc fc fc fc fc fc fb fb fb fb fb fb fb fb
-> > [   66.427632]                                            ^
-> > [   66.428213]  ffff8800b02dde80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> > [   66.428989]  ffff8800b02ddf00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> > [   66.429750] ==================================================================
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index d769a82f3641..618bb71535c8 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -53,6 +53,25 @@ xfs_bui_item_free(
+ 	kmem_zone_free(xfs_bui_zone, buip);
+ }
+ 
++/*
++ * Freeing the BUI requires that we remove it from the AIL if it has already
++ * been placed there. However, the BUI may not yet have been placed in the AIL
++ * when called by xfs_bui_release() from BUD processing due to the ordering of
++ * committed vs unpin operations in bulk insert operations. Hence the reference
++ * count to ensure only the last caller frees the BUI.
++ */
++void
++xfs_bui_release(
++	struct xfs_bui_log_item	*buip)
++{
++	ASSERT(atomic_read(&buip->bui_refcount) > 0);
++	if (atomic_dec_and_test(&buip->bui_refcount)) {
++		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
++		xfs_bui_item_free(buip);
++	}
++}
++
++
+ STATIC void
+ xfs_bui_item_size(
+ 	struct xfs_log_item	*lip,
+@@ -142,7 +161,7 @@ xfs_bui_item_unlock(
+ 	struct xfs_log_item	*lip)
+ {
+ 	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+-		xfs_bui_item_free(BUI_ITEM(lip));
++		xfs_bui_release(BUI_ITEM(lip));
+ }
+ 
+ /*
+@@ -206,24 +225,6 @@ xfs_bui_init(
+ 	return buip;
+ }
+ 
+-/*
+- * Freeing the BUI requires that we remove it from the AIL if it has already
+- * been placed there. However, the BUI may not yet have been placed in the AIL
+- * when called by xfs_bui_release() from BUD processing due to the ordering of
+- * committed vs unpin operations in bulk insert operations. Hence the reference
+- * count to ensure only the last caller frees the BUI.
+- */
+-void
+-xfs_bui_release(
+-	struct xfs_bui_log_item	*buip)
+-{
+-	ASSERT(atomic_read(&buip->bui_refcount) > 0);
+-	if (atomic_dec_and_test(&buip->bui_refcount)) {
+-		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
+-		xfs_bui_item_free(buip);
+-	}
+-}
+-
+ static inline struct xfs_bud_log_item *BUD_ITEM(struct xfs_log_item *lip)
+ {
+ 	return container_of(lip, struct xfs_bud_log_item, bud_item);
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index d60a9809f0c6..70b7d48af6d6 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -50,6 +50,24 @@ xfs_efi_item_free(
+ 		kmem_zone_free(xfs_efi_zone, efip);
+ }
+ 
++/*
++ * Freeing the efi requires that we remove it from the AIL if it has already
++ * been placed there. However, the EFI may not yet have been placed in the AIL
++ * when called by xfs_efi_release() from EFD processing due to the ordering of
++ * committed vs unpin operations in bulk insert operations. Hence the reference
++ * count to ensure only the last caller frees the EFI.
++ */
++void
++xfs_efi_release(
++	struct xfs_efi_log_item	*efip)
++{
++	ASSERT(atomic_read(&efip->efi_refcount) > 0);
++	if (atomic_dec_and_test(&efip->efi_refcount)) {
++		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
++		xfs_efi_item_free(efip);
++	}
++}
++
+ /*
+  * This returns the number of iovecs needed to log the given efi item.
+  * We only need 1 iovec for an efi item.  It just logs the efi_log_format
+@@ -151,7 +169,7 @@ xfs_efi_item_unlock(
+ 	struct xfs_log_item	*lip)
+ {
+ 	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+-		xfs_efi_item_free(EFI_ITEM(lip));
++		xfs_efi_release(EFI_ITEM(lip));
+ }
+ 
+ /*
+@@ -279,24 +297,6 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
+ 	return -EFSCORRUPTED;
+ }
+ 
+-/*
+- * Freeing the efi requires that we remove it from the AIL if it has already
+- * been placed there. However, the EFI may not yet have been placed in the AIL
+- * when called by xfs_efi_release() from EFD processing due to the ordering of
+- * committed vs unpin operations in bulk insert operations. Hence the reference
+- * count to ensure only the last caller frees the EFI.
+- */
+-void
+-xfs_efi_release(
+-	struct xfs_efi_log_item	*efip)
+-{
+-	ASSERT(atomic_read(&efip->efi_refcount) > 0);
+-	if (atomic_dec_and_test(&efip->efi_refcount)) {
+-		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
+-		xfs_efi_item_free(efip);
+-	}
+-}
+-
+ static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
+ {
+ 	return container_of(lip, struct xfs_efd_log_item, efd_item);
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index a017024bf249..e5866b714d5f 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -52,6 +52,25 @@ xfs_cui_item_free(
+ 		kmem_zone_free(xfs_cui_zone, cuip);
+ }
+ 
++/*
++ * Freeing the CUI requires that we remove it from the AIL if it has already
++ * been placed there. However, the CUI may not yet have been placed in the AIL
++ * when called by xfs_cui_release() from CUD processing due to the ordering of
++ * committed vs unpin operations in bulk insert operations. Hence the reference
++ * count to ensure only the last caller frees the CUI.
++ */
++void
++xfs_cui_release(
++	struct xfs_cui_log_item	*cuip)
++{
++	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
++	if (atomic_dec_and_test(&cuip->cui_refcount)) {
++		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
++		xfs_cui_item_free(cuip);
++	}
++}
++
++
+ STATIC void
+ xfs_cui_item_size(
+ 	struct xfs_log_item	*lip,
+@@ -141,7 +160,7 @@ xfs_cui_item_unlock(
+ 	struct xfs_log_item	*lip)
+ {
+ 	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+-		xfs_cui_item_free(CUI_ITEM(lip));
++		xfs_cui_release(CUI_ITEM(lip));
+ }
+ 
+ /*
+@@ -211,24 +230,6 @@ xfs_cui_init(
+ 	return cuip;
+ }
+ 
+-/*
+- * Freeing the CUI requires that we remove it from the AIL if it has already
+- * been placed there. However, the CUI may not yet have been placed in the AIL
+- * when called by xfs_cui_release() from CUD processing due to the ordering of
+- * committed vs unpin operations in bulk insert operations. Hence the reference
+- * count to ensure only the last caller frees the CUI.
+- */
+-void
+-xfs_cui_release(
+-	struct xfs_cui_log_item	*cuip)
+-{
+-	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
+-	if (atomic_dec_and_test(&cuip->cui_refcount)) {
+-		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
+-		xfs_cui_item_free(cuip);
+-	}
+-}
+-
+ static inline struct xfs_cud_log_item *CUD_ITEM(struct xfs_log_item *lip)
+ {
+ 	return container_of(lip, struct xfs_cud_log_item, cud_item);
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index cbf4ecd81616..e5b5b3e7ef82 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -52,6 +52,24 @@ xfs_rui_item_free(
+ 		kmem_zone_free(xfs_rui_zone, ruip);
+ }
+ 
++/*
++ * Freeing the RUI requires that we remove it from the AIL if it has already
++ * been placed there. However, the RUI may not yet have been placed in the AIL
++ * when called by xfs_rui_release() from RUD processing due to the ordering of
++ * committed vs unpin operations in bulk insert operations. Hence the reference
++ * count to ensure only the last caller frees the RUI.
++ */
++void
++xfs_rui_release(
++	struct xfs_rui_log_item	*ruip)
++{
++	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
++	if (atomic_dec_and_test(&ruip->rui_refcount)) {
++		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
++		xfs_rui_item_free(ruip);
++	}
++}
++
+ STATIC void
+ xfs_rui_item_size(
+ 	struct xfs_log_item	*lip,
+@@ -141,7 +159,7 @@ xfs_rui_item_unlock(
+ 	struct xfs_log_item	*lip)
+ {
+ 	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+-		xfs_rui_item_free(RUI_ITEM(lip));
++		xfs_rui_release(RUI_ITEM(lip));
+ }
+ 
+ /*
+@@ -233,24 +251,6 @@ xfs_rui_copy_format(
+ 	return 0;
+ }
+ 
+-/*
+- * Freeing the RUI requires that we remove it from the AIL if it has already
+- * been placed there. However, the RUI may not yet have been placed in the AIL
+- * when called by xfs_rui_release() from RUD processing due to the ordering of
+- * committed vs unpin operations in bulk insert operations. Hence the reference
+- * count to ensure only the last caller frees the RUI.
+- */
+-void
+-xfs_rui_release(
+-	struct xfs_rui_log_item	*ruip)
+-{
+-	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
+-	if (atomic_dec_and_test(&ruip->rui_refcount)) {
+-		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
+-		xfs_rui_item_free(ruip);
+-	}
+-}
+-
+ static inline struct xfs_rud_log_item *RUD_ITEM(struct xfs_log_item *lip)
+ {
+ 	return container_of(lip, struct xfs_rud_log_item, rud_item);
+-- 
+2.16.1
+
