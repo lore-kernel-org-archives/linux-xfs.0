@@ -1,170 +1,329 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45858 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752171AbeDCDAt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 23:00:49 -0400
-Date: Mon, 2 Apr 2018 20:00:46 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:53906 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750905AbeDCDRe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 23:17:34 -0400
+Date: Mon, 2 Apr 2018 20:06:47 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 1/2] xfs: skip scrub xref if corruption already noted
-Message-ID: <20180403030046.GF13552@magnolia>
-References: <152269892987.16253.3900560313483881560.stgit@magnolia>
- <152269893600.16253.2058199896357918178.stgit@magnolia>
+Subject: Re: [PATCH] xfs: fix intent use-after-free on abort
+Message-ID: <20180403030647.GH13552@magnolia>
+References: <20180403014458.22105-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152269893600.16253.2058199896357918178.stgit@magnolia>
+In-Reply-To: <20180403014458.22105-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dave Chinner <david@fromorbit.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Apr 03, 2018 at 11:44:58AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When an intent is aborted during it's initial commit through
+> xfs_defer_trans_abort(), there is a use after free. The current
+> report is for a RUI  through this path in generic/388:
+> 
+>  Freed by task 6274:
+>   __kasan_slab_free+0x136/0x180
+>   kmem_cache_free+0xe7/0x4b0
+>   xfs_trans_free_items+0x198/0x2e0
+>   __xfs_trans_commit+0x27f/0xcc0
+>   xfs_trans_roll+0x17b/0x2a0
+>   xfs_defer_trans_roll+0x6ad/0xe60
+>   xfs_defer_finish+0x2a6/0x2140
+>   xfs_alloc_file_space+0x53a/0xf90
+>   xfs_file_fallocate+0x5c6/0xac0
+>   vfs_fallocate+0x2f5/0x930
+>   ioctl_preallocate+0x1dc/0x320
+>   do_vfs_ioctl+0xfe4/0x1690
+> 
+> The problem is that the RUI has two active references - one in the
+> current transaction, and another held by the defer_ops structure
+> that is passed to the RUD (intent done) so that both the intent and
+> the intent done structures are freed on commit of the intent done.
+> 
+> Hence during abort, we need to release the intent item, because the
+> defer_ops reference is released separately via ->abort_intent
+> callback. Fix all the intent code to do this correctly.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_bmap_item.c     | 39 ++++++++++++++++++++-------------------
+>  fs/xfs/xfs_extfree_item.c  | 38 +++++++++++++++++++-------------------
+>  fs/xfs/xfs_refcount_item.c | 39 ++++++++++++++++++++-------------------
+>  fs/xfs/xfs_rmap_item.c     | 38 +++++++++++++++++++-------------------
+>  4 files changed, 78 insertions(+), 76 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index d769a82f3641..618bb71535c8 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -53,6 +53,25 @@ xfs_bui_item_free(
+>  	kmem_zone_free(xfs_bui_zone, buip);
+>  }
+>  
+> +/*
+> + * Freeing the BUI requires that we remove it from the AIL if it has already
+> + * been placed there. However, the BUI may not yet have been placed in the AIL
+> + * when called by xfs_bui_release() from BUD processing due to the ordering of
+> + * committed vs unpin operations in bulk insert operations. Hence the reference
+> + * count to ensure only the last caller frees the BUI.
+> + */
+> +void
+> +xfs_bui_release(
+> +	struct xfs_bui_log_item	*buip)
+> +{
+> +	ASSERT(atomic_read(&buip->bui_refcount) > 0);
+> +	if (atomic_dec_and_test(&buip->bui_refcount)) {
+> +		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
+> +		xfs_bui_item_free(buip);
+> +	}
+> +}
+> +
+> +
+>  STATIC void
+>  xfs_bui_item_size(
+>  	struct xfs_log_item	*lip,
+> @@ -142,7 +161,7 @@ xfs_bui_item_unlock(
+>  	struct xfs_log_item	*lip)
+>  {
+>  	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
 
-Don't bother looking for cross-referencing problems if the metadata is
-already corrupt or we've already found a cross-referencing problem.
-Since we added a helper function for flags testing, convert existing
-users to use it.
+Hm, in my tree this is still "if (lip->li_flags & XFS_LI_ABORTED)" :)
+/me wonders where the test_bit() came from?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: add helper function instead of open coding
----
- fs/xfs/scrub/alloc.c    |    2 +-
- fs/xfs/scrub/common.c   |    4 ++++
- fs/xfs/scrub/common.h   |    6 ++++++
- fs/xfs/scrub/ialloc.c   |    2 +-
- fs/xfs/scrub/refcount.c |    4 ++--
- fs/xfs/scrub/rmap.c     |    4 ++--
- fs/xfs/scrub/rtbitmap.c |    3 +++
- fs/xfs/scrub/scrub.c    |    3 +--
- 8 files changed, 20 insertions(+), 8 deletions(-)
+But this is the same change that I came up with to solve the problem, so
+I guess I'll go feed it to the test machines and see how they fare
+overnight, and mash on it harder with generic/388 tomorrow.
 
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index 517c079..f5c6993 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -172,7 +172,7 @@ xfs_scrub_xref_is_used_space(
- 	bool				is_freesp;
- 	int				error;
- 
--	if (!sc->sa.bno_cur)
-+	if (!sc->sa.bno_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_alloc_has_record(sc->sa.bno_cur, agbno, len, &is_freesp);
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index fe3a2b1..51d2a59 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -727,6 +727,10 @@ xfs_scrub_should_check_xref(
- 	int				*error,
- 	struct xfs_btree_cur		**curpp)
- {
-+	/* No point in xref if we already know we're corrupt. */
-+	if (xfs_scrub_found_corruption(sc->sm))
-+		return false;
-+
- 	if (*error == 0)
- 		return true;
- 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index deaf604..30e9039 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -157,4 +157,10 @@ int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
- 				   struct xfs_inode *ip, unsigned int resblks);
- void xfs_scrub_buffer_recheck(struct xfs_scrub_context *sc, struct xfs_buf *bp);
- 
-+static inline bool xfs_scrub_found_corruption(struct xfs_scrub_metadata *sm)
-+{
-+	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+			       XFS_SCRUB_OFLAG_XCORRUPT);
-+}
-+
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 106ca4b..05e6191 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -496,7 +496,7 @@ xfs_scrub_xref_inode_check(
- 	bool				has_inodes;
- 	int				error;
- 
--	if (!(*icur))
-+	if (!(*icur) || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_ialloc_has_inodes_at_extent(*icur, agbno, len, &has_inodes);
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 400f156..823bda3 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -460,7 +460,7 @@ xfs_scrub_xref_is_cow_staging(
- 	int				has_refcount;
- 	int				error;
- 
--	if (!sc->sa.refc_cur)
-+	if (!sc->sa.refc_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	/* Find the CoW staging extent. */
-@@ -504,7 +504,7 @@ xfs_scrub_xref_is_not_shared(
- 	bool				shared;
- 	int				error;
- 
--	if (!sc->sa.refc_cur)
-+	if (!sc->sa.refc_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_refcount_has_record(sc->sa.refc_cur, agbno, len, &shared);
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 8f2a7c3..9ca92e4 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -207,7 +207,7 @@ xfs_scrub_xref_check_owner(
- 	bool				has_rmap;
- 	int				error;
- 
--	if (!sc->sa.rmap_cur)
-+	if (!sc->sa.rmap_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_rmap_record_exists(sc->sa.rmap_cur, bno, len, oinfo,
-@@ -250,7 +250,7 @@ xfs_scrub_xref_has_no_owner(
- 	bool				has_rmap;
- 	int				error;
- 
--	if (!sc->sa.rmap_cur)
-+	if (!sc->sa.rmap_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_rmap_has_record(sc->sa.rmap_cur, bno, len, &has_rmap);
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 39c41dfe..c8672f7 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -110,6 +110,9 @@ xfs_scrub_xref_is_used_rt_space(
- 	bool				is_free;
- 	int				error;
- 
-+	if (xfs_scrub_found_corruption(sc->sm))
-+		return;
-+
- 	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
- 	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, fsbno, len,
- 			&is_free);
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 26c7596..cb1e727 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -446,8 +446,7 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
- 
--	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
--			       XFS_SCRUB_OFLAG_XCORRUPT))
-+	if (xfs_scrub_found_corruption(sc.sm))
- 		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
- 
- out_teardown:
+--D
+
+> -		xfs_bui_item_free(BUI_ITEM(lip));
+> +		xfs_bui_release(BUI_ITEM(lip));
+>  }
+>  
+>  /*
+> @@ -206,24 +225,6 @@ xfs_bui_init(
+>  	return buip;
+>  }
+>  
+> -/*
+> - * Freeing the BUI requires that we remove it from the AIL if it has already
+> - * been placed there. However, the BUI may not yet have been placed in the AIL
+> - * when called by xfs_bui_release() from BUD processing due to the ordering of
+> - * committed vs unpin operations in bulk insert operations. Hence the reference
+> - * count to ensure only the last caller frees the BUI.
+> - */
+> -void
+> -xfs_bui_release(
+> -	struct xfs_bui_log_item	*buip)
+> -{
+> -	ASSERT(atomic_read(&buip->bui_refcount) > 0);
+> -	if (atomic_dec_and_test(&buip->bui_refcount)) {
+> -		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_bui_item_free(buip);
+> -	}
+> -}
+> -
+>  static inline struct xfs_bud_log_item *BUD_ITEM(struct xfs_log_item *lip)
+>  {
+>  	return container_of(lip, struct xfs_bud_log_item, bud_item);
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index d60a9809f0c6..70b7d48af6d6 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -50,6 +50,24 @@ xfs_efi_item_free(
+>  		kmem_zone_free(xfs_efi_zone, efip);
+>  }
+>  
+> +/*
+> + * Freeing the efi requires that we remove it from the AIL if it has already
+> + * been placed there. However, the EFI may not yet have been placed in the AIL
+> + * when called by xfs_efi_release() from EFD processing due to the ordering of
+> + * committed vs unpin operations in bulk insert operations. Hence the reference
+> + * count to ensure only the last caller frees the EFI.
+> + */
+> +void
+> +xfs_efi_release(
+> +	struct xfs_efi_log_item	*efip)
+> +{
+> +	ASSERT(atomic_read(&efip->efi_refcount) > 0);
+> +	if (atomic_dec_and_test(&efip->efi_refcount)) {
+> +		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
+> +		xfs_efi_item_free(efip);
+> +	}
+> +}
+> +
+>  /*
+>   * This returns the number of iovecs needed to log the given efi item.
+>   * We only need 1 iovec for an efi item.  It just logs the efi_log_format
+> @@ -151,7 +169,7 @@ xfs_efi_item_unlock(
+>  	struct xfs_log_item	*lip)
+>  {
+>  	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+> -		xfs_efi_item_free(EFI_ITEM(lip));
+> +		xfs_efi_release(EFI_ITEM(lip));
+>  }
+>  
+>  /*
+> @@ -279,24 +297,6 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
+>  	return -EFSCORRUPTED;
+>  }
+>  
+> -/*
+> - * Freeing the efi requires that we remove it from the AIL if it has already
+> - * been placed there. However, the EFI may not yet have been placed in the AIL
+> - * when called by xfs_efi_release() from EFD processing due to the ordering of
+> - * committed vs unpin operations in bulk insert operations. Hence the reference
+> - * count to ensure only the last caller frees the EFI.
+> - */
+> -void
+> -xfs_efi_release(
+> -	struct xfs_efi_log_item	*efip)
+> -{
+> -	ASSERT(atomic_read(&efip->efi_refcount) > 0);
+> -	if (atomic_dec_and_test(&efip->efi_refcount)) {
+> -		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_efi_item_free(efip);
+> -	}
+> -}
+> -
+>  static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
+>  {
+>  	return container_of(lip, struct xfs_efd_log_item, efd_item);
+> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> index a017024bf249..e5866b714d5f 100644
+> --- a/fs/xfs/xfs_refcount_item.c
+> +++ b/fs/xfs/xfs_refcount_item.c
+> @@ -52,6 +52,25 @@ xfs_cui_item_free(
+>  		kmem_zone_free(xfs_cui_zone, cuip);
+>  }
+>  
+> +/*
+> + * Freeing the CUI requires that we remove it from the AIL if it has already
+> + * been placed there. However, the CUI may not yet have been placed in the AIL
+> + * when called by xfs_cui_release() from CUD processing due to the ordering of
+> + * committed vs unpin operations in bulk insert operations. Hence the reference
+> + * count to ensure only the last caller frees the CUI.
+> + */
+> +void
+> +xfs_cui_release(
+> +	struct xfs_cui_log_item	*cuip)
+> +{
+> +	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
+> +	if (atomic_dec_and_test(&cuip->cui_refcount)) {
+> +		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
+> +		xfs_cui_item_free(cuip);
+> +	}
+> +}
+> +
+> +
+>  STATIC void
+>  xfs_cui_item_size(
+>  	struct xfs_log_item	*lip,
+> @@ -141,7 +160,7 @@ xfs_cui_item_unlock(
+>  	struct xfs_log_item	*lip)
+>  {
+>  	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+> -		xfs_cui_item_free(CUI_ITEM(lip));
+> +		xfs_cui_release(CUI_ITEM(lip));
+>  }
+>  
+>  /*
+> @@ -211,24 +230,6 @@ xfs_cui_init(
+>  	return cuip;
+>  }
+>  
+> -/*
+> - * Freeing the CUI requires that we remove it from the AIL if it has already
+> - * been placed there. However, the CUI may not yet have been placed in the AIL
+> - * when called by xfs_cui_release() from CUD processing due to the ordering of
+> - * committed vs unpin operations in bulk insert operations. Hence the reference
+> - * count to ensure only the last caller frees the CUI.
+> - */
+> -void
+> -xfs_cui_release(
+> -	struct xfs_cui_log_item	*cuip)
+> -{
+> -	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
+> -	if (atomic_dec_and_test(&cuip->cui_refcount)) {
+> -		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_cui_item_free(cuip);
+> -	}
+> -}
+> -
+>  static inline struct xfs_cud_log_item *CUD_ITEM(struct xfs_log_item *lip)
+>  {
+>  	return container_of(lip, struct xfs_cud_log_item, cud_item);
+> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+> index cbf4ecd81616..e5b5b3e7ef82 100644
+> --- a/fs/xfs/xfs_rmap_item.c
+> +++ b/fs/xfs/xfs_rmap_item.c
+> @@ -52,6 +52,24 @@ xfs_rui_item_free(
+>  		kmem_zone_free(xfs_rui_zone, ruip);
+>  }
+>  
+> +/*
+> + * Freeing the RUI requires that we remove it from the AIL if it has already
+> + * been placed there. However, the RUI may not yet have been placed in the AIL
+> + * when called by xfs_rui_release() from RUD processing due to the ordering of
+> + * committed vs unpin operations in bulk insert operations. Hence the reference
+> + * count to ensure only the last caller frees the RUI.
+> + */
+> +void
+> +xfs_rui_release(
+> +	struct xfs_rui_log_item	*ruip)
+> +{
+> +	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
+> +	if (atomic_dec_and_test(&ruip->rui_refcount)) {
+> +		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
+> +		xfs_rui_item_free(ruip);
+> +	}
+> +}
+> +
+>  STATIC void
+>  xfs_rui_item_size(
+>  	struct xfs_log_item	*lip,
+> @@ -141,7 +159,7 @@ xfs_rui_item_unlock(
+>  	struct xfs_log_item	*lip)
+>  {
+>  	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+> -		xfs_rui_item_free(RUI_ITEM(lip));
+> +		xfs_rui_release(RUI_ITEM(lip));
+>  }
+>  
+>  /*
+> @@ -233,24 +251,6 @@ xfs_rui_copy_format(
+>  	return 0;
+>  }
+>  
+> -/*
+> - * Freeing the RUI requires that we remove it from the AIL if it has already
+> - * been placed there. However, the RUI may not yet have been placed in the AIL
+> - * when called by xfs_rui_release() from RUD processing due to the ordering of
+> - * committed vs unpin operations in bulk insert operations. Hence the reference
+> - * count to ensure only the last caller frees the RUI.
+> - */
+> -void
+> -xfs_rui_release(
+> -	struct xfs_rui_log_item	*ruip)
+> -{
+> -	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
+> -	if (atomic_dec_and_test(&ruip->rui_refcount)) {
+> -		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
+> -		xfs_rui_item_free(ruip);
+> -	}
+> -}
+> -
+>  static inline struct xfs_rud_log_item *RUD_ITEM(struct xfs_log_item *lip)
+>  {
+>  	return container_of(lip, struct xfs_rud_log_item, rud_item);
+> -- 
+> 2.16.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
