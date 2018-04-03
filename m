@@ -1,157 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42975 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750812AbeDDKHA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 06:07:00 -0400
-Date: Wed, 4 Apr 2018 12:06:57 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned
- dax mappings
-Message-ID: <20180404100657.qpodshwzmh4djwej@quack2.suse.cz>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
+Received: from mail-io0-f198.google.com ([209.85.223.198]:55848 "EHLO
+        mail-io0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752320AbeDCRBC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Apr 2018 13:01:02 -0400
+Received: by mail-io0-f198.google.com with SMTP id d3so4716501iod.22
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Apr 2018 10:01:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
+Date: Tue, 03 Apr 2018 10:01:01 -0700
+Message-ID: <000000000000b320810568f4a6f1@google.com>
+Subject: KASAN: use-after-free Read in xfs_inobt_init_key_from_rec
+From: syzbot <syzbot+08ab33be0178b76851c8@syzkaller.appspotmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, snitzer@redhat.com
+To: bfoster@redhat.com, darrick.wong@oracle.com, dchinner@redhat.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-On Wed 04-04-18 11:46:56, Jan Kara wrote:
-> On Fri 30-03-18 21:03:30, Dan Williams wrote:
-> > Background:
-> > 
-> > get_user_pages() in the filesystem pins file backed memory pages for
-> > access by devices performing dma. However, it only pins the memory pages
-> > not the page-to-file offset association. If a file is truncated the
-> > pages are mapped out of the file and dma may continue indefinitely into
-> > a page that is owned by a device driver. This breaks coherency of the
-> > file vs dma, but the assumption is that if userspace wants the
-> > file-space truncated it does not matter what data is inbound from the
-> > device, it is not relevant anymore. The only expectation is that dma can
-> > safely continue while the filesystem reallocates the block(s).
-> > 
-> > Problem:
-> > 
-> > This expectation that dma can safely continue while the filesystem
-> > changes the block map is broken by dax. With dax the target dma page
-> > *is* the filesystem block. The model of leaving the page pinned for dma,
-> > but truncating the file block out of the file, means that the filesytem
-> > is free to reallocate a block under active dma to another file and now
-> > the expected data-incoherency situation has turned into active
-> > data-corruption.
-> > 
-> > Solution:
-> > 
-> > Defer all filesystem operations (fallocate(), truncate()) on a dax mode
-> > file while any page/block in the file is under active dma. This solution
-> > assumes that dma is transient. Cases where dma operations are known to
-> > not be transient, like RDMA, have been explicitly disabled via
-> > commits like 5f1d43de5416 "IB/core: disable memory registration of
-> > filesystem-dax vmas".
-> > 
-> > The dax_layout_busy_page() routine is called by filesystems with a lock
-> > held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
-> > The process of looking up a busy page invalidates all mappings
-> > to trigger any subsequent get_user_pages() to block on i_mmap_lock.
-> > The filesystem continues to call dax_layout_busy_page() until it finally
-> > returns no more active pages. This approach assumes that the page
-> > pinning is transient, if that assumption is violated the system would
-> > have likely hung from the uncompleted I/O.
-> > 
-> > Cc: Jan Kara <jack@suse.cz>
-> > Cc: Jeff Moyer <jmoyer@redhat.com>
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Cc: Matthew Wilcox <mawilcox@microsoft.com>
-> > Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-> > Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > Cc: Dave Hansen <dave.hansen@linux.intel.com>
-> > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > Reported-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > ---
-> >  drivers/dax/super.c |    2 +
-> >  fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/dax.h |   25 ++++++++++++++
-> >  mm/gup.c            |    5 +++
-> >  4 files changed, 123 insertions(+), 1 deletion(-)
-> 
-> ...
-> 
-> > +/**
-> > + * dax_layout_busy_page - find first pinned page in @mapping
-> > + * @mapping: address space to scan for a page with ref count > 1
-> > + *
-> > + * DAX requires ZONE_DEVICE mapped pages. These pages are never
-> > + * 'onlined' to the page allocator so they are considered idle when
-> > + * page->count == 1. A filesystem uses this interface to determine if
-> > + * any page in the mapping is busy, i.e. for DMA, or other
-> > + * get_user_pages() usages.
-> > + *
-> > + * It is expected that the filesystem is holding locks to block the
-> > + * establishment of new mappings in this address_space. I.e. it expects
-> > + * to be able to run unmap_mapping_range() and subsequently not race
-> > + * mapping_mapped() becoming true. It expects that get_user_pages() pte
-> > + * walks are performed under rcu_read_lock().
-> > + */
-> > +struct page *dax_layout_busy_page(struct address_space *mapping)
-> > +{
-> > +	pgoff_t	indices[PAGEVEC_SIZE];
-> > +	struct page *page = NULL;
-> > +	struct pagevec pvec;
-> > +	pgoff_t	index, end;
-> > +	unsigned i;
-> > +
-> > +	/*
-> > +	 * In the 'limited' case get_user_pages() for dax is disabled.
-> > +	 */
-> > +	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-> > +		return NULL;
-> > +
-> > +	if (!dax_mapping(mapping) || !mapping_mapped(mapping))
-> > +		return NULL;
-> > +
-> > +	pagevec_init(&pvec);
-> > +	index = 0;
-> > +	end = -1;
-> > +	/*
-> > +	 * Flush dax_layout_lock() sections to ensure all possible page
-> > +	 * references have been taken, or otherwise arrange for faults
-> > +	 * to block on the filesystem lock that is taken for
-> > +	 * establishing new mappings.
-> > +	 */
-> > +	unmap_mapping_range(mapping, 0, 0, 1);
-> > +	synchronize_rcu();
-> 
-> So I still don't like the use of RCU for this. It just seems as an abuse to
-> use RCU like that. Furthermore it has a hefty latency cost for the truncate
-> path. A trivial test to truncate 100 times the last page of a 16k file that
-> is mmaped (only the first page):
-> 
-> DAX+your patches	3.899s
-> non-DAX			0.015s
-> 
-> So you can see synchronize_rcu() increased time to run truncate(2) more
-> than 200 times (the process is indeed sitting in __wait_rcu_gp all the
-> time). IMHO that's just too costly.
+Hello,
 
-Forgot to add some more thoughts: Maybe we could use global percpu rwsem
-for this instead of RCU? That would cut down the truncate latency and the
-cost on GUP path should be very small. Or I'm still not convinced that my
-PageTruncateInProgress() idea cannot be made to work - that would be free
-on the GUP side for the non-DAX case, relatively cheap for the DAX case,
-and also reasonably cheap for the truncate side. But I admit it requires
-more work on the fs side to propagate offsets that are going to be
-truncated into the DAX helper.
+syzbot hit the following crash on upstream commit
+642e7fd23353e22290e3d51719fcb658dc252342 (Tue Apr 3 04:22:12 2018 +0000)
+Merge branch 'syscalls-next' of  
+git://git.kernel.org/pub/scm/linux/kernel/git/brodo/linux
+syzbot dashboard link:  
+https://syzkaller.appspot.com/bug?extid=08ab33be0178b76851c8
 
-								Honza
+C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5951352765153280
+syzkaller reproducer:  
+https://syzkaller.appspot.com/x/repro.syz?id=5417464171069440
+Raw console output:  
+https://syzkaller.appspot.com/x/log.txt?id=6712144213049344
+Kernel config:  
+https://syzkaller.appspot.com/x/.config?id=-6874493495260513980
+compiler: gcc (GCC) 7.1.1 20170620
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+08ab33be0178b76851c8@syzkaller.appspotmail.com
+It will help syzbot understand when the bug is fixed. See footer for  
+details.
+If you forward the report, please keep this part and the footer.
+
+XFS (loop0): Mounting V4 Filesystem
+XFS (loop0): totally zeroed log
+==================================================================
+BUG: KASAN: use-after-free in xfs_inobt_init_key_from_rec+0x6a/0x70  
+fs/xfs/libxfs/xfs_ialloc_btree.c:195
+Read of size 4 at addr ffff8801af98cf00 by task syzkaller185183/4464
+
+CPU: 0 PID: 4464 Comm: syzkaller185183 Not tainted 4.16.0+ #12
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:17 [inline]
+  dump_stack+0x1a7/0x27d lib/dump_stack.c:53
+  print_address_description+0x73/0x250 mm/kasan/report.c:256
+  kasan_report_error mm/kasan/report.c:354 [inline]
+  kasan_report+0x23c/0x360 mm/kasan/report.c:412
+  __asan_report_load4_noabort+0x14/0x20 mm/kasan/report.c:432
+  xfs_inobt_init_key_from_rec+0x6a/0x70 fs/xfs/libxfs/xfs_ialloc_btree.c:195
+  xfs_lookup_get_search_key+0x7e/0xc0 fs/xfs/libxfs/xfs_btree.c:1858
+  xfs_btree_lookup+0x932/0x1180 fs/xfs/libxfs/xfs_btree.c:1948
+  xfs_inobt_lookup fs/xfs/libxfs/xfs_ialloc.c:75 [inline]
+  xfs_imap_lookup+0x216/0x640 fs/xfs/libxfs/xfs_ialloc.c:2235
+  xfs_imap+0x78f/0x960 fs/xfs/libxfs/xfs_ialloc.c:2364
+  xfs_iread+0xc7/0x770 fs/xfs/libxfs/xfs_inode_buf.c:556
+  xfs_iget_cache_miss fs/xfs/xfs_icache.c:475 [inline]
+  xfs_iget+0xcec/0x3060 fs/xfs/xfs_icache.c:626
+  xfs_mountfs+0x139a/0x2690 fs/xfs/xfs_mount.c:881
+  xfs_fs_fill_super+0xc8d/0x1250 fs/xfs/xfs_super.c:1703
+  mount_bdev+0x2b7/0x370 fs/super.c:1119
+  xfs_fs_mount+0x34/0x40 fs/xfs/xfs_super.c:1770
+  mount_fs+0x66/0x2d0 fs/super.c:1222
+  vfs_kern_mount.part.26+0xc6/0x4a0 fs/namespace.c:1037
+  vfs_kern_mount fs/namespace.c:2514 [inline]
+  do_new_mount fs/namespace.c:2517 [inline]
+  do_mount+0xea4/0x2b90 fs/namespace.c:2847
+  ksys_mount+0xab/0x120 fs/namespace.c:3063
+  SYSC_mount fs/namespace.c:3077 [inline]
+  SyS_mount+0x39/0x50 fs/namespace.c:3074
+  do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
+  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+RIP: 0033:0x44371a
+RSP: 002b:00007fff43e464c8 EFLAGS: 00000202 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 0000000020000840 RCX: 000000000044371a
+RDX: 0000000020000000 RSI: 0000000020000100 RDI: 00007fff43e464d0
+RBP: 0000000000000003 R08: 0000000020018900 R09: 000000000000000a
+R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000004
+R13: 0000000000402610 R14: 0000000000000000 R15: 0000000000000000
+
+Allocated by task 4462:
+  save_stack+0x43/0xd0 mm/kasan/kasan.c:447
+  set_track mm/kasan/kasan.c:459 [inline]
+  kasan_kmalloc+0xad/0xe0 mm/kasan/kasan.c:552
+  kasan_slab_alloc+0x12/0x20 mm/kasan/kasan.c:489
+  kmem_cache_alloc+0x12e/0x760 mm/slab.c:3542
+  getname_flags+0xcb/0x580 fs/namei.c:138
+  getname+0x19/0x20 fs/namei.c:209
+  do_sys_open+0x2e7/0x6d0 fs/open.c:1095
+  SYSC_open fs/open.c:1119 [inline]
+  SyS_open+0x2d/0x40 fs/open.c:1114
+  do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
+  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+
+Freed by task 4462:
+  save_stack+0x43/0xd0 mm/kasan/kasan.c:447
+  set_track mm/kasan/kasan.c:459 [inline]
+  __kasan_slab_free+0x11a/0x170 mm/kasan/kasan.c:520
+  kasan_slab_free+0xe/0x10 mm/kasan/kasan.c:527
+  __cache_free mm/slab.c:3486 [inline]
+  kmem_cache_free+0x83/0x2a0 mm/slab.c:3744
+  putname+0xee/0x130 fs/namei.c:258
+  do_sys_open+0x31b/0x6d0 fs/open.c:1110
+  SYSC_open fs/open.c:1119 [inline]
+  SyS_open+0x2d/0x40 fs/open.c:1114
+  do_syscall_64+0x281/0x940 arch/x86/entry/common.c:287
+  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+
+The buggy address belongs to the object at ffff8801af98c600
+  which belongs to the cache names_cache of size 4096
+The buggy address is located 2304 bytes inside of
+  4096-byte region [ffff8801af98c600, ffff8801af98d600)
+The buggy address belongs to the page:
+page:ffffea0006be6300 count:1 mapcount:0 mapping:ffff8801af98c600 index:0x0  
+compound_mapcount: 0
+flags: 0x2fffc0000008100(slab|head)
+raw: 02fffc0000008100 ffff8801af98c600 0000000000000000 0000000100000001
+raw: ffffea0006be7aa0 ffffea0006be5f20 ffff8801da5ea600 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+  ffff8801af98ce00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  ffff8801af98ce80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+> ffff8801af98cf00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                    ^
+  ffff8801af98cf80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  ffff8801af98d000: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+
+
+---
+This bug is generated by a dumb bot. It may contain errors.
+See https://goo.gl/tpsmEJ for details.
+Direct all questions to syzkaller@googlegroups.com.
+
+syzbot will keep track of this bug report.
+If you forgot to add the Reported-by tag, once the fix for this bug is  
+merged
+into any tree, please reply to this email with:
+#syz fix: exact-commit-title
+If you want to test a patch for this bug, please reply with:
+#syz test: git://repo/address.git branch
+and provide the patch inline or as an attachment.
+To mark this as a duplicate of another syzbot report, please reply with:
+#syz dup: exact-subject-of-another-report
+If it's a one-off invalid bug report, please reply with:
+#syz invalid
+Note: if the crash happens again, it will cause creation of a new bug  
+report.
+Note: all commands must start from beginning of the line in the email body.
