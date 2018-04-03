@@ -1,62 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:32835 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752662AbeDEWtQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 18:49:16 -0400
-Date: Fri, 6 Apr 2018 08:49:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/6] xfs: factor out quota time limit initialization
-Message-ID: <20180405224913.GH23861@dastard>
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
- <2d87ba58-f713-6326-8683-29185155ee58@sandeen.net>
- <20180405071533.GE17256@infradead.org>
- <0ca4f6ed-00db-ba87-c0ea-43c6f15068fa@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:51986 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755135AbeDCLe2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Apr 2018 07:34:28 -0400
+Date: Tue, 3 Apr 2018 07:34:27 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: fix intent use-after-free on abort
+Message-ID: <20180403113426.GB64324@bfoster.bfoster>
+References: <20180403014458.22105-1-david@fromorbit.com>
+ <20180403030647.GH13552@magnolia>
+ <20180403040358.GK1150@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0ca4f6ed-00db-ba87-c0ea-43c6f15068fa@sandeen.net>
+In-Reply-To: <20180403040358.GK1150@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Apr 05, 2018 at 07:36:58AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 4/5/18 2:15 AM, Christoph Hellwig wrote:
-> > On Wed, Apr 04, 2018 at 02:10:20PM -0500, Eric Sandeen wrote:
-> >> Factor out the time limit initialization from
-> >> xfs_qm_init_quotainfo so that we can delay it until
-> >> after quotacheck - it requires reading the default disk
-> >> quotas, which may need repair.
-> >>
-> >> No functional changes in this patch.
+On Tue, Apr 03, 2018 at 02:03:58PM +1000, Dave Chinner wrote:
+> On Mon, Apr 02, 2018 at 08:06:47PM -0700, Darrick J. Wong wrote:
+> > On Tue, Apr 03, 2018 at 11:44:58AM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > When an intent is aborted during it's initial commit through
+> > > xfs_defer_trans_abort(), there is a use after free. The current
+> > > report is for a RUI  through this path in generic/388:
+> > > 
+> > >  Freed by task 6274:
+> > >   __kasan_slab_free+0x136/0x180
+> > >   kmem_cache_free+0xe7/0x4b0
+> > >   xfs_trans_free_items+0x198/0x2e0
+> > >   __xfs_trans_commit+0x27f/0xcc0
+> > >   xfs_trans_roll+0x17b/0x2a0
+> > >   xfs_defer_trans_roll+0x6ad/0xe60
+> > >   xfs_defer_finish+0x2a6/0x2140
+> > >   xfs_alloc_file_space+0x53a/0xf90
+> > >   xfs_file_fallocate+0x5c6/0xac0
+> > >   vfs_fallocate+0x2f5/0x930
+> > >   ioctl_preallocate+0x1dc/0x320
+> > >   do_vfs_ioctl+0xfe4/0x1690
+> > > 
+> > > The problem is that the RUI has two active references - one in the
+> > > current transaction, and another held by the defer_ops structure
+> > > that is passed to the RUD (intent done) so that both the intent and
+> > > the intent done structures are freed on commit of the intent done.
+> > > 
+> > > Hence during abort, we need to release the intent item, because the
+> > > defer_ops reference is released separately via ->abort_intent
+> > > callback. Fix all the intent code to do this correctly.
+> > > 
+> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> .....
+> > > @@ -142,7 +161,7 @@ xfs_bui_item_unlock(
+> > >  	struct xfs_log_item	*lip)
+> > >  {
+> > >  	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
 > > 
-> > You have 75 characters per line for your changelog, use them!
+> > Hm, in my tree this is still "if (lip->li_flags & XFS_LI_ABORTED)" :)
+> > /me wonders where the test_bit() came from?
 > 
-> Sorry, bad habit.  I never remember exactly how many and sometimes I just
-> keep shortening...
+> Oh, sorry, I just dumped the patch on the end of my stack, which has
+> this conversion in it (because we do a bunch of racy updates on the
+> log item flags with any serialisation and that needs to be fixed to
+> get rid of log item descriptors).
+> 
+> Change them all to
+> 
+> 	if (lip->li_flags & XFS_LI_ABORTED)
+> 
+> and it'll apply to the for-next tree.
+> 
 
-If you use vim, set this up so you get automatic setting of the text
-width (with highlighting) depending on the editor context you are
-running:
+This also needs comment updates for all of the unlock handlers that
+currently explain why we free the item directly (which should now
+explain that the caller is responsible for the additional reference).
 
-" set default text width and shortcut to set custom widths
-set     textwidth=80
-map	#tw :set textwidth=<C-R>=col(".")<C-M>
+Brian
 
-" set the textwidth to 68 characters for commit messages
-au	BufNewFile,BufRead guilt.msg.*,.gitsendemail.*,git.*,*/.git/* set tw=68
-
-" set the textwidth to 68 characters for replies (email&usenet)
-au	BufNewFile,BufRead .letter,mutt*,nn.*,snd.* set tw=68
-
-" highlight textwidth
-set	cc=+1
-
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > But this is the same change that I came up with to solve the problem, so
+> > I guess I'll go feed it to the test machines and see how they fare
+> > overnight, and mash on it harder with generic/388 tomorrow.
+> 
+> Been running generic/388 in a loop and nothing seems to have gone
+> wrong yet.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
