@@ -1,183 +1,172 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59810 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:37976 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755300AbeDCLvM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Apr 2018 07:51:12 -0400
-Date: Tue, 3 Apr 2018 13:51:10 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v8 06/18] ext2, dax: introduce ext2_dax_aops
-Message-ID: <20180403115110.x272sevqcutguna6@quack2.suse.cz>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152246896163.36038.15934876342603748972.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1753645AbeDCWTz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Apr 2018 18:19:55 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id AFDF0C057EC3
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Apr 2018 22:19:55 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 86AE867F17
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Apr 2018 22:19:55 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: factor out xfs_dquot_verify_crc for use in quotacheck
+ rebuild
+Message-ID: <42e7adc1-9fa5-e606-000e-f8a89494c97c@redhat.com>
+Date: Tue, 3 Apr 2018 17:19:54 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152246896163.36038.15934876342603748972.stgit@dwillia2-desk3.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, kbuild test robot <lkp@intel.com>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz, snitzer@redhat.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri 30-03-18 21:02:41, Dan Williams wrote:
-> In preparation for the dax implementation to start associating dax pages
-> to inodes via page->mapping, we need to provide a 'struct
-> address_space_operations' instance for dax. Otherwise, direct-I/O
-> triggers incorrect page cache assumptions and warnings.
-> 
-> Cc: Jan Kara <jack@suse.com>
-> Reported-by: kbuild test robot <lkp@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Today, if a quota block has a bad UUID or CRC, it will never get
+rebuilt or repaired.
 
-Looks good. You can add:
+xfs_repair does not check or validate quota blocks, leaving that task
+to in-kernel quotacheck.  In-kernel quotacheck does not validate the
+UUID or CRC.  So the problem remains indefinitely.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+To remedy this:
 
-								Honza
+* Factor out xfs_dquot_verify_crc from xfs_dquot_buf_verify_crc
+* Call this new function from xfs_qm_reset_dqcounts for V5 fs
 
-> ---
->  fs/ext2/ext2.h  |    1 +
->  fs/ext2/inode.c |   46 +++++++++++++++++++++++++++-------------------
->  fs/ext2/namei.c |   18 ++----------------
->  3 files changed, 30 insertions(+), 35 deletions(-)
-> 
-> diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
-> index 032295e1d386..cc40802ddfa8 100644
-> --- a/fs/ext2/ext2.h
-> +++ b/fs/ext2/ext2.h
-> @@ -814,6 +814,7 @@ extern const struct inode_operations ext2_file_inode_operations;
->  extern const struct file_operations ext2_file_operations;
->  
->  /* inode.c */
-> +extern void ext2_set_file_ops(struct inode *inode);
->  extern const struct address_space_operations ext2_aops;
->  extern const struct address_space_operations ext2_nobh_aops;
->  extern const struct iomap_ops ext2_iomap_ops;
-> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-> index 9b2ac55ac34f..1e01fabef130 100644
-> --- a/fs/ext2/inode.c
-> +++ b/fs/ext2/inode.c
-> @@ -940,9 +940,6 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
->  	loff_t offset = iocb->ki_pos;
->  	ssize_t ret;
->  
-> -	if (WARN_ON_ONCE(IS_DAX(inode)))
-> -		return -EIO;
-> -
->  	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
->  	if (ret < 0 && iov_iter_rw(iter) == WRITE)
->  		ext2_write_failed(mapping, offset + count);
-> @@ -952,17 +949,16 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
->  static int
->  ext2_writepages(struct address_space *mapping, struct writeback_control *wbc)
->  {
-> -#ifdef CONFIG_FS_DAX
-> -	if (dax_mapping(mapping)) {
-> -		return dax_writeback_mapping_range(mapping,
-> -						   mapping->host->i_sb->s_bdev,
-> -						   wbc);
-> -	}
-> -#endif
-> -
->  	return mpage_writepages(mapping, wbc, ext2_get_block);
->  }
->  
-> +static int
-> +ext2_dax_writepages(struct address_space *mapping, struct writeback_control *wbc)
-> +{
-> +	return dax_writeback_mapping_range(mapping,
-> +			mapping->host->i_sb->s_bdev, wbc);
-> +}
-> +
->  const struct address_space_operations ext2_aops = {
->  	.readpage		= ext2_readpage,
->  	.readpages		= ext2_readpages,
-> @@ -990,6 +986,13 @@ const struct address_space_operations ext2_nobh_aops = {
->  	.error_remove_page	= generic_error_remove_page,
->  };
->  
-> +static const struct address_space_operations ext2_dax_aops = {
-> +	.writepages		= ext2_dax_writepages,
-> +	.direct_IO		= noop_direct_IO,
-> +	.set_page_dirty		= noop_set_page_dirty,
-> +	.invalidatepage		= noop_invalidatepage,
-> +};
-> +
->  /*
->   * Probably it should be a library function... search for first non-zero word
->   * or memcmp with zero_page, whatever is better for particular architecture.
-> @@ -1388,6 +1391,18 @@ void ext2_set_inode_flags(struct inode *inode)
->  		inode->i_flags |= S_DAX;
->  }
->  
-> +void ext2_set_file_ops(struct inode *inode)
-> +{
-> +	inode->i_op = &ext2_file_inode_operations;
-> +	inode->i_fop = &ext2_file_operations;
-> +	if (IS_DAX(inode))
-> +		inode->i_mapping->a_ops = &ext2_dax_aops;
-> +	else if (test_opt(inode->i_sb, NOBH))
-> +		inode->i_mapping->a_ops = &ext2_nobh_aops;
-> +	else
-> +		inode->i_mapping->a_ops = &ext2_aops;
-> +}
-> +
->  struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
->  {
->  	struct ext2_inode_info *ei;
-> @@ -1480,14 +1495,7 @@ struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
->  		ei->i_data[n] = raw_inode->i_block[n];
->  
->  	if (S_ISREG(inode->i_mode)) {
-> -		inode->i_op = &ext2_file_inode_operations;
-> -		if (test_opt(inode->i_sb, NOBH)) {
-> -			inode->i_mapping->a_ops = &ext2_nobh_aops;
-> -			inode->i_fop = &ext2_file_operations;
-> -		} else {
-> -			inode->i_mapping->a_ops = &ext2_aops;
-> -			inode->i_fop = &ext2_file_operations;
-> -		}
-> +		ext2_set_file_ops(inode);
->  	} else if (S_ISDIR(inode->i_mode)) {
->  		inode->i_op = &ext2_dir_inode_operations;
->  		inode->i_fop = &ext2_dir_operations;
-> diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
-> index e078075dc66f..55f7caadb093 100644
-> --- a/fs/ext2/namei.c
-> +++ b/fs/ext2/namei.c
-> @@ -107,14 +107,7 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
->  	if (IS_ERR(inode))
->  		return PTR_ERR(inode);
->  
-> -	inode->i_op = &ext2_file_inode_operations;
-> -	if (test_opt(inode->i_sb, NOBH)) {
-> -		inode->i_mapping->a_ops = &ext2_nobh_aops;
-> -		inode->i_fop = &ext2_file_operations;
-> -	} else {
-> -		inode->i_mapping->a_ops = &ext2_aops;
-> -		inode->i_fop = &ext2_file_operations;
-> -	}
-> +	ext2_set_file_ops(inode);
->  	mark_inode_dirty(inode);
->  	return ext2_add_nondir(dentry, inode);
->  }
-> @@ -125,14 +118,7 @@ static int ext2_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
->  	if (IS_ERR(inode))
->  		return PTR_ERR(inode);
->  
-> -	inode->i_op = &ext2_file_inode_operations;
-> -	if (test_opt(inode->i_sb, NOBH)) {
-> -		inode->i_mapping->a_ops = &ext2_nobh_aops;
-> -		inode->i_fop = &ext2_file_operations;
-> -	} else {
-> -		inode->i_mapping->a_ops = &ext2_aops;
-> -		inode->i_fop = &ext2_file_operations;
-> -	}
-> +	ext2_set_file_ops(inode);
->  	mark_inode_dirty(inode);
->  	d_tmpfile(dentry, inode);
->  	unlock_new_inode(inode);
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+If an invalid UUID or CRC is found, this will trigger xfs_dquot_repair
+which rewrites them.
+
+Also, since xfs_dquot_repair() operates on the disk block, just
+send that in directly since we have it handy.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+djwong: It's not clear to me if I should be using a failaddr_t here,
+it's not used directly at all.  Is it anything you need for scrub or
+should I change it to return a bool?
+
+And for that matter, do we /need/ to have a separate CRC validating routine?
+I've kind of lost the thread on when we need a distinct failaddr (for
+EFSBADCRC  vs. EFSCORRUPTED for example...)
+
+I think that in i.e. log replay we aren't validating crc or uuid either,
+so I'm wondering if I need to explicitly break this out in all those
+places, or if I could just bury the crc/uuid check in xfs_dquot_verify()
+and get it for free ...
+
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index 8b7a6c3..267519b 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -39,6 +39,21 @@
+ 	return BBTOB(nbblks) / sizeof(xfs_dqblk_t);
+ }
+ 
++xfs_failaddr_t
++xfs_dquot_verify_crc(
++	struct xfs_mount	*mp,
++	struct xfs_dqblk	*d)
++{
++
++	if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
++			 XFS_DQUOT_CRC_OFF))
++		return __this_address;
++	if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
++		return __this_address;
++
++	return NULL;
++}
++
+ /*
+  * Do some primitive error checking on ondisk dquot data structures.
+  */
+@@ -105,13 +120,10 @@
+ int
+ xfs_dquot_repair(
+ 	struct xfs_mount	*mp,
+-	struct xfs_disk_dquot	*ddq,
++	struct xfs_dqblk	*d,
+ 	xfs_dqid_t		id,
+ 	uint			type)
+ {
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
+-
+-
+ 	/*
+ 	 * Typically, a repair is only requested by quotacheck.
+ 	 */
+@@ -138,6 +150,7 @@
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	xfs_failaddr_t		fa;
+ 	int			ndquots;
+ 	int			i;
+ 
+@@ -155,10 +168,8 @@
+ 		ndquots = xfs_calc_dquots_per_chunk(bp->b_length);
+ 
+ 	for (i = 0; i < ndquots; i++, d++) {
+-		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 XFS_DQUOT_CRC_OFF))
+-			return false;
+-		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
++		fa = xfs_dquot_verify_crc(mp, d);
++		if (fa)
+ 			return false;
+ 	}
+ 	return true;
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index bb1b13a..413ee9b 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -151,11 +151,13 @@
+ 		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
+ #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+ 
++extern xfs_failaddr_t xfs_dquot_verify_crc(struct xfs_mount *mp,
++		struct xfs_dqblk *d);
+ extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
+ 		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type,
+ 		uint flags);
+ extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+-extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
++extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_dqblk *d,
+ 		xfs_dqid_t id, uint type);
+ 
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 5b848f4..19f63d1 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -842,7 +842,7 @@ struct xfs_qm_isolate {
+ {
+ 	struct xfs_dqblk	*dqb;
+ 	int			j;
+-	xfs_failaddr_t		fa;
++	xfs_failaddr_t		fa = NULL;
+ 
+ 	trace_xfs_reset_dqcounts(bp, _RET_IP_);
+ 
+@@ -867,10 +867,12 @@ struct xfs_qm_isolate {
+ 		 * find uninitialised dquot blks. See comment in
+ 		 * xfs_dquot_verify.
+ 		 */
+-		fa = xfs_dquot_verify(mp, ddq, id + j, type, 0);
++		if (xfs_sb_version_hascrc(&mp->m_sb))
++			fa = xfs_dquot_verify_crc(mp, &dqb[j]);
++		if (!fa)
++			fa = xfs_dquot_verify(mp, ddq, id + j, type, 0);
+ 		if (fa)
+-			xfs_dquot_repair(mp, ddq, id + j, type);
+-
++			xfs_dquot_repair(mp, dqb, id + j, type);
+ 		/*
+ 		 * Reset type in case we are reusing group quota file for
+ 		 * project quotas or vice versa
+
