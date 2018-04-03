@@ -1,53 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59334 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753332AbeDMD6w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Apr 2018 23:58:52 -0400
-Subject: Re: [PATCH V2] xfs: enhance dinode verifier
-References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
- <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
- <20180413035632.GB32099@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d61bd844-52ba-12a5-f658-d6aebaed3e93@sandeen.net>
-Date: Thu, 12 Apr 2018 22:58:50 -0500
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:61046 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750814AbeDCEi5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Apr 2018 00:38:57 -0400
+Date: Tue, 3 Apr 2018 14:38:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: WARNING: bad unlock balance in xfs_iunlock
+Message-ID: <20180403043854.GL1150@dastard>
+References: <f403043cbe8414177d0568e81405@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20180413035632.GB32099@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f403043cbe8414177d0568e81405@google.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, wen.xu@gatech.edu
+To: syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>
+Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-On 4/12/18 10:56 PM, Darrick J. Wong wrote:
-> On Thu, Apr 12, 2018 at 09:55:41PM -0500, Eric Sandeen wrote:
->> Add several more validations to xfs_dinode_verify:
-...
-
->> @@ -476,12 +478,25 @@ xfs_dinode_verify(
->>  	if (XFS_DFORK_Q(dip)) {
->>  		switch (dip->di_aformat) {
->>  		case XFS_DINODE_FMT_LOCAL:
->> +			if (dip->di_anextents)
->> +				return __this_address;
->> +		/* fall through */
->>  		case XFS_DINODE_FMT_EXTENTS:
->>  		case XFS_DINODE_FMT_BTREE:
->>  			break;
->>  		default:
->>  			return __this_address;
->>  		}
->> +	} else {	/* No attr fork */
->> +		switch (dip->di_aformat) {
->> +		case 0:	/* Uninitialized OK */
+On Mon, Apr 02, 2018 at 07:01:02PM -0700, syzbot wrote:
+> Hello,
 > 
-> Might be a good idea to point out that a newly allocated inode chunk
-> will have all these fields set to zero
+> syzbot hit the following crash on upstream commit
+> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
+> Merge branch 'ras-core-for-linus' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+> syzbot dashboard link:
+> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
+> 
+> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
+> syzkaller reproducer:
+> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
 
-Well, that was the intent of my terse comment...  I can write a longer
-one, clearly it did not do the trick?
+What a mess. A hand built, hopelessly broken filesystem image made
+up of hex dumps, written into a mmap()d region of memory, then
+copied into a tmpfs file and mounted with the loop device.
 
--Eric
+Engineers that can debug broken filesystems don't grow on trees.  If
+we are to have any hope of understanding what the hell this test is
+doing, the bot needs to supply us with a copy of the built
+filesystem image the test uses. We need to be able to point forensic
+tools at the image to decode all the structures into human readable
+format - if we are forced to do that by hand or jump through hoops
+to create our own filesystem image than I'm certainly not going to
+waste time looking at these reports...
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
