@@ -1,317 +1,183 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39896 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754688AbeDCFPg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Apr 2018 01:15:36 -0400
-Subject: Re: [PATCH] xfs: fix intent use-after-free on abort
-References: <20180403014458.22105-1-david@fromorbit.com>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <aa508010-077d-891d-a86c-7729d1b432d0@oracle.com>
-Date: Mon, 2 Apr 2018 22:10:30 -0700
+Received: from mx2.suse.de ([195.135.220.15]:59810 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755300AbeDCLvM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Apr 2018 07:51:12 -0400
+Date: Tue, 3 Apr 2018 13:51:10 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 06/18] ext2, dax: introduce ext2_dax_aops
+Message-ID: <20180403115110.x272sevqcutguna6@quack2.suse.cz>
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152246896163.36038.15934876342603748972.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20180403014458.22105-1-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152246896163.36038.15934876342603748972.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.com>, kbuild test robot <lkp@intel.com>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jack@suse.cz, snitzer@redhat.com
 
-On 04/02/2018 06:44 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
->
-> When an intent is aborted during it's initial commit through
-> xfs_defer_trans_abort(), there is a use after free. The current
-> report is for a RUI  through this path in generic/388:
->
->   Freed by task 6274:
->    __kasan_slab_free+0x136/0x180
->    kmem_cache_free+0xe7/0x4b0
->    xfs_trans_free_items+0x198/0x2e0
->    __xfs_trans_commit+0x27f/0xcc0
->    xfs_trans_roll+0x17b/0x2a0
->    xfs_defer_trans_roll+0x6ad/0xe60
->    xfs_defer_finish+0x2a6/0x2140
->    xfs_alloc_file_space+0x53a/0xf90
->    xfs_file_fallocate+0x5c6/0xac0
->    vfs_fallocate+0x2f5/0x930
->    ioctl_preallocate+0x1dc/0x320
->    do_vfs_ioctl+0xfe4/0x1690
->
-> The problem is that the RUI has two active references - one in the
-> current transaction, and another held by the defer_ops structure
-> that is passed to the RUD (intent done) so that both the intent and
-> the intent done structures are freed on commit of the intent done.
->
-> Hence during abort, we need to release the intent item, because the
-> defer_ops reference is released separately via ->abort_intent
-> callback. Fix all the intent code to do this correctly.
->
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+On Fri 30-03-18 21:02:41, Dan Williams wrote:
+> In preparation for the dax implementation to start associating dax pages
+> to inodes via page->mapping, we need to provide a 'struct
+> address_space_operations' instance for dax. Otherwise, direct-I/O
+> triggers incorrect page cache assumptions and warnings.
+> 
+> Cc: Jan Kara <jack@suse.com>
+> Reported-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+
+Looks good. You can add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
 > ---
->   fs/xfs/xfs_bmap_item.c     | 39 ++++++++++++++++++++-------------------
->   fs/xfs/xfs_extfree_item.c  | 38 +++++++++++++++++++-------------------
->   fs/xfs/xfs_refcount_item.c | 39 ++++++++++++++++++++-------------------
->   fs/xfs/xfs_rmap_item.c     | 38 +++++++++++++++++++-------------------
->   4 files changed, 78 insertions(+), 76 deletions(-)
->
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index d769a82f3641..618bb71535c8 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -53,6 +53,25 @@ xfs_bui_item_free(
->   	kmem_zone_free(xfs_bui_zone, buip);
->   }
->   
-> +/*
-> + * Freeing the BUI requires that we remove it from the AIL if it has already
-> + * been placed there. However, the BUI may not yet have been placed in the AIL
-> + * when called by xfs_bui_release() from BUD processing due to the ordering of
-> + * committed vs unpin operations in bulk insert operations. Hence the reference
-> + * count to ensure only the last caller frees the BUI.
-> + */
-> +void
-> +xfs_bui_release(
-> +	struct xfs_bui_log_item	*buip)
+>  fs/ext2/ext2.h  |    1 +
+>  fs/ext2/inode.c |   46 +++++++++++++++++++++++++++-------------------
+>  fs/ext2/namei.c |   18 ++----------------
+>  3 files changed, 30 insertions(+), 35 deletions(-)
+> 
+> diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
+> index 032295e1d386..cc40802ddfa8 100644
+> --- a/fs/ext2/ext2.h
+> +++ b/fs/ext2/ext2.h
+> @@ -814,6 +814,7 @@ extern const struct inode_operations ext2_file_inode_operations;
+>  extern const struct file_operations ext2_file_operations;
+>  
+>  /* inode.c */
+> +extern void ext2_set_file_ops(struct inode *inode);
+>  extern const struct address_space_operations ext2_aops;
+>  extern const struct address_space_operations ext2_nobh_aops;
+>  extern const struct iomap_ops ext2_iomap_ops;
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index 9b2ac55ac34f..1e01fabef130 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -940,9 +940,6 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+>  	loff_t offset = iocb->ki_pos;
+>  	ssize_t ret;
+>  
+> -	if (WARN_ON_ONCE(IS_DAX(inode)))
+> -		return -EIO;
+> -
+>  	ret = blockdev_direct_IO(iocb, inode, iter, ext2_get_block);
+>  	if (ret < 0 && iov_iter_rw(iter) == WRITE)
+>  		ext2_write_failed(mapping, offset + count);
+> @@ -952,17 +949,16 @@ ext2_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+>  static int
+>  ext2_writepages(struct address_space *mapping, struct writeback_control *wbc)
+>  {
+> -#ifdef CONFIG_FS_DAX
+> -	if (dax_mapping(mapping)) {
+> -		return dax_writeback_mapping_range(mapping,
+> -						   mapping->host->i_sb->s_bdev,
+> -						   wbc);
+> -	}
+> -#endif
+> -
+>  	return mpage_writepages(mapping, wbc, ext2_get_block);
+>  }
+>  
+> +static int
+> +ext2_dax_writepages(struct address_space *mapping, struct writeback_control *wbc)
 > +{
-> +	ASSERT(atomic_read(&buip->bui_refcount) > 0);
-> +	if (atomic_dec_and_test(&buip->bui_refcount)) {
-> +		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
-> +		xfs_bui_item_free(buip);
-> +	}
+> +	return dax_writeback_mapping_range(mapping,
+> +			mapping->host->i_sb->s_bdev, wbc);
 > +}
 > +
+>  const struct address_space_operations ext2_aops = {
+>  	.readpage		= ext2_readpage,
+>  	.readpages		= ext2_readpages,
+> @@ -990,6 +986,13 @@ const struct address_space_operations ext2_nobh_aops = {
+>  	.error_remove_page	= generic_error_remove_page,
+>  };
+>  
+> +static const struct address_space_operations ext2_dax_aops = {
+> +	.writepages		= ext2_dax_writepages,
+> +	.direct_IO		= noop_direct_IO,
+> +	.set_page_dirty		= noop_set_page_dirty,
+> +	.invalidatepage		= noop_invalidatepage,
+> +};
 > +
->   STATIC void
->   xfs_bui_item_size(
->   	struct xfs_log_item	*lip,
-> @@ -142,7 +161,7 @@ xfs_bui_item_unlock(
->   	struct xfs_log_item	*lip)
->   {
->   	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_bui_item_free(BUI_ITEM(lip));
-> +		xfs_bui_release(BUI_ITEM(lip));
->   }
->   
->   /*
-> @@ -206,24 +225,6 @@ xfs_bui_init(
->   	return buip;
->   }
->   
-> -/*
-> - * Freeing the BUI requires that we remove it from the AIL if it has already
-> - * been placed there. However, the BUI may not yet have been placed in the AIL
-> - * when called by xfs_bui_release() from BUD processing due to the ordering of
-> - * committed vs unpin operations in bulk insert operations. Hence the reference
-> - * count to ensure only the last caller frees the BUI.
-> - */
-> -void
-> -xfs_bui_release(
-> -	struct xfs_bui_log_item	*buip)
-> -{
-> -	ASSERT(atomic_read(&buip->bui_refcount) > 0);
-> -	if (atomic_dec_and_test(&buip->bui_refcount)) {
-> -		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
-> -		xfs_bui_item_free(buip);
-> -	}
-> -}
-> -
->   static inline struct xfs_bud_log_item *BUD_ITEM(struct xfs_log_item *lip)
->   {
->   	return container_of(lip, struct xfs_bud_log_item, bud_item);
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index d60a9809f0c6..70b7d48af6d6 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -50,6 +50,24 @@ xfs_efi_item_free(
->   		kmem_zone_free(xfs_efi_zone, efip);
->   }
->   
-> +/*
-> + * Freeing the efi requires that we remove it from the AIL if it has already
-> + * been placed there. However, the EFI may not yet have been placed in the AIL
-> + * when called by xfs_efi_release() from EFD processing due to the ordering of
-> + * committed vs unpin operations in bulk insert operations. Hence the reference
-> + * count to ensure only the last caller frees the EFI.
-> + */
-> +void
-> +xfs_efi_release(
-> +	struct xfs_efi_log_item	*efip)
+>  /*
+>   * Probably it should be a library function... search for first non-zero word
+>   * or memcmp with zero_page, whatever is better for particular architecture.
+> @@ -1388,6 +1391,18 @@ void ext2_set_inode_flags(struct inode *inode)
+>  		inode->i_flags |= S_DAX;
+>  }
+>  
+> +void ext2_set_file_ops(struct inode *inode)
 > +{
-> +	ASSERT(atomic_read(&efip->efi_refcount) > 0);
-> +	if (atomic_dec_and_test(&efip->efi_refcount)) {
-> +		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
-> +		xfs_efi_item_free(efip);
-> +	}
+> +	inode->i_op = &ext2_file_inode_operations;
+> +	inode->i_fop = &ext2_file_operations;
+> +	if (IS_DAX(inode))
+> +		inode->i_mapping->a_ops = &ext2_dax_aops;
+> +	else if (test_opt(inode->i_sb, NOBH))
+> +		inode->i_mapping->a_ops = &ext2_nobh_aops;
+> +	else
+> +		inode->i_mapping->a_ops = &ext2_aops;
 > +}
 > +
->   /*
->    * This returns the number of iovecs needed to log the given efi item.
->    * We only need 1 iovec for an efi item.  It just logs the efi_log_format
-> @@ -151,7 +169,7 @@ xfs_efi_item_unlock(
->   	struct xfs_log_item	*lip)
->   {
->   	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_efi_item_free(EFI_ITEM(lip));
-> +		xfs_efi_release(EFI_ITEM(lip));
->   }
->   
->   /*
-> @@ -279,24 +297,6 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf, xfs_efi_log_format_t *dst_efi_fmt)
->   	return -EFSCORRUPTED;
->   }
->   
-> -/*
-> - * Freeing the efi requires that we remove it from the AIL if it has already
-> - * been placed there. However, the EFI may not yet have been placed in the AIL
-> - * when called by xfs_efi_release() from EFD processing due to the ordering of
-> - * committed vs unpin operations in bulk insert operations. Hence the reference
-> - * count to ensure only the last caller frees the EFI.
-> - */
-> -void
-> -xfs_efi_release(
-> -	struct xfs_efi_log_item	*efip)
-> -{
-> -	ASSERT(atomic_read(&efip->efi_refcount) > 0);
-> -	if (atomic_dec_and_test(&efip->efi_refcount)) {
-> -		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
-> -		xfs_efi_item_free(efip);
+>  struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
+>  {
+>  	struct ext2_inode_info *ei;
+> @@ -1480,14 +1495,7 @@ struct inode *ext2_iget (struct super_block *sb, unsigned long ino)
+>  		ei->i_data[n] = raw_inode->i_block[n];
+>  
+>  	if (S_ISREG(inode->i_mode)) {
+> -		inode->i_op = &ext2_file_inode_operations;
+> -		if (test_opt(inode->i_sb, NOBH)) {
+> -			inode->i_mapping->a_ops = &ext2_nobh_aops;
+> -			inode->i_fop = &ext2_file_operations;
+> -		} else {
+> -			inode->i_mapping->a_ops = &ext2_aops;
+> -			inode->i_fop = &ext2_file_operations;
+> -		}
+> +		ext2_set_file_ops(inode);
+>  	} else if (S_ISDIR(inode->i_mode)) {
+>  		inode->i_op = &ext2_dir_inode_operations;
+>  		inode->i_fop = &ext2_dir_operations;
+> diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
+> index e078075dc66f..55f7caadb093 100644
+> --- a/fs/ext2/namei.c
+> +++ b/fs/ext2/namei.c
+> @@ -107,14 +107,7 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
+>  	if (IS_ERR(inode))
+>  		return PTR_ERR(inode);
+>  
+> -	inode->i_op = &ext2_file_inode_operations;
+> -	if (test_opt(inode->i_sb, NOBH)) {
+> -		inode->i_mapping->a_ops = &ext2_nobh_aops;
+> -		inode->i_fop = &ext2_file_operations;
+> -	} else {
+> -		inode->i_mapping->a_ops = &ext2_aops;
+> -		inode->i_fop = &ext2_file_operations;
 > -	}
-> -}
-> -
->   static inline struct xfs_efd_log_item *EFD_ITEM(struct xfs_log_item *lip)
->   {
->   	return container_of(lip, struct xfs_efd_log_item, efd_item);
-> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index a017024bf249..e5866b714d5f 100644
-> --- a/fs/xfs/xfs_refcount_item.c
-> +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -52,6 +52,25 @@ xfs_cui_item_free(
->   		kmem_zone_free(xfs_cui_zone, cuip);
->   }
->   
-> +/*
-> + * Freeing the CUI requires that we remove it from the AIL if it has already
-> + * been placed there. However, the CUI may not yet have been placed in the AIL
-> + * when called by xfs_cui_release() from CUD processing due to the ordering of
-> + * committed vs unpin operations in bulk insert operations. Hence the reference
-> + * count to ensure only the last caller frees the CUI.
-> + */
-> +void
-> +xfs_cui_release(
-> +	struct xfs_cui_log_item	*cuip)
-> +{
-> +	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
-> +	if (atomic_dec_and_test(&cuip->cui_refcount)) {
-> +		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
-> +		xfs_cui_item_free(cuip);
-> +	}
-> +}
-> +
-> +
->   STATIC void
->   xfs_cui_item_size(
->   	struct xfs_log_item	*lip,
-> @@ -141,7 +160,7 @@ xfs_cui_item_unlock(
->   	struct xfs_log_item	*lip)
->   {
->   	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_cui_item_free(CUI_ITEM(lip));
-> +		xfs_cui_release(CUI_ITEM(lip));
->   }
->   
->   /*
-> @@ -211,24 +230,6 @@ xfs_cui_init(
->   	return cuip;
->   }
->   
-> -/*
-> - * Freeing the CUI requires that we remove it from the AIL if it has already
-> - * been placed there. However, the CUI may not yet have been placed in the AIL
-> - * when called by xfs_cui_release() from CUD processing due to the ordering of
-> - * committed vs unpin operations in bulk insert operations. Hence the reference
-> - * count to ensure only the last caller frees the CUI.
-> - */
-> -void
-> -xfs_cui_release(
-> -	struct xfs_cui_log_item	*cuip)
-> -{
-> -	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
-> -	if (atomic_dec_and_test(&cuip->cui_refcount)) {
-> -		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
-> -		xfs_cui_item_free(cuip);
+> +	ext2_set_file_ops(inode);
+>  	mark_inode_dirty(inode);
+>  	return ext2_add_nondir(dentry, inode);
+>  }
+> @@ -125,14 +118,7 @@ static int ext2_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
+>  	if (IS_ERR(inode))
+>  		return PTR_ERR(inode);
+>  
+> -	inode->i_op = &ext2_file_inode_operations;
+> -	if (test_opt(inode->i_sb, NOBH)) {
+> -		inode->i_mapping->a_ops = &ext2_nobh_aops;
+> -		inode->i_fop = &ext2_file_operations;
+> -	} else {
+> -		inode->i_mapping->a_ops = &ext2_aops;
+> -		inode->i_fop = &ext2_file_operations;
 > -	}
-> -}
-> -
->   static inline struct xfs_cud_log_item *CUD_ITEM(struct xfs_log_item *lip)
->   {
->   	return container_of(lip, struct xfs_cud_log_item, cud_item);
-> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index cbf4ecd81616..e5b5b3e7ef82 100644
-> --- a/fs/xfs/xfs_rmap_item.c
-> +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -52,6 +52,24 @@ xfs_rui_item_free(
->   		kmem_zone_free(xfs_rui_zone, ruip);
->   }
->   
-> +/*
-> + * Freeing the RUI requires that we remove it from the AIL if it has already
-> + * been placed there. However, the RUI may not yet have been placed in the AIL
-> + * when called by xfs_rui_release() from RUD processing due to the ordering of
-> + * committed vs unpin operations in bulk insert operations. Hence the reference
-> + * count to ensure only the last caller frees the RUI.
-> + */
-> +void
-> +xfs_rui_release(
-> +	struct xfs_rui_log_item	*ruip)
-> +{
-> +	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
-> +	if (atomic_dec_and_test(&ruip->rui_refcount)) {
-> +		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
-> +		xfs_rui_item_free(ruip);
-> +	}
-> +}
-> +
->   STATIC void
->   xfs_rui_item_size(
->   	struct xfs_log_item	*lip,
-> @@ -141,7 +159,7 @@ xfs_rui_item_unlock(
->   	struct xfs_log_item	*lip)
->   {
->   	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
-> -		xfs_rui_item_free(RUI_ITEM(lip));
-> +		xfs_rui_release(RUI_ITEM(lip));
->   }
->   
->   /*
-> @@ -233,24 +251,6 @@ xfs_rui_copy_format(
->   	return 0;
->   }
->   
-> -/*
-> - * Freeing the RUI requires that we remove it from the AIL if it has already
-> - * been placed there. However, the RUI may not yet have been placed in the AIL
-> - * when called by xfs_rui_release() from RUD processing due to the ordering of
-> - * committed vs unpin operations in bulk insert operations. Hence the reference
-> - * count to ensure only the last caller frees the RUI.
-> - */
-> -void
-> -xfs_rui_release(
-> -	struct xfs_rui_log_item	*ruip)
-> -{
-> -	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
-> -	if (atomic_dec_and_test(&ruip->rui_refcount)) {
-> -		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
-> -		xfs_rui_item_free(ruip);
-> -	}
-> -}
-> -
->   static inline struct xfs_rud_log_item *RUD_ITEM(struct xfs_log_item *lip)
->   {
->   	return container_of(lip, struct xfs_rud_log_item, rud_item);
-This looks ok to me.  I may need to add something similar to some intent 
-code I am working on.  You can add my review.  Thanks!
-
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-
+> +	ext2_set_file_ops(inode);
+>  	mark_inode_dirty(inode);
+>  	d_tmpfile(dentry, inode);
+>  	unlock_new_inode(inode);
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
