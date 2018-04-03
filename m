@@ -1,113 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35114 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751624AbeDKA2Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Apr 2018 20:28:16 -0400
-Subject: Re: [PATCH 11/14] xfs_scrub_all: report version
-References: <152160358015.8288.2700156777231657519.stgit@magnolia>
- <152160364815.8288.2405559533299403970.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <de78d4fd-bba4-6df3-2e9f-bb9493621b71@sandeen.net>
-Date: Tue, 10 Apr 2018 19:28:15 -0500
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38958 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752132AbeDCTjO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Apr 2018 15:39:14 -0400
+Date: Tue, 3 Apr 2018 15:39:13 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v8 10/18] dax, dm: introduce ->fs_{claim, release}()
+ dax_device infrastructure
+Message-ID: <20180403193912.GC6556@redhat.com>
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152246898322.36038.17918469633893320678.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CAPcyv4jaZV3AhYaOA3d0SQ-AOvb4RKhj4_q-PR0bpt3aoax2mA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <152160364815.8288.2405559533299403970.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jaZV3AhYaOA3d0SQ-AOvb4RKhj4_q-PR0bpt3aoax2mA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Alasdair Kergon <agk@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, david <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On 3/20/18 10:40 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Make xfs_scrub_all -V report its version like the other xfs tools.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Apr 03 2018 at  2:24pm -0400,
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> On Fri, Mar 30, 2018 at 9:03 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> > In preparation for allowing filesystems to augment the dev_pagemap
+> > associated with a dax_device, add an ->fs_claim() callback. The
+> > ->fs_claim() callback is leveraged by the device-mapper dax
+> > implementation to iterate all member devices in the map and repeat the
+> > claim operation across the array.
+> >
+> > In order to resolve collisions between filesystem operations and DMA to
+> > DAX mapped pages we need a callback when DMA completes. With a callback
+> > we can hold off filesystem operations while DMA is in-flight and then
+> > resume those operations when the last put_page() occurs on a DMA page.
+> > The ->fs_claim() operation arranges for this callback to be registered,
+> > although that implementation is saved for a later patch.
+> >
+> > Cc: Alasdair Kergon <agk@redhat.com>
+> > Cc: Mike Snitzer <snitzer@redhat.com>
+> 
+> Mike, do these DM touches look ok to you?  We need these ->fs_claim()
+> / ->fs_release() interfaces for device-mapper to set up filesystem-dax
+> infrastructure on all sub-devices whenever a dax-capable DM device is
+> mounted. It builds on the device-mapper dax dependency removal
+> patches.
 
-> ---
->  man/man8/xfs_scrub_all.8 |   10 ++++++++++
->  scrub/Makefile           |    1 +
->  scrub/xfs_scrub_all.in   |   11 +++++++++++
->  3 files changed, 22 insertions(+)
-> 
-> 
-> diff --git a/man/man8/xfs_scrub_all.8 b/man/man8/xfs_scrub_all.8
-> index 5e1420b..7454880 100644
-> --- a/man/man8/xfs_scrub_all.8
-> +++ b/man/man8/xfs_scrub_all.8
-> @@ -3,6 +3,9 @@
->  xfs_scrub_all \- scrub all mounted XFS filesystems
->  .SH SYNOPSIS
->  .B xfs_scrub_all
-> +[
-> +.B \-hV
-> +]
->  .SH DESCRIPTION
->  .B xfs_scrub_all
->  attempts to read and check all the metadata on all mounted XFS filesystems.
-> @@ -13,6 +16,13 @@ in a restricted fashion.
->  Mounted filesystems are mapped to physical storage devices so that scrub
->  operations can be run in parallel so long as no two scrubbers access
->  the same device simultaneously.
-> +.SH OPTIONS
-> +.TP
-> +.B \-h
-> +Display help.
-> +.TP
-> +.B \-V
-> +Prints the version number and exits.
->  .SH EXIT CODE
->  The exit code returned by
->  .B xfs_scrub_all
-> diff --git a/scrub/Makefile b/scrub/Makefile
-> index bcc05a0..482e8a7 100644
-> --- a/scrub/Makefile
-> +++ b/scrub/Makefile
-> @@ -102,6 +102,7 @@ default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
->  xfs_scrub_all: xfs_scrub_all.in
->  	@echo "    [SED]    $@"
->  	$(Q)$(SED) -e "s|@sbindir@|$(PKG_ROOT_SBIN_DIR)|g" \
-> +		   -e "s|@pkg_version@|$(PKG_VERSION)|g" \
->  		   -e "s|@scrub_args@|$(XFS_SCRUB_ARGS)|g" < $< > $@
->  	$(Q)chmod a+x $@
->  
-> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-> index 80f07d5..aed66a1 100644
-> --- a/scrub/xfs_scrub_all.in
-> +++ b/scrub/xfs_scrub_all.in
-> @@ -26,6 +26,7 @@ import threading
->  import time
->  import sys
->  import os
-> +import argparse
->  
->  retcode = 0
->  terminate = False
-> @@ -139,6 +140,16 @@ def main():
->  		thr.start()
->  	global retcode, terminate
->  
-> +	parser = argparse.ArgumentParser( \
-> +			description = "Scrub all mounted XFS filesystems.")
-> +	parser.add_argument("-V", help = "Report version and exit.", \
-> +			action = "store_true")
-> +	args = parser.parse_args()
-> +
-> +	if args.V:
-> +		print("xfs_scrub_all version @pkg_version@")
-> +		sys.exit(0)
-> +
->  	fs = find_mounts()
->  
->  	# Tail the journal if we ourselves aren't a service...
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I'd prefer dm_dax_iterate() be renamed to dm_dax_iterate_devices()
+
+But dm_dax_iterate() is weird... it is simply returning the struct
+dax_device *dax_dev that is passed: seemingly without actually directly
+changing anything about that dax_device (I can infer that you're
+claiming the underlying devices, but...)
+
+In general user's of ti->type->iterate_devices can get a result back
+(via 'int' return).. you aren't using it that way (and maybe dax will
+never have a need to return an answer).  But all said, I think I'd
+prefer to see dm_dax_iterate_devices() return void.
+
+But please let me know if I'm missing something, thanks.
+
+Mike
