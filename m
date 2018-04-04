@@ -1,320 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:35669 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752881AbeDCSYv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Apr 2018 14:24:51 -0400
-Received: by mail-ot0-f196.google.com with SMTP id f47-v6so11548717oth.2
-        for <linux-xfs@vger.kernel.org>; Tue, 03 Apr 2018 11:24:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <152246898322.36038.17918469633893320678.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mx2.suse.de ([195.135.220.15]:42975 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750812AbeDDKHA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Apr 2018 06:07:00 -0400
+Date: Wed, 4 Apr 2018 12:06:57 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned
+ dax mappings
+Message-ID: <20180404100657.qpodshwzmh4djwej@quack2.suse.cz>
 References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152246898322.36038.17918469633893320678.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 3 Apr 2018 11:24:50 -0700
-Message-ID: <CAPcyv4jaZV3AhYaOA3d0SQ-AOvb4RKhj4_q-PR0bpt3aoax2mA@mail.gmail.com>
-Subject: Re: [PATCH v8 10/18] dax, dm: introduce ->fs_{claim, release}()
- dax_device infrastructure
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+ <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm <linux-nvdimm@lists.01.org>
-Cc: Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, david <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, snitzer@redhat.com
 
-On Fri, Mar 30, 2018 at 9:03 PM, Dan Williams <dan.j.williams@intel.com> wr=
-ote:
-> In preparation for allowing filesystems to augment the dev_pagemap
-> associated with a dax_device, add an ->fs_claim() callback. The
-> ->fs_claim() callback is leveraged by the device-mapper dax
-> implementation to iterate all member devices in the map and repeat the
-> claim operation across the array.
->
-> In order to resolve collisions between filesystem operations and DMA to
-> DAX mapped pages we need a callback when DMA completes. With a callback
-> we can hold off filesystem operations while DMA is in-flight and then
-> resume those operations when the last put_page() occurs on a DMA page.
-> The ->fs_claim() operation arranges for this callback to be registered,
-> although that implementation is saved for a later patch.
->
-> Cc: Alasdair Kergon <agk@redhat.com>
-> Cc: Mike Snitzer <snitzer@redhat.com>
+On Wed 04-04-18 11:46:56, Jan Kara wrote:
+> On Fri 30-03-18 21:03:30, Dan Williams wrote:
+> > Background:
+> > 
+> > get_user_pages() in the filesystem pins file backed memory pages for
+> > access by devices performing dma. However, it only pins the memory pages
+> > not the page-to-file offset association. If a file is truncated the
+> > pages are mapped out of the file and dma may continue indefinitely into
+> > a page that is owned by a device driver. This breaks coherency of the
+> > file vs dma, but the assumption is that if userspace wants the
+> > file-space truncated it does not matter what data is inbound from the
+> > device, it is not relevant anymore. The only expectation is that dma can
+> > safely continue while the filesystem reallocates the block(s).
+> > 
+> > Problem:
+> > 
+> > This expectation that dma can safely continue while the filesystem
+> > changes the block map is broken by dax. With dax the target dma page
+> > *is* the filesystem block. The model of leaving the page pinned for dma,
+> > but truncating the file block out of the file, means that the filesytem
+> > is free to reallocate a block under active dma to another file and now
+> > the expected data-incoherency situation has turned into active
+> > data-corruption.
+> > 
+> > Solution:
+> > 
+> > Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+> > file while any page/block in the file is under active dma. This solution
+> > assumes that dma is transient. Cases where dma operations are known to
+> > not be transient, like RDMA, have been explicitly disabled via
+> > commits like 5f1d43de5416 "IB/core: disable memory registration of
+> > filesystem-dax vmas".
+> > 
+> > The dax_layout_busy_page() routine is called by filesystems with a lock
+> > held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
+> > The process of looking up a busy page invalidates all mappings
+> > to trigger any subsequent get_user_pages() to block on i_mmap_lock.
+> > The filesystem continues to call dax_layout_busy_page() until it finally
+> > returns no more active pages. This approach assumes that the page
+> > pinning is transient, if that assumption is violated the system would
+> > have likely hung from the uncompleted I/O.
+> > 
+> > Cc: Jan Kara <jack@suse.cz>
+> > Cc: Jeff Moyer <jmoyer@redhat.com>
+> > Cc: Dave Chinner <david@fromorbit.com>
+> > Cc: Matthew Wilcox <mawilcox@microsoft.com>
+> > Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> > Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> > Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > Cc: Dave Hansen <dave.hansen@linux.intel.com>
+> > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > Reported-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> > ---
+> >  drivers/dax/super.c |    2 +
+> >  fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  include/linux/dax.h |   25 ++++++++++++++
+> >  mm/gup.c            |    5 +++
+> >  4 files changed, 123 insertions(+), 1 deletion(-)
+> 
+> ...
+> 
+> > +/**
+> > + * dax_layout_busy_page - find first pinned page in @mapping
+> > + * @mapping: address space to scan for a page with ref count > 1
+> > + *
+> > + * DAX requires ZONE_DEVICE mapped pages. These pages are never
+> > + * 'onlined' to the page allocator so they are considered idle when
+> > + * page->count == 1. A filesystem uses this interface to determine if
+> > + * any page in the mapping is busy, i.e. for DMA, or other
+> > + * get_user_pages() usages.
+> > + *
+> > + * It is expected that the filesystem is holding locks to block the
+> > + * establishment of new mappings in this address_space. I.e. it expects
+> > + * to be able to run unmap_mapping_range() and subsequently not race
+> > + * mapping_mapped() becoming true. It expects that get_user_pages() pte
+> > + * walks are performed under rcu_read_lock().
+> > + */
+> > +struct page *dax_layout_busy_page(struct address_space *mapping)
+> > +{
+> > +	pgoff_t	indices[PAGEVEC_SIZE];
+> > +	struct page *page = NULL;
+> > +	struct pagevec pvec;
+> > +	pgoff_t	index, end;
+> > +	unsigned i;
+> > +
+> > +	/*
+> > +	 * In the 'limited' case get_user_pages() for dax is disabled.
+> > +	 */
+> > +	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+> > +		return NULL;
+> > +
+> > +	if (!dax_mapping(mapping) || !mapping_mapped(mapping))
+> > +		return NULL;
+> > +
+> > +	pagevec_init(&pvec);
+> > +	index = 0;
+> > +	end = -1;
+> > +	/*
+> > +	 * Flush dax_layout_lock() sections to ensure all possible page
+> > +	 * references have been taken, or otherwise arrange for faults
+> > +	 * to block on the filesystem lock that is taken for
+> > +	 * establishing new mappings.
+> > +	 */
+> > +	unmap_mapping_range(mapping, 0, 0, 1);
+> > +	synchronize_rcu();
+> 
+> So I still don't like the use of RCU for this. It just seems as an abuse to
+> use RCU like that. Furthermore it has a hefty latency cost for the truncate
+> path. A trivial test to truncate 100 times the last page of a 16k file that
+> is mmaped (only the first page):
+> 
+> DAX+your patches	3.899s
+> non-DAX			0.015s
+> 
+> So you can see synchronize_rcu() increased time to run truncate(2) more
+> than 200 times (the process is indeed sitting in __wait_rcu_gp all the
+> time). IMHO that's just too costly.
 
-Mike, do these DM touches look ok to you?  We need these ->fs_claim()
-/ ->fs_release() interfaces for device-mapper to set up filesystem-dax
-infrastructure on all sub-devices whenever a dax-capable DM device is
-mounted. It builds on the device-mapper dax dependency removal
-patches.
+Forgot to add some more thoughts: Maybe we could use global percpu rwsem
+for this instead of RCU? That would cut down the truncate latency and the
+cost on GUP path should be very small. Or I'm still not convinced that my
+PageTruncateInProgress() idea cannot be made to work - that would be free
+on the GUP side for the non-DAX case, relatively cheap for the DAX case,
+and also reasonably cheap for the truncate side. But I admit it requires
+more work on the fs side to propagate offsets that are going to be
+truncated into the DAX helper.
 
-> Cc: Matthew Wilcox <mawilcox@microsoft.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Cc: "J=C3=A9r=C3=B4me Glisse" <jglisse@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Jan Kara <jack@suse.cz>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/dax/super.c      |   80 ++++++++++++++++++++++++++++++++++++++++=
-++++++
->  drivers/md/dm.c          |   56 ++++++++++++++++++++++++++++++++
->  include/linux/dax.h      |   16 +++++++++
->  include/linux/memremap.h |    8 +++++
->  4 files changed, 160 insertions(+)
->
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index 2b2332b605e4..c4cf284dfe1c 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -29,6 +29,7 @@ static struct vfsmount *dax_mnt;
->  static DEFINE_IDA(dax_minor_ida);
->  static struct kmem_cache *dax_cache __read_mostly;
->  static struct super_block *dax_superblock __read_mostly;
-> +static DEFINE_MUTEX(devmap_lock);
->
->  #define DAX_HASH_SIZE (PAGE_SIZE / sizeof(struct hlist_head))
->  static struct hlist_head dax_host_list[DAX_HASH_SIZE];
-> @@ -169,9 +170,88 @@ struct dax_device {
->         const char *host;
->         void *private;
->         unsigned long flags;
-> +       struct dev_pagemap *pgmap;
->         const struct dax_operations *ops;
->  };
->
-> +#if IS_ENABLED(CONFIG_FS_DAX)
-> +static void generic_dax_pagefree(struct page *page, void *data)
-> +{
-> +       /* TODO: wakeup page-idle waiters */
-> +}
-> +
-> +struct dax_device *fs_dax_claim(struct dax_device *dax_dev, void *owner)
-> +{
-> +       struct dev_pagemap *pgmap;
-> +
-> +       if (!dax_dev->pgmap)
-> +               return dax_dev;
-> +       pgmap =3D dax_dev->pgmap;
-> +
-> +       mutex_lock(&devmap_lock);
-> +       if (pgmap->data && pgmap->data =3D=3D owner) {
-> +               /* dm might try to claim the same device more than once..=
-. */
-> +               mutex_unlock(&devmap_lock);
-> +               return dax_dev;
-> +       } else if (pgmap->page_free || pgmap->page_fault
-> +                       || pgmap->type !=3D MEMORY_DEVICE_HOST) {
-> +               put_dax(dax_dev);
-> +               mutex_unlock(&devmap_lock);
-> +               return NULL;
-> +       }
-> +
-> +       pgmap->type =3D MEMORY_DEVICE_FS_DAX;
-> +       pgmap->page_free =3D generic_dax_pagefree;
-> +       pgmap->data =3D owner;
-> +       mutex_unlock(&devmap_lock);
-> +
-> +       return dax_dev;
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_claim);
-> +
-> +struct dax_device *fs_dax_claim_bdev(struct block_device *bdev, void *ow=
-ner)
-> +{
-> +       struct dax_device *dax_dev;
-> +
-> +       if (!blk_queue_dax(bdev->bd_queue))
-> +               return NULL;
-> +       dax_dev =3D fs_dax_get_by_host(bdev->bd_disk->disk_name);
-> +       if (dax_dev->ops->fs_claim)
-> +               return dax_dev->ops->fs_claim(dax_dev, owner);
-> +       else
-> +               return fs_dax_claim(dax_dev, owner);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_claim_bdev);
-> +
-> +void __fs_dax_release(struct dax_device *dax_dev, void *owner)
-> +{
-> +       struct dev_pagemap *pgmap =3D dax_dev ? dax_dev->pgmap : NULL;
-> +
-> +       put_dax(dax_dev);
-> +       if (!pgmap)
-> +               return;
-> +       if (!pgmap->data)
-> +               return;
-> +
-> +       mutex_lock(&devmap_lock);
-> +       WARN_ON(pgmap->data !=3D owner);
-> +       pgmap->type =3D MEMORY_DEVICE_HOST;
-> +       pgmap->page_free =3D NULL;
-> +       pgmap->data =3D NULL;
-> +       mutex_unlock(&devmap_lock);
-> +}
-> +EXPORT_SYMBOL_GPL(__fs_dax_release);
-> +
-> +void fs_dax_release(struct dax_device *dax_dev, void *owner)
-> +{
-> +       if (dax_dev->ops->fs_release)
-> +               dax_dev->ops->fs_release(dax_dev, owner);
-> +       else
-> +               __fs_dax_release(dax_dev, owner);
-> +}
-> +EXPORT_SYMBOL_GPL(fs_dax_release);
-> +#endif
-> +
->  static ssize_t write_cache_show(struct device *dev,
->                 struct device_attribute *attr, char *buf)
->  {
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index ffc93aecc02a..964cb7537f11 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -1090,6 +1090,60 @@ static size_t dm_dax_copy_from_iter(struct dax_dev=
-ice *dax_dev, pgoff_t pgoff,
->         return ret;
->  }
->
-> +static int dm_dax_dev_claim(struct dm_target *ti, struct dm_dev *dev,
-> +               sector_t start, sector_t len, void *owner)
-> +{
-> +       if (fs_dax_claim(dev->dax_dev, owner))
-> +               return 0;
-> +       /*
-> +        * Outside of a kernel bug there is no reason a dax_dev should
-> +        * fail a claim attempt. Device-mapper should have exclusive
-> +        * ownership of the dm_dev and the filesystem should have
-> +        * exclusive ownership of the dm_target.
-> +        */
-> +       WARN_ON_ONCE(1);
-> +       return -ENXIO;
-> +}
-> +
-> +static int dm_dax_dev_release(struct dm_target *ti, struct dm_dev *dev,
-> +               sector_t start, sector_t len, void *owner)
-> +{
-> +       __fs_dax_release(dev->dax_dev, owner);
-> +       return 0;
-> +}
-> +
-> +static struct dax_device *dm_dax_iterate(struct dax_device *dax_dev,
-> +               iterate_devices_callout_fn fn, void *arg)
-> +{
-> +       struct mapped_device *md =3D dax_get_private(dax_dev);
-> +       struct dm_table *map;
-> +       struct dm_target *ti;
-> +       int i, srcu_idx;
-> +
-> +       map =3D dm_get_live_table(md, &srcu_idx);
-> +
-> +       for (i =3D 0; i < dm_table_get_num_targets(map); i++) {
-> +               ti =3D dm_table_get_target(map, i);
-> +
-> +               if (ti->type->iterate_devices)
-> +                       ti->type->iterate_devices(ti, fn, arg);
-> +       }
-> +
-> +       dm_put_live_table(md, srcu_idx);
-> +       return dax_dev;
-> +}
-> +
-> +static struct dax_device *dm_dax_fs_claim(struct dax_device *dax_dev,
-> +               void *owner)
-> +{
-> +       return dm_dax_iterate(dax_dev, dm_dax_dev_claim, owner);
-> +}
-> +
-> +static void dm_dax_fs_release(struct dax_device *dax_dev, void *owner)
-> +{
-> +       dm_dax_iterate(dax_dev, dm_dax_dev_release, owner);
-> +}
-> +
->  /*
->   * A target may call dm_accept_partial_bio only from the map routine.  I=
-t is
->   * allowed for all bio types except REQ_PREFLUSH and REQ_OP_ZONE_RESET.
-> @@ -3111,6 +3165,8 @@ static const struct block_device_operations dm_blk_=
-dops =3D {
->  static const struct dax_operations dm_dax_ops =3D {
->         .direct_access =3D dm_dax_direct_access,
->         .copy_from_iter =3D dm_dax_copy_from_iter,
-> +       .fs_claim =3D dm_dax_fs_claim,
-> +       .fs_release =3D dm_dax_fs_release,
->  };
->
->  /*
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index f9eb22ad341e..e9d59a6b06e1 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -20,6 +20,10 @@ struct dax_operations {
->         /* copy_from_iter: required operation for fs-dax direct-i/o */
->         size_t (*copy_from_iter)(struct dax_device *, pgoff_t, void *, si=
-ze_t,
->                         struct iov_iter *);
-> +       /* fs_claim: setup filesytem parameters for the device's dev_page=
-map */
-> +       struct dax_device *(*fs_claim)(struct dax_device *, void *);
-> +       /* fs_release: restore device's dev_pagemap to its default state =
-*/
-> +       void (*fs_release)(struct dax_device *, void *);
->  };
->
->  extern struct attribute_group dax_attribute_group;
-> @@ -83,6 +87,8 @@ static inline void fs_put_dax(struct dax_device *dax_de=
-v)
->  struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
->  int dax_writeback_mapping_range(struct address_space *mapping,
->                 struct block_device *bdev, struct writeback_control *wbc)=
-;
-> +struct dax_device *fs_dax_claim(struct dax_device *dax_dev, void *owner)=
-;
-> +void __fs_dax_release(struct dax_device *dax_dev, void *owner);
->  #else
->  static inline int bdev_dax_supported(struct super_block *sb, int blocksi=
-ze)
->  {
-> @@ -108,6 +114,16 @@ static inline int dax_writeback_mapping_range(struct=
- address_space *mapping,
->  {
->         return -EOPNOTSUPP;
->  }
-> +
-> +static inline struct dax_device *fs_dax_claim(struct dax_device *dax_dev=
-,
-> +               void *owner)
-> +{
-> +       return NULL;
-> +}
-> +
-> +static inline void __fs_dax_release(struct dax_device *dax_dev, void *ow=
-ner)
-> +{
-> +}
->  #endif
->
->  int dax_read_lock(void);
-> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> index 7b4899c06f49..02d6d042ee7f 100644
-> --- a/include/linux/memremap.h
-> +++ b/include/linux/memremap.h
-> @@ -53,11 +53,19 @@ struct vmem_altmap {
->   * driver can hotplug the device memory using ZONE_DEVICE and with that =
-memory
->   * type. Any page of a process can be migrated to such memory. However n=
-o one
->   * should be allow to pin such memory so that it can always be evicted.
-> + *
-> + * MEMORY_DEVICE_FS_DAX:
-> + * When MEMORY_DEVICE_HOST memory is represented by a device that can
-> + * host a filesystem, for example /dev/pmem0, that filesystem can
-> + * register for a callback when a page is idled. For the filesystem-dax
-> + * case page idle callbacks are used to coordinate DMA vs
-> + * hole-punch/truncate.
->   */
->  enum memory_type {
->         MEMORY_DEVICE_HOST =3D 0,
->         MEMORY_DEVICE_PRIVATE,
->         MEMORY_DEVICE_PUBLIC,
-> +       MEMORY_DEVICE_FS_DAX,
->  };
->
->  /*
->
+								Honza
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
