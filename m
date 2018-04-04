@@ -1,151 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60788 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:40408 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753468AbeDJXqP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Apr 2018 19:46:15 -0400
-Subject: Re: [PATCH 04/14] xfs_scrub: communicate name problems via flagset
- instead of booleans
-References: <152160358015.8288.2700156777231657519.stgit@magnolia>
- <152160360472.8288.12725342216863079202.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1b344564-4177-0980-97c5-f605ea326033@sandeen.net>
-Date: Tue, 10 Apr 2018 18:46:14 -0500
+        id S1751155AbeDDJrB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Apr 2018 05:47:01 -0400
+Date: Wed, 4 Apr 2018 11:46:56 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned
+ dax mappings
+Message-ID: <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <152160360472.8288.12725342216863079202.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, snitzer@redhat.com
 
-
-
-On 3/20/18 10:40 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri 30-03-18 21:03:30, Dan Williams wrote:
+> Background:
 > 
-> Use an unsigned int to pass around name error flags instead of booleans.
+> get_user_pages() in the filesystem pins file backed memory pages for
+> access by devices performing dma. However, it only pins the memory pages
+> not the page-to-file offset association. If a file is truncated the
+> pages are mapped out of the file and dma may continue indefinitely into
+> a page that is owned by a device driver. This breaks coherency of the
+> file vs dma, but the assumption is that if userspace wants the
+> file-space truncated it does not matter what data is inbound from the
+> device, it is not relevant anymore. The only expectation is that dma can
+> safely continue while the filesystem reallocates the block(s).
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
+> Problem:
+> 
+> This expectation that dma can safely continue while the filesystem
+> changes the block map is broken by dax. With dax the target dma page
+> *is* the filesystem block. The model of leaving the page pinned for dma,
+> but truncating the file block out of the file, means that the filesytem
+> is free to reallocate a block under active dma to another file and now
+> the expected data-incoherency situation has turned into active
+> data-corruption.
+> 
+> Solution:
+> 
+> Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+> file while any page/block in the file is under active dma. This solution
+> assumes that dma is transient. Cases where dma operations are known to
+> not be transient, like RDMA, have been explicitly disabled via
+> commits like 5f1d43de5416 "IB/core: disable memory registration of
+> filesystem-dax vmas".
+> 
+> The dax_layout_busy_page() routine is called by filesystems with a lock
+> held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
+> The process of looking up a busy page invalidates all mappings
+> to trigger any subsequent get_user_pages() to block on i_mmap_lock.
+> The filesystem continues to call dax_layout_busy_page() until it finally
+> returns no more active pages. This approach assumes that the page
+> pinning is transient, if that assumption is violated the system would
+> have likely hung from the uncompleted I/O.
+> 
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Jeff Moyer <jmoyer@redhat.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Cc: Dave Hansen <dave.hansen@linux.intel.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Reported-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
->  scrub/unicrash.c |   43 ++++++++++++++++++++++++++++++-------------
->  1 file changed, 30 insertions(+), 13 deletions(-)
-> 
-> 
-> diff --git a/scrub/unicrash.c b/scrub/unicrash.c
-> index 10d7c14..3538a60 100644
-> --- a/scrub/unicrash.c
-> +++ b/scrub/unicrash.c
-> @@ -77,6 +77,14 @@ struct unicrash {
->  #define UNICRASH_SZ(nr)		(sizeof(struct unicrash) + \
->  				 (nr * sizeof(struct name_entry *)))
->  
-> +/* Things to complain about in Unicode naming. */
-> +
-> +/*
-> + * Multiple names resolve to the same normalized string and therefore render
-> + * identically.
+>  drivers/dax/super.c |    2 +
+>  fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/dax.h |   25 ++++++++++++++
+>  mm/gup.c            |    5 +++
+>  4 files changed, 123 insertions(+), 1 deletion(-)
+
+...
+
+> +/**
+> + * dax_layout_busy_page - find first pinned page in @mapping
+> + * @mapping: address space to scan for a page with ref count > 1
+> + *
+> + * DAX requires ZONE_DEVICE mapped pages. These pages are never
+> + * 'onlined' to the page allocator so they are considered idle when
+> + * page->count == 1. A filesystem uses this interface to determine if
+> + * any page in the mapping is busy, i.e. for DMA, or other
+> + * get_user_pages() usages.
+> + *
+> + * It is expected that the filesystem is holding locks to block the
+> + * establishment of new mappings in this address_space. I.e. it expects
+> + * to be able to run unmap_mapping_range() and subsequently not race
+> + * mapping_mapped() becoming true. It expects that get_user_pages() pte
+> + * walks are performed under rcu_read_lock().
 > + */
-> +#define UNICRASH_NOT_UNIQUE	(1 << 0)
+> +struct page *dax_layout_busy_page(struct address_space *mapping)
+> +{
+> +	pgoff_t	indices[PAGEVEC_SIZE];
+> +	struct page *page = NULL;
+> +	struct pagevec pvec;
+> +	pgoff_t	index, end;
+> +	unsigned i;
 > +
->  /*
->   * We only care about validating utf8 collisions if the underlying
->   * system configuration says we're using utf8.  If the language
-> @@ -256,7 +264,7 @@ unicrash_complain(
->  	struct unicrash		*uc,
->  	const char		*descr,
->  	const char		*what,
-> -	bool			unique,
-> +	unsigned int		badflags,
->  	const char		*name,
->  	uint8_t			*uniname)
->  {
-> @@ -266,11 +274,20 @@ unicrash_complain(
->  	bad1 = string_escape(name);
->  	bad2 = string_escape((char *)uniname);
->  
-> -	if (!unique)
 > +	/*
-> +	 * Two names that normalize to the same string will render
-> +	 * identically even though the filesystem considers them unique
-> +	 * names.  "cafe\xcc\x81" and "caf\xc3\xa9" have different byte
-> +	 * sequences, but they both appear as "café".
+> +	 * In the 'limited' case get_user_pages() for dax is disabled.
 > +	 */
-> +	if (badflags & UNICRASH_NOT_UNIQUE) {
->  		str_warn(uc->ctx, descr,
-> -_("Duplicate normalized Unicode name \"%s\" found in %s."),
-> -				bad1, what);
-> +_("Unicode name \"%s\" in %s renders identically to \"%s\"."),
-> +				bad1, what, bad2);
-> +		goto out;
+> +	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+> +		return NULL;
+> +
+> +	if (!dax_mapping(mapping) || !mapping_mapped(mapping))
+> +		return NULL;
+> +
+> +	pagevec_init(&pvec);
+> +	index = 0;
+> +	end = -1;
+> +	/*
+> +	 * Flush dax_layout_lock() sections to ensure all possible page
+> +	 * references have been taken, or otherwise arrange for faults
+> +	 * to block on the filesystem lock that is taken for
+> +	 * establishing new mappings.
+> +	 */
+> +	unmap_mapping_range(mapping, 0, 0, 1);
+> +	synchronize_rcu();
+
+So I still don't like the use of RCU for this. It just seems as an abuse to
+use RCU like that. Furthermore it has a hefty latency cost for the truncate
+path. A trivial test to truncate 100 times the last page of a 16k file that
+is mmaped (only the first page):
+
+DAX+your patches	3.899s
+non-DAX			0.015s
+
+So you can see synchronize_rcu() increased time to run truncate(2) more
+than 200 times (the process is indeed sitting in __wait_rcu_gp all the
+time). IMHO that's just too costly.
+
+> +	while (index < end && pagevec_lookup_entries(&pvec, mapping, index,
+> +				min(end - index, (pgoff_t)PAGEVEC_SIZE),
+> +				indices)) {
+> +		for (i = 0; i < pagevec_count(&pvec); i++) {
+> +			struct page *pvec_ent = pvec.pages[i];
+> +			void *entry;
+> +
+> +			index = indices[i];
+> +			if (index >= end)
+> +				break;
+> +
+> +			if (!radix_tree_exceptional_entry(pvec_ent))
+> +				continue;
+
+This would be a bug - so WARN_ON_ONCE() here?
+
+> +
+> +			spin_lock_irq(&mapping->tree_lock);
+> +			entry = get_unlocked_mapping_entry(mapping, index, NULL);
+> +			if (entry)
+> +				page = dax_busy_page(entry);
+> +			put_unlocked_mapping_entry(mapping, index, entry);
+> +			spin_unlock_irq(&mapping->tree_lock);
+> +			if (page)
+> +				break;
+> +		}
+> +		pagevec_remove_exceptionals(&pvec);
+> +		pagevec_release(&pvec);
+> +		index++;
+> +
+> +		if (page)
+> +			break;
 > +	}
->  
-> +out:
->  	free(bad1);
->  	free(bad2);
->  }
-> @@ -291,7 +308,7 @@ unicrash_add(
->  	struct unicrash		*uc,
->  	uint8_t			*uniname,
->  	xfs_ino_t		ino,
-> -	bool			*unique)
-> +	unsigned int		*badflags)
+> +	return page;
+> +}
+> +EXPORT_SYMBOL_GPL(dax_layout_busy_page);
+> +
+>  static int __dax_invalidate_mapping_entry(struct address_space *mapping,
+>  					  pgoff_t index, bool trunc)
 >  {
->  	struct name_entry	*ne;
->  	struct name_entry	*x;
-> @@ -304,8 +321,9 @@ unicrash_add(
->  	hash = unicrash_hashname(uniname, uninamelen);
->  	bucket = hash % uc->nr_buckets;
->  	for (nep = &uc->buckets[bucket], ne = *nep; ne != NULL; ne = x) {
-> -		if (u8_strcmp(uniname, ne->uniname) == 0) {
-> -			*unique = uc->compare_ino ? ne->ino == ino : false;
-> +		if (u8_strcmp(uniname, ne->uniname) == 0 &&
-> +		    (uc->compare_ino ? ino != ne->ino : true)) {
-> +			*badflags |= UNICRASH_NOT_UNIQUE;
->  			return true;
->  		}
->  		nep = &ne->next;
-> @@ -321,7 +339,6 @@ unicrash_add(
->  	x->uninamelen = uninamelen;
->  	memcpy(x->uniname, uniname, uninamelen + 1);
->  	*nep = x;
-> -	*unique = true;
->  
->  	return true;
->  }
-> @@ -336,19 +353,19 @@ __unicrash_check_name(
->  	xfs_ino_t		ino)
->  {
->  	uint8_t			uniname[(NAME_MAX * 2) + 1];
-> +	unsigned int		badflags = 0;
->  	bool			moveon;
-> -	bool			unique;
->  
->  	memset(uniname, 0, (NAME_MAX * 2) + 1);
->  	unicrash_normalize(name, uniname, NAME_MAX * 2);
-> -	moveon = unicrash_add(uc, uniname, ino, &unique);
-> +	moveon = unicrash_add(uc, uniname, ino, &badflags);
->  	if (!moveon)
->  		return false;
->  
-> -	if (unique)
-> -		return true;
-> +	if (badflags)
-> +		unicrash_complain(uc, descr, namedescr, badflags, name,
-> +				uniname);
->  
-> -	unicrash_complain(uc, descr, namedescr, unique, name, uniname);
->  	return true;
->  }
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
