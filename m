@@ -1,38 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54984 "EHLO sandeen.net"
+Received: from ozlabs.org ([103.22.144.67]:32871 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750791AbeDXTv0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Apr 2018 15:51:26 -0400
-Subject: Re: [PATCH 4/9] xfs: refactor inode buffer verifier error logging
-References: <152107377037.19571.8618901963505842632.stgit@magnolia>
- <152107379476.19571.15155451515464003337.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c1e36789-58c5-740e-e6a5-79e18e45e99d@sandeen.net>
-Date: Tue, 24 Apr 2018 13:51:24 -0600
+        id S1752392AbeDDXVL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Apr 2018 19:21:11 -0400
+Date: Thu, 5 Apr 2018 09:19:46 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [v8, 11/18] mm, dax: enable filesystems to trigger dev_pagemap
+ ->page_free callbacks
+Message-ID: <20180405091946.7ca20ead@canb.auug.org.au>
+In-Reply-To: <CAPcyv4jd+aSzMvGHJ6O8K5vJ+qmH=XU2i2bzsGvZENXnkpM7=g@mail.gmail.com>
+References: <152246898837.36038.26895928842345061.stgit@dwillia2-desk3.amr.corp.intel.com>
+        <20180404212340.GA12737@outlook.office365.com>
+        <CAPcyv4jknruAmkPEVx0X6Bd3uRs_FYdPf-W-5cDO1Z+kaG5+uw@mail.gmail.com>
+        <CAPcyv4jd+aSzMvGHJ6O8K5vJ+qmH=XU2i2bzsGvZENXnkpM7=g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <152107379476.19571.15155451515464003337.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/sgDCFHZZhV61WXqrqZ/wP=B"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Andrei Vagin <avagin@virtuozzo.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Michal Hocko <mhocko@suse.com>, =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, david <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
 
-On 3/14/18 6:29 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When the inode buffer verifier encounters an error, it's much more
-> helpful to print a buffer from the offending inode instead of just the
-> start of the inode chunk buffer.
+--Sig_/sgDCFHZZhV61WXqrqZ/wP=B
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Thanks, I was about to do this until you told me you did it weeks ago.  ;)
-That said, we should use this in the dquot verifiers as well.  But I'll
-need to hold off on that until we decide where my old
+Hi Dan,
 
-[PATCH 0/6] xfs: quota fixes and enhancements
+On Wed, 4 Apr 2018 14:35:20 -0700 Dan Williams <dan.j.williams@intel.com> w=
+rote:
+>
+> New branch pushed out with this offending commit removed.
 
-series is going, I think?
+Thanks, I refetched.
 
--Eric
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/sgDCFHZZhV61WXqrqZ/wP=B
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlrFXZIACgkQAVBC80lX
+0GzkHwgAoJUYgLchV2FPkM6kN5+QkaSI/dMQ571cQ+bs5JkrfAkANCdIr1LNVk5p
+JxFaMZccM3i4K/6t+/h84UowZV6Qk3W2GkrPhxUpFKsCWEc3w4wXrZRN71c4rM5D
+FIHHwY29bOj3wiP5ngOTFFR0D8F8cnrOD2k+bTetaNpCbuJ63am+I8NiI15qfzU3
+n5J+S+Ra7m4aCBi3n/pQqTKWKJehpjE3FSd5qwepBLXLsCXiQtcDzIT1+U0vvX27
+b/F2UAoOwZa8EZCsBCSDzQD5PX6/vSwk11hXkoveRhyhy7P8YOniRin8u/KOefsl
++8T7T2oYf/74PSICuIObkzEf9ZSQHQ==
+=nbIL
+-----END PGP SIGNATURE-----
+
+--Sig_/sgDCFHZZhV61WXqrqZ/wP=B--
