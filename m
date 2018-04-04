@@ -1,150 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41527 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:50162 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750812AbeDDJzU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 05:55:20 -0400
-Date: Wed, 4 Apr 2018 11:55:18 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v8 18/18] xfs, dax: introduce xfs_break_dax_layouts()
-Message-ID: <20180404095518.65exgpxuca3tqhav@quack2.suse.cz>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152246902607.36038.15813002361509305325.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1751277AbeDDStK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Apr 2018 14:49:10 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id CE12D81127
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 18:49:10 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A1B1A9D99E
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 18:49:10 +0000 (UTC)
+Subject: [PATCH 1/6] xfs: remove unused flags arg from xfs_dquot_verify
+From: Eric Sandeen <sandeen@redhat.com>
+References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+Message-ID: <51e940bc-9bcd-0fe6-ac90-003eae7e24f0@redhat.com>
+Date: Wed, 4 Apr 2018 13:49:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152246902607.36038.15813002361509305325.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, snitzer@redhat.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri 30-03-18 21:03:46, Dan Williams wrote:
-> xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
-> for busy / pinned dax pages and waits for those pages to go idle before
-> any potential extent unmap operation.
-> 
-> dax_layout_busy_page() handles synchronizing against new page-busy
-> events (get_user_pages). It invalidates all mappings to trigger the
-> get_user_pages slow path which will eventually block on the xfs inode
-> lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
-> busy page it returns it for xfs to wait for the page-idle event that
-> will fire when the page reference count reaches 1 (recall ZONE_DEVICE
-> pages are idle at count 1, see generic_dax_pagefree()).
-> 
-> While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
-> deadlock the process that might be trying to elevate the page count of
-> more pages before arranging for any of them to go idle. I.e. the typical
-> case of submitting I/O is that iov_iter_get_pages() elevates the
-> reference count of all pages in the I/O before starting I/O on the first
-> page. The process of elevating the reference count of all pages involved
-> in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
-> 
-> Cc: Jan Kara <jack@suse.cz>
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Long ago the flags argument was used to determine whether
+to issue warnings about corruptions, but that's done elsewhere
+now and the flag is unused here, so remove it.
 
-...
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/libxfs/xfs_dquot_buf.c  | 5 ++---
+ fs/xfs/libxfs/xfs_quota_defs.h | 3 +--
+ fs/xfs/xfs_dquot.c             | 2 +-
+ fs/xfs/xfs_log_recover.c       | 4 ++--
+ fs/xfs/xfs_qm.c                | 2 +-
+ 5 files changed, 7 insertions(+), 9 deletions(-)
 
-> ---
->  fs/xfs/xfs_file.c |   60 +++++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 49 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 51e6506bdcb1..0342f6fb782f 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -752,6 +752,38 @@ xfs_file_write_iter(
->  	return ret;
->  }
->  
-> +static void
-> +xfs_wait_var_event(
-> +	struct inode		*inode,
-> +	uint			iolock,
-> +	bool			*did_unlock)
-> +{
-> +	struct xfs_inode        *ip = XFS_I(inode);
-> +
-> +	*did_unlock = true;
-> +	xfs_iunlock(ip, iolock);
-> +	schedule();
-> +	xfs_ilock(ip, iolock);
-> +}
-
-With this scheme, there's a problem that it can be easily livelocked. E.g.
-when I created a program that maps a file on DAX fs and does AIO DIO from
-it indefinitely (with 64 iocbs in flight), truncate of that file never gets
-past xfs_break_layouts(). The reason is that once we drop all locks, new
-iocbs can be submitted, they grab new page references and these prevent
-truncation next time... So I think we need to somehow fix this retry scheme
-so that we guarantee forward progress of the truncate. E.g. if we kept
-IOLOCK locked, that would prevent new iocbs from being submitted...
-
-								Honza
-
-
-> +
-> +static int
-> +xfs_break_dax_layouts(
-> +	struct inode		*inode,
-> +	uint			iolock,
-> +	bool			*did_unlock)
-> +{
-> +	struct page		*page;
-> +
-> +	*did_unlock = false;
-> +	page = dax_layout_busy_page(inode->i_mapping);
-> +	if (!page)
-> +		return 0;
-> +
-> +	return ___wait_var_event(&page->_refcount,
-> +			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
-> +			0, 0, xfs_wait_var_event(inode, iolock, did_unlock));
-> +}
-> +
->  int
->  xfs_break_layouts(
->  	struct inode		*inode,
-> @@ -763,17 +795,23 @@ xfs_break_layouts(
->  
->  	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
->  
-> -	switch (reason) {
-> -	case BREAK_UNMAP:
-> -		ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
-> -		/* fall through */
-> -	case BREAK_WRITE:
-> -		error = xfs_break_leased_layouts(inode, iolock, &retry);
-> -		break;
-> -	default:
-> -		WARN_ON_ONCE(1);
-> -		return -EINVAL;
-> -	}
-> +	do {
-> +		switch (reason) {
-> +		case BREAK_UNMAP:
-> +			ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
-> +
-> +			error = xfs_break_dax_layouts(inode, *iolock, &retry);
-> +			/* fall through */
-> +		case BREAK_WRITE:
-> +			if (error || retry)
-> +				break;
-> +			error = xfs_break_leased_layouts(inode, iolock, &retry);
-> +			break;
-> +		default:
-> +			WARN_ON_ONCE(1);
-> +			return -EINVAL;
-> +		}
-> +	} while (error == 0 && retry);
->  
->  	return error;
->  }
-> 
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index 8b7a6c3..a926058 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -47,8 +47,7 @@
+ 	struct xfs_mount *mp,
+ 	xfs_disk_dquot_t *ddq,
+ 	xfs_dqid_t	 id,
+-	uint		 type,	  /* used only when IO_dorepair is true */
+-	uint		 flags)
++	uint		 type)	  /* used only when IO_dorepair is true */
+ {
+ 	/*
+ 	 * We can encounter an uninitialized dquot buffer for 2 reasons:
+@@ -200,7 +199,7 @@
+ 		if (i == 0)
+ 			id = be32_to_cpu(ddq->d_id);
+ 
+-		fa = xfs_dquot_verify(mp, ddq, id + i, 0, 0);
++		fa = xfs_dquot_verify(mp, ddq, id + i, 0);
+ 		if (fa)
+ 			return fa;
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index bb1b13a..8433656 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -152,8 +152,7 @@
+ #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+ 
+ extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
+-		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type,
+-		uint flags);
++		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
+ extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+ extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
+ 		xfs_dqid_t id, uint type);
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 43572f8..7e203f9 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -1003,7 +1003,7 @@
+ 	/*
+ 	 * A simple sanity check in case we got a corrupted dquot..
+ 	 */
+-	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0, 0);
++	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0);
+ 	if (fa) {
+ 		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
+ 				be32_to_cpu(ddqp->d_id), fa);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 00240c9..3b35feb 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2702,7 +2702,7 @@ struct xfs_buf_cancel {
+ 				goto next;
+ 			}
+ 			fa = xfs_dquot_verify(mp, item->ri_buf[i].i_addr,
+-					       -1, 0, 0);
++					       -1, 0);
+ 			if (fa) {
+ 				xfs_alert(mp,
+ 	"dquot corrupt at %pS trying to replay into block 0x%llx",
+@@ -3353,7 +3353,7 @@ struct xfs_buf_cancel {
+ 	 */
+ 	dq_f = item->ri_buf[0].i_addr;
+ 	ASSERT(dq_f);
+-	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0, 0);
++	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0);
+ 	if (fa) {
+ 		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
+ 				dq_f->qlf_id, fa);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 5b848f4..64c22c32 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -867,7 +867,7 @@ struct xfs_qm_isolate {
+ 		 * find uninitialised dquot blks. See comment in
+ 		 * xfs_dquot_verify.
+ 		 */
+-		fa = xfs_dquot_verify(mp, ddq, id + j, type, 0);
++		fa = xfs_dquot_verify(mp, ddq, id + j, type);
+ 		if (fa)
+ 			xfs_dquot_repair(mp, ddq, id + j, type);
+ 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+1.8.3.1
+
