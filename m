@@ -1,72 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f45.google.com ([209.85.160.45]:43489 "EHLO
-        mail-pl0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752128AbeDESzM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 14:55:12 -0400
-Received: by mail-pl0-f45.google.com with SMTP id a39-v6so1129989pla.10
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Apr 2018 11:55:12 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:14884 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751442AbeDDTAY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Apr 2018 15:00:24 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2CC8021BAD
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 19:00:24 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E17B07D64B
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 19:00:23 +0000 (UTC)
+Subject: [PATCH 3/6] xfs: validate UUID and type in xfs_dquot_verify
+From: Eric Sandeen <sandeen@redhat.com>
+References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+Message-ID: <59cde702-21d5-3465-12b0-29dad978186d@redhat.com>
+Date: Wed, 4 Apr 2018 14:00:22 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180403043854.GL1150@dastard>
-References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@dastard>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Thu, 5 Apr 2018 20:54:50 +0200
-Message-ID: <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, darrick.wong@oracle.com, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Apr 3, 2018 at 6:38 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Apr 02, 2018 at 07:01:02PM -0700, syzbot wrote:
->> Hello,
->>
->> syzbot hit the following crash on upstream commit
->> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
->> Merge branch 'ras-core-for-linus' of
->> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
->> syzbot dashboard link:
->> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
->>
->> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
->> syzkaller reproducer:
->> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
->
-> What a mess. A hand built, hopelessly broken filesystem image made
-> up of hex dumps, written into a mmap()d region of memory, then
-> copied into a tmpfs file and mounted with the loop device.
->
-> Engineers that can debug broken filesystems don't grow on trees.  If
-> we are to have any hope of understanding what the hell this test is
-> doing, the bot needs to supply us with a copy of the built
-> filesystem image the test uses. We need to be able to point forensic
-> tools at the image to decode all the structures into human readable
-> format - if we are forced to do that by hand or jump through hoops
-> to create our own filesystem image than I'm certainly not going to
-> waste time looking at these reports...
+Today the xfs_dqblk UUID is only checked in
+xfs_dquot_buf_verify_crc, which is a bit odd in itself; normally
+a CRC is checked on its own, separate from other metadata.
 
-Hi Dave,
+And by not checking the UUID in xfs_dquot_verify, this means
+that future read/write verifiers will continue to choke on
+mismatched UUID errors which are never seen or repaired when
+quotacheck calls xfs_dquot_verify to validate a disk dquot.
 
-Here is the image:
-https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
-(took me about a minute to extract from test by replacing memfd_create
-with open and running the program).
-Then do the following to trigger the bug:
-losetup /dev/loop0 xfs.repro
-mkdir xfs
-mount -t xfs -o nouuid,prjquota,noikeep,quota /dev/loop0 xfs
+Move the uuid check from xfs_dquot_buf_verify_crc to
+xfs_dquot_verify so that this piece of metadata is more consistently
+checked.  If we have a type sent in as well, validate that too -
+it was unused until now.
 
-To answer your more general question: syzbot is not a system to test
-solely file systems, it finds bugs in hundreds of kernel subsystems.
-Generating image for file systems, media files for sound and
-FaceDancer programs that crash host when  FaceDancer device is plugged
-into USB is not feasible. And in the end it's not even clear what
-kernel subsystem is at fault and even if it somehow figures out that
-it's a filesystem, it's unclear that it's exactly an image that
-provokes the bug. syzbot provides C reproducers which is a reasonable
-common ground for bug reports. At this point the bug needs human
-attention. Some bugs are trivial enough that a developer does not even
-need to look at the reproducer. Some bugs are so involved that only an
-expert in a particular subsystem can figure out what happens there.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ fs/xfs/libxfs/xfs_dquot_buf.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index f94e8c2..9f8b2c5 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -66,11 +66,20 @@
+ 	 * This is all fine; things are still consistent, and we haven't lost
+ 	 * any quota information. Just don't complain about bad dquot blks.
+ 	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		struct xfs_dqblk *dqb = (struct xfs_dqblk *)ddq;
++
++		if (!uuid_equal(&dqb->dd_uuid, &mp->m_sb.sb_meta_uuid))
++			return __this_address;
++	}
++
+ 	if (ddq->d_magic != cpu_to_be16(XFS_DQUOT_MAGIC))
+ 		return __this_address;
+ 	if (ddq->d_version != XFS_DQUOT_VERSION)
+ 		return __this_address;
+ 
++	if (type && ddq->d_flags != type)
++		return __this_address;
+ 	if (ddq->d_flags != XFS_DQ_USER &&
+ 	    ddq->d_flags != XFS_DQ_PROJ &&
+ 	    ddq->d_flags != XFS_DQ_GROUP)
+@@ -156,8 +165,6 @@
+ 		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+ 				 XFS_DQUOT_CRC_OFF))
+ 			return false;
+-		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
+-			return false;
+ 	}
+ 	return true;
+ }
+-- 
+1.8.3.1
+
+
