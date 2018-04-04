@@ -1,172 +1,419 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37976 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53468 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753645AbeDCWTz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Apr 2018 18:19:55 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        id S1752318AbeDDWws (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Apr 2018 18:52:48 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AFDF0C057EC3
-        for <linux-xfs@vger.kernel.org>; Tue,  3 Apr 2018 22:19:55 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 86AE867F17
-        for <linux-xfs@vger.kernel.org>; Tue,  3 Apr 2018 22:19:55 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 13871C00F7C9
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 22:52:48 +0000 (UTC)
+Subject: [PATCH 1/2] xfs: scrub - remove unused function parameters
+References: <b2b1aa4b-9ba9-eb4d-c91c-889a25fdd61e@redhat.com>
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: factor out xfs_dquot_verify_crc for use in quotacheck
- rebuild
-Message-ID: <42e7adc1-9fa5-e606-000e-f8a89494c97c@redhat.com>
-Date: Tue, 3 Apr 2018 17:19:54 -0500
+Message-ID: <a8926c11-ea41-e021-9da0-4fb73f6baece@redhat.com>
+Date: Wed, 4 Apr 2018 17:52:41 -0500
 MIME-Version: 1.0
+In-Reply-To: <b2b1aa4b-9ba9-eb4d-c91c-889a25fdd61e@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-
-Today, if a quota block has a bad UUID or CRC, it will never get
-rebuilt or repaired.
-
-xfs_repair does not check or validate quota blocks, leaving that task
-to in-kernel quotacheck.  In-kernel quotacheck does not validate the
-UUID or CRC.  So the problem remains indefinitely.
-
-To remedy this:
-
-* Factor out xfs_dquot_verify_crc from xfs_dquot_buf_verify_crc
-* Call this new function from xfs_qm_reset_dqcounts for V5 fs
-
-If an invalid UUID or CRC is found, this will trigger xfs_dquot_repair
-which rewrites them.
-
-Also, since xfs_dquot_repair() operates on the disk block, just
-send that in directly since we have it handy.
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
 
-djwong: It's not clear to me if I should be using a failaddr_t here,
-it's not used directly at all.  Is it anything you need for scrub or
-should I change it to return a bool?
-
-And for that matter, do we /need/ to have a separate CRC validating routine?
-I've kind of lost the thread on when we need a distinct failaddr (for
-EFSBADCRC  vs. EFSCORRUPTED for example...)
-
-I think that in i.e. log replay we aren't validating crc or uuid either,
-so I'm wondering if I need to explicitly break this out in all those
-places, or if I could just bury the crc/uuid check in xfs_dquot_verify()
-and get it for free ...
-
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 8b7a6c3..267519b 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -39,6 +39,21 @@
- 	return BBTOB(nbblks) / sizeof(xfs_dqblk_t);
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 018aabbd..4ad8877 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -105,8 +105,7 @@
+ /* Cross-reference with the other btrees. */
+ STATIC void
+ xfs_scrub_superblock_xref(
+-	struct xfs_scrub_context	*sc,
+-	struct xfs_buf			*bp)
++	struct xfs_scrub_context	*sc)
+ {
+ 	struct xfs_owner_info		oinfo;
+ 	struct xfs_mount		*mp = sc->mp;
+@@ -420,7 +419,7 @@
+ 			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
+ 		xfs_scrub_block_set_corrupt(sc, bp);
+ 
+-	xfs_scrub_superblock_xref(sc, bp);
++	xfs_scrub_superblock_xref(sc);
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 127575f..b0d6720 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -64,7 +64,7 @@
+ 	if (!sc->buf)
+ 		return -ENOMEM;
+ 
+-	return xfs_scrub_setup_inode_contents(sc, ip, 0);
++	return xfs_scrub_setup_inode_contents(sc, ip);
  }
  
-+xfs_failaddr_t
-+xfs_dquot_verify_crc(
-+	struct xfs_mount	*mp,
-+	struct xfs_dqblk	*d)
-+{
-+
-+	if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
-+			 XFS_DQUOT_CRC_OFF))
-+		return __this_address;
-+	if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
-+		return __this_address;
-+
-+	return NULL;
-+}
-+
- /*
-  * Do some primitive error checking on ondisk dquot data structures.
-  */
-@@ -105,13 +120,10 @@
- int
- xfs_dquot_repair(
- 	struct xfs_mount	*mp,
--	struct xfs_disk_dquot	*ddq,
-+	struct xfs_dqblk	*d,
- 	xfs_dqid_t		id,
- 	uint			type)
- {
--	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
--
--
- 	/*
- 	 * Typically, a repair is only requested by quotacheck.
- 	 */
-@@ -138,6 +150,7 @@
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
-+	xfs_failaddr_t		fa;
- 	int			ndquots;
- 	int			i;
- 
-@@ -155,10 +168,8 @@
- 		ndquots = xfs_calc_dquots_per_chunk(bp->b_length);
- 
- 	for (i = 0; i < ndquots; i++, d++) {
--		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
--				 XFS_DQUOT_CRC_OFF))
--			return false;
--		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
-+		fa = xfs_dquot_verify_crc(mp, d);
-+		if (fa)
- 			return false;
+ /* Extended Attributes */
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 639d14b..c4e85ac 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -75,7 +75,7 @@
  	}
- 	return true;
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index bb1b13a..413ee9b 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -151,11 +151,13 @@
- 		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
- #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
  
-+extern xfs_failaddr_t xfs_dquot_verify_crc(struct xfs_mount *mp,
-+		struct xfs_dqblk *d);
- extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
- 		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type,
- 		uint flags);
- extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
--extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
-+extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_dqblk *d,
- 		xfs_dqid_t id, uint type);
+ 	/* Got the inode, lock it and we're ready to go. */
+-	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++	error = xfs_scrub_trans_alloc(mp, &sc->tp);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+@@ -684,7 +684,7 @@ struct xfs_scrub_bmap_check_rmap_info {
+ 	info.lastoff = 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	for_each_xfs_iext(ifp, &icur, &irec) {
+-		if (xfs_scrub_should_terminate(sc, &error))
++		if (xfs_scrub_should_terminate(&error))
+ 			break;
+ 		if (isnullstartblock(irec.br_startblock))
+ 			continue;
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index 5421816..583a4b7 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -628,7 +628,7 @@ struct check_owner {
+ 			error = bs.scrub_rec(&bs, recp);
+ 			if (error)
+ 				break;
+-			if (xfs_scrub_should_terminate(sc, &error) ||
++			if (xfs_scrub_should_terminate(&error) ||
+ 			    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+ 				break;
  
- #endif	/* __XFS_QUOTA_H__ */
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 5b848f4..19f63d1 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -842,7 +842,7 @@ struct xfs_qm_isolate {
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 8ed91d5..7067c94 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -356,7 +356,6 @@ struct xfs_scrub_rmap_ownedby_info {
+  */
+ int
+ xfs_scrub_count_rmap_ownedby_ag(
+-	struct xfs_scrub_context		*sc,
+ 	struct xfs_btree_cur			*cur,
+ 	struct xfs_owner_info			*oinfo,
+ 	xfs_filblks_t				*blocks)
+@@ -574,7 +573,7 @@ struct xfs_scrub_rmap_ownedby_info {
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
  {
- 	struct xfs_dqblk	*dqb;
- 	int			j;
--	xfs_failaddr_t		fa;
-+	xfs_failaddr_t		fa = NULL;
+-	return xfs_scrub_trans_alloc(sc->sm, sc->mp, &sc->tp);
++	return xfs_scrub_trans_alloc(sc->mp, &sc->tp);
+ }
  
- 	trace_xfs_reset_dqcounts(bp, _RET_IP_);
+ /* Set us up with AG headers and btree cursors. */
+@@ -692,8 +691,7 @@ struct xfs_scrub_rmap_ownedby_info {
+ int
+ xfs_scrub_setup_inode_contents(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_inode		*ip,
+-	unsigned int			resblks)
++	struct xfs_inode		*ip)
+ {
+ 	struct xfs_mount		*mp = sc->mp;
+ 	int				error;
+@@ -705,7 +703,7 @@ struct xfs_scrub_rmap_ownedby_info {
+ 	/* Got the inode, lock it and we're ready to go. */
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	xfs_ilock(sc->ip, sc->ilock_flags);
+-	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++	error = xfs_scrub_trans_alloc(mp, &sc->tp);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index deaf604..8b6b83d 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -27,7 +27,6 @@
+  */
+ static inline bool
+ xfs_scrub_should_terminate(
+-	struct xfs_scrub_context	*sc,
+ 	int				*error)
+ {
+ 	if (fatal_signal_pending(current)) {
+@@ -44,7 +43,6 @@
+  */
+ static inline int
+ xfs_scrub_trans_alloc(
+-	struct xfs_scrub_metadata	*sm,
+ 	struct xfs_mount		*mp,
+ 	struct xfs_trans		**tpp)
+ {
+@@ -145,8 +143,7 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+ 			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
+ 				  void *),
+ 			void *priv);
+-int xfs_scrub_count_rmap_ownedby_ag(struct xfs_scrub_context *sc,
+-				    struct xfs_btree_cur *cur,
++int xfs_scrub_count_rmap_ownedby_ag(struct xfs_btree_cur *cur,
+ 				    struct xfs_owner_info *oinfo,
+ 				    xfs_filblks_t *blocks);
  
-@@ -867,10 +867,12 @@ struct xfs_qm_isolate {
- 		 * find uninitialised dquot blks. See comment in
- 		 * xfs_dquot_verify.
- 		 */
--		fa = xfs_dquot_verify(mp, ddq, id + j, type, 0);
-+		if (xfs_sb_version_hascrc(&mp->m_sb))
-+			fa = xfs_dquot_verify_crc(mp, &dqb[j]);
-+		if (!fa)
-+			fa = xfs_dquot_verify(mp, ddq, id + j, type, 0);
- 		if (fa)
--			xfs_dquot_repair(mp, ddq, id + j, type);
--
-+			xfs_dquot_repair(mp, dqb, id + j, type);
- 		/*
- 		 * Reset type in case we are reusing group quota file for
- 		 * project quotas or vice versa
+@@ -154,7 +151,7 @@ int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
+ 			     struct xfs_inode *ip, bool force_log);
+ int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
+ int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
+-				   struct xfs_inode *ip, unsigned int resblks);
++				   struct xfs_inode *ip);
+ void xfs_scrub_buffer_recheck(struct xfs_scrub_context *sc, struct xfs_buf *bp);
+ 
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index bffdb7d..db90c85 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -561,7 +561,7 @@
+ 			error = scrub_fn(&ds, level, rec);
+ 			if (error)
+ 				break;
+-			if (xfs_scrub_should_terminate(sc, &error) ||
++			if (xfs_scrub_should_terminate(&error) ||
+ 			    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+ 				break;
+ 
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 38f2980..01126aa 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -49,7 +49,7 @@
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
+ {
+-	return xfs_scrub_setup_inode_contents(sc, ip, 0);
++	return xfs_scrub_setup_inode_contents(sc, ip);
+ }
+ 
+ /* Directories */
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 106ca4b..26b67a3 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -157,7 +157,7 @@
+ 	bool				inuse;
+ 	int				error = 0;
+ 
+-	if (xfs_scrub_should_terminate(bs->sc, &error))
++	if (xfs_scrub_should_terminate(&error))
+ 		return error;
+ 
+ 	dip = xfs_buf_offset(bp, clusterino * mp->m_sb.sb_inodesize);
+@@ -377,8 +377,7 @@
+  */
+ STATIC void
+ xfs_scrub_iallocbt_xref_rmap_btreeblks(
+-	struct xfs_scrub_context	*sc,
+-	int				which)
++	struct xfs_scrub_context	*sc)
+ {
+ 	struct xfs_owner_info		oinfo;
+ 	xfs_filblks_t			blocks;
+@@ -402,7 +401,7 @@
+ 	}
+ 
+ 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
+-	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, &oinfo,
++	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, &oinfo,
+ 			&blocks);
+ 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
+ 		return;
+@@ -417,7 +416,6 @@
+ STATIC void
+ xfs_scrub_iallocbt_xref_rmap_inodes(
+ 	struct xfs_scrub_context	*sc,
+-	int				which,
+ 	xfs_filblks_t			inode_blocks)
+ {
+ 	struct xfs_owner_info		oinfo;
+@@ -429,7 +427,7 @@
+ 
+ 	/* Check that we saw as many inode blocks as the rmap knows about. */
+ 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
+-	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, &oinfo,
++	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, &oinfo,
+ 			&blocks);
+ 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
+ 		return;
+@@ -455,7 +453,7 @@
+ 	if (error)
+ 		return error;
+ 
+-	xfs_scrub_iallocbt_xref_rmap_btreeblks(sc, which);
++	xfs_scrub_iallocbt_xref_rmap_btreeblks(sc);
+ 
+ 	/*
+ 	 * If we're scrubbing the inode btree, inode_blocks is the number of
+@@ -465,7 +463,7 @@
+ 	 * to inode chunks with free inodes.
+ 	 */
+ 	if (which == XFS_BTNUM_INO)
+-		xfs_scrub_iallocbt_xref_rmap_inodes(sc, which, inode_blocks);
++		xfs_scrub_iallocbt_xref_rmap_inodes(sc, inode_blocks);
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index df14930..481cbdb 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -68,7 +68,7 @@
+ 		break;
+ 	case -EFSCORRUPTED:
+ 	case -EFSBADCRC:
+-		return xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++		return xfs_scrub_trans_alloc(mp, &sc->tp);
+ 	default:
+ 		return error;
+ 	}
+@@ -76,7 +76,7 @@
+ 	/* Got the inode, lock it and we're ready to go. */
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	xfs_ilock(sc->ip, sc->ilock_flags);
+-	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++	error = xfs_scrub_trans_alloc(mp, &sc->tp);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+@@ -134,7 +134,6 @@
+ STATIC void
+ xfs_scrub_inode_flags(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_dinode		*dip,
+ 	xfs_ino_t			ino,
+ 	uint16_t			mode,
+ 	uint16_t			flags)
+@@ -179,7 +178,6 @@
+ STATIC void
+ xfs_scrub_inode_flags2(
+ 	struct xfs_scrub_context	*sc,
+-	struct xfs_dinode		*dip,
+ 	xfs_ino_t			ino,
+ 	uint16_t			mode,
+ 	uint16_t			flags,
+@@ -372,7 +370,7 @@
+ 			xfs_scrub_ino_set_corrupt(sc, ino);
+ 	}
+ 
+-	xfs_scrub_inode_flags(sc, dip, ino, mode, flags);
++	xfs_scrub_inode_flags(sc, ino, mode, flags);
+ 
+ 	xfs_scrub_inode_extsize(sc, dip, ino, mode, flags);
+ 
+@@ -428,7 +426,7 @@
+ 	if (dip->di_version >= 3) {
+ 		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
+ 			xfs_scrub_ino_set_corrupt(sc, ino);
+-		xfs_scrub_inode_flags2(sc, dip, ino, mode, flags, flags2);
++		xfs_scrub_inode_flags2(sc, ino, mode, flags, flags2);
+ 		xfs_scrub_inode_cowextsize(sc, dip, ino, mode, flags,
+ 				flags2);
+ 	}
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index 1fb88c1..03110eb 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -45,7 +45,7 @@
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
+ {
+-	return xfs_scrub_setup_inode_contents(sc, ip, 0);
++	return xfs_scrub_setup_inode_contents(sc, ip);
+ }
+ 
+ /* Parent pointers */
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 6ba465e..eda174f 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -224,7 +224,7 @@
+ 	}
+ 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+ 	while (1) {
+-		if (xfs_scrub_should_terminate(sc, &error))
++		if (xfs_scrub_should_terminate(&error))
+ 			break;
+ 
+ 		off = irec.br_startoff + irec.br_blockcount;
+@@ -265,7 +265,7 @@
+ 
+ 	/* Check all the quota items. */
+ 	while (id < ((xfs_dqid_t)-1ULL)) {
+-		if (xfs_scrub_should_terminate(sc, &error))
++		if (xfs_scrub_should_terminate(&error))
+ 			break;
+ 
+ 		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index 400f156..b8d12bb 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -124,7 +124,7 @@ struct xfs_scrub_refcnt_check {
+ 	xfs_agblock_t			rc_last;
+ 	int				error = 0;
+ 
+-	if (xfs_scrub_should_terminate(refchk->sc, &error))
++	if (xfs_scrub_should_terminate(&error))
+ 		return error;
+ 
+ 	rm_last = rec->rm_startblock + rec->rm_blockcount - 1;
+@@ -411,7 +411,7 @@ struct xfs_scrub_refcnt_check {
+ 	error = xfs_btree_count_blocks(sc->sa.refc_cur, &refcbt_blocks);
+ 	if (!xfs_scrub_btree_process_error(sc, sc->sa.refc_cur, 0, &error))
+ 		return;
+-	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
++	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, oinfo,
+ 			&blocks);
+ 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
+ 		return;
+@@ -420,7 +420,7 @@ struct xfs_scrub_refcnt_check {
+ 
+ 	/* Check that we saw as many cow blocks as the rmap knows about. */
+ 	xfs_rmap_ag_owner(oinfo, XFS_RMAP_OWN_COW);
+-	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
++	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, oinfo,
+ 			&blocks);
+ 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
+ 		return;
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 26c7596..46e7bf1 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -138,7 +138,7 @@
+ {
+ 	int				error = 0;
+ 
+-	if (xfs_scrub_should_terminate(sc, &error))
++	if (xfs_scrub_should_terminate(&error))
+ 		return error;
+ 
+ 	return 0;
+diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
+index 3aa3d60..7af7981 100644
+--- a/fs/xfs/scrub/symlink.c
++++ b/fs/xfs/scrub/symlink.c
+@@ -48,7 +48,7 @@
+ 	if (!sc->buf)
+ 		return -ENOMEM;
+ 
+-	return xfs_scrub_setup_inode_contents(sc, ip, 0);
++	return xfs_scrub_setup_inode_contents(sc, ip);
+ }
+ 
+ /* Symbolic links. */
 
