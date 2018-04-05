@@ -1,53 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43944 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755435AbeDBTzc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Apr 2018 15:55:32 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w32JnWmr006304
-        for <linux-xfs@vger.kernel.org>; Mon, 2 Apr 2018 19:55:31 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2h3u10g0t1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Apr 2018 19:55:31 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w32JtU2H005466
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 2 Apr 2018 19:55:30 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w32JtUSp008244
-        for <linux-xfs@vger.kernel.org>; Mon, 2 Apr 2018 19:55:30 GMT
-Subject: [PATCH 0/2] xfs: online scrub fixes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 02 Apr 2018 12:55:29 -0700
-Message-ID: <152269892987.16253.3900560313483881560.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:32835 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752662AbeDEWtQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 18:49:16 -0400
+Date: Fri, 6 Apr 2018 08:49:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/6] xfs: factor out quota time limit initialization
+Message-ID: <20180405224913.GH23861@dastard>
+References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+ <2d87ba58-f713-6326-8683-29185155ee58@sandeen.net>
+ <20180405071533.GE17256@infradead.org>
+ <0ca4f6ed-00db-ba87-c0ea-43c6f15068fa@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0ca4f6ed-00db-ba87-c0ea-43c6f15068fa@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+On Thu, Apr 05, 2018 at 07:36:58AM -0500, Eric Sandeen wrote:
+> 
+> 
+> On 4/5/18 2:15 AM, Christoph Hellwig wrote:
+> > On Wed, Apr 04, 2018 at 02:10:20PM -0500, Eric Sandeen wrote:
+> >> Factor out the time limit initialization from
+> >> xfs_qm_init_quotainfo so that we can delay it until
+> >> after quotacheck - it requires reading the default disk
+> >> quotas, which may need repair.
+> >>
+> >> No functional changes in this patch.
+> > 
+> > You have 75 characters per line for your changelog, use them!
+> 
+> Sorry, bad habit.  I never remember exactly how many and sometimes I just
+> keep shortening...
 
-Here's a couple more patches to fix some inefficiencies in the scrub
-code.  The first patch skips cross-referencing once a cross-referencing
-problem has been found; and the second patch moves the "walk all AGFL
-blocks" function to libxfs so that (later) the repair code will be able
-to use it.
+If you use vim, set this up so you get automatic setting of the text
+width (with highlighting) depending on the editor context you are
+running:
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.16.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
+" set default text width and shortcut to set custom widths
+set     textwidth=80
+map	#tw :set textwidth=<C-R>=col(".")<C-M>
 
-This is an extraordinary way to eat your data.  Enjoy!
-Comments and questions are, as always, welcome.
+" set the textwidth to 68 characters for commit messages
+au	BufNewFile,BufRead guilt.msg.*,.gitsendemail.*,git.*,*/.git/* set tw=68
 
---D
+" set the textwidth to 68 characters for replies (email&usenet)
+au	BufNewFile,BufRead .letter,mutt*,nn.*,snd.* set tw=68
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+" highlight textwidth
+set	cc=+1
+
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
