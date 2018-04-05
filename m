@@ -1,106 +1,221 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36816 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750726AbeDEQvs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 12:51:48 -0400
-Date: Thu, 5 Apr 2018 09:51:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: reset xfs_inode struct on reclaim in debug mode
-Message-ID: <20180405165142.GE7500@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:51814 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbeDERSn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 13:18:43 -0400
+Date: Thu, 5 Apr 2018 10:18:42 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: replace filestream item xfs_inode reference
+ with xfs_mount
+Message-ID: <20180405171842.GA4849@infradead.org>
 References: <20180405121147.60897-1-bfoster@redhat.com>
+ <20180405121147.60897-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180405121147.60897-1-bfoster@redhat.com>
+In-Reply-To: <20180405121147.60897-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 05, 2018 at 08:11:46AM -0400, Brian Foster wrote:
-> A test case to reproduce a filestream/MRU use-after-free of a
-> reclaimed inode requires bits (e.g., ip->i_mount) of the inode to be
-> reset/reused once the inode memory is freed. This normally only
-> occurs when a new page is cycled into the zone, however.
-> 
-> Perform the "one-time" inode init immediately prior to freeing
-> inodes when in DEBUG mode. This will zero the inode, init the low
-> level structures (locks, lists, etc.) and otherwise ensure each
-> inode is in a purely uninitialized state while sitting in the zone
-> as free memory.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> I'll post a test that depends on this once this is worked out... one
-> concern this raised is if we consider any future bugs in the inode
-> initialization code (suppose we initialize some field once that should
-> be initialized on every allocation, for example), this code has the
-> potential to suppress such problems in debug mode. So an alternative to
-> this approach is to perhaps tie this to an errortag and let the
-> associated xfstests test enable it appropriately. Thoughts or
-> preferences?
+On Thu, Apr 05, 2018 at 08:11:47AM -0400, Brian Foster wrote:
+> The obvious solution is to grab an inode reference for
+> xfs_fstrm_item. The filestream mechanism only actually uses the
+> inode pointer as a means to access the xfs_mount, however. Rather
+> than add unnecessary complexity, simplify the implementation to
+> store an xfs_mount pointer instead of the inode. This also requires
+> updates to the tracepoint class to provide the associated data via
+> parameters rather than the inode and a minor hack to peek at the MRU
+> key to establish the inode number at free time.
 
-How about memset()ing the entire inode with a known poison value in
-xfs_inode_free_callback and calling _init_once in xfs_inode_alloc
-instead?  That way it'll be obvious that someone touched a poisoned
-(free) inode.
+How about not replacing it all and just providing the context from
+the mru cache?  Something like the untested patch below:
 
---D
-
-> Brian
-> 
->  fs/xfs/xfs_icache.c | 5 ++++-
->  fs/xfs/xfs_super.c  | 2 +-
->  fs/xfs/xfs_super.h  | 1 +
->  3 files changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 9a18f69f6e96..86dc4c8a4e1d 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -111,7 +111,10 @@ xfs_inode_free_callback(
->  		xfs_inode_item_destroy(ip);
->  		ip->i_itemp = NULL;
->  	}
-> -
-> +#ifdef DEBUG
-> +	/* facilitate catching use-after-free problems */
-> +	xfs_fs_inode_init_once(ip);
-> +#endif
->  	kmem_zone_free(xfs_inode_zone, ip);
->  }
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 612c1d5348b3..29b1be5dfebf 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1030,7 +1030,7 @@ xfs_fs_dirty_inode(
->   * fields in the xfs inode that left in the initialise state
->   * when freeing the inode.
->   */
-> -STATIC void
-> +void
->  xfs_fs_inode_init_once(
->  	void			*inode)
->  {
-> diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-> index 8cee8e8050e3..aae8a778f378 100644
-> --- a/fs/xfs/xfs_super.h
-> +++ b/fs/xfs/xfs_super.h
-> @@ -70,6 +70,7 @@ struct block_device;
->  
->  extern void xfs_quiesce_attr(struct xfs_mount *mp);
->  extern void xfs_flush_inodes(struct xfs_mount *mp);
-> +extern void xfs_fs_inode_init_once(void *);
->  extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
->  extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
->  					   xfs_agnumber_t agcount);
-> -- 
-> 2.13.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 043ca3808ea2..5131a6e25fc9 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -34,7 +34,6 @@
+ 
+ struct xfs_fstrm_item {
+ 	struct xfs_mru_cache_elem	mru;
+-	struct xfs_inode		*ip;
+ 	xfs_agnumber_t			ag; /* AG in use for this directory */
+ };
+ 
+@@ -122,14 +121,15 @@ xfs_filestream_put_ag(
+ 
+ static void
+ xfs_fstrm_free_func(
++	void			*data,
+ 	struct xfs_mru_cache_elem *mru)
+ {
++	struct xfs_mount	*mp = data;
+ 	struct xfs_fstrm_item	*item =
+ 		container_of(mru, struct xfs_fstrm_item, mru);
+ 
+-	xfs_filestream_put_ag(item->ip->i_mount, item->ag);
+-
+-	trace_xfs_filestream_free(item->ip, item->ag);
++	xfs_filestream_put_ag(mp, item->ag);
++	trace_xfs_filestream_free(mp, mru->key, item->ag);
+ 
+ 	kmem_free(item);
+ }
+@@ -165,7 +165,7 @@ xfs_filestream_pick_ag(
+ 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
+ 
+ 	for (nscan = 0; 1; nscan++) {
+-		trace_xfs_filestream_scan(ip, ag);
++		trace_xfs_filestream_scan(mp, ip->i_ino, ag);
+ 
+ 		pag = xfs_perag_get(mp, ag);
+ 
+@@ -265,7 +265,6 @@ xfs_filestream_pick_ag(
+ 		goto out_put_ag;
+ 
+ 	item->ag = *agp;
+-	item->ip = ip;
+ 
+ 	err = xfs_mru_cache_insert(mp->m_filestream, ip->i_ino, &item->mru);
+ 	if (err) {
+@@ -333,7 +332,7 @@ xfs_filestream_lookup_ag(
+ 		ag = container_of(mru, struct xfs_fstrm_item, mru)->ag;
+ 		xfs_mru_cache_done(mp->m_filestream);
+ 
+-		trace_xfs_filestream_lookup(ip, ag);
++		trace_xfs_filestream_lookup(mp, ip->i_ino, ag);
+ 		goto out;
+ 	}
+ 
+@@ -399,7 +398,7 @@ xfs_filestream_new_ag(
+ 	 * Only free the item here so we skip over the old AG earlier.
+ 	 */
+ 	if (mru)
+-		xfs_fstrm_free_func(mru);
++		xfs_fstrm_free_func(mp, mru);
+ 
+ 	IRELE(pip);
+ exit:
+@@ -426,8 +425,8 @@ xfs_filestream_mount(
+ 	 * timer tunable to within about 10 percent.  This requires at least 10
+ 	 * groups.
+ 	 */
+-	return xfs_mru_cache_create(&mp->m_filestream, xfs_fstrm_centisecs * 10,
+-				    10, xfs_fstrm_free_func);
++	return xfs_mru_cache_create(&mp->m_filestream, mp,
++			xfs_fstrm_centisecs * 10, 10, xfs_fstrm_free_func);
+ }
+ 
+ void
+diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+index f8a674d7f092..70eea7ae2876 100644
+--- a/fs/xfs/xfs_mru_cache.c
++++ b/fs/xfs/xfs_mru_cache.c
+@@ -112,6 +112,7 @@ struct xfs_mru_cache {
+ 	xfs_mru_cache_free_func_t free_func; /* Function pointer for freeing. */
+ 	struct delayed_work	work;      /* Workqueue data for reaping.   */
+ 	unsigned int		queued;	   /* work has been queued */
++	void			*data;
+ };
+ 
+ static struct workqueue_struct	*xfs_mru_reap_wq;
+@@ -259,7 +260,7 @@ _xfs_mru_cache_clear_reap_list(
+ 
+ 	list_for_each_entry_safe(elem, next, &tmp, list_node) {
+ 		list_del_init(&elem->list_node);
+-		mru->free_func(elem);
++		mru->free_func(mru->data, elem);
+ 	}
+ 
+ 	spin_lock(&mru->lock);
+@@ -326,6 +327,7 @@ xfs_mru_cache_uninit(void)
+ int
+ xfs_mru_cache_create(
+ 	struct xfs_mru_cache	**mrup,
++	void			*data,
+ 	unsigned int		lifetime_ms,
+ 	unsigned int		grp_count,
+ 	xfs_mru_cache_free_func_t free_func)
+@@ -369,7 +371,7 @@ xfs_mru_cache_create(
+ 
+ 	mru->grp_time  = grp_time;
+ 	mru->free_func = free_func;
+-
++	mru->data = data;
+ 	*mrup = mru;
+ 
+ exit:
+@@ -492,7 +494,7 @@ xfs_mru_cache_delete(
+ 
+ 	elem = xfs_mru_cache_remove(mru, key);
+ 	if (elem)
+-		mru->free_func(elem);
++		mru->free_func(mru->data, elem);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_mru_cache.h b/fs/xfs/xfs_mru_cache.h
+index fb5245ba5ff7..b3f3fbdfcc47 100644
+--- a/fs/xfs/xfs_mru_cache.h
++++ b/fs/xfs/xfs_mru_cache.h
+@@ -26,13 +26,13 @@ struct xfs_mru_cache_elem {
+ };
+ 
+ /* Function pointer type for callback to free a client's data pointer. */
+-typedef void (*xfs_mru_cache_free_func_t)(struct xfs_mru_cache_elem *elem);
++typedef void (*xfs_mru_cache_free_func_t)(void *, struct xfs_mru_cache_elem *);
+ 
+ int xfs_mru_cache_init(void);
+ void xfs_mru_cache_uninit(void);
+-int xfs_mru_cache_create(struct xfs_mru_cache **mrup, unsigned int lifetime_ms,
+-			     unsigned int grp_count,
+-			     xfs_mru_cache_free_func_t free_func);
++int xfs_mru_cache_create(struct xfs_mru_cache **mrup, void *data,
++		unsigned int lifetime_ms, unsigned int grp_count,
++		xfs_mru_cache_free_func_t free_func);
+ void xfs_mru_cache_destroy(struct xfs_mru_cache *mru);
+ int xfs_mru_cache_insert(struct xfs_mru_cache *mru, unsigned long key,
+ 		struct xfs_mru_cache_elem *elem);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 945de08af7ba..19f4e30265c2 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -506,8 +506,8 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
+ 
+ DECLARE_EVENT_CLASS(xfs_filestream_class,
+-	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno),
+-	TP_ARGS(ip, agno),
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno),
++	TP_ARGS(mp, ino, agno),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+@@ -515,10 +515,10 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ 		__field(int, streams)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+-		__entry->ino = ip->i_ino;
++		__entry->dev = mp->m_super->s_dev;
++		__entry->ino = ino;
+ 		__entry->agno = agno;
+-		__entry->streams = xfs_filestream_peek_ag(ip->i_mount, agno);
++		__entry->streams = xfs_filestream_peek_ag(mp, agno);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx agno %u streams %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -528,8 +528,8 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ )
+ #define DEFINE_FILESTREAM_EVENT(name) \
+ DEFINE_EVENT(xfs_filestream_class, name, \
+-	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno), \
+-	TP_ARGS(ip, agno))
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno), \
++	TP_ARGS(mp, ino, agno))
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_free);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_lookup);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_scan);
