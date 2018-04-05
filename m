@@ -1,239 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51444 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751507AbeDIJ5K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Apr 2018 05:57:10 -0400
-Received: from [188.21.169.252] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1f5TXy-0002ge-2E
-        for linux-xfs@vger.kernel.org; Mon, 09 Apr 2018 09:57:10 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: remove filestream item xfs_inode reference
-Date: Mon,  9 Apr 2018 11:57:07 +0200
-Message-Id: <20180409095707.13887-1-hch@lst.de>
+Received: from mout.gmx.net ([212.227.17.20]:54009 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752668AbeDEBkb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Apr 2018 21:40:31 -0400
+Content-Type: text/plain;
+        charset=gb2312
+Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
+Subject: Re: [PATCH] xfs: use hardlimit as sub-fs size if both hard/soft
+ limits are set
+From: "cgxu519@gmx.com" <cgxu519@gmx.com>
+In-Reply-To: <20180326192259.GU4818@magnolia>
+Date: Thu, 5 Apr 2018 09:40:03 +0800
+Content-Transfer-Encoding: 8BIT
+Message-Id: <66BA750A-5A49-4B81-BC99-40DC89216856@gmx.com>
+References: <1521954996-203628-1-git-send-email-cgxu519@gmx.com>
+ <20180326192259.GU4818@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "cgxu519@gmx.com" <cgxu519@gmx.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>
 
-The filestreams allocator stores an xfs_fstrm_item structure in the MRU to
-cache inode number to agno mappings for a particular length of time.  Each
-xfs_fstrm_item contains the internal MRU structure, an inode pointer and
-agno value.
+Hi Dave, Christoph
 
-The inode pointer stored in the xfs_fstrm_item is not referenced, however,
-which means the inode itself can be removed and reclaimed before the MRU
-item is freed. If this occurs, xfs_fstrm_free_func() can access freed or
-unrelated memory through xfs_fstrm_item->ip and crash.
+Any objection for this?
 
-The obvious solution is to grab an inode reference for xfs_fstrm_item.
-The filestream mechanism only actually uses the inode pointer as a means
-to access the xfs_mount, however.  Rather than add unnecessary
-complexity, simplify the implementation to store an xfs_mount pointer in
-struct xfs_mru_cache, and pass it to the free callback.  This also
-requires updates to the tracepoint class to provide the associated data
-via parameters rather than the inode and a minor hack to peek at the MRU
-key to establish the inode number at free time.
+Thanks,
+Chengguang.
 
-Based on debugging work and an earlier patch from Brian Foster, who
-also wrote most of this changelog.
-
-Reported-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_filestream.c | 19 +++++++++----------
- fs/xfs/xfs_mru_cache.c  |  8 +++++---
- fs/xfs/xfs_mru_cache.h  |  8 ++++----
- fs/xfs/xfs_trace.h      | 14 +++++++-------
- 4 files changed, 25 insertions(+), 24 deletions(-)
-
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 043ca3808ea2..5131a6e25fc9 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -34,7 +34,6 @@
- 
- struct xfs_fstrm_item {
- 	struct xfs_mru_cache_elem	mru;
--	struct xfs_inode		*ip;
- 	xfs_agnumber_t			ag; /* AG in use for this directory */
- };
- 
-@@ -122,14 +121,15 @@ xfs_filestream_put_ag(
- 
- static void
- xfs_fstrm_free_func(
-+	void			*data,
- 	struct xfs_mru_cache_elem *mru)
- {
-+	struct xfs_mount	*mp = data;
- 	struct xfs_fstrm_item	*item =
- 		container_of(mru, struct xfs_fstrm_item, mru);
- 
--	xfs_filestream_put_ag(item->ip->i_mount, item->ag);
--
--	trace_xfs_filestream_free(item->ip, item->ag);
-+	xfs_filestream_put_ag(mp, item->ag);
-+	trace_xfs_filestream_free(mp, mru->key, item->ag);
- 
- 	kmem_free(item);
- }
-@@ -165,7 +165,7 @@ xfs_filestream_pick_ag(
- 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
- 
- 	for (nscan = 0; 1; nscan++) {
--		trace_xfs_filestream_scan(ip, ag);
-+		trace_xfs_filestream_scan(mp, ip->i_ino, ag);
- 
- 		pag = xfs_perag_get(mp, ag);
- 
-@@ -265,7 +265,6 @@ xfs_filestream_pick_ag(
- 		goto out_put_ag;
- 
- 	item->ag = *agp;
--	item->ip = ip;
- 
- 	err = xfs_mru_cache_insert(mp->m_filestream, ip->i_ino, &item->mru);
- 	if (err) {
-@@ -333,7 +332,7 @@ xfs_filestream_lookup_ag(
- 		ag = container_of(mru, struct xfs_fstrm_item, mru)->ag;
- 		xfs_mru_cache_done(mp->m_filestream);
- 
--		trace_xfs_filestream_lookup(ip, ag);
-+		trace_xfs_filestream_lookup(mp, ip->i_ino, ag);
- 		goto out;
- 	}
- 
-@@ -399,7 +398,7 @@ xfs_filestream_new_ag(
- 	 * Only free the item here so we skip over the old AG earlier.
- 	 */
- 	if (mru)
--		xfs_fstrm_free_func(mru);
-+		xfs_fstrm_free_func(mp, mru);
- 
- 	IRELE(pip);
- exit:
-@@ -426,8 +425,8 @@ xfs_filestream_mount(
- 	 * timer tunable to within about 10 percent.  This requires at least 10
- 	 * groups.
- 	 */
--	return xfs_mru_cache_create(&mp->m_filestream, xfs_fstrm_centisecs * 10,
--				    10, xfs_fstrm_free_func);
-+	return xfs_mru_cache_create(&mp->m_filestream, mp,
-+			xfs_fstrm_centisecs * 10, 10, xfs_fstrm_free_func);
- }
- 
- void
-diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-index f8a674d7f092..70eea7ae2876 100644
---- a/fs/xfs/xfs_mru_cache.c
-+++ b/fs/xfs/xfs_mru_cache.c
-@@ -112,6 +112,7 @@ struct xfs_mru_cache {
- 	xfs_mru_cache_free_func_t free_func; /* Function pointer for freeing. */
- 	struct delayed_work	work;      /* Workqueue data for reaping.   */
- 	unsigned int		queued;	   /* work has been queued */
-+	void			*data;
- };
- 
- static struct workqueue_struct	*xfs_mru_reap_wq;
-@@ -259,7 +260,7 @@ _xfs_mru_cache_clear_reap_list(
- 
- 	list_for_each_entry_safe(elem, next, &tmp, list_node) {
- 		list_del_init(&elem->list_node);
--		mru->free_func(elem);
-+		mru->free_func(mru->data, elem);
- 	}
- 
- 	spin_lock(&mru->lock);
-@@ -326,6 +327,7 @@ xfs_mru_cache_uninit(void)
- int
- xfs_mru_cache_create(
- 	struct xfs_mru_cache	**mrup,
-+	void			*data,
- 	unsigned int		lifetime_ms,
- 	unsigned int		grp_count,
- 	xfs_mru_cache_free_func_t free_func)
-@@ -369,7 +371,7 @@ xfs_mru_cache_create(
- 
- 	mru->grp_time  = grp_time;
- 	mru->free_func = free_func;
--
-+	mru->data = data;
- 	*mrup = mru;
- 
- exit:
-@@ -492,7 +494,7 @@ xfs_mru_cache_delete(
- 
- 	elem = xfs_mru_cache_remove(mru, key);
- 	if (elem)
--		mru->free_func(elem);
-+		mru->free_func(mru->data, elem);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_mru_cache.h b/fs/xfs/xfs_mru_cache.h
-index fb5245ba5ff7..b3f3fbdfcc47 100644
---- a/fs/xfs/xfs_mru_cache.h
-+++ b/fs/xfs/xfs_mru_cache.h
-@@ -26,13 +26,13 @@ struct xfs_mru_cache_elem {
- };
- 
- /* Function pointer type for callback to free a client's data pointer. */
--typedef void (*xfs_mru_cache_free_func_t)(struct xfs_mru_cache_elem *elem);
-+typedef void (*xfs_mru_cache_free_func_t)(void *, struct xfs_mru_cache_elem *);
- 
- int xfs_mru_cache_init(void);
- void xfs_mru_cache_uninit(void);
--int xfs_mru_cache_create(struct xfs_mru_cache **mrup, unsigned int lifetime_ms,
--			     unsigned int grp_count,
--			     xfs_mru_cache_free_func_t free_func);
-+int xfs_mru_cache_create(struct xfs_mru_cache **mrup, void *data,
-+		unsigned int lifetime_ms, unsigned int grp_count,
-+		xfs_mru_cache_free_func_t free_func);
- void xfs_mru_cache_destroy(struct xfs_mru_cache *mru);
- int xfs_mru_cache_insert(struct xfs_mru_cache *mru, unsigned long key,
- 		struct xfs_mru_cache_elem *elem);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index a982c0b623d0..8955254b900e 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -506,8 +506,8 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
- DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
- 
- DECLARE_EVENT_CLASS(xfs_filestream_class,
--	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno),
--	TP_ARGS(ip, agno),
-+	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno),
-+	TP_ARGS(mp, ino, agno),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
-@@ -515,10 +515,10 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
- 		__field(int, streams)
- 	),
- 	TP_fast_assign(
--		__entry->dev = VFS_I(ip)->i_sb->s_dev;
--		__entry->ino = ip->i_ino;
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->ino = ino;
- 		__entry->agno = agno;
--		__entry->streams = xfs_filestream_peek_ag(ip->i_mount, agno);
-+		__entry->streams = xfs_filestream_peek_ag(mp, agno);
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx agno %u streams %d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-@@ -528,8 +528,8 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
- )
- #define DEFINE_FILESTREAM_EVENT(name) \
- DEFINE_EVENT(xfs_filestream_class, name, \
--	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno), \
--	TP_ARGS(ip, agno))
-+	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno), \
-+	TP_ARGS(mp, ino, agno))
- DEFINE_FILESTREAM_EVENT(xfs_filestream_free);
- DEFINE_FILESTREAM_EVENT(xfs_filestream_lookup);
- DEFINE_FILESTREAM_EVENT(xfs_filestream_scan);
--- 
-2.16.3
+> 在 2018年3月27日，上午3:22，Darrick J. Wong <darrick.wong@oracle.com> 写道：
+> 
+> On Sun, Mar 25, 2018 at 01:16:36PM +0800, Chengguang Xu wrote:
+>> In current implementation, we size the fs(sub-fs via project quota) at
+>> the soft limit and simply call it 100% used if the limit is exceeded.
+>> It is reasonable when only a soft limit is set, but we should use the
+>> hard limit if both hard/soft limits are set, so that quota-df reflects
+>> the usage information more accurately.
+> 
+> This is the followup patch to "xfs: adjust size/used/avail information
+> for quota-df", correct?
+> 
+> I also wonder, statvfs is a weird interface since there's no way to send
+> back usage information, just blocks/free/avail.  Isn't it more
+> appropriate to use xfs_quota to find out the usage, hard limit, and soft
+> limit of a directory?
+> 
+>> Signed-off-by: Chengguang Xu <cgxu519@gmx.com>
+>> ---
+>> fs/xfs/xfs_qm_bhv.c | 12 ++++++------
+>> 1 file changed, 6 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+>> index 2be6d27..43b0fe8 100644
+>> --- a/fs/xfs/xfs_qm_bhv.c
+>> +++ b/fs/xfs/xfs_qm_bhv.c
+>> @@ -35,9 +35,9 @@
+>> {
+>> 	uint64_t		limit;
+>> 
+>> -	limit = dqp->q_core.d_blk_softlimit ?
+>> -		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
+>> -		be64_to_cpu(dqp->q_core.d_blk_hardlimit);
+>> +	limit = dqp->q_core.d_blk_hardlimit ?
+>> +		be64_to_cpu(dqp->q_core.d_blk_hardlimit) :
+>> +		be64_to_cpu(dqp->q_core.d_blk_softlimit);
+> 
+> Ok, so now we report hard limit for f_blocks over the soft limit.  So if
+> this is the state of the filesystem:
+> 
+> # xfs_quota -xc 'report -ahp'
+> Project quota on /opt (/dev/sdf)
+>                        Blocks              
+> Project ID   Used   Soft   Hard Warn/Grace   
+> ---------- --------------------------------- 
+> #0              0      0      0  00 [------]
+> vms            3M     2M     3M  00 [7 days]
+> 
+> Then the df output goes from:
+> 
+> # df /opt/b
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sdf        2.0M  2.0M     0 100% /opt
+> 
+> to this:
+> 
+> # df /opt/b
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sdf        3.0M  3.0M     0 100% /opt
+> 
+> That makes to me, but as it /does/ change the behavior of an existing
+> user-visible interface, I would like to know more about the current
+> behavior.  Dave/Christoph, do you recall why df reports the project
+> quota soft limit?
+> 
+> ----
+> 
+> Just for fun let's try the same on ext4...
+> 
+> $ dd if=/dev/zero >> /opt/b/a
+> ^C4129977+0 records in
+> 4129977+0 records out
+> 2114548224 bytes (2.1 GB, 2.0 GiB) copied, 23.9179 s, 88.4 MB/s
+> 
+> $ sudo xfs_quota -fxc 'report -ahp' /opt
+> Project quota on /opt (/dev/sdf)
+>                        Blocks              
+> Project ID   Used   Soft   Hard Warn/Grace   
+> ---------- --------------------------------- 
+> #0            20K      0      0  00 [------]
+> vms          2.0G     2M     3M  00 [-none-]
+> 
+> <facepalm>
+> 
+> Only 1000x over soft quota...
+> 
+> $ df /opt/b
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sdf         13G  2.8G  8.9G  24% /opt
+> 
+> I guess we're going to need a couple more tests, then?  One to check
+> that we enforce project quotas, and another to check what we're
+> reporting via df?
+> 
+> --D
+> 
+>> 	if (limit && statp->f_blocks > limit) {
+>> 		statp->f_blocks = limit;
+>> 		statp->f_bfree = statp->f_bavail =
+>> @@ -45,9 +45,9 @@
+>> 			 (statp->f_blocks - dqp->q_res_bcount) : 0;
+>> 	}
+>> 
+>> -	limit = dqp->q_core.d_ino_softlimit ?
+>> -		be64_to_cpu(dqp->q_core.d_ino_softlimit) :
+>> -		be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+>> +	limit = dqp->q_core.d_ino_hardlimit ?
+>> +		be64_to_cpu(dqp->q_core.d_ino_hardlimit) :
+>> +		be64_to_cpu(dqp->q_core.d_ino_softlimit);
+>> 	if (limit && statp->f_files > limit) {
+>> 		statp->f_files = limit;
+>> 		statp->f_ffree =
+>> -- 
+>> 1.8.3.1
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
