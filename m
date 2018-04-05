@@ -1,101 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50836 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751213AbeDEENE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Apr 2018 00:13:04 -0400
-Subject: Re: [PATCH 2/6] xfs: pass xfs_dqblk to
- xfs_dquot_verify/xfs_dquot_repair
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
- <c92cfdb8-88c2-0f5b-7383-e5208fef6f5e@redhat.com>
- <20180405035241.GB7500@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5c02fc77-28b6-4665-82f3-699fda82688c@sandeen.net>
-Date: Wed, 4 Apr 2018 23:13:03 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:41841 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751365AbeDEViq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 17:38:46 -0400
+Date: Fri, 6 Apr 2018 07:38:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: WARNING: bad unlock balance in xfs_iunlock
+Message-ID: <20180405213844.GE23861@dastard>
+References: <f403043cbe8414177d0568e81405@google.com>
+ <20180403043854.GL1150@dastard>
+ <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20180405035241.GB7500@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, darrick.wong@oracle.com, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-On 4/4/18 10:52 PM, Darrick J. Wong wrote:
-> On Wed, Apr 04, 2018 at 01:54:26PM -0500, Eric Sandeen wrote:
->> In order to validate the UUID in xfs_dquot_verify, we need
->> the full xfs_qblk, not just the xfs_disk_dquot_t (which is
+On Thu, Apr 05, 2018 at 08:54:50PM +0200, Dmitry Vyukov wrote:
+> On Tue, Apr 3, 2018 at 6:38 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Apr 02, 2018 at 07:01:02PM -0700, syzbot wrote:
+> >> Hello,
+> >>
+> >> syzbot hit the following crash on upstream commit
+> >> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
+> >> Merge branch 'ras-core-for-linus' of
+> >> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+> >> syzbot dashboard link:
+> >> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
+> >>
+> >> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
+> >> syzkaller reproducer:
+> >> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
+> >
+> > What a mess. A hand built, hopelessly broken filesystem image made
+> > up of hex dumps, written into a mmap()d region of memory, then
+> > copied into a tmpfs file and mounted with the loop device.
+> >
+> > Engineers that can debug broken filesystems don't grow on trees.  If
+> > we are to have any hope of understanding what the hell this test is
+> > doing, the bot needs to supply us with a copy of the built
+> > filesystem image the test uses. We need to be able to point forensic
+> > tools at the image to decode all the structures into human readable
+> > format - if we are forced to do that by hand or jump through hoops
+> > to create our own filesystem image than I'm certainly not going to
+> > waste time looking at these reports...
 > 
->           ^^^^^^^^^ xfs_dqblk, right?
-
-yup
-
-...
-
->> @@ -192,14 +191,10 @@
+> Hi Dave,
 > 
-> Any way you can get your diff generator to add -p to spit out the
-> alleged function this chunk is supposed to land in?  It makes reviewing
-> patches somewhat easier for me. :)
+> Here is the image:
+> https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
+> (took me about a minute to extract from test by replacing memfd_create
+> with open and running the program).
 
-No doubt ... I don't know why it doesn't do so, sorry.  :/  Will try
-to figure that out.  Sorry about that.
+Says the expert who knows exactly how it's all put together. It took
+me a couple of hours just to understand WTF the syzbot reproducer
+was actually doing....
 
->>  	 * buffer so corruptions could point to the wrong dquot in this case.
->>  	 */
->>  	for (i = 0; i < ndquots; i++) {
->> -		struct xfs_disk_dquot	*ddq;
->> -
->> -		ddq = &d[i].dd_diskdq;
->> -
->>  		if (i == 0)
->> -			id = be32_to_cpu(ddq->d_id);
->> +			id = be32_to_cpu(d[i].dd_diskdq.d_id);
->>  
->> -		fa = xfs_dquot_verify(mp, ddq, id + i, 0);
->> +		fa = xfs_dquot_verify(mp, &d[i], id + i, 0);
->>  		if (fa)
->>  			return fa;
->>  	}
-
-...
-
->> @@ -1013,9 +1018,6 @@
->>  		return -EIO;
->>  	}
->>  
->> -	/* This is the only portion of data that needs to persist */
->> -	memcpy(ddqp, &dqp->q_core, sizeof(xfs_disk_dquot_t));
+> Then do the following to trigger the bug:
+> losetup /dev/loop0 xfs.repro
+> mkdir xfs
+> mount -t xfs -o nouuid,prjquota,noikeep,quota /dev/loop0 xfs
 > 
-> About this memcpy() -- isn't the point of this function that we verify
-> the contents of the in-core q_core and only memcpy the contents into the
-> xfs_buf if it actually passes validation?
+> To answer your more general question: syzbot is not a system to test
+> solely file systems, it finds bugs in hundreds of kernel subsystems.
+> Generating image for file systems, media files for sound and
+> FaceDancer programs that crash host when  FaceDancer device is plugged
+> into USB is not feasible. And in the end it's not even clear what
 
-yeah, but if it fails here we release the buffer & shut down the filesystem ;)
+I don't care how syzbot generates the filesystem image it uses.
 
-> I guess the _dquot_verify
-> function needs the entire on-disk buffer so that it can validate the crc
+> kernel subsystem is at fault and even if it somehow figures out that
+> it's a filesystem, it's unclear that it's exactly an image that
+> provokes the bug. syzbot provides C reproducers which is a reasonable
 
-narrator:  xfs_dquot_verify doesn't verify the crc ;)
+It doesn't matter *what subsystem breaks*. If syzbot is generating a
+filesystem image and then mounting it, it needs to provide that
+filesystem image to to people who end up having to debug the
+problem. It's a basic "corrupt filesystem" bug triage step.
 
-> and the uuid on a read, but we update the crc on dqflush and
-> (presumably) can set the uuid on write (quotacheck) or fail the dquot
-> read everywhere else, right?
-> 
-> Put another way, why not have xfs_dquot_buf_verify check the uuid?
-> xfs_dquot_repair seems to reset the uuid if it's garbage.
+> Some bugs are so involved that only an
+> expert in a particular subsystem can figure out what happens there.
 
-Well, the above path (xfs_qm_dqflush) isn't going to do repair...
+And that's clearly the case here, whether you like it or not.
 
-But OK, xfs_dquot_buf_verify does the entire dqblk; it iterates over
-each dquot calling xfs_dquot_verify.  I figured the easiest way to
-get uuid validation was to put it into xfs_dquot_verify.
+You want us to do things that make syzbot more useful as a tool but
+you don't want to do things that make syzbot a useful tool for us.
+It's a two way street....
 
-But I guess you're suggesting a separate uuid check in xfs_dquot_buf_verify 
-to validate the uuid, given that it has the full on-disk dquot?  Ok that
-might make sense...
+Cheers,
 
-Thanks,
--Eric
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
