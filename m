@@ -1,32 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52296 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751892AbeDJHuC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Apr 2018 03:50:02 -0400
-Date: Tue, 10 Apr 2018 00:50:02 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: only cancel cow blocks when truncating the data fork
-Message-ID: <20180410075002.GA11322@infradead.org>
-References: <20180410051357.GR7500@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:36816 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbeDEQvs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 12:51:48 -0400
+Date: Thu, 5 Apr 2018 09:51:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: reset xfs_inode struct on reclaim in debug mode
+Message-ID: <20180405165142.GE7500@magnolia>
+References: <20180405121147.60897-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180410051357.GR7500@magnolia>
+In-Reply-To: <20180405121147.60897-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Apr 09, 2018 at 10:13:57PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Apr 05, 2018 at 08:11:46AM -0400, Brian Foster wrote:
+> A test case to reproduce a filestream/MRU use-after-free of a
+> reclaimed inode requires bits (e.g., ip->i_mount) of the inode to be
+> reset/reused once the inode memory is freed. This normally only
+> occurs when a new page is cycled into the zone, however.
 > 
-> In xfs_itruncate_extents, only cancel cow blocks and clear the reflink
-> flag if we were asked to truncate the data fork.  Attr fork blocks
-> cannot be shared, so this makes no sense.
+> Perform the "one-time" inode init immediately prior to freeing
+> inodes when in DEBUG mode. This will zero the inode, init the low
+> level structures (locks, lists, etc.) and otherwise ensure each
+> inode is in a purely uninitialized state while sitting in the zone
+> as free memory.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> I'll post a test that depends on this once this is worked out... one
+> concern this raised is if we consider any future bugs in the inode
+> initialization code (suppose we initialize some field once that should
+> be initialized on every allocation, for example), this code has the
+> potential to suppress such problems in debug mode. So an alternative to
+> this approach is to perhaps tie this to an errortag and let the
+> associated xfstests test enable it appropriately. Thoughts or
+> preferences?
 
-Looks good,
+How about memset()ing the entire inode with a known poison value in
+xfs_inode_free_callback and calling _init_once in xfs_inode_alloc
+instead?  That way it'll be obvious that someone touched a poisoned
+(free) inode.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
+
+> Brian
+> 
+>  fs/xfs/xfs_icache.c | 5 ++++-
+>  fs/xfs/xfs_super.c  | 2 +-
+>  fs/xfs/xfs_super.h  | 1 +
+>  3 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 9a18f69f6e96..86dc4c8a4e1d 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -111,7 +111,10 @@ xfs_inode_free_callback(
+>  		xfs_inode_item_destroy(ip);
+>  		ip->i_itemp = NULL;
+>  	}
+> -
+> +#ifdef DEBUG
+> +	/* facilitate catching use-after-free problems */
+> +	xfs_fs_inode_init_once(ip);
+> +#endif
+>  	kmem_zone_free(xfs_inode_zone, ip);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 612c1d5348b3..29b1be5dfebf 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1030,7 +1030,7 @@ xfs_fs_dirty_inode(
+>   * fields in the xfs inode that left in the initialise state
+>   * when freeing the inode.
+>   */
+> -STATIC void
+> +void
+>  xfs_fs_inode_init_once(
+>  	void			*inode)
+>  {
+> diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+> index 8cee8e8050e3..aae8a778f378 100644
+> --- a/fs/xfs/xfs_super.h
+> +++ b/fs/xfs/xfs_super.h
+> @@ -70,6 +70,7 @@ struct block_device;
+>  
+>  extern void xfs_quiesce_attr(struct xfs_mount *mp);
+>  extern void xfs_flush_inodes(struct xfs_mount *mp);
+> +extern void xfs_fs_inode_init_once(void *);
+>  extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
+>  extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
+>  					   xfs_agnumber_t agcount);
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
