@@ -1,51 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56410 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751038AbeDEMhA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Apr 2018 08:37:00 -0400
-Subject: Re: [PATCH 5/6] xfs: factor out quota time limit initialization
+Received: from bombadil.infradead.org ([198.137.202.133]:55898 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750915AbeDEHQA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 03:16:00 -0400
+Date: Thu, 5 Apr 2018 00:16:00 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/6] xfs: delay quota timelimit init until after
+ quotacheck
+Message-ID: <20180405071600.GF17256@infradead.org>
 References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
- <2d87ba58-f713-6326-8683-29185155ee58@sandeen.net>
- <20180405071533.GE17256@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0ca4f6ed-00db-ba87-c0ea-43c6f15068fa@sandeen.net>
-Date: Thu, 5 Apr 2018 07:36:58 -0500
+ <49eeb340-2ff2-c274-d26b-fd8edd982d61@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20180405071533.GE17256@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <49eeb340-2ff2-c274-d26b-fd8edd982d61@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-
-
-On 4/5/18 2:15 AM, Christoph Hellwig wrote:
-> On Wed, Apr 04, 2018 at 02:10:20PM -0500, Eric Sandeen wrote:
->> Factor out the time limit initialization from
->> xfs_qm_init_quotainfo so that we can delay it until
->> after quotacheck - it requires reading the default disk
->> quotas, which may need repair.
->>
->> No functional changes in this patch.
+On Wed, Apr 04, 2018 at 02:12:40PM -0500, Eric Sandeen wrote:
+> Initializing the time limits in the quota info requires reading
+> the default quota block.  If it's corrupt, this yields even more
+> dmesg spew before kernelspace gets around to properly detecting
+> and repairing the corruption.
 > 
-> You have 75 characters per line for your changelog, use them!
-
-Sorry, bad habit.  I never remember exactly how many and sometimes I just
-keep shortening...
- 
-The public shaming should help, I'll try to do better.  :)
-
--Eric
-
-> Otherwise looks good:
+> If we move the read and initialization until post-quotacheck,
+> we can avoid the noisy read if it's corrupted.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
