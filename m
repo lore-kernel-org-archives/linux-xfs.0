@@ -1,36 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55898 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750915AbeDEHQA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 03:16:00 -0400
-Date: Thu, 5 Apr 2018 00:16:00 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] xfs: delay quota timelimit init until after
- quotacheck
-Message-ID: <20180405071600.GF17256@infradead.org>
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
- <49eeb340-2ff2-c274-d26b-fd8edd982d61@sandeen.net>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:30079 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751573AbeDFBSN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 21:18:13 -0400
+Date: Fri, 6 Apr 2018 11:18:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Question] Behaviour of directory listing in XFS with concurrent
+ deletes
+Message-ID: <20180406011808.GQ23861@dastard>
+References: <BLUPR0601MB0929603CF85A26259FA94D32F1BB0@BLUPR0601MB0929.namprd06.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <49eeb340-2ff2-c274-d26b-fd8edd982d61@sandeen.net>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <BLUPR0601MB0929603CF85A26259FA94D32F1BB0@BLUPR0601MB0929.namprd06.prod.outlook.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Vairavanathan, Emalayan" <Emalayan.Vairavanathan@netapp.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Wed, Apr 04, 2018 at 02:12:40PM -0500, Eric Sandeen wrote:
-> Initializing the time limits in the quota info requires reading
-> the default quota block.  If it's corrupt, this yields even more
-> dmesg spew before kernelspace gets around to properly detecting
-> and repairing the corruption.
+On Thu, Apr 05, 2018 at 11:53:18PM +0000, Vairavanathan, Emalayan wrote:
+> Hi There,
 > 
-> If we move the read and initialization until post-quotacheck,
-> we can avoid the noisy read if it's corrupted.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> We have an application that  iterates through a large directory
+> (that has around 1.2 million files)  and lists the names of all
+> the files in the directory. 
+> 
+> Files stored in the directory could be concurrently deleted by
+> another thread in the application while the application lists the
+> files. 
 
-Looks good,
+XFS complies with Posix requirements for stable directory offsets.
+i.e. that dirents don't change offset when other dirents are added
+or removed. Hence sequential readdir calls will always start off at
+the dirent offset the last call finished at.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+However, this guarantees nothing about individual dirent state
+when concurrent modifications occur between readdir calls.
+
+> Our application can tolerate false positives when listing a
+> directory. However false negatives in directory listing *cannot*
+> be tolerated.
+> 
+> To this end could someone tell  me how directory listing in XFS
+> behaves with concurrent deletes? Is it  possible to see false
+> negatives ?
+
+What's does "false-negative" mean? I don't know what your
+application is trying to do, so I don't know what your failure
+criteria is....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
