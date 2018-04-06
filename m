@@ -1,1039 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45964 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:32998 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752490AbeDDW4D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 18:56:03 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A14D4356D2
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 22:56:03 +0000 (UTC)
-Subject: [PATCH 2/2] xfs: non-scrub - remove unused function parameters
-References: <b2b1aa4b-9ba9-eb4d-c91c-889a25fdd61e@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <da7a3431-7f62-1e00-9260-11917723d29e@redhat.com>
-Date: Wed, 4 Apr 2018 17:55:59 -0500
+        id S1751298AbeDFRBS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 6 Apr 2018 13:01:18 -0400
+Date: Fri, 6 Apr 2018 13:01:16 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: reset xfs_inode struct on reclaim in debug mode
+Message-ID: <20180406170116.GA5703@bfoster.bfoster>
+References: <20180405121147.60897-1-bfoster@redhat.com>
+ <20180405211437.GD23861@dastard>
+ <20180406132806.GA5189@bfoster.bfoster>
+ <20180406161348.GG7500@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <b2b1aa4b-9ba9-eb4d-c91c-889a25fdd61e@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180406161348.GG7500@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+On Fri, Apr 06, 2018 at 09:13:48AM -0700, Darrick J. Wong wrote:
+> On Fri, Apr 06, 2018 at 09:28:07AM -0400, Brian Foster wrote:
+> > On Fri, Apr 06, 2018 at 07:14:37AM +1000, Dave Chinner wrote:
+> > > On Thu, Apr 05, 2018 at 08:11:46AM -0400, Brian Foster wrote:
+> > > > A test case to reproduce a filestream/MRU use-after-free of a
+> > > > reclaimed inode requires bits (e.g., ip->i_mount) of the inode to be
+> > > > reset/reused once the inode memory is freed. This normally only
+> > > > occurs when a new page is cycled into the zone, however.
+> > > > 
+> > > > Perform the "one-time" inode init immediately prior to freeing
+> > > > inodes when in DEBUG mode. This will zero the inode, init the low
+> > > > level structures (locks, lists, etc.) and otherwise ensure each
+> > > > inode is in a purely uninitialized state while sitting in the zone
+> > > > as free memory.
+> > > 
+> > > Does KASAN catch this use-after-free? i.e. Given that people
+> > > regularly run fstests with KASAN enabled, do we need to change the
+> > > code for the test to trigger detection?
+> > > 
+> > 
+> > I had tried with page poisoning without much luck, I suspect because my
+> > test doesn't involve cycling pages in and out of the kmem cache. I
+> > hadn't tried with KASAN though. I just gave it a try with my current
+> > test and it looks like it detected it[1]. I guess KASAN is doing some
+> > kind of higher level/out-of-band tracking of slab/cache objects that
+> > allows this to work.
+> > 
+> > So perhaps we don't need this patch after all... I'll just document in
+> > the test that KASAN may be necessary to reproduce the problem.
+> > 
+> > Brian
+> > 
+> > [1] KASAN splat:
+> > 
+> > [   66.389454] BUG: KASAN: use-after-free in xfs_fstrm_free_func+0x33/0x1b0 [xfs]
+> > [   66.390432] Read of size 8 at addr ffff8800b02dde40 by task rmdir/1939
+> > [   66.391268] 
+> > [   66.391470] CPU: 2 PID: 1939 Comm: rmdir Not tainted 4.16.0-rc5 #111
+> > [   66.392228] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+> 
+> Yay!  This'll make for a nice juicy commit log. :)
+> 
+> Ok, so at this point this series consists of Christoph's replacement for
+> patch 2, and a revision of this patch to memzero/init_once?
+> 
 
-(I checked, xfsprogs stays remarkably OK with the libxfs bits applied)
+It's Christoph's variant and just dropping this one atm. KASAN detects
+the problem with the current test (posted a bit ago), so it probably
+doesn't make sense to reinvent the wheel.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 39387bd..4bcc095 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1947,7 +1947,7 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- xfs_alloc_compute_maxlevels(
- 	xfs_mount_t	*mp)	/* file system mount structure */
- {
--	mp->m_ag_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_alloc_mnr,
-+	mp->m_ag_maxlevels = xfs_btree_compute_maxlevels(mp->m_alloc_mnr,
- 			(mp->m_sb.sb_agblocks + 1) / 2);
- }
- 
-@@ -1959,7 +1959,6 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
-  */
- xfs_extlen_t
- xfs_alloc_longest_free_extent(
--	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
- 	xfs_extlen_t		need,
- 	xfs_extlen_t		reserved)
-@@ -2038,8 +2037,7 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 
- 	/* do we have enough contiguous free space for the allocation? */
- 	alloc_len = args->minlen + (args->alignment - 1) + args->minalignslop;
--	longest = xfs_alloc_longest_free_extent(args->mp, pag, min_free,
--			reservation);
-+	longest = xfs_alloc_longest_free_extent(pag, min_free, reservation);
- 	if (longest < alloc_len)
- 		return false;
- 
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index a311a24..cbf789e 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -116,9 +116,8 @@
- unsigned int xfs_alloc_set_aside(struct xfs_mount *mp);
- unsigned int xfs_alloc_ag_max_usable(struct xfs_mount *mp);
- 
--xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_mount *mp,
--		struct xfs_perag *pag, xfs_extlen_t need,
--		xfs_extlen_t reserved);
-+xfs_extlen_t xfs_alloc_longest_free_extent(struct xfs_perag *pag,
-+		xfs_extlen_t need, xfs_extlen_t reserved);
- unsigned int xfs_alloc_min_freelist(struct xfs_mount *mp,
- 		struct xfs_perag *pag);
- 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3b03d88..6a7c2f0 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3225,7 +3225,7 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
- 		}
- 	}
- 
--	longest = xfs_alloc_longest_free_extent(mp, pag,
-+	longest = xfs_alloc_longest_free_extent(pag,
- 				xfs_alloc_min_freelist(mp, pag),
- 				xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE));
- 	if (*blen < longest)
-@@ -5667,7 +5667,6 @@ static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
- 	xfs_fileoff_t		*next_fsb,
- 	xfs_fileoff_t		offset_shift_fsb,
- 	bool			*done,
--	xfs_fileoff_t		stop_fsb,
- 	xfs_fsblock_t		*firstblock,
- 	struct xfs_defer_ops	*dfops)
- {
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index f3be641..2b766b3 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -228,7 +228,7 @@ void	xfs_bmap_del_extent_cow(struct xfs_inode *ip,
- uint	xfs_default_attroffset(struct xfs_inode *ip);
- int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
--		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
-+		bool *done, xfs_fsblock_t *firstblock,
- 		struct xfs_defer_ops *dfops);
- int	xfs_bmap_insert_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index edc0193..ac7d664 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -4531,7 +4531,6 @@ struct xfs_btree_block_change_owner_info {
-  */
- uint
- xfs_btree_compute_maxlevels(
--	struct xfs_mount	*mp,
- 	uint			*limits,
- 	unsigned long		len)
- {
-@@ -4839,7 +4838,6 @@ struct xfs_btree_block_change_owner_info {
-  */
- xfs_extlen_t
- xfs_btree_calc_size(
--	struct xfs_mount	*mp,
- 	uint			*limits,
- 	unsigned long long	len)
- {
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index 58e30c0..9227159 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -481,10 +481,8 @@ xfs_failaddr_t xfs_btree_lblock_v5hdr_verify(struct xfs_buf *bp,
- xfs_failaddr_t xfs_btree_lblock_verify(struct xfs_buf *bp,
- 		unsigned int max_recs);
- 
--uint xfs_btree_compute_maxlevels(struct xfs_mount *mp, uint *limits,
--				 unsigned long len);
--xfs_extlen_t xfs_btree_calc_size(struct xfs_mount *mp, uint *limits,
--		unsigned long long len);
-+uint xfs_btree_compute_maxlevels(uint *limits, unsigned long len);
-+xfs_extlen_t xfs_btree_calc_size(uint *limits, unsigned long long len);
- 
- /* return codes */
- #define XFS_BTREE_QUERY_RANGE_CONTINUE	0	/* keep iterating */
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 0e2cf5f..de627fa 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2406,7 +2406,7 @@
- 	uint		inodes;
- 
- 	inodes = (1LL << XFS_INO_AGINO_BITS(mp)) >> XFS_INODES_PER_CHUNK_LOG;
--	mp->m_in_maxlevels = xfs_btree_compute_maxlevels(mp, mp->m_inobt_mnr,
-+	mp->m_in_maxlevels = xfs_btree_compute_maxlevels(mp->m_inobt_mnr,
- 							 inodes);
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index a2dd7f4..367e9a0 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -556,7 +556,7 @@ struct xfs_btree_cur *				/* new inode btree cursor */
- 	if (mp->m_inobt_mxr[0] == 0)
- 		return 0;
- 
--	return xfs_btree_calc_size(mp, mp->m_inobt_mnr,
-+	return xfs_btree_calc_size(mp->m_inobt_mnr,
- 		(uint64_t)mp->m_sb.sb_agblocks * mp->m_sb.sb_inopblock /
- 				XFS_INODES_PER_CHUNK);
- }
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index bee68c2..560e284 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -351,7 +351,6 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 	struct xfs_refcount_irec	*center,
- 	struct xfs_refcount_irec	*right,
- 	unsigned long long		extlen,
--	xfs_agblock_t			*agbno,
- 	xfs_extlen_t			*aglen)
- {
- 	int				error;
-@@ -471,7 +470,6 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 	struct xfs_btree_cur		*cur,
- 	struct xfs_refcount_irec	*right,
- 	struct xfs_refcount_irec	*cright,
--	xfs_agblock_t			*agbno,
- 	xfs_extlen_t			*aglen)
- {
- 	int				error;
-@@ -749,7 +747,7 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 	    ulen < MAXREFCEXTLEN) {
- 		*shape_changed = true;
- 		return xfs_refcount_merge_center_extents(cur, &left, &cleft,
--				&right, ulen, agbno, aglen);
-+				&right, ulen, aglen);
- 	}
- 
- 	/* Try to merge left and cleft. */
-@@ -778,7 +776,7 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 	    ulen < MAXREFCEXTLEN) {
- 		*shape_changed = true;
- 		return xfs_refcount_merge_right_extent(cur, &right, &cright,
--				agbno, aglen);
-+				aglen);
- 	}
- 
- 	return error;
-@@ -1356,9 +1354,7 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 	struct xfs_btree_cur	*cur,
- 	xfs_agblock_t		agbno,
- 	xfs_extlen_t		aglen,
--	enum xfs_refc_adjust_op	adj,
--	struct xfs_defer_ops	*dfops,
--	struct xfs_owner_info	*oinfo)
-+	enum xfs_refc_adjust_op	adj)
- {
- 	struct xfs_refcount_irec	ext, tmp;
- 	int				error;
-@@ -1437,8 +1433,7 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 	struct xfs_btree_cur	*cur,
- 	xfs_agblock_t		agbno,
- 	xfs_extlen_t		aglen,
--	enum xfs_refc_adjust_op	adj,
--	struct xfs_defer_ops	*dfops)
-+	enum xfs_refc_adjust_op	adj)
- {
- 	bool			shape_changed;
- 	int			error;
-@@ -1465,8 +1460,7 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 		goto out_error;
- 
- 	/* Now that we've taken care of the ends, adjust the middle extents */
--	error = xfs_refcount_adjust_cow_extents(cur, agbno, aglen, adj,
--			dfops, NULL);
-+	error = xfs_refcount_adjust_cow_extents(cur, agbno, aglen, adj);
- 	if (error)
- 		goto out_error;
- 
-@@ -1493,7 +1487,7 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 
- 	/* Add refcount btree reservation */
- 	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
--			XFS_REFCOUNT_ADJUST_COW_ALLOC, dfops);
-+			XFS_REFCOUNT_ADJUST_COW_ALLOC);
- }
- 
- /*
-@@ -1511,7 +1505,7 @@ STATIC int __xfs_refcount_cow_free(struct xfs_btree_cur *rcur,
- 
- 	/* Remove refcount btree reservation */
- 	return xfs_refcount_adjust_cow(rcur, agbno, aglen,
--			XFS_REFCOUNT_ADJUST_COW_FREE, dfops);
-+			XFS_REFCOUNT_ADJUST_COW_FREE);
- }
- 
- /* Record a CoW staging extent in the refcount btree. */
-@@ -1568,7 +1562,7 @@ struct xfs_refcount_recovery {
- /* Stuff an extent on the recovery list. */
- STATIC int
- xfs_refcount_recover_extent(
--	struct xfs_btree_cur		*cur,
-+	struct xfs_btree_cur 		*cur,
- 	union xfs_btree_rec		*rec,
- 	void				*priv)
- {
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 265fdce..375abfe 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -373,7 +373,6 @@ struct xfs_btree_cur *
-  */
- int
- xfs_refcountbt_maxrecs(
--	struct xfs_mount	*mp,
- 	int			blocklen,
- 	bool			leaf)
- {
-@@ -390,7 +389,7 @@ struct xfs_btree_cur *
- xfs_refcountbt_compute_maxlevels(
- 	struct xfs_mount		*mp)
- {
--	mp->m_refc_maxlevels = xfs_btree_compute_maxlevels(mp,
-+	mp->m_refc_maxlevels = xfs_btree_compute_maxlevels(
- 			mp->m_refc_mnr, mp->m_sb.sb_agblocks);
- }
- 
-@@ -400,7 +399,7 @@ struct xfs_btree_cur *
- 	struct xfs_mount	*mp,
- 	unsigned long long	len)
- {
--	return xfs_btree_calc_size(mp, mp->m_refc_mnr, len);
-+	return xfs_btree_calc_size(mp->m_refc_mnr, len);
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-index 9db008b..2bc4694 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -60,8 +60,7 @@
- extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
- 		struct xfs_trans *tp, struct xfs_buf *agbp, xfs_agnumber_t agno,
- 		struct xfs_defer_ops *dfops);
--extern int xfs_refcountbt_maxrecs(struct xfs_mount *mp, int blocklen,
--		bool leaf);
-+extern int xfs_refcountbt_maxrecs(int blocklen, bool leaf);
- extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
- 
- extern xfs_extlen_t xfs_refcountbt_calc_size(struct xfs_mount *mp,
-diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-index 79822cf..fba8d27 100644
---- a/fs/xfs/libxfs/xfs_rmap.c
-+++ b/fs/xfs/libxfs/xfs_rmap.c
-@@ -376,7 +376,6 @@ struct xfs_find_left_neighbor_info {
- 	struct xfs_mount	*mp,
- 	uint64_t		ltoff,
- 	struct xfs_rmap_irec	*rec,
--	xfs_fsblock_t		bno,
- 	xfs_filblks_t		len,
- 	uint64_t		owner,
- 	uint64_t		offset,
-@@ -519,7 +518,7 @@ struct xfs_find_left_neighbor_info {
- 			bno + len, out_error);
- 
- 	/* Check owner information. */
--	error = xfs_rmap_free_check_owner(mp, ltoff, &ltrec, bno, len, owner,
-+	error = xfs_rmap_free_check_owner(mp, ltoff, &ltrec, len, owner,
- 			offset, flags);
- 	if (error)
- 		goto out_error;
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 8b0d0de..d756e0b 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -499,7 +499,6 @@ struct xfs_btree_cur *
-  */
- int
- xfs_rmapbt_maxrecs(
--	struct xfs_mount	*mp,
- 	int			blocklen,
- 	int			leaf)
- {
-@@ -534,7 +533,7 @@ struct xfs_btree_cur *
- 	if (xfs_sb_version_hasreflink(&mp->m_sb))
- 		mp->m_rmap_maxlevels = XFS_BTREE_MAXLEVELS;
- 	else
--		mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(mp,
-+		mp->m_rmap_maxlevels = xfs_btree_compute_maxlevels(
- 				mp->m_rmap_mnr, mp->m_sb.sb_agblocks);
- }
- 
-@@ -544,7 +543,7 @@ struct xfs_btree_cur *
- 	struct xfs_mount	*mp,
- 	unsigned long long	len)
- {
--	return xfs_btree_calc_size(mp, mp->m_rmap_mnr, len);
-+	return xfs_btree_calc_size(mp->m_rmap_mnr, len);
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-index 19c08e9..d68d96e 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.h
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-@@ -55,7 +55,7 @@
- struct xfs_btree_cur *xfs_rmapbt_init_cursor(struct xfs_mount *mp,
- 				struct xfs_trans *tp, struct xfs_buf *bp,
- 				xfs_agnumber_t agno);
--int xfs_rmapbt_maxrecs(struct xfs_mount *mp, int blocklen, int leaf);
-+int xfs_rmapbt_maxrecs(int blocklen, int leaf);
- extern void xfs_rmapbt_compute_maxlevels(struct xfs_mount *mp);
- 
- extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 53433cc..d9b94bd 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -756,15 +756,13 @@ struct xfs_perag *
- 	mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
- 	mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
- 
--	mp->m_rmap_mxr[0] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, 1);
--	mp->m_rmap_mxr[1] = xfs_rmapbt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	mp->m_rmap_mxr[0] = xfs_rmapbt_maxrecs(sbp->sb_blocksize, 1);
-+	mp->m_rmap_mxr[1] = xfs_rmapbt_maxrecs(sbp->sb_blocksize, 0);
- 	mp->m_rmap_mnr[0] = mp->m_rmap_mxr[0] / 2;
- 	mp->m_rmap_mnr[1] = mp->m_rmap_mxr[1] / 2;
- 
--	mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize,
--			true);
--	mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(mp, sbp->sb_blocksize,
--			false);
-+	mp->m_refc_mxr[0] = xfs_refcountbt_maxrecs(sbp->sb_blocksize, true);
-+	mp->m_refc_mxr[1] = xfs_refcountbt_maxrecs(sbp->sb_blocksize, false);
- 	mp->m_refc_mnr[0] = mp->m_refc_mxr[0] / 2;
- 	mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
- 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 5f17641..3bccdf7 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -734,8 +734,7 @@
-  *    the xfs_disk_dquot_t: sizeof(struct xfs_disk_dquot)
-  */
- STATIC uint
--xfs_calc_qm_setqlim_reservation(
--	struct xfs_mount	*mp)
-+xfs_calc_qm_setqlim_reservation(void)
- {
- 	return xfs_calc_buf_res(1, sizeof(struct xfs_disk_dquot));
- }
-@@ -772,8 +771,7 @@
-  *    the xfs_qoff_logitem_t: sizeof(struct xfs_qoff_logitem) * 2
-  */
- STATIC uint
--xfs_calc_qm_quotaoff_end_reservation(
--	struct xfs_mount	*mp)
-+xfs_calc_qm_quotaoff_end_reservation(void)
- {
- 	return sizeof(struct xfs_qoff_logitem) * 2;
- }
-@@ -877,14 +875,14 @@
- 	 * The following transactions are logged in logical format with
- 	 * a default log count.
- 	 */
--	resp->tr_qm_setqlim.tr_logres = xfs_calc_qm_setqlim_reservation(mp);
-+	resp->tr_qm_setqlim.tr_logres = xfs_calc_qm_setqlim_reservation();
- 	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
- 
- 	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
- 	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
- 
- 	resp->tr_qm_equotaoff.tr_logres =
--		xfs_calc_qm_quotaoff_end_reservation(mp);
-+		xfs_calc_qm_quotaoff_end_reservation();
- 	resp->tr_qm_equotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
- 
- 	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 018aabbd..4ad8877 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -105,8 +105,7 @@
- /* Cross-reference with the other btrees. */
- STATIC void
- xfs_scrub_superblock_xref(
--	struct xfs_scrub_context	*sc,
--	struct xfs_buf			*bp)
-+	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_owner_info		oinfo;
- 	struct xfs_mount		*mp = sc->mp;
-@@ -420,7 +419,7 @@
- 			BBTOB(bp->b_length) - sizeof(struct xfs_dsb)))
- 		xfs_scrub_block_set_corrupt(sc, bp);
- 
--	xfs_scrub_superblock_xref(sc, bp);
-+	xfs_scrub_superblock_xref(sc);
- 
- 	return error;
- }
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index 127575f..b0d6720 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -64,7 +64,7 @@
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
- }
- 
- /* Extended Attributes */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 639d14b..c4e85ac 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -75,7 +75,7 @@
- 	}
- 
- 	/* Got the inode, lock it and we're ready to go. */
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(mp, &sc->tp);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-@@ -684,7 +684,7 @@ struct xfs_scrub_bmap_check_rmap_info {
- 	info.lastoff = 0;
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	for_each_xfs_iext(ifp, &icur, &irec) {
--		if (xfs_scrub_should_terminate(sc, &error))
-+		if (xfs_scrub_should_terminate(&error))
- 			break;
- 		if (isnullstartblock(irec.br_startblock))
- 			continue;
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 5421816..583a4b7 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -628,7 +628,7 @@ struct check_owner {
- 			error = bs.scrub_rec(&bs, recp);
- 			if (error)
- 				break;
--			if (xfs_scrub_should_terminate(sc, &error) ||
-+			if (xfs_scrub_should_terminate(&error) ||
- 			    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
- 				break;
- 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 8ed91d5..7067c94 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -356,7 +356,6 @@ struct xfs_scrub_rmap_ownedby_info {
-  */
- int
- xfs_scrub_count_rmap_ownedby_ag(
--	struct xfs_scrub_context		*sc,
- 	struct xfs_btree_cur			*cur,
- 	struct xfs_owner_info			*oinfo,
- 	xfs_filblks_t				*blocks)
-@@ -574,7 +573,7 @@ struct xfs_scrub_rmap_ownedby_info {
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_trans_alloc(sc->sm, sc->mp, &sc->tp);
-+	return xfs_scrub_trans_alloc(sc->mp, &sc->tp);
- }
- 
- /* Set us up with AG headers and btree cursors. */
-@@ -692,8 +691,7 @@ struct xfs_scrub_rmap_ownedby_info {
- int
- xfs_scrub_setup_inode_contents(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_inode		*ip,
--	unsigned int			resblks)
-+	struct xfs_inode		*ip)
- {
- 	struct xfs_mount		*mp = sc->mp;
- 	int				error;
-@@ -705,7 +703,7 @@ struct xfs_scrub_rmap_ownedby_info {
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(mp, &sc->tp);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index deaf604..8b6b83d 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -27,7 +27,6 @@
-  */
- static inline bool
- xfs_scrub_should_terminate(
--	struct xfs_scrub_context	*sc,
- 	int				*error)
- {
- 	if (fatal_signal_pending(current)) {
-@@ -44,7 +43,6 @@
-  */
- static inline int
- xfs_scrub_trans_alloc(
--	struct xfs_scrub_metadata	*sm,
- 	struct xfs_mount		*mp,
- 	struct xfs_trans		**tpp)
- {
-@@ -145,8 +143,7 @@ int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
- 			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
- 				  void *),
- 			void *priv);
--int xfs_scrub_count_rmap_ownedby_ag(struct xfs_scrub_context *sc,
--				    struct xfs_btree_cur *cur,
-+int xfs_scrub_count_rmap_ownedby_ag(struct xfs_btree_cur *cur,
- 				    struct xfs_owner_info *oinfo,
- 				    xfs_filblks_t *blocks);
- 
-@@ -154,7 +151,7 @@ int xfs_scrub_setup_ag_btree(struct xfs_scrub_context *sc,
- 			     struct xfs_inode *ip, bool force_log);
- int xfs_scrub_get_inode(struct xfs_scrub_context *sc, struct xfs_inode *ip_in);
- int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
--				   struct xfs_inode *ip, unsigned int resblks);
-+				   struct xfs_inode *ip);
- void xfs_scrub_buffer_recheck(struct xfs_scrub_context *sc, struct xfs_buf *bp);
- 
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index bffdb7d..db90c85 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -561,7 +561,7 @@
- 			error = scrub_fn(&ds, level, rec);
- 			if (error)
- 				break;
--			if (xfs_scrub_should_terminate(sc, &error) ||
-+			if (xfs_scrub_should_terminate(&error) ||
- 			    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
- 				break;
- 
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 38f2980..01126aa 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -49,7 +49,7 @@
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
- }
- 
- /* Directories */
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 106ca4b..26b67a3 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -157,7 +157,7 @@
- 	bool				inuse;
- 	int				error = 0;
- 
--	if (xfs_scrub_should_terminate(bs->sc, &error))
-+	if (xfs_scrub_should_terminate(&error))
- 		return error;
- 
- 	dip = xfs_buf_offset(bp, clusterino * mp->m_sb.sb_inodesize);
-@@ -377,8 +377,7 @@
-  */
- STATIC void
- xfs_scrub_iallocbt_xref_rmap_btreeblks(
--	struct xfs_scrub_context	*sc,
--	int				which)
-+	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_owner_info		oinfo;
- 	xfs_filblks_t			blocks;
-@@ -402,7 +401,7 @@
- 	}
- 
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, &oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, &oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-@@ -417,7 +416,6 @@
- STATIC void
- xfs_scrub_iallocbt_xref_rmap_inodes(
- 	struct xfs_scrub_context	*sc,
--	int				which,
- 	xfs_filblks_t			inode_blocks)
- {
- 	struct xfs_owner_info		oinfo;
-@@ -429,7 +427,7 @@
- 
- 	/* Check that we saw as many inode blocks as the rmap knows about. */
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INODES);
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, &oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, &oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-@@ -455,7 +453,7 @@
- 	if (error)
- 		return error;
- 
--	xfs_scrub_iallocbt_xref_rmap_btreeblks(sc, which);
-+	xfs_scrub_iallocbt_xref_rmap_btreeblks(sc);
- 
- 	/*
- 	 * If we're scrubbing the inode btree, inode_blocks is the number of
-@@ -465,7 +463,7 @@
- 	 * to inode chunks with free inodes.
- 	 */
- 	if (which == XFS_BTNUM_INO)
--		xfs_scrub_iallocbt_xref_rmap_inodes(sc, which, inode_blocks);
-+		xfs_scrub_iallocbt_xref_rmap_inodes(sc, inode_blocks);
- 
- 	return error;
- }
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index df14930..481cbdb 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -68,7 +68,7 @@
- 		break;
- 	case -EFSCORRUPTED:
- 	case -EFSBADCRC:
--		return xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+		return xfs_scrub_trans_alloc(mp, &sc->tp);
- 	default:
- 		return error;
- 	}
-@@ -76,7 +76,7 @@
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(mp, &sc->tp);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-@@ -134,7 +134,6 @@
- STATIC void
- xfs_scrub_inode_flags(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
- 	uint16_t			flags)
-@@ -179,7 +178,6 @@
- STATIC void
- xfs_scrub_inode_flags2(
- 	struct xfs_scrub_context	*sc,
--	struct xfs_dinode		*dip,
- 	xfs_ino_t			ino,
- 	uint16_t			mode,
- 	uint16_t			flags,
-@@ -372,7 +370,7 @@
- 			xfs_scrub_ino_set_corrupt(sc, ino);
- 	}
- 
--	xfs_scrub_inode_flags(sc, dip, ino, mode, flags);
-+	xfs_scrub_inode_flags(sc, ino, mode, flags);
- 
- 	xfs_scrub_inode_extsize(sc, dip, ino, mode, flags);
- 
-@@ -428,7 +426,7 @@
- 	if (dip->di_version >= 3) {
- 		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
- 			xfs_scrub_ino_set_corrupt(sc, ino);
--		xfs_scrub_inode_flags2(sc, dip, ino, mode, flags, flags2);
-+		xfs_scrub_inode_flags2(sc, ino, mode, flags, flags2);
- 		xfs_scrub_inode_cowextsize(sc, dip, ino, mode, flags,
- 				flags2);
- 	}
-diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index 1fb88c1..03110eb 100644
---- a/fs/xfs/scrub/parent.c
-+++ b/fs/xfs/scrub/parent.c
-@@ -45,7 +45,7 @@
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
- }
- 
- /* Parent pointers */
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 6ba465e..eda174f 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -224,7 +224,7 @@
- 	}
- 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
- 	while (1) {
--		if (xfs_scrub_should_terminate(sc, &error))
-+		if (xfs_scrub_should_terminate(&error))
- 			break;
- 
- 		off = irec.br_startoff + irec.br_blockcount;
-@@ -265,7 +265,7 @@
- 
- 	/* Check all the quota items. */
- 	while (id < ((xfs_dqid_t)-1ULL)) {
--		if (xfs_scrub_should_terminate(sc, &error))
-+		if (xfs_scrub_should_terminate(&error))
- 			break;
- 
- 		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 400f156..b8d12bb 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -124,7 +124,7 @@ struct xfs_scrub_refcnt_check {
- 	xfs_agblock_t			rc_last;
- 	int				error = 0;
- 
--	if (xfs_scrub_should_terminate(refchk->sc, &error))
-+	if (xfs_scrub_should_terminate(&error))
- 		return error;
- 
- 	rm_last = rec->rm_startblock + rec->rm_blockcount - 1;
-@@ -411,7 +411,7 @@ struct xfs_scrub_refcnt_check {
- 	error = xfs_btree_count_blocks(sc->sa.refc_cur, &refcbt_blocks);
- 	if (!xfs_scrub_btree_process_error(sc, sc->sa.refc_cur, 0, &error))
- 		return;
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-@@ -420,7 +420,7 @@ struct xfs_scrub_refcnt_check {
- 
- 	/* Check that we saw as many cow blocks as the rmap knows about. */
- 	xfs_rmap_ag_owner(oinfo, XFS_RMAP_OWN_COW);
--	error = xfs_scrub_count_rmap_ownedby_ag(sc, sc->sa.rmap_cur, oinfo,
-+	error = xfs_scrub_count_rmap_ownedby_ag(sc->sa.rmap_cur, oinfo,
- 			&blocks);
- 	if (!xfs_scrub_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 26c7596..46e7bf1 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -138,7 +138,7 @@
- {
- 	int				error = 0;
- 
--	if (xfs_scrub_should_terminate(sc, &error))
-+	if (xfs_scrub_should_terminate(&error))
- 		return error;
- 
- 	return 0;
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-index 3aa3d60..7af7981 100644
---- a/fs/xfs/scrub/symlink.c
-+++ b/fs/xfs/scrub/symlink.c
-@@ -48,7 +48,7 @@
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip);
- }
- 
- /* Symbolic links. */
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 05dee8f..8cd8c41 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1326,7 +1326,6 @@
- 	int			error;
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t		first_block;
--	xfs_fileoff_t		stop_fsb = XFS_B_TO_FSB(mp, VFS_I(ip)->i_size);
- 	xfs_fileoff_t		next_fsb = XFS_B_TO_FSB(mp, offset + len);
- 	xfs_fileoff_t		shift_fsb = XFS_B_TO_FSB(mp, len);
- 	uint			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
-@@ -1361,7 +1360,7 @@
- 
- 		xfs_defer_init(&dfops, &first_block);
- 		error = xfs_bmap_collapse_extents(tp, ip, &next_fsb, shift_fsb,
--				&done, stop_fsb, &first_block, &dfops);
-+				&done, &first_block, &dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ac669a1..55661cb 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1754,7 +1754,6 @@ struct xfs_buf *
- 
- void
- xfs_free_buftarg(
--	struct xfs_mount	*mp,
- 	struct xfs_buftarg	*btp)
- {
- 	unregister_shrinker(&btp->bt_shrinker);
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 2f4c914..edced16 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -388,7 +388,7 @@ static inline void xfs_buf_relse(xfs_buf_t *bp)
-  */
- extern xfs_buftarg_t *xfs_alloc_buftarg(struct xfs_mount *,
- 			struct block_device *, struct dax_device *);
--extern void xfs_free_buftarg(struct xfs_mount *, struct xfs_buftarg *);
-+extern void xfs_free_buftarg(struct xfs_buftarg *);
- extern void xfs_wait_buftarg(xfs_buftarg_t *);
- extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
- 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 043ca380..7036083 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -198,7 +198,7 @@ enum xfs_fstrm_alloc {
- 			goto next_ag;
- 		}
- 
--		longest = xfs_alloc_longest_free_extent(mp, pag,
-+		longest = xfs_alloc_longest_free_extent(pag,
- 				xfs_alloc_min_freelist(mp, pag),
- 				xfs_ag_resv_needed(pag, XFS_AG_RESV_NONE));
- 		if (((minlen && longest >= minlen) ||
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3e3aab3..35d3785 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1309,7 +1309,6 @@
- int
- xfs_create_tmpfile(
- 	struct xfs_inode	*dp,
--	struct dentry		*dentry,
- 	umode_t			mode,
- 	struct xfs_inode	**ipp)
- {
-@@ -2903,7 +2902,7 @@
- 	struct xfs_inode	*tmpfile;
- 	int			error;
- 
--	error = xfs_create_tmpfile(dp, NULL, S_IFCHR | WHITEOUT_MODE, &tmpfile);
-+	error = xfs_create_tmpfile(dp, S_IFCHR | WHITEOUT_MODE, &tmpfile);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 132d8aa..f16c0e8 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -393,8 +393,8 @@ int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode **ipp, struct xfs_name *ci_name);
- int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
- 			   umode_t mode, dev_t rdev, struct xfs_inode **ipp);
--int		xfs_create_tmpfile(struct xfs_inode *dp, struct dentry *dentry,
--			   umode_t mode, struct xfs_inode **ipp);
-+int		xfs_create_tmpfile(struct xfs_inode *dp, umode_t mode,
-+			   struct xfs_inode **ipp);
- int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
- 			   struct xfs_inode *ip);
- int		xfs_link(struct xfs_inode *tdp, struct xfs_inode *sip,
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index e0307fb..c45acf0 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -177,7 +177,7 @@
- 	if (!tmpfile) {
- 		error = xfs_create(XFS_I(dir), &name, mode, rdev, &ip);
- 	} else {
--		error = xfs_create_tmpfile(XFS_I(dir), dentry, mode, &ip);
-+		error = xfs_create_tmpfile(XFS_I(dir), mode, &ip);
- 	}
- 	if (unlikely(error))
- 		goto out_free_acl;
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index b9c9c84..2fcd9ed 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -560,7 +560,6 @@
-  */
- int
- xfs_log_notify(
--	struct xfs_mount	*mp,
- 	struct xlog_in_core	*iclog,
- 	xfs_log_callback_t	*cb)
- {
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 7e2d629..fa8ad31 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -141,8 +141,7 @@ int	  xfs_log_mount(struct xfs_mount	*mp,
- xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
- xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
- void	  xfs_log_space_wake(struct xfs_mount *mp);
--int	  xfs_log_notify(struct xfs_mount	*mp,
--			 struct xlog_in_core	*iclog,
-+int	  xfs_log_notify(struct xlog_in_core	*iclog,
- 			 struct xfs_log_callback *callback_entry);
- int	  xfs_log_release_iclog(struct xfs_mount *mp,
- 			 struct xlog_in_core	 *iclog);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index cb376ac..4668403 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -848,7 +848,7 @@
- 	/* attach all the transactions w/ busy extents to iclog */
- 	ctx->log_cb.cb_func = xlog_cil_committed;
- 	ctx->log_cb.cb_arg = ctx;
--	error = xfs_log_notify(log->l_mp, commit_iclog, &ctx->log_cb);
-+	error = xfs_log_notify(commit_iclog, &ctx->log_cb);
- 	if (error)
- 		goto out_abort;
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 612c1d5..d714240 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -722,7 +722,7 @@ struct proc_xfs_info {
- 		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
- 		struct dax_device *dax_logdev = mp->m_logdev_targp->bt_daxdev;
- 
--		xfs_free_buftarg(mp, mp->m_logdev_targp);
-+		xfs_free_buftarg(mp->m_logdev_targp);
- 		xfs_blkdev_put(logdev);
- 		fs_put_dax(dax_logdev);
- 	}
-@@ -730,11 +730,11 @@ struct proc_xfs_info {
- 		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
- 		struct dax_device *dax_rtdev = mp->m_rtdev_targp->bt_daxdev;
- 
--		xfs_free_buftarg(mp, mp->m_rtdev_targp);
-+		xfs_free_buftarg(mp->m_rtdev_targp);
- 		xfs_blkdev_put(rtdev);
- 		fs_put_dax(dax_rtdev);
- 	}
--	xfs_free_buftarg(mp, mp->m_ddev_targp);
-+	xfs_free_buftarg(mp->m_ddev_targp);
- 	fs_put_dax(dax_ddev);
- }
- 
-@@ -808,9 +808,9 @@ struct proc_xfs_info {
- 
-  out_free_rtdev_targ:
- 	if (mp->m_rtdev_targp)
--		xfs_free_buftarg(mp, mp->m_rtdev_targp);
-+		xfs_free_buftarg(mp->m_rtdev_targp);
-  out_free_ddev_targ:
--	xfs_free_buftarg(mp, mp->m_ddev_targp);
-+	xfs_free_buftarg(mp->m_ddev_targp);
-  out_close_rtdev:
- 	xfs_blkdev_put(rtdev);
- 	fs_put_dax(dax_rtdev);
-@@ -1247,7 +1247,6 @@ struct proc_xfs_info {
- STATIC int
- xfs_test_remount_options(
- 	struct super_block	*sb,
--	struct xfs_mount	*mp,
- 	char			*options)
- {
- 	int			error = 0;
-@@ -1278,7 +1277,7 @@ struct proc_xfs_info {
- 	int			error;
- 
- 	/* First, check for complete junk; i.e. invalid options */
--	error = xfs_test_remount_options(sb, mp, options);
-+	error = xfs_test_remount_options(sb, options);
- 	if (error)
- 		return error;
- 
+> Hm, I wonder if there's a way to tell from sysfs if kasan is enabled.
+> 
 
+Hmm, from fishing around a bit it looks like you could possibly surmise
+it from /sys/kernel/debug/page_tables/kernel since it shows the KASAN
+shadow range. I'm not sure if there are other hints or anything more
+direct though..
 
+Are you hinting at checking for KASAN via the test..?
+
+Brian
+
+> --D
+> 
+> > [   66.392925] Call Trace:
+> > [   66.393243]  dump_stack+0x85/0xc0
+> > [   66.393683]  print_address_description+0x65/0x270
+> > [   66.394190]  kasan_report+0x253/0x380
+> > [   66.394681]  ? xfs_fstrm_free_func+0x33/0x1b0 [xfs]
+> > [   66.395352]  xfs_fstrm_free_func+0x33/0x1b0 [xfs]
+> > [   66.395987]  xfs_remove+0x60a/0x670 [xfs]
+> > [   66.396567]  ? xfs_iunpin_wait+0x30/0x30 [xfs]
+> > [   66.397077]  ? lock_acquire+0xc0/0x220
+> > [   66.397463]  ? d_walk+0x1b3/0x580
+> > [   66.397803]  ? do_raw_spin_unlock+0x8c/0x120
+> > [   66.398353]  xfs_vn_unlink+0xac/0x130 [xfs]
+> > [   66.398915]  ? xfs_vn_rename+0x230/0x230 [xfs]
+> > [   66.399369]  vfs_rmdir+0x12a/0x1e0
+> > [   66.399736]  do_rmdir+0x258/0x2c0
+> > [   66.400159]  ? user_path_create+0x30/0x30
+> > [   66.400622]  ? up_read+0x17/0x30
+> > [   66.400941]  ? __do_page_fault+0x64a/0x710
+> > [   66.401385]  ? mark_held_locks+0x1b/0xa0
+> > [   66.401766]  ? mark_held_locks+0x1b/0xa0
+> > [   66.402181]  ? do_syscall_64+0x39/0x310
+> > [   66.402592]  ? SyS_mkdir+0x170/0x170
+> > [   66.402938]  do_syscall_64+0xf1/0x310
+> > [   66.403352]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+> > [   66.403920] RIP: 0033:0x7fad1a8f4ec7
+> > [   66.404327] RSP: 002b:00007fffb10c8ca8 EFLAGS: 00000246 ORIG_RAX: 0000000000000054
+> > [   66.405173] RAX: ffffffffffffffda RBX: 00007fffb10cab1b RCX: 00007fad1a8f4ec7
+> > [   66.405864] RDX: 00007fad1abc4000 RSI: 0000000000000001 RDI: 00007fffb10cab1b
+> > [   66.406592] RBP: 00007fffb10c8dd8 R08: 0000000000000000 R09: 0000000000000000
+> > [   66.407332] R10: 0000564cf39f0010 R11: 0000000000000246 R12: 0000000000000002
+> > [   66.408090] R13: 00007fad1abc1344 R14: 0000000000000000 R15: 0000000000000000
+> > [   66.408819] 
+> > [   66.408977] Allocated by task 1929:
+> > [   66.409340]  kasan_kmalloc+0xa0/0xd0
+> > [   66.409732]  kmem_cache_alloc+0xe8/0x2e0
+> > [   66.410250]  kmem_zone_alloc+0x5e/0xf0 [xfs]
+> > [   66.410808]  xfs_inode_alloc+0x2d/0x2b0 [xfs]
+> > [   66.411358]  xfs_iget+0x616/0x1740 [xfs]
+> > [   66.411860]  xfs_ialloc+0x18b/0xb10 [xfs]
+> > [   66.412423]  xfs_dir_ialloc+0x21e/0x3f0 [xfs]
+> > [   66.413032]  xfs_create+0x7b4/0xb60 [xfs]
+> > [   66.413608]  xfs_generic_create+0x303/0x3f0 [xfs]
+> > [   66.414127]  vfs_mkdir+0x1d2/0x2e0
+> > [   66.414465]  SyS_mkdir+0xda/0x170
+> > [   66.414790]  do_syscall_64+0xf1/0x310
+> > [   66.415141]  entry_SYSCALL_64_after_hwframe+0x42/0xb7
+> > [   66.415636] 
+> > [   66.415790] Freed by task 0:
+> > [   66.416070]  __kasan_slab_free+0x136/0x180
+> > [   66.416467]  kmem_cache_free+0xc9/0x340
+> > [   66.416839]  rcu_process_callbacks+0x2ef/0x9c0
+> > [   66.417262]  __do_softirq+0x11a/0x5b9
+> > [   66.417654] 
+> > [   66.417878] The buggy address belongs to the object at ffff8800b02dde40
+> > [   66.417878]  which belongs to the cache xfs_inode of size 1696
+> > [   66.419219] The buggy address is located 0 bytes inside of
+> > [   66.419219]  1696-byte region [ffff8800b02dde40, ffff8800b02de4e0)
+> > [   66.420437] The buggy address belongs to the page:
+> > [   66.420948] page:ffffea0002c0b600 count:1 mapcount:0 mapping:0000000000000000 index:0x0 compound_mapcount: 0
+> > [   66.422024] flags: 0xfffffc0008100(slab|head)
+> > [   66.422466] raw: 000fffffc0008100 0000000000000000 0000000000000000 0000000180110011
+> > [   66.423223] raw: dead000000000100 dead000000000200 ffff8800c5207480 0000000000000000
+> > [   66.424013] page dumped because: kasan: bad access detected
+> > [   66.424602] 
+> > [   66.424895] Memory state around the buggy address:
+> > [   66.425369]  ffff8800b02ddd00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > [   66.426070]  ffff8800b02ddd80: 00 00 00 00 fc fc fc fc fc fc fc fc fc fc fc fc
+> > [   66.426815] >ffff8800b02dde00: fc fc fc fc fc fc fc fc fb fb fb fb fb fb fb fb
+> > [   66.427632]                                            ^
+> > [   66.428213]  ffff8800b02dde80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+> > [   66.428989]  ffff8800b02ddf00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+> > [   66.429750] ==================================================================
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
