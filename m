@@ -1,172 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-by2nam01on0119.outbound.protection.outlook.com ([104.47.34.119]:64144
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933529AbeDXOJ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Apr 2018 10:09:57 -0400
-From: Robert Dorr <rdorr@microsoft.com>
-Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-Date: Tue, 24 Apr 2018 14:09:53 +0000
-Message-ID: <BN6PR21MB0740003BBFCD4B6854A695D5B8880@BN6PR21MB0740.namprd21.prod.outlook.com>
-References: <20180301014144.28892-1-david@fromorbit.com>
- <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
- <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
- <20180313051037.GC18129@dastard>
- <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180313161242.GA11168@lst.de>
- <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
- <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180322143559.pmwwwz4gic4wkq7r@quack2.suse.cz>
- <BN6PR21MB0740C697371D948B83E6D23FB8A90@BN6PR21MB0740.namprd21.prod.outlook.com>
-In-Reply-To: <BN6PR21MB0740C697371D948B83E6D23FB8A90@BN6PR21MB0740.namprd21.prod.outlook.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:28922 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751298AbeDFBFW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Apr 2018 21:05:22 -0400
+Date: Fri, 6 Apr 2018 11:05:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/21] xfs: repair superblocks
+Message-ID: <20180406010520.GP23861@dastard>
+References: <152269897182.16346.1710955088267364781.stgit@magnolia>
+ <152269904439.16346.10122475346850875266.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152269904439.16346.10122475346850875266.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-SG9wZSB5b3UgYXJlIGZlZWxpbmcgYmV0dGVyLg0KDQoxLiBIb3cgY2FuIHdlIGVmZmVjdCBzaW1p
-bGFyIGNoYW5nZXMgaW4gZXh0ND8NCjIuIEhvdyBkbyB3ZSBnZXQgdGhlc2UgY2hhbmdlcyBwdXNo
-ZWQgaW50byBhbGwgY29tbW9uIHJlbGVhc2UgYnVpbGRzIGZvciBib3RoIHhmcyBvciBleHQ0IG9w
-dGltaXphdGlvbnM/DQoNCldlIGFyZSBzZWVpbmcgZHJhbWF0aWMgcGVyZm9ybWFuY2UgaW5jcmVh
-c2VzIHdpdGggdGhlIHhmcyBmaXhlcy4gICBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vc2hv
-d19idWcuY2dpP2lkPTE1NDg1MjQNCg0KNCBzb2NrZXQsIFRQQ0MNCjksMTA4IOKAkyBPbGQga2Vy
-bmVsDQozNiw2MTgg4oCTIFBhdGNoZWQga2VybmVsDQoNCjIgc29ja2V0LCBUUENDDQo5LDYwNiAt
-IE9sZCBrZXJuZWwNCjE4LDg0MCAtIFBhdGNoZWQga2VybmVsDQoNCi0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQotLSBUaW1lcyBpbiBtaWxsaS1zZWNvbmRzDQotLSB3
-dD1TUUwgd3JpdGV0aHJvdWdoIHNldHRpbmcNCi0tIGF3dD1TUUwgYWx0ZXJuYXRld3JpdGV0aHJv
-dWdoIHNldHRpbmcNCi0tIC1UMzk3OT1TUUwgb3BlbiB3aXRoIEZ1YSBiZWhhdmlvcg0KLS0gLVQz
-OTgyPVNRTCBvcGVucyB3aXRob3V0IEZ1YSBhbmQgdXNlIGZzeW5jIChmb3JjZWQgZmx1c2gpIGJl
-aGF2aW9yDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KLS0NCi0t
-CUxpbnV4IHBhdGNoZWQga2VybmVsIGZvciBYRlMgRlVBIG9wdHMNCi0tICBTUUwgU2VydmVyIDIw
-MTcgQ1U2DQotLSAgYmxrdHJhY2UgYWN0aXZlDQotLSAgQ2VudG9zNyAtIDRwcm9jLCA4R0IgcmFt
-IHJ1bm5pbmcgb24gSHlwZXItVg0KLS0gIFdpbjEwLCA4cHJvYywgMzJHQiByYW0gaG9zdA0KLS0g
-IFNhbXN1bmcgU1NEIGRyaXZlDQotLSAgQ2xlYW4gU1FMIFNlcnZlciByZXN0YXJ0cw0KLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCi0tICBQQVRDSEVEIEtFUk5FTCA0
-LjE2LngNCi0tCSAgICAgCQkJCQkJCQlDcmVhdGUgREIgSW5zZXJ0cyBDaGVja3BvaW50IE9wdGlv
-bnMNCi0tICAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSAtLS0tLS0tLS0gLS0t
-LS0tLSAtLS0tLS0tLS0tIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQotLSAg
-RGVmYXVsdCAoLVQzOTgyID0gZm9yY2VkIGZsdXNoKQkJMzc4NyAgICAgIDI5ODE0ICAgNDcJCSBP
-X0RJUkVDVCBhbmQgZnN5bmMgZnJvbSBTUUwNCi0tICAtVDM5NzkgYW5kIHd0PTEgYXd0PTEJCQkg
-ICAgNDIyNAkgIDI1ODgwICAgMzAgICAgICAgICBPX0RJUkVDVCBhbmQgc3BlY2lhbGl6ZWQgZmRh
-dGFzeW5jICAoQmVzdCB3aXRob3V0IEZVQSBpcyB+MTB4IHNsb3dlciB0aGFuIEZVQSkNCi0tDQot
-LSAgLVQzOTc5IGFuZCB3dD0wCQkJCQkJMjg2MAkgIDI1NzAJICAxMwkJIE9fRElSRUNUIA0KLS0g
-IC1UMzk3OSBhbmQgd3Q9MSBhd3Q9MAkJCQk0MjA0CSAgMjU3MwkgIDE3CQkgT19ESVJFQ1QgfCBP
-X0RTWU5DIC0gSW5zZXJ0cyBhbmQgY2hlY2twb2ludCBvbiBhbGxvY2F0ZWQgc3BhY2UgbmVhcnMg
-T19ESVJFQ1Qgb25seSAgPC0tLSAhISEgREVTSVJFRCBCRUhBVklPUiAhISENCi0tICAtVDM5Nzkg
-YW5kIHd0PTEgYXd0PTAgTk8gU1RBTVAJCTQxMjcJICAyODIzCSAgMTcJCSBPX0RJUkVDVCB8IE9f
-RFNZTkMgLSBJc3N1ZXMgaW50ZXJuYWwgZmx1c2hzIGZvciAxc3Qgd3JpdGVzLCBjcmVhdGUgZmFz
-dGVyIGJ1dCBpbnNlcnRzIHNsb3dlcg0KLS0NCi0tICBVTlBBVENIRUQgS0VSTkVMIDMueA0KLS0J
-ICAgICAJCQkJCQkJCUNyZWF0ZSBEQiBJbnNlcnRzIENoZWNrcG9pbnQgT3B0aW9ucw0KLS0gIC0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tIC0tLS0tLS0tLSAtLS0tLS0tIC0tLS0t
-LS0tLS0gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCi0tICBEZWZhdWx0ICgt
-VDM5ODIgPSBmb3JjZWQgZmx1c2gpCQkzMDk3ICAgICAgMjk3MDAgICAyNgkJIE9fRElSRUNUIGFu
-ZCBmc3luYyBmcm9tIFNRTA0KLS0gIC1UMzk3OSBhbmQgd3Q9MSBhd3Q9MQkJCSAgICA0MjEwCSAg
-MjU4MDAgICAyNyAgICAgICAgIE9fRElSRUNUIGFuZCBzcGVjaWFsaXplZCBmZGF0YXN5bmMNCi0t
-DQotLSAgLVQzOTc5IGFuZCB3dD0wCQkJCQkJMjg4MAkgIDIxMzQJICA2CQkJIE9fRElSRUNUIA0K
-LS0gIC1UMzk3OSBhbmQgd3Q9MSBhd3Q9MCAJCSAgICAgICAgNDQ0MwkgIDI1MjkwCSAgNDIJCSBP
-X0RJUkVDVCB8IE9fRFNZTkMNCi0tICAtVDM5NzkgYW5kIHd0PTEgYXd0PTAgTk8gU1RBTVAJCTQx
-MjAJICAyNTY4MAkgIDQwCQkgT19ESVJFQ1QgfCBPX0RTWU5DDQotLQ0KDQoNCg0KDQotLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogUm9iZXJ0IERvcnIgDQpTZW50OiBUaHVyc2RheSwg
-TWFyY2ggMjIsIDIwMTggNzozOCBBTQ0KVG86IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+DQpDYzog
-Q2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+OyBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21v
-cmJpdC5jb20+OyBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGludGVsLmNvbT47IGxpbnV4
-LXhmc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWZzZGV2ZWwgPGxpbnV4LWZzZGV2ZWxAdmdlci5r
-ZXJuZWwub3JnPjsgVGhlb2RvcmUgVHMnbyA8dHl0c29AbWl0LmVkdT47IE1hdHRoZXcgV2lsY294
-IDxtYXdpbGNveEBtaWNyb3NvZnQuY29tPjsgU2NvdHQgS29uZXJzbWFubiA8c2NvdHRrb25AbWlj
-cm9zb2Z0LmNvbT47IFNsYXZhIE9rcyA8c2xhdmFvQG1pY3Jvc29mdC5jb20+OyBKYXNyYWogRGFu
-Z2UgPGphc3JhamRAbWljcm9zb2Z0LmNvbT47IE1pY2hhZWwgTmVsc29uIDxtaWNuQG1pY3Jvc29m
-dC5jb20+DQpTdWJqZWN0OiBSRTogW1BBVENIXSBbUkZDXSBpb21hcDogVXNlIEZVQSBmb3IgcHVy
-ZSBkYXRhIE9fRFNZTkMgRElPIHdyaXRlcw0KDQpTb3JyeSB0byBoZWFyIHRoYXQuICBHZXQgd2Vs
-bCBzb29uLg0KDQpUaGFua3MgZm9yIHRoZSByZXNwb25zZS4NCg0KDQotLS0tLU9yaWdpbmFsIE1l
-c3NhZ2UtLS0tLQ0KRnJvbTogSmFuIEthcmEgPGphY2tAc3VzZS5jej4NClNlbnQ6IFRodXJzZGF5
-LCBNYXJjaCAyMiwgMjAxOCA5OjM2IEFNDQpUbzogUm9iZXJ0IERvcnIgPHJkb3JyQG1pY3Jvc29m
-dC5jb20+DQpDYzogSmFuIEthcmEgPGphY2tAc3VzZS5jej47IENocmlzdG9waCBIZWxsd2lnIDxo
-Y2hAbHN0LmRlPjsgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPjsgRGFuIFdpbGxp
-YW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+OyBsaW51eC14ZnNAdmdlci5rZXJuZWwub3Jn
-OyBsaW51eC1mc2RldmVsIDxsaW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9yZz47IFRoZW9kb3Jl
-IFRzJ28gPHR5dHNvQG1pdC5lZHU+OyBNYXR0aGV3IFdpbGNveCA8bWF3aWxjb3hAbWljcm9zb2Z0
-LmNvbT47IFNjb3R0IEtvbmVyc21hbm4gPHNjb3R0a29uQG1pY3Jvc29mdC5jb20+OyBTbGF2YSBP
-a3MgPHNsYXZhb0BtaWNyb3NvZnQuY29tPjsgSmFzcmFqIERhbmdlIDxqYXNyYWpkQG1pY3Jvc29m
-dC5jb20+OyBNaWNoYWVsIE5lbHNvbiA8bWljbkBtaWNyb3NvZnQuY29tPg0KU3ViamVjdDogUmU6
-IFtQQVRDSF0gW1JGQ10gaW9tYXA6IFVzZSBGVUEgZm9yIHB1cmUgZGF0YSBPX0RTWU5DIERJTyB3
-cml0ZXMNCg0KT24gTW9uIDE5LTAzLTE4IDE2OjE0OjE2LCBSb2JlcnQgRG9yciB3cm90ZToNCj4g
-QXdlc29tZSBuZXdzIG9uIHRoZSBzcGluLiAgIA0KPiANCj4gQXJlIHlvdSBnb2luZyB0byBiZSBh
-YmxlIHRvIG1ha2UgY2hhbmdlcyB0byBFWFQ0IHRvIGFjY29tbW9kYXRlIA0KPiBSRVFfRlVBIHdp
-dGhvdXQgZ2VuZXJpY193cml0ZV9mbHVzaCB0byBpbXByb3ZlIHBlcmZvcm1hbmNlIGxpa2Ugd2Fz
-IGRvbmUgZm9yIHhmcz8NCg0KSSdtIGN1cnJlbnRseSBvbiBhIHNpY2sgbGVhdmUgc28gSSdtIHNs
-b3cgb24gcmVwbGllcy4gU29ycnkuIEkgZG9uJ3Qgc2VlIGEgcmVhc29uIHdoeSBleHQ0IGNvdWxk
-IG5vdCBoYXZlIHRoZSBzYW1lIG9wdGltaXphdGlvbiBhcyBYRlMgZm9yIHRoYXQgY2FzZSBvZiBk
-aXJlY3QgSU8uIEhvd2V2ZXIgSSdtIG5vdCBzdXJlIHdoZW4gSSBnZXQgdG8gaW1wbGVtZW50aW5n
-IHRoYXQuDQoNCgkJCQkJCQkJSG9uemENCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
-PiBGcm9tOiBKYW4gS2FyYSA8amFja0BzdXNlLmN6Pg0KPiBTZW50OiBNb25kYXksIE1hcmNoIDE5
-LCAyMDE4IDExOjA3IEFNDQo+IFRvOiBSb2JlcnQgRG9yciA8cmRvcnJAbWljcm9zb2Z0LmNvbT4N
-Cj4gQ2M6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPjsgRGF2ZSBDaGlubmVyIA0KPiA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT47IERhbiBXaWxsaWFtcyA8ZGFuLmoud2lsbGlhbXNAaW50ZWwu
-Y29tPjsgDQo+IGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWZzZGV2ZWwgDQo+IDxs
-aW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9yZz47IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+OyBU
-aGVvZG9yZSANCj4gVHMnbyA8dHl0c29AbWl0LmVkdT47IE1hdHRoZXcgV2lsY294IDxtYXdpbGNv
-eEBtaWNyb3NvZnQuY29tPjsgU2NvdHQgDQo+IEtvbmVyc21hbm4gPHNjb3R0a29uQG1pY3Jvc29m
-dC5jb20+OyBTbGF2YSBPa3MgPHNsYXZhb0BtaWNyb3NvZnQuY29tPjsgDQo+IEphc3JhaiBEYW5n
-ZSA8amFzcmFqZEBtaWNyb3NvZnQuY29tPjsgTWljaGFlbCBOZWxzb24gDQo+IDxtaWNuQG1pY3Jv
-c29mdC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIFtSRkNdIGlvbWFwOiBVc2UgRlVBIGZv
-ciBwdXJlIGRhdGEgT19EU1lOQyBESU8gDQo+IHdyaXRlcw0KPiANCj4gT24gVHVlIDEzLTAzLTE4
-IDE4OjUyOjU3LCBSb2JlcnQgRG9yciB3cm90ZToNCj4gPiBJIHRyaWVkIHRoZSBSV0ZfT0RTWU5D
-IGFuZCB4ZnMgc2VlbXMgdG8gaG9ub3IgcHJvcGVybHkgYnV0IGl0IGNhdXNlcw0KPiA+IGV4dDQg
-dG8gZ28gc3BpbiBvdXQgYSBzaW5nbGUgQ1BVIGFuZCBoYW5nIHRoZSBzeXN0ZW0uIPCfmIoNCj4g
-DQo+IFllYWgsIHRoYXQncyBhIGJ1ZyBpbiBnZW5lcmljIGRpcmVjdCBJTyBjb2RlIHRoYXQgSSd2
-ZSBqdXN0IHJlY2VudGx5IA0KPiBmaXhlZA0KPiAoZDljMTBlNWI4ODYzICJkaXJlY3QtaW86IEZp
-eCBzbGVlcCBpbiBhdG9taWMgZHVlIHRvIHN5bmMgQUlPIiBpbiA0LjE2LXJjNCkuDQo+IA0KPiAJ
-CQkJCQkJCUhvbnphDQo+IA0KPiA+IA0KPiA+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
-LS0tDQo+ID4gRnJvbTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+ID4gU2VudDog
-VHVlc2RheSwgTWFyY2ggMTMsIDIwMTggMTE6MTMgQU0NCj4gPiBUbzogUm9iZXJ0IERvcnIgPHJk
-b3JyQG1pY3Jvc29mdC5jb20+DQo+ID4gQ2M6IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0
-LmNvbT47IERhbiBXaWxsaWFtcyANCj4gPiA8ZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tPjsgbGlu
-dXgteGZzQHZnZXIua2VybmVsLm9yZzsgQ2hyaXN0b3BoIA0KPiA+IEhlbGx3aWcgPGhjaEBsc3Qu
-ZGU+OyBsaW51eC1mc2RldmVsIDxsaW51eC1mc2RldmVsQHZnZXIua2VybmVsLm9yZz47IA0KPiA+
-IEphbiBLYXJhIDxqYWNrQHN1c2UuY3o+OyBUaGVvZG9yZSBUcydvIDx0eXRzb0BtaXQuZWR1Pjsg
-TWF0dGhldyANCj4gPiBXaWxjb3ggPG1hd2lsY294QG1pY3Jvc29mdC5jb20+OyBTY290dCBLb25l
-cnNtYW5uIA0KPiA+IDxzY290dGtvbkBtaWNyb3NvZnQuY29tPjsgU2xhdmEgT2tzIDxzbGF2YW9A
-bWljcm9zb2Z0LmNvbT47IEphc3JhaiANCj4gPiBEYW5nZSA8amFzcmFqZEBtaWNyb3NvZnQuY29t
-PjsgTWljaGFlbCBOZWxzb24gPG1pY25AbWljcm9zb2Z0LmNvbT4NCj4gPiBTdWJqZWN0OiBSZTog
-W1BBVENIXSBbUkZDXSBpb21hcDogVXNlIEZVQSBmb3IgcHVyZSBkYXRhIE9fRFNZTkMgRElPIA0K
-PiA+IHdyaXRlcw0KPiA+IA0KPiA+ID4gSSB0aGluayB0aGUgYW5zd2VyIGlzIHRoZSBpb21hcCog
-bG9naWMgbWFrZXMgc3VyZSB0byBpc3N1ZSBnZW5lcmljX3dyaXRlX3N5bmMgZm9yIE9fRFNZTkMg
-VzEgYWZ0ZXIgVzEgaXMgY29tcGxldGVkIGJ5IGhhcmR3YXJlIGFuZCB0aGVuIHdhaXRzIGZvciBj
-b21wbGV0aW9uIG9mIHRoZSBmbHVzaCByZXF1ZXN0IChSRVFfUFJFRkxVU0gpIGJlZm9yZSBXMSBp
-cyByZXR1cm5lZCB0byB0aGUgQUlPIGNvbXBsZXRpb24gcmluZywgcHJldmVudGluZyBpb19nZXRl
-dmVudHMgZnJvbSBwcm9jZXNzaW5nIFcxIGJlZm9yZSB0aGUgZmx1c2ggb2NjdXJzIGFuZCBjb21w
-bGV0ZXMuICAgSSBqdXN0IG5lZWQgcHJvcGVyIGNvbmZpcm1hdGlvbiBmcm9tIHRoZSBleHBlcnRz
-IG9uIHRoaXMgY29kZSB0aGF0IHRoaXMgaXMgdGhlIGV4cGVjdGVkIGJlaGF2aW9yLg0KPiA+IA0K
-PiA+IFllcy4gdGhhdCBpcyB0aGUgY2FzZS4NCj4gPiANCj4gPiA+IEZvciBTUUwgU2VydmVyIHVz
-aW5nIE9fRElSRUNUIHwgT19EU1lOQyBvbiBjdXJyZW50IGtlcm5lbHMgaXMgdmVyeSBwZXJmb3Jt
-YW5jZSBpbXBhY3RpbmcuICAgSW5zdGVhZCB3ZSBlbmFibGUgYSBtb2RlIGZvciBTUUwgdGhhdCBv
-cGVucyBPX0RJUkVDVCBvbmx5IGFuZCBpc3N1ZXMgZnN5bmMvZmRhdGFzeW5jIHdoZW4gd2UgYXJl
-IGhhcmRlbmluZyBsb2cgZmlsZXMgb3IgY2hlY2twb2ludGluZyBkYXRhIGZpbGVzLiAgIFRoaXMg
-cmVkdWNlcyB0aGUgd3JpdGUsIGZsdXNoLCB3cml0ZSwgZmx1c2ggcGF0dGVybiBhbGxvd2luZyBm
-b3Igd3JpdGUsIHdyaXRlLCB3cml0ZSwgLi4uIHRoZW4gZmx1c2ggYXMgd2Ugb25seSBpc3N1ZSBm
-bHVzaCByZXF1ZXN0cyB3aGVuIHJlcXVpcmVkIHRvIG1haW50YWluIHRoZSBkYXRhIGludGVncml0
-eSBib3VuZGFyaWVzIG9mIFNRTCBTZXJ2ZXIuICBUaGUgcGVyZm9ybWFuY2UgaXMgc2lnbmlmaWNh
-bnRseSBiZXR0ZXIgdGhlbiB0aGUgZGV2aWNlIGZsdXNoIGZvciBlYWNoIHdyaXRlIGFzIHlvdSBj
-YW4gaW1hZ2luZS4NCj4gPiA+IA0KPiA+ID4gVGVzdGluZyBzaG93cyB0aGUgRlVBIGVuaGFuY2Vt
-ZW50IGlzIGJldHRlciB0aGVuIHRoZSB3cml0ZSwgZmx1c2ggcGF0dGVybi4gICBGb3IgU1FMIFNl
-cnZlciB3ZSB3YW50IHRvIGR5bmFtaWNhbGx5IG9wZW4gd2l0aCBPX0RJUkVDVCB8IE9fRFNZTkMg
-d2hlbiBSRVFfRlVBIGNhbiBiZSBwcm9wZXJseSB1c2VkIGFuZCBvcGVuIHdpdGggT19ESVJFQ1Qg
-YW5kIGxldmVyYWdlIFNRTCBTZXJ2ZXIncyBhbHRlcm5hdGUgZmx1c2ggc2NoZW1lIHdoZW4gcnVu
-bmluZyBvbiBvbGRlciBrZXJuZWwgb3IgYSBzeXN0ZW0gdGhhdCBkb2VzIG5vdCBzdXBwb3J0IEZV
-QSAoU0FUQSwgSURFLCAuLi4pDQo+ID4gDQo+ID4gVGhlcmUgaXMgbm8gcmVhbGx5IGdvb2Qgd2F5
-IHRvIGZpZ3VyZSB0aGlzIG91dCBleGNlcHQgZm9yIGJlbmNobWFya2luZywgZ2l2ZW4gdGhhdCB0
-aGUgRlVBIHVzZSBhbiBpbXBsZW1lbnRhdGlvbiBkZXRhaWwuDQo+ID4gDQo+ID4gQnR3LCBhbm90
-aGVyIGZlYXR1cmUgdGhhdCBtaWdodCBiZSBpbnRlcmVzdGluZyB0byB5b3UgaXMgdGhlIFJXRl9E
-U1lOQyBmbGFnIHRvIHRoZSBwd3JpdGV2MiBzeXNjYWxsLCB3aGljaCBhbGxvd3MgdG8gYXBwbHkg
-T19EU1lOQyBzZW1hbnRpY3Mgb24gYSBwZXItSS9PIGJhc2lzIGluc3RlYWQgb2YgdXNpbmcgaXQg
-YXQgb3BlbiB0aW1lLg0KPiAtLQ0KPiBKYW4gS2FyYSA8amFja0BzdXNlLmNvbT4NCj4gU1VTRSBM
-YWJzLCBDUg0KLS0NCkphbiBLYXJhIDxqYWNrQHN1c2UuY29tPg0KU1VTRSBMYWJzLCBDUg0K
+On Mon, Apr 02, 2018 at 12:57:24PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> If one of the backup superblocks is found to differ seriously from
+> superblock 0, write out a fresh copy from the in-core sb.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+.....
+> +/* Repair the superblock. */
+> +int
+> +xfs_repair_superblock(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_dsb			*sbp;
+> +	xfs_agnumber_t			agno;
+> +	int				error;
+> +
+> +	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
+> +	agno = sc->sm->sm_agno;
+> +	if (agno == 0)
+> +		return -EOPNOTSUPP;
+> +
+> +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> +		  XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> +		  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+
+If we are just overwriting the superblock, then use
+xfs_trans_get_buf() so we don't need to do IO here.
+
+> +	if (error)
+> +		return error;
+> +	bp->b_ops = &xfs_sb_buf_ops;
+> +
+> +	/* Copy AG 0's superblock to this one. */
+> +	sbp = XFS_BUF_TO_SBP(bp);
+> +	memset(sbp, 0, mp->m_sb.sb_sectsize);
+
+That's a bit nasty. struct xfs_dsb is not a sector size in length.
+
+	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+
+> +	xfs_sb_to_disk(sbp, &mp->m_sb);
+> +	sbp->sb_bad_features2 = sbp->sb_features2;
+
+Why is sb_bad_features2 not correct when taken from the incore
+superblock?
+
+> +	/* Write this to disk. */
+> +	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
+> +	xfs_trans_log_buf(sc->tp, bp, 0, mp->m_sb.sb_sectsize - 1);
+
+And why log this rather than just write it straight to disk? We've
+never logged secondary superblocks before, so why now?
+
+>  int xfs_repair_setup_btree_extent_collection(struct xfs_scrub_context *sc);
+>  
+>  /* Metadata repairers */
+> +int xfs_repair_superblock(struct xfs_scrub_context *sc);
+>  
+>  #else
+>  
+> @@ -106,6 +107,8 @@ xfs_repair_calc_ag_resblks(
+>  	return 0;
+>  }
+>  
+> +#define xfs_repair_superblock		(NULL)
+
+Static inline, returns -EOPNOTSUPP. Or, as I'm suspecting that
+all the patches are goign to do this - have a generic
+xfs_repair_notsupported() function and define the functions
+to that.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
