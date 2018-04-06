@@ -1,129 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50162 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751277AbeDDStK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 14:49:10 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CE12D81127
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 18:49:10 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A1B1A9D99E
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 18:49:10 +0000 (UTC)
-Subject: [PATCH 1/6] xfs: remove unused flags arg from xfs_dquot_verify
-From: Eric Sandeen <sandeen@redhat.com>
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
-Message-ID: <51e940bc-9bcd-0fe6-ac90-003eae7e24f0@redhat.com>
-Date: Wed, 4 Apr 2018 13:49:09 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:53280 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751746AbeDFQRA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Apr 2018 12:17:00 -0400
+Date: Fri, 6 Apr 2018 09:16:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: reset xfs_inode struct on reclaim in debug mode
+Message-ID: <20180406161655.GH7500@magnolia>
+References: <20180405121147.60897-1-bfoster@redhat.com>
+ <20180405165142.GE7500@magnolia>
+ <20180405181237.GA417@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180405181237.GA417@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Long ago the flags argument was used to determine whether
-to issue warnings about corruptions, but that's done elsewhere
-now and the flag is unused here, so remove it.
+On Thu, Apr 05, 2018 at 02:12:38PM -0400, Brian Foster wrote:
+> On Thu, Apr 05, 2018 at 09:51:42AM -0700, Darrick J. Wong wrote:
+> > On Thu, Apr 05, 2018 at 08:11:46AM -0400, Brian Foster wrote:
+> > > A test case to reproduce a filestream/MRU use-after-free of a
+> > > reclaimed inode requires bits (e.g., ip->i_mount) of the inode to be
+> > > reset/reused once the inode memory is freed. This normally only
+> > > occurs when a new page is cycled into the zone, however.
+> > > 
+> > > Perform the "one-time" inode init immediately prior to freeing
+> > > inodes when in DEBUG mode. This will zero the inode, init the low
+> > > level structures (locks, lists, etc.) and otherwise ensure each
+> > > inode is in a purely uninitialized state while sitting in the zone
+> > > as free memory.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > I'll post a test that depends on this once this is worked out... one
+> > > concern this raised is if we consider any future bugs in the inode
+> > > initialization code (suppose we initialize some field once that should
+> > > be initialized on every allocation, for example), this code has the
+> > > potential to suppress such problems in debug mode. So an alternative to
+> > > this approach is to perhaps tie this to an errortag and let the
+> > > associated xfstests test enable it appropriately. Thoughts or
+> > > preferences?
+> > 
+> > How about memset()ing the entire inode with a known poison value in
+> > xfs_inode_free_callback and calling _init_once in xfs_inode_alloc
+> > instead?  That way it'll be obvious that someone touched a poisoned
+> > (free) inode.
+> > 
+> 
+> Ok... but note that doesn't address the concern above because we still
+> effectively call _init_once() for every allocation. Essentially this
+> means that if somebody screws up the idempotent nature of the
+> init_once() fields or adds a new xfs_inode field and doesn't initialize
+> it properly, the DEBUG mode kernel could suppress the problem by
+> reinvoking the ctor for each allocation (where a !DEBUG kernel
+> wouldn't). That's not a critical problem, but a bit of an annoying
+> tradeoff since IMO a DEBUG kernel should be more likely to find such
+> problems rather than hide them.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/libxfs/xfs_dquot_buf.c  | 5 ++---
- fs/xfs/libxfs/xfs_quota_defs.h | 3 +--
- fs/xfs/xfs_dquot.c             | 2 +-
- fs/xfs/xfs_log_recover.c       | 4 ++--
- fs/xfs/xfs_qm.c                | 2 +-
- 5 files changed, 7 insertions(+), 9 deletions(-)
+Or just add a new errortag to turn this behavior on?  I think that'd be
+useful at least for regression testing without requiring everyone to
+test with KASAN kernels...
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 8b7a6c3..a926058 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -47,8 +47,7 @@
- 	struct xfs_mount *mp,
- 	xfs_disk_dquot_t *ddq,
- 	xfs_dqid_t	 id,
--	uint		 type,	  /* used only when IO_dorepair is true */
--	uint		 flags)
-+	uint		 type)	  /* used only when IO_dorepair is true */
- {
- 	/*
- 	 * We can encounter an uninitialized dquot buffer for 2 reasons:
-@@ -200,7 +199,7 @@
- 		if (i == 0)
- 			id = be32_to_cpu(ddq->d_id);
- 
--		fa = xfs_dquot_verify(mp, ddq, id + i, 0, 0);
-+		fa = xfs_dquot_verify(mp, ddq, id + i, 0);
- 		if (fa)
- 			return fa;
- 	}
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index bb1b13a..8433656 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -152,8 +152,7 @@
- #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
- 
- extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
--		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type,
--		uint flags);
-+		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
- extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
- extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
- 		xfs_dqid_t id, uint type);
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 43572f8..7e203f9 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1003,7 +1003,7 @@
- 	/*
- 	 * A simple sanity check in case we got a corrupted dquot..
- 	 */
--	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0, 0);
-+	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0);
- 	if (fa) {
- 		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
- 				be32_to_cpu(ddqp->d_id), fa);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 00240c9..3b35feb 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2702,7 +2702,7 @@ struct xfs_buf_cancel {
- 				goto next;
- 			}
- 			fa = xfs_dquot_verify(mp, item->ri_buf[i].i_addr,
--					       -1, 0, 0);
-+					       -1, 0);
- 			if (fa) {
- 				xfs_alert(mp,
- 	"dquot corrupt at %pS trying to replay into block 0x%llx",
-@@ -3353,7 +3353,7 @@ struct xfs_buf_cancel {
- 	 */
- 	dq_f = item->ri_buf[0].i_addr;
- 	ASSERT(dq_f);
--	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0, 0);
-+	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0);
- 	if (fa) {
- 		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
- 				dq_f->qlf_id, fa);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 5b848f4..64c22c32 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -867,7 +867,7 @@ struct xfs_qm_isolate {
- 		 * find uninitialised dquot blks. See comment in
- 		 * xfs_dquot_verify.
- 		 */
--		fa = xfs_dquot_verify(mp, ddq, id + j, type, 0);
-+		fa = xfs_dquot_verify(mp, ddq, id + j, type);
- 		if (fa)
- 			xfs_dquot_repair(mp, ddq, id + j, type);
- 
--- 
-1.8.3.1
+> But if nobody objects to that tradeoff, I'm fine with doing a memset()
+> -> init_once() cycle as such instead of what this patch is doing. That
+> is probably a more robust form of use-after-free detection after all.
+> The minor tradeoff with the post-alloc init_once() approach is that we'd
+> also potentially suppress failures of the kmem_cache code to call the
+> ctor, but I suppose that's bound to fail spectacularly if that was ever
+> a problem.
 
+Probably. :)
+
+--D
+
+> 
+> Brian
+> 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > >  fs/xfs/xfs_icache.c | 5 ++++-
+> > >  fs/xfs/xfs_super.c  | 2 +-
+> > >  fs/xfs/xfs_super.h  | 1 +
+> > >  3 files changed, 6 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index 9a18f69f6e96..86dc4c8a4e1d 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -111,7 +111,10 @@ xfs_inode_free_callback(
+> > >  		xfs_inode_item_destroy(ip);
+> > >  		ip->i_itemp = NULL;
+> > >  	}
+> > > -
+> > > +#ifdef DEBUG
+> > > +	/* facilitate catching use-after-free problems */
+> > > +	xfs_fs_inode_init_once(ip);
+> > > +#endif
+> > >  	kmem_zone_free(xfs_inode_zone, ip);
+> > >  }
+> > >  
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index 612c1d5348b3..29b1be5dfebf 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -1030,7 +1030,7 @@ xfs_fs_dirty_inode(
+> > >   * fields in the xfs inode that left in the initialise state
+> > >   * when freeing the inode.
+> > >   */
+> > > -STATIC void
+> > > +void
+> > >  xfs_fs_inode_init_once(
+> > >  	void			*inode)
+> > >  {
+> > > diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+> > > index 8cee8e8050e3..aae8a778f378 100644
+> > > --- a/fs/xfs/xfs_super.h
+> > > +++ b/fs/xfs/xfs_super.h
+> > > @@ -70,6 +70,7 @@ struct block_device;
+> > >  
+> > >  extern void xfs_quiesce_attr(struct xfs_mount *mp);
+> > >  extern void xfs_flush_inodes(struct xfs_mount *mp);
+> > > +extern void xfs_fs_inode_init_once(void *);
+> > >  extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
+> > >  extern xfs_agnumber_t xfs_set_inode_alloc(struct xfs_mount *,
+> > >  					   xfs_agnumber_t agcount);
+> > > -- 
+> > > 2.13.6
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
