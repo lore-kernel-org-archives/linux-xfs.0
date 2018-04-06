@@ -1,99 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42141 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:56252 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755198AbeDWNyk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Apr 2018 09:54:40 -0400
-Date: Mon, 23 Apr 2018 09:54:30 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 03/13] xfs: delegate dqget input checks to helper function
-Message-ID: <20180423135429.GC43600@bfoster.bfoster>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia>
- <152440957121.29601.1360188076802956985.stgit@magnolia>
+        id S1751415AbeDFCuC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 5 Apr 2018 22:50:02 -0400
+Subject: Re: [PATCH 2/6] xfs: pass xfs_dqblk to
+ xfs_dquot_verify/xfs_dquot_repair
+References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+ <c92cfdb8-88c2-0f5b-7383-e5208fef6f5e@redhat.com>
+ <20180405035241.GB7500@magnolia>
+ <5c02fc77-28b6-4665-82f3-699fda82688c@sandeen.net>
+ <20180405224033.GG23861@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3d482958-bf06-86f4-56e1-c679e9490495@sandeen.net>
+Date: Thu, 5 Apr 2018 21:50:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152440957121.29601.1360188076802956985.stgit@magnolia>
+In-Reply-To: <20180405224033.GG23861@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Apr 22, 2018 at 08:06:11AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move the dqget input checks to a separate function in preparation for
-> splitting up the dqget functionality.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_dquot.c |   39 ++++++++++++++++++++++++++++++---------
->  1 file changed, 30 insertions(+), 9 deletions(-)
+On 4/5/18 5:40 PM, Dave Chinner wrote:
+> On Wed, Apr 04, 2018 at 11:13:03PM -0500, Eric Sandeen wrote:
+>> On 4/4/18 10:52 PM, Darrick J. Wong wrote:
+>>> On Wed, Apr 04, 2018 at 01:54:26PM -0500, Eric Sandeen wrote:
+>>>> In order to validate the UUID in xfs_dquot_verify, we need
+>>>> the full xfs_qblk, not just the xfs_disk_dquot_t (which is
+>>>
+>>>           ^^^^^^^^^ xfs_dqblk, right?
+>>
+>> yup
+>>
+>> ...
+>>
+>>>> @@ -192,14 +191,10 @@
+>>>
+>>> Any way you can get your diff generator to add -p to spit out the
+>>> alleged function this chunk is supposed to land in?  It makes reviewing
+>>> patches somewhat easier for me. :)
+>>
+>> No doubt ... I don't know why it doesn't do so, sorry.  :/  Will try
+>> to figure that out.  Sorry about that.
 > 
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 43b0b32..9a3a05e 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -753,6 +753,33 @@ xfs_qm_dqget_cache_insert(
->  	return 0;
->  }
->  
-> +/* Check our input parameters. */
-> +static int
-> +xfs_qm_dqget_checks(
-> +	struct xfs_mount	*mp,
-> +	uint			type)
-> +{
-> +	if (!XFS_IS_QUOTA_RUNNING(mp)) {
-> +		ASSERT(0);
-> +		return -ESRCH;
-> +	}
-> +
-> +	if ((!XFS_IS_UQUOTA_ON(mp) && type == XFS_DQ_USER) ||
-> +	    (!XFS_IS_PQUOTA_ON(mp) && type == XFS_DQ_PROJ) ||
-> +	    (!XFS_IS_GQUOTA_ON(mp) && type == XFS_DQ_GROUP)) {
-> +		return -ESRCH;
-> +	}
-> +
-> +	if (type != XFS_DQ_USER &&
-> +	    type != XFS_DQ_PROJ &&
-> +	    type != XFS_DQ_GROUP) {
-> +		ASSERT(0);
-> +		return -EINVAL;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  /*
->   * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
->   * a locked dquot, doing an allocation (if requested) as needed.
-> @@ -775,16 +802,10 @@ xfs_qm_dqget(
->  	struct xfs_dquot	*dqp;
->  	int			error;
->  
-> -	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> -	if ((! XFS_IS_UQUOTA_ON(mp) && type == XFS_DQ_USER) ||
-> -	    (! XFS_IS_PQUOTA_ON(mp) && type == XFS_DQ_PROJ) ||
-> -	    (! XFS_IS_GQUOTA_ON(mp) && type == XFS_DQ_GROUP)) {
-> -		return -ESRCH;
-> -	}
-> +	error = xfs_qm_dqget_checks(mp, type);
-> +	if (error)
-> +		return error;
->  
-> -	ASSERT(type == XFS_DQ_USER ||
-> -	       type == XFS_DQ_PROJ ||
-> -	       type == XFS_DQ_GROUP);
->  	if (ip) {
->  		ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  		ASSERT(xfs_inode_dquot(ip, type) == NULL);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff -up
+
+I am actually familiar with diff, thanks ;)  I couldn't figure out why
+git & guilt weren't giving me the expected results.
+
+For some reason I had this in this particular repo:
+
+$ cat .gitattributes
+*.c   diff=cpp
+*.h   diff=cpp
+
+Getting rid of that fixes it, I don't actually know why it was there.
+
+-Eric
