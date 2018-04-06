@@ -1,30 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60534 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752269AbeDDWvK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 18:51:10 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0A78183F3F
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 22:51:10 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CFE1182705
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 22:51:09 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/2] xfs: clean up unused function parameters
-Message-ID: <b2b1aa4b-9ba9-eb4d-c91c-889a25fdd61e@redhat.com>
-Date: Wed, 4 Apr 2018 17:51:08 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:47304 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751570AbeDFQbF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Apr 2018 12:31:05 -0400
+Date: Fri, 6 Apr 2018 09:31:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 03/21] xfs: add repair helpers for the reverse mapping
+ btree
+Message-ID: <20180406163101.GI7500@magnolia>
+References: <152269897182.16346.1710955088267364781.stgit@magnolia>
+ <152269899099.16346.10130327272084087800.stgit@magnolia>
+ <20180405230218.GI23861@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180405230218.GI23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-sometimes mechanical cleanup is soothing ;)
+On Fri, Apr 06, 2018 at 09:02:18AM +1000, Dave Chinner wrote:
+> On Mon, Apr 02, 2018 at 12:56:31PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Add a couple of functions to the reverse mapping btree that will be used
+> > to repair the rmapbt.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Minor nit:
+> 
+> > +struct xfs_rmap_key_state {
+> > +	uint64_t			owner;
+> > +	uint64_t			offset;
+> > +	unsigned int			flags;
+> > +	bool				has_rmap;
+> > +};
+> > +
+> > +/* For each rmap given, figure out if it doesn't match the key we want. */
+> > +STATIC int
+> > +xfs_rmap_has_other_keys_helper(
+> > +	struct xfs_btree_cur		*cur,
+> > +	struct xfs_rmap_irec		*rec,
+> > +	void				*priv)
+> > +{
+> > +	struct xfs_rmap_key_state	*rhok = priv;
+> 
+> rks rather than rhok?
 
-(if there's anything in here that you want to keep
-around for symmetry or whatnot, feel free to push back).
+Yep yep, fixed.
+
+--D
+
+> 
+> Otherwise looks ok.
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
