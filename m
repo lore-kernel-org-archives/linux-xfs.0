@@ -1,58 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:32871 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752392AbeDDXVL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 19:21:11 -0400
-Date: Thu, 5 Apr 2018 09:19:46 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [v8, 11/18] mm, dax: enable filesystems to trigger dev_pagemap
- ->page_free callbacks
-Message-ID: <20180405091946.7ca20ead@canb.auug.org.au>
-In-Reply-To: <CAPcyv4jd+aSzMvGHJ6O8K5vJ+qmH=XU2i2bzsGvZENXnkpM7=g@mail.gmail.com>
-References: <152246898837.36038.26895928842345061.stgit@dwillia2-desk3.amr.corp.intel.com>
-        <20180404212340.GA12737@outlook.office365.com>
-        <CAPcyv4jknruAmkPEVx0X6Bd3uRs_FYdPf-W-5cDO1Z+kaG5+uw@mail.gmail.com>
-        <CAPcyv4jd+aSzMvGHJ6O8K5vJ+qmH=XU2i2bzsGvZENXnkpM7=g@mail.gmail.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:59424 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750807AbeDFRbu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Apr 2018 13:31:50 -0400
+Date: Fri, 6 Apr 2018 10:31:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/21] xfs: make xfs_bmapi_remapi work with attribute
+ forks
+Message-ID: <20180406173146.GK7500@magnolia>
+References: <152269897182.16346.1710955088267364781.stgit@magnolia>
+ <152269901338.16346.3950698529446189331.stgit@magnolia>
+ <20180405231223.GK23861@dastard>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/sgDCFHZZhV61WXqrqZ/wP=B"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180405231223.GK23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Andrei Vagin <avagin@virtuozzo.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Michal Hocko <mhocko@suse.com>, =?UTF-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, david <david@fromorbit.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
---Sig_/sgDCFHZZhV61WXqrqZ/wP=B
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Apr 06, 2018 at 09:12:23AM +1000, Dave Chinner wrote:
+> On Mon, Apr 02, 2018 at 12:56:53PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Add a new flags argument to xfs_bmapi_remapi so that we can pass BMAPI
+> > flags into the function.  This enables us to pass in BMAPI_ATTRFORK so
+> > that we can remap things into the attribute fork.  Eventually the
+> > online repair code will use this to rebuild attribute forks, so make it
+> > non-static.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c |   36 +++++++++++++++++++++++-------------
+> >  fs/xfs/libxfs/xfs_bmap.h |    4 ++++
+> >  2 files changed, 27 insertions(+), 13 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 519ef9c..c676d5c 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -4512,30 +4512,37 @@ xfs_bmapi_write(
+> >  	return error;
+> >  }
+> >  
+> > -static int
+> > +int
+> >  xfs_bmapi_remap(
+> >  	struct xfs_trans	*tp,
+> >  	struct xfs_inode	*ip,
+> >  	xfs_fileoff_t		bno,
+> >  	xfs_filblks_t		len,
+> >  	xfs_fsblock_t		startblock,
+> > -	struct xfs_defer_ops	*dfops)
+> > +	struct xfs_defer_ops	*dfops,
+> > +	int			flags)
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> > +	struct xfs_ifork	*ifp;
+> >  	struct xfs_btree_cur	*cur = NULL;
+> >  	xfs_fsblock_t		firstblock = NULLFSBLOCK;
+> >  	struct xfs_bmbt_irec	got;
+> >  	struct xfs_iext_cursor	icur;
+> > +	int			whichfork = xfs_bmapi_whichfork(flags);
+> >  	int			logflags = 0, error;
+> >  
+> > +	ifp = XFS_IFORK_PTR(ip, whichfork);
+> >  	ASSERT(len > 0);
+> >  	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
+> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> > +	ASSERT(!(flags & (XFS_BMAPI_DELALLOC | XFS_BMAPI_COWFORK |
+> > +			  XFS_BMAPI_ZERO | XFS_BMAPI_CONVERT |
+> > +			  XFS_BMAPI_IGSTATE | XFS_BMAPI_METADATA |
+> > +			  XFS_BMAPI_ENTIRE | XFS_BMAPI_CONVERT_ONLY)));
+> 
+> Wouldn't it be better just to assert it's a flag that is supported?
+> i.e.
+> 
+> 	ASSERT(!flags || (flags & XFS_BMAPI_ATTRFORK));
 
-Hi Dan,
+Yes... but I want to allow XFS_BMAPI_PREALLOC too.
 
-On Wed, 4 Apr 2018 14:35:20 -0700 Dan Williams <dan.j.williams@intel.com> w=
-rote:
->
-> New branch pushed out with this offending commit removed.
+Ugh, that's a gross mess.
 
-Thanks, I refetched.
+ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC)));
 
---=20
-Cheers,
-Stephen Rothwell
+covers all four cases, I think.  Granted it probably needs a further
+test to screen out (ATTRFORK | PREALLOC)...
 
---Sig_/sgDCFHZZhV61WXqrqZ/wP=B
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+> > @@ -4569,18 +4576,21 @@ xfs_bmapi_remap(
+> >  	got.br_startoff = bno;
+> >  	got.br_startblock = startblock;
+> >  	got.br_blockcount = len;
+> > -	got.br_state = XFS_EXT_NORM;
+> > +	if (flags & XFS_BMAPI_PREALLOC)
+> > +		got.br_state = XFS_EXT_UNWRITTEN;
+> > +	else
+> > +		got.br_state = XFS_EXT_NORM;
+> 
+> This seems unrelated to the attr fork support change?
 
------BEGIN PGP SIGNATURE-----
+Oops, yeah.  Will split this out into a separate patch.
 
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlrFXZIACgkQAVBC80lX
-0GzkHwgAoJUYgLchV2FPkM6kN5+QkaSI/dMQ571cQ+bs5JkrfAkANCdIr1LNVk5p
-JxFaMZccM3i4K/6t+/h84UowZV6Qk3W2GkrPhxUpFKsCWEc3w4wXrZRN71c4rM5D
-FIHHwY29bOj3wiP5ngOTFFR0D8F8cnrOD2k+bTetaNpCbuJ63am+I8NiI15qfzU3
-n5J+S+Ra7m4aCBi3n/pQqTKWKJehpjE3FSd5qwepBLXLsCXiQtcDzIT1+U0vvX27
-b/F2UAoOwZa8EZCsBCSDzQD5PX6/vSwk11hXkoveRhyhy7P8YOniRin8u/KOefsl
-+8T7T2oYf/74PSICuIObkzEf9ZSQHQ==
-=nbIL
------END PGP SIGNATURE-----
+--D
 
---Sig_/sgDCFHZZhV61WXqrqZ/wP=B--
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
