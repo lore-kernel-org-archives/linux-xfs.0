@@ -1,241 +1,274 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37282 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752069AbeDEDwp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Apr 2018 23:52:45 -0400
-Date: Wed, 4 Apr 2018 20:52:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/6] xfs: pass xfs_dqblk to
- xfs_dquot_verify/xfs_dquot_repair
-Message-ID: <20180405035241.GB7500@magnolia>
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
- <c92cfdb8-88c2-0f5b-7383-e5208fef6f5e@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:34066 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750807AbeDFG7o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Apr 2018 02:59:44 -0400
+Date: Thu, 5 Apr 2018 23:59:44 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: replace filestream item xfs_inode reference
+ with xfs_mount
+Message-ID: <20180406065944.GA12740@infradead.org>
+References: <20180405121147.60897-1-bfoster@redhat.com>
+ <20180405121147.60897-2-bfoster@redhat.com>
+ <20180405171842.GA4849@infradead.org>
+ <20180405181300.GB417@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c92cfdb8-88c2-0f5b-7383-e5208fef6f5e@redhat.com>
+In-Reply-To: <20180405181300.GB417@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Wed, Apr 04, 2018 at 01:54:26PM -0500, Eric Sandeen wrote:
-> In order to validate the UUID in xfs_dquot_verify, we need
-> the full xfs_qblk, not just the xfs_disk_dquot_t (which is
-
-          ^^^^^^^^^ xfs_dqblk, right?
-
-> a subset).
+On Thu, Apr 05, 2018 at 02:13:01PM -0400, Brian Foster wrote:
+> On Thu, Apr 05, 2018 at 10:18:42AM -0700, Christoph Hellwig wrote:
+> > On Thu, Apr 05, 2018 at 08:11:47AM -0400, Brian Foster wrote:
+> > > The obvious solution is to grab an inode reference for
+> > > xfs_fstrm_item. The filestream mechanism only actually uses the
+> > > inode pointer as a means to access the xfs_mount, however. Rather
+> > > than add unnecessary complexity, simplify the implementation to
+> > > store an xfs_mount pointer instead of the inode. This also requires
+> > > updates to the tracepoint class to provide the associated data via
+> > > parameters rather than the inode and a minor hack to peek at the MRU
+> > > key to establish the inode number at free time.
+> > 
+> > How about not replacing it all and just providing the context from
+> > the mru cache?  Something like the untested patch below:
+> > 
 > 
-> Do the same for xfs_dquot_repair, for the same reasons.
-> Casting a xfs_disk_dquot to a xfs_qblk is risky if the source
-> pointer wasn't a full xfs_dqblk, so enforce that by changing
-> the arguments to these functions.
-> 
-> In xfs_qm_dqflush we move the memcpy up so that we have
-> a full (and updated) xfs_dqblk to test.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_dquot_buf.c  | 23 +++++++++--------------
->  fs/xfs/libxfs/xfs_quota_defs.h |  4 ++--
->  fs/xfs/xfs_dquot.c             | 12 +++++++-----
->  fs/xfs/xfs_log_recover.c       |  6 ++++--
->  fs/xfs/xfs_qm.c                |  6 +++---
->  5 files changed, 25 insertions(+), 26 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index a926058..f94e8c2 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -44,11 +44,13 @@
->   */
->  xfs_failaddr_t
->  xfs_dquot_verify(
-> -	struct xfs_mount *mp,
-> -	xfs_disk_dquot_t *ddq,
-> -	xfs_dqid_t	 id,
-> -	uint		 type)	  /* used only when IO_dorepair is true */
-> +	struct xfs_mount	*mp,
-> +	struct xfs_dqblk	*dqb,
-> +	xfs_dqid_t		id,
-> +	uint			type)	  /* used only during quota rebuild */
->  {
-> +	struct xfs_disk_dquot	*ddq = &dqb->dd_diskdq;
-> +
->  	/*
->  	 * We can encounter an uninitialized dquot buffer for 2 reasons:
->  	 * 1. If we crash while deleting the quotainode(s), and those blks got
-> @@ -104,13 +106,10 @@
->  int
->  xfs_dquot_repair(
->  	struct xfs_mount	*mp,
-> -	struct xfs_disk_dquot	*ddq,
-> +	struct xfs_dqblk	*d,
->  	xfs_dqid_t		id,
->  	uint			type)
->  {
-> -	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
-> -
-> -
->  	/*
->  	 * Typically, a repair is only requested by quotacheck.
->  	 */
-> @@ -192,14 +191,10 @@
+> I actually considered something like this briefly but it initially
+> looked more involved than what you've come up with here. I think that I
+> just didn't consider storing the mp directly in the xfs_mru_cache so it
+> would be available to the reaper context. With that, this looks nicer to
+> me. I'll give it a whirl.. thanks!
 
-Any way you can get your diff generator to add -p to spit out the
-alleged function this chunk is supposed to land in?  It makes reviewing
-patches somewhat easier for me. :)
+FYI, here is a version with a proper changelog:
 
->  	 * buffer so corruptions could point to the wrong dquot in this case.
->  	 */
->  	for (i = 0; i < ndquots; i++) {
-> -		struct xfs_disk_dquot	*ddq;
-> -
-> -		ddq = &d[i].dd_diskdq;
-> -
->  		if (i == 0)
-> -			id = be32_to_cpu(ddq->d_id);
-> +			id = be32_to_cpu(d[i].dd_diskdq.d_id);
->  
-> -		fa = xfs_dquot_verify(mp, ddq, id + i, 0);
-> +		fa = xfs_dquot_verify(mp, &d[i], id + i, 0);
->  		if (fa)
->  			return fa;
->  	}
-> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-> index 8433656..424526a 100644
-> --- a/fs/xfs/libxfs/xfs_quota_defs.h
-> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
-> @@ -152,9 +152,9 @@
->  #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
->  
->  extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
-> -		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
-> +		struct xfs_dqblk *dqb, xfs_dqid_t id, uint type);
->  extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
-> -extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
-> +extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
->  		xfs_dqid_t id, uint type);
->  
->  #endif	/* __XFS_QUOTA_H__ */
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 7e203f9..f7bed3c 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -955,6 +955,7 @@
->  {
->  	struct xfs_mount	*mp = dqp->q_mount;
->  	struct xfs_buf		*bp;
-> +	struct xfs_dqblk	*dqb;
->  	struct xfs_disk_dquot	*ddqp;
->  	xfs_failaddr_t		fa;
->  	int			error;
-> @@ -998,12 +999,16 @@
->  	/*
->  	 * Calculate the location of the dquot inside the buffer.
->  	 */
-> -	ddqp = bp->b_addr + dqp->q_bufoffset;
-> +	dqb = bp->b_addr + dqp->q_bufoffset;
-> +	ddqp = &dqb->dd_diskdq;
-> +
-> +	/* This is the only portion of data that needs to persist */
-> +	memcpy(ddqp, &dqp->q_core, sizeof(xfs_disk_dquot_t));
->  
->  	/*
->  	 * A simple sanity check in case we got a corrupted dquot..
->  	 */
-> -	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0);
-> +	fa = xfs_dquot_verify(mp, dqb, be32_to_cpu(ddqp->d_id), 0);
->  	if (fa) {
->  		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
->  				be32_to_cpu(ddqp->d_id), fa);
-> @@ -1013,9 +1018,6 @@
->  		return -EIO;
->  	}
->  
-> -	/* This is the only portion of data that needs to persist */
-> -	memcpy(ddqp, &dqp->q_core, sizeof(xfs_disk_dquot_t));
+---
+>From ef8248a6cf39f2fbf69b2590c4cc66c9a2ba57fd Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Thu, 5 Apr 2018 19:17:51 +0200
+Subject: xfs: remove filestream item xfs_inode reference
 
-About this memcpy() -- isn't the point of this function that we verify
-the contents of the in-core q_core and only memcpy the contents into the
-xfs_buf if it actually passes validation?  I guess the _dquot_verify
-function needs the entire on-disk buffer so that it can validate the crc
-and the uuid on a read, but we update the crc on dqflush and
-(presumably) can set the uuid on write (quotacheck) or fail the dquot
-read everywhere else, right?
+The filestreams allocator stores an xfs_fstrm_item structure in the MRU to
+cache inode number to agno mappings for a particular length of time.  Each
+xfs_fstrm_item contains the internal MRU structure, an inode pointer and
+agno value.
 
-Put another way, why not have xfs_dquot_buf_verify check the uuid?
-xfs_dquot_repair seems to reset the uuid if it's garbage.
+The inode pointer stored in the xfs_fstrm_item is not referenced, however,
+which means the inode itself can be removed and reclaimed before the MRU
+item is freed. If this occurs, xfs_fstrm_free_func() can access freed or
+unrelated memory through xfs_fstrm_item->ip and crash.
 
---D
+The obvious solution is to grab an inode reference for xfs_fstrm_item.
+The filestream mechanism only actually uses the inode pointer as a means
+to access the xfs_mount, however.  Rather than add unnecessary
+complexity, simplify the implementation to store an xfs_mount pointer in
+struct xfs_mru_cache, and pass it to the free callback.  This also
+requires updates to the tracepoint class to provide the associated data
+via parameters rather than the inode and a minor hack to peek at the MRU
+key to establish the inode number at free time.
 
-> -
->  	/*
->  	 * Clear the dirty field and remember the flush lsn for later use.
->  	 */
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 3b35feb..546df8e1 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3309,6 +3309,7 @@ struct xfs_buf_cancel {
->  {
->  	xfs_mount_t		*mp = log->l_mp;
->  	xfs_buf_t		*bp;
-> +	struct xfs_dqblk	*dqb;
->  	struct xfs_disk_dquot	*ddq, *recddq;
->  	xfs_failaddr_t		fa;
->  	int			error;
-> @@ -3322,7 +3323,8 @@ struct xfs_buf_cancel {
->  	if (mp->m_qflags == 0)
->  		return 0;
->  
-> -	recddq = item->ri_buf[1].i_addr;
-> +	dqb = item->ri_buf[1].i_addr;
-> +	recddq = &dqb->dd_diskdq;
->  	if (recddq == NULL) {
->  		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
->  		return -EIO;
-> @@ -3353,7 +3355,7 @@ struct xfs_buf_cancel {
->  	 */
->  	dq_f = item->ri_buf[0].i_addr;
->  	ASSERT(dq_f);
-> -	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0);
-> +	fa = xfs_dquot_verify(mp, dqb, dq_f->qlf_id, 0);
->  	if (fa) {
->  		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
->  				dq_f->qlf_id, fa);
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 64c22c32..b422382 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -859,7 +859,7 @@ struct xfs_qm_isolate {
->  	for (j = 0; j < mp->m_quotainfo->qi_dqperchunk; j++) {
->  		struct xfs_disk_dquot	*ddq;
->  
-> -		ddq = (struct xfs_disk_dquot *)&dqb[j];
-> +		ddq = &dqb[j].dd_diskdq;
->  
->  		/*
->  		 * Do a sanity check, and if needed, repair the dqblk. Don't
-> @@ -867,9 +867,9 @@ struct xfs_qm_isolate {
->  		 * find uninitialised dquot blks. See comment in
->  		 * xfs_dquot_verify.
->  		 */
-> -		fa = xfs_dquot_verify(mp, ddq, id + j, type);
-> +		fa = xfs_dquot_verify(mp, &dqb[j], id + j, type);
->  		if (fa)
-> -			xfs_dquot_repair(mp, ddq, id + j, type);
-> +			xfs_dquot_repair(mp, &dqb[j], id + j, type);
->  
->  		/*
->  		 * Reset type in case we are reusing group quota file for
-> -- 
-> 1.8.3.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Based on debugging work and an earlier patch from Brian Foster, who
+also wrote most of this changelog.
+
+Reported-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_filestream.c | 19 +++++++++----------
+ fs/xfs/xfs_mru_cache.c  |  8 +++++---
+ fs/xfs/xfs_mru_cache.h  |  8 ++++----
+ fs/xfs/xfs_trace.h      | 14 +++++++-------
+ 4 files changed, 25 insertions(+), 24 deletions(-)
+
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 043ca3808ea2..5131a6e25fc9 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -34,7 +34,6 @@
+ 
+ struct xfs_fstrm_item {
+ 	struct xfs_mru_cache_elem	mru;
+-	struct xfs_inode		*ip;
+ 	xfs_agnumber_t			ag; /* AG in use for this directory */
+ };
+ 
+@@ -122,14 +121,15 @@ xfs_filestream_put_ag(
+ 
+ static void
+ xfs_fstrm_free_func(
++	void			*data,
+ 	struct xfs_mru_cache_elem *mru)
+ {
++	struct xfs_mount	*mp = data;
+ 	struct xfs_fstrm_item	*item =
+ 		container_of(mru, struct xfs_fstrm_item, mru);
+ 
+-	xfs_filestream_put_ag(item->ip->i_mount, item->ag);
+-
+-	trace_xfs_filestream_free(item->ip, item->ag);
++	xfs_filestream_put_ag(mp, item->ag);
++	trace_xfs_filestream_free(mp, mru->key, item->ag);
+ 
+ 	kmem_free(item);
+ }
+@@ -165,7 +165,7 @@ xfs_filestream_pick_ag(
+ 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
+ 
+ 	for (nscan = 0; 1; nscan++) {
+-		trace_xfs_filestream_scan(ip, ag);
++		trace_xfs_filestream_scan(mp, ip->i_ino, ag);
+ 
+ 		pag = xfs_perag_get(mp, ag);
+ 
+@@ -265,7 +265,6 @@ xfs_filestream_pick_ag(
+ 		goto out_put_ag;
+ 
+ 	item->ag = *agp;
+-	item->ip = ip;
+ 
+ 	err = xfs_mru_cache_insert(mp->m_filestream, ip->i_ino, &item->mru);
+ 	if (err) {
+@@ -333,7 +332,7 @@ xfs_filestream_lookup_ag(
+ 		ag = container_of(mru, struct xfs_fstrm_item, mru)->ag;
+ 		xfs_mru_cache_done(mp->m_filestream);
+ 
+-		trace_xfs_filestream_lookup(ip, ag);
++		trace_xfs_filestream_lookup(mp, ip->i_ino, ag);
+ 		goto out;
+ 	}
+ 
+@@ -399,7 +398,7 @@ xfs_filestream_new_ag(
+ 	 * Only free the item here so we skip over the old AG earlier.
+ 	 */
+ 	if (mru)
+-		xfs_fstrm_free_func(mru);
++		xfs_fstrm_free_func(mp, mru);
+ 
+ 	IRELE(pip);
+ exit:
+@@ -426,8 +425,8 @@ xfs_filestream_mount(
+ 	 * timer tunable to within about 10 percent.  This requires at least 10
+ 	 * groups.
+ 	 */
+-	return xfs_mru_cache_create(&mp->m_filestream, xfs_fstrm_centisecs * 10,
+-				    10, xfs_fstrm_free_func);
++	return xfs_mru_cache_create(&mp->m_filestream, mp,
++			xfs_fstrm_centisecs * 10, 10, xfs_fstrm_free_func);
+ }
+ 
+ void
+diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+index f8a674d7f092..70eea7ae2876 100644
+--- a/fs/xfs/xfs_mru_cache.c
++++ b/fs/xfs/xfs_mru_cache.c
+@@ -112,6 +112,7 @@ struct xfs_mru_cache {
+ 	xfs_mru_cache_free_func_t free_func; /* Function pointer for freeing. */
+ 	struct delayed_work	work;      /* Workqueue data for reaping.   */
+ 	unsigned int		queued;	   /* work has been queued */
++	void			*data;
+ };
+ 
+ static struct workqueue_struct	*xfs_mru_reap_wq;
+@@ -259,7 +260,7 @@ _xfs_mru_cache_clear_reap_list(
+ 
+ 	list_for_each_entry_safe(elem, next, &tmp, list_node) {
+ 		list_del_init(&elem->list_node);
+-		mru->free_func(elem);
++		mru->free_func(mru->data, elem);
+ 	}
+ 
+ 	spin_lock(&mru->lock);
+@@ -326,6 +327,7 @@ xfs_mru_cache_uninit(void)
+ int
+ xfs_mru_cache_create(
+ 	struct xfs_mru_cache	**mrup,
++	void			*data,
+ 	unsigned int		lifetime_ms,
+ 	unsigned int		grp_count,
+ 	xfs_mru_cache_free_func_t free_func)
+@@ -369,7 +371,7 @@ xfs_mru_cache_create(
+ 
+ 	mru->grp_time  = grp_time;
+ 	mru->free_func = free_func;
+-
++	mru->data = data;
+ 	*mrup = mru;
+ 
+ exit:
+@@ -492,7 +494,7 @@ xfs_mru_cache_delete(
+ 
+ 	elem = xfs_mru_cache_remove(mru, key);
+ 	if (elem)
+-		mru->free_func(elem);
++		mru->free_func(mru->data, elem);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_mru_cache.h b/fs/xfs/xfs_mru_cache.h
+index fb5245ba5ff7..b3f3fbdfcc47 100644
+--- a/fs/xfs/xfs_mru_cache.h
++++ b/fs/xfs/xfs_mru_cache.h
+@@ -26,13 +26,13 @@ struct xfs_mru_cache_elem {
+ };
+ 
+ /* Function pointer type for callback to free a client's data pointer. */
+-typedef void (*xfs_mru_cache_free_func_t)(struct xfs_mru_cache_elem *elem);
++typedef void (*xfs_mru_cache_free_func_t)(void *, struct xfs_mru_cache_elem *);
+ 
+ int xfs_mru_cache_init(void);
+ void xfs_mru_cache_uninit(void);
+-int xfs_mru_cache_create(struct xfs_mru_cache **mrup, unsigned int lifetime_ms,
+-			     unsigned int grp_count,
+-			     xfs_mru_cache_free_func_t free_func);
++int xfs_mru_cache_create(struct xfs_mru_cache **mrup, void *data,
++		unsigned int lifetime_ms, unsigned int grp_count,
++		xfs_mru_cache_free_func_t free_func);
+ void xfs_mru_cache_destroy(struct xfs_mru_cache *mru);
+ int xfs_mru_cache_insert(struct xfs_mru_cache *mru, unsigned long key,
+ 		struct xfs_mru_cache_elem *elem);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 945de08af7ba..19f4e30265c2 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -506,8 +506,8 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
+ 
+ DECLARE_EVENT_CLASS(xfs_filestream_class,
+-	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno),
+-	TP_ARGS(ip, agno),
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno),
++	TP_ARGS(mp, ino, agno),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+@@ -515,10 +515,10 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ 		__field(int, streams)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+-		__entry->ino = ip->i_ino;
++		__entry->dev = mp->m_super->s_dev;
++		__entry->ino = ino;
+ 		__entry->agno = agno;
+-		__entry->streams = xfs_filestream_peek_ag(ip->i_mount, agno);
++		__entry->streams = xfs_filestream_peek_ag(mp, agno);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx agno %u streams %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -528,8 +528,8 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ )
+ #define DEFINE_FILESTREAM_EVENT(name) \
+ DEFINE_EVENT(xfs_filestream_class, name, \
+-	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno), \
+-	TP_ARGS(ip, agno))
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno), \
++	TP_ARGS(mp, ino, agno))
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_free);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_lookup);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_scan);
+-- 
+2.16.3
+
