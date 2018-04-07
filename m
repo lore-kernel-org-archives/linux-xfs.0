@@ -1,180 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57092 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752984AbeDSS7N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Apr 2018 14:59:13 -0400
-Date: Thu, 19 Apr 2018 14:58:12 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 11/11] xfs: avoid ABBA deadlock when scrubbing parent
- pointers
-Message-ID: <20180419185811.GB26938@bfoster.bfoster>
-References: <152401916729.11465.4212188839231900136.stgit@magnolia>
- <152401924456.11465.4870308714829350533.stgit@magnolia>
- <20180419125606.GE25844@bfoster.bfoster>
- <20180419173340.GZ24738@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:39456 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752185AbeDGSEw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Apr 2018 14:04:52 -0400
+Date: Sat, 7 Apr 2018 11:04:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/21] xfs: repair superblocks
+Message-ID: <20180407180448.GM7500@magnolia>
+References: <152269897182.16346.1710955088267364781.stgit@magnolia>
+ <152269904439.16346.10122475346850875266.stgit@magnolia>
+ <20180406010520.GP23861@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180419173340.GZ24738@magnolia>
+In-Reply-To: <20180406010520.GP23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 19, 2018 at 10:33:40AM -0700, Darrick J. Wong wrote:
-> On Thu, Apr 19, 2018 at 08:56:07AM -0400, Brian Foster wrote:
-> > On Tue, Apr 17, 2018 at 07:40:44PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > In normal operation, the XFS convention is to take an inode's iolock
-> > > and then allocate a transaction.  However, when scrubbing parent inodes
-> > > this is inverted -- we allocated the transaction to do the scrub, and
-> > > now we're trying to grab the parent's iolock.  This can lead to ABBA
-> > > deadlocks: some thread grabbed the parent's iolock and is waiting for
-> > > space for a transaction while our parent scrubber is sitting on a
-> > > transaction trying to get the parent's iolock.
-> > > 
+On Fri, Apr 06, 2018 at 11:05:20AM +1000, Dave Chinner wrote:
+> On Mon, Apr 02, 2018 at 12:57:24PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Is that really an issue if the scrub transaction doesn't acquire a log
-> > reservation (or does it in certain circumstances)..?
-> 
-> Once we get to the repair series the transactions will have reservations
-> for logging metadata changes from the metadata rebuilds.
-> 
-> For a non-repair scrub invocation it's pretty simple:
-> 1. Allocate zero-reservation (empty) transaction
-> 2. Iterate metadata, check stuff
-> 3. Cancel transaction, exit to userland
-> 
-> For a repair it's much more complicated:
-> 1. Allocate a big permanent-reservation transaction
-> 2. Iterate metadata, check stuff (same as #2 above)
-> 3. If the metadata is ok, cancel and exit to userland
-> 4. Create set of records that metadata is supposed to have
-> 5. Zap metadata root
-> 6. Insert record, roll transaction, repeat...
-> 7. Commit transaction
-> 8. Run non-repair scrub to see if we fixed it.
-> 
-> So this patch is more of a cleanup to prepare for the circumstances
-> changing later. :)
-> 
-
-Ok, so all that really matters wrt to this patch is that the repair mode
-will eventually reserve log space for the transaction. Care to add some
-context to the commit log? Otherwise it's kind of hard to surmise the
-purpose. ;) Perhaps better yet would be to just bundle this with the
-repair code that depends on it..?
-
-Brian
-
-> --D
-> 
-> > Brian
+> > If one of the backup superblocks is found to differ seriously from
+> > superblock 0, write out a fresh copy from the in-core sb.
 > > 
-> > > Therefore, convert all iolock attempts to use trylock; if that fails,
-> > > they can use the existing mechanisms to back off and try again.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/scrub/common.c |   22 ++++++++++++++++++++++
-> > >  fs/xfs/scrub/common.h |    2 ++
-> > >  fs/xfs/scrub/parent.c |   16 ++++++++++++++--
-> > >  3 files changed, 38 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> > > index f5e281a..93f9e7d 100644
-> > > --- a/fs/xfs/scrub/common.c
-> > > +++ b/fs/xfs/scrub/common.c
-> > > @@ -787,3 +787,25 @@ xfs_scrub_buffer_recheck(
-> > >  	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> > >  	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
-> > >  }
-> > > +
-> > > +/*
-> > > + * Try to lock an inode in violation of the usual locking order rules.  For
-> > > + * example, trying to get the IOLOCK while in transaction context, or just
-> > > + * plain breaking AG-order or inode-order inode locking rules.  Either way,
-> > > + * the only way to avoid an ABBA deadlock is to use trylock and back off if
-> > > + * we can't.
-> > > + */
-> > > +int
-> > > +xfs_scrub_ilock_inverted(
-> > > +	struct xfs_inode	*ip,
-> > > +	uint			lock_mode)
-> > > +{
-> > > +	int			i;
-> > > +
-> > > +	for (i = 0; i < 20; i++) {
-> > > +		if (xfs_ilock_nowait(ip, lock_mode))
-> > > +			return 0;
-> > > +		delay(1);
-> > > +	}
-> > > +	return -EDEADLOCK;
-> > > +}
-> > > diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> > > index 8296873..191c369 100644
-> > > --- a/fs/xfs/scrub/common.h
-> > > +++ b/fs/xfs/scrub/common.h
-> > > @@ -151,4 +151,6 @@ static inline bool xfs_scrub_found_corruption(struct xfs_scrub_metadata *sm)
-> > >  			       XFS_SCRUB_OFLAG_XCORRUPT);
-> > >  }
-> > >  
-> > > +int xfs_scrub_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
-> > > +
-> > >  #endif	/* __XFS_SCRUB_COMMON_H__ */
-> > > diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-> > > index 1fb88c1..19cd54d 100644
-> > > --- a/fs/xfs/scrub/parent.c
-> > > +++ b/fs/xfs/scrub/parent.c
-> > > @@ -211,7 +211,9 @@ xfs_scrub_parent_validate(
-> > >  	 */
-> > >  	xfs_iunlock(sc->ip, sc->ilock_flags);
-> > >  	sc->ilock_flags = 0;
-> > > -	xfs_ilock(dp, XFS_IOLOCK_SHARED);
-> > > +	error = xfs_scrub_ilock_inverted(dp, XFS_IOLOCK_SHARED);
-> > > +	if (error)
-> > > +		goto out_rele;
-> > >  
-> > >  	/* Go looking for our dentry. */
-> > >  	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
-> > > @@ -220,8 +222,10 @@ xfs_scrub_parent_validate(
-> > >  
-> > >  	/* Drop the parent lock, relock this inode. */
-> > >  	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
-> > > +	error = xfs_scrub_ilock_inverted(sc->ip, XFS_IOLOCK_EXCL);
-> > > +	if (error)
-> > > +		goto out_rele;
-> > >  	sc->ilock_flags = XFS_IOLOCK_EXCL;
-> > > -	xfs_ilock(sc->ip, sc->ilock_flags);
-> > >  
-> > >  	/*
-> > >  	 * If we're an unlinked directory, the parent /won't/ have a link
-> > > @@ -323,5 +327,13 @@ xfs_scrub_parent(
-> > >  	if (try_again && tries == 20)
-> > >  		xfs_scrub_set_incomplete(sc);
-> > >  out:
-> > > +	/*
-> > > +	 * If we failed to lock the parent inode even after a retry, just mark
-> > > +	 * this scrub incomplete and return.
-> > > +	 */
-> > > +	if (sc->try_harder && error == -EDEADLOCK) {
-> > > +		error = 0;
-> > > +		xfs_scrub_set_incomplete(sc);
-> > > +	}
-> > >  	return error;
-> > >  }
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> .....
+> > +/* Repair the superblock. */
+> > +int
+> > +xfs_repair_superblock(
+> > +	struct xfs_scrub_context	*sc)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	struct xfs_buf			*bp;
+> > +	struct xfs_dsb			*sbp;
+> > +	xfs_agnumber_t			agno;
+> > +	int				error;
+> > +
+> > +	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
+> > +	agno = sc->sm->sm_agno;
+> > +	if (agno == 0)
+> > +		return -EOPNOTSUPP;
+> > +
+> > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > +		  XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> > +		  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+> 
+> If we are just overwriting the superblock, then use
+> xfs_trans_get_buf() so we don't need to do IO here.
+
+Ok.
+
+> > +	if (error)
+> > +		return error;
+> > +	bp->b_ops = &xfs_sb_buf_ops;
+> > +
+> > +	/* Copy AG 0's superblock to this one. */
+> > +	sbp = XFS_BUF_TO_SBP(bp);
+> > +	memset(sbp, 0, mp->m_sb.sb_sectsize);
+> 
+> That's a bit nasty. struct xfs_dsb is not a sector size in length.
+> 
+> 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+
+Fixed.
+
+> > +	xfs_sb_to_disk(sbp, &mp->m_sb);
+> > +	sbp->sb_bad_features2 = sbp->sb_features2;
+> 
+> Why is sb_bad_features2 not correct when taken from the incore
+> superblock?
+
+It is correct, this is unnecessary.
+
+> > +	/* Write this to disk. */
+> > +	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
+> > +	xfs_trans_log_buf(sc->tp, bp, 0, mp->m_sb.sb_sectsize - 1);
+> 
+> And why log this rather than just write it straight to disk? We've
+> never logged secondary superblocks before, so why now?
+
+Ok, will do.  I might as well change the sb scrubber to use uncached
+buffers while I'm at it (separate patch, obviously).
+
+> >  int xfs_repair_setup_btree_extent_collection(struct xfs_scrub_context *sc);
+> >  
+> >  /* Metadata repairers */
+> > +int xfs_repair_superblock(struct xfs_scrub_context *sc);
+> >  
+> >  #else
+> >  
+> > @@ -106,6 +107,8 @@ xfs_repair_calc_ag_resblks(
+> >  	return 0;
+> >  }
+> >  
+> > +#define xfs_repair_superblock		(NULL)
+> 
+> Static inline, returns -EOPNOTSUPP. Or, as I'm suspecting that
+> all the patches are goign to do this - have a generic
+> xfs_repair_notsupported() function and define the functions
+> to that.
+
+Working on it. :)
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
