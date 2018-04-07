@@ -1,150 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:54009 "EHLO mout.gmx.net"
+Received: from sandeen.net ([63.231.237.45]:33780 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752668AbeDEBkb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 21:40:31 -0400
-Content-Type: text/plain;
-        charset=gb2312
-Mime-Version: 1.0 (Mac OS X Mail 11.2 \(3445.5.20\))
-Subject: Re: [PATCH] xfs: use hardlimit as sub-fs size if both hard/soft
- limits are set
-From: "cgxu519@gmx.com" <cgxu519@gmx.com>
-In-Reply-To: <20180326192259.GU4818@magnolia>
-Date: Thu, 5 Apr 2018 09:40:03 +0800
-Content-Transfer-Encoding: 8BIT
-Message-Id: <66BA750A-5A49-4B81-BC99-40DC89216856@gmx.com>
-References: <1521954996-203628-1-git-send-email-cgxu519@gmx.com>
- <20180326192259.GU4818@magnolia>
+        id S1752348AbeDGWAO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 7 Apr 2018 18:00:14 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 6339017267
+        for <linux-xfs@vger.kernel.org>; Sat,  7 Apr 2018 16:59:34 -0500 (CDT)
+Subject: Re: [PATCH 0/6] xfs: quota fixes and enhancements
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+Message-ID: <6479893d-7f01-f262-6ec5-84a33237d2d8@sandeen.net>
+Date: Sat, 7 Apr 2018 17:00:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "cgxu519@gmx.com" <cgxu519@gmx.com>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi Dave, Christoph
+On 4/4/18 1:47 PM, Eric Sandeen wrote:
+> A semi-random smattering of quota stuff.  First three seem quite
+> good to go, the rest are more along the lines of a suggestion
+> or conversation-starter.  ;)
+> 
+> (the first patch is just removing an unused arg).
+> 
+> xfs_repair doesn't look at quota blocks.  At all.  It relies
+> on quotacheck in the kernel to fix them up as needed.
 
-Any objection for this?
+I'm starting to rethink a lot of this hackery.  Why doesn't xfs_repair
+just fix things up?  (leave quotacheck to the next mount, but the
+"repair" stuff in the kernel seems like a really strange wart.)
+
+I think I'll look at teaching repair to sanity check the quota
+inodes, but if anyone knows why that's a bad idea please let me
+know.  ;)
 
 Thanks,
-Chengguang.
-
-> 在 2018年3月27日，上午3:22，Darrick J. Wong <darrick.wong@oracle.com> 写道：
-> 
-> On Sun, Mar 25, 2018 at 01:16:36PM +0800, Chengguang Xu wrote:
->> In current implementation, we size the fs(sub-fs via project quota) at
->> the soft limit and simply call it 100% used if the limit is exceeded.
->> It is reasonable when only a soft limit is set, but we should use the
->> hard limit if both hard/soft limits are set, so that quota-df reflects
->> the usage information more accurately.
-> 
-> This is the followup patch to "xfs: adjust size/used/avail information
-> for quota-df", correct?
-> 
-> I also wonder, statvfs is a weird interface since there's no way to send
-> back usage information, just blocks/free/avail.  Isn't it more
-> appropriate to use xfs_quota to find out the usage, hard limit, and soft
-> limit of a directory?
-> 
->> Signed-off-by: Chengguang Xu <cgxu519@gmx.com>
->> ---
->> fs/xfs/xfs_qm_bhv.c | 12 ++++++------
->> 1 file changed, 6 insertions(+), 6 deletions(-)
->> 
->> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
->> index 2be6d27..43b0fe8 100644
->> --- a/fs/xfs/xfs_qm_bhv.c
->> +++ b/fs/xfs/xfs_qm_bhv.c
->> @@ -35,9 +35,9 @@
->> {
->> 	uint64_t		limit;
->> 
->> -	limit = dqp->q_core.d_blk_softlimit ?
->> -		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
->> -		be64_to_cpu(dqp->q_core.d_blk_hardlimit);
->> +	limit = dqp->q_core.d_blk_hardlimit ?
->> +		be64_to_cpu(dqp->q_core.d_blk_hardlimit) :
->> +		be64_to_cpu(dqp->q_core.d_blk_softlimit);
-> 
-> Ok, so now we report hard limit for f_blocks over the soft limit.  So if
-> this is the state of the filesystem:
-> 
-> # xfs_quota -xc 'report -ahp'
-> Project quota on /opt (/dev/sdf)
->                        Blocks              
-> Project ID   Used   Soft   Hard Warn/Grace   
-> ---------- --------------------------------- 
-> #0              0      0      0  00 [------]
-> vms            3M     2M     3M  00 [7 days]
-> 
-> Then the df output goes from:
-> 
-> # df /opt/b
-> Filesystem      Size  Used Avail Use% Mounted on
-> /dev/sdf        2.0M  2.0M     0 100% /opt
-> 
-> to this:
-> 
-> # df /opt/b
-> Filesystem      Size  Used Avail Use% Mounted on
-> /dev/sdf        3.0M  3.0M     0 100% /opt
-> 
-> That makes to me, but as it /does/ change the behavior of an existing
-> user-visible interface, I would like to know more about the current
-> behavior.  Dave/Christoph, do you recall why df reports the project
-> quota soft limit?
-> 
-> ----
-> 
-> Just for fun let's try the same on ext4...
-> 
-> $ dd if=/dev/zero >> /opt/b/a
-> ^C4129977+0 records in
-> 4129977+0 records out
-> 2114548224 bytes (2.1 GB, 2.0 GiB) copied, 23.9179 s, 88.4 MB/s
-> 
-> $ sudo xfs_quota -fxc 'report -ahp' /opt
-> Project quota on /opt (/dev/sdf)
->                        Blocks              
-> Project ID   Used   Soft   Hard Warn/Grace   
-> ---------- --------------------------------- 
-> #0            20K      0      0  00 [------]
-> vms          2.0G     2M     3M  00 [-none-]
-> 
-> <facepalm>
-> 
-> Only 1000x over soft quota...
-> 
-> $ df /opt/b
-> Filesystem      Size  Used Avail Use% Mounted on
-> /dev/sdf         13G  2.8G  8.9G  24% /opt
-> 
-> I guess we're going to need a couple more tests, then?  One to check
-> that we enforce project quotas, and another to check what we're
-> reporting via df?
-> 
-> --D
-> 
->> 	if (limit && statp->f_blocks > limit) {
->> 		statp->f_blocks = limit;
->> 		statp->f_bfree = statp->f_bavail =
->> @@ -45,9 +45,9 @@
->> 			 (statp->f_blocks - dqp->q_res_bcount) : 0;
->> 	}
->> 
->> -	limit = dqp->q_core.d_ino_softlimit ?
->> -		be64_to_cpu(dqp->q_core.d_ino_softlimit) :
->> -		be64_to_cpu(dqp->q_core.d_ino_hardlimit);
->> +	limit = dqp->q_core.d_ino_hardlimit ?
->> +		be64_to_cpu(dqp->q_core.d_ino_hardlimit) :
->> +		be64_to_cpu(dqp->q_core.d_ino_softlimit);
->> 	if (limit && statp->f_files > limit) {
->> 		statp->f_files = limit;
->> 		statp->f_ffree =
->> -- 
->> 1.8.3.1
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-Eric
