@@ -1,31 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54937 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932076AbeDWRbe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Apr 2018 13:31:34 -0400
-Date: Mon, 23 Apr 2018 19:32:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 09/13] xfs: remove xfs_qm_dqread flags argument
-Message-ID: <20180423173257.GI834@lst.de>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia> <152440961880.29601.15798100669042989214.stgit@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:34814 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752034AbeDHBiB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Apr 2018 21:38:01 -0400
+Date: Sat, 7 Apr 2018 18:37:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/6] xfs: quota fixes and enhancements
+Message-ID: <20180408013757.GN7500@magnolia>
+References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+ <6479893d-7f01-f262-6ec5-84a33237d2d8@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152440961880.29601.15798100669042989214.stgit@magnolia>
+In-Reply-To: <6479893d-7f01-f262-6ec5-84a33237d2d8@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Apr 22, 2018 at 08:06:58AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Apr 07, 2018 at 05:00:13PM -0500, Eric Sandeen wrote:
+> On 4/4/18 1:47 PM, Eric Sandeen wrote:
+> > A semi-random smattering of quota stuff.  First three seem quite
+> > good to go, the rest are more along the lines of a suggestion
+> > or conversation-starter.  ;)
+> > 
+> > (the first patch is just removing an unused arg).
+> > 
+> > xfs_repair doesn't look at quota blocks.  At all.  It relies
+> > on quotacheck in the kernel to fix them up as needed.
 > 
-> Move the _qm_dqread functionality to _qm_dqensure, then remove the flags
-> argument from xfs_qm_dqread since the only DQALLOC users were internal
-> to xfs_dquot.c anyway.
+> I'm starting to rethink a lot of this hackery.  Why doesn't xfs_repair
+> just fix things up?  (leave quotacheck to the next mount, but the
+> "repair" stuff in the kernel seems like a really strange wart.)
+> 
+> I think I'll look at teaching repair to sanity check the quota
+> inodes, but if anyone knows why that's a bad idea please let me
+> know.  ;)
 
-Unless this makes something much easier later in the series I'd rather
-not change the names and calling conventions here.  dqensure just sounds
-very weird, and having dqread is a trivial wrapper for it also doesn't
-seem to be very intuitive.
+/me shrugs, we still need to fix the kernel's quota verifiers to check
+the uuid and all that, right?  Which means that both are going to need
+patches, afaict.
+
+--D
+
+> Thanks,
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
