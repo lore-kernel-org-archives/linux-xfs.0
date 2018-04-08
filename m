@@ -1,119 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:59424 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750807AbeDFRbu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Apr 2018 13:31:50 -0400
-Date: Fri, 6 Apr 2018 10:31:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/21] xfs: make xfs_bmapi_remapi work with attribute
- forks
-Message-ID: <20180406173146.GK7500@magnolia>
-References: <152269897182.16346.1710955088267364781.stgit@magnolia>
- <152269901338.16346.3950698529446189331.stgit@magnolia>
- <20180405231223.GK23861@dastard>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57006 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752466AbeDHDKU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Apr 2018 23:10:20 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w3834Pxe093091
+        for <linux-xfs@vger.kernel.org>; Sat, 7 Apr 2018 23:10:19 -0400
+Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2h6px5r1ru-1
+        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sat, 07 Apr 2018 23:10:19 -0400
+Received: from localhost
+        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
+        Sat, 7 Apr 2018 23:10:18 -0400
+Date: Sat, 7 Apr 2018 20:11:13 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned
+ dax mappings
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
+ <CAPcyv4joRA=BrurYZ1kzXpMG=jnXik9+LdLqH9961jM5VnmU7w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180405231223.GK23861@dastard>
+In-Reply-To: <CAPcyv4joRA=BrurYZ1kzXpMG=jnXik9+LdLqH9961jM5VnmU7w@mail.gmail.com>
+Message-Id: <20180408031113.GO3948@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Josh Triplett <josh.triplett@intel.com>
 
-On Fri, Apr 06, 2018 at 09:12:23AM +1000, Dave Chinner wrote:
-> On Mon, Apr 02, 2018 at 12:56:53PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a new flags argument to xfs_bmapi_remapi so that we can pass BMAPI
-> > flags into the function.  This enables us to pass in BMAPI_ATTRFORK so
-> > that we can remap things into the attribute fork.  Eventually the
-> > online repair code will use this to rebuild attribute forks, so make it
-> > non-static.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |   36 +++++++++++++++++++++++-------------
-> >  fs/xfs/libxfs/xfs_bmap.h |    4 ++++
-> >  2 files changed, 27 insertions(+), 13 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 519ef9c..c676d5c 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -4512,30 +4512,37 @@ xfs_bmapi_write(
-> >  	return error;
-> >  }
-> >  
-> > -static int
-> > +int
-> >  xfs_bmapi_remap(
-> >  	struct xfs_trans	*tp,
-> >  	struct xfs_inode	*ip,
-> >  	xfs_fileoff_t		bno,
-> >  	xfs_filblks_t		len,
-> >  	xfs_fsblock_t		startblock,
-> > -	struct xfs_defer_ops	*dfops)
-> > +	struct xfs_defer_ops	*dfops,
-> > +	int			flags)
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> > -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> > +	struct xfs_ifork	*ifp;
-> >  	struct xfs_btree_cur	*cur = NULL;
-> >  	xfs_fsblock_t		firstblock = NULLFSBLOCK;
-> >  	struct xfs_bmbt_irec	got;
-> >  	struct xfs_iext_cursor	icur;
-> > +	int			whichfork = xfs_bmapi_whichfork(flags);
-> >  	int			logflags = 0, error;
-> >  
-> > +	ifp = XFS_IFORK_PTR(ip, whichfork);
-> >  	ASSERT(len > 0);
-> >  	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
-> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> > +	ASSERT(!(flags & (XFS_BMAPI_DELALLOC | XFS_BMAPI_COWFORK |
-> > +			  XFS_BMAPI_ZERO | XFS_BMAPI_CONVERT |
-> > +			  XFS_BMAPI_IGSTATE | XFS_BMAPI_METADATA |
-> > +			  XFS_BMAPI_ENTIRE | XFS_BMAPI_CONVERT_ONLY)));
+On Sat, Apr 07, 2018 at 12:38:24PM -0700, Dan Williams wrote:
+> [ adding Paul and Josh ]
 > 
-> Wouldn't it be better just to assert it's a flag that is supported?
-> i.e.
+> On Wed, Apr 4, 2018 at 2:46 AM, Jan Kara <jack@suse.cz> wrote:
+> > On Fri 30-03-18 21:03:30, Dan Williams wrote:
+> >> Background:
+> >>
+> >> get_user_pages() in the filesystem pins file backed memory pages for
+> >> access by devices performing dma. However, it only pins the memory pages
+> >> not the page-to-file offset association. If a file is truncated the
+> >> pages are mapped out of the file and dma may continue indefinitely into
+> >> a page that is owned by a device driver. This breaks coherency of the
+> >> file vs dma, but the assumption is that if userspace wants the
+> >> file-space truncated it does not matter what data is inbound from the
+> >> device, it is not relevant anymore. The only expectation is that dma can
+> >> safely continue while the filesystem reallocates the block(s).
+> >>
+> >> Problem:
+> >>
+> >> This expectation that dma can safely continue while the filesystem
+> >> changes the block map is broken by dax. With dax the target dma page
+> >> *is* the filesystem block. The model of leaving the page pinned for dma,
+> >> but truncating the file block out of the file, means that the filesytem
+> >> is free to reallocate a block under active dma to another file and now
+> >> the expected data-incoherency situation has turned into active
+> >> data-corruption.
+> >>
+> >> Solution:
+> >>
+> >> Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+> >> file while any page/block in the file is under active dma. This solution
+> >> assumes that dma is transient. Cases where dma operations are known to
+> >> not be transient, like RDMA, have been explicitly disabled via
+> >> commits like 5f1d43de5416 "IB/core: disable memory registration of
+> >> filesystem-dax vmas".
+> >>
+> >> The dax_layout_busy_page() routine is called by filesystems with a lock
+> >> held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
+> >> The process of looking up a busy page invalidates all mappings
+> >> to trigger any subsequent get_user_pages() to block on i_mmap_lock.
+> >> The filesystem continues to call dax_layout_busy_page() until it finally
+> >> returns no more active pages. This approach assumes that the page
+> >> pinning is transient, if that assumption is violated the system would
+> >> have likely hung from the uncompleted I/O.
+> >>
+> >> Cc: Jan Kara <jack@suse.cz>
+> >> Cc: Jeff Moyer <jmoyer@redhat.com>
+> >> Cc: Dave Chinner <david@fromorbit.com>
+> >> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+> >> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> >> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> >> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> >> Cc: Dave Hansen <dave.hansen@linux.intel.com>
+> >> Cc: Andrew Morton <akpm@linux-foundation.org>
+> >> Reported-by: Christoph Hellwig <hch@lst.de>
+> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> >> ---
+> >>  drivers/dax/super.c |    2 +
+> >>  fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >>  include/linux/dax.h |   25 ++++++++++++++
+> >>  mm/gup.c            |    5 +++
+> >>  4 files changed, 123 insertions(+), 1 deletion(-)
+> >
+> > ...
+> >
+> >> +/**
+> >> + * dax_layout_busy_page - find first pinned page in @mapping
+> >> + * @mapping: address space to scan for a page with ref count > 1
+> >> + *
+> >> + * DAX requires ZONE_DEVICE mapped pages. These pages are never
+> >> + * 'onlined' to the page allocator so they are considered idle when
+> >> + * page->count == 1. A filesystem uses this interface to determine if
+> >> + * any page in the mapping is busy, i.e. for DMA, or other
+> >> + * get_user_pages() usages.
+> >> + *
+> >> + * It is expected that the filesystem is holding locks to block the
+> >> + * establishment of new mappings in this address_space. I.e. it expects
+> >> + * to be able to run unmap_mapping_range() and subsequently not race
+> >> + * mapping_mapped() becoming true. It expects that get_user_pages() pte
+> >> + * walks are performed under rcu_read_lock().
+> >> + */
+> >> +struct page *dax_layout_busy_page(struct address_space *mapping)
+> >> +{
+> >> +     pgoff_t indices[PAGEVEC_SIZE];
+> >> +     struct page *page = NULL;
+> >> +     struct pagevec pvec;
+> >> +     pgoff_t index, end;
+> >> +     unsigned i;
+> >> +
+> >> +     /*
+> >> +      * In the 'limited' case get_user_pages() for dax is disabled.
+> >> +      */
+> >> +     if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+> >> +             return NULL;
+> >> +
+> >> +     if (!dax_mapping(mapping) || !mapping_mapped(mapping))
+> >> +             return NULL;
+> >> +
+> >> +     pagevec_init(&pvec);
+> >> +     index = 0;
+> >> +     end = -1;
+> >> +     /*
+> >> +      * Flush dax_layout_lock() sections to ensure all possible page
+> >> +      * references have been taken, or otherwise arrange for faults
+> >> +      * to block on the filesystem lock that is taken for
+> >> +      * establishing new mappings.
+> >> +      */
+> >> +     unmap_mapping_range(mapping, 0, 0, 1);
+> >> +     synchronize_rcu();
+> >
+> > So I still don't like the use of RCU for this. It just seems as an abuse to
+> > use RCU like that. Furthermore it has a hefty latency cost for the truncate
+> > path. A trivial test to truncate 100 times the last page of a 16k file that
+> > is mmaped (only the first page):
+> >
+> > DAX+your patches        3.899s
+> > non-DAX                 0.015s
+> >
+> > So you can see synchronize_rcu() increased time to run truncate(2) more
+> > than 200 times (the process is indeed sitting in __wait_rcu_gp all the
+> > time). IMHO that's just too costly.
 > 
-> 	ASSERT(!flags || (flags & XFS_BMAPI_ATTRFORK));
+> I wonder if this can be trivially solved by using srcu. I.e. we don't
+> need to wait for a global quiescent state, just a
+> get_user_pages_fast() quiescent state. ...or is that an abuse of the
+> srcu api?
 
-Yes... but I want to allow XFS_BMAPI_PREALLOC too.
+>From what I can see (not that I claim to understand DAX), SRCU
+is worth trying.  Another thing to try (as a test) is to replace the
+synchronize_rcu() above with synchronize_rcu_expedited(), which might
+get you an order of magnitude or thereabouts.
 
-Ugh, that's a gross mess.
+							Thanx, Paul
 
-ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC)));
-
-covers all four cases, I think.  Granted it probably needs a further
-test to screen out (ATTRFORK | PREALLOC)...
-
-> > @@ -4569,18 +4576,21 @@ xfs_bmapi_remap(
-> >  	got.br_startoff = bno;
-> >  	got.br_startblock = startblock;
-> >  	got.br_blockcount = len;
-> > -	got.br_state = XFS_EXT_NORM;
-> > +	if (flags & XFS_BMAPI_PREALLOC)
-> > +		got.br_state = XFS_EXT_UNWRITTEN;
-> > +	else
-> > +		got.br_state = XFS_EXT_NORM;
-> 
-> This seems unrelated to the attr fork support change?
-
-Oops, yeah.  Will split this out into a separate patch.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
