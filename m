@@ -1,98 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55112 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751461AbeDCRt5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Apr 2018 13:49:57 -0400
-Subject: Re: [PATCH 02/14] xfs_scrub: only run ascii name checks if unicode
- name checker
-References: <152160358015.8288.2700156777231657519.stgit@magnolia>
- <152160359247.8288.11181593031135733955.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0bff333c-4688-b65d-f435-fde753a0d831@sandeen.net>
-Date: Tue, 3 Apr 2018 12:49:56 -0500
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:29258 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755465AbeDIA0y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Apr 2018 20:26:54 -0400
+Date: Mon, 9 Apr 2018 10:26:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/21] xfs: repair superblocks
+Message-ID: <20180409002651.GT23861@dastard>
+References: <152269897182.16346.1710955088267364781.stgit@magnolia>
+ <152269904439.16346.10122475346850875266.stgit@magnolia>
+ <20180406010520.GP23861@dastard>
+ <20180407180448.GM7500@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <152160359247.8288.11181593031135733955.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180407180448.GM7500@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 3/20/18 10:39 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Apr 07, 2018 at 11:04:48AM -0700, Darrick J. Wong wrote:
+> On Fri, Apr 06, 2018 at 11:05:20AM +1000, Dave Chinner wrote:
+> > On Mon, Apr 02, 2018 at 12:57:24PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > If one of the backup superblocks is found to differ seriously from
+> > > superblock 0, write out a fresh copy from the in-core sb.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > .....
+> > > +/* Repair the superblock. */
+> > > +int
+> > > +xfs_repair_superblock(
+> > > +	struct xfs_scrub_context	*sc)
+> > > +{
+> > > +	struct xfs_mount		*mp = sc->mp;
+> > > +	struct xfs_buf			*bp;
+> > > +	struct xfs_dsb			*sbp;
+> > > +	xfs_agnumber_t			agno;
+> > > +	int				error;
+> > > +
+> > > +	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
+> > > +	agno = sc->sm->sm_agno;
+> > > +	if (agno == 0)
+> > > +		return -EOPNOTSUPP;
+> > > +
+> > > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > > +		  XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> > > +		  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+> > 
+> > If we are just overwriting the superblock, then use
+> > xfs_trans_get_buf() so we don't need to do IO here.
 > 
-> Skip the ASCII name checks if the Unicode name checker is going to run,
-> since the latter covers everything that the former does.
+> Ok.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> > > +	if (error)
+> > > +		return error;
+> > > +	bp->b_ops = &xfs_sb_buf_ops;
+> > > +
+> > > +	/* Copy AG 0's superblock to this one. */
+> > > +	sbp = XFS_BUF_TO_SBP(bp);
+> > > +	memset(sbp, 0, mp->m_sb.sb_sectsize);
+> > 
+> > That's a bit nasty. struct xfs_dsb is not a sector size in length.
+> > 
+> > 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+> 
+> Fixed.
+> 
+> > > +	xfs_sb_to_disk(sbp, &mp->m_sb);
+> > > +	sbp->sb_bad_features2 = sbp->sb_features2;
+> > 
+> > Why is sb_bad_features2 not correct when taken from the incore
+> > superblock?
+> 
+> It is correct, this is unnecessary.
+> 
+> > > +	/* Write this to disk. */
+> > > +	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
+> > > +	xfs_trans_log_buf(sc->tp, bp, 0, mp->m_sb.sb_sectsize - 1);
+> > 
+> > And why log this rather than just write it straight to disk? We've
+> > never logged secondary superblocks before, so why now?
+> 
+> Ok, will do.  I might as well change the sb scrubber to use uncached
+> buffers while I'm at it (separate patch, obviously).
 
-Seems fine.  Since you already have some layers of wrappers it might
-be nice to just call i.e. xfs_scrub_check_xattr_name(uc, ctx, descr, keybuf)
-and let it sort out the uc / not-uc cases, but unless you're super
-excited about that idea, this is fine.
+We discussed this with my growfs rework that used uncached buffers -
+if there's a concurrent growfs then the secondary superblock buffers
+need to be coherent and access correctly serialised. Hence they need to
+remain cached buffers. What we need to do is make them single use
+cached buffers, so they are discarded immediately the last reference
+goes away and are not put on the lru....
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Cheers,
 
->  scrub/phase5.c |   24 +++++++++++++-----------
->  1 file changed, 13 insertions(+), 11 deletions(-)
-> 
-> 
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index 36821d0..decda02 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -113,11 +113,11 @@ xfs_scrub_scan_dirents(
->  
->  	dentry = readdir(dir);
->  	while (dentry) {
-> -		moveon = xfs_scrub_check_name(ctx, descr, _("directory"),
-> -				dentry->d_name);
-> -		if (!moveon)
-> -			break;
-> -		moveon = unicrash_check_dir_name(uc, descr, dentry);
-> +		if (uc)
-> +			moveon = unicrash_check_dir_name(uc, descr, dentry);
-> +		else
-> +			moveon = xfs_scrub_check_name(ctx, descr,
-> +					_("directory"), dentry->d_name);
->  		if (!moveon)
->  			break;
->  		dentry = readdir(dir);
-> @@ -163,7 +163,7 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
->  	char				keybuf[ATTR_NAME_MAX + 1];
->  	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
->  	struct attrlist_ent		*ent;
-> -	struct unicrash			*uc;
-> +	struct unicrash			*uc = NULL;
->  	bool				moveon = true;
->  	int				i;
->  	int				error;
-> @@ -183,11 +183,13 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
->  			ent = ATTR_ENTRY(attrlist, i);
->  			snprintf(keybuf, ATTR_NAME_MAX, "%s.%s", attr_ns->name,
->  					ent->a_name);
-> -			moveon = xfs_scrub_check_name(ctx, descr,
-> -					_("extended attribute"), keybuf);
-> -			if (!moveon)
-> -				goto out;
-> -			moveon = unicrash_check_xattr_name(uc, descr, keybuf);
-> +			if (uc)
-> +				moveon = unicrash_check_xattr_name(uc, descr,
-> +						keybuf);
-> +			else
-> +				moveon = xfs_scrub_check_name(ctx, descr,
-> +						_("extended attribute"),
-> +						keybuf);
->  			if (!moveon)
->  				goto out;
->  		}
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
