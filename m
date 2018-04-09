@@ -1,59 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51698 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933065AbeDFNrd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Apr 2018 09:47:33 -0400
-Date: Fri, 6 Apr 2018 09:47:32 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: replace filestream item xfs_inode reference
- with xfs_mount
-Message-ID: <20180406134731.GB5189@bfoster.bfoster>
-References: <20180405121147.60897-1-bfoster@redhat.com>
- <20180405121147.60897-2-bfoster@redhat.com>
- <20180405171842.GA4849@infradead.org>
- <20180405181300.GB417@bfoster.bfoster>
- <20180406065944.GA12740@infradead.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:36724 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751549AbeDIRYt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Apr 2018 13:24:49 -0400
+Date: Mon, 9 Apr 2018 10:24:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: remove filestream item xfs_inode reference
+Message-ID: <20180409172443.GP7500@magnolia>
+References: <20180409095707.13887-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180406065944.GA12740@infradead.org>
+In-Reply-To: <20180409095707.13887-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 05, 2018 at 11:59:44PM -0700, Christoph Hellwig wrote:
-> On Thu, Apr 05, 2018 at 02:13:01PM -0400, Brian Foster wrote:
-> > On Thu, Apr 05, 2018 at 10:18:42AM -0700, Christoph Hellwig wrote:
-> > > On Thu, Apr 05, 2018 at 08:11:47AM -0400, Brian Foster wrote:
-> > > > The obvious solution is to grab an inode reference for
-> > > > xfs_fstrm_item. The filestream mechanism only actually uses the
-> > > > inode pointer as a means to access the xfs_mount, however. Rather
-> > > > than add unnecessary complexity, simplify the implementation to
-> > > > store an xfs_mount pointer instead of the inode. This also requires
-> > > > updates to the tracepoint class to provide the associated data via
-> > > > parameters rather than the inode and a minor hack to peek at the MRU
-> > > > key to establish the inode number at free time.
-> > > 
-> > > How about not replacing it all and just providing the context from
-> > > the mru cache?  Something like the untested patch below:
-> > > 
-> > 
-> > I actually considered something like this briefly but it initially
-> > looked more involved than what you've come up with here. I think that I
-> > just didn't consider storing the mp directly in the xfs_mru_cache so it
-> > would be available to the reaper context. With that, this looks nicer to
-> > me. I'll give it a whirl.. thanks!
-> 
-> FYI, here is a version with a proper changelog:
-> 
-> ---
-> From ef8248a6cf39f2fbf69b2590c4cc66c9a2ba57fd Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Thu, 5 Apr 2018 19:17:51 +0200
-> Subject: xfs: remove filestream item xfs_inode reference
-> 
+On Mon, Apr 09, 2018 at 11:57:07AM +0200, Christoph Hellwig wrote:
 > The filestreams allocator stores an xfs_fstrm_item structure in the MRU to
 > cache inode number to agno mappings for a particular length of time.  Each
 > xfs_fstrm_item contains the internal MRU structure, an inode pointer and
@@ -78,17 +43,14 @@ On Thu, Apr 05, 2018 at 11:59:44PM -0700, Christoph Hellwig wrote:
 > 
 > Reported-by: Brian Foster <bfoster@redhat.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Looks ok, doesn't seem to cause any testing regressions,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
 > ---
-
-Looks good to me and survives my test:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Care to send this as an independent patch (unless Darrick just wants to
-pick it up from here)?
-
-Brian
-
 >  fs/xfs/xfs_filestream.c | 19 +++++++++----------
 >  fs/xfs/xfs_mru_cache.c  |  8 +++++---
 >  fs/xfs/xfs_mru_cache.h  |  8 ++++----
@@ -242,7 +204,7 @@ Brian
 >  int xfs_mru_cache_insert(struct xfs_mru_cache *mru, unsigned long key,
 >  		struct xfs_mru_cache_elem *elem);
 > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 945de08af7ba..19f4e30265c2 100644
+> index a982c0b623d0..8955254b900e 100644
 > --- a/fs/xfs/xfs_trace.h
 > +++ b/fs/xfs/xfs_trace.h
 > @@ -506,8 +506,8 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
