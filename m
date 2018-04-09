@@ -1,280 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53456 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751229AbeDYFsb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Apr 2018 01:48:31 -0400
-Date: Tue, 24 Apr 2018 22:48:26 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] generic: test XATTR_REPLACE doesn't take the fs down
-Message-ID: <20180425054826.GB1661@magnolia>
-References: <20180418003236.GE5201@magnolia>
- <20180418042457.GF5201@magnolia>
- <20180424120859.GD11384@desktop>
- <20180424160630.GB26261@magnolia>
- <20180425031420.GE11384@desktop>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34978 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753755AbeDISNG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Apr 2018 14:13:06 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w39I5nHs107680
+        for <linux-xfs@vger.kernel.org>; Mon, 9 Apr 2018 14:13:06 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2h8ccst8tw-1
+        (version=TLSv1.2 cipher=AES256-SHA256 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Apr 2018 14:13:06 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
+        Mon, 9 Apr 2018 14:13:05 -0400
+Date: Mon, 9 Apr 2018 11:14:02 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned
+ dax mappings
+Reply-To: paulmck@linux.vnet.ibm.com
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
+ <CAPcyv4joRA=BrurYZ1kzXpMG=jnXik9+LdLqH9961jM5VnmU7w@mail.gmail.com>
+ <20180408031113.GO3948@linux.vnet.ibm.com>
+ <20180409163910.2f6t734pwefylak3@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180425031420.GE11384@desktop>
+In-Reply-To: <20180409163910.2f6t734pwefylak3@quack2.suse.cz>
+Message-Id: <20180409181402.GN3948@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: kanda.motohiro@gmail.com, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, linux-ext4@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Josh Triplett <josh.triplett@intel.com>
 
-On Wed, Apr 25, 2018 at 11:14:20AM +0800, Eryu Guan wrote:
-> On Tue, Apr 24, 2018 at 09:06:30AM -0700, Darrick J. Wong wrote:
-> > On Tue, Apr 24, 2018 at 08:08:59PM +0800, Eryu Guan wrote:
-> > > On Tue, Apr 17, 2018 at 09:24:57PM -0700, Darrick J. Wong wrote:
-> > > > [cc xfs/fstests lists]
-> > > > 
-> > > > On Tue, Apr 17, 2018 at 05:32:36PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > 
-> > > > > Kanda Motohiro reported that expanding a tiny xattr into a large xattr
-> > > > > fails on XFS because we remove the tiny xattr from a shortform fork and
-> > > > > then try to re-add it after converting the fork to extents format having
-> > > > > not removed the ATTR_REPLACE flag.  This fails because the attr is no
-> > > > > longer present, causing a fs shutdown.
-> > > > > 
-> > > > > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
-> > > > > Reported-by: kanda.motohiro@gmail.com
-> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 09, 2018 at 06:39:10PM +0200, Jan Kara wrote:
+> On Sat 07-04-18 20:11:13, Paul E. McKenney wrote:
+> > On Sat, Apr 07, 2018 at 12:38:24PM -0700, Dan Williams wrote:
+> > > [ adding Paul and Josh ]
 > > > 
-> > > Some minor issues below, but I think I can fix them all on commit.
+> > > On Wed, Apr 4, 2018 at 2:46 AM, Jan Kara <jack@suse.cz> wrote:
+> > > > On Fri 30-03-18 21:03:30, Dan Williams wrote:
+> > > >> Background:
+> > > >>
+> > > >> get_user_pages() in the filesystem pins file backed memory pages for
+> > > >> access by devices performing dma. However, it only pins the memory pages
+> > > >> not the page-to-file offset association. If a file is truncated the
+> > > >> pages are mapped out of the file and dma may continue indefinitely into
+> > > >> a page that is owned by a device driver. This breaks coherency of the
+> > > >> file vs dma, but the assumption is that if userspace wants the
+> > > >> file-space truncated it does not matter what data is inbound from the
+> > > >> device, it is not relevant anymore. The only expectation is that dma can
+> > > >> safely continue while the filesystem reallocates the block(s).
+> > > >>
+> > > >> Problem:
+> > > >>
+> > > >> This expectation that dma can safely continue while the filesystem
+> > > >> changes the block map is broken by dax. With dax the target dma page
+> > > >> *is* the filesystem block. The model of leaving the page pinned for dma,
+> > > >> but truncating the file block out of the file, means that the filesytem
+> > > >> is free to reallocate a block under active dma to another file and now
+> > > >> the expected data-incoherency situation has turned into active
+> > > >> data-corruption.
+> > > >>
+> > > >> Solution:
+> > > >>
+> > > >> Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+> > > >> file while any page/block in the file is under active dma. This solution
+> > > >> assumes that dma is transient. Cases where dma operations are known to
+> > > >> not be transient, like RDMA, have been explicitly disabled via
+> > > >> commits like 5f1d43de5416 "IB/core: disable memory registration of
+> > > >> filesystem-dax vmas".
+> > > >>
+> > > >> The dax_layout_busy_page() routine is called by filesystems with a lock
+> > > >> held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
+> > > >> The process of looking up a busy page invalidates all mappings
+> > > >> to trigger any subsequent get_user_pages() to block on i_mmap_lock.
+> > > >> The filesystem continues to call dax_layout_busy_page() until it finally
+> > > >> returns no more active pages. This approach assumes that the page
+> > > >> pinning is transient, if that assumption is violated the system would
+> > > >> have likely hung from the uncompleted I/O.
+> > > >>
+> > > >> Cc: Jan Kara <jack@suse.cz>
+> > > >> Cc: Jeff Moyer <jmoyer@redhat.com>
+> > > >> Cc: Dave Chinner <david@fromorbit.com>
+> > > >> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+> > > >> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> > > >> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> > > >> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > >> Cc: Dave Hansen <dave.hansen@linux.intel.com>
+> > > >> Cc: Andrew Morton <akpm@linux-foundation.org>
+> > > >> Reported-by: Christoph Hellwig <hch@lst.de>
+> > > >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> > > >> ---
+> > > >>  drivers/dax/super.c |    2 +
+> > > >>  fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >>  include/linux/dax.h |   25 ++++++++++++++
+> > > >>  mm/gup.c            |    5 +++
+> > > >>  4 files changed, 123 insertions(+), 1 deletion(-)
+> > > >
+> > > > ...
+> > > >
+> > > >> +/**
+> > > >> + * dax_layout_busy_page - find first pinned page in @mapping
+> > > >> + * @mapping: address space to scan for a page with ref count > 1
+> > > >> + *
+> > > >> + * DAX requires ZONE_DEVICE mapped pages. These pages are never
+> > > >> + * 'onlined' to the page allocator so they are considered idle when
+> > > >> + * page->count == 1. A filesystem uses this interface to determine if
+> > > >> + * any page in the mapping is busy, i.e. for DMA, or other
+> > > >> + * get_user_pages() usages.
+> > > >> + *
+> > > >> + * It is expected that the filesystem is holding locks to block the
+> > > >> + * establishment of new mappings in this address_space. I.e. it expects
+> > > >> + * to be able to run unmap_mapping_range() and subsequently not race
+> > > >> + * mapping_mapped() becoming true. It expects that get_user_pages() pte
+> > > >> + * walks are performed under rcu_read_lock().
+> > > >> + */
+> > > >> +struct page *dax_layout_busy_page(struct address_space *mapping)
+> > > >> +{
+> > > >> +     pgoff_t indices[PAGEVEC_SIZE];
+> > > >> +     struct page *page = NULL;
+> > > >> +     struct pagevec pvec;
+> > > >> +     pgoff_t index, end;
+> > > >> +     unsigned i;
+> > > >> +
+> > > >> +     /*
+> > > >> +      * In the 'limited' case get_user_pages() for dax is disabled.
+> > > >> +      */
+> > > >> +     if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+> > > >> +             return NULL;
+> > > >> +
+> > > >> +     if (!dax_mapping(mapping) || !mapping_mapped(mapping))
+> > > >> +             return NULL;
+> > > >> +
+> > > >> +     pagevec_init(&pvec);
+> > > >> +     index = 0;
+> > > >> +     end = -1;
+> > > >> +     /*
+> > > >> +      * Flush dax_layout_lock() sections to ensure all possible page
+> > > >> +      * references have been taken, or otherwise arrange for faults
+> > > >> +      * to block on the filesystem lock that is taken for
+> > > >> +      * establishing new mappings.
+> > > >> +      */
+> > > >> +     unmap_mapping_range(mapping, 0, 0, 1);
+> > > >> +     synchronize_rcu();
+> > > >
+> > > > So I still don't like the use of RCU for this. It just seems as an abuse to
+> > > > use RCU like that. Furthermore it has a hefty latency cost for the truncate
+> > > > path. A trivial test to truncate 100 times the last page of a 16k file that
+> > > > is mmaped (only the first page):
+> > > >
+> > > > DAX+your patches        3.899s
+> > > > non-DAX                 0.015s
+> > > >
+> > > > So you can see synchronize_rcu() increased time to run truncate(2) more
+> > > > than 200 times (the process is indeed sitting in __wait_rcu_gp all the
+> > > > time). IMHO that's just too costly.
 > > > 
-> > > > > ---
-> > > > >  src/Makefile            |    3 +-
-> > > > >  src/attr_replace_test.c |   47 +++++++++++++++++++++++++++++++++++
-> > > 
-> > > Need a .gitignore entry for it.
+> > > I wonder if this can be trivially solved by using srcu. I.e. we don't
+> > > need to wait for a global quiescent state, just a
+> > > get_user_pages_fast() quiescent state. ...or is that an abuse of the
+> > > srcu api?
 > > 
-> > Ok.  Assuming you meant a .gitignore entry for src/attr_replace_test,
-> > not the source file itself.
+> > From what I can see (not that I claim to understand DAX), SRCU
+> > is worth trying.  Another thing to try (as a test) is to replace the
+> > synchronize_rcu() above with synchronize_rcu_expedited(), which might
+> > get you an order of magnitude or thereabouts.
 > 
-> Correct, I meant the entry for binary file :)
-> 
-> And I found another problem in the test, it fails on 1k/2k block size
-> extN filesystems, because 2k xattr doesn't fit in single block.. e.g.
-> 
->     -Attribute "world" has a 2048 byte value for SCRATCH_MNT/hello
->     +No space left on device
->     +error=22 at line 46
->     +Attribute "world" has a 1 byte value for
-> 
-> We probably need to check the block size of SCRATCH_DEV and _notrun if
-> it's smaller than 4k.
->
-> Or require ea_inode feature when block size < 4k? Note that this test
-> does fail on ext4 with ea_inode feature enabled (so add ext4 list to
-> cc). e.g.
+> But having synchronize_rcu_expedited() easily triggerable by userspace
+> (potentially every 100 usec or even less) is not a great thing, right?
+> It would be hogging the system with IPIs...
 
-I was about to say "Eh, this is a regression test for XFS so that's
-probably fine, but then...
+Yes, and that is why I have "(as a test)" above.  If doing that restores
+performance in the trivial-truncation case, that at least lets us know what
+needs to happen, even though it does have some drawbacks.
 
-> 
->     ...
->     Pass 4: Checking reference counts
->     Extended attribute inode 13 ref count is 0, should be 1. Fix? no
->     ...
-> 
-> I think it's easier to _notrun if block size < 4k in this generic test
-> and introduce a new ext4-specific test that excrises the ea_inode
-> feature.
-> 
-> What do you and/or other ext4 developers think?
+And there is a synchronize_srcu_expedited() that does not do IPIs, if
+that helps.
 
-"Oh WTH I wasn't expecting /that/..." :)
+Another approach is to use call_rcu(), but I am guessing that you cannot
+safely return to user until the grace period has completed.
 
---D
+							Thanx, Paul
 
-> 
-> Thanks,
-> Eryu
-> 
-> > 
-> > > > >  tests/generic/706       |   64 +++++++++++++++++++++++++++++++++++++++++++++++
-> > > > >  tests/generic/706.out   |    2 +
-> > > > >  tests/generic/group     |    1 +
-> > > > >  5 files changed, 116 insertions(+), 1 deletion(-)
-> > > > >  create mode 100644 src/attr_replace_test.c
-> > > > >  create mode 100755 tests/generic/706
-> > > > >  create mode 100644 tests/generic/706.out
-> > > > > 
-> > > > > diff --git a/src/Makefile b/src/Makefile
-> > > > > index 0d3feae..162e529 100644
-> > > > > --- a/src/Makefile
-> > > > > +++ b/src/Makefile
-> > > > > @@ -25,7 +25,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
-> > > > >  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
-> > > > >  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
-> > > > >  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
-> > > > > -	dio-invalidate-cache stat_test t_encrypted_d_revalidate
-> > > > > +	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
-> > > > > +	attr_replace_test
-> > > > >  
-> > > > >  SUBDIRS = log-writes perf
-> > > > >  
-> > > > > diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
-> > > > > new file mode 100644
-> > > > > index 0000000..583ca17
-> > > > > --- /dev/null
-> > > > > +++ b/src/attr_replace_test.c
-> > > > > @@ -0,0 +1,47 @@
-> > > > > +// setattr.c by kanda.motohiro@gmail.com
-> > > > > +// xfs extended attribute corruption bug reproducer
-> > > > > +#include <stdio.h>
-> > > > > +#include <string.h>
-> > > > > +#include <fcntl.h>
-> > > > > +#include <errno.h>
-> > > > > +#include <stdlib.h>
-> > > > > +#include <unistd.h>
-> > > > > +#include <sys/types.h>
-> > > > > +#include <sys/xattr.h>
-> > > > > +
-> > > > > +#define die() do { perror(""); \
-> > > > > +fprintf(stderr, "error=%d at line %d\n", errno, __LINE__); \
-> > > > > +exit(1); } while (0)
-> > > > > +
-> > > > > +int main(int argc, char *argv[])
-> > > > > +{
-> > > > > +	int ret;
-> > > > > +	int fd;
-> > > > > +	char *path = "/mnt/xfs/hello";
-> > > 
-> > > I'd like not assign default path to "/mnt/xfs/hello", just in case we
-> > > forget the testfile argument and test runs against /mnt/xfs/hello
-> > > accidently and test passes silently.
-> > 
-> > Ok, please get rid of it then. :)
-> > 
-> > > > > +	char *name = "user.world";
-> > > > > +	char value[2048];
-> > > > > +	size_t size = sizeof(value);
-> > > > > +
-> > > > > +	if (argc == 2)
-> > > > > +		path = argv[1];
-> > > 
-> > > I'll make sure argc == 2, and error out if not.
-> > 
-> > Ok.
-> > 
-> > > Thanks,
-> > > Eryu
-> > > 
-> > > > > +
-> > > > > +	fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-> > > > > +	if (fd < 0) die();
-> > > > > +
-> > > > > +	// First, create a small xattr.
-> > > > > +	memset(value, '0', 1);
-> > > > > +	ret = fsetxattr(fd, name, value, 1, XATTR_CREATE);
-> > > > > +	if (ret < 0) die();
-> > > > > +	close(fd);
-> > > > > +
-> > > > > +	fd = open(path, O_RDWR);
-> > > > > +	if (fd < 0) die();
-> > > > > +
-> > > > > +	// Then, replace it with bigger one, forcing short form to leaf conversion.
-> > > > > +	memset(value, '1', sizeof(value));
-> > > > > +	ret = fsetxattr(fd, name, value, size, XATTR_REPLACE);
-> > > > > +	if (ret < 0) die();
-> > > > > +	close(fd);
-> > > > > +
-> > > > > +	return 0;
-> > > > > +}
-> > > > > diff --git a/tests/generic/706 b/tests/generic/706
-> > > > > new file mode 100755
-> > > > > index 0000000..4d8f180
-> > > > > --- /dev/null
-> > > > > +++ b/tests/generic/706
-> > > > > @@ -0,0 +1,64 @@
-> > > > > +#! /bin/bash
-> > > > > +# FS QA Test No. 706
-> > > > > +#
-> > > > > +# Ensure that we can XATTR_REPLACE a tiny attr into a large attr.
-> > > > > +# Kanda Motohiro <kanda.motohiro@gmail.com> reports that XATTR_REPLACE'ing
-> > > > > +# a single-byte attr with a 2048-byte attr causes a fs shutdown because we
-> > > > > +# remove the shortform attr, convert the attr fork to long format, and then
-> > > > > +# try to re-add the attr having not cleared ATTR_REPLACE.
-> > > > > +#
-> > > > > +#-----------------------------------------------------------------------
-> > > > > +# Copyright (c) 2018 Oracle.  All Rights Reserved.
-> > > > > +#
-> > > > > +# This program is free software; you can redistribute it and/or
-> > > > > +# modify it under the terms of the GNU General Public License as
-> > > > > +# published by the Free Software Foundation.
-> > > > > +#
-> > > > > +# This program is distributed in the hope that it would be useful,
-> > > > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > > > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > > > > +# GNU General Public License for more details.
-> > > > > +#
-> > > > > +# You should have received a copy of the GNU General Public License
-> > > > > +# along with this program; if not, write the Free Software Foundation,
-> > > > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > > > > +#
-> > > > > +#-----------------------------------------------------------------------
-> > > > > +
-> > > > > +seq=`basename $0`
-> > > > > +seqres=$RESULT_DIR/$seq
-> > > > > +echo "QA output created by $seq"
-> > > > > +
-> > > > > +status=1	# failure is the default!
-> > > > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > > > +
-> > > > > +_cleanup()
-> > > > > +{
-> > > > > +	cd /
-> > > > > +	rm -f $testfile
-> > > > > +}
-> > > > > +
-> > > > > +# get standard environment, filters and checks
-> > > > > +. ./common/rc
-> > > > > +. ./common/filter
-> > > > > +. ./common/attr
-> > > > > +
-> > > > > +# remove previous $seqres.full before test
-> > > > > +rm -f $seqres.full
-> > > > > +
-> > > > > +# real QA test starts here
-> > > > > +_supported_fs generic
-> > > > > +_supported_os Linux
-> > > > > +_require_test_program "attr_replace_test"
-> > > > > +_require_attrs
-> > > > > +_require_scratch
-> > > > > +
-> > > > > +rm -f $seqres.full
-> > > > > +_scratch_mkfs >>$seqres.full 2>&1
-> > > > > +_scratch_mount >>$seqres.full 2>&1
-> > > > > +
-> > > > > +./src/attr_replace_test $SCRATCH_MNT/hello
-> > > > > +$ATTR_PROG -l $SCRATCH_MNT/hello | _filter_scratch
-> > > > > +
-> > > > > +status=0
-> > > > > +exit
-> > > > > diff --git a/tests/generic/706.out b/tests/generic/706.out
-> > > > > new file mode 100644
-> > > > > index 0000000..1c654c1
-> > > > > --- /dev/null
-> > > > > +++ b/tests/generic/706.out
-> > > > > @@ -0,0 +1,2 @@
-> > > > > +QA output created by 706
-> > > > > +Attribute "world" has a 2048 byte value for SCRATCH_MNT/hello
-> > > > > diff --git a/tests/generic/group b/tests/generic/group
-> > > > > index 3f93dc4..fc05315 100644
-> > > > > --- a/tests/generic/group
-> > > > > +++ b/tests/generic/group
-> > > > > @@ -487,3 +487,4 @@
-> > > > >  482 auto metadata replay
-> > > > >  483 auto quick log metadata
-> > > > >  484 auto quick insert
-> > > > > +706 auto quick attr
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
