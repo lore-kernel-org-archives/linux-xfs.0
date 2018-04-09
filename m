@@ -1,149 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:39846 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752364AbeDGTiZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Apr 2018 15:38:25 -0400
-Received: by mail-oi0-f65.google.com with SMTP id q71-v6so4115154oic.6
-        for <linux-xfs@vger.kernel.org>; Sat, 07 Apr 2018 12:38:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sat, 7 Apr 2018 12:38:24 -0700
-Message-ID: <CAPcyv4joRA=BrurYZ1kzXpMG=jnXik9+LdLqH9961jM5VnmU7w@mail.gmail.com>
-Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned dax mappings
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:51444 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751507AbeDIJ5K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Apr 2018 05:57:10 -0400
+Received: from [188.21.169.252] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1f5TXy-0002ge-2E
+        for linux-xfs@vger.kernel.org; Mon, 09 Apr 2018 09:57:10 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: remove filestream item xfs_inode reference
+Date: Mon,  9 Apr 2018 11:57:07 +0200
+Message-Id: <20180409095707.13887-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Paul McKenney <paulmck@linux.vnet.ibm.com>, Josh Triplett <josh.triplett@intel.com>
+To: linux-xfs@vger.kernel.org
 
-[ adding Paul and Josh ]
+The filestreams allocator stores an xfs_fstrm_item structure in the MRU to
+cache inode number to agno mappings for a particular length of time.  Each
+xfs_fstrm_item contains the internal MRU structure, an inode pointer and
+agno value.
 
-On Wed, Apr 4, 2018 at 2:46 AM, Jan Kara <jack@suse.cz> wrote:
-> On Fri 30-03-18 21:03:30, Dan Williams wrote:
->> Background:
->>
->> get_user_pages() in the filesystem pins file backed memory pages for
->> access by devices performing dma. However, it only pins the memory pages
->> not the page-to-file offset association. If a file is truncated the
->> pages are mapped out of the file and dma may continue indefinitely into
->> a page that is owned by a device driver. This breaks coherency of the
->> file vs dma, but the assumption is that if userspace wants the
->> file-space truncated it does not matter what data is inbound from the
->> device, it is not relevant anymore. The only expectation is that dma can
->> safely continue while the filesystem reallocates the block(s).
->>
->> Problem:
->>
->> This expectation that dma can safely continue while the filesystem
->> changes the block map is broken by dax. With dax the target dma page
->> *is* the filesystem block. The model of leaving the page pinned for dma,
->> but truncating the file block out of the file, means that the filesytem
->> is free to reallocate a block under active dma to another file and now
->> the expected data-incoherency situation has turned into active
->> data-corruption.
->>
->> Solution:
->>
->> Defer all filesystem operations (fallocate(), truncate()) on a dax mode
->> file while any page/block in the file is under active dma. This solution
->> assumes that dma is transient. Cases where dma operations are known to
->> not be transient, like RDMA, have been explicitly disabled via
->> commits like 5f1d43de5416 "IB/core: disable memory registration of
->> filesystem-dax vmas".
->>
->> The dax_layout_busy_page() routine is called by filesystems with a lock
->> held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
->> The process of looking up a busy page invalidates all mappings
->> to trigger any subsequent get_user_pages() to block on i_mmap_lock.
->> The filesystem continues to call dax_layout_busy_page() until it finally
->> returns no more active pages. This approach assumes that the page
->> pinning is transient, if that assumption is violated the system would
->> have likely hung from the uncompleted I/O.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
->> Cc: Dave Chinner <david@fromorbit.com>
->> Cc: Matthew Wilcox <mawilcox@microsoft.com>
->> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
->> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Cc: Dave Hansen <dave.hansen@linux.intel.com>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Reported-by: Christoph Hellwig <hch@lst.de>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> ---
->>  drivers/dax/super.c |    2 +
->>  fs/dax.c            |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/dax.h |   25 ++++++++++++++
->>  mm/gup.c            |    5 +++
->>  4 files changed, 123 insertions(+), 1 deletion(-)
->
-> ...
->
->> +/**
->> + * dax_layout_busy_page - find first pinned page in @mapping
->> + * @mapping: address space to scan for a page with ref count > 1
->> + *
->> + * DAX requires ZONE_DEVICE mapped pages. These pages are never
->> + * 'onlined' to the page allocator so they are considered idle when
->> + * page->count == 1. A filesystem uses this interface to determine if
->> + * any page in the mapping is busy, i.e. for DMA, or other
->> + * get_user_pages() usages.
->> + *
->> + * It is expected that the filesystem is holding locks to block the
->> + * establishment of new mappings in this address_space. I.e. it expects
->> + * to be able to run unmap_mapping_range() and subsequently not race
->> + * mapping_mapped() becoming true. It expects that get_user_pages() pte
->> + * walks are performed under rcu_read_lock().
->> + */
->> +struct page *dax_layout_busy_page(struct address_space *mapping)
->> +{
->> +     pgoff_t indices[PAGEVEC_SIZE];
->> +     struct page *page = NULL;
->> +     struct pagevec pvec;
->> +     pgoff_t index, end;
->> +     unsigned i;
->> +
->> +     /*
->> +      * In the 'limited' case get_user_pages() for dax is disabled.
->> +      */
->> +     if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
->> +             return NULL;
->> +
->> +     if (!dax_mapping(mapping) || !mapping_mapped(mapping))
->> +             return NULL;
->> +
->> +     pagevec_init(&pvec);
->> +     index = 0;
->> +     end = -1;
->> +     /*
->> +      * Flush dax_layout_lock() sections to ensure all possible page
->> +      * references have been taken, or otherwise arrange for faults
->> +      * to block on the filesystem lock that is taken for
->> +      * establishing new mappings.
->> +      */
->> +     unmap_mapping_range(mapping, 0, 0, 1);
->> +     synchronize_rcu();
->
-> So I still don't like the use of RCU for this. It just seems as an abuse to
-> use RCU like that. Furthermore it has a hefty latency cost for the truncate
-> path. A trivial test to truncate 100 times the last page of a 16k file that
-> is mmaped (only the first page):
->
-> DAX+your patches        3.899s
-> non-DAX                 0.015s
->
-> So you can see synchronize_rcu() increased time to run truncate(2) more
-> than 200 times (the process is indeed sitting in __wait_rcu_gp all the
-> time). IMHO that's just too costly.
+The inode pointer stored in the xfs_fstrm_item is not referenced, however,
+which means the inode itself can be removed and reclaimed before the MRU
+item is freed. If this occurs, xfs_fstrm_free_func() can access freed or
+unrelated memory through xfs_fstrm_item->ip and crash.
 
-I wonder if this can be trivially solved by using srcu. I.e. we don't
-need to wait for a global quiescent state, just a
-get_user_pages_fast() quiescent state. ...or is that an abuse of the
-srcu api?
+The obvious solution is to grab an inode reference for xfs_fstrm_item.
+The filestream mechanism only actually uses the inode pointer as a means
+to access the xfs_mount, however.  Rather than add unnecessary
+complexity, simplify the implementation to store an xfs_mount pointer in
+struct xfs_mru_cache, and pass it to the free callback.  This also
+requires updates to the tracepoint class to provide the associated data
+via parameters rather than the inode and a minor hack to peek at the MRU
+key to establish the inode number at free time.
+
+Based on debugging work and an earlier patch from Brian Foster, who
+also wrote most of this changelog.
+
+Reported-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_filestream.c | 19 +++++++++----------
+ fs/xfs/xfs_mru_cache.c  |  8 +++++---
+ fs/xfs/xfs_mru_cache.h  |  8 ++++----
+ fs/xfs/xfs_trace.h      | 14 +++++++-------
+ 4 files changed, 25 insertions(+), 24 deletions(-)
+
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 043ca3808ea2..5131a6e25fc9 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -34,7 +34,6 @@
+ 
+ struct xfs_fstrm_item {
+ 	struct xfs_mru_cache_elem	mru;
+-	struct xfs_inode		*ip;
+ 	xfs_agnumber_t			ag; /* AG in use for this directory */
+ };
+ 
+@@ -122,14 +121,15 @@ xfs_filestream_put_ag(
+ 
+ static void
+ xfs_fstrm_free_func(
++	void			*data,
+ 	struct xfs_mru_cache_elem *mru)
+ {
++	struct xfs_mount	*mp = data;
+ 	struct xfs_fstrm_item	*item =
+ 		container_of(mru, struct xfs_fstrm_item, mru);
+ 
+-	xfs_filestream_put_ag(item->ip->i_mount, item->ag);
+-
+-	trace_xfs_filestream_free(item->ip, item->ag);
++	xfs_filestream_put_ag(mp, item->ag);
++	trace_xfs_filestream_free(mp, mru->key, item->ag);
+ 
+ 	kmem_free(item);
+ }
+@@ -165,7 +165,7 @@ xfs_filestream_pick_ag(
+ 	trylock = XFS_ALLOC_FLAG_TRYLOCK;
+ 
+ 	for (nscan = 0; 1; nscan++) {
+-		trace_xfs_filestream_scan(ip, ag);
++		trace_xfs_filestream_scan(mp, ip->i_ino, ag);
+ 
+ 		pag = xfs_perag_get(mp, ag);
+ 
+@@ -265,7 +265,6 @@ xfs_filestream_pick_ag(
+ 		goto out_put_ag;
+ 
+ 	item->ag = *agp;
+-	item->ip = ip;
+ 
+ 	err = xfs_mru_cache_insert(mp->m_filestream, ip->i_ino, &item->mru);
+ 	if (err) {
+@@ -333,7 +332,7 @@ xfs_filestream_lookup_ag(
+ 		ag = container_of(mru, struct xfs_fstrm_item, mru)->ag;
+ 		xfs_mru_cache_done(mp->m_filestream);
+ 
+-		trace_xfs_filestream_lookup(ip, ag);
++		trace_xfs_filestream_lookup(mp, ip->i_ino, ag);
+ 		goto out;
+ 	}
+ 
+@@ -399,7 +398,7 @@ xfs_filestream_new_ag(
+ 	 * Only free the item here so we skip over the old AG earlier.
+ 	 */
+ 	if (mru)
+-		xfs_fstrm_free_func(mru);
++		xfs_fstrm_free_func(mp, mru);
+ 
+ 	IRELE(pip);
+ exit:
+@@ -426,8 +425,8 @@ xfs_filestream_mount(
+ 	 * timer tunable to within about 10 percent.  This requires at least 10
+ 	 * groups.
+ 	 */
+-	return xfs_mru_cache_create(&mp->m_filestream, xfs_fstrm_centisecs * 10,
+-				    10, xfs_fstrm_free_func);
++	return xfs_mru_cache_create(&mp->m_filestream, mp,
++			xfs_fstrm_centisecs * 10, 10, xfs_fstrm_free_func);
+ }
+ 
+ void
+diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
+index f8a674d7f092..70eea7ae2876 100644
+--- a/fs/xfs/xfs_mru_cache.c
++++ b/fs/xfs/xfs_mru_cache.c
+@@ -112,6 +112,7 @@ struct xfs_mru_cache {
+ 	xfs_mru_cache_free_func_t free_func; /* Function pointer for freeing. */
+ 	struct delayed_work	work;      /* Workqueue data for reaping.   */
+ 	unsigned int		queued;	   /* work has been queued */
++	void			*data;
+ };
+ 
+ static struct workqueue_struct	*xfs_mru_reap_wq;
+@@ -259,7 +260,7 @@ _xfs_mru_cache_clear_reap_list(
+ 
+ 	list_for_each_entry_safe(elem, next, &tmp, list_node) {
+ 		list_del_init(&elem->list_node);
+-		mru->free_func(elem);
++		mru->free_func(mru->data, elem);
+ 	}
+ 
+ 	spin_lock(&mru->lock);
+@@ -326,6 +327,7 @@ xfs_mru_cache_uninit(void)
+ int
+ xfs_mru_cache_create(
+ 	struct xfs_mru_cache	**mrup,
++	void			*data,
+ 	unsigned int		lifetime_ms,
+ 	unsigned int		grp_count,
+ 	xfs_mru_cache_free_func_t free_func)
+@@ -369,7 +371,7 @@ xfs_mru_cache_create(
+ 
+ 	mru->grp_time  = grp_time;
+ 	mru->free_func = free_func;
+-
++	mru->data = data;
+ 	*mrup = mru;
+ 
+ exit:
+@@ -492,7 +494,7 @@ xfs_mru_cache_delete(
+ 
+ 	elem = xfs_mru_cache_remove(mru, key);
+ 	if (elem)
+-		mru->free_func(elem);
++		mru->free_func(mru->data, elem);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_mru_cache.h b/fs/xfs/xfs_mru_cache.h
+index fb5245ba5ff7..b3f3fbdfcc47 100644
+--- a/fs/xfs/xfs_mru_cache.h
++++ b/fs/xfs/xfs_mru_cache.h
+@@ -26,13 +26,13 @@ struct xfs_mru_cache_elem {
+ };
+ 
+ /* Function pointer type for callback to free a client's data pointer. */
+-typedef void (*xfs_mru_cache_free_func_t)(struct xfs_mru_cache_elem *elem);
++typedef void (*xfs_mru_cache_free_func_t)(void *, struct xfs_mru_cache_elem *);
+ 
+ int xfs_mru_cache_init(void);
+ void xfs_mru_cache_uninit(void);
+-int xfs_mru_cache_create(struct xfs_mru_cache **mrup, unsigned int lifetime_ms,
+-			     unsigned int grp_count,
+-			     xfs_mru_cache_free_func_t free_func);
++int xfs_mru_cache_create(struct xfs_mru_cache **mrup, void *data,
++		unsigned int lifetime_ms, unsigned int grp_count,
++		xfs_mru_cache_free_func_t free_func);
+ void xfs_mru_cache_destroy(struct xfs_mru_cache *mru);
+ int xfs_mru_cache_insert(struct xfs_mru_cache *mru, unsigned long key,
+ 		struct xfs_mru_cache_elem *elem);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index a982c0b623d0..8955254b900e 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -506,8 +506,8 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
+ 
+ DECLARE_EVENT_CLASS(xfs_filestream_class,
+-	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno),
+-	TP_ARGS(ip, agno),
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno),
++	TP_ARGS(mp, ino, agno),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+@@ -515,10 +515,10 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ 		__field(int, streams)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+-		__entry->ino = ip->i_ino;
++		__entry->dev = mp->m_super->s_dev;
++		__entry->ino = ino;
+ 		__entry->agno = agno;
+-		__entry->streams = xfs_filestream_peek_ag(ip->i_mount, agno);
++		__entry->streams = xfs_filestream_peek_ag(mp, agno);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx agno %u streams %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+@@ -528,8 +528,8 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
+ )
+ #define DEFINE_FILESTREAM_EVENT(name) \
+ DEFINE_EVENT(xfs_filestream_class, name, \
+-	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno), \
+-	TP_ARGS(ip, agno))
++	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno), \
++	TP_ARGS(mp, ino, agno))
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_free);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_lookup);
+ DEFINE_FILESTREAM_EVENT(xfs_filestream_scan);
+-- 
+2.16.3
+
