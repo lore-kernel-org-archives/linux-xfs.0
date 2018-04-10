@@ -1,155 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42714 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751231AbeDDTKW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Apr 2018 15:10:22 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A18C22B0F
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Apr 2018 14:09:46 -0500 (CDT)
-Subject: [PATCH 5/6] xfs: factor out quota time limit initialization
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
-Message-ID: <2d87ba58-f713-6326-8683-29185155ee58@sandeen.net>
-Date: Wed, 4 Apr 2018 14:10:20 -0500
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:59259 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751630AbeDJJUE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Apr 2018 05:20:04 -0400
+Date: Tue, 10 Apr 2018 19:20:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Question] Behaviour of directory listing in XFS with concurrent
+ deletes
+Message-ID: <20180410092001.GW23861@dastard>
+References: <BLUPR0601MB0929603CF85A26259FA94D32F1BB0@BLUPR0601MB0929.namprd06.prod.outlook.com>
+ <20180406011808.GQ23861@dastard>
+ <BLUPR0601MB0929F6CB22C71DE3E6E65F28F1BF0@BLUPR0601MB0929.namprd06.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <BLUPR0601MB0929F6CB22C71DE3E6E65F28F1BF0@BLUPR0601MB0929.namprd06.prod.outlook.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Vairavanathan, Emalayan" <Emalayan.Vairavanathan@netapp.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-Factor out the time limit initialization from
-xfs_qm_init_quotainfo so that we can delay it until
-after quotacheck - it requires reading the default disk
-quotas, which may need repair.
+[ Please word wrap your emails at 72 columns! ]
 
-No functional changes in this patch.
+On Tue, Apr 10, 2018 at 12:24:55AM +0000, Vairavanathan, Emalayan
+wrote:
+> Hi Dave,
+> 
+> Thank you for getting back to me. Please see my response inline.
+> 
+> >> What's does "false-negative" mean?  I don't know what your
+> >> application is trying to do, so I don't know what your failure
+> >> criteria is...
+> 
+> Assume the following :
+> 
+> 1) No failures (application crash OR disk / sector errors OR any
+> form of disk or memory corruption)
+> 2) xfs file-system is mounted with dirsync option.
+> 3) A directory in XFS with 1.2 million files. fsync() was called
+> on each file after creation.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Directory Size, dirsync, fsync, and failures are irrelevant to
+readdir vs concurrent unlink behaviour.
 
-nb: the patch itself looks weird, what it really does is move the
-timelimit setting /up/ in the file.  You just have to squint
-at it.
+> 4) An application with two threads (Thread-A and Thread-B) that
+> uses this directory. Thread-A iterates through the directory and
+> lists the names of all the files in the directory using readdir
+> calls. The Thread-B  concurrently deletes some files from the
+> directory.
+> 5) Files can be only deleted from the directory. No new files will
+> be created once the directory listing is started and we have a
+> coordination layer to ensure this. 
 
- fs/xfs/xfs_qm.c | 91 ++++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 51 insertions(+), 40 deletions(-)
+> Given this context:
+> - False-positive means a file that was deleted by Thread-B is seen
+> by Thread-A. 
+> - False-negative means a file that is already in the directory is
+> not seen by Thread-A (due to concurrent deletes of some other
+> files in the directory).
+> 
+> Does this make sense ?
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 328d770..a4da46c 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -594,47 +594,13 @@ struct xfs_qm_isolate {
- 	}
- }
- 
--/*
-- * This initializes all the quota information that's kept in the
-- * mount structure
-- */
--STATIC int
--xfs_qm_init_quotainfo(
--	xfs_mount_t	*mp)
-+STATIC void
-+xfs_qm_set_timelimits(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qinf)
- {
--	xfs_quotainfo_t *qinf;
--	int		error;
--	xfs_dquot_t	*dqp;
--
--	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
--
--	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(xfs_quotainfo_t), KM_SLEEP);
--
--	error = list_lru_init(&qinf->qi_lru);
--	if (error)
--		goto out_free_qinf;
--
--	/*
--	 * See if quotainodes are setup, and if not, allocate them,
--	 * and change the superblock accordingly.
--	 */
--	error = xfs_qm_init_quotainos(mp);
--	if (error)
--		goto out_free_lru;
--
--	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
--	mutex_init(&qinf->qi_tree_lock);
--
--	/* mutex used to serialize quotaoffs */
--	mutex_init(&qinf->qi_quotaofflock);
--
--	/* Precalc some constants */
--	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
--	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(qinf->qi_dqchunklen);
--
--	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
-+	int			error;
-+	xfs_dquot_t		*dqp;
- 
- 	/*
- 	 * We try to get the limits from the superuser's limits fields.
-@@ -691,6 +657,51 @@ struct xfs_qm_isolate {
- 		xfs_qm_set_defquota(mp, XFS_DQ_PROJ, qinf);
- 
- 	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
-+}
-+
-+/*
-+ * This initializes all the quota information that's kept in the
-+ * mount structure
-+ */
-+STATIC int
-+xfs_qm_init_quotainfo(
-+	xfs_mount_t	*mp)
-+{
-+	xfs_quotainfo_t *qinf;
-+	int		error;
-+
-+	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-+
-+	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(xfs_quotainfo_t), KM_SLEEP);
-+
-+	error = list_lru_init(&qinf->qi_lru);
-+	if (error)
-+		goto out_free_qinf;
-+
-+	/*
-+	 * See if quotainodes are setup, and if not, allocate them,
-+	 * and change the superblock accordingly.
-+	 */
-+	error = xfs_qm_init_quotainos(mp);
-+	if (error)
-+		goto out_free_lru;
-+
-+	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
-+	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
-+	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
-+	mutex_init(&qinf->qi_tree_lock);
-+
-+	/* mutex used to serialize quotaoffs */
-+	mutex_init(&qinf->qi_quotaofflock);
-+
-+	/* Precalc some constants */
-+	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
-+	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(qinf->qi_dqchunklen);
-+
-+	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
-+
-+	xfs_qm_set_timelimits(mp, qinf);
-+
- 	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
- 	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
- 	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE;
+Yes.
+
+> I know that false-positives are possible in this context.
+
+Right, POSIX explicitly states that behaviour of readdir() w.r.t.
+files added/deleted after opendir()/rewinddir() is unspecified.
+
+> Is it possible to see false negatives in this
+> context? 
+
+No.
+
+-Dave.
 -- 
-1.8.3.1
-
+Dave Chinner
+david@fromorbit.com
