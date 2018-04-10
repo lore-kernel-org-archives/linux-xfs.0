@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55802 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53036 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752128AbeDJRqd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1751968AbeDJRqd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 10 Apr 2018 13:46:33 -0400
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id ADBAF7E9EE
+        by mx1.redhat.com (Postfix) with ESMTPS id 2FBBA7B523
         for <linux-xfs@vger.kernel.org>; Tue, 10 Apr 2018 17:46:33 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 838D37BE6E
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 123C47BE7E
         for <linux-xfs@vger.kernel.org>; Tue, 10 Apr 2018 17:46:33 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 6/7] xfs: defer frees from common inode allocation paths
-Date: Tue, 10 Apr 2018 13:46:30 -0400
-Message-Id: <20180410174631.4915-7-bfoster@redhat.com>
+Subject: [PATCH 1/7] xfs: create agfl block free helper function
+Date: Tue, 10 Apr 2018 13:46:25 -0400
+Message-Id: <20180410174631.4915-2-bfoster@redhat.com>
 In-Reply-To: <20180410174631.4915-1-bfoster@redhat.com>
 References: <20180410174631.4915-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,53 +22,89 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Inode allocation can require block allocation for physical inode
-chunk allocation, inode btree record insertion, and/or directory
-block allocation for entry insertion. Any of these block allocation
-requests can require AGFL fixups prior to the actual allocation.
-Update the common file creation transacions to defer AGFL frees from
-these contexts to avoid too much log reservation consumption
-per-transaction.
-
-Since these transactions are already passed down through the btree
-cursors and da_args structure, this simply requires to attach dfops
-to the transaction. Note that this covers tr_create, tr_mkdir and
-tr_symlink. Other transactions such as tr_create_tmpfile do not
-already make use of deferred operations and so are left alone for
-the time being.
+Refactor the AGFL block free code into a new helper such that it can
+be invoked from deferred context. No functional changes.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c   | 2 +-
- fs/xfs/xfs_symlink.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 37 +++++++++++++++++++++++++++----------
+ fs/xfs/libxfs/xfs_alloc.h |  2 ++
+ 2 files changed, 29 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 117dced8bf66..fdf5d276b44c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1195,7 +1195,7 @@ xfs_create(
- 	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
- 	unlock_dp_on_error = true;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 4bcc095fe44a..193a5b4909c5 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2060,6 +2060,30 @@ xfs_alloc_space_available(
+ 	return true;
+ }
  
--	xfs_defer_init(NULL, &dfops, &first_block);
-+	xfs_defer_init(tp, &dfops, &first_block);
++int
++xfs_free_agfl_block(
++	struct xfs_trans	*tp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	struct xfs_buf		*agbp,
++	struct xfs_owner_info	*oinfo)
++{
++	int			error;
++	struct xfs_buf		*bp;
++
++	error = xfs_free_ag_extent(tp, agbp, agno, agbno, 1, oinfo,
++				   XFS_AG_RESV_AGFL);
++	if (error)
++		return error;
++
++	bp = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno, 0);
++	if (!bp)
++		return -EFSCORRUPTED;
++	xfs_trans_binval(tp, bp);
++
++	return 0;
++}
++
+ /*
+  * Check the agfl fields of the agf for inconsistency or corruption. The purpose
+  * is to detect an agfl header padding mismatch between current and early v5
+@@ -2247,21 +2271,14 @@ xfs_alloc_fix_freelist(
+ 	else
+ 		xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
+ 	while (!(flags & XFS_ALLOC_FLAG_NOSHRINK) && pag->pagf_flcount > need) {
+-		struct xfs_buf	*bp;
+-
+ 		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
+ 		if (error)
+ 			goto out_agbp_relse;
+-		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
+-					   &targs.oinfo, XFS_AG_RESV_AGFL);
++
++		error = xfs_free_agfl_block(tp, args->agno, bno, agbp,
++					    &targs.oinfo);
+ 		if (error)
+ 			goto out_agbp_relse;
+-		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
+-		if (!bp) {
+-			error = -EFSCORRUPTED;
+-			goto out_agbp_relse;
+-		}
+-		xfs_trans_binval(tp, bp);
+ 	}
  
- 	/*
- 	 * Reserve disk quota and the inode.
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index e4c4ea25af61..0f3564741fa9 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -258,7 +258,7 @@ xfs_symlink(
- 	 * Initialize the bmap freelist prior to calling either
- 	 * bmapi or the directory create code.
- 	 */
--	xfs_defer_init(NULL, &dfops, &first_block);
-+	xfs_defer_init(tp, &dfops, &first_block);
- 
- 	/*
- 	 * Allocate an inode for the symlink.
+ 	targs.tp = tp;
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index cbf789ea5a4e..949e21326066 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -223,6 +223,8 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+ int xfs_alloc_read_agfl(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			xfs_agnumber_t agno, struct xfs_buf **bpp);
++int xfs_free_agfl_block(struct xfs_trans *, xfs_agnumber_t, xfs_agblock_t,
++			struct xfs_buf *, struct xfs_owner_info *);
+ int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+ int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 		struct xfs_buf **agbp);
 -- 
 2.13.6
 
