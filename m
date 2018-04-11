@@ -1,16 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39996 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39386 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751991AbeDKBpZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Apr 2018 21:45:25 -0400
-Subject: Re: [PATCH 12/14] xfs_scrub: disable private /tmp for scrub service
+        id S1751946AbeDKBfX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Apr 2018 21:35:23 -0400
+Subject: Re: [PATCH 14/14] xfs_scrub_all: use system encoding for lsblk output
+ decoding
 References: <152160358015.8288.2700156777231657519.stgit@magnolia>
- <152160365430.8288.18072489901853791592.stgit@magnolia>
+ <152160366773.8288.6721882677866606943.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <de647355-57bd-75e5-d10c-22dc99cb20c0@sandeen.net>
-Date: Tue, 10 Apr 2018 20:45:23 -0500
+Message-ID: <31606041-661e-3317-b8e5-413f2edcf062@sandeen.net>
+Date: Tue, 10 Apr 2018 20:35:21 -0500
 MIME-Version: 1.0
-In-Reply-To: <152160365430.8288.18072489901853791592.stgit@magnolia>
+In-Reply-To: <152160366773.8288.6721882677866606943.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -22,37 +23,35 @@ Cc: linux-xfs@vger.kernel.org
 
 
 
-On 3/20/18 10:40 PM, Darrick J. Wong wrote:
+On 3/20/18 10:41 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Don't make /tmp private when invoking xfs_scrub as a service, because
-> /tmp might contain or itself be an xfs filesystem mountpoint.
-
-Could you please add a comment to this so that future security analysts
-don't change it back?  :)
-
-# xfs_scrub doesn't even use /tmp but <this is why we do this here>
-
+> Don't hardcode utf-8 as the decoding scheme for lsblk output, since the
+> system could set it to anything else.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Its-all-python-to-me-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  scrub/xfs_scrub@.service.in |    2 +-
+>  scrub/xfs_scrub_all.in |    2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > 
-> diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-> index c14f813..9e6206a 100644
-> --- a/scrub/xfs_scrub@.service.in
-> +++ b/scrub/xfs_scrub@.service.in
-> @@ -9,7 +9,7 @@ WorkingDirectory=%I
->  PrivateNetwork=true
->  ProtectSystem=full
->  ProtectHome=read-only
-> -PrivateTmp=yes
-> +PrivateTmp=no
->  AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
->  NoNewPrivileges=yes
->  User=nobody
+> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+> index 83c4e21..d374f92 100644
+> --- a/scrub/xfs_scrub_all.in
+> +++ b/scrub/xfs_scrub_all.in
+> @@ -48,7 +48,7 @@ def find_mounts():
+>  	result.wait()
+>  	if result.returncode != 0:
+>  		return fs
+> -	sarray = [x.decode('utf-8') for x in result.stdout.readlines()]
+> +	sarray = [x.decode(sys.stdout.encoding) for x in result.stdout.readlines()]
+>  	output = ' '.join(sarray)
+>  	bdevdata = json.loads(output)
+>  	# The lsblk output had better be in disks-then-partitions order
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
