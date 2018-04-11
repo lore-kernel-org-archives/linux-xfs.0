@@ -1,54 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48574 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:39172 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751430AbeDCQMp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Apr 2018 12:12:45 -0400
-Subject: Re: FreeBSD and xfsprogs ?
-References: <cem@freebsd.org>
- <CAG6CVpU3qe10UUY6B-N4fs9WTwwUerVcJh0CrP22D8hvB4Z14Q@mail.gmail.com>
- <201803261953.w2QJrYQm028227@slippy.cwsent.com>
- <CAG6CVpXi3rb-NfLUXQqzStipmwRviKJPMpgKeQA9DfBmOWJ5oQ@mail.gmail.com>
- <20180327160714.GB4818@magnolia>
- <8396fd92-3a64-a84f-b110-7edc6f0844b0@redhat.com>
- <20180327223201.GR18129@dastard> <20180328120212.GA1838@infradead.org>
+        id S1752016AbeDKBbv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Apr 2018 21:31:51 -0400
+Subject: Re: [PATCH 13/14] xfs_scrub_all: escape paths being passed to systemd
+ service instances
+References: <152160358015.8288.2700156777231657519.stgit@magnolia>
+ <152160366039.8288.1390627066543987632.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9f19f951-a328-5980-1b8e-3630dfacc3b1@sandeen.net>
-Date: Tue, 3 Apr 2018 11:12:44 -0500
+Message-ID: <134f4277-50f8-1909-4be7-d2104d6ee42e@sandeen.net>
+Date: Tue, 10 Apr 2018 20:31:50 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180328120212.GA1838@infradead.org>
+In-Reply-To: <152160366039.8288.1390627066543987632.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Carlos Maiolino <cmaiolino@redhat.com>, Conrad Meyer <cem@freebsd.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "freebsd-arch@freebsd.org" <freebsd-arch@freebsd.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
 
 
-On 3/28/18 7:02 AM, Christoph Hellwig wrote:
-> On Wed, Mar 28, 2018 at 09:32:01AM +1100, Dave Chinner wrote:
->> We don't support fuse-lkl XFS filesystems on Linux, so I'm not sure
->> that using it on some other platform compels us to maintain a
->> current userspace tool port to those platforms...
+On 3/20/18 10:41 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> IFF we have someone signing up to maintain the FreeBSD port it seems
-> like a whortwhile exercise.  But that is a big IFF.
+> systemd doesn't like unit instance names with slashes in them, so it
+> replaces them with dashes when it invokes the service.  However, it's
+> not smart enough to convert the dashes to something else, so when it
+> unescapes the instance name to feed to xfs_scrub, it turns all dashes
+> into slashes.  "/moo-cow" becomes "-moo-cow" becomes "/moo/cow", which
+> is wrong.  systemd actually /can/ escape the dashes correctly if it is
+> told that this is a path (and not a unit name), but it didn't do this
+> prior to January 2017, so fix this for them.
 > 
-> For now I'd say give it a grace period of another release or two to
-> see if someone is going to maintain it properly and if not drop it.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Oh-good-god-whatever-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Just to keep it on this thread - I'm going to commit this to 4.16:
-
-+#warning "FreeBSD support is deprecated and planned for removal in July 2018"
-+#warning "Contact linux-xfs@vger.kernel.org if you'd like to maintain this port"
-+#error   "Remove this line if you'd like to continue the build"
-
-for to FreeBSD & the other platforms we're talking about deprecating.
-
-That should get the attention of anyone who cares, I think.  If someone wants
-to step up and maintain it, let us know on the list.
-
-Thanks,
--Eric
+> ---
+>  scrub/xfs_scrub_all.in |   24 +++++++++++++++++++++++-
+>  1 file changed, 23 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+> index aed66a1..83c4e21 100644
+> --- a/scrub/xfs_scrub_all.in
+> +++ b/scrub/xfs_scrub_all.in
+> @@ -87,6 +87,28 @@ def run_killable(cmd, stdout, killfuncs, kill_fn):
+>  	except:
+>  		return -1
+>  
+> +# systemd doesn't like unit instance names with slashes in them, so it
+> +# replaces them with dashes when it invokes the service.  However, it's not
+> +# smart enough to convert the dashes to something else, so when it unescapes
+> +# the instance name to feed to xfs_scrub, it turns all dashes into slashes.
+> +# "/moo-cow" becomes "-moo-cow" becomes "/moo/cow", which is wrong.  systemd
+> +# actually /can/ escape the dashes correctly if it is told that this is a path
+> +# (and not a unit name), but it didn't do this prior to January 2017, so fix
+> +# this for them.
+> +def systemd_escape(path):
+> +	'''Escape a path to avoid mangled systemd mangling.'''
+> +
+> +	if '-' not in path:
+> +		return path
+> +	cmd = ['systemd-escape', '--path', path]
+> +	try:
+> +		proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+> +		proc.wait()
+> +		for line in proc.stdout:
+> +			return '-' + line.decode(sys.stdout.encoding).strip()
+> +	except:
+> +		return path
+> +
+>  def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+>  	'''Run a scrub process.'''
+>  	global retcode, terminate
+> @@ -99,7 +121,7 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+>  			return
+>  
+>  		# Try it the systemd way
+> -		cmd=['systemctl', 'start', 'xfs_scrub@%s' % mnt]
+> +		cmd=['systemctl', 'start', 'xfs_scrub@%s' % systemd_escape(mnt)]
+>  		ret = run_killable(cmd, DEVNULL(), killfuncs, \
+>  				lambda proc: kill_systemd('xfs_scrub@%s' % mnt, proc))
+>  		if ret == 0 or ret == 1:
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
