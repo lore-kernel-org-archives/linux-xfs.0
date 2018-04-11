@@ -1,140 +1,264 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47866 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:40180 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753269AbeDPT5g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Apr 2018 15:57:36 -0400
-Subject: Re: XFS reports in-memory corruption and unmounts filesystem
-References: <CAG+d3v+rMvN=N4adMLC+mhY8FgWrdTior1bToVzb4YBK89UjqQ@mail.gmail.com>
+        id S1751991AbeDKBsH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Apr 2018 21:48:07 -0400
+Subject: Re: [PATCH 10/14] xfs_scrub: refactor mountpoint finding code to use
+ libfrog path code
+References: <152160358015.8288.2700156777231657519.stgit@magnolia>
+ <152160364198.8288.1222538238075511907.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9f04c538-2972-1fe3-085e-6a1fd0359465@sandeen.net>
-Date: Mon, 16 Apr 2018 14:57:34 -0500
+Message-ID: <d4fbe9a1-23f8-ca79-0f64-7dac4bad1f05@sandeen.net>
+Date: Tue, 10 Apr 2018 20:48:05 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAG+d3v+rMvN=N4adMLC+mhY8FgWrdTior1bToVzb4YBK89UjqQ@mail.gmail.com>
+In-Reply-To: <152160364198.8288.1222538238075511907.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dheeraj Sangamkar <dheerajrs@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
 
 
-On 4/16/18 2:13 PM, Dheeraj Sangamkar wrote:
-> Hello,
+On 3/20/18 10:40 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I have a few linux boxes where I see xfs error messages when the
-> filesystem becomes full.
-> I saw quite a few reports of this kind of crash but none that had
-> exactly the same backtrace as the one I found. So, here it is..
+> Use the libfrog path finding code to determine if the argument being
+> passed in is a mountpoint, remove all mention of taking a block device
+> (we have never supported that) from the documentation, and fix some
+> potential memory leaks.
 > 
-> The kernel log:
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+now with 100% mount point!
 
-> Jan 9 20:09:33 linux-box kernel: 1,1871,248971320,-;XFS (dm-17): Internal error xfs_trans_cancel at line 1005 of file /build/src/linux-4.9.51/fs/xfs/xfs_trans.c. Caller xfs_create+0x44d/0x6c0 [xfs]
-> Jan 9 20:09:33 linux-box kernel: 4,1872,248985454,-;CPU: 11 PID: 27044 Comm: xxxxxx Tainted: G O 4.9.0-4-amd64 #1 Debian 4.9.51-1+ntap1
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Can you reproduce this on an upstream kernel?
-
-(and can you find a way to not wrap your emails so stuff like the below is readable) ;)
-
-> Jan 9 20:09:33 linux-box kernel: 4,1873,248994971,-;Hardware name: ..........
-> Jan 9 20:09:33 linux-box kernel: 4,1874,249005526,-; 0000000000000000 ffffffff99729974 ffff95c11afaae80 0000000000000001
-> Jan 9 20:09:33 linux-box kernel: 4,1875,249012916,-; ffffffffc0a041ed ffff95c15b407800 ffff95c1c0949000 00000000ffffffe4
-> Jan 9 20:09:33 linux-box kernel: 4,1876,249020305,-; ffffffffc09f70fd 0000000000000001 ffffb23f2279bbf0 0000000000000000
-> Jan 9 20:09:33 linux-box kernel: 4,1877,249027694,-;Call Trace:
-> Jan 9 20:09:33 linux-box kernel: 4,1878,249030129,-; [<ffffffff99729974>] ? dump_stack+0x5c/0x78
-> Jan 9 20:09:33 linux-box kernel: 4,1879,249035474,-; [<ffffffffc0a041ed>] ? xfs_trans_cancel+0xad/0xd0 [xfs]
-> Jan 9 20:09:33 linux-box kernel: 4,1880,249041843,-; [<ffffffffc09f70fd>] ? xfs_create+0x44d/0x6c0 [xfs]
-> Jan 9 20:09:33 linux-box kernel: 4,1881,249047823,-; [<ffffffff99660000>] ? load_elf_binary+0x12c0/0x1640
-> Jan 9 20:09:33 linux-box kernel: 4,1882,249053930,-; [<ffffffffc09f41ec>] ? xfs_generic_create+0x23c/0x2e0 [xfs]
-> Jan 9 20:09:33 linux-box kernel: 4,1883,249060597,-; [<ffffffff99612888>] ? path_openat+0x1338/0x1440
-> Jan 9 20:09:33 linux-box kernel: 4,1884,249066314,-; [<ffffffff994f6264>] ? futex_wake+0x94/0x170
-> Jan 9 20:09:33 linux-box kernel: 4,1885,249071682,-; [<ffffffff99613c51>] ? do_filp_open+0x91/0x100
-> Jan 9 20:09:33 linux-box kernel: 4,1886,249077224,-; [<ffffffff995fedba>] ? __check_object_size+0xfa/0x1d8
-> Jan 9 20:09:33 linux-box kernel: 4,1887,249083370,-; [<ffffffff9960162e>] ? do_sys_open+0x12e/0x210
-> Jan 9 20:09:33 linux-box kernel: 4,1888,249088914,-; [<ffffffff99a085bb>] ? system_call_fast_compare_end+0xc/0x9b
-> Jan 9 20:09:33 linux-box kernel: 5,1889,249095715,-;XFS (dm-17): xfs_do_force_shutdown(0x8) called from line 1006 of file /build/src/linux-4.9.51/fs/xfs/xfs_trans.c. Return address = 0xffffffffc0a04206
-> Jan 9 20:09:33 linux-box kernel: 1,1890,249110179,-;XFS (dm-17): Corruption of in-memory data detected. Shutting down filesystem
-> Jan 9 20:09:33 linux-box kernel: 1,1891,249118348,-;XFS (dm-17): Please umount the filesystem and rectify the problem(s)
-
-Ok, this is actually canceling a dirty transaction, which is the root of the problem.
-
-> Upon running xfs repair, I see the following:
+> ---
+>  man/man8/xfs_scrub.8 |    2 +
+>  scrub/common.c       |   69 --------------------------------------------------
+>  scrub/common.h       |    1 -
+>  scrub/phase1.c       |   12 ---------
+>  scrub/xfs_scrub.c    |   19 +++++++-------
+>  scrub/xfs_scrub.h    |    1 -
+>  6 files changed, 10 insertions(+), 94 deletions(-)
 > 
-> Output of xfs_repair on the rangedb device:
-> root@another-linux-box:/ # xfs_repair -n /dev/sdk
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - scan filesystem freespace and inode maps...
-> sb_icount 4710720, counted 4711168
-> sb_ifree 560, counted 0
-> sb_fdblocks 95850, counted 8321
-
-I'm going to guess that this might have a dirty log, and you should
-mount/umount it before running repair, and that if you do so you'll
-see no corruption here.
-
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 3
->         - agno = 2
->         - agno = 1
->         - agno = 4
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
-> root@another-linux-box:/
 > 
-> Remounting the volume makes the content accessible for a while.
-> However, eventually, some file lookup fails with ENOENT and the
-> filesystem is unmounted.
+> diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
+> index 77fed92..680ef72 100644
+> --- a/man/man8/xfs_scrub.8
+> +++ b/man/man8/xfs_scrub.8
+> @@ -6,7 +6,7 @@ xfs_scrub \- check the contents of a mounted XFS filesystem
+>  [
+>  .B \-abCemnTvx
+>  ]
+> -.RI "[" mount-point " | " block-device "]"
+> +.I mount-point
+>  .br
+>  .B xfs_scrub \-V
+>  .SH DESCRIPTION
+> diff --git a/scrub/common.c b/scrub/common.c
+> index 5a37a98..722bf36 100644
+> --- a/scrub/common.c
+> +++ b/scrub/common.c
+> @@ -267,75 +267,6 @@ scrub_nproc_workqueue(
+>  }
+>  
+>  /*
+> - * Check if the argument is either the device name or mountpoint of a mounted
+> - * filesystem.
+> - */
+> -#define MNTTYPE_XFS	"xfs"
+> -static bool
+> -find_mountpoint_check(
+> -	struct stat		*sb,
+> -	struct mntent		*t)
+> -{
+> -	struct stat		ms;
+> -
+> -	if (S_ISDIR(sb->st_mode)) {		/* mount point */
+> -		if (stat(t->mnt_dir, &ms) < 0)
+> -			return false;
+> -		if (sb->st_ino != ms.st_ino)
+> -			return false;
+> -		if (sb->st_dev != ms.st_dev)
+> -			return false;
+> -		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
+> -			return NULL;
+> -	} else {				/* device */
+> -		if (stat(t->mnt_fsname, &ms) < 0)
+> -			return false;
+> -		if (sb->st_rdev != ms.st_rdev)
+> -			return false;
+> -		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
+> -			return NULL;
+> -		/*
+> -		 * Make sure the mountpoint given by mtab is accessible
+> -		 * before using it.
+> -		 */
+> -		if (stat(t->mnt_dir, &ms) < 0)
+> -			return false;
+> -	}
+> -
+> -	return true;
+> -}
+> -
+> -/* Check that our alleged mountpoint is in mtab */
+> -bool
+> -find_mountpoint(
+> -	char			*mtab,
+> -	struct scrub_ctx	*ctx)
+> -{
+> -	struct mntent_cursor	cursor;
+> -	struct mntent		*t = NULL;
+> -	bool			found = false;
+> -
+> -	if (platform_mntent_open(&cursor, mtab) != 0) {
+> -		fprintf(stderr, "Error: can't get mntent entries.\n");
+> -		exit(1);
+> -	}
+> -
+> -	while ((t = platform_mntent_next(&cursor)) != NULL) {
+> -		/*
+> -		 * Keep jotting down matching mount details; newer mounts are
+> -		 * towards the end of the file (hopefully).
+> -		 */
+> -		if (find_mountpoint_check(&ctx->mnt_sb, t)) {
+> -			ctx->mntpoint = strdup(t->mnt_dir);
+> -			ctx->blkdev = strdup(t->mnt_fsname);
+> -			found = true;
+> -		}
+> -	}
+> -	platform_mntent_close(&cursor);
+> -	return found;
+> -}
+> -
+> -/*
+>   * Sleep for 100ms * however many -b we got past the initial one.
+>   * This is an (albeit clumsy) way to throttle scrub activity.
+>   */
+> diff --git a/scrub/common.h b/scrub/common.h
+> index 4f1f0cd..bc83971 100644
+> --- a/scrub/common.h
+> +++ b/scrub/common.h
+> @@ -88,7 +88,6 @@ static inline int syncfs(int fd)
+>  }
+>  #endif
+>  
+> -bool find_mountpoint(char *mtab, struct scrub_ctx *ctx);
+>  void background_sleep(void);
+>  char *string_escape(const char *in);
+>  
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index 9926770..c2b9067 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -83,7 +83,6 @@ bool
+>  xfs_setup_fs(
+>  	struct scrub_ctx		*ctx)
+>  {
+> -	struct fs_path			*fsp;
+>  	int				error;
+>  
+>  	/*
+> @@ -178,17 +177,6 @@ _("Kernel metadata repair facility is not available.  Use -n to scrub."));
+>  		return false;
+>  	}
+>  
+> -	/* Go find the XFS devices if we have a usable fsmap. */
+> -	fs_table_initialise(0, NULL, 0, NULL);
+> -	errno = 0;
+> -	fsp = fs_table_lookup(ctx->mntpoint, FS_MOUNT_POINT);
+> -	if (!fsp) {
+> -		str_info(ctx, ctx->mntpoint,
+> -_("Unable to find XFS information."));
+> -		return false;
+> -	}
+> -	memcpy(&ctx->fsinfo, fsp, sizeof(struct fs_path));
+> -
+>  	/* Did we find the log and rt devices, if they're present? */
+>  	if (ctx->geo.logstart == 0 && ctx->fsinfo.fs_log == NULL) {
+>  		str_info(ctx, ctx->mntpoint,
+> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+> index 2d55283..a5b5cf2 100644
+> --- a/scrub/xfs_scrub.c
+> +++ b/scrub/xfs_scrub.c
+> @@ -170,7 +170,7 @@ bool				is_service;
+>  static void __attribute__((noreturn))
+>  usage(void)
+>  {
+> -	fprintf(stderr, _("Usage: %s [OPTIONS] mountpoint | device\n"), progname);
+> +	fprintf(stderr, _("Usage: %s [OPTIONS] mountpoint\n"), progname);
+>  	fprintf(stderr, "\n");
+>  	fprintf(stderr, _("Options:\n"));
+>  	fprintf(stderr, _("  -a count     Stop after this many errors are found.\n"));
+> @@ -538,8 +538,8 @@ main(
+>  	struct phase_rusage	all_pi;
+>  	char			*mtab = NULL;
+>  	FILE			*progress_fp = NULL;
+> +	struct fs_path		*fsp;
+>  	bool			moveon = true;
+> -	bool			ismnt;
+>  	int			c;
+>  	int			fd;
+>  	int			ret = SCRUB_RET_SUCCESS;
+> @@ -640,7 +640,7 @@ main(
+>  	if (optind != argc - 1)
+>  		usage();
+>  
+> -	ctx.mntpoint = strdup(argv[optind]);
+> +	ctx.mntpoint = argv[optind];
+>  
+>  	stdout_isatty = isatty(STDOUT_FILENO);
+>  	stderr_isatty = isatty(STDERR_FILENO);
+> @@ -680,14 +680,15 @@ main(
+>  			mtab = _PATH_MOUNTED;
+>  	}
+>  
+> -	ismnt = find_mountpoint(mtab, &ctx);
+> -	if (!ismnt) {
+> -		fprintf(stderr,
+> -_("%s: Not a XFS mount point or block device.\n"),
+> -			ctx.mntpoint);
+> +	fs_table_initialise(0, NULL, 0, NULL);
+> +	fsp = fs_table_lookup_mount(ctx.mntpoint);
+> +	if (!fsp) {
+> +		fprintf(stderr, _("%s: Not a XFS mount point.\n"),
+> +				ctx.mntpoint);
+>  		ret |= SCRUB_RET_SYNTAX;
+>  		goto out;
+>  	}
+> +	memcpy(&ctx.fsinfo, fsp, sizeof(struct fs_path));
+>  
+>  	/* How many CPUs? */
+>  	nproc = sysconf(_SC_NPROCESSORS_ONLN);
+> @@ -740,8 +741,6 @@ _("%s: Not a XFS mount point or block device.\n"),
+>  	phase_end(&all_pi, 0);
+>  	if (progress_fp)
+>  		fclose(progress_fp);
+> -	free(ctx.blkdev);
+> -	free(ctx.mntpoint);
+>  
+>  	/*
+>  	 * If we're being run as a service, the return code must fit the LSB
+> diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+> index aa130a7..c9dbe8e 100644
+> --- a/scrub/xfs_scrub.h
+> +++ b/scrub/xfs_scrub.h
+> @@ -48,7 +48,6 @@ struct scrub_ctx {
+>  
+>  	/* Strings we need for presentation */
+>  	char			*mntpoint;
+> -	char			*blkdev;
+>  
+>  	/* Mountpoint info */
+>  	struct stat		mnt_sb;
 > 
-> I am not able to create the problem at will.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> Is this problem new/fixed?
-
-Maybe with 
-
-commit f59cf5c29919d17b61913c3360a7bd29b72975c1
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Mon Dec 4 17:32:55 2017 -0800
-
-    xfs: remove "no-allocation" reservations for file creations
-    
-    If we create a new file we will need an inode, and usually some metadata
-    in the parent direction.  Aiming for everything to go well despite the
-    lack of a reservation leads to dirty transactions cancelled under a heavy
-    create/delete load.  This patch removes those nospace transactions, which
-    will lead to slightly earlier ENOSPC on some workloads, but instead
-    prevent file system shutdowns due to cancelling dirty transactions for
-    others.
-
-but honestly debugging 2 year old kernels is more a question for your distro
-than for upstream...
-
-> Was the corruption only in memory or on disk as well?
-
-it's not actually corruption, that's a poorly worded error message TBH.
-
-> Why did xfs_repair not detect the corruption?
-
-Because there is no corruption on the disk.
-
--Eric
