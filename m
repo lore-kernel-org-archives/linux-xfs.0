@@ -1,50 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42218 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:39216 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754797AbeDVPF6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:05:58 -0400
-Subject: [PATCH 00/13] xfs-4.18: quota refactor
+        with ESMTP id S1752121AbeDKBxU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Apr 2018 21:53:20 -0400
+Date: Tue, 10 Apr 2018 18:53:09 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:05:42 -0700
-Message-ID: <152440954198.29601.14390250048915099607.stgit@magnolia>
+Subject: [PATCH v2 12/14] xfs_scrub: disable private /tmp for scrub service
+Message-ID: <20180411015309.GW7500@magnolia>
+References: <152160358015.8288.2700156777231657519.stgit@magnolia>
+ <152160365430.8288.18072489901853791592.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152160365430.8288.18072489901853791592.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here's a series to refactor and clean out the incohesive mess that
-xfs_qm_dqget has become.
+Don't make /tmp private when invoking xfs_scrub as a service, because
+/tmp might contain or itself be an xfs filesystem mountpoint.
 
-I've distinguished three contexts in which dqget can be called, and
-converted them into separate externally visible interfaces --
-_qm_dqget_next, which returns the first initialized dquot with an id at
-least as high as the id passed in; _qm_dqget_inode, which returns the
-dquot for a given (inode, type); and so _qm_dqget now only returns the
-dquot for a given (id, type).  I removed unused parameters from the
-dqattach functions, renamed _qm_dqiterate (since it now only knows how
-to zap dquot counters during quotacheck), and added a real function to
-iterate all dquots of a given type.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: add a comment explaining why we turned it off
+---
+ scrub/xfs_scrub@.service.in |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-This means that all _dqget variants no longer take QMOPT flags, and
-QMOPT_NEXT is gone.  XFS_QMOPT_DQALLOC is now XFS_DQGET_DQALLOC and can
-only be specified for functions where it makes sense.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.17-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
-
-This is an extraordinary way to eat your data.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
+index c14f813..56acea6 100644
+--- a/scrub/xfs_scrub@.service.in
++++ b/scrub/xfs_scrub@.service.in
+@@ -9,7 +9,8 @@ WorkingDirectory=%I
+ PrivateNetwork=true
+ ProtectSystem=full
+ ProtectHome=read-only
+-PrivateTmp=yes
++# Disable private /tmp just in case %i is a path under /tmp.
++PrivateTmp=no
+ AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
+ NoNewPrivileges=yes
+ User=nobody
