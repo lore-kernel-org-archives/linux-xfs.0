@@ -1,69 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from dugong.comp.uvic.ca ([142.104.42.98]:40586 "EHLO
-        dugong.comp.uvic.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751793AbeDQDZY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 23:25:24 -0400
-Received: from uaru.uvic.ca (uaru.uvic.ca [142.104.224.130])
-        by dugong.comp.uvic.ca (8.14.4/8.14.4) with ESMTP id w3H38ki3031303
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Apr 2018 20:08:46 -0700
-From: Ryan Taylor <rptaylor@uvic.ca>
-Subject: xfsdump: too many -f arguments: maximum is 1 when running in miniroot
-Date: Tue, 17 Apr 2018 03:08:45 +0000
-Message-ID: <1523934525.20129.96.camel@uvic.ca>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <232B54ECF5F4AE47872F7AEEA39C53FA@local.uvic.ca>
-Content-Transfer-Encoding: base64
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:53702 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752234AbeDLNBL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Apr 2018 09:01:11 -0400
 MIME-Version: 1.0
+Reply-To: mtk.manpages@gmail.com
+In-Reply-To: <20171101153648.30166-20-jack@suse.cz>
+References: <20171101153648.30166-1-jack@suse.cz> <20171101153648.30166-20-jack@suse.cz>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Date: Thu, 12 Apr 2018 15:00:49 +0200
+Message-ID: <CAKgNAkhsFrcdkXNA2cw3o0gJV0uLRtBg9ybaCe5xy1QBC2PgqA@mail.gmail.com>
+Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-nvdimm@lists.01.org, Linux-MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-DQpIZWxsbywNCg0KSSBoYXZlIGEgQ2VudE9TNiBzeXN0ZW0gd2l0aCBrZXJuZWwgMi42LjMyLTY5
-Ni4yMy4xLmVsNi54ODZfNjQgYW5kIHhmc2R1bXAtMy4wLjQtNC5lbDZfNi4xLng4Nl82NA0KKHRo
-ZSBsYXRlc3QgYXZhaWxhYmxlIHZlcnNpb25zKS4NCg0KV2hlbiBJIHRyeSB0byB4ZnNkdW1wIEkg
-Z2V0IHRoaXMgZXJyb3I6DQoNCiQgc3VkbyB4ZnNkdW1wIC1kIDIwMDAgLWwgMCAtcCAzMCAtTCBE
-dW1wIC1mIC9tbnQvZGF0YTIvbDAvZmlsZTAgLWYgL21udC9kYXRhMi9sMC9maWxlMSAvbW50L2Rh
-dGExDQp4ZnNkdW1wOiB0b28gbWFueSAtZiBhcmd1bWVudHM6IG1heGltdW0gaXMgMSB3aGVuIHJ1
-bm5pbmcgaW4gbWluaXJvb3QNCnhmc2R1bXA6IHVzYWdlOiB4ZnNkdW1wIFsgLWEgKGR1bXAgRE1G
-IGR1YWxzdGF0ZSBmaWxlcyBhcyBvZmZsaW5lKSBdDQogICAgICAgICAgICAgICAgICAgICAgICBb
-IC1iIDxibG9ja3NpemU+IF0NCiAgICAgICAgICAgICAgICAgICAgICAgIFsgLWMgPG1lZGlhIGNo
-YW5nZSBhbGVydCBwcm9ncmFtPiAgXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtZCA8ZHVt
-cCBtZWRpYSBmaWxlIHNpemU+ICBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1lIChhbGxv
-dyBmaWxlcyB0byBiZSBleGNsdWRlZCkgXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtZiA8
-ZGVzdGluYXRpb24+IC4uLiBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1oIChoZWxwKSBd
-DQogICAgICAgICAgICAgICAgICAgICAgICBbIC1sIDxsZXZlbD4gXQ0KICAgICAgICAgICAgICAg
-ICAgICAgICAgWyAtbSAoZm9yY2UgdXNhZ2Ugb2YgbWluaW1hbCBybXQpIF0NCiAgICAgICAgICAg
-ICAgICAgICAgICAgIFsgLW8gKG92ZXJ3cml0ZSB0YXBlKSBdDQogICAgICAgICAgICAgICAgICAg
-ICAgICBbIC1wIDxzZWNvbmRzIGJldHdlZW4gcHJvZ3Jlc3MgcmVwb3J0cz4gXQ0KICAgICAgICAg
-ICAgICAgICAgICAgICAgWyAtcSA8dXNlIFFJQyB0YXBlIHNldHRpbmdzPiBdDQogICAgICAgICAg
-ICAgICAgICAgICAgICBbIC1zIDxzdWJ0cmVlPiAuLi4gXQ0KICAgICAgICAgICAgICAgICAgICAg
-ICAgWyAtdCA8ZmlsZT4gKHVzZSBmaWxlIG10aW1lIGZvciBkdW1wIHRpbWUgXQ0KICAgICAgICAg
-ICAgICAgICAgICAgICAgWyAtdiA8dmVyYm9zaXR5IHtzaWxlbnQsIHZlcmJvc2UsIHRyYWNlfT4g
-XQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAteiA8bWF4aW11bSBmaWxlIHNpemU+IF0NCiAg
-ICAgICAgICAgICAgICAgICAgICAgIFsgLUEgKGRvbid0IGR1bXAgZXh0ZW5kZWQgZmlsZSBhdHRy
-aWJ1dGVzKSBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1CIDxiYXNlIGR1bXAgc2Vzc2lv
-biBpZD4gXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtRSAocHJlLWVyYXNlIG1lZGlhKSBd
-DQogICAgICAgICAgICAgICAgICAgICAgICBbIC1GIChkb24ndCBwcm9tcHQpIF0NCiAgICAgICAg
-ICAgICAgICAgICAgICAgIFsgLUkgKGRpc3BsYXkgZHVtcCBpbnZlbnRvcnkpIF0NCiAgICAgICAg
-ICAgICAgICAgICAgICAgIFsgLUogKGluaGliaXQgaW52ZW50b3J5IHVwZGF0ZSkgXQ0KICAgICAg
-ICAgICAgICAgICAgICAgICAgWyAtTCA8c2Vzc2lvbiBsYWJlbD4gXQ0KICAgICAgICAgICAgICAg
-ICAgICAgICAgWyAtTSA8bWVkaWEgbGFiZWw+IC4uLiBdDQogICAgICAgICAgICAgICAgICAgICAg
-ICBbIC1PIDxvcHRpb25zIGZpbGU+IF0NCiAgICAgICAgICAgICAgICAgICAgICAgIFsgLVIgKHJl
-c3VtZSkgXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtVCAoZG9uJ3QgdGltZW91dCBkaWFs
-b2dzKSBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1ZIDxJL08gYnVmZmVyIHJpbmcgbGVu
-Z3RoPiBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC0gKHN0ZG91dCkgXQ0KICAgICAgICAg
-ICAgICAgICAgICAgICAgWyA8c291cmNlIChtbnRwbnR8ZGV2aWNlKT4gXQ0KeGZzZHVtcDogRHVt
-cCBTdGF0dXM6IEVSUk9SDQoNCihJIG5lZWQgdG8gcHJvZHVjZSBtdWx0aXBsZSBkdW1wIGZpbGVz
-IGluIG9yZGVyIHRvIG1pZ3JhdGUgc29tZSBkYXRhIHVuZGVyIHNwYWNlIGNvbnN0cmFpbnRzLg0K
-SSB3YXMgcGxhbm5pbmcgdG8gcHJvZHVjZSB0aGUgZHVtcCBmaWxlcyBvbiBhbiBleHQ0IGZpbGVz
-eXN0ZW0gKHNpbmNlIHlvdSBjYW4gc2hyaW5rIHRoYXQpLCBhbmQNCnJlc3RvcmUgMSBkdW1wIGZp
-bGUgYXQgYSB0aW1lLiBBZnRlciByZXN0b3JpbmcgZWFjaCBkdW1wIGZpbGUsIEkgY2FuIGRlbGV0
-ZSBpdCwgc2hyaW5rIHRoZSBleHQ0DQpmaWxlc3lzdGVtIHRvIHJlY2xhaW0gc3BhY2UsIGFuZCBl
-eHBhbmQgdGhlIGRlc3RpbmF0aW9uIFhGUyBmaWxlc3lzdGVtLikNCg0KV2h5IGRvZXMgaXQgdGhp
-bmsgSSBhbSBydW5uaW5nIGluIG1pbmlyb290PyBIb3cgY2FuIHRoaXMgZXJyb3IgYmUgYXZvaWRl
-ZD8NCg0KVGhhbmtzLA0KLXJ0DQoNCi0tIA0KUnlhbiBUYXlsb3INClJlc2VhcmNoIENvbXB1dGlu
-ZyBTcGVjaWFsaXN0DQpSZXNlYXJjaCBDb21wdXRpbmcgU2VydmljZXMsIFVuaXZlcnNpdHkgU3lz
-dGVtcywgVW5pdmVyc2l0eSBvZiBWaWN0b3JpYQ==
+Hello Jan,
+
+I have applied your patch, and tweaked the text a little, and pushed
+the result to the git repo.
+
+On 1 November 2017 at 16:36, Jan Kara <jack@suse.cz> wrote:
+> Reviewed-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
+
+I have a question below.
+
+> ---
+>  man2/mmap.2 | 35 ++++++++++++++++++++++++++++++++++-
+>  1 file changed, 34 insertions(+), 1 deletion(-)
+>
+> diff --git a/man2/mmap.2 b/man2/mmap.2
+> index 47c3148653be..b38ee6809327 100644
+> --- a/man2/mmap.2
+> +++ b/man2/mmap.2
+> @@ -125,6 +125,21 @@ are carried through to the underlying file.
+>  to the underlying file requires the use of
+>  .BR msync (2).)
+>  .TP
+> +.BR MAP_SHARED_VALIDATE " (since Linux 4.15)"
+> +The same as
+> +.B MAP_SHARED
+> +except that
+> +.B MAP_SHARED
+> +mappings ignore unknown flags in
+> +.IR flags .
+> +In contrast when creating mapping of
+> +.B MAP_SHARED_VALIDATE
+> +mapping type, the kernel verifies all passed flags are known and fails the
+> +mapping with
+> +.BR EOPNOTSUPP
+> +otherwise. This mapping type is also required to be able to use some mapping
+> +flags.
+> +.TP
+>  .B MAP_PRIVATE
+>  Create a private copy-on-write mapping.
+>  Updates to the mapping are not visible to other processes
+> @@ -134,7 +149,10 @@ It is unspecified whether changes made to the file after the
+>  .BR mmap ()
+>  call are visible in the mapped region.
+>  .PP
+> -Both of these flags are described in POSIX.1-2001 and POSIX.1-2008.
+> +.B MAP_SHARED
+> +and
+> +.B MAP_PRIVATE
+> +are described in POSIX.1-2001 and POSIX.1-2008.
+>  .PP
+>  In addition, zero or more of the following values can be ORed in
+>  .IR flags :
+> @@ -352,6 +370,21 @@ option.
+>  Because of the security implications,
+>  that option is normally enabled only on embedded devices
+>  (i.e., devices where one has complete control of the contents of user memory).
+> +.TP
+> +.BR MAP_SYNC " (since Linux 4.15)"
+> +This flags is available only with
+> +.B MAP_SHARED_VALIDATE
+> +mapping type. Mappings of
+> +.B MAP_SHARED
+> +type will silently ignore this flag.
+> +This flag is supported only for files supporting DAX (direct mapping of persistent
+> +memory). For other files, creating mapping with this flag results in
+> +.B EOPNOTSUPP
+> +error. Shared file mappings with this flag provide the guarantee that while
+> +some memory is writeably mapped in the address space of the process, it will
+> +be visible in the same file at the same offset even after the system crashes or
+> +is rebooted. This allows users of such mappings to make data modifications
+> +persistent in a more efficient way using appropriate CPU instructions.
+
+It feels like there's a word missing/unclear wording in the previous
+line, before "using". Without that word, the sentence feels a bit
+ambiguous.
+
+Should it be:
+
+persistent in a more efficient way *through the use of* appropriate
+CPU instructions.
+
+or:
+
+persistent in a more efficient way *than using* appropriate CPU instructions.
+
+?
+
+Is suspect the first is correct, but need to check.
+
+Cheers,
+
+Michael
+
+
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
