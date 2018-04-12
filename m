@@ -1,99 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49624 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753639AbeDLPWP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Apr 2018 11:22:15 -0400
-Subject: Re: [PATCH] xfs_repair: fix getsubopt name definitions to use enums
-References: <20180410052053.GS7500@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <c74dd292-82b1-76ab-4c9e-2f9f285420b9@redhat.com>
-Date: Thu, 12 Apr 2018 10:22:14 -0500
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36602 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753089AbeDLSUe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Apr 2018 14:20:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <20180410052053.GS7500@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Reply-To: mtk.manpages@gmail.com
+In-Reply-To: <20180412142214.fcxw3g2jxv6bvn7d@quack2.suse.cz>
+References: <20171101153648.30166-1-jack@suse.cz> <20171101153648.30166-20-jack@suse.cz>
+ <CAKgNAkhsFrcdkXNA2cw3o0gJV0uLRtBg9ybaCe5xy1QBC2PgqA@mail.gmail.com> <20180412142214.fcxw3g2jxv6bvn7d@quack2.suse.cz>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Date: Thu, 12 Apr 2018 20:20:12 +0200
+Message-ID: <CAKgNAkgtVryFb81QgzwPq8SD241yKDN1xNxOWUUQH9QBYV13SA@mail.gmail.com>
+Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-nvdimm@lists.01.org, Linux-MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-On 4/10/18 12:20 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Convert the getsubopt usage in xfs_repair to use enums and explicitly
-> initialized array elements, similar to mkfs.  This also fixes the hole
-> in the o_opts table caused by 42fa89bc1b8dc8 ("xfs_repair: remove
-> pre_65_beta option") that causes segfaults in xfs/179 and xfs/202.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Jan, Ross.
 
-Ugh, sorry for not catching that myself, thanks.
+On 12 April 2018 at 16:22, Jan Kara <jack@suse.cz> wrote:
+> Hello Michael!
+>
+> On Thu 12-04-18 15:00:49, Michael Kerrisk (man-pages) wrote:
+>> Hello Jan,
+>>
+>> I have applied your patch, and tweaked the text a little, and pushed
+>> the result to the git repo.
+>
+> Thanks!
+>
+>> > +.B MAP_SHARED
+>> > +type will silently ignore this flag.
+>> > +This flag is supported only for files supporting DAX (direct mapping =
+of persistent
+>> > +memory). For other files, creating mapping with this flag results in
+>> > +.B EOPNOTSUPP
+>> > +error. Shared file mappings with this flag provide the guarantee that=
+ while
+>> > +some memory is writeably mapped in the address space of the process, =
+it will
+>> > +be visible in the same file at the same offset even after the system =
+crashes or
+>> > +is rebooted. This allows users of such mappings to make data modifica=
+tions
+>> > +persistent in a more efficient way using appropriate CPU instructions=
+.
+>>
+>> It feels like there's a word missing/unclear wording in the previous
+>> line, before "using". Without that word, the sentence feels a bit
+>> ambiguous.
+>>
+>> Should it be:
+>>
+>> persistent in a more efficient way *through the use of* appropriate
+>> CPU instructions.
+>>
+>> or:
+>>
+>> persistent in a more efficient way *than using* appropriate CPU instruct=
+ions.
+>>
+>> ?
+>>
+>> Is suspect the first is correct, but need to check.
+>
+> Yes, the first is correct.
 
-Fixes-commit: 42fa89bc1b ("xfs_repair: remove pre_65_beta option")
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Thanks for both checking that phrasing. In the end I decided to reword
+the sentence a bot more substantially:
 
-> ---
->  repair/xfs_repair.c |   40 ++++++++++++++++++++++++----------------
->  1 file changed, 24 insertions(+), 16 deletions(-)
-> 
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index b2a2432..ff6a738 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -46,29 +46,37 @@
->  /*
->   * -o: user-supplied override options
->   */
-> +enum o_opt_nums {
-> +	ASSUME_XFS = 0,
-> +	IHASH_SIZE,
-> +	BHASH_SIZE,
-> +	AG_STRIDE,
-> +	FORCE_GEO,
-> +	PHASE2_THREADS,
-> +	O_MAX_OPTS,
-> +};
-> +
->  static char *o_opts[] = {
-> -#define ASSUME_XFS	0
-> -	"assume_xfs",
-> -#define	IHASH_SIZE	2
-> -	"ihash",
-> -#define	BHASH_SIZE	3
-> -	"bhash",
-> -#define	AG_STRIDE	4
-> -	"ag_stride",
-> -#define FORCE_GEO	5
-> -	"force_geometry",
-> -#define PHASE2_THREADS	6
-> -	"phase2_threads",
-> -	NULL
-> +	[ASSUME_XFS]		= "assume_xfs",
-> +	[IHASH_SIZE]		= "ihash",
-> +	[BHASH_SIZE]		= "bhash",
-> +	[AG_STRIDE]		= "ag_stride",
-> +	[FORCE_GEO]		= "force_geometry",
-> +	[PHASE2_THREADS]	= "phase2_threads",
-> +	[O_MAX_OPTS]		= NULL,
->  };
->  
->  /*
->   * -c: conversion options
->   */
-> +enum c_opt_nums {
-> +	CONVERT_LAZY_COUNT = 0,
-> +	C_MAX_OPTS,
-> +};
-> +
->  static char *c_opts[] = {
-> -#define CONVERT_LAZY_COUNT	0
-> -	"lazycount",
-> -	NULL
-> +	[CONVERT_LAZY_COUNT]	= "lazycount",
-> +	[C_MAX_OPTS]		= NULL,
->  };
->  
->  
-> 
+              In  conjunction  with  the  use of appropriate CPU
+              instructions, this provides users of such mappings
+              with a more efficient way of making data modifica=E2=80=90
+              tions persistent.
 
+Thanks,
+
+Michael
+
+--=20
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
