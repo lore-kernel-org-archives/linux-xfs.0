@@ -1,35 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52760 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752053AbeDNWYI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Apr 2018 18:24:08 -0400
-Date: Sat, 14 Apr 2018 15:24:07 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
-Message-ID: <20180414222407.GA15294@bombadil.infradead.org>
-References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
- <20180414215937.GH5572@dastard>
+Received: from sandeen.net ([63.231.237.45]:59334 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753332AbeDMD6w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Apr 2018 23:58:52 -0400
+Subject: Re: [PATCH V2] xfs: enhance dinode verifier
+References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
+ <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
+ <20180413035632.GB32099@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d61bd844-52ba-12a5-f658-d6aebaed3e93@sandeen.net>
+Date: Thu, 12 Apr 2018 22:58:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180414215937.GH5572@dastard>
+In-Reply-To: <20180413035632.GB32099@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, wen.xu@gatech.edu
 
-On Sun, Apr 15, 2018 at 07:59:37AM +1000, Dave Chinner wrote:
-> On Sun, Apr 15, 2018 at 01:35:30AM +0530, Souptick Joarder wrote:
-> > Use new return type vm_fault_t for fault handlers.
-> > 
-> > Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
-> > Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
-> 
-> Ummm. Why are we adding typedefs to hide basic types?
-> 
-> typedef int vm_fault_t;
+On 4/12/18 10:56 PM, Darrick J. Wong wrote:
+> On Thu, Apr 12, 2018 at 09:55:41PM -0500, Eric Sandeen wrote:
+>> Add several more validations to xfs_dinode_verify:
+...
 
-That's the intermediate step.  It's going to become a sparse typedef
-like gfp_t once everything's converted.  And the "why" is that people
-are still returning -EFOO when they should be returning VM_FAULT_FOO.
+>> @@ -476,12 +478,25 @@ xfs_dinode_verify(
+>>  	if (XFS_DFORK_Q(dip)) {
+>>  		switch (dip->di_aformat) {
+>>  		case XFS_DINODE_FMT_LOCAL:
+>> +			if (dip->di_anextents)
+>> +				return __this_address;
+>> +		/* fall through */
+>>  		case XFS_DINODE_FMT_EXTENTS:
+>>  		case XFS_DINODE_FMT_BTREE:
+>>  			break;
+>>  		default:
+>>  			return __this_address;
+>>  		}
+>> +	} else {	/* No attr fork */
+>> +		switch (dip->di_aformat) {
+>> +		case 0:	/* Uninitialized OK */
+> 
+> Might be a good idea to point out that a newly allocated inode chunk
+> will have all these fields set to zero
+
+Well, that was the intent of my terse comment...  I can write a longer
+one, clearly it did not do the trick?
+
+-Eric
+
