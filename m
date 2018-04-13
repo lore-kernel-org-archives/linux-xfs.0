@@ -1,110 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53036 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751968AbeDJRqd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Apr 2018 13:46:33 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2FBBA7B523
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Apr 2018 17:46:33 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 123C47BE7E
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Apr 2018 17:46:33 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/7] xfs: create agfl block free helper function
-Date: Tue, 10 Apr 2018 13:46:25 -0400
-Message-Id: <20180410174631.4915-2-bfoster@redhat.com>
-In-Reply-To: <20180410174631.4915-1-bfoster@redhat.com>
-References: <20180410174631.4915-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:36382 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752182AbeDMD4k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Apr 2018 23:56:40 -0400
+Date: Thu, 12 Apr 2018 20:56:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH V2] xfs: enhance dinode verifier
+Message-ID: <20180413035632.GB32099@magnolia>
+References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
+ <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, wen.xu@gatech.edu
 
-Refactor the AGFL block free code into a new helper such that it can
-be invoked from deferred context. No functional changes.
+On Thu, Apr 12, 2018 at 09:55:41PM -0500, Eric Sandeen wrote:
+> Add several more validations to xfs_dinode_verify:
+> 
+> - For LOCAL data fork formats, di_nextents must be 0.
+> - For LOCAL attr fork formats, di_anextents must be 0.
+> - For inodes with no attr fork offset,
+>   - format must be XFS_DINODE_FMT_EXTENTS if set at all
+>   - di_anextents must be 0.
+> 
+> Thanks to dchinner for pointing out a couple related checks I had
+> forgotten to add.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> V2: due credit :)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 4fe17b368316..72ab4d2df8cf 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -458,6 +458,8 @@ xfs_dinode_verify(
+>  				return __this_address;
+>  			if (di_size > XFS_DFORK_DSIZE(dip, mp))
+>  				return __this_address;
+> +			if (dip->di_nextents)
+> +				return __this_address;
+>  			/* fall through */
+>  		case XFS_DINODE_FMT_EXTENTS:
+>  		case XFS_DINODE_FMT_BTREE:
+> @@ -476,12 +478,25 @@ xfs_dinode_verify(
+>  	if (XFS_DFORK_Q(dip)) {
+>  		switch (dip->di_aformat) {
+>  		case XFS_DINODE_FMT_LOCAL:
+> +			if (dip->di_anextents)
+> +				return __this_address;
+> +		/* fall through */
+>  		case XFS_DINODE_FMT_EXTENTS:
+>  		case XFS_DINODE_FMT_BTREE:
+>  			break;
+>  		default:
+>  			return __this_address;
+>  		}
+> +	} else {	/* No attr fork */
+> +		switch (dip->di_aformat) {
+> +		case 0:	/* Uninitialized OK */
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 37 +++++++++++++++++++++++++++----------
- fs/xfs/libxfs/xfs_alloc.h |  2 ++
- 2 files changed, 29 insertions(+), 10 deletions(-)
+Might be a good idea to point out that a newly allocated inode chunk
+will have all these fields set to zero (as I apparently stumble over
+this about once every 10-11 months).
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 4bcc095fe44a..193a5b4909c5 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2060,6 +2060,30 @@ xfs_alloc_space_available(
- 	return true;
- }
- 
-+int
-+xfs_free_agfl_block(
-+	struct xfs_trans	*tp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno,
-+	struct xfs_buf		*agbp,
-+	struct xfs_owner_info	*oinfo)
-+{
-+	int			error;
-+	struct xfs_buf		*bp;
-+
-+	error = xfs_free_ag_extent(tp, agbp, agno, agbno, 1, oinfo,
-+				   XFS_AG_RESV_AGFL);
-+	if (error)
-+		return error;
-+
-+	bp = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno, 0);
-+	if (!bp)
-+		return -EFSCORRUPTED;
-+	xfs_trans_binval(tp, bp);
-+
-+	return 0;
-+}
-+
- /*
-  * Check the agfl fields of the agf for inconsistency or corruption. The purpose
-  * is to detect an agfl header padding mismatch between current and early v5
-@@ -2247,21 +2271,14 @@ xfs_alloc_fix_freelist(
- 	else
- 		xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
- 	while (!(flags & XFS_ALLOC_FLAG_NOSHRINK) && pag->pagf_flcount > need) {
--		struct xfs_buf	*bp;
--
- 		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
- 		if (error)
- 			goto out_agbp_relse;
--		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
--					   &targs.oinfo, XFS_AG_RESV_AGFL);
-+
-+		error = xfs_free_agfl_block(tp, args->agno, bno, agbp,
-+					    &targs.oinfo);
- 		if (error)
- 			goto out_agbp_relse;
--		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
--		if (!bp) {
--			error = -EFSCORRUPTED;
--			goto out_agbp_relse;
--		}
--		xfs_trans_binval(tp, bp);
- 	}
- 
- 	targs.tp = tp;
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index cbf789ea5a4e..949e21326066 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -223,6 +223,8 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
- 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
- int xfs_alloc_read_agfl(struct xfs_mount *mp, struct xfs_trans *tp,
- 			xfs_agnumber_t agno, struct xfs_buf **bpp);
-+int xfs_free_agfl_block(struct xfs_trans *, xfs_agnumber_t, xfs_agblock_t,
-+			struct xfs_buf *, struct xfs_owner_info *);
- int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
- int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
- 		struct xfs_buf **agbp);
--- 
-2.13.6
+Also, uh, does xfs_repair catch these? :D
 
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> +		case XFS_DINODE_FMT_EXTENTS:
+> +			break;
+> +		default:
+> +			return __this_address;
+> +		}
+> +		if (dip->di_anextents)
+> +			return __this_address;
+>  	}
+>  
+>  	/* only version 3 or greater inodes are extensively verified here */
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
