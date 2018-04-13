@@ -1,115 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41250 "EHLO mail.kernel.org"
+Received: from sandeen.net ([63.231.237.45]:46920 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752488AbeDLURM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Apr 2018 16:17:12 -0400
-Date: Thu, 12 Apr 2018 13:17:11 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: cleanups & fixes for 4.17
-Message-ID: <20180412201711.GA32099@magnolia>
+        id S1751021AbeDMPyQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Apr 2018 11:54:16 -0400
+Subject: [PATCH V3] xfs: enhance dinode verifier
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
+ <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
+Message-ID: <1ffdb61f-d642-1310-a5df-0f166d90aa28@sandeen.net>
+Date: Fri, 13 Apr 2018 10:54:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: wen.xu@gatech.edu
 
-Hi Linus,
+Add several more validations to xfs_dinode_verify:
 
-Here's the second round of patches for XFS for 4.17.  Most of these are
-code cleanups, but there are a couple of notable use-after-free bug
-fixes.
+- For LOCAL data fork formats, di_nextents must be 0.
+- For LOCAL attr fork formats, di_anextents must be 0.
+- For inodes with no attr fork offset,
+  - format must be XFS_DINODE_FMT_EXTENTS if set at all
+  - di_anextents must be 0.
 
-This series has been run through a full xfstests run over the week
-and through a quick xfstests run against this morning's master, with no
-major failures reported.  Let me know if there are any merge problems.
+Thanks to dchinner for pointing out a couple related checks I had
+forgotten to add.
 
---D
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-The following changes since commit dc1baa715bbfbb1902da942d06497e79b40e7bc7:
+V2: due credit 
+V3: clarify the no-offset / no-format cases in a comment
 
-  xfs: do not log/recover swapext extent owner changes for deleted inodes (2018-03-29 10:19:15 -0700)
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index ef68b1d..ee8ed90 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -466,6 +466,8 @@
+ 				return __this_address;
+ 			if (di_size > XFS_DFORK_DSIZE(dip, mp))
+ 				return __this_address;
++			if (dip->di_nextents)
++				return __this_address;
+ 			/* fall through */
+ 		case XFS_DINODE_FMT_EXTENTS:
+ 		case XFS_DINODE_FMT_BTREE:
+@@ -484,12 +486,31 @@
+ 	if (XFS_DFORK_Q(dip)) {
+ 		switch (dip->di_aformat) {
+ 		case XFS_DINODE_FMT_LOCAL:
++			if (dip->di_anextents)
++				return __this_address;
++		/* fall through */
+ 		case XFS_DINODE_FMT_EXTENTS:
+ 		case XFS_DINODE_FMT_BTREE:
+ 			break;
+ 		default:
+ 			return __this_address;
+ 		}
++	} else {
++		/*
++		 * If there is no fork offset, this may be a freshly-made inode
++		 * in a new disk cluster, in which case di_aformat is zeroed.
++		 * Otherwise, such an inode must be in EXTENTS format; this goes
++		 * for freed inodes as well.
++		 */
++		switch (dip->di_aformat) {
++		case 0:
++		case XFS_DINODE_FMT_EXTENTS:
++			break;
++		default:
++			return __this_address;
++		}
++		if (dip->di_anextents)
++			return __this_address;
+ 	}
+ 
+ 	/* only version 3 or greater inodes are extensively verified here */
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.17-merge-4
-
-for you to fetch changes up to 8c81dd46ef3c416b3b95e3020fb90dbd44e6140b:
-
-  Force log to disk before reading the AGF during a fstrim (2018-04-10 22:39:04 -0700)
-
-----------------------------------------------------------------
-Changes since last update:
-- Cleanup unnecessary function call parameters
-- Fix a use-after-free bug when aborting logging intents
-- Refactor filestreams state data to avoid use-after-free bug
-- Fix incorrect removal of cow extents when truncating extended
-  attributes.
-- Refactor open-coded __set_page_dirty in favor of using vfs function.
-- Fix a deadlock when fstrim and fs shutdown race.
-
-----------------------------------------------------------------
-Carlos Maiolino (1):
-      Force log to disk before reading the AGF during a fstrim
-
-Chandan Rajendra (1):
-      xfs: Remove "committed" argument of xfs_dir_ialloc
-
-Christoph Hellwig (1):
-      xfs: remove filestream item xfs_inode reference
-
-Darrick J. Wong (1):
-      xfs: only cancel cow blocks when truncating the data fork
-
-Dave Chinner (1):
-      xfs: fix intent use-after-free on abort
-
-Eric Sandeen (1):
-      xfs: non-scrub - remove unused function parameters
-
-Matthew Wilcox (1):
-      Export __set_page_dirty
-
- fs/buffer.c                        |  3 ++-
- fs/xfs/libxfs/xfs_alloc.c          |  6 ++----
- fs/xfs/libxfs/xfs_alloc.h          |  5 ++---
- fs/xfs/libxfs/xfs_bmap.c           |  3 +--
- fs/xfs/libxfs/xfs_bmap.h           |  2 +-
- fs/xfs/libxfs/xfs_btree.c          |  2 --
- fs/xfs/libxfs/xfs_btree.h          |  6 ++----
- fs/xfs/libxfs/xfs_ialloc.c         |  2 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  2 +-
- fs/xfs/libxfs/xfs_refcount.c       | 22 ++++++++-------------
- fs/xfs/libxfs/xfs_refcount_btree.c |  5 ++---
- fs/xfs/libxfs/xfs_refcount_btree.h |  3 +--
- fs/xfs/libxfs/xfs_rmap.c           |  3 +--
- fs/xfs/libxfs/xfs_rmap_btree.c     |  5 ++---
- fs/xfs/libxfs/xfs_rmap_btree.h     |  2 +-
- fs/xfs/libxfs/xfs_sb.c             | 10 ++++------
- fs/xfs/libxfs/xfs_trans_resv.c     | 10 ++++------
- fs/xfs/xfs_aops.c                  | 15 ++-------------
- fs/xfs/xfs_bmap_item.c             | 39 +++++++++++++++++++-------------------
- fs/xfs/xfs_bmap_util.c             |  3 +--
- fs/xfs/xfs_buf.c                   |  1 -
- fs/xfs/xfs_buf.h                   |  2 +-
- fs/xfs/xfs_discard.c               | 14 +++++++-------
- fs/xfs/xfs_extfree_item.c          | 38 ++++++++++++++++++-------------------
- fs/xfs/xfs_filestream.c            | 21 ++++++++++----------
- fs/xfs/xfs_inode.c                 | 31 ++++++++++++------------------
- fs/xfs/xfs_inode.h                 |  6 +++---
- fs/xfs/xfs_iops.c                  |  2 +-
- fs/xfs/xfs_log.c                   |  1 -
- fs/xfs/xfs_log.h                   |  3 +--
- fs/xfs/xfs_log_cil.c               |  2 +-
- fs/xfs/xfs_mru_cache.c             |  8 +++++---
- fs/xfs/xfs_mru_cache.h             |  8 ++++----
- fs/xfs/xfs_qm.c                    |  4 +---
- fs/xfs/xfs_refcount_item.c         | 39 +++++++++++++++++++-------------------
- fs/xfs/xfs_rmap_item.c             | 38 ++++++++++++++++++-------------------
- fs/xfs/xfs_super.c                 | 13 ++++++-------
- fs/xfs/xfs_symlink.c               |  2 +-
- fs/xfs/xfs_trace.h                 | 14 +++++++-------
- include/linux/mm.h                 |  1 +
- 40 files changed, 177 insertions(+), 219 deletions(-)
