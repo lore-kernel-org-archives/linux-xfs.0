@@ -1,59 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:56776 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752800AbeDRC6M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:58:12 -0400
-Date: Tue, 17 Apr 2018 19:57:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs: cap the length of deduplication requests
-Message-ID: <20180418025755.GN24738@magnolia>
-References: <20180417051918.GD5203@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:57378 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752594AbeDMCtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Apr 2018 22:49:53 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: enhance dinode verifier
+Message-ID: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
+Date: Thu, 12 Apr 2018 21:49:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180417051918.GD5203@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: fstests <fstests@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: wen.xu@gatech.edu
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Add several more validations to xfs_dinode_verify:
 
-Since deduplication potentially has to read in all the pages in both
-files in order to compare the contents, cap the deduplication request
-length at MAX_RW_COUNT/2 (roughly 1GB) so that we have /some/ upper bound
-on the request length and can't just lock up the kernel forever.  Found
-by running generic/304 after commit 1ddae54555b62a ("common/rc: add
-missing 'local' keywords").
+- For LOCAL data fork formats, di_nextents must be 0.
+- For LOCAL attr fork formats, di_anextents must be 0.
+- For inodes with no attr fork offset,
+  - format must be XFS_DINODE_FMT_EXTENTS if set at all
+  - di_anextents must be 0.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
-v2: halve the amount so that we do MAX_RW_COUNT IO max
----
- fs/xfs/xfs_file.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 299aee4..9cafad4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -876,8 +876,18 @@ xfs_file_dedupe_range(
- 	struct file	*dst_file,
- 	u64		dst_loff)
- {
-+	struct inode	*srci = file_inode(src_file);
-+	u64		max_dedupe;
- 	int		error;
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 4fe17b368316..72ab4d2df8cf 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -458,6 +458,8 @@ xfs_dinode_verify(
+ 				return __this_address;
+ 			if (di_size > XFS_DFORK_DSIZE(dip, mp))
+ 				return __this_address;
++			if (dip->di_nextents)
++				return __this_address;
+ 			/* fall through */
+ 		case XFS_DINODE_FMT_EXTENTS:
+ 		case XFS_DINODE_FMT_BTREE:
+@@ -476,12 +478,25 @@ xfs_dinode_verify(
+ 	if (XFS_DFORK_Q(dip)) {
+ 		switch (dip->di_aformat) {
+ 		case XFS_DINODE_FMT_LOCAL:
++			if (dip->di_anextents)
++				return __this_address;
++		/* fall through */
+ 		case XFS_DINODE_FMT_EXTENTS:
+ 		case XFS_DINODE_FMT_BTREE:
+ 			break;
+ 		default:
+ 			return __this_address;
+ 		}
++	} else {	/* No attr fork */
++		switch (dip->di_aformat) {
++		case 0:	/* Uninitialized OK */
++		case XFS_DINODE_FMT_EXTENTS:
++			break;
++		default:
++			return __this_address;
++		}
++		if (dip->di_anextents)
++			return __this_address;
+ 	}
  
-+	/*
-+	 * Since we have to read all these pages in to compare them, cut
-+	 * it off at MAX_RW_COUNT/2 rounded down to the nearest block.
-+	 * That means we won't do more than MAX_RW_COUNT IO per request.
-+	 */
-+	max_dedupe = (MAX_RW_COUNT >> 1) & ~(i_blocksize(srci) - 1);
-+	if (len > max_dedupe)
-+		len = max_dedupe;
- 	error = xfs_reflink_remap_range(src_file, loff, dst_file, dst_loff,
- 				     len, true);
- 	if (error)
+ 	/* only version 3 or greater inodes are extensively verified here */
+
