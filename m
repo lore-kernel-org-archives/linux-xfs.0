@@ -1,110 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33900 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752679AbeDRCNY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:13:24 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2CB73083241
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2hdrxn8hcf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2DOKW002602
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3I2DOG8009203
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 GMT
-Subject: Re: [PATCH 1/1] xfs: fix a null pointer dereference in
- xfs_bmap_extents_to_btree
-From: Shan Hai <shan.hai@oracle.com>
-References: <1524017385-6671-1-git-send-email-shan.hai@oracle.com>
-Message-ID: <9fbccc81-103f-5b21-af3c-e32b82eba24b@oracle.com>
-Date: Wed, 18 Apr 2018 10:13:22 +0800
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:42138 "EHLO
+        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750761AbeDMGkV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Apr 2018 02:40:21 -0400
+Received: by mail-yw0-f182.google.com with SMTP id z82so3696989ywd.9
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Apr 2018 23:40:21 -0700 (PDT)
+From: Kirubakaran Kaliannan <kirubak@zadarastorage.com>
+References: ac41fcc0ce75c5d9621e03adeb9695bc@mail.gmail.com
+In-Reply-To: ac41fcc0ce75c5d9621e03adeb9695bc@mail.gmail.com
 MIME-Version: 1.0
-In-Reply-To: <1524017385-6671-1-git-send-email-shan.hai@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Date: Fri, 13 Apr 2018 12:10:19 +0530
+Message-ID: <c126c0a025db7e4011b4461c1ff26601@mail.gmail.com>
+Subject: statvfs() return large f_bavail on a 10TB drive
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
+Hi All,
+
+I have couple of =C2=A0xfs filesystem =C2=A0on a 10TB STAT drive.
+
+After 50% of filesystem is full, the df =E2=80=93kH is returning a large f_=
+bavail.
 
 
-On 2018年04月18日 10:09, Shan Hai wrote:
-> Fuzzing tool reports a write to null pointer error in the
-> xfs_bmap_extents_to_btree, fix it by bailing out on encountering
-> a null pointer.
->
-> Signed-off-by: Shan Hai <shan.hai@oracle.com>
+Filesystem=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Size=C2=A0 Used Avail Use% Mou=
+nted on
+/dev/dm-4=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 10T=C2=A0 -12T=C2=A0=
+=C2=A0 22T=C2=A0=C2=A0=C2=A0 - /mnt/a
+/dev/dm-3=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 10T=C2=A0 -12T=C2=A0=
+=C2=A0 22T=C2=A0=C2=A0=C2=A0 - /mnt/b
 
-This one supposed to be applied on top of below:
+I tried statvfs() and got the same large f_bavail as well,
 
-https://www.spinics.net/lists/linux-xfs/msg17254.html
-[PATCH] xfs: set format back to extents if xfs_bmap_extents_to_btree fails
+       =C2=A0total filesystem size =3D 9763506176 KB
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0total Available size =3D 21=
+279656740 KB
+        total used size =3D -11516150564 KB
 
-Thanks
-Shan Hai
-> ---
->   fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++++--------
->   1 file changed, 16 insertions(+), 8 deletions(-)
->
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 040eeda..90b743d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -724,19 +724,14 @@ xfs_bmap_extents_to_btree(
->   	args.wasdel = wasdel;
->   	*logflagsp = 0;
->   	if ((error = xfs_alloc_vextent(&args))) {
-> -		xfs_iroot_realloc(ip, -1, whichfork);
->   		ASSERT(ifp->if_broot == NULL);
-> -		XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-> -		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> -		return error;
-> +		goto err1;
->   	}
->   
->   	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-> -		xfs_iroot_realloc(ip, -1, whichfork);
->   		ASSERT(ifp->if_broot == NULL);
-> -		XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-> -		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> -		return -ENOSPC;
-> +		error = -ENOSPC;
-> +		goto err1;
->   	}
->   	/*
->   	 * Allocation can't fail, the space was reserved.
-> @@ -748,6 +743,10 @@ xfs_bmap_extents_to_btree(
->   	ip->i_d.di_nblocks++;
->   	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
->   	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
-> +	if (!abp) {
-> +		error = -ENOSPC;
-> +		goto err2;
-> +	}
->   	/*
->   	 * Fill in the child block.
->   	 */
-> @@ -787,6 +786,15 @@ xfs_bmap_extents_to_btree(
->   	*curp = cur;
->   	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
->   	return 0;
-> +
-> +err2:
-> +	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
-> +err1:
-> +	xfs_iroot_realloc(ip, -1, whichfork);
-> +	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-> +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> +
-> +	return error;
->   }
->   
->   /*
+We are using Ubuntu 3.18.19 Linux kernel/xfs.
 
+If I unmount and mount the filesysem back, the f_bavail values are back to
+normal.
+
+Can you please point me, if this is something a known issue got fixed in
+XFS in the later version, or any lead may help.
+It is difficult at this point of time to upgrade the XFS for this specific
+issue.
+
+Thanks,
+-kiru
