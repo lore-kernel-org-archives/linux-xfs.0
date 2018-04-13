@@ -1,42 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38355 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750960AbeDMLRv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Apr 2018 07:17:51 -0400
-Date: Fri, 13 Apr 2018 13:17:48 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
- MAP_SYNC
-Message-ID: <20180413111748.pnusziuap54hknrm@quack2.suse.cz>
-References: <20171101153648.30166-1-jack@suse.cz>
- <20171101153648.30166-20-jack@suse.cz>
- <CAKgNAkhsFrcdkXNA2cw3o0gJV0uLRtBg9ybaCe5xy1QBC2PgqA@mail.gmail.com>
- <20180412142214.fcxw3g2jxv6bvn7d@quack2.suse.cz>
- <CAKgNAkgtVryFb81QgzwPq8SD241yKDN1xNxOWUUQH9QBYV13SA@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:33978 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751553AbeDMP7Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Apr 2018 11:59:25 -0400
+Date: Fri, 13 Apr 2018 08:59:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH V3] xfs: enhance dinode verifier
+Message-ID: <20180413155917.GD32099@magnolia>
+References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
+ <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
+ <1ffdb61f-d642-1310-a5df-0f166d90aa28@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKgNAkgtVryFb81QgzwPq8SD241yKDN1xNxOWUUQH9QBYV13SA@mail.gmail.com>
+In-Reply-To: <1ffdb61f-d642-1310-a5df-0f166d90aa28@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-nvdimm@lists.01.org, Linux-MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, wen.xu@gatech.edu
 
-On Thu 12-04-18 20:20:12, Michael Kerrisk (man-pages) wrote:
+On Fri, Apr 13, 2018 at 10:54:14AM -0500, Eric Sandeen wrote:
+> Add several more validations to xfs_dinode_verify:
 > 
-> Thanks for both checking that phrasing. In the end I decided to reword
-> the sentence a bot more substantially:
+> - For LOCAL data fork formats, di_nextents must be 0.
+> - For LOCAL attr fork formats, di_anextents must be 0.
+> - For inodes with no attr fork offset,
+>   - format must be XFS_DINODE_FMT_EXTENTS if set at all
+>   - di_anextents must be 0.
 > 
->               In  conjunction  with  the  use of appropriate CPU
->               instructions, this provides users of such mappings
->               with a more efficient way of making data modifica‐
->               tions persistent.
+> Thanks to dchinner for pointing out a couple related checks I had
+> forgotten to add.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Great, thanks for the improvement!
+Looks ok, will try to figure out what the online repair ramifications
+are...
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+> 
+> V2: due credit 
+> V3: clarify the no-offset / no-format cases in a comment
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index ef68b1d..ee8ed90 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -466,6 +466,8 @@
+>  				return __this_address;
+>  			if (di_size > XFS_DFORK_DSIZE(dip, mp))
+>  				return __this_address;
+> +			if (dip->di_nextents)
+> +				return __this_address;
+>  			/* fall through */
+>  		case XFS_DINODE_FMT_EXTENTS:
+>  		case XFS_DINODE_FMT_BTREE:
+> @@ -484,12 +486,31 @@
+>  	if (XFS_DFORK_Q(dip)) {
+>  		switch (dip->di_aformat) {
+>  		case XFS_DINODE_FMT_LOCAL:
+> +			if (dip->di_anextents)
+> +				return __this_address;
+> +		/* fall through */
+>  		case XFS_DINODE_FMT_EXTENTS:
+>  		case XFS_DINODE_FMT_BTREE:
+>  			break;
+>  		default:
+>  			return __this_address;
+>  		}
+> +	} else {
+> +		/*
+> +		 * If there is no fork offset, this may be a freshly-made inode
+> +		 * in a new disk cluster, in which case di_aformat is zeroed.
+> +		 * Otherwise, such an inode must be in EXTENTS format; this goes
+> +		 * for freed inodes as well.
+> +		 */
+> +		switch (dip->di_aformat) {
+> +		case 0:
+> +		case XFS_DINODE_FMT_EXTENTS:
+> +			break;
+> +		default:
+> +			return __this_address;
+> +		}
+> +		if (dip->di_anextents)
+> +			return __this_address;
+>  	}
+>  
+>  	/* only version 3 or greater inodes are extensively verified here */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
