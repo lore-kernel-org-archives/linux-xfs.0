@@ -1,62 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50678 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750824AbeDMPnQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Apr 2018 11:43:16 -0400
-Date: Fri, 13 Apr 2018 08:43:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: statvfs() return large f_bavail on a 10TB drive
-Message-ID: <20180413154313.GC32099@magnolia>
-References: <c126c0a025db7e4011b4461c1ff26601@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:55306 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752594AbeDMCzn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Apr 2018 22:55:43 -0400
+Subject: [PATCH V2] xfs: enhance dinode verifier
+References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
+Date: Thu, 12 Apr 2018 21:55:41 -0500
 MIME-Version: 1.0
+In-Reply-To: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c126c0a025db7e4011b4461c1ff26601@mail.gmail.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kirubakaran Kaliannan <kirubak@zadarastorage.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: wen.xu@gatech.edu
 
-On Fri, Apr 13, 2018 at 12:10:19PM +0530, Kirubakaran Kaliannan wrote:
-> Hi All,
-> 
-> I have couple of  xfs filesystem  on a 10TB STAT drive.
-> 
-> After 50% of filesystem is full, the df –kH is returning a large f_bavail.
-> 
-> 
-> Filesystem                   Size  Used Avail Use% Mounted on
-> /dev/dm-4                     10T  -12T   22T    - /mnt/a
-> /dev/dm-3                     10T  -12T   22T    - /mnt/b
-> 
-> I tried statvfs() and got the same large f_bavail as well,
-> 
->         total filesystem size = 9763506176 KB
->         total Available size = 21279656740 KB
+Add several more validations to xfs_dinode_verify:
 
-21279656740KB = 0x100000000000 | (about 50% of the space) ?
+- For LOCAL data fork formats, di_nextents must be 0.
+- For LOCAL attr fork formats, di_anextents must be 0.
+- For inodes with no attr fork offset,
+  - format must be XFS_DINODE_FMT_EXTENTS if set at all
+  - di_anextents must be 0.
 
-Bitflip?
+Thanks to dchinner for pointing out a couple related checks I had
+forgotten to add.
 
---D
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
->         total used size = -11516150564 KB
-> 
-> We are using Ubuntu 3.18.19 Linux kernel/xfs.
-> 
-> If I unmount and mount the filesysem back, the f_bavail values are back to
-> normal.
-> 
-> Can you please point me, if this is something a known issue got fixed in
-> XFS in the later version, or any lead may help.
-> It is difficult at this point of time to upgrade the XFS for this specific
-> issue.
-> 
-> Thanks,
-> -kiru
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+V2: due credit :)
+
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 4fe17b368316..72ab4d2df8cf 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -458,6 +458,8 @@ xfs_dinode_verify(
+ 				return __this_address;
+ 			if (di_size > XFS_DFORK_DSIZE(dip, mp))
+ 				return __this_address;
++			if (dip->di_nextents)
++				return __this_address;
+ 			/* fall through */
+ 		case XFS_DINODE_FMT_EXTENTS:
+ 		case XFS_DINODE_FMT_BTREE:
+@@ -476,12 +478,25 @@ xfs_dinode_verify(
+ 	if (XFS_DFORK_Q(dip)) {
+ 		switch (dip->di_aformat) {
+ 		case XFS_DINODE_FMT_LOCAL:
++			if (dip->di_anextents)
++				return __this_address;
++		/* fall through */
+ 		case XFS_DINODE_FMT_EXTENTS:
+ 		case XFS_DINODE_FMT_BTREE:
+ 			break;
+ 		default:
+ 			return __this_address;
+ 		}
++	} else {	/* No attr fork */
++		switch (dip->di_aformat) {
++		case 0:	/* Uninitialized OK */
++		case XFS_DINODE_FMT_EXTENTS:
++			break;
++		default:
++			return __this_address;
++		}
++		if (dip->di_anextents)
++			return __this_address;
+ 	}
+ 
+ 	/* only version 3 or greater inodes are extensively verified here */
+
+
