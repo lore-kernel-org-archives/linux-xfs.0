@@ -1,94 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from isopod.comp.uvic.ca ([142.104.177.239]:56876 "EHLO
-        isopod.comp.uvic.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752327AbeDQUIx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 16:08:53 -0400
-From: Ryan Taylor <rptaylor@uvic.ca>
-Subject: Re: xfsdump: too many -f arguments: maximum is 1 when running in
- miniroot
-Date: Tue, 17 Apr 2018 19:55:32 +0000
-Message-ID: <1523994932.20129.115.camel@uvic.ca>
-References: <1523934525.20129.96.camel@uvic.ca>
-         <20180417065943.GJ23861@dastard>
-In-Reply-To: <20180417065943.GJ23861@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <74B02548EBC859499CFAA2CE513F5AF1@local.uvic.ca>
-Content-Transfer-Encoding: base64
+Received: from sandeen.net ([63.231.237.45]:52312 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752298AbeDMCGS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Apr 2018 22:06:18 -0400
+Subject: Re: New rash of fuzzer bugs on kernel.org bugzilla
+References: <0bdeb0e5-fd1d-a4d8-1a1a-f9371b829026@sandeen.net>
+ <20180412233605.GC5572@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6f6ac5be-7828-26c9-90df-5953e025592e@sandeen.net>
+Date: Thu, 12 Apr 2018 21:06:15 -0500
 MIME-Version: 1.0
+In-Reply-To: <20180412233605.GC5572@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "david@fromorbit.com" <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, wen.xu@gatech.edu
 
-SGkgRGF2ZSwNCg0KVGhhbmtzIGZvciB0aGUgaW5mby4gVG9vIGJhZCBSSCBkaWRuJ3QgYmFja3Bv
-cnQgdGhlIGZ1bmN0aW9uYWxpdHkgaW50byBSSEVMNiAod2hpY2ggaXMgb24NCm1haW50ZW5hbmNl
-IHN1cHBvcnQgcGhhc2UgMiBmb3IgMjAxNy0yMDIwKS4NCg0KPiBJIGRvbid0IHRoaW5rIG11bHRp
-cGxlIGR1bXAgc3RyZWFtcyBkb2VzIHdoYXQgeW91IHdhbnQuDQoNCj4gV2hlbiB5b3UgY3JlYXRl
-IG11bHRpcGxlIGR1bXAgZmlsZXMgd2l0aCBhIGN1cnJlbnQgeGZzZHVtcCwgeW91IGFsc28NCj4g
-bmVlZCB0byBzdXBwbHkgeGZzcmVzdG9yZSB3aXRoIGFsbCB0aG9zZSBkdW1wIGZpbGVzLCB0b28s
-IG90aGVyd2lzZQ0KPiB0aGUgZHVtcCBpbnZlbnRvcnkgY2Fubm90IGJlIHZhbGlkYXRlZC4gSU9X
-cywgSSBkb24ndCB0aGluayB5b3UgY2FuDQo+IGp1c3QgcmVzdG9yZSBhIHNpbmdsZSBkdW1wIGZp
-bGUgZnJvbSBhIG11bHRpLXN0cmVhbSBkdW1wIGFzIGRhdGENCj4gYmVpbmcgcmVzdG9yZWQgbWF5
-IGJlIHNwcmVhZCBhY3Jvc3MgbXVsdGlwbGUgZHVtcCBmaWxlcy4uLg0KDQpJIGhhZCB0ZXN0ZWQg
-dGhpcyBhbmQgaXQgY29tcGxldGVkIHN1Y2Nlc3NmdWxseSwgd2l0aCBubyB3YXJuaW5ncyBvciBl
-cnJvcnM6DQoNCnhmc3Jlc3RvcmUgLVIgLXIgLXAgMzAgLWYgL21udC90bXAvZHVtcHMvbDAvZmls
-ZTEgL21udC9kc3QNCnhmc3Jlc3RvcmUgLVIgLXIgLXAgMzAgLWYgL21udC90bXAvZHVtcHMvbDAv
-ZmlsZTIgL21udC9kc3QNCiMgZXRjLg0KDQpNeSB0ZXN0IGNhc2Ugd2FzIHJlbGF0aXZlbHkgc2lt
-cGxlIHRob3VnaC4gKEFsc28sIHRoZSByZXN0b3JlIHdhcyBkb25lIG9uIGEgbmV3ZXIgQ2VudE9T
-NyBzeXN0ZW0pLg0KSXQgc2VlbWVkIHRoYXQgZG9pbmcgaXQgaW4gdGhpcyB3YXkgd2l0aCB0aGUg
-Y3VtdWxhdGl2ZSAoLXIpIGFuZCByZXN1bWUgKC1SKSBvcHRpb25zIGlzIHZhbGlkLCBidXQNCm1h
-eWJlIHRoYXQgaXMganVzdCBteSBpbnRlcnByZXRhdGlvbiBvZiB0aGUgeGZzcmVzdG9yZSBtYW4g
-cGFnZS4gSWYgaXQgaXMgbm90IHZhbGlkLCBpdCB3b3VsZCBiZSBhDQp1c2VmdWwgZnVuY3Rpb25h
-bGl0eSB0byBoYXZlLg0KDQpBbnl3YXkgSSB3aWxsIGNvbWUgdXAgd2l0aCBhbiBhbHRlcm5hdGl2
-ZSBhcHByb2FjaC4NCg0KVGhhbmtzLA0KLXJ0DQoNCi0tIA0KUnlhbiBUYXlsb3INClJlc2VhcmNo
-IENvbXB1dGluZyBTcGVjaWFsaXN0DQpSZXNlYXJjaCBDb21wdXRpbmcgU2VydmljZXMsIFVuaXZl
-cnNpdHkgU3lzdGVtcywgVW5pdmVyc2l0eSBvZiBWaWN0b3JpYQ0KDQpPbiBUdWUsIDIwMTgtMDQt
-MTcgYXQgMTY6NTkgKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90ZToNCj4gT24gVHVlLCBBcHIgMTcs
-IDIwMTggYXQgMDM6MDg6NDVBTSArMDAwMCwgUnlhbiBUYXlsb3Igd3JvdGU6DQo+ID4gDQo+ID4g
-SGVsbG8sDQo+ID4gDQo+ID4gSSBoYXZlIGEgQ2VudE9TNiBzeXN0ZW0gd2l0aCBrZXJuZWwgMi42
-LjMyLTY5Ni4yMy4xLmVsNi54ODZfNjQgYW5kIHhmc2R1bXAtMy4wLjQtDQo+ID4gNC5lbDZfNi4x
-Lng4Nl82NA0KPiA+ICh0aGUgbGF0ZXN0IGF2YWlsYWJsZSB2ZXJzaW9ucykuDQo+ID4gDQo+ID4g
-V2hlbiBJIHRyeSB0byB4ZnNkdW1wIEkgZ2V0IHRoaXMgZXJyb3I6DQo+ID4gDQo+ID4gJCBzdWRv
-IHhmc2R1bXAgLWQgMjAwMCAtbCAwIC1wIDMwIC1MIER1bXAgLWYgL21udC9kYXRhMi9sMC9maWxl
-MCAtZiAvbW50L2RhdGEyL2wwL2ZpbGUxDQo+ID4gL21udC9kYXRhMQ0KPiA+IHhmc2R1bXA6IHRv
-byBtYW55IC1mIGFyZ3VtZW50czogbWF4aW11bSBpcyAxIHdoZW4gcnVubmluZyBpbiBtaW5pcm9v
-dA0KPiANCj4gWW91ciB4ZnNkdW1wIGJpbmFyeSBpcyBzbyBvbGQgaXQgZG9lc24ndCBzdXBwb3J0
-IG11bHRpcGxlIGR1bXAgZmlsZXMNCj4gKG9yIHN0cmVhbXMsIGFzIHhmc2R1bXAgY2FsbHMgdGhl
-bSkuIFRoYXQgd2FzIGludHJvZHVjZWQgaW4gdjMuMS4wLA0KPiBJSVJDLCB2aWEgY29tbWl0Og0K
-PiANCj4gY29tbWl0IDdmZmRmOWQxZmJkNjVlYjM4MTcxYjg3NzJlZDRjMzEzMTVjYmJlZjYNCj4g
-QXV0aG9yOiBCaWxsIEtlbmRhbGwgPHdrZW5kYWxsQHNnaS5jb20+DQo+IERhdGU6ICAgTW9uIE5v
-diA3IDE0OjU4OjMxIDIwMTEgLTA2MDANCj4gDQo+ICAgICB4ZnNkdW1wOiBlbmFibGUgbXVsdGlw
-bGUgc3RyZWFtcw0KPiAgICAgDQo+ICAgICBJUklYIGNvbnRhaW5lZCBhbiBlbnZpcm9ubWVudCBy
-ZWZlcnJlZCB0byBhcyAibWluaXJvb3QiIHdoZXJlDQo+ICAgICBzcHJvYyB0aHJlYWRzIHdlcmUg
-ZWl0aGVyIG5vdCBhdmFpbGFibGUsIG9yIGF0IGxlYXN0IG5vdCB1c2VkDQo+ICAgICBpbiB4ZnNk
-dW1wLiBUaHJvdWdob3V0IHhmc2R1bXAgdGhlcmUncyBhICJtaW5pcm9vdCIgdmFyaWFibGUNCj4g
-ICAgIHdoaWNoIGluZGljYXRlcyB3aGV0aGVyIG9yIG5vdCB0aHJlYWQgc3VwcG9ydCBpcyBlbmFi
-bGVkLiBPbg0KPiAgICAgTGludXggdGhpcyB2YXJpYWJsZSBoYXMgYWx3YXlzIGJlZW4gZmFsc2Ug
-aW4gb3JkZXIgdG8gZGlzYWJsZQ0KPiAgICAgc3VwcG9ydCBmb3IgbXVsdGlwbGUgc3RyZWFtcy4N
-Cj4gICAgIA0KPiAgICAgTm93IHRoYXQgdGhlIHRocmVhZGluZyBpbmZyYWNzdHJ1Y3R1cmUgaGFz
-IGJlZW4gY29udmVydGVkIG92ZXINCj4gICAgIHRvIHB0aHJlYWRzLCB0aGlzIHBhdGNoIHJlbW92
-ZXMgdGhlICJtaW5pcm9vdCIgdmFyaWFibGUgYW5kDQo+ICAgICBlbmFibGVzIHRoZSBvcHRpb24g
-b2YgdXNpbmcgbXVsdGlwbGUgc3RyZWFtcy4NCj4gICAgIA0KPiAgICAgTm90ZSB0aGF0IGFub3Ro
-ZXIgZmVhdHVyZSBpbiB4ZnNkdW1wLCB1c2luZyBhIHJpbmcgYnVmZmVyIGZvcg0KPiAgICAgSS9P
-IHRvIHRhcGVzLCBhbHNvIGRlcGVuZHMgb24gdGhyZWFkIHN1cHBvcnQuIEknbSBsZWF2aW5nIHRo
-YXQNCj4gICAgIGRpc2FibGVkIGZvciBub3cgdW50aWwgbW9yZSB0ZXN0aW5nIGhhcyBiZWVuIGRv
-bmUuDQo+ICAgICANCj4gICAgIFJldmlld2VkLWJ5OiBBbGV4IEVsZGVyIDxhZWxkZXJAc2dpLmNv
-bT4NCj4gICAgIFNpZ25lZC1vZmYtYnk6IEJpbGwgS2VuZGFsbCA8d2tlbmRhbGxAc2dpLmNvbT4N
-Cj4gICAgIFNpZ25lZC1vZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiAN
-Cj4gPiAoSSBuZWVkIHRvIHByb2R1Y2UgbXVsdGlwbGUgZHVtcCBmaWxlcyBpbiBvcmRlciB0byBt
-aWdyYXRlIHNvbWUgZGF0YSB1bmRlciBzcGFjZSBjb25zdHJhaW50cy4NCj4gPiBJIHdhcyBwbGFu
-bmluZyB0byBwcm9kdWNlIHRoZSBkdW1wIGZpbGVzIG9uIGFuIGV4dDQgZmlsZXN5c3RlbSAoc2lu
-Y2UgeW91IGNhbiBzaHJpbmsgdGhhdCksIGFuZA0KPiA+IHJlc3RvcmUgMSBkdW1wIGZpbGUgYXQg
-YSB0aW1lLiBBZnRlciByZXN0b3JpbmcgZWFjaCBkdW1wIGZpbGUsIEkgY2FuIGRlbGV0ZSBpdCwg
-c2hyaW5rIHRoZSBleHQ0DQo+ID4gZmlsZXN5c3RlbSB0byByZWNsYWltIHNwYWNlLCBhbmQgZXhw
-YW5kIHRoZSBkZXN0aW5hdGlvbiBYRlMgZmlsZXN5c3RlbS4pDQo+IA0KPiBJIGRvbid0IHRoaW5r
-IG11bHRpcGxlIGR1bXAgc3RyZWFtcyBkb2VzIHdoYXQgeW91IHdhbnQuDQo+IA0KPiBXaGVuIHlv
-dSBjcmVhdGUgbXVsdGlwbGUgZHVtcCBmaWxlcyB3aXRoIGEgY3VycmVudCB4ZnNkdW1wLCB5b3Ug
-YWxzbw0KPiBuZWVkIHRvIHN1cHBseSB4ZnNyZXN0b3JlIHdpdGggYWxsIHRob3NlIGR1bXAgZmls
-ZXMsIHRvbywgb3RoZXJ3aXNlDQo+IHRoZSBkdW1wIGludmVudG9yeSBjYW5ub3QgYmUgdmFsaWRh
-dGVkLiBJT1dzLCBJIGRvbid0IHRoaW5rIHlvdSBjYW4NCj4ganVzdCByZXN0b3JlIGEgc2luZ2xl
-IGR1bXAgZmlsZSBmcm9tIGEgbXVsdGktc3RyZWFtIGR1bXAgYXMgZGF0YQ0KPiBiZWluZyByZXN0
-b3JlZCBtYXkgYmUgc3ByZWFkIGFjcm9zcyBtdWx0aXBsZSBkdW1wIGZpbGVzLi4uDQo+IA0KPiBD
-aGVlcnMsDQo+IA0KPiBEYXZlLg==
+On 4/12/18 6:36 PM, Dave Chinner wrote:
+
+> FWIW, I'm not that interested in fuzzing v4 filesystems. We know
+> they have problems with undetected bit errors and are lacking in
+> information on disk to detect a lot of error types. Hence there's
+> only so much we can do to harden them.
+
+*nod* - how are you creating these fuzzed images, i.e. what mkfs
+do you start with.  Are you randomizing mkfs options, and it just happens
+that the ones with problems are the v4 filesystems w/o crcs?  That would
+certainly make sense.
+
+Or are you manually restricting the type of filesystems you create for
+fuzzing?
+
+-Eric
