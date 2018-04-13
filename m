@@ -1,45 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46642 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751145AbeDOLLF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Apr 2018 07:11:05 -0400
-Date: Sun, 15 Apr 2018 04:11:04 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
-Message-ID: <20180415111104.GB25513@bombadil.infradead.org>
-References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
- <20180414215937.GH5572@dastard>
- <20180414222407.GA15294@bombadil.infradead.org>
- <20180415072121.GA13601@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:38355 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750960AbeDMLRv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Apr 2018 07:17:51 -0400
+Date: Fri, 13 Apr 2018 13:17:48 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and
+ MAP_SYNC
+Message-ID: <20180413111748.pnusziuap54hknrm@quack2.suse.cz>
+References: <20171101153648.30166-1-jack@suse.cz>
+ <20171101153648.30166-20-jack@suse.cz>
+ <CAKgNAkhsFrcdkXNA2cw3o0gJV0uLRtBg9ybaCe5xy1QBC2PgqA@mail.gmail.com>
+ <20180412142214.fcxw3g2jxv6bvn7d@quack2.suse.cz>
+ <CAKgNAkgtVryFb81QgzwPq8SD241yKDN1xNxOWUUQH9QBYV13SA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180415072121.GA13601@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAKgNAkgtVryFb81QgzwPq8SD241yKDN1xNxOWUUQH9QBYV13SA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-nvdimm@lists.01.org, Linux-MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-On Sun, Apr 15, 2018 at 12:21:21AM -0700, Christoph Hellwig wrote:
-> On Sat, Apr 14, 2018 at 03:24:07PM -0700, Matthew Wilcox wrote:
-> > On Sun, Apr 15, 2018 at 07:59:37AM +1000, Dave Chinner wrote:
-> > > On Sun, Apr 15, 2018 at 01:35:30AM +0530, Souptick Joarder wrote:
-> > > > Use new return type vm_fault_t for fault handlers.
-> > > > 
-> > > > Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
-> > > > Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
-> > > 
-> > > Ummm. Why are we adding typedefs to hide basic types?
-> > > 
-> > > typedef int vm_fault_t;
-> > 
-> > That's the intermediate step.  It's going to become a sparse typedef
-> > like gfp_t once everything's converted.  And the "why" is that people
-> > are still returning -EFOO when they should be returning VM_FAULT_FOO.
+On Thu 12-04-18 20:20:12, Michael Kerrisk (man-pages) wrote:
 > 
-> Please just send one damn patch adding the typedef and the sparse
-> annotation and converting everyone over.  Splitting this into five
-> gazillion patches that do nothing doesn't help anyone.
+> Thanks for both checking that phrasing. In the end I decided to reword
+> the sentence a bot more substantially:
+> 
+>               In  conjunction  with  the  use of appropriate CPU
+>               instructions, this provides users of such mappings
+>               with a more efficient way of making data modifica‐
+>               tions persistent.
 
-The XFS one is trivial.  Many of the others are not.
+Great, thanks for the improvement!
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
