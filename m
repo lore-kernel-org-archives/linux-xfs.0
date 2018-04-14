@@ -1,44 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:45788 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750871AbeDOHq7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Apr 2018 03:46:59 -0400
-Date: Sun, 15 Apr 2018 00:46:58 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/7] xfs: defer agfl block frees when dfops is available
-Message-ID: <20180415074658.GC5226@infradead.org>
-References: <20180410174631.4915-1-bfoster@redhat.com>
- <20180410174631.4915-4-bfoster@redhat.com>
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:33253 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751355AbeDNUDi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Apr 2018 16:03:38 -0400
+Received: by mail-pl0-f68.google.com with SMTP id w12-v6so6960932plp.0
+        for <linux-xfs@vger.kernel.org>; Sat, 14 Apr 2018 13:03:38 -0700 (PDT)
+Date: Sun, 15 Apr 2018 01:35:30 +0530
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: [PATCH] fs: xfs: Change return type to vm_fault_t
+Message-ID: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180410174631.4915-4-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, willy@infradead.org
 
-> Add the capability to defer AGFL block frees when a deferred ops
-> list is available to the AGFL fixup code.
+Use new return type vm_fault_t for fault handlers.
 
-When is one available and when not?  Why are we fine not delaying it
-in some cases?
+Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
+---
+ fs/xfs/xfs_file.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-> Note that this patch only adds infrastructure. It does not change
-> behavior because no callers have been updated to pass ->t_dfops into
-> the allocation code.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 9ea0832..988ec56 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1027,7 +1027,7 @@
+  *       page_lock (MM)
+  *         i_lock (XFS - extent map serialisation)
+  */
+-static int
++static vm_fault_t
+ __xfs_filemap_fault(
+ 	struct vm_fault		*vmf,
+ 	enum page_entry_size	pe_size,
+@@ -1035,7 +1035,7 @@
+ {
+ 	struct inode		*inode = file_inode(vmf->vma->vm_file);
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	int			ret;
++	vm_fault_t		ret;
+ 
+ 	trace_xfs_filemap_fault(ip, pe_size, write_fault);
+ 
+@@ -1064,7 +1064,7 @@
+ 	return ret;
+ }
+ 
+-static int
++static vm_fault_t
+ xfs_filemap_fault(
+ 	struct vm_fault		*vmf)
+ {
+@@ -1074,7 +1074,7 @@
+ 			(vmf->flags & FAULT_FLAG_WRITE));
+ }
+ 
+-static int
++static vm_fault_t
+ xfs_filemap_huge_fault(
+ 	struct vm_fault		*vmf,
+ 	enum page_entry_size	pe_size)
+@@ -1087,7 +1087,7 @@
+ 			(vmf->flags & FAULT_FLAG_WRITE));
+ }
+ 
+-static int
++static vm_fault_t
+ xfs_filemap_page_mkwrite(
+ 	struct vm_fault		*vmf)
+ {
+@@ -1099,7 +1099,7 @@
+  * on write faults. In reality, it needs to serialise against truncate and
+  * prepare memory for writing so handle is as standard write fault.
+  */
+-static int
++static vm_fault_t
+ xfs_filemap_pfn_mkwrite(
+ 	struct vm_fault		*vmf)
+ {
+-- 
+1.9.1
 
-So the plan is to eventually have all callers pass it?  If so that is
-another argument to first always pass defer_ops through the transaction,
-then make sure all callers have it where required, and only then move
-to actually use it.
-
-> +{
-> +	struct xfs_extent_free_item	*new;		/* new element */
-> +
-> +	ASSERT(xfs_bmap_free_item_zone != NULL);
-> +	ASSERT(oinfo != NULL);
-
-No need for either assert, we get nice clean NULL ptr dereferences when
-this isn't true.
