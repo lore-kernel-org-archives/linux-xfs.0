@@ -1,120 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39456 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752185AbeDGSEw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Apr 2018 14:04:52 -0400
-Date: Sat, 7 Apr 2018 11:04:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/21] xfs: repair superblocks
-Message-ID: <20180407180448.GM7500@magnolia>
-References: <152269897182.16346.1710955088267364781.stgit@magnolia>
- <152269904439.16346.10122475346850875266.stgit@magnolia>
- <20180406010520.GP23861@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:39002 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750904AbeDNBAV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Apr 2018 21:00:21 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 647FD356CB
+        for <linux-xfs@vger.kernel.org>; Sat, 14 Apr 2018 01:00:21 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 35C185D9C9
+        for <linux-xfs@vger.kernel.org>; Sat, 14 Apr 2018 01:00:21 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: notify user if free inodes contain errors
+Message-ID: <c05f7e4f-8dc6-5d2f-4e9a-709de95012c9@redhat.com>
+Date: Fri, 13 Apr 2018 20:00:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180406010520.GP23861@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Apr 06, 2018 at 11:05:20AM +1000, Dave Chinner wrote:
-> On Mon, Apr 02, 2018 at 12:57:24PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If one of the backup superblocks is found to differ seriously from
-> > superblock 0, write out a fresh copy from the in-core sb.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> .....
-> > +/* Repair the superblock. */
-> > +int
-> > +xfs_repair_superblock(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_buf			*bp;
-> > +	struct xfs_dsb			*sbp;
-> > +	xfs_agnumber_t			agno;
-> > +	int				error;
-> > +
-> > +	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
-> > +	agno = sc->sm->sm_agno;
-> > +	if (agno == 0)
-> > +		return -EOPNOTSUPP;
-> > +
-> > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-> > +		  XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> > +		  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-> 
-> If we are just overwriting the superblock, then use
-> xfs_trans_get_buf() so we don't need to do IO here.
+xfs_repair checks allocated but unused (free) inodes in on-disk clusters,
+and up until now silently repairs any errors, and as a result does not
+alter exit status if errors are found.
 
-Ok.
+The in-kernel verifiers will be noisy about these errors and instruct
+the user to run repair, so it's best if repair is explicit about any
+fixes it makes.
 
-> > +	if (error)
-> > +		return error;
-> > +	bp->b_ops = &xfs_sb_buf_ops;
-> > +
-> > +	/* Copy AG 0's superblock to this one. */
-> > +	sbp = XFS_BUF_TO_SBP(bp);
-> > +	memset(sbp, 0, mp->m_sb.sb_sectsize);
-> 
-> That's a bit nasty. struct xfs_dsb is not a sector size in length.
-> 
-> 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+This also requires tweaking or removing some tests for free inode
+state to match what the kernel does on either initial allocation or
+eventual free after re-use.
 
-Fixed.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> > +	xfs_sb_to_disk(sbp, &mp->m_sb);
-> > +	sbp->sb_bad_features2 = sbp->sb_features2;
-> 
-> Why is sb_bad_features2 not correct when taken from the incore
-> superblock?
 
-It is correct, this is unnecessary.
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 9af4f05..1d7659f 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -117,6 +117,15 @@ _("would have cleared inode %" PRIu64 " attributes\n"), ino_num);
+ 	return(1);
+ }
+ 
++/*
++ * Clear the on-disk inode, and also test for inconsistencies along the way.
++ * In some cases this is to wipe out a bad inode, in other cases it is
++ * validating an unused but allocated inode on disk.
++ * The kernel leaves unused inodes on disk in slightly different states
++ * depending on whether it is freshly allocated or used and then freed,
++ * so this function only validates deterministic fields set by the
++ * kernel in i.e. xfs_ialloc_inode_init or  xfs_ifree.
++ */
+ static int
+ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ {
+@@ -159,17 +168,21 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_forkoff = 0;
+ 	}
+ 
+-	if (dinoc->di_format != XFS_DINODE_FMT_EXTENTS)  {
++	/* Brand new allocated, never used inodes have format 0 */
++	if (dinoc->di_format &&
++	    dinoc->di_format != XFS_DINODE_FMT_EXTENTS)  {
+ 		__dirty_no_modify_ret(dirty);
+ 		dinoc->di_format = XFS_DINODE_FMT_EXTENTS;
+ 	}
+ 
+-	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
++	if (dinoc->di_aformat &&
++	    dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
+ 		__dirty_no_modify_ret(dirty);
+ 		dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 	}
+ 
+-	if (be64_to_cpu(dinoc->di_size) != 0)  {
++	if (S_ISREG(be16_to_cpu(dinoc->di_mode)) &&
++	    be64_to_cpu(dinoc->di_size) != 0)  {
+ 		__dirty_no_modify_ret(dirty);
+ 		dinoc->di_size = 0;
+ 	}
+@@ -227,15 +240,7 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_flags2 = 0;
+ 	}
+ 
+-	if (be64_to_cpu(dinoc->di_lsn) != 0)  {
+-		__dirty_no_modify_ret(dirty);
+-		dinoc->di_lsn = 0;
+-	}
+-
+-	if (be64_to_cpu(dinoc->di_changecount) != 0)  {
+-		__dirty_no_modify_ret(dirty);
+-		dinoc->di_changecount = 0;
+-	}
++	/* We leave di_lsn, di_changecount alone, as does the kernel */
+ 
+ 	return dirty;
+ }
+@@ -2358,7 +2363,7 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 	}
+ 
+ 	/*
+-	 * if not in verify mode, check to sii if the inode and imap
++	 * if not in verify mode, check to see if the inode and imap
+ 	 * agree that the inode is free
+ 	 */
+ 	if (!verify_mode && di_mode == 0) {
+@@ -2369,10 +2374,17 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 			/*
+ 			 * easy case, inode free -- inode and map agree, clear
+ 			 * it just in case to ensure that format, etc. are
+-			 * set correctly
++			 * set correctly.  no_modify is tested in clear_dinode.
+ 			 */
+-			if (!no_modify)
+-				*dirty += clear_dinode(mp, dino, lino);
++			if (clear_dinode(mp, dino, lino) != 0) {
++				do_warn(
++	_("free inode %" PRIu64 " contains errors, "), lino);
++				if (!no_modify) {
++					do_warn(_("corrected\n"));
++					*dirty += 1;
++				} else
++					do_warn(_("would correct\n"));
++			}
+ 			*used = is_free;
+ 			return 0;
+ 		}
 
-> > +	/* Write this to disk. */
-> > +	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
-> > +	xfs_trans_log_buf(sc->tp, bp, 0, mp->m_sb.sb_sectsize - 1);
-> 
-> And why log this rather than just write it straight to disk? We've
-> never logged secondary superblocks before, so why now?
 
-Ok, will do.  I might as well change the sb scrubber to use uncached
-buffers while I'm at it (separate patch, obviously).
-
-> >  int xfs_repair_setup_btree_extent_collection(struct xfs_scrub_context *sc);
-> >  
-> >  /* Metadata repairers */
-> > +int xfs_repair_superblock(struct xfs_scrub_context *sc);
-> >  
-> >  #else
-> >  
-> > @@ -106,6 +107,8 @@ xfs_repair_calc_ag_resblks(
-> >  	return 0;
-> >  }
-> >  
-> > +#define xfs_repair_superblock		(NULL)
-> 
-> Static inline, returns -EOPNOTSUPP. Or, as I'm suspecting that
-> all the patches are goign to do this - have a generic
-> xfs_repair_notsupported() function and define the functions
-> to that.
-
-Working on it. :)
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
