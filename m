@@ -1,70 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57378 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752594AbeDMCtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Apr 2018 22:49:53 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: enhance dinode verifier
-Message-ID: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
-Date: Thu, 12 Apr 2018 21:49:51 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:18531 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751152AbeDNV7j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Apr 2018 17:59:39 -0400
+Date: Sun, 15 Apr 2018 07:59:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
+Message-ID: <20180414215937.GH5572@dastard>
+References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: wen.xu@gatech.edu
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, willy@infradead.org
 
-Add several more validations to xfs_dinode_verify:
+On Sun, Apr 15, 2018 at 01:35:30AM +0530, Souptick Joarder wrote:
+> Use new return type vm_fault_t for fault handlers.
+> 
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+> Reviewed-by: Matthew Wilcox <mawilcox@microsoft.com>
 
-- For LOCAL data fork formats, di_nextents must be 0.
-- For LOCAL attr fork formats, di_anextents must be 0.
-- For inodes with no attr fork offset,
-  - format must be XFS_DINODE_FMT_EXTENTS if set at all
-  - di_anextents must be 0.
+Ummm. Why are we adding typedefs to hide basic types?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+typedef int vm_fault_t;
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 4fe17b368316..72ab4d2df8cf 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -458,6 +458,8 @@ xfs_dinode_verify(
- 				return __this_address;
- 			if (di_size > XFS_DFORK_DSIZE(dip, mp))
- 				return __this_address;
-+			if (dip->di_nextents)
-+				return __this_address;
- 			/* fall through */
- 		case XFS_DINODE_FMT_EXTENTS:
- 		case XFS_DINODE_FMT_BTREE:
-@@ -476,12 +478,25 @@ xfs_dinode_verify(
- 	if (XFS_DFORK_Q(dip)) {
- 		switch (dip->di_aformat) {
- 		case XFS_DINODE_FMT_LOCAL:
-+			if (dip->di_anextents)
-+				return __this_address;
-+		/* fall through */
- 		case XFS_DINODE_FMT_EXTENTS:
- 		case XFS_DINODE_FMT_BTREE:
- 			break;
- 		default:
- 			return __this_address;
- 		}
-+	} else {	/* No attr fork */
-+		switch (dip->di_aformat) {
-+		case 0:	/* Uninitialized OK */
-+		case XFS_DINODE_FMT_EXTENTS:
-+			break;
-+		default:
-+			return __this_address;
-+		}
-+		if (dip->di_anextents)
-+			return __this_address;
- 	}
- 
- 	/* only version 3 or greater inodes are extensively verified here */
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
