@@ -1,53 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:45590 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:39386 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751072AbeDOHoB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Apr 2018 03:44:01 -0400
-Date: Sun, 15 Apr 2018 00:44:00 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/7] xfs: allow attach of dfops to transaction
-Message-ID: <20180415074400.GB5226@infradead.org>
-References: <20180410174631.4915-1-bfoster@redhat.com>
- <20180410174631.4915-3-bfoster@redhat.com>
+        with ESMTP id S1752295AbeDOMe2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Apr 2018 08:34:28 -0400
+Date: Sun, 15 Apr 2018 05:34:27 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
+Message-ID: <20180415123427.GA11379@bombadil.infradead.org>
+References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
+ <20180414215937.GH5572@dastard>
+ <20180414222407.GA15294@bombadil.infradead.org>
+ <20180415072121.GA13601@infradead.org>
+ <20180415111104.GB25513@bombadil.infradead.org>
+ <20180415120426.GA10479@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180410174631.4915-3-bfoster@redhat.com>
+In-Reply-To: <20180415120426.GA10479@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 087fea02c389..f3aef54257d1 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -525,6 +525,7 @@ xfs_defer_init_op_type(
->  /* Initialize a deferred operation. */
->  void
->  xfs_defer_init(
-> +	struct xfs_trans		*tp,
->  	struct xfs_defer_ops		*dop,
->  	xfs_fsblock_t			*fbp)
->  {
-> @@ -532,5 +533,7 @@ xfs_defer_init(
->  	*fbp = NULLFSBLOCK;
->  	INIT_LIST_HEAD(&dop->dop_intake);
->  	INIT_LIST_HEAD(&dop->dop_pending);
-> -	trace_xfs_defer_init(NULL, dop);
-> +	if (tp)
-> +		tp->t_dfops = dop;
-> +	trace_xfs_defer_init(tp ? tp->t_mountp : NULL, dop);
+On Sun, Apr 15, 2018 at 05:04:26AM -0700, Christoph Hellwig wrote:
+> On Sun, Apr 15, 2018 at 04:11:04AM -0700, Matthew Wilcox wrote:
+> > > Please just send one damn patch adding the typedef and the sparse
+> > > annotation and converting everyone over.  Splitting this into five
+> > > gazillion patches that do nothing doesn't help anyone.
+> > 
+> > The XFS one is trivial.  Many of the others are not.
+> 
+> if they arne't trivial you are doing something wrong.  That is you
+> fix bugs that exist independent of the annotation together with the
+> annotation.
+> 
+> Fix all the bugs first, and send them in (including for -stable) and
+> then do the annotations in one big patch.
 
-there is really no oint un doing this massive change of prototypes
-everywhere just to move an assignment into xfs_defer_init.  Just keep
-that assignment in the caller.
-
-
-But in general I'm really concerned about making the dops in the
-transaction conditional behavior.  This is just going down the rathole
-of inconsistent behavior where some callers expect it in the transaction
-vs other explcitit and every time something really to defered ops is
-touched it will need a deep code audit.  I'd rather switch everything
-over in a go and be done with it.
+They aren't all bugs.  Some of them are just splitting errnos apart
+from return values for typesafety.  The ones that are bugfixes are
+unlikely-to-happen bugs like running out of memory when allocating a
+page table, and returning "we inserted the PTE" instead of "we ran out
+of memory".  More of a QOI issue than an exploitable bug.
