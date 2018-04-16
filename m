@@ -1,48 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60488 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751946AbeDLUmm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Apr 2018 16:42:42 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: New rash of fuzzer bugs on kernel.org bugzilla
-Message-ID: <0bdeb0e5-fd1d-a4d8-1a1a-f9371b829026@sandeen.net>
-Date: Thu, 12 Apr 2018 15:42:41 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:50482 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752783AbeDPRDy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 13:03:54 -0400
+Date: Mon, 16 Apr 2018 10:03:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
+Message-ID: <20180416170329.GA5203@magnolia>
+References: <20180414215937.GH5572@dastard>
+ <20180414222407.GA15294@bombadil.infradead.org>
+ <20180415072121.GA13601@infradead.org>
+ <20180415111104.GB25513@bombadil.infradead.org>
+ <20180415120426.GA10479@infradead.org>
+ <20180415123427.GA11379@bombadil.infradead.org>
+ <20180416085707.GB30363@infradead.org>
+ <20180416111423.GA26022@bombadil.infradead.org>
+ <20180416112353.GA22921@infradead.org>
+ <20180416113139.GB26022@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180416113139.GB26022@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: wen.xu@gatech.edu
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, linux-xfs@vger.kernel.org
 
-behold:
+On Mon, Apr 16, 2018 at 04:31:39AM -0700, Matthew Wilcox wrote:
+> On Mon, Apr 16, 2018 at 04:23:53AM -0700, Christoph Hellwig wrote:
+> > On Mon, Apr 16, 2018 at 04:14:23AM -0700, Matthew Wilcox wrote:
+> > > That's an unreasonable request.  It would (usually) require writing more
+> > > code to convert errnos into VM_FAULT returns.  And that code would get
+> > > precisely zero testing upstream because the next commit would come along
+> > > and delete it, replacing it with calls to common code.
+> > 
+> > Well, introduce the damn common code first.  It does not require
+> > using the typedef in any way.
+> 
+> Already done.
 
-https://bugzilla.kernel.org/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&component=XFS&email1=wen.xu%40gatech.edu&emailreporter1=1&emailtype1=substring&known_name=XFS%20bugs&list_id=983189&product=File%20System&query_based_on=XFS%20bugs&query_format=advanced
+I wondered "Yeah, why isn't this one big series?  Where are the rest of
+the patches to convert everything else?" and then realized the patch
+author landed the function pointer prototype changes in mm.h prior to
+4.17-rc1 and is now playing scattershot catch-up across the tree...
 
-the return of the fuzzer.
+...hm, the original mm patch wasn't cc'd to fsdevel either, so that's
+probably why I never heard of any of this until now.
 
-If you were looking for something to do on xfs and wanted a self-contained reproducible bug with a testcase, well, there you go!
+So, uh, why wasn't this whole series (all the mm changes and all the
+required fs changes) sent out for review prior to the merge window?
 
-(I'm not sure who gets email from kernel.org bugzilla; I'd encourage anyone who works on xfs to keep an eye on the kernel.org bugzilla one way or another - but anyway, figured I'd highlight these.)
+I don't like "Hey we bitrotted your filesystem without telling you, now
+here's a patch to fix it..."  The code change looks ok, but now I'm
+going to schedule some time to go digging to see if there's anything
+else lurking beneath the surface here.
 
-Wen, I think we need to find ways for you to help us help you, as well.
-Turning a crank on a fuzzer and sending the bugs off to us for triage will only go so far and so fast, as we have limited resources as well.
+> > In this current form of single patches:  NAK to anything I maintain
+> > or review.
+> 
+> Yeah, we already have a plan for dealing with arsehole or MIA maintainers.
+> Fortunately, you're not actually the maintainer for XFS, so it'll be up
+> to Darrick whether to take it or not.
 
-One of the most recent bugs filed, which you say does not reproduce on 4.16 but does on 4.15 - honestly, we work on upstream.  Distros and others need to look after older kernels if they care.  If /you/ care, then I'd propose bisecting to find which commit made the problem go away, and propose it for -stable if it looks clearly like a bugfix, and cc: the list.  If you really don't care, then I'd say close the bug and only file against current upstream kernels.
+I also dislike being pitted against the other XFS developers.
 
-As for the rest, in general, there are other things that can help:
+--D
 
-Use CONFIG_FRAME_POINTER so that backtraces are readable
-Be sure to include the full relevant dmesg, everything after the mount message
-Include your full config so we know which debugging options are on or off
-Put some effort into your "poc.c" so you can say /which/ action triggered the flaw.
-Run with a debug kernel to catch use after free, etc.
-
-We can always download the bits and do the full investigation from scratch, debug kernel runs, etc etc but anything you can do to give a head start is helpful.
-
-If your goal is to help get these fixed, we'd love to have you contribute as much as you can to the triage steps.  It's probably more fulfilling to be actively engaged in the solution as well as the discovery.  ;)  Others may have further suggestions, or think that my suggestions are bad ones, but that's my $0.02 here.
-
-Thanks,
--Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
