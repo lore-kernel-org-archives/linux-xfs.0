@@ -1,123 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f66.google.com ([209.85.160.66]:39487 "EHLO
-        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752501AbeDKIl6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Apr 2018 04:41:58 -0400
-Received: by mail-pl0-f66.google.com with SMTP id e7-v6so875420plt.6
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Apr 2018 01:41:58 -0700 (PDT)
-Date: Wed, 11 Apr 2018 10:41:51 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] Force log to disk before reading the AGF during a fstrim
-Message-ID: <20180411084151.kfe2zmen6vgh6gxn@odin.usersys.redhat.com>
-References: <20180410150814.22610-1-cmaiolino@redhat.com>
- <20180410151834.GT7500@magnolia>
+Received: from sandeen.net ([63.231.237.45]:47866 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753269AbeDPT5g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Apr 2018 15:57:36 -0400
+Subject: Re: XFS reports in-memory corruption and unmounts filesystem
+References: <CAG+d3v+rMvN=N4adMLC+mhY8FgWrdTior1bToVzb4YBK89UjqQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9f04c538-2972-1fe3-085e-6a1fd0359465@sandeen.net>
+Date: Mon, 16 Apr 2018 14:57:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180410151834.GT7500@magnolia>
+In-Reply-To: <CAG+d3v+rMvN=N4adMLC+mhY8FgWrdTior1bToVzb4YBK89UjqQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dheeraj Sangamkar <dheerajrs@gmail.com>, linux-xfs@vger.kernel.org
 
-On Tue, Apr 10, 2018 at 08:18:34AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 10, 2018 at 05:08:14PM +0200, Carlos Maiolino wrote:
-> > Forcing the log to disk after reading the agf is wrong, we might be
-> > calling xfs_log_force with XFS_LOG_SYNC with a metadata lock held.
-> > 
-> > This can cause a deadlock when racing a fstrim with a filesystem
-> > shutdown.
-> > 
-> > The deadlock has been identified due a miscalculation bug in device-mapper
-> > dm-thin, which returns lack of space to its users earlier than the device itself
-> > really runs out of space, changing the device-mapper volume into an error state.
-> > 
-> > The problem happened while filling the filesystem with a single file,
-> > triggering the bug in device-mapper, consequently causing an IO error
-> > and shutting down the filesystem.
-> > 
-> > If such file is removed, and fstrim executed before the XFS finishes the
-> > shut down process, the fstrim process will end up holding the buffer
-> > lock, and going to sleep on the cil wait queue.
-> > 
-> > At this point, the shut down process will try to wake up all the threads
-> > waiting on the cil wait queue, but for this, it will try to hold the
-> > same buffer log already held my the fstrim, locking up the filesystem.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> > Kudos to Dave who spotted it just after me telling him the process was
-> > deadlocked on a buffer lock
+
+
+On 4/16/18 2:13 PM, Dheeraj Sangamkar wrote:
+> Hello,
 > 
-> Uh... got an xfstest to reproduce this? :)
+> I have a few linux boxes where I see xfs error messages when the
+> filesystem becomes full.
+> I saw quite a few reports of this kind of crash but none that had
+> exactly the same backtrace as the one I found. So, here it is..
 > 
+> The kernel log:
 
-Not yet, I'm actually relying on the DM bug to hit this problem :P
 
-I think it can be fabricated without relying using xfstests though.
+> Jan 9 20:09:33 linux-box kernel: 1,1871,248971320,-;XFS (dm-17): Internal error xfs_trans_cancel at line 1005 of file /build/src/linux-4.9.51/fs/xfs/xfs_trans.c. Caller xfs_create+0x44d/0x6c0 [xfs]
+> Jan 9 20:09:33 linux-box kernel: 4,1872,248985454,-;CPU: 11 PID: 27044 Comm: xxxxxx Tainted: G O 4.9.0-4-amd64 #1 Debian 4.9.51-1+ntap1
 
-One thing I forgot to mention, is I could only reproduce it using a very
-low-latency device (in my test cases, using a ramdisk), I couldn't trigger it
-using my regular spindles or SSD, I believe the higher latency 'helps' the
-buffer lock to be released before the fstrim actually tries to lock it.
+Can you reproduce this on an upstream kernel?
 
-I don't remember though of any xfstests using ramdisks, so, is it ok if I try to
-write a xfstest using a ramdisk device?
+(and can you find a way to not wrap your emails so stuff like the below is readable) ;)
 
-Cheers
+> Jan 9 20:09:33 linux-box kernel: 4,1873,248994971,-;Hardware name: ..........
+> Jan 9 20:09:33 linux-box kernel: 4,1874,249005526,-; 0000000000000000 ffffffff99729974 ffff95c11afaae80 0000000000000001
+> Jan 9 20:09:33 linux-box kernel: 4,1875,249012916,-; ffffffffc0a041ed ffff95c15b407800 ffff95c1c0949000 00000000ffffffe4
+> Jan 9 20:09:33 linux-box kernel: 4,1876,249020305,-; ffffffffc09f70fd 0000000000000001 ffffb23f2279bbf0 0000000000000000
+> Jan 9 20:09:33 linux-box kernel: 4,1877,249027694,-;Call Trace:
+> Jan 9 20:09:33 linux-box kernel: 4,1878,249030129,-; [<ffffffff99729974>] ? dump_stack+0x5c/0x78
+> Jan 9 20:09:33 linux-box kernel: 4,1879,249035474,-; [<ffffffffc0a041ed>] ? xfs_trans_cancel+0xad/0xd0 [xfs]
+> Jan 9 20:09:33 linux-box kernel: 4,1880,249041843,-; [<ffffffffc09f70fd>] ? xfs_create+0x44d/0x6c0 [xfs]
+> Jan 9 20:09:33 linux-box kernel: 4,1881,249047823,-; [<ffffffff99660000>] ? load_elf_binary+0x12c0/0x1640
+> Jan 9 20:09:33 linux-box kernel: 4,1882,249053930,-; [<ffffffffc09f41ec>] ? xfs_generic_create+0x23c/0x2e0 [xfs]
+> Jan 9 20:09:33 linux-box kernel: 4,1883,249060597,-; [<ffffffff99612888>] ? path_openat+0x1338/0x1440
+> Jan 9 20:09:33 linux-box kernel: 4,1884,249066314,-; [<ffffffff994f6264>] ? futex_wake+0x94/0x170
+> Jan 9 20:09:33 linux-box kernel: 4,1885,249071682,-; [<ffffffff99613c51>] ? do_filp_open+0x91/0x100
+> Jan 9 20:09:33 linux-box kernel: 4,1886,249077224,-; [<ffffffff995fedba>] ? __check_object_size+0xfa/0x1d8
+> Jan 9 20:09:33 linux-box kernel: 4,1887,249083370,-; [<ffffffff9960162e>] ? do_sys_open+0x12e/0x210
+> Jan 9 20:09:33 linux-box kernel: 4,1888,249088914,-; [<ffffffff99a085bb>] ? system_call_fast_compare_end+0xc/0x9b
+> Jan 9 20:09:33 linux-box kernel: 5,1889,249095715,-;XFS (dm-17): xfs_do_force_shutdown(0x8) called from line 1006 of file /build/src/linux-4.9.51/fs/xfs/xfs_trans.c. Return address = 0xffffffffc0a04206
+> Jan 9 20:09:33 linux-box kernel: 1,1890,249110179,-;XFS (dm-17): Corruption of in-memory data detected. Shutting down filesystem
+> Jan 9 20:09:33 linux-box kernel: 1,1891,249118348,-;XFS (dm-17): Please umount the filesystem and rectify the problem(s)
 
-> Code looks reasonable,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Ok, this is actually canceling a dirty transaction, which is the root of the problem.
+
+> Upon running xfs repair, I see the following:
 > 
-> --D
-> 
-> 
-> >  fs/xfs/xfs_discard.c | 14 +++++++-------
-> >  1 file changed, 7 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-> > index b2cde5426182..7b68e6c9a474 100644
-> > --- a/fs/xfs/xfs_discard.c
-> > +++ b/fs/xfs/xfs_discard.c
-> > @@ -50,19 +50,19 @@ xfs_trim_extents(
-> >  
-> >  	pag = xfs_perag_get(mp, agno);
-> >  
-> > -	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> > -	if (error || !agbp)
-> > -		goto out_put_perag;
-> > -
-> > -	cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno, XFS_BTNUM_CNT);
-> > -
-> >  	/*
-> >  	 * Force out the log.  This means any transactions that might have freed
-> > -	 * space before we took the AGF buffer lock are now on disk, and the
-> > +	 * space before we take the AGF buffer lock are now on disk, and the
-> >  	 * volatile disk cache is flushed.
-> >  	 */
-> >  	xfs_log_force(mp, XFS_LOG_SYNC);
-> >  
-> > +	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> > +	if (error || !agbp)
-> > +		goto out_put_perag;
-> > +
-> > +	cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno, XFS_BTNUM_CNT);
-> > +
-> >  	/*
-> >  	 * Look up the longest btree in the AGF and start with it.
-> >  	 */
-> > -- 
-> > 2.14.3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Output of xfs_repair on the rangedb device:
+> root@another-linux-box:/ # xfs_repair -n /dev/sdk
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+> sb_icount 4710720, counted 4711168
+> sb_ifree 560, counted 0
+> sb_fdblocks 95850, counted 8321
 
--- 
-Carlos
+I'm going to guess that this might have a dirty log, and you should
+mount/umount it before running repair, and that if you do so you'll
+see no corruption here.
+
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan (but don't clear) agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - agno = 4
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 3
+>         - agno = 2
+>         - agno = 1
+>         - agno = 4
+> No modify flag set, skipping phase 5
+> Phase 6 - check inode connectivity...
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify link counts...
+> No modify flag set, skipping filesystem flush and exiting.
+> root@another-linux-box:/
+> 
+> Remounting the volume makes the content accessible for a while.
+> However, eventually, some file lookup fails with ENOENT and the
+> filesystem is unmounted.
+> 
+> I am not able to create the problem at will.
+> 
+> Is this problem new/fixed?
+
+Maybe with 
+
+commit f59cf5c29919d17b61913c3360a7bd29b72975c1
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Mon Dec 4 17:32:55 2017 -0800
+
+    xfs: remove "no-allocation" reservations for file creations
+    
+    If we create a new file we will need an inode, and usually some metadata
+    in the parent direction.  Aiming for everything to go well despite the
+    lack of a reservation leads to dirty transactions cancelled under a heavy
+    create/delete load.  This patch removes those nospace transactions, which
+    will lead to slightly earlier ENOSPC on some workloads, but instead
+    prevent file system shutdowns due to cancelling dirty transactions for
+    others.
+
+but honestly debugging 2 year old kernels is more a question for your distro
+than for upstream...
+
+> Was the corruption only in memory or on disk as well?
+
+it's not actually corruption, that's a poorly worded error message TBH.
+
+> Why did xfs_repair not detect the corruption?
+
+Because there is no corruption on the disk.
+
+-Eric
