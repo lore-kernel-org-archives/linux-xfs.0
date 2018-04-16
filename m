@@ -1,41 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52286 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750881AbeDPLXz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 07:23:55 -0400
-Date: Mon, 16 Apr 2018 04:23:53 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
-Message-ID: <20180416112353.GA22921@infradead.org>
-References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
- <20180414215937.GH5572@dastard>
- <20180414222407.GA15294@bombadil.infradead.org>
- <20180415072121.GA13601@infradead.org>
- <20180415111104.GB25513@bombadil.infradead.org>
- <20180415120426.GA10479@infradead.org>
- <20180415123427.GA11379@bombadil.infradead.org>
- <20180416085707.GB30363@infradead.org>
- <20180416111423.GA26022@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180416111423.GA26022@bombadil.infradead.org>
+Received: from mail-yb0-f196.google.com ([209.85.213.196]:37813 "EHLO
+        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750989AbeDPUtG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 16:49:06 -0400
+Received: by mail-yb0-f196.google.com with SMTP id i13-v6so7577832ybl.4
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Apr 2018 13:49:06 -0700 (PDT)
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: [PATCH] xfs: prevent creating negative-sized file via INSERT_RANGE
+Date: Mon, 16 Apr 2018 13:46:30 -0700
+Message-Id: <20180416204630.177682-1-ebiggers3@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Eric Biggers <ebiggers@google.com>
 
-On Mon, Apr 16, 2018 at 04:14:23AM -0700, Matthew Wilcox wrote:
-> That's an unreasonable request.  It would (usually) require writing more
-> code to convert errnos into VM_FAULT returns.  And that code would get
-> precisely zero testing upstream because the next commit would come along
-> and delete it, replacing it with calls to common code.
+From: Eric Biggers <ebiggers@google.com>
 
-Well, introduce the damn common code first.  It does not require
-using the typedef in any way.
+During the "insert range" fallocate operation, i_size grows by the
+specified 'len' bytes.  XFS verifies that i_size + len < s_maxbytes, as
+it should.  But this comparison is done using the signed 'loff_t', and
+'i_size + len' can wrap around to a negative value, causing the check to
+incorrectly pass, resulting in an inode with "negative" i_size.  This is
+possible on 64-bit platforms, where XFS sets s_maxbytes = LLONG_MAX.
+ext4 and f2fs don't run into this because they set a smaller s_maxbytes.
 
-In this current form of single patches:  NAK to anything I maintain
-or review.
+Fix it by doing an unsigned comparison instead.
 
-Send out an actual series, and think about how to order it best.
+Reproducer:
+    xfs_io -f file -c "truncate $(((1<<63)-1))" -c "finsert 0 4096"
+
+Fixes: a904b1ca5751 ("xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate")
+Cc: <stable@vger.kernel.org> # v4.1+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/xfs/xfs_file.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 299aee4b7b0b..56a820efeb2a 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -786,8 +786,11 @@ xfs_file_fallocate(
+ 			goto out_unlock;
+ 		}
+ 
+-		/* check the new inode size does not wrap through zero */
+-		if (new_size > inode->i_sb->s_maxbytes) {
++		/*
++		 * New inode size must not exceed ->s_maxbytes, accounting for
++		 * possible signed overflow.
++		 */
++		if ((u64)new_size > inode->i_sb->s_maxbytes) {
+ 			error = -EFBIG;
+ 			goto out_unlock;
+ 		}
+-- 
+2.17.0.484.g0c8726318c-goog
+
