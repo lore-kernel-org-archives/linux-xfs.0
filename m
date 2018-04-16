@@ -1,70 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57384 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751991AbeDKBuD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Apr 2018 21:50:03 -0400
-Date: Tue, 10 Apr 2018 18:49:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/14] xfs_scrub: disable private /tmp for scrub service
-Message-ID: <20180411014953.GV7500@magnolia>
-References: <152160358015.8288.2700156777231657519.stgit@magnolia>
- <152160365430.8288.18072489901853791592.stgit@magnolia>
- <de647355-57bd-75e5-d10c-22dc99cb20c0@sandeen.net>
+Received: from bombadil.infradead.org ([198.137.202.133]:51484 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753479AbeDPLOY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 07:14:24 -0400
+Date: Mon, 16 Apr 2018 04:14:23 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
+Message-ID: <20180416111423.GA26022@bombadil.infradead.org>
+References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
+ <20180414215937.GH5572@dastard>
+ <20180414222407.GA15294@bombadil.infradead.org>
+ <20180415072121.GA13601@infradead.org>
+ <20180415111104.GB25513@bombadil.infradead.org>
+ <20180415120426.GA10479@infradead.org>
+ <20180415123427.GA11379@bombadil.infradead.org>
+ <20180416085707.GB30363@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <de647355-57bd-75e5-d10c-22dc99cb20c0@sandeen.net>
+In-Reply-To: <20180416085707.GB30363@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Tue, Apr 10, 2018 at 08:45:23PM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 3/20/18 10:40 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Apr 16, 2018 at 01:57:07AM -0700, Christoph Hellwig wrote:
+> On Sun, Apr 15, 2018 at 05:34:27AM -0700, Matthew Wilcox wrote:
+> > On Sun, Apr 15, 2018 at 05:04:26AM -0700, Christoph Hellwig wrote:
+> > > On Sun, Apr 15, 2018 at 04:11:04AM -0700, Matthew Wilcox wrote:
+> > > > > Please just send one damn patch adding the typedef and the sparse
+> > > > > annotation and converting everyone over.  Splitting this into five
+> > > > > gazillion patches that do nothing doesn't help anyone.
+> > > > 
+> > > > The XFS one is trivial.  Many of the others are not.
+> > > 
+> > > if they arne't trivial you are doing something wrong.  That is you
+> > > fix bugs that exist independent of the annotation together with the
+> > > annotation.
+> > > 
+> > > Fix all the bugs first, and send them in (including for -stable) and
+> > > then do the annotations in one big patch.
 > > 
-> > Don't make /tmp private when invoking xfs_scrub as a service, because
-> > /tmp might contain or itself be an xfs filesystem mountpoint.
+> > They aren't all bugs.  Some of them are just splitting errnos apart
+> > from return values for typesafety.  The ones that are bugfixes are
+> > unlikely-to-happen bugs like running out of memory when allocating a
+> > page table, and returning "we inserted the PTE" instead of "we ran out
+> > of memory".  More of a QOI issue than an exploitable bug.
 > 
-> Could you please add a comment to this so that future security analysts
-> don't change it back?  :)
+> Then do all the cleanups first and do the batch rename of the type after
+> that, same concept.
 
-# Disable private /tmp just in case %i is a path under /tmp.
+That's an unreasonable request.  It would (usually) require writing more
+code to convert errnos into VM_FAULT returns.  And that code would get
+precisely zero testing upstream because the next commit would come along
+and delete it, replacing it with calls to common code.
 
---D
-
-> # xfs_scrub doesn't even use /tmp but <this is why we do this here>
-> 
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  scrub/xfs_scrub@.service.in |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/scrub/xfs_scrub@.service.in b/scrub/xfs_scrub@.service.in
-> > index c14f813..9e6206a 100644
-> > --- a/scrub/xfs_scrub@.service.in
-> > +++ b/scrub/xfs_scrub@.service.in
-> > @@ -9,7 +9,7 @@ WorkingDirectory=%I
-> >  PrivateNetwork=true
-> >  ProtectSystem=full
-> >  ProtectHome=read-only
-> > -PrivateTmp=yes
-> > +PrivateTmp=no
-> >  AmbientCapabilities=CAP_SYS_ADMIN CAP_FOWNER CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_SYS_RAWIO
-> >  NoNewPrivileges=yes
-> >  User=nobody
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If anybody wants to backport any of this, they should just pick up the
+common code (1c8f422059a "mm: change return type to vm_fault_t") and then
+the commit that they want.
