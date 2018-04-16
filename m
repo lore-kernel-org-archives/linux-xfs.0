@@ -1,97 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33978 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751553AbeDMP7Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Apr 2018 11:59:25 -0400
-Date: Fri, 13 Apr 2018 08:59:17 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH V3] xfs: enhance dinode verifier
-Message-ID: <20180413155917.GD32099@magnolia>
-References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
- <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
- <1ffdb61f-d642-1310-a5df-0f166d90aa28@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:39906 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752578AbeDPNmb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Apr 2018 09:42:31 -0400
+Date: Mon, 16 Apr 2018 09:42:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/7] xfs: defer agfl block frees when dfops is available
+Message-ID: <20180416134229.GB21136@bfoster.bfoster>
+References: <20180410174631.4915-1-bfoster@redhat.com>
+ <20180410174631.4915-4-bfoster@redhat.com>
+ <20180415074658.GC5226@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1ffdb61f-d642-1310-a5df-0f166d90aa28@sandeen.net>
+In-Reply-To: <20180415074658.GC5226@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, wen.xu@gatech.edu
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Apr 13, 2018 at 10:54:14AM -0500, Eric Sandeen wrote:
-> Add several more validations to xfs_dinode_verify:
+On Sun, Apr 15, 2018 at 12:46:58AM -0700, Christoph Hellwig wrote:
+> > Add the capability to defer AGFL block frees when a deferred ops
+> > list is available to the AGFL fixup code.
 > 
-> - For LOCAL data fork formats, di_nextents must be 0.
-> - For LOCAL attr fork formats, di_anextents must be 0.
-> - For inodes with no attr fork offset,
->   - format must be XFS_DINODE_FMT_EXTENTS if set at all
->   - di_anextents must be 0.
+> When is one available and when not?  Why are we fine not delaying it
+> in some cases?
 > 
-> Thanks to dchinner for pointing out a couple related checks I had
-> forgotten to add.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok, will try to figure out what the online repair ramifications
-are...
+Because not all transactions either have this problem or generally may
+not have a need for deferred operations at all. This mechanism doesn't
+dictate that all allocator callers must use deferred operations if they
+haven't necessarily demonstrated the problem.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Note that this patch only adds infrastructure. It does not change
+> > behavior because no callers have been updated to pass ->t_dfops into
+> > the allocation code.
+> 
+> So the plan is to eventually have all callers pass it?  If so that is
+> another argument to first always pass defer_ops through the transaction,
+> then make sure all callers have it where required, and only then move
+> to actually use it.
+> 
 
---D
+The plan is that ultimately any transaction that already uses deferred
+operations or any transaction that explicitly requires deferred agfl
+frees (those modified in this patchset) will pass it along to the
+allocator context. I wasn't planning to add dfops for any allocator
+callers that don't currently use/need one, but we can revisit that
+later.
 
-> ---
+As noted in my previous mail, this is essentially equivalent to passing
+down the dfops on the stack and optimizing out the step of immediately
+refactoring that code away. Further, doing broader refactoring first
+puts the cleanup ahead of the fix, which is backwards. I want to fix the
+problem first and clean up the code second.
+
+> > +{
+> > +	struct xfs_extent_free_item	*new;		/* new element */
+> > +
+> > +	ASSERT(xfs_bmap_free_item_zone != NULL);
+> > +	ASSERT(oinfo != NULL);
 > 
-> V2: due credit 
-> V3: clarify the no-offset / no-format cases in a comment
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index ef68b1d..ee8ed90 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -466,6 +466,8 @@
->  				return __this_address;
->  			if (di_size > XFS_DFORK_DSIZE(dip, mp))
->  				return __this_address;
-> +			if (dip->di_nextents)
-> +				return __this_address;
->  			/* fall through */
->  		case XFS_DINODE_FMT_EXTENTS:
->  		case XFS_DINODE_FMT_BTREE:
-> @@ -484,12 +486,31 @@
->  	if (XFS_DFORK_Q(dip)) {
->  		switch (dip->di_aformat) {
->  		case XFS_DINODE_FMT_LOCAL:
-> +			if (dip->di_anextents)
-> +				return __this_address;
-> +		/* fall through */
->  		case XFS_DINODE_FMT_EXTENTS:
->  		case XFS_DINODE_FMT_BTREE:
->  			break;
->  		default:
->  			return __this_address;
->  		}
-> +	} else {
-> +		/*
-> +		 * If there is no fork offset, this may be a freshly-made inode
-> +		 * in a new disk cluster, in which case di_aformat is zeroed.
-> +		 * Otherwise, such an inode must be in EXTENTS format; this goes
-> +		 * for freed inodes as well.
-> +		 */
-> +		switch (dip->di_aformat) {
-> +		case 0:
-> +		case XFS_DINODE_FMT_EXTENTS:
-> +			break;
-> +		default:
-> +			return __this_address;
-> +		}
-> +		if (dip->di_anextents)
-> +			return __this_address;
->  	}
->  
->  	/* only version 3 or greater inodes are extensively verified here */
-> 
+> No need for either assert, we get nice clean NULL ptr dereferences when
+> this isn't true.
+
+Ok.
+
+Brian
+
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
