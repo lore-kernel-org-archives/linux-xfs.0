@@ -1,38 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52312 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752298AbeDMCGS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Apr 2018 22:06:18 -0400
-Subject: Re: New rash of fuzzer bugs on kernel.org bugzilla
-References: <0bdeb0e5-fd1d-a4d8-1a1a-f9371b829026@sandeen.net>
- <20180412233605.GC5572@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6f6ac5be-7828-26c9-90df-5953e025592e@sandeen.net>
-Date: Thu, 12 Apr 2018 21:06:15 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:57446 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750821AbeDQHJ5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 03:09:57 -0400
+Date: Tue, 17 Apr 2018 00:09:56 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: prevent creating negative-sized file via
+ INSERT_RANGE
+Message-ID: <20180417070956.GA18079@infradead.org>
+References: <20180416204630.177682-1-ebiggers3@gmail.com>
+ <20180417005218.GC5203@magnolia>
+ <20180417053907.GE5203@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180412233605.GC5572@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180417053907.GE5203@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, wen.xu@gatech.edu
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Biggers <ebiggers3@gmail.com>, linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
-On 4/12/18 6:36 PM, Dave Chinner wrote:
+>  	} else if (mode & FALLOC_FL_INSERT_RANGE) {
+>  		unsigned int blksize_mask = i_blocksize(inode) - 1;
+> +		loff_t		isize;
+>  
+> +		isize = i_size_read(inode);
 
-> FWIW, I'm not that interested in fuzzing v4 filesystems. We know
-> they have problems with undetected bit errors and are lacking in
-> information on disk to detect a lot of error types. Hence there's
-> only so much we can do to harden them.
+Maybe move the assignment up:
 
-*nod* - how are you creating these fuzzed images, i.e. what mkfs
-do you start with.  Are you randomizing mkfs options, and it just happens
-that the ones with problems are the v4 filesystems w/o crcs?  That would
-certainly make sense.
+		
+		loff_t		isize = i_size_read(inode);
 
-Or are you manually restricting the type of filesystems you create for
-fuzzing?
+But functionally this looks fine:
 
--Eric
+Reviewed-by: Christoph Hellwig <hch@lst.de>
