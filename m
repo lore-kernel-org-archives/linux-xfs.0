@@ -1,88 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36602 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753089AbeDLSUe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Apr 2018 14:20:34 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:54146 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750764AbeDQFjM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 01:39:12 -0400
+Date: Mon, 16 Apr 2018 22:39:07 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2] xfs: prevent creating negative-sized file via INSERT_RANGE
+Message-ID: <20180417053907.GE5203@magnolia>
+References: <20180416204630.177682-1-ebiggers3@gmail.com>
+ <20180417005218.GC5203@magnolia>
 MIME-Version: 1.0
-Reply-To: mtk.manpages@gmail.com
-In-Reply-To: <20180412142214.fcxw3g2jxv6bvn7d@quack2.suse.cz>
-References: <20171101153648.30166-1-jack@suse.cz> <20171101153648.30166-20-jack@suse.cz>
- <CAKgNAkhsFrcdkXNA2cw3o0gJV0uLRtBg9ybaCe5xy1QBC2PgqA@mail.gmail.com> <20180412142214.fcxw3g2jxv6bvn7d@quack2.suse.cz>
-From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
-Date: Thu, 12 Apr 2018 20:20:12 +0200
-Message-ID: <CAKgNAkgtVryFb81QgzwPq8SD241yKDN1xNxOWUUQH9QBYV13SA@mail.gmail.com>
-Subject: Re: [PATCH] mmap.2: Add description of MAP_SHARED_VALIDATE and MAP_SYNC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180417005218.GC5203@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-nvdimm@lists.01.org, Linux-MM <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: Eric Biggers <ebiggers3@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
-Jan, Ross.
+How about this instead?
 
-On 12 April 2018 at 16:22, Jan Kara <jack@suse.cz> wrote:
-> Hello Michael!
->
-> On Thu 12-04-18 15:00:49, Michael Kerrisk (man-pages) wrote:
->> Hello Jan,
->>
->> I have applied your patch, and tweaked the text a little, and pushed
->> the result to the git repo.
->
-> Thanks!
->
->> > +.B MAP_SHARED
->> > +type will silently ignore this flag.
->> > +This flag is supported only for files supporting DAX (direct mapping =
-of persistent
->> > +memory). For other files, creating mapping with this flag results in
->> > +.B EOPNOTSUPP
->> > +error. Shared file mappings with this flag provide the guarantee that=
- while
->> > +some memory is writeably mapped in the address space of the process, =
-it will
->> > +be visible in the same file at the same offset even after the system =
-crashes or
->> > +is rebooted. This allows users of such mappings to make data modifica=
-tions
->> > +persistent in a more efficient way using appropriate CPU instructions=
-.
->>
->> It feels like there's a word missing/unclear wording in the previous
->> line, before "using". Without that word, the sentence feels a bit
->> ambiguous.
->>
->> Should it be:
->>
->> persistent in a more efficient way *through the use of* appropriate
->> CPU instructions.
->>
->> or:
->>
->> persistent in a more efficient way *than using* appropriate CPU instruct=
-ions.
->>
->> ?
->>
->> Is suspect the first is correct, but need to check.
->
-> Yes, the first is correct.
+--D
 
-Thanks for both checking that phrasing. In the end I decided to reword
-the sentence a bot more substantially:
+---
+From: Eric Biggers <ebiggers@google.com>
 
-              In  conjunction  with  the  use of appropriate CPU
-              instructions, this provides users of such mappings
-              with a more efficient way of making data modifica=E2=80=90
-              tions persistent.
+During the "insert range" fallocate operation, i_size grows by the
+specified 'len' bytes.  XFS verifies that i_size + len < s_maxbytes, as
+it should.  But this comparison is done using the signed 'loff_t', and
+'i_size + len' can wrap around to a negative value, causing the check to
+incorrectly pass, resulting in an inode with "negative" i_size.  This is
+possible on 64-bit platforms, where XFS sets s_maxbytes = LLONG_MAX.
+ext4 and f2fs don't run into this because they set a smaller s_maxbytes.
 
-Thanks,
+Fix it by doing an unsigned comparison instead.
 
-Michael
+Reproducer:
+    xfs_io -f file -c "truncate $(((1<<63)-1))" -c "finsert 0 4096"
 
---=20
-Michael Kerrisk
-Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
-Linux/UNIX System Programming Training: http://man7.org/training/
+Fixes: a904b1ca5751 ("xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate")
+Cc: <stable@vger.kernel.org> # v4.1+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+[darrick: rearrange this whole function to use subtraction to avoid
+ overflow of the signed integer addition]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_file.c |   20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 9fd9dd7..a385334 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -779,21 +779,27 @@ xfs_file_fallocate(
+ 			goto out_unlock;
+ 	} else if (mode & FALLOC_FL_INSERT_RANGE) {
+ 		unsigned int blksize_mask = i_blocksize(inode) - 1;
++		loff_t		isize;
+ 
+-		new_size = i_size_read(inode) + len;
+-		if (offset & blksize_mask || len & blksize_mask) {
+-			error = -EINVAL;
++		isize = i_size_read(inode);
++
++		/*
++		 * New inode size must not exceed ->s_maxbytes, accounting for
++		 * possible signed overflow.
++		 */
++		if (inode->i_sb->s_maxbytes - isize < len) {
++			error = -EFBIG;
+ 			goto out_unlock;
+ 		}
+ 
+-		/* check the new inode size does not wrap through zero */
+-		if (new_size > inode->i_sb->s_maxbytes) {
+-			error = -EFBIG;
++		if (offset & blksize_mask || len & blksize_mask) {
++			error = -EINVAL;
+ 			goto out_unlock;
+ 		}
+ 
++		new_size = isize + len;
+ 		/* Offset should be less than i_size */
+-		if (offset >= i_size_read(inode)) {
++		if (offset >= isize) {
+ 			error = -EINVAL;
+ 			goto out_unlock;
+ 		}
