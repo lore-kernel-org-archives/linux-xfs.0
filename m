@@ -1,73 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50482 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752783AbeDPRDy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 13:03:54 -0400
-Date: Mon, 16 Apr 2018 10:03:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
-Message-ID: <20180416170329.GA5203@magnolia>
-References: <20180414215937.GH5572@dastard>
- <20180414222407.GA15294@bombadil.infradead.org>
- <20180415072121.GA13601@infradead.org>
- <20180415111104.GB25513@bombadil.infradead.org>
- <20180415120426.GA10479@infradead.org>
- <20180415123427.GA11379@bombadil.infradead.org>
- <20180416085707.GB30363@infradead.org>
- <20180416111423.GA26022@bombadil.infradead.org>
- <20180416112353.GA22921@infradead.org>
- <20180416113139.GB26022@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180416113139.GB26022@bombadil.infradead.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:21745 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751085AbeDQGj1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 02:39:27 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: validate allocated inode number
+Date: Tue, 17 Apr 2018 16:39:16 +1000
+Message-Id: <20180417063916.13069-3-david@fromorbit.com>
+In-Reply-To: <20180417063916.13069-1-david@fromorbit.com>
+References: <20180417063916.13069-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: viro@ZenIV.linux.org.uk
 
-On Mon, Apr 16, 2018 at 04:31:39AM -0700, Matthew Wilcox wrote:
-> On Mon, Apr 16, 2018 at 04:23:53AM -0700, Christoph Hellwig wrote:
-> > On Mon, Apr 16, 2018 at 04:14:23AM -0700, Matthew Wilcox wrote:
-> > > That's an unreasonable request.  It would (usually) require writing more
-> > > code to convert errnos into VM_FAULT returns.  And that code would get
-> > > precisely zero testing upstream because the next commit would come along
-> > > and delete it, replacing it with calls to common code.
-> > 
-> > Well, introduce the damn common code first.  It does not require
-> > using the typedef in any way.
-> 
-> Already done.
+From: Dave Chinner <dchinner@redhat.com>
 
-I wondered "Yeah, why isn't this one big series?  Where are the rest of
-the patches to convert everything else?" and then realized the patch
-author landed the function pointer prototype changes in mm.h prior to
-4.17-rc1 and is now playing scattershot catch-up across the tree...
+When we have corrupted free inode btrees, we can attempt to
+allocate inodes that we know are already allocated. Catch allocation
+of these inodes and report corruption as early as possible to
+prevent corruption propagation or deadlocks.
 
-...hm, the original mm patch wasn't cc'd to fsdevel either, so that's
-probably why I never heard of any of this until now.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-So, uh, why wasn't this whole series (all the mm changes and all the
-required fs changes) sent out for review prior to the merge window?
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7b764f746ff2..12e6c1aec386 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -790,6 +790,19 @@ xfs_ialloc(
+ 	}
+ 	ASSERT(*ialloc_context == NULL);
+ 
++	/*
++	 * Protect against obviously corrupt allocation btree records. Later
++	 * xfs_iget checks will catch re-allocation of other active in-memory
++	 * and on-disk inodes. If we don't catch reallocating the parent inode
++	 * here we will deadlock in xfs_iget() so we have to do these checks
++	 * first.
++	 */
++	if ((pip && ino == pip->i_ino) ||
++	    !xfs_verify_dir_ino(mp, ino)) {
++		xfs_alert(mp, "Allocated a known in-use inode 0x%llx!", ino);
++		return -EFSCORRUPTED;
++	}
++
+ 	/*
+ 	 * Get the in-core inode with the lock held exclusively.
+ 	 * This is because we're setting fields here we need
+-- 
+2.16.1
 
-I don't like "Hey we bitrotted your filesystem without telling you, now
-here's a patch to fix it..."  The code change looks ok, but now I'm
-going to schedule some time to go digging to see if there's anything
-else lurking beneath the surface here.
-
-> > In this current form of single patches:  NAK to anything I maintain
-> > or review.
-> 
-> Yeah, we already have a plan for dealing with arsehole or MIA maintainers.
-> Fortunately, you're not actually the maintainer for XFS, so it'll be up
-> to Darrick whether to take it or not.
-
-I also dislike being pitted against the other XFS developers.
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
