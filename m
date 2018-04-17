@@ -1,199 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45134 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753076AbeDRCnI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:43:08 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2fkaQ045664
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2hdrxp0k3j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2h7JB020128
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3I2h7FB027727
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 GMT
-Subject: [PATCH 12/24] xfs: repair the AGI
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:43:05 -0700
-Message-ID: <152401938579.12079.7078564615989254152.stgit@magnolia>
-In-Reply-To: <152401930978.12079.2000682561964128780.stgit@magnolia>
-References: <152401930978.12079.2000682561964128780.stgit@magnolia>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:21512 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751206AbeDQG7p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 02:59:45 -0400
+Date: Tue, 17 Apr 2018 16:59:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsdump: too many -f arguments: maximum is 1 when running in
+ miniroot
+Message-ID: <20180417065943.GJ23861@dastard>
+References: <1523934525.20129.96.camel@uvic.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1523934525.20129.96.camel@uvic.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Ryan Taylor <rptaylor@uvic.ca>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Apr 17, 2018 at 03:08:45AM +0000, Ryan Taylor wrote:
+> 
+> Hello,
+> 
+> I have a CentOS6 system with kernel 2.6.32-696.23.1.el6.x86_64 and xfsdump-3.0.4-4.el6_6.1.x86_64
+> (the latest available versions).
+> 
+> When I try to xfsdump I get this error:
+> 
+> $ sudo xfsdump -d 2000 -l 0 -p 30 -L Dump -f /mnt/data2/l0/file0 -f /mnt/data2/l0/file1 /mnt/data1
+> xfsdump: too many -f arguments: maximum is 1 when running in miniroot
 
-Rebuild the AGI header items with some help from the rmapbt.
+Your xfsdump binary is so old it doesn't support multiple dump files
+(or streams, as xfsdump calls them). That was introduced in v3.1.0,
+IIRC, via commit:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/agheader_repair.c |  111 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h          |    2 +
- fs/xfs/scrub/scrub.c           |    2 -
- 3 files changed, 114 insertions(+), 1 deletion(-)
+commit 7ffdf9d1fbd65eb38171b8772ed4c31315cbbef6
+Author: Bill Kendall <wkendall@sgi.com>
+Date:   Mon Nov 7 14:58:31 2011 -0600
 
+    xfsdump: enable multiple streams
+    
+    IRIX contained an environment referred to as "miniroot" where
+    sproc threads were either not available, or at least not used
+    in xfsdump. Throughout xfsdump there's a "miniroot" variable
+    which indicates whether or not thread support is enabled. On
+    Linux this variable has always been false in order to disable
+    support for multiple streams.
+    
+    Now that the threading infracstructure has been converted over
+    to pthreads, this patch removes the "miniroot" variable and
+    enables the option of using multiple streams.
+    
+    Note that another feature in xfsdump, using a ring buffer for
+    I/O to tapes, also depends on thread support. I'm leaving that
+    disabled for now until more testing has been done.
+    
+    Reviewed-by: Alex Elder <aelder@sgi.com>
+    Signed-off-by: Bill Kendall <wkendall@sgi.com>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 6958c36..8c35d03 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -565,3 +565,114 @@ xfs_repair_agfl(
- 				XFS_BTREE_NOERROR);
- 	return error;
- }
-+
-+/* AGI */
-+
-+int
-+xfs_repair_agi(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_repair_find_ag_btree	fab[] = {
-+		{
-+			.rmap_owner = XFS_RMAP_OWN_INOBT,
-+			.buf_ops = &xfs_inobt_buf_ops,
-+			.magic = XFS_IBT_CRC_MAGIC,
-+		},
-+		{
-+			.rmap_owner = XFS_RMAP_OWN_INOBT,
-+			.buf_ops = &xfs_inobt_buf_ops,
-+			.magic = XFS_FIBT_CRC_MAGIC,
-+		},
-+		{
-+			.buf_ops = NULL
-+		},
-+	};
-+	struct xfs_agi			old_agi;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*agi_bp;
-+	struct xfs_buf			*agf_bp;
-+	struct xfs_agi			*agi;
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_perag		*pag;
-+	xfs_agino_t			old_count;
-+	xfs_agino_t			old_freecount;
-+	xfs_agino_t			count;
-+	xfs_agino_t			freecount;
-+	int				bucket;
-+	int				error;
-+
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
-+	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
-+			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
-+	if (error)
-+		return error;
-+	agi_bp->b_ops = &xfs_agi_buf_ops;
-+
-+	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
-+	if (error)
-+		return error;
-+	if (!agf_bp)
-+		return -ENOMEM;
-+
-+	/* Find the btree roots. */
-+	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, NULL);
-+	if (error)
-+		return error;
-+	if (fab[0].root == NULLAGBLOCK || fab[0].height > XFS_BTREE_MAXLEVELS)
-+		return -EFSCORRUPTED;
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
-+	    (fab[1].root == NULLAGBLOCK || fab[1].height > XFS_BTREE_MAXLEVELS))
-+		return -EFSCORRUPTED;
-+
-+	/* Start rewriting the header. */
-+	agi = XFS_BUF_TO_AGI(agi_bp);
-+	old_agi = *agi;
-+	old_count = be32_to_cpu(old_agi.agi_count);
-+	old_freecount = be32_to_cpu(old_agi.agi_freecount);
-+	memset(agi, 0, mp->m_sb.sb_sectsize);
-+	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
-+	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
-+	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
-+	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
-+	agi->agi_newino = cpu_to_be32(NULLAGINO);
-+	agi->agi_dirino = cpu_to_be32(NULLAGINO);
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
-+	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
-+		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
-+	agi->agi_root = cpu_to_be32(fab[0].root);
-+	agi->agi_level = cpu_to_be32(fab[0].height);
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+		agi->agi_free_root = cpu_to_be32(fab[1].root);
-+		agi->agi_free_level = cpu_to_be32(fab[1].height);
-+	}
-+
-+	/* Update the AGI counters. */
-+	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
-+			XFS_BTNUM_INO);
-+	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	if (error)
-+		goto err;
-+	agi->agi_count = cpu_to_be32(count);
-+	agi->agi_freecount = cpu_to_be32(freecount);
-+	if (old_count != count || old_freecount != freecount) {
-+		pag = xfs_perag_get(mp, sc->sa.agno);
-+		pag->pagi_init = 0;
-+		xfs_perag_put(pag);
-+		sc->reset_counters = true;
-+	}
-+
-+	/* Write this to disk. */
-+	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
-+	xfs_trans_log_buf(sc->tp, agi_bp, 0, mp->m_sb.sb_sectsize - 1);
-+	return error;
-+
-+err:
-+	*agi = old_agi;
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 8c19136..9a22428 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -106,6 +106,7 @@ int xfs_repair_probe(struct xfs_scrub_context *sc);
- int xfs_repair_superblock(struct xfs_scrub_context *sc);
- int xfs_repair_agf(struct xfs_scrub_context *sc);
- int xfs_repair_agfl(struct xfs_scrub_context *sc);
-+int xfs_repair_agi(struct xfs_scrub_context *sc);
- 
- #else
- 
-@@ -137,6 +138,7 @@ static inline int xfs_repair_reset_counters(struct xfs_mount *mp)
- #define xfs_repair_superblock		xfs_repair_notsupported
- #define xfs_repair_agf			xfs_repair_notsupported
- #define xfs_repair_agfl			xfs_repair_notsupported
-+#define xfs_repair_agi			xfs_repair_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index ee9cb33..b4fb805 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -236,7 +236,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_PERAG,
- 		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_agi,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_agi,
- 	},
- 	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
- 		.type	= ST_PERAG,
+> (I need to produce multiple dump files in order to migrate some data under space constraints.
+> I was planning to produce the dump files on an ext4 filesystem (since you can shrink that), and
+> restore 1 dump file at a time. After restoring each dump file, I can delete it, shrink the ext4
+> filesystem to reclaim space, and expand the destination XFS filesystem.)
 
+I don't think multiple dump streams does what you want.
+
+When you create multiple dump files with a current xfsdump, you also
+need to supply xfsrestore with all those dump files, too, otherwise
+the dump inventory cannot be validated. IOWs, I don't think you can
+just restore a single dump file from a multi-stream dump as data
+being restored may be spread across multiple dump files...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
