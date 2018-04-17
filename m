@@ -1,78 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55306 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752594AbeDMCzn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Apr 2018 22:55:43 -0400
-Subject: [PATCH V2] xfs: enhance dinode verifier
-References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
-Date: Thu, 12 Apr 2018 21:55:41 -0500
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:45504 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751211AbeDQJAj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 05:00:39 -0400
+Received: by mail-wr0-f196.google.com with SMTP id u11so33244813wri.12
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Apr 2018 02:00:39 -0700 (PDT)
+Date: Tue, 17 Apr 2018 11:00:30 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: validate cached inodes are free when allocated
+Message-ID: <20180417090030.xyt53fr5aztxftfg@odin.usersys.redhat.com>
+References: <20180417063916.13069-1-david@fromorbit.com>
+ <20180417063916.13069-2-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180417063916.13069-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc: wen.xu@gatech.edu
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Add several more validations to xfs_dinode_verify:
+>  fs/xfs/xfs_icache.c | 73 +++++++++++++++++++++++++++++++++++------------------
+>  1 file changed, 48 insertions(+), 25 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 98b7a4ae15e4..fb37ada55710 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -309,6 +309,46 @@ xfs_reinit_inode(
+>  	return error;
+>  }
+>  
+> +/*
+> + * If we are allocating a new inode, then check what was returned is
+> + * actually a free, empty inode. If we are not allocating an inode,
+> + * the check we didn't find a free inode.
 
-- For LOCAL data fork formats, di_nextents must be 0.
-- For LOCAL attr fork formats, di_anextents must be 0.
-- For inodes with no attr fork offset,
-  - format must be XFS_DINODE_FMT_EXTENTS if set at all
-  - di_anextents must be 0.
+I know it's been like that for a while, but maybe it's a good time to fix this
+typo? "then check we didn't find..." ?
 
-Thanks to dchinner for pointing out a couple related checks I had
-forgotten to add.
+Fixing the old typo or not, the patch looks good:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-V2: due credit :)
-
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 4fe17b368316..72ab4d2df8cf 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -458,6 +458,8 @@ xfs_dinode_verify(
- 				return __this_address;
- 			if (di_size > XFS_DFORK_DSIZE(dip, mp))
- 				return __this_address;
-+			if (dip->di_nextents)
-+				return __this_address;
- 			/* fall through */
- 		case XFS_DINODE_FMT_EXTENTS:
- 		case XFS_DINODE_FMT_BTREE:
-@@ -476,12 +478,25 @@ xfs_dinode_verify(
- 	if (XFS_DFORK_Q(dip)) {
- 		switch (dip->di_aformat) {
- 		case XFS_DINODE_FMT_LOCAL:
-+			if (dip->di_anextents)
-+				return __this_address;
-+		/* fall through */
- 		case XFS_DINODE_FMT_EXTENTS:
- 		case XFS_DINODE_FMT_BTREE:
- 			break;
- 		default:
- 			return __this_address;
- 		}
-+	} else {	/* No attr fork */
-+		switch (dip->di_aformat) {
-+		case 0:	/* Uninitialized OK */
-+		case XFS_DINODE_FMT_EXTENTS:
-+			break;
-+		default:
-+			return __this_address;
-+		}
-+		if (dip->di_anextents)
-+			return __this_address;
- 	}
- 
- 	/* only version 3 or greater inodes are extensively verified here */
-
-
+-- 
+Carlos
