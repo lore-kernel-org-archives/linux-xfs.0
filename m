@@ -1,48 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53032 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752496AbeDPLbk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 07:31:40 -0400
-Date: Mon, 16 Apr 2018 04:31:39 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
-Message-ID: <20180416113139.GB26022@bombadil.infradead.org>
-References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
- <20180414215937.GH5572@dastard>
- <20180414222407.GA15294@bombadil.infradead.org>
- <20180415072121.GA13601@infradead.org>
- <20180415111104.GB25513@bombadil.infradead.org>
- <20180415120426.GA10479@infradead.org>
- <20180415123427.GA11379@bombadil.infradead.org>
- <20180416085707.GB30363@infradead.org>
- <20180416111423.GA26022@bombadil.infradead.org>
- <20180416112353.GA22921@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180416112353.GA22921@infradead.org>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:8271 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751057AbeDQGj0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 02:39:26 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: validate cached inodes are free when allocated
+Date: Tue, 17 Apr 2018 16:39:15 +1000
+Message-Id: <20180417063916.13069-2-david@fromorbit.com>
+In-Reply-To: <20180417063916.13069-1-david@fromorbit.com>
+References: <20180417063916.13069-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: viro@ZenIV.linux.org.uk
 
-On Mon, Apr 16, 2018 at 04:23:53AM -0700, Christoph Hellwig wrote:
-> On Mon, Apr 16, 2018 at 04:14:23AM -0700, Matthew Wilcox wrote:
-> > That's an unreasonable request.  It would (usually) require writing more
-> > code to convert errnos into VM_FAULT returns.  And that code would get
-> > precisely zero testing upstream because the next commit would come along
-> > and delete it, replacing it with calls to common code.
-> 
-> Well, introduce the damn common code first.  It does not require
-> using the typedef in any way.
+From: Dave Chinner <dchinner@redhat.com>
 
-Already done.
+A recent fuzzed filesystem image cached random dcache corruption
+when the reproducer was run. This often showed up as panics in
+lookup_slow() on a null inode->i_ops pointer when doing pathwalks.
 
-> In this current form of single patches:  NAK to anything I maintain
-> or review.
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+....
+Call Trace:
+ lookup_slow+0x44/0x60
+ walk_component+0x3dd/0x9f0
+ link_path_walk+0x4a7/0x830
+ path_lookupat+0xc1/0x470
+ filename_lookup+0x129/0x270
+ user_path_at_empty+0x36/0x40
+ path_listxattr+0x98/0x110
+ SyS_listxattr+0x13/0x20
+ do_syscall_64+0xf5/0x280
+ entry_SYSCALL_64_after_hwframe+0x42/0xb7
 
-Yeah, we already have a plan for dealing with arsehole or MIA maintainers.
-Fortunately, you're not actually the maintainer for XFS, so it'll be up
-to Darrick whether to take it or not.
+but had many different failure modes including deadlocks trying to
+lock the inode that was just allocated or KASAN reports of
+use-after-free violations.
+
+The cause of the problem was a corrupt INOBT on a v4 fs where the
+root inode was marked as free in the inobt record. Hence when we
+allocated an inode, it chose the root inode to allocate, found it in
+the cache and re-initialised it.
+
+We recently fixed a similar inode allocation issue caused by inobt
+record corruption problem in xfs_iget_cache_miss() in commit
+ee457001ed6c ("xfs: catch inode allocation state mismatch
+corruption"). This change adds similar checks to the cache-hit path
+to catch it, and turns the reproducer into a corruption shutdown
+situation.
+
+Reported-by: Wen Xu <wen.xu@gatech.edu>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_icache.c | 73 +++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 48 insertions(+), 25 deletions(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 98b7a4ae15e4..fb37ada55710 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -309,6 +309,46 @@ xfs_reinit_inode(
+ 	return error;
+ }
+ 
++/*
++ * If we are allocating a new inode, then check what was returned is
++ * actually a free, empty inode. If we are not allocating an inode,
++ * the check we didn't find a free inode.
++ *
++ * Returns:
++ *	0		if the inode free state matches the lookup context
++ *	-ENOENT		if the inode is free and we are not allocating
++ *	-EFSCORRUPTED	if there is any state mismatch at all
++ */
++static int
++xfs_iget_check_free_state(
++	struct xfs_inode	*ip,
++	int			flags)
++{
++	if (flags & XFS_IGET_CREATE) {
++		/* should be a free inode */
++		if (VFS_I(ip)->i_mode != 0) {
++			xfs_warn(ip->i_mount,
++"Corruption detected! Free inode 0x%llx not marked free! (mode 0x%x)",
++				ip->i_ino, VFS_I(ip)->i_mode);
++			return -EFSCORRUPTED;
++		}
++
++		if (ip->i_d.di_nblocks != 0) {
++			xfs_warn(ip->i_mount,
++"Corruption detected! Free inode 0x%llx has blocks allocated!",
++				ip->i_ino);
++			return -EFSCORRUPTED;
++		}
++		return 0;
++	}
++
++	/* should be an allocated inode */
++	if (VFS_I(ip)->i_mode == 0)
++		return -ENOENT;
++
++	return 0;
++}
++
+ /*
+  * Check the validity of the inode we just found it the cache
+  */
+@@ -358,12 +398,12 @@ xfs_iget_cache_hit(
+ 	}
+ 
+ 	/*
+-	 * If lookup is racing with unlink return an error immediately.
++	 * Check the inode free state is valid. This also detects lookup
++	 * racing with unlinks.
+ 	 */
+-	if (VFS_I(ip)->i_mode == 0 && !(flags & XFS_IGET_CREATE)) {
+-		error = -ENOENT;
++	error = xfs_iget_check_free_state(ip, flags);
++	if (error)
+ 		goto out_error;
+-	}
+ 
+ 	/*
+ 	 * If IRECLAIMABLE is set, we've torn down the VFS inode already.
+@@ -486,29 +526,12 @@ xfs_iget_cache_miss(
+ 
+ 
+ 	/*
+-	 * If we are allocating a new inode, then check what was returned is
+-	 * actually a free, empty inode. If we are not allocating an inode,
+-	 * the check we didn't find a free inode.
++	 * Check the inode free state is valid. This also detects lookup
++	 * racing with unlinks.
+ 	 */
+-	if (flags & XFS_IGET_CREATE) {
+-		if (VFS_I(ip)->i_mode != 0) {
+-			xfs_warn(mp,
+-"Corruption detected! Free inode 0x%llx not marked free on disk",
+-				ino);
+-			error = -EFSCORRUPTED;
+-			goto out_destroy;
+-		}
+-		if (ip->i_d.di_nblocks != 0) {
+-			xfs_warn(mp,
+-"Corruption detected! Free inode 0x%llx has blocks allocated!",
+-				ino);
+-			error = -EFSCORRUPTED;
+-			goto out_destroy;
+-		}
+-	} else if (VFS_I(ip)->i_mode == 0) {
+-		error = -ENOENT;
++	error = xfs_iget_check_free_state(ip, flags);
++	if (error)
+ 		goto out_destroy;
+-	}
+ 
+ 	/*
+ 	 * Preload the radix tree so we can insert safely under the
+-- 
+2.16.1
 
