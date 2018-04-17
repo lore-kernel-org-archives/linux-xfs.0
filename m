@@ -1,60 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f196.google.com ([209.85.213.196]:37813 "EHLO
-        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750989AbeDPUtG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 16:49:06 -0400
-Received: by mail-yb0-f196.google.com with SMTP id i13-v6so7577832ybl.4
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Apr 2018 13:49:06 -0700 (PDT)
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH] xfs: prevent creating negative-sized file via INSERT_RANGE
-Date: Mon, 16 Apr 2018 13:46:30 -0700
-Message-Id: <20180416204630.177682-1-ebiggers3@gmail.com>
+Received: from dugong.comp.uvic.ca ([142.104.42.98]:40586 "EHLO
+        dugong.comp.uvic.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751793AbeDQDZY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 23:25:24 -0400
+Received: from uaru.uvic.ca (uaru.uvic.ca [142.104.224.130])
+        by dugong.comp.uvic.ca (8.14.4/8.14.4) with ESMTP id w3H38ki3031303
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Apr 2018 20:08:46 -0700
+From: Ryan Taylor <rptaylor@uvic.ca>
+Subject: xfsdump: too many -f arguments: maximum is 1 when running in miniroot
+Date: Tue, 17 Apr 2018 03:08:45 +0000
+Message-ID: <1523934525.20129.96.camel@uvic.ca>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <232B54ECF5F4AE47872F7AEEA39C53FA@local.uvic.ca>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Eric Biggers <ebiggers@google.com>
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-From: Eric Biggers <ebiggers@google.com>
-
-During the "insert range" fallocate operation, i_size grows by the
-specified 'len' bytes.  XFS verifies that i_size + len < s_maxbytes, as
-it should.  But this comparison is done using the signed 'loff_t', and
-'i_size + len' can wrap around to a negative value, causing the check to
-incorrectly pass, resulting in an inode with "negative" i_size.  This is
-possible on 64-bit platforms, where XFS sets s_maxbytes = LLONG_MAX.
-ext4 and f2fs don't run into this because they set a smaller s_maxbytes.
-
-Fix it by doing an unsigned comparison instead.
-
-Reproducer:
-    xfs_io -f file -c "truncate $(((1<<63)-1))" -c "finsert 0 4096"
-
-Fixes: a904b1ca5751 ("xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate")
-Cc: <stable@vger.kernel.org> # v4.1+
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- fs/xfs/xfs_file.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 299aee4b7b0b..56a820efeb2a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -786,8 +786,11 @@ xfs_file_fallocate(
- 			goto out_unlock;
- 		}
- 
--		/* check the new inode size does not wrap through zero */
--		if (new_size > inode->i_sb->s_maxbytes) {
-+		/*
-+		 * New inode size must not exceed ->s_maxbytes, accounting for
-+		 * possible signed overflow.
-+		 */
-+		if ((u64)new_size > inode->i_sb->s_maxbytes) {
- 			error = -EFBIG;
- 			goto out_unlock;
- 		}
--- 
-2.17.0.484.g0c8726318c-goog
-
+DQpIZWxsbywNCg0KSSBoYXZlIGEgQ2VudE9TNiBzeXN0ZW0gd2l0aCBrZXJuZWwgMi42LjMyLTY5
+Ni4yMy4xLmVsNi54ODZfNjQgYW5kIHhmc2R1bXAtMy4wLjQtNC5lbDZfNi4xLng4Nl82NA0KKHRo
+ZSBsYXRlc3QgYXZhaWxhYmxlIHZlcnNpb25zKS4NCg0KV2hlbiBJIHRyeSB0byB4ZnNkdW1wIEkg
+Z2V0IHRoaXMgZXJyb3I6DQoNCiQgc3VkbyB4ZnNkdW1wIC1kIDIwMDAgLWwgMCAtcCAzMCAtTCBE
+dW1wIC1mIC9tbnQvZGF0YTIvbDAvZmlsZTAgLWYgL21udC9kYXRhMi9sMC9maWxlMSAvbW50L2Rh
+dGExDQp4ZnNkdW1wOiB0b28gbWFueSAtZiBhcmd1bWVudHM6IG1heGltdW0gaXMgMSB3aGVuIHJ1
+bm5pbmcgaW4gbWluaXJvb3QNCnhmc2R1bXA6IHVzYWdlOiB4ZnNkdW1wIFsgLWEgKGR1bXAgRE1G
+IGR1YWxzdGF0ZSBmaWxlcyBhcyBvZmZsaW5lKSBdDQogICAgICAgICAgICAgICAgICAgICAgICBb
+IC1iIDxibG9ja3NpemU+IF0NCiAgICAgICAgICAgICAgICAgICAgICAgIFsgLWMgPG1lZGlhIGNo
+YW5nZSBhbGVydCBwcm9ncmFtPiAgXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtZCA8ZHVt
+cCBtZWRpYSBmaWxlIHNpemU+ICBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1lIChhbGxv
+dyBmaWxlcyB0byBiZSBleGNsdWRlZCkgXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtZiA8
+ZGVzdGluYXRpb24+IC4uLiBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1oIChoZWxwKSBd
+DQogICAgICAgICAgICAgICAgICAgICAgICBbIC1sIDxsZXZlbD4gXQ0KICAgICAgICAgICAgICAg
+ICAgICAgICAgWyAtbSAoZm9yY2UgdXNhZ2Ugb2YgbWluaW1hbCBybXQpIF0NCiAgICAgICAgICAg
+ICAgICAgICAgICAgIFsgLW8gKG92ZXJ3cml0ZSB0YXBlKSBdDQogICAgICAgICAgICAgICAgICAg
+ICAgICBbIC1wIDxzZWNvbmRzIGJldHdlZW4gcHJvZ3Jlc3MgcmVwb3J0cz4gXQ0KICAgICAgICAg
+ICAgICAgICAgICAgICAgWyAtcSA8dXNlIFFJQyB0YXBlIHNldHRpbmdzPiBdDQogICAgICAgICAg
+ICAgICAgICAgICAgICBbIC1zIDxzdWJ0cmVlPiAuLi4gXQ0KICAgICAgICAgICAgICAgICAgICAg
+ICAgWyAtdCA8ZmlsZT4gKHVzZSBmaWxlIG10aW1lIGZvciBkdW1wIHRpbWUgXQ0KICAgICAgICAg
+ICAgICAgICAgICAgICAgWyAtdiA8dmVyYm9zaXR5IHtzaWxlbnQsIHZlcmJvc2UsIHRyYWNlfT4g
+XQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAteiA8bWF4aW11bSBmaWxlIHNpemU+IF0NCiAg
+ICAgICAgICAgICAgICAgICAgICAgIFsgLUEgKGRvbid0IGR1bXAgZXh0ZW5kZWQgZmlsZSBhdHRy
+aWJ1dGVzKSBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1CIDxiYXNlIGR1bXAgc2Vzc2lv
+biBpZD4gXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtRSAocHJlLWVyYXNlIG1lZGlhKSBd
+DQogICAgICAgICAgICAgICAgICAgICAgICBbIC1GIChkb24ndCBwcm9tcHQpIF0NCiAgICAgICAg
+ICAgICAgICAgICAgICAgIFsgLUkgKGRpc3BsYXkgZHVtcCBpbnZlbnRvcnkpIF0NCiAgICAgICAg
+ICAgICAgICAgICAgICAgIFsgLUogKGluaGliaXQgaW52ZW50b3J5IHVwZGF0ZSkgXQ0KICAgICAg
+ICAgICAgICAgICAgICAgICAgWyAtTCA8c2Vzc2lvbiBsYWJlbD4gXQ0KICAgICAgICAgICAgICAg
+ICAgICAgICAgWyAtTSA8bWVkaWEgbGFiZWw+IC4uLiBdDQogICAgICAgICAgICAgICAgICAgICAg
+ICBbIC1PIDxvcHRpb25zIGZpbGU+IF0NCiAgICAgICAgICAgICAgICAgICAgICAgIFsgLVIgKHJl
+c3VtZSkgXQ0KICAgICAgICAgICAgICAgICAgICAgICAgWyAtVCAoZG9uJ3QgdGltZW91dCBkaWFs
+b2dzKSBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC1ZIDxJL08gYnVmZmVyIHJpbmcgbGVu
+Z3RoPiBdDQogICAgICAgICAgICAgICAgICAgICAgICBbIC0gKHN0ZG91dCkgXQ0KICAgICAgICAg
+ICAgICAgICAgICAgICAgWyA8c291cmNlIChtbnRwbnR8ZGV2aWNlKT4gXQ0KeGZzZHVtcDogRHVt
+cCBTdGF0dXM6IEVSUk9SDQoNCihJIG5lZWQgdG8gcHJvZHVjZSBtdWx0aXBsZSBkdW1wIGZpbGVz
+IGluIG9yZGVyIHRvIG1pZ3JhdGUgc29tZSBkYXRhIHVuZGVyIHNwYWNlIGNvbnN0cmFpbnRzLg0K
+SSB3YXMgcGxhbm5pbmcgdG8gcHJvZHVjZSB0aGUgZHVtcCBmaWxlcyBvbiBhbiBleHQ0IGZpbGVz
+eXN0ZW0gKHNpbmNlIHlvdSBjYW4gc2hyaW5rIHRoYXQpLCBhbmQNCnJlc3RvcmUgMSBkdW1wIGZp
+bGUgYXQgYSB0aW1lLiBBZnRlciByZXN0b3JpbmcgZWFjaCBkdW1wIGZpbGUsIEkgY2FuIGRlbGV0
+ZSBpdCwgc2hyaW5rIHRoZSBleHQ0DQpmaWxlc3lzdGVtIHRvIHJlY2xhaW0gc3BhY2UsIGFuZCBl
+eHBhbmQgdGhlIGRlc3RpbmF0aW9uIFhGUyBmaWxlc3lzdGVtLikNCg0KV2h5IGRvZXMgaXQgdGhp
+bmsgSSBhbSBydW5uaW5nIGluIG1pbmlyb290PyBIb3cgY2FuIHRoaXMgZXJyb3IgYmUgYXZvaWRl
+ZD8NCg0KVGhhbmtzLA0KLXJ0DQoNCi0tIA0KUnlhbiBUYXlsb3INClJlc2VhcmNoIENvbXB1dGlu
+ZyBTcGVjaWFsaXN0DQpSZXNlYXJjaCBDb21wdXRpbmcgU2VydmljZXMsIFVuaXZlcnNpdHkgU3lz
+dGVtcywgVW5pdmVyc2l0eSBvZiBWaWN0b3JpYQ==
