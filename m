@@ -1,61 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51484 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753479AbeDPLOY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 07:14:24 -0400
-Date: Mon, 16 Apr 2018 04:14:23 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
-Message-ID: <20180416111423.GA26022@bombadil.infradead.org>
-References: <20180414200530.GA20184@jordon-HP-15-Notebook-PC>
- <20180414215937.GH5572@dastard>
- <20180414222407.GA15294@bombadil.infradead.org>
- <20180415072121.GA13601@infradead.org>
- <20180415111104.GB25513@bombadil.infradead.org>
- <20180415120426.GA10479@infradead.org>
- <20180415123427.GA11379@bombadil.infradead.org>
- <20180416085707.GB30363@infradead.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:37048 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752979AbeDQAwX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Apr 2018 20:52:23 -0400
+Date: Mon, 16 Apr 2018 17:52:18 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: prevent creating negative-sized file via
+ INSERT_RANGE
+Message-ID: <20180417005218.GC5203@magnolia>
+References: <20180416204630.177682-1-ebiggers3@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180416085707.GB30363@infradead.org>
+In-Reply-To: <20180416204630.177682-1-ebiggers3@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Eric Biggers <ebiggers3@gmail.com>
+Cc: linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>
 
-On Mon, Apr 16, 2018 at 01:57:07AM -0700, Christoph Hellwig wrote:
-> On Sun, Apr 15, 2018 at 05:34:27AM -0700, Matthew Wilcox wrote:
-> > On Sun, Apr 15, 2018 at 05:04:26AM -0700, Christoph Hellwig wrote:
-> > > On Sun, Apr 15, 2018 at 04:11:04AM -0700, Matthew Wilcox wrote:
-> > > > > Please just send one damn patch adding the typedef and the sparse
-> > > > > annotation and converting everyone over.  Splitting this into five
-> > > > > gazillion patches that do nothing doesn't help anyone.
-> > > > 
-> > > > The XFS one is trivial.  Many of the others are not.
-> > > 
-> > > if they arne't trivial you are doing something wrong.  That is you
-> > > fix bugs that exist independent of the annotation together with the
-> > > annotation.
-> > > 
-> > > Fix all the bugs first, and send them in (including for -stable) and
-> > > then do the annotations in one big patch.
-> > 
-> > They aren't all bugs.  Some of them are just splitting errnos apart
-> > from return values for typesafety.  The ones that are bugfixes are
-> > unlikely-to-happen bugs like running out of memory when allocating a
-> > page table, and returning "we inserted the PTE" instead of "we ran out
-> > of memory".  More of a QOI issue than an exploitable bug.
+On Mon, Apr 16, 2018 at 01:46:30PM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
 > 
-> Then do all the cleanups first and do the batch rename of the type after
-> that, same concept.
+> During the "insert range" fallocate operation, i_size grows by the
+> specified 'len' bytes.  XFS verifies that i_size + len < s_maxbytes, as
+> it should.  But this comparison is done using the signed 'loff_t', and
+> 'i_size + len' can wrap around to a negative value, causing the check to
 
-That's an unreasonable request.  It would (usually) require writing more
-code to convert errnos into VM_FAULT returns.  And that code would get
-precisely zero testing upstream because the next commit would come along
-and delete it, replacing it with calls to common code.
+Hmm.  Looking at that closer, i_size_read returns loff_t, which means
+that when your generic/484 test runs, it ends up doing:
 
-If anybody wants to backport any of this, they should just pick up the
-common code (1c8f422059a "mm: change return type to vm_fault_t") and then
-the commit that they want.
+if ((loff_t)9223372036854771712 + (loff_t)8192 < (loff_t)9223372036854775807)
+
+This is a signed addition that overflows the long long int, I think.
+
+Yes, it does; the UBSAN checker complains:
+
+================================================================================
+UBSAN: Undefined behaviour in fs/xfs/xfs_file.c:783:12
+signed integer overflow:
+9223372036854771712 + 8192 cannot be represented in type 'long long int'
+CPU: 1 PID: 11277 Comm: xfs_io Not tainted 4.17.0-rc1-xfsx #4
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1djwong0 04/01/2014
+Call Trace:
+ dump_stack+0x7c/0xbb
+ ubsan_epilogue+0x9/0x40
+ handle_overflow+0xc7/0xf0
+ ? xfs_ilock+0x2ae/0x450 [xfs]
+ xfs_file_fallocate+0x41d/0x4e0 [xfs]
+ vfs_fallocate+0x132/0x250
+ ksys_fallocate+0x3c/0x70
+ __x64_sys_fallocate+0x1a/0x20
+ do_syscall_64+0x56/0x180
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x7f38f4a4d2cf
+RSP: 002b:00007ffe289615c0 EFLAGS: 00000293 ORIG_RAX: 000000000000011d
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f38f4a4d2cf
+RDX: 0000000000000000 RSI: 0000000000000020 RDI: 0000000000000003
+RBP: 0000000000000020 R08: 0000000000000000 R09: 1999999999999999
+R10: 0000000000002000 R11: 0000000000000293 R12: 0000000000000000
+R13: 0000000000002000 R14: 00000000012bcbd0 R15: 00000000012bc3e0
+================================================================================
+
+So I think we can't rely on the addition working properly and this code
+has to be rearranged to use subtraction:
+
+loff_t		isize;
+
+isize = i_size_read(inode);
+
+/*
+ * New inode size must not exceed ->s_maxbytes, accounting for
+ * possible signed overflow.
+ */
+if (inode->i_sb->s_maxbytes - isize < len) {
+	error = -EFBIG;
+	goto out_unlock;
+}
+
+if (offset & blksize_mask || len & blksize_mask) {
+	error = -EINVAL;
+	goto out_unlock;
+}
+
+new_size = isize + len;
+
+I think?  Integer wrap always ties my brain in knots.
+
+--D
+
+> incorrectly pass, resulting in an inode with "negative" i_size.  This is
+> possible on 64-bit platforms, where XFS sets s_maxbytes = LLONG_MAX.
+> ext4 and f2fs don't run into this because they set a smaller s_maxbytes.
+> 
+> Fix it by doing an unsigned comparison instead.
+> 
+> Reproducer:
+>     xfs_io -f file -c "truncate $(((1<<63)-1))" -c "finsert 0 4096"
+> 
+> Fixes: a904b1ca5751 ("xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate")
+> Cc: <stable@vger.kernel.org> # v4.1+
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>  fs/xfs/xfs_file.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 299aee4b7b0b..56a820efeb2a 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -786,8 +786,11 @@ xfs_file_fallocate(
+>  			goto out_unlock;
+>  		}
+>  
+> -		/* check the new inode size does not wrap through zero */
+> -		if (new_size > inode->i_sb->s_maxbytes) {
+> +		/*
+> +		 * New inode size must not exceed ->s_maxbytes, accounting for
+> +		 * possible signed overflow.
+> +		 */
+> +		if ((u64)new_size > inode->i_sb->s_maxbytes) {
+>  			error = -EFBIG;
+>  			goto out_unlock;
+>  		}
+> -- 
+> 2.17.0.484.g0c8726318c-goog
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
