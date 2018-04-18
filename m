@@ -1,15 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58212 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753144AbeDRCmH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:42:07 -0400
-Subject: [PATCH 9/9] xfs: halt auto-reclamation activities while rebuilding
- rmap
+Received: from userp2120.oracle.com ([156.151.31.85]:45134 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753076AbeDRCnI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:43:08 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2fkaQ045664
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2hdrxp0k3j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2h7JB020128
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3I2h7FB027727
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:07 GMT
+Subject: [PATCH 12/24] xfs: repair the AGI
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:41:48 -0700
-Message-ID: <152401930817.11792.5003602424787160068.stgit@magnolia>
-In-Reply-To: <152401924595.11792.16954598133403059881.stgit@magnolia>
-References: <152401924595.11792.16954598133403059881.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:43:05 -0700
+Message-ID: <152401938579.12079.7078564615989254152.stgit@magnolia>
+In-Reply-To: <152401930978.12079.2000682561964128780.stgit@magnolia>
+References: <152401930978.12079.2000682561964128780.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -17,140 +30,170 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Rebuilding the reverse-mapping tree requires us to quiesce all inodes in
-the filesystem, so we must stop background reclamation of post-EOF and
-CoW prealloc blocks.
+Rebuild the AGI header items with some help from the rmapbt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c |   18 ++++++++++++++++++
- fs/xfs/xfs_icache.h |    3 +++
- fs/xfs/xfs_mount.c  |    4 +---
- fs/xfs/xfs_super.c  |   18 +++++++++---------
- 4 files changed, 31 insertions(+), 12 deletions(-)
+ fs/xfs/scrub/agheader_repair.c |  111 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h          |    2 +
+ fs/xfs/scrub/scrub.c           |    2 -
+ 3 files changed, 114 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 9a18f69..a7dd676 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1802,3 +1802,21 @@ xfs_inode_clear_cowblocks_tag(
- 	return __xfs_inode_clear_blocks_tag(ip,
- 			trace_xfs_perag_clear_cowblocks, XFS_ICI_COWBLOCKS_TAG);
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 6958c36..8c35d03 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -565,3 +565,114 @@ xfs_repair_agfl(
+ 				XFS_BTREE_NOERROR);
+ 	return error;
  }
 +
-+/* Disable post-EOF and CoW block auto-reclamation. */
-+void
-+xfs_icache_disable_reclaim(
-+	struct xfs_mount	*mp)
++/* AGI */
++
++int
++xfs_repair_agi(
++	struct xfs_scrub_context	*sc)
 +{
-+	cancel_delayed_work_sync(&mp->m_eofblocks_work);
-+	cancel_delayed_work_sync(&mp->m_cowblocks_work);
++	struct xfs_repair_find_ag_btree	fab[] = {
++		{
++			.rmap_owner = XFS_RMAP_OWN_INOBT,
++			.buf_ops = &xfs_inobt_buf_ops,
++			.magic = XFS_IBT_CRC_MAGIC,
++		},
++		{
++			.rmap_owner = XFS_RMAP_OWN_INOBT,
++			.buf_ops = &xfs_inobt_buf_ops,
++			.magic = XFS_FIBT_CRC_MAGIC,
++		},
++		{
++			.buf_ops = NULL
++		},
++	};
++	struct xfs_agi			old_agi;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_buf			*agi_bp;
++	struct xfs_buf			*agf_bp;
++	struct xfs_agi			*agi;
++	struct xfs_btree_cur		*cur;
++	struct xfs_perag		*pag;
++	xfs_agino_t			old_count;
++	xfs_agino_t			old_freecount;
++	xfs_agino_t			count;
++	xfs_agino_t			freecount;
++	int				bucket;
++	int				error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
++	if (error)
++		return error;
++	agi_bp->b_ops = &xfs_agi_buf_ops;
++
++	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
++	if (error)
++		return error;
++	if (!agf_bp)
++		return -ENOMEM;
++
++	/* Find the btree roots. */
++	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, NULL);
++	if (error)
++		return error;
++	if (fab[0].root == NULLAGBLOCK || fab[0].height > XFS_BTREE_MAXLEVELS)
++		return -EFSCORRUPTED;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	    (fab[1].root == NULLAGBLOCK || fab[1].height > XFS_BTREE_MAXLEVELS))
++		return -EFSCORRUPTED;
++
++	/* Start rewriting the header. */
++	agi = XFS_BUF_TO_AGI(agi_bp);
++	old_agi = *agi;
++	old_count = be32_to_cpu(old_agi.agi_count);
++	old_freecount = be32_to_cpu(old_agi.agi_freecount);
++	memset(agi, 0, mp->m_sb.sb_sectsize);
++	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
++	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
++	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
++	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
++	agi->agi_newino = cpu_to_be32(NULLAGINO);
++	agi->agi_dirino = cpu_to_be32(NULLAGINO);
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
++	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
++		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
++	agi->agi_root = cpu_to_be32(fab[0].root);
++	agi->agi_level = cpu_to_be32(fab[0].height);
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		agi->agi_free_root = cpu_to_be32(fab[1].root);
++		agi->agi_free_level = cpu_to_be32(fab[1].height);
++	}
++
++	/* Update the AGI counters. */
++	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
++			XFS_BTNUM_INO);
++	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	if (error)
++		goto err;
++	agi->agi_count = cpu_to_be32(count);
++	agi->agi_freecount = cpu_to_be32(freecount);
++	if (old_count != count || old_freecount != freecount) {
++		pag = xfs_perag_get(mp, sc->sa.agno);
++		pag->pagi_init = 0;
++		xfs_perag_put(pag);
++		sc->reset_counters = true;
++	}
++
++	/* Write this to disk. */
++	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
++	xfs_trans_log_buf(sc->tp, agi_bp, 0, mp->m_sb.sb_sectsize - 1);
++	return error;
++
++err:
++	*agi = old_agi;
++	return error;
 +}
-+
-+/* Enable post-EOF and CoW block auto-reclamation. */
-+void
-+xfs_icache_enable_reclaim(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_queue_eofblocks(mp);
-+	xfs_queue_cowblocks(mp);
-+}
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index d4a7758..d69a0f5 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -131,4 +131,7 @@ xfs_fs_eofblocks_from_user(
- int xfs_icache_inode_is_allocated(struct xfs_mount *mp, struct xfs_trans *tp,
- 				  xfs_ino_t ino, bool *inuse);
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 8c19136..9a22428 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -106,6 +106,7 @@ int xfs_repair_probe(struct xfs_scrub_context *sc);
+ int xfs_repair_superblock(struct xfs_scrub_context *sc);
+ int xfs_repair_agf(struct xfs_scrub_context *sc);
+ int xfs_repair_agfl(struct xfs_scrub_context *sc);
++int xfs_repair_agi(struct xfs_scrub_context *sc);
  
-+void xfs_icache_disable_reclaim(struct xfs_mount *mp);
-+void xfs_icache_enable_reclaim(struct xfs_mount *mp);
-+
- #endif
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index a901b86..73ed8fe 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1072,9 +1072,7 @@ xfs_unmountfs(
- 	uint64_t		resblks;
- 	int			error;
+ #else
  
--	cancel_delayed_work_sync(&mp->m_eofblocks_work);
--	cancel_delayed_work_sync(&mp->m_cowblocks_work);
--
-+	xfs_icache_disable_reclaim(mp);
- 	xfs_fs_unreserve_ag_blocks(mp);
- 	xfs_qm_unmount_quotas(mp);
- 	xfs_rtunmount_inodes(mp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d714240..aa641ca 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1372,7 +1372,6 @@ xfs_fs_remount(
- 		 */
- 		xfs_restore_resvblks(mp);
- 		xfs_log_work_queue(mp);
--		xfs_queue_eofblocks(mp);
+@@ -137,6 +138,7 @@ static inline int xfs_repair_reset_counters(struct xfs_mount *mp)
+ #define xfs_repair_superblock		xfs_repair_notsupported
+ #define xfs_repair_agf			xfs_repair_notsupported
+ #define xfs_repair_agfl			xfs_repair_notsupported
++#define xfs_repair_agi			xfs_repair_notsupported
  
- 		/* Recover any CoW blocks that never got remapped. */
- 		error = xfs_reflink_recover_cow(mp);
-@@ -1382,7 +1381,7 @@ xfs_fs_remount(
- 			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 			return error;
- 		}
--		xfs_queue_cowblocks(mp);
-+		xfs_icache_enable_reclaim(mp);
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
  
- 		/* Create the per-AG metadata reservation pool .*/
- 		error = xfs_fs_reserve_ag_blocks(mp);
-@@ -1392,8 +1391,13 @@ xfs_fs_remount(
- 
- 	/* rw -> ro */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
-+		/*
-+		 * Cancel background eofb scanning so it cannot race with the
-+		 * final log force+buftarg wait and deadlock the remount.
-+		 */
-+		xfs_icache_disable_reclaim(mp);
-+
- 		/* Get rid of any leftover CoW reservations... */
--		cancel_delayed_work_sync(&mp->m_cowblocks_work);
- 		error = xfs_icache_free_cowblocks(mp, NULL);
- 		if (error) {
- 			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-@@ -1416,12 +1420,6 @@ xfs_fs_remount(
- 		 */
- 		xfs_save_resvblks(mp);
- 
--		/*
--		 * Cancel background eofb scanning so it cannot race with the
--		 * final log force+buftarg wait and deadlock the remount.
--		 */
--		cancel_delayed_work_sync(&mp->m_eofblocks_work);
--
- 		xfs_quiesce_attr(mp);
- 		mp->m_flags |= XFS_MOUNT_RDONLY;
- 	}
-@@ -1441,6 +1439,7 @@ xfs_fs_freeze(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
-+	xfs_icache_disable_reclaim(mp);
- 	xfs_save_resvblks(mp);
- 	xfs_quiesce_attr(mp);
- 	return xfs_sync_sb(mp, true);
-@@ -1454,6 +1453,7 @@ xfs_fs_unfreeze(
- 
- 	xfs_restore_resvblks(mp);
- 	xfs_log_work_queue(mp);
-+	xfs_icache_enable_reclaim(mp);
- 	return 0;
- }
- 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index ee9cb33..b4fb805 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -236,7 +236,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_PERAG,
+ 		.setup	= xfs_scrub_setup_fs,
+ 		.scrub	= xfs_scrub_agi,
+-		.repair	= xfs_repair_notsupported,
++		.repair	= xfs_repair_agi,
+ 	},
+ 	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
+ 		.type	= ST_PERAG,
 
