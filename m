@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46950 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:46998 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753141AbeDRCrJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:47:09 -0400
-Subject: [PATCH 03/11] xfs_repair: validate some of the log space information
+        with ESMTP id S1753244AbeDRCrQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:47:16 -0400
+Subject: [PATCH 04/11] xfs_repair: zap corrupt remote symlink
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:46:50 -0700
-Message-ID: <152401961080.13319.3976228325503296406.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:46:57 -0700
+Message-ID: <152401961698.13319.6780338835004190495.stgit@magnolia>
 In-Reply-To: <152401958920.13319.10756339531174871801.stgit@magnolia>
 References: <152401958920.13319.10756339531174871801.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,56 +20,31 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Validate the log space information in a similar manner to the kernel so
-that repair will stumble over (and fix) broken log info that prevents
-mounting.  Fixes logsunit fuzz-and-fix failures in xfs/350.
+If a remote symlink has a corrupted remote block, just zap the symlink.
+Fixes total lack of repair activity in xfs/382.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/sb.c |   24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+ repair/dinode.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
 
-diff --git a/repair/sb.c b/repair/sb.c
-index 3dc6538..f2968cd 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -299,6 +299,27 @@ sb_validate_ino_align(struct xfs_sb *sb)
- }
- 
- /*
-+ * Validate the given log space.  Derived from xfs_log_mount, though we
-+ * can't validate the minimum log size until later.
-+ * Returns false if the log is garbage.
-+ */
-+static bool
-+verify_sb_loginfo(
-+	struct xfs_sb	*sb)
-+{
-+	if (xfs_sb_version_hascrc(sb) &&
-+	    (sb->sb_logblocks == 0 ||
-+	     sb->sb_logblocks > XFS_MAX_LOG_BLOCKS ||
-+	     (sb->sb_logblocks << sb->sb_blocklog) > XFS_MAX_LOG_BYTES))
-+		return false;
-+
-+	if (sb->sb_logsunit > 1 && sb->sb_logsunit % sb->sb_blocksize)
-+		return false;
-+
-+	return true;
-+}
-+
-+/*
-  * verify a superblock -- does not verify root inode #
-  *	can only check that geometry info is internally
-  *	consistent.  because of growfs, that's no guarantee
-@@ -409,7 +430,8 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
- 	    sb->sb_inodesize != (1 << sb->sb_inodelog)                 ||
- 	    sb->sb_logsunit > XLOG_MAX_RECORD_BSIZE                    ||
- 	    sb->sb_inopblock != howmany(sb->sb_blocksize, sb->sb_inodesize) ||
--	    (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog))
-+	    (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog) ||
-+	    !verify_sb_loginfo(sb))
- 		return XR_BAD_INO_SIZE_DATA;
- 
- 	if (xfs_sb_version_hassector(sb))  {
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 9af4f05..ceffc52 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -1330,6 +1330,13 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
+ 				lino, i, fsbno);
+ 			return 1;
+ 		}
++		if (bp->b_error == -EFSCORRUPTED) {
++			do_warn(
++_("Corrupt symlink remote, block %" PRIu64 ", inode %" PRIu64 ".\n"),
++				fsbno, lino);
++			libxfs_putbuf(bp);
++			return 1;
++		}
+ 		if (bp->b_error == -EFSBADCRC) {
+ 			do_warn(
+ _("Bad symlink buffer CRC, block %" PRIu64 ", inode %" PRIu64 ".\n"
 
