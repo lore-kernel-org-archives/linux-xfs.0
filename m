@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46626 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753031AbeDRCqh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:37 -0400
-Subject: [PATCH 7/9] xfs_info: move to xfs_spaceman
+Received: from aserp2130.oracle.com ([141.146.126.79]:51968 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753076AbeDRCqq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:46 -0400
+Subject: [PATCH 9/9] xfs_growfs: refactor geometry reporting
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:46:15 -0700
-Message-ID: <152401957530.13048.12736391147882277807.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:46:27 -0700
+Message-ID: <152401958770.13048.16460296024921613094.stgit@magnolia>
 In-Reply-To: <152401952391.13048.15040850425873030425.stgit@magnolia>
 References: <152401952391.13048.15040850425873030425.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,154 +20,153 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move xfs_info to be under spaceman so that we can remove growfs -N.
+Use the new geometry pretty-printing function.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- growfs/Makefile      |    2 --
- growfs/xfs_info.sh   |   32 --------------------------------
- spaceman/Makefile    |    2 ++
- spaceman/init.c      |    5 ++++-
- spaceman/xfs_info.sh |   32 ++++++++++++++++++++++++++++++++
- 5 files changed, 38 insertions(+), 35 deletions(-)
- delete mode 100755 growfs/xfs_info.sh
- create mode 100755 spaceman/xfs_info.sh
+ growfs/xfs_growfs.c |   88 +--------------------------------------------------
+ 1 file changed, 2 insertions(+), 86 deletions(-)
 
 
-diff --git a/growfs/Makefile b/growfs/Makefile
-index f0190e4..adcd84b 100644
---- a/growfs/Makefile
-+++ b/growfs/Makefile
-@@ -20,7 +20,6 @@ endif
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 366176b..8ec445a 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -18,6 +18,7 @@
  
- LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
--LSRCFILES = xfs_info.sh
+ #include "libxfs.h"
+ #include "path.h"
++#include "fsgeom.h"
  
- default: depend $(LTCOMMAND)
+ static void
+ usage(void)
+@@ -42,54 +43,6 @@ Options:\n\
+ 	exit(2);
+ }
  
-@@ -29,7 +28,6 @@ include $(BUILDRULES)
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
--	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
- install-dev:
- 
- -include .dep
-diff --git a/growfs/xfs_info.sh b/growfs/xfs_info.sh
-deleted file mode 100755
-index b85f120..0000000
---- a/growfs/xfs_info.sh
-+++ /dev/null
-@@ -1,32 +0,0 @@
--#!/bin/sh -f
--#
--# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
--#
+-void
+-report_info(
+-	xfs_fsop_geom_t	geo,
+-	char		*mntpoint,
+-	int		isint,
+-	char		*logname,
+-	char		*rtname,
+-	int		lazycount,
+-	int		dirversion,
+-	int		logversion,
+-	int		attrversion,
+-	int		projid32bit,
+-	int		crcs_enabled,
+-	int		cimode,
+-	int		ftype_enabled,
+-	int		finobt_enabled,
+-	int		spinodes,
+-	int		rmapbt_enabled,
+-	int		reflink_enabled)
+-{
+-	printf(_(
+-	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
+-	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-	    "         =%-22s crc=%-8u finobt=%u spinodes=%u rmapbt=%u\n"
+-	    "         =%-22s reflink=%u\n"
+-	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+-	    "         =%-22s sunit=%-6u swidth=%u blks\n"
+-	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+-	    "log      =%-22s bsize=%-6u blocks=%u, version=%u\n"
+-	    "         =%-22s sectsz=%-5u sunit=%u blks, lazy-count=%u\n"
+-	    "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"),
 -
--OPTS=""
--USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
+-		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
+-		"", geo.sectsize, attrversion, projid32bit,
+-		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
+-		"", reflink_enabled,
+-		"", geo.blocksize, (unsigned long long)geo.datablocks,
+-			geo.imaxpct,
+-		"", geo.sunit, geo.swidth,
+-  		dirversion, geo.dirblocksize, cimode, ftype_enabled,
+-		isint ? _("internal") : logname ? logname : _("external"),
+-			geo.blocksize, geo.logblocks, logversion,
+-		"", geo.logsectsize, geo.logsunit / geo.blocksize, lazycount,
+-		!geo.rtblocks ? _("none") : rtname ? rtname : _("external"),
+-		geo.rtextsize * geo.blocksize, (unsigned long long)geo.rtblocks,
+-			(unsigned long long)geo.rtextents);
+-}
 -
--while getopts "t:V" c
--do
--	case $c in
--	t)	OPTS="-t $OPTARG" ;;
--	V)	xfs_growfs -p xfs_info -V
--		status=$?
--		exit $status
--		;;
--	*)	echo $USAGE 1>&2
--		exit 2
--		;;
--	esac
--done
--set -- extra "$@"
--shift $OPTIND
--case $# in
--	1)	xfs_growfs -p xfs_info -n $OPTS "$1"
--		status=$?
--		;;
--	*)	echo $USAGE 1>&2
--		exit 2
--		;;
--esac
--exit $status
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index c1d903b..0d5ae2d 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -8,6 +8,7 @@ include $(TOPDIR)/include/builddefs
- LTCOMMAND = xfs_spaceman
- HFILES = init.h space.h
- CFILES = info.c init.c file.c prealloc.c trim.c
-+LSRCFILES = xfs_info.sh
+ int
+ main(int argc, char **argv)
+ {
+@@ -97,9 +50,6 @@ main(int argc, char **argv)
+ 	int			c;	/* current option character */
+ 	long long		ddsize;	/* device size in 512-byte blocks */
+ 	int			dflag;	/* -d flag */
+-	int			attrversion;/* attribute version number */
+-	int			dirversion; /* directory version number */
+-	int			logversion; /* log version number */
+ 	long long		dlsize;	/* device size in 512-byte blocks */
+ 	long long		drsize;	/* device size in 512-byte blocks */
+ 	long long		dsize;	/* new data size in fs blocks */
+@@ -117,8 +67,6 @@ main(int argc, char **argv)
+ 	xfs_fsop_geom_t		ngeo;	/* new fs geometry */
+ 	int			rflag;	/* -r flag */
+ 	long long		rsize;	/* new rt size in fs blocks */
+-	int			ci;	/* ASCII case-insensitive fs */
+-	int			lazycount; /* lazy superblock counters */
+ 	int			xflag;	/* -x flag */
+ 	char			*fname;	/* mount point name */
+ 	char			*datadev; /* data device name */
+@@ -126,13 +74,6 @@ main(int argc, char **argv)
+ 	char			*rtdev;	/*   RT device name */
+ 	fs_path_t		*fs;	/* mount point information */
+ 	libxfs_init_t		xi;	/* libxfs structure */
+-	int			projid32bit;
+-	int			crcs_enabled;
+-	int			ftype_enabled = 0;
+-	int			finobt_enabled;	/* free inode btree */
+-	int			spinodes;
+-	int			rmapbt_enabled;
+-	int			reflink_enabled;
+ 	char			rpath[PATH_MAX];
  
- LLDLIBS = $(LIBXCMD) $(LIBFROG)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
-@@ -35,6 +36,7 @@ include $(BUILDRULES)
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
- 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
-+	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
- install-dev:
+ 	progname = basename(argv[0]);
+@@ -253,27 +194,6 @@ main(int argc, char **argv)
+ 		}
+ 	}
+ 	isint = geo.logstart > 0;
+-	lazycount = geo.flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
+-	dirversion = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2 ? 2 : 1;
+-	logversion = geo.flags & XFS_FSOP_GEOM_FLAGS_LOGV2 ? 2 : 1;
+-	attrversion = geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR2 ? 2 : \
+-			(geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR ? 1 : 0);
+-	ci = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2CI ? 1 : 0;
+-	projid32bit = geo.flags & XFS_FSOP_GEOM_FLAGS_PROJID32 ? 1 : 0;
+-	crcs_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_V5SB ? 1 : 0;
+-	ftype_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FTYPE ? 1 : 0;
+-	finobt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FINOBT ? 1 : 0;
+-	spinodes = geo.flags & XFS_FSOP_GEOM_FLAGS_SPINODES ? 1 : 0;
+-	rmapbt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_RMAPBT ? 1 : 0;
+-	reflink_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_REFLINK ? 1 : 0;
+-	if (nflag) {
+-		report_info(geo, datadev, isint, logdev, rtdev,
+-				lazycount, dirversion, logversion,
+-				attrversion, projid32bit, crcs_enabled, ci,
+-				ftype_enabled, finobt_enabled, spinodes,
+-				rmapbt_enabled, reflink_enabled);
+-		exit(0);
+-	}
  
- -include .dep
-diff --git a/spaceman/init.c b/spaceman/init.c
-index 895504f..91c773f 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -81,11 +81,14 @@ init(
- 	textdomain(PACKAGE);
+ 	/*
+ 	 * Need root access from here on (using raw devices)...
+@@ -306,11 +226,7 @@ main(int argc, char **argv)
+ 		exit(1);
+ 	}
  
- 	fs_table_initialise(0, NULL, 0, NULL);
--	while ((c = getopt(argc, argv, "c:V")) != EOF) {
-+	while ((c = getopt(argc, argv, "c:p:V")) != EOF) {
- 		switch (c) {
- 		case 'c':
- 			add_user_command(optarg);
- 			break;
-+		case 'p':
-+			progname = optarg;
-+			break;
- 		case 'V':
- 			printf(_("%s version %s\n"), progname, VERSION);
- 			exit(0);
-diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
-new file mode 100755
-index 0000000..5df0a26
---- /dev/null
-+++ b/spaceman/xfs_info.sh
-@@ -0,0 +1,32 @@
-+#!/bin/sh -f
-+#
-+# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+
-+OPTS=""
-+USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
-+
-+while getopts "t:V" c
-+do
-+	case $c in
-+	t)	OPTS="-t $OPTARG" ;;
-+	V)	xfs_spaceman -p xfs_info -V
-+		status=$?
-+		exit $status
-+		;;
-+	*)	echo $USAGE 1>&2
-+		exit 2
-+		;;
-+	esac
-+done
-+set -- extra "$@"
-+shift $OPTIND
-+case $# in
-+	1)	xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
-+		status=$?
-+		;;
-+	*)	echo $USAGE 1>&2
-+		exit 2
-+		;;
-+esac
-+exit $status
+-	report_info(geo, datadev, isint, logdev, rtdev,
+-			lazycount, dirversion, logversion,
+-			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled,
+-			finobt_enabled, spinodes, rmapbt_enabled,
+-			reflink_enabled);
++	xfs_report_geom(&geo, datadev, logdev, rtdev);
+ 
+ 	ddsize = xi.dsize;
+ 	dlsize = ( xi.logBBsize? xi.logBBsize :
 
