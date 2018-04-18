@@ -1,187 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51982 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751512AbeEADEA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Apr 2018 23:04:00 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5F8B4479AE3
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 22:02:46 -0500 (CDT)
-Subject: Re: [ANNOUNCE] xfsprogs: for-next rebased to 43d5ec8
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
-Message-ID: <f85ca497-3de0-329c-a4aa-a6dd5494c3ef@sandeen.net>
-Date: Mon, 30 Apr 2018 22:03:57 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:49320 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753144AbeDRCul (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:50:41 -0400
+Date: Tue, 17 Apr 2018 19:50:23 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] iomap: add a swapfile activation function
+Message-ID: <20180418025023.GM24738@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO
-Content-Type: multipart/mixed; boundary="2MCZuLAXV8gsMRFw24zVB7S52hKecIcv7";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <f85ca497-3de0-329c-a4aa-a6dd5494c3ef@sandeen.net>
-Subject: Re: [ANNOUNCE] xfsprogs: for-next rebased to 43d5ec8
-References: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
-In-Reply-To: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
---2MCZuLAXV8gsMRFw24zVB7S52hKecIcv7
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Add a new iomap_swapfile_activate function so that filesystems can
+activate swap files without having to use the obsolete and slow bmap
+function.
 
-And due to the 4.16.1 release I'm about to do, which I did
-out of order, I promptly rebased for-next, so the new head of for-next is=
- now:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/iomap.c            |   99 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_aops.c     |   12 ++++++
+ include/linux/iomap.h |    7 +++
+ 3 files changed, 118 insertions(+)
 
-4152dae Merge branch 'libxfs-4.17-sync' into for-next
-
-and for-next also includes the minor 4.16.1 update, a release for which
-I'll send out momentarily.
-
-Sorry about the churn.
-
--Eric
-
-On 4/30/18 9:18 PM, Eric Sandeen wrote:
-> Hi folks,
->=20
-> The for-next branch of the xfsprogs repository at:
->=20
-> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
->=20
-> has just been updated.  I've merged the 4.17 libxfs changes from the
-> libxfs-4.17-sync branch into for-next.
->=20
-> Patches often get missed, so please check if your outstanding
-> patches were in this update. If they have not been in this update,
-> please resubmit them to linux-xfs@vger.kernel.org so they can be
-> picked up in the next update.
->=20
-> The new head of the for-next branch is commit:
->=20
-> 43d5ec8 Merge branch 'libxfs-4.17-sync' into for-next
->=20
-> New Commits:
->=20
-> Brian Foster (4):
->       [65a15e0] xfs: rename agfl perag res type to rmapbt
->       [9760cac] xfs: account only rmapbt-used blocks against rmapbt per=
-ag res
->       [8dbee8f] xfs: detect agfl count corruption and reset agfl
->       [19fbb9d] xfs: clean up xfs_mount allocation and dynamic initiali=
-zers
->=20
-> Carlos Maiolino (1):
->       [97b3ffd] Cleanup old XFS_BTREE_* traces
->=20
-> Darrick J. Wong (7):
->       [6da71a8] xfs: convert a few more directory asserts to corruption=
-
->       [15348e0] xfs: sanity-check the unused space before trying to use=
- it
->       [0cf6a3a] xfs: refactor bmap record validation
->       [b02a2c9] xfs: refactor inode verifier error logging
->       [43f7ceb] xfs: refactor inode buffer verifier error logging
->       [fd0c360] xfs: move inode extent size hint validation to libxfs
->       [2949b46] xfs: don't accept inode buffers with suspicious unlinke=
-d chains
->=20
-> Dave Chinner (2):
->       [b816550] xfs: convert XFS_AGFL_SIZE to a helper function
->       [d206fcb] xfs: remove dead inode version setting code
->=20
-> Eric Sandeen (2):
->       [1421de3] xfs: non-scrub - remove unused function parameters
->       [43d5ec8] Merge branch 'libxfs-4.17-sync' into for-next
->=20
->=20
-> Code Diffstat:
->=20
->  db/agfl.c                   |   2 +-
->  db/check.c                  |   6 +--
->  db/freesp.c                 |   6 +--
->  db/metadump.c               |   2 +-
->  include/libxfs.h            |   1 +
->  include/xfs_mount.h         |  10 +++--
->  include/xfs_trace.h         |   2 +
->  libxfs/libxfs_api_defs.h    |   2 +
->  libxfs/libxfs_priv.h        |  11 ++++++
->  libxfs/xfs_ag_resv.c        |  39 ++++++++++---------
->  libxfs/xfs_ag_resv.h        |  31 +++++++++++++++
->  libxfs/xfs_alloc.c          | 145 ++++++++++++++++++++++++++++++++++++=
-++++++++++++++++++++++++-----------
->  libxfs/xfs_alloc.h          |   7 ++--
->  libxfs/xfs_alloc_btree.c    |   8 +---
->  libxfs/xfs_bmap.c           |  54 +++++++++++++++++++++++----
->  libxfs/xfs_bmap.h           |   5 ++-
->  libxfs/xfs_bmap_btree.c     |   4 +-
->  libxfs/xfs_bmap_btree.h     |  14 -------
->  libxfs/xfs_btree.c          | 127 +++++-------------------------------=
---------------------------
->  libxfs/xfs_btree.h          |  25 +------------
->  libxfs/xfs_dir2.h           |   2 +-
->  libxfs/xfs_dir2_block.c     |  59 +++++++++++++++++------------
->  libxfs/xfs_dir2_data.c      |  78 +++++++++++++++++++++++++++++-------=
---
->  libxfs/xfs_dir2_leaf.c      |  13 +++++--
->  libxfs/xfs_dir2_node.c      |  16 +++++---
->  libxfs/xfs_format.h         |  13 +------
->  libxfs/xfs_ialloc.c         |   2 +-
->  libxfs/xfs_ialloc_btree.c   |  11 ++----
->  libxfs/xfs_inode_buf.c      | 124 ++++++++++++++++++++++++++++++++++++=
-++++++++++++++++++++----
->  libxfs/xfs_inode_buf.h      |   5 +++
->  libxfs/xfs_inode_fork.c     |  27 +++++++++-----
->  libxfs/xfs_refcount.c       |  22 ++++-------
->  libxfs/xfs_refcount_btree.c |  10 +----
->  libxfs/xfs_refcount_btree.h |   3 +-
->  libxfs/xfs_rmap.c           |   3 +-
->  libxfs/xfs_rmap_btree.c     |  17 ++++-----
->  libxfs/xfs_rmap_btree.h     |   2 +-
->  libxfs/xfs_sb.c             |  11 ++----
->  libxfs/xfs_trans_resv.c     |  10 ++---
->  mkfs/xfs_mkfs.c             |   4 +-
->  repair/agheader.c           |  12 +++---
->  repair/phase5.c             |  20 +++++-----
->  repair/rmap.c               |   2 +-
->  repair/scan.c               |   6 +--
->  44 files changed, 585 insertions(+), 388 deletions(-)
->=20
-
-
---2MCZuLAXV8gsMRFw24zVB7S52hKecIcv7--
-
---JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlrn2R0ACgkQIK4WkuE9
-3uD9dw/7BGTvPfDjVrnaQEJB68tDAQeuT9XnL8/a+tGoLINBwNb1k7w6cEj9iXRg
-8IZEkMqgpz/wuVD/sq5XeR1IC3+ofbaHSp5R3iKtUA1BNMysg4B6unvy26fgkhXE
-NYRBaFdUPBDaDsJqUwfUMCNmMiaL92vakmd1P/MxPuHfGIkIEX0iLWGLqYGEaqAN
-XcYtkwjsC/Cc6KTdzO+doJSrww5b9x5MYJEeFQ9qGraRycVdolay9VFGnehD6sqx
-3K+5uRmIC+VovCy7CK6T4QPC0R6FbVgsX6vQLQF4soqpMB0kLB/0efLv7slriFiV
-dAD5GRkMFlhM9uAV/H7CFr/0uSXvBRDUjwR+smLEFg4Plt4UtjPSRg5M9Gc5X49w
-6YG8m2TaIpNWwIKPVWU5T4qPDQPiXIfJ7TbAu6sczUlrEr9BGY1y3S/7RTzUPMBP
-6uqDebXn0W7hLXFYt18bw0r9qouvO/7dklQ+GRO3XlbfTCgjkmIRuXcAhTbBUTg3
-bxbHkrBdmL9IbhNnMkux2sBwwo9tQqBOjASdwjsC1ICd/K9vQEySpzzrwrwkRe1P
-8yX4sJHJMyxLmVSuMZiSPtxDXRqhzgAhMvb95iXk2KQJ6h3Fxb6QkgrKdiblezUK
-3Cs6CKmxCqTIA/wfxPibYv1K6AbdLXlqc+ctgnS8qa/1/2S3QyI=
-=IG6E
------END PGP SIGNATURE-----
-
---JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO--
+diff --git a/fs/iomap.c b/fs/iomap.c
+index afd1635..ace921b 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1089,3 +1089,102 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_rw);
++
++/* Swapfile activation */
++
++struct iomap_swapfile_info {
++	struct swap_info_struct *sis;
++	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
++	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
++	unsigned long expected_page_no;	/* next logical offset wanted (pages) */
++	int nr_extents;			/* extent count */
++};
++
++static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
++		loff_t count, void *data, struct iomap *iomap)
++{
++	struct iomap_swapfile_info *isi = data;
++	unsigned long page_no = iomap->offset >> PAGE_SHIFT;
++	unsigned long nr_pages = iomap->length >> PAGE_SHIFT;
++	uint64_t first_ppage = iomap->addr >> PAGE_SHIFT;
++	uint64_t last_ppage = ((iomap->addr + iomap->length) >> PAGE_SHIFT) - 1;
++
++	/* Only one bdev per swap file. */
++	if (iomap->bdev != isi->sis->bdev)
++		goto err;
++
++	/* Must be aligned to a page boundary. */
++	if ((iomap->offset & ~PAGE_MASK) || (iomap->addr & ~PAGE_MASK) ||
++	    (iomap->length & ~PAGE_MASK))
++		goto err;
++
++	/* Only real or unwritten extents. */
++	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
++		goto err;
++
++	/* No sparse files. */
++	if (isi->expected_page_no != page_no)
++		goto err;
++
++	/* No uncommitted metadata or shared blocks or inline data. */
++	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
++			    IOMAP_F_DATA_INLINE))
++		goto err;
++
++	/*
++	 * Calculate how much swap space we're adding; the first page contains
++	 * the swap header and doesn't count.
++	 */
++	if (page_no == 0)
++		first_ppage++;
++	if (isi->lowest_ppage > first_ppage)
++		isi->lowest_ppage = first_ppage;
++	if (isi->highest_ppage < last_ppage)
++		isi->highest_ppage = last_ppage;
++
++	/* Add extent, set up for the next call. */
++	isi->nr_extents += add_swap_extent(isi->sis, page_no, nr_pages,
++			first_ppage);
++	isi->expected_page_no = page_no + nr_pages;
++
++	return count;
++err:
++	pr_err("swapon: swapfile has holes\n");
++	return -EINVAL;
++}
++
++int iomap_swapfile_activate(struct swap_info_struct *sis,
++		struct file *swap_file, sector_t *pagespan,
++		const struct iomap_ops *ops)
++{
++	struct iomap_swapfile_info isi = {
++		.sis = sis,
++		.lowest_ppage = (sector_t)-1ULL,
++	};
++	struct address_space *mapping = swap_file->f_mapping;
++	struct inode *inode = mapping->host;
++	loff_t pos = 0;
++	loff_t len = i_size_read(inode);
++	loff_t ret;
++
++	ret = filemap_write_and_wait(inode->i_mapping);
++	if (ret)
++		return ret;
++
++	while (len > 0) {
++		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
++				ops, &isi, iomap_swapfile_activate_actor);
++		if (ret <= 0)
++			return ret;
++
++		pos += ret;
++		len -= ret;
++	}
++
++	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
++	sis->max = isi.expected_page_no;
++	sis->pages = isi.expected_page_no - 1;
++	sis->highest_bit = isi.expected_page_no - 1;
++	return isi.nr_extents;
++}
++EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0ab824f..80de476 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1475,6 +1475,16 @@ xfs_vm_set_page_dirty(
+ 	return newly_dirty;
+ }
+ 
++static int
++xfs_iomap_swapfile_activate(
++	struct swap_info_struct		*sis,
++	struct file			*swap_file,
++	sector_t			*span)
++{
++	sis->bdev = xfs_find_bdev_for_inode(file_inode(swap_file));
++	return iomap_swapfile_activate(sis, swap_file, span, &xfs_iomap_ops);
++}
++
+ const struct address_space_operations xfs_address_space_operations = {
+ 	.readpage		= xfs_vm_readpage,
+ 	.readpages		= xfs_vm_readpages,
+@@ -1488,6 +1498,7 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.migratepage		= buffer_migrate_page,
+ 	.is_partially_uptodate  = block_is_partially_uptodate,
+ 	.error_remove_page	= generic_error_remove_page,
++	.swap_activate		= xfs_iomap_swapfile_activate,
+ };
+ 
+ const struct address_space_operations xfs_dax_aops = {
+@@ -1495,4 +1506,5 @@ const struct address_space_operations xfs_dax_aops = {
+ 	.direct_IO		= noop_direct_IO,
+ 	.set_page_dirty		= noop_set_page_dirty,
+ 	.invalidatepage		= noop_invalidatepage,
++	.swap_activate		= xfs_iomap_swapfile_activate,
+ };
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 19a07de..66d1c35 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -106,4 +106,11 @@ typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
+ ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
+ 
++struct file;
++struct swap_info_struct;
++
++int iomap_swapfile_activate(struct swap_info_struct *sis,
++		struct file *swap_file, sector_t *pagespan,
++		const struct iomap_ops *ops);
++
+ #endif /* LINUX_IOMAP_H */
