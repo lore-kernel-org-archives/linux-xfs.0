@@ -1,12 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45966 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:46812 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753076AbeDRCmP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:42:15 -0400
-Subject: [PATCH 01/24] xfs: create tracepoints for online repair
+        with ESMTP id S1753076AbeDRCoF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:44:05 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2fYCA100870
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:44:05 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2hdrxn8jyq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:44:04 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2i3Ur018071
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:44:04 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3I2i3eg025558
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:44:03 GMT
+Subject: [PATCH 21/24] xfs: repair extended attributes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:41:56 -0700
-Message-ID: <152401931628.12079.2732020785958491392.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:44:02 -0700
+Message-ID: <152401944232.12079.7379649499344246671.stgit@magnolia>
 In-Reply-To: <152401930978.12079.2000682561964128780.stgit@magnolia>
 References: <152401930978.12079.2000682561964128780.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,293 +30,619 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These tracepoints will be used to debug the online repair routines.
+If the extended attributes look bad, try to sift through the rubble to
+find whatever keys/values we can, zap the attr tree, and re-add the
+values.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/scrub/trace.h |  258 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 258 insertions(+)
+ fs/xfs/Makefile            |    1 
+ fs/xfs/scrub/attr.c        |    2 
+ fs/xfs/scrub/attr_repair.c |  519 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h      |    2 
+ fs/xfs/scrub/scrub.c       |    2 
+ fs/xfs/scrub/scrub.h       |    3 
+ 6 files changed, 527 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/attr_repair.c
 
 
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 5d2b1c2..794d56b 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -69,6 +69,8 @@ DEFINE_EVENT(xfs_scrub_class, name, \
- DEFINE_SCRUB_EVENT(xfs_scrub_start);
- DEFINE_SCRUB_EVENT(xfs_scrub_done);
- DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
-+DEFINE_SCRUB_EVENT(xfs_repair_attempt);
-+DEFINE_SCRUB_EVENT(xfs_repair_done);
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 2bc350b..30165de 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -174,6 +174,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+ ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+ xfs-y				+= $(addprefix scrub/, \
+ 				   agheader_repair.o \
++				   attr_repair.o \
+ 				   alloc_repair.o \
+ 				   bmap_repair.o \
+ 				   ialloc_repair.o \
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 127575f..7ee2ffe 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -138,7 +138,7 @@ xfs_scrub_xattr_listent(
+  * Within a char, the lowest bit of the char represents the byte with
+  * the smallest address
+  */
+-STATIC bool
++bool
+ xfs_scrub_xattr_set_map(
+ 	struct xfs_scrub_context	*sc,
+ 	unsigned long			*map,
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
+new file mode 100644
+index 0000000..6ef765e
+--- /dev/null
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -0,0 +1,519 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2.h"
++#include "xfs_attr.h"
++#include "xfs_attr_leaf.h"
++#include "xfs_attr_sf.h"
++#include "xfs_attr_remote.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++
++/* Extended attribute repair. */
++
++struct xfs_attr_key {
++	struct list_head		list;
++	unsigned char			*value;
++	int				valuelen;
++	int				flags;
++	int				namelen;
++	unsigned char			name[0];
++};
++
++#define XFS_ATTR_KEY_LEN(namelen) (sizeof(struct xfs_attr_key) + (namelen) + 1)
++
++struct xfs_repair_xattr {
++	struct list_head		attrlist;
++	struct xfs_scrub_context	*sc;
++};
++
++/* Iterate each block in an attr fork extent */
++#define for_each_xfs_attr_block(mp, irec, dabno) \
++	for ((dabno) = roundup((xfs_dablk_t)(irec)->br_startoff, \
++			(mp)->m_attr_geo->fsbcount); \
++	     (dabno) < (irec)->br_startoff + (irec)->br_blockcount; \
++	     (dabno) += (mp)->m_attr_geo->fsbcount)
++
++/*
++ * Record an extended attribute key & value for later reinsertion into the
++ * inode.  Use the helpers below, don't call this directly.
++ */
++STATIC int
++__xfs_repair_xattr_salvage_attr(
++	struct xfs_repair_xattr		*rx,
++	struct xfs_buf			*bp,
++	int				flags,
++	int				idx,
++	unsigned char			*name,
++	int				namelen,
++	unsigned char			*value,
++	int				valuelen)
++{
++	struct xfs_attr_key		*key;
++	struct xfs_da_args		args;
++	int				error = -ENOMEM;
++
++	/* Ignore incomplete or oversized attributes. */
++	if ((flags & XFS_ATTR_INCOMPLETE) ||
++	    namelen > XATTR_NAME_MAX || namelen < 0 ||
++	    valuelen > XATTR_SIZE_MAX || valuelen < 0)
++		return 0;
++
++	/* Store attr key. */
++	key = kmem_alloc(XFS_ATTR_KEY_LEN(namelen), KM_MAYFAIL);
++	if (!key)
++		goto err;
++	INIT_LIST_HEAD(&key->list);
++	key->value = kmem_zalloc_large(valuelen, KM_MAYFAIL);
++	if (!key->value)
++		goto err_key;
++	key->valuelen = valuelen;
++	key->flags = flags & (ATTR_ROOT | ATTR_SECURE);
++	key->namelen = namelen;
++	key->name[namelen] = 0;
++	memcpy(key->name, name, namelen);
++
++	/* Caller already had the value, so copy it and exit. */
++	if (value) {
++		memcpy(key->value, value, valuelen);
++		goto out_ok;
++	}
++
++	/* Otherwise look up the remote value directly. */
++	memset(&args, 0, sizeof(args));
++	args.geo = rx->sc->mp->m_attr_geo;
++	args.index = idx;
++	args.namelen = namelen;
++	args.name = key->name;
++	args.valuelen = valuelen;
++	args.value = key->value;
++	args.dp = rx->sc->ip;
++	args.trans = rx->sc->tp;
++	error = xfs_attr3_leaf_getvalue(bp, &args);
++	if (error || args.rmtblkno == 0)
++		goto err_value;
++
++	error = xfs_attr_rmtval_get(&args);
++	switch (error) {
++	case 0:
++		break;
++	case -EFSBADCRC:
++	case -EFSCORRUPTED:
++		error = 0;
++		/* fall through */
++	default:
++		goto err_value;
++	}
++
++out_ok:
++	list_add_tail(&key->list, &rx->attrlist);
++	return 0;
++
++err_value:
++	kmem_free(key->value);
++err_key:
++	kmem_free(key);
++err:
++	return error;
++}
++
++/*
++ * Record a local format extended attribute key & value for later reinsertion
++ * into the inode.
++ */
++static inline int
++xfs_repair_xattr_salvage_local_attr(
++	struct xfs_repair_xattr		*rx,
++	int				flags,
++	unsigned char			*name,
++	int				namelen,
++	unsigned char			*value,
++	int				valuelen)
++{
++	return __xfs_repair_xattr_salvage_attr(rx, NULL, flags, 0, name,
++			namelen, value, valuelen);
++}
++
++/*
++ * Record a remote format extended attribute key & value for later reinsertion
++ * into the inode.
++ */
++static inline int
++xfs_repair_xattr_salvage_remote_attr(
++	struct xfs_repair_xattr		*rx,
++	int				flags,
++	unsigned char			*name,
++	int				namelen,
++	struct xfs_buf			*leaf_bp,
++	int				idx,
++	int				valuelen)
++{
++	return __xfs_repair_xattr_salvage_attr(rx, leaf_bp, flags, idx,
++			name, namelen, NULL, valuelen);
++}
++
++/* Extract every xattr key that we can from this attr fork block. */
++STATIC int
++xfs_repair_xattr_recover_leaf(
++	struct xfs_repair_xattr		*rx,
++	struct xfs_buf			*bp)
++{
++	struct xfs_attr3_icleaf_hdr	leafhdr;
++	struct xfs_scrub_context	*sc = rx->sc;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_attr_leafblock	*leaf;
++	unsigned long			*usedmap = sc->buf;
++	struct xfs_attr_leaf_name_local	*lentry;
++	struct xfs_attr_leaf_name_remote *rentry;
++	struct xfs_attr_leaf_entry	*ent;
++	struct xfs_attr_leaf_entry	*entries;
++	char				*buf_end;
++	char				*name;
++	char				*name_end;
++	char				*value;
++	size_t				off;
++	unsigned int			nameidx;
++	unsigned int			namesize;
++	unsigned int			hdrsize;
++	unsigned int			namelen;
++	unsigned int			valuelen;
++	int				i;
++	int				error;
++
++	bitmap_zero(usedmap, mp->m_attr_geo->blksize);
++
++	/* Check the leaf header */
++	leaf = bp->b_addr;
++	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
++	hdrsize = xfs_attr3_leaf_hdr_size(leaf);
++	xfs_scrub_xattr_set_map(sc, usedmap, 0, hdrsize);
++	entries = xfs_attr3_leaf_entryp(leaf);
++
++	buf_end = (char *)bp->b_addr + mp->m_attr_geo->blksize;
++	for (i = 0, ent = entries; i < leafhdr.count; ent++, i++) {
++		/* Skip key if it conflicts with something else? */
++		off = (char *)ent - (char *)leaf;
++		if (!xfs_scrub_xattr_set_map(sc, usedmap, off,
++				sizeof(xfs_attr_leaf_entry_t)))
++			continue;
++
++		/* Check the name information. */
++		nameidx = be16_to_cpu(ent->nameidx);
++		if (nameidx < leafhdr.firstused ||
++		    nameidx >= mp->m_attr_geo->blksize)
++			continue;
++
++		if (ent->flags & XFS_ATTR_LOCAL) {
++			lentry = xfs_attr3_leaf_name_local(leaf, i);
++			namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
++					be16_to_cpu(lentry->valuelen));
++			name_end = (char *)lentry + namesize;
++			if (lentry->namelen == 0)
++				continue;
++			name = lentry->nameval;
++			namelen = lentry->namelen;
++			valuelen = be16_to_cpu(lentry->valuelen);
++			value = &name[namelen];
++		} else {
++			rentry = xfs_attr3_leaf_name_remote(leaf, i);
++			namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
++			name_end = (char *)rentry + namesize;
++			if (rentry->namelen == 0 || rentry->valueblk == 0)
++				continue;
++			name = rentry->name;
++			namelen = rentry->namelen;
++			valuelen = be32_to_cpu(rentry->valuelen);
++			value = NULL;
++		}
++		if (name_end > buf_end)
++			continue;
++		if (!xfs_scrub_xattr_set_map(sc, usedmap, nameidx, namesize))
++			continue;
++
++		/* Ok, let's save this key/value. */
++		if (ent->flags & XFS_ATTR_LOCAL)
++			error = xfs_repair_xattr_salvage_local_attr(rx,
++				ent->flags, name, namelen, value, valuelen);
++		else
++			error = xfs_repair_xattr_salvage_remote_attr(rx,
++				ent->flags, name, namelen, bp, i, valuelen);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
++/* Try to recover shortform attrs. */
++STATIC int
++xfs_repair_xattr_recover_sf(
++	struct xfs_repair_xattr		*rx)
++{
++	struct xfs_attr_shortform	*sf;
++	struct xfs_attr_sf_entry	*sfe;
++	struct xfs_attr_sf_entry	*next;
++	struct xfs_ifork		*ifp;
++	unsigned char			*end;
++	int				i;
++	int				error;
++
++	ifp = XFS_IFORK_PTR(rx->sc->ip, XFS_ATTR_FORK);
++	sf = (struct xfs_attr_shortform *)rx->sc->ip->i_afp->if_u1.if_data;
++	end = (unsigned char *)ifp->if_u1.if_data + ifp->if_bytes;
++
++	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
++		next = XFS_ATTR_SF_NEXTENTRY(sfe);
++		if ((unsigned char *)next > end)
++			break;
++
++		/* Ok, let's save this key/value. */
++		error = xfs_repair_xattr_salvage_local_attr(rx, sfe->flags,
++				sfe->nameval, sfe->namelen,
++				&sfe->nameval[sfe->namelen], sfe->valuelen);
++		if (error)
++			return error;
++
++		sfe = next;
++	}
++
++	return 0;
++}
++
++/* Extract as many attribute keys and values as we can. */
++STATIC int
++xfs_repair_xattr_recover(
++	struct xfs_repair_xattr		*rx)
++{
++	struct xfs_iext_cursor		icur;
++	struct xfs_bmbt_irec		got;
++	struct xfs_scrub_context	*sc = rx->sc;
++	struct xfs_ifork		*ifp;
++	struct xfs_da_blkinfo		*info;
++	struct xfs_buf			*bp;
++	xfs_dablk_t			dabno;
++	int				error = 0;
++
++	if (sc->ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
++		return xfs_repair_xattr_recover_sf(rx);
++
++	/* Iterate each attr block in the attr fork. */
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
++	for_each_xfs_iext(ifp, &icur, &got) {
++		for_each_xfs_attr_block(sc->mp, &got, dabno) {
++			/*
++			 * Try to read buffer.  We invalidate them in the next
++			 * step so we don't bother to set a buffer type or
++			 * ops.
++			 */
++			error = xfs_da_read_buf(sc->tp, sc->ip, dabno, -1, &bp,
++					XFS_ATTR_FORK, NULL);
++			if (error || !bp)
++				continue;
++
++			/* Screen out non-leaves & other garbage. */
++			info = bp->b_addr;
++			if (info->magic != cpu_to_be16(XFS_ATTR3_LEAF_MAGIC) ||
++			    xfs_attr3_leaf_buf_ops.verify_struct(bp) != NULL)
++				continue;
++
++			error = xfs_repair_xattr_recover_leaf(rx, bp);
++			if (error)
++				return error;
++		}
++	}
++
++	return 0;
++}
++
++/* Free all the attribute fork blocks and delete the fork. */
++STATIC int
++xfs_repair_xattr_zap(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_iext_cursor		icur;
++	struct xfs_bmbt_irec		got;
++	struct xfs_ifork		*ifp;
++	struct xfs_buf			*bp;
++	xfs_fileoff_t			lblk;
++	int				error;
++
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++
++	if (sc->ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
++		goto out_fork_remove;
++
++	/* Invalidate each attr block in the attr fork. */
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
++	for_each_xfs_iext(ifp, &icur, &got) {
++		for_each_xfs_attr_block(sc->mp, &got, lblk) {
++			error = xfs_da_read_buf(sc->tp, sc->ip, lblk, -1, &bp,
++					XFS_ATTR_FORK, NULL);
++			if (error || !bp)
++				continue;
++			xfs_trans_binval(sc->tp, bp);
++			error = xfs_trans_roll_inode(&sc->tp, sc->ip);
++			if (error)
++				return error;
++		}
++	}
++
++	error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_ATTR_FORK, 0);
++	if (error)
++		return error;
++
++out_fork_remove:
++	/* Reset the attribute fork - this also destroys the in-core fork */
++	xfs_attr_fork_remove(sc->ip, sc->tp);
++	return 0;
++}
++
++/*
++ * Compare two xattr keys.  ATTR_SECURE keys come before ATTR_ROOT and
++ * ATTR_ROOT keys come before user attrs.  Otherwise sort in hash order.
++ */
++static int
++xfs_repair_xattr_key_cmp(
++	void			*priv,
++	struct list_head	*a,
++	struct list_head	*b)
++{
++	struct xfs_attr_key	*ap;
++	struct xfs_attr_key	*bp;
++	uint			ahash, bhash;
++
++	ap = container_of(a, struct xfs_attr_key, list);
++	bp = container_of(b, struct xfs_attr_key, list);
++
++	if (ap->flags > bp->flags)
++		return 1;
++	else if (ap->flags < bp->flags)
++		return -1;
++
++	ahash = xfs_da_hashname(ap->name, ap->namelen);
++	bhash = xfs_da_hashname(bp->name, bp->namelen);
++	if (ahash > bhash)
++		return 1;
++	else if (ahash < bhash)
++		return -1;
++	return 0;
++}
++
++/* Repair the extended attribute metadata. */
++int
++xfs_repair_xattr(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_repair_xattr		rx;
++	struct xfs_attr_key		*key, *next;
++	struct xfs_ifork		*ifp;
++	int				error;
++
++	if (!xfs_inode_hasattr(sc->ip))
++		return -ENOENT;
++	error = xfs_repair_ino_dqattach(sc);
++	if (error)
++		return error;
++
++	/* Extent map should be loaded. */
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
++	if (XFS_IFORK_FORMAT(sc->ip, XFS_ATTR_FORK) != XFS_DINODE_FMT_LOCAL &&
++	    !(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(sc->tp, sc->ip, XFS_ATTR_FORK);
++		if (error)
++			return error;
++	}
++
++	memset(&rx, 0, sizeof(rx));
++	rx.sc = sc;
++	INIT_LIST_HEAD(&rx.attrlist);
++
++	/* Read every attr key and value and record them in memory. */
++	error = xfs_repair_xattr_recover(&rx);
++	if (error)
++		return error;
++
++	/* Reinsert the security and root attrs first. */
++	list_sort(NULL, &rx.attrlist, xfs_repair_xattr_key_cmp);
++
++	/*
++	 * Invalidate and truncate the attribute fork extents, commit the
++	 * repair transaction, and drop the ilock.  The attribute setting code
++	 * needs to be able to allocate special transactions and take the
++	 * ilock on its own.  This means that we can't 100% prevent other
++	 * programs from accessing the inode while we're rebuilding the
++	 * attributes.
++	 */
++	error = xfs_repair_xattr_zap(sc);
++	if (error)
++		goto out_attrs;
++	error = xfs_trans_commit(sc->tp);
++	sc->tp = NULL;
++	if (error)
++		goto out_attrs;
++	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
++	sc->ilock_flags &= ~XFS_ILOCK_EXCL;
++
++	/* Re-add every attr to the file. */
++	list_for_each_entry_safe(key, next, &rx.attrlist, list) {
++		error = xfs_attr_set(sc->ip, key->name, key->value,
++				key->valuelen, key->flags);
++		if (error)
++			goto out_attrs;
++
++		/*
++		 * If the attr value is larger than a single page, free the
++		 * key now so that we aren't hogging memory while doing a lot
++		 * of metadata updates.  Otherwise, we want to spend as little
++		 * time reconstructing the attrs as we possibly can.
++		 */
++		if (key->valuelen <= PAGE_SIZE)
++			continue;
++		list_del(&key->list);
++		kmem_free(key->value);
++		kmem_free(key);
++	}
++
++out_attrs:
++	/* Free attribute list. */
++	list_for_each_entry_safe(key, next, &rx.attrlist, list) {
++		list_del(&key->list);
++		kmem_free(key->value);
++		kmem_free(key);
++	}
++
++	return error;
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index fa2b8d2..99eeb24 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -120,6 +120,7 @@ int xfs_repair_inode(struct xfs_scrub_context *sc);
+ int xfs_repair_bmap_data(struct xfs_scrub_context *sc);
+ int xfs_repair_bmap_attr(struct xfs_scrub_context *sc);
+ int xfs_repair_symlink(struct xfs_scrub_context *sc);
++int xfs_repair_xattr(struct xfs_scrub_context *sc);
  
- TRACE_EVENT(xfs_scrub_op_error,
- 	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
-@@ -492,6 +494,262 @@ TRACE_EVENT(xfs_scrub_xref_error,
- 		  __entry->ret_ip)
- );
+ #else
  
-+/* repair tracepoints */
-+#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
-+
-+DECLARE_EVENT_CLASS(xfs_repair_extent_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_extlen_t len),
-+	TP_ARGS(mp, agno, agbno, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len)
-+);
-+#define DEFINE_REPAIR_EXTENT_EVENT(name) \
-+DEFINE_EVENT(xfs_repair_extent_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_extlen_t len), \
-+	TP_ARGS(mp, agno, agbno, len))
-+DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_dispose_btree_extent);
-+DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_collect_btree_extent);
-+DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_agfl_insert);
-+
-+DECLARE_EVENT_CLASS(xfs_repair_rmap_class,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t agbno, xfs_extlen_t len,
-+		 uint64_t owner, uint64_t offset, unsigned int flags),
-+	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(xfs_extlen_t, len)
-+		__field(uint64_t, owner)
-+		__field(uint64_t, offset)
-+		__field(unsigned int, flags)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->len = len;
-+		__entry->owner = owner;
-+		__entry->offset = offset;
-+		__entry->flags = flags;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->len,
-+		  __entry->owner,
-+		  __entry->offset,
-+		  __entry->flags)
-+);
-+#define DEFINE_REPAIR_RMAP_EVENT(name) \
-+DEFINE_EVENT(xfs_repair_rmap_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
-+		 xfs_agblock_t agbno, xfs_extlen_t len, \
-+		 uint64_t owner, uint64_t offset, unsigned int flags), \
-+	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_alloc_extent_fn);
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_ialloc_extent_fn);
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_rmap_extent_fn);
-+DEFINE_REPAIR_RMAP_EVENT(xfs_repair_bmap_extent_fn);
-+
-+TRACE_EVENT(xfs_repair_refcount_extent_fn,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 struct xfs_refcount_irec *irec),
-+	TP_ARGS(mp, agno, irec),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, startblock)
-+		__field(xfs_extlen_t, blockcount)
-+		__field(xfs_nlink_t, refcount)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->startblock = irec->rc_startblock;
-+		__entry->blockcount = irec->rc_blockcount;
-+		__entry->refcount = irec->rc_refcount;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->startblock,
-+		  __entry->blockcount,
-+		  __entry->refcount)
-+)
-+
-+TRACE_EVENT(xfs_repair_init_btblock,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		 xfs_btnum_t btnum),
-+	TP_ARGS(mp, agno, agbno, btnum),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(uint32_t, btnum)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->btnum = btnum;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->btnum)
-+)
-+TRACE_EVENT(xfs_repair_findroot_block,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
-+		 uint32_t magic, uint16_t level),
-+	TP_ARGS(mp, agno, agbno, magic, level),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, agbno)
-+		__field(uint32_t, magic)
-+		__field(uint16_t, level)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->agbno = agbno;
-+		__entry->magic = magic;
-+		__entry->level = level;
-+	),
-+	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->agbno,
-+		  __entry->magic,
-+		  __entry->level)
-+)
-+TRACE_EVENT(xfs_repair_calc_ag_resblks,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
-+		 xfs_agblock_t usedlen),
-+	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agino_t, icount)
-+		__field(xfs_agblock_t, aglen)
-+		__field(xfs_agblock_t, freelen)
-+		__field(xfs_agblock_t, usedlen)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->icount = icount;
-+		__entry->aglen = aglen;
-+		__entry->freelen = freelen;
-+		__entry->usedlen = usedlen;
-+	),
-+	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->icount,
-+		  __entry->aglen,
-+		  __entry->freelen,
-+		  __entry->usedlen)
-+)
-+TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
-+		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
-+	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agblock_t, bnobt_sz)
-+		__field(xfs_agblock_t, inobt_sz)
-+		__field(xfs_agblock_t, rmapbt_sz)
-+		__field(xfs_agblock_t, refcbt_sz)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->bnobt_sz = bnobt_sz;
-+		__entry->inobt_sz = inobt_sz;
-+		__entry->rmapbt_sz = rmapbt_sz;
-+		__entry->refcbt_sz = refcbt_sz;
-+	),
-+	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->bnobt_sz,
-+		  __entry->inobt_sz,
-+		  __entry->rmapbt_sz,
-+		  __entry->refcbt_sz)
-+)
-+TRACE_EVENT(xfs_repair_reset_counters,
-+	TP_PROTO(struct xfs_mount *mp),
-+	TP_ARGS(mp),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+	),
-+	TP_printk("dev %d:%d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev))
-+)
-+
-+TRACE_EVENT(xfs_repair_ialloc_insert,
-+	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-+		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
-+		 uint8_t freecount, uint64_t freemask),
-+	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_agnumber_t, agno)
-+		__field(xfs_agino_t, startino)
-+		__field(uint16_t, holemask)
-+		__field(uint8_t, count)
-+		__field(uint8_t, freecount)
-+		__field(uint64_t, freemask)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->agno = agno;
-+		__entry->startino = startino;
-+		__entry->holemask = holemask;
-+		__entry->count = count;
-+		__entry->freecount = freecount;
-+		__entry->freemask = freemask;
-+	),
-+	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->agno,
-+		  __entry->startino,
-+		  __entry->holemask,
-+		  __entry->count,
-+		  __entry->freecount,
-+		  __entry->freemask)
-+)
-+
-+#endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
-+
- #endif /* _TRACE_XFS_SCRUB_TRACE_H */
+@@ -174,6 +175,7 @@ static inline int xfs_repair_rmapbt_setup(
+ #define xfs_repair_bmap_data		xfs_repair_notsupported
+ #define xfs_repair_bmap_attr		xfs_repair_notsupported
+ #define xfs_repair_symlink		xfs_repair_notsupported
++#define xfs_repair_xattr		xfs_repair_notsupported
  
- #undef TRACE_INCLUDE_PATH
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index fa34713..064a46c 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -319,7 +319,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_INODE,
+ 		.setup	= xfs_scrub_setup_xattr,
+ 		.scrub	= xfs_scrub_xattr,
+-		.repair	= xfs_repair_notsupported,
++		.repair	= xfs_repair_xattr,
+ 	},
+ 	[XFS_SCRUB_TYPE_SYMLINK] = {	/* symbolic link */
+ 		.type	= ST_INODE,
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 8cf4062..336c316 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -156,4 +156,7 @@ void xfs_scrub_xref_is_used_rt_space(struct xfs_scrub_context *sc,
+ # define xfs_scrub_xref_is_used_rt_space(sc, rtbno, len) do { } while (0)
+ #endif
+ 
++bool xfs_scrub_xattr_set_map(struct xfs_scrub_context *sc, unsigned long *map,
++		unsigned int start, unsigned int len);
++
+ #endif	/* __XFS_SCRUB_SCRUB_H__ */
 
