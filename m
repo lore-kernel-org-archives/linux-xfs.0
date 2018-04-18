@@ -1,86 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39126 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751248AbeDRAvN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 20:51:13 -0400
-Date: Tue, 17 Apr 2018 17:51:07 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:38816 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753002AbeDRCY2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:24:28 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2LU0Z088994
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:24:28 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2hdrxn8hy0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:24:27 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2ORrB001524
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:24:27 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2ORwI022505
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:24:27 GMT
+Date: Tue, 17 Apr 2018 19:24:26 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't fail when converting shortform attr to long
- form during ATTR_REPLACE
-Message-ID: <20180418005107.GK24738@magnolia>
-References: <20180418003130.GI24738@magnolia>
- <20180418004521.GM23861@dastard>
+Subject: Re: [PATCH 1/1] xfs: fix a null pointer dereference in
+ xfs_bmap_extents_to_btree
+Message-ID: <20180418022426.GL24738@magnolia>
+References: <1524017385-6671-1-git-send-email-shan.hai@oracle.com>
+ <9fbccc81-103f-5b21-af3c-e32b82eba24b@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180418004521.GM23861@dastard>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9fbccc81-103f-5b21-af3c-e32b82eba24b@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, kanda.motohiro@gmail.com
+To: Shan Hai <shan.hai@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 18, 2018 at 10:45:21AM +1000, Dave Chinner wrote:
-> On Tue, Apr 17, 2018 at 05:31:30PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Kanda Motohiro reported that expanding a tiny xattr into a large xattr
-> > fails on XFS because we remove the tiny xattr from a shortform fork and
-> > then try to re-add it after converting the fork to extents format having
-> > not removed the ATTR_REPLACE flag.  This fails because the attr is no
-> > longer present, causing a fs shutdown.
-> > 
-> > This is derived from the patch in his bug report, but we really
-> > shouldn't ignore a nonzero retval from the remove call.  Something's
-> > broken and we should bail out and shut down.
-> > 
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
-> > Reported-by: kanda.motohiro@gmail.com
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.c |    9 ++++++++-
-> >  1 file changed, 8 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index ce4a34a..2588c73 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -511,7 +511,14 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
-> >  		if (args->flags & ATTR_CREATE)
-> >  			return retval;
-> >  		retval = xfs_attr_shortform_remove(args);
-> > -		ASSERT(retval == 0);
-> > +		if (retval)
-> > +			return retval;
-> > +		/*
-> > +		 * Since we have removed the old attr here,
-> > +		 * further lookup will fail with ENOATTR.
-> > +		 * Ignore this was a replace and go on creating new attr.
+On Wed, Apr 18, 2018 at 10:13:22AM +0800, Shan Hai wrote:
 > 
-> The last line of that comment doesn't make sense to me. not sure
-> what it's meant to say...
+> 
+> On 2018年04月18日 10:09, Shan Hai wrote:
+> >Fuzzing tool reports a write to null pointer error in the
+> >xfs_bmap_extents_to_btree, fix it by bailing out on encountering
+> >a null pointer.
+> >
+> >Signed-off-by: Shan Hai <shan.hai@oracle.com>
+> 
+> This one supposed to be applied on top of below:
+> 
+> https://www.spinics.net/lists/linux-xfs/msg17254.html
+> [PATCH] xfs: set format back to extents if xfs_bmap_extents_to_btree fails
+> 
+> Thanks
+> Shan Hai
+> >---
+> >  fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++++--------
+> >  1 file changed, 16 insertions(+), 8 deletions(-)
+> >
+> >diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> >index 040eeda..90b743d 100644
+> >--- a/fs/xfs/libxfs/xfs_bmap.c
+> >+++ b/fs/xfs/libxfs/xfs_bmap.c
+> >@@ -724,19 +724,14 @@ xfs_bmap_extents_to_btree(
+> >  	args.wasdel = wasdel;
+> >  	*logflagsp = 0;
+> >  	if ((error = xfs_alloc_vextent(&args))) {
+> >-		xfs_iroot_realloc(ip, -1, whichfork);
+> >  		ASSERT(ifp->if_broot == NULL);
+> >-		XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> >-		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> >-		return error;
+> >+		goto err1;
+> >  	}
+> >  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+> >-		xfs_iroot_realloc(ip, -1, whichfork);
+> >  		ASSERT(ifp->if_broot == NULL);
+> >-		XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> >-		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> >-		return -ENOSPC;
+> >+		error = -ENOSPC;
+> >+		goto err1;
+> >  	}
+> >  	/*
+> >  	 * Allocation can't fail, the space was reserved.
+> >@@ -748,6 +743,10 @@ xfs_bmap_extents_to_btree(
+> >  	ip->i_d.di_nblocks++;
+> >  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+> >  	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
+> >+	if (!abp) {
 
-That was what was in the patch attached to the bugzilla. :)
+When does this happen?  We got args.fsbno from the allocator, so we're
+not out of space.  Or are you saying that something fuzzed the free
+space btree, therefore the allocator gave back a nonsense block number
+(say pointing past the end of the fs), and therefore the _get_bufl call
+returned NULL?
 
-How about:
+If so, maybe we need to change that WARN_ON_ONCE thing above to:
 
-/*
- * Since we have removed the old attr, clear ATTR_REPLACE so that the
- * leaf format add routine won't trip over the attr not being around.
- */
-
-instead?
+if (WARN_ON_ONCE(...) || !xfs_verify_fsbno(..., args.fsbno)) {
+	/* undo state and return */
+}
 
 --D
 
-
+> >+		error = -ENOSPC;
+> >+		goto err2;
+> >+	}
+> >  	/*
+> >  	 * Fill in the child block.
+> >  	 */
+> >@@ -787,6 +786,15 @@ xfs_bmap_extents_to_btree(
+> >  	*curp = cur;
+> >  	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
+> >  	return 0;
+> >+
+> >+err2:
+> >+	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+> >+err1:
+> >+	xfs_iroot_realloc(ip, -1, whichfork);
+> >+	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> >+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> >+
+> >+	return error;
+> >  }
+> >  /*
 > 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
