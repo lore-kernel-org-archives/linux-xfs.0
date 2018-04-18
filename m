@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48002 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753076AbeDRCrD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:47:03 -0400
-Subject: [PATCH 02/11] xfs_repair: don't leak buffer on xattr remote buf
- verifier error
+Received: from userp2120.oracle.com ([156.151.31.85]:47264 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753144AbeDRCr7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:47:59 -0400
+Subject: [PATCH 11/11] xfs_repair: don't assert on bad '.' entry in
+ no-modify mode
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:46:44 -0700
-Message-ID: <152401960402.13319.3526134260258053342.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:47:40 -0700
+Message-ID: <152401966025.13319.16584599904269469257.stgit@magnolia>
 In-Reply-To: <152401958920.13319.10756339531174871801.stgit@magnolia>
 References: <152401958920.13319.10756339531174871801.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,25 +21,32 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If we try to read an xattr remote buffer and hit a verifier error,
-release the buffer instead of leaking it.
+During phase 3, we check the '.' entry of a directory inode and (in
+modify mode) zap it if the name isn't valid.  During phase 6, we assert
+that the '.' entry now reflects the correct name.  In no-modify mode
+this is incorrect because we didn't actually fix anything, so repair
+asserts and crashes.
+
+Found by fuzzing bu[0].namelen = 4 in xfs/387 and running xfs_repair -n.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/attr_repair.c |    1 +
- 1 file changed, 1 insertion(+)
+ repair/phase6.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index bb5ab3d..3e6efd0 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -433,6 +433,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
- 		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
- 			do_warn(
- 	_("Corrupt remote block for attributes of inode %" PRIu64 "\n"), ino);
-+			libxfs_putbuf(bp);
- 			clearit = 1;
- 			break;
- 		}
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 2005e40..e65fc4a 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1884,7 +1884,8 @@ longform_dir2_entry_check_data(
+ 		 * of when directory is moved to orphanage.
+ 		 */
+ 		if (ip->i_ino == inum)  {
+-			ASSERT(dep->name[0] == '.' && dep->namelen == 1);
++			ASSERT(no_modify ||
++			       (dep->name[0] == '.' && dep->namelen == 1));
+ 			add_inode_ref(current_irec, current_ino_offset);
+ 			if (da_bno != 0 ||
+ 			    dep != M_DIROPS(mp)->data_entry_p(d)) {
 
