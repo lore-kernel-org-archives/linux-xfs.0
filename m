@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49440 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752613AbeDRWNw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:52 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMC80s063256
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:51 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2hdrxnvtrk-1
+Received: from userp2120.oracle.com ([156.151.31.85]:34818 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752699AbeDRWNx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:53 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMBDRN098308
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:53 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2hdrxp4u3j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:51 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:53 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDoVq027043
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDqeE007138
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:51 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:52 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDoQv028986
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:50 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDqIY028989
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:52 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 08/18] xfs: get directory offset when replacing a directory name
-Date: Wed, 18 Apr 2018 15:11:16 -0700
-Message-Id: <1524089486-22922-9-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 13/18] xfs: add parent attributes to link
+Date: Wed, 18 Apr 2018 15:11:21 -0700
+Message-Id: <1524089486-22922-14-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 References: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,210 +28,132 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Mark Tinguely <tinguely@sgi.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Return the directory offset information when replacing an entry to the
-directory.
+This patch modifies xfs_link to add a parent pointer to the inode.
+xfs_link will also need to create an attribute fork if the inode does
+not already have one.
 
-This offset will be used as the parent pointer offset in xfs_rename.
-
-[dchinner: forward ported and cleaned up]
+[bfoster: rebase, use VFS inode fields, fix xfs_bmap_finish() usage]
 [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-	   Changed typedefs to raw struct types]
+	   fixed null pointer bugs]
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2.c       | 16 ++++++++++------
- fs/xfs/libxfs/xfs_dir2.h       |  3 ++-
- fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
- fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
- fs/xfs/xfs_inode.c             | 28 +++++++++++++---------------
- 7 files changed, 31 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_inode.c | 60 +++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 46 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 090ab0e..a4f7bcd 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -499,13 +499,14 @@ xfs_dir_removename(
-  */
- int
- xfs_dir_replace(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*dp,
--	struct xfs_name	*name,		/* name of entry to replace */
--	xfs_ino_t	inum,		/* new inode number */
--	xfs_fsblock_t	*first,		/* bmap's firstblock */
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_name		*name,		/* name of entry to replace */
-+	xfs_ino_t		inum,		/* new inode number */
-+	xfs_fsblock_t		*first,		/* bmap's firstblock */
- 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
--	xfs_extlen_t	total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
- {
- 	struct xfs_da_args *args;
- 	int		rval;
-@@ -555,6 +556,9 @@ xfs_dir_replace(
- 	else
- 		rval = xfs_dir2_node_replace(args);
- out_free:
-+	if (offset)
-+		*offset = args->offset;
-+
- 	kmem_free(args);
- 	return rval;
- }
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index b73bdcb..d361442 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -145,7 +145,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
--				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-+				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
-+				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name);
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 9c1e485..77744e5 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -872,9 +872,9 @@ xfs_dir2_block_replace(
- 	/*
- 	 * Point to the data entry we need to change.
- 	 */
-+	args->offset = be32_to_cpu(blp[ent].address);
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
--			xfs_dir2_dataptr_to_off(args->geo,
--						be32_to_cpu(blp[ent].address)));
-+			xfs_dir2_dataptr_to_off(args->geo, args->offset));
- 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
- 	/*
- 	 * Change the inode number to the new value.
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index c5595c1..6ad7741 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -1550,6 +1550,7 @@ xfs_dir2_leaf_replace(
- 	/*
- 	 * Point to the data entry.
- 	 */
-+	args->offset = be32_to_cpu(lep->address);
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)dbp->b_addr +
- 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index eb8b240..ccf220a 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -2256,6 +2256,7 @@ xfs_dir2_node_replace(
- 		hdr = state->extrablk.bp->b_addr;
- 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
- 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
-+		args->offset = be32_to_cpu(lep->address);
- 		dep = (xfs_dir2_data_entry_t *)
- 		      ((char *)hdr +
- 		       xfs_dir2_dataptr_to_off(args->geo,
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 1d0957c..73f1eef 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -1043,6 +1043,8 @@ xfs_dir2_sf_replace(
- 				ASSERT(args->inumber != ino);
- 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+				args->offset = xfs_dir2_byte_to_dataptr(
-+						  xfs_dir2_sf_get_offset(sfep));
- 				break;
- 			}
- 		}
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3054e9a..5c291d2 100644
+index 0cfdc2f..90498cb 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2783,16 +2783,14 @@ xfs_cross_rename(
- 	int		dp2_flags = 0;
+@@ -1417,6 +1417,8 @@ xfs_link(
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t           first_block;
+ 	int			resblks;
++	xfs_dir2_dataptr_t	diroffset;
++	bool			first_parent = false;
  
- 	/* Swap inode number for dirent in first parent */
--	error = xfs_dir_replace(tp, dp1, name1,
--				ip2->i_ino,
--				first_block, dfops, spaceres);
-+	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block, dfops,
-+				spaceres, NULL);
+ 	trace_xfs_link(tdp, target_name);
+ 
+@@ -1433,6 +1435,25 @@ xfs_link(
  	if (error)
- 		goto out_trans_abort;
+ 		goto std_return;
  
- 	/* Swap inode number for dirent in second parent */
--	error = xfs_dir_replace(tp, dp2, name2,
--				ip1->i_ino,
--				first_block, dfops, spaceres);
-+	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block, dfops,
-+				spaceres, NULL);
- 	if (error)
- 		goto out_trans_abort;
++	/*
++	 * If we have parent pointers and there is no attribute fork (i.e. we
++	 * are linking in a O_TMPFILE created inode) we need to add the
++	 * attribute fork to the inode. Because we may have an existing data
++	 * fork, we do this before we start the link transaction as adding an
++	 * attribute fork requires it's own transaction.
++	 */
++	if (xfs_sb_version_hasparent(&mp->m_sb) && !xfs_inode_hasattr(sip)) {
++		int sf_size = sizeof(struct xfs_attr_sf_hdr) +
++				XFS_ATTR_SF_ENTSIZE_BYNAME(
++					sizeof(struct xfs_parent_name_rec),
++					target_name->len);
++		ASSERT(VFS_I(sip)->i_nlink == 0);
++		error = xfs_bmap_add_attrfork(sip, sf_size, 0);
++		if (error)
++			goto std_return;
++		first_parent = true;
++	}
++
+ 	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_link, resblks, 0, 0, &tp);
+ 	if (error == -ENOSPC) {
+@@ -1464,8 +1485,6 @@ xfs_link(
+ 			goto error_return;
+ 	}
  
-@@ -2806,8 +2804,8 @@ xfs_cross_rename(
- 
- 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
--						dp1->i_ino, first_block,
--						dfops, spaceres);
-+						dp1->i_ino, first_block, dfops,
-+						spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
- 
-@@ -2833,8 +2831,8 @@ xfs_cross_rename(
- 
- 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
--						dp2->i_ino, first_block,
--						dfops, spaceres);
-+						dp2->i_ino, first_block, dfops,
-+						spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
- 
-@@ -3081,8 +3079,8 @@ xfs_rename(
- 		 * name at the destination directory, remove it first.
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
--					src_ip->i_ino,
--					&first_block, &dfops, spaceres);
-+					src_ip->i_ino, &first_block, &dfops,
-+					spaceres, NULL);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -3116,8 +3114,8 @@ xfs_rename(
- 		 * directory.
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
--					target_dp->i_ino,
--					&first_block, &dfops, spaceres);
-+					target_dp->i_ino, &first_block, &dfops,
-+					spaceres, NULL);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_bmap_cancel;
-@@ -3156,7 +3154,7 @@ xfs_rename(
+-	xfs_defer_init(&dfops, &first_block);
+-
+ 	/*
+ 	 * Handle initial link state of O_TMPFILE inode
  	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					&first_block, &dfops, spaceres);
-+					&first_block, &dfops, spaceres, NULL);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
- 					   &first_block, &dfops, spaceres,
+@@ -1475,36 +1494,49 @@ xfs_link(
+ 			goto error_return;
+ 	}
+ 
++	xfs_defer_init(&dfops, &first_block);
+ 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+-				   &first_block, &dfops, resblks, NULL);
++				   &first_block, &dfops, resblks, &diroffset);
+ 	if (error)
+-		goto error_return;
++		goto out_defer_cancel;
+ 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+ 
+ 	error = xfs_bumplink(tp, sip);
+ 	if (error)
+-		goto error_return;
++		goto out_defer_cancel;
+ 
+ 	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * link transaction goes to disk before returning to
+-	 * the user.
++	 * If we have parent pointers, we now need to add the parent record to
++	 * the attribute fork of the inode. If this is the initial parent
++	 * attribute, we need to create it correctly, otherwise we can just add
++	 * the parent to the inode.
++	 */
++	if (xfs_sb_version_hasparent(&mp->m_sb)) {
++		error = xfs_parent_add_deferred(tdp, sip, target_name,
++				       diroffset, &dfops);
++		if (error)
++			goto out_defer_cancel;
++	}
++
++	/*
++	 * If this is a synchronous mount, make sure that the link transaction
++	 * goes to disk before returning to the user.
+ 	 */
+ 	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
+ 		xfs_trans_set_sync(tp);
+ 
+ 	error = xfs_defer_finish(&tp, &dfops);
+-	if (error) {
+-		xfs_defer_cancel(&dfops);
+-		goto error_return;
+-	}
++	if (error)
++		goto out_defer_cancel;
+ 
+ 	return xfs_trans_commit(tp);
+ 
+- error_return:
++out_defer_cancel:
++	xfs_defer_cancel(&dfops);
++error_return:
+ 	xfs_trans_cancel(tp);
+- std_return:
++std_return:
+ 	return error;
+ }
+ 
 -- 
 2.7.4
 
