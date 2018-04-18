@@ -1,131 +1,24 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:64121 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751878AbeDRAVR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 20:21:17 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1f8aqY-00008q-VB
-        for linux-xfs@vger.kernel.org; Wed, 18 Apr 2018 10:21:14 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.90_1)
-        (envelope-from <david@fromorbit.com>)
-        id 1f8aqY-00034N-UA
-        for linux-xfs@vger.kernel.org; Wed, 18 Apr 2018 10:21:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: make xfs_buf_incore out of line
-Date: Wed, 18 Apr 2018 10:21:10 +1000
-Message-Id: <20180418002111.11637-2-david@fromorbit.com>
-In-Reply-To: <20180418002111.11637-1-david@fromorbit.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:58254 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751305AbeDRKab (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 06:30:31 -0400
+Date: Wed, 18 Apr 2018 03:30:31 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: don't retry xfs_buf_find on XBF_TRYLOCK failure
+Message-ID: <20180418103031.GC15190@infradead.org>
 References: <20180418002111.11637-1-david@fromorbit.com>
+ <20180418002111.11637-3-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180418002111.11637-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Looks good,
 
-Move xfs_buf_incore out of line and make it the only way to look up
-a buffer in the buffer cache from outside the buffer cache. Convert
-the external users of _xfs_buf_find() to xfs_buf_incore() and make
-_xfs_buf_find() static.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_buf.c | 21 ++++++++++++++++-----
- fs/xfs/xfs_buf.h | 17 +++--------------
- fs/xfs/xfs_qm.c  |  5 ++---
- 3 files changed, 21 insertions(+), 22 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 55661cbdb51b..2ca8e2c7fbc4 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -549,17 +549,17 @@ xfs_buf_hash_destroy(
- }
- 
- /*
-- *	Look up, and creates if absent, a lockable buffer for
-- *	a given range of an inode.  The buffer is returned
-- *	locked.	No I/O is implied by this call.
-+ * Look up (and insert if absent), a lockable buffer for a given
-+ * range of an inode.  The buffer is returned locked. No I/O is
-+ * implied by this call.
-  */
--xfs_buf_t *
-+static struct xfs_buf *
- _xfs_buf_find(
- 	struct xfs_buftarg	*btp,
- 	struct xfs_buf_map	*map,
- 	int			nmaps,
- 	xfs_buf_flags_t		flags,
--	xfs_buf_t		*new_bp)
-+	struct xfs_buf		*new_bp)
- {
- 	struct xfs_perag	*pag;
- 	xfs_buf_t		*bp;
-@@ -649,6 +649,17 @@ _xfs_buf_find(
- 	return bp;
- }
- 
-+struct xfs_buf *
-+xfs_incore(
-+	struct xfs_buftarg	*target,
-+	xfs_daddr_t		blkno,
-+	size_t			numblks,
-+	xfs_buf_flags_t		flags)
-+{
-+	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
-+	return _xfs_buf_find(target, &map, 1, flags, NULL);
-+}
-+
- /*
-  * Assembles a buffer covering the specified range. The code is optimised for
-  * cache hits, as metadata intensive workloads will see 3 orders of magnitude
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index edced162a674..e8947c1adac0 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -218,20 +218,9 @@ typedef struct xfs_buf {
- } xfs_buf_t;
- 
- /* Finding and Reading Buffers */
--struct xfs_buf *_xfs_buf_find(struct xfs_buftarg *target,
--			      struct xfs_buf_map *map, int nmaps,
--			      xfs_buf_flags_t flags, struct xfs_buf *new_bp);
--
--static inline struct xfs_buf *
--xfs_incore(
--	struct xfs_buftarg	*target,
--	xfs_daddr_t		blkno,
--	size_t			numblks,
--	xfs_buf_flags_t		flags)
--{
--	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
--	return _xfs_buf_find(target, &map, 1, flags, NULL);
--}
-+struct xfs_buf *xfs_incore(struct xfs_buftarg *target,
-+			   xfs_daddr_t blkno, size_t numblks,
-+			   xfs_buf_flags_t flags);
- 
- struct xfs_buf *_xfs_buf_alloc(struct xfs_buftarg *target,
- 			       struct xfs_buf_map *map, int nmaps,
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ec39ae274c78..aff4924f637f 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1247,9 +1247,8 @@ xfs_qm_flush_one(
- 	 */
- 	if (!xfs_dqflock_nowait(dqp)) {
- 		/* buf is pinned in-core by delwri list */
--		DEFINE_SINGLE_BUF_MAP(map, dqp->q_blkno,
--				      mp->m_quotainfo->qi_dqchunklen);
--		bp = _xfs_buf_find(mp->m_ddev_targp, &map, 1, 0, NULL);
-+		bp = xfs_incore(mp->m_ddev_targp, dqp->q_blkno,
-+				mp->m_quotainfo->qi_dqchunklen, 0);
- 		if (!bp) {
- 			error = -EINVAL;
- 			goto out_unlock;
--- 
-2.16.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
