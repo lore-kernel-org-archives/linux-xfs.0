@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47222 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753031AbeDRCpN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:45:13 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2fpsi100948
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:13 GMT
+Received: from userp2130.oracle.com ([156.151.31.86]:59722 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753076AbeDRCpZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:45:25 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2fQWt010290
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:24 GMT
 Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2hdrxn8k1n-1
+        by userp2130.oracle.com with ESMTP id 2hdrxnrk0g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:13 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:24 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2jCFU016368
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2jNIq016735
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:12 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2jCuf032615
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:12 GMT
-Subject: [PATCH 8/9] xfs: don't ASSERT on short form btree root pointer of
- zero
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:23 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2jNJw032658
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:23 GMT
+Subject: [PATCH 9/9] xfs: don't return garbage buffers in xfs_da3_node_read
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:45:11 -0700
-Message-ID: <152401951163.12719.7441194507384177453.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:45:17 -0700
+Message-ID: <152401951770.12719.12922411919487593139.stgit@magnolia>
 In-Reply-To: <152401946245.12719.18338955003321437040.stgit@magnolia>
 References: <152401946245.12719.18338955003321437040.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,52 +34,35 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't ASSERT if the short form btree root pointer is zero.  Now that we
-use xfs_verify_agbno to check all short form btree pointers, we'll let
-that log the error and pass it to the upper layers.
+If we're reading a node in a dir/attr btree and the buffer comes off the
+disk with a magic number we don't recognize, don't ASSERT and don't set
+a garbage buffer type (0 also triggers ASSERTs).  Instead, report the
+corruption, release the buffer, and return -EFSCORRUPTED because that's
+what the dabtree is -- corrupt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c    |    1 -
- fs/xfs/libxfs/xfs_refcount_btree.c |    1 -
- fs/xfs/libxfs/xfs_rmap_btree.c     |    1 -
- 3 files changed, 3 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 18aec7a..a4a001f 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -242,7 +242,6 @@ xfs_allocbt_init_ptr_from_cur(
- 	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
- 
- 	ASSERT(cur->bc_private.a.agno == be32_to_cpu(agf->agf_seqno));
--	ASSERT(agf->agf_roots[cur->bc_btnum] != 0);
- 
- 	ptr->s = agf->agf_roots[cur->bc_btnum];
- }
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 375abfe..f652b48 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -192,7 +192,6 @@ xfs_refcountbt_init_ptr_from_cur(
- 	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
- 
- 	ASSERT(cur->bc_private.a.agno == be32_to_cpu(agf->agf_seqno));
--	ASSERT(agf->agf_refcount_root != 0);
- 
- 	ptr->s = agf->agf_refcount_root;
- }
-diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index d756e0b..78ab00b 100644
---- a/fs/xfs/libxfs/xfs_rmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -234,7 +234,6 @@ xfs_rmapbt_init_ptr_from_cur(
- 	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
- 
- 	ASSERT(cur->bc_private.a.agno == be32_to_cpu(agf->agf_seqno));
--	ASSERT(agf->agf_roots[cur->bc_btnum] != 0);
- 
- 	ptr->s = agf->agf_roots[cur->bc_btnum];
- }
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index ea187b4..39c1013 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -305,9 +305,11 @@ xfs_da3_node_read(
+ 			type = XFS_BLFT_DIR_LEAFN_BUF;
+ 			break;
+ 		default:
+-			type = 0;
+-			ASSERT(0);
+-			break;
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
++					tp->t_mountp, info);
++			xfs_trans_brelse(tp, *bpp);
++			*bpp = NULL;
++			return -EFSCORRUPTED;
+ 		}
+ 		xfs_trans_buf_set_type(tp, *bpp, type);
+ 	}
 
