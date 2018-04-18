@@ -1,14 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42382 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751556AbeDVPGX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:06:23 -0400
-Subject: [PATCH 04/13] xfs: remove unnecessary xfs_qm_dqattach parameter
+Received: from aserp2120.oracle.com ([141.146.126.78]:44774 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752979AbeDRCja (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:39:30 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2a2tR097383
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:29 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2hdrxn8jqa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:29 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2dS7B007745
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:28 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2dS0H024966
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:28 GMT
+Subject: [PATCH 00/11] xfs-4.18: online scrub fixes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:06:17 -0700
-Message-ID: <152440957769.29601.7369035661664268323.stgit@magnolia>
-In-Reply-To: <152440954198.29601.14390250048915099607.stgit@magnolia>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:39:27 -0700
+Message-ID: <152401916729.11465.4212188839231900136.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,219 +28,44 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-The flags argument is always zero, get rid of it.
+Here's a series cleaning up some problems and bugs in the online scrub
+code.  Most of the problems fixed here were uncovered through more
+thorough testing of the online repair series, which will be posted
+shortly.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c |    4 ++--
- fs/xfs/xfs_bmap_util.c   |    6 +++---
- fs/xfs/xfs_inode.c       |   10 +++++-----
- fs/xfs/xfs_iomap.c       |    4 ++--
- fs/xfs/xfs_iops.c        |    2 +-
- fs/xfs/xfs_qm.c          |    7 +++----
- fs/xfs/xfs_quota.h       |    4 ++--
- fs/xfs/xfs_reflink.c     |    2 +-
- 8 files changed, 19 insertions(+), 20 deletions(-)
+First, we amend scrub to skip cross-referencing once the first error is
+found; this patch hasn't changed since its posting during the 4.17 cycle.
 
+The next five patches refactor the quota code to make it possible to
+iterate all the dquots in the system with the quota inode's ILOCK held.
+After this, we can drop all the weird code that attaches to the quota ip
+in favor of using the well known mechanism that we use for all other
+inodes.  This enables us to call the data fork scrubber on the quota
+inodes; and the dquot iterator that we created earlier.
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 35a1244..c3d02a6 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -236,7 +236,7 @@ xfs_attr_set(
- 	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
- 	args.total = xfs_attr_calc_size(&args, &local);
- 
--	error = xfs_qm_dqattach(dp, 0);
-+	error = xfs_qm_dqattach(dp);
- 	if (error)
- 		return error;
- 
-@@ -427,7 +427,7 @@ xfs_attr_remove(
- 	 */
- 	args.op_flags = XFS_DA_OP_OKNOENT;
- 
--	error = xfs_qm_dqattach(dp, 0);
-+	error = xfs_qm_dqattach(dp);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 8cd8c41..65b2cc2 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -848,7 +848,7 @@ xfs_free_eofblocks(
- 		/*
- 		 * Attach the dquots to the inode up front.
- 		 */
--		error = xfs_qm_dqattach(ip, 0);
-+		error = xfs_qm_dqattach(ip);
- 		if (error)
- 			return error;
- 
-@@ -918,7 +918,7 @@ xfs_alloc_file_space(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	error = xfs_qm_dqattach(ip, 0);
-+	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return error;
- 
-@@ -1169,7 +1169,7 @@ xfs_free_file_space(
- 
- 	trace_xfs_free_file_space(ip);
- 
--	error = xfs_qm_dqattach(ip, 0);
-+	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 2b70c8b..1da9863 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1411,11 +1411,11 @@ xfs_link(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	error = xfs_qm_dqattach(sip, 0);
-+	error = xfs_qm_dqattach(sip);
- 	if (error)
- 		goto std_return;
- 
--	error = xfs_qm_dqattach(tdp, 0);
-+	error = xfs_qm_dqattach(tdp);
- 	if (error)
- 		goto std_return;
- 
-@@ -1911,7 +1911,7 @@ xfs_inactive(
- 	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
- 		truncate = 1;
- 
--	error = xfs_qm_dqattach(ip, 0);
-+	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return;
- 
-@@ -2574,11 +2574,11 @@ xfs_remove(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	error = xfs_qm_dqattach(dp, 0);
-+	error = xfs_qm_dqattach(dp);
- 	if (error)
- 		goto std_return;
- 
--	error = xfs_qm_dqattach(ip, 0);
-+	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		goto std_return;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 046469f..58b04ea 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -224,7 +224,7 @@ xfs_iomap_write_direct(
- 	 * necessary and move on to transaction setup.
- 	 */
- 	xfs_iunlock(ip, lockmode);
--	error = xfs_qm_dqattach(ip, 0);
-+	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return error;
- 
-@@ -692,7 +692,7 @@ xfs_iomap_write_allocate(
- 	/*
- 	 * Make sure that the dquots are there.
- 	 */
--	error = xfs_qm_dqattach(ip, 0);
-+	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a3ed3c8..5afe3c2 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -855,7 +855,7 @@ xfs_setattr_size(
- 	/*
- 	 * Make sure that the dquots are attached to the inode.
- 	 */
--	error = xfs_qm_dqattach(ip, 0);
-+	error = xfs_qm_dqattach(ip);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ec39ae2..d919b85 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -381,8 +381,7 @@ xfs_qm_dqattach_locked(
- 
- int
- xfs_qm_dqattach(
--	struct xfs_inode	*ip,
--	uint			flags)
-+	struct xfs_inode	*ip)
- {
- 	int			error;
- 
-@@ -390,7 +389,7 @@ xfs_qm_dqattach(
- 		return 0;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	error = xfs_qm_dqattach_locked(ip, flags);
-+	error = xfs_qm_dqattach_locked(ip, 0);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
- 	return error;
-@@ -1933,7 +1932,7 @@ xfs_qm_vop_rename_dqattach(
- 		 */
- 		if (i == 0 || ip != i_tab[i-1]) {
- 			if (XFS_NOT_DQATTACHED(mp, ip)) {
--				error = xfs_qm_dqattach(ip, 0);
-+				error = xfs_qm_dqattach(ip);
- 				if (error)
- 					return error;
- 			}
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index ce6506a..a4d3922 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -90,7 +90,7 @@ extern struct xfs_dquot *xfs_qm_vop_chown(struct xfs_trans *,
- extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
- 		struct xfs_dquot *, struct xfs_dquot *,
- 		struct xfs_dquot *, uint);
--extern int xfs_qm_dqattach(struct xfs_inode *, uint);
-+extern int xfs_qm_dqattach(struct xfs_inode *);
- extern int xfs_qm_dqattach_locked(struct xfs_inode *, uint);
- extern void xfs_qm_dqdetach(struct xfs_inode *);
- extern void xfs_qm_dqrele(struct xfs_dquot *);
-@@ -132,7 +132,7 @@ static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
- #define xfs_qm_vop_rename_dqattach(it)					(0)
- #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
- #define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl)			(0)
--#define xfs_qm_dqattach(ip, fl)						(0)
-+#define xfs_qm_dqattach(ip)						(0)
- #define xfs_qm_dqattach_locked(ip, fl)					(0)
- #define xfs_qm_dqdetach(ip)
- #define xfs_qm_dqrele(d)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index cdbd342..fd8e6af 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1359,7 +1359,7 @@ xfs_reflink_remap_range(
- 		goto out_unlock;
- 
- 	/* Attach dquots to dest inode before changing block map */
--	ret = xfs_qm_dqattach(dest, 0);
-+	ret = xfs_qm_dqattach(dest);
- 	if (ret)
- 		goto out_unlock;
- 
+The next two patches fix some broken interaction between scrub and the
+rest of xfs.
 
+Following that are three fixes to the scrubbers themselves -- the first
+checks that a btree block never contains fewer than minrecs records
+unless it's the top block in a tree.  The second refactors the
+transaction allocation helper; and the last one fixes a potential ABBA
+deadlock in the parent scrubber.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.17-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to eat your data.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
