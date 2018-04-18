@@ -1,29 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44054 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753031AbeDRClB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:41:01 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2ag4J042465
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:41:00 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2hdrxp0jyn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:41:00 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2ex6L015509
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:41:00 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2ex9P030782
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:40:59 GMT
-Subject: [PATCH 1/9] xfs: hoist xfs_scrub_agfl_walk to libxfs as
- xfs_agfl_walk
+Received: from aserp2120.oracle.com ([141.146.126.78]:45966 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753076AbeDRCmP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:42:15 -0400
+Subject: [PATCH 01/24] xfs: create tracepoints for online repair
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:40:52 -0700
-Message-ID: <152401925221.11792.6582685122071970769.stgit@magnolia>
-In-Reply-To: <152401924595.11792.16954598133403059881.stgit@magnolia>
-References: <152401924595.11792.16954598133403059881.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:41:56 -0700
+Message-ID: <152401931628.12079.2732020785958491392.stgit@magnolia>
+In-Reply-To: <152401930978.12079.2000682561964128780.stgit@magnolia>
+References: <152401930978.12079.2000682561964128780.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -31,222 +16,293 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This function is basically a generic AGFL block iterator, so promote it
-to libxfs ahead of online repair wanting to use it.
+These tracepoints will be used to debug the online repair routines.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   37 +++++++++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h |    5 +++
- fs/xfs/scrub/agheader.c   |   78 ++++++++-------------------------------------
- fs/xfs/scrub/common.h     |    4 --
- 4 files changed, 55 insertions(+), 69 deletions(-)
+ fs/xfs/scrub/trace.h |  258 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 258 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 4bcc095..6dd0984 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3116,3 +3116,40 @@ xfs_alloc_has_record(
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 5d2b1c2..794d56b 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -69,6 +69,8 @@ DEFINE_EVENT(xfs_scrub_class, name, \
+ DEFINE_SCRUB_EVENT(xfs_scrub_start);
+ DEFINE_SCRUB_EVENT(xfs_scrub_done);
+ DEFINE_SCRUB_EVENT(xfs_scrub_deadlock_retry);
++DEFINE_SCRUB_EVENT(xfs_repair_attempt);
++DEFINE_SCRUB_EVENT(xfs_repair_done);
  
- 	return xfs_btree_has_record(cur, &low, &high, exists);
- }
+ TRACE_EVENT(xfs_scrub_op_error,
+ 	TP_PROTO(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+@@ -492,6 +494,262 @@ TRACE_EVENT(xfs_scrub_xref_error,
+ 		  __entry->ret_ip)
+ );
+ 
++/* repair tracepoints */
++#if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
 +
-+/*
-+ * Walk all the blocks in the AGFL.  The @walk_fn can return any negative
-+ * error code or XFS_BTREE_QUERY_RANGE_ABORT.
-+ */
-+int
-+xfs_agfl_walk(
-+	struct xfs_mount	*mp,
-+	struct xfs_agf		*agf,
-+	struct xfs_buf		*agflbp,
-+	xfs_agfl_walk_fn	walk_fn,
-+	void			*priv)
-+{
-+	__be32			*agfl_bno;
-+	unsigned int		i;
-+	int			error;
++DECLARE_EVENT_CLASS(xfs_repair_extent_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len),
++	TP_ARGS(mp, agno, agbno, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len)
++);
++#define DEFINE_REPAIR_EXTENT_EVENT(name) \
++DEFINE_EVENT(xfs_repair_extent_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len), \
++	TP_ARGS(mp, agno, agbno, len))
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_dispose_btree_extent);
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_collect_btree_extent);
++DEFINE_REPAIR_EXTENT_EVENT(xfs_repair_agfl_insert);
 +
-+	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
-+	i = be32_to_cpu(agf->agf_flfirst);
++DECLARE_EVENT_CLASS(xfs_repair_rmap_class,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t agbno, xfs_extlen_t len,
++		 uint64_t owner, uint64_t offset, unsigned int flags),
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(xfs_extlen_t, len)
++		__field(uint64_t, owner)
++		__field(uint64_t, offset)
++		__field(unsigned int, flags)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->len = len;
++		__entry->owner = owner;
++		__entry->offset = offset;
++		__entry->flags = flags;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u owner %lld offset %llu flags 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->len,
++		  __entry->owner,
++		  __entry->offset,
++		  __entry->flags)
++);
++#define DEFINE_REPAIR_RMAP_EVENT(name) \
++DEFINE_EVENT(xfs_repair_rmap_class, name, \
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
++		 xfs_agblock_t agbno, xfs_extlen_t len, \
++		 uint64_t owner, uint64_t offset, unsigned int flags), \
++	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_alloc_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_ialloc_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_rmap_extent_fn);
++DEFINE_REPAIR_RMAP_EVENT(xfs_repair_bmap_extent_fn);
 +
-+	/* Nothing to walk in an empty AGFL. */
-+	if (agf->agf_flcount == cpu_to_be32(0))
-+		return 0;
++TRACE_EVENT(xfs_repair_refcount_extent_fn,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 struct xfs_refcount_irec *irec),
++	TP_ARGS(mp, agno, irec),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, startblock)
++		__field(xfs_extlen_t, blockcount)
++		__field(xfs_nlink_t, refcount)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startblock = irec->rc_startblock;
++		__entry->blockcount = irec->rc_blockcount;
++		__entry->refcount = irec->rc_refcount;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u len %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startblock,
++		  __entry->blockcount,
++		  __entry->refcount)
++)
 +
-+	/* Otherwise, walk from first to last, wrapping as needed. */
-+	for (;;) {
-+		error = walk_fn(mp, be32_to_cpu(agfl_bno[i]), priv);
-+		if (error)
-+			return error;
-+		if (i == be32_to_cpu(agf->agf_fllast))
-+			break;
-+		if (++i == xfs_agfl_size(mp))
-+			i = 0;
-+	}
++TRACE_EVENT(xfs_repair_init_btblock,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 xfs_btnum_t btnum),
++	TP_ARGS(mp, agno, agbno, btnum),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, btnum)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->btnum = btnum;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u btnum %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->btnum)
++)
++TRACE_EVENT(xfs_repair_findroot_block,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agblock_t agbno,
++		 uint32_t magic, uint16_t level),
++	TP_ARGS(mp, agno, agbno, magic, level),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, agbno)
++		__field(uint32_t, magic)
++		__field(uint16_t, level)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->agbno = agbno;
++		__entry->magic = magic;
++		__entry->level = level;
++	),
++	TP_printk("dev %d:%d agno %u agbno %u magic 0x%x level %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agbno,
++		  __entry->magic,
++		  __entry->level)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t icount, xfs_agblock_t aglen, xfs_agblock_t freelen,
++		 xfs_agblock_t usedlen),
++	TP_ARGS(mp, agno, icount, aglen, freelen, usedlen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, icount)
++		__field(xfs_agblock_t, aglen)
++		__field(xfs_agblock_t, freelen)
++		__field(xfs_agblock_t, usedlen)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->icount = icount;
++		__entry->aglen = aglen;
++		__entry->freelen = freelen;
++		__entry->usedlen = usedlen;
++	),
++	TP_printk("dev %d:%d agno %d icount %u aglen %u freelen %u usedlen %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->icount,
++		  __entry->aglen,
++		  __entry->freelen,
++		  __entry->usedlen)
++)
++TRACE_EVENT(xfs_repair_calc_ag_resblks_btsize,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agblock_t bnobt_sz, xfs_agblock_t inobt_sz,
++		 xfs_agblock_t rmapbt_sz, xfs_agblock_t refcbt_sz),
++	TP_ARGS(mp, agno, bnobt_sz, inobt_sz, rmapbt_sz, refcbt_sz),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agblock_t, bnobt_sz)
++		__field(xfs_agblock_t, inobt_sz)
++		__field(xfs_agblock_t, rmapbt_sz)
++		__field(xfs_agblock_t, refcbt_sz)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->bnobt_sz = bnobt_sz;
++		__entry->inobt_sz = inobt_sz;
++		__entry->rmapbt_sz = rmapbt_sz;
++		__entry->refcbt_sz = refcbt_sz;
++	),
++	TP_printk("dev %d:%d agno %d bno %u ino %u rmap %u refcount %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bnobt_sz,
++		  __entry->inobt_sz,
++		  __entry->rmapbt_sz,
++		  __entry->refcbt_sz)
++)
++TRACE_EVENT(xfs_repair_reset_counters,
++	TP_PROTO(struct xfs_mount *mp),
++	TP_ARGS(mp),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++	),
++	TP_printk("dev %d:%d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev))
++)
 +
-+	return 0;
-+}
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index cbf789e..490f210 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -248,4 +248,9 @@ bool xfs_verify_fsbno(struct xfs_mount *mp, xfs_fsblock_t fsbno);
- int xfs_alloc_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
- 		xfs_extlen_t len, bool *exist);
- 
-+typedef int (*xfs_agfl_walk_fn)(struct xfs_mount *mp, xfs_agblock_t bno,
-+		void *priv);
-+int xfs_agfl_walk(struct xfs_mount *mp, struct xfs_agf *agf,
-+		struct xfs_buf *agflbp, xfs_agfl_walk_fn walk_fn, void *priv);
++TRACE_EVENT(xfs_repair_ialloc_insert,
++	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
++		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
++		 uint8_t freecount, uint64_t freemask),
++	TP_ARGS(mp, agno, startino, holemask, count, freecount, freemask),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, startino)
++		__field(uint16_t, holemask)
++		__field(uint8_t, count)
++		__field(uint8_t, freecount)
++		__field(uint64_t, freemask)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->agno = agno;
++		__entry->startino = startino;
++		__entry->holemask = holemask;
++		__entry->count = count;
++		__entry->freecount = freecount;
++		__entry->freemask = freemask;
++	),
++	TP_printk("dev %d:%d agno %d startino %u holemask 0x%x count %u freecount %u freemask 0x%llx",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->startino,
++		  __entry->holemask,
++		  __entry->count,
++		  __entry->freecount,
++		  __entry->freemask)
++)
 +
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 6c6e4d8..c5b5429 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -38,68 +38,6 @@
- #include "scrub/common.h"
- #include "scrub/trace.h"
- 
--/*
-- * Walk all the blocks in the AGFL.  The fn function can return any negative
-- * error code or XFS_BTREE_QUERY_RANGE_ABORT.
-- */
--int
--xfs_scrub_walk_agfl(
--	struct xfs_scrub_context	*sc,
--	int				(*fn)(struct xfs_scrub_context *,
--					      xfs_agblock_t bno, void *),
--	void				*priv)
--{
--	struct xfs_agf			*agf;
--	__be32				*agfl_bno;
--	struct xfs_mount		*mp = sc->mp;
--	unsigned int			flfirst;
--	unsigned int			fllast;
--	int				i;
--	int				error;
--
--	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
--	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, sc->sa.agfl_bp);
--	flfirst = be32_to_cpu(agf->agf_flfirst);
--	fllast = be32_to_cpu(agf->agf_fllast);
--
--	/* Nothing to walk in an empty AGFL. */
--	if (agf->agf_flcount == cpu_to_be32(0))
--		return 0;
--
--	/* first to last is a consecutive list. */
--	if (fllast >= flfirst) {
--		for (i = flfirst; i <= fllast; i++) {
--			error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
--			if (error)
--				return error;
--			if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--				return error;
--		}
--
--		return 0;
--	}
--
--	/* first to the end */
--	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
--		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
--		if (error)
--			return error;
--		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--			return error;
--	}
--
--	/* the start to last. */
--	for (i = 0; i <= fllast; i++) {
--		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
--		if (error)
--			return error;
--		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--			return error;
--	}
--
--	return 0;
--}
--
- /* Superblock */
- 
- /* Cross-reference with the other btrees. */
-@@ -681,6 +619,7 @@ struct xfs_scrub_agfl_info {
- 	unsigned int			sz_entries;
- 	unsigned int			nr_entries;
- 	xfs_agblock_t			*entries;
-+	struct xfs_scrub_context	*sc;
- };
- 
- /* Cross-reference with the other btrees. */
-@@ -702,12 +641,12 @@ xfs_scrub_agfl_block_xref(
- /* Scrub an AGFL block. */
- STATIC int
- xfs_scrub_agfl_block(
--	struct xfs_scrub_context	*sc,
-+	struct xfs_mount		*mp,
- 	xfs_agblock_t			agbno,
- 	void				*priv)
- {
--	struct xfs_mount		*mp = sc->mp;
- 	struct xfs_scrub_agfl_info	*sai = priv;
-+	struct xfs_scrub_context	*sc = sai->sc;
- 	xfs_agnumber_t			agno = sc->sa.agno;
- 
- 	if (xfs_verify_agbno(mp, agno, agbno) &&
-@@ -718,6 +657,9 @@ xfs_scrub_agfl_block(
- 
- 	xfs_scrub_agfl_block_xref(sc, agbno, priv);
- 
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return XFS_BTREE_QUERY_RANGE_ABORT;
++#endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
 +
- 	return 0;
- }
+ #endif /* _TRACE_XFS_SCRUB_TRACE_H */
  
-@@ -797,6 +739,7 @@ xfs_scrub_agfl(
- 		goto out;
- 	}
- 	memset(&sai, 0, sizeof(sai));
-+	sai.sc = sc;
- 	sai.sz_entries = agflcount;
- 	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount,
- 			KM_MAYFAIL);
-@@ -807,7 +750,12 @@ xfs_scrub_agfl(
- 
- 	/* Check the blocks in the AGFL. */
- 	xfs_rmap_ag_owner(&sai.oinfo, XFS_RMAP_OWN_AG);
--	error = xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sai);
-+	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
-+			sc->sa.agfl_bp, xfs_scrub_agfl_block, &sai);
-+	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
-+		error = 0;
-+		goto out_free;
-+	}
- 	if (error)
- 		goto out_free;
- 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 191c369..5d3e9c5 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -129,10 +129,6 @@ int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- void xfs_scrub_ag_btcur_free(struct xfs_scrub_ag *sa);
- int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
- 			    struct xfs_scrub_ag *sa);
--int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
--			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
--				  void *),
--			void *priv);
- int xfs_scrub_count_rmap_ownedby_ag(struct xfs_scrub_context *sc,
- 				    struct xfs_btree_cur *cur,
- 				    struct xfs_owner_info *oinfo,
+ #undef TRACE_INCLUDE_PATH
 
