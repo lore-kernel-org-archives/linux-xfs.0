@@ -1,102 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51878 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:48618 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750764AbeDQEfy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Apr 2018 00:35:54 -0400
-Subject: Re: [PATCH V3] xfs: enhance dinode verifier
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <a1454c1f-e01a-5570-85d3-d55181c9ddd3@redhat.com>
- <c80d14ca-2d47-86f7-62f8-90affb06cef7@sandeen.net>
- <1ffdb61f-d642-1310-a5df-0f166d90aa28@sandeen.net>
-Message-ID: <5afa3a18-80dd-d794-bb3e-09226ed37ab5@sandeen.net>
-Date: Mon, 16 Apr 2018 23:35:52 -0500
+        id S1752153AbeDRKMZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Apr 2018 06:12:25 -0400
+Date: Wed, 18 Apr 2018 12:12:21 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 03/11] fs: add frozen sb state helpers
+Message-ID: <20180418101221.nzkpkuoojruuiqoc@quack2.suse.cz>
+References: <20171129232356.28296-1-mcgrof@kernel.org>
+ <20171129232356.28296-4-mcgrof@kernel.org>
+ <20171130171310.GG28180@quack2.suse.cz>
+ <20171130190548.GJ729@wotan.suse.de>
+ <20171201114724.GC8365@quack2.suse.cz>
+ <20171201211327.GQ729@wotan.suse.de>
+ <20171221110329.GG31584@quack2.suse.cz>
+ <20180418005936.j3fa5rogfm353clf@garbanzo.do-not-panic.com>
 MIME-Version: 1.0
-In-Reply-To: <1ffdb61f-d642-1310-a5df-0f166d90aa28@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180418005936.j3fa5rogfm353clf@garbanzo.do-not-panic.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc: wen.xu@gatech.edu
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jlayton@redhat.com
 
-
-
-On 4/13/18 10:54 AM, Eric Sandeen wrote:
-> Add several more validations to xfs_dinode_verify:
+On Tue 17-04-18 17:59:36, Luis R. Rodriguez wrote:
+> On Thu, Dec 21, 2017 at 12:03:29PM +0100, Jan Kara wrote:
+> > On Fri 01-12-17 22:13:27, Luis R. Rodriguez wrote:
+> > > 
+> > > I'll note that its still not perfectly clear if really the semantics behind
+> > > freeze_bdev() match what I described above fully. That still needs to be
+> > > vetted for. For instance, does thaw_bdev() keep a superblock frozen if we
+> > > an ioctl initiated freeze had occurred before? If so then great. Otherwise
+> > > I think we'll need to distinguish the ioctl interface. Worst possible case
+> > > is that bdev semantics and in-kernel semantics differ somehow, then that
+> > > will really create a holy fucking mess.
+> > 
+> > I believe nobody really thought about mixing those two interfaces to fs
+> > freezing and so the behavior is basically defined by the implementation.
+> > That is:
+> > 
+> > freeze_bdev() on sb frozen by ioctl_fsfreeze() -> EBUSY
 > 
-> - For LOCAL data fork formats, di_nextents must be 0.
-> - For LOCAL attr fork formats, di_anextents must be 0.
-> - For inodes with no attr fork offset,
->   - format must be XFS_DINODE_FMT_EXTENTS if set at all
->   - di_anextents must be 0.
+> Note below as well on your *future* freeze_super() implementation.
 > 
-> Thanks to dchinner for pointing out a couple related checks I had
-> forgotten to add.
-
-Darrick, maybe also add:
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199377
-
-If you still can
-
--Eric
-
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> > freeze_bdev() on sb frozen by freeze_bdev() -> success
+> > ioctl_fsfreeze() on sb frozen by freeze_bdev() -> EBUSY
+> > ioctl_fsfreeze() on sb frozen by ioctl_fsfreeze() -> EBUSY
+> > 
+> > thaw_bdev() on sb frozen by ioctl_fsfreeze() -> EINVAL
 > 
-> V2: due credit 
-> V3: clarify the no-offset / no-format cases in a comment
+> Phew, so this is what we want for the in-kernel freezing so we're good
+> and *can* combine these then.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index ef68b1d..ee8ed90 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -466,6 +466,8 @@
->  				return __this_address;
->  			if (di_size > XFS_DFORK_DSIZE(dip, mp))
->  				return __this_address;
-> +			if (dip->di_nextents)
-> +				return __this_address;
->  			/* fall through */
->  		case XFS_DINODE_FMT_EXTENTS:
->  		case XFS_DINODE_FMT_BTREE:
-> @@ -484,12 +486,31 @@
->  	if (XFS_DFORK_Q(dip)) {
->  		switch (dip->di_aformat) {
->  		case XFS_DINODE_FMT_LOCAL:
-> +			if (dip->di_anextents)
-> +				return __this_address;
-> +		/* fall through */
->  		case XFS_DINODE_FMT_EXTENTS:
->  		case XFS_DINODE_FMT_BTREE:
->  			break;
->  		default:
->  			return __this_address;
->  		}
-> +	} else {
-> +		/*
-> +		 * If there is no fork offset, this may be a freshly-made inode
-> +		 * in a new disk cluster, in which case di_aformat is zeroed.
-> +		 * Otherwise, such an inode must be in EXTENTS format; this goes
-> +		 * for freed inodes as well.
-> +		 */
-> +		switch (dip->di_aformat) {
-> +		case 0:
-> +		case XFS_DINODE_FMT_EXTENTS:
-> +			break;
-> +		default:
-> +			return __this_address;
-> +		}
-> +		if (dip->di_anextents)
-> +			return __this_address;
->  	}
->  
->  	/* only version 3 or greater inodes are extensively verified here */
+> > ioctl_fsthaw() on sb frozen by freeze_bdev() -> success
+> > 
+> > What I propose is the following API:
+> > 
+> > freeze_super_excl()
+> >   - freezes superblock, returns EBUSY if the superblock is already frozen
+> >     (either by another freeze_super_excl() or by freeze_super())
+> > freeze_super()
+> >   - this function will make sure superblock is frozen when the function
+> >     returns with success. 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> That's straight forward.
 > 
+> >     It can be nested with other freeze_super() or
+> >     freeze_super_excl() calls 
+> 
+> This is where it can get hairy. More below.
+> 
+> >     (this second part is different from how
+> >     freeze_bdev() behaves currently but AFAICT this behavior is actually
+> >     what all current users of freeze_bdev() really want - just make sure
+> >     fs cannot be written to)
+> 
+> If we can agree to this, then sure. However there are two types of
+> possible nested calls to consider, one where the sb was already frozen
+> by an IOCTL, and the other where it was initiated by either another
+> freeze_super_excl() or another freeze_super() call which is currently
+> being processed. For the first type, its easy to say the device is
+> already frozen as such return success. If the freezing is ongoing,
+> we may want to wait or not wait, and this will depend on our current
+> use cases for freeze_bdev().
+
+A side note since I'm not sure I wrote this down in my previous email:
+I want ioctl_fsfreeze() directly use freeze_super_excl().
+
+Now to your freeze in progress question: freeze_super_excl() can
+immediately return EBUSY when there's freezing in progress. OTOH
+freeze_super() always has to wait for the current freeze / thaw to finish
+and then do what's necessary. I don't see a use case where you'd like to
+have freeze_super() not wait.
+
+> As you noted above, freeze_bdev() currently returns EBUSY if we had
+> the sb already frozen by ioctl_fsfreeze(). It may be a welcomed
+> enhancement to correct the semantics first to address the first case,
+> but keep the EBUSY for the other case. A secondary patch could then
+> add a completion mechanism and let callers decide to either wait or not.
+> *Iff* the caller did not opt-in to wait we keep the EBUSY return.
+
+You're now speaking about steps to transition to the new API, right? I'd
+structure the transition as follows:
+
+1) Move bdev->bd_fsfreeze_count to a superblock.
+2) Make freeze_super() grab the counter as well, thaw_super() drops it and
+  unfreezes the filesystem only if the counter dropped to zero.
+3) Rename freeze_super() to freeze_super_excl().
+4) Only now I'd go for messing with freeze_bdev() as it now combines sanely
+with freeze_super_excl(). Probably I'd just implement new freeze_super()
+with the desired semantics (including waiting for ongoing operation to
+finish).
+5) And then switch all users (there are 4 in the kernel) from freeze_bdev()
+to freeze_super() with the justification in each case why the new semantics
+is actually desirable.
+6) Drop old freeze_bdev() - note that only one freeze_bdev() user (in
+drivers/md/dm.c) is actually interested in passing bdev, all the others are
+better off just passing in superblock to new freeze_super(). Anyway for
+that user in dm we might still provide a convenience wrapper to grab the
+superblock and call new freeze_super() on it.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
