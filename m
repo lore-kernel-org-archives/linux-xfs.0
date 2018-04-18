@@ -1,58 +1,209 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:39387 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750799AbeDSJNH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Apr 2018 05:13:07 -0400
-Received: by mail-wr0-f176.google.com with SMTP id q3-v6so1945605wrj.6
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Apr 2018 02:13:06 -0700 (PDT)
-Date: Thu, 19 Apr 2018 11:13:02 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [RFC PATCH] db: Stop core dumping on attr3 if block header is
- not recognized
-Message-ID: <20180419091302.coz4clrmr5ubdku2@odin.usersys.redhat.com>
-References: <20180418094935.12495-1-cmaiolino@redhat.com>
- <20180418154435.GQ24738@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:44224 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752785AbeDRQzb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 12:55:31 -0400
+Date: Wed, 18 Apr 2018 09:55:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 02/11] xfs: create the XFS_QMOPT_QUOTIP_LOCKED flag
+Message-ID: <20180418165511.GS24738@magnolia>
+References: <152401916729.11465.4212188839231900136.stgit@magnolia>
+ <152401917977.11465.9543981144688523511.stgit@magnolia>
+ <20180418153317.GB19870@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180418154435.GQ24738@magnolia>
+In-Reply-To: <20180418153317.GB19870@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Apr 18, 2018 at 08:44:35AM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 18, 2018 at 11:49:35AM +0200, Carlos Maiolino wrote:
+On Wed, Apr 18, 2018 at 11:33:17AM -0400, Brian Foster wrote:
+> On Tue, Apr 17, 2018 at 07:39:39PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a new QMOPT flag to signal that we've already locked the quota
+> > inode.  This will be used by the quota scrub code refactoring to avoid
+> > dropping the quota ip lock during scrub.  The flag is incompatible with
+> > the DQALLOC flag because dquot allocation creates a transaction, and we
+> > shouldn't be doing that with the ILOCK held.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_quota_defs.h |    2 ++
+> >  fs/xfs/xfs_dquot.c             |   32 ++++++++++++++++++++------------
+> >  2 files changed, 22 insertions(+), 12 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+> > index bb1b13a..cfc9938 100644
+> > --- a/fs/xfs/libxfs/xfs_quota_defs.h
+> > +++ b/fs/xfs/libxfs/xfs_quota_defs.h
+> > @@ -107,6 +107,8 @@ typedef uint16_t	xfs_qwarncnt_t;
+> >   * to a single function. None of these XFS_QMOPT_* flags are meant to have
+> >   * persistent values (ie. their values can and will change between versions)
+> >   */
+> > +/* Quota ip already locked.  Cannot be used with DQALLOC. */
+> > +#define XFS_QMOPT_QUOTIP_LOCKED	0x0000001
+> >  #define XFS_QMOPT_DQALLOC	0x0000002 /* alloc dquot ondisk if needed */
+> >  #define XFS_QMOPT_UQUOTA	0x0000004 /* user dquot requested */
+> >  #define XFS_QMOPT_PQUOTA	0x0000008 /* project dquot requested */
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index a7daef9..ed2e37c 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -417,18 +417,20 @@ xfs_qm_dqtobp(
+> >  	struct xfs_mount	*mp = dqp->q_mount;
+> >  	xfs_dqid_t		id = be32_to_cpu(dqp->q_core.d_id);
+> >  	struct xfs_trans	*tp = (tpp ? *tpp : NULL);
+> > -	uint			lock_mode;
+> > +	uint			lock_mode = 0;
+> >  
+> >  	quotip = xfs_quota_inode(dqp->q_mount, dqp->dq_flags);
+> >  	dqp->q_fileoffset = (xfs_fileoff_t)id / mp->m_quotainfo->qi_dqperchunk;
+> >  
+> > -	lock_mode = xfs_ilock_data_map_shared(quotip);
+> > +	if (!(flags & XFS_QMOPT_QUOTIP_LOCKED))
+> > +		lock_mode = xfs_ilock_data_map_shared(quotip);
+> >  	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
+> >  		/*
+> >  		 * Return if this type of quotas is turned off while we
+> >  		 * didn't have the quota inode lock.
+> >  		 */
+> > -		xfs_iunlock(quotip, lock_mode);
+> > +		if (lock_mode)
+> > +			xfs_iunlock(quotip, lock_mode);
+> >  		return -ESRCH;
+> >  	}
+> >  
+> > @@ -438,7 +440,8 @@ xfs_qm_dqtobp(
+> >  	error = xfs_bmapi_read(quotip, dqp->q_fileoffset,
+> >  			       XFS_DQUOT_CLUSTER_SIZE_FSB, &map, &nmaps, 0);
+> >  
+> > -	xfs_iunlock(quotip, lock_mode);
+> > +	if (lock_mode)
+> > +		xfs_iunlock(quotip, lock_mode);
+> >  	if (error)
+> >  		return error;
+> >  
+> > @@ -458,7 +461,7 @@ xfs_qm_dqtobp(
+> >  		 */
+> >  		if (!(flags & XFS_QMOPT_DQALLOC))
+> >  			return -ENOENT;
+> > -
+> > +		ASSERT(!(flags & XFS_QMOPT_QUOTIP_LOCKED));
+> >  		ASSERT(tp);
+> >  		error = xfs_qm_dqalloc(tpp, mp, dqp, quotip,
+> >  					dqp->q_fileoffset, &bp);
+> > @@ -553,6 +556,7 @@ xfs_qm_dqread(
+> >  	trace_xfs_dqread(dqp);
+> >  
+> >  	if (flags & XFS_QMOPT_DQALLOC) {
+> > +		ASSERT(!(flags & XFS_QMOPT_QUOTIP_LOCKED));
 > 
-> There are two possible magics for attr3 blocks -- this one, which is for
-> remote attr value blocks, and the xfs_da3_blkinfo magic for the attr
-> leaf and da node blocks.  Can you please fish out the second magic and
-> print that too?
-> 
-> Looks otherwise reasonable, and certainly better than the ASSERT.
-> 
-> --D
-> 
+> Perhaps we should just have an explicit check for both flags above and
+> return with -EINVAL if necessary?
 
-What do you think about this output. Using attr3 type trying to print a
-directory's leaf block.
+Sounds like a good idea.
 
-xfs_db> type attr3
-Unknown attribute buffer type!
-xfs_db> p
-Unrecognized attr3 block, attempting to print magic numbers and/or blkinfo:
-Unrecognized attr3 block, attempting to print magic numbers and/or blkinfo:
-hdr.magic = 0
-hdr.info.hdr.forw = 0
-hdr.info.hdr.back = 0
-hdr.info.hdr.magic = 0x3df1
-hdr.info.crc = 0x72e2e910 (correct)
-hdr.info.bno = 64
-hdr.info.lsn = 0x300002833
-hdr.info.uuid = 2b21796f-7f81-4cec-b583-968c55b7f4bb
-hdr.info.owner = 99
-xfs_db> 
+> >  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
+> >  				XFS_QM_DQALLOC_SPACE_RES(mp), 0, 0, &tp);
+> >  		if (error)
+> > @@ -634,11 +638,12 @@ static int
+> >  xfs_dq_get_next_id(
+> >  	struct xfs_mount	*mp,
+> >  	uint			type,
+> > -	xfs_dqid_t		*id)
+> > +	xfs_dqid_t		*id,
+> > +	uint			flags)
+> >  {
+> >  	struct xfs_inode	*quotip = xfs_quota_inode(mp, type);
+> >  	xfs_dqid_t		next_id = *id + 1; /* simple advance */
+> > -	uint			lock_flags;
+> > +	uint			lock_flags = 0;
+> >  	struct xfs_bmbt_irec	got;
+> >  	struct xfs_iext_cursor	cur;
+> >  	xfs_fsblock_t		start;
+> > @@ -657,7 +662,8 @@ xfs_dq_get_next_id(
+> >  	/* Nope, next_id is now past the current chunk, so find the next one */
+> >  	start = (xfs_fsblock_t)next_id / mp->m_quotainfo->qi_dqperchunk;
+> >  
+> > -	lock_flags = xfs_ilock_data_map_shared(quotip);
+> > +	if (!(flags & XFS_QMOPT_QUOTIP_LOCKED))
+> > +		lock_flags = xfs_ilock_data_map_shared(quotip);
+> >  	if (!(quotip->i_df.if_flags & XFS_IFEXTENTS)) {
+> >  		error = xfs_iread_extents(NULL, quotip, XFS_DATA_FORK);
+> >  		if (error)
+> > @@ -673,7 +679,8 @@ xfs_dq_get_next_id(
+> >  		error = -ENOENT;
+> >  	}
+> >  
+> > -	xfs_iunlock(quotip, lock_flags);
+> > +	if (lock_flags)
+> > +		xfs_iunlock(quotip, lock_flags);
+> >  
+> >  	return error;
+> >  }
+> > @@ -733,7 +740,8 @@ xfs_qm_dqget(
+> 
+> Earlier code in this function drops/reacquires the ip ILOCK with a note
+> in the comment around lock ordering with the quota inode. Assuming an
+> inode is passed, is that lock cycle safe if the caller also has the
+> quotip held locked?
 
--- 
-Carlos
+I'm not sure; for the case that I want to support (iterate dquots
+without a specific file inode in mind) I don't need (ip != NULL) at all.
+So my answer is that I don't want to support this scenario at all. :)
+
+Ok, so at the top of _dqget, add:
+
+if (flags & _QUOTIP_LOCKED) {
+	ASSERT(ip == NULL);
+	ASSERT(!(flags & _DQALLOC));
+	if (ip || (flags & DQALLOC))
+		return -EINVAL;
+}
+
+--D
+
+> 
+> Brian
+> 
+> >  			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+> >  				xfs_dqunlock(dqp);
+> >  				mutex_unlock(&qi->qi_tree_lock);
+> > -				error = xfs_dq_get_next_id(mp, type, &id);
+> > +				error = xfs_dq_get_next_id(mp, type, &id,
+> > +						flags);
+> >  				if (error)
+> >  					return error;
+> >  				goto restart;
+> > @@ -768,7 +776,7 @@ xfs_qm_dqget(
+> >  
+> >  	/* If we are asked to find next active id, keep looking */
+> >  	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
+> > -		error = xfs_dq_get_next_id(mp, type, &id);
+> > +		error = xfs_dq_get_next_id(mp, type, &id, flags);
+> >  		if (!error)
+> >  			goto restart;
+> >  	}
+> > @@ -827,7 +835,7 @@ xfs_qm_dqget(
+> >  	if (flags & XFS_QMOPT_DQNEXT) {
+> >  		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
+> >  			xfs_qm_dqput(dqp);
+> > -			error = xfs_dq_get_next_id(mp, type, &id);
+> > +			error = xfs_dq_get_next_id(mp, type, &id, flags);
+> >  			if (error)
+> >  				return error;
+> >  			goto restart;
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
