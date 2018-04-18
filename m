@@ -1,55 +1,310 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44178 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:45844 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754465AbeDVPHd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:07:33 -0400
-Subject: [PATCH 11/13] xfs: report failing address when dquot verifier fails
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:07:11 -0700
-Message-ID: <152440963171.29601.16982578523210467285.stgit@magnolia>
-In-Reply-To: <152440954198.29601.14390250048915099607.stgit@magnolia>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S1752499AbeDRWNt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:49 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMBGsl154347
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:49 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2hdrxncudy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:49 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDn4Z031510
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:49 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3IMDmoQ005628
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:48 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 05/18] xfs: Remove all strlen calls in all xfs_attr_* functions for attr names.
+Date: Wed, 18 Apr 2018 15:11:13 -0700
+Message-Id: <1524089486-22922-6-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
+References: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, hch@lst.de
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Parent pointer attributes use a binary name, so strlen will not work.
+Calling functions will need to pass in the name length
 
-Pass the failing address through to the corruption report when dquot
-verifiers fail.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dquot_buf.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 12 ++++++++----
+ fs/xfs/libxfs/xfs_attr.h | 10 ++++++----
+ fs/xfs/xfs_acl.c         | 12 +++++++-----
+ fs/xfs/xfs_ioctl.c       | 13 ++++++++++---
+ fs/xfs/xfs_iops.c        |  6 ++++--
+ fs/xfs/xfs_trans_attr.c  |  2 +-
+ fs/xfs/xfs_xattr.c       | 10 +++++++---
+ 7 files changed, 43 insertions(+), 22 deletions(-)
 
-
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index 8b7a6c3..a1e6cf1 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -229,7 +229,7 @@ xfs_dquot_buf_read_verify(
- 	else {
- 		fa = xfs_dquot_buf_verify(mp, bp);
- 		if (fa)
--			xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
-+			xfs_verifier_error(bp, -EFSCORRUPTED, fa);
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 5acf6e7..0e69fa6 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -80,6 +80,7 @@ xfs_attr_args_init(
+ 	struct xfs_da_args	*args,
+ 	struct xfs_inode	*dp,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	int			flags)
+ {
+ 
+@@ -92,7 +93,7 @@ xfs_attr_args_init(
+ 	args->dp = dp;
+ 	args->flags = flags;
+ 	args->name = name;
+-	args->namelen = strlen((const char *)name);
++	args->namelen = namelen;
+ 	if (args->namelen >= MAXNAMELEN)
+ 		return -EFAULT;		/* match IRIX behaviour */
+ 
+@@ -138,6 +139,7 @@ int
+ xfs_attr_get(
+ 	struct xfs_inode	*ip,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	unsigned char		*value,
+ 	int			*valuelenp,
+ 	int			flags)
+@@ -151,7 +153,7 @@ xfs_attr_get(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+-	error = xfs_attr_args_init(&args, ip, name, flags);
++	error = xfs_attr_args_init(&args, ip, name, namelen, flags);
+ 	if (error)
+ 		return error;
+ 
+@@ -425,6 +427,7 @@ int
+ xfs_attr_set(
+ 	struct xfs_inode	*dp,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	unsigned char		*value,
+ 	int			valuelen,
+ 	int			flags)
+@@ -442,7 +445,7 @@ xfs_attr_set(
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+ 
+-	error = xfs_attr_args_init(&args, dp, name, flags);
++	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+ 	if (error)
+ 		return error;
+ 
+@@ -549,6 +552,7 @@ int
+ xfs_attr_remove(
+ 	struct xfs_inode	*dp,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	int			flags)
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
+@@ -562,7 +566,7 @@ xfs_attr_remove(
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+ 
+-	error = xfs_attr_args_init(&args, dp, name, flags);
++	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 924bf7c..2ca9e7e 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -171,17 +171,19 @@ int xfs_attr_list_int(struct xfs_attr_list_context *);
+ int xfs_inode_hasattr(struct xfs_inode *ip);
+ int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+-		 unsigned char *value, int *valuelenp, int flags);
++		size_t namelen, unsigned char *value, int *valuelenp,
++		int flags);
+ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+-		 unsigned char *value, int valuelen, int flags);
++		size_t namelen, unsigned char *value, int valuelen, int flags);
+ int xfs_attr_set_args(struct xfs_da_args *args, int flags,
+ 			struct xfs_buf *leaf_bp, bool roll_trans);
+-int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
++int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
++		size_t namelen, int flags);
+ int xfs_attr_remove_args(struct xfs_da_args *args, int flags);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+-		       const unsigned char *name, int flags);
++		       const unsigned char *name, size_t namelen, int flags);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+ int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
+ 			  void *name, unsigned int name_len, void *value,
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 3354140..e59b26d 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -153,8 +153,8 @@ xfs_get_acl(struct inode *inode, int type)
+ 	if (!xfs_acl)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	error = xfs_attr_get(ip, ea_name, (unsigned char *)xfs_acl,
+-							&len, ATTR_ROOT);
++	error = xfs_attr_get(ip, ea_name, strlen(ea_name),
++			     (unsigned char *)xfs_acl, &len, ATTR_ROOT);
+ 	if (error) {
+ 		/*
+ 		 * If the attribute doesn't exist make sure we have a negative
+@@ -204,15 +204,17 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+ 		len -= sizeof(struct xfs_acl_entry) *
+ 			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+ 
+-		error = xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
+-				len, ATTR_ROOT);
++		error = xfs_attr_set(ip, ea_name, strlen(ea_name),
++				     (unsigned char *)xfs_acl, len, ATTR_ROOT);
+ 
+ 		kmem_free(xfs_acl);
+ 	} else {
+ 		/*
+ 		 * A NULL ACL argument means we want to remove the ACL.
+ 		 */
+-		error = xfs_attr_remove(ip, ea_name, ATTR_ROOT);
++		error = xfs_attr_remove(ip, ea_name,
++					strlen(ea_name),
++					ATTR_ROOT);
+ 
+ 		/*
+ 		 * If the attribute didn't exist to start with that's fine.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89fb1eb..844480a 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -450,6 +450,7 @@ xfs_attrmulti_attr_get(
+ {
+ 	unsigned char		*kbuf;
+ 	int			error = -EFAULT;
++	size_t			namelen;
+ 
+ 	if (*len > XFS_XATTR_SIZE_MAX)
+ 		return -EINVAL;
+@@ -457,7 +458,9 @@ xfs_attrmulti_attr_get(
+ 	if (!kbuf)
+ 		return -ENOMEM;
+ 
+-	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
++	namelen = strlen(name);
++	error = xfs_attr_get(XFS_I(inode), name, namelen,
++			     kbuf, (int *)len, flags);
+ 	if (error)
+ 		goto out_kfree;
+ 
+@@ -479,6 +482,7 @@ xfs_attrmulti_attr_set(
+ {
+ 	unsigned char		*kbuf;
+ 	int			error;
++	size_t			namelen;
+ 
+ 	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+ 		return -EPERM;
+@@ -489,7 +493,8 @@ xfs_attrmulti_attr_set(
+ 	if (IS_ERR(kbuf))
+ 		return PTR_ERR(kbuf);
+ 
+-	error = xfs_attr_set(XFS_I(inode), name, kbuf, len, flags);
++	namelen = strlen(name);
++	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
+ 	if (!error)
+ 		xfs_forget_acl(inode, name, flags);
+ 	kfree(kbuf);
+@@ -503,10 +508,12 @@ xfs_attrmulti_attr_remove(
+ 	uint32_t		flags)
+ {
+ 	int			error;
++	size_t			namelen;
+ 
+ 	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
+ 		return -EPERM;
+-	error = xfs_attr_remove(XFS_I(inode), name, flags);
++	namelen = strlen(name);
++	error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
+ 	if (!error)
+ 		xfs_forget_acl(inode, name, flags);
+ 	return error;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index c45acf0..7920f19 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -71,8 +71,10 @@ xfs_initxattrs(
+ 	int			error = 0;
+ 
+ 	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
+-		error = xfs_attr_set(ip, xattr->name, xattr->value,
+-				      xattr->value_len, ATTR_SECURE);
++		error = xfs_attr_set(ip, xattr->name,
++				     strlen(xattr->name),
++				     xattr->value, xattr->value_len,
++				     ATTR_SECURE);
+ 		if (error < 0)
+ 			break;
  	}
- }
+diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+index 7320639..d02dcb7 100644
+--- a/fs/xfs/xfs_trans_attr.c
++++ b/fs/xfs/xfs_trans_attr.c
+@@ -86,7 +86,7 @@ xfs_trans_attr(
  
-@@ -266,7 +266,7 @@ xfs_dquot_buf_write_verify(
+ 	tp->t_flags |= XFS_TRANS_RESERVE;
  
- 	fa = xfs_dquot_buf_verify(mp, bp);
- 	if (fa)
--		xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
-+		xfs_verifier_error(bp, -EFSCORRUPTED, fa);
- }
+-	error = xfs_attr_args_init(&args, ip, name, flags);
++	error = xfs_attr_args_init(&args, ip, name, name_len, flags);
+ 	if (error)
+ 		return error;
  
- const struct xfs_buf_ops xfs_dquot_buf_ops = {
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 0594db4..6cf30ae 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -38,6 +38,7 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+ 	int xflags = handler->flags;
+ 	struct xfs_inode *ip = XFS_I(inode);
+ 	int error, asize = size;
++	size_t namelen = strlen(name);
+ 
+ 	/* Convert Linux syscall to XFS internal ATTR flags */
+ 	if (!size) {
+@@ -45,7 +46,8 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+ 		value = NULL;
+ 	}
+ 
+-	error = xfs_attr_get(ip, (unsigned char *)name, value, &asize, xflags);
++	error = xfs_attr_get(ip, name, namelen, value,
++			     &asize, xflags);
+ 	if (error)
+ 		return error;
+ 	return asize;
+@@ -81,6 +83,7 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+ 	int			xflags = handler->flags;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	int			error;
++	size_t			namelen = strlen(name);
+ 
+ 	/* Convert Linux syscall to XFS internal ATTR flags */
+ 	if (flags & XATTR_CREATE)
+@@ -89,8 +92,9 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+ 		xflags |= ATTR_REPLACE;
+ 
+ 	if (!value)
+-		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
+-	error = xfs_attr_set(ip, (unsigned char *)name,
++		return xfs_attr_remove(ip, name,
++				       namelen, xflags);
++	error = xfs_attr_set(ip, name, namelen,
+ 				(void *)value, size, xflags);
+ 	if (!error)
+ 		xfs_forget_acl(inode, name, xflags);
+-- 
+2.7.4
 
