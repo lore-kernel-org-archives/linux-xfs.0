@@ -1,80 +1,227 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60802 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753144AbeDRCrx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:47:53 -0400
-Subject: [PATCH 10/11] xfs_repair: check inode nsec for obviously garbage
- values
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:47:34 -0700
-Message-ID: <152401965412.13319.8835868498112431576.stgit@magnolia>
-In-Reply-To: <152401958920.13319.10756339531174871801.stgit@magnolia>
-References: <152401958920.13319.10756339531174871801.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:64121 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752314AbeDRAVS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 20:21:18 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1f8aqY-00008r-W4
+        for linux-xfs@vger.kernel.org; Wed, 18 Apr 2018 10:21:15 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.90_1)
+        (envelope-from <david@fromorbit.com>)
+        id 1f8aqY-00034Q-V5
+        for linux-xfs@vger.kernel.org; Wed, 18 Apr 2018 10:21:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: don't retry xfs_buf_find on XBF_TRYLOCK failure
+Date: Wed, 18 Apr 2018 10:21:11 +1000
+Message-Id: <20180418002111.11637-3-david@fromorbit.com>
+In-Reply-To: <20180418002111.11637-1-david@fromorbit.com>
+References: <20180418002111.11637-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-It makes no sense to have an nsec value that is larger than 1 second,
-so zero the field if this is the case.
+When looking at an event trace recently, I noticed that non-blocking
+buffer lookup attempts would fail on cached locked buffers and then
+run the slow cache-miss path. This means we are doing an xfs_buf
+allocation, lookup and free unnecessarily every time we avoid
+blocking on a locked buffer.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fix this by changing _xfs_buf_find() to return an error status to
+the caller to indicate that we failed the lock attempt rather than
+just returning a NULL. This allows the higher level code to
+discriminate between a cache miss and an cache hit that we failed to
+lock.
+
+This also allows us to return a -EFSCORRUPTED state if we are asked
+to look up a block number outside the range of the filesystem in
+_xfs_buf_find(), which moves us one step closer to being able to
+handle such errors in a more graceful manner at the higher levels.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- repair/dinode.c |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ fs/xfs/xfs_buf.c | 93 +++++++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 65 insertions(+), 28 deletions(-)
 
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index c8c1850..9792293 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -2233,6 +2233,28 @@ _("would clear obsolete nlink field in version 2 inode %" PRIu64 ", currently %d
- 	return dirty;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 2ca8e2c7fbc4..41b386c26582 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -549,17 +549,31 @@ xfs_buf_hash_destroy(
  }
  
-+/* Check nanoseconds of a timestamp don't exceed 1 second. */
-+static void
-+check_nsec(
-+	const char		*name,
-+	xfs_ino_t		lino,
-+	struct xfs_timestamp	*t,
-+	int			*dirty)
-+{
-+	if (be32_to_cpu(t->t_nsec) < 1000000000)
-+		return;
-+
-+	do_warn(
-+_("Bad %s nsec %u on inode %" PRIu64 ", "), name, be32_to_cpu(t->t_nsec), lino);
-+	if (no_modify) {
-+		do_warn(_("would reset to zero\n"));
-+	} else {
-+		do_warn(_("resetting to zero\n"));
-+		t->t_nsec = 0;
-+		*dirty = 1;
-+	}
-+}
-+
  /*
-  * returns 0 if the inode is ok, 1 if the inode is corrupt
-  * check_dups can be set to 1 *only* when called by the
-@@ -2749,6 +2771,13 @@ _("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
- 		}
+- * Look up (and insert if absent), a lockable buffer for a given
+- * range of an inode.  The buffer is returned locked. No I/O is
+- * implied by this call.
++ * Look up a buffer in the buffer cache and return it referenced and locked
++ * in @found_bp.
++ *
++ * If @new_bp is supplied and we have a lookup miss, insert @new_bp into the
++ * cache.
++ *
++ * If XBF_TRYLOCK is set in @flags, only try to lock the buffer and return
++ * -EAGAIN if we fail to lock it.
++ *
++ * Return values are:
++ *	-EFSCORRUPTED if have been supplied with an invalid address
++ *	-EAGAIN on trylock failure
++ *	-ENOENT if we fail to find a match and @new_bp was NULL
++ *	0, with @found_bp:
++ *		- @new_bp if we inserted it into the cache
++ *		- the buffer we found and locked.
+  */
+-static struct xfs_buf *
+-_xfs_buf_find(
++static int
++xfs_buf_find(
+ 	struct xfs_buftarg	*btp,
+ 	struct xfs_buf_map	*map,
+ 	int			nmaps,
+ 	xfs_buf_flags_t		flags,
+-	struct xfs_buf		*new_bp)
++	struct xfs_buf		*new_bp,
++	struct xfs_buf		**found_bp)
+ {
+ 	struct xfs_perag	*pag;
+ 	xfs_buf_t		*bp;
+@@ -567,6 +581,8 @@ _xfs_buf_find(
+ 	xfs_daddr_t		eofs;
+ 	int			i;
+ 
++	*found_bp = NULL;
++
+ 	for (i = 0; i < nmaps; i++)
+ 		cmap.bm_len += map[i].bm_len;
+ 
+@@ -580,16 +596,11 @@ _xfs_buf_find(
+ 	 */
+ 	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
+ 	if (cmap.bm_bn < 0 || cmap.bm_bn >= eofs) {
+-		/*
+-		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
+-		 * but none of the higher level infrastructure supports
+-		 * returning a specific error on buffer lookup failures.
+-		 */
+ 		xfs_alert(btp->bt_mount,
+ 			  "%s: daddr 0x%llx out of range, EOFS 0x%llx",
+ 			  __func__, cmap.bm_bn, eofs);
+ 		WARN_ON(1);
+-		return NULL;
++		return -EFSCORRUPTED;
  	}
  
-+	/* nsec fields cannot be larger than 1 billion */
-+	check_nsec("atime", lino, &dino->di_atime, dirty);
-+	check_nsec("mtime", lino, &dino->di_mtime, dirty);
-+	check_nsec("ctime", lino, &dino->di_ctime, dirty);
-+	if (dino->di_version >= 3)
-+		check_nsec("crtime", lino, &dino->di_crtime, dirty);
+ 	pag = xfs_perag_get(btp->bt_mount,
+@@ -604,19 +615,20 @@ _xfs_buf_find(
+ 	}
+ 
+ 	/* No match found */
+-	if (new_bp) {
+-		/* the buffer keeps the perag reference until it is freed */
+-		new_bp->b_pag = pag;
+-		rhashtable_insert_fast(&pag->pag_buf_hash,
+-				       &new_bp->b_rhash_head,
+-				       xfs_buf_hash_params);
+-		spin_unlock(&pag->pag_buf_lock);
+-	} else {
++	if (!new_bp) {
+ 		XFS_STATS_INC(btp->bt_mount, xb_miss_locked);
+ 		spin_unlock(&pag->pag_buf_lock);
+ 		xfs_perag_put(pag);
++		return -ENOENT;
+ 	}
+-	return new_bp;
 +
- 	/*
- 	 * general size/consistency checks:
- 	 */
++	/* the buffer keeps the perag reference until it is freed */
++	new_bp->b_pag = pag;
++	rhashtable_insert_fast(&pag->pag_buf_hash, &new_bp->b_rhash_head,
++			       xfs_buf_hash_params);
++	spin_unlock(&pag->pag_buf_lock);
++	*found_bp = new_bp;
++	return 0;
+ 
+ found:
+ 	spin_unlock(&pag->pag_buf_lock);
+@@ -626,7 +638,7 @@ _xfs_buf_find(
+ 		if (flags & XBF_TRYLOCK) {
+ 			xfs_buf_rele(bp);
+ 			XFS_STATS_INC(btp->bt_mount, xb_busy_locked);
+-			return NULL;
++			return -EAGAIN;
+ 		}
+ 		xfs_buf_lock(bp);
+ 		XFS_STATS_INC(btp->bt_mount, xb_get_locked_waited);
+@@ -646,7 +658,8 @@ _xfs_buf_find(
+ 
+ 	trace_xfs_buf_find(bp, flags, _RET_IP_);
+ 	XFS_STATS_INC(btp->bt_mount, xb_get_locked);
+-	return bp;
++	*found_bp = bp;
++	return 0;
+ }
+ 
+ struct xfs_buf *
+@@ -656,8 +669,14 @@ xfs_incore(
+ 	size_t			numblks,
+ 	xfs_buf_flags_t		flags)
+ {
++	struct xfs_buf		*bp;
++	int			error;
+ 	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+-	return _xfs_buf_find(target, &map, 1, flags, NULL);
++
++	error = xfs_buf_find(target, &map, 1, flags, NULL, &bp);
++	if (error)
++		return NULL;
++	return bp;
+ }
+ 
+ /*
+@@ -676,9 +695,27 @@ xfs_buf_get_map(
+ 	struct xfs_buf		*new_bp;
+ 	int			error = 0;
+ 
+-	bp = _xfs_buf_find(target, map, nmaps, flags, NULL);
+-	if (likely(bp))
++	error = xfs_buf_find(target, map, nmaps, flags, NULL, &bp);
++
++	switch (error) {
++	case 0:
++		/* cache hit */
+ 		goto found;
++	case -EAGAIN:
++		/* cache hit, trylock failure, caller handles failure */
++		ASSERT(flags & XBF_TRYLOCK);
++		return NULL;
++	case -ENOENT:
++		/* cache miss, go for insert */
++		break;
++	case -EFSCORRUPTED:
++	default:
++		/*
++		 * None of the higher layers understand failure types
++		 * yet, so return NULL to signal a fatal lookup error.
++		 */
++		return NULL;
++	}
+ 
+ 	new_bp = _xfs_buf_alloc(target, map, nmaps, flags);
+ 	if (unlikely(!new_bp))
+@@ -690,8 +727,8 @@ xfs_buf_get_map(
+ 		return NULL;
+ 	}
+ 
+-	bp = _xfs_buf_find(target, map, nmaps, flags, new_bp);
+-	if (!bp) {
++	error = xfs_buf_find(target, map, nmaps, flags, new_bp, &bp);
++	if (error) {
+ 		xfs_buf_free(new_bp);
+ 		return NULL;
+ 	}
+-- 
+2.16.1
 
