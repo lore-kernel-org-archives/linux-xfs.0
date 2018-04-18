@@ -1,53 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:61046 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750814AbeDCEi5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Apr 2018 00:38:57 -0400
-Date: Tue, 3 Apr 2018 14:38:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Message-ID: <20180403043854.GL1150@dastard>
-References: <f403043cbe8414177d0568e81405@google.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:33900 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752679AbeDRCNY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:13:24 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2CB73083241
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2hdrxn8hcf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2DOKW002602
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3I2DOG8009203
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:13:24 GMT
+Subject: Re: [PATCH 1/1] xfs: fix a null pointer dereference in
+ xfs_bmap_extents_to_btree
+From: Shan Hai <shan.hai@oracle.com>
+References: <1524017385-6671-1-git-send-email-shan.hai@oracle.com>
+Message-ID: <9fbccc81-103f-5b21-af3c-e32b82eba24b@oracle.com>
+Date: Wed, 18 Apr 2018 10:13:22 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f403043cbe8414177d0568e81405@google.com>
+In-Reply-To: <1524017385-6671-1-git-send-email-shan.hai@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>
-Cc: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, Apr 02, 2018 at 07:01:02PM -0700, syzbot wrote:
-> Hello,
-> 
-> syzbot hit the following crash on upstream commit
-> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
-> Merge branch 'ras-core-for-linus' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-> syzbot dashboard link:
-> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
-> 
-> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
-> syzkaller reproducer:
-> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
 
-What a mess. A hand built, hopelessly broken filesystem image made
-up of hex dumps, written into a mmap()d region of memory, then
-copied into a tmpfs file and mounted with the loop device.
 
-Engineers that can debug broken filesystems don't grow on trees.  If
-we are to have any hope of understanding what the hell this test is
-doing, the bot needs to supply us with a copy of the built
-filesystem image the test uses. We need to be able to point forensic
-tools at the image to decode all the structures into human readable
-format - if we are forced to do that by hand or jump through hoops
-to create our own filesystem image than I'm certainly not going to
-waste time looking at these reports...
+On 2018年04月18日 10:09, Shan Hai wrote:
+> Fuzzing tool reports a write to null pointer error in the
+> xfs_bmap_extents_to_btree, fix it by bailing out on encountering
+> a null pointer.
+>
+> Signed-off-by: Shan Hai <shan.hai@oracle.com>
 
-Cheers,
+This one supposed to be applied on top of below:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+https://www.spinics.net/lists/linux-xfs/msg17254.html
+[PATCH] xfs: set format back to extents if xfs_bmap_extents_to_btree fails
+
+Thanks
+Shan Hai
+> ---
+>   fs/xfs/libxfs/xfs_bmap.c | 24 ++++++++++++++++--------
+>   1 file changed, 16 insertions(+), 8 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 040eeda..90b743d 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -724,19 +724,14 @@ xfs_bmap_extents_to_btree(
+>   	args.wasdel = wasdel;
+>   	*logflagsp = 0;
+>   	if ((error = xfs_alloc_vextent(&args))) {
+> -		xfs_iroot_realloc(ip, -1, whichfork);
+>   		ASSERT(ifp->if_broot == NULL);
+> -		XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> -		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> -		return error;
+> +		goto err1;
+>   	}
+>   
+>   	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+> -		xfs_iroot_realloc(ip, -1, whichfork);
+>   		ASSERT(ifp->if_broot == NULL);
+> -		XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> -		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> -		return -ENOSPC;
+> +		error = -ENOSPC;
+> +		goto err1;
+>   	}
+>   	/*
+>   	 * Allocation can't fail, the space was reserved.
+> @@ -748,6 +743,10 @@ xfs_bmap_extents_to_btree(
+>   	ip->i_d.di_nblocks++;
+>   	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+>   	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
+> +	if (!abp) {
+> +		error = -ENOSPC;
+> +		goto err2;
+> +	}
+>   	/*
+>   	 * Fill in the child block.
+>   	 */
+> @@ -787,6 +786,15 @@ xfs_bmap_extents_to_btree(
+>   	*curp = cur;
+>   	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
+>   	return 0;
+> +
+> +err2:
+> +	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+> +err1:
+> +	xfs_iroot_realloc(ip, -1, whichfork);
+> +	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> +
+> +	return error;
+>   }
+>   
+>   /*
+
