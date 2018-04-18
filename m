@@ -1,27 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45936 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:46722 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753076AbeDRCmM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:42:12 -0400
+        with ESMTP id S1753031AbeDRCn6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:43:58 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2g5Yl100997
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:42:11 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2hdrxn8juu-1
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2gcR1101310
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:58 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2hdrxn8jya-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:42:11 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:58 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2gBX0009804
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2hvkp019806
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:42:11 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2gBY3031313
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:42:11 GMT
-Subject: [PATCH 03/24] xfs: add helpers to deal with transaction allocation
- and rolling
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:57 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2hvA5032072
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:43:57 GMT
+Subject: [PATCH 20/24] xfs: repair damaged symlinks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:42:09 -0700
-Message-ID: <152401932899.12079.11463794891965919567.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:43:56 -0700
+Message-ID: <152401943604.12079.8001496617634115259.stgit@magnolia>
 In-Reply-To: <152401930978.12079.2000682561964128780.stgit@magnolia>
 References: <152401930978.12079.2000682561964128780.stgit@magnolia>
 MIME-Version: 1.0
@@ -35,315 +34,365 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-For repairs, we need to reserve at least as many blocks as we think
-we're going to need to rebuild the data structure, and we're going to
-need some helpers to roll transactions while maintaining locks on the AG
-headers so that other threads cannot wander into the middle of a repair.
+Repair inconsistent symbolic link data.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/bmap.c   |    2 -
- fs/xfs/scrub/common.c |   21 ++++++-
- fs/xfs/scrub/common.h |    2 -
- fs/xfs/scrub/inode.c  |    4 +
- fs/xfs/scrub/repair.c |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h |   12 ++++
- 6 files changed, 186 insertions(+), 7 deletions(-)
+ fs/xfs/Makefile               |    1 
+ fs/xfs/scrub/repair.h         |    2 
+ fs/xfs/scrub/scrub.c          |    2 
+ fs/xfs/scrub/symlink.c        |    2 
+ fs/xfs/scrub/symlink_repair.c |  284 +++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 289 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/symlink_repair.c
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 3f8fd10..df04215 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -74,7 +74,7 @@ xfs_scrub_setup_inode_bmap(
- 	}
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index c3f9e19..2bc350b 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -181,6 +181,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   refcount_repair.o \
+ 				   repair.o \
+ 				   rmap_repair.o \
++				   symlink_repair.o \
+ 				   )
+ endif
+ endif
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index cfe18b8..fa2b8d2 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -119,6 +119,7 @@ int xfs_repair_refcountbt(struct xfs_scrub_context *sc);
+ int xfs_repair_inode(struct xfs_scrub_context *sc);
+ int xfs_repair_bmap_data(struct xfs_scrub_context *sc);
+ int xfs_repair_bmap_attr(struct xfs_scrub_context *sc);
++int xfs_repair_symlink(struct xfs_scrub_context *sc);
  
- 	/* Got the inode, lock it and we're ready to go. */
--	error = xfs_scrub_trans_alloc(sc);
-+	error = xfs_scrub_trans_alloc(sc, 0);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 93f9e7d..0833fa5 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -49,6 +49,7 @@
- #include "scrub/common.h"
- #include "scrub/trace.h"
- #include "scrub/btree.h"
-+#include "scrub/repair.h"
+ #else
  
- /* Common code for the metadata scrubbers. */
+@@ -172,6 +173,7 @@ static inline int xfs_repair_rmapbt_setup(
+ #define xfs_repair_inode		xfs_repair_notsupported
+ #define xfs_repair_bmap_data		xfs_repair_notsupported
+ #define xfs_repair_bmap_attr		xfs_repair_notsupported
++#define xfs_repair_symlink		xfs_repair_notsupported
  
-@@ -571,11 +572,22 @@ xfs_scrub_ag_init(
- /*
-  * Grab an empty transaction so that we can re-grab locked buffers if
-  * one of our btrees turns out to be cyclic.
-+ *
-+ * If we're going to repair something, we need to ask for the largest possible
-+ * log reservation so that we can handle the worst case scenario for metadata
-+ * updates while rebuilding a metadata item.  We also need to reserve as many
-+ * blocks in the head transaction as we think we're going to need to rebuild
-+ * the metadata object.
-  */
- int
- xfs_scrub_trans_alloc(
--	struct xfs_scrub_context	*sc)
-+	struct xfs_scrub_context	*sc,
-+	uint				resblks)
- {
-+	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-+		return xfs_trans_alloc(sc->mp, &M_RES(sc->mp)->tr_itruncate,
-+				resblks, 0, 0, &sc->tp);
-+
- 	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 904f9c5..fa34713 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -325,7 +325,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_INODE,
+ 		.setup	= xfs_scrub_setup_symlink,
+ 		.scrub	= xfs_scrub_symlink,
+-		.repair	= xfs_repair_notsupported,
++		.repair	= xfs_repair_symlink,
+ 	},
+ 	[XFS_SCRUB_TYPE_PARENT] = {	/* parent pointers */
+ 		.type	= ST_INODE,
+diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
+index 3aa3d60..a370aad 100644
+--- a/fs/xfs/scrub/symlink.c
++++ b/fs/xfs/scrub/symlink.c
+@@ -48,7 +48,7 @@ xfs_scrub_setup_symlink(
+ 	if (!sc->buf)
+ 		return -ENOMEM;
+ 
+-	return xfs_scrub_setup_inode_contents(sc, ip, 0);
++	return xfs_scrub_setup_inode_contents(sc, ip, XFS_SYMLINK_MAPS);
  }
  
-@@ -585,7 +597,10 @@ xfs_scrub_setup_fs(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_trans_alloc(sc);
-+	uint				resblks;
-+
-+	resblks = xfs_repair_calc_ag_resblks(sc);
-+	return xfs_scrub_trans_alloc(sc, resblks);
- }
- 
- /* Set us up with AG headers and btree cursors. */
-@@ -715,7 +730,7 @@ xfs_scrub_setup_inode_contents(
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc);
-+	error = xfs_scrub_trans_alloc(sc, resblks);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 5d3e9c5..510aa8a 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -38,7 +38,7 @@ xfs_scrub_should_terminate(
- 	return false;
- }
- 
--int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc);
-+int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc, uint resblks);
- bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- 		xfs_agblock_t bno, int *error);
- bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index e15b1bc..a807ad4 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -67,7 +67,7 @@ xfs_scrub_setup_inode(
- 		break;
- 	case -EFSCORRUPTED:
- 	case -EFSBADCRC:
--		return xfs_scrub_trans_alloc(sc);
-+		return xfs_scrub_trans_alloc(sc, 0);
- 	default:
- 		return error;
- 	}
-@@ -75,7 +75,7 @@ xfs_scrub_setup_inode(
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc);
-+	error = xfs_scrub_trans_alloc(sc, 0);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index be30825..ab053d0 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -128,3 +128,155 @@ xfs_repair_probe(
- 
- 	return 0;
- }
-+
+ /* Symbolic links. */
+diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+new file mode 100644
+index 0000000..a58eb96
+--- /dev/null
++++ b/fs/xfs/scrub/symlink_repair.c
+@@ -0,0 +1,284 @@
 +/*
-+ * Roll a transaction, keeping the AG headers locked and reinitializing
-+ * the btree cursors.
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 + */
-+int
-+xfs_repair_roll_ag_trans(
-+	struct xfs_scrub_context	*sc)
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_inode_fork.h"
++#include "xfs_symlink.h"
++#include "xfs_bmap.h"
++#include "xfs_quota.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++
++/* Blow out the whole symlink; replace contents. */
++STATIC int
++xfs_repair_symlink_rewrite(
++	struct xfs_trans	**tpp,
++	struct xfs_inode	*ip,
++	const char		*target_path,
++	int			pathlen)
 +{
-+	int				error;
++	struct xfs_defer_ops	dfops;
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	struct xfs_ifork	*ifp;
++	const char		*cur_chunk;
++	struct xfs_mount	*mp = (*tpp)->t_mountp;
++	struct xfs_buf		*bp;
++	xfs_fsblock_t		first_block;
++	xfs_fileoff_t		first_fsb;
++	xfs_filblks_t		fs_blocks;
++	xfs_daddr_t		d;
++	int			byte_cnt;
++	int			n;
++	int			nmaps;
++	int			offset;
++	int			error = 0;
 +
-+	/* Keep the AG header buffers locked so we can keep going. */
-+	xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
-+	xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
-+	xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
 +
-+	/* Roll the transaction. */
-+	error = xfs_trans_roll(&sc->tp);
++	/* Truncate the whole data fork if it wasn't inline. */
++	if (!(ifp->if_flags & XFS_IFINLINE)) {
++		error = xfs_itruncate_extents(tpp, ip, XFS_DATA_FORK, 0);
++		if (error)
++			goto out;
++	}
++
++	/* Blow out the in-core fork and zero the on-disk fork. */
++	xfs_idestroy_fork(ip, XFS_DATA_FORK);
++	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
++	ip->i_d.di_nextents = 0;
++	memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
++	ip->i_df.if_flags |= XFS_IFEXTENTS;
++
++	/* Rewrite an inline symlink. */
++	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
++		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
++
++		i_size_write(VFS_I(ip), pathlen);
++		ip->i_d.di_size = pathlen;
++		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
++		xfs_trans_log_inode(*tpp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
++		goto out;
++
++	}
++
++	/* Rewrite a remote symlink. */
++	fs_blocks = xfs_symlink_blocks(mp, pathlen);
++	first_fsb = 0;
++	nmaps = XFS_SYMLINK_MAPS;
++
++	/* Reserve quota for new blocks. */
++	error = xfs_trans_reserve_quota_nblks(*tpp, ip, fs_blocks, 0,
++			XFS_QMOPT_RES_REGBLKS);
 +	if (error)
-+		goto out_release;
++		goto out;
 +
-+	/* Join AG headers to the new transaction. */
-+	xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
-+	xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
-+	xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
++	/* Map blocks, write symlink target. */
++	xfs_defer_init(&dfops, &first_block);
++
++	error = xfs_bmapi_write(*tpp, ip, first_fsb, fs_blocks,
++			  XFS_BMAPI_METADATA, &first_block, fs_blocks,
++			  mval, &nmaps, &dfops);
++	if (error)
++		goto out_bmap_cancel;
++
++	ip->i_d.di_size = pathlen;
++	i_size_write(VFS_I(ip), pathlen);
++	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
++
++	cur_chunk = target_path;
++	offset = 0;
++	for (n = 0; n < nmaps; n++) {
++		char	*buf;
++
++		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
++		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
++		bp = xfs_trans_get_buf(*tpp, mp->m_ddev_targp, d,
++				       BTOBB(byte_cnt), 0);
++		if (!bp) {
++			error = -ENOMEM;
++			goto out_bmap_cancel;
++		}
++		bp->b_ops = &xfs_symlink_buf_ops;
++
++		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
++		byte_cnt = min(byte_cnt, pathlen);
++
++		buf = bp->b_addr;
++		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
++					   byte_cnt, bp);
++
++		memcpy(buf, cur_chunk, byte_cnt);
++
++		cur_chunk += byte_cnt;
++		pathlen -= byte_cnt;
++		offset += byte_cnt;
++
++		xfs_trans_buf_set_type(*tpp, bp, XFS_BLFT_SYMLINK_BUF);
++		xfs_trans_log_buf(*tpp, bp, 0, (buf + byte_cnt - 1) -
++						(char *)bp->b_addr);
++	}
++	ASSERT(pathlen == 0);
++
++	error = xfs_defer_finish(tpp, &dfops);
++	if (error)
++		goto out_bmap_cancel;
 +
 +	return 0;
 +
-+out_release:
-+	/*
-+	 * Rolling failed, so release the hold on the buffers.  The
-+	 * buffers will be released during teardown on our way out
-+	 * of the kernel.
-+	 */
-+	xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
-+	xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
-+	xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
-+
++out_bmap_cancel:
++	xfs_defer_cancel(&dfops);
++out:
 +	return error;
 +}
 +
-+/*
-+ * Does the given AG have enough space to rebuild a btree?  Neither AG
-+ * reservation can be critical, and we must have enough space (factoring
-+ * in AG reservations) to construct a whole btree.
-+ */
-+bool
-+xfs_repair_ag_has_space(
-+	struct xfs_perag		*pag,
-+	xfs_extlen_t			nr_blocks,
-+	enum xfs_ag_resv_type		type)
++/* Fix everything that fails the verifiers in the remote blocks. */
++STATIC int
++xfs_repair_symlink_fix_remotes(
++	struct xfs_scrub_context	*sc,
++	loff_t				len)
 +{
-+	return  !xfs_ag_resv_critical(pag, XFS_AG_RESV_AGFL) &&
-+		!xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA) &&
-+		pag->pagf_freeblks > xfs_ag_resv_needed(pag, type) + nr_blocks;
-+}
-+
-+/*
-+ * Figure out how many blocks to reserve for an AG repair.  We calculate the
-+ * worst case estimate for the number of blocks we'd need to rebuild one of
-+ * any type of per-AG btree.
-+ */
-+xfs_extlen_t
-+xfs_repair_calc_ag_resblks(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_scrub_metadata	*sm = sc->sm;
-+	struct xfs_perag		*pag;
++	struct xfs_bmbt_irec		mval[XFS_SYMLINK_MAPS];
 +	struct xfs_buf			*bp;
-+	xfs_agino_t			icount = 0;
-+	xfs_extlen_t			aglen = 0;
-+	xfs_extlen_t			usedlen;
-+	xfs_extlen_t			freelen;
-+	xfs_extlen_t			bnobt_sz;
-+	xfs_extlen_t			inobt_sz;
-+	xfs_extlen_t			rmapbt_sz;
-+	xfs_extlen_t			refcbt_sz;
++	xfs_filblks_t			fsblocks;
++	xfs_daddr_t			d;
++	loff_t				offset;
++	unsigned int			byte_cnt;
++	int				n;
++	int				nmaps = XFS_SYMLINK_MAPS;
++	int				nr;
 +	int				error;
 +
-+	if (!(sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
-+		return 0;
++	fsblocks = xfs_symlink_blocks(sc->mp, len);
++	error = xfs_bmapi_read(sc->ip, 0, fsblocks, mval, &nmaps, 0);
++	if (error)
++		return error;
 +
-+	/* Use in-core counters if possible. */
-+	pag = xfs_perag_get(mp, sm->sm_agno);
-+	if (pag->pagi_init)
-+		icount = pag->pagi_count;
-+	xfs_perag_put(pag);
++	offset = 0;
++	for (n = 0; n < nmaps; n++) {
++		d = XFS_FSB_TO_DADDR(sc->mp, mval[n].br_startblock);
++		byte_cnt = XFS_FSB_TO_B(sc->mp, mval[n].br_blockcount);
 +
-+	/*
-+	 * Otherwise try to get the actual counters from disk; if not, make
-+	 * some worst case assumptions.
-+	 */
-+	if (icount == 0) {
-+		error = xfs_ialloc_read_agi(mp, NULL, sm->sm_agno, &bp);
-+		if (error) {
-+			icount = mp->m_sb.sb_agblocks / mp->m_sb.sb_inopblock;
-+		} else {
-+			pag = xfs_perag_get(mp, sm->sm_agno);
-+			icount = pag->pagi_count;
-+			xfs_perag_put(pag);
-+			xfs_buf_relse(bp);
-+		}
++		error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
++				d, BTOBB(byte_cnt), 0, &bp, NULL);
++		if (error)
++			return error;
++		bp->b_ops = &xfs_symlink_buf_ops;
++
++		byte_cnt = XFS_SYMLINK_BUF_SPACE(sc->mp, byte_cnt);
++		if (len < byte_cnt)
++			byte_cnt = len;
++
++		nr = xfs_symlink_hdr_set(sc->mp, sc->ip->i_ino, offset,
++				byte_cnt, bp);
++
++		len -= byte_cnt;
++		offset += byte_cnt;
++
++		xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SYMLINK_BUF);
++		xfs_trans_log_buf(sc->tp, bp, 0, nr - 1);
++		xfs_trans_brelse(sc->tp, bp);
 +	}
++	if (len != 0)
++		return -EFSCORRUPTED;
 +
-+	/* Now grab the block counters from the AGF. */
-+	error = xfs_alloc_read_agf(mp, NULL, sm->sm_agno, 0, &bp);
-+	if (error) {
-+		aglen = mp->m_sb.sb_agblocks;
-+		freelen = aglen;
-+		usedlen = aglen;
-+	} else {
-+		pag = xfs_perag_get(mp, sm->sm_agno);
-+		aglen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_length);
-+		freelen = pag->pagf_freeblks;
-+		usedlen = aglen - freelen;
-+		xfs_perag_put(pag);
-+		xfs_buf_relse(bp);
-+	}
-+
-+	trace_xfs_repair_calc_ag_resblks(mp, sm->sm_agno, icount, aglen,
-+			freelen, usedlen);
-+
-+	/*
-+	 * Figure out how many blocks we'd need worst case to rebuild
-+	 * each type of btree.  Note that we can only rebuild the
-+	 * bnobt/cntbt or inobt/finobt as pairs.
-+	 */
-+	bnobt_sz = 2 * xfs_allocbt_calc_size(mp, freelen);
-+	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-+		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
-+				XFS_INODES_PER_HOLEMASK_BIT);
-+	else
-+		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
-+				XFS_INODES_PER_CHUNK);
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		inobt_sz *= 2;
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		rmapbt_sz = xfs_rmapbt_calc_size(mp, aglen);
-+		refcbt_sz = xfs_refcountbt_calc_size(mp, usedlen);
-+	} else {
-+		rmapbt_sz = xfs_rmapbt_calc_size(mp, usedlen);
-+		refcbt_sz = 0;
-+	}
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		rmapbt_sz = 0;
-+
-+	trace_xfs_repair_calc_ag_resblks_btsize(mp, sm->sm_agno, bnobt_sz,
-+			inobt_sz, rmapbt_sz, refcbt_sz);
-+
-+	return max(max(bnobt_sz, inobt_sz), max(rmapbt_sz, refcbt_sz));
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 83170dd..8d181dc 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -32,6 +32,10 @@ static inline int xfs_repair_notsupported(struct xfs_scrub_context *sc)
- int xfs_repair_attempt(struct xfs_inode *ip, struct xfs_scrub_context *sc,
- 		bool *fixed);
- void xfs_repair_failure(struct xfs_mount *mp);
-+int xfs_repair_roll_ag_trans(struct xfs_scrub_context *sc);
-+bool xfs_repair_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
-+		enum xfs_ag_resv_type type);
-+xfs_extlen_t xfs_repair_calc_ag_resblks(struct xfs_scrub_context *sc);
- 
- /* Metadata repairers */
- 
-@@ -49,6 +53,14 @@ static inline int xfs_repair_attempt(
- 
- static inline void xfs_repair_failure(struct xfs_mount *mp) {}
- 
-+static inline xfs_extlen_t
-+xfs_repair_calc_ag_resblks(
-+	struct xfs_scrub_context	*sc)
-+{
-+	ASSERT(!(sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR));
 +	return 0;
 +}
 +
- #define xfs_repair_probe		xfs_repair_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
++int
++xfs_repair_symlink(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_inode		*ip = sc->ip;
++	struct xfs_ifork		*ifp;
++	loff_t				len;
++	size_t				newlen;
++	int				error = 0;
++
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	len = i_size_read(VFS_I(ip));
++	xfs_trans_ijoin(sc->tp, ip, 0);
++
++	/* Truncate the inode if there's a zero inside the length. */
++	if (ifp->if_flags & XFS_IFINLINE) {
++		if (ifp->if_u1.if_data)
++			newlen = strnlen(ifp->if_u1.if_data,
++					XFS_IFORK_DSIZE(ip));
++		else {
++			/* Zero length symlink becomes a root symlink. */
++			ifp->if_u1.if_data = kmem_alloc(4, KM_SLEEP);
++			snprintf(ifp->if_u1.if_data, 4, "/");
++			newlen = 1;
++		}
++		if (len > newlen) {
++			i_size_write(VFS_I(ip), newlen);
++			ip->i_d.di_size = newlen;
++			xfs_trans_log_inode(sc->tp, ip, XFS_ILOG_DDATA |
++					XFS_ILOG_CORE);
++		}
++		goto out;
++	}
++
++	error = xfs_repair_symlink_fix_remotes(sc, len);
++	if (error)
++		goto out;
++
++	/* Roll transaction, release buffers. */
++	error = xfs_trans_roll_inode(&sc->tp, ip);
++	if (error)
++		goto out;
++
++	/* Size set correctly? */
++	len = i_size_read(VFS_I(ip));
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	error = xfs_readlink(ip, sc->buf);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	if (error)
++		goto out;
++
++	/*
++	 * Figure out the new target length.  We can't handle zero-length
++	 * symlinks, so make sure that we don't write that out.
++	 */
++	newlen = strnlen(sc->buf, XFS_SYMLINK_MAXLEN);
++	if (newlen == 0) {
++		*((char *)sc->buf) = '/';
++		newlen = 1;
++	}
++
++	if (len > newlen)
++		error = xfs_repair_symlink_rewrite(&sc->tp, ip, sc->buf,
++				newlen);
++out:
++	return error;
++}
 
