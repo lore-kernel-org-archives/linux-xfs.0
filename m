@@ -1,60 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41572 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750767AbeDUEeK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 21 Apr 2018 00:34:10 -0400
-Subject: Re: question about mkfs.xfs
-References: <5ADAAE79.5020803@cn.fujitsu.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b663f0ab-ab78-961f-7e24-a9794eb07d98@sandeen.net>
-Date: Fri, 20 Apr 2018 23:34:08 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:51668 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753162AbeDRAbl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 20:31:41 -0400
+Date: Tue, 17 Apr 2018 17:31:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: don't fail when converting shortform attr to long form
+ during ATTR_REPLACE
+Message-ID: <20180418003130.GI24738@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <5ADAAE79.5020803@cn.fujitsu.com>
-Content-Type: text/plain; charset=gbk
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiao Yang <yangx.jy@cn.fujitsu.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
+Cc: kanda.motohiro@gmail.com
 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Kanda Motohiro reported that expanding a tiny xattr into a large xattr
+fails on XFS because we remove the tiny xattr from a shortform fork and
+then try to re-add it after converting the fork to extents format having
+not removed the ATTR_REPLACE flag.  This fails because the attr is no
+longer present, causing a fs shutdown.
 
-On 4/20/18 10:22 PM, Xiao Yang wrote:
-> Hi Eric£¬
-> 
-> Before commit 16adcb8 in xfsprogs-dev, only "sunit=0,swidth=0" is vaild
-> and will convert
-> into the default stripe config as expected.
+This is derived from the patch in his bug report, but we really
+shouldn't ignore a nonzero retval from the remove call.  Something's
+broken and we should bail out and shut down.
 
-It behaved the same as the default, because it looked the same as
-"not set" to all the conditionals in mkfs.
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
+Reported-by: kanda.motohiro@gmail.com
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-> After this commit, both
-> "sunit=0,swidth=0"
-> and "sunit=0,swidth=64" will be forced to convert into the default
-> stripe config.
-
-0,0 should be allowed, to force mkfs to ignore any stripe geometry
-reported by the device.
-
-> If either of sunit and swidth is not 0, should we do a forced conversion?
-> I am not sure if we should reject the combination(e.g. sunit=0,swidth=64).
-
-I am not sure what you mean by "forced conversion" - can you give specific
-examples?
-
-However, a stripe unit of 0 with a non-zero stripe width should probably
-also be rejected, because it has no meaning.  I think it was rejected
-before, and my commit accidentally allowed it again.
-
-It probably needs another test added back in, to check for "both options
-were specified, but (only) one was zero."
-
-Thanks,
--Eric
-
-> 
-> Thanks,
-> Xiao Yang
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index ce4a34a..2588c73 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -511,7 +511,14 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+ 		if (args->flags & ATTR_CREATE)
+ 			return retval;
+ 		retval = xfs_attr_shortform_remove(args);
+-		ASSERT(retval == 0);
++		if (retval)
++			return retval;
++		/*
++		 * Since we have removed the old attr here,
++		 * further lookup will fail with ENOATTR.
++		 * Ignore this was a replace and go on creating new attr.
++		 */
++		args->flags &= ~ATTR_REPLACE;
+ 	}
+ 
+ 	if (args->namelen >= XFS_ATTR_SF_ENTSIZE_MAX ||
