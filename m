@@ -1,37 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:52320 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751271AbeDRELK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 00:11:10 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/4 V2] iomap: Use FUA for O_DSYNC DIO writes
-Date: Wed, 18 Apr 2018 14:08:24 +1000
-Message-Id: <20180418040828.18165-1-david@fromorbit.com>
+Received: from verein.lst.de ([213.95.11.211]:59814 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751830AbeDRKdY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Apr 2018 06:33:24 -0400
+Date: Wed, 18 Apr 2018 12:34:03 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/4] blk: add blk_queue_fua() helper function
+Message-ID: <20180418103403.GA16044@lst.de>
+References: <20180418040828.18165-1-david@fromorbit.com> <20180418040828.18165-4-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180418040828.18165-4-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-Hi folks,
+s/blk/block/ for block patches.
 
-This is the latest version of the "use FUA for DIO writes" patchset
-that was last posted here:
+Otherwise looks fine:
 
-https://marc.info/?l=linux-xfs&m=152213446528167&w=2
-
-Functionality and performance is the same as the previous version.
-Changes in this version address Christoph's review comments.
-
-Version 2:
-- Fixed comment typos in first patch
-- simplified iomap_dio_complete_work()
-- changed IOMAP_DIO_WRITE_SYNC to IOMAP_DIO_NEED_SYNC
-- split blk_queue_fua() into it's own patch
-- fixed formatting issue in last patch
-- update bio->io_opf directly rather than use bio_set_op_attrs()
-- Updated comment to mention we try to use FUA optimistically.
-
-Cheers,
-
-Dave.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
