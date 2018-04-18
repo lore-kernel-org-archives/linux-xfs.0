@@ -1,59 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44376 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754051AbeDVPHu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:07:50 -0400
-Subject: [PATCH v2 00/10] xfs-4.18: online scrub fixes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:07:26 -0700
-Message-ID: <152440964593.30048.15577210457233332459.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:52320 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750718AbeDRELN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 00:11:13 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/4] iomap: iomap_dio_rw() handles all sync writes
+Date: Wed, 18 Apr 2018 14:08:26 +1000
+Message-Id: <20180418040828.18165-3-david@fromorbit.com>
+In-Reply-To: <20180418040828.18165-1-david@fromorbit.com>
+References: <20180418040828.18165-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-Hi all,
+From: Dave Chinner <dchinner@redhat.com>
 
-Here's a revised series cleaning up some problems and bugs in the online
-scrub code.  Most of the problems fixed here were uncovered through more
-thorough testing of the online repair series, which was posted
-previously.
+Currently iomap_dio_rw() only handles (data)sync write completions
+for AIO. This means we can't optimised non-AIO IO to minimise device
+flushes as we can't tell the caller whether a flush is required or
+not.
 
-First, we amend scrub to skip cross-referencing once the first error is
-found; this patch hasn't changed since its posting during the 4.17 cycle.
-Second is a patch adding more "finish scrub as soon as we've decided
-CORRUPT" checks.
+To solve this problem and enable further optimisations, make
+iomap_dio_rw responsible for data sync behaviour for all IO, not
+just AIO.
 
-The next two patches refactor the quota scrub to drop all the weird code
-that attaches to the quota ip in favor of using the well known mechanism
-that we use for all other inodes.  This enables us to call the data fork
-scrubber on the quota inodes; and the dquot iterator that we created
-earlier.  We also adapt the rtbitmap/rtsum scrubbers to check the data
-forks with the same helper.
+In doing so, the sync operation is now accounted as part of the DIO
+IO by inode_dio_end(), hence post-IO data stability updates will no
+long race against operations that serialise via inode_dio_wait()
+such as truncate or hole punch.
 
-The next two patches fix some broken interaction between scrub and the
-rest of xfs.
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c        | 22 +++++++++++++++-------
+ fs/xfs/xfs_file.c |  5 -----
+ 2 files changed, 15 insertions(+), 12 deletions(-)
 
-Following that are three fixes to the scrubbers themselves -- the first
-checks that a btree block never contains fewer than minrecs records
-unless it's the top block in a tree.  The second refactors the
-transaction allocation helper; and the last one fixes a potential ABBA
-deadlock in the parent scrubber.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index afd163586aa0..1f59c2d9ade6 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+  */
++#define IOMAP_DIO_NEED_SYNC	(1 << 29)
+ #define IOMAP_DIO_WRITE		(1 << 30)
+ #define IOMAP_DIO_DIRTY		(1 << 31)
+ 
+@@ -759,6 +760,13 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 			dio_warn_stale_pagecache(iocb->ki_filp);
+ 	}
+ 
++	/*
++	 * If this is a DSYNC write, make sure we push it to stable storage now
++	 * that we've written data.
++	 */
++	if (ret > 0 && (dio->flags & IOMAP_DIO_NEED_SYNC))
++		ret = generic_write_sync(iocb, ret);
++
+ 	inode_dio_end(file_inode(iocb->ki_filp));
+ 	kfree(dio);
+ 
+@@ -768,14 +776,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ static void iomap_dio_complete_work(struct work_struct *work)
+ {
+ 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
+-	struct kiocb *iocb = dio->iocb;
+-	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
+-	ssize_t ret;
+ 
+-	ret = iomap_dio_complete(dio);
+-	if (is_write && ret > 0)
+-		ret = generic_write_sync(iocb, ret);
+-	iocb->ki_complete(iocb, ret, 0);
++	dio->iocb->ki_complete(dio->iocb, iomap_dio_complete(dio), 0);
+ }
+ 
+ /*
+@@ -961,6 +963,10 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	return copied;
+ }
+ 
++/*
++ * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
++ * is being issued as AIO or not.
++ */
+ ssize_t
+ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
+@@ -1006,6 +1012,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 			dio->flags |= IOMAP_DIO_DIRTY;
+ 	} else {
+ 		dio->flags |= IOMAP_DIO_WRITE;
++		if (iocb->ki_flags & IOCB_DSYNC)
++			dio->flags |= IOMAP_DIO_NEED_SYNC;
+ 		flags |= IOMAP_WRITE;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 6f15027661b6..0c4b8313d544 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -570,11 +570,6 @@ xfs_file_dio_aio_write(
+ 	 * complete fully or fail.
+ 	 */
+ 	ASSERT(ret < 0 || ret == count);
+-
+-	if (ret > 0) {
+-		/* Handle various SYNC-type writes */
+-		ret = generic_write_sync(iocb, ret);
+-	}
+ 	return ret;
+ }
+ 
+-- 
+2.16.1
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.17-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
-
-This is an extraordinary way to eat your data.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
