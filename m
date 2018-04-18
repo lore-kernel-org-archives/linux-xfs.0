@@ -1,237 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:44049 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753848AbeDRLxg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 07:53:36 -0400
-Received: by mail-wr0-f173.google.com with SMTP id o15-v6so4024285wro.11
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 04:53:36 -0700 (PDT)
-Date: Wed, 18 Apr 2018 13:53:33 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: don't retry xfs_buf_find on XBF_TRYLOCK failure
-Message-ID: <20180418115333.owapbiyzlnzypvgi@odin.usersys.redhat.com>
-References: <20180418002111.11637-1-david@fromorbit.com>
- <20180418002111.11637-3-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180418002111.11637-3-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55740 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753170AbeDRNbU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Apr 2018 09:31:20 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D7983489
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 13:31:20 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B823D805C5
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 13:31:20 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 0/6] xfs: defer agfl block frees
+Date: Wed, 18 Apr 2018 09:31:13 -0400
+Message-Id: <20180418133119.21775-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Apr 18, 2018 at 10:21:11AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When looking at an event trace recently, I noticed that non-blocking
-> buffer lookup attempts would fail on cached locked buffers and then
-> run the slow cache-miss path. This means we are doing an xfs_buf
-> allocation, lookup and free unnecessarily every time we avoid
-> blocking on a locked buffer.
-> 
-> Fix this by changing _xfs_buf_find() to return an error status to
-> the caller to indicate that we failed the lock attempt rather than
-> just returning a NULL. This allows the higher level code to
-> discriminate between a cache miss and an cache hit that we failed to
-> lock.
-> 
-> This also allows us to return a -EFSCORRUPTED state if we are asked
-> to look up a block number outside the range of the filesystem in
-> _xfs_buf_find(), which moves us one step closer to being able to
-> handle such errors in a more graceful manner at the higher levels.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Hi all,
 
-Looks good
+This version drops all refactoring and cleanup changes related to the tp
+pointer to avoid confusion between functional fixes and cleanup work
+that was somewhat intertwined in the previous versions. Hence, the
+purpose of this series is now purely to enable deferred AGFL block
+frees. Because this behavior is enabled at transaction granularity,
+carry the dfops to the allocator via the transaction.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_buf.c | 93 +++++++++++++++++++++++++++++++++++++++-----------------
->  1 file changed, 65 insertions(+), 28 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 2ca8e2c7fbc4..41b386c26582 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -549,17 +549,31 @@ xfs_buf_hash_destroy(
->  }
->  
->  /*
-> - * Look up (and insert if absent), a lockable buffer for a given
-> - * range of an inode.  The buffer is returned locked. No I/O is
-> - * implied by this call.
-> + * Look up a buffer in the buffer cache and return it referenced and locked
-> + * in @found_bp.
-> + *
-> + * If @new_bp is supplied and we have a lookup miss, insert @new_bp into the
-> + * cache.
-> + *
-> + * If XBF_TRYLOCK is set in @flags, only try to lock the buffer and return
-> + * -EAGAIN if we fail to lock it.
-> + *
-> + * Return values are:
-> + *	-EFSCORRUPTED if have been supplied with an invalid address
-> + *	-EAGAIN on trylock failure
-> + *	-ENOENT if we fail to find a match and @new_bp was NULL
-> + *	0, with @found_bp:
-> + *		- @new_bp if we inserted it into the cache
-> + *		- the buffer we found and locked.
->   */
-> -static struct xfs_buf *
-> -_xfs_buf_find(
-> +static int
-> +xfs_buf_find(
->  	struct xfs_buftarg	*btp,
->  	struct xfs_buf_map	*map,
->  	int			nmaps,
->  	xfs_buf_flags_t		flags,
-> -	struct xfs_buf		*new_bp)
-> +	struct xfs_buf		*new_bp,
-> +	struct xfs_buf		**found_bp)
->  {
->  	struct xfs_perag	*pag;
->  	xfs_buf_t		*bp;
-> @@ -567,6 +581,8 @@ _xfs_buf_find(
->  	xfs_daddr_t		eofs;
->  	int			i;
->  
-> +	*found_bp = NULL;
-> +
->  	for (i = 0; i < nmaps; i++)
->  		cmap.bm_len += map[i].bm_len;
->  
-> @@ -580,16 +596,11 @@ _xfs_buf_find(
->  	 */
->  	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
->  	if (cmap.bm_bn < 0 || cmap.bm_bn >= eofs) {
-> -		/*
-> -		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
-> -		 * but none of the higher level infrastructure supports
-> -		 * returning a specific error on buffer lookup failures.
-> -		 */
->  		xfs_alert(btp->bt_mount,
->  			  "%s: daddr 0x%llx out of range, EOFS 0x%llx",
->  			  __func__, cmap.bm_bn, eofs);
->  		WARN_ON(1);
-> -		return NULL;
-> +		return -EFSCORRUPTED;
->  	}
->  
->  	pag = xfs_perag_get(btp->bt_mount,
-> @@ -604,19 +615,20 @@ _xfs_buf_find(
->  	}
->  
->  	/* No match found */
-> -	if (new_bp) {
-> -		/* the buffer keeps the perag reference until it is freed */
-> -		new_bp->b_pag = pag;
-> -		rhashtable_insert_fast(&pag->pag_buf_hash,
-> -				       &new_bp->b_rhash_head,
-> -				       xfs_buf_hash_params);
-> -		spin_unlock(&pag->pag_buf_lock);
-> -	} else {
-> +	if (!new_bp) {
->  		XFS_STATS_INC(btp->bt_mount, xb_miss_locked);
->  		spin_unlock(&pag->pag_buf_lock);
->  		xfs_perag_put(pag);
-> +		return -ENOENT;
->  	}
-> -	return new_bp;
-> +
-> +	/* the buffer keeps the perag reference until it is freed */
-> +	new_bp->b_pag = pag;
-> +	rhashtable_insert_fast(&pag->pag_buf_hash, &new_bp->b_rhash_head,
-> +			       xfs_buf_hash_params);
-> +	spin_unlock(&pag->pag_buf_lock);
-> +	*found_bp = new_bp;
-> +	return 0;
->  
->  found:
->  	spin_unlock(&pag->pag_buf_lock);
-> @@ -626,7 +638,7 @@ _xfs_buf_find(
->  		if (flags & XBF_TRYLOCK) {
->  			xfs_buf_rele(bp);
->  			XFS_STATS_INC(btp->bt_mount, xb_busy_locked);
-> -			return NULL;
-> +			return -EAGAIN;
->  		}
->  		xfs_buf_lock(bp);
->  		XFS_STATS_INC(btp->bt_mount, xb_get_locked_waited);
-> @@ -646,7 +658,8 @@ _xfs_buf_find(
->  
->  	trace_xfs_buf_find(bp, flags, _RET_IP_);
->  	XFS_STATS_INC(btp->bt_mount, xb_get_locked);
-> -	return bp;
-> +	*found_bp = bp;
-> +	return 0;
->  }
->  
->  struct xfs_buf *
-> @@ -656,8 +669,14 @@ xfs_incore(
->  	size_t			numblks,
->  	xfs_buf_flags_t		flags)
->  {
-> +	struct xfs_buf		*bp;
-> +	int			error;
->  	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
-> -	return _xfs_buf_find(target, &map, 1, flags, NULL);
-> +
-> +	error = xfs_buf_find(target, &map, 1, flags, NULL, &bp);
-> +	if (error)
-> +		return NULL;
-> +	return bp;
->  }
->  
->  /*
-> @@ -676,9 +695,27 @@ xfs_buf_get_map(
->  	struct xfs_buf		*new_bp;
->  	int			error = 0;
->  
-> -	bp = _xfs_buf_find(target, map, nmaps, flags, NULL);
-> -	if (likely(bp))
-> +	error = xfs_buf_find(target, map, nmaps, flags, NULL, &bp);
-> +
-> +	switch (error) {
-> +	case 0:
-> +		/* cache hit */
->  		goto found;
-> +	case -EAGAIN:
-> +		/* cache hit, trylock failure, caller handles failure */
-> +		ASSERT(flags & XBF_TRYLOCK);
-> +		return NULL;
-> +	case -ENOENT:
-> +		/* cache miss, go for insert */
-> +		break;
-> +	case -EFSCORRUPTED:
-> +	default:
-> +		/*
-> +		 * None of the higher layers understand failure types
-> +		 * yet, so return NULL to signal a fatal lookup error.
-> +		 */
-> +		return NULL;
-> +	}
->  
->  	new_bp = _xfs_buf_alloc(target, map, nmaps, flags);
->  	if (unlikely(!new_bp))
-> @@ -690,8 +727,8 @@ xfs_buf_get_map(
->  		return NULL;
->  	}
->  
-> -	bp = _xfs_buf_find(target, map, nmaps, flags, new_bp);
-> -	if (!bp) {
-> +	error = xfs_buf_find(target, map, nmaps, flags, new_bp, &bp);
-> +	if (error) {
->  		xfs_buf_free(new_bp);
->  		return NULL;
->  	}
-> -- 
-> 2.16.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This avoids the need for the extra plumbing that was implemented in
+rfcv1 (and removed in rfcv2) and facilitates cleanups like those
+demonstrated in the previous version. I'll rename ->t_agfl_dfops to
+->t_dfops and do the broader cleanup work in a separate series once this
+series is complete.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+v2:
+- Drop all refactoring/cleanup bits.
+- Rename dfops pointer to ->t_agfl_dfops for explicit use by AGFL fixup
+  code.
+v1: https://marc.info/?l=linux-xfs&m=152338240213442&w=2
+- Rebased to for-next.
+- Attach dfops to tp via xfs_defer_init().
+- Fix up xfs_defer_finish() to restore original pointer.
+- Dropped debug/test patches.
+rfcv2: https://marc.info/?l=linux-xfs&m=151681946702093&w=2
+- Use transaction to carry deferred ops struct to allocation context.
+- Remove dfops param from dir interfaces where possible.
+- Defer AGFL block frees from more contexts.
+- Define runtime stat for transaction regrant and logcount patch (to be
+  potentially removed).
+rfcv1: https://marc.info/?l=linux-xfs&m=151267309423883&w=2
+
+Brian Foster (6):
+  xfs: create agfl block free helper function
+  xfs: defer agfl block frees when dfops is available
+  xfs: defer agfl block frees from deferred ops processing context
+  xfs: defer agfl frees from inode inactivation
+  xfs: defer frees from common inode allocation paths
+  xfs: defer agfl frees from directory op transactions
+
+ fs/xfs/libxfs/xfs_alloc.c  | 82 +++++++++++++++++++++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_alloc.h  |  2 ++
+ fs/xfs/libxfs/xfs_defer.c  | 12 +++++++
+ fs/xfs/libxfs/xfs_defer.h  |  1 +
+ fs/xfs/xfs_inode.c         |  5 +++
+ fs/xfs/xfs_symlink.c       |  1 +
+ fs/xfs/xfs_trace.h         |  2 ++
+ fs/xfs/xfs_trans.c         | 11 +++++--
+ fs/xfs/xfs_trans.h         |  1 +
+ fs/xfs/xfs_trans_extfree.c | 70 +++++++++++++++++++++++++++++++++++++++
+ 10 files changed, 173 insertions(+), 14 deletions(-)
 
 -- 
-Carlos
+2.13.6
+
