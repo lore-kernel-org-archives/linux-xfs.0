@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43514 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753144AbeDRCjg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:39:36 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2aFvG042119
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:35 GMT
+Received: from aserp2130.oracle.com ([141.146.126.79]:49210 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbeDRCkR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:40:17 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2b6Jc168048
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:40:16 GMT
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2hdrxp0jw4-1
+        by aserp2130.oracle.com with ESMTP id 2hdrxn8jkc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:35 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2dYTY010915
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:40:16 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2eFwn013723
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:35 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3I2dYJi023406
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:39:34 GMT
-Subject: [PATCH 01/11] xfs: skip scrub xref if corruption already noted
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:40:15 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2eFdp030419
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:40:15 GMT
+Subject: [PATCH 06/11] xfs: quota scrub should use bmapbtd scrubber
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:39:33 -0700
-Message-ID: <152401917356.11465.5404373936588816069.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:40:14 -0700
+Message-ID: <152401921403.11465.9618173695298878026.stgit@magnolia>
 In-Reply-To: <152401916729.11465.4212188839231900136.stgit@magnolia>
 References: <152401916729.11465.4212188839231900136.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,150 +34,138 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't bother looking for cross-referencing problems if the metadata is
-already corrupt or we've already found a cross-referencing problem.
-Since we added a helper function for flags testing, convert existing
-users to use it.
+Replace the quota scrubber's open-coded data fork scrubber with a
+redirected call to the bmapbtd scrubber.  This strengthens the quota
+scrub to include all the cross-referencing that it does.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/alloc.c    |    2 +-
- fs/xfs/scrub/common.c   |    4 ++++
- fs/xfs/scrub/common.h   |    6 ++++++
- fs/xfs/scrub/ialloc.c   |    2 +-
- fs/xfs/scrub/refcount.c |    4 ++--
- fs/xfs/scrub/rmap.c     |    4 ++--
- fs/xfs/scrub/rtbitmap.c |    3 +++
- fs/xfs/scrub/scrub.c    |    3 +--
- 8 files changed, 20 insertions(+), 8 deletions(-)
+ fs/xfs/scrub/quota.c |   95 ++++++++++++++++++++++++++++----------------------
+ 1 file changed, 54 insertions(+), 41 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index 517c079..f5c6993 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -172,7 +172,7 @@ xfs_scrub_xref_is_used_space(
- 	bool				is_freesp;
- 	int				error;
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 1068a91..67f94c4 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -207,65 +207,78 @@ xfs_scrub_quota_item(
+ 	return 0;
+ }
  
--	if (!sc->sa.bno_cur)
-+	if (!sc->sa.bno_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_alloc_has_record(sc->sa.bno_cur, agbno, len, &is_freesp);
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 8ed91d5..3f72176 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -727,6 +727,10 @@ xfs_scrub_should_check_xref(
- 	int				*error,
- 	struct xfs_btree_cur		**curpp)
+-/* Scrub all of a quota type's items. */
+-int
+-xfs_scrub_quota(
++/* Check the quota's data fork. */
++STATIC int
++xfs_scrub_quota_data_fork(
+ 	struct xfs_scrub_context	*sc)
  {
-+	/* No point in xref if we already know we're corrupt. */
-+	if (xfs_scrub_found_corruption(sc->sm))
-+		return false;
+ 	struct xfs_bmbt_irec		irec = { 0 };
+-	struct xfs_scrub_quota_info	sqi;
+-	struct xfs_mount		*mp = sc->mp;
+-	struct xfs_quotainfo		*qi = mp->m_quotainfo;
++	struct xfs_iext_cursor		icur;
++	struct xfs_scrub_metadata	fake_sm;
++	struct xfs_scrub_metadata	*real_sm = sc->sm;
++	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
++	struct xfs_ifork		*ifp;
+ 	xfs_fileoff_t			max_dqid_off;
+-	xfs_fileoff_t			off = 0;
+-	uint				dqtype;
+-	int				nimaps;
+ 	int				error = 0;
+ 
+-	dqtype = xfs_scrub_quota_to_dqtype(sc);
+-
+-	/* Look for problem extents. */
++	/* Quotas don't live on the rt device. */
+ 	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
+ 		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+-		goto out;
++		return 0;
+ 	}
 +
- 	if (*error == 0)
- 		return true;
- 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index deaf604..30e9039 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -157,4 +157,10 @@ int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
- 				   struct xfs_inode *ip, unsigned int resblks);
- void xfs_scrub_buffer_recheck(struct xfs_scrub_context *sc, struct xfs_buf *bp);
- 
-+static inline bool xfs_scrub_found_corruption(struct xfs_scrub_metadata *sm)
-+{
-+	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+			       XFS_SCRUB_OFLAG_XCORRUPT);
++	/* Invoke the data fork scrubber. */
++	memcpy(&fake_sm, real_sm, sizeof(fake_sm));
++	fake_sm.sm_type = XFS_SCRUB_TYPE_BMBTD;
++	fake_sm.sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
++	sc->sm = &fake_sm;
++	error = xfs_scrub_bmap_data(sc);
++	sc->sm = real_sm;
++	if (error)
++		return error;
++	sc->sm->sm_flags |= (fake_sm.sm_flags & XFS_SCRUB_FLAGS_OUT);
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return error;
++
++	/* Check for data fork problems that apply only to quota files. */
+ 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+-	while (1) {
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
++	for_each_xfs_iext(ifp, &icur, &irec) {
+ 		if (xfs_scrub_should_terminate(sc, &error))
+ 			break;
+-
+-		off = irec.br_startoff + irec.br_blockcount;
+-		nimaps = 1;
+-		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
+-				XFS_BMAPI_ENTIRE);
+-		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
+-				&error))
+-			goto out;
+-		if (!nimaps)
+-			break;
+-		if (irec.br_startblock == HOLESTARTBLOCK)
+-			continue;
+-
+-		/* Check the extent record doesn't point to crap. */
+-		if (irec.br_startblock + irec.br_blockcount <=
+-		    irec.br_startblock)
+-			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+-					irec.br_startoff);
+-		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
+-		    !xfs_verify_fsbno(mp, irec.br_startblock +
+-					irec.br_blockcount - 1))
+-			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+-					irec.br_startoff);
+-
+ 		/*
+-		 * Unwritten extents or blocks mapped above the highest
++		 * delalloc extents or blocks mapped above the highest
+ 		 * quota id shouldn't happen.
+ 		 */
+ 		if (isnullstartblock(irec.br_startblock) ||
+ 		    irec.br_startoff > max_dqid_off ||
+-		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
+-			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
++		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1) {
++			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
++					irec.br_startoff);
++			break;
++		}
+ 	}
++
++	return error;
 +}
 +
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 106ca4b..05e6191 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -496,7 +496,7 @@ xfs_scrub_xref_inode_check(
- 	bool				has_inodes;
- 	int				error;
- 
--	if (!(*icur))
-+	if (!(*icur) || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_ialloc_has_inodes_at_extent(*icur, agbno, len, &has_inodes);
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 400f156..823bda3 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -460,7 +460,7 @@ xfs_scrub_xref_is_cow_staging(
- 	int				has_refcount;
- 	int				error;
- 
--	if (!sc->sa.refc_cur)
-+	if (!sc->sa.refc_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	/* Find the CoW staging extent. */
-@@ -504,7 +504,7 @@ xfs_scrub_xref_is_not_shared(
- 	bool				shared;
- 	int				error;
- 
--	if (!sc->sa.refc_cur)
-+	if (!sc->sa.refc_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_refcount_has_record(sc->sa.refc_cur, agbno, len, &shared);
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 8f2a7c3..9ca92e4 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -207,7 +207,7 @@ xfs_scrub_xref_check_owner(
- 	bool				has_rmap;
- 	int				error;
- 
--	if (!sc->sa.rmap_cur)
-+	if (!sc->sa.rmap_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_rmap_record_exists(sc->sa.rmap_cur, bno, len, oinfo,
-@@ -250,7 +250,7 @@ xfs_scrub_xref_has_no_owner(
- 	bool				has_rmap;
- 	int				error;
- 
--	if (!sc->sa.rmap_cur)
-+	if (!sc->sa.rmap_cur || xfs_scrub_found_corruption(sc->sm))
- 		return;
- 
- 	error = xfs_rmap_has_record(sc->sa.rmap_cur, bno, len, &has_rmap);
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 39c41dfe..c8672f7 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -110,6 +110,9 @@ xfs_scrub_xref_is_used_rt_space(
- 	bool				is_free;
- 	int				error;
- 
-+	if (xfs_scrub_found_corruption(sc->sm))
-+		return;
++/* Scrub all of a quota type's items. */
++int
++xfs_scrub_quota(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_scrub_quota_info	sqi;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_quotainfo		*qi = mp->m_quotainfo;
++	uint				dqtype;
++	int				error = 0;
 +
- 	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
- 	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, fsbno, len,
- 			&is_free);
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 26c7596..cb1e727 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -446,8 +446,7 @@ xfs_scrub_metadata(
- 	} else if (error)
- 		goto out_teardown;
++	dqtype = xfs_scrub_quota_to_dqtype(sc);
++
++	/* Look for problem extents. */
++	error = xfs_scrub_quota_data_fork(sc);
++	if (error)
++		goto out;
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		goto out;
  
--	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
--			       XFS_SCRUB_OFLAG_XCORRUPT))
-+	if (xfs_scrub_found_corruption(sc.sm))
- 		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
- 
- out_teardown:
 
