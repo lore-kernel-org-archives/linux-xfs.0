@@ -1,65 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51012 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753819AbeDRNbV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Apr 2018 09:31:21 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 67FC931327E5
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 13:31:21 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4792C7059E
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 13:31:21 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 6/6] xfs: defer agfl frees from directory op transactions
-Date: Wed, 18 Apr 2018 09:31:19 -0400
-Message-Id: <20180418133119.21775-7-bfoster@redhat.com>
-In-Reply-To: <20180418133119.21775-1-bfoster@redhat.com>
-References: <20180418133119.21775-1-bfoster@redhat.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:3085 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750796AbeDRELJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 00:11:09 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/4] iomap: Use FUA for pure data O_DSYNC DIO writes
+Date: Wed, 18 Apr 2018 14:08:28 +1000
+Message-Id: <20180418040828.18165-5-david@fromorbit.com>
+In-Reply-To: <20180418040828.18165-1-david@fromorbit.com>
+References: <20180418040828.18165-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-Directory operations can perform block allocations as entries are
-added/removed from directories. Defer AGFL block frees from the
-remaining directory operation transactions. This covers the hard
-link, remove and rename operations.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+If we are doing direct IO writes with datasync semantics, we often
+have to flush metadata changes along with the data write. However,
+if we are overwriting existing data, there are no metadata changes
+that we need to flush. In this case, optimising the IO by using
+FUA write makes sense.
+
+We know from the IOMAP_F_DIRTY flag as to whether a specific inode
+requires a metadata flush - this is currently used by DAX to ensure
+extent modification as stable in page fault operations. For direct
+IO writes, we can use it to determine if we need to flush metadata
+or not once the data is on disk.
+
+Hence if we have been returned a mapped extent that is not new and
+the IO mapping is not dirty, then we can use a FUA write to provide
+datasync semantics. This allows us to short-cut the
+generic_write_sync() call in IO completion and hence avoid
+unnecessary operations. This makes pure direct IO data write
+behaviour identical to the way block devices use REQ_FUA to provide
+datasync semantics.
+
+On a FUA enabled device, a synchronous direct IO write workload
+(sequential 4k overwrites in 32MB file) had the following results:
+
+# xfs_io -fd -c "pwrite -V 1 -D 0 32m" /mnt/scratch/boo
+
+kernel		time	write()s	write iops	Write b/w
+------		----	--------	----------	---------
+(no dsync)	 4s	2173/s		2173		8.5MB/s
+vanilla		22s	 370/s		 750		1.4MB/s
+patched		19s	 420/s		 420		1.6MB/s
+
+The patched code clearly doesn't send cache flushes anymore, but
+instead uses FUA (confirmed via blktrace), and performance improves
+a bit as a result. However, the benefits will be higher on workloads
+that mix O_DSYNC overwrites with other write IO as we won't be
+flushing the entire device cache on every DSYNC overwrite IO
+anymore.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_inode.c | 3 +++
- 1 file changed, 3 insertions(+)
+ fs/iomap.c | 48 +++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 43 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 484ebef36fe4..47aa124e4744 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1452,6 +1452,7 @@ xfs_link(
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 1f59c2d9ade6..62f1f8256da2 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+  */
++#define IOMAP_DIO_WRITE_FUA	(1 << 28)
+ #define IOMAP_DIO_NEED_SYNC	(1 << 29)
+ #define IOMAP_DIO_WRITE		(1 << 30)
+ #define IOMAP_DIO_DIRTY		(1 << 31)
+@@ -860,6 +861,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	struct iov_iter iter;
+ 	struct bio *bio;
+ 	bool need_zeroout = false;
++	bool use_fua = false;
+ 	int nr_pages, ret;
+ 	size_t copied = 0;
+ 
+@@ -883,8 +885,20 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	case IOMAP_MAPPED:
+ 		if (iomap->flags & IOMAP_F_SHARED)
+ 			dio->flags |= IOMAP_DIO_COW;
+-		if (iomap->flags & IOMAP_F_NEW)
++		if (iomap->flags & IOMAP_F_NEW) {
+ 			need_zeroout = true;
++		} else {
++			/*
++			 * Use a FUA write if we need datasync semantics, this
++			 * is a pure data IO that doesn't require any metadata
++			 * updates and the underlying device supports FUA. This
++			 * allows us to avoid cache flushes on IO completion.
++			 */
++			if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
++			    (dio->flags & IOMAP_DIO_WRITE_FUA) &&
++			    blk_queue_fua(bdev_get_queue(iomap->bdev)))
++				use_fua = true;
++		}
+ 		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+@@ -932,10 +946,14 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ 		n = bio->bi_iter.bi_size;
+ 		if (dio->flags & IOMAP_DIO_WRITE) {
+-			bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
++			bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_IDLE;
++			if (use_fua)
++				bio->bi_opf |= REQ_FUA;
++			else
++				dio->flags &= ~IOMAP_DIO_WRITE_FUA;
+ 			task_io_account_write(n);
+ 		} else {
+-			bio_set_op_attrs(bio, REQ_OP_READ, 0);
++			bio->bi_opf = REQ_OP_READ;
+ 			if (dio->flags & IOMAP_DIO_DIRTY)
+ 				bio_set_pages_dirty(bio);
+ 		}
+@@ -965,7 +983,12 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ /*
+  * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
+- * is being issued as AIO or not.
++ * is being issued as AIO or not.  This allows us to optimise pure data writes
++ * to use REQ_FUA rather than requiring generic_write_sync() to issue a
++ * REQ_FLUSH post write. This is slightly tricky because a single request here
++ * can be mapped into multiple disjoint IOs and only a subset of the IOs issued
++ * may be pure data writes. In that case, we still need to do a full data sync
++ * completion.
+  */
+ ssize_t
+ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+@@ -1012,8 +1035,16 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 			dio->flags |= IOMAP_DIO_DIRTY;
+ 	} else {
+ 		dio->flags |= IOMAP_DIO_WRITE;
+-		if (iocb->ki_flags & IOCB_DSYNC)
++		if (iocb->ki_flags & IOCB_DSYNC) {
+ 			dio->flags |= IOMAP_DIO_NEED_SYNC;
++			/*
++			 * We optimistically try using FUA for this IO.  Any
++			 * non-FUA write that occurs will clear this flag, hence
++			 * we know before completion whether a cache flush is
++			 * necessary.
++			 */
++			dio->flags |= IOMAP_DIO_WRITE_FUA;
++		}
+ 		flags |= IOMAP_WRITE;
  	}
  
- 	xfs_defer_init(&dfops, &first_block);
-+	tp->t_agfl_dfops = &dfops;
+@@ -1070,6 +1101,13 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret < 0)
+ 		iomap_dio_set_error(dio, ret);
  
- 	/*
- 	 * Handle initial link state of O_TMPFILE inode
-@@ -2649,6 +2650,7 @@ xfs_remove(
- 		goto out_trans_cancel;
- 
- 	xfs_defer_init(&dfops, &first_block);
-+	tp->t_agfl_dfops = &dfops;
- 	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
- 					&first_block, &dfops, resblks);
- 	if (error) {
-@@ -3016,6 +3018,7 @@ xfs_rename(
- 	}
- 
- 	xfs_defer_init(&dfops, &first_block);
-+	tp->t_agfl_dfops = &dfops;
- 
- 	/* RENAME_EXCHANGE is unique from here on. */
- 	if (flags & RENAME_EXCHANGE)
++	/*
++	 * If all the writes we issued were FUA, we don't need to flush the
++	 * cache on IO completion. Clear the sync flag for this case.
++	 */
++	if (dio->flags & IOMAP_DIO_WRITE_FUA)
++		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
++
+ 	if (!atomic_dec_and_test(&dio->ref)) {
+ 		if (!is_sync_kiocb(iocb))
+ 			return -EIOCBQUEUED;
 -- 
-2.13.6
+2.16.1
 
