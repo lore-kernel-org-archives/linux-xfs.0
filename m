@@ -1,14 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46882 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:46488 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753076AbeDRCq5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:57 -0400
-Subject: [PATCH 01/11] xfs_repair: examine all remote attribute blocks
+        with ESMTP id S1753031AbeDRCqV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:21 -0400
+Subject: [PATCH 5/9] xfs_spaceman: print a nicer message when the file path
+ isn't on an xfs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:46:37 -0700
-Message-ID: <152401959780.13319.9582448473529615015.stgit@magnolia>
-In-Reply-To: <152401958920.13319.10756339531174871801.stgit@magnolia>
-References: <152401958920.13319.10756339531174871801.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:46:02 -0700
+Message-ID: <152401956294.13048.1815463748899965760.stgit@magnolia>
+In-Reply-To: <152401952391.13048.15040850425873030425.stgit@magnolia>
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -20,28 +21,27 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Examine all remote xattr values of a file, not just the XFS_ATTR_ROOT
-values.  This enables us to detect and zap corrupt user xattrs, as
-tested by xfs/404.
+If the file path passed in is not something on an xfs filesystem, print
+a nice message about that instead of yelling about ioctls.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/attr_repair.c |    3 ---
- 1 file changed, 3 deletions(-)
+ spaceman/file.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 8b1b8a7..bb5ab3d 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -537,9 +537,6 @@ process_leaf_attr_remote(
- 		return -1;
+diff --git a/spaceman/file.c b/spaceman/file.c
+index 4c13b4a..4f9f66c 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -69,7 +69,8 @@ openfile(
  	}
  
--	if (!(entry->flags & XFS_ATTR_ROOT))
--		goto out;
--
- 	value = malloc(be32_to_cpu(remotep->valuelen));
- 	if (value == NULL) {
- 		do_warn(
+ 	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+-		perror("XFS_IOC_FSGEOMETRY");
++		fprintf(stderr, _("%s: Not on a mounted XFS filesystem.\n"),
++				path);
+ 		close(fd);
+ 		return -1;
+ 	}
 
