@@ -1,128 +1,212 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48618 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:41626 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752153AbeDRKMZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Apr 2018 06:12:25 -0400
-Date: Wed, 18 Apr 2018 12:12:21 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 03/11] fs: add frozen sb state helpers
-Message-ID: <20180418101221.nzkpkuoojruuiqoc@quack2.suse.cz>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
- <20171129232356.28296-4-mcgrof@kernel.org>
- <20171130171310.GG28180@quack2.suse.cz>
- <20171130190548.GJ729@wotan.suse.de>
- <20171201114724.GC8365@quack2.suse.cz>
- <20171201211327.GQ729@wotan.suse.de>
- <20171221110329.GG31584@quack2.suse.cz>
- <20180418005936.j3fa5rogfm353clf@garbanzo.do-not-panic.com>
+        id S1753424AbeDRPDr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Apr 2018 11:03:47 -0400
+Date: Wed, 18 Apr 2018 11:03:08 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/11] xfs: skip scrub xref if corruption already noted
+Message-ID: <20180418150307.GA19870@bfoster.bfoster>
+References: <152401916729.11465.4212188839231900136.stgit@magnolia>
+ <152401917356.11465.5404373936588816069.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180418005936.j3fa5rogfm353clf@garbanzo.do-not-panic.com>
+In-Reply-To: <152401917356.11465.5404373936588816069.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jlayton@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue 17-04-18 17:59:36, Luis R. Rodriguez wrote:
-> On Thu, Dec 21, 2017 at 12:03:29PM +0100, Jan Kara wrote:
-> > On Fri 01-12-17 22:13:27, Luis R. Rodriguez wrote:
-> > > 
-> > > I'll note that its still not perfectly clear if really the semantics behind
-> > > freeze_bdev() match what I described above fully. That still needs to be
-> > > vetted for. For instance, does thaw_bdev() keep a superblock frozen if we
-> > > an ioctl initiated freeze had occurred before? If so then great. Otherwise
-> > > I think we'll need to distinguish the ioctl interface. Worst possible case
-> > > is that bdev semantics and in-kernel semantics differ somehow, then that
-> > > will really create a holy fucking mess.
-> > 
-> > I believe nobody really thought about mixing those two interfaces to fs
-> > freezing and so the behavior is basically defined by the implementation.
-> > That is:
-> > 
-> > freeze_bdev() on sb frozen by ioctl_fsfreeze() -> EBUSY
+On Tue, Apr 17, 2018 at 07:39:33PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Note below as well on your *future* freeze_super() implementation.
+> Don't bother looking for cross-referencing problems if the metadata is
+> already corrupt or we've already found a cross-referencing problem.
+> Since we added a helper function for flags testing, convert existing
+> users to use it.
 > 
-> > freeze_bdev() on sb frozen by freeze_bdev() -> success
-> > ioctl_fsfreeze() on sb frozen by freeze_bdev() -> EBUSY
-> > ioctl_fsfreeze() on sb frozen by ioctl_fsfreeze() -> EBUSY
-> > 
-> > thaw_bdev() on sb frozen by ioctl_fsfreeze() -> EINVAL
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/alloc.c    |    2 +-
+>  fs/xfs/scrub/common.c   |    4 ++++
+>  fs/xfs/scrub/common.h   |    6 ++++++
+>  fs/xfs/scrub/ialloc.c   |    2 +-
+>  fs/xfs/scrub/refcount.c |    4 ++--
+>  fs/xfs/scrub/rmap.c     |    4 ++--
+>  fs/xfs/scrub/rtbitmap.c |    3 +++
+>  fs/xfs/scrub/scrub.c    |    3 +--
+>  8 files changed, 20 insertions(+), 8 deletions(-)
 > 
-> Phew, so this is what we want for the in-kernel freezing so we're good
-> and *can* combine these then.
 > 
-> > ioctl_fsthaw() on sb frozen by freeze_bdev() -> success
-> > 
-> > What I propose is the following API:
-> > 
-> > freeze_super_excl()
-> >   - freezes superblock, returns EBUSY if the superblock is already frozen
-> >     (either by another freeze_super_excl() or by freeze_super())
-> > freeze_super()
-> >   - this function will make sure superblock is frozen when the function
-> >     returns with success. 
-> 
-> That's straight forward.
-> 
-> >     It can be nested with other freeze_super() or
-> >     freeze_super_excl() calls 
-> 
-> This is where it can get hairy. More below.
-> 
-> >     (this second part is different from how
-> >     freeze_bdev() behaves currently but AFAICT this behavior is actually
-> >     what all current users of freeze_bdev() really want - just make sure
-> >     fs cannot be written to)
-> 
-> If we can agree to this, then sure. However there are two types of
-> possible nested calls to consider, one where the sb was already frozen
-> by an IOCTL, and the other where it was initiated by either another
-> freeze_super_excl() or another freeze_super() call which is currently
-> being processed. For the first type, its easy to say the device is
-> already frozen as such return success. If the freezing is ongoing,
-> we may want to wait or not wait, and this will depend on our current
-> use cases for freeze_bdev().
+> diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+> index 517c079..f5c6993 100644
+> --- a/fs/xfs/scrub/alloc.c
+> +++ b/fs/xfs/scrub/alloc.c
+> @@ -172,7 +172,7 @@ xfs_scrub_xref_is_used_space(
+>  	bool				is_freesp;
+>  	int				error;
+>  
+> -	if (!sc->sa.bno_cur)
+> +	if (!sc->sa.bno_cur || xfs_scrub_found_corruption(sc->sm))
+>  		return;
+>  
+>  	error = xfs_alloc_has_record(sc->sa.bno_cur, agbno, len, &is_freesp);
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 8ed91d5..3f72176 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -727,6 +727,10 @@ xfs_scrub_should_check_xref(
+>  	int				*error,
+>  	struct xfs_btree_cur		**curpp)
+>  {
+> +	/* No point in xref if we already know we're corrupt. */
+> +	if (xfs_scrub_found_corruption(sc->sm))
+> +		return false;
+> +
 
-A side note since I'm not sure I wrote this down in my previous email:
-I want ioctl_fsfreeze() directly use freeze_super_excl().
+This seems like a fairly innocuous change for not being terribly
+familiar with the scrub code, but a high level thought...
 
-Now to your freeze in progress question: freeze_super_excl() can
-immediately return EBUSY when there's freezing in progress. OTOH
-freeze_super() always has to wait for the current freeze / thaw to finish
-and then do what's necessary. I don't see a use case where you'd like to
-have freeze_super() not wait.
+This function has 30+ callers, then we have a bunch of these
+found_corruption() checks as well, one of which is the former. The new
+callers of the found_corruption() functions look like they easily have
+tens of callers throughout the scrub xref code, which kind of makes this
+look like quite the maze of logic just to shortcut various checks.
 
-> As you noted above, freeze_bdev() currently returns EBUSY if we had
-> the sb already frozen by ioctl_fsfreeze(). It may be a welcomed
-> enhancement to correct the semantics first to address the first case,
-> but keep the EBUSY for the other case. A secondary patch could then
-> add a completion mechanism and let callers decide to either wait or not.
-> *Iff* the caller did not opt-in to wait we keep the EBUSY return.
+This is not an objection to this patch, but it makes me wonder how much
+"empty" processing is involved in a situation where we assume an xref
+error is detected early on in a scrub. Secondarily, the logic makes this
+hard enough to follow that the only way to really surmise that is to
+trace through all of the scrub code. It also looks like we have some
+places where it's checked multiple times. For example,
+xfs_scrub_inode_xref() checks the corrupt flag and then calls a bunch of
+sub-handlers that call either found_corruption() or the
+should_check_xref(). One of the latter callers is
+xfs_scrub_inode_xref_finobt(), which does a btree lookup before it ever
+gets to this call only to then bail on the corruption flag being set.
 
-You're now speaking about steps to transition to the new API, right? I'd
-structure the transition as follows:
+Granted, this would probably only execute if the flag was set after the
+higher level scrub_inode_xref() check, but isn't it kind of strange to
+bury a check that is intended to control high-level xref execution flow
+in a call that is (also) designed to check the error of some btree
+lookup that shouldn't be required at all if the xref was going to be
+skipped anyways? I'm wondering if this would be more clear with
+consistent but separate error/corruption checks at the top of every xref
+helper to dictate high-level scrub execution flow and leave
+scrub_should_check_xref() to continue to care only about local
+processing decisions specific to the current branch of the scan (i.e.,
+my btree lookup failed and so we must set the corrupt flag and not
+proceed).
 
-1) Move bdev->bd_fsfreeze_count to a superblock.
-2) Make freeze_super() grab the counter as well, thaw_super() drops it and
-  unfreezes the filesystem only if the counter dropped to zero.
-3) Rename freeze_super() to freeze_super_excl().
-4) Only now I'd go for messing with freeze_bdev() as it now combines sanely
-with freeze_super_excl(). Probably I'd just implement new freeze_super()
-with the desired semantics (including waiting for ongoing operation to
-finish).
-5) And then switch all users (there are 4 in the kernel) from freeze_bdev()
-to freeze_super() with the justification in each case why the new semantics
-is actually desirable.
-6) Drop old freeze_bdev() - note that only one freeze_bdev() user (in
-drivers/md/dm.c) is actually interested in passing bdev, all the others are
-better off just passing in superblock to new freeze_super(). Anyway for
-that user in dm we might still provide a convenience wrapper to grab the
-superblock and call new freeze_super() on it.
+Brian
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+>  	if (*error == 0)
+>  		return true;
+>  
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index deaf604..30e9039 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -157,4 +157,10 @@ int xfs_scrub_setup_inode_contents(struct xfs_scrub_context *sc,
+>  				   struct xfs_inode *ip, unsigned int resblks);
+>  void xfs_scrub_buffer_recheck(struct xfs_scrub_context *sc, struct xfs_buf *bp);
+>  
+> +static inline bool xfs_scrub_found_corruption(struct xfs_scrub_metadata *sm)
+> +{
+> +	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
+> +			       XFS_SCRUB_OFLAG_XCORRUPT);
+> +}
+> +
+>  #endif	/* __XFS_SCRUB_COMMON_H__ */
+> diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+> index 106ca4b..05e6191 100644
+> --- a/fs/xfs/scrub/ialloc.c
+> +++ b/fs/xfs/scrub/ialloc.c
+> @@ -496,7 +496,7 @@ xfs_scrub_xref_inode_check(
+>  	bool				has_inodes;
+>  	int				error;
+>  
+> -	if (!(*icur))
+> +	if (!(*icur) || xfs_scrub_found_corruption(sc->sm))
+>  		return;
+>  
+>  	error = xfs_ialloc_has_inodes_at_extent(*icur, agbno, len, &has_inodes);
+> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+> index 400f156..823bda3 100644
+> --- a/fs/xfs/scrub/refcount.c
+> +++ b/fs/xfs/scrub/refcount.c
+> @@ -460,7 +460,7 @@ xfs_scrub_xref_is_cow_staging(
+>  	int				has_refcount;
+>  	int				error;
+>  
+> -	if (!sc->sa.refc_cur)
+> +	if (!sc->sa.refc_cur || xfs_scrub_found_corruption(sc->sm))
+>  		return;
+>  
+>  	/* Find the CoW staging extent. */
+> @@ -504,7 +504,7 @@ xfs_scrub_xref_is_not_shared(
+>  	bool				shared;
+>  	int				error;
+>  
+> -	if (!sc->sa.refc_cur)
+> +	if (!sc->sa.refc_cur || xfs_scrub_found_corruption(sc->sm))
+>  		return;
+>  
+>  	error = xfs_refcount_has_record(sc->sa.refc_cur, agbno, len, &shared);
+> diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
+> index 8f2a7c3..9ca92e4 100644
+> --- a/fs/xfs/scrub/rmap.c
+> +++ b/fs/xfs/scrub/rmap.c
+> @@ -207,7 +207,7 @@ xfs_scrub_xref_check_owner(
+>  	bool				has_rmap;
+>  	int				error;
+>  
+> -	if (!sc->sa.rmap_cur)
+> +	if (!sc->sa.rmap_cur || xfs_scrub_found_corruption(sc->sm))
+>  		return;
+>  
+>  	error = xfs_rmap_record_exists(sc->sa.rmap_cur, bno, len, oinfo,
+> @@ -250,7 +250,7 @@ xfs_scrub_xref_has_no_owner(
+>  	bool				has_rmap;
+>  	int				error;
+>  
+> -	if (!sc->sa.rmap_cur)
+> +	if (!sc->sa.rmap_cur || xfs_scrub_found_corruption(sc->sm))
+>  		return;
+>  
+>  	error = xfs_rmap_has_record(sc->sa.rmap_cur, bno, len, &has_rmap);
+> diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+> index 39c41dfe..c8672f7 100644
+> --- a/fs/xfs/scrub/rtbitmap.c
+> +++ b/fs/xfs/scrub/rtbitmap.c
+> @@ -110,6 +110,9 @@ xfs_scrub_xref_is_used_rt_space(
+>  	bool				is_free;
+>  	int				error;
+>  
+> +	if (xfs_scrub_found_corruption(sc->sm))
+> +		return;
+> +
+>  	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
+>  	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, fsbno, len,
+>  			&is_free);
+> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> index 26c7596..cb1e727 100644
+> --- a/fs/xfs/scrub/scrub.c
+> +++ b/fs/xfs/scrub/scrub.c
+> @@ -446,8 +446,7 @@ xfs_scrub_metadata(
+>  	} else if (error)
+>  		goto out_teardown;
+>  
+> -	if (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
+> -			       XFS_SCRUB_OFLAG_XCORRUPT))
+> +	if (xfs_scrub_found_corruption(sc.sm))
+>  		xfs_alert_ratelimited(mp, "Corruption detected during scrub.");
+>  
+>  out_teardown:
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
