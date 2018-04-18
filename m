@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47642 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753031AbeDRCqP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:15 -0400
-Subject: [PATCH 4/9] xfs_db: add a superblock info command
+Received: from userp2130.oracle.com ([156.151.31.86]:60168 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbeDRCq2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:28 -0400
+Subject: [PATCH 6/9] xfs_spaceman: add a superblock info command
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:45:56 -0700
-Message-ID: <152401955677.13048.14823962842951881263.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:46:09 -0700
+Message-ID: <152401956907.13048.9916119316995542280.stgit@magnolia>
 In-Reply-To: <152401952391.13048.15040850425873030425.stgit@magnolia>
 References: <152401952391.13048.15040850425873030425.stgit@magnolia>
 MIME-Version: 1.0
@@ -24,55 +24,66 @@ Add an 'info' command to pretty-print the superblock geometry.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/Makefile       |    2 +
- db/command.c      |    1 +
- db/command.h      |    1 +
- db/info.c         |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |    6 ++++
- 5 files changed, 83 insertions(+), 1 deletion(-)
- create mode 100644 db/info.c
+ man/man8/xfs_spaceman.8 |    7 +++
+ spaceman/Makefile       |    2 -
+ spaceman/file.c         |    2 +
+ spaceman/info.c         |   96 +++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/init.c         |    1 
+ spaceman/space.h        |    1 
+ 6 files changed, 108 insertions(+), 1 deletion(-)
+ create mode 100644 spaceman/info.c
 
 
-diff --git a/db/Makefile b/db/Makefile
-index 6caa634..c73d7f2 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -14,7 +14,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
- 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
- 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
- 	fuzz.h
--CFILES = $(HFILES:.h=.c) btdump.c
-+CFILES = $(HFILES:.h=.c) btdump.c info.c
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+index e4a9137..12dd04e 100644
+--- a/man/man8/xfs_spaceman.8
++++ b/man/man8/xfs_spaceman.8
+@@ -84,6 +84,13 @@ Display a summary of the free space information found.
+ .PD
+ .RE
+ .TP
++.B info
++Displays selected geometry information about the filesystem.
++The opened file must be a mount point of a XFS filesystem.
++The output will have the same format that
++.BR "xfs_info" "(8)"
++prints when querying a filesystem.
++.TP
+ .BR "help [ " command " ]"
+ Display a brief description of one or all commands.
+ .TP
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index 8b31030..c1d903b 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
  
- LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-diff --git a/db/command.c b/db/command.c
-index 12ae5b7..087955e 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -136,6 +136,7 @@ init_commands(void)
- 	fsmap_init();
- 	help_init();
- 	hash_init();
-+	info_init();
- 	inode_init();
- 	input_init();
- 	logres_init();
-diff --git a/db/command.h b/db/command.h
-index 9b4ed2d..84cd0b1 100644
---- a/db/command.h
-+++ b/db/command.h
-@@ -41,3 +41,4 @@ extern const cmdinfo_t	*find_command(const char *cmd);
- extern void		init_commands(void);
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+-CFILES = init.c file.c prealloc.c trim.c
++CFILES = info.c init.c file.c prealloc.c trim.c
  
- extern void		btdump_init(void);
-+extern void		info_init(void);
-diff --git a/db/info.c b/db/info.c
+ LLDLIBS = $(LIBXCMD) $(LIBFROG)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
+diff --git a/spaceman/file.c b/spaceman/file.c
+index 4f9f66c..6adb4f5 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -84,6 +84,8 @@ openfile(
+ 			return -1;
+ 		}
+ 		memcpy(fs_path, fsp, sizeof(struct fs_path));
++	} else {
++		memset(fs_path, 0, sizeof(struct fs_path));
+ 	}
+ 	return fd;
+ }
+diff --git a/spaceman/info.c b/spaceman/info.c
 new file mode 100644
-index 0000000..7e7e4db
+index 0000000..b8b8133
 --- /dev/null
-+++ b/db/info.c
-@@ -0,0 +1,74 @@
++++ b/spaceman/info.c
+@@ -0,0 +1,96 @@
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
 + *
@@ -95,16 +106,18 @@ index 0000000..7e7e4db
 +#include "libxfs.h"
 +#include "command.h"
 +#include "init.h"
-+#include "output.h"
++#include "path.h"
++#include "space.h"
 +#include "fsgeom.h"
 +
 +static void
 +info_help(void)
 +{
-+	dbprintf(_(
++	printf(_(
 +"\n"
 +" Pretty-prints the filesystem geometry as derived from the superblock.\n"
-+" The output has the same format as mkfs.\n"
++" The output has the same format as mkfs.  The opened file must be a XFS\n"
++" mount point.\n"
 +"\n"
 +));
 +
@@ -118,15 +131,34 @@ index 0000000..7e7e4db
 +	struct xfs_fsop_geom	geo;
 +	int			error;
 +
-+	error = -libxfs_fs_geometry(&mp->m_sb, &geo,
-+			XFS_FS_GEOM_MAX_STRUCT_VER);
-+	if (error) {
-+		dbprintf(_("could not obtain geometry\n"));
-+		exitcode = 1;
-+		return 0;
++	if (fs_table_lookup_mount(file->name) == NULL) {
++		fprintf(stderr, _("%s: Not a XFS mount point.\n"), file->name);
++		return 1;
 +	}
 +
-+	xfs_report_geom(&geo, fsdevice, x.logname, x.rtname);
++	/* get the current filesystem size & geometry */
++	error = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &geo);
++	if (error) {
++		/*
++		 * OK, new xfsctl barfed - back off and try earlier version
++		 * as we're probably running an older kernel version.
++		 * Only field added in the v2 geometry xfsctl is "logsunit"
++		 * so we'll zero that out for later display (as zero).
++		 */
++		geo.logsunit = 0;
++		error = ioctl(file->fd, XFS_IOC_FSGEOMETRY_V1, &geo);
++		if (error) {
++			fprintf(stderr, _(
++				"%s: cannot determine geometry of filesystem"
++				" mounted at %s: %s\n"),
++				progname, file->name, strerror(errno));
++			exitcode = 1;
++			return 0;
++		}
++	}
++
++	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
++			file->fs_path.fs_rt);
 +	return 0;
 +}
 +
@@ -138,6 +170,7 @@ index 0000000..7e7e4db
 +	.argmax =	0,
 +	.canpush =	0,
 +	.args =		NULL,
++	.flags =	CMD_FLAG_ONESHOT,
 +	.oneline =	N_("dump superblock info"),
 +	.help =		info_help,
 +};
@@ -147,21 +180,27 @@ index 0000000..7e7e4db
 +{
 +	add_command(&info_cmd);
 +}
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 524b1ef..e29821e 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -670,6 +670,12 @@ using the hash function of the XFS directory and attribute implementation.
- .BI "help [" command ]
- Print help for one or all commands.
- .TP
-+.B info
-+Displays selected geometry information about the filesystem.
-+The output will have the same format that
-+.BR "mkfs.xfs" "(8)"
-+prints when creating a filesystem.
-+.TP
- .BI "inode [" inode# ]
- Set the current inode number. If no
- .I inode#
+diff --git a/spaceman/init.c b/spaceman/init.c
+index b3eface..895504f 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -40,6 +40,7 @@ init_commands(void)
+ {
+ 	print_init();
+ 	help_init();
++	info_init();
+ 	prealloc_init();
+ 	quit_init();
+ 	trim_init();
+diff --git a/spaceman/space.h b/spaceman/space.h
+index 5f4a8a0..d2a2543 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -42,5 +42,6 @@ extern void	freesp_init(void);
+ #else
+ # define freesp_init()	do { } while (0)
+ #endif
++extern void	info_init(void);
+ 
+ #endif /* XFS_SPACEMAN_SPACE_H_ */
 
