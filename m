@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45888 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752450AbeDRWNz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:55 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMBJvV154355
+Received: from aserp2130.oracle.com ([141.146.126.79]:56848 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752707AbeDRWNy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:54 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMBsNu027687
         for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:54 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2hdrxncuee-1
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2hdrxnctff-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:54 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDrBw013323
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDqnj027112
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:54 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDru4001414
         for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:53 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDqQt028994
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:52 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 16/18] xfs: Add the parent pointer support to the superblock version 5.
-Date: Wed, 18 Apr 2018 15:11:24 -0700
-Message-Id: <1524089486-22922-17-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 14/18] xfs: remove parent pointers in unlink
+Date: Wed, 18 Apr 2018 15:11:22 -0700
+Message-Id: <1524089486-22922-15-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 References: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,88 +28,94 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased and added parent pointer attribute to
-           compatible attributes mask]
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+This patch removes the parent pointer attribute during unlink
+
+[bfoster: rebase, use VFS inode generation]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+	   implemented xfs_attr_remove_parent]
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_format.h | 7 +++++--
- fs/xfs/libxfs/xfs_fs.h     | 1 +
- fs/xfs/libxfs/xfs_sb.c     | 2 ++
- fs/xfs/xfs_super.c         | 4 ++++
- 4 files changed, 12 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_inode.c        |  9 ++++++++-
+ fs/xfs/xfs_parent_utils.c | 19 +++++++++++++++++++
+ fs/xfs/xfs_parent_utils.h |  4 ++++
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 5e946c8..d05ffc5 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -462,10 +462,12 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-+#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)		/* parent inode ptr */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-+		 XFS_SB_FEAT_RO_COMPAT_PARENT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-@@ -561,7 +563,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 90498cb..29c58b3 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2614,6 +2614,7 @@ xfs_remove(
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t           first_block;
+ 	uint			resblks;
++	xfs_dir2_dataptr_t	dir_offset;
  
- static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
- {
--	return false; /* We'll enable this at the end of the set */
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
- }
+ 	trace_xfs_remove(dp, name);
  
- /*
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index faf1a4e..641e0af 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
+@@ -2694,12 +2695,18 @@ xfs_remove(
  
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index d9b94bd..e1f0ac1 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -955,6 +955,8 @@ xfs_fs_geometry(
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
- 	if (xfs_sb_version_hasreflink(sbp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
-+	if(xfs_sb_version_hasparent(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
- 	if (xfs_sb_version_hassector(sbp))
- 		geo->logsectsize = sbp->sb_logsectsize;
- 	else
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index dce3baf..366deee 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1731,6 +1731,10 @@ xfs_fs_fill_super(
- 		goto out_filestream_unmount;
+ 	xfs_defer_init(&dfops, &first_block);
+ 	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+-				   &dfops, resblks, NULL);
++				   &dfops, resblks, &dir_offset);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_bmap_cancel;
  	}
  
-+	if (xfs_sb_version_hasparent(&mp->m_sb))
-+		xfs_alert(mp,
-+	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
++	if (xfs_sb_version_hasparent(&mp->m_sb)) {
++		error = xfs_parent_remove_deferred(dp, ip, dir_offset, &dfops);
++		if (error)
++			goto out_bmap_cancel;
++	}
 +
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * remove transaction goes to disk before returning to
+diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
+index cf4a7e2..0fd48b8 100644
+--- a/fs/xfs/xfs_parent_utils.c
++++ b/fs/xfs/xfs_parent_utils.c
+@@ -49,3 +49,22 @@ xfs_parent_add_deferred(
+ 		(void *)child_name->name, child_name->len, ATTR_PARENT);
+ }
+ 
++/*
++ * Remove a parent record from a child inode.
++ */
++int
++xfs_parent_remove_deferred(
++	struct xfs_inode	*parent,
++	struct xfs_inode	*child,
++	xfs_dir2_dataptr_t	diroffset,
++	struct xfs_defer_ops	*dfops)
++{
++	struct xfs_parent_name_rec rec;
++
++	xfs_init_parent_name_rec(&rec, parent->i_ino,
++				 VFS_I(parent)->i_generation, diroffset);
++
++	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
++					ATTR_PARENT);
++}
++
+diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
+index a667d1d..9e0ac13 100644
+--- a/fs/xfs/xfs_parent_utils.h
++++ b/fs/xfs/xfs_parent_utils.h
+@@ -23,4 +23,8 @@
+ int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_inode *child,
+ 	       struct xfs_name *child_name, uint32_t diroffset,
+ 	       struct xfs_defer_ops *dfops);
++int xfs_parent_remove_deferred(struct xfs_inode *parent,
++			       struct xfs_inode *child,
++			       xfs_dir2_dataptr_t diroffset,
++			       struct xfs_defer_ops *dfops);
+ #endif	/* __XFS_PARENT_UTILS_H__ */
 -- 
 2.7.4
 
