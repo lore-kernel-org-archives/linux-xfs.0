@@ -1,176 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46826 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750981AbeDRSet (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Apr 2018 14:34:49 -0400
-Date: Wed, 18 Apr 2018 14:34:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/11] xfs: quota scrub should use bmapbtd scrubber
-Message-ID: <20180418183447.GE22375@bfoster.bfoster>
-References: <152401916729.11465.4212188839231900136.stgit@magnolia>
- <152401921403.11465.9618173695298878026.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152401921403.11465.9618173695298878026.stgit@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:34776 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752308AbeDRWNs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:48 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMCW5h099120
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:47 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2hdrxp4u37-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:47 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDksv006960
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:47 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3IMDkGR005613
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:46 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 00/18] Parent Pointers v5
+Date: Wed, 18 Apr 2018 15:11:08 -0700
+Message-Id: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Apr 17, 2018 at 07:40:14PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Replace the quota scrubber's open-coded data fork scrubber with a
-> redirected call to the bmapbtd scrubber.  This strengthens the quota
-> scrub to include all the cross-referencing that it does.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/quota.c |   95 ++++++++++++++++++++++++++++----------------------
->  1 file changed, 54 insertions(+), 41 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-> index 1068a91..67f94c4 100644
-> --- a/fs/xfs/scrub/quota.c
-> +++ b/fs/xfs/scrub/quota.c
-> @@ -207,65 +207,78 @@ xfs_scrub_quota_item(
->  	return 0;
->  }
->  
-> -/* Scrub all of a quota type's items. */
-> -int
-> -xfs_scrub_quota(
-> +/* Check the quota's data fork. */
-> +STATIC int
-> +xfs_scrub_quota_data_fork(
->  	struct xfs_scrub_context	*sc)
->  {
->  	struct xfs_bmbt_irec		irec = { 0 };
-> -	struct xfs_scrub_quota_info	sqi;
-> -	struct xfs_mount		*mp = sc->mp;
-> -	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> +	struct xfs_iext_cursor		icur;
-> +	struct xfs_scrub_metadata	fake_sm;
-> +	struct xfs_scrub_metadata	*real_sm = sc->sm;
-> +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-> +	struct xfs_ifork		*ifp;
->  	xfs_fileoff_t			max_dqid_off;
-> -	xfs_fileoff_t			off = 0;
-> -	uint				dqtype;
-> -	int				nimaps;
->  	int				error = 0;
->  
-> -	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> -
-> -	/* Look for problem extents. */
-> +	/* Quotas don't live on the rt device. */
->  	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
->  		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-> -		goto out;
-> +		return 0;
->  	}
-> +
-> +	/* Invoke the data fork scrubber. */
-> +	memcpy(&fake_sm, real_sm, sizeof(fake_sm));
-> +	fake_sm.sm_type = XFS_SCRUB_TYPE_BMBTD;
-> +	fake_sm.sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-> +	sc->sm = &fake_sm;
-> +	error = xfs_scrub_bmap_data(sc);
-> +	sc->sm = real_sm;
+Hi all,
 
-Is the sm swap out of caution or is there really some conflict here?
-AFAICT sm_type is only used in the setup handler (and tracepoints).
-With respect to sm_flags, what's the difference between the above and
-just passing in the original sm without stripping FLAGS_OUT (whatever it
-is, might be useful to note in the comment)?
+This is the fifth version of parent pointer attributes for xfs. The goal of
+this patch set is to add a parent pointer attribute to each inode.  The
+attribute name containing the parent inode, generation, and directory offset,
+while the  attribute value contains the file name.  This feature will enable
+future optimizations for online scrub, or any other feature that could make
+use of quickly deriving an inodes path from  the mount point.  This set also
+introduces deferred attribute operations, though it is currently only used by
+ the new parent pointer code.
 
-> +	if (error)
-> +		return error;
-> +	sc->sm->sm_flags |= (fake_sm.sm_flags & XFS_SCRUB_FLAGS_OUT);
-> +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		return error;
-> +
-> +	/* Check for data fork problems that apply only to quota files. */
->  	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-> -	while (1) {
-> +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-> +	for_each_xfs_iext(ifp, &icur, &irec) {
->  		if (xfs_scrub_should_terminate(sc, &error))
->  			break;
-> -
-> -		off = irec.br_startoff + irec.br_blockcount;
-> -		nimaps = 1;
-> -		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
-> -				XFS_BMAPI_ENTIRE);
-> -		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
-> -				&error))
-> -			goto out;
-> -		if (!nimaps)
-> -			break;
-> -		if (irec.br_startblock == HOLESTARTBLOCK)
-> -			continue;
-> -
-> -		/* Check the extent record doesn't point to crap. */
-> -		if (irec.br_startblock + irec.br_blockcount <=
-> -		    irec.br_startblock)
-> -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> -					irec.br_startoff);
-> -		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
-> -		    !xfs_verify_fsbno(mp, irec.br_startblock +
-> -					irec.br_blockcount - 1))
-> -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> -					irec.br_startoff);
-> -
->  		/*
-> -		 * Unwritten extents or blocks mapped above the highest
-> +		 * delalloc extents or blocks mapped above the highest
->  		 * quota id shouldn't happen.
->  		 */
->  		if (isnullstartblock(irec.br_startblock) ||
->  		    irec.br_startoff > max_dqid_off ||
-> -		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
-> -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-> +		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1) {
+My apologies for the delays on the set, but I do intend to resume moving
+forward with it.  I've updated the set from the comments made since v4, and 
+have also done some work to separate out the code that needs to be shared
+with xfsprogs in libxfs.  The set is not quite ready yet.  In working on the
+tests, I have identified some bugs that still need to be resolved.  But I
+wanted to put out what I have at the moment to keep people updated with
+where things are right now.  Thanks everyone!
 
-Not introduced by this patch, but what's with the +1 to max_dqid_off
-here?
+As always, comments and feedback are appreciated.  Thank you!
 
-Brian
+Allison Henderson (9):
+  xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
+  xfs: Add attibute set and remove helper functions
+  xfs: Set up infastructure for deferred attribute operations
+  xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+  xfs: Remove all strlen calls in all xfs_attr_* functions for attr
+    names.
+  xfs: Add parent pointers to rename
+  xfs: Add the parent pointer support to the superblock version 5.
+  xfs: Add parent pointer ioctl
+  xfs: Add delayed attributes error tag
 
-> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> +					irec.br_startoff);
-> +			break;
-> +		}
->  	}
-> +
-> +	return error;
-> +}
-> +
-> +/* Scrub all of a quota type's items. */
-> +int
-> +xfs_scrub_quota(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	struct xfs_scrub_quota_info	sqi;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> +	uint				dqtype;
-> +	int				error = 0;
-> +
-> +	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> +
-> +	/* Look for problem extents. */
-> +	error = xfs_scrub_quota_data_fork(sc);
-> +	if (error)
-> +		goto out;
->  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
->  		goto out;
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave Chinner (5):
+  xfs: define parent pointer xattr format
+  xfs: extent transaction reservations for parent attributes
+  xfs: parent pointer attribute creation
+  xfs: add parent attributes to link
+  xfs: remove parent pointers in unlink
+
+Mark Tinguely (4):
+  xfs: get directory offset when adding directory name
+  xfs: get directory offset when removing directory name
+  xfs: get directory offset when replacing a directory name
+  xfs: add parent pointer support to attribute code
+
+ fs/xfs/Makefile                |   4 +
+ fs/xfs/libxfs/xfs_attr.c       | 448 +++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_attr.h       | 196 +++++++++++++++
+ fs/xfs/libxfs/xfs_bmap.c       |  49 ++--
+ fs/xfs/libxfs/xfs_bmap.h       |   1 +
+ fs/xfs/libxfs/xfs_da_btree.h   |   1 +
+ fs/xfs/libxfs/xfs_da_format.h  |  38 ++-
+ fs/xfs/libxfs/xfs_defer.h      |   1 +
+ fs/xfs/libxfs/xfs_dir2.c       |  41 ++--
+ fs/xfs/libxfs/xfs_dir2.h       |  10 +-
+ fs/xfs/libxfs/xfs_dir2_block.c |   9 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |   8 +-
+ fs/xfs/libxfs/xfs_dir2_node.c  |   8 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c    |   6 +
+ fs/xfs/libxfs/xfs_errortag.h   |   5 +-
+ fs/xfs/libxfs/xfs_format.h     |  10 +-
+ fs/xfs/libxfs/xfs_fs.h         |  39 +++
+ fs/xfs/libxfs/xfs_log_format.h |  44 +++-
+ fs/xfs/libxfs/xfs_parent.c     | 142 +++++++++++
+ fs/xfs/libxfs/xfs_parent.h     |  38 +++
+ fs/xfs/libxfs/xfs_sb.c         |   2 +
+ fs/xfs/libxfs/xfs_trans_resv.c | 111 +++++++--
+ fs/xfs/libxfs/xfs_trans_resv.h |   1 +
+ fs/xfs/libxfs/xfs_types.h      |   1 +
+ fs/xfs/xfs_acl.c               |  12 +-
+ fs/xfs/xfs_attr.h              | 160 -------------
+ fs/xfs/xfs_attr_item.c         | 530 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_item.h         | 119 +++++++++
+ fs/xfs/xfs_attr_list.c         |   3 +
+ fs/xfs/xfs_error.c             |   3 +
+ fs/xfs/xfs_inode.c             | 137 ++++++++---
+ fs/xfs/xfs_ioctl.c             |  74 +++++-
+ fs/xfs/xfs_iops.c              |   6 +-
+ fs/xfs/xfs_log_recover.c       | 122 ++++++++++
+ fs/xfs/xfs_parent_utils.c      | 136 +++++++++++
+ fs/xfs/xfs_parent_utils.h      |  32 +++
+ fs/xfs/xfs_super.c             |   5 +
+ fs/xfs/xfs_symlink.c           |   2 +-
+ fs/xfs/xfs_trans.h             |  13 +
+ fs/xfs/xfs_trans_attr.c        | 294 +++++++++++++++++++++++
+ fs/xfs/xfs_xattr.c             |  10 +-
+ 41 files changed, 2444 insertions(+), 427 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_attr.h
+ create mode 100644 fs/xfs/libxfs/xfs_parent.c
+ create mode 100644 fs/xfs/libxfs/xfs_parent.h
+ delete mode 100644 fs/xfs/xfs_attr.h
+ create mode 100644 fs/xfs/xfs_attr_item.c
+ create mode 100644 fs/xfs/xfs_attr_item.h
+ create mode 100644 fs/xfs/xfs_parent_utils.c
+ create mode 100644 fs/xfs/xfs_parent_utils.h
+ create mode 100644 fs/xfs/xfs_trans_attr.c
+
+-- 
+2.7.4
+
