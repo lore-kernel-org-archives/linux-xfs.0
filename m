@@ -1,37 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:53636 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751882AbeDQXfN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Apr 2018 19:35:13 -0400
-Date: Tue, 17 Apr 2018 19:34:59 -0400
-From: "Theodore Y. Ts'o" <tytso@mit.edu>
-Subject: Re: ioctl FIBMAP for dax gone in v4.17-rc1
-Message-ID: <20180417233459.GB23194@thunk.org>
-References: <20180417144059.nwbbynhgq3k3i63q@XZHOUW.usersys.redhat.com>
- <20180417161056.GA24257@infradead.org>
- <CAPcyv4i05nP=wmOMwKFbdwqBrYXpcPBCmR4g2b4w8vOZaCBEnQ@mail.gmail.com>
- <20180417165756.GC24738@magnolia>
- <BE1492A6-DF52-428C-A3CE-E91F0ACC0ADA@dilger.ca>
- <20180417175007.GB5210@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:48002 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753076AbeDRCrD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:47:03 -0400
+Subject: [PATCH 02/11] xfs_repair: don't leak buffer on xattr remote buf
+ verifier error
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 17 Apr 2018 19:46:44 -0700
+Message-ID: <152401960402.13319.3526134260258053342.stgit@magnolia>
+In-Reply-To: <152401958920.13319.10756339531174871801.stgit@magnolia>
+References: <152401958920.13319.10756339531174871801.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180417175007.GB5210@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, Xiong Zhou <xzhou@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, fstests <fstests@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Apr 17, 2018 at 10:50:07AM -0700, Darrick J. Wong wrote:
-> syslinux does FIEMAP w/ FIBMAP fallback.
-> 
-> lilo & elilo still use FIBMAP only, but lilo hasn't seen a release since
-> 2015 and elilo 2013.  I prefer not to add FIBMAP support in XFS-DAX for
-> the singular case of booting off pmem via lilo.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It shouldn't be that hard to write a userspace emulation layer which
-exports a FIBMAP-like functional interface but gets the information
-from the kernel using the FIMAP ioctl....
+If we try to read an xattr remote buffer and hit a verifier error,
+release the buffer instead of leaking it.
 
-					- Ted
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/attr_repair.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index bb5ab3d..3e6efd0 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -433,6 +433,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
+ 		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
+ 			do_warn(
+ 	_("Corrupt remote block for attributes of inode %" PRIu64 "\n"), ino);
++			libxfs_putbuf(bp);
+ 			clearit = 1;
+ 			break;
+ 		}
+
