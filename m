@@ -1,121 +1,247 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:52320 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750718AbeDRELN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 00:11:13 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] iomap: iomap_dio_rw() handles all sync writes
-Date: Wed, 18 Apr 2018 14:08:26 +1000
-Message-Id: <20180418040828.18165-3-david@fromorbit.com>
-In-Reply-To: <20180418040828.18165-1-david@fromorbit.com>
-References: <20180418040828.18165-1-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:46650 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbeDRCqk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:40 -0400
+Subject: [PATCH 8/9] xfs_info: call xfs_db for offline filesystems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 17 Apr 2018 19:46:21 -0700
+Message-ID: <152401958146.13048.3834702512829151272.stgit@magnolia>
+In-Reply-To: <152401952391.13048.15040850425873030425.stgit@magnolia>
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Currently iomap_dio_rw() only handles (data)sync write completions
-for AIO. This means we can't optimised non-AIO IO to minimise device
-flushes as we can't tell the caller whether a flush is required or
-not.
+If the online filesystem geometry query doesn't work, try using xfs_db
+to see if we can grab the information offline.
 
-To solve this problem and enable further optimisations, make
-iomap_dio_rw responsible for data sync behaviour for all IO, not
-just AIO.
-
-In doing so, the sync operation is now accounted as part of the DIO
-IO by inode_dio_end(), hence post-IO data stability updates will no
-long race against operations that serialise via inode_dio_wait()
-such as truncate or hole punch.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c        | 22 +++++++++++++++-------
- fs/xfs/xfs_file.c |  5 -----
- 2 files changed, 15 insertions(+), 12 deletions(-)
+ man/man8/xfs_growfs.8 |   47 +-----------------------
+ man/man8/xfs_info.8   |   95 +++++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/xfs_info.sh  |   12 +++++-
+ 3 files changed, 106 insertions(+), 48 deletions(-)
+ create mode 100644 man/man8/xfs_info.8
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index afd163586aa0..1f59c2d9ade6 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
-  * Private flags for iomap_dio, must not overlap with the public ones in
-  * iomap.h:
-  */
-+#define IOMAP_DIO_NEED_SYNC	(1 << 29)
- #define IOMAP_DIO_WRITE		(1 << 30)
- #define IOMAP_DIO_DIRTY		(1 << 31)
+
+diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
+index e23d30e..7e6a387 100644
+--- a/man/man8/xfs_growfs.8
++++ b/man/man8/xfs_growfs.8
+@@ -11,7 +11,7 @@
  
-@@ -759,6 +760,13 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 			dio_warn_stale_pagecache(iocb->ki_filp);
- 	}
- 
-+	/*
-+	 * If this is a DSYNC write, make sure we push it to stable storage now
-+	 * that we've written data.
-+	 */
-+	if (ret > 0 && (dio->flags & IOMAP_DIO_NEED_SYNC))
-+		ret = generic_write_sync(iocb, ret);
-+
- 	inode_dio_end(file_inode(iocb->ki_filp));
- 	kfree(dio);
- 
-@@ -768,14 +776,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- static void iomap_dio_complete_work(struct work_struct *work)
- {
- 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
--	struct kiocb *iocb = dio->iocb;
--	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
--	ssize_t ret;
- 
--	ret = iomap_dio_complete(dio);
--	if (is_write && ret > 0)
--		ret = generic_write_sync(iocb, ret);
--	iocb->ki_complete(iocb, ret, 0);
-+	dio->iocb->ki_complete(dio->iocb, iomap_dio_complete(dio), 0);
- }
- 
- /*
-@@ -961,6 +963,10 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 	return copied;
- }
- 
-+/*
-+ * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
-+ * is being issued as AIO or not.
-+ */
- ssize_t
- iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
-@@ -1006,6 +1012,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 			dio->flags |= IOMAP_DIO_DIRTY;
- 	} else {
- 		dio->flags |= IOMAP_DIO_WRITE;
-+		if (iocb->ki_flags & IOCB_DSYNC)
-+			dio->flags |= IOMAP_DIO_NEED_SYNC;
- 		flags |= IOMAP_WRITE;
- 	}
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 6f15027661b6..0c4b8313d544 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -570,11 +570,6 @@ xfs_file_dio_aio_write(
- 	 * complete fully or fail.
- 	 */
- 	ASSERT(ret < 0 || ret == count);
+ .TH xfs_growfs 8
+ .SH NAME
+-xfs_growfs, xfs_info \- expand an XFS filesystem
++xfs_growfs \- expand an XFS filesystem
+ .SH SYNOPSIS
+ .B xfs_growfs
+ [
+@@ -38,16 +38,6 @@ xfs_growfs, xfs_info \- expand an XFS filesystem
+ .I mount-point
+ .br
+ .B xfs_growfs \-V
+-.PP
+-.br
+-.B xfs_info
+-[
+-.B \-t
+-.I mtab
+-]
+-.I mount-point
+-.br
+-.B xfs_info \-V
+ .SH DESCRIPTION
+ .B xfs_growfs
+ expands an existing XFS filesystem (see
+@@ -59,13 +49,6 @@ is mounted. The filesystem must be mounted to be grown (see
+ .BR mount (8)).
+ The existing contents of the filesystem are undisturbed, and the added space
+ becomes available for additional file storage.
+-.PP
+-.B xfs_info
+-is equivalent to invoking
+-.B xfs_growfs
+-with the
+-.B \-n
+-option (see discussion below).
+ .SH OPTIONS
+ .TP
+ .BI "\-d | \-D " size
+@@ -169,35 +152,9 @@ reside. In order to grow a filesystem, it is necessary to provide added
+ space for it to occupy. Therefore there must be at least one spare new
+ disk partition available. Adding the space is often done through the use
+ of a logical volume manager.
+-.SH "EXAMPLES"
 -
--	if (ret > 0) {
--		/* Handle various SYNC-type writes */
--		ret = generic_write_sync(iocb, ret);
--	}
- 	return ret;
- }
+-Understanding xfs_info output.
+-.PP
+-Suppose one has the following "xfs_info /dev/sda" output:
+-.PP
+-.RS 2
+-.Vb
+-\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
+-\&         =              sectsz=512   attr=2
+-\&data     =              bsize=4096   blocks=536869888, imaxpct=5
+-\&         =              sunit=32     swidth=128 blks
+-\&naming   =version 2     bsize=4096
+-\&log      =internal      bsize=4096   blocks=32768, version=2
+-\&         =              sectsz=512   sunit=32 blks, lazy-count=1
+-\&realtime =none          extsz=524288 blocks=0, rtextents=0
+-.Ve
+-.RE
+-.PP
+-
+-Here, the data section of the output indicates "bsize=4096",
+-meaning the data block size for this filesystem is 4096 bytes.
+-This section also shows "sunit=32 swidth=128 blks", which means
+-the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
+-width is 128*4096 bytes = 512 kibibytes.
+-A single stripe of this filesystem therefore consists
+-of four stripe units (128 blocks / 32 blocks per unit).
+ .SH SEE ALSO
+ .BR mkfs.xfs (8),
++.BR xfs_info (8),
+ .BR md (4),
+ .BR lvm (8),
+ .BR mount (8).
+diff --git a/man/man8/xfs_info.8 b/man/man8/xfs_info.8
+new file mode 100644
+index 0000000..c4c470d
+--- /dev/null
++++ b/man/man8/xfs_info.8
+@@ -0,0 +1,95 @@
++.\" Verbatim blocks taken from openssl req manpage content
++.de Vb \" Begin verbatim text
++.ft CW
++.nf
++.ne \\$1
++..
++.de Ve \" End verbatim text
++.ft R
++.fi
++..
++
++.TH xfs_info 8
++.SH NAME
++xfs_info, \- display XFS filesystem geometry information
++.SH SYNOPSIS
++.B xfs_info
++[
++.B \-t
++.I mtab
++]
++[
++.I mount-point
++|
++.I block-device
++|
++.I file-image
++]
++.br
++.B xfs_info \-V
++.SH DESCRIPTION
++.B xfs_info
++displays geometry information about an existing XFS filesystem.
++The
++.I mount-point
++argument is the pathname of a directory where the filesystem
++is mounted.
++The
++.I block-device
++or
++.I file-image
++contain a raw XFS filesystem.
++The existing contents of the filesystem are undisturbed.
++.SH OPTIONS
++.TP
++.B \-t
++Specifies an alternate mount table file (default is
++.I /proc/mounts
++if it exists, else
++.IR /etc/mtab ).
++This is used when working with filesystems mounted without writing to
++.I /etc/mtab
++file - refer to
++.BR mount (8)
++for further details.
++This option has no effect with the
++.IR block-device " or " file-image
++parameters.
++.TP
++.B \-V
++Prints the version number and exits. The
++.I mount-point
++argument is not required with
++.BR \-V .
++.SH "EXAMPLES"
++
++Understanding xfs_info output.
++.PP
++Suppose one has the following "xfs_info /dev/sda" output:
++.PP
++.RS 2
++.Vb
++\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
++\&         =              sectsz=512   attr=2
++\&data     =              bsize=4096   blocks=536869888, imaxpct=5
++\&         =              sunit=32     swidth=128 blks
++\&naming   =version 2     bsize=4096
++\&log      =internal log  bsize=4096   blocks=32768, version=2
++\&         =              sectsz=512   sunit=32 blks, lazy-count=1
++\&realtime =none          extsz=524288 blocks=0, rtextents=0
++.Ve
++.RE
++.PP
++
++Here, the data section of the output indicates "bsize=4096",
++meaning the data block size for this filesystem is 4096 bytes.
++This section also shows "sunit=32 swidth=128 blks", which means
++the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
++width is 128*4096 bytes = 512 kibibytes.
++A single stripe of this filesystem therefore consists
++of four stripe units (128 blocks / 32 blocks per unit).
++.SH SEE ALSO
++.BR mkfs.xfs (8),
++.BR md (4),
++.BR lvm (8),
++.BR mount (8).
+diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
+index 5df0a26..2e17fd9 100755
+--- a/spaceman/xfs_info.sh
++++ b/spaceman/xfs_info.sh
+@@ -4,7 +4,7 @@
+ #
  
--- 
-2.16.1
+ OPTS=""
+-USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
++USAGE="Usage: xfs_info [-V] [-t mtab] [mountpoint|device|file]"
+ 
+ while getopts "t:V" c
+ do
+@@ -22,8 +22,14 @@ done
+ set -- extra "$@"
+ shift $OPTIND
+ case $# in
+-	1)	xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
+-		status=$?
++	1)
++		if [ -b "$1" ] || [ -f "$1" ]; then
++			xfs_db -p xfs_info -c "info" $OPTS "$1"
++			status=$?
++		else
++			xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
++			status=$?
++		fi
+ 		;;
+ 	*)	echo $USAGE 1>&2
+ 		exit 2
 
