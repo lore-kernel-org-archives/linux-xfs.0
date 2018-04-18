@@ -1,206 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55438 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752091AbeDRUA4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 16:00:56 -0400
-Date: Wed, 18 Apr 2018 13:00:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/11] xfs: quota scrub should use bmapbtd scrubber
-Message-ID: <20180418200036.GT24738@magnolia>
-References: <152401916729.11465.4212188839231900136.stgit@magnolia>
- <152401921403.11465.9618173695298878026.stgit@magnolia>
- <20180418183447.GE22375@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180418183447.GE22375@bfoster.bfoster>
+Received: from aserp2120.oracle.com ([141.146.126.78]:45840 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752308AbeDRWNt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:49 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMC9O9154838
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:49 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2hdrxncudw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:48 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDmfm031494
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:48 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3IMDm0o005625
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:48 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 04/18] xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+Date: Wed, 18 Apr 2018 15:11:12 -0700
+Message-Id: <1524089486-22922-5-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
+References: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Apr 18, 2018 at 02:34:47PM -0400, Brian Foster wrote:
-> On Tue, Apr 17, 2018 at 07:40:14PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Replace the quota scrubber's open-coded data fork scrubber with a
-> > redirected call to the bmapbtd scrubber.  This strengthens the quota
-> > scrub to include all the cross-referencing that it does.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/quota.c |   95 ++++++++++++++++++++++++++++----------------------
-> >  1 file changed, 54 insertions(+), 41 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-> > index 1068a91..67f94c4 100644
-> > --- a/fs/xfs/scrub/quota.c
-> > +++ b/fs/xfs/scrub/quota.c
-> > @@ -207,65 +207,78 @@ xfs_scrub_quota_item(
-> >  	return 0;
-> >  }
-> >  
-> > -/* Scrub all of a quota type's items. */
-> > -int
-> > -xfs_scrub_quota(
-> > +/* Check the quota's data fork. */
-> > +STATIC int
-> > +xfs_scrub_quota_data_fork(
-> >  	struct xfs_scrub_context	*sc)
-> >  {
-> >  	struct xfs_bmbt_irec		irec = { 0 };
-> > -	struct xfs_scrub_quota_info	sqi;
-> > -	struct xfs_mount		*mp = sc->mp;
-> > -	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> > +	struct xfs_iext_cursor		icur;
-> > +	struct xfs_scrub_metadata	fake_sm;
-> > +	struct xfs_scrub_metadata	*real_sm = sc->sm;
-> > +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-> > +	struct xfs_ifork		*ifp;
-> >  	xfs_fileoff_t			max_dqid_off;
-> > -	xfs_fileoff_t			off = 0;
-> > -	uint				dqtype;
-> > -	int				nimaps;
-> >  	int				error = 0;
-> >  
-> > -	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> > -
-> > -	/* Look for problem extents. */
-> > +	/* Quotas don't live on the rt device. */
-> >  	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-> >  		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-> > -		goto out;
-> > +		return 0;
-> >  	}
-> > +
-> > +	/* Invoke the data fork scrubber. */
-> > +	memcpy(&fake_sm, real_sm, sizeof(fake_sm));
-> > +	fake_sm.sm_type = XFS_SCRUB_TYPE_BMBTD;
-> > +	fake_sm.sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-> > +	sc->sm = &fake_sm;
-> > +	error = xfs_scrub_bmap_data(sc);
-> > +	sc->sm = real_sm;
-> 
-> Is the sm swap out of caution or is there really some conflict here?
-> AFAICT sm_type is only used in the setup handler (and tracepoints).
+These routines set up set and start a new deferred attribute
+operation.  These functions are meant to be called by other
+code needing to initiate a deferred attribute operation.  We
+will use these routines later in the parent pointer patches.
 
-The fake_sm is out of caution so that any thing that scribbles on
-_scrub_bmap_data can't make it back out ot userspace.  It could probably
-get dropped.
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 70 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr.h |  5 ++++
+ 2 files changed, 75 insertions(+)
 
-The sm_type override is so the tracepoints report the scrub type
-correctly ("type bmapbtd ino <uquotino>").
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 338abd6..5acf6e7 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -504,6 +504,43 @@ xfs_attr_set(
+ 	return error;
+ }
+ 
++/* Sets an attribute for an inode as a deferred operation */
++int
++xfs_attr_set_deferred(
++	struct xfs_inode	*dp,
++	struct xfs_defer_ops    *dfops,
++	void			*name,
++	unsigned int		namelen,
++	void			*value,
++	unsigned int		valuelen,
++	int			flags)
++{
++
++	struct xfs_attr_item	*new;
++	char			*name_value;
++
++	if (!namelen || !valuelen) {
++		ASSERT(0);
++		return -EFSCORRUPTED;
++	}
++
++	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, valuelen),
++			 KM_SLEEP|KM_NOFS);
++	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
++	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, valuelen));
++	new->xattri_ip = dp;
++	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
++	new->xattri_name_len = namelen;
++	new->xattri_value_len = valuelen;
++	new->xattri_flags = flags;
++	memcpy(&name_value[0], name, namelen);
++	memcpy(&name_value[namelen], value, valuelen);
++
++	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++
++	return 0;
++}
++
+ /*
+  * Generic handler routine to remove a name from an attribute list.
+  * Transitions attribute list from Btree to shortform as necessary.
+@@ -581,6 +618,39 @@ xfs_attr_remove(
+ 	return error;
+ }
+ 
++/* Removes an attribute for an inode as a deferred operation */
++int
++xfs_attr_remove_deferred(
++	struct xfs_inode        *dp,
++	struct xfs_defer_ops    *dfops,
++	void			*name,
++	unsigned int		namelen,
++	int                     flags)
++{
++
++	struct xfs_attr_item	*new;
++	char			*name_value;
++
++	if (!namelen) {
++		ASSERT(0);
++		return -EFSCORRUPTED;
++	}
++
++	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
++	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
++	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
++	new->xattri_ip = dp;
++	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
++	new->xattri_name_len = namelen;
++	new->xattri_value_len = 0;
++	new->xattri_flags = flags;
++	memcpy(name_value, name, namelen);
++
++	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++
++	return 0;
++}
++
+ /*========================================================================
+  * External routines when attribute list is inside the inode
+  *========================================================================*/
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index e3f6cc8..924bf7c 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -183,5 +183,10 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+ 		       const unsigned char *name, int flags);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
++int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
++			  void *name, unsigned int name_len, void *value,
++			  unsigned int valuelen, int flags);
++int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
++			    void *name, unsigned int namelen, int flags);
+ 
+ #endif	/* __XFS_ATTR_H__ */
+-- 
+2.7.4
 
-But, stack space is precious so I'll just override the two fields we
-need.
-
-> With respect to sm_flags, what's the difference between the above and
-> just passing in the original sm without stripping FLAGS_OUT (whatever it
-> is, might be useful to note in the comment)?
-
-Hm yes the whole thing warrants an "if (_CORRUPT) return;" at the top so
-that we then don't need to clean out sm_flags.
-
-> 
-> > +	if (error)
-> > +		return error;
-> > +	sc->sm->sm_flags |= (fake_sm.sm_flags & XFS_SCRUB_FLAGS_OUT);
-> > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> > +		return error;
-> > +
-> > +	/* Check for data fork problems that apply only to quota files. */
-> >  	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-> > -	while (1) {
-> > +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-> > +	for_each_xfs_iext(ifp, &icur, &irec) {
-> >  		if (xfs_scrub_should_terminate(sc, &error))
-> >  			break;
-> > -
-> > -		off = irec.br_startoff + irec.br_blockcount;
-> > -		nimaps = 1;
-> > -		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
-> > -				XFS_BMAPI_ENTIRE);
-> > -		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
-> > -				&error))
-> > -			goto out;
-> > -		if (!nimaps)
-> > -			break;
-> > -		if (irec.br_startblock == HOLESTARTBLOCK)
-> > -			continue;
-> > -
-> > -		/* Check the extent record doesn't point to crap. */
-> > -		if (irec.br_startblock + irec.br_blockcount <=
-> > -		    irec.br_startblock)
-> > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > -					irec.br_startoff);
-> > -		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
-> > -		    !xfs_verify_fsbno(mp, irec.br_startblock +
-> > -					irec.br_blockcount - 1))
-> > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > -					irec.br_startoff);
-> > -
-> >  		/*
-> > -		 * Unwritten extents or blocks mapped above the highest
-> > +		 * delalloc extents or blocks mapped above the highest
-> >  		 * quota id shouldn't happen.
-> >  		 */
-> >  		if (isnullstartblock(irec.br_startblock) ||
-> >  		    irec.br_startoff > max_dqid_off ||
-> > -		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
-> > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-> > +		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1) {
-> 
-> Not introduced by this patch, but what's with the +1 to max_dqid_off
-> here?
-
-max_dquid_off is the file block offset of the dquot for the highest
-quota id (0xFFFFFFFF), so this is checking that the next block after the
-extent doesn't map an unreachable offset.  The logic is a bit twisted;
-maybe (irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) would
-be clearer?
-
---D
-
-> 
-> Brian
-> 
-> > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > +					irec.br_startoff);
-> > +			break;
-> > +		}
-> >  	}
-> > +
-> > +	return error;
-> > +}
-> > +
-> > +/* Scrub all of a quota type's items. */
-> > +int
-> > +xfs_scrub_quota(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	struct xfs_scrub_quota_info	sqi;
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> > +	uint				dqtype;
-> > +	int				error = 0;
-> > +
-> > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> > +
-> > +	/* Look for problem extents. */
-> > +	error = xfs_scrub_quota_data_fork(sc);
-> > +	if (error)
-> > +		goto out;
-> >  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> >  		goto out;
-> >  
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
