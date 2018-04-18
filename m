@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:56848 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752707AbeDRWNy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:54 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMBsNu027687
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:54 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2hdrxnctff-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:45896 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752732AbeDRWNz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:55 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMBGCu154344
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:55 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2hdrxncuef-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:54 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDqnj027112
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDsMk013338
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:53 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:54 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDqQt028994
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:52 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3IMDsAt005739
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:54 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 14/18] xfs: remove parent pointers in unlink
-Date: Wed, 18 Apr 2018 15:11:22 -0700
-Message-Id: <1524089486-22922-15-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 18/18] xfs: Add delayed attributes error tag
+Date: Wed, 18 Apr 2018 15:11:26 -0700
+Message-Id: <1524089486-22922-19-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 References: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,94 +28,99 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+This patch adds an error tag that we can use to test
+delayed attribute recovery and replay
 
-This patch removes the parent pointer attribute during unlink
-
-[bfoster: rebase, use VFS inode generation]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
-	   implemented xfs_attr_remove_parent]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_inode.c        |  9 ++++++++-
- fs/xfs/xfs_parent_utils.c | 19 +++++++++++++++++++
- fs/xfs/xfs_parent_utils.h |  4 ++++
- 3 files changed, 31 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_errortag.h | 5 ++++-
+ fs/xfs/xfs_error.c           | 3 +++
+ fs/xfs/xfs_trans_attr.c      | 8 ++++++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 90498cb..29c58b3 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2614,6 +2614,7 @@ xfs_remove(
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t           first_block;
- 	uint			resblks;
-+	xfs_dir2_dataptr_t	dir_offset;
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index bc1789d..f606ab6 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -65,7 +65,8 @@
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
+ #define XFS_ERRTAG_LOG_ITEM_PIN				30
+ #define XFS_ERRTAG_BUF_LRU_REF				31
+-#define XFS_ERRTAG_MAX					32
++#define XFS_ERRTAG_DELAYED_ATTR			32
++#define XFS_ERRTAG_MAX					33
  
- 	trace_xfs_remove(dp, name);
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -102,5 +103,7 @@
+ #define XFS_RANDOM_LOG_BAD_CRC				1
+ #define XFS_RANDOM_LOG_ITEM_PIN				1
+ #define XFS_RANDOM_BUF_LRU_REF				2
++#define XFS_RANDOM_DELAYED_ATTR			1
  
-@@ -2694,12 +2695,18 @@ xfs_remove(
+ #endif /* __XFS_ERRORTAG_H_ */
++
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index a63f508..0752f20 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -61,6 +61,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_LOG_BAD_CRC,
+ 	XFS_RANDOM_LOG_ITEM_PIN,
+ 	XFS_RANDOM_BUF_LRU_REF,
++	XFS_RANDOM_DELAYED_ATTR,
+ };
  
- 	xfs_defer_init(&dfops, &first_block);
- 	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
--				   &dfops, resblks, NULL);
-+				   &dfops, resblks, &dir_offset);
- 	if (error) {
- 		ASSERT(error != -ENOENT);
- 		goto out_bmap_cancel;
- 	}
+ struct xfs_errortag_attr {
+@@ -167,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+ XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
++XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
  
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_remove_deferred(dp, ip, dir_offset, &dfops);
-+		if (error)
-+			goto out_bmap_cancel;
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -201,6 +203,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
+ 	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
+ 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
++	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+ 	NULL,
+ };
+ 
+diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+index d02dcb7..3492c5d 100644
+--- a/fs/xfs/xfs_trans_attr.c
++++ b/fs/xfs/xfs_trans_attr.c
+@@ -35,6 +35,8 @@
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+ #include "xfs_quota.h"
++#include "xfs_errortag.h"
++#include "xfs_error.h"
+ 
+ /*
+  * This routine is called to allocate an "extent free done"
+@@ -109,6 +111,11 @@ xfs_trans_attr(
+ 	if (error)
+ 		return error;
+ 
++	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
++		error = -EIO;
++		goto out;
 +	}
 +
- 	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * remove transaction goes to disk before returning to
-diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
-index cf4a7e2..0fd48b8 100644
---- a/fs/xfs/xfs_parent_utils.c
-+++ b/fs/xfs/xfs_parent_utils.c
-@@ -49,3 +49,22 @@ xfs_parent_add_deferred(
- 		(void *)child_name->name, child_name->len, ATTR_PARENT);
- }
+ 	switch (op_flags) {
+ 		case XFS_ATTR_OP_FLAGS_SET:
+ 			args.op_flags |= XFS_DA_OP_ADDNAME;
+@@ -123,6 +130,7 @@ xfs_trans_attr(
+ 			error = -EFSCORRUPTED;
+ 	}
  
-+/*
-+ * Remove a parent record from a child inode.
-+ */
-+int
-+xfs_parent_remove_deferred(
-+	struct xfs_inode	*parent,
-+	struct xfs_inode	*child,
-+	xfs_dir2_dataptr_t	diroffset,
-+	struct xfs_defer_ops	*dfops)
-+{
-+	struct xfs_parent_name_rec rec;
-+
-+	xfs_init_parent_name_rec(&rec, parent->i_ino,
-+				 VFS_I(parent)->i_generation, diroffset);
-+
-+	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
-+					ATTR_PARENT);
-+}
-+
-diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
-index a667d1d..9e0ac13 100644
---- a/fs/xfs/xfs_parent_utils.h
-+++ b/fs/xfs/xfs_parent_utils.h
-@@ -23,4 +23,8 @@
- int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_inode *child,
- 	       struct xfs_name *child_name, uint32_t diroffset,
- 	       struct xfs_defer_ops *dfops);
-+int xfs_parent_remove_deferred(struct xfs_inode *parent,
-+			       struct xfs_inode *child,
-+			       xfs_dir2_dataptr_t diroffset,
-+			       struct xfs_defer_ops *dfops);
- #endif	/* __XFS_PARENT_UTILS_H__ */
++out:
+ 	if (error) {
+ 		xfs_defer_cancel(&dfops);
+ 	        if (leaf_bp)
 -- 
 2.7.4
 
