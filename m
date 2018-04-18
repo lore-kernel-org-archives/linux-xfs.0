@@ -1,68 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59722 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753076AbeDRCpZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:45:25 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2fQWt010290
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:24 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2hdrxnrk0g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:24 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2jNIq016735
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:23 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2jNJw032658
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:45:23 GMT
-Subject: [PATCH 9/9] xfs: don't return garbage buffers in xfs_da3_node_read
+Received: from aserp2130.oracle.com ([141.146.126.79]:51666 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbeDRCqK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:46:10 -0400
+Subject: [PATCH 3/9] mkfs: use geometry generation / helper functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:45:17 -0700
-Message-ID: <152401951770.12719.12922411919487593139.stgit@magnolia>
-In-Reply-To: <152401946245.12719.18338955003321437040.stgit@magnolia>
-References: <152401946245.12719.18338955003321437040.stgit@magnolia>
+Date: Tue, 17 Apr 2018 19:45:42 -0700
+Message-ID: <152401954281.13048.8462957622341585756.stgit@magnolia>
+In-Reply-To: <152401952391.13048.15040850425873030425.stgit@magnolia>
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If we're reading a node in a dir/attr btree and the buffer comes off the
-disk with a magic number we don't recognize, don't ASSERT and don't set
-a garbage buffer type (0 also triggers ASSERTs).  Instead, report the
-corruption, release the buffer, and return -EFSCORRUPTED because that's
-what the dabtree is -- corrupt.
+Since libxfs now has a function to fill out the geometry structure
+and libfrog has a function to pretty-print the geometry, have mkfs
+use the two helpers instead of open-coding it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_btree.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ libxfs/libxfs_api_defs.h |    1 +
+ mkfs/xfs_mkfs.c          |   54 ++++++++++++++--------------------------------
+ 2 files changed, 18 insertions(+), 37 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index ea187b4..39c1013 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -305,9 +305,11 @@ xfs_da3_node_read(
- 			type = XFS_BLFT_DIR_LEAFN_BUF;
- 			break;
- 		default:
--			type = 0;
--			ASSERT(0);
--			break;
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
-+					tp->t_mountp, info);
-+			xfs_trans_brelse(tp, *bpp);
-+			*bpp = NULL;
-+			return -EFSCORRUPTED;
- 		}
- 		xfs_trans_buf_set_type(tp, *bpp, type);
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 78daca0..09f1428 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -152,5 +152,6 @@
+ #define xfs_rmap_compare		libxfs_rmap_compare
+ #define xfs_dir_get_ops			libxfs_dir_get_ops
+ #define xfs_default_ifork_ops		libxfs_default_ifork_ops
++#define xfs_fs_geometry			libxfs_fs_geometry
+ 
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 78d0ce5..81f2123 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -20,7 +20,7 @@
+ #include <ctype.h>
+ #include "xfs_multidisk.h"
+ #include "libxcmd.h"
+-
++#include "fsgeom.h"
+ 
+ 
+ #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
+@@ -3172,40 +3172,6 @@ initialise_mount(
+ 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
+ }
+ 
+-static void
+-print_mkfs_cfg(
+-	struct mkfs_params	*cfg,
+-	char			*dfile,
+-	char			*logfile,
+-	char			*rtfile)
+-{
+-	struct sb_feat_args	*fp = &cfg->sb_feat;
+-
+-	printf(_(
+-"meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+-"         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-"         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
+-"data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+-"         =%-22s sunit=%-6u swidth=%u blks\n"
+-"naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+-"log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+-"         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
+-"realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+-		dfile, cfg->inodesize, (long long)cfg->agcount,
+-			(long long)cfg->agsize,
+-		"", cfg->sectorsize, fp->attr_version, fp->projid32bit,
+-		"", fp->crcs_enabled, fp->finobt, fp->spinodes, fp->rmapbt,
+-			fp->reflink,
+-		"", cfg->blocksize, (long long)cfg->dblocks, cfg->imaxpct,
+-		"", cfg->dsunit, cfg->dswidth,
+-		fp->dir_version, cfg->dirblocksize, fp->nci, fp->dirftype,
+-		logfile, cfg->blocksize, (long long)cfg->logblocks,
+-			fp->log_version,
+-		"", cfg->lsectorsize, cfg->lsunit, fp->lazy_sb_counters,
+-		rtfile, (int)cfg->rtextblocks << cfg->blocklog,
+-			(long long)cfg->rtblocks, (long long)cfg->rtextents);
+-}
+-
+ /*
+  * Format everything from the generated config into the superblock that
+  * will be used to initialise the on-disk superblock. This is the in-memory
+@@ -3967,12 +3933,26 @@ main(
+ 	 */
+ 	calculate_log_size(&cfg, &cli, mp);
+ 
++	finish_superblock_setup(&cfg, mp, sbp);
++
++	/* Print the intended geometry of the fs. */
+ 	if (!quiet || dry_run) {
+-		print_mkfs_cfg(&cfg, dfile, logfile, rtfile);
++		struct xfs_fsop_geom	geo;
++		int			error;
++
++		error = -libxfs_fs_geometry(sbp, &geo,
++				XFS_FS_GEOM_MAX_STRUCT_VER);
++		if (error) {
++			fprintf(stderr,
++	_("%s: failed to generate filesystem geometry\n"),
++				progname);
++			exit(1);
++		}
++
++		xfs_report_geom(&geo, dfile, logfile, rtfile);
+ 		if (dry_run)
+ 			exit(0);
  	}
+-	finish_superblock_setup(&cfg, mp, sbp);
+ 
+ 	/*
+ 	 * we need the libxfs buffer cache from here on in.
 
