@@ -1,97 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:34116 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753146AbeDQPd6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 11:33:58 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3HFQ5rH106387
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Apr 2018 15:33:57 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2hbamf2p1h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Apr 2018 15:33:57 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3HFXu5g015130
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Apr 2018 15:33:56 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w3HFXuFc023189
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Apr 2018 15:33:56 GMT
-Date: Tue, 17 Apr 2018 08:33:55 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:45638 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbeDRClg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:41:36 -0400
+Subject: [PATCH 4/9] xfs: add repair helpers for the reverse mapping btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Assertion fails on xfs_db when setting erroneous type
-Message-ID: <20180417153355.GA24738@magnolia>
-References: <20180417122351.l4uxq6cx2wczjlsh@odin.usersys.redhat.com>
+Date: Tue, 17 Apr 2018 19:41:17 -0700
+Message-ID: <152401927719.11792.16362101708177668747.stgit@magnolia>
+In-Reply-To: <152401924595.11792.16954598133403059881.stgit@magnolia>
+References: <152401924595.11792.16954598133403059881.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180417122351.l4uxq6cx2wczjlsh@odin.usersys.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Apr 17, 2018 at 02:23:51PM +0200, Carlos Maiolino wrote:
-> Hi,
-> 
-> recently while playing with a FS image, I've hit an assertion in xfs_db:
-> 
-> xfs_db: print.c:164: print_flist_1: Assertion `fa->arg & 64' failed.
-> Aborted (core dumped)
-> 
-> The reason for this assert was that I tried to print a remote attr3 block, after
-> having set the block pointer to a random, no attr3 location.
-> 
-> I wonder if crashing xfs_db here is the right thing to do?
-> 
-> 
-> I've written a small workaround for it as below:
-> 
-> 
-> @@ -160,9 +160,10 @@ print_flist_1(
->                                         (f->flags & FLD_ARRAY) != 0);
->                                 if (neednl)
->                                         dbprintf("\n");
-> -                       } else {
-> -                               ASSERT(fa->arg & FTARG_OKEMPTY);
-> +                       } else if (fa->arg & FTARG_OKEMPTY) {
->                                 dbprintf(_("(empty)\n"));
-> +                       } else {
-> +                               dbprintf(_("Invalid arg\n"));
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-"Unrecognized metadata\n" ?
+Add a couple of functions to the reverse mapping btree that will be used
+to repair the rmapbt.
 
-The block space pointer that got us here wasn't necessarily invalid,
-it's just that we don't recognize the block as matching whatever type is
-selected in the io cursor.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_rmap.c |   81 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rmap.h |    4 ++
+ 2 files changed, 85 insertions(+)
 
->                         }
->                 }
->                 free_strvec(pfx);
-> 
-> 
-> I wonder if something like this makes sense or not? I'm still familiarizing
-> myself with xfs_db code, so I'm not sure if something as the small patch above
-> is a valid fix for it or not, but I believe exiting xfs_db just because somebody
-> tried to print a metadata block using a different type from the on-disk block
-> being read doesn't look like the right thing to do.
 
-Funny, I've had a debug patch squirreled away in my xfsprogs tree for
-ages to teach those ASSERTs not to abort the binary (which then sprays
-core files everywhere).  This one has been particularly annoying, so...
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index fba8d27..3d7fa03 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2030,6 +2030,34 @@ xfs_rmap_map_shared(
+ 	return error;
+ }
+ 
++/* Insert a raw rmap into the rmapbt. */
++int
++xfs_rmap_map_raw(
++	struct xfs_btree_cur	*cur,
++	struct xfs_rmap_irec	*rmap)
++{
++	struct xfs_owner_info	oinfo;
++
++	oinfo.oi_owner = rmap->rm_owner;
++	oinfo.oi_offset = rmap->rm_offset;
++	oinfo.oi_flags = 0;
++	if (rmap->rm_flags & XFS_RMAP_ATTR_FORK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
++	if (rmap->rm_flags & XFS_RMAP_BMBT_BLOCK)
++		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
++
++	if (rmap->rm_flags || XFS_RMAP_NON_INODE_OWNER(rmap->rm_owner))
++		return xfs_rmap_map(cur, rmap->rm_startblock,
++				rmap->rm_blockcount,
++				rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++				&oinfo);
++
++	return xfs_rmap_map_shared(cur, rmap->rm_startblock,
++			rmap->rm_blockcount,
++			rmap->rm_flags & XFS_RMAP_UNWRITTEN,
++			&oinfo);
++}
++
+ struct xfs_rmap_query_range_info {
+ 	xfs_rmap_query_range_fn	fn;
+ 	void				*priv;
+@@ -2453,3 +2481,56 @@ xfs_rmap_record_exists(
+ 		     irec.rm_startblock + irec.rm_blockcount >= bno + len);
+ 	return 0;
+ }
++
++struct xfs_rmap_key_state {
++	uint64_t			owner;
++	uint64_t			offset;
++	unsigned int			flags;
++	bool				has_rmap;
++};
++
++/* For each rmap given, figure out if it doesn't match the key we want. */
++STATIC int
++xfs_rmap_has_other_keys_helper(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_rmap_key_state	*rks = priv;
++
++	if (rks->owner == rec->rm_owner && rks->offset == rec->rm_offset &&
++	    ((rks->flags & rec->rm_flags) & XFS_RMAP_KEY_FLAGS) == rks->flags)
++		return 0;
++	rks->has_rmap = true;
++	return XFS_BTREE_QUERY_RANGE_ABORT;
++}
++
++/*
++ * Given an extent and some owner info, can we find records overlapping
++ * the extent whose owner info does not match the given owner?
++ */
++int
++xfs_rmap_has_other_keys(
++	struct xfs_btree_cur		*cur,
++	xfs_agblock_t			bno,
++	xfs_extlen_t			len,
++	struct xfs_owner_info		*oinfo,
++	bool				*has_rmap)
++{
++	struct xfs_rmap_irec		low = {0};
++	struct xfs_rmap_irec		high;
++	struct xfs_rmap_key_state	rks;
++	int				error;
++
++	xfs_owner_info_unpack(oinfo, &rks.owner, &rks.offset, &rks.flags);
++	rks.has_rmap = false;
++
++	low.rm_startblock = bno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rm_startblock = bno + len - 1;
++
++	error = xfs_rmap_query_range(cur, &low, &high,
++			xfs_rmap_has_other_keys_helper, &rks);
++	*has_rmap = rks.has_rmap;
++	return error;
++}
+diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
+index 380e53b..43e506f 100644
+--- a/fs/xfs/libxfs/xfs_rmap.h
++++ b/fs/xfs/libxfs/xfs_rmap.h
+@@ -238,5 +238,9 @@ int xfs_rmap_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ int xfs_rmap_record_exists(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, struct xfs_owner_info *oinfo,
+ 		bool *has_rmap);
++int xfs_rmap_has_other_keys(struct xfs_btree_cur *cur, xfs_agblock_t bno,
++		xfs_extlen_t len, struct xfs_owner_info *oinfo,
++		bool *has_rmap);
++int xfs_rmap_map_raw(struct xfs_btree_cur *cur, struct xfs_rmap_irec *rmap);
+ 
+ #endif	/* __XFS_RMAP_H__ */
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> 
-> Comments?
-> 
-> Cheers
-> 
-> -- 
-> Carlos
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
