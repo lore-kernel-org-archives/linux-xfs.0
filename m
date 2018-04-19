@@ -1,136 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49322 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752118AbeDSM4I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Apr 2018 08:56:08 -0400
-Date: Thu, 19 Apr 2018 08:56:07 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 11/11] xfs: avoid ABBA deadlock when scrubbing parent
- pointers
-Message-ID: <20180419125606.GE25844@bfoster.bfoster>
+Received: from userp2130.oracle.com ([156.151.31.86]:56860 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752640AbeDSR0H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Apr 2018 13:26:07 -0400
+Date: Thu, 19 Apr 2018 10:25:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 07/11] xfs: superblock scrub should use uncached buffers
+Message-ID: <20180419172548.GY24738@magnolia>
 References: <152401916729.11465.4212188839231900136.stgit@magnolia>
- <152401924456.11465.4870308714829350533.stgit@magnolia>
+ <152401922015.11465.14941366292853283272.stgit@magnolia>
+ <20180419125546.GA25844@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152401924456.11465.4870308714829350533.stgit@magnolia>
+In-Reply-To: <20180419125546.GA25844@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Apr 17, 2018 at 07:40:44PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Apr 19, 2018 at 08:55:47AM -0400, Brian Foster wrote:
+> On Tue, Apr 17, 2018 at 07:40:20PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > We've never cached buffers when reading or writing superblocks, so we
+> > need to change scrub to do likewise or risk screwing up the uncached sb
+> > buffer usage everywhere else.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
 > 
-> In normal operation, the XFS convention is to take an inode's iolock
-> and then allocate a transaction.  However, when scrubbing parent inodes
-> this is inverted -- we allocated the transaction to do the scrub, and
-> now we're trying to grab the parent's iolock.  This can lead to ABBA
-> deadlocks: some thread grabbed the parent's iolock and is waiting for
-> space for a transaction while our parent scrubber is sitting on a
-> transaction trying to get the parent's iolock.
-> 
+> Hmm, so this goes back to this[1] thread, right?
 
-Is that really an issue if the scrub transaction doesn't acquire a log
-reservation (or does it in certain circumstances)..?
+Yep.
 
-Brian
+> IIRC, we wanted to end up with an lru-bypassing uncached buffer lookup
+> mechanism to provide uncached behavior for resource-saving purposes
+> but without introducing serialization issues between multiple users of
+> uncached buffers.
 
-> Therefore, convert all iolock attempts to use trylock; if that fails,
-> they can use the existing mechanisms to back off and try again.
+Right.
+
+> On a quick look back, growfs currently uses cached buffers for secondary
+> superblocks and the associated patch was looking to change that to
+> something like the above. Don't we have the same requirement here (since
+> growfs currently still uses cached buffers)?
+
+Correct, this patch is contingent on landing Dave's "tableise growfs"
+series that converts growfs to use uncached buffers for writing out the
+new secondary supers.  If I manage to land Dave's growfs thing before
+repair then I'll keep this; if repair goes first I'll defer it to that
+series.
+
+I've never done a contingent-patch in the middle of a series, so I'm not
+sure exactly how to present such a {monstr,bog}osity.
+
+--D
+
+> Brian
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/common.c |   22 ++++++++++++++++++++++
->  fs/xfs/scrub/common.h |    2 ++
->  fs/xfs/scrub/parent.c |   16 ++++++++++++++--
->  3 files changed, 38 insertions(+), 2 deletions(-)
+> [1] https://marc.info/?l=linux-xfs&m=151746733326282&w=2
 > 
-> 
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index f5e281a..93f9e7d 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -787,3 +787,25 @@ xfs_scrub_buffer_recheck(
->  	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
->  	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
->  }
-> +
-> +/*
-> + * Try to lock an inode in violation of the usual locking order rules.  For
-> + * example, trying to get the IOLOCK while in transaction context, or just
-> + * plain breaking AG-order or inode-order inode locking rules.  Either way,
-> + * the only way to avoid an ABBA deadlock is to use trylock and back off if
-> + * we can't.
-> + */
-> +int
-> +xfs_scrub_ilock_inverted(
-> +	struct xfs_inode	*ip,
-> +	uint			lock_mode)
-> +{
-> +	int			i;
-> +
-> +	for (i = 0; i < 20; i++) {
-> +		if (xfs_ilock_nowait(ip, lock_mode))
-> +			return 0;
-> +		delay(1);
-> +	}
-> +	return -EDEADLOCK;
-> +}
-> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> index 8296873..191c369 100644
-> --- a/fs/xfs/scrub/common.h
-> +++ b/fs/xfs/scrub/common.h
-> @@ -151,4 +151,6 @@ static inline bool xfs_scrub_found_corruption(struct xfs_scrub_metadata *sm)
->  			       XFS_SCRUB_OFLAG_XCORRUPT);
->  }
->  
-> +int xfs_scrub_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
-> +
->  #endif	/* __XFS_SCRUB_COMMON_H__ */
-> diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-> index 1fb88c1..19cd54d 100644
-> --- a/fs/xfs/scrub/parent.c
-> +++ b/fs/xfs/scrub/parent.c
-> @@ -211,7 +211,9 @@ xfs_scrub_parent_validate(
->  	 */
->  	xfs_iunlock(sc->ip, sc->ilock_flags);
->  	sc->ilock_flags = 0;
-> -	xfs_ilock(dp, XFS_IOLOCK_SHARED);
-> +	error = xfs_scrub_ilock_inverted(dp, XFS_IOLOCK_SHARED);
-> +	if (error)
-> +		goto out_rele;
->  
->  	/* Go looking for our dentry. */
->  	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
-> @@ -220,8 +222,10 @@ xfs_scrub_parent_validate(
->  
->  	/* Drop the parent lock, relock this inode. */
->  	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
-> +	error = xfs_scrub_ilock_inverted(sc->ip, XFS_IOLOCK_EXCL);
-> +	if (error)
-> +		goto out_rele;
->  	sc->ilock_flags = XFS_IOLOCK_EXCL;
-> -	xfs_ilock(sc->ip, sc->ilock_flags);
->  
->  	/*
->  	 * If we're an unlinked directory, the parent /won't/ have a link
-> @@ -323,5 +327,13 @@ xfs_scrub_parent(
->  	if (try_again && tries == 20)
->  		xfs_scrub_set_incomplete(sc);
->  out:
-> +	/*
-> +	 * If we failed to lock the parent inode even after a retry, just mark
-> +	 * this scrub incomplete and return.
-> +	 */
-> +	if (sc->try_harder && error == -EDEADLOCK) {
-> +		error = 0;
-> +		xfs_scrub_set_incomplete(sc);
-> +	}
->  	return error;
->  }
-> 
+> >  fs/xfs/scrub/agheader.c |    3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> > index 018aabbd..aacbc3f 100644
+> > --- a/fs/xfs/scrub/agheader.c
+> > +++ b/fs/xfs/scrub/agheader.c
+> > @@ -157,7 +157,7 @@ xfs_scrub_superblock(
+> >  	if (agno == 0)
+> >  		return 0;
+> >  
+> > -	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > +	error = xfs_buf_read_uncached(mp->m_ddev_targp,
+> >  		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> >  		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
+> >  	/*
+> > @@ -421,6 +421,7 @@ xfs_scrub_superblock(
+> >  		xfs_scrub_block_set_corrupt(sc, bp);
+> >  
+> >  	xfs_scrub_superblock_xref(sc, bp);
+> > +	xfs_buf_relse(bp);
+> >  
+> >  	return error;
+> >  }
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
