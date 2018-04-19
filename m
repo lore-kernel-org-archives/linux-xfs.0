@@ -1,109 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45398 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757822AbeDXNIK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Apr 2018 09:08:10 -0400
-Date: Tue, 24 Apr 2018 09:08:09 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 13/13] xfs: refactor dquot iteration
-Message-ID: <20180424130808.GC50204@bfoster.bfoster>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia>
- <152440964413.29601.4956532853947603949.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:45428 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753770AbeDSW6v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Apr 2018 18:58:51 -0400
+Date: Fri, 20 Apr 2018 08:58:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix intent use-after-free on abort
+Message-ID: <20180419225848.GR23861@dastard>
+References: <20180403014458.22105-1-david@fromorbit.com>
+ <20180403030647.GH13552@magnolia>
+ <20180403040358.GK1150@dastard>
+ <20180419212219.GB15670@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152440964413.29601.4956532853947603949.stgit@magnolia>
+In-Reply-To: <20180419212219.GB15670@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Sun, Apr 22, 2018 at 08:07:24AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Apr 19, 2018 at 11:22:19PM +0200, Luis R. Rodriguez wrote:
+> On Tue, Apr 03, 2018 at 02:03:58PM +1000, Dave Chinner wrote:
+> > On Mon, Apr 02, 2018 at 08:06:47PM -0700, Darrick J. Wong wrote:
+> > > On Tue, Apr 03, 2018 at 11:44:58AM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > When an intent is aborted during it's initial commit through
+> > > > xfs_defer_trans_abort(), there is a use after free. The current
+> > > > report is for a RUI  through this path in generic/388:
+> > > > 
+> > > >  Freed by task 6274:
+> > > >   __kasan_slab_free+0x136/0x180
+> > > >   kmem_cache_free+0xe7/0x4b0
+> > > >   xfs_trans_free_items+0x198/0x2e0
+> > > >   __xfs_trans_commit+0x27f/0xcc0
+> > > >   xfs_trans_roll+0x17b/0x2a0
+> > > >   xfs_defer_trans_roll+0x6ad/0xe60
+> > > >   xfs_defer_finish+0x2a6/0x2140
+> > > >   xfs_alloc_file_space+0x53a/0xf90
+> > > >   xfs_file_fallocate+0x5c6/0xac0
+> > > >   vfs_fallocate+0x2f5/0x930
+> > > >   ioctl_preallocate+0x1dc/0x320
+> > > >   do_vfs_ioctl+0xfe4/0x1690
+> > > > 
+> > > > The problem is that the RUI has two active references - one in the
+> > > > current transaction, and another held by the defer_ops structure
+> > > > that is passed to the RUD (intent done) so that both the intent and
+> > > > the intent done structures are freed on commit of the intent done.
+> > > > 
+> > > > Hence during abort, we need to release the intent item, because the
+> > > > defer_ops reference is released separately via ->abort_intent
+> > > > callback. Fix all the intent code to do this correctly.
+> > > > 
+> > > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > .....
+> > > > @@ -142,7 +161,7 @@ xfs_bui_item_unlock(
+> > > >  	struct xfs_log_item	*lip)
+> > > >  {
+> > > >  	if (test_bit(XFS_LI_ABORTED, &lip->li_flags))
+> > > 
+> > > Hm, in my tree this is still "if (lip->li_flags & XFS_LI_ABORTED)" :)
+> > > /me wonders where the test_bit() came from?
+> > 
+> > Oh, sorry, I just dumped the patch on the end of my stack, which has
+> > this conversion in it (because we do a bunch of racy updates on the
+> > log item flags with any serialisation and that needs to be fixed to
+> > get rid of log item descriptors).
+> > 
+> > Change them all to
+> > 
+> > 	if (lip->li_flags & XFS_LI_ABORTED)
+> > 
+> > and it'll apply to the for-next tree.
 > 
-> Create a helper function to iterate all the dquots of a given type in
-> the system, and refactor the dquot scrub to use it.  This will get more
-> use in the quota repair code.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/quota.c |   45 +++++++++++++++++++++------------------------
->  fs/xfs/xfs_dquot.c   |   32 ++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_dquot.h   |    5 +++++
->  3 files changed, 58 insertions(+), 24 deletions(-)
-> 
-> 
-...
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 7ce3dbd..1f1139d 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -1213,3 +1213,35 @@ xfs_qm_exit(void)
->  	kmem_zone_destroy(xfs_qm_dqtrxzone);
->  	kmem_zone_destroy(xfs_qm_dqzone);
->  }
-> +
-> +/*
-> + * Iterate every dquot of a particular type.  The caller must ensure that the
-> + * particular quota type is active.  iter_fn can return negative error codes,
-> + * or XFS_BTREE_QUERY_RANGE_ABORT to indicate that it wants to stop iterating.
-> + */
-> +int
-> +xfs_qm_dqiterate(
-> +	struct xfs_mount	*mp,
-> +	uint			dqtype,
-> +	xfs_qm_dqiterate_fn	iter_fn,
-> +	void			*priv)
-> +{
-> +	struct xfs_dquot	*dq;
-> +	xfs_dqid_t		id = 0;
-> +	int			error;
-> +
-> +	do {
-> +		error = xfs_qm_dqget_next(mp, id, dqtype, &dq);
-> +		if (error == -ENOENT)
-> +			return 0;
-> +		if (error)
-> +			return error;
-> +
-> +		id = be32_to_cpu(dq->q_core.d_id);
-> +		error = iter_fn(dq, dqtype, id, priv);
+> Just a friendly poke for resubmission, so it doesn't fall through the cracks.
 
-This passes the id from the dquot into the scrub function, which goes
-and does:
+0612d1166330 xfs: fix intent use-after-free on abort
 
-        if (id > be32_to_cpu(d->d_id))
-                xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-
-Is the intent to pass the search id into the iterator callback? If so,
-perhaps a more descriptive name might be helpful (i.e., search_id, key,
-whatever..). Otherwise looks Ok to me.
-
-Brian
-
-> +		xfs_qm_dqput(dq);
-> +		id++;
-> +	} while (error == 0 && id != 0);
-> +
-> +	return error;
-> +}
-> diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-> index fe99e43..5427355 100644
-> --- a/fs/xfs/xfs_dquot.h
-> +++ b/fs/xfs/xfs_dquot.h
-> @@ -194,4 +194,9 @@ static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
->  	return dqp;
->  }
->  
-> +typedef int (*xfs_qm_dqiterate_fn)(struct xfs_dquot *dq, uint dqtype,
-> +		xfs_dqid_t id, void *priv);
-> +int xfs_qm_dqiterate(struct xfs_mount *mp, uint dqtype,
-> +		xfs_qm_dqiterate_fn iter_fn, void *priv);
-> +
->  #endif /* __XFS_DQUOT_H__ */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
