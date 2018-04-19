@@ -1,182 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48344 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754767AbeDVPH2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:07:28 -0400
-Subject: [PATCH 13/13] xfs: refactor dquot iteration
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:07:24 -0700
-Message-ID: <152440964413.29601.4956532853947603949.stgit@magnolia>
-In-Reply-To: <152440954198.29601.14390250048915099607.stgit@magnolia>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:41452 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751565AbeDSKog (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Apr 2018 06:44:36 -0400
+Date: Thu, 19 Apr 2018 12:44:32 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned
+ dax mappings
+Message-ID: <20180419104432.7lzk7nbjmwav6ojl@quack2.suse.cz>
+References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
+ <CAPcyv4joRA=BrurYZ1kzXpMG=jnXik9+LdLqH9961jM5VnmU7w@mail.gmail.com>
+ <20180409164944.6u7i4wgbp6yihvin@quack2.suse.cz>
+ <CAPcyv4gzJ4gcWgwOOmER1z7zsWR+X2zao-tMh8TjN9tx2kg_0g@mail.gmail.com>
+ <CAPcyv4h3RPdohsPyiB=GxE8iQCjRRen=knDd=Em5BMy1MYpRvA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4h3RPdohsPyiB=GxE8iQCjRRen=knDd=Em5BMy1MYpRvA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Paul McKenney <paulmck@linux.vnet.ibm.com>, Josh Triplett <josh.triplett@intel.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri 13-04-18 15:03:51, Dan Williams wrote:
+> On Mon, Apr 9, 2018 at 9:51 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+> > On Mon, Apr 9, 2018 at 9:49 AM, Jan Kara <jack@suse.cz> wrote:
+> >> On Sat 07-04-18 12:38:24, Dan Williams wrote:
+> > [..]
+> >>> I wonder if this can be trivially solved by using srcu. I.e. we don't
+> >>> need to wait for a global quiescent state, just a
+> >>> get_user_pages_fast() quiescent state. ...or is that an abuse of the
+> >>> srcu api?
+> >>
+> >> Well, I'd rather use the percpu rwsemaphore (linux/percpu-rwsem.h) than
+> >> SRCU. It is a more-or-less standard locking mechanism rather than relying
+> >> on implementation properties of SRCU which is a data structure protection
+> >> method. And the overhead of percpu rwsemaphore for your use case should be
+> >> about the same as that of SRCU.
+> >
+> > I was just about to ask that. Yes, it seems they would share similar
+> > properties and it would be better to use the explicit implementation
+> > rather than a side effect of srcu.
+> 
+> ...unfortunately:
+> 
+>  BUG: sleeping function called from invalid context at
+> ./include/linux/percpu-rwsem.h:34
+>  [..]
+>  Call Trace:
+>   dump_stack+0x85/0xcb
+>   ___might_sleep+0x15b/0x240
+>   dax_layout_lock+0x18/0x80
+>   get_user_pages_fast+0xf8/0x140
+> 
+> ...and thinking about it more srcu is a better fit. We don't need the
+> 100% exclusion provided by an rwsem we only need the guarantee that
+> all cpus that might have been running get_user_pages_fast() have
+> finished it at least once.
+> 
+> In my tests synchronize_srcu is a bit slower than unpatched for the
+> trivial 100 truncate test, but certainly not the 200x latency you were
+> seeing with syncrhonize_rcu.
+> 
+> Elapsed time:
+> 0.006149178 unpatched
+> 0.009426360 srcu
 
-Create a helper function to iterate all the dquots of a given type in
-the system, and refactor the dquot scrub to use it.  This will get more
-use in the quota repair code.
+Hum, right. Yesterday I was looking into KSM for a different reason and
+I've noticed it also does writeprotect pages and deals with races with GUP.
+And what KSM relies on is:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/quota.c |   45 +++++++++++++++++++++------------------------
- fs/xfs/xfs_dquot.c   |   32 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dquot.h   |    5 +++++
- 3 files changed, 58 insertions(+), 24 deletions(-)
+write_protect_page()
+  ...
+  entry = ptep_clear_flush(vma, pvmw.address, pvmw.pte);
+  /*
+   * Check that no O_DIRECT or similar I/O is in progress on the
+   * page
+   */
+  if (page_mapcount(page) + 1 + swapped != page_count(page)) {
+    page used -> bail
+  }
 
+And this really works because gup_pte_range() does:
 
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 50415e8..0ba3ab4 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -77,14 +77,21 @@ xfs_scrub_setup_quota(
- 
- /* Quotas. */
- 
-+struct xfs_scrub_quota_info {
-+	struct xfs_scrub_context	*sc;
-+	xfs_dqid_t			last_id;
-+};
-+
- /* Scrub the fields in an individual quota item. */
--STATIC void
-+STATIC int
- xfs_scrub_quota_item(
--	struct xfs_scrub_context	*sc,
--	uint				dqtype,
- 	struct xfs_dquot		*dq,
--	xfs_dqid_t			id)
-+	uint				dqtype,
-+	xfs_dqid_t			id,
-+	void				*priv)
- {
-+	struct xfs_scrub_quota_info	*sqi = priv;
-+	struct xfs_scrub_context	*sc = sqi->sc;
- 	struct xfs_mount		*mp = sc->mp;
- 	struct xfs_disk_dquot		*d = &dq->q_core;
- 	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-@@ -100,6 +107,7 @@ xfs_scrub_quota_item(
- 	unsigned long long		rcount;
- 	xfs_ino_t			fs_icount;
- 
-+	sqi->last_id = id;
- 	offset = id / qi->qi_dqperchunk;
- 
- 	/*
-@@ -183,6 +191,8 @@ xfs_scrub_quota_item(
- 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
- 	if (id != 0 && rhard != 0 && rcount > rhard)
- 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
-+
-+	return 0;
- }
- 
- /* Scrub all of a quota type's items. */
-@@ -191,13 +201,12 @@ xfs_scrub_quota(
- 	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_bmbt_irec		irec = { 0 };
-+	struct xfs_scrub_quota_info	sqi;
- 	struct xfs_mount		*mp = sc->mp;
- 	struct xfs_inode		*ip;
- 	struct xfs_quotainfo		*qi = mp->m_quotainfo;
--	struct xfs_dquot		*dq;
- 	xfs_fileoff_t			max_dqid_off;
- 	xfs_fileoff_t			off = 0;
--	xfs_dqid_t			id = 0;
- 	uint				dqtype;
- 	int				nimaps;
- 	int				error = 0;
-@@ -264,24 +273,12 @@ xfs_scrub_quota(
- 		goto out;
- 
- 	/* Check all the quota items. */
--	while (id < ((xfs_dqid_t)-1ULL)) {
--		if (xfs_scrub_should_terminate(sc, &error))
--			break;
--
--		error = xfs_qm_dqget_next(mp, id, dqtype, &dq);
--		if (error == -ENOENT)
--			break;
--		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK,
--				id * qi->qi_dqperchunk, &error))
--			break;
--
--		xfs_scrub_quota_item(sc, dqtype, dq, id);
--
--		id = be32_to_cpu(dq->q_core.d_id) + 1;
--		xfs_qm_dqput(dq);
--		if (!id)
--			break;
--	}
-+	sqi.sc = sc;
-+	sqi.last_id = 0;
-+	error = xfs_qm_dqiterate(mp, dqtype, xfs_scrub_quota_item, &sqi);
-+	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK,
-+			sqi.last_id * qi->qi_dqperchunk, &error))
-+		goto out;
- 
- out:
- 	/* We set sc->ip earlier, so make sure we clear it now. */
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 7ce3dbd..1f1139d 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1213,3 +1213,35 @@ xfs_qm_exit(void)
- 	kmem_zone_destroy(xfs_qm_dqtrxzone);
- 	kmem_zone_destroy(xfs_qm_dqzone);
- }
-+
-+/*
-+ * Iterate every dquot of a particular type.  The caller must ensure that the
-+ * particular quota type is active.  iter_fn can return negative error codes,
-+ * or XFS_BTREE_QUERY_RANGE_ABORT to indicate that it wants to stop iterating.
-+ */
-+int
-+xfs_qm_dqiterate(
-+	struct xfs_mount	*mp,
-+	uint			dqtype,
-+	xfs_qm_dqiterate_fn	iter_fn,
-+	void			*priv)
-+{
-+	struct xfs_dquot	*dq;
-+	xfs_dqid_t		id = 0;
-+	int			error;
-+
-+	do {
-+		error = xfs_qm_dqget_next(mp, id, dqtype, &dq);
-+		if (error == -ENOENT)
-+			return 0;
-+		if (error)
-+			return error;
-+
-+		id = be32_to_cpu(dq->q_core.d_id);
-+		error = iter_fn(dq, dqtype, id, priv);
-+		xfs_qm_dqput(dq);
-+		id++;
-+	} while (error == 0 && id != 0);
-+
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index fe99e43..5427355 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -194,4 +194,9 @@ static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
- 	return dqp;
- }
- 
-+typedef int (*xfs_qm_dqiterate_fn)(struct xfs_dquot *dq, uint dqtype,
-+		xfs_dqid_t id, void *priv);
-+int xfs_qm_dqiterate(struct xfs_mount *mp, uint dqtype,
-+		xfs_qm_dqiterate_fn iter_fn, void *priv);
-+
- #endif /* __XFS_DQUOT_H__ */
+  page = pte_page(pte);
+  head = compound_head(page);
 
+  if (!page_cache_get_speculative(head))
+    goto pte_unmap;
+
+  if (unlikely(pte_val(pte) != pte_val(*ptep))) {
+    bail
+  }
+
+So either write_protect_page() page sees the elevated reference or
+gup_pte_range() bails because it will see the pte changed.
+
+In the truncate path things are a bit different but in principle the same
+should work - once truncate blocks page faults and unmaps pages from page
+tables, we can be sure GUP will not grab the page anymore or we'll see
+elevated page count. So IMO there's no need for any additional locking
+against the GUP path (but a comment explaining this is highly desirable I
+guess). 
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
