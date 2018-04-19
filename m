@@ -1,120 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45852 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:33724 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752499AbeDRWNw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 18:13:52 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3IMBUHR154692
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:51 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2hdrxncue2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:51 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDo1p007076
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:50 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3IMDo29001397
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 22:13:50 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 09/18] xfs: add parent pointer support to attribute code
-Date: Wed, 18 Apr 2018 15:11:17 -0700
-Message-Id: <1524089486-22922-10-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
-References: <1524089486-22922-1-git-send-email-allison.henderson@oracle.com>
+        with ESMTP id S1752700AbeDSREz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Apr 2018 13:04:55 -0400
+Date: Thu, 19 Apr 2018 10:04:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: Add a helper to retrieve xfs_inode from the
+ address_space
+Message-ID: <20180419170434.GX24738@magnolia>
+References: <20180419143511.16924-1-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180419143511.16924-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Mark Tinguely <tinguely@sgi.com>
+On Thu, Apr 19, 2018 at 04:35:11PM +0200, Carlos Maiolino wrote:
+> Reduce some code and local variable allocation on file operations by
+> using a new helper.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+> 
+> Hi, I though this could be useful instead of keeping allocating file,
+> address_space and inode structs in several places, just to retrieve the
+> xfs_inode, what you guys think?
+> 
+> XFS_FTOINO() isn't really a good name, that's the first one which came to my
+> mind, if this is useful at all I can change the name to something else, like
+> XFS_AS_TO_INO() maybe, or something else?!
+> 
+> Although I think some vfs_wide helper like file_inode() would be more useful,
+> but, well, it's just an idea that came to my mind.
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+There's already a file_inode() defined in include/linux/fs.h.
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased]
+Though now I wonder if there's supposed to be a difference between
+file->f_inode and file->f_mapping->host?  It doesn't look like it, but
+An Engineer Put It There(tm). :)
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c      |  2 +-
- fs/xfs/libxfs/xfs_attr.h      |  2 ++
- fs/xfs/libxfs/xfs_da_format.h | 12 ++++++++----
- 3 files changed, 11 insertions(+), 5 deletions(-)
+(I dunno, some of the other filesystems do tricky things with metadata
+inodes...)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 0e69fa6..baf488f 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -437,7 +437,7 @@ xfs_attr_set(
- 	struct xfs_da_args	args;
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t		firstblock;
--	int			rsvd = (flags & ATTR_ROOT) != 0;
-+	bool			rsvd = (flags & (ATTR_ROOT | ATTR_PARENT)) != 0;
- 	int			error, local;
- 
- 	XFS_STATS_INC(mp, xs_attr_set);
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 2ca9e7e..a317874 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -46,6 +46,7 @@ struct xfs_attr_list_context;
- #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
- 
- #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
- #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-@@ -59,6 +60,7 @@ struct xfs_attr_list_context;
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
- 	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_PARENT,		"PARENT" }, \
- 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
- 	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
- 	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 7e77299..9bd2e6b 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -758,24 +758,28 @@ struct xfs_attr3_icleaf_hdr {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define 	XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
- 
- /*
-  * Conversion macros for converting namespace bits from argument flags
-  * to ondisk flags.
-  */
--#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
-+#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
- #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
- #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
- #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
--					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
-+					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
-+					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
- #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
--					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
-+					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
-+					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
- 
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
--- 
-2.7.4
+--D
 
+> 
+> Cheers
+> 
+>  fs/xfs/xfs_file.c  | 37 ++++++++++++++-----------------------
+>  fs/xfs/xfs_inode.h |  5 +++++
+>  2 files changed, 19 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 299aee4b7b0b..b57e39a78ff6 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -95,7 +95,7 @@ xfs_dir_fsync(
+>  	loff_t			end,
+>  	int			datasync)
+>  {
+> -	struct xfs_inode	*ip = XFS_I(file->f_mapping->host);
+> +	struct xfs_inode	*ip = XFS_FTOINO(file);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	xfs_lsn_t		lsn = 0;
+>  
+> @@ -118,8 +118,7 @@ xfs_file_fsync(
+>  	loff_t			end,
+>  	int			datasync)
+>  {
+> -	struct inode		*inode = file->f_mapping->host;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_inode	*ip = XFS_FTOINO(file);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	int			error = 0;
+>  	int			log_flushed = 0;
+> @@ -215,7 +214,7 @@ xfs_file_dax_read(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*to)
+>  {
+> -	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+> +	struct xfs_inode	*ip = XFS_FTOINO(iocb->ki_filp);
+>  	size_t			count = iov_iter_count(to);
+>  	ssize_t			ret = 0;
+>  
+> @@ -300,8 +299,8 @@ xfs_file_aio_write_checks(
+>  	int			*iolock)
+>  {
+>  	struct file		*file = iocb->ki_filp;
+> -	struct inode		*inode = file->f_mapping->host;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_inode	*ip = XFS_FTOINO(file);
+> +	struct inode		*inode = VFS_I(ip);
+>  	ssize_t			error = 0;
+>  	size_t			count = iov_iter_count(from);
+>  	bool			drained_dio = false;
+> @@ -364,7 +363,7 @@ xfs_file_aio_write_checks(
+>  			drained_dio = true;
+>  			goto restart;
+>  		}
+> -	
+> +
+>  		trace_xfs_zero_eof(ip, isize, iocb->ki_pos - isize);
+>  		error = iomap_zero_range(inode, isize, iocb->ki_pos - isize,
+>  				NULL, &xfs_iomap_ops);
+> @@ -482,10 +481,8 @@ xfs_file_dio_aio_write(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> -	struct file		*file = iocb->ki_filp;
+> -	struct address_space	*mapping = file->f_mapping;
+> -	struct inode		*inode = mapping->host;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_inode	*ip = XFS_FTOINO(iocb->ki_filp);
+> +	struct inode		*inode = VFS_I(ip);
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	ssize_t			ret = 0;
+>  	int			unaligned_io = 0;
+> @@ -570,8 +567,8 @@ xfs_file_dax_write(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> -	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_inode	*ip = XFS_FTOINO(iocb->ki_filp);
+> +	struct inode		*inode = VFS_I(ip);
+>  	int			iolock = XFS_IOLOCK_EXCL;
+>  	ssize_t			ret, error = 0;
+>  	size_t			count;
+> @@ -607,10 +604,7 @@ xfs_file_buffered_aio_write(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> -	struct file		*file = iocb->ki_filp;
+> -	struct address_space	*mapping = file->f_mapping;
+> -	struct inode		*inode = mapping->host;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_inode	*ip = XFS_FTOINO(iocb->ki_filp);
+>  	ssize_t			ret;
+>  	int			enospc = 0;
+>  	int			iolock;
+> @@ -627,7 +621,7 @@ xfs_file_buffered_aio_write(
+>  		goto out;
+>  
+>  	/* We can write back this queue in page reclaim */
+> -	current->backing_dev_info = inode_to_bdi(inode);
+> +	current->backing_dev_info = inode_to_bdi(VFS_I(ip));
+>  
+>  	trace_xfs_file_buffered_write(ip, iov_iter_count(from), iocb->ki_pos);
+>  	ret = iomap_file_buffered_write(iocb, from, &xfs_iomap_ops);
+> @@ -677,10 +671,7 @@ xfs_file_write_iter(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*from)
+>  {
+> -	struct file		*file = iocb->ki_filp;
+> -	struct address_space	*mapping = file->f_mapping;
+> -	struct inode		*inode = mapping->host;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_inode	*ip = XFS_FTOINO(iocb->ki_filp);
+>  	ssize_t			ret;
+>  	size_t			ocount = iov_iter_count(from);
+>  
+> @@ -692,7 +683,7 @@ xfs_file_write_iter(
+>  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+>  		return -EIO;
+>  
+> -	if (IS_DAX(inode))
+> +	if (IS_DAX(VFS_I(ip)))
+>  		ret = xfs_file_dax_write(iocb, from);
+>  	else if (iocb->ki_flags & IOCB_DIRECT) {
+>  		/*
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 1eebc53df7d7..dd359644de22 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -84,6 +84,11 @@ static inline struct inode *VFS_I(struct xfs_inode *ip)
+>  	return &ip->i_vnode;
+>  }
+>  
+> +/* convert from file to xfs inode */
+> +static inline struct xfs_inode *XFS_FTOINO(struct file *filp)
+> +{
+> +	return XFS_I(filp->f_mapping->host);
+> +}
+>  /*
+>   * For regular files we only update the on-disk filesize when actually
+>   * writing data back to disk.  Until then only the copy in the VFS inode
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
