@@ -1,112 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41452 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:46720 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751565AbeDSKog (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Apr 2018 06:44:36 -0400
-Date: Thu, 19 Apr 2018 12:44:32 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v8 15/18] mm, fs, dax: handle layout changes to pinned
- dax mappings
-Message-ID: <20180419104432.7lzk7nbjmwav6ojl@quack2.suse.cz>
-References: <152246892890.36038.18436540150980653229.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152246901060.36038.4487158506830998280.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180404094656.dssixqvvdcp5jff2@quack2.suse.cz>
- <CAPcyv4joRA=BrurYZ1kzXpMG=jnXik9+LdLqH9961jM5VnmU7w@mail.gmail.com>
- <20180409164944.6u7i4wgbp6yihvin@quack2.suse.cz>
- <CAPcyv4gzJ4gcWgwOOmER1z7zsWR+X2zao-tMh8TjN9tx2kg_0g@mail.gmail.com>
- <CAPcyv4h3RPdohsPyiB=GxE8iQCjRRen=knDd=Em5BMy1MYpRvA@mail.gmail.com>
+        id S1751695AbeDSLUn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Apr 2018 07:20:43 -0400
+Date: Thu, 19 Apr 2018 07:20:42 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 06/11] xfs: quota scrub should use bmapbtd scrubber
+Message-ID: <20180419112042.GA25447@bfoster.bfoster>
+References: <152401916729.11465.4212188839231900136.stgit@magnolia>
+ <152401921403.11465.9618173695298878026.stgit@magnolia>
+ <20180418183447.GE22375@bfoster.bfoster>
+ <20180418200036.GT24738@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4h3RPdohsPyiB=GxE8iQCjRRen=knDd=Em5BMy1MYpRvA@mail.gmail.com>
+In-Reply-To: <20180418200036.GT24738@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Paul McKenney <paulmck@linux.vnet.ibm.com>, Josh Triplett <josh.triplett@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri 13-04-18 15:03:51, Dan Williams wrote:
-> On Mon, Apr 9, 2018 at 9:51 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> > On Mon, Apr 9, 2018 at 9:49 AM, Jan Kara <jack@suse.cz> wrote:
-> >> On Sat 07-04-18 12:38:24, Dan Williams wrote:
-> > [..]
-> >>> I wonder if this can be trivially solved by using srcu. I.e. we don't
-> >>> need to wait for a global quiescent state, just a
-> >>> get_user_pages_fast() quiescent state. ...or is that an abuse of the
-> >>> srcu api?
-> >>
-> >> Well, I'd rather use the percpu rwsemaphore (linux/percpu-rwsem.h) than
-> >> SRCU. It is a more-or-less standard locking mechanism rather than relying
-> >> on implementation properties of SRCU which is a data structure protection
-> >> method. And the overhead of percpu rwsemaphore for your use case should be
-> >> about the same as that of SRCU.
-> >
-> > I was just about to ask that. Yes, it seems they would share similar
-> > properties and it would be better to use the explicit implementation
-> > rather than a side effect of srcu.
+On Wed, Apr 18, 2018 at 01:00:36PM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 18, 2018 at 02:34:47PM -0400, Brian Foster wrote:
+> > On Tue, Apr 17, 2018 at 07:40:14PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Replace the quota scrubber's open-coded data fork scrubber with a
+> > > redirected call to the bmapbtd scrubber.  This strengthens the quota
+> > > scrub to include all the cross-referencing that it does.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/scrub/quota.c |   95 ++++++++++++++++++++++++++++----------------------
+> > >  1 file changed, 54 insertions(+), 41 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+> > > index 1068a91..67f94c4 100644
+> > > --- a/fs/xfs/scrub/quota.c
+> > > +++ b/fs/xfs/scrub/quota.c
+...
+> > > +	if (error)
+> > > +		return error;
+> > > +	sc->sm->sm_flags |= (fake_sm.sm_flags & XFS_SCRUB_FLAGS_OUT);
+> > > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > > +		return error;
+> > > +
+> > > +	/* Check for data fork problems that apply only to quota files. */
+> > >  	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+> > > -	while (1) {
+> > > +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
+> > > +	for_each_xfs_iext(ifp, &icur, &irec) {
+> > >  		if (xfs_scrub_should_terminate(sc, &error))
+> > >  			break;
+> > > -
+> > > -		off = irec.br_startoff + irec.br_blockcount;
+> > > -		nimaps = 1;
+> > > -		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
+> > > -				XFS_BMAPI_ENTIRE);
+> > > -		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
+> > > -				&error))
+> > > -			goto out;
+> > > -		if (!nimaps)
+> > > -			break;
+> > > -		if (irec.br_startblock == HOLESTARTBLOCK)
+> > > -			continue;
+> > > -
+> > > -		/* Check the extent record doesn't point to crap. */
+> > > -		if (irec.br_startblock + irec.br_blockcount <=
+> > > -		    irec.br_startblock)
+> > > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> > > -					irec.br_startoff);
+> > > -		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
+> > > -		    !xfs_verify_fsbno(mp, irec.br_startblock +
+> > > -					irec.br_blockcount - 1))
+> > > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> > > -					irec.br_startoff);
+> > > -
+> > >  		/*
+> > > -		 * Unwritten extents or blocks mapped above the highest
+> > > +		 * delalloc extents or blocks mapped above the highest
+> > >  		 * quota id shouldn't happen.
+> > >  		 */
+> > >  		if (isnullstartblock(irec.br_startblock) ||
+> > >  		    irec.br_startoff > max_dqid_off ||
+> > > -		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
+> > > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
+> > > +		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1) {
+> > 
+> > Not introduced by this patch, but what's with the +1 to max_dqid_off
+> > here?
 > 
-> ...unfortunately:
+> max_dquid_off is the file block offset of the dquot for the highest
+> quota id (0xFFFFFFFF), so this is checking that the next block after the
+> extent doesn't map an unreachable offset.  The logic is a bit twisted;
+> maybe (irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) would
+> be clearer?
 > 
->  BUG: sleeping function called from invalid context at
-> ./include/linux/percpu-rwsem.h:34
->  [..]
->  Call Trace:
->   dump_stack+0x85/0xcb
->   ___might_sleep+0x15b/0x240
->   dax_layout_lock+0x18/0x80
->   get_user_pages_fast+0xf8/0x140
+
+Ah, I see. The calculated offset is exclusive and the max_dqid_off value
+is inclusive. Yeah... not a big deal obviously but the tweak you propose
+does seem a bit more clear to me. Thanks.
+
+Brian
+
+> --D
 > 
-> ...and thinking about it more srcu is a better fit. We don't need the
-> 100% exclusion provided by an rwsem we only need the guarantee that
-> all cpus that might have been running get_user_pages_fast() have
-> finished it at least once.
-> 
-> In my tests synchronize_srcu is a bit slower than unpatched for the
-> trivial 100 truncate test, but certainly not the 200x latency you were
-> seeing with syncrhonize_rcu.
-> 
-> Elapsed time:
-> 0.006149178 unpatched
-> 0.009426360 srcu
-
-Hum, right. Yesterday I was looking into KSM for a different reason and
-I've noticed it also does writeprotect pages and deals with races with GUP.
-And what KSM relies on is:
-
-write_protect_page()
-  ...
-  entry = ptep_clear_flush(vma, pvmw.address, pvmw.pte);
-  /*
-   * Check that no O_DIRECT or similar I/O is in progress on the
-   * page
-   */
-  if (page_mapcount(page) + 1 + swapped != page_count(page)) {
-    page used -> bail
-  }
-
-And this really works because gup_pte_range() does:
-
-  page = pte_page(pte);
-  head = compound_head(page);
-
-  if (!page_cache_get_speculative(head))
-    goto pte_unmap;
-
-  if (unlikely(pte_val(pte) != pte_val(*ptep))) {
-    bail
-  }
-
-So either write_protect_page() page sees the elevated reference or
-gup_pte_range() bails because it will see the pte changed.
-
-In the truncate path things are a bit different but in principle the same
-should work - once truncate blocks page faults and unmaps pages from page
-tables, we can be sure GUP will not grab the page anymore or we'll see
-elevated page count. So IMO there's no need for any additional locking
-against the GUP path (but a comment explaining this is highly desirable I
-guess). 
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> > 
+> > Brian
+> > 
+> > > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> > > +					irec.br_startoff);
+> > > +			break;
+> > > +		}
+> > >  	}
+> > > +
+> > > +	return error;
+> > > +}
+> > > +
+> > > +/* Scrub all of a quota type's items. */
+> > > +int
+> > > +xfs_scrub_quota(
+> > > +	struct xfs_scrub_context	*sc)
+> > > +{
+> > > +	struct xfs_scrub_quota_info	sqi;
+> > > +	struct xfs_mount		*mp = sc->mp;
+> > > +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
+> > > +	uint				dqtype;
+> > > +	int				error = 0;
+> > > +
+> > > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
+> > > +
+> > > +	/* Look for problem extents. */
+> > > +	error = xfs_scrub_quota_data_fork(sc);
+> > > +	if (error)
+> > > +		goto out;
+> > >  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > >  		goto out;
+> > >  
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
