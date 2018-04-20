@@ -1,142 +1,160 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47930 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755597AbeDVPGm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:06:42 -0400
-Subject: [PATCH 07/13] xfs: refactor incore dquot initialization functions
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:06:37 -0700
-Message-ID: <152440959784.29601.7345409188558922914.stgit@magnolia>
-In-Reply-To: <152440954198.29601.14390250048915099607.stgit@magnolia>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia>
+Received: from smtp-fw-33001.amazon.com ([207.171.190.10]:9425 "EHLO
+        smtp-fw-33001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752881AbeDTWJS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Apr 2018 18:09:18 -0400
+From: Aleksei Besogonov <cyberax@amazon.com>
+Subject: [PATCH 1/2] fs: Add iomap_swap_activate
+Date: Fri, 20 Apr 2018 22:08:14 +0000
+Message-ID: <20180420220815.44160-2-cyberax@amazon.com>
+In-Reply-To: <20180420220815.44160-1-cyberax@amazon.com>
+References: <20180420220815.44160-1-cyberax@amazon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Aleksei Besogonov <cyberax@amazon.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Create two incore dquot initialization functions that will help us to
-disentangle dqget and dqread.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+This commit adds an alternative to generic_swapfile_activate function
+based on iomap family. The major driver for this is swap file support
+on XFS, currently it doesn't work on files with holes due to deficiencies
+in the old bmap() interface that is used by generic_swapfile_activate.
 ---
- fs/xfs/xfs_dquot.c |   80 +++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 50 insertions(+), 30 deletions(-)
+ fs/iomap.c            | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  5 +++
+ mm/swapfile.c         |  1 +
+ 3 files changed, 93 insertions(+)
 
-
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 62415f1..7154909 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -491,26 +491,14 @@ xfs_qm_dqtobp(
- 	return 0;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index afd163586aa0..9f0980637dbc 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1089,3 +1089,90 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return ret;
  }
- 
--
--/*
-- * Read in the ondisk dquot using dqtobp() then copy it to an incore version,
-- * and release the buffer immediately.
-- *
-- * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
-- */
--int
--xfs_qm_dqread(
-+/* Allocate and initialize everything we need for an incore dquot. */
-+STATIC struct xfs_dquot *
-+xfs_qm_dqinit_once(
- 	struct xfs_mount	*mp,
- 	xfs_dqid_t		id,
--	uint			type,
--	uint			flags,
--	struct xfs_dquot	**O_dqpp)
-+	uint			type)
- {
- 	struct xfs_dquot	*dqp;
--	struct xfs_disk_dquot	*ddqp;
--	struct xfs_buf		*bp;
--	struct xfs_trans	*tp = NULL;
--	int			error;
- 
- 	dqp = kmem_zone_zalloc(xfs_qm_dqzone, KM_SLEEP);
- 
-@@ -549,7 +537,52 @@ xfs_qm_dqread(
- 	}
- 
- 	XFS_STATS_INC(mp, xs_qm_dquot);
-+	return dqp;
-+}
+ EXPORT_SYMBOL_GPL(iomap_dio_rw);
 +
-+/* Copy the in-core quota fields in from the on-disk buffer. */
-+STATIC void
-+xfs_qm_dqinit_from_buf(
-+	struct xfs_dquot	*dqp,
-+	struct xfs_disk_dquot	*ddqp)
++struct iomap_swap_walker_context
 +{
-+	/* copy everything from disk dquot to the incore dquot */
-+	memcpy(&dqp->q_core, ddqp, sizeof(xfs_disk_dquot_t));
-+	xfs_qm_dquot_logitem_init(dqp);
++    struct swap_info_struct *sis;
++    unsigned int page_no;
++    unsigned int nr_extents;
++    sector_t *span;
++};
++
++static loff_t
++iomap_swap_map(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	struct iomap_swap_walker_context *ctx = data;
++	unsigned int blocks_per_page = PAGE_SIZE >> inode->i_blkbits;
++	u64 num_pages;
++	u64 aligned_address;
++	sector_t disk_pos;
++	loff_t eff_length;
++	loff_t ret;
 +
 +	/*
-+	 * Reservation counters are defined as reservation plus current usage
-+	 * to avoid having to add every time.
++	 * Swap extents need to be PAGE_SIZE aligned on the disk
 +	 */
-+	dqp->q_res_bcount = be64_to_cpu(ddqp->d_bcount);
-+	dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
-+	dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
++	aligned_address = ALIGN(iomap->addr, PAGE_SIZE);
++	eff_length = length - (aligned_address - iomap->addr);
++	BUG_ON(eff_length > length);
++	disk_pos = aligned_address >> inode->i_blkbits;
 +
-+	/* initialize the dquot speculative prealloc thresholds */
-+	xfs_dquot_set_prealloc_limits(dqp);
++	if (eff_length < 0)
++		return length; /* Continue probing */
++
++	num_pages = eff_length / PAGE_SIZE;
++
++	/* Can't add blocks less than 1 page */
++	if (num_pages == 0)
++		return length; /* Continue probing */
++
++	ret = add_swap_extent(ctx->sis, ctx->page_no, num_pages, disk_pos);
++	if (ret < 0)
++		return ret;
++
++	ctx->nr_extents += ret;
++	ctx->page_no += num_pages;
++	*(ctx->span) += num_pages * blocks_per_page;
++
++	return length; /* continue probing */
 +}
 +
-+/*
-+ * Read in the ondisk dquot using dqtobp() then copy it to an incore version,
-+ * and release the buffer immediately.
-+ *
-+ * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
-+ */
 +int
-+xfs_qm_dqread(
-+	struct xfs_mount	*mp,
-+	xfs_dqid_t		id,
-+	uint			type,
-+	uint			flags,
-+	struct xfs_dquot	**O_dqpp)
++iomap_swap_activate(struct swap_info_struct *sis, struct file *file,
++		sector_t *span, const struct iomap_ops *ops)
 +{
-+	struct xfs_dquot	*dqp;
-+	struct xfs_disk_dquot	*ddqp;
-+	struct xfs_buf		*bp;
-+	struct xfs_trans	*tp = NULL;
-+	int			error;
++	struct iomap_swap_walker_context ctx = {
++		.sis = sis,
++		.page_no = 0,
++		.nr_extents = 0,
++		.span = span
++	};
++
++	struct inode * inode = file_inode(file);
++	loff_t len = i_size_read(inode);
++	loff_t pos = 0;
++	loff_t ret = -EINVAL;
++
++	while(len > 0) {
++		ret = iomap_apply(inode, pos, len, IOMAP_REPORT, ops,
++				  &ctx, iomap_swap_map);
++		if (ret <= 0)
++			break;
++
++		pos += ret;
++		len -= ret;
++	}
++
++	if (ret < 0) {
++		pr_err("Failed to activate the swap file\n");
++		return -EINVAL;
++	}
++
++	sis->max = ctx.page_no == 0 ? 1 : ctx.page_no;
++	sis->pages = ctx.page_no;
++	sis->highest_bit = ctx.page_no;
++
++	return ctx.nr_extents;
++}
++EXPORT_SYMBOL_GPL(iomap_swap_activate);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 19a07de28212..a85da0db6c2e 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -10,6 +10,8 @@ struct iov_iter;
+ struct kiocb;
+ struct vm_area_struct;
+ struct vm_fault;
++struct file;
++struct swap_info_struct;
  
-+	dqp = xfs_qm_dqinit_once(mp, id, type);
- 	trace_xfs_dqread(dqp);
+ /*
+  * Types of block ranges for iomap mappings:
+@@ -106,4 +108,7 @@ typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
+ ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
  
- 	if (flags & XFS_QMOPT_DQALLOC) {
-@@ -574,20 +607,7 @@ xfs_qm_dqread(
- 		goto error1;
- 	}
++int iomap_swap_activate(struct swap_info_struct *sis, struct file *file,
++			sector_t *span, const struct iomap_ops *ops);
++
+ #endif /* LINUX_IOMAP_H */
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index c7a33717d079..9e6d3c1a882e 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -2381,6 +2381,7 @@ add_swap_extent(struct swap_info_struct *sis, unsigned long start_page,
+ 	list_add_tail(&new_se->list, &sis->first_swap_extent.list);
+ 	return 1;
+ }
++EXPORT_SYMBOL_GPL(add_swap_extent);
  
--	/* copy everything from disk dquot to the incore dquot */
--	memcpy(&dqp->q_core, ddqp, sizeof(xfs_disk_dquot_t));
--	xfs_qm_dquot_logitem_init(dqp);
--
--	/*
--	 * Reservation counters are defined as reservation plus current usage
--	 * to avoid having to add every time.
--	 */
--	dqp->q_res_bcount = be64_to_cpu(ddqp->d_bcount);
--	dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
--	dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
--
--	/* initialize the dquot speculative prealloc thresholds */
--	xfs_dquot_set_prealloc_limits(dqp);
-+	xfs_qm_dqinit_from_buf(dqp, ddqp);
- 
- 	/* Mark the buf so that this will stay incore a little longer */
- 	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
+ /*
+  * A `swap extent' is a simple thing which maps a contiguous range of pages
+-- 
+2.14.1
 
