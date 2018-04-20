@@ -1,69 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:41817 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754372AbeDWI2s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Apr 2018 04:28:48 -0400
-Received: by mail-wr0-f194.google.com with SMTP id g21-v6so11235511wrb.8
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Apr 2018 01:28:48 -0700 (PDT)
-Date: Mon, 23 Apr 2018 10:28:45 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: Add a helper to retrieve xfs_inode from the
- address_space
-Message-ID: <20180423082845.ofpuv2dfezoejyxt@odin.usersys.redhat.com>
-References: <20180419143511.16924-1-cmaiolino@redhat.com>
- <20180419225002.GQ23861@dastard>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:21261 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753581AbeDTAIY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Apr 2018 20:08:24 -0400
+Date: Fri, 20 Apr 2018 10:05:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 07/11] xfs: superblock scrub should use uncached buffers
+Message-ID: <20180420000551.GS23861@dastard>
+References: <152401916729.11465.4212188839231900136.stgit@magnolia>
+ <152401922015.11465.14941366292853283272.stgit@magnolia>
+ <20180419125546.GA25844@bfoster.bfoster>
+ <20180419172548.GY24738@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180419225002.GQ23861@dastard>
+In-Reply-To: <20180419172548.GY24738@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Fri, Apr 20, 2018 at 08:50:02AM +1000, Dave Chinner wrote:
-> On Thu, Apr 19, 2018 at 04:35:11PM +0200, Carlos Maiolino wrote:
-> > Reduce some code and local variable allocation on file operations by
-> > using a new helper.
+On Thu, Apr 19, 2018 at 10:25:48AM -0700, Darrick J. Wong wrote:
+> On Thu, Apr 19, 2018 at 08:55:47AM -0400, Brian Foster wrote:
+> > On Tue, Apr 17, 2018 at 07:40:20PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > We've never cached buffers when reading or writing superblocks, so we
+> > > need to change scrub to do likewise or risk screwing up the uncached sb
+> > > buffer usage everywhere else.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
 > > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> > 
-> > Hi, I though this could be useful instead of keeping allocating file,
-> > address_space and inode structs in several places, just to retrieve the
-> > xfs_inode, what you guys think?
-> > 
-> > XFS_FTOINO() isn't really a good name, that's the first one which came to my
-> > mind, if this is useful at all I can change the name to something else, like
-> > XFS_AS_TO_INO() maybe, or something else?!
+> > Hmm, so this goes back to this[1] thread, right?
 > 
-> I'd prefer that we don't add more "vfs to xfs structure" macros like
-> this. It doesn't make the code any more readable or correct,
-> especially for non-XFS developers.
+> Yep.
 > 
-
-Ok.
-
-> > Although I think some vfs_wide helper like file_inode() would be more useful,
-> > but, well, it's just an idea that came to my mind.
+> > IIRC, we wanted to end up with an lru-bypassing uncached buffer lookup
+> > mechanism to provide uncached behavior for resource-saving purposes
+> > but without introducing serialization issues between multiple users of
+> > uncached buffers.
 > 
-> XFS_I(file_inode(file)) would be my preferred solution here, as it
-> uses the correct VFS accessor function to get the VFS inode from
-> the struct file and it's obvious what it does to anyone familiar
-> with typical VFS and filesystem coding conventions.
+> Right.
 > 
-
-I think keep nesting function calls to reduce a few lines of code if harder to
-read indeed, and I would stay with the current way and pretend I've never
-submitted this patch :)
-
-> Cheers,
+> > On a quick look back, growfs currently uses cached buffers for secondary
+> > superblocks and the associated patch was looking to change that to
+> > something like the above. Don't we have the same requirement here (since
+> > growfs currently still uses cached buffers)?
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Correct, this patch is contingent on landing Dave's "tableise growfs"
+> series that converts growfs to use uncached buffers for writing out the
+> new secondary supers.  If I manage to land Dave's growfs thing before
+> repair then I'll keep this; if repair goes first I'll defer it to that
+> series.
 
+I plan on changing that patch set to use single-use cached buffers
+rather than uncached buffers. So I'd just drop this patch, or
+replace it with a patch that adds this:
+
+#define XFS_SINGLE_USE_REF	0
+
+and this after the xfs_trans_read_buf() call:
+
+	xfs_buf_set_ref(bp, XFS_SINGLE_USE_REF);
+
+Which will result in it being reclaimed when it is released rather
+than being put on the LRU.
+
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
