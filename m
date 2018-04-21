@@ -1,52 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:22706 "EHLO
-        smtp-fw-6002.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752605AbeDTWiv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Apr 2018 18:38:51 -0400
-From: "Besogonov, Aleksei" <cyberax@amazon.com>
-Subject: Re: [PATCH 0/2] RFC: iomap-based swap file activation
-Date: Fri, 20 Apr 2018 22:38:49 +0000
-Message-ID: <ACC8E6C0-3FD7-4696-86E0-BD397E61176A@amazon.com>
-References: <20180420220815.44160-1-cyberax@amazon.com>
- <20180420222541.GC24738@magnolia>
-In-Reply-To: <20180420222541.GC24738@magnolia>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1EC9FA96D61E4645AF48838D3F3F25B2@amazon.com>
-Content-Transfer-Encoding: base64
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:45331 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752245AbeDUDWk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Apr 2018 23:22:40 -0400
+Message-ID: <5ADAAE79.5020803@cn.fujitsu.com>
+Date: Sat, 21 Apr 2018 11:22:33 +0800
+From: Xiao Yang <yangx.jy@cn.fujitsu.com>
 MIME-Version: 1.0
+Subject: question about mkfs.xfs
+Content-Type: text/plain; charset="GB2312"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-U29ycnkgZm9yIHRvcC1wb3N0aW5nLg0KDQpJJ20gc29ycnkgSSBtaXNzZWQgeW91ciBwYXRjaC4g
-SXQncyBkZWZpbml0ZWx5IGJldHRlciB0aGFuIG1pbmUgaW4gdGhlIG51bWJlcg0Kb2YgdmFsaWRh
-dGlvbnMgaXQgZG9lcy4NCg0KTXkgb25seSBjb21tZW50IGlzLCBzaG91bGRuJ3Qgd2UgYWxsb3cg
-YmxvY2tzIHRoYXQgYXJlIG5vdCBwYWdlLWFsaWduZWQ/DQpUaGUgY3VycmVudCBnZW5lcmljX3N3
-YXBmaWxlX2FjdGl2YXRlIHdpbGwgc2ltcGx5IGRpc2NhcmQgdGhlIGxlYWRpbmcgdW5hbGlnbmVk
-DQpzZWN0b3JzLiBZb3VyIHBhdGNoIHdpbGwgaW1tZWRpYXRlbHkgZXJyb3Igb3V0IGluIHRoaXMg
-Y2FzZS4NCg0KSSB0cmllZCB0byByZXBsaWNhdGUgdGhlIHNhbWUgYmVoYXZpb3IgYnkgZG9pbmcg
-QUxJR04gb24gdGhlIGlvbWFwIGFkZHIuDQoNCu+7v09uIDQvMjAvMTgsIDE1OjI2LCAiRGFycmlj
-ayBKLiBXb25nIiA8ZGFycmljay53b25nQG9yYWNsZS5jb20+IHdyb3RlOg0KDQogICAgT24gRnJp
-LCBBcHIgMjAsIDIwMTggYXQgMTA6MDg6MTNQTSArMDAwMCwgQWxla3NlaSBCZXNvZ29ub3Ygd3Jv
-dGU6DQogICAgPiBUaGlzIHBhdGNoIHNldCBhZGRzIGlvbWFwLWJhc2VkIHN3YXAgZmlsZSBpbml0
-aWFsaXphdGlvbiwgdGhpcyBhbGxvd3MNCiAgICA+IGl0IHRvIHVzZSBmaWxlcyB3aXRoIGhvbGVz
-IG9uIFhGUyBmb3Igc3dhcC4NCiAgICANCiAgICBVbS4uLiB0aGVyZSdzIGFscmVhZHkgYSBwYXRj
-aFsxXSBpbXBsZW1lbnRpbmcgdGhpcyBvdXQgZm9yIHJldmlldyBvbiB0aGUNCiAgICBtYWlsaW5n
-IGxpc3QuICBDb3VsZCB5b3UgcGxlYXNlIHRha2UgYSBsb29rIGF0IHRoYXQgaW5zdGVhZD8NCiAg
-ICANCiAgICAtLUQNCiAgICANCiAgICBbMV0gaHR0cHM6Ly9tYXJjLmluZm8vP2w9bGludXgteGZz
-Jm09MTUyNDAxOTg0ODEwMDYyJnc9Mg0KICAgIA0KICAgID4gDQogICAgPiBBbGVrc2VpIEJlc29n
-b25vdiAoMik6DQogICAgPiAgIGZzOiBBZGQgaW9tYXBfc3dhcF9hY3RpdmF0ZQ0KICAgID4gICB4
-ZnM6IGFkZCBzdXBwb3J0IGZvciBpb21hcC1iYXNlZCBzd2FwZmlsZSBhY3RpdmF0aW9uDQogICAg
-PiANCiAgICA+ICBmcy9pb21hcC5jICAgICAgICAgICAgfCA4NyArKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCiAgICA+ICBmcy94ZnMveGZzX2FvcHMu
-YyAgICAgfCAgNyArKysrKw0KICAgID4gIGluY2x1ZGUvbGludXgvaW9tYXAuaCB8ICA1ICsrKw0K
-ICAgID4gIG1tL3N3YXBmaWxlLmMgICAgICAgICB8ICAxICsNCiAgICA+ICA0IGZpbGVzIGNoYW5n
-ZWQsIDEwMCBpbnNlcnRpb25zKCspDQogICAgPiANCiAgICA+IC0tIA0KICAgID4gMi4xNC4xDQog
-ICAgPiANCiAgICA+IC0tDQogICAgPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2Vu
-ZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgteGZzIiBpbg0KICAgID4gdGhlIGJvZHkgb2Yg
-YSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCiAgICA+IE1vcmUgbWFqb3Jk
-b21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
-ICAgIA0KDQo=
+Hi Eric£¬
+
+Before commit 16adcb8 in xfsprogs-dev, only "sunit=0,swidth=0" is vaild
+and will convert
+into the default stripe config as expected. After this commit, both
+"sunit=0,swidth=0"
+and "sunit=0,swidth=64" will be forced to convert into the default
+stripe config.
+
+If either of sunit and swidth is not 0, should we do a forced conversion?
+I am not sure if we should reject the combination(e.g. sunit=0,swidth=64).
+
+Thanks,
+Xiao Yang
+
+
