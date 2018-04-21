@@ -1,33 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38090 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751333AbeDUHic (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Apr 2018 03:38:32 -0400
-Date: Sat, 21 Apr 2018 00:38:31 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS Developers' Meeting @ LSFMM?
-Message-ID: <20180421073831.GA25019@infradead.org>
-References: <20180419020231.GW24738@magnolia>
- <CAOQ4uxgmq0qiS=rvNnJ39_UJw1yVM4etW3MnnpF3M6mSiyORMQ@mail.gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:40590 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753077AbeDUSnO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Apr 2018 14:43:14 -0400
+Date: Sat, 21 Apr 2018 11:42:51 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 02/11] xfs: create the XFS_QMOPT_QUOTIP_LOCKED flag
+Message-ID: <20180421184251.GA26268@magnolia>
+References: <152401916729.11465.4212188839231900136.stgit@magnolia>
+ <152401917977.11465.9543981144688523511.stgit@magnolia>
+ <20180419083224.GA17515@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgmq0qiS=rvNnJ39_UJw1yVM4etW3MnnpF3M6mSiyORMQ@mail.gmail.com>
+In-Reply-To: <20180419083224.GA17515@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, lsf-pc@lists.linux-foundation.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Apr 19, 2018 at 11:49:38AM +0300, Amir Goldstein wrote:
-> >  0. Meet & greet, PGP keysigning[2]
-> >  1. How are the maintainers doing? How are everybody feeling?
-> >  2. What to do about the review backlog...
-> >  3. How to help grow new people
-> >  4. Roadmap for the next year!
+On Thu, Apr 19, 2018 at 01:32:24AM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 17, 2018 at 07:39:39PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a new QMOPT flag to signal that we've already locked the quota
+> > inode.  This will be used by the quota scrub code refactoring to avoid
+> > dropping the quota ip lock during scrub.  The flag is incompatible with
+> > the DQALLOC flag because dquot allocation creates a transaction, and we
+> > shouldn't be doing that with the ILOCK held.
 > 
-> 5. Wanted! stable maintainer for XFS.
+> Locked flag are always a sign for code smell.  And this already is
+> pretty smelly code before that flag is added.  I think someone (i.e.
+> either you or me :)) needs to do a major refactoring here first.
 
-I have maintained specific stable trees under contract for maintainers,
-and I'd stil be happy to do it for anyone else who is willing to pay for
-the work.
+Bleh... ok, I marched through that swamp and refactored all that goopy
+dqget crud into a ton of smaller helper functions that only do one thing,
+killed off QMOPT_NEXT, and renamed DQALLOC to make it obvious it's for
+dqget only.  So now we have...
+
+xfs_qm_dqget (get dquot based on id/type, can take XFS_DQGET_DQALLOC to
+allocate if not present)
+
+xfs_qm_dqget_inode (get dquot based on inode/type, contains all the
+locking and looping mess to one function, can take _DQALLOC)
+
+xfs_qm_dqget_next (get this or the next higher dquot, no DQALLOC allowed
+here, contain all the NEXT looping mess to this function)
+
+xfs_qm_dqread (read dquot from disk and return incore dquot, do not
+check in radix tree, no longer takes DQALLOC)
+
+xfs_qm_dqiterate (iterate all the dquots for the given quota type)
+
+I also cleaned out a bunch of unnecessary parameters and other junk,
+and refactored mount time quotacheck so that it doesn't need to
+ILOCK_EXCL every inode in the system.  In theory that should be fine
+because we only needed ILOCK_EXCL to make sure nobody can chown/chproj
+the inode on us, which shouldn't be happening during mount.
+
+As a bonus I realized that scrub and repair don't actually need to
+maintain the ilock once they're done fixing all of the things that can
+cause dqget to fail, so the ILOCKED flag goes away entirely.
+
+Will have a revised megaseries out on the list ideally some time before
+LSF starts... though it did add another 12 patches to the review queue. :P
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
