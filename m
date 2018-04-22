@@ -1,166 +1,355 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:49896 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752804AbeDSReB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Apr 2018 13:34:01 -0400
-Date: Thu, 19 Apr 2018 10:33:40 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:42442 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751556AbeDVPG2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:06:28 -0400
+Subject: [PATCH 05/13] xfs: split out dqget for inodes from regular dqget
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/11] xfs: avoid ABBA deadlock when scrubbing parent
- pointers
-Message-ID: <20180419173340.GZ24738@magnolia>
-References: <152401916729.11465.4212188839231900136.stgit@magnolia>
- <152401924456.11465.4870308714829350533.stgit@magnolia>
- <20180419125606.GE25844@bfoster.bfoster>
+Date: Sun, 22 Apr 2018 08:06:24 -0700
+Message-ID: <152440958392.29601.4865223638433656924.stgit@magnolia>
+In-Reply-To: <152440954198.29601.14390250048915099607.stgit@magnolia>
+References: <152440954198.29601.14390250048915099607.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180419125606.GE25844@bfoster.bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Thu, Apr 19, 2018 at 08:56:07AM -0400, Brian Foster wrote:
-> On Tue, Apr 17, 2018 at 07:40:44PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In normal operation, the XFS convention is to take an inode's iolock
-> > and then allocate a transaction.  However, when scrubbing parent inodes
-> > this is inverted -- we allocated the transaction to do the scrub, and
-> > now we're trying to grab the parent's iolock.  This can lead to ABBA
-> > deadlocks: some thread grabbed the parent's iolock and is waiting for
-> > space for a transaction while our parent scrubber is sitting on a
-> > transaction trying to get the parent's iolock.
-> > 
-> 
-> Is that really an issue if the scrub transaction doesn't acquire a log
-> reservation (or does it in certain circumstances)..?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Once we get to the repair series the transactions will have reservations
-for logging metadata changes from the metadata rebuilds.
+There are two uses of dqget here -- one is to return the dquot for a
+given type and id, and the other is to return the dquot for a given type
+and inode.  Those are two separate things, so split them into two
+smaller functions.
 
-For a non-repair scrub invocation it's pretty simple:
-1. Allocate zero-reservation (empty) transaction
-2. Iterate metadata, check stuff
-3. Cancel transaction, exit to userland
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_dquot.c       |  148 ++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_dquot.h       |   11 +++
+ fs/xfs/xfs_qm.c          |   22 ++-----
+ fs/xfs/xfs_qm_bhv.c      |    2 -
+ fs/xfs/xfs_qm_syscalls.c |    4 +
+ 5 files changed, 124 insertions(+), 63 deletions(-)
 
-For a repair it's much more complicated:
-1. Allocate a big permanent-reservation transaction
-2. Iterate metadata, check stuff (same as #2 above)
-3. If the metadata is ok, cancel and exit to userland
-4. Create set of records that metadata is supposed to have
-5. Zap metadata root
-6. Insert record, roll transaction, repeat...
-7. Commit transaction
-8. Run non-repair scrub to see if we fixed it.
 
-So this patch is more of a cleanup to prepare for the circumstances
-changing later. :)
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 9a3a05e..62415f1 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -781,24 +781,19 @@ xfs_qm_dqget_checks(
+ }
+ 
+ /*
+- * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
+- * a locked dquot, doing an allocation (if requested) as needed.
+- * When both an inode and an id are given, the inode's id takes precedence.
+- * That is, if the id changes while we don't hold the ilock inside this
+- * function, the new dquot is returned, not necessarily the one requested
+- * in the id argument.
++ * Given the file system, id, and type (UDQUOT/GDQUOT), return a a locked
++ * dquot, doing an allocation (if requested) as needed.
+  */
+ int
+ xfs_qm_dqget(
+-	xfs_mount_t	*mp,
+-	xfs_inode_t	*ip,	  /* locked inode (optional) */
+-	xfs_dqid_t	id,	  /* uid/projid/gid depending on type */
+-	uint		type,	  /* XFS_DQ_USER/XFS_DQ_PROJ/XFS_DQ_GROUP */
+-	uint		flags,	  /* DQALLOC, DQSUSER, DQREPAIR, DOWARN */
+-	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
++	struct xfs_mount	*mp,
++	xfs_dqid_t		id,
++	uint			type,
++	uint			flags,	  /* DQALLOC, DQSUSER, DQREPAIR, DOWARN */
++	struct xfs_dquot	**O_dqpp)
+ {
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+ 
+@@ -806,10 +801,82 @@ xfs_qm_dqget(
+ 	if (error)
+ 		return error;
+ 
+-	if (ip) {
+-		ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-		ASSERT(xfs_inode_dquot(ip, type) == NULL);
++restart:
++	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
++	if (dqp) {
++		*O_dqpp = dqp;
++		return 0;
++	}
++
++	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
++	if (error)
++		return error;
++
++	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	if (error) {
++		/*
++		 * Duplicate found. Just throw away the new dquot and start
++		 * over.
++		 */
++		xfs_qm_dqdestroy(dqp);
++		XFS_STATS_INC(mp, xs_qm_dquot_dups);
++		goto restart;
++	}
++
++	trace_xfs_dqget_miss(dqp);
++	*O_dqpp = dqp;
++	return 0;
++}
++
++/* Return the quota id for a given inode and type. */
++xfs_dqid_t
++xfs_qm_id_for_quotatype(
++	struct xfs_inode	*ip,
++	uint			type)
++{
++	switch (type) {
++	case XFS_DQ_USER:
++		return ip->i_d.di_uid;
++	case XFS_DQ_GROUP:
++		return ip->i_d.di_gid;
++	case XFS_DQ_PROJ:
++		return xfs_get_projid(ip);
+ 	}
++	ASSERT(0);
++	return 0;
++}
++
++/*
++ * Return the dquot for a given inode and type.  If @can_alloc is true, then
++ * allocate blocks if needed.  The inode's ILOCK must be held and it must not
++ * have already had an inode attached.
++ */
++int
++xfs_qm_dqget_inode(
++	struct xfs_mount	*mp,
++	struct xfs_inode	*ip,
++	uint			type,
++	uint			can_alloc,
++	struct xfs_dquot	**O_dqpp)
++{
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
++	struct xfs_dquot	*dqp;
++	xfs_dqid_t		id;
++	uint			flags = 0;
++	int			error;
++
++	error = xfs_qm_dqget_checks(mp, type);
++	if (error)
++		return error;
++
++	if (can_alloc)
++		flags |= XFS_QMOPT_DQALLOC;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(xfs_inode_dquot(ip, type) == NULL);
++
++	id = xfs_qm_id_for_quotatype(ip, type);
+ 
+ restart:
+ 	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
+@@ -825,37 +892,30 @@ xfs_qm_dqget(
+ 	 * lock here means dealing with a chown that can happen before
+ 	 * we re-acquire the lock.
+ 	 */
+-	if (ip)
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
+-
+-	if (ip)
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (error)
+ 		return error;
+ 
+-	if (ip) {
+-		/*
+-		 * A dquot could be attached to this inode by now, since
+-		 * we had dropped the ilock.
+-		 */
+-		if (xfs_this_quota_on(mp, type)) {
+-			struct xfs_dquot	*dqp1;
+-
+-			dqp1 = xfs_inode_dquot(ip, type);
+-			if (dqp1) {
+-				xfs_qm_dqdestroy(dqp);
+-				dqp = dqp1;
+-				xfs_dqlock(dqp);
+-				goto dqret;
+-			}
+-		} else {
+-			/* inode stays locked on return */
++	/*
++	 * A dquot could be attached to this inode by now, since we had
++	 * dropped the ilock.
++	 */
++	if (xfs_this_quota_on(mp, type)) {
++		struct xfs_dquot	*dqp1;
++
++		dqp1 = xfs_inode_dquot(ip, type);
++		if (dqp1) {
+ 			xfs_qm_dqdestroy(dqp);
+-			return -ESRCH;
++			dqp = dqp1;
++			xfs_dqlock(dqp);
++			goto dqret;
+ 		}
++	} else {
++		/* inode stays locked on return */
++		xfs_qm_dqdestroy(dqp);
++		return -ESRCH;
+ 	}
+ 
+ 	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
+@@ -869,8 +929,8 @@ xfs_qm_dqget(
+ 		goto restart;
+ 	}
+ 
+- dqret:
+-	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
++dqret:
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	trace_xfs_dqget_miss(dqp);
+ 	*O_dqpp = dqp;
+ 	return 0;
+@@ -892,7 +952,7 @@ xfs_qm_dqget_next(
+ 
+ 	*dqpp = NULL;
+ 	for (; !error; error = xfs_dq_get_next_id(mp, type, &id)) {
+-		error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
++		error = xfs_qm_dqget(mp, id, type, 0, &dqp);
+ 		if (error == -ENOENT)
+ 			continue;
+ 		else if (error != 0)
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 303e71d..1458de3 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -169,8 +169,15 @@ extern void		xfs_qm_adjust_dqtimers(xfs_mount_t *,
+ 					xfs_disk_dquot_t *);
+ extern void		xfs_qm_adjust_dqlimits(struct xfs_mount *,
+ 					       struct xfs_dquot *);
+-extern int		xfs_qm_dqget(xfs_mount_t *, xfs_inode_t *,
+-					xfs_dqid_t, uint, uint, xfs_dquot_t **);
++extern xfs_dqid_t	xfs_qm_id_for_quotatype(struct xfs_inode *ip,
++					uint type);
++extern int		xfs_qm_dqget(struct xfs_mount *mp, xfs_dqid_t id,
++					uint type, uint flags,
++					struct xfs_dquot **dqpp);
++extern int		xfs_qm_dqget_inode(struct xfs_mount *mp,
++					struct xfs_inode *ip, uint type,
++					uint can_alloc,
++					struct xfs_dquot **dqpp);
+ extern int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
+ 					uint type, struct xfs_dquot **dqpp);
+ extern void		xfs_qm_dqput(xfs_dquot_t *);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index d919b85..385d315 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -291,7 +291,7 @@ xfs_qm_dqattach_one(
+ 	 * exist on disk and we didn't ask it to allocate; ESRCH if quotas got
+ 	 * turned off suddenly.
+ 	 */
+-	error = xfs_qm_dqget(ip->i_mount, ip, id, type, doalloc, &dqp);
++	error = xfs_qm_dqget_inode(ip->i_mount, ip, type, doalloc, &dqp);
+ 	if (error)
+ 		return error;
+ 
+@@ -1074,7 +1074,7 @@ xfs_qm_quotacheck_dqadjust(
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+ 
+-	error = xfs_qm_dqget(mp, ip, id, type, XFS_QMOPT_DQALLOC, &dqp);
++	error = xfs_qm_dqget_inode(mp, ip, type, XFS_QMOPT_DQALLOC, &dqp);
+ 	if (error) {
+ 		/*
+ 		 * Shouldn't be able to turn off quotas here.
+@@ -1693,10 +1693,8 @@ xfs_qm_vop_dqalloc(
+ 			 * holding ilock.
+ 			 */
+ 			xfs_iunlock(ip, lockflags);
+-			error = xfs_qm_dqget(mp, NULL, uid,
+-						 XFS_DQ_USER,
+-						 XFS_QMOPT_DQALLOC,
+-						 &uq);
++			error = xfs_qm_dqget(mp, uid, XFS_DQ_USER,
++					XFS_QMOPT_DQALLOC, &uq);
+ 			if (error) {
+ 				ASSERT(error != -ENOENT);
+ 				return error;
+@@ -1719,10 +1717,8 @@ xfs_qm_vop_dqalloc(
+ 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
+ 		if (ip->i_d.di_gid != gid) {
+ 			xfs_iunlock(ip, lockflags);
+-			error = xfs_qm_dqget(mp, NULL, gid,
+-						 XFS_DQ_GROUP,
+-						 XFS_QMOPT_DQALLOC,
+-						 &gq);
++			error = xfs_qm_dqget(mp, gid, XFS_DQ_GROUP,
++					XFS_QMOPT_DQALLOC, &gq);
+ 			if (error) {
+ 				ASSERT(error != -ENOENT);
+ 				goto error_rele;
+@@ -1738,10 +1734,8 @@ xfs_qm_vop_dqalloc(
+ 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+ 		if (xfs_get_projid(ip) != prid) {
+ 			xfs_iunlock(ip, lockflags);
+-			error = xfs_qm_dqget(mp, NULL, (xfs_dqid_t)prid,
+-						 XFS_DQ_PROJ,
+-						 XFS_QMOPT_DQALLOC,
+-						 &pq);
++			error = xfs_qm_dqget(mp, (xfs_dqid_t)prid, XFS_DQ_PROJ,
++					XFS_QMOPT_DQALLOC, &pq);
+ 			if (error) {
+ 				ASSERT(error != -ENOENT);
+ 				goto error_rele;
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index 2be6d27..531e822 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -72,7 +72,7 @@ xfs_qm_statvfs(
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_dquot_t		*dqp;
+ 
+-	if (!xfs_qm_dqget(mp, NULL, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
++	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
+ 		xfs_fill_statvfs_from_dquot(statp, dqp);
+ 		xfs_qm_dqput(dqp);
+ 	}
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 0234cfc..b9243f5 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -425,7 +425,7 @@ xfs_qm_scall_setqlim(
+ 	 * a reference to the dquot, so it's safe to do this unlock/lock without
+ 	 * it being reclaimed in the mean time.
+ 	 */
+-	error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp);
++	error = xfs_qm_dqget(mp, id, type, XFS_QMOPT_DQALLOC, &dqp);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_unlock;
+@@ -700,7 +700,7 @@ xfs_qm_scall_getquota(
+ 	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
+ 	 * exist, we'll get ENOENT back.
+ 	 */
+-	error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
++	error = xfs_qm_dqget(mp, id, type, 0, &dqp);
+ 	if (error)
+ 		return error;
+ 
 
---D
-
-> Brian
-> 
-> > Therefore, convert all iolock attempts to use trylock; if that fails,
-> > they can use the existing mechanisms to back off and try again.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/common.c |   22 ++++++++++++++++++++++
-> >  fs/xfs/scrub/common.h |    2 ++
-> >  fs/xfs/scrub/parent.c |   16 ++++++++++++++--
-> >  3 files changed, 38 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> > index f5e281a..93f9e7d 100644
-> > --- a/fs/xfs/scrub/common.c
-> > +++ b/fs/xfs/scrub/common.c
-> > @@ -787,3 +787,25 @@ xfs_scrub_buffer_recheck(
-> >  	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> >  	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
-> >  }
-> > +
-> > +/*
-> > + * Try to lock an inode in violation of the usual locking order rules.  For
-> > + * example, trying to get the IOLOCK while in transaction context, or just
-> > + * plain breaking AG-order or inode-order inode locking rules.  Either way,
-> > + * the only way to avoid an ABBA deadlock is to use trylock and back off if
-> > + * we can't.
-> > + */
-> > +int
-> > +xfs_scrub_ilock_inverted(
-> > +	struct xfs_inode	*ip,
-> > +	uint			lock_mode)
-> > +{
-> > +	int			i;
-> > +
-> > +	for (i = 0; i < 20; i++) {
-> > +		if (xfs_ilock_nowait(ip, lock_mode))
-> > +			return 0;
-> > +		delay(1);
-> > +	}
-> > +	return -EDEADLOCK;
-> > +}
-> > diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> > index 8296873..191c369 100644
-> > --- a/fs/xfs/scrub/common.h
-> > +++ b/fs/xfs/scrub/common.h
-> > @@ -151,4 +151,6 @@ static inline bool xfs_scrub_found_corruption(struct xfs_scrub_metadata *sm)
-> >  			       XFS_SCRUB_OFLAG_XCORRUPT);
-> >  }
-> >  
-> > +int xfs_scrub_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
-> > +
-> >  #endif	/* __XFS_SCRUB_COMMON_H__ */
-> > diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-> > index 1fb88c1..19cd54d 100644
-> > --- a/fs/xfs/scrub/parent.c
-> > +++ b/fs/xfs/scrub/parent.c
-> > @@ -211,7 +211,9 @@ xfs_scrub_parent_validate(
-> >  	 */
-> >  	xfs_iunlock(sc->ip, sc->ilock_flags);
-> >  	sc->ilock_flags = 0;
-> > -	xfs_ilock(dp, XFS_IOLOCK_SHARED);
-> > +	error = xfs_scrub_ilock_inverted(dp, XFS_IOLOCK_SHARED);
-> > +	if (error)
-> > +		goto out_rele;
-> >  
-> >  	/* Go looking for our dentry. */
-> >  	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
-> > @@ -220,8 +222,10 @@ xfs_scrub_parent_validate(
-> >  
-> >  	/* Drop the parent lock, relock this inode. */
-> >  	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
-> > +	error = xfs_scrub_ilock_inverted(sc->ip, XFS_IOLOCK_EXCL);
-> > +	if (error)
-> > +		goto out_rele;
-> >  	sc->ilock_flags = XFS_IOLOCK_EXCL;
-> > -	xfs_ilock(sc->ip, sc->ilock_flags);
-> >  
-> >  	/*
-> >  	 * If we're an unlinked directory, the parent /won't/ have a link
-> > @@ -323,5 +327,13 @@ xfs_scrub_parent(
-> >  	if (try_again && tries == 20)
-> >  		xfs_scrub_set_incomplete(sc);
-> >  out:
-> > +	/*
-> > +	 * If we failed to lock the parent inode even after a retry, just mark
-> > +	 * this scrub incomplete and return.
-> > +	 */
-> > +	if (sc->try_harder && error == -EDEADLOCK) {
-> > +		error = 0;
-> > +		xfs_scrub_set_incomplete(sc);
-> > +	}
-> >  	return error;
-> >  }
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
