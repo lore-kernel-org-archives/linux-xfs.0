@@ -1,86 +1,234 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48590 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753340AbeDUXx2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 21 Apr 2018 19:53:28 -0400
-Date: Sun, 22 Apr 2018 01:53:23 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 03/11] fs: add frozen sb state helpers
-Message-ID: <20180421235323.ndj3gx65n7kmv5ta@quack2.suse.cz>
-References: <20171129232356.28296-1-mcgrof@kernel.org>
- <20171129232356.28296-4-mcgrof@kernel.org>
- <20171130171310.GG28180@quack2.suse.cz>
- <20171130190548.GJ729@wotan.suse.de>
- <20171201114724.GC8365@quack2.suse.cz>
- <20171201211327.GQ729@wotan.suse.de>
- <20171221110329.GG31584@quack2.suse.cz>
- <20180418005936.j3fa5rogfm353clf@garbanzo.do-not-panic.com>
- <20180420184932.57as7jup75nx463v@garbanzo.do-not-panic.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:42382 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751556AbeDVPGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:06:23 -0400
+Subject: [PATCH 04/13] xfs: remove unnecessary xfs_qm_dqattach parameter
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 22 Apr 2018 08:06:17 -0700
+Message-ID: <152440957769.29601.7369035661664268323.stgit@magnolia>
+In-Reply-To: <152440954198.29601.14390250048915099607.stgit@magnolia>
+References: <152440954198.29601.14390250048915099607.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180420184932.57as7jup75nx463v@garbanzo.do-not-panic.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, viro@zeniv.linux.org.uk, bart.vanassche@wdc.com, ming.lei@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jikos@kernel.org, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-fsdevel@vger.kernel.org, boris.ostrovsky@oracle.com, jgross@suse.com, todd.e.brandt@linux.intel.com, nborisov@suse.com, martin.petersen@oracle.com, ONeukum@suse.com, oleksandr@natalenko.name, oleg.b.antonyan@gmail.com, yu.chen.surf@gmail.com, dan.j.williams@intel.com, linux-pm@vger.kernel.org, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, jlayton@redhat.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Fri 20-04-18 11:49:32, Luis R. Rodriguez wrote:
-> On Tue, Apr 17, 2018 at 05:59:36PM -0700, Luis R. Rodriguez wrote:
-> > On Thu, Dec 21, 2017 at 12:03:29PM +0100, Jan Kara wrote:
-> > > Hello,
-> > > 
-> > > I think I owe you a reply here... Sorry that it took so long.
-> > 
-> > Took me just as long :)
-> > 
-> > > On Fri 01-12-17 22:13:27, Luis R. Rodriguez wrote:
-> > > > 
-> > > > I'll note that its still not perfectly clear if really the semantics behind
-> > > > freeze_bdev() match what I described above fully. That still needs to be
-> > > > vetted for. For instance, does thaw_bdev() keep a superblock frozen if we
-> > > > an ioctl initiated freeze had occurred before? If so then great. Otherwise
-> > > > I think we'll need to distinguish the ioctl interface. Worst possible case
-> > > > is that bdev semantics and in-kernel semantics differ somehow, then that
-> > > > will really create a holy fucking mess.
-> > > 
-> > > I believe nobody really thought about mixing those two interfaces to fs
-> > > freezing and so the behavior is basically defined by the implementation.
-> > > That is:
-> > > 
-> > > freeze_bdev() on sb frozen by ioctl_fsfreeze() -> EBUSY
-> > > freeze_bdev() on sb frozen by freeze_bdev() -> success
-> > > ioctl_fsfreeze() on sb frozen by freeze_bdev() -> EBUSY
-> > > ioctl_fsfreeze() on sb frozen by ioctl_fsfreeze() -> EBUSY
-> > > 
-> > > thaw_bdev() on sb frozen by ioctl_fsfreeze() -> EINVAL
-> > 
-> > Phew, so this is what we want for the in-kernel freezing so we're good
-> > and *can* combine these then.
-> 
-> I double checked, and I don't see where you get EINVAL for this case.
-> We *do* keep the sb frozen though, which is good, and the worst fear
-> I had was that we did not. However we return 0 if there was already
-> a prior freeze_bdev() or ioctl_fsfreeze() other than the context that
-> started the prior freeze (--bdev->bd_fsfreeze_count > 0).
-> 
-> The -EINVAL is only returned currently if there were no freezers.
-> 
-> int thaw_bdev(struct block_device *bdev, struct super_block *sb)
-> {
-> 	int error = -EINVAL;
-> 
-> 	mutex_lock(&bdev->bd_fsfreeze_mutex);
-> 	if (!bdev->bd_fsfreeze_count)
-> 		goto out;
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-But this is precisely where we'd bail if we freeze sb by ioctl_fsfreeze()
-but try to thaw by thaw_bdev(). ioctl_fsfreeze() does not touch
-bd_fsfreeze_count...
+The flags argument is always zero, get rid of it.
 
-								Honza
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c |    4 ++--
+ fs/xfs/xfs_bmap_util.c   |    6 +++---
+ fs/xfs/xfs_inode.c       |   10 +++++-----
+ fs/xfs/xfs_iomap.c       |    4 ++--
+ fs/xfs/xfs_iops.c        |    2 +-
+ fs/xfs/xfs_qm.c          |    7 +++----
+ fs/xfs/xfs_quota.h       |    4 ++--
+ fs/xfs/xfs_reflink.c     |    2 +-
+ 8 files changed, 19 insertions(+), 20 deletions(-)
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 35a1244..c3d02a6 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -236,7 +236,7 @@ xfs_attr_set(
+ 	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+ 	args.total = xfs_attr_calc_size(&args, &local);
+ 
+-	error = xfs_qm_dqattach(dp, 0);
++	error = xfs_qm_dqattach(dp);
+ 	if (error)
+ 		return error;
+ 
+@@ -427,7 +427,7 @@ xfs_attr_remove(
+ 	 */
+ 	args.op_flags = XFS_DA_OP_OKNOENT;
+ 
+-	error = xfs_qm_dqattach(dp, 0);
++	error = xfs_qm_dqattach(dp);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8cd8c41..65b2cc2 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -848,7 +848,7 @@ xfs_free_eofblocks(
+ 		/*
+ 		 * Attach the dquots to the inode up front.
+ 		 */
+-		error = xfs_qm_dqattach(ip, 0);
++		error = xfs_qm_dqattach(ip);
+ 		if (error)
+ 			return error;
+ 
+@@ -918,7 +918,7 @@ xfs_alloc_file_space(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+@@ -1169,7 +1169,7 @@ xfs_free_file_space(
+ 
+ 	trace_xfs_free_file_space(ip);
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 2b70c8b..1da9863 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1411,11 +1411,11 @@ xfs_link(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	error = xfs_qm_dqattach(sip, 0);
++	error = xfs_qm_dqattach(sip);
+ 	if (error)
+ 		goto std_return;
+ 
+-	error = xfs_qm_dqattach(tdp, 0);
++	error = xfs_qm_dqattach(tdp);
+ 	if (error)
+ 		goto std_return;
+ 
+@@ -1911,7 +1911,7 @@ xfs_inactive(
+ 	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
+ 		truncate = 1;
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return;
+ 
+@@ -2574,11 +2574,11 @@ xfs_remove(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	error = xfs_qm_dqattach(dp, 0);
++	error = xfs_qm_dqattach(dp);
+ 	if (error)
+ 		goto std_return;
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		goto std_return;
+ 
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 046469f..58b04ea 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -224,7 +224,7 @@ xfs_iomap_write_direct(
+ 	 * necessary and move on to transaction setup.
+ 	 */
+ 	xfs_iunlock(ip, lockmode);
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+@@ -692,7 +692,7 @@ xfs_iomap_write_allocate(
+ 	/*
+ 	 * Make sure that the dquots are there.
+ 	 */
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a3ed3c8..5afe3c2 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -855,7 +855,7 @@ xfs_setattr_size(
+ 	/*
+ 	 * Make sure that the dquots are attached to the inode.
+ 	 */
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index ec39ae2..d919b85 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -381,8 +381,7 @@ xfs_qm_dqattach_locked(
+ 
+ int
+ xfs_qm_dqattach(
+-	struct xfs_inode	*ip,
+-	uint			flags)
++	struct xfs_inode	*ip)
+ {
+ 	int			error;
+ 
+@@ -390,7 +389,7 @@ xfs_qm_dqattach(
+ 		return 0;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	error = xfs_qm_dqattach_locked(ip, flags);
++	error = xfs_qm_dqattach_locked(ip, 0);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+ 	return error;
+@@ -1933,7 +1932,7 @@ xfs_qm_vop_rename_dqattach(
+ 		 */
+ 		if (i == 0 || ip != i_tab[i-1]) {
+ 			if (XFS_NOT_DQATTACHED(mp, ip)) {
+-				error = xfs_qm_dqattach(ip, 0);
++				error = xfs_qm_dqattach(ip);
+ 				if (error)
+ 					return error;
+ 			}
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index ce6506a..a4d3922 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -90,7 +90,7 @@ extern struct xfs_dquot *xfs_qm_vop_chown(struct xfs_trans *,
+ extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
+ 		struct xfs_dquot *, struct xfs_dquot *,
+ 		struct xfs_dquot *, uint);
+-extern int xfs_qm_dqattach(struct xfs_inode *, uint);
++extern int xfs_qm_dqattach(struct xfs_inode *);
+ extern int xfs_qm_dqattach_locked(struct xfs_inode *, uint);
+ extern void xfs_qm_dqdetach(struct xfs_inode *);
+ extern void xfs_qm_dqrele(struct xfs_dquot *);
+@@ -132,7 +132,7 @@ static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
+ #define xfs_qm_vop_rename_dqattach(it)					(0)
+ #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
+ #define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl)			(0)
+-#define xfs_qm_dqattach(ip, fl)						(0)
++#define xfs_qm_dqattach(ip)						(0)
+ #define xfs_qm_dqattach_locked(ip, fl)					(0)
+ #define xfs_qm_dqdetach(ip)
+ #define xfs_qm_dqrele(d)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cdbd342..fd8e6af 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1359,7 +1359,7 @@ xfs_reflink_remap_range(
+ 		goto out_unlock;
+ 
+ 	/* Attach dquots to dest inode before changing block map */
+-	ret = xfs_qm_dqattach(dest, 0);
++	ret = xfs_qm_dqattach(dest);
+ 	if (ret)
+ 		goto out_unlock;
+ 
+
