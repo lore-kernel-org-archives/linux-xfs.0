@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44524 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:44594 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751556AbeDVPIL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:08:11 -0400
-Subject: [PATCH 03/10] xfs: avoid ilock games in the quota scrubber
+        with ESMTP id S1753567AbeDVPIS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:08:18 -0400
+Subject: [PATCH 04/10] xfs: quota scrub should use bmapbtd scrubber
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:07:51 -0700
-Message-ID: <152440967110.30048.11062386228440497727.stgit@magnolia>
+Date: Sun, 22 Apr 2018 08:07:57 -0700
+Message-ID: <152440967759.30048.11272145733543544279.stgit@magnolia>
 In-Reply-To: <152440964593.30048.15577210457233332459.stgit@magnolia>
 References: <152440964593.30048.15577210457233332459.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,169 +20,209 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the quota scrubber to take the quotaofflock and grab the quota
-inode in the setup function so that we can treat quota in the same
-"scrub in the context of this inode" (i.e. sc->ip) manner as we treat
-any other inode.  We do have to drop the quota inode's ILOCK_EXCL to use
-dqiterate, but since dquots have their own individual locks the ILOCK
-wasn't helping us anyway.
+Replace the quota scrubber's open-coded data fork scrubber with a
+redirected call to the bmapbtd scrubber.  This strengthens the quota
+scrub to include all the cross-referencing that it does.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/scrub/quota.c |   53 ++++++++++++++++++++++++--------------------------
- fs/xfs/scrub/scrub.c |    4 ++++
- fs/xfs/scrub/scrub.h |    1 +
- 3 files changed, 30 insertions(+), 28 deletions(-)
+ fs/xfs/scrub/common.c |   57 ++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.h |    2 +
+ fs/xfs/scrub/quota.c  |   83 ++++++++++++++++++++++++-------------------------
+ 3 files changed, 99 insertions(+), 43 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 0ba3ab4..8af809f 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -66,12 +66,24 @@ xfs_scrub_setup_quota(
- 	struct xfs_inode		*ip)
- {
- 	uint				dqtype;
-+	int				error;
-+
-+	if (!XFS_IS_QUOTA_RUNNING(sc->mp) || !XFS_IS_QUOTA_ON(sc->mp))
-+		return -ENOENT;
- 
- 	dqtype = xfs_scrub_quota_to_dqtype(sc);
- 	if (dqtype == 0)
- 		return -EINVAL;
-+	sc->has_quotaofflock = true;
-+	mutex_lock(&sc->mp->m_quotainfo->qi_quotaofflock);
- 	if (!xfs_this_quota_on(sc->mp, dqtype))
- 		return -ENOENT;
-+	error = xfs_scrub_setup_fs(sc, ip);
-+	if (error)
-+		return error;
-+	sc->ip = xfs_quota_inode(sc->mp, dqtype);
-+	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
-+	sc->ilock_flags = XFS_ILOCK_EXCL;
- 	return 0;
- }
- 
-@@ -203,7 +215,6 @@ xfs_scrub_quota(
- 	struct xfs_bmbt_irec		irec = { 0 };
- 	struct xfs_scrub_quota_info	sqi;
- 	struct xfs_mount		*mp = sc->mp;
--	struct xfs_inode		*ip;
- 	struct xfs_quotainfo		*qi = mp->m_quotainfo;
- 	xfs_fileoff_t			max_dqid_off;
- 	xfs_fileoff_t			off = 0;
-@@ -211,25 +222,12 @@ xfs_scrub_quota(
- 	int				nimaps;
- 	int				error = 0;
- 
--	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
--		return -ENOENT;
--
--	mutex_lock(&qi->qi_quotaofflock);
- 	dqtype = xfs_scrub_quota_to_dqtype(sc);
--	if (!xfs_this_quota_on(sc->mp, dqtype)) {
--		error = -ENOENT;
--		goto out_unlock_quota;
--	}
--
--	/* Attach to the quota inode and set sc->ip so that reporting works. */
--	ip = xfs_quota_inode(sc->mp, dqtype);
--	sc->ip = ip;
- 
- 	/* Look for problem extents. */
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-+	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
- 		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
--		goto out_unlock_inode;
-+		goto out;
- 	}
- 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
- 	while (1) {
-@@ -238,11 +236,11 @@ xfs_scrub_quota(
- 
- 		off = irec.br_startoff + irec.br_blockcount;
- 		nimaps = 1;
--		error = xfs_bmapi_read(ip, off, -1, &irec, &nimaps,
-+		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
- 				XFS_BMAPI_ENTIRE);
- 		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
- 				&error))
--			goto out_unlock_inode;
-+			goto out;
- 		if (!nimaps)
- 			break;
- 		if (irec.br_startblock == HOLESTARTBLOCK)
-@@ -268,26 +266,25 @@ xfs_scrub_quota(
- 		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
- 			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
- 	}
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
- 
--	/* Check all the quota items. */
-+	/*
-+	 * Check all the quota items.  Now that we've checked the quota inode
-+	 * data fork we have to drop ILOCK_EXCL to use the regular dquot
-+	 * functions.
-+	 */
-+	xfs_iunlock(sc->ip, sc->ilock_flags);
-+	sc->ilock_flags = 0;
- 	sqi.sc = sc;
- 	sqi.last_id = 0;
- 	error = xfs_qm_dqiterate(mp, dqtype, xfs_scrub_quota_item, &sqi);
-+	sc->ilock_flags = XFS_ILOCK_EXCL;
-+	xfs_ilock(sc->ip, sc->ilock_flags);
- 	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK,
- 			sqi.last_id * qi->qi_dqperchunk, &error))
- 		goto out;
- 
- out:
--	/* We set sc->ip earlier, so make sure we clear it now. */
--	sc->ip = NULL;
--out_unlock_quota:
--	mutex_unlock(&qi->qi_quotaofflock);
- 	return error;
--
--out_unlock_inode:
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	goto out;
- }
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index d9ecbb6..ad6eda4 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -42,6 +42,8 @@
- #include "xfs_refcount_btree.h"
- #include "xfs_rmap.h"
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index e9ca5f0..335c7a3 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -44,6 +44,8 @@
  #include "xfs_rmap_btree.h"
-+#include "xfs_quota.h"
-+#include "xfs_qm.h"
+ #include "xfs_log.h"
+ #include "xfs_trans_priv.h"
++#include "xfs_attr.h"
++#include "xfs_reflink.h"
  #include "scrub/xfs_scrub.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
-@@ -166,6 +168,8 @@ xfs_scrub_teardown(
- 			iput(VFS_I(sc->ip));
- 		sc->ip = NULL;
- 	}
-+	if (sc->has_quotaofflock)
-+		mutex_unlock(&sc->mp->m_quotainfo->qi_quotaofflock);
- 	if (sc->buf) {
- 		kmem_free(sc->buf);
- 		sc->buf = NULL;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 0d92af8..5d79731 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -73,6 +73,7 @@ struct xfs_scrub_context {
- 	void				*buf;
- 	uint				ilock_flags;
- 	bool				try_harder;
-+	bool				has_quotaofflock;
+@@ -777,3 +779,58 @@ xfs_scrub_buffer_recheck(
+ 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
+ }
++
++/*
++ * Scrub the attr/data forks of a metadata inode.  The metadata inode must be
++ * pointed to by sc->ip and the ILOCK must be held.
++ */
++int
++xfs_scrub_metadata_inode_forks(
++	struct xfs_scrub_context	*sc)
++{
++	__u32				smtype;
++	bool				shared;
++	int				error;
++
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return 0;
++
++	/* Metadata inodes don't live on the rt device. */
++	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
++		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
++		return 0;
++	}
++
++	/* They should never participate in reflink. */
++	if (xfs_is_reflink_inode(sc->ip)) {
++		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
++		return 0;
++	}
++
++	/* They also should never have extended attributes. */
++	if (xfs_inode_hasattr(sc->ip)) {
++		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
++		return 0;
++	}
++
++	/* Invoke the data fork scrubber. */
++	smtype = sc->sm->sm_type;
++	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
++	error = xfs_scrub_bmap_data(sc);
++	sc->sm->sm_type = smtype;
++	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
++		return error;
++
++	/* Look for incorrect shared blocks. */
++	if (xfs_sb_version_hasreflink(&sc->mp->m_sb)) {
++		error = xfs_reflink_inode_has_shared_extents(sc->tp, sc->ip,
++				&shared);
++		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
++				&error))
++			return error;
++		if (shared)
++			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
++	}
++
++	return error;
++}
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 80fa5a6..ad736c4 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -167,4 +167,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
+ 			       XFS_SCRUB_OFLAG_XCORRUPT);
+ }
  
- 	/* State tracking for single-AG operations. */
- 	struct xfs_scrub_ag		sa;
++int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
++
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 8af809f..13837ab 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -207,65 +207,62 @@ xfs_scrub_quota_item(
+ 	return 0;
+ }
+ 
+-/* Scrub all of a quota type's items. */
+-int
+-xfs_scrub_quota(
++/* Check the quota's data fork. */
++STATIC int
++xfs_scrub_quota_data_fork(
+ 	struct xfs_scrub_context	*sc)
+ {
+ 	struct xfs_bmbt_irec		irec = { 0 };
+-	struct xfs_scrub_quota_info	sqi;
+-	struct xfs_mount		*mp = sc->mp;
+-	struct xfs_quotainfo		*qi = mp->m_quotainfo;
++	struct xfs_iext_cursor		icur;
++	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
++	struct xfs_ifork		*ifp;
+ 	xfs_fileoff_t			max_dqid_off;
+-	xfs_fileoff_t			off = 0;
+-	uint				dqtype;
+-	int				nimaps;
+ 	int				error = 0;
+ 
+-	dqtype = xfs_scrub_quota_to_dqtype(sc);
++	/* Invoke the fork scrubber. */
++	error = xfs_scrub_metadata_inode_forks(sc);
++	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
++		return error;
+ 
+-	/* Look for problem extents. */
+-	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
+-		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+-		goto out;
+-	}
++	/* Check for data fork problems that apply only to quota files. */
+ 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+-	while (1) {
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
++	for_each_xfs_iext(ifp, &icur, &irec) {
+ 		if (xfs_scrub_should_terminate(sc, &error))
+ 			break;
+-
+-		off = irec.br_startoff + irec.br_blockcount;
+-		nimaps = 1;
+-		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
+-				XFS_BMAPI_ENTIRE);
+-		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
+-				&error))
+-			goto out;
+-		if (!nimaps)
+-			break;
+-		if (irec.br_startblock == HOLESTARTBLOCK)
+-			continue;
+-
+-		/* Check the extent record doesn't point to crap. */
+-		if (irec.br_startblock + irec.br_blockcount <=
+-		    irec.br_startblock)
+-			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+-					irec.br_startoff);
+-		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
+-		    !xfs_verify_fsbno(mp, irec.br_startblock +
+-					irec.br_blockcount - 1))
+-			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+-					irec.br_startoff);
+-
+ 		/*
+-		 * Unwritten extents or blocks mapped above the highest
++		 * delalloc extents or blocks mapped above the highest
+ 		 * quota id shouldn't happen.
+ 		 */
+ 		if (isnullstartblock(irec.br_startblock) ||
+ 		    irec.br_startoff > max_dqid_off ||
+-		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
+-			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
++		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
++			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
++					irec.br_startoff);
++			break;
++		}
+ 	}
++
++	return error;
++}
++
++/* Scrub all of a quota type's items. */
++int
++xfs_scrub_quota(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_scrub_quota_info	sqi;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_quotainfo		*qi = mp->m_quotainfo;
++	uint				dqtype;
++	int				error = 0;
++
++	dqtype = xfs_scrub_quota_to_dqtype(sc);
++
++	/* Look for problem extents. */
++	error = xfs_scrub_quota_data_fork(sc);
++	if (error)
++		goto out;
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		goto out;
+ 
 
