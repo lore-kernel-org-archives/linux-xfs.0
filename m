@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43704 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753595AbeDVPIs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:08:48 -0400
-Subject: [PATCH 09/10] xfs: refactor scrub transaction allocation function
+Received: from aserp2120.oracle.com ([141.146.126.78]:44908 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753595AbeDVPIz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:08:55 -0400
+Subject: [PATCH 10/10] xfs: avoid ABBA deadlock when scrubbing parent
+ pointers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:08:29 -0700
-Message-ID: <152440970952.30048.5491929622652776209.stgit@magnolia>
+Date: Sun, 22 Apr 2018 08:08:35 -0700
+Message-ID: <152440971583.30048.12706085815917294148.stgit@magnolia>
 In-Reply-To: <152440964593.30048.15577210457233332459.stgit@magnolia>
 References: <152440964593.30048.15577210457233332459.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,140 +21,111 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since the transaction allocation helper is about to become more complex,
-move it to common.c and remove the redundant parameters.
+In normal operation, the XFS convention is to take an inode's iolock
+and then allocate a transaction.  However, when scrubbing parent inodes
+this is inverted -- we allocated the transaction to do the scrub, and
+now we're trying to grab the parent's iolock.  This can lead to ABBA
+deadlocks: some thread grabbed the parent's iolock and is waiting for
+space for a transaction while our parent scrubber is sitting on a
+transaction trying to get the parent's iolock.
+
+Therefore, convert all iolock attempts to use trylock; if that fails,
+they can use the existing mechanisms to back off and try again.
+
+The ABBA deadlock didn't happen with a non-repair scrub because the
+transactions don't reserve any space, but repair scrubs require
+reservation in order to update metadata.  However, any other concurrent
+metadata update (e.g. directory create in the parent) could also induce
+this deadlock with the parent scrubber.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/scrub/bmap.c   |    3 +--
- fs/xfs/scrub/common.c |   16 +++++++++++++---
- fs/xfs/scrub/common.h |   14 +-------------
- fs/xfs/scrub/inode.c  |    5 ++---
- 4 files changed, 17 insertions(+), 21 deletions(-)
+ fs/xfs/scrub/common.c |   22 ++++++++++++++++++++++
+ fs/xfs/scrub/common.h |    1 +
+ fs/xfs/scrub/parent.c |   16 ++++++++++++++--
+ 3 files changed, 37 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index c28ff2e..42a115e 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -51,7 +51,6 @@ xfs_scrub_setup_inode_bmap(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	struct xfs_mount		*mp = sc->mp;
- 	int				error;
- 
- 	error = xfs_scrub_get_inode(sc, ip);
-@@ -75,7 +74,7 @@ xfs_scrub_setup_inode_bmap(
- 	}
- 
- 	/* Got the inode, lock it and we're ready to go. */
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(sc);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
 diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 335c7a3..62b33c9 100644
+index 62b33c9..518bff2 100644
 --- a/fs/xfs/scrub/common.c
 +++ b/fs/xfs/scrub/common.c
-@@ -570,13 +570,24 @@ xfs_scrub_ag_init(
+@@ -844,3 +844,25 @@ xfs_scrub_metadata_inode_forks(
  
- /* Per-scrubber setup functions */
- 
+ 	return error;
+ }
++
 +/*
-+ * Grab an empty transaction so that we can re-grab locked buffers if
-+ * one of our btrees turns out to be cyclic.
++ * Try to lock an inode in violation of the usual locking order rules.  For
++ * example, trying to get the IOLOCK while in transaction context, or just
++ * plain breaking AG-order or inode-order inode locking rules.  Either way,
++ * the only way to avoid an ABBA deadlock is to use trylock and back off if
++ * we can't.
 + */
 +int
-+xfs_scrub_trans_alloc(
-+	struct xfs_scrub_context	*sc)
++xfs_scrub_ilock_inverted(
++	struct xfs_inode	*ip,
++	uint			lock_mode)
 +{
-+	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
-+}
++	int			i;
 +
- /* Set us up with a transaction and an empty context. */
- int
- xfs_scrub_setup_fs(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_trans_alloc(sc->sm, sc->mp, &sc->tp);
-+	return xfs_scrub_trans_alloc(sc);
- }
- 
- /* Set us up with AG headers and btree cursors. */
-@@ -697,7 +708,6 @@ xfs_scrub_setup_inode_contents(
- 	struct xfs_inode		*ip,
- 	unsigned int			resblks)
- {
--	struct xfs_mount		*mp = sc->mp;
- 	int				error;
- 
- 	error = xfs_scrub_get_inode(sc, ip);
-@@ -707,7 +717,7 @@ xfs_scrub_setup_inode_contents(
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(sc);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
++	for (i = 0; i < 20; i++) {
++		if (xfs_ilock_nowait(ip, lock_mode))
++			return 0;
++		delay(1);
++	}
++	return -EDEADLOCK;
++}
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index ad736c4..5d78bb9 100644
+index 5d78bb9..119d9b6 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -38,19 +38,7 @@ xfs_scrub_should_terminate(
- 	return false;
+@@ -156,5 +156,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
  }
  
--/*
-- * Grab an empty transaction so that we can re-grab locked buffers if
-- * one of our btrees turns out to be cyclic.
-- */
--static inline int
--xfs_scrub_trans_alloc(
--	struct xfs_scrub_metadata	*sm,
--	struct xfs_mount		*mp,
--	struct xfs_trans		**tpp)
--{
--	return xfs_trans_alloc_empty(mp, tpp);
--}
--
-+int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc);
- bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- 		xfs_agblock_t bno, int *error);
- bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 8532fc7..550c0cf 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -55,7 +55,6 @@ xfs_scrub_setup_inode(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	struct xfs_mount		*mp = sc->mp;
- 	int				error;
+ int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
++int xfs_scrub_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
+ 
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index 95fdd0d..85241e6 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -214,7 +214,9 @@ xfs_scrub_parent_validate(
+ 	 */
+ 	xfs_iunlock(sc->ip, sc->ilock_flags);
+ 	sc->ilock_flags = 0;
+-	xfs_ilock(dp, XFS_IOLOCK_SHARED);
++	error = xfs_scrub_ilock_inverted(dp, XFS_IOLOCK_SHARED);
++	if (error)
++		goto out_rele;
+ 
+ 	/* Go looking for our dentry. */
+ 	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
+@@ -223,8 +225,10 @@ xfs_scrub_parent_validate(
+ 
+ 	/* Drop the parent lock, relock this inode. */
+ 	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
++	error = xfs_scrub_ilock_inverted(sc->ip, XFS_IOLOCK_EXCL);
++	if (error)
++		goto out_rele;
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL;
+-	xfs_ilock(sc->ip, sc->ilock_flags);
  
  	/*
-@@ -68,7 +67,7 @@ xfs_scrub_setup_inode(
- 		break;
- 	case -EFSCORRUPTED:
- 	case -EFSBADCRC:
--		return xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+		return xfs_scrub_trans_alloc(sc);
- 	default:
- 		return error;
- 	}
-@@ -76,7 +75,7 @@ xfs_scrub_setup_inode(
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
-+	error = xfs_scrub_trans_alloc(sc);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+ 	 * If we're an unlinked directory, the parent /won't/ have a link
+@@ -326,5 +330,13 @@ xfs_scrub_parent(
+ 	if (try_again && tries == 20)
+ 		xfs_scrub_set_incomplete(sc);
+ out:
++	/*
++	 * If we failed to lock the parent inode even after a retry, just mark
++	 * this scrub incomplete and return.
++	 */
++	if (sc->try_harder && error == -EDEADLOCK) {
++		error = 0;
++		xfs_scrub_set_incomplete(sc);
++	}
+ 	return error;
+ }
 
