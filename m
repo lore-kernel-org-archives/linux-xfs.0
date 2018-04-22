@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44734 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755856AbeDVPIf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:08:35 -0400
-Subject: [PATCH 07/10] xfs: clean up scrub usage of KM_NOFS
+Received: from aserp2130.oracle.com ([141.146.126.79]:38988 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756048AbeDVPIm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:08:42 -0400
+Subject: [PATCH 08/10] xfs: btree scrub should check minrecs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 22 Apr 2018 08:08:17 -0700
-Message-ID: <152440969717.30048.17979100596654108736.stgit@magnolia>
+Date: Sun, 22 Apr 2018 08:08:23 -0700
+Message-ID: <152440970335.30048.3140499875347648459.stgit@magnolia>
 In-Reply-To: <152440964593.30048.15577210457233332459.stgit@magnolia>
 References: <152440964593.30048.15577210457233332459.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,58 +20,74 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-All scrub code runs in transaction context, which means that memory
-allocations are automatically run in PF_MEMALLOC_NOFS context.  It's
-therefore unnecessary to pass in KM_NOFS to allocation routines, so
-clean them all out.
+Strengthen the btree block header checks to detect the number of records
+being less than the btree type's minimum record count.  Certain blocks
+are allowed to violate this constraint -- specifically any btree block
+at the top of the tree can have fewer than minrecs records.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/scrub/agheader.c |    3 ++-
- fs/xfs/scrub/btree.c    |    2 +-
- fs/xfs/scrub/refcount.c |    2 +-
- 3 files changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/scrub/btree.c |   40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index cd24ac56..831acc0 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -795,7 +795,8 @@ xfs_scrub_agfl(
- 	}
- 	memset(&sai, 0, sizeof(sai));
- 	sai.sz_entries = agflcount;
--	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount, KM_NOFS);
-+	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount,
-+			KM_MAYFAIL);
- 	if (!sai.entries) {
- 		error = -ENOMEM;
- 		goto out;
 diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 5421816..ea972da 100644
+index ea972da..2d29dce 100644
 --- a/fs/xfs/scrub/btree.c
 +++ b/fs/xfs/scrub/btree.c
-@@ -442,7 +442,7 @@ xfs_scrub_btree_check_owner(
- 	 */
- 	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_RMAP) {
- 		co = kmem_alloc(sizeof(struct check_owner),
--				KM_MAYFAIL | KM_NOFS);
-+				KM_MAYFAIL);
- 		if (!co)
- 			return -ENOMEM;
- 		co->level = level;
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 913b0a1..324a5f1 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -150,7 +150,7 @@ xfs_scrub_refcountbt_rmap_check(
- 		 * so we don't need insertion sort here.
- 		 */
- 		frag = kmem_alloc(sizeof(struct xfs_scrub_refcnt_frag),
--				KM_MAYFAIL | KM_NOFS);
-+				KM_MAYFAIL);
- 		if (!frag)
- 			return -ENOMEM;
- 		memcpy(&frag->rm, rec, sizeof(frag->rm));
+@@ -455,6 +455,44 @@ xfs_scrub_btree_check_owner(
+ }
+ 
+ /*
++ * Check that this btree block has at least minrecs records or is one of the
++ * special blocks that don't require that.
++ */
++STATIC void
++xfs_scrub_btree_check_minrecs(
++	struct xfs_scrub_btree	*bs,
++	int			level,
++	struct xfs_btree_block	*block)
++{
++	unsigned int		numrecs;
++	int			ok_level;
++
++	numrecs = be16_to_cpu(block->bb_numrecs);
++
++	/* More records than minrecs means the block is ok. */
++	if (numrecs >= bs->cur->bc_ops->get_minrecs(bs->cur, level))
++		return;
++
++	/*
++	 * Certain btree blocks /can/ have fewer than minrecs records.  Any
++	 * level greater than or equal to the level of the highest dedicated
++	 * btree block are allowed to violate this constraint.
++	 *
++	 * For a btree rooted in a block, the btree root can have fewer than
++	 * minrecs records.  If the btree is rooted in an inode and does not
++	 * store records in the root, the direct children of the root and the
++	 * root itself can have fewer than minrecs records.
++	 */
++	ok_level = bs->cur->bc_nlevels - 1;
++	if (bs->cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
++		ok_level--;
++	if (level >= ok_level)
++		return;
++
++	xfs_scrub_btree_set_corrupt(bs->sc, bs->cur, level);
++}
++
++/*
+  * Grab and scrub a btree block given a btree pointer.  Returns block
+  * and buffer pointers (if applicable) if they're ok to use.
+  */
+@@ -491,6 +529,8 @@ xfs_scrub_btree_get_block(
+ 	if (*pbp)
+ 		xfs_scrub_buffer_recheck(bs->sc, *pbp);
+ 
++	xfs_scrub_btree_check_minrecs(bs, level, *pblock);
++
+ 	/*
+ 	 * Check the block's owner; this function absorbs error codes
+ 	 * for us.
 
