@@ -1,66 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44260 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753046AbeDYNCQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Apr 2018 09:02:16 -0400
-Date: Wed, 25 Apr 2018 15:02:10 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/4] iomap: Use FUA for pure data O_DSYNC DIO writes
-Message-ID: <20180425130210.i6drajub4yrbmubf@quack2.suse.cz>
-References: <20180418040828.18165-1-david@fromorbit.com>
- <20180418040828.18165-5-david@fromorbit.com>
- <20180421125405.hyx3bbkohdgvducq@quack2.suse.cz>
- <20180424173444.GA25233@infradead.org>
- <2fb29b95-a39d-3ee7-249b-86614a8dcbb4@applied-asynchrony.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:42218 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754797AbeDVPF6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 11:05:58 -0400
+Subject: [PATCH 00/13] xfs-4.18: quota refactor
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 22 Apr 2018 08:05:42 -0700
+Message-ID: <152440954198.29601.14390250048915099607.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2fb29b95-a39d-3ee7-249b-86614a8dcbb4@applied-asynchrony.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Wed 25-04-18 00:07:07, Holger Hoffstätte wrote:
-> On 04/24/18 19:34, Christoph Hellwig wrote:
-> > On Sat, Apr 21, 2018 at 02:54:05PM +0200, Jan Kara wrote:
-> > > > -		if (iocb->ki_flags & IOCB_DSYNC)
-> > > > +		if (iocb->ki_flags & IOCB_DSYNC) {
-> > > >   			dio->flags |= IOMAP_DIO_NEED_SYNC;
-> > > > +			/*
-> > > > +			 * We optimistically try using FUA for this IO.  Any
-> > > > +			 * non-FUA write that occurs will clear this flag, hence
-> > > > +			 * we know before completion whether a cache flush is
-> > > > +			 * necessary.
-> > > > +			 */
-> > > > +			dio->flags |= IOMAP_DIO_WRITE_FUA;
-> > > > +		}
-> > > 
-> > > So I don't think this is quite correct. IOCB_DSYNC gets set also for O_SYNC
-> > > writes (in that case we also set IOCB_SYNC). And for those we cannot use
-> > > the FUA optimization AFAICT (definitely IOMAP_F_DIRTY isn't a safe
-> > > indicator of a need of full fsync for O_SYNC). Other than that the patch
-> > > looks good to me.
-> > 
-> > Oops, good catch. I think the above if should just be
-> > 
-> > 		if (iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC) == IOCB_DSYNC)) {
-> > 
-> > and we are fine.
-> 
-> The above line just gives parenthesis salad errors, so why not compromise
-> on:
-> 
-> 	if ((iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC)) == IOCB_DSYNC) {
-> 
-> Unless my bit twiddling has completely left me I think this is what was
-> intended, and it actually compiles too.
+Hi all,
 
-Yup, I agree this is what needs to happen.
+Here's a series to refactor and clean out the incohesive mess that
+xfs_qm_dqget has become.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I've distinguished three contexts in which dqget can be called, and
+converted them into separate externally visible interfaces --
+_qm_dqget_next, which returns the first initialized dquot with an id at
+least as high as the id passed in; _qm_dqget_inode, which returns the
+dquot for a given (inode, type); and so _qm_dqget now only returns the
+dquot for a given (id, type).  I removed unused parameters from the
+dqattach functions, renamed _qm_dqiterate (since it now only knows how
+to zap dquot counters during quotacheck), and added a real function to
+iterate all dquots of a given type.
+
+This means that all _dqget variants no longer take QMOPT flags, and
+QMOPT_NEXT is gone.  XFS_QMOPT_DQALLOC is now XFS_DQGET_DQALLOC and can
+only be specified for functions where it makes sense.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.17-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to eat your data.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
