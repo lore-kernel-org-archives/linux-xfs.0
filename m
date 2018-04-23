@@ -1,54 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34890 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751053AbeDVNxY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Apr 2018 09:53:24 -0400
-Date: Sun, 22 Apr 2018 06:53:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: cap the length of deduplication requests
-Message-ID: <20180422135305.GB26268@magnolia>
-References: <20180417051918.GD5203@magnolia>
- <20180418025755.GN24738@magnolia>
- <CAOQ4uxguonNyKB=M7mhNouOhbhar3voLjneeSZDY3xooePPnjg@mail.gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:54941 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932076AbeDWRcS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Apr 2018 13:32:18 -0400
+Date: Mon, 23 Apr 2018 19:33:41 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 10/13] xfs: replace XFS_QMOPT_DQALLOC with
+        XFS_DQGET_{ALLOC, EXISTS}
+Message-ID: <20180423173341.GJ834@lst.de>
+References: <152440954198.29601.14390250048915099607.stgit@magnolia> <152440962542.29601.4228199041127085137.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxguonNyKB=M7mhNouOhbhar3voLjneeSZDY3xooePPnjg@mail.gmail.com>
+In-Reply-To: <152440962542.29601.4228199041127085137.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Sun, Apr 22, 2018 at 05:57:32AM +0300, Amir Goldstein wrote:
-> On Wed, Apr 18, 2018 at 5:57 AM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Since deduplication potentially has to read in all the pages in both
-> > files in order to compare the contents, cap the deduplication request
-> > length at MAX_RW_COUNT/2 (roughly 1GB) so that we have /some/ upper bound
-> > on the request length and can't just lock up the kernel forever.  Found
-> > by running generic/304 after commit 1ddae54555b62a ("common/rc: add
-> > missing 'local' keywords").
-> >
+On Sun, Apr 22, 2018 at 08:07:05AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> With this patch generic/304 doesn't soft lock the kernel, but it doesn't
-> seem 'quick' at all. I stopped waiting after 5 minutes. Is that expected?
-> If so, best get the test out of the quick group.
+> DQALLOC is only ever used with xfs_qm_dqget*, and the only flag that the
+> _dqget family of functions cares about is DQALLOC.  Therefore, change
+> the name to make it clear that it's only a dqget flag.  Since these are
+> modes and no longer bit flags, define a XFS_DQGET_EXISTS flag and
+> convert all the callers.
 
-No, that is incorrect behavior; the test is buggy.
-
-> Can you shed some light on how the "missing 'local' keywords" change
-> exposed this behavior?
-
-See the patch I sent to the fstests lists to fix generic/304.
-
---D
-
-> Thanks,
-> Amir.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm almost tempted to just have a 'bool alloc' argument instead.
