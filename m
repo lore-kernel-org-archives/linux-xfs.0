@@ -1,133 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:54712 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750779AbeDXXnw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Apr 2018 19:43:52 -0400
-Subject: [PATCH v9 9/9] xfs, dax: introduce xfs_break_dax_layouts()
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 24 Apr 2018 16:33:50 -0700
-Message-ID: <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from icebox.esperi.org.uk ([81.187.191.129]:54744 "EHLO
+        mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932454AbeDWVx5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Apr 2018 17:53:57 -0400
+From: Nix <nix@esperi.org.uk>
+Subject: Re: bupsplit.c copyright and patching
+References: <6179db6e-786d-40a2-936d-9fb4dfa2529f@googlegroups.com>
+        <87k1uak2xb.fsf@trouble.defaultvalue.org>
+        <CAHqTa-1eKSZq6Vph+th5YH-b43NAvF+BWCDoJqPJQGa3=Oze-w@mail.gmail.com>
+        <874llde5yn.fsf@trouble.defaultvalue.org>
+        <CAHqTa-1ghU6+Y0Y2pBOjbS=7CWKMytPvj-c1Z0aE3=PqpPi1OA@mail.gmail.com>
+        <87k1u0ca2d.fsf@trouble.defaultvalue.org>
+        <CAHqTa-0B-iZfjhX4pHMnb0d-XRhY_wCywsjOOnOgSRF1iFKN4Q@mail.gmail.com>
+        <871sfsefs7.fsf@esperi.org.uk>
+        <CAHqTa-25QqzDb+u9_4zXuoMGU5uF9nv_pmioLE+xJ+0pHbiYUg@mail.gmail.com>
+        <87k1szdni5.fsf@esperi.org.uk>
+        <CAHqTa-28D05VafHNeS0f16qHQ9A6g=Vb8u=YEODquniwfEAygA@mail.gmail.com>
+        <871sf5ddi7.fsf@esperi.org.uk>
+        <CAHqTa-3KHrC67r9tZs5kFNF7bSh5Dt_AYHnAEhHziqvAijD_wA@mail.gmail.com>
+        <87lgddbshd.fsf@esperi.org.uk>
+        <CAHqTa-1R6GDGvncE92PXmZC3ew5HZPZPqe-qWiBEREqjXygCZA@mail.gmail.com>
+Date: Mon, 23 Apr 2018 22:53:51 +0100
+In-Reply-To: <CAHqTa-1R6GDGvncE92PXmZC3ew5HZPZPqe-qWiBEREqjXygCZA@mail.gmail.com>
+        (Avery Pennarun's message of "Mon, 23 Apr 2018 16:22:03 -0400")
+Message-ID: <8736zlbndc.fsf@esperi.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm@lists.01.org
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.orgjack@suse.czhch@lst.de
+To: Avery Pennarun <apenwarr@gmail.com>
+Cc: Rob Browning <rlb@defaultvalue.org>, Robert Evans <evansr@google.com>, bup-list <bup-list@googlegroups.com>, linux-xfs@vger.kernel.org
 
-xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
-for busy / pinned dax pages and waits for those pages to go idle before
-any potential extent unmap operation.
+On 23 Apr 2018, Avery Pennarun stated:
+> On Mon, Apr 23, 2018 at 4:03 PM, Nix <nix@esperi.org.uk> wrote:
+>> On 23 Apr 2018, Avery Pennarun stated:
+>> Yes, though idle versus non-idle can be used by other components too: it
+>> can tell bcache not to cache low-priority reads, for instance (pretty
+>> crucial if you've just done an index deletion, or the next bup run would
+>> destroy your entire bcache!)
+>
+> Hmm, I don't know about that.  It's hard to completely avoid caching
+> things at all, because the usual way of things is to load stuff into
+> the cache, then feed it back to userspace sometime shortly afterward.
+> Not doing so can make things much worse (eg. if someone tries to
+> stat() the same file twice in a row or something).  bup's way of doing
+> fadvise() when it's done with a file seems to work pretty well in my
+> experience, explicitly not churning the kernel cache even when doing a
+> full backup from scratch.
 
-dax_layout_busy_page() handles synchronizing against new page-busy
-events (get_user_pages). It invalidates all mappings to trigger the
-get_user_pages slow path which will eventually block on the xfs inode
-lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
-busy page it returns it for xfs to wait for the page-idle event that
-will fire when the page reference count reaches 1 (recall ZONE_DEVICE
-pages are idle at count 1, see generic_dax_pagefree()).
+Bear in mind that the 'cache' I mentioned above is a bcache cache, i.e.
+*writing the data to SSD*. :) It'll still get read into the page cache!
 
-While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
-deadlock the process that might be trying to elevate the page count of
-more pages before arranging for any of them to go idle. I.e. the typical
-case of submitting I/O is that iov_iter_get_pages() elevates the
-reference count of all pages in the I/O before starting I/O on the first
-page. The process of elevating the reference count of all pages involved
-in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
+>>> That's really a shame: bup does a great job (basically zero
+>>> performance impact) when run at ionice 'idle" priority, especially
+>>> since it uses fadvise() to tell the kernel when it's done with files,
+>>> so it doesn't get other people's stuff evicted from page cache.
+>>
+>> Yeah. Mind you, I don't actually notice its performance impact here,
+>> with the deadline scheduler, but part of that is bcache and the rest is
+>> 128GiB RAM. We can't require users to have something like *that*. :P
+>> (heck most of my systems are much smaller.)
+>
+> Inherently, doing a system backup will need to cause a huge number of
+> disk seeks.
 
-Although XFS_MMAPLOCK_EXCL is dropped while waiting, XFS_IOLOCK_EXCL is
-held while sleeping. We need this to prevent starvation of the truncate
-path as continuous submission of direct-I/O could starve the truncate
-path indefinitely if the lock is dropped.
+This is actually something where having a few hundred GiB of bcache
+helps a great deal. A great deal of seeky metadata gets cached during
+normal usage, and then bup will use it, even if it's not allowed to
+populate it more.
 
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reported-by: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- fs/xfs/xfs_file.c |   59 +++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 48 insertions(+), 11 deletions(-)
+>             If you are checking a couple of realtime streams to make
+> sure they don't miss any deadlines, then you might not notice any
+> impact, but you ought to notice a reduction in total available
+> throughput while a big backup task is running (unless it's running
+> using idle priority).
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 1a5176b21803..4e98d0dcc035 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -718,6 +718,37 @@ xfs_file_write_iter(
- 	return ret;
- }
- 
-+static void
-+xfs_wait_dax_page(
-+	struct inode		*inode,
-+	bool			*did_unlock)
-+{
-+	struct xfs_inode        *ip = XFS_I(inode);
-+
-+	*did_unlock = true;
-+	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-+	schedule();
-+	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-+}
-+
-+static int
-+xfs_break_dax_layouts(
-+	struct inode		*inode,
-+	uint			iolock,
-+	bool			*did_unlock)
-+{
-+	struct page		*page;
-+
-+	*did_unlock = false;
-+	page = dax_layout_busy_page(inode->i_mapping);
-+	if (!page)
-+		return 0;
-+
-+	return ___wait_var_event(&page->_refcount,
-+			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
-+			0, 0, xfs_wait_dax_page(inode, did_unlock));
-+}
-+
- int
- xfs_break_layouts(
- 	struct inode		*inode,
-@@ -729,17 +760,23 @@ xfs_break_layouts(
- 
- 	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
- 
--	switch (reason) {
--	case BREAK_UNMAP:
--		ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
--		/* fall through */
--	case BREAK_WRITE:
--		error = xfs_break_leased_layouts(inode, iolock, &retry);
--		break;
--	default:
--		WARN_ON_ONCE(1);
--		return -EINVAL;
--	}
-+	do {
-+		switch (reason) {
-+		case BREAK_UNMAP:
-+			ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
-+
-+			error = xfs_break_dax_layouts(inode, *iolock, &retry);
-+			/* fall through */
-+		case BREAK_WRITE:
-+			if (error || retry)
-+				break;
-+			error = xfs_break_leased_layouts(inode, iolock, &retry);
-+			break;
-+		default:
-+			WARN_ON_ONCE(1);
-+			return -EINVAL;
-+		}
-+	} while (error == 0 && retry);
- 
- 	return error;
- }
+Of course it is. Why would you want to run a backup task at higher
+priority than that? :)
 
+> Incidentally, I have a tool that we used on a DVR product to ensure we
+> could support multiple realtime streams under heavy load (ie.
+> something like 12 readers + 12 writers on a single 7200 RPM disk).
+
+This is also what xfs's realtime stuff was meant for, back in the day.
+
+-- 
+NULL && (void)
