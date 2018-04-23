@@ -1,188 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35844 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:52258 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750739AbeDXPcu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Apr 2018 11:32:50 -0400
-Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-References: <20180301014144.28892-1-david@fromorbit.com>
- <CAA9_cmebHisbzU9CHVpq77UrtCTev_yT=3_SWhUX5oZNOJZwcw@mail.gmail.com>
- <CY4PR21MB074130B753A5BF81332A5171B8D20@CY4PR21MB0741.namprd21.prod.outlook.com>
- <20180313051037.GC18129@dastard>
- <BN6PR21MB074023CEF5DE1B70D0AA2363B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180313161242.GA11168@lst.de>
- <BN6PR21MB0740E78F2E7945B563BC71A8B8D20@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180319160650.mavedzwienzgwgqi@quack2.suse.cz>
- <BN6PR21MB074023968CDB8780FE9443A2B8D40@BN6PR21MB0740.namprd21.prod.outlook.com>
- <20180322143559.pmwwwz4gic4wkq7r@quack2.suse.cz>
- <BN6PR21MB0740C697371D948B83E6D23FB8A90@BN6PR21MB0740.namprd21.prod.outlook.com>
- <BN6PR21MB0740003BBFCD4B6854A695D5B8880@BN6PR21MB0740.namprd21.prod.outlook.com>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <c4e22caa-bc53-8122-493f-8bc1d1fb8080@suse.com>
-Date: Tue, 24 Apr 2018 18:32:45 +0300
+        id S1755056AbeDWNyj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Apr 2018 09:54:39 -0400
+Date: Mon, 23 Apr 2018 09:54:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 04/13] xfs: remove unnecessary xfs_qm_dqattach parameter
+Message-ID: <20180423135434.GD43600@bfoster.bfoster>
+References: <152440954198.29601.14390250048915099607.stgit@magnolia>
+ <152440957769.29601.7369035661664268323.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <BN6PR21MB0740003BBFCD4B6854A695D5B8880@BN6PR21MB0740.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152440957769.29601.7369035661664268323.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Robert Dorr <rdorr@microsoft.com>, Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Matthew Wilcox <mawilcox@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
+On Sun, Apr 22, 2018 at 08:06:17AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> The flags argument is always zero, get rid of it.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-On 24.04.2018 17:09, Robert Dorr wrote:
-> Hope you are feeling better.
+>  fs/xfs/libxfs/xfs_attr.c |    4 ++--
+>  fs/xfs/xfs_bmap_util.c   |    6 +++---
+>  fs/xfs/xfs_inode.c       |   10 +++++-----
+>  fs/xfs/xfs_iomap.c       |    4 ++--
+>  fs/xfs/xfs_iops.c        |    2 +-
+>  fs/xfs/xfs_qm.c          |    7 +++----
+>  fs/xfs/xfs_quota.h       |    4 ++--
+>  fs/xfs/xfs_reflink.c     |    2 +-
+>  8 files changed, 19 insertions(+), 20 deletions(-)
 > 
-> 1. How can we effect similar changes in ext4?
-> 2. How do we get these changes pushed into all common release builds for both xfs or ext4 optimizations?
 > 
-> We are seeing dramatic performance increases with the xfs fixes.   https://bugzilla.redhat.com/show_bug.cgi?id=1548524
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 35a1244..c3d02a6 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -236,7 +236,7 @@ xfs_attr_set(
+>  	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+>  	args.total = xfs_attr_calc_size(&args, &local);
+>  
+> -	error = xfs_qm_dqattach(dp, 0);
+> +	error = xfs_qm_dqattach(dp);
+>  	if (error)
+>  		return error;
+>  
+> @@ -427,7 +427,7 @@ xfs_attr_remove(
+>  	 */
+>  	args.op_flags = XFS_DA_OP_OKNOENT;
+>  
+> -	error = xfs_qm_dqattach(dp, 0);
+> +	error = xfs_qm_dqattach(dp);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 8cd8c41..65b2cc2 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -848,7 +848,7 @@ xfs_free_eofblocks(
+>  		/*
+>  		 * Attach the dquots to the inode up front.
+>  		 */
+> -		error = xfs_qm_dqattach(ip, 0);
+> +		error = xfs_qm_dqattach(ip);
+>  		if (error)
+>  			return error;
+>  
+> @@ -918,7 +918,7 @@ xfs_alloc_file_space(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	error = xfs_qm_dqattach(ip, 0);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return error;
+>  
+> @@ -1169,7 +1169,7 @@ xfs_free_file_space(
+>  
+>  	trace_xfs_free_file_space(ip);
+>  
+> -	error = xfs_qm_dqattach(ip, 0);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 2b70c8b..1da9863 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1411,11 +1411,11 @@ xfs_link(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	error = xfs_qm_dqattach(sip, 0);
+> +	error = xfs_qm_dqattach(sip);
+>  	if (error)
+>  		goto std_return;
+>  
+> -	error = xfs_qm_dqattach(tdp, 0);
+> +	error = xfs_qm_dqattach(tdp);
+>  	if (error)
+>  		goto std_return;
+>  
+> @@ -1911,7 +1911,7 @@ xfs_inactive(
+>  	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
+>  		truncate = 1;
+>  
+> -	error = xfs_qm_dqattach(ip, 0);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return;
+>  
+> @@ -2574,11 +2574,11 @@ xfs_remove(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	error = xfs_qm_dqattach(dp, 0);
+> +	error = xfs_qm_dqattach(dp);
+>  	if (error)
+>  		goto std_return;
+>  
+> -	error = xfs_qm_dqattach(ip, 0);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		goto std_return;
+>  
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 046469f..58b04ea 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -224,7 +224,7 @@ xfs_iomap_write_direct(
+>  	 * necessary and move on to transaction setup.
+>  	 */
+>  	xfs_iunlock(ip, lockmode);
+> -	error = xfs_qm_dqattach(ip, 0);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return error;
+>  
+> @@ -692,7 +692,7 @@ xfs_iomap_write_allocate(
+>  	/*
+>  	 * Make sure that the dquots are there.
+>  	 */
+> -	error = xfs_qm_dqattach(ip, 0);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index a3ed3c8..5afe3c2 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -855,7 +855,7 @@ xfs_setattr_size(
+>  	/*
+>  	 * Make sure that the dquots are attached to the inode.
+>  	 */
+> -	error = xfs_qm_dqattach(ip, 0);
+> +	error = xfs_qm_dqattach(ip);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index ec39ae2..d919b85 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -381,8 +381,7 @@ xfs_qm_dqattach_locked(
+>  
+>  int
+>  xfs_qm_dqattach(
+> -	struct xfs_inode	*ip,
+> -	uint			flags)
+> +	struct xfs_inode	*ip)
+>  {
+>  	int			error;
+>  
+> @@ -390,7 +389,7 @@ xfs_qm_dqattach(
+>  		return 0;
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	error = xfs_qm_dqattach_locked(ip, flags);
+> +	error = xfs_qm_dqattach_locked(ip, 0);
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  
+>  	return error;
+> @@ -1933,7 +1932,7 @@ xfs_qm_vop_rename_dqattach(
+>  		 */
+>  		if (i == 0 || ip != i_tab[i-1]) {
+>  			if (XFS_NOT_DQATTACHED(mp, ip)) {
+> -				error = xfs_qm_dqattach(ip, 0);
+> +				error = xfs_qm_dqattach(ip);
+>  				if (error)
+>  					return error;
+>  			}
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index ce6506a..a4d3922 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -90,7 +90,7 @@ extern struct xfs_dquot *xfs_qm_vop_chown(struct xfs_trans *,
+>  extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
+>  		struct xfs_dquot *, struct xfs_dquot *,
+>  		struct xfs_dquot *, uint);
+> -extern int xfs_qm_dqattach(struct xfs_inode *, uint);
+> +extern int xfs_qm_dqattach(struct xfs_inode *);
+>  extern int xfs_qm_dqattach_locked(struct xfs_inode *, uint);
+>  extern void xfs_qm_dqdetach(struct xfs_inode *);
+>  extern void xfs_qm_dqrele(struct xfs_dquot *);
+> @@ -132,7 +132,7 @@ static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
+>  #define xfs_qm_vop_rename_dqattach(it)					(0)
+>  #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
+>  #define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl)			(0)
+> -#define xfs_qm_dqattach(ip, fl)						(0)
+> +#define xfs_qm_dqattach(ip)						(0)
+>  #define xfs_qm_dqattach_locked(ip, fl)					(0)
+>  #define xfs_qm_dqdetach(ip)
+>  #define xfs_qm_dqrele(d)
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index cdbd342..fd8e6af 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1359,7 +1359,7 @@ xfs_reflink_remap_range(
+>  		goto out_unlock;
+>  
+>  	/* Attach dquots to dest inode before changing block map */
+> -	ret = xfs_qm_dqattach(dest, 0);
+> +	ret = xfs_qm_dqattach(dest);
+>  	if (ret)
+>  		goto out_unlock;
+>  
 > 
-> 4 socket, TPCC
-> 9,108 – Old kernel
-> 36,618 – Patched kernel
-> 
-> 2 socket, TPCC
-> 9,606 - Old kernel
-> 18,840 - Patched kernel
-> 
-> --------------------------------------------------------------------------------------------------
-> -- Times in milli-seconds
-> -- wt=SQL writethrough setting
-> -- awt=SQL alternatewritethrough setting
-> -- -T3979=SQL open with Fua behavior
-> -- -T3982=SQL opens without Fua and use fsync (forced flush) behavior
-> --------------------------------------------------------------------------------------------------
 > --
-> --	Linux patched kernel for XFS FUA opts
-> --  SQL Server 2017 CU6
-> --  blktrace active
-> --  Centos7 - 4proc, 8GB ram running on Hyper-V
-> --  Win10, 8proc, 32GB ram host
-> --  Samsung SSD drive
-> --  Clean SQL Server restarts
-> --------------------------------------------------------------------------------------------------
-> --  PATCHED KERNEL 4.16.x
-> --	     								Create DB Inserts Checkpoint Options
-> --  ----------------------------------- --------- ------- ---------- -----------------------------------
-> --  Default (-T3982 = forced flush)		3787      29814   47		 O_DIRECT and fsync from SQL
-> --  -T3979 and wt=1 awt=1			    4224	  25880   30         O_DIRECT and specialized fdatasync  (Best without FUA is ~10x slower than FUA)
-> --
-> --  -T3979 and wt=0						2860	  2570	  13		 O_DIRECT 
-> --  -T3979 and wt=1 awt=0				4204	  2573	  17		 O_DIRECT | O_DSYNC - Inserts and checkpoint on allocated space nears O_DIRECT only  <--- !!! DESIRED BEHAVIOR !!!
-> --  -T3979 and wt=1 awt=0 NO STAMP		4127	  2823	  17		 O_DIRECT | O_DSYNC - Issues internal flushs for 1st writes, create faster but inserts slower
-> --
-> --  UNPATCHED KERNEL 3.x
-> --	     								Create DB Inserts Checkpoint Options
-> --  ----------------------------------- --------- ------- ---------- -----------------------------------
-> --  Default (-T3982 = forced flush)		3097      29700   26		 O_DIRECT and fsync from SQL
-> --  -T3979 and wt=1 awt=1			    4210	  25800   27         O_DIRECT and specialized fdatasync
-> --
-> --  -T3979 and wt=0						2880	  2134	  6			 O_DIRECT 
-> --  -T3979 and wt=1 awt=0 		        4443	  25290	  42		 O_DIRECT | O_DSYNC
-> --  -T3979 and wt=1 awt=0 NO STAMP		4120	  25680	  40		 O_DIRECT | O_DSYNC
-> --
-> 
-
-So these number should be taken with a VERY BIG grain of salt. Not
-because the change is not valid but because at the very least you are
-comparing kernel 3.x with latest 4.16. It's unlikely that this report
-will be the thing that tips the scaler to either "implement" or "not"
-that for ext4. But at the very least show number for the same kernel
-with the only difference being the patch.
-
-
-> 
-> 
-> 
-> -----Original Message-----
-> From: Robert Dorr 
-> Sent: Thursday, March 22, 2018 7:38 AM
-> To: Jan Kara <jack@suse.cz>
-> Cc: Christoph Hellwig <hch@lst.de>; Dave Chinner <david@fromorbit.com>; Dan Williams <dan.j.williams@intel.com>; linux-xfs@vger.kernel.org; linux-fsdevel <linux-fsdevel@vger.kernel.org>; Theodore Ts'o <tytso@mit.edu>; Matthew Wilcox <mawilcox@microsoft.com>; Scott Konersmann <scottkon@microsoft.com>; Slava Oks <slavao@microsoft.com>; Jasraj Dange <jasrajd@microsoft.com>; Michael Nelson <micn@microsoft.com>
-> Subject: RE: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-> 
-> Sorry to hear that.  Get well soon.
-> 
-> Thanks for the response.
-> 
-> 
-> -----Original Message-----
-> From: Jan Kara <jack@suse.cz>
-> Sent: Thursday, March 22, 2018 9:36 AM
-> To: Robert Dorr <rdorr@microsoft.com>
-> Cc: Jan Kara <jack@suse.cz>; Christoph Hellwig <hch@lst.de>; Dave Chinner <david@fromorbit.com>; Dan Williams <dan.j.williams@intel.com>; linux-xfs@vger.kernel.org; linux-fsdevel <linux-fsdevel@vger.kernel.org>; Theodore Ts'o <tytso@mit.edu>; Matthew Wilcox <mawilcox@microsoft.com>; Scott Konersmann <scottkon@microsoft.com>; Slava Oks <slavao@microsoft.com>; Jasraj Dange <jasrajd@microsoft.com>; Michael Nelson <micn@microsoft.com>
-> Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO writes
-> 
-> On Mon 19-03-18 16:14:16, Robert Dorr wrote:
->> Awesome news on the spin.   
->>
->> Are you going to be able to make changes to EXT4 to accommodate 
->> REQ_FUA without generic_write_flush to improve performance like was done for xfs?
-> 
-> I'm currently on a sick leave so I'm slow on replies. Sorry. I don't see a reason why ext4 could not have the same optimization as XFS for that case of direct IO. However I'm not sure when I get to implementing that.
-> 
-> 								Honza
-> 
->> -----Original Message-----
->> From: Jan Kara <jack@suse.cz>
->> Sent: Monday, March 19, 2018 11:07 AM
->> To: Robert Dorr <rdorr@microsoft.com>
->> Cc: Christoph Hellwig <hch@lst.de>; Dave Chinner 
->> <david@fromorbit.com>; Dan Williams <dan.j.williams@intel.com>; 
->> linux-xfs@vger.kernel.org; linux-fsdevel 
->> <linux-fsdevel@vger.kernel.org>; Jan Kara <jack@suse.cz>; Theodore 
->> Ts'o <tytso@mit.edu>; Matthew Wilcox <mawilcox@microsoft.com>; Scott 
->> Konersmann <scottkon@microsoft.com>; Slava Oks <slavao@microsoft.com>; 
->> Jasraj Dange <jasrajd@microsoft.com>; Michael Nelson 
->> <micn@microsoft.com>
->> Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO 
->> writes
->>
->> On Tue 13-03-18 18:52:57, Robert Dorr wrote:
->>> I tried the RWF_ODSYNC and xfs seems to honor properly but it causes
->>> ext4 to go spin out a single CPU and hang the system. 😊
->>
->> Yeah, that's a bug in generic direct IO code that I've just recently 
->> fixed
->> (d9c10e5b8863 "direct-io: Fix sleep in atomic due to sync AIO" in 4.16-rc4).
->>
->> 								Honza
->>
->>>
->>>
->>> -----Original Message-----
->>> From: Christoph Hellwig <hch@lst.de>
->>> Sent: Tuesday, March 13, 2018 11:13 AM
->>> To: Robert Dorr <rdorr@microsoft.com>
->>> Cc: Dave Chinner <david@fromorbit.com>; Dan Williams 
->>> <dan.j.williams@intel.com>; linux-xfs@vger.kernel.org; Christoph 
->>> Hellwig <hch@lst.de>; linux-fsdevel <linux-fsdevel@vger.kernel.org>; 
->>> Jan Kara <jack@suse.cz>; Theodore Ts'o <tytso@mit.edu>; Matthew 
->>> Wilcox <mawilcox@microsoft.com>; Scott Konersmann 
->>> <scottkon@microsoft.com>; Slava Oks <slavao@microsoft.com>; Jasraj 
->>> Dange <jasrajd@microsoft.com>; Michael Nelson <micn@microsoft.com>
->>> Subject: Re: [PATCH] [RFC] iomap: Use FUA for pure data O_DSYNC DIO 
->>> writes
->>>
->>>> I think the answer is the iomap* logic makes sure to issue generic_write_sync for O_DSYNC W1 after W1 is completed by hardware and then waits for completion of the flush request (REQ_PREFLUSH) before W1 is returned to the AIO completion ring, preventing io_getevents from processing W1 before the flush occurs and completes.   I just need proper confirmation from the experts on this code that this is the expected behavior.
->>>
->>> Yes. that is the case.
->>>
->>>> For SQL Server using O_DIRECT | O_DSYNC on current kernels is very performance impacting.   Instead we enable a mode for SQL that opens O_DIRECT only and issues fsync/fdatasync when we are hardening log files or checkpointing data files.   This reduces the write, flush, write, flush pattern allowing for write, write, write, ... then flush as we only issue flush requests when required to maintain the data integrity boundaries of SQL Server.  The performance is significantly better then the device flush for each write as you can imagine.
->>>>
->>>> Testing shows the FUA enhancement is better then the write, flush pattern.   For SQL Server we want to dynamically open with O_DIRECT | O_DSYNC when REQ_FUA can be properly used and open with O_DIRECT and leverage SQL Server's alternate flush scheme when running on older kernel or a system that does not support FUA (SATA, IDE, ...)
->>>
->>> There is no really good way to figure this out except for benchmarking, given that the FUA use an implementation detail.
->>>
->>> Btw, another feature that might be interesting to you is the RWF_DSYNC flag to the pwritev2 syscall, which allows to apply O_DSYNC semantics on a per-I/O basis instead of using it at open time.
->> --
->> Jan Kara <jack@suse.com>
->> SUSE Labs, CR
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
-> N�����r��y���b�X��ǧv�^�)޺{.n�+����{���"��^n�r���z���h����&���G���h�(�階�ݢj"���m�����z�ޖ���f���h���~�mml==
-> 
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
