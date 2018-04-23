@@ -1,68 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35824 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753551AbeDXL12 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Apr 2018 07:27:28 -0400
-Date: Tue, 24 Apr 2018 07:27:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS and Memory allocation
-Message-ID: <20180424112727.GB49785@bfoster.bfoster>
-References: <CA+1g8semVirCEfbQRNt8h-Cj7NV7p1FYP76XLjH4vVMVU7F=aw@mail.gmail.com>
- <20180423143605.GH43600@bfoster.bfoster>
- <CA+1g8seTYOgERkM=dnDZFDX3QZQ1w6pMGOw1HVC-tdQxVON=vA@mail.gmail.com>
- <20180423153447.GI43600@bfoster.bfoster>
- <CA+1g8segDPZo821caCX73ARLa3Ly9_u6O9iseqoE3b+LntqSLw@mail.gmail.com>
+Received: from icebox.esperi.org.uk ([81.187.191.129]:54430 "EHLO
+        mail.esperi.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752086AbeDWUZD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Apr 2018 16:25:03 -0400
+From: Nix <nix@esperi.org.uk>
+Subject: Re: bupsplit.c copyright and patching
+References: <6179db6e-786d-40a2-936d-9fb4dfa2529f@googlegroups.com>
+        <87k1uak2xb.fsf@trouble.defaultvalue.org>
+        <CAHqTa-1eKSZq6Vph+th5YH-b43NAvF+BWCDoJqPJQGa3=Oze-w@mail.gmail.com>
+        <874llde5yn.fsf@trouble.defaultvalue.org>
+        <CAHqTa-1ghU6+Y0Y2pBOjbS=7CWKMytPvj-c1Z0aE3=PqpPi1OA@mail.gmail.com>
+        <87k1u0ca2d.fsf@trouble.defaultvalue.org>
+        <CAHqTa-0B-iZfjhX4pHMnb0d-XRhY_wCywsjOOnOgSRF1iFKN4Q@mail.gmail.com>
+        <871sfsefs7.fsf@esperi.org.uk>
+        <CAHqTa-25QqzDb+u9_4zXuoMGU5uF9nv_pmioLE+xJ+0pHbiYUg@mail.gmail.com>
+        <87k1szdni5.fsf@esperi.org.uk>
+        <CAHqTa-28D05VafHNeS0f16qHQ9A6g=Vb8u=YEODquniwfEAygA@mail.gmail.com>
+        <871sf5ddi7.fsf@esperi.org.uk>
+        <CAHqTa-3KHrC67r9tZs5kFNF7bSh5Dt_AYHnAEhHziqvAijD_wA@mail.gmail.com>
+Date: Mon, 23 Apr 2018 21:03:26 +0100
+In-Reply-To: <CAHqTa-3KHrC67r9tZs5kFNF7bSh5Dt_AYHnAEhHziqvAijD_wA@mail.gmail.com>
+        (Avery Pennarun's message of "Mon, 23 Apr 2018 14:13:04 -0400")
+Message-ID: <87lgddbshd.fsf@esperi.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+1g8segDPZo821caCX73ARLa3Ly9_u6O9iseqoE3b+LntqSLw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrea del Monaco <andrea.delmonaco@clustervision.com>
-Cc: linux-xfs@vger.kernel.org
+To: Avery Pennarun <apenwarr@gmail.com>
+Cc: Rob Browning <rlb@defaultvalue.org>, Robert Evans <evansr@google.com>, bup-list <bup-list@googlegroups.com>, linux-xfs@vger.kernel.org
 
-On Tue, Apr 24, 2018 at 09:25:41AM +0200, Andrea del Monaco wrote:
-> Hi Brian,
-> 
-> I've been tunining some kernel parameters here and there. Seems that the
-> reclaim_zone set to 1 has had a positive impact - or at least, the
-> number of errors reduced drastically.
-> 
-> Do you now if and when will it be available?
-> I am very tempted to get the packages from Fedora repos (Which seems
-> to be available there), but you know, it might get messy.
-> 
+[Cc:ed in the xfs list to ask a question: see the last quoted section
+ below]
 
-Not really.
+On 23 Apr 2018, Avery Pennarun stated:
 
-> I guess that in order to reduce the extent counts of the files, would
-> mean re-create the FS. Wouldn't it?
-> 
+> On Mon, Apr 23, 2018 at 1:44 PM, Nix <nix@esperi.org.uk> wrote:
+>> Hm. Checking the documentation it looks like the scheduler is smarter
+>> than I thought: it does try to batch the requests and service as many as
+>> possible in each sweep across the disk surface, but it is indeed only
+>> tunable on a systemwide basis :(
+>
+> Yeah, my understanding was that only cfq actually cares about ionice.
 
-Not necessarily. You may have to recreate individual files so they are
-not as fragmented or sparse (via preallocation, extent size hints,
-etc.), but this probably depends on the specifics of your use case,
-workload, current fs layout, etc.
+Yes, though idle versus non-idle can be used by other components too: it
+can tell bcache not to cache low-priority reads, for instance (pretty
+crucial if you've just done an index deletion, or the next bup run would
+destroy your entire bcache!)
 
-For example, if the use case is large virtual disk image files, I
-believe it is fairly common for random access via the guest to cause
-huge extent counts due to the random/sparse and smallish nature of the
-writes. XFS has extent size hints (see the 'extsize' command in 'man
-xfs_io') to combat this particular behavior, which creates a minimum
-size allocation/alignment (i.e., I think 1MB is a common setting) for
-writes that helps prevent the proliferation of tiny extents. IIRC, an
-extent size hint can only be set on a file before any extents are
-allocated, however. It is thus not a retroactive fix, but doesn't
-necessarily require to recreate the entire fs. If you had hundreds or
-thousands of such files to deal with, however, then it may very well be
-easier to create a new fs and set a recursive hint on the appropriate
-directory.
+> That's really a shame: bup does a great job (basically zero
+> performance impact) when run at ionice 'idle" priority, especially
+> since it uses fadvise() to tell the kernel when it's done with files,
+> so it doesn't get other people's stuff evicted from page cache.
 
-Brian
+Yeah. Mind you, I don't actually notice its performance impact here,
+with the deadline scheduler, but part of that is bcache and the rest is
+128GiB RAM. We can't require users to have something like *that*. :P
+(heck most of my systems are much smaller.)
 
-> Regards,
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On the other hand, maybe what you actually want is just cfq with your
+> high-priority tasks given a higher-than-average ionice priority.  I
+
+The XFS FAQ claims that this is, ah, not good for xfs performance, but
+this may be one of those XFS canards that is wildly out of date, like
+almost all the online tuning hints telling you to do something on the
+mkfs.xfs line, most of which actually make performance *worse*.
+
+xfs folks, could you confirm that the deadline scheduler really is still
+necessary for XFS atop md, and that CFS is still a distinctly bad idea?
+
+I'm trying to evaluate possible bup improvements before they're made
+(involving making *lots* of I/O requests in parallel, i.e. dozens, and
+relying on the I/O scheduler to sort it out, even if the number of
+requests is way above the number of rotating-rust spindles), and it has
+been put forward that CFS will do the right thing here and deadline is
+likely to be just terrible.
+<http://xfs.org/index.php/XFS_FAQ#Q:_Which_I.2FO_scheduler_for_XFS.3F>
+suggests otherwise (particularly for parallel workloads such as, uh,
+this one), but even on xfs.org I am somewhat concerned about stale
+recommendations causing trouble...
