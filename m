@@ -1,102 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:42548 "EHLO
-        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752086AbeDWUWZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Apr 2018 16:22:25 -0400
-Received: by mail-lf0-f45.google.com with SMTP id u21-v6so15300634lfu.9
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Apr 2018 13:22:24 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:60100 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755419AbeDWOyj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Apr 2018 10:54:39 -0400
+Received: from Liberator-5.local (174-23-155-86.slkc.qwest.net [174.23.155.86])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id DFBFE4872F9
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Apr 2018 09:53:36 -0500 (CDT)
+Subject: Re: [RFC PATCH] db: Stop core dumping on attr3 if block header is not
+ recognized
+References: <20180418094935.12495-1-cmaiolino@redhat.com>
+ <9514c503-e5ba-3ca0-dd5d-83d4c81f97f5@sandeen.net>
+ <20180423082646.wmz4vkhhuysdbepd@odin.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <aba7b7cd-e6ec-62c1-dfac-b7c3e87ed2f9@sandeen.net>
+Date: Mon, 23 Apr 2018 08:54:37 -0600
 MIME-Version: 1.0
-In-Reply-To: <87lgddbshd.fsf@esperi.org.uk>
-References: <6179db6e-786d-40a2-936d-9fb4dfa2529f@googlegroups.com>
- <87k1uak2xb.fsf@trouble.defaultvalue.org> <CAHqTa-1eKSZq6Vph+th5YH-b43NAvF+BWCDoJqPJQGa3=Oze-w@mail.gmail.com>
- <874llde5yn.fsf@trouble.defaultvalue.org> <CAHqTa-1ghU6+Y0Y2pBOjbS=7CWKMytPvj-c1Z0aE3=PqpPi1OA@mail.gmail.com>
- <87k1u0ca2d.fsf@trouble.defaultvalue.org> <CAHqTa-0B-iZfjhX4pHMnb0d-XRhY_wCywsjOOnOgSRF1iFKN4Q@mail.gmail.com>
- <871sfsefs7.fsf@esperi.org.uk> <CAHqTa-25QqzDb+u9_4zXuoMGU5uF9nv_pmioLE+xJ+0pHbiYUg@mail.gmail.com>
- <87k1szdni5.fsf@esperi.org.uk> <CAHqTa-28D05VafHNeS0f16qHQ9A6g=Vb8u=YEODquniwfEAygA@mail.gmail.com>
- <871sf5ddi7.fsf@esperi.org.uk> <CAHqTa-3KHrC67r9tZs5kFNF7bSh5Dt_AYHnAEhHziqvAijD_wA@mail.gmail.com>
- <87lgddbshd.fsf@esperi.org.uk>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Mon, 23 Apr 2018 16:22:03 -0400
-Message-ID: <CAHqTa-1R6GDGvncE92PXmZC3ew5HZPZPqe-qWiBEREqjXygCZA@mail.gmail.com>
-Subject: Re: bupsplit.c copyright and patching
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180423082646.wmz4vkhhuysdbepd@odin.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nix <nix@esperi.org.uk>
-Cc: Rob Browning <rlb@defaultvalue.org>, Robert Evans <evansr@google.com>, bup-list <bup-list@googlegroups.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Apr 23, 2018 at 4:03 PM, Nix <nix@esperi.org.uk> wrote:
-> [Cc:ed in the xfs list to ask a question: see the last quoted section
->  below]
->
-> On 23 Apr 2018, Avery Pennarun stated:
->
->> On Mon, Apr 23, 2018 at 1:44 PM, Nix <nix@esperi.org.uk> wrote:
->>> Hm. Checking the documentation it looks like the scheduler is smarter
->>> than I thought: it does try to batch the requests and service as many as
->>> possible in each sweep across the disk surface, but it is indeed only
->>> tunable on a systemwide basis :(
+
+
+On 4/23/18 2:26 AM, Carlos Maiolino wrote:
+>> So it seems like casting it into something the user might expect would
+>> be better?
 >>
->> Yeah, my understanding was that only cfq actually cares about ionice.
->
-> Yes, though idle versus non-idle can be used by other components too: it
-> can tell bcache not to cache low-priority reads, for instance (pretty
-> crucial if you've just done an index deletion, or the next bup run would
-> destroy your entire bcache!)
+> Not sure, in this case, the 'user' is expaecting an attr3 type, while xfs_db is
+> reading some other random, non attr3 type block. So, I wonder, what you meant by
+> 'something the user might expect'? The way I view it is: "The user is expecting
+> attr3 type", but there is no attr3 data in the block being read, so, the way I
+> understand what you meant, was trying to print the current block using attr3
+> format, which, IMHO, might fool the xfs_db user. I think saying the block
+> doesn't match attr3 format, and printing a possible magic number found in the
+> block works better. After all, xfs_db is a developer tool, not an user tool. If
+> I use myself and my xfs_db usage as an example:
+> If I try to print some block as attr3, and I see a message saying no attr3
+> format has been found, and I got a dump of a possible magic number, I can check
+> if that magic number matches some metadata format, or if it doesn't look as a
+> magic at all, I can simply consider the block corrupted. But well, this is just
+> my way to view it.
+> 
 
-Hmm, I don't know about that.  It's hard to completely avoid caching
-things at all, because the usual way of things is to load stuff into
-the cache, then feed it back to userspace sometime shortly afterward.
-Not doing so can make things much worse (eg. if someone tries to
-stat() the same file twice in a row or something).  bup's way of doing
-fadvise() when it's done with a file seems to work pretty well in my
-experience, explicitly not churning the kernel cache even when doing a
-full backup from scratch.
+So, don't get too hung up on your "it's not actually an attr3 block" testcase;
+imagine the scenario where it /is/ an attr3 block, but the magic is
+corrupted.  Now imagine that you want to examine the block (to see what the magic
+was, and what the other fields were, and if it even looks like an attr3 block,
+or something else), and possibly even fix a field manually.
 
->> That's really a shame: bup does a great job (basically zero
->> performance impact) when run at ionice 'idle" priority, especially
->> since it uses fadvise() to tell the kernel when it's done with files,
->> so it doesn't get other people's stuff evicted from page cache.
->
-> Yeah. Mind you, I don't actually notice its performance impact here,
-> with the deadline scheduler, but part of that is bcache and the rest is
-> 128GiB RAM. We can't require users to have something like *that*. :P
-> (heck most of my systems are much smaller.)
+If all you get is "unknown" that's not very helpful.  You /could/ hexdump it
+and count bytes, but that sucks.
 
-Inherently, doing a system backup will need to cause a huge number of
-disk seeks.  If you are checking a couple of realtime streams to make
-sure they don't miss any deadlines, then you might not notice any
-impact, but you ought to notice a reduction in total available
-throughput while a big backup task is running (unless it's running
-using idle priority).  This would presumably be even worse if the
-backup task is running many file reads/stats in parallel.
+If you tried the same thing on i.e. an agf header (with bitflipped magic) you
+would still be able to print the whole structure, and see what was wrong.
 
-Incidentally, I have a tool that we used on a DVR product to ensure we
-could support multiple realtime streams under heavy load (ie.
-something like 12 readers + 12 writers on a single 7200 RPM disk).
-For that use case, it was easy to see that deadline was better for
-keeping deadlines (imagine!) than cfq.  But cfq got more total
-throughput.  This was on ext4 with preallocation though, not xfs.  The
-tool I wrote is diskbench, available here:
-https://gfiber.googlesource.com/vendor/google/platform/+/master/cmds/diskbench.c
+Because attr3 only prints semi-validated blocks today, and refuses to show you
+anything that doesn't match, it's a far more difficult situation.  The root
+cause is that "attr3" is a multiplexer that will really decide between 3 different
+formats, but will /only/ show you one of the 3 if the magic is undamaged.
 
-> <http://xfs.org/index.php/XFS_FAQ#Q:_Which_I.2FO_scheduler_for_XFS.3F>
-> suggests otherwise (particularly for parallel workloads such as, uh,
-> this one), but even on xfs.org I am somewhat concerned about stale
-> recommendations causing trouble...
+That's why I was wondering about explicit types for the leaf/block etc so you
+can force xfs_db to show it to you in that format (like you could with i.e. agf).
 
-That section seems... not so well supported.  If your deadlines are
-incredibly short, there might be something to it, but the whole point
-of cfq and this sort of time slicing is to minimize seeks.  It might
-cause the disk to linger longer in a particular section without
-seeking, but if (eg.) one of the tasks decides it wants to read from
-all over the disk, it wouldn't make sense to just let that task do
-whatever it wants, then switch to another task that does whatever it
-wants, and so on.  That would seem to *maximize* seeks as well as
-latency, which is just bad for everyone.  Empirically cfq is quite
-good :)
+Meh, for now maybe I will just merge the "don't segfault" patch, it's at least an
+improvement.  A nicer outcome isn't our most pressing problem I guess.
 
-Have fun,
-
-Avery
+-Eric
