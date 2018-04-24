@@ -1,17 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48852 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:54984 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752006AbeDHBsz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 7 Apr 2018 21:48:55 -0400
-Subject: Re: [PATCH 0/6] xfs: quota fixes and enhancements
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
- <6479893d-7f01-f262-6ec5-84a33237d2d8@sandeen.net>
- <20180408013757.GN7500@magnolia>
+        id S1750791AbeDXTv0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Apr 2018 15:51:26 -0400
+Subject: Re: [PATCH 4/9] xfs: refactor inode buffer verifier error logging
+References: <152107377037.19571.8618901963505842632.stgit@magnolia>
+ <152107379476.19571.15155451515464003337.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <91de46d5-c861-655b-1961-bf4073d1c989@sandeen.net>
-Date: Sat, 7 Apr 2018 20:48:54 -0500
+Message-ID: <c1e36789-58c5-740e-e6a5-79e18e45e99d@sandeen.net>
+Date: Tue, 24 Apr 2018 13:51:24 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180408013757.GN7500@magnolia>
+In-Reply-To: <152107379476.19571.15155451515464003337.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -19,42 +18,21 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 4/7/18 8:37 PM, Darrick J. Wong wrote:
-> On Sat, Apr 07, 2018 at 05:00:13PM -0500, Eric Sandeen wrote:
->> On 4/4/18 1:47 PM, Eric Sandeen wrote:
->>> A semi-random smattering of quota stuff.  First three seem quite
->>> good to go, the rest are more along the lines of a suggestion
->>> or conversation-starter.  ;)
->>>
->>> (the first patch is just removing an unused arg).
->>>
->>> xfs_repair doesn't look at quota blocks.  At all.  It relies
->>> on quotacheck in the kernel to fix them up as needed.
->>
->> I'm starting to rethink a lot of this hackery.  Why doesn't xfs_repair
->> just fix things up?  (leave quotacheck to the next mount, but the
->> "repair" stuff in the kernel seems like a really strange wart.)
->>
->> I think I'll look at teaching repair to sanity check the quota
->> inodes, but if anyone knows why that's a bad idea please let me
->> know.  ;)
+On 3/14/18 6:29 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> /me shrugs, we still need to fix the kernel's quota verifiers to check
-> the uuid and all that, right?  Which means that both are going to need
-> patches, afaict.
+> When the inode buffer verifier encounters an error, it's much more
+> helpful to print a buffer from the offending inode instead of just the
+> start of the inode chunk buffer.
 
-The verifiers do check UUID:
+Thanks, I was about to do this until you told me you did it weeks ago.  ;)
+That said, we should use this in the dquot verifiers as well.  But I'll
+need to hold off on that until we decide where my old
 
-xfs_dquot_buf_read_verify
-	xfs_dquot_buf_verify_crc
-                if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
-                        return false;
+[PATCH 0/6] xfs: quota fixes and enhancements
 
-the issue is that neither the kernel nor userspace repairs this error
-if it's detected.
+series is going, I think?
 
 -Eric
