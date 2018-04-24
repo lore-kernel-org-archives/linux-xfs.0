@@ -1,52 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:31279 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751323AbeDXQrd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 12:47:33 -0400
-Date: Wed, 25 Apr 2018 02:47:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: bupsplit.c copyright and patching
-Message-ID: <20180424164740.2eftsje7su5usmqs@destitution>
-References: <CAHqTa-1ghU6+Y0Y2pBOjbS=7CWKMytPvj-c1Z0aE3=PqpPi1OA@mail.gmail.com>
- <87k1u0ca2d.fsf@trouble.defaultvalue.org>
- <CAHqTa-0B-iZfjhX4pHMnb0d-XRhY_wCywsjOOnOgSRF1iFKN4Q@mail.gmail.com>
- <871sfsefs7.fsf@esperi.org.uk>
- <CAHqTa-25QqzDb+u9_4zXuoMGU5uF9nv_pmioLE+xJ+0pHbiYUg@mail.gmail.com>
- <87k1szdni5.fsf@esperi.org.uk>
- <CAHqTa-28D05VafHNeS0f16qHQ9A6g=Vb8u=YEODquniwfEAygA@mail.gmail.com>
- <871sf5ddi7.fsf@esperi.org.uk>
- <CAHqTa-3KHrC67r9tZs5kFNF7bSh5Dt_AYHnAEhHziqvAijD_wA@mail.gmail.com>
- <87lgddbshd.fsf@esperi.org.uk>
+Received: from mga05.intel.com ([192.55.52.43]:13615 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751117AbeDXXn0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Apr 2018 19:43:26 -0400
+Subject: [PATCH v9 5/9] mm: fix __gup_device_huge vs unmap
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 24 Apr 2018 16:33:29 -0700
+Message-ID: <152461280975.17530.2817946409563456285.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87lgddbshd.fsf@esperi.org.uk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nix <nix@esperi.org.uk>
-Cc: Avery Pennarun <apenwarr@gmail.com>, Rob Browning <rlb@defaultvalue.org>, Robert Evans <evansr@google.com>, bup-list <bup-list@googlegroups.com>, linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: stable@vger.kernel.org, Jan Kara <jack@suse.cz>, david@fromorbit.com, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.orgjack@suse.czhch@lst.de
 
-On Mon, Apr 23, 2018 at 09:03:26PM +0100, Nix wrote:
-> The XFS FAQ claims that this is, ah, not good for xfs performance, but
-> this may be one of those XFS canards that is wildly out of date, like
-> almost all the online tuning hints telling you to do something on the
-> mkfs.xfs line, most of which actually make performance *worse*.
-> 
-> xfs folks, could you confirm that the deadline scheduler really is still
-> necessary for XFS atop md, and that CFS is still a distinctly bad idea?
+get_user_pages_fast() for device pages is missing the typical validation
+that all page references have been taken while the mapping was valid.
+Without this validation truncate operations can not reliably coordinate
+against new page reference events like O_DIRECT.
 
-Yes, the problem still exists. CFQ just doesn't work well with
-workloads that issue concurrent, dependent IOs from multiple
-processes, nor does it work well with hardware raid arrays with
-non-volatile caches that have unpredictable IO performance. This
-sort of workload and hardware is common in the sorts of high
-performance applications we see run on XFS filesystems, and we avoid
-CFQ as much as possible....
+Cc: <stable@vger.kernel.org>
+Fixes: 3565fce3a659 ("mm, x86: get_user_pages() for dax mappings")
+Reported-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ mm/gup.c |   36 ++++++++++++++++++++++++++----------
+ 1 file changed, 26 insertions(+), 10 deletions(-)
 
-Cheers,
+diff --git a/mm/gup.c b/mm/gup.c
+index 76af4cfeaf68..84dd2063ca3d 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -1456,32 +1456,48 @@ static int __gup_device_huge(unsigned long pfn, unsigned long addr,
+ 	return 1;
+ }
+ 
+-static int __gup_device_huge_pmd(pmd_t pmd, unsigned long addr,
++static int __gup_device_huge_pmd(pmd_t orig, pmd_t *pmdp, unsigned long addr,
+ 		unsigned long end, struct page **pages, int *nr)
+ {
+ 	unsigned long fault_pfn;
++	int nr_start = *nr;
++
++	fault_pfn = pmd_pfn(orig) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
++	if (!__gup_device_huge(fault_pfn, addr, end, pages, nr))
++		return 0;
+ 
+-	fault_pfn = pmd_pfn(pmd) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
+-	return __gup_device_huge(fault_pfn, addr, end, pages, nr);
++	if (unlikely(pmd_val(orig) != pmd_val(*pmdp))) {
++		undo_dev_pagemap(nr, nr_start, pages);
++		return 0;
++	}
++	return 1;
+ }
+ 
+-static int __gup_device_huge_pud(pud_t pud, unsigned long addr,
++static int __gup_device_huge_pud(pud_t orig, pud_t *pudp, unsigned long addr,
+ 		unsigned long end, struct page **pages, int *nr)
+ {
+ 	unsigned long fault_pfn;
++	int nr_start = *nr;
++
++	fault_pfn = pud_pfn(orig) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
++	if (!__gup_device_huge(fault_pfn, addr, end, pages, nr))
++		return 0;
+ 
+-	fault_pfn = pud_pfn(pud) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
+-	return __gup_device_huge(fault_pfn, addr, end, pages, nr);
++	if (unlikely(pud_val(orig) != pud_val(*pudp))) {
++		undo_dev_pagemap(nr, nr_start, pages);
++		return 0;
++	}
++	return 1;
+ }
+ #else
+-static int __gup_device_huge_pmd(pmd_t pmd, unsigned long addr,
++static int __gup_device_huge_pmd(pmd_t orig, pmd_t *pmdp, unsigned long addr,
+ 		unsigned long end, struct page **pages, int *nr)
+ {
+ 	BUILD_BUG();
+ 	return 0;
+ }
+ 
+-static int __gup_device_huge_pud(pud_t pud, unsigned long addr,
++static int __gup_device_huge_pud(pud_t pud, pud_t *pudp, unsigned long addr,
+ 		unsigned long end, struct page **pages, int *nr)
+ {
+ 	BUILD_BUG();
+@@ -1499,7 +1515,7 @@ static int gup_huge_pmd(pmd_t orig, pmd_t *pmdp, unsigned long addr,
+ 		return 0;
+ 
+ 	if (pmd_devmap(orig))
+-		return __gup_device_huge_pmd(orig, addr, end, pages, nr);
++		return __gup_device_huge_pmd(orig, pmdp, addr, end, pages, nr);
+ 
+ 	refs = 0;
+ 	page = pmd_page(orig) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
+@@ -1537,7 +1553,7 @@ static int gup_huge_pud(pud_t orig, pud_t *pudp, unsigned long addr,
+ 		return 0;
+ 
+ 	if (pud_devmap(orig))
+-		return __gup_device_huge_pud(orig, addr, end, pages, nr);
++		return __gup_device_huge_pud(orig, pudp, addr, end, pages, nr);
+ 
+ 	refs = 0;
+ 	page = pud_page(orig) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
