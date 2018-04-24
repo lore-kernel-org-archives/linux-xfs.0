@@ -1,44 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39692 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751780AbeDXQMd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 12:12:33 -0400
-Date: Tue, 24 Apr 2018 09:12:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [ANNOUNCE] xfsprogs-4.16.0-rc1 released
-Message-ID: <20180424161229.GA1661@magnolia>
-References: <9673fe5a-6350-e469-28c3-7427af1bba18@sandeen.net>
- <a5de3bdd-903a-fb26-ac27-e46ccc51003c@sandeen.net>
+Received: from mga12.intel.com ([192.55.52.136]:29490 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751117AbeDXXng (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Apr 2018 19:43:36 -0400
+Subject: [PATCH v9 7/9] xfs: prepare xfs_break_layouts() to be called with
+ XFS_MMAPLOCK_EXCL
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 24 Apr 2018 16:33:40 -0700
+Message-ID: <152461282007.17530.4005479436001566081.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a5de3bdd-903a-fb26-ac27-e46ccc51003c@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-nvdimm@lists.01.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>Christoph Hellwig <hch@lst.de>"Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, jack@suse.czhch@lst.de
 
-On Mon, Apr 23, 2018 at 09:34:00AM -0600, Eric Sandeen wrote:
-> On 4/12/18 3:39 PM, Eric Sandeen wrote:
-> > Hi folks,
-> > 
-> > The master branch of the xfsprogs repository at:
-> > 
-> > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> > 
-> > has just been updated and tagged with v4.16.0-rc1
-> 
-> I plan to release this as 4.16.0 in the next day or two, unless anyone
-> has found issues with -rc1 that must be fixed before a point release.
+In preparation for adding coordination between extent unmap operations
+and busy dax-pages, update xfs_break_layouts() to permit it to be called
+with the mmap lock held. This lock scheme will be required for
+coordinating the break of 'dax layouts' (non-idle dax (ZONE_DEVICE)
+pages mapped into the file's address space). Breaking dax layouts will
+be added to xfs_break_layouts() in a future patch, for now this preps
+the unmap call sites to take and hold XFS_MMAPLOCK_EXCL over the call to
+xfs_break_layouts().
 
-Seems fine to me.
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Suggested-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: "Darrick J. Wong" <darrick.wong@oracle.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/xfs/xfs_file.c  |    5 +----
+ fs/xfs/xfs_ioctl.c |    5 +----
+ fs/xfs/xfs_iops.c  |   10 +++++++---
+ fs/xfs/xfs_pnfs.c  |    3 ++-
+ 4 files changed, 11 insertions(+), 12 deletions(-)
 
---D
-
-> Thanks,
-> -Eric
-> 
-
-
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 299aee4b7b0b..35309bd046be 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -734,7 +734,7 @@ xfs_file_fallocate(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	long			error;
+ 	enum xfs_prealloc_flags	flags = 0;
+-	uint			iolock = XFS_IOLOCK_EXCL;
++	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	loff_t			new_size = 0;
+ 	bool			do_file_insert = false;
+ 
+@@ -748,9 +748,6 @@ xfs_file_fallocate(
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
+-
+ 	if (mode & FALLOC_FL_PUNCH_HOLE) {
+ 		error = xfs_free_file_space(ip, offset, len);
+ 		if (error)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89fb1eb80aae..4151fade4bb1 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -614,7 +614,7 @@ xfs_ioc_space(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct iattr		iattr;
+ 	enum xfs_prealloc_flags	flags = 0;
+-	uint			iolock = XFS_IOLOCK_EXCL;
++	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	int			error;
+ 
+ 	/*
+@@ -648,9 +648,6 @@ xfs_ioc_space(
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+-	iolock |= XFS_MMAPLOCK_EXCL;
+-
+ 	switch (bf->l_whence) {
+ 	case 0: /*SEEK_SET*/
+ 		break;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a3ed3c811dfa..138fb36ca875 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1031,13 +1031,17 @@ xfs_vn_setattr(
+ 
+ 	if (iattr->ia_valid & ATTR_SIZE) {
+ 		struct xfs_inode	*ip = XFS_I(d_inode(dentry));
+-		uint			iolock = XFS_IOLOCK_EXCL;
++		uint			iolock;
++
++		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
++		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 
+ 		error = xfs_break_layouts(d_inode(dentry), &iolock);
+-		if (error)
++		if (error) {
++			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 			return error;
++		}
+ 
+-		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 		error = xfs_vn_setattr_size(dentry, iattr);
+ 		xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+ 	} else {
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index aa6c5c193f45..6ea7b0b55d02 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -43,7 +43,8 @@ xfs_break_layouts(
+ 	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
+ 		xfs_iunlock(ip, *iolock);
+ 		error = break_layout(inode, true);
+-		*iolock = XFS_IOLOCK_EXCL;
++		*iolock &= ~XFS_IOLOCK_SHARED;
++		*iolock |= XFS_IOLOCK_EXCL;
+ 		xfs_ilock(ip, *iolock);
+ 	}
+ 
 
