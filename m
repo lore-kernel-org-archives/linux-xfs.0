@@ -1,69 +1,201 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:41217 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756720AbeDXLpH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 07:45:07 -0400
-Date: Tue, 24 Apr 2018 19:45:01 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] xfs/191: remove logarithm-based test
-Message-ID: <20180424114501.GC11384@desktop>
-References: <1524281782-18208-1-git-send-email-yangx.jy@cn.fujitsu.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:38460 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751384AbeDXRfk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 13:35:40 -0400
+Date: Tue, 24 Apr 2018 10:35:39 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] iomap: add a swapfile activation function
+Message-ID: <20180424173539.GB25233@infradead.org>
+References: <20180418025023.GM24738@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1524281782-18208-1-git-send-email-yangx.jy@cn.fujitsu.com>
+In-Reply-To: <20180418025023.GM24738@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org
 
-[cc linux-xfs for xfs specific test for review]
+This looks much better than using bmap, but I still think that
+having the swap code build its own ineffecient extents maps is
+a horible idea..
 
-On Sat, Apr 21, 2018 at 11:36:22AM +0800, Xiao Yang wrote:
-> Since commit 2cf637c in xfsprogs-dev, logarithm-based options
-> were removed, so it's unnecessary to test them.
+On Tue, Apr 17, 2018 at 07:50:23PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
-
-This reminded me that Dave mentioned xfs/191 was broken[1], just remove
-it from auto group?
-
-Thanks,
-Eryu
-
-[1] https://www.spinics.net/lists/fstests/msg08915.html
-
+> Add a new iomap_swapfile_activate function so that filesystems can
+> activate swap files without having to use the obsolete and slow bmap
+> function.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  tests/xfs/191-input-validation | 2 --
->  1 file changed, 2 deletions(-)
+>  fs/iomap.c            |   99 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_aops.c     |   12 ++++++
+>  include/linux/iomap.h |    7 +++
+>  3 files changed, 118 insertions(+)
 > 
-> diff --git a/tests/xfs/191-input-validation b/tests/xfs/191-input-validation
-> index cff3efa..f3498a0 100755
-> --- a/tests/xfs/191-input-validation
-> +++ b/tests/xfs/191-input-validation
-> @@ -262,7 +262,6 @@ do_mkfs_fail -l version=0  $SCRATCH_DEV
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index afd1635..ace921b 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1089,3 +1089,102 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_dio_rw);
+> +
+> +/* Swapfile activation */
+> +
+> +struct iomap_swapfile_info {
+> +	struct swap_info_struct *sis;
+> +	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
+> +	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
+> +	unsigned long expected_page_no;	/* next logical offset wanted (pages) */
+> +	int nr_extents;			/* extent count */
+> +};
+> +
+> +static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+> +		loff_t count, void *data, struct iomap *iomap)
+> +{
+> +	struct iomap_swapfile_info *isi = data;
+> +	unsigned long page_no = iomap->offset >> PAGE_SHIFT;
+> +	unsigned long nr_pages = iomap->length >> PAGE_SHIFT;
+> +	uint64_t first_ppage = iomap->addr >> PAGE_SHIFT;
+> +	uint64_t last_ppage = ((iomap->addr + iomap->length) >> PAGE_SHIFT) - 1;
+> +
+> +	/* Only one bdev per swap file. */
+> +	if (iomap->bdev != isi->sis->bdev)
+> +		goto err;
+> +
+> +	/* Must be aligned to a page boundary. */
+> +	if ((iomap->offset & ~PAGE_MASK) || (iomap->addr & ~PAGE_MASK) ||
+> +	    (iomap->length & ~PAGE_MASK))
+> +		goto err;
+> +
+> +	/* Only real or unwritten extents. */
+> +	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
+> +		goto err;
+> +
+> +	/* No sparse files. */
+> +	if (isi->expected_page_no != page_no)
+> +		goto err;
+> +
+> +	/* No uncommitted metadata or shared blocks or inline data. */
+> +	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
+> +			    IOMAP_F_DATA_INLINE))
+> +		goto err;
+> +
+> +	/*
+> +	 * Calculate how much swap space we're adding; the first page contains
+> +	 * the swap header and doesn't count.
+> +	 */
+> +	if (page_no == 0)
+> +		first_ppage++;
+> +	if (isi->lowest_ppage > first_ppage)
+> +		isi->lowest_ppage = first_ppage;
+> +	if (isi->highest_ppage < last_ppage)
+> +		isi->highest_ppage = last_ppage;
+> +
+> +	/* Add extent, set up for the next call. */
+> +	isi->nr_extents += add_swap_extent(isi->sis, page_no, nr_pages,
+> +			first_ppage);
+> +	isi->expected_page_no = page_no + nr_pages;
+> +
+> +	return count;
+> +err:
+> +	pr_err("swapon: swapfile has holes\n");
+> +	return -EINVAL;
+> +}
+> +
+> +int iomap_swapfile_activate(struct swap_info_struct *sis,
+> +		struct file *swap_file, sector_t *pagespan,
+> +		const struct iomap_ops *ops)
+> +{
+> +	struct iomap_swapfile_info isi = {
+> +		.sis = sis,
+> +		.lowest_ppage = (sector_t)-1ULL,
+> +	};
+> +	struct address_space *mapping = swap_file->f_mapping;
+> +	struct inode *inode = mapping->host;
+> +	loff_t pos = 0;
+> +	loff_t len = i_size_read(inode);
+> +	loff_t ret;
+> +
+> +	ret = filemap_write_and_wait(inode->i_mapping);
+> +	if (ret)
+> +		return ret;
+> +
+> +	while (len > 0) {
+> +		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
+> +				ops, &isi, iomap_swapfile_activate_actor);
+> +		if (ret <= 0)
+> +			return ret;
+> +
+> +		pos += ret;
+> +		len -= ret;
+> +	}
+> +
+> +	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
+> +	sis->max = isi.expected_page_no;
+> +	sis->pages = isi.expected_page_no - 1;
+> +	sis->highest_bit = isi.expected_page_no - 1;
+> +	return isi.nr_extents;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 0ab824f..80de476 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1475,6 +1475,16 @@ xfs_vm_set_page_dirty(
+>  	return newly_dirty;
+>  }
 >  
->  # naming section, should pass
->  do_mkfs_pass -n size=65536 $SCRATCH_DEV
-> -do_mkfs_pass -n log=15 $SCRATCH_DEV
->  do_mkfs_pass -n version=2 $SCRATCH_DEV
->  do_mkfs_pass -n version=ci $SCRATCH_DEV
->  do_mkfs_pass -n ftype=0 -m crc=0 $SCRATCH_DEV
-> @@ -309,7 +308,6 @@ do_mkfs_fail -r size=65536 $SCRATCH_DEV
->  do_mkfs_pass -i size=256 -m crc=0 $SCRATCH_DEV
->  do_mkfs_pass -i size=512 $SCRATCH_DEV
->  do_mkfs_pass -i size=2048 $SCRATCH_DEV
-> -do_mkfs_pass -i log=10 $SCRATCH_DEV
->  do_mkfs_pass -i perblock=2 $SCRATCH_DEV
->  do_mkfs_pass -i maxpct=10 $SCRATCH_DEV
->  do_mkfs_pass -i maxpct=100 $SCRATCH_DEV
-> -- 
-> 1.8.3.1
-> 
-> 
-> 
+> +static int
+> +xfs_iomap_swapfile_activate(
+> +	struct swap_info_struct		*sis,
+> +	struct file			*swap_file,
+> +	sector_t			*span)
+> +{
+> +	sis->bdev = xfs_find_bdev_for_inode(file_inode(swap_file));
+> +	return iomap_swapfile_activate(sis, swap_file, span, &xfs_iomap_ops);
+> +}
+> +
+>  const struct address_space_operations xfs_address_space_operations = {
+>  	.readpage		= xfs_vm_readpage,
+>  	.readpages		= xfs_vm_readpages,
+> @@ -1488,6 +1498,7 @@ const struct address_space_operations xfs_address_space_operations = {
+>  	.migratepage		= buffer_migrate_page,
+>  	.is_partially_uptodate  = block_is_partially_uptodate,
+>  	.error_remove_page	= generic_error_remove_page,
+> +	.swap_activate		= xfs_iomap_swapfile_activate,
+>  };
+>  
+>  const struct address_space_operations xfs_dax_aops = {
+> @@ -1495,4 +1506,5 @@ const struct address_space_operations xfs_dax_aops = {
+>  	.direct_IO		= noop_direct_IO,
+>  	.set_page_dirty		= noop_set_page_dirty,
+>  	.invalidatepage		= noop_invalidatepage,
+> +	.swap_activate		= xfs_iomap_swapfile_activate,
+>  };
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 19a07de..66d1c35 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -106,4 +106,11 @@ typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
+>  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
+>  
+> +struct file;
+> +struct swap_info_struct;
+> +
+> +int iomap_swapfile_activate(struct swap_info_struct *sis,
+> +		struct file *swap_file, sector_t *pagespan,
+> +		const struct iomap_ops *ops);
+> +
+>  #endif /* LINUX_IOMAP_H */
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
