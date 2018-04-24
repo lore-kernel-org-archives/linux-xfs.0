@@ -1,83 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:33329 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750756AbeDWE1B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Apr 2018 00:27:01 -0400
-Received: by mail-qk0-f178.google.com with SMTP id c70so6046414qkg.0
-        for <linux-xfs@vger.kernel.org>; Sun, 22 Apr 2018 21:27:01 -0700 (PDT)
-From: Kirubakaran Kaliannan <kirubak@zadarastorage.com>
-References: <c126c0a025db7e4011b4461c1ff26601@mail.gmail.com> <20180413154313.GC32099@magnolia>
-In-Reply-To: <20180413154313.GC32099@magnolia>
+Received: from mga18.intel.com ([134.134.136.126]:54712 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750779AbeDXXnw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Apr 2018 19:43:52 -0400
+Subject: [PATCH v9 9/9] xfs, dax: introduce xfs_break_dax_layouts()
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 24 Apr 2018 16:33:50 -0700
+Message-ID: <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
+References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
-Date: Mon, 23 Apr 2018 09:56:58 +0530
-Message-ID: <3bd0697599c117cfd4db6431a2cba270@mail.gmail.com>
-Subject: RE: statvfs() return large f_bavail on a 10TB drive
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-nvdimm@lists.01.org
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.orgjack@suse.czhch@lst.de
 
-Hi Darrick,
+xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
+for busy / pinned dax pages and waits for those pages to go idle before
+any potential extent unmap operation.
 
-Yes this looks like the bitflip !
-Do you have seen any occurrence of this before or maybe something related t=
-o
-a in-memory corruption ?
+dax_layout_busy_page() handles synchronizing against new page-busy
+events (get_user_pages). It invalidates all mappings to trigger the
+get_user_pages slow path which will eventually block on the xfs inode
+lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
+busy page it returns it for xfs to wait for the page-idle event that
+will fire when the page reference count reaches 1 (recall ZONE_DEVICE
+pages are idle at count 1, see generic_dax_pagefree()).
 
-Thaks
--kiru
+While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
+deadlock the process that might be trying to elevate the page count of
+more pages before arranging for any of them to go idle. I.e. the typical
+case of submitting I/O is that iov_iter_get_pages() elevates the
+reference count of all pages in the I/O before starting I/O on the first
+page. The process of elevating the reference count of all pages involved
+in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
 
------Original Message-----
-From: Darrick J. Wong [mailto:darrick.wong@oracle.com]
-Sent: Friday, April 13, 2018 9:13 PM
-To: Kirubakaran Kaliannan
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: statvfs() return large f_bavail on a 10TB drive
+Although XFS_MMAPLOCK_EXCL is dropped while waiting, XFS_IOLOCK_EXCL is
+held while sleeping. We need this to prevent starvation of the truncate
+path as continuous submission of direct-I/O could starve the truncate
+path indefinitely if the lock is dropped.
 
-On Fri, Apr 13, 2018 at 12:10:19PM +0530, Kirubakaran Kaliannan wrote:
-> Hi All,
->
-> I have couple of  xfs filesystem  on a 10TB STAT drive.
->
-> After 50% of filesystem is full, the df =E2=80=93kH is returning a large =
-f_bavail.
->
->
-> Filesystem                   Size  Used Avail Use% Mounted on
-> /dev/dm-4                     10T  -12T   22T    - /mnt/a
-> /dev/dm-3                     10T  -12T   22T    - /mnt/b
->
-> I tried statvfs() and got the same large f_bavail as well,
->
->         total filesystem size =3D 9763506176 KB
->         total Available size =3D 21279656740 KB
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+Reported-by: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ fs/xfs/xfs_file.c |   59 +++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 48 insertions(+), 11 deletions(-)
 
-21279656740KB =3D 0x100000000000 | (about 50% of the space) ?
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 1a5176b21803..4e98d0dcc035 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -718,6 +718,37 @@ xfs_file_write_iter(
+ 	return ret;
+ }
+ 
++static void
++xfs_wait_dax_page(
++	struct inode		*inode,
++	bool			*did_unlock)
++{
++	struct xfs_inode        *ip = XFS_I(inode);
++
++	*did_unlock = true;
++	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
++	schedule();
++	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
++}
++
++static int
++xfs_break_dax_layouts(
++	struct inode		*inode,
++	uint			iolock,
++	bool			*did_unlock)
++{
++	struct page		*page;
++
++	*did_unlock = false;
++	page = dax_layout_busy_page(inode->i_mapping);
++	if (!page)
++		return 0;
++
++	return ___wait_var_event(&page->_refcount,
++			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
++			0, 0, xfs_wait_dax_page(inode, did_unlock));
++}
++
+ int
+ xfs_break_layouts(
+ 	struct inode		*inode,
+@@ -729,17 +760,23 @@ xfs_break_layouts(
+ 
+ 	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
+ 
+-	switch (reason) {
+-	case BREAK_UNMAP:
+-		ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
+-		/* fall through */
+-	case BREAK_WRITE:
+-		error = xfs_break_leased_layouts(inode, iolock, &retry);
+-		break;
+-	default:
+-		WARN_ON_ONCE(1);
+-		return -EINVAL;
+-	}
++	do {
++		switch (reason) {
++		case BREAK_UNMAP:
++			ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
++
++			error = xfs_break_dax_layouts(inode, *iolock, &retry);
++			/* fall through */
++		case BREAK_WRITE:
++			if (error || retry)
++				break;
++			error = xfs_break_leased_layouts(inode, iolock, &retry);
++			break;
++		default:
++			WARN_ON_ONCE(1);
++			return -EINVAL;
++		}
++	} while (error == 0 && retry);
+ 
+ 	return error;
+ }
 
-Bitflip?
-
---D
-
->         total used size =3D -11516150564 KB
->
-> We are using Ubuntu 3.18.19 Linux kernel/xfs.
->
-> If I unmount and mount the filesysem back, the f_bavail values are back t=
-o
-> normal.
->
-> Can you please point me, if this is something a known issue got fixed in
-> XFS in the later version, or any lead may help.
-> It is difficult at this point of time to upgrade the XFS for this specifi=
-c
-> issue.
->
-> Thanks,
-> -kiru
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
