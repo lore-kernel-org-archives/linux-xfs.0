@@ -1,201 +1,231 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38460 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751384AbeDXRfk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 13:35:40 -0400
-Date: Tue, 24 Apr 2018 10:35:39 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] iomap: add a swapfile activation function
-Message-ID: <20180424173539.GB25233@infradead.org>
-References: <20180418025023.GM24738@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:35504 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750842AbeDXQGe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 12:06:34 -0400
+Date: Tue, 24 Apr 2018 09:06:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] generic: test XATTR_REPLACE doesn't take the fs down
+Message-ID: <20180424160630.GB26261@magnolia>
+References: <20180418003236.GE5201@magnolia>
+ <20180418042457.GF5201@magnolia>
+ <20180424120859.GD11384@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180418025023.GM24738@magnolia>
+In-Reply-To: <20180424120859.GD11384@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: kanda.motohiro@gmail.com, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-This looks much better than using bmap, but I still think that
-having the swap code build its own ineffecient extents maps is
-a horible idea..
+On Tue, Apr 24, 2018 at 08:08:59PM +0800, Eryu Guan wrote:
+> On Tue, Apr 17, 2018 at 09:24:57PM -0700, Darrick J. Wong wrote:
+> > [cc xfs/fstests lists]
+> > 
+> > On Tue, Apr 17, 2018 at 05:32:36PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Kanda Motohiro reported that expanding a tiny xattr into a large xattr
+> > > fails on XFS because we remove the tiny xattr from a shortform fork and
+> > > then try to re-add it after converting the fork to extents format having
+> > > not removed the ATTR_REPLACE flag.  This fails because the attr is no
+> > > longer present, causing a fs shutdown.
+> > > 
+> > > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
+> > > Reported-by: kanda.motohiro@gmail.com
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Some minor issues below, but I think I can fix them all on commit.
+> 
+> > > ---
+> > >  src/Makefile            |    3 +-
+> > >  src/attr_replace_test.c |   47 +++++++++++++++++++++++++++++++++++
+> 
+> Need a .gitignore entry for it.
 
-On Tue, Apr 17, 2018 at 07:50:23PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+Ok.  Assuming you meant a .gitignore entry for src/attr_replace_test,
+not the source file itself.
+
+> > >  tests/generic/706       |   64 +++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/generic/706.out   |    2 +
+> > >  tests/generic/group     |    1 +
+> > >  5 files changed, 116 insertions(+), 1 deletion(-)
+> > >  create mode 100644 src/attr_replace_test.c
+> > >  create mode 100755 tests/generic/706
+> > >  create mode 100644 tests/generic/706.out
+> > > 
+> > > diff --git a/src/Makefile b/src/Makefile
+> > > index 0d3feae..162e529 100644
+> > > --- a/src/Makefile
+> > > +++ b/src/Makefile
+> > > @@ -25,7 +25,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+> > >  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
+> > >  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
+> > >  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+> > > -	dio-invalidate-cache stat_test t_encrypted_d_revalidate
+> > > +	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+> > > +	attr_replace_test
+> > >  
+> > >  SUBDIRS = log-writes perf
+> > >  
+> > > diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
+> > > new file mode 100644
+> > > index 0000000..583ca17
+> > > --- /dev/null
+> > > +++ b/src/attr_replace_test.c
+> > > @@ -0,0 +1,47 @@
+> > > +// setattr.c by kanda.motohiro@gmail.com
+> > > +// xfs extended attribute corruption bug reproducer
+> > > +#include <stdio.h>
+> > > +#include <string.h>
+> > > +#include <fcntl.h>
+> > > +#include <errno.h>
+> > > +#include <stdlib.h>
+> > > +#include <unistd.h>
+> > > +#include <sys/types.h>
+> > > +#include <sys/xattr.h>
+> > > +
+> > > +#define die() do { perror(""); \
+> > > +fprintf(stderr, "error=%d at line %d\n", errno, __LINE__); \
+> > > +exit(1); } while (0)
+> > > +
+> > > +int main(int argc, char *argv[])
+> > > +{
+> > > +	int ret;
+> > > +	int fd;
+> > > +	char *path = "/mnt/xfs/hello";
 > 
-> Add a new iomap_swapfile_activate function so that filesystems can
-> activate swap files without having to use the obsolete and slow bmap
-> function.
+> I'd like not assign default path to "/mnt/xfs/hello", just in case we
+> forget the testfile argument and test runs against /mnt/xfs/hello
+> accidently and test passes silently.
+
+Ok, please get rid of it then. :)
+
+> > > +	char *name = "user.world";
+> > > +	char value[2048];
+> > > +	size_t size = sizeof(value);
+> > > +
+> > > +	if (argc == 2)
+> > > +		path = argv[1];
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/iomap.c            |   99 +++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_aops.c     |   12 ++++++
->  include/linux/iomap.h |    7 +++
->  3 files changed, 118 insertions(+)
+> I'll make sure argc == 2, and error out if not.
+
+Ok.
+
+> Thanks,
+> Eryu
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index afd1635..ace921b 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -1089,3 +1089,102 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	return ret;
->  }
->  EXPORT_SYMBOL_GPL(iomap_dio_rw);
-> +
-> +/* Swapfile activation */
-> +
-> +struct iomap_swapfile_info {
-> +	struct swap_info_struct *sis;
-> +	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
-> +	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
-> +	unsigned long expected_page_no;	/* next logical offset wanted (pages) */
-> +	int nr_extents;			/* extent count */
-> +};
-> +
-> +static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
-> +		loff_t count, void *data, struct iomap *iomap)
-> +{
-> +	struct iomap_swapfile_info *isi = data;
-> +	unsigned long page_no = iomap->offset >> PAGE_SHIFT;
-> +	unsigned long nr_pages = iomap->length >> PAGE_SHIFT;
-> +	uint64_t first_ppage = iomap->addr >> PAGE_SHIFT;
-> +	uint64_t last_ppage = ((iomap->addr + iomap->length) >> PAGE_SHIFT) - 1;
-> +
-> +	/* Only one bdev per swap file. */
-> +	if (iomap->bdev != isi->sis->bdev)
-> +		goto err;
-> +
-> +	/* Must be aligned to a page boundary. */
-> +	if ((iomap->offset & ~PAGE_MASK) || (iomap->addr & ~PAGE_MASK) ||
-> +	    (iomap->length & ~PAGE_MASK))
-> +		goto err;
-> +
-> +	/* Only real or unwritten extents. */
-> +	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
-> +		goto err;
-> +
-> +	/* No sparse files. */
-> +	if (isi->expected_page_no != page_no)
-> +		goto err;
-> +
-> +	/* No uncommitted metadata or shared blocks or inline data. */
-> +	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
-> +			    IOMAP_F_DATA_INLINE))
-> +		goto err;
-> +
-> +	/*
-> +	 * Calculate how much swap space we're adding; the first page contains
-> +	 * the swap header and doesn't count.
-> +	 */
-> +	if (page_no == 0)
-> +		first_ppage++;
-> +	if (isi->lowest_ppage > first_ppage)
-> +		isi->lowest_ppage = first_ppage;
-> +	if (isi->highest_ppage < last_ppage)
-> +		isi->highest_ppage = last_ppage;
-> +
-> +	/* Add extent, set up for the next call. */
-> +	isi->nr_extents += add_swap_extent(isi->sis, page_no, nr_pages,
-> +			first_ppage);
-> +	isi->expected_page_no = page_no + nr_pages;
-> +
-> +	return count;
-> +err:
-> +	pr_err("swapon: swapfile has holes\n");
-> +	return -EINVAL;
-> +}
-> +
-> +int iomap_swapfile_activate(struct swap_info_struct *sis,
-> +		struct file *swap_file, sector_t *pagespan,
-> +		const struct iomap_ops *ops)
-> +{
-> +	struct iomap_swapfile_info isi = {
-> +		.sis = sis,
-> +		.lowest_ppage = (sector_t)-1ULL,
-> +	};
-> +	struct address_space *mapping = swap_file->f_mapping;
-> +	struct inode *inode = mapping->host;
-> +	loff_t pos = 0;
-> +	loff_t len = i_size_read(inode);
-> +	loff_t ret;
-> +
-> +	ret = filemap_write_and_wait(inode->i_mapping);
-> +	if (ret)
-> +		return ret;
-> +
-> +	while (len > 0) {
-> +		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
-> +				ops, &isi, iomap_swapfile_activate_actor);
-> +		if (ret <= 0)
-> +			return ret;
-> +
-> +		pos += ret;
-> +		len -= ret;
-> +	}
-> +
-> +	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
-> +	sis->max = isi.expected_page_no;
-> +	sis->pages = isi.expected_page_no - 1;
-> +	sis->highest_bit = isi.expected_page_no - 1;
-> +	return isi.nr_extents;
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 0ab824f..80de476 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1475,6 +1475,16 @@ xfs_vm_set_page_dirty(
->  	return newly_dirty;
->  }
->  
-> +static int
-> +xfs_iomap_swapfile_activate(
-> +	struct swap_info_struct		*sis,
-> +	struct file			*swap_file,
-> +	sector_t			*span)
-> +{
-> +	sis->bdev = xfs_find_bdev_for_inode(file_inode(swap_file));
-> +	return iomap_swapfile_activate(sis, swap_file, span, &xfs_iomap_ops);
-> +}
-> +
->  const struct address_space_operations xfs_address_space_operations = {
->  	.readpage		= xfs_vm_readpage,
->  	.readpages		= xfs_vm_readpages,
-> @@ -1488,6 +1498,7 @@ const struct address_space_operations xfs_address_space_operations = {
->  	.migratepage		= buffer_migrate_page,
->  	.is_partially_uptodate  = block_is_partially_uptodate,
->  	.error_remove_page	= generic_error_remove_page,
-> +	.swap_activate		= xfs_iomap_swapfile_activate,
->  };
->  
->  const struct address_space_operations xfs_dax_aops = {
-> @@ -1495,4 +1506,5 @@ const struct address_space_operations xfs_dax_aops = {
->  	.direct_IO		= noop_direct_IO,
->  	.set_page_dirty		= noop_set_page_dirty,
->  	.invalidatepage		= noop_invalidatepage,
-> +	.swap_activate		= xfs_iomap_swapfile_activate,
->  };
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 19a07de..66d1c35 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -106,4 +106,11 @@ typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
->  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
->  
-> +struct file;
-> +struct swap_info_struct;
-> +
-> +int iomap_swapfile_activate(struct swap_info_struct *sis,
-> +		struct file *swap_file, sector_t *pagespan,
-> +		const struct iomap_ops *ops);
-> +
->  #endif /* LINUX_IOMAP_H */
+> > > +
+> > > +	fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+> > > +	if (fd < 0) die();
+> > > +
+> > > +	// First, create a small xattr.
+> > > +	memset(value, '0', 1);
+> > > +	ret = fsetxattr(fd, name, value, 1, XATTR_CREATE);
+> > > +	if (ret < 0) die();
+> > > +	close(fd);
+> > > +
+> > > +	fd = open(path, O_RDWR);
+> > > +	if (fd < 0) die();
+> > > +
+> > > +	// Then, replace it with bigger one, forcing short form to leaf conversion.
+> > > +	memset(value, '1', sizeof(value));
+> > > +	ret = fsetxattr(fd, name, value, size, XATTR_REPLACE);
+> > > +	if (ret < 0) die();
+> > > +	close(fd);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > diff --git a/tests/generic/706 b/tests/generic/706
+> > > new file mode 100755
+> > > index 0000000..4d8f180
+> > > --- /dev/null
+> > > +++ b/tests/generic/706
+> > > @@ -0,0 +1,64 @@
+> > > +#! /bin/bash
+> > > +# FS QA Test No. 706
+> > > +#
+> > > +# Ensure that we can XATTR_REPLACE a tiny attr into a large attr.
+> > > +# Kanda Motohiro <kanda.motohiro@gmail.com> reports that XATTR_REPLACE'ing
+> > > +# a single-byte attr with a 2048-byte attr causes a fs shutdown because we
+> > > +# remove the shortform attr, convert the attr fork to long format, and then
+> > > +# try to re-add the attr having not cleared ATTR_REPLACE.
+> > > +#
+> > > +#-----------------------------------------------------------------------
+> > > +# Copyright (c) 2018 Oracle.  All Rights Reserved.
+> > > +#
+> > > +# This program is free software; you can redistribute it and/or
+> > > +# modify it under the terms of the GNU General Public License as
+> > > +# published by the Free Software Foundation.
+> > > +#
+> > > +# This program is distributed in the hope that it would be useful,
+> > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > +# GNU General Public License for more details.
+> > > +#
+> > > +# You should have received a copy of the GNU General Public License
+> > > +# along with this program; if not, write the Free Software Foundation,
+> > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > > +#
+> > > +#-----------------------------------------------------------------------
+> > > +
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +status=1	# failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	cd /
+> > > +	rm -f $testfile
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +. ./common/attr
+> > > +
+> > > +# remove previous $seqres.full before test
+> > > +rm -f $seqres.full
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs generic
+> > > +_supported_os Linux
+> > > +_require_test_program "attr_replace_test"
+> > > +_require_attrs
+> > > +_require_scratch
+> > > +
+> > > +rm -f $seqres.full
+> > > +_scratch_mkfs >>$seqres.full 2>&1
+> > > +_scratch_mount >>$seqres.full 2>&1
+> > > +
+> > > +./src/attr_replace_test $SCRATCH_MNT/hello
+> > > +$ATTR_PROG -l $SCRATCH_MNT/hello | _filter_scratch
+> > > +
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/generic/706.out b/tests/generic/706.out
+> > > new file mode 100644
+> > > index 0000000..1c654c1
+> > > --- /dev/null
+> > > +++ b/tests/generic/706.out
+> > > @@ -0,0 +1,2 @@
+> > > +QA output created by 706
+> > > +Attribute "world" has a 2048 byte value for SCRATCH_MNT/hello
+> > > diff --git a/tests/generic/group b/tests/generic/group
+> > > index 3f93dc4..fc05315 100644
+> > > --- a/tests/generic/group
+> > > +++ b/tests/generic/group
+> > > @@ -487,3 +487,4 @@
+> > >  482 auto metadata replay
+> > >  483 auto quick log metadata
+> > >  484 auto quick insert
+> > > +706 auto quick attr
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
