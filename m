@@ -1,58 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40758 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750826AbeDXQBG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Apr 2018 12:01:06 -0400
-Subject: Re: [PATCH 07/13] xfs: refactor incore dquot initialization functions
+Received: from userp2120.oracle.com ([156.151.31.85]:48358 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757825AbeDXOFE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 10:05:04 -0400
+Date: Tue, 24 Apr 2018 07:04:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 13/13] xfs: refactor dquot iteration
+Message-ID: <20180424140444.GF26268@magnolia>
 References: <152440954198.29601.14390250048915099607.stgit@magnolia>
- <152440959784.29601.7345409188558922914.stgit@magnolia>
- <20180423172755.GG834@lst.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7b75039e-92a4-7d63-3881-2fb5d29c31ee@sandeen.net>
-Date: Tue, 24 Apr 2018 10:01:03 -0600
+ <152440964413.29601.4956532853947603949.stgit@magnolia>
+ <20180424130808.GC50204@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180423172755.GG834@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180424130808.GC50204@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On 4/23/18 11:27 AM, Christoph Hellwig wrote:
-> On Sun, Apr 22, 2018 at 08:06:37AM -0700, Darrick J. Wong wrote:
->> -/*
->> - * Read in the ondisk dquot using dqtobp() then copy it to an incore version,
->> - * and release the buffer immediately.
->> - *
->> - * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
->> - */
->> -int
->> -xfs_qm_dqread(
->> +/* Allocate and initialize everything we need for an incore dquot. */
->> +STATIC struct xfs_dquot *
->> +xfs_qm_dqinit_once(
->>  	struct xfs_mount	*mp,
->>  	xfs_dqid_t		id,
->> -	uint			type,
->> -	uint			flags,
->> -	struct xfs_dquot	**O_dqpp)
->> +	uint			type)
->>  {
->>  	struct xfs_dquot	*dqp;
->> -	struct xfs_disk_dquot	*ddqp;
->> -	struct xfs_buf		*bp;
->> -	struct xfs_trans	*tp = NULL;
->> -	int			error;
->>  
->>  	dqp = kmem_zone_zalloc(xfs_qm_dqzone, KM_SLEEP);
+On Tue, Apr 24, 2018 at 09:08:09AM -0400, Brian Foster wrote:
+> On Sun, Apr 22, 2018 at 08:07:24AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a helper function to iterate all the dquots of a given type in
+> > the system, and refactor the dquot scrub to use it.  This will get more
+> > use in the quota repair code.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/scrub/quota.c |   45 +++++++++++++++++++++------------------------
+> >  fs/xfs/xfs_dquot.c   |   32 ++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_dquot.h   |    5 +++++
+> >  3 files changed, 58 insertions(+), 24 deletions(-)
+> > 
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index 7ce3dbd..1f1139d 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -1213,3 +1213,35 @@ xfs_qm_exit(void)
+> >  	kmem_zone_destroy(xfs_qm_dqtrxzone);
+> >  	kmem_zone_destroy(xfs_qm_dqzone);
+> >  }
+> > +
+> > +/*
+> > + * Iterate every dquot of a particular type.  The caller must ensure that the
+> > + * particular quota type is active.  iter_fn can return negative error codes,
+> > + * or XFS_BTREE_QUERY_RANGE_ABORT to indicate that it wants to stop iterating.
+> > + */
+> > +int
+> > +xfs_qm_dqiterate(
+> > +	struct xfs_mount	*mp,
+> > +	uint			dqtype,
+> > +	xfs_qm_dqiterate_fn	iter_fn,
+> > +	void			*priv)
+> > +{
+> > +	struct xfs_dquot	*dq;
+> > +	xfs_dqid_t		id = 0;
+> > +	int			error;
+> > +
+> > +	do {
+> > +		error = xfs_qm_dqget_next(mp, id, dqtype, &dq);
+> > +		if (error == -ENOENT)
+> > +			return 0;
+> > +		if (error)
+> > +			return error;
+> > +
+> > +		id = be32_to_cpu(dq->q_core.d_id);
+> > +		error = iter_fn(dq, dqtype, id, priv);
 > 
-> Shouldn't this be called something like xfs_dquot_alloc given that
-> it allocates the xfs_dquot structure?
+> This passes the id from the dquot into the scrub function, which goes
+> and does:
+> 
+>         if (id > be32_to_cpu(d->d_id))
+>                 xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+> 
+> Is the intent to pass the search id into the iterator callback? If so,
+> perhaps a more descriptive name might be helpful (i.e., search_id, key,
+> whatever..). Otherwise looks Ok to me.
 
-Preaching to the choir here but I agree, "init_once" has a pretty specific
-meaning in slab allocation paths, and this isn't it. ;)
+Yep, ihe id parameter ought to be the id we passed into dqget_next.
+Thanks for catching that.
 
--Eric
+--D
+
+> Brian
+> 
+> > +		xfs_qm_dqput(dq);
+> > +		id++;
+> > +	} while (error == 0 && id != 0);
+> > +
+> > +	return error;
+> > +}
+> > diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+> > index fe99e43..5427355 100644
+> > --- a/fs/xfs/xfs_dquot.h
+> > +++ b/fs/xfs/xfs_dquot.h
+> > @@ -194,4 +194,9 @@ static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
+> >  	return dqp;
+> >  }
+> >  
+> > +typedef int (*xfs_qm_dqiterate_fn)(struct xfs_dquot *dq, uint dqtype,
+> > +		xfs_dqid_t id, void *priv);
+> > +int xfs_qm_dqiterate(struct xfs_mount *mp, uint dqtype,
+> > +		xfs_qm_dqiterate_fn iter_fn, void *priv);
+> > +
+> >  #endif /* __XFS_DQUOT_H__ */
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
