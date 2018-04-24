@@ -1,58 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:44441 "EHLO
-        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932416AbeDWWGZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Apr 2018 18:06:25 -0400
-Received: by mail-lf0-f53.google.com with SMTP id g203-v6so17239371lfg.11
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Apr 2018 15:06:24 -0700 (PDT)
+Received: from mail02.iobjects.de ([188.40.134.68]:43012 "EHLO
+        mail02.iobjects.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750902AbeDXWRP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 18:17:15 -0400
+Subject: Re: [PATCH 4/4] iomap: Use FUA for pure data O_DSYNC DIO writes
+References: <20180418040828.18165-1-david@fromorbit.com>
+ <20180418040828.18165-5-david@fromorbit.com>
+ <20180421125405.hyx3bbkohdgvducq@quack2.suse.cz>
+ <20180424173444.GA25233@infradead.org>
+From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Message-ID: <2fb29b95-a39d-3ee7-249b-86614a8dcbb4@applied-asynchrony.com>
+Date: Wed, 25 Apr 2018 00:07:07 +0200
 MIME-Version: 1.0
-In-Reply-To: <8736zlbndc.fsf@esperi.org.uk>
-References: <6179db6e-786d-40a2-936d-9fb4dfa2529f@googlegroups.com>
- <87k1uak2xb.fsf@trouble.defaultvalue.org> <CAHqTa-1eKSZq6Vph+th5YH-b43NAvF+BWCDoJqPJQGa3=Oze-w@mail.gmail.com>
- <874llde5yn.fsf@trouble.defaultvalue.org> <CAHqTa-1ghU6+Y0Y2pBOjbS=7CWKMytPvj-c1Z0aE3=PqpPi1OA@mail.gmail.com>
- <87k1u0ca2d.fsf@trouble.defaultvalue.org> <CAHqTa-0B-iZfjhX4pHMnb0d-XRhY_wCywsjOOnOgSRF1iFKN4Q@mail.gmail.com>
- <871sfsefs7.fsf@esperi.org.uk> <CAHqTa-25QqzDb+u9_4zXuoMGU5uF9nv_pmioLE+xJ+0pHbiYUg@mail.gmail.com>
- <87k1szdni5.fsf@esperi.org.uk> <CAHqTa-28D05VafHNeS0f16qHQ9A6g=Vb8u=YEODquniwfEAygA@mail.gmail.com>
- <871sf5ddi7.fsf@esperi.org.uk> <CAHqTa-3KHrC67r9tZs5kFNF7bSh5Dt_AYHnAEhHziqvAijD_wA@mail.gmail.com>
- <87lgddbshd.fsf@esperi.org.uk> <CAHqTa-1R6GDGvncE92PXmZC3ew5HZPZPqe-qWiBEREqjXygCZA@mail.gmail.com>
- <8736zlbndc.fsf@esperi.org.uk>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Mon, 23 Apr 2018 18:06:03 -0400
-Message-ID: <CAHqTa-1zY9jpuBNjyxWzH+Nk3xH5K+gEz9EnODEhWPPdY_kp-Q@mail.gmail.com>
-Subject: Re: bupsplit.c copyright and patching
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180424173444.GA25233@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Nix <nix@esperi.org.uk>
-Cc: Rob Browning <rlb@defaultvalue.org>, Robert Evans <evansr@google.com>, bup-list <bup-list@googlegroups.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-On Mon, Apr 23, 2018 at 5:53 PM, Nix <nix@esperi.org.uk> wrote:
-> On 23 Apr 2018, Avery Pennarun stated:
->>             If you are checking a couple of realtime streams to make
->> sure they don't miss any deadlines, then you might not notice any
->> impact, but you ought to notice a reduction in total available
->> throughput while a big backup task is running (unless it's running
->> using idle priority).
->
-> Of course it is. Why would you want to run a backup task at higher
-> priority than that? :)
+On 04/24/18 19:34, Christoph Hellwig wrote:
+> On Sat, Apr 21, 2018 at 02:54:05PM +0200, Jan Kara wrote:
+>>> -		if (iocb->ki_flags & IOCB_DSYNC)
+>>> +		if (iocb->ki_flags & IOCB_DSYNC) {
+>>>   			dio->flags |= IOMAP_DIO_NEED_SYNC;
+>>> +			/*
+>>> +			 * We optimistically try using FUA for this IO.  Any
+>>> +			 * non-FUA write that occurs will clear this flag, hence
+>>> +			 * we know before completion whether a cache flush is
+>>> +			 * necessary.
+>>> +			 */
+>>> +			dio->flags |= IOMAP_DIO_WRITE_FUA;
+>>> +		}
+>>
+>> So I don't think this is quite correct. IOCB_DSYNC gets set also for O_SYNC
+>> writes (in that case we also set IOCB_SYNC). And for those we cannot use
+>> the FUA optimization AFAICT (definitely IOMAP_F_DIRTY isn't a safe
+>> indicator of a need of full fsync for O_SYNC). Other than that the patch
+>> looks good to me.
+> 
+> Oops, good catch. I think the above if should just be
+> 
+> 		if (iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC) == IOCB_DSYNC)) {
+> 
+> and we are fine.
 
-Well, assuming your block scheduler supports it :)  Anyway, the idea
-is that this is relatively easy to benchmark empirically, as long as
-you know what to look for.
+The above line just gives parenthesis salad errors, so why not compromise
+on:
 
->> Incidentally, I have a tool that we used on a DVR product to ensure we
->> could support multiple realtime streams under heavy load (ie.
->> something like 12 readers + 12 writers on a single 7200 RPM disk).
->
-> This is also what xfs's realtime stuff was meant for, back in the day.
+	if ((iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC)) == IOCB_DSYNC) {
 
-Oops, I wasn't clear.  diskbench is a tool for checking whether your
-cpu + disk + filesystem + scheduler can handle the load.  It doesn't
-actually do the work.  That way you can do things like compare ext4,
-ext4 + large prealloc, xfs, different disk schedulers, etc.  For our
-dvr it was clear that the deadline scheduler did better, but only
-because we had virtually no non-dvr disk accesses.  It would have been
-really nice to be able to deprioritize all the non-realtime disk
-accesses.
+Unless my bit twiddling has completely left me I think this is what was
+intended, and it actually compiles too.
+
+cheers
+Holger
