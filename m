@@ -1,212 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35410 "EHLO
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:38548 "EHLO
         mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751155AbeDYDW0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 23:22:26 -0400
-Date: Wed, 25 Apr 2018 11:22:21 +0800
+        with ESMTP id S1754462AbeDXMJH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 08:09:07 -0400
+Date: Tue, 24 Apr 2018 20:08:59 +0800
 From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] tests/xfs: filestream allocator inode use-after-free test
-Message-ID: <20180425032221.GF11384@desktop>
-References: <20180406141815.6472-1-bfoster@redhat.com>
+Subject: Re: [PATCH] generic: test XATTR_REPLACE doesn't take the fs down
+Message-ID: <20180424120859.GD11384@desktop>
+References: <20180418003236.GE5201@magnolia>
+ <20180418042457.GF5201@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180406141815.6472-1-bfoster@redhat.com>
+In-Reply-To: <20180418042457.GF5201@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: kanda.motohiro@gmail.com, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Fri, Apr 06, 2018 at 10:18:15AM -0400, Brian Foster wrote:
-> The XFS filestreams allocator caches dir inode -> agno mappings in
-> an MRU mechanism that holds elements in memory for an amount of time
-> and then cleans up expired elements in the background. The elements
-> typically held inode pointers without holding a reference to the
-> associated inode. This means that if the inode is reclaimed before
-> an expired entry is cleaned up, the MRU reaper can access freed
-> memory and cause a panic.
+On Tue, Apr 17, 2018 at 09:24:57PM -0700, Darrick J. Wong wrote:
+> [cc xfs/fstests lists]
 > 
-> Test for this problem by performing continuous filestreams
-> allocations under short-lived parent directory inodes. This will
-> produce KASAN use-after-free splats if enabled during the test.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> This test reproduces the problem described in this[1] thread. It's
-> XFS-specific because of the filestream option and specific geometry used
-> to format the scratch device.
-> 
-> Brian
-> 
-> [1] https://marc.info/?l=linux-xfs&m=152293031029161&w=2
+> On Tue, Apr 17, 2018 at 05:32:36PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Kanda Motohiro reported that expanding a tiny xattr into a large xattr
+> > fails on XFS because we remove the tiny xattr from a shortform fork and
+> > then try to re-add it after converting the fork to extents format having
+> > not removed the ATTR_REPLACE flag.  This fails because the attr is no
+> > longer present, causing a fs shutdown.
+> > 
+> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
+> > Reported-by: kanda.motohiro@gmail.com
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
->From above thread, it seems that we don't need the kernel change
-anymore, and the test itself would trigger dmesg check failure when
-testing on kernel with kasan enabled, right?
+Some minor issues below, but I think I can fix them all on commit.
 
-But I've looped the test for 200 times and it all passed without
-triggering any KASAN warnings, kernel is v4.17-rc2.
+> > ---
+> >  src/Makefile            |    3 +-
+> >  src/attr_replace_test.c |   47 +++++++++++++++++++++++++++++++++++
 
-> 
->  tests/xfs/445     | 111 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/445.out |   2 +
->  tests/xfs/group   |   1 +
->  3 files changed, 114 insertions(+)
->  create mode 100755 tests/xfs/445
->  create mode 100644 tests/xfs/445.out
-> 
-> diff --git a/tests/xfs/445 b/tests/xfs/445
-> new file mode 100755
-> index 00000000..331a7dd4
-> --- /dev/null
-> +++ b/tests/xfs/445
-> @@ -0,0 +1,111 @@
-> +#! /bin/bash
-> +# FS QA Test 445
-> +#
-> +# Test the XFS filestreams allocator for use-after-free inode access. The
-> +# filestreams allocator uses the MRU and historically kept around unreferenced
-> +# inode pointers in each element. These pointers could outlive the inodes they
-> +# referred to and thus lead to access of freed or reused memory when the MRU
-> +# element was reaped. Test for this problem by performing filestream allocations
-> +# against short-lived parent directory inodes.
-> +#
-> +# Note that some form of kernel debug mechanism for use-after-free detection
-> +# (i.e., KASAN) is required for this test to reproduce the original problem.
-> +# This is because XFS uses a kmem cache for xfs_inode objects which means that
-> +# the backing pages for freed inodes may still reside in the cache with the
-> +# freed inodes in a partially initialized state.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/filestreams
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +drop_caches()
-> +{
-> +	while [ true ]; do
-> +		echo 2 > /proc/sys/vm/drop_caches
-> +		sleep 1
-> +	done
-> +}
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +# check for filestreams and min device size
-> +_check_filestreams_support || _notrun "filestreams not available"
-> +devsize=`blockdev --getsize64 $SCRATCH_DEV`
+Need a .gitignore entry for it.
 
-There're a few other tests follow the same pattern in getting device
-size, seems it's time to make it a helper function :)
+> >  tests/generic/706       |   64 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/706.out   |    2 +
+> >  tests/generic/group     |    1 +
+> >  5 files changed, 116 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/attr_replace_test.c
+> >  create mode 100755 tests/generic/706
+> >  create mode 100644 tests/generic/706.out
+> > 
+> > diff --git a/src/Makefile b/src/Makefile
+> > index 0d3feae..162e529 100644
+> > --- a/src/Makefile
+> > +++ b/src/Makefile
+> > @@ -25,7 +25,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+> >  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
+> >  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
+> >  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+> > -	dio-invalidate-cache stat_test t_encrypted_d_revalidate
+> > +	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+> > +	attr_replace_test
+> >  
+> >  SUBDIRS = log-writes perf
+> >  
+> > diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
+> > new file mode 100644
+> > index 0000000..583ca17
+> > --- /dev/null
+> > +++ b/src/attr_replace_test.c
+> > @@ -0,0 +1,47 @@
+> > +// setattr.c by kanda.motohiro@gmail.com
+> > +// xfs extended attribute corruption bug reproducer
+> > +#include <stdio.h>
+> > +#include <string.h>
+> > +#include <fcntl.h>
+> > +#include <errno.h>
+> > +#include <stdlib.h>
+> > +#include <unistd.h>
+> > +#include <sys/types.h>
+> > +#include <sys/xattr.h>
+> > +
+> > +#define die() do { perror(""); \
+> > +fprintf(stderr, "error=%d at line %d\n", errno, __LINE__); \
+> > +exit(1); } while (0)
+> > +
+> > +int main(int argc, char *argv[])
+> > +{
+> > +	int ret;
+> > +	int fd;
+> > +	char *path = "/mnt/xfs/hello";
 
-> +[ $devsize -gt $((2 * 1024 * 1024 * 1024)) ] || _notrun "scratch dev too small"
-> +
-> +# use small AGs for frequent stream switching
-> +_scratch_mkfs_xfs -d agsize=20m,size=2g >> $seqres.full 2>&1 ||
-> +	_fail "mkfs failed"
-> +_scratch_mount "-o filestreams" || _fail "mount failed"
+I'd like not assign default path to "/mnt/xfs/hello", just in case we
+forget the testfile argument and test runs against /mnt/xfs/hello
+accidently and test passes silently.
 
-No need to _fail on _scratch_mount failure, it's the default behavior
-now, since commit 69eb6281a9d3 ("fstests: _fail test by default when
-_scratch_mount fails").
+> > +	char *name = "user.world";
+> > +	char value[2048];
+> > +	size_t size = sizeof(value);
+> > +
+> > +	if (argc == 2)
+> > +		path = argv[1];
+
+I'll make sure argc == 2, and error out if not.
 
 Thanks,
 Eryu
 
-> +
-> +# start background inode reclaim
-> +drop_caches &
-> +pid=$!
-> +
-> +# Stress the filestreams allocator via continuous allocation to a file under
-> +# different parent dirs. Remove the old dirs as the file is moved so the MRU
-> +# references point to an unlinked inode by the time they are removed. If the
-> +# old dir inodes are reclaimed and associated memory reused, MRU cleanup can
-> +# access the inode after it's been freed.
-> +dir=$SCRATCH_MNT
-> +for i in $(seq 0 90); do
-> +	mkdir -p $dir/$i
-> +	$XFS_IO_PROG -fc "falloc $(($i * 20))m 20m" $dir/$i/file
-> +
-> +	mkdir -p $dir/$((i + 1))
-> +	mv $dir/$i/file $dir/$((i + 1))/file
-> +	rmdir $dir/$i
-> +
-> +	# throttle to ensure this loop sees several cache reclaims
-> +	sleep 0.1
-> +done
-> +
-> +kill $pid 2> /dev/null
-> +wait $pid 2> /dev/null
-> +
-> +echo Silence is golden
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/445.out b/tests/xfs/445.out
-> new file mode 100644
-> index 00000000..44e55d20
-> --- /dev/null
-> +++ b/tests/xfs/445.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 445
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 831f2cfa..2a7dec6f 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -442,3 +442,4 @@
->  442 auto stress clone quota
->  443 auto quick ioctl fsr
->  444 auto quick
-> +445 auto filestreams
-> -- 
-> 2.13.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > +
+> > +	fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+> > +	if (fd < 0) die();
+> > +
+> > +	// First, create a small xattr.
+> > +	memset(value, '0', 1);
+> > +	ret = fsetxattr(fd, name, value, 1, XATTR_CREATE);
+> > +	if (ret < 0) die();
+> > +	close(fd);
+> > +
+> > +	fd = open(path, O_RDWR);
+> > +	if (fd < 0) die();
+> > +
+> > +	// Then, replace it with bigger one, forcing short form to leaf conversion.
+> > +	memset(value, '1', sizeof(value));
+> > +	ret = fsetxattr(fd, name, value, size, XATTR_REPLACE);
+> > +	if (ret < 0) die();
+> > +	close(fd);
+> > +
+> > +	return 0;
+> > +}
+> > diff --git a/tests/generic/706 b/tests/generic/706
+> > new file mode 100755
+> > index 0000000..4d8f180
+> > --- /dev/null
+> > +++ b/tests/generic/706
+> > @@ -0,0 +1,64 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 706
+> > +#
+> > +# Ensure that we can XATTR_REPLACE a tiny attr into a large attr.
+> > +# Kanda Motohiro <kanda.motohiro@gmail.com> reports that XATTR_REPLACE'ing
+> > +# a single-byte attr with a 2048-byte attr causes a fs shutdown because we
+> > +# remove the shortform attr, convert the attr fork to long format, and then
+> > +# try to re-add the attr having not cleared ATTR_REPLACE.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2018 Oracle.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $testfile
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/attr
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_test_program "attr_replace_test"
+> > +_require_attrs
+> > +_require_scratch
+> > +
+> > +rm -f $seqres.full
+> > +_scratch_mkfs >>$seqres.full 2>&1
+> > +_scratch_mount >>$seqres.full 2>&1
+> > +
+> > +./src/attr_replace_test $SCRATCH_MNT/hello
+> > +$ATTR_PROG -l $SCRATCH_MNT/hello | _filter_scratch
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/706.out b/tests/generic/706.out
+> > new file mode 100644
+> > index 0000000..1c654c1
+> > --- /dev/null
+> > +++ b/tests/generic/706.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 706
+> > +Attribute "world" has a 2048 byte value for SCRATCH_MNT/hello
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index 3f93dc4..fc05315 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -487,3 +487,4 @@
+> >  482 auto metadata replay
+> >  483 auto quick log metadata
+> >  484 auto quick insert
+> > +706 auto quick attr
