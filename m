@@ -1,158 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39534 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50180 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755198AbeDWNzS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Apr 2018 09:55:18 -0400
-Date: Mon, 23 Apr 2018 09:54:58 -0400
+        id S1757787AbeDXNHd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Apr 2018 09:07:33 -0400
+Date: Tue, 24 Apr 2018 09:07:31 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 07/13] xfs: refactor incore dquot initialization functions
-Message-ID: <20180423135457.GG43600@bfoster.bfoster>
+Subject: Re: [PATCH 08/13] xfs: refactor xfs_qm_dqtobp and xfs_qm_dqalloc
+Message-ID: <20180424130731.GA50204@bfoster.bfoster>
 References: <152440954198.29601.14390250048915099607.stgit@magnolia>
- <152440959784.29601.7345409188558922914.stgit@magnolia>
+ <152440960423.29601.4842354354335883165.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152440959784.29601.7345409188558922914.stgit@magnolia>
+In-Reply-To: <152440960423.29601.4842354354335883165.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Sun, Apr 22, 2018 at 08:06:37AM -0700, Darrick J. Wong wrote:
+On Sun, Apr 22, 2018 at 08:06:44AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Create two incore dquot initialization functions that will help us to
-> disentangle dqget and dqread.
+> Separate the disk dquot read and allocation functionality into
+> two helper functions, then refactor dqread to call them directly.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_dquot.c |   80 +++++++++++++++++++++++++++++++++-------------------
->  1 file changed, 50 insertions(+), 30 deletions(-)
+>  fs/xfs/xfs_dquot.c |  261 ++++++++++++++++++++--------------------------------
+>  1 file changed, 99 insertions(+), 162 deletions(-)
 > 
 > 
 > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 62415f1..7154909 100644
+> index 7154909..ef4cd56 100644
 > --- a/fs/xfs/xfs_dquot.c
 > +++ b/fs/xfs/xfs_dquot.c
-> @@ -491,26 +491,14 @@ xfs_qm_dqtobp(
->  	return 0;
->  }
->  
-> -
-> -/*
-> - * Read in the ondisk dquot using dqtobp() then copy it to an incore version,
-> - * and release the buffer immediately.
-> - *
-> - * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
-> - */
-> -int
-> -xfs_qm_dqread(
-> +/* Allocate and initialize everything we need for an incore dquot. */
-> +STATIC struct xfs_dquot *
-> +xfs_qm_dqinit_once(
-
-I find the init_once() naming confusing. How about something more
-straightforward like xfs_dquot_alloc()?
-
->  	struct xfs_mount	*mp,
+...
+> @@ -574,74 +532,53 @@ xfs_qm_dqread(
 >  	xfs_dqid_t		id,
-> -	uint			type,
-> -	uint			flags,
+>  	uint			type,
+>  	uint			flags,
 > -	struct xfs_dquot	**O_dqpp)
-> +	uint			type)
+> +	struct xfs_dquot	**dqpp)
 >  {
 >  	struct xfs_dquot	*dqp;
 > -	struct xfs_disk_dquot	*ddqp;
-> -	struct xfs_buf		*bp;
+>  	struct xfs_buf		*bp;
 > -	struct xfs_trans	*tp = NULL;
-> -	int			error;
+> +	struct xfs_trans	*tp;
+>  	int			error;
 >  
->  	dqp = kmem_zone_zalloc(xfs_qm_dqzone, KM_SLEEP);
->  
-> @@ -549,7 +537,52 @@ xfs_qm_dqread(
->  	}
->  
->  	XFS_STATS_INC(mp, xs_qm_dquot);
-> +	return dqp;
-> +}
-> +
-> +/* Copy the in-core quota fields in from the on-disk buffer. */
-> +STATIC void
-> +xfs_qm_dqinit_from_buf(
-> +	struct xfs_dquot	*dqp,
-> +	struct xfs_disk_dquot	*ddqp)
-> +{
-> +	/* copy everything from disk dquot to the incore dquot */
-> +	memcpy(&dqp->q_core, ddqp, sizeof(xfs_disk_dquot_t));
-> +	xfs_qm_dquot_logitem_init(dqp);
-
-I wonder if the logitem init should really be part of the "init from
-buf" helper?
-
-Otherwise looks fine:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +
-> +	/*
-> +	 * Reservation counters are defined as reservation plus current usage
-> +	 * to avoid having to add every time.
-> +	 */
-> +	dqp->q_res_bcount = be64_to_cpu(ddqp->d_bcount);
-> +	dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
-> +	dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
-> +
-> +	/* initialize the dquot speculative prealloc thresholds */
-> +	xfs_dquot_set_prealloc_limits(dqp);
-> +}
-> +
-> +/*
-> + * Read in the ondisk dquot using dqtobp() then copy it to an incore version,
-> + * and release the buffer immediately.
-> + *
-> + * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
-> + */
-> +int
-> +xfs_qm_dqread(
-> +	struct xfs_mount	*mp,
-> +	xfs_dqid_t		id,
-> +	uint			type,
-> +	uint			flags,
-> +	struct xfs_dquot	**O_dqpp)
-> +{
-> +	struct xfs_dquot	*dqp;
-> +	struct xfs_disk_dquot	*ddqp;
-> +	struct xfs_buf		*bp;
-> +	struct xfs_trans	*tp = NULL;
-> +	int			error;
->  
-> +	dqp = xfs_qm_dqinit_once(mp, id, type);
+>  	dqp = xfs_qm_dqinit_once(mp, id, type);
 >  	trace_xfs_dqread(dqp);
 >  
->  	if (flags & XFS_QMOPT_DQALLOC) {
-> @@ -574,20 +607,7 @@ xfs_qm_dqread(
->  		goto error1;
->  	}
+> -	if (flags & XFS_QMOPT_DQALLOC) {
+> +	/* Try to read the buffer... */
+> +	error = xfs_qm_dqread_ondisk(mp, dqp, &bp);
+> +	if (error == -ENOENT && (flags & XFS_QMOPT_DQALLOC)) {
+> +		/* ...or allocate a new block and buffer. */
+>  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
+>  				XFS_QM_DQALLOC_SPACE_RES(mp), 0, 0, &tp);
+>  		if (error)
+> -			goto error0;
+> -	}
+> +			goto err;
 >  
-> -	/* copy everything from disk dquot to the incore dquot */
-> -	memcpy(&dqp->q_core, ddqp, sizeof(xfs_disk_dquot_t));
-> -	xfs_qm_dquot_logitem_init(dqp);
-> -
 > -	/*
-> -	 * Reservation counters are defined as reservation plus current usage
-> -	 * to avoid having to add every time.
+> -	 * get a pointer to the on-disk dquot and the buffer containing it
+> -	 * dqp already knows its own type (GROUP/USER).
 > -	 */
-> -	dqp->q_res_bcount = be64_to_cpu(ddqp->d_bcount);
-> -	dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
-> -	dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
-> -
-> -	/* initialize the dquot speculative prealloc thresholds */
-> -	xfs_dquot_set_prealloc_limits(dqp);
-> +	xfs_qm_dqinit_from_buf(dqp, ddqp);
+> -	error = xfs_qm_dqtobp(&tp, dqp, &ddqp, &bp, flags);
+> -	if (error) {
+> -		/*
+> -		 * This can happen if quotas got turned off (ESRCH),
+> -		 * or if the dquot didn't exist on disk and we ask to
+> -		 * allocate (ENOENT).
+> -		 */
+> -		trace_xfs_dqread_fail(dqp);
+> -		goto error1;
+> -	}
+> +		error = xfs_qm_dqalloc_ondisk(&tp, dqp, &bp);
+> +		if (error)
+> +			goto err_cancel;
 >  
->  	/* Mark the buf so that this will stay incore a little longer */
->  	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
+> -	xfs_qm_dqinit_from_buf(dqp, ddqp);
+> +		error = xfs_trans_commit(tp);
+> +	}
+> +	ASSERT(xfs_buf_islocked(bp));
+
+Doesn't this fail if the tx commit above fails? Granted we've probably
+shut down...
+
+Otherwise looks fine modulo Christoph's comments.
+
+Brian
+
+P.S., I see that assert was fixed up in the next patch, but then we have
+a couple of the same calls separated by the init call. That probably
+should be fixed up here in any event...
+
+> +	if (error)
+> +		goto err;
+>  
+> -	/* Mark the buf so that this will stay incore a little longer */
+> -	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
+> +	xfs_qm_dqinit_from_buf(dqp, bp);
+>  
+>  	/*
+> -	 * We got the buffer with a xfs_trans_read_buf() (in dqtobp())
+> -	 * So we need to release with xfs_trans_brelse().
+> -	 * The strategy here is identical to that of inodes; we lock
+> -	 * the dquot in xfs_qm_dqget() before making it accessible to
+> -	 * others. This is because dquots, like inodes, need a good level of
+> -	 * concurrency, and we don't want to take locks on the entire buffers
+> -	 * for dquot accesses.
+> -	 * Note also that the dquot buffer may even be dirty at this point, if
+> -	 * this particular dquot was repaired. We still aren't afraid to
+> -	 * brelse it because we have the changes incore.
+> +	 * At this point we should have a clean locked buffer.  Release the
+> +	 * buffer since the incore dquot has its own copy and locking
+> +	 * protocol so we needn't tie up the buffer any further.
+>  	 */
+>  	ASSERT(xfs_buf_islocked(bp));
+> -	xfs_trans_brelse(tp, bp);
+> -
+> -	if (tp) {
+> -		error = xfs_trans_commit(tp);
+> -		if (error)
+> -			goto error0;
+> -	}
+> -
+> -	*O_dqpp = dqp;
+> +	xfs_buf_relse(bp);
+> +	*dqpp = dqp;
+>  	return error;
+>  
+> -error1:
+> -	if (tp)
+> -		xfs_trans_cancel(tp);
+> -error0:
+> +err_cancel:
+> +	xfs_trans_cancel(tp);
+> +err:
+> +	trace_xfs_dqread_fail(dqp);
+>  	xfs_qm_dqdestroy(dqp);
+> -	*O_dqpp = NULL;
+> +	*dqpp = NULL;
+>  	return error;
+>  }
+>  
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
