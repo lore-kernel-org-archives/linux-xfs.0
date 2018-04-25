@@ -1,155 +1,237 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:41826 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755283AbeD3WkI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 18:40:08 -0400
-Received: by mail-pf0-f177.google.com with SMTP id v63so7841938pfk.8
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 15:40:07 -0700 (PDT)
-Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
-References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
- <1525102372-8430-3-git-send-email-axboe@kernel.dk>
- <20180430213120.GD13766@dastard>
- <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
- <20180430222852.GF13766@dastard>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
-Date: Mon, 30 Apr 2018 16:40:04 -0600
+Received: from mx1.redhat.com ([209.132.183.28]:42864 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751910AbeDYLxm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Apr 2018 07:53:42 -0400
+Date: Wed, 25 Apr 2018 07:53:41 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] tests/xfs: filestream allocator inode use-after-free test
+Message-ID: <20180425115340.GA3879@bfoster.bfoster>
+References: <20180406141815.6472-1-bfoster@redhat.com>
+ <20180425032221.GF11384@desktop>
 MIME-Version: 1.0
-In-Reply-To: <20180430222852.GF13766@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180425032221.GF11384@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 4/30/18 4:28 PM, Dave Chinner wrote:
-> On Mon, Apr 30, 2018 at 03:42:11PM -0600, Jens Axboe wrote:
->> On 4/30/18 3:31 PM, Dave Chinner wrote:
->>> On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
->>>> XFS recently added support for async discards. While this can be
->>>> a win for some workloads and devices, there are also cases where
->>>> async bursty discard will severly harm the latencies of reads
->>>> and writes.
->>>
->>> FWIW, convention is it document the performance regression in the
->>> commit message, not leave the reader to guess at what it was....
->>
->> Yeah I'll give you that, I can improve the commit message for sure.
->>
->>> Did anyone analyse the pattern of discards being issued to work out
->>> what pattern was worse for async vs sync discard? is it lots of
->>> little discards, large extents being discarded, perhaps a problem
->>> with the request request queue starving other IOs because we queue
->>> so many async discards in such a short time (which is the difference
->>> in behaviour vs the old code), or something else?
->>
->> What was observed was a big discard which would previously have
->> gone down as smaller discards now going down as either one or many
->> discards. Looking at the blktrace data, it's the difference between
->>
->> discard 1 queue
->> discard 1 complete
->> discatd 2 queue
->> discard 2 complete
->> [...]
->> discard n queue
->> discard n complete
->>
->> which is now
->>
->> discard 1 queue
->> discard 2 queue
->> [...]
->> discard n queue
->> [...]
->> discard 1 complete
->> discard 2 complete
->> [...]
->> discard n complete
->>
->> Note that we set a max discard size of 64MB for most devices,
->> since it's been shown to have less impact on latencies for
->> the IO that jobs actually care about.
+On Wed, Apr 25, 2018 at 11:22:21AM +0800, Eryu Guan wrote:
+> On Fri, Apr 06, 2018 at 10:18:15AM -0400, Brian Foster wrote:
+> > The XFS filestreams allocator caches dir inode -> agno mappings in
+> > an MRU mechanism that holds elements in memory for an amount of time
+> > and then cleans up expired elements in the background. The elements
+> > typically held inode pointers without holding a reference to the
+> > associated inode. This means that if the inode is reclaimed before
+> > an expired entry is cleaned up, the MRU reaper can access freed
+> > memory and cause a panic.
+> > 
+> > Test for this problem by performing continuous filestreams
+> > allocations under short-lived parent directory inodes. This will
+> > produce KASAN use-after-free splats if enabled during the test.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > This test reproduces the problem described in this[1] thread. It's
+> > XFS-specific because of the filestream option and specific geometry used
+> > to format the scratch device.
+> > 
+> > Brian
+> > 
+> > [1] https://marc.info/?l=linux-xfs&m=152293031029161&w=2
 > 
-> IOWs, this has nothing to do with XFS behaviour, and everything to
-> do with suboptimal scheduling control for concurrent queued discards
-> in the block layer....
-
-You could argue that, and it's fallout from XFS being the first
-user of async discard. Prior to that, we've never had that use
-case. I'm quite fine making all discards throttle to depth
-1.
-
-> XFS can issue discard requests of up to 8GB (on 4k block size
-> filesystems), and how they are optimised is completely up to the
-> block layer. blkdev_issue_discard() happens to be synchronous (for
-> historical reasons) and that does not match our asynchronous log IO
-> model. it's always been a cause of total filesystem stall problems
-> for XFS because we can't free log space until all the pending
-> discards have been issued. Hence we can see global filesystems
-> stalls of *minutes* with synchronous discards on bad devices and can
-> cause OOM and all sorts of other nasty cascading failures.
+> From above thread, it seems that we don't need the kernel change
+> anymore, and the test itself would trigger dmesg check failure when
+> testing on kernel with kasan enabled, right?
 > 
-> Async discard dispatch solves this problem for XFS - discards no
-> longer block forward journal progress, and we really don't want to
-> go back to having that ticking timebomb in XFS. Handling concurrent
-> discard requests in an optimal manner is not a filesystem problem -
-> it's an IO scheduling problem.
+
+Yep...
+
+> But I've looped the test for 200 times and it all passed without
+> triggering any KASAN warnings, kernel is v4.17-rc2.
 > 
+
+The kernel fix ended up being a patch from Christoph. It looks like it
+made it into v4.17-rc1 as commit 7fcd3efa1e ("xfs: remove filestream
+item xfs_inode reference"). Could you perhaps try an older kernel or one
+with that patch reverted?
+
+> > 
+> >  tests/xfs/445     | 111 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/445.out |   2 +
+> >  tests/xfs/group   |   1 +
+> >  3 files changed, 114 insertions(+)
+> >  create mode 100755 tests/xfs/445
+> >  create mode 100644 tests/xfs/445.out
+> > 
+> > diff --git a/tests/xfs/445 b/tests/xfs/445
+> > new file mode 100755
+> > index 00000000..331a7dd4
+> > --- /dev/null
+> > +++ b/tests/xfs/445
+> > @@ -0,0 +1,111 @@
+> > +#! /bin/bash
+> > +# FS QA Test 445
+> > +#
+> > +# Test the XFS filestreams allocator for use-after-free inode access. The
+> > +# filestreams allocator uses the MRU and historically kept around unreferenced
+> > +# inode pointers in each element. These pointers could outlive the inodes they
+> > +# referred to and thus lead to access of freed or reused memory when the MRU
+> > +# element was reaped. Test for this problem by performing filestream allocations
+> > +# against short-lived parent directory inodes.
+> > +#
+> > +# Note that some form of kernel debug mechanism for use-after-free detection
+> > +# (i.e., KASAN) is required for this test to reproduce the original problem.
+> > +# This is because XFS uses a kmem cache for xfs_inode objects which means that
+> > +# the backing pages for freed inodes may still reside in the cache with the
+> > +# freed inodes in a partially initialized state.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/filestreams
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +drop_caches()
+> > +{
+> > +	while [ true ]; do
+> > +		echo 2 > /proc/sys/vm/drop_caches
+> > +		sleep 1
+> > +	done
+> > +}
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +
+> > +# check for filestreams and min device size
+> > +_check_filestreams_support || _notrun "filestreams not available"
+> > +devsize=`blockdev --getsize64 $SCRATCH_DEV`
 > 
-> Essentially, we've exposed yet another limitation of the block/IO
-> layer handling of discard requests in the linux storage stack - it
-> does not have a configurable discard queue depth.
+> There're a few other tests follow the same pattern in getting device
+> size, seems it's time to make it a helper function :)
 > 
-> I'd much prefer these problems get handled at the IO scheduling
-> layer where there is visibulity of device capabilities and request
-> queue state. i.e. we should be throttling async discards just like
-> we can throttle read or write IO, especially given there are many
-> devices that serialise discards at the device level (i.e. not queued
-> device commands). This solves the problem for everyone and makes
-> things much better for the future where hardware implementations are
-> likely to get better and support more and more concurrency in
-> discard operations.
+
+TBH I wasn't quite sure this was necessary with a 2GB requirement, but I
+figured it couldn't hurt just in case. A helper seems fine.. are you
+thinking something like _require_scratch_size() perhaps?
+
+> > +[ $devsize -gt $((2 * 1024 * 1024 * 1024)) ] || _notrun "scratch dev too small"
+> > +
+> > +# use small AGs for frequent stream switching
+> > +_scratch_mkfs_xfs -d agsize=20m,size=2g >> $seqres.full 2>&1 ||
+> > +	_fail "mkfs failed"
+> > +_scratch_mount "-o filestreams" || _fail "mount failed"
 > 
-> IMO, the way the high level code dispatches discard requests is
-> irrelevant here - this is a problem to do with queue depth and IO
-> scheduling/throttling. That's why I don't think adding permanent ABI
-> changes to filesystems to work around this problem is the right
-> solution....
-
-If you get off your high horse for a bit, this is essentially
-a performance regression. I can either migrate folks off of XFS, or
-I can come up with something that works for them. It's pretty
-easy to claim this is "yet another limitation of the IO stack",
-but it's really not fair to make crazy claims like that when it's
-an entirely new use case. Let's try to state things objectively
-and fairly.
-
-This work should probably have been done before making XFS
-discard async. This isn't the first fallout we've had from that
-code.
-
->>> I don't think we should be changing anything - adding an opaque,
->>> user-unfriendly mount option does nothing to address the underlying
->>> problem - it's just a hack to work around the symptoms being seen...
->>>
->>> More details of the regression and the root cause analysis is
->>> needed, please.
->>
->> It brings back the same behavior as we had before, which performs
->> better for us. It's preventing users of XFS+discard from upgrading,
->> which is sad.
+> No need to _fail on _scratch_mount failure, it's the default behavior
+> now, since commit 69eb6281a9d3 ("fstests: _fail test by default when
+> _scratch_mount fails").
 > 
-> Yes, it does, but so would having the block layer to throttle device
-> discard requests in flight to a queue depth of 1. And then we don't
-> have to change XFS at all.
 
-I'm perfectly fine with making that change by default, and much easier
-for me since I don't have to patch file systems.
+Ah, right. I'll drop that, thanks!
 
--- 
-Jens Axboe
+Brian
 
+> Thanks,
+> Eryu
+> 
+> > +
+> > +# start background inode reclaim
+> > +drop_caches &
+> > +pid=$!
+> > +
+> > +# Stress the filestreams allocator via continuous allocation to a file under
+> > +# different parent dirs. Remove the old dirs as the file is moved so the MRU
+> > +# references point to an unlinked inode by the time they are removed. If the
+> > +# old dir inodes are reclaimed and associated memory reused, MRU cleanup can
+> > +# access the inode after it's been freed.
+> > +dir=$SCRATCH_MNT
+> > +for i in $(seq 0 90); do
+> > +	mkdir -p $dir/$i
+> > +	$XFS_IO_PROG -fc "falloc $(($i * 20))m 20m" $dir/$i/file
+> > +
+> > +	mkdir -p $dir/$((i + 1))
+> > +	mv $dir/$i/file $dir/$((i + 1))/file
+> > +	rmdir $dir/$i
+> > +
+> > +	# throttle to ensure this loop sees several cache reclaims
+> > +	sleep 0.1
+> > +done
+> > +
+> > +kill $pid 2> /dev/null
+> > +wait $pid 2> /dev/null
+> > +
+> > +echo Silence is golden
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/445.out b/tests/xfs/445.out
+> > new file mode 100644
+> > index 00000000..44e55d20
+> > --- /dev/null
+> > +++ b/tests/xfs/445.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 445
+> > +Silence is golden
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index 831f2cfa..2a7dec6f 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -442,3 +442,4 @@
+> >  442 auto stress clone quota
+> >  443 auto quick ioctl fsr
+> >  444 auto quick
+> > +445 auto filestreams
+> > -- 
+> > 2.13.6
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
