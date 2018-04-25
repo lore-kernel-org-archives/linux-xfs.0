@@ -1,60 +1,212 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail02.iobjects.de ([188.40.134.68]:43012 "EHLO
-        mail02.iobjects.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750902AbeDXWRP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 18:17:15 -0400
-Subject: Re: [PATCH 4/4] iomap: Use FUA for pure data O_DSYNC DIO writes
-References: <20180418040828.18165-1-david@fromorbit.com>
- <20180418040828.18165-5-david@fromorbit.com>
- <20180421125405.hyx3bbkohdgvducq@quack2.suse.cz>
- <20180424173444.GA25233@infradead.org>
-From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Message-ID: <2fb29b95-a39d-3ee7-249b-86614a8dcbb4@applied-asynchrony.com>
-Date: Wed, 25 Apr 2018 00:07:07 +0200
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35410 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751155AbeDYDW0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Apr 2018 23:22:26 -0400
+Date: Wed, 25 Apr 2018 11:22:21 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] tests/xfs: filestream allocator inode use-after-free test
+Message-ID: <20180425032221.GF11384@desktop>
+References: <20180406141815.6472-1-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180424173444.GA25233@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180406141815.6472-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 04/24/18 19:34, Christoph Hellwig wrote:
-> On Sat, Apr 21, 2018 at 02:54:05PM +0200, Jan Kara wrote:
->>> -		if (iocb->ki_flags & IOCB_DSYNC)
->>> +		if (iocb->ki_flags & IOCB_DSYNC) {
->>>   			dio->flags |= IOMAP_DIO_NEED_SYNC;
->>> +			/*
->>> +			 * We optimistically try using FUA for this IO.  Any
->>> +			 * non-FUA write that occurs will clear this flag, hence
->>> +			 * we know before completion whether a cache flush is
->>> +			 * necessary.
->>> +			 */
->>> +			dio->flags |= IOMAP_DIO_WRITE_FUA;
->>> +		}
->>
->> So I don't think this is quite correct. IOCB_DSYNC gets set also for O_SYNC
->> writes (in that case we also set IOCB_SYNC). And for those we cannot use
->> the FUA optimization AFAICT (definitely IOMAP_F_DIRTY isn't a safe
->> indicator of a need of full fsync for O_SYNC). Other than that the patch
->> looks good to me.
+On Fri, Apr 06, 2018 at 10:18:15AM -0400, Brian Foster wrote:
+> The XFS filestreams allocator caches dir inode -> agno mappings in
+> an MRU mechanism that holds elements in memory for an amount of time
+> and then cleans up expired elements in the background. The elements
+> typically held inode pointers without holding a reference to the
+> associated inode. This means that if the inode is reclaimed before
+> an expired entry is cleaned up, the MRU reaper can access freed
+> memory and cause a panic.
 > 
-> Oops, good catch. I think the above if should just be
+> Test for this problem by performing continuous filestreams
+> allocations under short-lived parent directory inodes. This will
+> produce KASAN use-after-free splats if enabled during the test.
 > 
-> 		if (iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC) == IOCB_DSYNC)) {
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
-> and we are fine.
+> This test reproduces the problem described in this[1] thread. It's
+> XFS-specific because of the filestream option and specific geometry used
+> to format the scratch device.
+> 
+> Brian
+> 
+> [1] https://marc.info/?l=linux-xfs&m=152293031029161&w=2
 
-The above line just gives parenthesis salad errors, so why not compromise
-on:
+>From above thread, it seems that we don't need the kernel change
+anymore, and the test itself would trigger dmesg check failure when
+testing on kernel with kasan enabled, right?
 
-	if ((iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC)) == IOCB_DSYNC) {
+But I've looped the test for 200 times and it all passed without
+triggering any KASAN warnings, kernel is v4.17-rc2.
 
-Unless my bit twiddling has completely left me I think this is what was
-intended, and it actually compiles too.
+> 
+>  tests/xfs/445     | 111 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/445.out |   2 +
+>  tests/xfs/group   |   1 +
+>  3 files changed, 114 insertions(+)
+>  create mode 100755 tests/xfs/445
+>  create mode 100644 tests/xfs/445.out
+> 
+> diff --git a/tests/xfs/445 b/tests/xfs/445
+> new file mode 100755
+> index 00000000..331a7dd4
+> --- /dev/null
+> +++ b/tests/xfs/445
+> @@ -0,0 +1,111 @@
+> +#! /bin/bash
+> +# FS QA Test 445
+> +#
+> +# Test the XFS filestreams allocator for use-after-free inode access. The
+> +# filestreams allocator uses the MRU and historically kept around unreferenced
+> +# inode pointers in each element. These pointers could outlive the inodes they
+> +# referred to and thus lead to access of freed or reused memory when the MRU
+> +# element was reaped. Test for this problem by performing filestream allocations
+> +# against short-lived parent directory inodes.
+> +#
+> +# Note that some form of kernel debug mechanism for use-after-free detection
+> +# (i.e., KASAN) is required for this test to reproduce the original problem.
+> +# This is because XFS uses a kmem cache for xfs_inode objects which means that
+> +# the backing pages for freed inodes may still reside in the cache with the
+> +# freed inodes in a partially initialized state.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/filestreams
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +drop_caches()
+> +{
+> +	while [ true ]; do
+> +		echo 2 > /proc/sys/vm/drop_caches
+> +		sleep 1
+> +	done
+> +}
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +
+> +# check for filestreams and min device size
+> +_check_filestreams_support || _notrun "filestreams not available"
+> +devsize=`blockdev --getsize64 $SCRATCH_DEV`
 
-cheers
-Holger
+There're a few other tests follow the same pattern in getting device
+size, seems it's time to make it a helper function :)
+
+> +[ $devsize -gt $((2 * 1024 * 1024 * 1024)) ] || _notrun "scratch dev too small"
+> +
+> +# use small AGs for frequent stream switching
+> +_scratch_mkfs_xfs -d agsize=20m,size=2g >> $seqres.full 2>&1 ||
+> +	_fail "mkfs failed"
+> +_scratch_mount "-o filestreams" || _fail "mount failed"
+
+No need to _fail on _scratch_mount failure, it's the default behavior
+now, since commit 69eb6281a9d3 ("fstests: _fail test by default when
+_scratch_mount fails").
+
+Thanks,
+Eryu
+
+> +
+> +# start background inode reclaim
+> +drop_caches &
+> +pid=$!
+> +
+> +# Stress the filestreams allocator via continuous allocation to a file under
+> +# different parent dirs. Remove the old dirs as the file is moved so the MRU
+> +# references point to an unlinked inode by the time they are removed. If the
+> +# old dir inodes are reclaimed and associated memory reused, MRU cleanup can
+> +# access the inode after it's been freed.
+> +dir=$SCRATCH_MNT
+> +for i in $(seq 0 90); do
+> +	mkdir -p $dir/$i
+> +	$XFS_IO_PROG -fc "falloc $(($i * 20))m 20m" $dir/$i/file
+> +
+> +	mkdir -p $dir/$((i + 1))
+> +	mv $dir/$i/file $dir/$((i + 1))/file
+> +	rmdir $dir/$i
+> +
+> +	# throttle to ensure this loop sees several cache reclaims
+> +	sleep 0.1
+> +done
+> +
+> +kill $pid 2> /dev/null
+> +wait $pid 2> /dev/null
+> +
+> +echo Silence is golden
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/445.out b/tests/xfs/445.out
+> new file mode 100644
+> index 00000000..44e55d20
+> --- /dev/null
+> +++ b/tests/xfs/445.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 445
+> +Silence is golden
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 831f2cfa..2a7dec6f 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -442,3 +442,4 @@
+>  442 auto stress clone quota
+>  443 auto quick ioctl fsr
+>  444 auto quick
+> +445 auto filestreams
+> -- 
+> 2.13.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
