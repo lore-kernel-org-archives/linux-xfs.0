@@ -1,192 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51008 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:58983 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755113AbeDWNyn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Apr 2018 09:54:43 -0400
-Date: Mon, 23 Apr 2018 09:54:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/13] xfs: refactor dquot cache handling
-Message-ID: <20180423135423.GB43600@bfoster.bfoster>
-References: <152440954198.29601.14390250048915099607.stgit@magnolia>
- <152440956493.29601.14685471061467996971.stgit@magnolia>
+        id S1751279AbeDZXuk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Apr 2018 19:50:40 -0400
+Date: Thu, 26 Apr 2018 23:50:38 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] xfs_repair: clear extra file attributes on symlinks
+Message-ID: <20180426235038.GB27875@wotan.suse.de>
+References: <20171031215156.12544-1-mcgrof@kernel.org>
+ <20171031221253.GV4911@magnolia>
+ <CAB=NE6WusGvGYVBokMOup9snofncCm9gXopM7BaUukp9N3zbRQ@mail.gmail.com>
+ <20171031224320.GB4911@magnolia>
+ <20171031231022.GD22894@wotan.suse.de>
+ <659d0936-f2a0-5604-b72c-6b3ded3da4f7@sandeen.net>
+ <20171101235007.GF22894@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152440956493.29601.14685471061467996971.stgit@magnolia>
+In-Reply-To: <20171101235007.GF22894@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Howells <dhowells@redhat.com>, xfs <linux-xfs@vger.kernel.org>, Tso Ted <tytso@mit.edu>, Nikolay Borisov <nborisov@suse.com>, Flex Liu <fliu@suse.com>, Jake Norris <jake.norris@suse.com>, Jan Kara <jack@suse.cz>
 
-On Sun, Apr 22, 2018 at 08:06:05AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Nov 02, 2017 at 12:50:07AM +0100, Luis R. Rodriguez wrote:
+> On Tue, Oct 31, 2017 at 06:12:30PM -0500, Eric Sandeen wrote:
+> > 
+> > 
+> > On 10/31/17 6:10 PM, Luis R. Rodriguez wrote:
+> > > On Tue, Oct 31, 2017 at 03:43:20PM -0700, Darrick J. Wong wrote:
+> > >> On Tue, Oct 31, 2017 at 03:19:00PM -0700, Luis R. Rodriguez wrote:
+> > >>> On Tue, Oct 31, 2017 at 3:12 PM, Darrick J. Wong
+> > >>> <darrick.wong@oracle.com> wrote:
+> > >>>> On Tue, Oct 31, 2017 at 02:51:56PM -0700, Luis R. Rodriguez wrote:
+> > >>>>> diff --git a/repair/dinode.c b/repair/dinode.c
+> > >>>>> index 15ba8cc22b39..6288e42de15e 100644
+> > >>>>> --- a/repair/dinode.c
+> > >>>>> +++ b/repair/dinode.c
+> > >>>>> @@ -2482,6 +2482,27 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+> > >>>>>                                               FS_XFLAG_EXTSIZE);
+> > >>>>>                       }
+> > >>>>>               }
+> > >>>>> +             if (flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND |
+> > >>>>> +                          XFS_DIFLAG_NODUMP)) {
+> > >>>>> +                     /*
+> > >>>>> +                      * ioctl(fd, *) and so ioctl(fd, FS_IOC_SETFLAGS)
+> > >>>>> +                      * yields EBADF on symlinks as they have O_PATH set.
+> > >>>>> +                      * "Extra file attributes", stx_attributes, as per
+> > >>>>> +                      * statx(2) cannot be set on symlinks on Linux.
+> > >>>>> +                      */
+> > >>>>> +                     if (di_mode && S_ISLNK(di_mode) &&
+> > >>>>> +                         !S_ISREG(di_mode) && !S_ISDIR(di_mode)) {
+> > >>>>
+> > >>>> Does this DIFLAG clearing applies to bdev/cdev/fifo/socket files too?
+> > >>>
+> > >>> Not at the moment given the semantics I hunted down and tested for
+> > >>> were for O_PATH only.  The validation I hunted down applies to any
+> > >>> file descriptors which we open via O_PATH only.
+> > >>
+> > >> iirc when you open one of those special files you end up with a fd that
+> > >> points to an inode on a special bdevfs/pipefs/etc., not an inode linked
+> > >> to the underlying filesystem containing the special file.
+> > > 
+> > > That seems to fit the O_PATH intent, however its unclear if O_PATH was needed,
+> > > as per my testing on /dev/loop0 I don't need O_PATH set for it.
+> > > 
+> > >> Therefore you shouldn't be able to set any DIFLAG/DIFLAG2 flags on special files.
+> > > 
+> > > That would be great if we can verify.
+> > > 
+> > >> # mknod block b 8 0 ; mknod char c 1 3 ; mknod fifo p
+> > >> # lsattr block char fifo
+> > >> lsattr: Operation not supported While reading flags on block
+> > >> lsattr: Operation not supported While reading flags on char
+> > >> lsattr: Operation not supported While reading flags on fifo
+> > > 
+> > > I'm afraid e2fsprogs has a special check for these, ie, userspace is barred
+> > > from actually toying with special files purposely because of the Debian bug I
+> > > named.
+> > > 
+> > > strace should reveal the respective ioctl() was not actually issued.
+> > 
+> > That's very easy to short-circuit in e2fsprogs if you'd like to test what
+> > the kernel does today.
 > 
-> Delegate the dquot cache handling (radix tree lookup and insertion) to
-> separate helper functions so that we can continue to simplify the body
-> of dqget.
+> I meant that *I know* that the ioctl() is not issued, as it is a guard implemented
+> on e2fsprogs to avoid potentially interfacing with buggy kernel drivers.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> One however can write a program which does the raw ioctl() call to really test.
+> 
+> For all the above: block char fifo, ioctl() with FS_IOC_FSGETXATTR and
+> FS_IOC_FSSETXATTR fails with: -1 an errno is set to ENOTTY (Inappropriate ioctl
+> for device). Reason is that vfs_ioctl() is used, and on XFS we'll hit the goto
+> out here as no f_op callbacks are set for these special  devices:
+> 
+> long vfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+> {
+>         int error = -ENOTTY;                                                    
+>                                                                                 
+>         if (!filp->f_op->unlocked_ioctl)                                        
+>                 goto out;                                                       
+>                                                                                 
+>         error = filp->f_op->unlocked_ioctl(filp, cmd, arg);                     
+>         if (error == -ENOIOCTLCMD)                                              
+>                 error = -ENOTTY;                                                
+>  out:                                                                           
+>         return error;                                                           
+> }
+> 
+> My point also was that the above logic is different than for symlink. I'd  much
+> prefer to address these as a secondary patch given the logic is different.
+> 
+> PF_LOCAL named sockets are also represented on the filesystem, and same situation
+> with them, so I can bunch up a check for them as well. Are you OK with these
+> going in as separate patches or do you want me to mesh this all together along
+> with the new explanation for these?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+*re-poke*
 
->  fs/xfs/xfs_dquot.c |  112 ++++++++++++++++++++++++++++++++++++----------------
->  1 file changed, 78 insertions(+), 34 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 79a9df6..43b0b32 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -679,6 +679,81 @@ xfs_dq_get_next_id(
->  }
->  
->  /*
-> + * Look up the dquot in the in-core cache.  If found, the dquot is returned
-> + * locked and ready to go.
-> + */
-> +static struct xfs_dquot *
-> +xfs_qm_dqget_cache_lookup(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_quotainfo	*qi,
-> +	struct radix_tree_root	*tree,
-> +	xfs_dqid_t		id)
-> +{
-> +	struct xfs_dquot	*dqp;
-> +
-> +restart:
-> +	mutex_lock(&qi->qi_tree_lock);
-> +	dqp = radix_tree_lookup(tree, id);
-> +	if (!dqp) {
-> +		mutex_unlock(&qi->qi_tree_lock);
-> +		XFS_STATS_INC(mp, xs_qm_dqcachemisses);
-> +		return NULL;
-> +	}
-> +
-> +	xfs_dqlock(dqp);
-> +	if (dqp->dq_flags & XFS_DQ_FREEING) {
-> +		xfs_dqunlock(dqp);
-> +		mutex_unlock(&qi->qi_tree_lock);
-> +		trace_xfs_dqget_freeing(dqp);
-> +		delay(1);
-> +		goto restart;
-> +	}
-> +
-> +	dqp->q_nrefs++;
-> +	mutex_unlock(&qi->qi_tree_lock);
-> +
-> +	trace_xfs_dqget_hit(dqp);
-> +	XFS_STATS_INC(mp, xs_qm_dqcachehits);
-> +	return dqp;
-> +}
-> +
-> +/*
-> + * Try to insert a new dquot into the in-core cache.  If an error occurs the
-> + * caller should throw away the dquot and start over.  Otherwise, the dquot
-> + * is returned locked (and held by the cache) as if there had been a cache
-> + * hit.
-> + */
-> +static int
-> +xfs_qm_dqget_cache_insert(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_quotainfo	*qi,
-> +	struct radix_tree_root	*tree,
-> +	xfs_dqid_t		id,
-> +	struct xfs_dquot	*dqp)
-> +{
-> +	int			error;
-> +
-> +	mutex_lock(&qi->qi_tree_lock);
-> +	error = radix_tree_insert(tree, id, dqp);
-> +	if (unlikely(error)) {
-> +		/* Duplicate found!  Caller must try again. */
-> +		WARN_ON(error != -EEXIST);
-> +		mutex_unlock(&qi->qi_tree_lock);
-> +		trace_xfs_dqget_dup(dqp);
-> +		return error;
-> +	}
-> +
-> +	/* Return a locked dquot to the caller, with a reference taken. */
-> +	xfs_dqlock(dqp);
-> +	dqp->q_nrefs = 1;
-> +
-> +	qi->qi_dquots++;
-> +	mutex_unlock(&qi->qi_tree_lock);
-> +
-> +	return 0;
-> +}
-> +
-> +/*
->   * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
->   * a locked dquot, doing an allocation (if requested) as needed.
->   * When both an inode and an id are given, the inode's id takes precedence.
-> @@ -716,28 +791,11 @@ xfs_qm_dqget(
->  	}
->  
->  restart:
-> -	mutex_lock(&qi->qi_tree_lock);
-> -	dqp = radix_tree_lookup(tree, id);
-> +	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
->  	if (dqp) {
-> -		xfs_dqlock(dqp);
-> -		if (dqp->dq_flags & XFS_DQ_FREEING) {
-> -			xfs_dqunlock(dqp);
-> -			mutex_unlock(&qi->qi_tree_lock);
-> -			trace_xfs_dqget_freeing(dqp);
-> -			delay(1);
-> -			goto restart;
-> -		}
-> -
-> -		dqp->q_nrefs++;
-> -		mutex_unlock(&qi->qi_tree_lock);
-> -
-> -		trace_xfs_dqget_hit(dqp);
-> -		XFS_STATS_INC(mp, xs_qm_dqcachehits);
->  		*O_dqpp = dqp;
->  		return 0;
->  	}
-> -	mutex_unlock(&qi->qi_tree_lock);
-> -	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
->  
->  	/*
->  	 * Dquot cache miss. We don't want to keep the inode lock across
-> @@ -779,31 +837,17 @@ xfs_qm_dqget(
->  		}
->  	}
->  
-> -	mutex_lock(&qi->qi_tree_lock);
-> -	error = radix_tree_insert(tree, id, dqp);
-> -	if (unlikely(error)) {
-> -		WARN_ON(error != -EEXIST);
-> -
-> +	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
-> +	if (error) {
->  		/*
->  		 * Duplicate found. Just throw away the new dquot and start
->  		 * over.
->  		 */
-> -		mutex_unlock(&qi->qi_tree_lock);
-> -		trace_xfs_dqget_dup(dqp);
->  		xfs_qm_dqdestroy(dqp);
->  		XFS_STATS_INC(mp, xs_qm_dquot_dups);
->  		goto restart;
->  	}
->  
-> -	/*
-> -	 * We return a locked dquot to the caller, with a reference taken
-> -	 */
-> -	xfs_dqlock(dqp);
-> -	dqp->q_nrefs = 1;
-> -
-> -	qi->qi_dquots++;
-> -	mutex_unlock(&qi->qi_tree_lock);
-> -
->   dqret:
->  	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  	trace_xfs_dqget_miss(dqp);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I hope the VFS RFC patch I just posted clarifies the situation a bit more.
+
+  Luis
