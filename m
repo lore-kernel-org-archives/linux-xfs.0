@@ -1,42 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:45720 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755861AbeDZO6B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Apr 2018 10:58:01 -0400
-Received: by mail-pf0-f194.google.com with SMTP id l27so18585513pfk.12
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Apr 2018 07:58:01 -0700 (PDT)
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:44780 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751151AbeD1VZU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Apr 2018 17:25:20 -0400
 MIME-Version: 1.0
-From: Jorge Garcia <jorge.garcia101011@gmail.com>
-Date: Thu, 26 Apr 2018 16:58:00 +0200
-Message-ID: <CAN==6Xc9aNnEShwAtCfdtNeYHVFORFjJhzOss=x2KBSp0Qb2=Q@mail.gmail.com>
-Subject: XFS quotas: Skipping quotacheck in the initial mount
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Sat, 28 Apr 2018 23:25:17 +0200
+Message-ID: <CACna6rz_Ms2Uv1P6E0gCGNsRwK4nm=PMAOaJ5Uk9aJxs2VSamQ@mail.gmail.com>
+Subject: LICENSES: Missing ISC text & possibly a category ("Not recommended"
+ vs. "Preferred licenses")
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, DOCUMENTATION <linux-doc@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Kate Stewart <kate@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Kate Stewart <kstewart@linuxfoundation.org>, Florian Fainelli <f.fainelli@gmail.com>
 
-Hi all,
+Hi,
 
-I tried to add XFS quotas in a fileserver with a capacity of 260TB
-(112TB occupied), but after adding the user and project quota options
-for this disk in the fstab file and remounting it, the mount rest
-hanged running the quota check process. I waited for 20 minutes, but
-this process did not finish. Due to this server can't be unavailable,
-I had to cancel the process and remove the quota options from fstab
-file.
+Due to some maintainers *preferring* BSD-compatible license for DTS
+files [0], I was writing mine using ISC. I had no very special reason
+for it: I was choosing between BSD-2-Clause, MIT and ISC. I've chosen
+ISC as I read about its "removal of language deemed unnecessary".
 
-My question is: Would it be possible to run the quota check process in
-the background? If not, how could I get the estimated time to finish
-this process?
+I took a moment to look at the new SPDX thing and noticed that:
+1) File license-rules.rst provides "LICENSES/other/ISC" as an example
+2) License file LICENSES/other/ISC doesn't exist
+3) ISC is listed as an *example* under the "Not recommended licenses"
 
-Additional info:
+First of all, as ISC is used by some files in the Linux kernel, I
+think it's worth adding to the LICENSE/*/ISC.
 
-This server is running 3.10.0-693.21.1.el7.x86_64 kernel (CentOS 7.4),
-and here the number of inodes:
+Secondly, it isn't 100% clear to me if ISC is preferred or not
+recommended. File license-rules.rst suggests the later by listing it
+as an example for "Not recommended". It's just an example though, so
+I'm not 100% sure without seeing it in either: "preferred" or "other"
+directories. Also if anyone finds it "Not recommended", can we get a
+short explanation why is it so, please?
 
-Filesystem         Inodes    IUsed      IFree IUse% Mounted on
-/dev/sda       5625717696 39592403 5586125293    1% /export
+[0] https://lkml.org/lkml/2016/5/4/707
 
-Thanks in advance!
-Jorge
+--=20
+Rafa=C5=82
