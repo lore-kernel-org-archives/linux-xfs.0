@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36954 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751583AbeD3Fnl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 01:43:41 -0400
-Subject: [PATCH 03/13] xfs: delegate dqget input checks to helper function
+Received: from userp2130.oracle.com ([156.151.31.86]:43156 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751569AbeD3FoH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 01:44:07 -0400
+Subject: [PATCH 05/13] xfs: split out dqget for inodes from regular dqget
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 29 Apr 2018 22:43:20 -0700
-Message-ID: <152506700078.21553.13318579090724249199.stgit@magnolia>
+Date: Sun, 29 Apr 2018 22:43:39 -0700
+Message-ID: <152506701902.21553.14923681535114904296.stgit@magnolia>
 In-Reply-To: <152506698177.21553.13500862866416804148.stgit@magnolia>
 References: <152506698177.21553.13500862866416804148.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,74 +20,454 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the dqget input checks to a separate function in preparation for
-splitting up the dqget functionality.
+There are two uses of dqget here -- one is to return the dquot for a
+given type and id, and the other is to return the dquot for a given type
+and inode.  Those are two separate things, so split them into two
+smaller functions.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dquot.c |   40 +++++++++++++++++++++++++++++++---------
- 1 file changed, 31 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_dquot.c       |  148 ++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_dquot.h       |   10 ++-
+ fs/xfs/xfs_iomap.c       |    2 -
+ fs/xfs/xfs_qm.c          |   39 +++++-------
+ fs/xfs/xfs_qm_bhv.c      |    2 -
+ fs/xfs/xfs_qm_syscalls.c |    4 +
+ fs/xfs/xfs_quota.h       |    2 -
+ fs/xfs/xfs_reflink.c     |    4 +
+ 8 files changed, 134 insertions(+), 77 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 43b0b32effd4..028d0d513cdf 100644
+index 028d0d513cdf..e3e51f6e2880 100644
 --- a/fs/xfs/xfs_dquot.c
 +++ b/fs/xfs/xfs_dquot.c
-@@ -753,6 +753,34 @@ xfs_qm_dqget_cache_insert(
- 	return 0;
+@@ -782,24 +782,19 @@ xfs_qm_dqget_checks(
  }
  
-+/* Check our input parameters. */
-+static int
-+xfs_qm_dqget_checks(
-+	struct xfs_mount	*mp,
-+	uint			type)
-+{
-+	if (WARN_ON_ONCE(!XFS_IS_QUOTA_RUNNING(mp)))
-+		return -ESRCH;
-+
-+	switch (type) {
-+	case XFS_DQ_USER:
-+		if (!XFS_IS_UQUOTA_ON(mp))
-+			return -ESRCH;
-+		return 0;
-+	case XFS_DQ_GROUP:
-+		if (!XFS_IS_GQUOTA_ON(mp))
-+			return -ESRCH;
-+		return 0;
-+	case XFS_DQ_PROJ:
-+		if (!XFS_IS_PQUOTA_ON(mp))
-+			return -ESRCH;
-+		return 0;
-+	default:
-+		WARN_ON_ONCE(0);
-+		return -EINVAL;
-+	}
-+}
-+
  /*
-  * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
-  * a locked dquot, doing an allocation (if requested) as needed.
-@@ -775,16 +803,10 @@ xfs_qm_dqget(
+- * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
+- * a locked dquot, doing an allocation (if requested) as needed.
+- * When both an inode and an id are given, the inode's id takes precedence.
+- * That is, if the id changes while we don't hold the ilock inside this
+- * function, the new dquot is returned, not necessarily the one requested
+- * in the id argument.
++ * Given the file system, id, and type (UDQUOT/GDQUOT), return a a locked
++ * dquot, doing an allocation (if requested) as needed.
+  */
+ int
+ xfs_qm_dqget(
+-	xfs_mount_t	*mp,
+-	xfs_inode_t	*ip,	  /* locked inode (optional) */
+-	xfs_dqid_t	id,	  /* uid/projid/gid depending on type */
+-	uint		type,	  /* XFS_DQ_USER/XFS_DQ_PROJ/XFS_DQ_GROUP */
+-	uint		flags,	  /* DQALLOC, DQSUSER, DQREPAIR, DOWARN */
+-	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
++	struct xfs_mount	*mp,
++	xfs_dqid_t		id,
++	uint			type,
++	uint			flags,	  /* DQALLOC, DQSUSER, DQREPAIR, DOWARN */
++	struct xfs_dquot	**O_dqpp)
+ {
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
  	struct xfs_dquot	*dqp;
  	int			error;
  
--	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
--	if ((! XFS_IS_UQUOTA_ON(mp) && type == XFS_DQ_USER) ||
--	    (! XFS_IS_PQUOTA_ON(mp) && type == XFS_DQ_PROJ) ||
--	    (! XFS_IS_GQUOTA_ON(mp) && type == XFS_DQ_GROUP)) {
--		return -ESRCH;
--	}
+@@ -807,10 +802,82 @@ xfs_qm_dqget(
+ 	if (error)
+ 		return error;
+ 
+-	if (ip) {
+-		ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-		ASSERT(xfs_inode_dquot(ip, type) == NULL);
++restart:
++	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
++	if (dqp) {
++		*O_dqpp = dqp;
++		return 0;
++	}
++
++	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
++	if (error)
++		return error;
++
++	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	if (error) {
++		/*
++		 * Duplicate found. Just throw away the new dquot and start
++		 * over.
++		 */
++		xfs_qm_dqdestroy(dqp);
++		XFS_STATS_INC(mp, xs_qm_dquot_dups);
++		goto restart;
++	}
++
++	trace_xfs_dqget_miss(dqp);
++	*O_dqpp = dqp;
++	return 0;
++}
++
++/* Return the quota id for a given inode and type. */
++xfs_dqid_t
++xfs_qm_id_for_quotatype(
++	struct xfs_inode	*ip,
++	uint			type)
++{
++	switch (type) {
++	case XFS_DQ_USER:
++		return ip->i_d.di_uid;
++	case XFS_DQ_GROUP:
++		return ip->i_d.di_gid;
++	case XFS_DQ_PROJ:
++		return xfs_get_projid(ip);
+ 	}
++	ASSERT(0);
++	return 0;
++}
++
++/*
++ * Return the dquot for a given inode and type.  If @can_alloc is true, then
++ * allocate blocks if needed.  The inode's ILOCK must be held and it must not
++ * have already had an inode attached.
++ */
++int
++xfs_qm_dqget_inode(
++	struct xfs_inode	*ip,
++	uint			type,
++	bool			can_alloc,
++	struct xfs_dquot	**O_dqpp)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
++	struct xfs_dquot	*dqp;
++	xfs_dqid_t		id;
++	uint			flags = 0;
++	int			error;
++
 +	error = xfs_qm_dqget_checks(mp, type);
 +	if (error)
 +		return error;
++
++	if (can_alloc)
++		flags |= XFS_QMOPT_DQALLOC;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(xfs_inode_dquot(ip, type) == NULL);
++
++	id = xfs_qm_id_for_quotatype(ip, type);
  
--	ASSERT(type == XFS_DQ_USER ||
--	       type == XFS_DQ_PROJ ||
--	       type == XFS_DQ_GROUP);
- 	if (ip) {
- 		ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 		ASSERT(xfs_inode_dquot(ip, type) == NULL);
+ restart:
+ 	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
+@@ -826,37 +893,30 @@ xfs_qm_dqget(
+ 	 * lock here means dealing with a chown that can happen before
+ 	 * we re-acquire the lock.
+ 	 */
+-	if (ip)
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
+-
+-	if (ip)
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (error)
+ 		return error;
+ 
+-	if (ip) {
+-		/*
+-		 * A dquot could be attached to this inode by now, since
+-		 * we had dropped the ilock.
+-		 */
+-		if (xfs_this_quota_on(mp, type)) {
+-			struct xfs_dquot	*dqp1;
+-
+-			dqp1 = xfs_inode_dquot(ip, type);
+-			if (dqp1) {
+-				xfs_qm_dqdestroy(dqp);
+-				dqp = dqp1;
+-				xfs_dqlock(dqp);
+-				goto dqret;
+-			}
+-		} else {
+-			/* inode stays locked on return */
++	/*
++	 * A dquot could be attached to this inode by now, since we had
++	 * dropped the ilock.
++	 */
++	if (xfs_this_quota_on(mp, type)) {
++		struct xfs_dquot	*dqp1;
++
++		dqp1 = xfs_inode_dquot(ip, type);
++		if (dqp1) {
+ 			xfs_qm_dqdestroy(dqp);
+-			return -ESRCH;
++			dqp = dqp1;
++			xfs_dqlock(dqp);
++			goto dqret;
+ 		}
++	} else {
++		/* inode stays locked on return */
++		xfs_qm_dqdestroy(dqp);
++		return -ESRCH;
+ 	}
+ 
+ 	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
+@@ -870,8 +930,8 @@ xfs_qm_dqget(
+ 		goto restart;
+ 	}
+ 
+- dqret:
+-	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
++dqret:
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	trace_xfs_dqget_miss(dqp);
+ 	*O_dqpp = dqp;
+ 	return 0;
+@@ -893,7 +953,7 @@ xfs_qm_dqget_next(
+ 
+ 	*dqpp = NULL;
+ 	for (; !error; error = xfs_dq_get_next_id(mp, type, &id)) {
+-		error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
++		error = xfs_qm_dqget(mp, id, type, 0, &dqp);
+ 		if (error == -ENOENT)
+ 			continue;
+ 		else if (error != 0)
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 303e71dfcf70..8a5b30e952b0 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -169,8 +169,14 @@ extern void		xfs_qm_adjust_dqtimers(xfs_mount_t *,
+ 					xfs_disk_dquot_t *);
+ extern void		xfs_qm_adjust_dqlimits(struct xfs_mount *,
+ 					       struct xfs_dquot *);
+-extern int		xfs_qm_dqget(xfs_mount_t *, xfs_inode_t *,
+-					xfs_dqid_t, uint, uint, xfs_dquot_t **);
++extern xfs_dqid_t	xfs_qm_id_for_quotatype(struct xfs_inode *ip,
++					uint type);
++extern int		xfs_qm_dqget(struct xfs_mount *mp, xfs_dqid_t id,
++					uint type, uint flags,
++					struct xfs_dquot **dqpp);
++extern int		xfs_qm_dqget_inode(struct xfs_inode *ip, uint type,
++					bool can_alloc,
++					struct xfs_dquot **dqpp);
+ extern int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
+ 					uint type, struct xfs_dquot **dqpp);
+ extern void		xfs_qm_dqput(xfs_dquot_t *);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 58b04eace2bc..7f8fc83c1555 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -576,7 +576,7 @@ xfs_file_iomap_begin_delay(
+ 		goto done;
+ 	}
+ 
+-	error = xfs_qm_dqattach_locked(ip, 0);
++	error = xfs_qm_dqattach_locked(ip, false);
+ 	if (error)
+ 		goto out_unlock;
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index d919b8554bf0..25c0718e1993 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -265,7 +265,7 @@ xfs_qm_dqattach_one(
+ 	xfs_inode_t	*ip,
+ 	xfs_dqid_t	id,
+ 	uint		type,
+-	uint		doalloc,
++	bool		doalloc,
+ 	xfs_dquot_t	**IO_idqpp)
+ {
+ 	xfs_dquot_t	*dqp;
+@@ -291,7 +291,7 @@ xfs_qm_dqattach_one(
+ 	 * exist on disk and we didn't ask it to allocate; ESRCH if quotas got
+ 	 * turned off suddenly.
+ 	 */
+-	error = xfs_qm_dqget(ip->i_mount, ip, id, type, doalloc, &dqp);
++	error = xfs_qm_dqget_inode(ip, type, doalloc, &dqp);
+ 	if (error)
+ 		return error;
+ 
+@@ -333,7 +333,7 @@ xfs_qm_need_dqattach(
+ int
+ xfs_qm_dqattach_locked(
+ 	xfs_inode_t	*ip,
+-	uint		flags)
++	bool		doalloc)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	int		error = 0;
+@@ -345,8 +345,7 @@ xfs_qm_dqattach_locked(
+ 
+ 	if (XFS_IS_UQUOTA_ON(mp) && !ip->i_udquot) {
+ 		error = xfs_qm_dqattach_one(ip, ip->i_d.di_uid, XFS_DQ_USER,
+-						flags & XFS_QMOPT_DQALLOC,
+-						&ip->i_udquot);
++				doalloc, &ip->i_udquot);
+ 		if (error)
+ 			goto done;
+ 		ASSERT(ip->i_udquot);
+@@ -354,8 +353,7 @@ xfs_qm_dqattach_locked(
+ 
+ 	if (XFS_IS_GQUOTA_ON(mp) && !ip->i_gdquot) {
+ 		error = xfs_qm_dqattach_one(ip, ip->i_d.di_gid, XFS_DQ_GROUP,
+-						flags & XFS_QMOPT_DQALLOC,
+-						&ip->i_gdquot);
++				doalloc, &ip->i_gdquot);
+ 		if (error)
+ 			goto done;
+ 		ASSERT(ip->i_gdquot);
+@@ -363,8 +361,7 @@ xfs_qm_dqattach_locked(
+ 
+ 	if (XFS_IS_PQUOTA_ON(mp) && !ip->i_pdquot) {
+ 		error = xfs_qm_dqattach_one(ip, xfs_get_projid(ip), XFS_DQ_PROJ,
+-						flags & XFS_QMOPT_DQALLOC,
+-						&ip->i_pdquot);
++				doalloc, &ip->i_pdquot);
+ 		if (error)
+ 			goto done;
+ 		ASSERT(ip->i_pdquot);
+@@ -389,7 +386,7 @@ xfs_qm_dqattach(
+ 		return 0;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	error = xfs_qm_dqattach_locked(ip, 0);
++	error = xfs_qm_dqattach_locked(ip, false);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+ 	return error;
+@@ -1074,7 +1071,7 @@ xfs_qm_quotacheck_dqadjust(
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+ 
+-	error = xfs_qm_dqget(mp, ip, id, type, XFS_QMOPT_DQALLOC, &dqp);
++	error = xfs_qm_dqget_inode(ip, type, true, &dqp);
+ 	if (error) {
+ 		/*
+ 		 * Shouldn't be able to turn off quotas here.
+@@ -1674,7 +1671,7 @@ xfs_qm_vop_dqalloc(
+ 	 * if necessary. The dquot(s) will not be locked.
+ 	 */
+ 	if (XFS_NOT_DQATTACHED(mp, ip)) {
+-		error = xfs_qm_dqattach_locked(ip, XFS_QMOPT_DQALLOC);
++		error = xfs_qm_dqattach_locked(ip, true);
+ 		if (error) {
+ 			xfs_iunlock(ip, lockflags);
+ 			return error;
+@@ -1693,10 +1690,8 @@ xfs_qm_vop_dqalloc(
+ 			 * holding ilock.
+ 			 */
+ 			xfs_iunlock(ip, lockflags);
+-			error = xfs_qm_dqget(mp, NULL, uid,
+-						 XFS_DQ_USER,
+-						 XFS_QMOPT_DQALLOC,
+-						 &uq);
++			error = xfs_qm_dqget(mp, uid, XFS_DQ_USER,
++					XFS_QMOPT_DQALLOC, &uq);
+ 			if (error) {
+ 				ASSERT(error != -ENOENT);
+ 				return error;
+@@ -1719,10 +1714,8 @@ xfs_qm_vop_dqalloc(
+ 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
+ 		if (ip->i_d.di_gid != gid) {
+ 			xfs_iunlock(ip, lockflags);
+-			error = xfs_qm_dqget(mp, NULL, gid,
+-						 XFS_DQ_GROUP,
+-						 XFS_QMOPT_DQALLOC,
+-						 &gq);
++			error = xfs_qm_dqget(mp, gid, XFS_DQ_GROUP,
++					XFS_QMOPT_DQALLOC, &gq);
+ 			if (error) {
+ 				ASSERT(error != -ENOENT);
+ 				goto error_rele;
+@@ -1738,10 +1731,8 @@ xfs_qm_vop_dqalloc(
+ 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+ 		if (xfs_get_projid(ip) != prid) {
+ 			xfs_iunlock(ip, lockflags);
+-			error = xfs_qm_dqget(mp, NULL, (xfs_dqid_t)prid,
+-						 XFS_DQ_PROJ,
+-						 XFS_QMOPT_DQALLOC,
+-						 &pq);
++			error = xfs_qm_dqget(mp, (xfs_dqid_t)prid, XFS_DQ_PROJ,
++					XFS_QMOPT_DQALLOC, &pq);
+ 			if (error) {
+ 				ASSERT(error != -ENOENT);
+ 				goto error_rele;
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index 2be6d2735ca9..531e8224dcb6 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -72,7 +72,7 @@ xfs_qm_statvfs(
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_dquot_t		*dqp;
+ 
+-	if (!xfs_qm_dqget(mp, NULL, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
++	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
+ 		xfs_fill_statvfs_from_dquot(statp, dqp);
+ 		xfs_qm_dqput(dqp);
+ 	}
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 0234cfc4d445..b9243f554697 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -425,7 +425,7 @@ xfs_qm_scall_setqlim(
+ 	 * a reference to the dquot, so it's safe to do this unlock/lock without
+ 	 * it being reclaimed in the mean time.
+ 	 */
+-	error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp);
++	error = xfs_qm_dqget(mp, id, type, XFS_QMOPT_DQALLOC, &dqp);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_unlock;
+@@ -700,7 +700,7 @@ xfs_qm_scall_getquota(
+ 	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
+ 	 * exist, we'll get ENOENT back.
+ 	 */
+-	error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
++	error = xfs_qm_dqget(mp, id, type, 0, &dqp);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index a4d392240cf4..1c79ebbe5236 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -91,7 +91,7 @@ extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
+ 		struct xfs_dquot *, struct xfs_dquot *,
+ 		struct xfs_dquot *, uint);
+ extern int xfs_qm_dqattach(struct xfs_inode *);
+-extern int xfs_qm_dqattach_locked(struct xfs_inode *, uint);
++extern int xfs_qm_dqattach_locked(struct xfs_inode *ip, bool doalloc);
+ extern void xfs_qm_dqdetach(struct xfs_inode *);
+ extern void xfs_qm_dqrele(struct xfs_dquot *);
+ extern void xfs_qm_statvfs(struct xfs_inode *, struct kstatfs *);
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index fd8e6afb8e1c..d7f251bd7acc 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -305,7 +305,7 @@ xfs_reflink_reserve_cow(
+ 	 * Fork all the shared blocks from our write offset until the end of
+ 	 * the extent.
+ 	 */
+-	error = xfs_qm_dqattach_locked(ip, 0);
++	error = xfs_qm_dqattach_locked(ip, false);
+ 	if (error)
+ 		return error;
+ 
+@@ -431,7 +431,7 @@ xfs_reflink_allocate_cow(
+ 		if (error)
+ 			return error;
+ 
+-		error = xfs_qm_dqattach_locked(ip, 0);
++		error = xfs_qm_dqattach_locked(ip, false);
+ 		if (error)
+ 			goto out;
+ 		goto retry;
 
