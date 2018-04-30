@@ -1,57 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:37905 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753578AbeD3NZJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 09:25:09 -0400
-Received: by mail-pf0-f193.google.com with SMTP id o76so6736425pfi.5
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 06:25:09 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:36630 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751979AbeD3W7H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Apr 2018 18:59:07 -0400
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+ <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+ <20180430171945.GB22176@bfoster.bfoster>
+ <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+ <20180430182525.GE27875@wotan.suse.de>
+ <4cb68c8e-bf6c-b717-73f0-20e850582004@sandeen.net>
+ <210ebc4e-780a-1cf2-92e0-2482b98704a2@kernel.dk>
+ <c149cd30-97ba-cd86-de8d-efb83825521a@sandeen.net>
+ <6f4137ac-d7c2-2727-d1da-649df30f3682@kernel.dk>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5d5d6d6a-f312-a2ad-8718-97a2f334ec7f@sandeen.net>
+Date: Mon, 30 Apr 2018 17:59:05 -0500
 MIME-Version: 1.0
-In-Reply-To: <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
-References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@dastard>
- <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 30 Apr 2018 15:24:48 +0200
-Message-ID: <CACT4Y+aQZ8KbU1C-sJ2PUKn_788SEKQpYGjoLaRDJrP9vXjs-A@mail.gmail.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <6f4137ac-d7c2-2727-d1da-649df30f3682@kernel.dk>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs <syzkaller-bugs@googlegroups.com>
+To: Jens Axboe <axboe@kernel.dk>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-On Thu, Apr 5, 2018 at 8:54 PM, Dmitry Vyukov <dvyukov@google.com> wrote:
-> On Tue, Apr 3, 2018 at 6:38 AM, Dave Chinner <david@fromorbit.com> wrote:
->> On Mon, Apr 02, 2018 at 07:01:02PM -0700, syzbot wrote:
->>> Hello,
->>>
->>> syzbot hit the following crash on upstream commit
->>> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
->>> Merge branch 'ras-core-for-linus' of
->>> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
->>> syzbot dashboard link:
->>> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
->>>
->>> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
->>> syzkaller reproducer:
->>> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
->>
->> What a mess. A hand built, hopelessly broken filesystem image made
->> up of hex dumps, written into a mmap()d region of memory, then
->> copied into a tmpfs file and mounted with the loop device.
->>
->> Engineers that can debug broken filesystems don't grow on trees.  If
->> we are to have any hope of understanding what the hell this test is
->> doing, the bot needs to supply us with a copy of the built
->> filesystem image the test uses. We need to be able to point forensic
->> tools at the image to decode all the structures into human readable
->> format - if we are forced to do that by hand or jump through hoops
->> to create our own filesystem image than I'm certainly not going to
->> waste time looking at these reports...
->
-> Hi Dave,
->
-> Here is the image:
-> https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
+On 4/30/18 2:58 PM, Jens Axboe wrote:
+> On 4/30/18 1:57 PM, Eric Sandeen wrote:
+>> On 4/30/18 2:21 PM, Jens Axboe wrote:
 
-Have anybody looked at the bug and the image yet?
+...
+
+>> Ok, but I'm not sure how that precludes a block device tunable?  You'd tune
+>> it for your workload, right?
+> 
+> What kind of tunable are you thinking of? Right now we have one tunable,
+> which is the max discard size. Patch #1 actually helps make this do what
+> it should for sync discards, instead of just building a bio chain and
+> submitting that all at once.
+> 
+>> Or is the concern that it could only be for the entire block device, and
+>> perhaps different partitions have different workloads?
+>>
+>> Sorry, caveman filesystem guy doesn't completely understand block devices.
+> 
+> I just don't know what you are trying to tune :-)
+
+I'm wondering if "make discards synchronous" couldn't just be a block device
+tunable, rather than a filesystem mount option tunable.
+
+-Eric
