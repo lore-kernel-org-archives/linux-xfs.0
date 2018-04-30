@@ -1,60 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59348 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753608AbeD3SZ1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Apr 2018 14:25:27 -0400
-Date: Mon, 30 Apr 2018 18:25:25 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
-Message-ID: <20180430182525.GE27875@wotan.suse.de>
-References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
- <1525102372-8430-3-git-send-email-axboe@kernel.dk>
- <20180430171945.GB22176@bfoster.bfoster>
- <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+Received: from aserp2130.oracle.com ([141.146.126.79]:36912 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbeD3Fnf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 01:43:35 -0400
+Subject: [PATCH 02/13] xfs: refactor dquot cache handling
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 29 Apr 2018 22:43:14 -0700
+Message-ID: <152506699458.21553.5575785933695714320.stgit@magnolia>
+In-Reply-To: <152506698177.21553.13500862866416804148.stgit@magnolia>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
 
-On Mon, Apr 30, 2018 at 12:07:31PM -0600, Jens Axboe wrote:
-> On 4/30/18 11:19 AM, Brian Foster wrote:
-> > On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
-> >> XFS recently added support for async discards. While this can be
-> >> a win for some workloads and devices, there are also cases where
-> >> async bursty discard will severly harm the latencies of reads
-> >> and writes.
-> >>
-> >> Add a 'discard_sync' mount flag to revert to using sync discard,
-> >> issuing them one at the time and waiting for each one. This fixes
-> >> a big performance regression we had moving to kernels that include
-> >> the XFS async discard support.
-> >>
-> >> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> >> ---
-> > 
-> > Hm, I figured the async discard stuff would have been a pretty clear win
-> > all around, but then again I'm not terribly familiar with what happens
-> > with discards beneath the fs. I do know that the previous behavior would
-> > cause fs level latencies due to holding up log I/O completion while
-> > discards completed one at a time. My understanding is that this lead to
-> > online discard being pretty much universally "not recommended" in favor
-> > of fstrim.
-> 
-> It's not a secret that most devices suck at discard.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-How can we know if a device sucks at discard?
+Delegate the dquot cache handling (radix tree lookup and insertion) to
+separate helper functions so that we can continue to simplify the body
+of dqget.
 
-> While the async
-> discard is nifty and I bet works well for some cases, it can also cause
-> a flood of discards on the device side which does not work well for
-> other cases.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_dquot.c |  112 ++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 78 insertions(+), 34 deletions(-)
 
-Shouldn't async then be only enabled if the device used supports it well?
-Or should a blacklist per device be more suitable? Which is more popular?
 
-  Luis
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 79a9df691d6c..43b0b32effd4 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -678,6 +678,81 @@ xfs_dq_get_next_id(
+ 	return error;
+ }
+ 
++/*
++ * Look up the dquot in the in-core cache.  If found, the dquot is returned
++ * locked and ready to go.
++ */
++static struct xfs_dquot *
++xfs_qm_dqget_cache_lookup(
++	struct xfs_mount	*mp,
++	struct xfs_quotainfo	*qi,
++	struct radix_tree_root	*tree,
++	xfs_dqid_t		id)
++{
++	struct xfs_dquot	*dqp;
++
++restart:
++	mutex_lock(&qi->qi_tree_lock);
++	dqp = radix_tree_lookup(tree, id);
++	if (!dqp) {
++		mutex_unlock(&qi->qi_tree_lock);
++		XFS_STATS_INC(mp, xs_qm_dqcachemisses);
++		return NULL;
++	}
++
++	xfs_dqlock(dqp);
++	if (dqp->dq_flags & XFS_DQ_FREEING) {
++		xfs_dqunlock(dqp);
++		mutex_unlock(&qi->qi_tree_lock);
++		trace_xfs_dqget_freeing(dqp);
++		delay(1);
++		goto restart;
++	}
++
++	dqp->q_nrefs++;
++	mutex_unlock(&qi->qi_tree_lock);
++
++	trace_xfs_dqget_hit(dqp);
++	XFS_STATS_INC(mp, xs_qm_dqcachehits);
++	return dqp;
++}
++
++/*
++ * Try to insert a new dquot into the in-core cache.  If an error occurs the
++ * caller should throw away the dquot and start over.  Otherwise, the dquot
++ * is returned locked (and held by the cache) as if there had been a cache
++ * hit.
++ */
++static int
++xfs_qm_dqget_cache_insert(
++	struct xfs_mount	*mp,
++	struct xfs_quotainfo	*qi,
++	struct radix_tree_root	*tree,
++	xfs_dqid_t		id,
++	struct xfs_dquot	*dqp)
++{
++	int			error;
++
++	mutex_lock(&qi->qi_tree_lock);
++	error = radix_tree_insert(tree, id, dqp);
++	if (unlikely(error)) {
++		/* Duplicate found!  Caller must try again. */
++		WARN_ON(error != -EEXIST);
++		mutex_unlock(&qi->qi_tree_lock);
++		trace_xfs_dqget_dup(dqp);
++		return error;
++	}
++
++	/* Return a locked dquot to the caller, with a reference taken. */
++	xfs_dqlock(dqp);
++	dqp->q_nrefs = 1;
++
++	qi->qi_dquots++;
++	mutex_unlock(&qi->qi_tree_lock);
++
++	return 0;
++}
++
+ /*
+  * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
+  * a locked dquot, doing an allocation (if requested) as needed.
+@@ -716,28 +791,11 @@ xfs_qm_dqget(
+ 	}
+ 
+ restart:
+-	mutex_lock(&qi->qi_tree_lock);
+-	dqp = radix_tree_lookup(tree, id);
++	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
+ 	if (dqp) {
+-		xfs_dqlock(dqp);
+-		if (dqp->dq_flags & XFS_DQ_FREEING) {
+-			xfs_dqunlock(dqp);
+-			mutex_unlock(&qi->qi_tree_lock);
+-			trace_xfs_dqget_freeing(dqp);
+-			delay(1);
+-			goto restart;
+-		}
+-
+-		dqp->q_nrefs++;
+-		mutex_unlock(&qi->qi_tree_lock);
+-
+-		trace_xfs_dqget_hit(dqp);
+-		XFS_STATS_INC(mp, xs_qm_dqcachehits);
+ 		*O_dqpp = dqp;
+ 		return 0;
+ 	}
+-	mutex_unlock(&qi->qi_tree_lock);
+-	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
+ 
+ 	/*
+ 	 * Dquot cache miss. We don't want to keep the inode lock across
+@@ -779,31 +837,17 @@ xfs_qm_dqget(
+ 		}
+ 	}
+ 
+-	mutex_lock(&qi->qi_tree_lock);
+-	error = radix_tree_insert(tree, id, dqp);
+-	if (unlikely(error)) {
+-		WARN_ON(error != -EEXIST);
+-
++	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	if (error) {
+ 		/*
+ 		 * Duplicate found. Just throw away the new dquot and start
+ 		 * over.
+ 		 */
+-		mutex_unlock(&qi->qi_tree_lock);
+-		trace_xfs_dqget_dup(dqp);
+ 		xfs_qm_dqdestroy(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
+ 		goto restart;
+ 	}
+ 
+-	/*
+-	 * We return a locked dquot to the caller, with a reference taken
+-	 */
+-	xfs_dqlock(dqp);
+-	dqp->q_nrefs = 1;
+-
+-	qi->qi_dquots++;
+-	mutex_unlock(&qi->qi_tree_lock);
+-
+  dqret:
+ 	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	trace_xfs_dqget_miss(dqp);
+
