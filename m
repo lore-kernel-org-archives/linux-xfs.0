@@ -1,189 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49320 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753144AbeDRCul (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:50:41 -0400
-Date: Tue, 17 Apr 2018 19:50:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] iomap: add a swapfile activation function
-Message-ID: <20180418025023.GM24738@magnolia>
+Received: from sandeen.net ([63.231.237.45]:36656 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753582AbeD3Pqi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Apr 2018 11:46:38 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 5F05F4C1515
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 10:45:26 -0500 (CDT)
+Subject: [PATCH 4/5] xfs: implement online get/set fs label
+References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
+Date: Mon, 30 Apr 2018 10:46:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+The GET ioctl is trivial, just return the current label.
 
-Add a new iomap_swapfile_activate function so that filesystems can
-activate swap files without having to use the obsolete and slow bmap
-function.
+The SET ioctl is more involved:
+It transactionally modifies the superblock to write a new filesystem
+label to the primary super.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+It then also checkpoints the log to disk so that the change lands in
+block 0, invalidates any page cache that userspace might have previously
+read, and updates all secondary superblocks as userspace relable does.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/iomap.c            |   99 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_aops.c     |   12 ++++++
- include/linux/iomap.h |    7 +++
- 3 files changed, 118 insertions(+)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index afd1635..ace921b 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1089,3 +1089,102 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
-+
-+/* Swapfile activation */
-+
-+struct iomap_swapfile_info {
-+	struct swap_info_struct *sis;
-+	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
-+	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
-+	unsigned long expected_page_no;	/* next logical offset wanted (pages) */
-+	int nr_extents;			/* extent count */
-+};
-+
-+static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
-+		loff_t count, void *data, struct iomap *iomap)
-+{
-+	struct iomap_swapfile_info *isi = data;
-+	unsigned long page_no = iomap->offset >> PAGE_SHIFT;
-+	unsigned long nr_pages = iomap->length >> PAGE_SHIFT;
-+	uint64_t first_ppage = iomap->addr >> PAGE_SHIFT;
-+	uint64_t last_ppage = ((iomap->addr + iomap->length) >> PAGE_SHIFT) - 1;
-+
-+	/* Only one bdev per swap file. */
-+	if (iomap->bdev != isi->sis->bdev)
-+		goto err;
-+
-+	/* Must be aligned to a page boundary. */
-+	if ((iomap->offset & ~PAGE_MASK) || (iomap->addr & ~PAGE_MASK) ||
-+	    (iomap->length & ~PAGE_MASK))
-+		goto err;
-+
-+	/* Only real or unwritten extents. */
-+	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
-+		goto err;
-+
-+	/* No sparse files. */
-+	if (isi->expected_page_no != page_no)
-+		goto err;
-+
-+	/* No uncommitted metadata or shared blocks or inline data. */
-+	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
-+			    IOMAP_F_DATA_INLINE))
-+		goto err;
-+
-+	/*
-+	 * Calculate how much swap space we're adding; the first page contains
-+	 * the swap header and doesn't count.
-+	 */
-+	if (page_no == 0)
-+		first_ppage++;
-+	if (isi->lowest_ppage > first_ppage)
-+		isi->lowest_ppage = first_ppage;
-+	if (isi->highest_ppage < last_ppage)
-+		isi->highest_ppage = last_ppage;
-+
-+	/* Add extent, set up for the next call. */
-+	isi->nr_extents += add_swap_extent(isi->sis, page_no, nr_pages,
-+			first_ppage);
-+	isi->expected_page_no = page_no + nr_pages;
-+
-+	return count;
-+err:
-+	pr_err("swapon: swapfile has holes\n");
-+	return -EINVAL;
-+}
-+
-+int iomap_swapfile_activate(struct swap_info_struct *sis,
-+		struct file *swap_file, sector_t *pagespan,
-+		const struct iomap_ops *ops)
-+{
-+	struct iomap_swapfile_info isi = {
-+		.sis = sis,
-+		.lowest_ppage = (sector_t)-1ULL,
-+	};
-+	struct address_space *mapping = swap_file->f_mapping;
-+	struct inode *inode = mapping->host;
-+	loff_t pos = 0;
-+	loff_t len = i_size_read(inode);
-+	loff_t ret;
-+
-+	ret = filemap_write_and_wait(inode->i_mapping);
-+	if (ret)
-+		return ret;
-+
-+	while (len > 0) {
-+		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
-+				ops, &isi, iomap_swapfile_activate_actor);
-+		if (ret <= 0)
-+			return ret;
-+
-+		pos += ret;
-+		len -= ret;
-+	}
-+
-+	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
-+	sis->max = isi.expected_page_no;
-+	sis->pages = isi.expected_page_no - 1;
-+	sis->highest_bit = isi.expected_page_no - 1;
-+	return isi.nr_extents;
-+}
-+EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 0ab824f..80de476 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1475,6 +1475,16 @@ xfs_vm_set_page_dirty(
- 	return newly_dirty;
+nb: the growfs trylock is just cargo-culting; growfs also trylocks.  *shrug*
+
+ fs/xfs/xfs_ioctl.c | 83 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 83 insertions(+)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89fb1eb..12c6711 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -20,6 +20,7 @@
+ #include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_log_format.h"
++#include "xfs_log.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+@@ -1811,6 +1812,84 @@ struct getfsmap_info {
+ 	return error;
  }
  
 +static int
-+xfs_iomap_swapfile_activate(
-+	struct swap_info_struct		*sis,
-+	struct file			*swap_file,
-+	sector_t			*span)
++xfs_ioc_getlabel(
++	struct xfs_mount	*mp,
++	char			__user *label)
 +{
-+	sis->bdev = xfs_find_bdev_for_inode(file_inode(swap_file));
-+	return iomap_swapfile_activate(sis, swap_file, span, &xfs_iomap_ops);
++	struct xfs_sb		*sbp = &mp->m_sb;
++
++	/* Paranoia */
++	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
++
++	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
++		return -EFAULT;
++	return 0;
 +}
 +
- const struct address_space_operations xfs_address_space_operations = {
- 	.readpage		= xfs_vm_readpage,
- 	.readpages		= xfs_vm_readpages,
-@@ -1488,6 +1498,7 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.migratepage		= buffer_migrate_page,
- 	.is_partially_uptodate  = block_is_partially_uptodate,
- 	.error_remove_page	= generic_error_remove_page,
-+	.swap_activate		= xfs_iomap_swapfile_activate,
- };
- 
- const struct address_space_operations xfs_dax_aops = {
-@@ -1495,4 +1506,5 @@ const struct address_space_operations xfs_dax_aops = {
- 	.direct_IO		= noop_direct_IO,
- 	.set_page_dirty		= noop_set_page_dirty,
- 	.invalidatepage		= noop_invalidatepage,
-+	.swap_activate		= xfs_iomap_swapfile_activate,
- };
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 19a07de..66d1c35 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -106,4 +106,11 @@ typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
- ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
- 
-+struct file;
-+struct swap_info_struct;
++static int
++xfs_ioc_setlabel(
++	struct file		*filp,
++	struct xfs_mount	*mp,
++	char			__user *newlabel)
++{
++	struct address_space	*mapping;
++	struct xfs_sb		*sbp = &mp->m_sb;
++	char			label[FSLABEL_MAX];
++	size_t			len;
++	int			error;
 +
-+int iomap_swapfile_activate(struct swap_info_struct *sis,
-+		struct file *swap_file, sector_t *pagespan,
-+		const struct iomap_ops *ops);
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
 +
- #endif /* LINUX_IOMAP_H */
++	if (copy_from_user(label, newlabel, FSLABEL_MAX))
++		return -EFAULT;
++	/*
++	 * The generic ioctl allows up to FSLABEL_MAX chars, but xfs is much
++	 * smaller, at 12 bytes.
++	 * NB: The on disk label doesn't need to be null terminated.
++	 */
++	len = strnlen(label, FSLABEL_MAX);
++	if (len > sizeof(sbp->sb_fname)) {
++		xfs_warn(mp, "label %s is too long, max %zu chars",
++			label, sizeof(sbp->sb_fname));
++		return -EINVAL;
++	}
++
++	error = mnt_want_write_file(filp);
++	if (error)
++		return error;
++
++	spin_lock(&mp->m_sb_lock);
++	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
++	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
++	spin_unlock(&mp->m_sb_lock);
++
++	error = xfs_sync_sb(mp, true);
++	if (error)
++		goto out;
++
++	/* checkpoint the log to update primary super in fs itself */
++	error = xfs_log_checkpoint(mp);
++	if (error)
++		goto out;
++
++	/* invalidate any cached bdev page for userspace visibility */
++	mapping = mp->m_ddev_targp->bt_bdev->bd_inode->i_mapping;
++	error = invalidate_inode_pages2_range(mapping, 0, 0);
++	if (error)
++		goto out;
++
++	/* update the backup superblocks like userspace does */
++	if (mutex_trylock(&mp->m_growlock)) {
++		error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
++		mutex_unlock(&mp->m_growlock);
++	}
++out:
++	mnt_drop_write_file(filp);
++	return error;
++}
++
+ /*
+  * Note: some of the ioctl's return positive numbers as a
+  * byte count indicating success, such as readlink_by_handle.
+@@ -1834,6 +1913,10 @@ struct getfsmap_info {
+ 	switch (cmd) {
+ 	case FITRIM:
+ 		return xfs_ioc_trim(mp, arg);
++	case FS_IOC_GET_FSLABEL:
++		return xfs_ioc_getlabel(mp, arg);
++	case FS_IOC_SET_FSLABEL:
++		return xfs_ioc_setlabel(filp, mp, arg);
+ 	case XFS_IOC_ALLOCSP:
+ 	case XFS_IOC_FREESP:
+ 	case XFS_IOC_RESVSP:
+-- 
+1.8.3.1
+
