@@ -1,87 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:45838 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753257AbeD3XAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 19:00:18 -0400
-Received: by mail-pg0-f65.google.com with SMTP id i29-v6so7249955pgn.12
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 16:00:18 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:52156 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755726AbeD3T50 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Apr 2018 15:57:26 -0400
 Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
-From: Jens Axboe <axboe@kernel.dk>
 References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
  <1525102372-8430-3-git-send-email-axboe@kernel.dk>
- <20180430213120.GD13766@dastard>
- <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
- <20180430222852.GF13766@dastard>
- <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
-Message-ID: <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
-Date: Mon, 30 Apr 2018 17:00:14 -0600
+ <20180430171945.GB22176@bfoster.bfoster>
+ <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+ <20180430182525.GE27875@wotan.suse.de>
+ <4cb68c8e-bf6c-b717-73f0-20e850582004@sandeen.net>
+ <210ebc4e-780a-1cf2-92e0-2482b98704a2@kernel.dk>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c149cd30-97ba-cd86-de8d-efb83825521a@sandeen.net>
+Date: Mon, 30 Apr 2018 14:57:24 -0500
 MIME-Version: 1.0
-In-Reply-To: <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
+In-Reply-To: <210ebc4e-780a-1cf2-92e0-2482b98704a2@kernel.dk>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
+To: Jens Axboe <axboe@kernel.dk>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-On 4/30/18 4:40 PM, Jens Axboe wrote:
-> On 4/30/18 4:28 PM, Dave Chinner wrote:
->> Yes, it does, but so would having the block layer to throttle device
->> discard requests in flight to a queue depth of 1. And then we don't
->> have to change XFS at all.
+
+
+On 4/30/18 2:21 PM, Jens Axboe wrote:
+> On 4/30/18 1:19 PM, Eric Sandeen wrote:
+>>
+>>
+>> On 4/30/18 1:25 PM, Luis R. Rodriguez wrote:
+>>> On Mon, Apr 30, 2018 at 12:07:31PM -0600, Jens Axboe wrote:
+>>>> On 4/30/18 11:19 AM, Brian Foster wrote:
+>>>>> On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
+>>>>>> XFS recently added support for async discards. While this can be
+>>>>>> a win for some workloads and devices, there are also cases where
+>>>>>> async bursty discard will severly harm the latencies of reads
+>>>>>> and writes.
+>>>>>>
+>>>>>> Add a 'discard_sync' mount flag to revert to using sync discard,
+>>>>>> issuing them one at the time and waiting for each one. This fixes
+>>>>>> a big performance regression we had moving to kernels that include
+>>>>>> the XFS async discard support.
+>>>>>>
+>>>>>> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+>>>>>> ---
+>>>>>
+>>>>> Hm, I figured the async discard stuff would have been a pretty clear win
+>>>>> all around, but then again I'm not terribly familiar with what happens
+>>>>> with discards beneath the fs. I do know that the previous behavior would
+>>>>> cause fs level latencies due to holding up log I/O completion while
+>>>>> discards completed one at a time. My understanding is that this lead to
+>>>>> online discard being pretty much universally "not recommended" in favor
+>>>>> of fstrim.
+>>>>
+>>>> It's not a secret that most devices suck at discard.
+>>>
+>>> How can we know if a device sucks at discard?
+>>
+>> I was going to ask the same thing.  ;)  "Meh, punt to the admin!"
+>>
+>> I'm having deja vu but can't remember why.  Seems like this has come up
+>> before and we thought it should be a block device tunable, not pushed down
+>> from the filesystem.  Is that possible?
 > 
-> I'm perfectly fine with making that change by default, and much easier
-> for me since I don't have to patch file systems.
+> The problem is that it'll depend on the workload as well. The device in
+> may laptop is fine with discard for my workload, which is very light.
+> But if you are running RocksDB on it, and doing heavy compactions and
+> deletes, it probably would not be.
 
-Totally untested, but this should do the trick. It ensures we have
-a QD of 1 (per caller), which should be sufficient.
+Ok, but I'm not sure how that precludes a block device tunable?  You'd tune
+it for your workload, right?
 
-If people tune down the discard size, then you'll be blocking waiting
-for discards on issue.
+Or is the concern that it could only be for the entire block device, and
+perhaps different partitions have different workloads?
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index a676084d4740..0bf9befcc863 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -11,16 +11,19 @@
- #include "blk.h"
- 
- static struct bio *next_bio(struct bio *bio, unsigned int nr_pages,
--		gfp_t gfp)
-+			    gfp_t gfp)
- {
--	struct bio *new = bio_alloc(gfp, nr_pages);
--
-+	/*
-+	 * Devices suck at discard, so if we have to break up the bio
-+	 * size due to the max discard size setting, wait for the
-+	 * previous one to finish first.
-+	 */
- 	if (bio) {
--		bio_chain(bio, new);
--		submit_bio(bio);
-+		submit_bio_wait(bio);
-+		bio_put(bio);
- 	}
- 
--	return new;
-+	return bio_alloc(gfp, nr_pages);
- }
- 
- int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
-@@ -63,7 +66,8 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		sector_t end_sect, tmp;
- 
- 		/* Make sure bi_size doesn't overflow */
--		req_sects = min_t(sector_t, nr_sects, UINT_MAX >> 9);
-+		req_sects = min_t(sector_t, nr_sects,
-+					q->limits.max_discard_sectors);
- 
- 		/**
- 		 * If splitting a request, and the next starting sector would be
+Sorry, caveman filesystem guy doesn't completely understand block devices.
 
--- 
-Jens Axboe
-
+-Eric
