@@ -1,98 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57236 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754409AbeD3AJY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 29 Apr 2018 20:09:24 -0400
-Date: Sun, 29 Apr 2018 17:09:14 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: LICENSES: Missing ISC text & possibly a category ("Not
- recommended" vs. "Preferred licenses")
-Message-ID: <20180430000914.GB29548@kroah.com>
-References: <CACna6rz_Ms2Uv1P6E0gCGNsRwK4nm=PMAOaJ5Uk9aJxs2VSamQ@mail.gmail.com>
- <20180429052617.GC24294@kroah.com>
- <CACna6rw0R7j9pkFnUKnJFcudoZ2n1r1Dig4xSpj+n7e9Qo129w@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:56988 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751448AbeD3FoM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 01:44:12 -0400
+Subject: [PATCH 06/13] xfs: fetch dquots directly during quotacheck
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 29 Apr 2018 22:43:52 -0700
+Message-ID: <152506703202.21553.3937789203901382882.stgit@magnolia>
+In-Reply-To: <152506698177.21553.13500862866416804148.stgit@magnolia>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CACna6rw0R7j9pkFnUKnJFcudoZ2n1r1Dig4xSpj+n7e9Qo129w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, DOCUMENTATION <linux-doc@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Kate Stewart <kstewart@linuxfoundation.org>, Florian Fainelli <f.fainelli@gmail.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
 
-On Sun, Apr 29, 2018 at 12:15:11PM +0200, Rafał Miłecki wrote:
-> On 29 April 2018 at 07:26, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Sat, Apr 28, 2018 at 11:25:17PM +0200, Rafał Miłecki wrote:
-> >> Due to some maintainers *preferring* BSD-compatible license for DTS
-> >> files [0], I was writing mine using ISC. I had no very special reason
-> >> for it: I was choosing between BSD-2-Clause, MIT and ISC. I've chosen
-> >> ISC as I read about its "removal of language deemed unnecessary".
-> >>
-> >> I took a moment to look at the new SPDX thing and noticed that:
-> >> 1) File license-rules.rst provides "LICENSES/other/ISC" as an example
-> >
-> > Yeah, bad example, we should fix that text up.  Care to send a patch? :)
-> 
-> Sure. I see that license-rules.rst also refers to LICENSES/other/ZLib
-> which also doesn't exist.
-> 
-> As "other" directory contains only GPL-1.0 and MPL-1.1 I guess one of
-> these should be referenced.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-See the patch set that Thomas has posted to hopefully resolve these
-issues.  I think they are all now taken care of with that series.
+Quotacheck only runs during mount, which means that there are no other
+processes in the system that could be doing chown or chproj.  Therefore
+there's no potential for racing to attach dquots to the inode so we can
+drop all the ILOCK and race detection bits from quotacheck.
 
-> >> 2) License file LICENSES/other/ISC doesn't exist
-> >> 3) ISC is listed as an *example* under the "Not recommended licenses"
-> >
-> > Yes, please don't use it if at all possible.
-> >
-> >> First of all, as ISC is used by some files in the Linux kernel, I
-> >> think it's worth adding to the LICENSE/*/ISC.
-> >
-> > I see it is only used in a very small number of dts files.  Why not just
-> > use BSD-2-Clause instead?  What do you find in ISC that is not available
-> > to you with just BSD?
-> 
-> As said, I read about its "removal of language deemed unnecessary". I
-> assumed that the simpler license text the better.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_qm.c |   28 ++++++++++++----------------
+ 1 file changed, 12 insertions(+), 16 deletions(-)
 
-Simple up to a point, having loads of different licenses is a mess, as
-you are finding out :)
 
-> >> Secondly, it isn't 100% clear to me if ISC is preferred or not
-> >> recommended. File license-rules.rst suggests the later by listing it
-> >> as an example for "Not recommended". It's just an example though, so
-> >> I'm not 100% sure without seeing it in either: "preferred" or "other"
-> >> directories. Also if anyone finds it "Not recommended", can we get a
-> >> short explanation why is it so, please?
-> >
-> > The license is functionally equalivant to BSD-2, so why would you want
-> > to add more complexity here and have two licenses that are the same be
-> > "recommended"?
-> 
-> I don't insist on it, I'm trying to figure out what's the best for the
-> Linux community.
-> 
-> On the other hand I could ask why do we want more complexity by having
-> MIT license. It's very similar to the BSD-2-Clause after all. AFAIK
-> the only minor differences are that:
-> 1) MIT clearly allows sublicensing
-> 2) BSD 2-Clause clearly requires distributing *binaries* with
-> copyrights + license text
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 25c0718e1993..fb14954610ee 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1062,16 +1062,17 @@ xfs_qm_dqiterate(
+ STATIC int
+ xfs_qm_quotacheck_dqadjust(
+ 	struct xfs_inode	*ip,
+-	xfs_dqid_t		id,
+ 	uint			type,
+ 	xfs_qcnt_t		nblks,
+ 	xfs_qcnt_t		rtblks)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_dquot	*dqp;
++	xfs_dqid_t		id;
+ 	int			error;
+ 
+-	error = xfs_qm_dqget_inode(ip, type, true, &dqp);
++	id = xfs_qm_id_for_quotatype(ip, type);
++	error = xfs_qm_dqget(mp, id, type, XFS_QMOPT_DQALLOC, &dqp);
+ 	if (error) {
+ 		/*
+ 		 * Shouldn't be able to turn off quotas here.
+@@ -1144,13 +1145,10 @@ xfs_qm_dqusage_adjust(
+ 	}
+ 
+ 	/*
+-	 * We don't _need_ to take the ilock EXCL. However, the xfs_qm_dqget
+-	 * interface expects the inode to be exclusively locked because that's
+-	 * the case in all other instances. It's OK that we do this because
+-	 * quotacheck is done only at mount time.
++	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
++	 * at mount time and therefore nobody will be racing chown/chproj.
+ 	 */
+-	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, XFS_ILOCK_EXCL,
+-			 &ip);
++	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
+ 	if (error) {
+ 		*res = BULKSTAT_RV_NOTHING;
+ 		return error;
+@@ -1185,33 +1183,31 @@ xfs_qm_dqusage_adjust(
+ 	 * and quotaoffs don't race. (Quotachecks happen at mount time only).
+ 	 */
+ 	if (XFS_IS_UQUOTA_ON(mp)) {
+-		error = xfs_qm_quotacheck_dqadjust(ip, ip->i_d.di_uid,
+-						   XFS_DQ_USER, nblks, rtblks);
++		error = xfs_qm_quotacheck_dqadjust(ip, XFS_DQ_USER, nblks,
++				rtblks);
+ 		if (error)
+ 			goto error0;
+ 	}
+ 
+ 	if (XFS_IS_GQUOTA_ON(mp)) {
+-		error = xfs_qm_quotacheck_dqadjust(ip, ip->i_d.di_gid,
+-						   XFS_DQ_GROUP, nblks, rtblks);
++		error = xfs_qm_quotacheck_dqadjust(ip, XFS_DQ_GROUP, nblks,
++				rtblks);
+ 		if (error)
+ 			goto error0;
+ 	}
+ 
+ 	if (XFS_IS_PQUOTA_ON(mp)) {
+-		error = xfs_qm_quotacheck_dqadjust(ip, xfs_get_projid(ip),
+-						   XFS_DQ_PROJ, nblks, rtblks);
++		error = xfs_qm_quotacheck_dqadjust(ip, XFS_DQ_PROJ, nblks,
++				rtblks);
+ 		if (error)
+ 			goto error0;
+ 	}
+ 
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	IRELE(ip);
+ 	*res = BULKSTAT_RV_DIDONE;
+ 	return 0;
+ 
+ error0:
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	IRELE(ip);
+ 	*res = BULKSTAT_RV_GIVEUP;
+ 	return error;
 
-I think you will find more dual-licensed MIT code in the tree already
-than ISC, right?
-
-And really, in the end, the odds of someone taking this code _out_ of
-the tree and using it only under a non-GPLv2 license is slim, to none,
-so it's best to just stick with the common licenses, as long as they
-match what you wish the code to abide by.  As you want to follow what
-MIT says, then just use that and all should be good, right?
-
-thanks,
-
-greg k-h
