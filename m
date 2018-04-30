@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36912 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751581AbeD3Fnf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 01:43:35 -0400
-Subject: [PATCH 02/13] xfs: refactor dquot cache handling
+Received: from userp2120.oracle.com ([156.151.31.85]:56814 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750959AbeD3Fny (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 01:43:54 -0400
+Subject: [PATCH 04/13] xfs: remove unnecessary xfs_qm_dqattach parameter
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 29 Apr 2018 22:43:14 -0700
-Message-ID: <152506699458.21553.5575785933695714320.stgit@magnolia>
+Date: Sun, 29 Apr 2018 22:43:27 -0700
+Message-ID: <152506700766.21553.5167201271304136172.stgit@magnolia>
 In-Reply-To: <152506698177.21553.13500862866416804148.stgit@magnolia>
 References: <152506698177.21553.13500862866416804148.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,166 +20,217 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Delegate the dquot cache handling (radix tree lookup and insertion) to
-separate helper functions so that we can continue to simplify the body
-of dqget.
+The flags argument is always zero, get rid of it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dquot.c |  112 ++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 78 insertions(+), 34 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c |    4 ++--
+ fs/xfs/xfs_bmap_util.c   |    6 +++---
+ fs/xfs/xfs_inode.c       |   10 +++++-----
+ fs/xfs/xfs_iomap.c       |    4 ++--
+ fs/xfs/xfs_iops.c        |    2 +-
+ fs/xfs/xfs_qm.c          |    7 +++----
+ fs/xfs/xfs_quota.h       |    4 ++--
+ fs/xfs/xfs_reflink.c     |    2 +-
+ 8 files changed, 19 insertions(+), 20 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 79a9df691d6c..43b0b32effd4 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -678,6 +678,81 @@ xfs_dq_get_next_id(
- 	return error;
- }
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 35a124400d60..c3d02a66d39d 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -236,7 +236,7 @@ xfs_attr_set(
+ 	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
+ 	args.total = xfs_attr_calc_size(&args, &local);
  
-+/*
-+ * Look up the dquot in the in-core cache.  If found, the dquot is returned
-+ * locked and ready to go.
-+ */
-+static struct xfs_dquot *
-+xfs_qm_dqget_cache_lookup(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qi,
-+	struct radix_tree_root	*tree,
-+	xfs_dqid_t		id)
-+{
-+	struct xfs_dquot	*dqp;
-+
-+restart:
-+	mutex_lock(&qi->qi_tree_lock);
-+	dqp = radix_tree_lookup(tree, id);
-+	if (!dqp) {
-+		mutex_unlock(&qi->qi_tree_lock);
-+		XFS_STATS_INC(mp, xs_qm_dqcachemisses);
-+		return NULL;
-+	}
-+
-+	xfs_dqlock(dqp);
-+	if (dqp->dq_flags & XFS_DQ_FREEING) {
-+		xfs_dqunlock(dqp);
-+		mutex_unlock(&qi->qi_tree_lock);
-+		trace_xfs_dqget_freeing(dqp);
-+		delay(1);
-+		goto restart;
-+	}
-+
-+	dqp->q_nrefs++;
-+	mutex_unlock(&qi->qi_tree_lock);
-+
-+	trace_xfs_dqget_hit(dqp);
-+	XFS_STATS_INC(mp, xs_qm_dqcachehits);
-+	return dqp;
-+}
-+
-+/*
-+ * Try to insert a new dquot into the in-core cache.  If an error occurs the
-+ * caller should throw away the dquot and start over.  Otherwise, the dquot
-+ * is returned locked (and held by the cache) as if there had been a cache
-+ * hit.
-+ */
-+static int
-+xfs_qm_dqget_cache_insert(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qi,
-+	struct radix_tree_root	*tree,
-+	xfs_dqid_t		id,
-+	struct xfs_dquot	*dqp)
-+{
-+	int			error;
-+
-+	mutex_lock(&qi->qi_tree_lock);
-+	error = radix_tree_insert(tree, id, dqp);
-+	if (unlikely(error)) {
-+		/* Duplicate found!  Caller must try again. */
-+		WARN_ON(error != -EEXIST);
-+		mutex_unlock(&qi->qi_tree_lock);
-+		trace_xfs_dqget_dup(dqp);
-+		return error;
-+	}
-+
-+	/* Return a locked dquot to the caller, with a reference taken. */
-+	xfs_dqlock(dqp);
-+	dqp->q_nrefs = 1;
-+
-+	qi->qi_dquots++;
-+	mutex_unlock(&qi->qi_tree_lock);
-+
-+	return 0;
-+}
-+
- /*
-  * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
-  * a locked dquot, doing an allocation (if requested) as needed.
-@@ -716,28 +791,11 @@ xfs_qm_dqget(
- 	}
+-	error = xfs_qm_dqattach(dp, 0);
++	error = xfs_qm_dqattach(dp);
+ 	if (error)
+ 		return error;
  
- restart:
--	mutex_lock(&qi->qi_tree_lock);
--	dqp = radix_tree_lookup(tree, id);
-+	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
- 	if (dqp) {
--		xfs_dqlock(dqp);
--		if (dqp->dq_flags & XFS_DQ_FREEING) {
--			xfs_dqunlock(dqp);
--			mutex_unlock(&qi->qi_tree_lock);
--			trace_xfs_dqget_freeing(dqp);
--			delay(1);
--			goto restart;
--		}
--
--		dqp->q_nrefs++;
--		mutex_unlock(&qi->qi_tree_lock);
--
--		trace_xfs_dqget_hit(dqp);
--		XFS_STATS_INC(mp, xs_qm_dqcachehits);
- 		*O_dqpp = dqp;
- 		return 0;
- 	}
--	mutex_unlock(&qi->qi_tree_lock);
--	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
+@@ -427,7 +427,7 @@ xfs_attr_remove(
+ 	 */
+ 	args.op_flags = XFS_DA_OP_OKNOENT;
  
- 	/*
- 	 * Dquot cache miss. We don't want to keep the inode lock across
-@@ -779,31 +837,17 @@ xfs_qm_dqget(
- 		}
- 	}
+-	error = xfs_qm_dqattach(dp, 0);
++	error = xfs_qm_dqattach(dp);
+ 	if (error)
+ 		return error;
  
--	mutex_lock(&qi->qi_tree_lock);
--	error = radix_tree_insert(tree, id, dqp);
--	if (unlikely(error)) {
--		WARN_ON(error != -EEXIST);
--
-+	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
-+	if (error) {
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8cd8c412f52d..65b2cc2a69df 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -848,7 +848,7 @@ xfs_free_eofblocks(
  		/*
- 		 * Duplicate found. Just throw away the new dquot and start
- 		 * over.
+ 		 * Attach the dquots to the inode up front.
  		 */
--		mutex_unlock(&qi->qi_tree_lock);
--		trace_xfs_dqget_dup(dqp);
- 		xfs_qm_dqdestroy(dqp);
- 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
- 		goto restart;
- 	}
+-		error = xfs_qm_dqattach(ip, 0);
++		error = xfs_qm_dqattach(ip);
+ 		if (error)
+ 			return error;
  
--	/*
--	 * We return a locked dquot to the caller, with a reference taken
--	 */
--	xfs_dqlock(dqp);
--	dqp->q_nrefs = 1;
--
--	qi->qi_dquots++;
--	mutex_unlock(&qi->qi_tree_lock);
--
-  dqret:
- 	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	trace_xfs_dqget_miss(dqp);
+@@ -918,7 +918,7 @@ xfs_alloc_file_space(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+@@ -1169,7 +1169,7 @@ xfs_free_file_space(
+ 
+ 	trace_xfs_free_file_space(ip);
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 2b70c8b4cee2..1da986330e73 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1411,11 +1411,11 @@ xfs_link(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	error = xfs_qm_dqattach(sip, 0);
++	error = xfs_qm_dqattach(sip);
+ 	if (error)
+ 		goto std_return;
+ 
+-	error = xfs_qm_dqattach(tdp, 0);
++	error = xfs_qm_dqattach(tdp);
+ 	if (error)
+ 		goto std_return;
+ 
+@@ -1911,7 +1911,7 @@ xfs_inactive(
+ 	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
+ 		truncate = 1;
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return;
+ 
+@@ -2574,11 +2574,11 @@ xfs_remove(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	error = xfs_qm_dqattach(dp, 0);
++	error = xfs_qm_dqattach(dp);
+ 	if (error)
+ 		goto std_return;
+ 
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		goto std_return;
+ 
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 046469fcc1b8..58b04eace2bc 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -224,7 +224,7 @@ xfs_iomap_write_direct(
+ 	 * necessary and move on to transaction setup.
+ 	 */
+ 	xfs_iunlock(ip, lockmode);
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+@@ -692,7 +692,7 @@ xfs_iomap_write_allocate(
+ 	/*
+ 	 * Make sure that the dquots are there.
+ 	 */
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index a3ed3c811dfa..5afe3c2234b3 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -855,7 +855,7 @@ xfs_setattr_size(
+ 	/*
+ 	 * Make sure that the dquots are attached to the inode.
+ 	 */
+-	error = xfs_qm_dqattach(ip, 0);
++	error = xfs_qm_dqattach(ip);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index ec39ae274c78..d919b8554bf0 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -381,8 +381,7 @@ xfs_qm_dqattach_locked(
+ 
+ int
+ xfs_qm_dqattach(
+-	struct xfs_inode	*ip,
+-	uint			flags)
++	struct xfs_inode	*ip)
+ {
+ 	int			error;
+ 
+@@ -390,7 +389,7 @@ xfs_qm_dqattach(
+ 		return 0;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	error = xfs_qm_dqattach_locked(ip, flags);
++	error = xfs_qm_dqattach_locked(ip, 0);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+ 	return error;
+@@ -1933,7 +1932,7 @@ xfs_qm_vop_rename_dqattach(
+ 		 */
+ 		if (i == 0 || ip != i_tab[i-1]) {
+ 			if (XFS_NOT_DQATTACHED(mp, ip)) {
+-				error = xfs_qm_dqattach(ip, 0);
++				error = xfs_qm_dqattach(ip);
+ 				if (error)
+ 					return error;
+ 			}
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index ce6506adab7b..a4d392240cf4 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -90,7 +90,7 @@ extern struct xfs_dquot *xfs_qm_vop_chown(struct xfs_trans *,
+ extern int xfs_qm_vop_chown_reserve(struct xfs_trans *, struct xfs_inode *,
+ 		struct xfs_dquot *, struct xfs_dquot *,
+ 		struct xfs_dquot *, uint);
+-extern int xfs_qm_dqattach(struct xfs_inode *, uint);
++extern int xfs_qm_dqattach(struct xfs_inode *);
+ extern int xfs_qm_dqattach_locked(struct xfs_inode *, uint);
+ extern void xfs_qm_dqdetach(struct xfs_inode *);
+ extern void xfs_qm_dqrele(struct xfs_dquot *);
+@@ -132,7 +132,7 @@ static inline int xfs_trans_reserve_quota_bydquots(struct xfs_trans *tp,
+ #define xfs_qm_vop_rename_dqattach(it)					(0)
+ #define xfs_qm_vop_chown(tp, ip, old, new)				(NULL)
+ #define xfs_qm_vop_chown_reserve(tp, ip, u, g, p, fl)			(0)
+-#define xfs_qm_dqattach(ip, fl)						(0)
++#define xfs_qm_dqattach(ip)						(0)
+ #define xfs_qm_dqattach_locked(ip, fl)					(0)
+ #define xfs_qm_dqdetach(ip)
+ #define xfs_qm_dqrele(d)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cdbd342a5249..fd8e6afb8e1c 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1359,7 +1359,7 @@ xfs_reflink_remap_range(
+ 		goto out_unlock;
+ 
+ 	/* Attach dquots to dest inode before changing block map */
+-	ret = xfs_qm_dqattach(dest, 0);
++	ret = xfs_qm_dqattach(dest);
+ 	if (ret)
+ 		goto out_unlock;
+ 
 
