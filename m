@@ -1,120 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36564 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753582AbeD3PpN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Apr 2018 11:45:13 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id CF5994C1515
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 10:44:01 -0500 (CDT)
-Subject: [PATCH 3/5] xfs: move xfs_scrub_checkpoint_log to xfs_log_checkpoint
- for general use
-References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c57f7f1e-f5f5-56f3-b85c-4c8f6edfba0c@sandeen.net>
-Date: Mon, 30 Apr 2018 10:45:13 -0500
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:41826 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755283AbeD3WkI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 18:40:08 -0400
+Received: by mail-pf0-f177.google.com with SMTP id v63so7841938pfk.8
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 15:40:07 -0700 (PDT)
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+ <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+ <20180430213120.GD13766@dastard>
+ <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
+ <20180430222852.GF13766@dastard>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
+Date: Mon, 30 Apr 2018 16:40:04 -0600
 MIME-Version: 1.0
-In-Reply-To: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
+In-Reply-To: <20180430222852.GF13766@dastard>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-The upcoming online label patch will require forcing the superblock
-change from the log to the actual on-disk superblock, so move this log
-checkpoint function out for general use.
+On 4/30/18 4:28 PM, Dave Chinner wrote:
+> On Mon, Apr 30, 2018 at 03:42:11PM -0600, Jens Axboe wrote:
+>> On 4/30/18 3:31 PM, Dave Chinner wrote:
+>>> On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
+>>>> XFS recently added support for async discards. While this can be
+>>>> a win for some workloads and devices, there are also cases where
+>>>> async bursty discard will severly harm the latencies of reads
+>>>> and writes.
+>>>
+>>> FWIW, convention is it document the performance regression in the
+>>> commit message, not leave the reader to guess at what it was....
+>>
+>> Yeah I'll give you that, I can improve the commit message for sure.
+>>
+>>> Did anyone analyse the pattern of discards being issued to work out
+>>> what pattern was worse for async vs sync discard? is it lots of
+>>> little discards, large extents being discarded, perhaps a problem
+>>> with the request request queue starving other IOs because we queue
+>>> so many async discards in such a short time (which is the difference
+>>> in behaviour vs the old code), or something else?
+>>
+>> What was observed was a big discard which would previously have
+>> gone down as smaller discards now going down as either one or many
+>> discards. Looking at the blktrace data, it's the difference between
+>>
+>> discard 1 queue
+>> discard 1 complete
+>> discatd 2 queue
+>> discard 2 complete
+>> [...]
+>> discard n queue
+>> discard n complete
+>>
+>> which is now
+>>
+>> discard 1 queue
+>> discard 2 queue
+>> [...]
+>> discard n queue
+>> [...]
+>> discard 1 complete
+>> discard 2 complete
+>> [...]
+>> discard n complete
+>>
+>> Note that we set a max discard size of 64MB for most devices,
+>> since it's been shown to have less impact on latencies for
+>> the IO that jobs actually care about.
+> 
+> IOWs, this has nothing to do with XFS behaviour, and everything to
+> do with suboptimal scheduling control for concurrent queued discards
+> in the block layer....
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/scrub/common.c | 16 +---------------
- fs/xfs/scrub/common.h |  1 -
- fs/xfs/xfs_log.c      | 14 ++++++++++++++
- fs/xfs/xfs_log.h      |  1 +
- 4 files changed, 16 insertions(+), 16 deletions(-)
+You could argue that, and it's fallout from XFS being the first
+user of async discard. Prior to that, we've never had that use
+case. I'm quite fine making all discards throttle to depth
+1.
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 8ed91d5..6044399 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -594,7 +594,7 @@ struct xfs_scrub_rmap_ownedby_info {
- 	 * document why they need to do so.
- 	 */
- 	if (force_log) {
--		error = xfs_scrub_checkpoint_log(mp);
-+		error = xfs_log_checkpoint(mp);
- 		if (error)
- 			return error;
- 	}
-@@ -606,20 +606,6 @@ struct xfs_scrub_rmap_ownedby_info {
- 	return xfs_scrub_ag_init(sc, sc->sm->sm_agno, &sc->sa);
- }
- 
--/* Push everything out of the log onto disk. */
--int
--xfs_scrub_checkpoint_log(
--	struct xfs_mount	*mp)
--{
--	int			error;
--
--	error = xfs_log_force(mp, XFS_LOG_SYNC);
--	if (error)
--		return error;
--	xfs_ail_push_all_sync(mp->m_ail);
--	return 0;
--}
--
- /*
-  * Given an inode and the scrub control structure, grab either the
-  * inode referenced in the control structure or the inode passed in.
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index deaf604..a88ae07 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -83,7 +83,6 @@ void xfs_scrub_fblock_set_warning(struct xfs_scrub_context *sc, int whichfork,
- 		xfs_fileoff_t offset);
- 
- void xfs_scrub_set_incomplete(struct xfs_scrub_context *sc);
--int xfs_scrub_checkpoint_log(struct xfs_mount *mp);
- 
- /* Are we set up for a cross-referencing check? */
- bool xfs_scrub_should_check_xref(struct xfs_scrub_context *sc, int *error,
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 2fcd9ed..326fbe8 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -4095,3 +4095,17 @@ struct xlog_ticket *
- 
- 	return valid;
- }
-+
-+/* Push everything out of the log onto disk. */
-+int
-+xfs_log_checkpoint(
-+	struct xfs_mount	*mp)
-+{
-+	int			error;
-+
-+	error = xfs_log_force(mp, XFS_LOG_SYNC);
-+	if (error)
-+		return error;
-+	xfs_ail_push_all_sync(mp->m_ail);
-+	return 0;
-+}
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index fa8ad31..df2d5d2 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -165,5 +165,6 @@ void	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
- void	xfs_log_work_queue(struct xfs_mount *mp);
- void	xfs_log_quiesce(struct xfs_mount *mp);
- bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
-+int	xfs_log_checkpoint(struct xfs_mount *mp);
- 
- #endif	/* __XFS_LOG_H__ */
+> XFS can issue discard requests of up to 8GB (on 4k block size
+> filesystems), and how they are optimised is completely up to the
+> block layer. blkdev_issue_discard() happens to be synchronous (for
+> historical reasons) and that does not match our asynchronous log IO
+> model. it's always been a cause of total filesystem stall problems
+> for XFS because we can't free log space until all the pending
+> discards have been issued. Hence we can see global filesystems
+> stalls of *minutes* with synchronous discards on bad devices and can
+> cause OOM and all sorts of other nasty cascading failures.
+> 
+> Async discard dispatch solves this problem for XFS - discards no
+> longer block forward journal progress, and we really don't want to
+> go back to having that ticking timebomb in XFS. Handling concurrent
+> discard requests in an optimal manner is not a filesystem problem -
+> it's an IO scheduling problem.
+> 
+> 
+> Essentially, we've exposed yet another limitation of the block/IO
+> layer handling of discard requests in the linux storage stack - it
+> does not have a configurable discard queue depth.
+> 
+> I'd much prefer these problems get handled at the IO scheduling
+> layer where there is visibulity of device capabilities and request
+> queue state. i.e. we should be throttling async discards just like
+> we can throttle read or write IO, especially given there are many
+> devices that serialise discards at the device level (i.e. not queued
+> device commands). This solves the problem for everyone and makes
+> things much better for the future where hardware implementations are
+> likely to get better and support more and more concurrency in
+> discard operations.
+> 
+> IMO, the way the high level code dispatches discard requests is
+> irrelevant here - this is a problem to do with queue depth and IO
+> scheduling/throttling. That's why I don't think adding permanent ABI
+> changes to filesystems to work around this problem is the right
+> solution....
+
+If you get off your high horse for a bit, this is essentially
+a performance regression. I can either migrate folks off of XFS, or
+I can come up with something that works for them. It's pretty
+easy to claim this is "yet another limitation of the IO stack",
+but it's really not fair to make crazy claims like that when it's
+an entirely new use case. Let's try to state things objectively
+and fairly.
+
+This work should probably have been done before making XFS
+discard async. This isn't the first fallout we've had from that
+code.
+
+>>> I don't think we should be changing anything - adding an opaque,
+>>> user-unfriendly mount option does nothing to address the underlying
+>>> problem - it's just a hack to work around the symptoms being seen...
+>>>
+>>> More details of the regression and the root cause analysis is
+>>> needed, please.
+>>
+>> It brings back the same behavior as we had before, which performs
+>> better for us. It's preventing users of XFS+discard from upgrading,
+>> which is sad.
+> 
+> Yes, it does, but so would having the block layer to throttle device
+> discard requests in flight to a queue depth of 1. And then we don't
+> have to change XFS at all.
+
+I'm perfectly fine with making that change by default, and much easier
+for me since I don't have to patch file systems.
+
 -- 
-1.8.3.1
+Jens Axboe
 
