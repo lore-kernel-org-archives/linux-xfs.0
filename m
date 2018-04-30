@@ -1,106 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:42132 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752786AbeDRHPL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 03:15:11 -0400
-Received: by mail-wr0-f194.google.com with SMTP id s18-v6so1764192wrg.9
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 00:15:10 -0700 (PDT)
-Date: Wed, 18 Apr 2018 09:15:05 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Assertion fails on xfs_db when setting erroneous type
-Message-ID: <20180418071505.aoal4utub2gtvzlw@odin.usersys.redhat.com>
-References: <20180417122351.l4uxq6cx2wczjlsh@odin.usersys.redhat.com>
- <20180417153355.GA24738@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:59348 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753608AbeD3SZ1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Apr 2018 14:25:27 -0400
+Date: Mon, 30 Apr 2018 18:25:25 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+Message-ID: <20180430182525.GE27875@wotan.suse.de>
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+ <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+ <20180430171945.GB22176@bfoster.bfoster>
+ <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180417153355.GA24738@magnolia>
+In-Reply-To: <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-On Tue, Apr 17, 2018 at 08:33:55AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 17, 2018 at 02:23:51PM +0200, Carlos Maiolino wrote:
-> > Hi,
+On Mon, Apr 30, 2018 at 12:07:31PM -0600, Jens Axboe wrote:
+> On 4/30/18 11:19 AM, Brian Foster wrote:
+> > On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
+> >> XFS recently added support for async discards. While this can be
+> >> a win for some workloads and devices, there are also cases where
+> >> async bursty discard will severly harm the latencies of reads
+> >> and writes.
+> >>
+> >> Add a 'discard_sync' mount flag to revert to using sync discard,
+> >> issuing them one at the time and waiting for each one. This fixes
+> >> a big performance regression we had moving to kernels that include
+> >> the XFS async discard support.
+> >>
+> >> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> >> ---
 > > 
-> > recently while playing with a FS image, I've hit an assertion in xfs_db:
-> > 
-> > xfs_db: print.c:164: print_flist_1: Assertion `fa->arg & 64' failed.
-> > Aborted (core dumped)
-> > 
-> > The reason for this assert was that I tried to print a remote attr3 block, after
-> > having set the block pointer to a random, no attr3 location.
-> > 
-> > I wonder if crashing xfs_db here is the right thing to do?
-> > 
-> > 
-> > I've written a small workaround for it as below:
-> > 
-> > 
-> > @@ -160,9 +160,10 @@ print_flist_1(
-> >                                         (f->flags & FLD_ARRAY) != 0);
-> >                                 if (neednl)
-> >                                         dbprintf("\n");
-> > -                       } else {
-> > -                               ASSERT(fa->arg & FTARG_OKEMPTY);
-> > +                       } else if (fa->arg & FTARG_OKEMPTY) {
-> >                                 dbprintf(_("(empty)\n"));
-> > +                       } else {
-> > +                               dbprintf(_("Invalid arg\n"));
+> > Hm, I figured the async discard stuff would have been a pretty clear win
+> > all around, but then again I'm not terribly familiar with what happens
+> > with discards beneath the fs. I do know that the previous behavior would
+> > cause fs level latencies due to holding up log I/O completion while
+> > discards completed one at a time. My understanding is that this lead to
+> > online discard being pretty much universally "not recommended" in favor
+> > of fstrim.
 > 
-> "Unrecognized metadata\n" ?
+> It's not a secret that most devices suck at discard.
 
-Agreed, the message "Invalid arg" was just the first thing that came to my mind
-while looking into this, I didn't spend too much time thinking about what would
-be a better message, but the Unrecognized metadata message makes more sense for
-sure.
+How can we know if a device sucks at discard?
 
-Thanks for the review, time to see Eric's comment and work on the decent fix.
-Will submit it today yet.
+> While the async
+> discard is nifty and I bet works well for some cases, it can also cause
+> a flood of discards on the device side which does not work well for
+> other cases.
 
-Cheers
+Shouldn't async then be only enabled if the device used supports it well?
+Or should a blacklist per device be more suitable? Which is more popular?
 
-> 
-> The block space pointer that got us here wasn't necessarily invalid,
-> it's just that we don't recognize the block as matching whatever type is
-> selected in the io cursor.
-> 
-> >                         }
-> >                 }
-> >                 free_strvec(pfx);
-> > 
-> > 
-> > I wonder if something like this makes sense or not? I'm still familiarizing
-> > myself with xfs_db code, so I'm not sure if something as the small patch above
-> > is a valid fix for it or not, but I believe exiting xfs_db just because somebody
-> > tried to print a metadata block using a different type from the on-disk block
-> > being read doesn't look like the right thing to do.
-> 
-> Funny, I've had a debug patch squirreled away in my xfsprogs tree for
-> ages to teach those ASSERTs not to abort the binary (which then sprays
-> core files everywhere).  This one has been particularly annoying, so...
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> --D
-> 
-> > 
-> > Comments?
-> > 
-> > Cheers
-> > 
-> > -- 
-> > Carlos
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
+  Luis
