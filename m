@@ -1,130 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38154 "EHLO mail.kernel.org"
+Received: from sandeen.net ([63.231.237.45]:49880 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751139AbeDZXqp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Apr 2018 19:46:45 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC] vfs: skip extra attributes check on removal for symlinks
-Date: Thu, 26 Apr 2018 16:46:39 -0700
-Message-Id: <20180426234639.12480-1-mcgrof@kernel.org>
+        id S1753410AbeD3TT3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Apr 2018 15:19:29 -0400
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+ <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+ <20180430171945.GB22176@bfoster.bfoster>
+ <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+ <20180430182525.GE27875@wotan.suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4cb68c8e-bf6c-b717-73f0-20e850582004@sandeen.net>
+Date: Mon, 30 Apr 2018 14:19:27 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180430182525.GE27875@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org
-Cc: sandeen@sandeen.net, darrick.wong@oracle.com, dhowells@redhat.com, tytso@mit.edu, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-Linux filesystems cannot set extra file attributes (stx_attributes as per
-statx(2)) on a symbolic link. To set extra file attributes you issue
-ioctl(2) with FS_IOC_SETFLAGS, *all* ioctl(2) calls on a symbolic link
-yield EBADF.
 
-This is because ioctl(2) tries to obtain struct fd from the symbolic link
-file descriptor passed using fdget(), fdget() in turn always returns no
-file set when a file descriptor is open with O_PATH. As per symlink(2)
-O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
-descriptor of a symbolic link, and this holds true for Linux, as such extra
-file attributes cannot possibly be set on symbolic links on Linux.
 
-Filesystems repair utilities should be updated to detect this as
-corruption and correct this, however, the VFS *does* respect these
-extra attributes on symlinks for removal.
+On 4/30/18 1:25 PM, Luis R. Rodriguez wrote:
+> On Mon, Apr 30, 2018 at 12:07:31PM -0600, Jens Axboe wrote:
+>> On 4/30/18 11:19 AM, Brian Foster wrote:
+>>> On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
+>>>> XFS recently added support for async discards. While this can be
+>>>> a win for some workloads and devices, there are also cases where
+>>>> async bursty discard will severly harm the latencies of reads
+>>>> and writes.
+>>>>
+>>>> Add a 'discard_sync' mount flag to revert to using sync discard,
+>>>> issuing them one at the time and waiting for each one. This fixes
+>>>> a big performance regression we had moving to kernels that include
+>>>> the XFS async discard support.
+>>>>
+>>>> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+>>>> ---
+>>>
+>>> Hm, I figured the async discard stuff would have been a pretty clear win
+>>> all around, but then again I'm not terribly familiar with what happens
+>>> with discards beneath the fs. I do know that the previous behavior would
+>>> cause fs level latencies due to holding up log I/O completion while
+>>> discards completed one at a time. My understanding is that this lead to
+>>> online discard being pretty much universally "not recommended" in favor
+>>> of fstrim.
+>>
+>> It's not a secret that most devices suck at discard.
+> 
+> How can we know if a device sucks at discard?
 
-Since we cannot set these attributes we should special-case the
-immutable/append on delete for symlinks, this would be consistent with
-what we *do* allow on Linux for all filesystems.
+I was going to ask the same thing.  ;)  "Meh, punt to the admin!"
 
-The userspace utility chattr(1) cannot set these attributes on symlinks
-*and* other special files as well:
+I'm having deja vu but can't remember why.  Seems like this has come up
+before and we thought it should be a block device tunable, not pushed down
+from the filesystem.  Is that possible?
 
-	# chattr -a symlink
-	chattr: Operation not supported while reading flags on b
-
-The reason for this is different though. Refer to commit 023d111e92195
-("chattr.1.in: Document the compression attribute flags E, X, and ...")
-merged on e2fsprogs v1.28 since August 2002. This commit prevented
-issuing the ioctl() for symlink *and* special files in consideration for
-a buggy DRM driver where issuing lsattr on their special files crashed
-the system. For details refer to Debian bug 152029 [0].
-
-You can craft your own tool to query the extra file attributes with
-the new shiny statx(2) tool, statx(2) will list the attributes if
-they were set for instance on a corrupt filesystem. However statx(2)
-is only used for *querying* -- not for setting the attributes.
-
-If you implement issuing your own ioctl() for FS_IOC_FSGETXATTR or
-FS_IOC_FSSETXATTR on special files (block, char, fifo) it will fail
-returning -1 and errno is set to ENOTTY (Inappropriate ioctl for
-device). The reason for this is different than for symlinks.
-For special files this fails on vfs_ioctl() when the filesystem
-f_op callbacks are not set for these special files:
-
-long vfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
-{
-	int error = -ENOTTY;
-
-        if (!filp->f_op->unlocked_ioctl)
-		goto out;
-
-	error = filp->f_op->unlocked_ioctl(filp, cmd, arg);
-	if (error == -ENOIOCTLCMD)
-		error = -ENOTTY;
-out:
-	return error;
-}
-
-The same applies to PF_LOCAL named sockets. Since this varies by
-filesystem for special files, only make a special rule to respect
-the immutable and append attribute on symlinks.
-
-[0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
-
-As discussed at LSF/MM -- I'd follow up on this low hanging fruit as
-the discussion had stalled on linux-xfs on review of the respective
-xfs_repair changes. This addresses the general API question, and
-as such I think could help establish order in how we split up patches
-for those changes.
-
-This requires some other eyeballs, and it also requires a putting it through
-xfstests which I can do in the next few days, hence the RFC. But better put it
-out for review already. I'd also like feedback from the linux-api folks to
-see if this matches their own known / documented expectations.
-
- fs/namei.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/fs/namei.c b/fs/namei.c
-index 186bd2464fd5..0f9069468cfb 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -2719,6 +2719,14 @@ int __check_sticky(struct inode *dir, struct inode *inode)
- }
- EXPORT_SYMBOL(__check_sticky);
- 
-+/* Process extra file attributes only when they make sense */
-+static bool may_delete_stx_attributes(struct inode *inode)
-+{
-+	if (!S_ISLNK(inode->i_mode) && (IS_APPEND(inode) || IS_IMMUTABLE(inode)))
-+		return false;
-+	return  true;
-+}
-+
- /*
-  *	Check whether we can remove a link victim from directory dir, check
-  *  whether the type of victim is right.
-@@ -2757,8 +2765,8 @@ static int may_delete(struct inode *dir, struct dentry *victim, bool isdir)
- 	if (IS_APPEND(dir))
- 		return -EPERM;
- 
--	if (check_sticky(dir, inode) || IS_APPEND(inode) ||
--	    IS_IMMUTABLE(inode) || IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
-+	if (check_sticky(dir, inode) || !may_delete_stx_attributes(inode) ||
-+	    IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
- 		return -EPERM;
- 	if (isdir) {
- 		if (!d_is_dir(victim))
--- 
-2.17.0
-
+-Eric
