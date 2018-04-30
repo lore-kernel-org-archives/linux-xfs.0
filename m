@@ -1,79 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f44.google.com ([209.85.214.44]:53180 "EHLO
-        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754618AbeD3SbE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 14:31:04 -0400
-Received: by mail-it0-f44.google.com with SMTP id i136-v6so2050801ita.2
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 11:31:04 -0700 (PDT)
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:47853 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752614AbeD3XXW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 19:23:22 -0400
+Date: Tue, 1 May 2018 09:23:20 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+Message-ID: <20180430232319.GV23861@dastard>
 References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
  <1525102372-8430-3-git-send-email-axboe@kernel.dk>
- <20180430171945.GB22176@bfoster.bfoster>
- <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
- <20180430182525.GE27875@wotan.suse.de>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <bd113078-d3a9-6490-b9b4-1319a6963e2b@kernel.dk>
-Date: Mon, 30 Apr 2018 12:31:00 -0600
+ <20180430213120.GD13766@dastard>
+ <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
+ <20180430222852.GF13766@dastard>
+ <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
+ <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
 MIME-Version: 1.0
-In-Reply-To: <20180430182525.GE27875@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-On 4/30/18 12:25 PM, Luis R. Rodriguez wrote:
-> On Mon, Apr 30, 2018 at 12:07:31PM -0600, Jens Axboe wrote:
->> On 4/30/18 11:19 AM, Brian Foster wrote:
->>> On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
->>>> XFS recently added support for async discards. While this can be
->>>> a win for some workloads and devices, there are also cases where
->>>> async bursty discard will severly harm the latencies of reads
->>>> and writes.
->>>>
->>>> Add a 'discard_sync' mount flag to revert to using sync discard,
->>>> issuing them one at the time and waiting for each one. This fixes
->>>> a big performance regression we had moving to kernels that include
->>>> the XFS async discard support.
->>>>
->>>> Signed-off-by: Jens Axboe <axboe@kernel.dk>
->>>> ---
->>>
->>> Hm, I figured the async discard stuff would have been a pretty clear win
->>> all around, but then again I'm not terribly familiar with what happens
->>> with discards beneath the fs. I do know that the previous behavior would
->>> cause fs level latencies due to holding up log I/O completion while
->>> discards completed one at a time. My understanding is that this lead to
->>> online discard being pretty much universally "not recommended" in favor
->>> of fstrim.
->>
->> It's not a secret that most devices suck at discard.
+On Mon, Apr 30, 2018 at 05:00:14PM -0600, Jens Axboe wrote:
+> On 4/30/18 4:40 PM, Jens Axboe wrote:
+> > On 4/30/18 4:28 PM, Dave Chinner wrote:
+> >> Yes, it does, but so would having the block layer to throttle device
+> >> discard requests in flight to a queue depth of 1. And then we don't
+> >> have to change XFS at all.
+> > 
+> > I'm perfectly fine with making that change by default, and much easier
+> > for me since I don't have to patch file systems.
 > 
-> How can we know if a device sucks at discard?
-
-This test usually works well - does it support discard? Then it probably
-sucks :-)
-
-But seriously, synthetic test case with reads/writes (the actual workload)
-and then mix in trims. If the performance suffers, then discards suck.
-Just consider this series - it was a 25% latency win.
-
->> While the async
->> discard is nifty and I bet works well for some cases, it can also cause
->> a flood of discards on the device side which does not work well for
->> other cases.
+> Totally untested, but this should do the trick. It ensures we have
+> a QD of 1 (per caller), which should be sufficient.
 > 
-> Shouldn't async then be only enabled if the device used supports it well?
-> Or should a blacklist per device be more suitable? Which is more popular?
+> If people tune down the discard size, then you'll be blocking waiting
+> for discards on issue.
+> 
+> diff --git a/block/blk-lib.c b/block/blk-lib.c
+> index a676084d4740..0bf9befcc863 100644
+> --- a/block/blk-lib.c
+> +++ b/block/blk-lib.c
+> @@ -11,16 +11,19 @@
+>  #include "blk.h"
+>  
+>  static struct bio *next_bio(struct bio *bio, unsigned int nr_pages,
+> -		gfp_t gfp)
+> +			    gfp_t gfp)
+>  {
+> -	struct bio *new = bio_alloc(gfp, nr_pages);
+> -
+> +	/*
+> +	 * Devices suck at discard, so if we have to break up the bio
+> +	 * size due to the max discard size setting, wait for the
+> +	 * previous one to finish first.
+> +	 */
+>  	if (bio) {
+> -		bio_chain(bio, new);
+> -		submit_bio(bio);
+> +		submit_bio_wait(bio);
+> +		bio_put(bio);
+>  	}
 
-You'd be left with nothing... My general recommendation is to not use
-discards at all, unless there's a proven case that it makes a write
-amplification difference for you - from at all, to "big enough that I'd
-suffer the latency consequences".
+This only addresses the case where __blkdev_issue_discard() breaks
+up a single large discard, right? It seems like a brute force
+solution, too, because it will do so even when the underlying device
+is idle and there's no need to throttle.
 
+Shouldn't the throttling logic at least look at device congestion?
+i.e. if the device is not backlogged, then we should be able to
+issue the discard without problems. 
+
+I ask this because this only addresses throttling the "discard large
+extent" case when the discard limit is set low. i.e. your exact
+problem case. We know that XFS can issue large numbers of
+discontiguous async discards in a single batch - this patch does not
+address that case and so it will still cause starvation problems.
+
+If we look at device congestion in determining how to throttle/back
+off during discard issuing, then it doesn't matter what
+max_discard_sectors is set to - it will throttle in all situations
+that cause device overloads and starvations....
+
+Cheers,
+
+Dave.
 -- 
-Jens Axboe
-
+Dave Chinner
+david@fromorbit.com
