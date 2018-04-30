@@ -1,132 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57194 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753410AbeD3TSD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Apr 2018 15:18:03 -0400
-Date: Mon, 30 Apr 2018 15:18:01 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:32105 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753482AbeD3W2z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 18:28:55 -0400
+Date: Tue, 1 May 2018 08:28:52 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
-Message-ID: <20180430191801.GC22176@bfoster.bfoster>
+Message-ID: <20180430222852.GF13766@dastard>
 References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
  <1525102372-8430-3-git-send-email-axboe@kernel.dk>
- <20180430171945.GB22176@bfoster.bfoster>
- <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+ <20180430213120.GD13766@dastard>
+ <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+In-Reply-To: <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-On Mon, Apr 30, 2018 at 12:07:31PM -0600, Jens Axboe wrote:
-> On 4/30/18 11:19 AM, Brian Foster wrote:
+On Mon, Apr 30, 2018 at 03:42:11PM -0600, Jens Axboe wrote:
+> On 4/30/18 3:31 PM, Dave Chinner wrote:
 > > On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
 > >> XFS recently added support for async discards. While this can be
 > >> a win for some workloads and devices, there are also cases where
 > >> async bursty discard will severly harm the latencies of reads
 > >> and writes.
-> >>
-> >> Add a 'discard_sync' mount flag to revert to using sync discard,
-> >> issuing them one at the time and waiting for each one. This fixes
-> >> a big performance regression we had moving to kernels that include
-> >> the XFS async discard support.
-> >>
-> >> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> >> ---
 > > 
-> > Hm, I figured the async discard stuff would have been a pretty clear win
-> > all around, but then again I'm not terribly familiar with what happens
-> > with discards beneath the fs. I do know that the previous behavior would
-> > cause fs level latencies due to holding up log I/O completion while
-> > discards completed one at a time. My understanding is that this lead to
-> > online discard being pretty much universally "not recommended" in favor
-> > of fstrim.
+> > FWIW, convention is it document the performance regression in the
+> > commit message, not leave the reader to guess at what it was....
 > 
-> It's not a secret that most devices suck at discard. While the async
-> discard is nifty and I bet works well for some cases, it can also cause
-> a flood of discards on the device side which does not work well for
-> other cases.
+> Yeah I'll give you that, I can improve the commit message for sure.
 > 
-
-Heh, Ok.
-
-> > Do you have any more data around the workload where the old sync discard
-> > behavior actually provides an overall win over the newer behavior? Is it
-> > purely a matter of workload, or is it a workload+device thing with how
-> > discards may be handled by certain devices?
+> > Did anyone analyse the pattern of discards being issued to work out
+> > what pattern was worse for async vs sync discard? is it lots of
+> > little discards, large extents being discarded, perhaps a problem
+> > with the request request queue starving other IOs because we queue
+> > so many async discards in such a short time (which is the difference
+> > in behaviour vs the old code), or something else?
 > 
-> The worse read latencies were observed on more than one device type,
-> making it sync again was universally a win. We've had many issues
-> with discard, one trick that is often used is to chop up file deletion
-> into smaller chunks. Say you want to kill 10GB of data, you do it
-> incrementally, since 10G of discard usually doesn't behave very nicely.
-> If you make that async, then you're back to square one.
+> What was observed was a big discard which would previously have
+> gone down as smaller discards now going down as either one or many
+> discards. Looking at the blktrace data, it's the difference between
 > 
-
-Makes sense, so there's not much win in chopping up huge discard ranges
-into smaller, async requests that cover the same overall size/range..
-
-> > I'm ultimately not against doing this if it's useful for somebody and is
-> > otherwise buried under a mount option, but it would be nice to see if
-> > there's opportunity to improve the async mechanism before resorting to
-> > that. Is the issue here too large bio chains, too many chains at once,
-> > or just simply too many discards (regardless of chaining) at the same
-> > time?
+> discard 1 queue
+> discard 1 complete
+> discatd 2 queue
+> discard 2 complete
+> [...]
+> discard n queue
+> discard n complete
 > 
-> Well, ultimately you'd need better scheduling of the discards, but for
-> most devices what really works the best is a simple "just do one at
-> the time". The size constraint was added to further limit the impact.
+> which is now
 > 
-
-... but presumably there is some value in submitting some number of
-requests together provided they adhere to some size constraint..? Is
-there a typical size constraint for the average ssd, or is this value
-all over the place? (Is there a field somewhere in the bdev that the fs
-can query?)
-
-(I guess I'll defer to Christoph's input on this, I assume he measured
-some kind of improvement in the previous async work..)
-
-> Honestly, I think the only real improvement would be on the device
-> side. Most folks want discard as an advisory hint, and it should not
-> impact current workloads at all. In reality, many implementations
-> are much more strict and even include substantial flash writes. For
-> the cases where we can't just turn it off (I'd love to), we at least
-> need to make it less intrusive.
+> discard 1 queue
+> discard 2 queue
+> [...]
+> discard n queue
+> [...]
+> discard 1 complete
+> discard 2 complete
+> [...]
+> discard n complete
 > 
-> > I'm wondering if xfs could separate discard submission from log I/O
-> > completion entirely and then perhaps limit/throttle submission somehow
-> > or another (Christoph, thoughts?) via a background task. Perhaps doing
-> > something like that may even eliminate the need for some discards on
-> > busy filesystems with a lot of block free -> reallocation activity, but
-> > I'm just handwaving atm.
+> Note that we set a max discard size of 64MB for most devices,
+> since it's been shown to have less impact on latencies for
+> the IO that jobs actually care about.
+
+IOWs, this has nothing to do with XFS behaviour, and everything to
+do with suboptimal scheduling control for concurrent queued discards
+in the block layer....
+
+XFS can issue discard requests of up to 8GB (on 4k block size
+filesystems), and how they are optimised is completely up to the
+block layer. blkdev_issue_discard() happens to be synchronous (for
+historical reasons) and that does not match our asynchronous log IO
+model. it's always been a cause of total filesystem stall problems
+for XFS because we can't free log space until all the pending
+discards have been issued. Hence we can see global filesystems
+stalls of *minutes* with synchronous discards on bad devices and can
+cause OOM and all sorts of other nasty cascading failures.
+
+Async discard dispatch solves this problem for XFS - discards no
+longer block forward journal progress, and we really don't want to
+go back to having that ticking timebomb in XFS. Handling concurrent
+discard requests in an optimal manner is not a filesystem problem -
+it's an IO scheduling problem.
+
+
+Essentially, we've exposed yet another limitation of the block/IO
+layer handling of discard requests in the linux storage stack - it
+does not have a configurable discard queue depth.
+
+I'd much prefer these problems get handled at the IO scheduling
+layer where there is visibulity of device capabilities and request
+queue state. i.e. we should be throttling async discards just like
+we can throttle read or write IO, especially given there are many
+devices that serialise discards at the device level (i.e. not queued
+device commands). This solves the problem for everyone and makes
+things much better for the future where hardware implementations are
+likely to get better and support more and more concurrency in
+discard operations.
+
+IMO, the way the high level code dispatches discard requests is
+irrelevant here - this is a problem to do with queue depth and IO
+scheduling/throttling. That's why I don't think adding permanent ABI
+changes to filesystems to work around this problem is the right
+solution....
+
+> > I don't think we should be changing anything - adding an opaque,
+> > user-unfriendly mount option does nothing to address the underlying
+> > problem - it's just a hack to work around the symptoms being seen...
+> > 
+> > More details of the regression and the root cause analysis is
+> > needed, please.
 > 
-> Just having the sync vs async option is the best split imho. The async
-> could potentially be scheduled. I don't think more involved logic
-> belongs in the fs.
-> 
+> It brings back the same behavior as we had before, which performs
+> better for us. It's preventing users of XFS+discard from upgrading,
+> which is sad.
 
-The more interesting part to me is whether we can safely separate
-discard from log I/O completion in XFS. Then we can release the log
-buffer locks and whatnot and let the fs proceed without waiting on any
-number of discards to complete. In theory, I think the background task
-could issue discards one at a time (or N at a time, or N blocks at a
-time, whatever..) without putting us back in a place where discards hold
-up the log and subsequently lock up the rest of the fs.
+Yes, it does, but so would having the block layer to throttle device
+discard requests in flight to a queue depth of 1. And then we don't
+have to change XFS at all.
 
-If that's possible, then the whole sync/async thing is more of an
-implementation detail and we have no need for separate mount options for
-users to try and grok.
+Cheers,
 
-Brian
-
-> -- 
-> Jens Axboe
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
