@@ -1,131 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:45850 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753277AbeD3WAX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 18:00:23 -0400
-Date: Tue, 1 May 2018 08:00:20 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH] xfs: skip discard of unwritten extents
-Message-ID: <20180430220020.GE13766@dastard>
-References: <20180426180624.6134-1-bfoster@redhat.com>
+Received: from mail.kernel.org ([198.145.29.99]:57236 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754409AbeD3AJY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 29 Apr 2018 20:09:24 -0400
+Date: Sun, 29 Apr 2018 17:09:14 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: LICENSES: Missing ISC text & possibly a category ("Not
+ recommended" vs. "Preferred licenses")
+Message-ID: <20180430000914.GB29548@kroah.com>
+References: <CACna6rz_Ms2Uv1P6E0gCGNsRwK4nm=PMAOaJ5Uk9aJxs2VSamQ@mail.gmail.com>
+ <20180429052617.GC24294@kroah.com>
+ <CACna6rw0R7j9pkFnUKnJFcudoZ2n1r1Dig4xSpj+n7e9Qo129w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180426180624.6134-1-bfoster@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CACna6rw0R7j9pkFnUKnJFcudoZ2n1r1Dig4xSpj+n7e9Qo129w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, DOCUMENTATION <linux-doc@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Kate Stewart <kstewart@linuxfoundation.org>, Florian Fainelli <f.fainelli@gmail.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-On Thu, Apr 26, 2018 at 02:06:24PM -0400, Brian Foster wrote:
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
+On Sun, Apr 29, 2018 at 12:15:11PM +0200, Rafał Miłecki wrote:
+> On 29 April 2018 at 07:26, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Sat, Apr 28, 2018 at 11:25:17PM +0200, Rafał Miłecki wrote:
+> >> Due to some maintainers *preferring* BSD-compatible license for DTS
+> >> files [0], I was writing mine using ISC. I had no very special reason
+> >> for it: I was choosing between BSD-2-Clause, MIT and ISC. I've chosen
+> >> ISC as I read about its "removal of language deemed unnecessary".
+> >>
+> >> I took a moment to look at the new SPDX thing and noticed that:
+> >> 1) File license-rules.rst provides "LICENSES/other/ISC" as an example
+> >
+> > Yeah, bad example, we should fix that text up.  Care to send a patch? :)
 > 
-> Hi all,
+> Sure. I see that license-rules.rst also refers to LICENSES/other/ZLib
+> which also doesn't exist.
 > 
-> What do folks think of something like this?
+> As "other" directory contains only GPL-1.0 and MPL-1.1 I guess one of
+> these should be referenced.
 
-Definitely sounds like something we need to address.
+See the patch set that Thomas has posted to hopefully resolve these
+issues.  I think they are all now taken care of with that series.
 
-> The motivation here is that
-> the VDO (dedup) devs had reported seeing online discards during
-> write-only workloads. These turn out to be related to trimming post-eof
-> preallocation blocks after large file copies. To my knowledge, this
-> isn't really a prevalent or serious issue, but I think that technically
-> these discards are unnecessary and so I was looking into how we could
-> avoid them.
+> >> 2) License file LICENSES/other/ISC doesn't exist
+> >> 3) ISC is listed as an *example* under the "Not recommended licenses"
+> >
+> > Yes, please don't use it if at all possible.
+> >
+> >> First of all, as ISC is used by some files in the Linux kernel, I
+> >> think it's worth adding to the LICENSE/*/ISC.
+> >
+> > I see it is only used in a very small number of dts files.  Why not just
+> > use BSD-2-Clause instead?  What do you find in ISC that is not available
+> > to you with just BSD?
+> 
+> As said, I read about its "removal of language deemed unnecessary". I
+> assumed that the simpler license text the better.
 
-We simply trucate post-eof extents, right? So we know in
-xfs_itruncate_extents() if the inode size is changing, not to
-mention we know if the extent is beyond EOF? e.g. all calls to
-xfs_itruncate_extents() other than xfs_free_eofblocks() change the
-inode size and so directly indicate they are removing written
-blocks. Anything where the inode size is not changing is doing a
-post-eof removal, and so we can assume no data has been written?
+Simple up to a point, having loads of different licenses is a mess, as
+you are finding out :)
 
-So rather than converting everything to unwritten extents, the "skip
-discard flag" is simply triggered via extents being freed sitting
-beyond the current EOF (not the new EOF) and/or being unwritten?
+> >> Secondly, it isn't 100% clear to me if ISC is preferred or not
+> >> recommended. File license-rules.rst suggests the later by listing it
+> >> as an example for "Not recommended". It's just an example though, so
+> >> I'm not 100% sure without seeing it in either: "preferred" or "other"
+> >> directories. Also if anyone finds it "Not recommended", can we get a
+> >> short explanation why is it so, please?
+> >
+> > The license is functionally equalivant to BSD-2, so why would you want
+> > to add more complexity here and have two licenses that are the same be
+> > "recommended"?
+> 
+> I don't insist on it, I'm trying to figure out what's the best for the
+> Linux community.
+> 
+> On the other hand I could ask why do we want more complexity by having
+> MIT license. It's very similar to the BSD-2-Clause after all. AFAIK
+> the only minor differences are that:
+> 1) MIT clearly allows sublicensing
+> 2) BSD 2-Clause clearly requires distributing *binaries* with
+> copyrights + license text
 
-> This behavior is of course not directly related to unwritten extents,
-> but the immediate/obvious solution to bubble up a bmapi flag of some
-> kind to xfs_free_eofblocks() seemed rather crude. From there, I figured
-> that we technically don't need to discard any unwritten extents (within
-> or beyond EOF) because they haven't been written to since being
-> allocated. In fact, I'm not sure we have to even busy them, but it's
-> roughly equivalent logic either way and I'm trying to avoid getting too
-> clever.
+I think you will find more dual-licensed MIT code in the tree already
+than ISC, right?
 
-I think we still need to busy them to avoid re-allocating them in
-the same checkpoint, as data extent free/realloc in the same
-checkpoint could result in a failed recovery (i.e. partial
-checkpoint replay) leaving the extent linked into two separate
-files.
+And really, in the end, the odds of someone taking this code _out_ of
+the tree and using it only under a non-GPLv2 license is slim, to none,
+so it's best to just stick with the common licenses, as long as they
+match what you wish the code to abide by.  As you want to follow what
+MIT says, then just use that and all should be good, right?
 
-> I also recall that we've discussed using unwritten extents for delalloc
-> -> real conversion to avoid the small stale data exposure window that
-> exists in writeback. Without getting too deep into the reason we don't
-> currently do an initial unwritten allocation [1], I don't think there's
-> anything blocking us from converting any post-eof blocks that happen to
-> be part of the resulting normal allocation. As it is, the imap is
-> already trimmed to EOF by the writeback code for coherency reasons. If
-> we were to convert post-eof blocks (not part of this patch) along with
-> something like this patch, then we'd indirectly prevent discards for
-> eofblocks trims.
+thanks,
 
-I think we should leave that as a separate problem, as writeback
-currently has issues with the way we manage bufferhead state.
-i.e. things don't work right if we put unwritten extents under
-delalloc buffers and vice versa. [ I have patches to address that
-I'm working on.] And there's also the issue that we need to change
-the delalloc reservations to take into account block allocations
-required by unwritten extent conversion needed by delalloc.
-
-Hence I think we should address that as a separate problem, not as
-the solution to avoiding discard of post-eof extents.
-
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 4bcc095fe44a..942c90ec6747 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2954,13 +2954,15 @@ xfs_free_extent(
->  	xfs_fsblock_t		bno,	/* starting block number of extent */
->  	xfs_extlen_t		len,	/* length of extent */
->  	struct xfs_owner_info	*oinfo,	/* extent owner */
-> -	enum xfs_ag_resv_type	type)	/* block reservation type */
-> +	enum xfs_ag_resv_type	type,	/* block reservation type */
-> +	bool			skip_discard)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
->  	struct xfs_buf		*agbp;
->  	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, bno);
->  	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, bno);
->  	int			error;
-> +	unsigned int		busy_flags = 0;
->  
->  	ASSERT(len != 0);
->  	ASSERT(type != XFS_AG_RESV_AGFL);
-> @@ -2984,7 +2986,9 @@ xfs_free_extent(
->  	if (error)
->  		goto err;
->  
-> -	xfs_extent_busy_insert(tp, agno, agbno, len, 0);
-> +	if (skip_discard)
-> +		busy_flags |= XFS_EXTENT_BUSY_SKIP_DISCARD;
-> +	xfs_extent_busy_insert(tp, agno, agbno, len, busy_flags);
->  	return 0;
-
-Rather than changing xfs_free_extent(), how about adding a
-xfs_free_extent_nodiscard() wrapper, and only call it when
-processing an extent that doesn't need discard? This means none of
-the other code that frees extents needs to be changed. Similarly
-add a xfs_bmap_add_free_nodiscard() wrapper. That will cut down on
-the code churn caused by passing new parameters everywhere....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+greg k-h
