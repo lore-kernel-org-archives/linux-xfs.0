@@ -1,167 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49170 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751429AbeEACSg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Apr 2018 22:18:36 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 358AF479AE3
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 21:17:23 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 43d5ec8
-Message-ID: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
-Date: Mon, 30 Apr 2018 21:18:34 -0500
+Received: from mail-it0-f53.google.com ([209.85.214.53]:34881 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756097AbeD3T6z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 15:58:55 -0400
+Received: by mail-it0-f53.google.com with SMTP id 186-v6so10973301itu.0
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 12:58:54 -0700 (PDT)
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+ <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+ <20180430171945.GB22176@bfoster.bfoster>
+ <24df628d-c861-6f39-96a8-d759902d1fe3@kernel.dk>
+ <20180430182525.GE27875@wotan.suse.de>
+ <4cb68c8e-bf6c-b717-73f0-20e850582004@sandeen.net>
+ <210ebc4e-780a-1cf2-92e0-2482b98704a2@kernel.dk>
+ <c149cd30-97ba-cd86-de8d-efb83825521a@sandeen.net>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <6f4137ac-d7c2-2727-d1da-649df30f3682@kernel.dk>
+Date: Mon, 30 Apr 2018 13:58:51 -0600
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="va0HUKGlhRllUWVrrtoBdus0ObCXszXyW"
+In-Reply-To: <c149cd30-97ba-cd86-de8d-efb83825521a@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---va0HUKGlhRllUWVrrtoBdus0ObCXszXyW
-Content-Type: multipart/mixed; boundary="DaK1S7hQ3jt5iPEI4SpQuzB9nZonE81sC";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 43d5ec8
+On 4/30/18 1:57 PM, Eric Sandeen wrote:
+> 
+> 
+> On 4/30/18 2:21 PM, Jens Axboe wrote:
+>> On 4/30/18 1:19 PM, Eric Sandeen wrote:
+>>>
+>>>
+>>> On 4/30/18 1:25 PM, Luis R. Rodriguez wrote:
+>>>> On Mon, Apr 30, 2018 at 12:07:31PM -0600, Jens Axboe wrote:
+>>>>> On 4/30/18 11:19 AM, Brian Foster wrote:
+>>>>>> On Mon, Apr 30, 2018 at 09:32:52AM -0600, Jens Axboe wrote:
+>>>>>>> XFS recently added support for async discards. While this can be
+>>>>>>> a win for some workloads and devices, there are also cases where
+>>>>>>> async bursty discard will severly harm the latencies of reads
+>>>>>>> and writes.
+>>>>>>>
+>>>>>>> Add a 'discard_sync' mount flag to revert to using sync discard,
+>>>>>>> issuing them one at the time and waiting for each one. This fixes
+>>>>>>> a big performance regression we had moving to kernels that include
+>>>>>>> the XFS async discard support.
+>>>>>>>
+>>>>>>> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+>>>>>>> ---
+>>>>>>
+>>>>>> Hm, I figured the async discard stuff would have been a pretty clear win
+>>>>>> all around, but then again I'm not terribly familiar with what happens
+>>>>>> with discards beneath the fs. I do know that the previous behavior would
+>>>>>> cause fs level latencies due to holding up log I/O completion while
+>>>>>> discards completed one at a time. My understanding is that this lead to
+>>>>>> online discard being pretty much universally "not recommended" in favor
+>>>>>> of fstrim.
+>>>>>
+>>>>> It's not a secret that most devices suck at discard.
+>>>>
+>>>> How can we know if a device sucks at discard?
+>>>
+>>> I was going to ask the same thing.  ;)  "Meh, punt to the admin!"
+>>>
+>>> I'm having deja vu but can't remember why.  Seems like this has come up
+>>> before and we thought it should be a block device tunable, not pushed down
+>>> from the filesystem.  Is that possible?
+>>
+>> The problem is that it'll depend on the workload as well. The device in
+>> may laptop is fine with discard for my workload, which is very light.
+>> But if you are running RocksDB on it, and doing heavy compactions and
+>> deletes, it probably would not be.
+> 
+> Ok, but I'm not sure how that precludes a block device tunable?  You'd tune
+> it for your workload, right?
 
---DaK1S7hQ3jt5iPEI4SpQuzB9nZonE81sC
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+What kind of tunable are you thinking of? Right now we have one tunable,
+which is the max discard size. Patch #1 actually helps make this do what
+it should for sync discards, instead of just building a bio chain and
+submitting that all at once.
 
-Hi folks,
+> Or is the concern that it could only be for the entire block device, and
+> perhaps different partitions have different workloads?
+> 
+> Sorry, caveman filesystem guy doesn't completely understand block devices.
 
-The for-next branch of the xfsprogs repository at:
+I just don't know what you are trying to tune :-)
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+-- 
+Jens Axboe
 
-has just been updated.  I've merged the 4.17 libxfs changes from the
-libxfs-4.17-sync branch into for-next.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-43d5ec8 Merge branch 'libxfs-4.17-sync' into for-next
-
-New Commits:
-
-Brian Foster (4):
-      [65a15e0] xfs: rename agfl perag res type to rmapbt
-      [9760cac] xfs: account only rmapbt-used blocks against rmapbt perag=
- res
-      [8dbee8f] xfs: detect agfl count corruption and reset agfl
-      [19fbb9d] xfs: clean up xfs_mount allocation and dynamic initialize=
-rs
-
-Carlos Maiolino (1):
-      [97b3ffd] Cleanup old XFS_BTREE_* traces
-
-Darrick J. Wong (7):
-      [6da71a8] xfs: convert a few more directory asserts to corruption
-      [15348e0] xfs: sanity-check the unused space before trying to use i=
-t
-      [0cf6a3a] xfs: refactor bmap record validation
-      [b02a2c9] xfs: refactor inode verifier error logging
-      [43f7ceb] xfs: refactor inode buffer verifier error logging
-      [fd0c360] xfs: move inode extent size hint validation to libxfs
-      [2949b46] xfs: don't accept inode buffers with suspicious unlinked =
-chains
-
-Dave Chinner (2):
-      [b816550] xfs: convert XFS_AGFL_SIZE to a helper function
-      [d206fcb] xfs: remove dead inode version setting code
-
-Eric Sandeen (2):
-      [1421de3] xfs: non-scrub - remove unused function parameters
-      [43d5ec8] Merge branch 'libxfs-4.17-sync' into for-next
-
-
-Code Diffstat:
-
- db/agfl.c                   |   2 +-
- db/check.c                  |   6 +--
- db/freesp.c                 |   6 +--
- db/metadump.c               |   2 +-
- include/libxfs.h            |   1 +
- include/xfs_mount.h         |  10 +++--
- include/xfs_trace.h         |   2 +
- libxfs/libxfs_api_defs.h    |   2 +
- libxfs/libxfs_priv.h        |  11 ++++++
- libxfs/xfs_ag_resv.c        |  39 ++++++++++---------
- libxfs/xfs_ag_resv.h        |  31 +++++++++++++++
- libxfs/xfs_alloc.c          | 145 ++++++++++++++++++++++++++++++++++++++=
-++++++++++++++++++++++-----------
- libxfs/xfs_alloc.h          |   7 ++--
- libxfs/xfs_alloc_btree.c    |   8 +---
- libxfs/xfs_bmap.c           |  54 +++++++++++++++++++++++----
- libxfs/xfs_bmap.h           |   5 ++-
- libxfs/xfs_bmap_btree.c     |   4 +-
- libxfs/xfs_bmap_btree.h     |  14 -------
- libxfs/xfs_btree.c          | 127 +++++---------------------------------=
-------------------------
- libxfs/xfs_btree.h          |  25 +------------
- libxfs/xfs_dir2.h           |   2 +-
- libxfs/xfs_dir2_block.c     |  59 +++++++++++++++++------------
- libxfs/xfs_dir2_data.c      |  78 +++++++++++++++++++++++++++++---------=
-
- libxfs/xfs_dir2_leaf.c      |  13 +++++--
- libxfs/xfs_dir2_node.c      |  16 +++++---
- libxfs/xfs_format.h         |  13 +------
- libxfs/xfs_ialloc.c         |   2 +-
- libxfs/xfs_ialloc_btree.c   |  11 ++----
- libxfs/xfs_inode_buf.c      | 124 ++++++++++++++++++++++++++++++++++++++=
-++++++++++++++++++----
- libxfs/xfs_inode_buf.h      |   5 +++
- libxfs/xfs_inode_fork.c     |  27 +++++++++-----
- libxfs/xfs_refcount.c       |  22 ++++-------
- libxfs/xfs_refcount_btree.c |  10 +----
- libxfs/xfs_refcount_btree.h |   3 +-
- libxfs/xfs_rmap.c           |   3 +-
- libxfs/xfs_rmap_btree.c     |  17 ++++-----
- libxfs/xfs_rmap_btree.h     |   2 +-
- libxfs/xfs_sb.c             |  11 ++----
- libxfs/xfs_trans_resv.c     |  10 ++---
- mkfs/xfs_mkfs.c             |   4 +-
- repair/agheader.c           |  12 +++---
- repair/phase5.c             |  20 +++++-----
- repair/rmap.c               |   2 +-
- repair/scan.c               |   6 +--
- 44 files changed, 585 insertions(+), 388 deletions(-)
-
-
---DaK1S7hQ3jt5iPEI4SpQuzB9nZonE81sC--
-
---va0HUKGlhRllUWVrrtoBdus0ObCXszXyW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlrnznoACgkQIK4WkuE9
-3uCgJhAAoX9cmoFFQfltdmyFFoHparNz0sUjX+ssrzj6QUj/I/Xu7U6NzazWcIGC
-35Zc71ZuDCxcfgie63JDORjkKWfp87nah2nD5fjdNssCRMSy2krJXe5VfktpbkMZ
-/0t2VQTKz5zFRNtlHg/9kk6XVnykqbzkT3k51rHqBqqqdQ/QEIX3QtsWeoqP569m
-G8IevZh//mDEkeEH5IiN/FwV67TBhGtHCIHEcflcJlDV4VrpqzfylVN3NpDZb5yV
-IJQ5BKEqGG4unlL1asbowjVRgdx14oknryYmfKodbvlBjuyd74lPW/Vy116r/PHe
-VoQjOBT+DoTDmRar0YRE5I9En7rZeKDjG6VDFKqGBqWYtQ0QpkIhLnesTgcX98nO
-k5oB2wz+tuE1AdlmighEsoR0VuHRMCXCOzOhmtoXkS8a9MEk9Vyhlr+KGTpWw9jk
-iVTAnKnJFp0+g1vNsVAfg7XyWme7qKm5LmRZaNWp18CMAmRy53p1UpNkgCFGcQMq
-3GunxZ+MxOEtvwVSEl9AuViKh0e12t8C4SSC/JfcBUlzm/cgFX84pod01VD4bKsv
-j8pk96i5dyBRauql0Y5Q1FnqTeRH9fjHKLSRQNvlP5Xxxh9sS1uHVHycXAzJk0qg
-41fjea+T05YMzRNgzTvRYgVRSKDBcf56vUFQG7l0W+HXCchQul8=
-=cFYh
------END PGP SIGNATURE-----
-
---va0HUKGlhRllUWVrrtoBdus0ObCXszXyW--
