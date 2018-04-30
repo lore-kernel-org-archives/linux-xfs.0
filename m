@@ -1,129 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45818 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753031AbeDRClw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Apr 2018 22:41:52 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w3I2fqxV100953
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:41:52 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2hdrxn8ju5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:41:52 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2fp5D014697
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:41:51 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w3I2fpnm025984
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Apr 2018 02:41:51 GMT
-Subject: [PATCH v15 00/24] xfs-4.18: online repair support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 17 Apr 2018 19:41:50 -0700
-Message-ID: <152401930978.12079.2000682561964128780.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail-io0-f195.google.com ([209.85.223.195]:33014 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754645AbeD3Pc7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 11:32:59 -0400
+Received: by mail-io0-f195.google.com with SMTP id e78-v6so10639249iod.0
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 08:32:59 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+Subject: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+Date: Mon, 30 Apr 2018 09:32:52 -0600
+Message-Id: <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+In-Reply-To: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+Cc: hch@lst.de, Jens Axboe <axboe@kernel.dk>
 
-Hi all,
+XFS recently added support for async discards. While this can be
+a win for some workloads and devices, there are also cases where
+async bursty discard will severly harm the latencies of reads
+and writes.
 
-This is the fifteenth revision of a patchset that adds to XFS kernel
-support for online metadata scrubbing and repair.  There aren't any
-on-disk format changes.
+Add a 'discard_sync' mount flag to revert to using sync discard,
+issuing them one at the time and waiting for each one. This fixes
+a big performance regression we had moving to kernels that include
+the XFS async discard support.
 
-New in v15 of the patch series is the ability to scavenge broken
-attribute forks for intact extended attributes, to repair minor
-corruptions in the on-disk quota records, and to perform quotacheck
-online.
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+---
+ fs/xfs/xfs_log_cil.c | 18 ++++++++++++++----
+ fs/xfs/xfs_mount.h   |  1 +
+ fs/xfs/xfs_super.c   |  7 ++++++-
+ 3 files changed, 21 insertions(+), 5 deletions(-)
 
-The first nine patches are helper functions that are internal to the
-online repair code.  The first two provide tracepoints and the basics of
-dispatching repair activities and have already been reviewed; the next
-seven patches each add repair helpers for:
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 4668403b1741..4eced3eceea5 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -552,10 +552,16 @@ xlog_discard_busy_extents(
+ 	struct bio		*bio = NULL;
+ 	struct blk_plug		plug;
+ 	int			error = 0;
++	int			discard_flags = 0;
++	bool			sync_discard = mp->m_flags & XFS_MOUNT_DISCARD_SYNC;
+ 
+ 	ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
+ 
+-	blk_start_plug(&plug);
++	if (!sync_discard)
++		blk_start_plug(&plug);
++	else
++		discard_flags = BLKDEV_DISCARD_SYNC;
++
+ 	list_for_each_entry(busyp, list, list) {
+ 		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
+ 					 busyp->length);
+@@ -563,7 +569,7 @@ xlog_discard_busy_extents(
+ 		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
+ 				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
+ 				XFS_FSB_TO_BB(mp, busyp->length),
+-				GFP_NOFS, 0, &bio);
++				GFP_NOFS, discard_flags, &bio);
+ 		if (error && error != -EOPNOTSUPP) {
+ 			xfs_info(mp,
+ 	 "discard failed for extent [0x%llx,%u], error %d",
+@@ -574,14 +580,18 @@ xlog_discard_busy_extents(
+ 		}
+ 	}
+ 
+-	if (bio) {
++	if (sync_discard) {
++		xfs_extent_busy_clear(mp, &ctx->busy_extents, false);
++		kmem_free(ctx);
++	} else if (bio) {
+ 		bio->bi_private = ctx;
+ 		bio->bi_end_io = xlog_discard_endio;
+ 		submit_bio(bio);
++		blk_finish_plug(&plug);
+ 	} else {
+ 		xlog_discard_endio_work(&ctx->discard_endio_work);
++		blk_finish_plug(&plug);
+ 	}
+-	blk_finish_plug(&plug);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 10b90bbc5162..3f0b7b9106c7 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -219,6 +219,7 @@ typedef struct xfs_mount {
+ 						   operations, typically for
+ 						   disk errors in metadata */
+ #define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
++#define XFS_MOUNT_DISCARD_SYNC	(1ULL << 6)	/* discard unused blocks sync */
+ #define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
+ 						   allocations */
+ #define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d71424052917..6d960bb4725f 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -83,7 +83,7 @@ enum {
+ 	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota,
+ 	Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
++	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err, Opt_discard_sync,
+ };
+ 
+ static const match_table_t tokens = {
+@@ -129,6 +129,7 @@ static const match_table_t tokens = {
+ 	{Opt_pqnoenforce,"pqnoenforce"},/* project quota limit enforcement */
+ 	{Opt_qnoenforce, "qnoenforce"},	/* same as uqnoenforce */
+ 	{Opt_discard,	"discard"},	/* Discard unused blocks */
++	{Opt_discard_sync,"discard_sync"},/* Discard unused blocks sync */
+ 	{Opt_nodiscard,	"nodiscard"},	/* Do not discard unused blocks */
+ 
+ 	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
+@@ -363,11 +364,15 @@ xfs_parseargs(
+ 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+ 			mp->m_qflags &= ~XFS_GQUOTA_ENFD;
+ 			break;
++		case Opt_discard_sync:
++			mp->m_flags |= XFS_MOUNT_DISCARD_SYNC;
++			/* fall through and set XFS_MOUNT_DISCARD too */
+ 		case Opt_discard:
+ 			mp->m_flags |= XFS_MOUNT_DISCARD;
+ 			break;
+ 		case Opt_nodiscard:
+ 			mp->m_flags &= ~XFS_MOUNT_DISCARD;
++			mp->m_flags &= ~XFS_MOUNT_DISCARD_SYNC;
+ 			break;
+ #ifdef CONFIG_FS_DAX
+ 		case Opt_dax:
+-- 
+2.7.4
 
- - Estimating transaction block reservations and creating transactions
-   suitable for repairing metadata.
- - Allocating and initializing per-AG btree blocks.
- - Managing lists of AG blocks; we find all the dead blocks of a btree
-   we're rebuilding by making a list of blocks with the same rmap owner,
-   and subtracting out any blocks in use by other data structures.
- - Disposing of lists of dead per-AG btree blocks.
- - Finding btree roots given only rmap information.
- - Resetting filesystem counters.
- - Calling dqattach for inodes being repaired and scheduling quotacheck.
-
-Patches 10-21 introduce the online repair functionality for space
-metadata.  Our general strategy for rebuilding damaged primary metadata
-is to rebuild the structure completely from secondary metadata and free
-the old structure after the fact; we do not try to salvage anything.
-Consequently, online repair requires rmapbt.  Rebuilding the secondary
-metadata (rmap) is much harder -- due to our locking rules (primary and
-then secondary) we have to shut down the filesystem temporarily while we
-scan all the primary metadata for data to put in the new secondary
-structure.
-
-Reconstructing inodes is difficult -- the ability to rebuild files
-depends on the filesystem being able to load an inode (xfs_iget), which
-means repair has to know how to zap any part of an inode record that
-might trigger corruption errors from iget.  To that end, we can now
-reset most of an inode record or an inode fork so that we can rebuild
-the file.
-
-The refcount rebuilder is more or less the same algorithm that
-xfs_repair uses, but modified to reflect the constraints of running in
-kernel space.
-
-For rmap rebuilds, we cannot have anything on the filesystem taking
-exclusive locks and we cannot have any allocation activity at all.
-Therefore, we start by freezing the filesystem to allow other
-transactions to finish.  Next, we scan all other AG metadata structures,
-every inode, and every block map to reconstruct the rmap data.  Then, we
-reinitialize the rmap btree root and reload the rmap btree.  Finally, we
-release all the resource we grabbed and the filesystem returns to
-normal.
-
-The extended attribute repair function uses a different strategy from
-the other repair code.  Since there are no secondary metadata for
-extended attributes, we can't simply rebuild from an alternate data
-source.  Therefore, this repairer simply walks through the blocks in the
-attribute fork looking for attribute names and values that appear to be
-intact, zaps the attr fork, and re-adds the collected names and values
-to the new fork.  This enables us to trigger optimization notices for
-attributes blocks with holes.
-
-Quota repairs are fairly straightforward -- repair anything wrong with
-the inode data fork, eliminate garbage extents, and then iterate all the
-dquot blocks fixing up things that the dquot buffer verifier will
-complain about.  This should leave the quota ip in good enough shape
-for...
-
-...quotacheck!  Here we reuse the same fs freezing mechanism as in the
-rmap repair to block all other filesystem users.  Then we zero all the
-quota counters, iterate all the inodes in the system to recalculate the
-counts, and log all the dquots to disk.  We of course clear the CHKD
-flags before starting out, so if we crash midway through, the mount time
-quotacheck will run.
-
-Looking forward, the parent pointer feature that Allison Henderson is
-working on will enable us to reconstruct directories, at which point
-we'll be able to reconstruct most of a lightly damaged filesystem.  But
-that's future talk.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.17-rc1.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
