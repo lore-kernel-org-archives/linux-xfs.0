@@ -1,280 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:39951 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752521AbeD3NXy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Apr 2018 09:23:54 -0400
-Received: by mail-pf0-f174.google.com with SMTP id f189so6732658pfa.7
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 06:23:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <95c1400b-94f2-1af4-2d5d-c61c274c28ff@sandeen.net>
-References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@dastard>
+Received: from sandeen.net ([63.231.237.45]:34686 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754363AbeD3PO3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Apr 2018 11:14:29 -0400
+Subject: Re: WARNING: bad unlock balance in xfs_iunlock
+References: <f403043cbe8414177d0568e81405@google.com>
+ <20180403043854.GL1150@dastard>
  <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
  <20180405213844.GE23861@dastard> <20180406161053.GF7500@magnolia>
- <CACT4Y+aaEOffkFA-B-hMzwzSiQwVpkPrc2udC087a55OTnkS4g@mail.gmail.com> <95c1400b-94f2-1af4-2d5d-c61c274c28ff@sandeen.net>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 30 Apr 2018 15:23:32 +0200
-Message-ID: <CACT4Y+aiwgRg5pk+N7bq9HYpgumTFyqG6-y3EZ8pWkq9-uB1aA@mail.gmail.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Content-Type: text/plain; charset="UTF-8"
+ <CACT4Y+aaEOffkFA-B-hMzwzSiQwVpkPrc2udC087a55OTnkS4g@mail.gmail.com>
+ <95c1400b-94f2-1af4-2d5d-c61c274c28ff@sandeen.net>
+ <CACT4Y+aiwgRg5pk+N7bq9HYpgumTFyqG6-y3EZ8pWkq9-uB1aA@mail.gmail.com>
+ <9f8d657c-7f42-7bd9-4477-6c3addf16dee@sandeen.net>
+ <CACT4Y+bUx4jw83Ux7w9URL9bCy1ERLaVGTTwvA9Fe_UtLFeqCw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
+Date: Mon, 30 Apr 2018 10:14:28 -0500
+MIME-Version: 1.0
+In-Reply-To: <CACT4Y+bUx4jw83Ux7w9URL9bCy1ERLaVGTTwvA9Fe_UtLFeqCw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Dmitry Vyukov <dvyukov@google.com>
 Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Theodore Ts'o <tytso@mit.edu>, syzkaller <syzkaller@googlegroups.com>
 
-On Mon, Apr 16, 2018 at 9:22 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 4/13/18 5:03 AM, Dmitry Vyukov wrote:
->> On Fri, Apr 6, 2018 at 6:10 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
->>> On Fri, Apr 06, 2018 at 07:38:44AM +1000, Dave Chinner wrote:
->>>> On Thu, Apr 05, 2018 at 08:54:50PM +0200, Dmitry Vyukov wrote:
->>>>> On Tue, Apr 3, 2018 at 6:38 AM, Dave Chinner <david@fromorbit.com> wrote:
->>>>>> On Mon, Apr 02, 2018 at 07:01:02PM -0700, syzbot wrote:
->>>>>>> Hello,
->>>>>>>
->>>>>>> syzbot hit the following crash on upstream commit
->>>>>>> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
->>>>>>> Merge branch 'ras-core-for-linus' of
->>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
->>>>>>> syzbot dashboard link:
->>>>>>> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
->>>>>>>
->>>>>>> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
->>>>>>> syzkaller reproducer:
->>>>>>> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
->>>>>>
->>>>>> What a mess. A hand built, hopelessly broken filesystem image made
->>>>>> up of hex dumps, written into a mmap()d region of memory, then
->>>>>> copied into a tmpfs file and mounted with the loop device.
->>>>>>
->>>>>> Engineers that can debug broken filesystems don't grow on trees.  If
->>>>>> we are to have any hope of understanding what the hell this test is
->>>>>> doing, the bot needs to supply us with a copy of the built
->>>>>> filesystem image the test uses. We need to be able to point forensic
->>>>>> tools at the image to decode all the structures into human readable
->>>>>> format - if we are forced to do that by hand or jump through hoops
->>>>>> to create our own filesystem image than I'm certainly not going to
->>>>>> waste time looking at these reports...
->>>>>
->>>>> Hi Dave,
->>>>>
->>>>> Here is the image:
->>>>> https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
->>>>> (took me about a minute to extract from test by replacing memfd_create
->>>>> with open and running the program).
->>>>
->>>> Says the expert who knows exactly how it's all put together. It took
->>>> me a couple of hours just to understand WTF the syzbot reproducer
->>>> was actually doing....
->
-> *nod* more on this below.
->
->>>>> Then do the following to trigger the bug:
->>>>> losetup /dev/loop0 xfs.repro
->>>>> mkdir xfs
->>>>> mount -t xfs -o nouuid,prjquota,noikeep,quota /dev/loop0 xfs
->>>>>
->>>>> To answer your more general question: syzbot is not a system to test
->>>>> solely file systems, it finds bugs in hundreds of kernel subsystems.
->>>>> Generating image for file systems, media files for sound and
->>>>> FaceDancer programs that crash host when  FaceDancer device is plugged
->>>>> into USB is not feasible. And in the end it's not even clear what
->>>>
->>>> I don't care how syzbot generates the filesystem image it uses.
->>>>
->>>>> kernel subsystem is at fault and even if it somehow figures out that
->>>>> it's a filesystem, it's unclear that it's exactly an image that
->>>>> provokes the bug. syzbot provides C reproducers which is a reasonable
->>>>
->>>> It doesn't matter *what subsystem breaks*. If syzbot is generating a
->>>> filesystem image and then mounting it, it needs to provide that
->>>> filesystem image to to people who end up having to debug the
->>>> problem. It's a basic "corrupt filesystem" bug triage step.
->
-> *nod*
->
->>>>> Some bugs are so involved that only an
->>>>> expert in a particular subsystem can figure out what happens there.
->>>>
->>>> And that's clearly the case here, whether you like it or not.
->>>>
->>>> You want us to do things that make syzbot more useful as a tool but
->>>> you don't want to do things that make syzbot a useful tool for us.
->>>> It's a two way street....
+On 4/30/18 9:02 AM, Dmitry Vyukov wrote:
+> On Mon, Apr 30, 2018 at 3:49 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+
+...
+
+>>> It just extracted kernel source file name that looked relevant
+>>> to this crash and run get_maintainers.pl on it.
+>>> Also the image can contain dynamically generated data, which makes it
+>>> impossible to have as a file at all.
 >>
->> Hi Dave, Darrick,
+>> I guess I'm not sure what this means, can you explain?
+> 
+> Say, a value that we generally pass to close system call is not static
+> and can't be dumped to a static file. It's whatever a previous open
+> system call has returned. Inside of the program we memorize the return
+> value of open in a variable and then pass it to close. This generally
+> stands for all system calls. Say, an image can contain an uid, and
+> that uid can be obtained from a system call too.
+
+Ok, but that's the syscall side.  You are operating on a static xfs image,
+correct?  We're only asking for the actual filesystem you're operating
+against.
+
+(When I say "image" I am talking only about the filesystem itself, not any
+other syzkaller state)
+ 
+...
+
+>> That was not at all clear to me.  I thought when syzkaller was telling us
+>> "on upstream commit XYZ," it meant that it had identified commit XYZ as bad.
+>> I'm not sure if anyone else made that mistake, but  perhaps you could also clarify
+>> the bug report text in this regard?
+> 
+> Suggestions are welcome. Currently it says "syzbot hit the following
+> crash on upstream commit SHA1", which was supposed to mean just the
+> state of the source tree when the crash happened. But I am not a
+> native speaker, so perhaps I am saying not what I intend to say.
+> 
+> There are also suggestions on report format improvement from +Ted
+> currently in works:
+> https://github.com/google/syzkaller/issues/565#issuecomment-380792942
+> Not sure if they make this distinction 100% clear, though.
+
+Maybe I was the only one who misunderstood, but something like
+
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+HEAD:		f5c754d63d06 mm/swap_state.c: make bool enable_vma_readahead and swap_vma_readahead()
+ 
+to make it clear that it has not identified that commit as the culprit, it's
+just the head of the tree you were testing?  (I think I have the correct git
+nomenclature ...)
+
+...
+
+>> If the base image only has one allocation group, it makes it more difficult for
+>> some tools to work with the image, because there is no redundancy.  1 AG is
+>> not a supported or recommended geometry for any real-life use of xfs.
 >>
->> It's not that we don't want to make the system more useful, it's just
->> that we don't see what reasonably can be done here. The system does
->> not have notion of images, sound files, USB devices. It feeds data
->> into system calls, and that's what it provides as reproducers. Also
->> see the last paragraph.
->
-> It sure /seems/ to have a notion of images: what else is syz_mount_image()?
->
-> i.e. you are mounting an image to reproduce the problem, correct?
-> And the system is "smart" enough to fire off an email to a filesystem list;
-> if it does so, add a link to the image itself, as you already have already done
-> for the C reproducer.
->
-> Filesystem images are common parlance for filesystem engineers.  When
-> you engage with them you'll have better results if you  provide them with
-> inputs they can use directly instead of requiring them to reverse-engineer
-> your custom test harness.
+>> If I am correct that you start with a base image w/ a certain geometry or
+>> set of mkfs options, starting with >= 2 AGs would improve the usefulness of the
+>> filesystem image.
+> 
+> syzkaller can generate/mutate images based on structured format
+> templates, but for now we don't have any templates and these are just
+> opaque blobs.
 
+Ok, backing up more: When you are testing against an xfs filesystem image, where
+does that image come from?  How is it generated?  A quick look at the syzkaller
+tree didn't make that clear to me.
 
-Well, yes and no.
-syz_mount_image() is the only part of a large system that knows about
-images. For the rest of the system it's just a syscall like any other
-syscall. And the part that sends emails is far away from
-syz_mount_image().
-syzbot does not know per se that it sends an email to filesystems
-list. It just extracted kernel source file name that looked relevant
-to this crash and run get_maintainers.pl on it.
-Also the image can contain dynamically generated data, which makes it
-impossible to have as a file at all.
+the xfs.repro file you provided at
+https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
 
-Thinking of this, what should be reasonably easy to do and may be a
-compromise for near future is the following. We could insert code into
-syz_mount_image() which dump the image if you build a program with a
-special define (e.g. -DSYZ_DUMP_IMAGE). Will this work for you?
+is strange, it doesn't even contain AGF blocks; they aren't fuzzed or corrupted,
+they are completely zeroed out.  I don't know if that's part of the fuzzing,
+or what - what steps led to that image?
 
+Or put another way, how did you arrive at the fs image values in the reproducer,
+i.e.:
 
+oid loop()
+{
+  memcpy((void*)0x20000000, "xfs", 4);
+  memcpy((void*)0x20000100, "./file0", 8);
+  *(uint64_t*)0x20000200 = 0x20010000;
+  memcpy((void*)0x20010000,
+         "\x58\x46\x53\x42\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x10\x00\x00"
+         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x9f\x98"
+         "\x99\xff\xcb\xa1\x4e\xe6\xad\x52\x08\x20\x67\x09\xed\x75\x00\x00\x00"
+         "\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x35\xe0\x00\x00\x00\x00"
+         "\x00\x00\x35\xe1\x00\x00\x00\x00\x00\x00\x35\xe2\x00\x00\x00\x01\x00"
+         "\x00\x10\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03\x55\xb4\xa4"
+         "\x02\x00\x01\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+         "\x00\x0c\x09\x08\x04\x0c\x00\x00\x19\x00\x00\x00\x00\x00\x00\x00\x40"
+         "\x00\x00\x00\x00\x00\x00\x00\x3d\x00\x00\x00\x00\x00\x00\x0c\xa3\x00"
+         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00"
+         "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x02\x02",
+         204);
 
->>> ...here's my take on this whole situation:
->>>
->>> So far as I can tell, this syzbot daemon grew the ability to fuzz
->>> filesystems and started emitting bug report after bug report, with
->>> misleading commit ids that have nothing to do with the complaint.
->>
->> Please elaborate re commits. It's a basic rule of any good bug report
->> -- communicate exact state of source code when the bug was hit, i.e.
->> provide the commit hash.
->
-> Further best practice is to provide the /correct/ commit hash.
->
-> syzbot has identified commits which seem almost certainly incorrect.
->
-> For example,
->
-> KASAN: use-after-free Read in radix_tree_next_chunk
->
-> identified:
->
-> 9dd2326890d89a5179967c947dab2bab34d7ddee (Fri Mar 30 17:29:47 2018 +0000)
-> Merge tag 'ceph-for-4.16-rc8' of git://github.com/ceph/ceph-client
->
-> and:
->
-> WARNING: bad unlock balance in xfs_iunlock
->
-> identified:
->
-> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
-> Merge branch 'ras-core-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
->
-> I can't imagine these are right...
+... 
 
+The in-memory xfs filesystem it constructs is damaged, is that an intentional
+part of the fuzzing during the test?
 
-As I said, bisection is on our plate:
-https://github.com/google/syzkaller/issues/501
-Though, we will see how well it works, because it's not trivial (see
-the issue for details).
-
-
->>>  Your
->>> maintainers (Dave, Eric, and me) have spent a few hours trying to figure
->>> out what's going on, to some frustration.  The bug reports themselves
->>> miss the public engagement detail of saying something like "Hey XFS
->>> engineers, if you'd like to talk to the syzbot engineers they can be
->>> reached at <googlegroup address>."  Instead it merely says "direct
->>> questions to <addr>" like this is some press release and the only thing
->>> on the other end of the line will be some disinterested bureaucracy.
->>> Or some robot.
->>
->> This is quite subjective and we hear opinions all possible ways. I
->> don't think there is one size fits all. E.g. +Ted argued in exactly
->> the opposite direction: make reports more laconic, formal,
->> table-formatted with dry information. There is also a tradeoff between
->> describing each detail in proper, friendly English and being more
->> laconic. If we increase everything 4x and post a wall of text with
->> each report, lots of people won't read anything of it just because
->> it's a wall of text. I am also not a native English speaker, so
->> providing simple formal text is a safer option than writing something
->> potentially clumsy.
->
-> What Darrick is asking for, I think, is a human on the other end to talk
-> to if there are any issues or concerns about the reports.  (For example,
-> "hey that commit looks wrong, are you sure?)  We are not asking for a
-> long narrative with each report.  We're asking for a dialogue about this
-> framework and the reporting, so it can improve.
->
->> Having said that, I am collecting proposals for report format
->> improvements. Here is fortunately slightly better wording for footer
->> based on your idea:
->> https://github.com/google/syzkaller/issues/565#issuecomment-380793620
-
-Report footer will be improved to make it more clear:
-https://github.com/google/syzkaller/issues/565#issuecomment-380793620
-
-
->> Well, I guess nobody has infinite engineering resources. If we would
->> have them we would also fix all these bug ourselves and don't bother
->> you at all. Just as any other company could invest in writing bug
->> detection tools, fuzzers, deploy them and report bugs, which would
->> relief us from this.
->> We have limited resources and do what's possible within these
->> resources. Unfortunately providing individual handling of each of the
->> thousands of bugs is not possible within these resources. I know that
->> what we are doing is useful for kernel overall because lots of
->> hundreds of bugs get fixed due to this effort. If you, as xfs
->> maintainers, think that these reports are net negative for xfs and xfs
->> should not be tested, say so and we will figure out how to make it
->> happen.
->
-> We've been inundated lately with results of scripts which generate bug reports
-> quickly but do not provide enough information to quickly triage, reproduce, and
-> fix those reports.
->
-> (For example, another fuzzer is using the same "poc.c" to exercise a fuzzed
-> image; it might be the 1st operation or the 50th that causes the issue, but
-> the harness doesn't bother to find out or report it, it just sends all 50
-> potential operations to us, and assumes we'll take the time to figure it out.
-> It's laziness on the script/reporting side, resulting in extra work on the
-> human/debugging side.)
->
-> I think that in this case, what we are asking for is a fine tuning of the
-> testing and reporting so that we can more efficiently address these issues.
-> Off the top of my head, and there may be more items:
->
-> 1) Add a human contact to the emails, start an IRC channel, etc, for better
->    two-way communication.  (it wasn't clear that syzkaller@ reached humans,
->    tbh.)
-
-There is a human contact at syzkaller@googlegroups.com. Report footer
-will be improved to make it more clear:
-https://github.com/google/syzkaller/issues/565#issuecomment-380793620
-
-> 2) _Properly_ identify the regressing commit, if any.  If it doesn't look like
->    a recent regression, you can state that too.
-
-Bisection is on our plate.
-
-> 3) If you're reporting a filesystem bug that arose from using a filesystem
->    image, provide a URL to that filesystem image directly in the report.
-
-See above. It may not be necessary representable as a static file at all.
-
-> 4) Create a filesystem image that can be more easily debugged by the experts,
->    i.e. one with > 1 allocation group, so standard repair & analysis tools can
->    be used with it.
-
-What is "> 1 allocation group"?
-
-> Hopefully this sort of feedback will result in better bug reports from you,
-> and faster (and more) bugfixes from us.
->
-> Personally, I'm certainly not asking you to stop sending reports of bugs you
-> find, but I /am/ asking that they be as refined, specific, and useful as possible.
->
-> Thanks,
-> -Eric
+-Eric
