@@ -1,188 +1,187 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51574 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:51982 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751195AbeD3VnT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Apr 2018 17:43:19 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] test online label ioctl
-Message-ID: <fd1e2651-099f-8acd-da4d-a67c1e45cd07@redhat.com>
-Date: Mon, 30 Apr 2018 16:43:18 -0500
+        id S1751512AbeEADEA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Apr 2018 23:04:00 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 5F8B4479AE3
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Apr 2018 22:02:46 -0500 (CDT)
+Subject: Re: [ANNOUNCE] xfsprogs: for-next rebased to 43d5ec8
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
+Message-ID: <f85ca497-3de0-329c-a4aa-a6dd5494c3ef@sandeen.net>
+Date: Mon, 30 Apr 2018 22:03:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests <fstests@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-This tests the online label ioctl that btrfs has, which has been
-recently proposed for XFS.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO
+Content-Type: multipart/mixed; boundary="2MCZuLAXV8gsMRFw24zVB7S52hKecIcv7";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <f85ca497-3de0-329c-a4aa-a6dd5494c3ef@sandeen.net>
+Subject: Re: [ANNOUNCE] xfsprogs: for-next rebased to 43d5ec8
+References: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
+In-Reply-To: <b8905265-4c18-d927-9a92-9cfededb8ae0@sandeen.net>
 
-To run, it requires an updated xfs_io with the label command and a
-filesystem that supports it
+--2MCZuLAXV8gsMRFw24zVB7S52hKecIcv7
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-A slight change here to _require_xfs_io_command as well, so that tests
-which simply fail with "Inappropriate ioctl" can be caught in the
-common case.
+And due to the 4.16.1 release I'm about to do, which I did
+out of order, I promptly rebased for-next, so the new head of for-next is=
+ now:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+4152dae Merge branch 'libxfs-4.17-sync' into for-next
 
-this passes on btrfs, _notruns on xfs/ext4 of yore, and passes
-on xfs w/ my online label patchset (as long as xfs_io has the new
-capability)
+and for-next also includes the minor 4.16.1 update, a release for which
+I'll send out momentarily.
 
-diff --git a/common/rc b/common/rc
-index 9ffab7f..c53a721 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2158,6 +2158,9 @@ _require_xfs_io_command()
- 		echo $testio | grep -q "Inappropriate ioctl" && \
- 			_notrun "xfs_io $command support is missing"
- 		;;
-+	"label")
-+		testio=`$XFS_IO_PROG -c "label" $TEST_DIR 2>&1`
-+		;;
- 	"open")
- 		# -c "open $f" is broken in xfs_io <= 4.8. Along with the fix,
- 		# a new -C flag was introduced to execute one shot commands.
-@@ -2196,7 +2199,7 @@ _require_xfs_io_command()
- 	rm -f $testfile 2>&1 > /dev/null
- 	echo $testio | grep -q "not found" && \
- 		_notrun "xfs_io $command support is missing"
--	echo $testio | grep -q "Operation not supported" && \
-+	echo $testio | grep -q "Operation not supported\|Inappropriate ioctl" && \
- 		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
- 	echo $testio | grep -q "Invalid" && \
- 		_notrun "xfs_io $command failed (old kernel/wrong fs/bad args?)"
-diff --git a/tests/generic/485 b/tests/generic/485
-new file mode 100755
-index 0000000..79902c2
---- /dev/null
-+++ b/tests/generic/485
-@@ -0,0 +1,99 @@
-+#! /bin/bash
-+# FS QA Test 485
-+#
-+# Test the online filesystem label set/get ioctls
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
-+# Author: Eric Sandeen <sandeen@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_xfs_io_command "label"
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount
-+
-+# Make sure we can set & clear the label
-+$XFS_IO_PROG -c "label label.$seq" $SCRATCH_MNT
-+$XFS_IO_PROG -c "label" $SCRATCH_MNT
-+
-+# And that userspace can see it now, while mounted
-+blkid -s LABEL $SCRATCH_DEV | _filter_scratch
-+
-+# And that the it is still there when it's unmounted
-+_scratch_unmount
-+blkid -s LABEL $SCRATCH_DEV | _filter_scratch
-+
-+# And that it persists after a remount
-+_scratch_mount
-+$XFS_IO_PROG -c "label" $SCRATCH_MNT
-+
-+# And that a too-long label is rejected, beyond the interface max:
-+LABEL=$(perl -e "print 'l' x 257;")
-+$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT
-+
-+# And that it succeeds right at the filesystem max:
-+case $FSTYP in
-+xfs)
-+	MAXLEN=12;
-+	;;
-+btrfs)
-+	MAXLEN=256
-+	;;
-+*)
-+	MAXLEN=256
-+	echo "Your filesystem supports online label, please add max length"
-+	;;
-+esac
-+LABEL=$(perl -e "print 'o' x $MAXLEN;")
-+$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT | sed -e 's/o\+/MAXLABEL/'
-+
-+# And that it fails just past the filesystem max:
-+let TOOLONG=MAXLEN+1
-+LABEL=$(perl -e "print 'o' x $TOOLONG;")
-+$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/485.out b/tests/generic/485.out
-new file mode 100644
-index 0000000..bc54684
---- /dev/null
-+++ b/tests/generic/485.out
-@@ -0,0 +1,9 @@
-+QA output created by 485
-+label = "label.485"
-+label = "label.485"
-+SCRATCH_DEV: LABEL="label.485" 
-+SCRATCH_DEV: LABEL="label.485" 
-+label = "label.485"
-+label: Invalid argument
-+label = "MAXLABEL"
-+label: Invalid argument
-diff --git a/tests/generic/group b/tests/generic/group
-index 19be926..cf6ac49 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -487,3 +487,4 @@
- 482 auto metadata replay
- 483 auto quick log metadata
- 484 auto quick
-+485 auto quick
+Sorry about the churn.
 
+-Eric
+
+On 4/30/18 9:18 PM, Eric Sandeen wrote:
+> Hi folks,
+>=20
+> The for-next branch of the xfsprogs repository at:
+>=20
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+>=20
+> has just been updated.  I've merged the 4.17 libxfs changes from the
+> libxfs-4.17-sync branch into for-next.
+>=20
+> Patches often get missed, so please check if your outstanding
+> patches were in this update. If they have not been in this update,
+> please resubmit them to linux-xfs@vger.kernel.org so they can be
+> picked up in the next update.
+>=20
+> The new head of the for-next branch is commit:
+>=20
+> 43d5ec8 Merge branch 'libxfs-4.17-sync' into for-next
+>=20
+> New Commits:
+>=20
+> Brian Foster (4):
+>       [65a15e0] xfs: rename agfl perag res type to rmapbt
+>       [9760cac] xfs: account only rmapbt-used blocks against rmapbt per=
+ag res
+>       [8dbee8f] xfs: detect agfl count corruption and reset agfl
+>       [19fbb9d] xfs: clean up xfs_mount allocation and dynamic initiali=
+zers
+>=20
+> Carlos Maiolino (1):
+>       [97b3ffd] Cleanup old XFS_BTREE_* traces
+>=20
+> Darrick J. Wong (7):
+>       [6da71a8] xfs: convert a few more directory asserts to corruption=
+
+>       [15348e0] xfs: sanity-check the unused space before trying to use=
+ it
+>       [0cf6a3a] xfs: refactor bmap record validation
+>       [b02a2c9] xfs: refactor inode verifier error logging
+>       [43f7ceb] xfs: refactor inode buffer verifier error logging
+>       [fd0c360] xfs: move inode extent size hint validation to libxfs
+>       [2949b46] xfs: don't accept inode buffers with suspicious unlinke=
+d chains
+>=20
+> Dave Chinner (2):
+>       [b816550] xfs: convert XFS_AGFL_SIZE to a helper function
+>       [d206fcb] xfs: remove dead inode version setting code
+>=20
+> Eric Sandeen (2):
+>       [1421de3] xfs: non-scrub - remove unused function parameters
+>       [43d5ec8] Merge branch 'libxfs-4.17-sync' into for-next
+>=20
+>=20
+> Code Diffstat:
+>=20
+>  db/agfl.c                   |   2 +-
+>  db/check.c                  |   6 +--
+>  db/freesp.c                 |   6 +--
+>  db/metadump.c               |   2 +-
+>  include/libxfs.h            |   1 +
+>  include/xfs_mount.h         |  10 +++--
+>  include/xfs_trace.h         |   2 +
+>  libxfs/libxfs_api_defs.h    |   2 +
+>  libxfs/libxfs_priv.h        |  11 ++++++
+>  libxfs/xfs_ag_resv.c        |  39 ++++++++++---------
+>  libxfs/xfs_ag_resv.h        |  31 +++++++++++++++
+>  libxfs/xfs_alloc.c          | 145 ++++++++++++++++++++++++++++++++++++=
+++++++++++++++++++++++++-----------
+>  libxfs/xfs_alloc.h          |   7 ++--
+>  libxfs/xfs_alloc_btree.c    |   8 +---
+>  libxfs/xfs_bmap.c           |  54 +++++++++++++++++++++++----
+>  libxfs/xfs_bmap.h           |   5 ++-
+>  libxfs/xfs_bmap_btree.c     |   4 +-
+>  libxfs/xfs_bmap_btree.h     |  14 -------
+>  libxfs/xfs_btree.c          | 127 +++++-------------------------------=
+--------------------------
+>  libxfs/xfs_btree.h          |  25 +------------
+>  libxfs/xfs_dir2.h           |   2 +-
+>  libxfs/xfs_dir2_block.c     |  59 +++++++++++++++++------------
+>  libxfs/xfs_dir2_data.c      |  78 +++++++++++++++++++++++++++++-------=
+--
+>  libxfs/xfs_dir2_leaf.c      |  13 +++++--
+>  libxfs/xfs_dir2_node.c      |  16 +++++---
+>  libxfs/xfs_format.h         |  13 +------
+>  libxfs/xfs_ialloc.c         |   2 +-
+>  libxfs/xfs_ialloc_btree.c   |  11 ++----
+>  libxfs/xfs_inode_buf.c      | 124 ++++++++++++++++++++++++++++++++++++=
+++++++++++++++++++++----
+>  libxfs/xfs_inode_buf.h      |   5 +++
+>  libxfs/xfs_inode_fork.c     |  27 +++++++++-----
+>  libxfs/xfs_refcount.c       |  22 ++++-------
+>  libxfs/xfs_refcount_btree.c |  10 +----
+>  libxfs/xfs_refcount_btree.h |   3 +-
+>  libxfs/xfs_rmap.c           |   3 +-
+>  libxfs/xfs_rmap_btree.c     |  17 ++++-----
+>  libxfs/xfs_rmap_btree.h     |   2 +-
+>  libxfs/xfs_sb.c             |  11 ++----
+>  libxfs/xfs_trans_resv.c     |  10 ++---
+>  mkfs/xfs_mkfs.c             |   4 +-
+>  repair/agheader.c           |  12 +++---
+>  repair/phase5.c             |  20 +++++-----
+>  repair/rmap.c               |   2 +-
+>  repair/scan.c               |   6 +--
+>  44 files changed, 585 insertions(+), 388 deletions(-)
+>=20
+
+
+--2MCZuLAXV8gsMRFw24zVB7S52hKecIcv7--
+
+--JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlrn2R0ACgkQIK4WkuE9
+3uD9dw/7BGTvPfDjVrnaQEJB68tDAQeuT9XnL8/a+tGoLINBwNb1k7w6cEj9iXRg
+8IZEkMqgpz/wuVD/sq5XeR1IC3+ofbaHSp5R3iKtUA1BNMysg4B6unvy26fgkhXE
+NYRBaFdUPBDaDsJqUwfUMCNmMiaL92vakmd1P/MxPuHfGIkIEX0iLWGLqYGEaqAN
+XcYtkwjsC/Cc6KTdzO+doJSrww5b9x5MYJEeFQ9qGraRycVdolay9VFGnehD6sqx
+3K+5uRmIC+VovCy7CK6T4QPC0R6FbVgsX6vQLQF4soqpMB0kLB/0efLv7slriFiV
+dAD5GRkMFlhM9uAV/H7CFr/0uSXvBRDUjwR+smLEFg4Plt4UtjPSRg5M9Gc5X49w
+6YG8m2TaIpNWwIKPVWU5T4qPDQPiXIfJ7TbAu6sczUlrEr9BGY1y3S/7RTzUPMBP
+6uqDebXn0W7hLXFYt18bw0r9qouvO/7dklQ+GRO3XlbfTCgjkmIRuXcAhTbBUTg3
+bxbHkrBdmL9IbhNnMkux2sBwwo9tQqBOjASdwjsC1ICd/K9vQEySpzzrwrwkRe1P
+8yX4sJHJMyxLmVSuMZiSPtxDXRqhzgAhMvb95iXk2KQJ6h3Fxb6QkgrKdiblezUK
+3Cs6CKmxCqTIA/wfxPibYv1K6AbdLXlqc+ctgnS8qa/1/2S3QyI=
+=IG6E
+-----END PGP SIGNATURE-----
+
+--JeiK6FsETBWH3jplHmP2Y1Qg2JyvKYBgO--
