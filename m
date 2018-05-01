@@ -1,100 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43594 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56026 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754662AbeEANpF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 May 2018 09:45:05 -0400
-Date: Tue, 1 May 2018 09:45:04 -0400
+        id S1754908AbeEANpK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 May 2018 09:45:10 -0400
+Date: Tue, 1 May 2018 09:45:08 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 10/13] xfs: replace XFS_QMOPT_DQALLOC with boolean
-Message-ID: <20180501134503.GC4525@bfoster.bfoster>
+Subject: Re: [PATCH 12/13] xfs: rename on-disk dquot counter zap functions
+Message-ID: <20180501134508.GD4525@bfoster.bfoster>
 References: <152506698177.21553.13500862866416804148.stgit@magnolia>
- <152506705736.21553.3142275765217711989.stgit@magnolia>
- <20180430054752.GB21688@magnolia>
+ <152506707010.21553.15727146910203332609.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180430054752.GB21688@magnolia>
+In-Reply-To: <152506707010.21553.15727146910203332609.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Sun, Apr 29, 2018 at 10:47:52PM -0700, Darrick J. Wong wrote:
-> Ugh, wrong commit message.  Here's an updated one now that the flag is
-> gone entirely.
+On Sun, Apr 29, 2018 at 10:44:30PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-
-Just FYI.. git applies this with the above as the commit log message and
-the text below is tossed. ;P
-
-> --D
-> 
-> ---
-> Subject: [PATCH] xfs: replace XFS_QMOPT_DQALLOC with a simple boolean
-> 
-> DQALLOC is only ever used with xfs_qm_dqget*, and the only flag that the
-> _dqget family of functions cares about is DQALLOC.  Therefore, change
-> it to a boolean 'can alloc?' flag for the dqget interfaces where that
-> makes sense.
+> The function 'xfs_qm_dqiterate' doesn't iterate dquots at all, it
+> iterates all dquot blocks of a quota inode and clears the counters.
+> Therefore, change the name to something more descriptive so that we can
+> introduce a real dquot iterator later.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_quota_defs.h |    1 -
->  fs/xfs/xfs_dquot.c             |    8 ++++----
->  fs/xfs/xfs_dquot.h             |    2 +-
->  fs/xfs/xfs_qm.c                |   12 +++++-------
->  fs/xfs/xfs_qm_bhv.c            |    2 +-
->  fs/xfs/xfs_qm_syscalls.c       |    9 ++++-----
->  6 files changed, 15 insertions(+), 19 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-> index 531e8224dcb6..1fa3d6d6db40 100644
-> --- a/fs/xfs/xfs_qm_bhv.c
-> +++ b/fs/xfs/xfs_qm_bhv.c
-> @@ -72,7 +72,7 @@ xfs_qm_statvfs(
->  	xfs_mount_t		*mp = ip->i_mount;
->  	xfs_dquot_t		*dqp;
->  
-> -	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
-> +	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, true, &dqp)) {
-
-False? Otherwise looks fine:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  		xfs_fill_statvfs_from_dquot(statp, dqp);
->  		xfs_qm_dqput(dqp);
+>  fs/xfs/xfs_qm.c |   16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index c6b1e9bd7a3e..fcbbae70748a 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -889,7 +889,7 @@ xfs_qm_reset_dqcounts(
+>  }
+>  
+>  STATIC int
+> -xfs_qm_dqiter_bufs(
+> +xfs_qm_reset_dqcounts_all(
+>  	struct xfs_mount	*mp,
+>  	xfs_dqid_t		firstid,
+>  	xfs_fsblock_t		bno,
+> @@ -957,11 +957,11 @@ xfs_qm_dqiter_bufs(
+>  }
+>  
+>  /*
+> - * Iterate over all allocated USR/GRP/PRJ dquots in the system, calling a
+> - * caller supplied function for every chunk of dquots that we find.
+> + * Iterate over all allocated dquot blocks in this quota inode, zeroing all
+> + * counters for every chunk of dquots that we find.
+>   */
+>  STATIC int
+> -xfs_qm_dqiterate(
+> +xfs_qm_reset_dqcounts_buf(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_inode	*qip,
+>  	uint			flags,
+> @@ -1037,7 +1037,7 @@ xfs_qm_dqiterate(
+>  			 * Iterate thru all the blks in the extent and
+>  			 * reset the counters of all the dquots inside them.
+>  			 */
+> -			error = xfs_qm_dqiter_bufs(mp, firstid,
+> +			error = xfs_qm_reset_dqcounts_all(mp, firstid,
+>  						   map[i].br_startblock,
+>  						   map[i].br_blockcount,
+>  						   flags, buffer_list);
+> @@ -1299,7 +1299,7 @@ xfs_qm_quotacheck(
+>  	 * We don't log our changes till later.
+>  	 */
+>  	if (uip) {
+> -		error = xfs_qm_dqiterate(mp, uip, XFS_QMOPT_UQUOTA,
+> +		error = xfs_qm_reset_dqcounts_buf(mp, uip, XFS_QMOPT_UQUOTA,
+>  					 &buffer_list);
+>  		if (error)
+>  			goto error_return;
+> @@ -1307,7 +1307,7 @@ xfs_qm_quotacheck(
 >  	}
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index b9243f554697..3e05d300b14e 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -425,7 +425,7 @@ xfs_qm_scall_setqlim(
->  	 * a reference to the dquot, so it's safe to do this unlock/lock without
->  	 * it being reclaimed in the mean time.
->  	 */
-> -	error = xfs_qm_dqget(mp, id, type, XFS_QMOPT_DQALLOC, &dqp);
-> +	error = xfs_qm_dqget(mp, id, type, true, &dqp);
->  	if (error) {
->  		ASSERT(error != -ENOENT);
->  		goto out_unlock;
-> @@ -696,11 +696,10 @@ xfs_qm_scall_getquota(
->  	int			error;
 >  
->  	/*
-> -	 * Try to get the dquot. We don't want it allocated on disk, so
-> -	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
-> -	 * exist, we'll get ENOENT back.
-> +	 * Try to get the dquot. We don't want it allocated on disk, so don't
-> +	 * set doalloc. If it doesn't exist, we'll get ENOENT back.
->  	 */
-> -	error = xfs_qm_dqget(mp, id, type, 0, &dqp);
-> +	error = xfs_qm_dqget(mp, id, type, false, &dqp);
->  	if (error)
->  		return error;
+>  	if (gip) {
+> -		error = xfs_qm_dqiterate(mp, gip, XFS_QMOPT_GQUOTA,
+> +		error = xfs_qm_reset_dqcounts_buf(mp, gip, XFS_QMOPT_GQUOTA,
+>  					 &buffer_list);
+>  		if (error)
+>  			goto error_return;
+> @@ -1315,7 +1315,7 @@ xfs_qm_quotacheck(
+>  	}
 >  
+>  	if (pip) {
+> -		error = xfs_qm_dqiterate(mp, pip, XFS_QMOPT_PQUOTA,
+> +		error = xfs_qm_reset_dqcounts_buf(mp, pip, XFS_QMOPT_PQUOTA,
+>  					 &buffer_list);
+>  		if (error)
+>  			goto error_return;
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
