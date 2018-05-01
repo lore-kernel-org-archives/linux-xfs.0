@@ -1,115 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28489 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751329AbeEBICI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:02:08 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDmi8-0002Wd-1n
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDmi8-0003Ar-0g
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/10] xfs: catch log items multiply joined to a transaction
-Date: Wed,  2 May 2018 18:01:49 +1000
-Message-Id: <20180502080157.11386-3-david@fromorbit.com>
-In-Reply-To: <20180502080157.11386-1-david@fromorbit.com>
-References: <20180502080157.11386-1-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:33544 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753851AbeEAPjm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:39:42 -0400
+Subject: [PATCH 3/9] generic/45[34]: add unicode directional override checks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 01 May 2018 08:39:39 -0700
+Message-ID: <152518917904.23023.222758648230658600.stgit@magnolia>
+In-Reply-To: <152518916007.23023.4793255395982876953.stgit@magnolia>
+References: <152518916007.23023.4793255395982876953.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I've comes across a series of subtle bugs in development code that
-are a result of inodes being joined to the same transaction more
-than once. This means the transaction has multiple log item
-descriptors pointing to the same log item, and so processes them
-multiple times during transaction commit processing. Further, the
-log item can only store a single log item descriptor back pointer,
-so this means all but one of the log item descriptors pointing
-to the log item can't be found from the log item.
+Try injecting a Unicode directional override character in the middle of
+a name to see if the fs can handle it / xfs_scrub will complain.
 
-Add a log item flag to say the item has been joined to a transaction
-and assert that it's not set when adding a log item to a
-transaction. Clear it when the log item is disconnected from the log
-item descriptor. This will tell us if there are other log items that
-transactions are referencing multiple times.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_trans.c | 6 ++++--
- fs/xfs/xfs_trans.h | 4 +++-
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ tests/generic/453 |    7 +++++++
+ tests/generic/454 |    7 +++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index c6a2a3cb9df5..33c40788cffa 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -741,6 +741,7 @@ xfs_trans_add_item(
+
+diff --git a/tests/generic/453 b/tests/generic/453
+index 424412e9..f2cd81fb 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -112,6 +112,10 @@ setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt
+ # Line draw characters, because why not?
+ setf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
  
- 	ASSERT(lip->li_mountp == tp->t_mountp);
- 	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
-+	ASSERT(!test_bit(XFS_LI_TRANS, &lip->li_flags));
++# unicode rtl widgets too...
++setf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
++setf "mootxt.png" "Harvey"
++
+ ls -la $testdir >> $seqres.full
  
- 	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
+ echo "Test files"
+@@ -135,6 +139,9 @@ testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.tx
  
-@@ -749,6 +750,7 @@ xfs_trans_add_item(
- 	list_add_tail(&lidp->lid_trans, &tp->t_items);
+ testf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
  
- 	lip->li_desc = lidp;
-+	set_bit(XFS_LI_TRANS, &lip->li_flags);
- }
++testf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
++testf "mootxt.png" "Harvey"
++
+ echo "Uniqueness of inodes?"
+ stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
+ 	if [ "${nr}" -gt 1 ]; then
+diff --git a/tests/generic/454 b/tests/generic/454
+index 24727ab3..c6530290 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -110,6 +110,10 @@ setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt
+ # Line draw characters, because why not?
+ setf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
  
- STATIC void
-@@ -766,6 +768,7 @@ void
- xfs_trans_del_item(
- 	struct xfs_log_item	*lip)
- {
-+	clear_bit(XFS_LI_TRANS, &lip->li_flags);
- 	xfs_trans_free_item_desc(lip->li_desc);
- 	lip->li_desc = NULL;
- }
-@@ -785,7 +788,7 @@ xfs_trans_free_items(
- 	list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
- 		struct xfs_log_item	*lip = lidp->lid_item;
++# unicode rtl widgets too...
++setf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
++setf "mootxt.png" "Harvey"
++
+ $GETFATTR_PROG --absolute-names -d "${testfile}" >> $seqres.full
  
--		lip->li_desc = NULL;
-+		xfs_trans_del_item(lip);
+ echo "Test files"
+@@ -133,6 +137,9 @@ testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.tx
  
- 		if (commit_lsn != NULLCOMMITLSN)
- 			lip->li_ops->iop_committing(lip, commit_lsn);
-@@ -793,7 +796,6 @@ xfs_trans_free_items(
- 			set_bit(XFS_LI_ABORTED, &lip->li_flags);
- 		lip->li_ops->iop_unlock(lip);
+ testf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
  
--		xfs_trans_free_item_desc(lidp);
- 	}
- }
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 51145ddf7e5b..af52107adffc 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -72,11 +72,13 @@ typedef struct xfs_log_item {
- #define	XFS_LI_IN_AIL	0
- #define	XFS_LI_ABORTED	1
- #define	XFS_LI_FAILED	2
-+#define	XFS_LI_TRANS	3	/* attached to an active transaction */
- 
- #define XFS_LI_FLAGS \
- 	{ (1 << XFS_LI_IN_AIL),		"IN_AIL" }, \
- 	{ (1 << XFS_LI_ABORTED),	"ABORTED" }, \
--	{ (1 << XFS_LI_FAILED),		"FAILED" }
-+	{ (1 << XFS_LI_FAILED),		"FAILED" }, \
-+	{ (1 << XFS_LI_TRANS),		"TRANS" }
- 
- struct xfs_item_ops {
- 	void (*iop_size)(xfs_log_item_t *, int *, int *);
--- 
-2.17.0
++testf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
++testf "mootxt.png" "Harvey"
++
+ echo "Uniqueness of keys?"
+ crazy_keys="$($GETFATTR_PROG --absolute-names -d "${testfile}" | egrep -c '(french_|chinese_|greek_|arabic_|urk)')"
+ expected_keys=11
 
