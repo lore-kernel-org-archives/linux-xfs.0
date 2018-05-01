@@ -1,63 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38274 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755634AbeEaROd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 May 2018 13:14:33 -0400
-Date: Thu, 31 May 2018 12:14:31 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH 1/4] xfs: xfs_rtword_t should be unsigned, not signed
-Message-ID: <20180531171431.GA25547@redhat.com>
-References: <152778442467.6891.15278589749191666547.stgit@magnolia>
- <152778443080.6891.5154502694195176365.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:55862 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751139AbeEATQd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 May 2018 15:16:33 -0400
+Subject: Re: [PATCH 0/2] RFC: iomap-based swapfile activation
+References: <20180501184807.123111-1-cyberax@amazon.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <10920cf1-b887-d13a-e028-685d83463bc9@sandeen.net>
+Date: Tue, 1 May 2018 14:16:32 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152778443080.6891.5154502694195176365.stgit@magnolia>
+In-Reply-To: <20180501184807.123111-1-cyberax@amazon.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Aleksei Besogonov <cyberax@amazon.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, May 31, 2018 at 09:33:50AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 5/1/18 1:48 PM, Aleksei Besogonov wrote:
+> V2 of iomap-based swapfile support. 
 > 
-> xfs_rtword_t is used for bit manipulations in the realtime bitmap file.
-> Since we're performing bit shifts with this type, we don't want sign
-> extension and we don't want to be left shifting negative quantities
-> because that's undefined behavior.
-> 
-> This also shuts up these UBSAN warnings:
-> UBSAN: Undefined behaviour in fs/xfs/libxfs/xfs_rtbitmap.c:833:48
-> signed integer overflow:
-> -2147483648 - 1 cannot be represented in type 'int'
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Changes from V1: additional validations for file extents, based on
+> a patch from Darrick Wong.
 
-looks fine.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Aleksei - 
 
+As Darrick pointed out earlier and as you acknowledge here, Darrick already
+has a patchset for this in the works, started a couple days before your first
+submission.
 
-> ---
->  fs/xfs/libxfs/xfs_types.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Generally we don't race to re-implement someone else's patch.  If you were unsure
+whether Darrick planned to send a V2, it would have been good to ask.
+
+Although I think Darrick does plan to resubmit his patches based on the feedback
+provided so far, I'll go ahead & point out a couple things in your series for
+future reference:
+
+1) You need a Signed-off-by: line which essentially states that this is your
+   own work, and that you may submit it for inclusion.
+2) If you were building on someone else's patch with their blessing, you'd
+   probably preceed your Signed-off-by: with theirs (but this is a bit
+   unusual)
+3) There's no reason to export iomap_apply for modules; no module uses it
+
+I'll admit that I didn't look a lot more in depth.  ;)
+ 
+At this point it's probably best to help this along by reviewing & testing
+Darrick's (forthcoming?) V2 patchset.
+
+It's not that we don't appreciate the help - it's great that you're motivated
+to get this done - it's just that someone else already started the work, and
+the normal process there is to review/comment on the first submitter's patches,
+unless they have clearly abandoned the work.  This keeps the development
+process and the mailing list more organized than if several people submit
+competing patchsets in parallel.
+
+Thanks,
+-Eric
+ 
+> Aleksei Besogonov (2):
+>   fs: Add iomap_swap_activate
+>   xfs: add support for iomap-based swapfile activation
 > 
+>  fs/iomap.c            | 106 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_aops.c     |   8 ++++
+>  include/linux/iomap.h |   5 +++
+>  mm/swapfile.c         |   1 +
+>  4 files changed, 120 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 3c560695c546..ea18449bd732 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -30,7 +30,7 @@ typedef int64_t		xfs_fsize_t;	/* bytes in a file */
->  typedef uint64_t	xfs_ufsize_t;	/* unsigned bytes in a file */
->  
->  typedef int32_t		xfs_suminfo_t;	/* type of bitmap summary info */
-> -typedef int32_t		xfs_rtword_t;	/* word type for bitmap manipulations */
-> +typedef uint32_t	xfs_rtword_t;	/* word type for bitmap manipulations */
->  
->  typedef int64_t		xfs_lsn_t;	/* log sequence number */
->  typedef int32_t		xfs_tid_t;	/* transaction identifier */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
