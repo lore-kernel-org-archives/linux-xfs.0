@@ -1,293 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:52344 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:44670 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755443AbeEAPCo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:02:44 -0400
-Date: Tue, 1 May 2018 08:02:40 -0700
+        with ESMTP id S1752048AbeEAOt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 10:49:57 -0400
+Date: Tue, 1 May 2018 07:49:35 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] generic: test XATTR_REPLACE doesn't take the fs down
-Message-ID: <20180501150240.GA4116@magnolia>
-References: <20180418003236.GE5201@magnolia>
- <20180418042457.GF5201@magnolia>
- <20180424120859.GD11384@desktop>
- <20180424160630.GB26261@magnolia>
- <20180425031420.GE11384@desktop>
- <20180425054826.GB1661@magnolia>
+Subject: Re: [PATCH 4/5] xfs: implement online get/set fs label
+Message-ID: <20180501144935.GA4127@magnolia>
+References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
+ <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
+ <20180501141833.GG4525@bfoster.bfoster>
+ <f52bedee-9432-1f58-dc11-a59d2a7d6359@sandeen.net>
+ <20180501144238.GH4525@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180425054826.GB1661@magnolia>
+In-Reply-To: <20180501144238.GH4525@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: kanda.motohiro@gmail.com, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, linux-ext4@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Apr 24, 2018 at 10:48:26PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 25, 2018 at 11:14:20AM +0800, Eryu Guan wrote:
-> > On Tue, Apr 24, 2018 at 09:06:30AM -0700, Darrick J. Wong wrote:
-> > > On Tue, Apr 24, 2018 at 08:08:59PM +0800, Eryu Guan wrote:
-> > > > On Tue, Apr 17, 2018 at 09:24:57PM -0700, Darrick J. Wong wrote:
-> > > > > [cc xfs/fstests lists]
-> > > > > 
-> > > > > On Tue, Apr 17, 2018 at 05:32:36PM -0700, Darrick J. Wong wrote:
-> > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > 
-> > > > > > Kanda Motohiro reported that expanding a tiny xattr into a large xattr
-> > > > > > fails on XFS because we remove the tiny xattr from a shortform fork and
-> > > > > > then try to re-add it after converting the fork to extents format having
-> > > > > > not removed the ATTR_REPLACE flag.  This fails because the attr is no
-> > > > > > longer present, causing a fs shutdown.
-> > > > > > 
-> > > > > > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
-> > > > > > Reported-by: kanda.motohiro@gmail.com
-> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Some minor issues below, but I think I can fix them all on commit.
-> > > > 
-> > > > > > ---
-> > > > > >  src/Makefile            |    3 +-
-> > > > > >  src/attr_replace_test.c |   47 +++++++++++++++++++++++++++++++++++
-> > > > 
-> > > > Need a .gitignore entry for it.
+On Tue, May 01, 2018 at 10:42:38AM -0400, Brian Foster wrote:
+> On Tue, May 01, 2018 at 09:27:30AM -0500, Eric Sandeen wrote:
+> > On 5/1/18 9:18 AM, Brian Foster wrote:
+> > > On Mon, Apr 30, 2018 at 10:46:37AM -0500, Eric Sandeen wrote:
+> > >> The GET ioctl is trivial, just return the current label.
+> > >>
+> > >> The SET ioctl is more involved:
+> > >> It transactionally modifies the superblock to write a new filesystem
+> > >> label to the primary super.
+> > >>
+> > >> It then also checkpoints the log to disk so that the change lands in
+> > >> block 0, invalidates any page cache that userspace might have previously
+> > >> read, and updates all secondary superblocks as userspace relable does.
+> > >>
+> > >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > >> ---
+> > >>
+> > >> nb: the growfs trylock is just cargo-culting; growfs also trylocks.  *shrug*
+> > >>
+> > >>  fs/xfs/xfs_ioctl.c | 83 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >>  1 file changed, 83 insertions(+)
+> > >>
+> > >> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > >> index 89fb1eb..12c6711 100644
+> > >> --- a/fs/xfs/xfs_ioctl.c
+> > >> +++ b/fs/xfs/xfs_ioctl.c
+> > >> @@ -20,6 +20,7 @@
+> > >>  #include "xfs_shared.h"
+> > >>  #include "xfs_format.h"
+> > >>  #include "xfs_log_format.h"
+> > >> +#include "xfs_log.h"
+> > >>  #include "xfs_trans_resv.h"
+> > >>  #include "xfs_mount.h"
+> > >>  #include "xfs_inode.h"
+> > >> @@ -1811,6 +1812,84 @@ struct getfsmap_info {
+> > >>  	return error;
+> > >>  }
+> > >>  
+> > >> +static int
+> > >> +xfs_ioc_getlabel(
+> > >> +	struct xfs_mount	*mp,
+> > >> +	char			__user *label)
+> > >> +{
+> > >> +	struct xfs_sb		*sbp = &mp->m_sb;
+> > >> +
+> > >> +	/* Paranoia */
+> > >> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
+> > >> +
+> > >> +	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
+> > >> +		return -EFAULT;
+> > >> +	return 0;
+> > >> +}
+> > >> +
+> > >> +static int
+> > >> +xfs_ioc_setlabel(
+> > >> +	struct file		*filp,
+> > >> +	struct xfs_mount	*mp,
+> > >> +	char			__user *newlabel)
+> > >> +{
+> > >> +	struct address_space	*mapping;
+> > >> +	struct xfs_sb		*sbp = &mp->m_sb;
+> > >> +	char			label[FSLABEL_MAX];
+> > >> +	size_t			len;
+> > >> +	int			error;
+> > >> +
+> > >> +	if (!capable(CAP_SYS_ADMIN))
+> > >> +		return -EPERM;
+> > >> +
+> > >> +	if (copy_from_user(label, newlabel, FSLABEL_MAX))
+> > >> +		return -EFAULT;
+> > >> +	/*
+> > >> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but xfs is much
+> > >> +	 * smaller, at 12 bytes.
+> > >> +	 * NB: The on disk label doesn't need to be null terminated.
+> > >> +	 */
+> > >> +	len = strnlen(label, FSLABEL_MAX);
+> > >> +	if (len > sizeof(sbp->sb_fname)) {
+> > >> +		xfs_warn(mp, "label %s is too long, max %zu chars",
+> > >> +			label, sizeof(sbp->sb_fname));
+> > >> +		return -EINVAL;
+> > >> +	}
+> > >> +
+> > >> +	error = mnt_want_write_file(filp);
+> > >> +	if (error)
+> > >> +		return error;
+> > >> +
+> > >> +	spin_lock(&mp->m_sb_lock);
+> > >> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+> > >> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
+> > >> +	spin_unlock(&mp->m_sb_lock);
+> > >> +
+> > >> +	error = xfs_sync_sb(mp, true);
+> > >> +	if (error)
+> > >> +		goto out;
 > > > 
-> > > Ok.  Assuming you meant a .gitignore entry for src/attr_replace_test,
-> > > not the source file itself.
+> > > Is there a reason this all has to be synchronous in the first place, as
+> > > opposed to using xfs_log_sb() and committing a transaction for example?
+> > > Is it because we essentially don't have a way to recover if we crash
+> > > partway through? (Whatever the reason, a brief comment around why is
+> > > useful for future reference).
 > > 
-> > Correct, I meant the entry for binary file :)
+> > Well, we want userspace to see it in sector 0 after the call returns,
+> > I don't want it waiting around in the log.  That's why I was doing
+> > sync-all-the-things-now.
 > > 
-> > And I found another problem in the test, it fails on 1k/2k block size
-> > extN filesystems, because 2k xattr doesn't fit in single block.. e.g.
+> 
+> Ok. It doesn't really seem like a problem given the operation. I was
+> just curious.
+> 
+> > >> +
+> > >> +	/* checkpoint the log to update primary super in fs itself */
+> > >> +	error = xfs_log_checkpoint(mp);
+> > >> +	if (error)
+> > >> +		goto out;
+> > >> +
+> > > 
+> > > xfs_sync_sb() with wait == true marks the transaction sync, which does
+> > > the log force part (but doesn't push the ail) based on the lsn of the
+> > > commit. Also note that you should be able to push the AIL based on the
+> > > lsn in the log item, which is set on AIL insertion, as opposed to doing
+> > > a full AIL push as well.
 > > 
-> >     -Attribute "world" has a 2048 byte value for SCRATCH_MNT/hello
-> >     +No space left on device
-> >     +error=22 at line 46
-> >     +Attribute "world" has a 1 byte value for
+> > It's kind of ridiculous, but I don't speak log very well.  I didn't see a
+> > downside to just pushing it all, but can you offer a code snippet for what
+> > you're proposing, if you think that'd be better?
 > > 
-> > We probably need to check the block size of SCRATCH_DEV and _notrun if
-> > it's smaller than 4k.
+> 
+> It's just a bit of overkill. The log force is unnecessary. If you do end
+> up using xfs_sync_sb(), then I think calling xfs_ail_push() with the
+> ->li_lsn from the superblock log buffer would be sufficient. But er,
+> that's async and I'm not sure we have anything atm that does an LSN
+> targeted sync ail push. Perhaps we could create one based on
+> xfs_ail_push_all_sync()?
 
-FWIW I didn't see this appear in last Sunday's update, so I rewrote the
-C program to set the value to 3/4 the size of a fs block, so I'll
-resubmit this shortly.
+Sounds like a good fit here.
+
+> > >> +	/* invalidate any cached bdev page for userspace visibility */
+> > >> +	mapping = mp->m_ddev_targp->bt_bdev->bd_inode->i_mapping;
+> > >> +	error = invalidate_inode_pages2_range(mapping, 0, 0);
+> > >> +	if (error)
+> > >> +		goto out;
+> > > 
+> > > A more detailed comment on why this is necessary would be helpful. :)
+> > 
+> > Why we need to invalidate cached pages on the block device?  I thought that
+> > was clear from the comment, but I can add more words.
+> > 
+> 
+> I'm not really sure what "userspace visibility" means. Wouldn't
+> userspace just call the get label ioctl?
+> 
+> > /*
+> >  * The block device may have cached pages for the block device from previous
+> >  * reads in userspace, and we want i.e. blkid to see the new info, so invalidate
+> >  * any cached pages now.
+> >  */
+> > 
+> > Like that?
+
+/*
+ * Userspace reads of the superblock may have created page cache for the
+ * superblock behind our back, so invalidate those pages.
+ */
+
+Perhaps?
+
+> > 
+> 
+> I suppose. Does something actually break without this? Why do we care
+> about bdev inode cache invalidation here and not with any other
+> superblock modifications?
+
+blkid will return stale results if the page cache is stale.
+
+> 
+> > >> +
+> > >> +	/* update the backup superblocks like userspace does */
+> > >> +	if (mutex_trylock(&mp->m_growlock)) {
+> > >> +		error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
+> > >> +		mutex_unlock(&mp->m_growlock);
+> > >> +	}
+> > > 
+> > > It looks like growfs returns an error if the lock not available. Did you
+> > > intend to perform the primary update and then skip the secondary updates
+> > > if the lock is not acquired?
+> > > 
+> > > Perhaps we should just trylock earlier and hold the lock across the
+> > > entire operation..? It's not like grow or relabel are frequent
+> > > operations.
+> > 
+> > yeah, I was on the fence about this.  Updating the secondaries with the new label
+> > is not strictly required; repair doesn't care at all, and online repair considers
+> > it a "preen" action.  TBH I was lazily unsure about growlock vs. m_sb_lock nesting
+> > and didn't want to risk getting it wrong.
+> > 
+> 
+> I have no strong preference either way, but ISTM we should decide
+> whether to update secondary supers or not.
+
+Dave's 'tablise growfs' series converted all this to create a chain of
+delwri buffers, which makes it tempting to refactor
+xfs_sb_update_secondary().  However, iirc that discussion ended with
+Dave saying he'd rework a few bits and resend... so either that needs to
+happen, or we just push this in sooner and add refactoring the other
+secondary super update (namely online repair) when the growfs work
+lands.
 
 --D
 
-> >
-> > Or require ea_inode feature when block size < 4k? Note that this test
-> > does fail on ext4 with ea_inode feature enabled (so add ext4 list to
-> > cc). e.g.
 > 
-> I was about to say "Eh, this is a regression test for XFS so that's
-> probably fine, but then...
+> Brian
 > 
-> > 
-> >     ...
-> >     Pass 4: Checking reference counts
-> >     Extended attribute inode 13 ref count is 0, should be 1. Fix? no
-> >     ...
-> > 
-> > I think it's easier to _notrun if block size < 4k in this generic test
-> > and introduce a new ext4-specific test that excrises the ea_inode
-> > feature.
-> > 
-> > What do you and/or other ext4 developers think?
-> 
-> "Oh WTH I wasn't expecting /that/..." :)
-> 
-> --D
-> 
-> > 
-> > Thanks,
-> > Eryu
-> > 
-> > > 
-> > > > > >  tests/generic/706       |   64 +++++++++++++++++++++++++++++++++++++++++++++++
-> > > > > >  tests/generic/706.out   |    2 +
-> > > > > >  tests/generic/group     |    1 +
-> > > > > >  5 files changed, 116 insertions(+), 1 deletion(-)
-> > > > > >  create mode 100644 src/attr_replace_test.c
-> > > > > >  create mode 100755 tests/generic/706
-> > > > > >  create mode 100644 tests/generic/706.out
-> > > > > > 
-> > > > > > diff --git a/src/Makefile b/src/Makefile
-> > > > > > index 0d3feae..162e529 100644
-> > > > > > --- a/src/Makefile
-> > > > > > +++ b/src/Makefile
-> > > > > > @@ -25,7 +25,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
-> > > > > >  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
-> > > > > >  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
-> > > > > >  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
-> > > > > > -	dio-invalidate-cache stat_test t_encrypted_d_revalidate
-> > > > > > +	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
-> > > > > > +	attr_replace_test
-> > > > > >  
-> > > > > >  SUBDIRS = log-writes perf
-> > > > > >  
-> > > > > > diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
-> > > > > > new file mode 100644
-> > > > > > index 0000000..583ca17
-> > > > > > --- /dev/null
-> > > > > > +++ b/src/attr_replace_test.c
-> > > > > > @@ -0,0 +1,47 @@
-> > > > > > +// setattr.c by kanda.motohiro@gmail.com
-> > > > > > +// xfs extended attribute corruption bug reproducer
-> > > > > > +#include <stdio.h>
-> > > > > > +#include <string.h>
-> > > > > > +#include <fcntl.h>
-> > > > > > +#include <errno.h>
-> > > > > > +#include <stdlib.h>
-> > > > > > +#include <unistd.h>
-> > > > > > +#include <sys/types.h>
-> > > > > > +#include <sys/xattr.h>
-> > > > > > +
-> > > > > > +#define die() do { perror(""); \
-> > > > > > +fprintf(stderr, "error=%d at line %d\n", errno, __LINE__); \
-> > > > > > +exit(1); } while (0)
-> > > > > > +
-> > > > > > +int main(int argc, char *argv[])
-> > > > > > +{
-> > > > > > +	int ret;
-> > > > > > +	int fd;
-> > > > > > +	char *path = "/mnt/xfs/hello";
-> > > > 
-> > > > I'd like not assign default path to "/mnt/xfs/hello", just in case we
-> > > > forget the testfile argument and test runs against /mnt/xfs/hello
-> > > > accidently and test passes silently.
-> > > 
-> > > Ok, please get rid of it then. :)
-> > > 
-> > > > > > +	char *name = "user.world";
-> > > > > > +	char value[2048];
-> > > > > > +	size_t size = sizeof(value);
-> > > > > > +
-> > > > > > +	if (argc == 2)
-> > > > > > +		path = argv[1];
-> > > > 
-> > > > I'll make sure argc == 2, and error out if not.
-> > > 
-> > > Ok.
-> > > 
-> > > > Thanks,
-> > > > Eryu
-> > > > 
-> > > > > > +
-> > > > > > +	fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-> > > > > > +	if (fd < 0) die();
-> > > > > > +
-> > > > > > +	// First, create a small xattr.
-> > > > > > +	memset(value, '0', 1);
-> > > > > > +	ret = fsetxattr(fd, name, value, 1, XATTR_CREATE);
-> > > > > > +	if (ret < 0) die();
-> > > > > > +	close(fd);
-> > > > > > +
-> > > > > > +	fd = open(path, O_RDWR);
-> > > > > > +	if (fd < 0) die();
-> > > > > > +
-> > > > > > +	// Then, replace it with bigger one, forcing short form to leaf conversion.
-> > > > > > +	memset(value, '1', sizeof(value));
-> > > > > > +	ret = fsetxattr(fd, name, value, size, XATTR_REPLACE);
-> > > > > > +	if (ret < 0) die();
-> > > > > > +	close(fd);
-> > > > > > +
-> > > > > > +	return 0;
-> > > > > > +}
-> > > > > > diff --git a/tests/generic/706 b/tests/generic/706
-> > > > > > new file mode 100755
-> > > > > > index 0000000..4d8f180
-> > > > > > --- /dev/null
-> > > > > > +++ b/tests/generic/706
-> > > > > > @@ -0,0 +1,64 @@
-> > > > > > +#! /bin/bash
-> > > > > > +# FS QA Test No. 706
-> > > > > > +#
-> > > > > > +# Ensure that we can XATTR_REPLACE a tiny attr into a large attr.
-> > > > > > +# Kanda Motohiro <kanda.motohiro@gmail.com> reports that XATTR_REPLACE'ing
-> > > > > > +# a single-byte attr with a 2048-byte attr causes a fs shutdown because we
-> > > > > > +# remove the shortform attr, convert the attr fork to long format, and then
-> > > > > > +# try to re-add the attr having not cleared ATTR_REPLACE.
-> > > > > > +#
-> > > > > > +#-----------------------------------------------------------------------
-> > > > > > +# Copyright (c) 2018 Oracle.  All Rights Reserved.
-> > > > > > +#
-> > > > > > +# This program is free software; you can redistribute it and/or
-> > > > > > +# modify it under the terms of the GNU General Public License as
-> > > > > > +# published by the Free Software Foundation.
-> > > > > > +#
-> > > > > > +# This program is distributed in the hope that it would be useful,
-> > > > > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > > > > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > > > > > +# GNU General Public License for more details.
-> > > > > > +#
-> > > > > > +# You should have received a copy of the GNU General Public License
-> > > > > > +# along with this program; if not, write the Free Software Foundation,
-> > > > > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > > > > > +#
-> > > > > > +#-----------------------------------------------------------------------
-> > > > > > +
-> > > > > > +seq=`basename $0`
-> > > > > > +seqres=$RESULT_DIR/$seq
-> > > > > > +echo "QA output created by $seq"
-> > > > > > +
-> > > > > > +status=1	# failure is the default!
-> > > > > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > > > > +
-> > > > > > +_cleanup()
-> > > > > > +{
-> > > > > > +	cd /
-> > > > > > +	rm -f $testfile
-> > > > > > +}
-> > > > > > +
-> > > > > > +# get standard environment, filters and checks
-> > > > > > +. ./common/rc
-> > > > > > +. ./common/filter
-> > > > > > +. ./common/attr
-> > > > > > +
-> > > > > > +# remove previous $seqres.full before test
-> > > > > > +rm -f $seqres.full
-> > > > > > +
-> > > > > > +# real QA test starts here
-> > > > > > +_supported_fs generic
-> > > > > > +_supported_os Linux
-> > > > > > +_require_test_program "attr_replace_test"
-> > > > > > +_require_attrs
-> > > > > > +_require_scratch
-> > > > > > +
-> > > > > > +rm -f $seqres.full
-> > > > > > +_scratch_mkfs >>$seqres.full 2>&1
-> > > > > > +_scratch_mount >>$seqres.full 2>&1
-> > > > > > +
-> > > > > > +./src/attr_replace_test $SCRATCH_MNT/hello
-> > > > > > +$ATTR_PROG -l $SCRATCH_MNT/hello | _filter_scratch
-> > > > > > +
-> > > > > > +status=0
-> > > > > > +exit
-> > > > > > diff --git a/tests/generic/706.out b/tests/generic/706.out
-> > > > > > new file mode 100644
-> > > > > > index 0000000..1c654c1
-> > > > > > --- /dev/null
-> > > > > > +++ b/tests/generic/706.out
-> > > > > > @@ -0,0 +1,2 @@
-> > > > > > +QA output created by 706
-> > > > > > +Attribute "world" has a 2048 byte value for SCRATCH_MNT/hello
-> > > > > > diff --git a/tests/generic/group b/tests/generic/group
-> > > > > > index 3f93dc4..fc05315 100644
-> > > > > > --- a/tests/generic/group
-> > > > > > +++ b/tests/generic/group
-> > > > > > @@ -487,3 +487,4 @@
-> > > > > >  482 auto metadata replay
-> > > > > >  483 auto quick log metadata
-> > > > > >  484 auto quick insert
-> > > > > > +706 auto quick attr
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > Brian
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
