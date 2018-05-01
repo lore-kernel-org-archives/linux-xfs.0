@@ -1,157 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54764 "EHLO sandeen.net"
+Received: from mail.kernel.org ([198.145.29.99]:52426 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756552AbeEATAg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 May 2018 15:00:36 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 192E232541C
-        for <linux-xfs@vger.kernel.org>; Tue,  1 May 2018 13:59:23 -0500 (CDT)
-Subject: [PATCH 5/6 V2] xfs: factor out quota time limit initialization
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
- <2d87ba58-f713-6326-8683-29185155ee58@sandeen.net>
-Message-ID: <a5fd2c7b-5578-58da-3665-e08e0df85ba3@sandeen.net>
-Date: Tue, 1 May 2018 14:00:36 -0500
+        id S1753789AbeEAQBb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 May 2018 12:01:31 -0400
+Date: Tue, 1 May 2018 09:01:30 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: fixes for 4.17-rc4
+Message-ID: <20180501160130.GD4127@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <2d87ba58-f713-6326-8683-29185155ee58@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-Factor out the time limit initialization from xfs_qm_init_quotainfo
-so that we can delay it until after quotacheck - it requires reading
-the default disk quotas, which may need repair.
+Hi Linus,
 
-No functional changes in this patch.
+Here are a few more bug fixes for xfs for 4.17-rc4.  Most of them are
+fixes for bad behavior.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+This series has been run through a full xfstests run during LSF and
+through a quick xfstests run against this morning's master, with no
+major failures reported.  Let me know if there are any merge problems.
 
-V2: nice wide changelog :D  No patch changes.
+--D
 
-nb: the patch itself looks weird, what it really does is move the
-timelimit setting /up/ in the file.  You just have to squint
-at it.
+The following changes since commit 60cc43fc888428bb2f18f08997432d426a243338:
 
- fs/xfs/xfs_qm.c | 91 ++++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 51 insertions(+), 40 deletions(-)
+  Linux 4.17-rc1 (2018-04-15 18:24:20 -0700)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 328d770..a4da46c 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -594,47 +594,13 @@ struct xfs_qm_isolate {
- 	}
- }
- 
--/*
-- * This initializes all the quota information that's kept in the
-- * mount structure
-- */
--STATIC int
--xfs_qm_init_quotainfo(
--	xfs_mount_t	*mp)
-+STATIC void
-+xfs_qm_set_timelimits(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qinf)
- {
--	xfs_quotainfo_t *qinf;
--	int		error;
--	xfs_dquot_t	*dqp;
--
--	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
--
--	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(xfs_quotainfo_t), KM_SLEEP);
--
--	error = list_lru_init(&qinf->qi_lru);
--	if (error)
--		goto out_free_qinf;
--
--	/*
--	 * See if quotainodes are setup, and if not, allocate them,
--	 * and change the superblock accordingly.
--	 */
--	error = xfs_qm_init_quotainos(mp);
--	if (error)
--		goto out_free_lru;
--
--	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
--	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
--	mutex_init(&qinf->qi_tree_lock);
--
--	/* mutex used to serialize quotaoffs */
--	mutex_init(&qinf->qi_quotaofflock);
--
--	/* Precalc some constants */
--	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
--	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(qinf->qi_dqchunklen);
--
--	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
-+	int			error;
-+	xfs_dquot_t		*dqp;
- 
- 	/*
- 	 * We try to get the limits from the superuser's limits fields.
-@@ -691,6 +657,51 @@ struct xfs_qm_isolate {
- 		xfs_qm_set_defquota(mp, XFS_DQ_PROJ, qinf);
- 
- 	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
-+}
-+
-+/*
-+ * This initializes all the quota information that's kept in the
-+ * mount structure
-+ */
-+STATIC int
-+xfs_qm_init_quotainfo(
-+	xfs_mount_t	*mp)
-+{
-+	xfs_quotainfo_t *qinf;
-+	int		error;
-+
-+	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-+
-+	qinf = mp->m_quotainfo = kmem_zalloc(sizeof(xfs_quotainfo_t), KM_SLEEP);
-+
-+	error = list_lru_init(&qinf->qi_lru);
-+	if (error)
-+		goto out_free_qinf;
-+
-+	/*
-+	 * See if quotainodes are setup, and if not, allocate them,
-+	 * and change the superblock accordingly.
-+	 */
-+	error = xfs_qm_init_quotainos(mp);
-+	if (error)
-+		goto out_free_lru;
-+
-+	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
-+	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
-+	INIT_RADIX_TREE(&qinf->qi_pquota_tree, GFP_NOFS);
-+	mutex_init(&qinf->qi_tree_lock);
-+
-+	/* mutex used to serialize quotaoffs */
-+	mutex_init(&qinf->qi_quotaofflock);
-+
-+	/* Precalc some constants */
-+	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
-+	qinf->qi_dqperchunk = xfs_calc_dquots_per_chunk(qinf->qi_dqchunklen);
-+
-+	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
-+
-+	xfs_qm_set_timelimits(mp, qinf);
-+
- 	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
- 	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
- 	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE;
--- 
-1.8.3.1
+are available in the Git repository at:
 
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.17-fixes-1
+
+for you to fetch changes up to 7b38460dc8e4eafba06c78f8e37099d3b34d473c:
+
+  xfs: don't fail when converting shortform attr to long form during ATTR_REPLACE (2018-04-17 19:10:15 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- Enhance inode fork verifiers to prevent loading of corrupted metadata.
+- Fix a crash when we try to convert extents format inodes to btree
+  format, we run out of space, but forget to revert the in-core state
+  changes.
+- Fix file size checks when doing INSERT_RANGE that could cause files
+  to end up negative size if there previously was an extent mapped at
+  s_maxbytes.
+- Fix a bug when doing a remove-then-add ATTR_REPLACE xattr update where
+  we forget to clear ATTR_REPLACE after the remove, which causes the
+  attr to be lost and the fs to shut down due to (what it thinks is)
+  inconsistent in-core state.
+
+----------------------------------------------------------------
+Darrick J. Wong (2):
+      xfs: prevent creating negative-sized file via INSERT_RANGE
+      xfs: don't fail when converting shortform attr to long form during ATTR_REPLACE
+
+Eric Sandeen (2):
+      xfs: enhance dinode verifier
+      xfs: set format back to extents if xfs_bmap_extents_to_btree
+
+ fs/xfs/libxfs/xfs_attr.c      |  9 ++++++++-
+ fs/xfs/libxfs/xfs_bmap.c      |  4 ++++
+ fs/xfs/libxfs/xfs_inode_buf.c | 21 +++++++++++++++++++++
+ fs/xfs/xfs_file.c             | 14 +++++++++-----
+ 4 files changed, 42 insertions(+), 6 deletions(-)
