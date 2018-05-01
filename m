@@ -1,101 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28489 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751019AbeEBICF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:02:05 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDmi8-0002Wo-7T
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDmi8-0003B6-5q
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/10] xfs: fix double ijoin in xfs_reflink_cancel_cow_range
-Date: Wed,  2 May 2018 18:01:54 +1000
-Message-Id: <20180502080157.11386-8-david@fromorbit.com>
-In-Reply-To: <20180502080157.11386-1-david@fromorbit.com>
-References: <20180502080157.11386-1-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:33600 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754749AbeEAPjs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:39:48 -0400
+Subject: [PATCH 4/9] generic/45[34]: check unicode names only if xfs_scrub
+ linked against libicu
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 01 May 2018 08:39:45 -0700
+Message-ID: <152518918522.23023.14015169259875311012.stgit@magnolia>
+In-Reply-To: <152518916007.23023.4793255395982876953.stgit@magnolia>
+References: <152518916007.23023.4793255395982876953.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-AN inode is joined to teh same transaction twice in
-xfs_reflink_cancel_cow_range() resulting in the following assert
-failure:
+Since we've rewriting the xfs_scrub Unicode name scanner to use libicu
+to detect potential spoof names, change our check for unicode-enabled
+name scanning xfs_scrub to look for libicu instead of libunistring,
+adjust the golden output to reflect the new library's detection
+capabilities and make sure we get all the scrub output by invoking with
+-v.
 
-[   30.180485] XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
-[   30.183435] ------------[ cut here ]------------
-......
-[   30.209264] Call Trace:
-[   30.209935]  xfs_trans_add_item+0xcc/0xe0
-[   30.210968]  xfs_reflink_cancel_cow_blocks+0xab/0x290
-[   30.212249]  ? xfs_trans_reserve+0x1b4/0x2b0
-[   30.213320]  ? kmem_zone_alloc+0x61/0xe0
-[   30.214321]  xfs_reflink_cancel_cow_range+0xb2/0x1f0
-[   30.215616]  xfs_fs_destroy_inode+0x1bd/0x280
-[   30.216757]  dispose_list+0x35/0x40
-[   30.217656]  evict_inodes+0x132/0x160
-[   30.218620]  generic_shutdown_super+0x3a/0x110
-[   30.219771]  kill_block_super+0x21/0x50
-[   30.220762]  deactivate_locked_super+0x39/0x70
-[   30.221909]  cleanup_mnt+0x3b/0x70
-[   30.222819]  task_work_run+0x7f/0xa0
-[   30.223762]  exit_to_usermode_loop+0x9b/0xa0
-[   30.224884]  do_syscall_64+0x18f/0x1a0
+Note that this requires xfsprogs 4.16 or newer; since xfs_scrub is (for
+now) an experimental program, we don't care about breaking backwards
+compatibility.
 
-Fix it and document that the callers of
-xfs_reflink_cancel_cow_blocks() must have already joined the inode
-to the permanent transaction passed in.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_reflink.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ tests/generic/453 |    5 ++---
+ tests/generic/454 |    5 ++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index cdbd342a5249..bce2b5351d64 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -552,6 +552,9 @@ xfs_reflink_trim_irec_to_next_cow(
-  *
-  * If cancel_real is true this function cancels all COW fork extents for the
-  * inode; if cancel_real is false, real extents are not cleared.
-+ *
-+ * Caller must have already joined the inode to the current transaction. The
-+ * inode will be joined to the transaction returned to the caller.
-  */
- int
- xfs_reflink_cancel_cow_blocks(
-@@ -592,7 +595,6 @@ xfs_reflink_cancel_cow_blocks(
- 			if (error)
- 				break;
- 		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
--			xfs_trans_ijoin(*tpp, ip, 0);
- 			xfs_defer_init(&dfops, &firstfsb);
+
+diff --git a/tests/generic/453 b/tests/generic/453
+index f2cd81fb..6cb2a296 100755
+--- a/tests/generic/453
++++ b/tests/generic/453
+@@ -158,7 +158,7 @@ check_xfs_scrub() {
  
- 			/* Free the CoW orphan record. */
-@@ -1570,6 +1572,7 @@ xfs_reflink_clear_inode_flag(
- 	 * We didn't find any shared blocks so turn off the reflink flag.
- 	 * First, get rid of any leftover CoW mappings.
- 	 */
-+	xfs_trans_ijoin(*tpp, ip, 0);
- 	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, true);
- 	if (error)
- 		return error;
-@@ -1578,7 +1581,6 @@ xfs_reflink_clear_inode_flag(
- 	trace_xfs_reflink_unset_inode_flag(ip);
- 	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
- 	xfs_inode_clear_cowblocks_tag(ip);
--	xfs_trans_ijoin(*tpp, ip, 0);
- 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+-	   ! ldd "${XFS_SCRUB_PROG}" | grep -q libunistring; then
++	   ! ldd "${XFS_SCRUB_PROG}" | grep -q libicui18n; then
+ 		return 1
+ 	fi
  
- 	return error;
--- 
-2.17.0
+@@ -166,9 +166,8 @@ check_xfs_scrub() {
+ }
+ 
+ if check_xfs_scrub; then
+-	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -n "${SCRATCH_MNT}" 2>&1 | filter_scrub)"
++	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1 | filter_scrub)"
+ 	echo "${output}" | grep -q "french_" || echo "No complaints about french e accent?"
+-	echo "${output}" | grep -q "chinese_" || echo "No complaints about chinese width-different?"
+ 	echo "${output}" | grep -q "greek_" || echo "No complaints about greek letter mess?"
+ 	echo "${output}" | grep -q "arabic_" || echo "No complaints about arabic expanded string?"
+ 	echo "Actual xfs_scrub output:" >> $seqres.full
+diff --git a/tests/generic/454 b/tests/generic/454
+index c6530290..ec4fb997 100755
+--- a/tests/generic/454
++++ b/tests/generic/454
+@@ -154,7 +154,7 @@ check_xfs_scrub() {
+ 
+ 	# We only care if xfs_scrub has unicode string support...
+ 	if ! type ldd > /dev/null 2>&1 || \
+-	   ! ldd "${XFS_SCRUB_PROG}" | grep -q libunistring; then
++	   ! ldd "${XFS_SCRUB_PROG}" | grep -q libicui18n; then
+ 		return 1
+ 	fi
+ 
+@@ -162,9 +162,8 @@ check_xfs_scrub() {
+ }
+ 
+ if check_xfs_scrub; then
+-	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -n "${SCRATCH_MNT}" 2>&1 | filter_scrub)"
++	output="$(LC_ALL="C.UTF-8" ${XFS_SCRUB_PROG} -v -n "${SCRATCH_MNT}" 2>&1 | filter_scrub)"
+ 	echo "${output}" | grep -q "french_" || echo "No complaints about french e accent?"
+-	echo "${output}" | grep -q "chinese_" || echo "No complaints about chinese width-different?"
+ 	echo "${output}" | grep -q "greek_" || echo "No complaints about greek letter mess?"
+ 	echo "${output}" | grep -q "arabic_" || echo "No complaints about arabic expanded string?"
+ 	echo "Actual xfs_scrub output:" >> $seqres.full
 
