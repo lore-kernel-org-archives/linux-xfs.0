@@ -1,120 +1,252 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:19610 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751127AbeEBGCL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 02:02:11 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] iomap: iomap_dio_rw() handles all sync writes
-Date: Wed,  2 May 2018 15:38:06 +1000
-Message-Id: <20180502053807.13846-3-david@fromorbit.com>
-In-Reply-To: <20180502053807.13846-1-david@fromorbit.com>
-References: <20180502053807.13846-1-david@fromorbit.com>
+Received: from sandeen.net ([63.231.237.45]:54700 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752034AbeEAS6r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 May 2018 14:58:47 -0400
+Subject: [PATCH 2/6 V2] xfs: pass xfs_dqblk to
+ xfs_dquot_verify/xfs_dquot_repair
+References: <f0856054-551f-9139-39f7-1d5439910903@sandeen.net>
+ <c92cfdb8-88c2-0f5b-7383-e5208fef6f5e@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <998fdfcc-45f4-9837-dc2a-288fad08b49d@sandeen.net>
+Date: Tue, 1 May 2018 13:58:46 -0500
+MIME-Version: 1.0
+In-Reply-To: <c92cfdb8-88c2-0f5b-7383-e5208fef6f5e@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Currently iomap_dio_rw() only handles (data)sync write completions
-for AIO. This means we can't optimised non-AIO IO to minimise device
-flushes as we can't tell the caller whether a flush is required or
-not.
-
-To solve this problem and enable further optimisations, make
-iomap_dio_rw responsible for data sync behaviour for all IO, not
-just AIO.
-
-In doing so, the sync operation is now accounted as part of the DIO
-IO by inode_dio_end(), hence post-IO data stability updates will no
-long race against operations that serialise via inode_dio_wait()
-such as truncate or hole punch.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+In order to validate the UUID in xfs_dquot_verify, we need the full
+xfs_qblk, not just the xfs_disk_dquot_t (which is a subset).
+    
+Do the same for xfs_dquot_repair, for the same reasons.  Casting a
+xfs_disk_dquot to a xfs_qblk is risky if the source pointer wasn't a full
+xfs_dqblk, so enforce that by changing the arguments to these functions.
+    
+In xfs_qm_dqflush we move the memcpy up so that we have a full
+(and updated) xfs_dqblk to test.
+    
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/iomap.c        | 21 +++++++++++++++------
- fs/xfs/xfs_file.c |  5 -----
- 2 files changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index afd163586aa0..b044d8ee2efd 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
-  * Private flags for iomap_dio, must not overlap with the public ones in
-  * iomap.h:
+V2: rename some variables for clarity, get rid of pointer math in
+xfs_dquot_buf_verify_crc
+
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index a926058..b5c0f3c 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -44,11 +44,13 @@ xfs_calc_dquots_per_chunk(
   */
-+#define IOMAP_DIO_NEED_SYNC	(1 << 29)
- #define IOMAP_DIO_WRITE		(1 << 30)
- #define IOMAP_DIO_DIRTY		(1 << 31)
- 
-@@ -759,6 +760,13 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 			dio_warn_stale_pagecache(iocb->ki_filp);
- 	}
- 
-+	/*
-+	 * If this is a DSYNC write, make sure we push it to stable storage now
-+	 * that we've written data.
-+	 */
-+	if (ret > 0 && (dio->flags & IOMAP_DIO_NEED_SYNC))
-+		ret = generic_write_sync(iocb, ret);
-+
- 	inode_dio_end(file_inode(iocb->ki_filp));
- 	kfree(dio);
- 
-@@ -769,13 +777,8 @@ static void iomap_dio_complete_work(struct work_struct *work)
+ xfs_failaddr_t
+ xfs_dquot_verify(
+-	struct xfs_mount *mp,
+-	xfs_disk_dquot_t *ddq,
+-	xfs_dqid_t	 id,
+-	uint		 type)	  /* used only when IO_dorepair is true */
++	struct xfs_mount	*mp,
++	struct xfs_dqblk	*dqb,
++	xfs_dqid_t		id,
++	uint			type)	  /* used only during quota rebuild */
  {
- 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
- 	struct kiocb *iocb = dio->iocb;
--	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
--	ssize_t ret;
++	struct xfs_disk_dquot	*ddq = &dqb->dd_diskdq;
++
+ 	/*
+ 	 * We can encounter an uninitialized dquot buffer for 2 reasons:
+ 	 * 1. If we crash while deleting the quotainode(s), and those blks got
+@@ -104,27 +106,24 @@ xfs_dquot_verify(
+ int
+ xfs_dquot_repair(
+ 	struct xfs_mount	*mp,
+-	struct xfs_disk_dquot	*ddq,
++	struct xfs_dqblk	*dqblk,
+ 	xfs_dqid_t		id,
+ 	uint			type)
+ {
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
+-
+-
+ 	/*
+ 	 * Typically, a repair is only requested by quotacheck.
+ 	 */
+ 	ASSERT(id != -1);
+-	memset(d, 0, sizeof(xfs_dqblk_t));
++	memset(dqblk, 0, sizeof(xfs_dqblk_t));
  
--	ret = iomap_dio_complete(dio);
--	if (is_write && ret > 0)
--		ret = generic_write_sync(iocb, ret);
--	iocb->ki_complete(iocb, ret, 0);
-+	iocb->ki_complete(iocb, iomap_dio_complete(dio), 0);
- }
+-	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+-	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+-	d->dd_diskdq.d_flags = type;
+-	d->dd_diskdq.d_id = cpu_to_be32(id);
++	dqblk->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++	dqblk->dd_diskdq.d_version = XFS_DQUOT_VERSION;
++	dqblk->dd_diskdq.d_flags = type;
++	dqblk->dd_diskdq.d_id = cpu_to_be32(id);
  
- /*
-@@ -961,6 +964,10 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 	return copied;
- }
- 
-+/*
-+ * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
-+ * is being issued as AIO or not.
-+ */
- ssize_t
- iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
-@@ -1006,6 +1013,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 			dio->flags |= IOMAP_DIO_DIRTY;
- 	} else {
- 		dio->flags |= IOMAP_DIO_WRITE;
-+		if (iocb->ki_flags & IOCB_DSYNC)
-+			dio->flags |= IOMAP_DIO_NEED_SYNC;
- 		flags |= IOMAP_WRITE;
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
+-		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++		uuid_copy(&dqblk->dd_uuid, &mp->m_sb.sb_meta_uuid);
++		xfs_update_cksum((char *)dqblk, sizeof(struct xfs_dqblk),
+ 				 XFS_DQUOT_CRC_OFF);
  	}
  
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 4cbd15d84bb8..64112a57b004 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -570,11 +570,6 @@ xfs_file_dio_aio_write(
- 	 * complete fully or fail.
- 	 */
- 	ASSERT(ret < 0 || ret == count);
--
--	if (ret > 0) {
--		/* Handle various SYNC-type writes */
--		ret = generic_write_sync(iocb, ret);
--	}
- 	return ret;
- }
+@@ -136,7 +135,7 @@ xfs_dquot_buf_verify_crc(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	struct xfs_dqblk	*dqblks = (struct xfs_dqblk *)bp->b_addr;
+ 	int			ndquots;
+ 	int			i;
  
--- 
-2.17.0
+@@ -153,11 +152,11 @@ xfs_dquot_buf_verify_crc(
+ 	else
+ 		ndquots = xfs_calc_dquots_per_chunk(bp->b_length);
+ 
+-	for (i = 0; i < ndquots; i++, d++) {
+-		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 XFS_DQUOT_CRC_OFF))
++	for (i = 0; i < ndquots; i++) {
++		if (!xfs_verify_cksum((char *)&dqblks[i],
++				sizeof(struct xfs_dqblk), XFS_DQUOT_CRC_OFF))
+ 			return false;
+-		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_meta_uuid))
++		if (!uuid_equal(&dqblks[i].dd_uuid, &mp->m_sb.sb_meta_uuid))
+ 			return false;
+ 	}
+ 	return true;
+@@ -192,14 +191,10 @@ xfs_dquot_buf_verify(
+ 	 * buffer so corruptions could point to the wrong dquot in this case.
+ 	 */
+ 	for (i = 0; i < ndquots; i++) {
+-		struct xfs_disk_dquot	*ddq;
+-
+-		ddq = &d[i].dd_diskdq;
+-
+ 		if (i == 0)
+-			id = be32_to_cpu(ddq->d_id);
++			id = be32_to_cpu(d[i].dd_diskdq.d_id);
+ 
+-		fa = xfs_dquot_verify(mp, ddq, id + i, 0);
++		fa = xfs_dquot_verify(mp, &d[i], id + i, 0);
+ 		if (fa)
+ 			return fa;
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index 8433656..424526a 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -152,9 +152,9 @@ typedef uint16_t	xfs_qwarncnt_t;
+ #define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+ 
+ extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
+-		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
++		struct xfs_dqblk *dqb, xfs_dqid_t id, uint type);
+ extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+-extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
++extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
+ 		xfs_dqid_t id, uint type);
+ 
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 8d378f4..613fbe6 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -953,6 +953,7 @@ xfs_qm_dqflush(
+ {
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_buf		*bp;
++	struct xfs_dqblk	*dqb;
+ 	struct xfs_disk_dquot	*ddqp;
+ 	xfs_failaddr_t		fa;
+ 	int			error;
+@@ -996,12 +997,16 @@ xfs_qm_dqflush(
+ 	/*
+ 	 * Calculate the location of the dquot inside the buffer.
+ 	 */
+-	ddqp = bp->b_addr + dqp->q_bufoffset;
++	dqb = bp->b_addr + dqp->q_bufoffset;
++	ddqp = &dqb->dd_diskdq;
++
++	/* This is the only portion of data that needs to persist */
++	memcpy(ddqp, &dqp->q_core, sizeof(xfs_disk_dquot_t));
+ 
+ 	/*
+ 	 * A simple sanity check in case we got a corrupted dquot..
+ 	 */
+-	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(ddqp->d_id), 0);
++	fa = xfs_dquot_verify(mp, dqb, be32_to_cpu(ddqp->d_id), 0);
+ 	if (fa) {
+ 		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
+ 				be32_to_cpu(ddqp->d_id), fa);
+@@ -1011,9 +1016,6 @@ xfs_qm_dqflush(
+ 		return -EIO;
+ 	}
+ 
+-	/* This is the only portion of data that needs to persist */
+-	memcpy(ddqp, &dqp->q_core, sizeof(xfs_disk_dquot_t));
+-
+ 	/*
+ 	 * Clear the dirty field and remember the flush lsn for later use.
+ 	 */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 06a09cb..d866a59 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3304,6 +3304,7 @@ xlog_recover_dquot_pass2(
+ {
+ 	xfs_mount_t		*mp = log->l_mp;
+ 	xfs_buf_t		*bp;
++	struct xfs_dqblk	*dqb;
+ 	struct xfs_disk_dquot	*ddq, *recddq;
+ 	xfs_failaddr_t		fa;
+ 	int			error;
+@@ -3317,7 +3318,8 @@ xlog_recover_dquot_pass2(
+ 	if (mp->m_qflags == 0)
+ 		return 0;
+ 
+-	recddq = item->ri_buf[1].i_addr;
++	dqb = item->ri_buf[1].i_addr;
++	recddq = &dqb->dd_diskdq;
+ 	if (recddq == NULL) {
+ 		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
+ 		return -EIO;
+@@ -3348,7 +3350,7 @@ xlog_recover_dquot_pass2(
+ 	 */
+ 	dq_f = item->ri_buf[0].i_addr;
+ 	ASSERT(dq_f);
+-	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0);
++	fa = xfs_dquot_verify(mp, dqb, dq_f->qlf_id, 0);
+ 	if (fa) {
+ 		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
+ 				dq_f->qlf_id, fa);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index c71ad79..7d784d6 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -857,7 +857,7 @@ xfs_qm_reset_dqcounts(
+ 	for (j = 0; j < mp->m_quotainfo->qi_dqperchunk; j++) {
+ 		struct xfs_disk_dquot	*ddq;
+ 
+-		ddq = (struct xfs_disk_dquot *)&dqb[j];
++		ddq = &dqb[j].dd_diskdq;
+ 
+ 		/*
+ 		 * Do a sanity check, and if needed, repair the dqblk. Don't
+@@ -865,9 +865,9 @@ xfs_qm_reset_dqcounts(
+ 		 * find uninitialised dquot blks. See comment in
+ 		 * xfs_dquot_verify.
+ 		 */
+-		fa = xfs_dquot_verify(mp, ddq, id + j, type);
++		fa = xfs_dquot_verify(mp, &dqb[j], id + j, type);
+ 		if (fa)
+-			xfs_dquot_repair(mp, ddq, id + j, type);
++			xfs_dquot_repair(mp, &dqb[j], id + j, type);
+ 
+ 		/*
+ 		 * Reset type in case we are reusing group quota file for
 
