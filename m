@@ -1,95 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:38483 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751019AbeEBIoG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:44:06 -0400
-Date: Wed, 2 May 2018 16:44:01 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 7/9] xfs/422: add fsstress to the freeze-and-rmap-repair
- race test
-Message-ID: <20180502084401.GD29084@desktop>
-References: <152518916007.23023.4793255395982876953.stgit@magnolia>
- <152518920390.23023.633707441886698447.stgit@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:54398 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754727AbeEAPxW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:53:22 -0400
+Date: Tue, 1 May 2018 08:52:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 10/13] xfs: replace XFS_QMOPT_DQALLOC with boolean
+Message-ID: <20180501155259.GB4127@magnolia>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <152506705736.21553.3142275765217711989.stgit@magnolia>
+ <20180430054752.GB21688@magnolia>
+ <20180501134503.GC4525@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152518920390.23023.633707441886698447.stgit@magnolia>
+In-Reply-To: <20180501134503.GC4525@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Tue, May 01, 2018 at 08:40:03AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 01, 2018 at 09:45:04AM -0400, Brian Foster wrote:
+> On Sun, Apr 29, 2018 at 10:47:52PM -0700, Darrick J. Wong wrote:
+> > Ugh, wrong commit message.  Here's an updated one now that the flag is
+> > gone entirely.
+> > 
 > 
-> Add fsstress to the pile of things that we race with rmap repair to
-> ensure that the rmap repair isolates the filesystem correctly while it
-> is doing its repairs.
+> Just FYI.. git applies this with the above as the commit log message and
+> the text below is tossed. ;P
+
+D'oh.  Yeah, I screwed up the git-to-mail export. :(
+
+This all will be done correctly in the git tree I swear.
+
+> > --D
+> > 
+> > ---
+> > Subject: [PATCH] xfs: replace XFS_QMOPT_DQALLOC with a simple boolean
+> > 
+> > DQALLOC is only ever used with xfs_qm_dqget*, and the only flag that the
+> > _dqget family of functions cares about is DQALLOC.  Therefore, change
+> > it to a boolean 'can alloc?' flag for the dqget interfaces where that
+> > makes sense.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_quota_defs.h |    1 -
+> >  fs/xfs/xfs_dquot.c             |    8 ++++----
+> >  fs/xfs/xfs_dquot.h             |    2 +-
+> >  fs/xfs/xfs_qm.c                |   12 +++++-------
+> >  fs/xfs/xfs_qm_bhv.c            |    2 +-
+> >  fs/xfs/xfs_qm_syscalls.c       |    9 ++++-----
+> >  6 files changed, 15 insertions(+), 19 deletions(-)
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+> > index 531e8224dcb6..1fa3d6d6db40 100644
+> > --- a/fs/xfs/xfs_qm_bhv.c
+> > +++ b/fs/xfs/xfs_qm_bhv.c
+> > @@ -72,7 +72,7 @@ xfs_qm_statvfs(
+> >  	xfs_mount_t		*mp = ip->i_mount;
+> >  	xfs_dquot_t		*dqp;
+> >  
+> > -	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
+> > +	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, true, &dqp)) {
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/xfs/422 |   19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
+> False? Otherwise looks fine:
+
+Yep, that should be false.  Fixed.
+
+--D
+
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> 
-> diff --git a/tests/xfs/422 b/tests/xfs/422
-> index a8fa5d5a..b2db713c 100755
-> --- a/tests/xfs/422
-> +++ b/tests/xfs/422
-> @@ -51,6 +51,8 @@ _supported_fs xfs
->  _require_xfs_scratch_rmapbt
->  _require_xfs_io_command "scrub"
->  _require_xfs_io_error_injection "force_repair"
-> +_require_command "$KILLALL_PROG" killall
-> +_require_command "$FSSTRESS_PROG" fsstress
-
-This is not needed, as we already have
-
-export FSSTRESS_PROG="./ltp/fsstress"                                                                                                                                                          
-[ ! -x $FSSTRESS_PROG ] && _fatal "fsstress not found or executable"
-
-in common/config. I can remove it on commit.
-
-Thanks,
-Eryu
-
->  
->  echo "Format and populate"
->  _scratch_mkfs > "$seqres.full" 2>&1
-> @@ -89,18 +91,33 @@ repair_loop() {
->  		$XFS_IO_PROG -x -c 'repair rmapbt 0' -c 'repair rmapbt 1' $SCRATCH_MNT 2>&1 | filter_output
->  	done
->  }
-> +stress_loop() {
-> +	end="$1"
-> +
-> +	FSSTRESS_ARGS=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000 $FSSTRESS_AVOID)
-> +	while [ "$(date +%s)" -lt $end ]; do
-> +		$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full
-> +	done
-> +}
->  $XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
->  
->  start=$(date +%s)
->  end=$((start + (30 * TIME_FACTOR) ))
->  
->  echo "Loop started at $(date --date="@${start}"), ending at $(date --date="@${end}")" >> $seqres.full
-> +stress_loop $end &
->  freeze_loop $end &
->  repair_loop $end &
->  
-> -while [ "$(date +%s)" -lt $end ]; do
-> +# Wait until 2 seconds after the loops should have finished...
-> +while [ "$(date +%s)" -lt $((end + 2)) ]; do
->  	sleep 1
->  done
-> +
-> +# ...and clean up after the loops in case they didn't do it themselves.
-> +$KILLALL_PROG -TERM xfs_io fsstress >> $seqres.full 2>&1
-> +$XFS_IO_PROG -x -c 'thaw' $SCRATCH_MNT >> $seqres.full 2>&1
-> +
->  echo "Loop finished at $(date)" >> $seqres.full
->  echo "Test done"
->  
-> 
+> >  		xfs_fill_statvfs_from_dquot(statp, dqp);
+> >  		xfs_qm_dqput(dqp);
+> >  	}
+> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> > index b9243f554697..3e05d300b14e 100644
+> > --- a/fs/xfs/xfs_qm_syscalls.c
+> > +++ b/fs/xfs/xfs_qm_syscalls.c
+> > @@ -425,7 +425,7 @@ xfs_qm_scall_setqlim(
+> >  	 * a reference to the dquot, so it's safe to do this unlock/lock without
+> >  	 * it being reclaimed in the mean time.
+> >  	 */
+> > -	error = xfs_qm_dqget(mp, id, type, XFS_QMOPT_DQALLOC, &dqp);
+> > +	error = xfs_qm_dqget(mp, id, type, true, &dqp);
+> >  	if (error) {
+> >  		ASSERT(error != -ENOENT);
+> >  		goto out_unlock;
+> > @@ -696,11 +696,10 @@ xfs_qm_scall_getquota(
+> >  	int			error;
+> >  
+> >  	/*
+> > -	 * Try to get the dquot. We don't want it allocated on disk, so
+> > -	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
+> > -	 * exist, we'll get ENOENT back.
+> > +	 * Try to get the dquot. We don't want it allocated on disk, so don't
+> > +	 * set doalloc. If it doesn't exist, we'll get ENOENT back.
+> >  	 */
+> > -	error = xfs_qm_dqget(mp, id, type, 0, &dqp);
+> > +	error = xfs_qm_dqget(mp, id, type, false, &dqp);
+> >  	if (error)
+> >  		return error;
+> >  
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
