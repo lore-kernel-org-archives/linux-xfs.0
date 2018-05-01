@@ -1,64 +1,141 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:60762 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751045AbeEBV7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 17:59:08 -0400
-Date: Thu, 3 May 2018 07:59:06 +1000
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62567 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750863AbeEAWLc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 18:11:32 -0400
+Date: Wed, 2 May 2018 08:11:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: be careful about what we stat in
- platform_check_mount
-Message-ID: <20180502215906.GD23861@dastard>
-References: <92bcf603-5106-9fa0-1b48-0d13ff0608c8@sandeen.net>
+Subject: Re: [PATCH 4/5] xfs: implement online get/set fs label
+Message-ID: <20180501221113.GW23861@dastard>
+References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
+ <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <92bcf603-5106-9fa0-1b48-0d13ff0608c8@sandeen.net>
+In-Reply-To: <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, May 02, 2018 at 02:56:22PM -0500, Eric Sandeen wrote:
-> After we lost ustat(2) in commit 4e7a824, we ended up with a slightly
-> bonkers method to determine if our target block device was mounted:
-> it goes through every entry returned by getmntent and stats the dir
-> to see if its underlying device matches ours.
+On Mon, Apr 30, 2018 at 10:46:37AM -0500, Eric Sandeen wrote:
+> The GET ioctl is trivial, just return the current label.
 > 
-> Unfortunately that dir might be a hung nfs server and sadness ensues.
+> The SET ioctl is more involved:
+> It transactionally modifies the superblock to write a new filesystem
+> label to the primary super.
 > 
-> So do some pre-checks; can we stat the mounted "device?"  If so is
-> it really a block device?  If not, skip it.
+> It then also checkpoints the log to disk so that the change lands in
+> block 0, invalidates any page cache that userspace might have previously
+> read, and updates all secondary superblocks as userspace relable does.
 > 
-> Fixes: 4e7a824 ("libxfs/linux.c: Replace use of ustat by stat")
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
-> 
-> diff --git a/libxfs/linux.c b/libxfs/linux.c
-> index 0bace3e..7350fa7 100644
-> --- a/libxfs/linux.c
-> +++ b/libxfs/linux.c
-> @@ -77,7 +77,21 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
->  		    progname, name);
->  		return 1;
->  	}
-> +	/*
-> +	 * This whole business is to work out if our block device is mounted
-> +	 * after we lost ustat(2), see:
-> +	 * 	4e7a824 libxfs/linux.c: Replace use of ustat by stat
-> +	 * We don't really want to stat every single mounted directory,
-> +	 * as that may include tmpfs, cgroups, procfs or - worst - hung nfs
-> +	 * servers.  So we check the "device" before going after the mountpoint.
-> +	 */
->  	while ((mnt = getmntent(f)) != NULL) {
-> +		/* If the "fsname" is't a stat-able device, skip it */
-> +		if (stat(mnt->mnt_fsname, &mst) < 0)
-> +			continue;
-> +		if (!S_ISBLK(mst.st_mode))
-> +			continue;
 
-That'll break with subvolumes - we'll be mounting regular files, not
-block devices....
+Just to close the loop on what Eric and I just talked about on
+IRC....
+
+> +xfs_ioc_setlabel(
+> +	struct file		*filp,
+> +	struct xfs_mount	*mp,
+> +	char			__user *newlabel)
+> +{
+> +	struct address_space	*mapping;
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +	char			label[FSLABEL_MAX];
+> +	size_t			len;
+> +	int			error;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +
+> +	if (copy_from_user(label, newlabel, FSLABEL_MAX))
+> +		return -EFAULT;
+> +	/*
+> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but xfs is much
+> +	 * smaller, at 12 bytes.
+> +	 * NB: The on disk label doesn't need to be null terminated.
+> +	 */
+> +	len = strnlen(label, FSLABEL_MAX);
+> +	if (len > sizeof(sbp->sb_fname)) {
+> +		xfs_warn(mp, "label %s is too long, max %zu chars",
+> +			label, sizeof(sbp->sb_fname));
+> +		return -EINVAL;
+> +	}
+> +
+> +	error = mnt_want_write_file(filp);
+> +	if (error)
+> +		return error;
+> +
+> +	spin_lock(&mp->m_sb_lock);
+> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
+> +	spin_unlock(&mp->m_sb_lock);
+> +
+> +	error = xfs_sync_sb(mp, true);
+> +	if (error)
+> +		goto out;
+
+This is all good up to here. We want a synchronous transaction to
+force the change to the log and *unpin the superblock buffer* at the
+same time.
+
+However, we want to also write the superblock buffer, and so we
+really should have a function that does this directly: i.e.
+
+	/* Force superblock label changes to disk */
+	error = xfs_sync_sb_buf(mp);
+	if (error)
+		goto out;
+
+which does:
+
+xfs_sync_sb_buf()
+{
+	/* same transaction preamble and logging as xfs_sync_sb() */
+	.....
+
+	xfs_trans_bhold(tp, bp);
+	xfs_trans_set_sync(tp);
+	error = xfs_trans_commit(tp);
+	if (error)
+		goto out;
+
+	/*
+	 * write out the sb buffer to get the changes to disk
+	 */
+	error = xfs_bwrite(bp);
+	xfs_buf_relse(bp);
+	return error;
+}
+
+
+> +	/* checkpoint the log to update primary super in fs itself */
+> +	error = xfs_log_checkpoint(mp);
+> +	if (error)
+> +		goto out;
+> +
+> +	/* invalidate any cached bdev page for userspace visibility */
+> +	mapping = mp->m_ddev_targp->bt_bdev->bd_inode->i_mapping;
+> +	error = invalidate_inode_pages2_range(mapping, 0, 0);
+> +	if (error)
+> +		goto out;
+
+invalidate_bdev()? We don't use this block device
+mapping, so just invalidating it completely is probably appropriate.
+FWIW, ISTR that userspace points at a different address space
+mapping and we can't invalidate that directly ourselves? Worth
+checking...
+
+
+> +	/* update the backup superblocks like userspace does */
+> +	if (mutex_trylock(&mp->m_growlock)) {
+> +		error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
+> +		mutex_unlock(&mp->m_growlock);
+> +	}
+
+Why not just block here?
 
 Cheers,
 
