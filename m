@@ -1,240 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44670 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752048AbeEAOt5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 10:49:57 -0400
-Date: Tue, 1 May 2018 07:49:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39868 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754630AbeEAOSf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 May 2018 10:18:35 -0400
+Date: Tue, 1 May 2018 10:18:34 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH 4/5] xfs: implement online get/set fs label
-Message-ID: <20180501144935.GA4127@magnolia>
+Message-ID: <20180501141833.GG4525@bfoster.bfoster>
 References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
  <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
- <20180501141833.GG4525@bfoster.bfoster>
- <f52bedee-9432-1f58-dc11-a59d2a7d6359@sandeen.net>
- <20180501144238.GH4525@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180501144238.GH4525@bfoster.bfoster>
+In-Reply-To: <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, May 01, 2018 at 10:42:38AM -0400, Brian Foster wrote:
-> On Tue, May 01, 2018 at 09:27:30AM -0500, Eric Sandeen wrote:
-> > On 5/1/18 9:18 AM, Brian Foster wrote:
-> > > On Mon, Apr 30, 2018 at 10:46:37AM -0500, Eric Sandeen wrote:
-> > >> The GET ioctl is trivial, just return the current label.
-> > >>
-> > >> The SET ioctl is more involved:
-> > >> It transactionally modifies the superblock to write a new filesystem
-> > >> label to the primary super.
-> > >>
-> > >> It then also checkpoints the log to disk so that the change lands in
-> > >> block 0, invalidates any page cache that userspace might have previously
-> > >> read, and updates all secondary superblocks as userspace relable does.
-> > >>
-> > >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > >> ---
-> > >>
-> > >> nb: the growfs trylock is just cargo-culting; growfs also trylocks.  *shrug*
-> > >>
-> > >>  fs/xfs/xfs_ioctl.c | 83 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >>  1 file changed, 83 insertions(+)
-> > >>
-> > >> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > >> index 89fb1eb..12c6711 100644
-> > >> --- a/fs/xfs/xfs_ioctl.c
-> > >> +++ b/fs/xfs/xfs_ioctl.c
-> > >> @@ -20,6 +20,7 @@
-> > >>  #include "xfs_shared.h"
-> > >>  #include "xfs_format.h"
-> > >>  #include "xfs_log_format.h"
-> > >> +#include "xfs_log.h"
-> > >>  #include "xfs_trans_resv.h"
-> > >>  #include "xfs_mount.h"
-> > >>  #include "xfs_inode.h"
-> > >> @@ -1811,6 +1812,84 @@ struct getfsmap_info {
-> > >>  	return error;
-> > >>  }
-> > >>  
-> > >> +static int
-> > >> +xfs_ioc_getlabel(
-> > >> +	struct xfs_mount	*mp,
-> > >> +	char			__user *label)
-> > >> +{
-> > >> +	struct xfs_sb		*sbp = &mp->m_sb;
-> > >> +
-> > >> +	/* Paranoia */
-> > >> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
-> > >> +
-> > >> +	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
-> > >> +		return -EFAULT;
-> > >> +	return 0;
-> > >> +}
-> > >> +
-> > >> +static int
-> > >> +xfs_ioc_setlabel(
-> > >> +	struct file		*filp,
-> > >> +	struct xfs_mount	*mp,
-> > >> +	char			__user *newlabel)
-> > >> +{
-> > >> +	struct address_space	*mapping;
-> > >> +	struct xfs_sb		*sbp = &mp->m_sb;
-> > >> +	char			label[FSLABEL_MAX];
-> > >> +	size_t			len;
-> > >> +	int			error;
-> > >> +
-> > >> +	if (!capable(CAP_SYS_ADMIN))
-> > >> +		return -EPERM;
-> > >> +
-> > >> +	if (copy_from_user(label, newlabel, FSLABEL_MAX))
-> > >> +		return -EFAULT;
-> > >> +	/*
-> > >> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but xfs is much
-> > >> +	 * smaller, at 12 bytes.
-> > >> +	 * NB: The on disk label doesn't need to be null terminated.
-> > >> +	 */
-> > >> +	len = strnlen(label, FSLABEL_MAX);
-> > >> +	if (len > sizeof(sbp->sb_fname)) {
-> > >> +		xfs_warn(mp, "label %s is too long, max %zu chars",
-> > >> +			label, sizeof(sbp->sb_fname));
-> > >> +		return -EINVAL;
-> > >> +	}
-> > >> +
-> > >> +	error = mnt_want_write_file(filp);
-> > >> +	if (error)
-> > >> +		return error;
-> > >> +
-> > >> +	spin_lock(&mp->m_sb_lock);
-> > >> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
-> > >> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
-> > >> +	spin_unlock(&mp->m_sb_lock);
-> > >> +
-> > >> +	error = xfs_sync_sb(mp, true);
-> > >> +	if (error)
-> > >> +		goto out;
-> > > 
-> > > Is there a reason this all has to be synchronous in the first place, as
-> > > opposed to using xfs_log_sb() and committing a transaction for example?
-> > > Is it because we essentially don't have a way to recover if we crash
-> > > partway through? (Whatever the reason, a brief comment around why is
-> > > useful for future reference).
-> > 
-> > Well, we want userspace to see it in sector 0 after the call returns,
-> > I don't want it waiting around in the log.  That's why I was doing
-> > sync-all-the-things-now.
-> > 
+On Mon, Apr 30, 2018 at 10:46:37AM -0500, Eric Sandeen wrote:
+> The GET ioctl is trivial, just return the current label.
 > 
-> Ok. It doesn't really seem like a problem given the operation. I was
-> just curious.
+> The SET ioctl is more involved:
+> It transactionally modifies the superblock to write a new filesystem
+> label to the primary super.
 > 
-> > >> +
-> > >> +	/* checkpoint the log to update primary super in fs itself */
-> > >> +	error = xfs_log_checkpoint(mp);
-> > >> +	if (error)
-> > >> +		goto out;
-> > >> +
-> > > 
-> > > xfs_sync_sb() with wait == true marks the transaction sync, which does
-> > > the log force part (but doesn't push the ail) based on the lsn of the
-> > > commit. Also note that you should be able to push the AIL based on the
-> > > lsn in the log item, which is set on AIL insertion, as opposed to doing
-> > > a full AIL push as well.
-> > 
-> > It's kind of ridiculous, but I don't speak log very well.  I didn't see a
-> > downside to just pushing it all, but can you offer a code snippet for what
-> > you're proposing, if you think that'd be better?
-> > 
+> It then also checkpoints the log to disk so that the change lands in
+> block 0, invalidates any page cache that userspace might have previously
+> read, and updates all secondary superblocks as userspace relable does.
 > 
-> It's just a bit of overkill. The log force is unnecessary. If you do end
-> up using xfs_sync_sb(), then I think calling xfs_ail_push() with the
-> ->li_lsn from the superblock log buffer would be sufficient. But er,
-> that's async and I'm not sure we have anything atm that does an LSN
-> targeted sync ail push. Perhaps we could create one based on
-> xfs_ail_push_all_sync()?
-
-Sounds like a good fit here.
-
-> > >> +	/* invalidate any cached bdev page for userspace visibility */
-> > >> +	mapping = mp->m_ddev_targp->bt_bdev->bd_inode->i_mapping;
-> > >> +	error = invalidate_inode_pages2_range(mapping, 0, 0);
-> > >> +	if (error)
-> > >> +		goto out;
-> > > 
-> > > A more detailed comment on why this is necessary would be helpful. :)
-> > 
-> > Why we need to invalidate cached pages on the block device?  I thought that
-> > was clear from the comment, but I can add more words.
-> > 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> I'm not really sure what "userspace visibility" means. Wouldn't
-> userspace just call the get label ioctl?
+> nb: the growfs trylock is just cargo-culting; growfs also trylocks.  *shrug*
 > 
-> > /*
-> >  * The block device may have cached pages for the block device from previous
-> >  * reads in userspace, and we want i.e. blkid to see the new info, so invalidate
-> >  * any cached pages now.
-> >  */
-> > 
-> > Like that?
-
-/*
- * Userspace reads of the superblock may have created page cache for the
- * superblock behind our back, so invalidate those pages.
- */
-
-Perhaps?
-
-> > 
+>  fs/xfs/xfs_ioctl.c | 83 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 83 insertions(+)
 > 
-> I suppose. Does something actually break without this? Why do we care
-> about bdev inode cache invalidation here and not with any other
-> superblock modifications?
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 89fb1eb..12c6711 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -20,6 +20,7 @@
+>  #include "xfs_shared.h"
+>  #include "xfs_format.h"
+>  #include "xfs_log_format.h"
+> +#include "xfs_log.h"
+>  #include "xfs_trans_resv.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_inode.h"
+> @@ -1811,6 +1812,84 @@ struct getfsmap_info {
+>  	return error;
+>  }
+>  
+> +static int
+> +xfs_ioc_getlabel(
+> +	struct xfs_mount	*mp,
+> +	char			__user *label)
+> +{
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +
+> +	/* Paranoia */
+> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
+> +
+> +	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
+> +		return -EFAULT;
+> +	return 0;
+> +}
+> +
+> +static int
+> +xfs_ioc_setlabel(
+> +	struct file		*filp,
+> +	struct xfs_mount	*mp,
+> +	char			__user *newlabel)
+> +{
+> +	struct address_space	*mapping;
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +	char			label[FSLABEL_MAX];
+> +	size_t			len;
+> +	int			error;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +
+> +	if (copy_from_user(label, newlabel, FSLABEL_MAX))
+> +		return -EFAULT;
+> +	/*
+> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but xfs is much
+> +	 * smaller, at 12 bytes.
+> +	 * NB: The on disk label doesn't need to be null terminated.
+> +	 */
+> +	len = strnlen(label, FSLABEL_MAX);
+> +	if (len > sizeof(sbp->sb_fname)) {
+> +		xfs_warn(mp, "label %s is too long, max %zu chars",
+> +			label, sizeof(sbp->sb_fname));
+> +		return -EINVAL;
+> +	}
+> +
+> +	error = mnt_want_write_file(filp);
+> +	if (error)
+> +		return error;
+> +
+> +	spin_lock(&mp->m_sb_lock);
+> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
+> +	spin_unlock(&mp->m_sb_lock);
+> +
+> +	error = xfs_sync_sb(mp, true);
+> +	if (error)
+> +		goto out;
 
-blkid will return stale results if the page cache is stale.
+Is there a reason this all has to be synchronous in the first place, as
+opposed to using xfs_log_sb() and committing a transaction for example?
+Is it because we essentially don't have a way to recover if we crash
+partway through? (Whatever the reason, a brief comment around why is
+useful for future reference).
 
+> +
+> +	/* checkpoint the log to update primary super in fs itself */
+> +	error = xfs_log_checkpoint(mp);
+> +	if (error)
+> +		goto out;
+> +
+
+xfs_sync_sb() with wait == true marks the transaction sync, which does
+the log force part (but doesn't push the ail) based on the lsn of the
+commit. Also note that you should be able to push the AIL based on the
+lsn in the log item, which is set on AIL insertion, as opposed to doing
+a full AIL push as well.
+
+> +	/* invalidate any cached bdev page for userspace visibility */
+> +	mapping = mp->m_ddev_targp->bt_bdev->bd_inode->i_mapping;
+> +	error = invalidate_inode_pages2_range(mapping, 0, 0);
+> +	if (error)
+> +		goto out;
+
+A more detailed comment on why this is necessary would be helpful. :)
+
+> +
+> +	/* update the backup superblocks like userspace does */
+> +	if (mutex_trylock(&mp->m_growlock)) {
+> +		error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
+> +		mutex_unlock(&mp->m_growlock);
+> +	}
+
+It looks like growfs returns an error if the lock not available. Did you
+intend to perform the primary update and then skip the secondary updates
+if the lock is not acquired?
+
+Perhaps we should just trylock earlier and hold the lock across the
+entire operation..? It's not like grow or relabel are frequent
+operations.
+
+Brian
+
+> +out:
+> +	mnt_drop_write_file(filp);
+> +	return error;
+> +}
+> +
+>  /*
+>   * Note: some of the ioctl's return positive numbers as a
+>   * byte count indicating success, such as readlink_by_handle.
+> @@ -1834,6 +1913,10 @@ struct getfsmap_info {
+>  	switch (cmd) {
+>  	case FITRIM:
+>  		return xfs_ioc_trim(mp, arg);
+> +	case FS_IOC_GET_FSLABEL:
+> +		return xfs_ioc_getlabel(mp, arg);
+> +	case FS_IOC_SET_FSLABEL:
+> +		return xfs_ioc_setlabel(filp, mp, arg);
+>  	case XFS_IOC_ALLOCSP:
+>  	case XFS_IOC_FREESP:
+>  	case XFS_IOC_RESVSP:
+> -- 
+> 1.8.3.1
 > 
-> > >> +
-> > >> +	/* update the backup superblocks like userspace does */
-> > >> +	if (mutex_trylock(&mp->m_growlock)) {
-> > >> +		error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
-> > >> +		mutex_unlock(&mp->m_growlock);
-> > >> +	}
-> > > 
-> > > It looks like growfs returns an error if the lock not available. Did you
-> > > intend to perform the primary update and then skip the secondary updates
-> > > if the lock is not acquired?
-> > > 
-> > > Perhaps we should just trylock earlier and hold the lock across the
-> > > entire operation..? It's not like grow or relabel are frequent
-> > > operations.
-> > 
-> > yeah, I was on the fence about this.  Updating the secondaries with the new label
-> > is not strictly required; repair doesn't care at all, and online repair considers
-> > it a "preen" action.  TBH I was lazily unsure about growlock vs. m_sb_lock nesting
-> > and didn't want to risk getting it wrong.
-> > 
-> 
-> I have no strong preference either way, but ISTM we should decide
-> whether to update secondary supers or not.
-
-Dave's 'tablise growfs' series converted all this to create a chain of
-delwri buffers, which makes it tempting to refactor
-xfs_sb_update_secondary().  However, iirc that discussion ended with
-Dave saying he'd rework a few bits and resend... so either that needs to
-happen, or we just push this in sooner and add refactoring the other
-secondary super update (namely online repair) when the growfs work
-lands.
-
---D
-
-> 
-> Brian
-> 
-> > > Brian
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
