@@ -1,110 +1,285 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40672 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755443AbeEARpP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 May 2018 13:45:15 -0400
-Date: Tue, 1 May 2018 17:45:12 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [RFC] vfs: skip extra attributes check on removal for symlinks
-Message-ID: <20180501174512.GA27853@wotan.suse.de>
-References: <20180426234639.12480-1-mcgrof@kernel.org>
- <20180501172319.GK4127@magnolia>
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:34733 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755182AbeEAPXR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:23:17 -0400
+Received: by mail-pf0-f180.google.com with SMTP id a14so9336744pfi.1
+        for <linux-xfs@vger.kernel.org>; Tue, 01 May 2018 08:23:17 -0700 (PDT)
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+ <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+ <20180430213120.GD13766@dastard>
+ <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
+ <20180430222852.GF13766@dastard>
+ <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
+ <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
+ <20180430232319.GV23861@dastard>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <bacc9dbb-c38b-9258-cd95-7582c27a97f7@kernel.dk>
+Date: Tue, 1 May 2018 09:23:13 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180501172319.GK4127@magnolia>
+In-Reply-To: <20180430232319.GV23861@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, sandeen@sandeen.net, dhowells@redhat.com, tytso@mit.edu, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-On Tue, May 01, 2018 at 10:23:19AM -0700, Darrick J. Wong wrote:
-> On Thu, Apr 26, 2018 at 04:46:39PM -0700, Luis R. Rodriguez wrote:
-> > Linux filesystems cannot set extra file attributes (stx_attributes as per
-> > statx(2)) on a symbolic link. To set extra file attributes you issue
-> > ioctl(2) with FS_IOC_SETFLAGS, *all* ioctl(2) calls on a symbolic link
-> > yield EBADF.
-> > 
-> > This is because ioctl(2) tries to obtain struct fd from the symbolic link
-> > file descriptor passed using fdget(), fdget() in turn always returns no
-> > file set when a file descriptor is open with O_PATH. As per symlink(2)
-> > O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
-> > descriptor of a symbolic link, and this holds true for Linux, as such extra
-> > file attributes cannot possibly be set on symbolic links on Linux.
-> > 
-> > Filesystems repair utilities should be updated to detect this as
-> > corruption and correct this, however, the VFS *does* respect these
-> > extra attributes on symlinks for removal.
-> > 
-> > Since we cannot set these attributes we should special-case the
-> > immutable/append on delete for symlinks, this would be consistent with
-> > what we *do* allow on Linux for all filesystems.
+On 4/30/18 5:23 PM, Dave Chinner wrote:
+> On Mon, Apr 30, 2018 at 05:00:14PM -0600, Jens Axboe wrote:
+>> On 4/30/18 4:40 PM, Jens Axboe wrote:
+>>> On 4/30/18 4:28 PM, Dave Chinner wrote:
+>>>> Yes, it does, but so would having the block layer to throttle device
+>>>> discard requests in flight to a queue depth of 1. And then we don't
+>>>> have to change XFS at all.
+>>>
+>>> I'm perfectly fine with making that change by default, and much easier
+>>> for me since I don't have to patch file systems.
+>>
+>> Totally untested, but this should do the trick. It ensures we have
+>> a QD of 1 (per caller), which should be sufficient.
+>>
+>> If people tune down the discard size, then you'll be blocking waiting
+>> for discards on issue.
+>>
+>> diff --git a/block/blk-lib.c b/block/blk-lib.c
+>> index a676084d4740..0bf9befcc863 100644
+>> --- a/block/blk-lib.c
+>> +++ b/block/blk-lib.c
+>> @@ -11,16 +11,19 @@
+>>  #include "blk.h"
+>>  
+>>  static struct bio *next_bio(struct bio *bio, unsigned int nr_pages,
+>> -		gfp_t gfp)
+>> +			    gfp_t gfp)
+>>  {
+>> -	struct bio *new = bio_alloc(gfp, nr_pages);
+>> -
+>> +	/*
+>> +	 * Devices suck at discard, so if we have to break up the bio
+>> +	 * size due to the max discard size setting, wait for the
+>> +	 * previous one to finish first.
+>> +	 */
+>>  	if (bio) {
+>> -		bio_chain(bio, new);
+>> -		submit_bio(bio);
+>> +		submit_bio_wait(bio);
+>> +		bio_put(bio);
+>>  	}
 > 
-> Ah, ok, so the problem here is that you can't rm an "immutable" symlink
-> nor can you clear the immutable flag on such a beast, so therefore
-> ignore the immutable (and append) flags if we're trying to delete a
-> symlink?
+> This only addresses the case where __blkdev_issue_discard() breaks
+> up a single large discard, right? It seems like a brute force
+> solution, too, because it will do so even when the underlying device
+> is idle and there's no need to throttle.
 
-Yup.
+Right, the above would only break up a single discard, that's the
+per-caller part.
 
-> I think we ought to teach the xfs inode verifier to check for
-> immutable/append symlinks and return error so that we don't end up with
-> such things in core in the first place,
+> Shouldn't the throttling logic at least look at device congestion?
+> i.e. if the device is not backlogged, then we should be able to
+> issue the discard without problems. 
+> 
+> I ask this because this only addresses throttling the "discard large
+> extent" case when the discard limit is set low. i.e. your exact
+> problem case. We know that XFS can issue large numbers of
+> discontiguous async discards in a single batch - this patch does not
+> address that case and so it will still cause starvation problems.
+> 
+> If we look at device congestion in determining how to throttle/back
+> off during discard issuing, then it doesn't matter what
+> max_discard_sectors is set to - it will throttle in all situations
+> that cause device overloads and starvations....
 
-Agreed. But note that one way to end up with these things is through
-corruption. Once a user finds this the first signs they'll run into
-(unless they have the awesome new online scrubber) is they cannot delete
-some odd file and not know why. And then they'll see they cannot change
-or remove either the immutable or append flag. The immutable attribute
-is known to not let you delete the file, but its less known that the
-append attribute implies the same. Folks would scratch their heads.
+How about the below? It integrates it with the writeback throttling,
+treating it like background writes. Totally untested. The benefit
+of this is that it ties into that whole framework, and it's
+per-device managed.
 
-Since one cannot *set* these attributes on symlinks on Linux, other than
-ignoring such attributes perhaps we should warn about it? As the only
-way you could end up with that is if your filesystem got corrupted.
+The blk-lib change is a separate patch, ensuring we break up discards
+according to the user size. Will get broken up.
 
-But without filesystems having a fix for that merged users can't do anything.
 
-> and fix xfs_repair to zap such things.
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index a676084d4740..7417d617091b 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -62,10 +62,11 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		unsigned int req_sects;
+ 		sector_t end_sect, tmp;
+ 
+-		/* Make sure bi_size doesn't overflow */
+-		req_sects = min_t(sector_t, nr_sects, UINT_MAX >> 9);
++		/* Issue in chunks of the user defined max discard setting */
++		req_sects = min_t(sector_t, nr_sects,
++					q->limits.max_discard_sectors);
+ 
+-		/**
++		/*
+ 		 * If splitting a request, and the next starting sector would be
+ 		 * misaligned, stop the discard at the previous aligned sector.
+ 		 */
+diff --git a/block/blk-stat.h b/block/blk-stat.h
+index 2dd36347252a..c22049a8125e 100644
+--- a/block/blk-stat.h
++++ b/block/blk-stat.h
+@@ -10,11 +10,11 @@
+ 
+ /*
+  * from upper:
+- * 3 bits: reserved for other usage
++ * 4 bits: reserved for other usage
+  * 12 bits: size
+- * 49 bits: time
++ * 48 bits: time
+  */
+-#define BLK_STAT_RES_BITS	3
++#define BLK_STAT_RES_BITS	4
+ #define BLK_STAT_SIZE_BITS	12
+ #define BLK_STAT_RES_SHIFT	(64 - BLK_STAT_RES_BITS)
+ #define BLK_STAT_SIZE_SHIFT	(BLK_STAT_RES_SHIFT - BLK_STAT_SIZE_BITS)
+diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+index f92fc84b5e2c..ba0c2825d382 100644
+--- a/block/blk-wbt.c
++++ b/block/blk-wbt.c
+@@ -101,9 +101,15 @@ static bool wb_recent_wait(struct rq_wb *rwb)
+ 	return time_before(jiffies, wb->dirty_sleep + HZ);
+ }
+ 
+-static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_kswapd)
++static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_trim,
++					  bool is_kswapd)
+ {
+-	return &rwb->rq_wait[is_kswapd];
++	if (is_trim)
++		return &rwb->rq_wait[WBT_REQ_TRIM];
++	else if (is_kswapd)
++		return &rwb->rq_wait[WBT_REQ_KSWAPD];
++	else
++		return &rwb->rq_wait[WBT_REQ_BG];
+ }
+ 
+ static void rwb_wake_all(struct rq_wb *rwb)
+@@ -120,13 +126,14 @@ static void rwb_wake_all(struct rq_wb *rwb)
+ 
+ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
+ {
++	const bool is_trim = wb_acct & WBT_TRIM;
+ 	struct rq_wait *rqw;
+ 	int inflight, limit;
+ 
+ 	if (!(wb_acct & WBT_TRACKED))
+ 		return;
+ 
+-	rqw = get_rq_wait(rwb, wb_acct & WBT_KSWAPD);
++	rqw = get_rq_wait(rwb, is_trim, wb_acct & WBT_KSWAPD);
+ 	inflight = atomic_dec_return(&rqw->inflight);
+ 
+ 	/*
+@@ -139,10 +146,13 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
+ 	}
+ 
+ 	/*
+-	 * If the device does write back caching, drop further down
+-	 * before we wake people up.
++	 * For discards, our limit is always the background. For writes, if
++	 * the device does write back caching, drop further down before we
++	 * wake people up.
+ 	 */
+-	if (rwb->wc && !wb_recent_wait(rwb))
++	if (is_trim)
++		limit = rwb->wb_background;
++	else if (rwb->wc && !wb_recent_wait(rwb))
+ 		limit = 0;
+ 	else
+ 		limit = rwb->wb_normal;
+@@ -479,6 +489,9 @@ static inline unsigned int get_limit(struct rq_wb *rwb, unsigned long rw)
+ {
+ 	unsigned int limit;
+ 
++	if ((rw & REQ_OP_MASK) == REQ_OP_DISCARD)
++		return rwb->wb_background;
++
+ 	/*
+ 	 * At this point we know it's a buffered write. If this is
+ 	 * kswapd trying to free memory, or REQ_SYNC is set, then
+@@ -533,7 +546,8 @@ static void __wbt_wait(struct rq_wb *rwb, unsigned long rw, spinlock_t *lock)
+ 	__releases(lock)
+ 	__acquires(lock)
+ {
+-	struct rq_wait *rqw = get_rq_wait(rwb, current_is_kswapd());
++	const bool is_trim = (rw & REQ_OP_MASK) == REQ_OP_DISCARD;
++	struct rq_wait *rqw = get_rq_wait(rwb, is_trim, current_is_kswapd());
+ 	DEFINE_WAIT(wait);
+ 
+ 	if (may_queue(rwb, rqw, &wait, rw))
+@@ -561,19 +575,19 @@ static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
+ {
+ 	const int op = bio_op(bio);
+ 
+-	/*
+-	 * If not a WRITE, do nothing
+-	 */
+-	if (op != REQ_OP_WRITE)
+-		return false;
++	if (op == REQ_OP_WRITE) {
++		/*
++		 * Don't throttle WRITE_ODIRECT
++		 */
++		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
++		    (REQ_SYNC | REQ_IDLE))
++			return false;
+ 
+-	/*
+-	 * Don't throttle WRITE_ODIRECT
+-	 */
+-	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
+-		return false;
++		return true;
++	} else if (op == REQ_OP_DISCARD)
++		return true;
+ 
+-	return true;
++	return false;
+ }
+ 
+ /*
+@@ -605,6 +619,8 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
+ 
+ 	if (current_is_kswapd())
+ 		ret |= WBT_KSWAPD;
++	if (bio_op(bio) == REQ_OP_DISCARD)
++		ret |= WBT_TRIM;
+ 
+ 	return ret | WBT_TRACKED;
+ }
+diff --git a/block/blk-wbt.h b/block/blk-wbt.h
+index a232c98fbf4d..aec5bc82d580 100644
+--- a/block/blk-wbt.h
++++ b/block/blk-wbt.h
+@@ -14,12 +14,17 @@ enum wbt_flags {
+ 	WBT_TRACKED		= 1,	/* write, tracked for throttling */
+ 	WBT_READ		= 2,	/* read */
+ 	WBT_KSWAPD		= 4,	/* write, from kswapd */
++	WBT_TRIM		= 8,
+ 
+-	WBT_NR_BITS		= 3,	/* number of bits */
++	WBT_NR_BITS		= 4,	/* number of bits */
+ };
+ 
+ enum {
+-	WBT_NUM_RWQ		= 2,
++	WBT_REQ_BG = 0,
++	WBT_REQ_KSWAPD,
++	WBT_REQ_TRIM,
++
++	WBT_NUM_RWQ,
+ };
+ 
+ /*
 
-This is what my patch for xfs_repair does, which is pending review.
+-- 
+Jens Axboe
 
-But note that special files are handled differently, I explain the logic on the
-RFC commit log, which is why I suggested splitting up adding a fix for special
-files as a separate patch.
-
-> That said, for the filesystems that aren't going to check their inodes,
-> I guess this is a (hackish) way to avoid presenting undeletable gunk in
-> the fs to the user...
-
-That's why its RFC. What is the right thing to do here?
-
-My own logic here was since we cannot possibly allow extended attributes on
-symlinks is to not use them then as well, in this case for delete.
-
-> (Were it up to me I'd make a common vfs_check_inode() to reject
-> struct inode containing garbage that the vfs won't deal with,
-
-There certainly are cases that we could come up with for the VFS where
-if such things are found, regardless of the filesystem, we're very sure
-its a corruption. This is just one example, as you note.
-
-So it is correct that there are two things here:
-
-1) Do we respect the attribute for symlink on delete
-2) Do we warn to users of the fact that the inode is very likely corrupted
-   regardless of the filesystem?
-
-This patch only addresses 1) and makes it match the VFS expectation, and
-I think this is safe if we're not doing 2). This is why I'm also looking
-for feedback from linux-api folks.
-
-This is one of those odd corner cases we run into, and very likely not
-well documented anywhere.
-
-> and teach the filesystems to use it;
-
-Or the VFS uses it.
-
-  Luis
