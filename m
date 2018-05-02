@@ -1,59 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33982 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:47928 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750822AbeECVZR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 17:25:17 -0400
-Date: Thu, 3 May 2018 14:24:47 -0700
+        with ESMTP id S1751350AbeEBUaX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 16:30:23 -0400
+Date: Wed, 2 May 2018 13:29:55 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 1/2] iomap: add a swapfile activation function
-Message-ID: <20180503212447.GG4141@magnolia>
-References: <20180503174659.GD4127@magnolia>
- <20180503205803.GA26037@vader>
+Subject: Re: [PATCH] iomap: add a swapfile activation function
+Message-ID: <20180502202955.GA4112@magnolia>
+References: <20180418025023.GM24738@magnolia>
+ <20180421123301.v7bbofc2joaibpi6@quack2.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180503205803.GA26037@vader>
+In-Reply-To: <20180421123301.v7bbofc2joaibpi6@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, hch@infradead.org, cyberax@amazon.com, jack@suse.cz, Eryu Guan <guaneryu@gmail.com>
+To: Jan Kara <jack@suse.cz>
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org
 
-On Thu, May 03, 2018 at 01:58:03PM -0700, Omar Sandoval wrote:
-> On Thu, May 03, 2018 at 10:46:59AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a new iomap_swapfile_activate function so that filesystems can
-> > activate swap files without having to use the obsolete and slow bmap
-> > function.  This enables XFS to support fallocate'd swap files and
-> > swap files on realtime devices.
-> > 
+On Sat, Apr 21, 2018 at 02:33:01PM +0200, Jan Kara wrote:
+> On Tue 17-04-18 19:50:23, Darrick J. Wong wrote:
+> > +
+> > +/* Swapfile activation */
+> > +
+> > +struct iomap_swapfile_info {
+> > +	struct swap_info_struct *sis;
+> > +	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
+> > +	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
+> > +	unsigned long expected_page_no;	/* next logical offset wanted (pages) */
+> > +	int nr_extents;			/* extent count */
+> > +};
+> > +
+> > +static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+> > +		loff_t count, void *data, struct iomap *iomap)
+> > +{
+> > +	struct iomap_swapfile_info *isi = data;
+> > +	unsigned long page_no = iomap->offset >> PAGE_SHIFT;
+> > +	unsigned long nr_pages = iomap->length >> PAGE_SHIFT;
+> > +	uint64_t first_ppage = iomap->addr >> PAGE_SHIFT;
+> > +	uint64_t last_ppage = ((iomap->addr + iomap->length) >> PAGE_SHIFT) - 1;
+> > +
+> > +	/* Only one bdev per swap file. */
+> > +	if (iomap->bdev != isi->sis->bdev)
+> > +		goto err;
+> > +
+> > +	/* Must be aligned to a page boundary. */
+> > +	if ((iomap->offset & ~PAGE_MASK) || (iomap->addr & ~PAGE_MASK) ||
+> > +	    (iomap->length & ~PAGE_MASK))
+> > +		goto err;
 > 
-> Shouldn't we also prevent the extents of an active swapfile from
-> becoming shared? If I swapon(a) and reflink(a, b), swapout to a now has
-> to break the reflink or corrupt b! In my old Btrfs swapfile series [1] I
-> just forbid all reflink operations on active swapfiles. 
+> Reporting error in this case does not look equivalent to
+> generic_swapfile_activate()? That function just skips blocks with
+> insufficient alignment...
 
-xfs already does this in its reflink handler: it takes the inode lock &
-bails out if IS_SWAPFILE().  swapon calls claim_swapfile to take the
-inode lock and sets S_SWAPFILE (if successful) so the two are
-effectively locked out from each other...
+Yes, I've fixed this to emulate more closely the behavior of the old
+bmap implementation, so now we collect physically contiguous iomaps
+and trim the accumulated iomap to satisfy the page alignment
+requirements.
 
-> One thing to note is that then this will need a matching
-> ->swap_deactivate(), which currently isn't called if ->swap_activate()
-> returned > 0.
+> And I'm actually puzzled why alignment of physical block is needed but
+> that's independent question.
 
-...so there shouldn't be any state to undo if the
-iomap_swapfile_activate fails.
+I'm not sure why either. :)
+
+> > +	/* Only real or unwritten extents. */
+> > +	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
+> > +		goto err;
+> > +
+> > +	/* No sparse files. */
+> > +	if (isi->expected_page_no != page_no)
+> > +		goto err;
+> > +
+> > +	/* No uncommitted metadata or shared blocks or inline data. */
+> > +	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
+> > +			    IOMAP_F_DATA_INLINE))
+> > +		goto err;
+> > +
+> > +	/*
+> > +	 * Calculate how much swap space we're adding; the first page contains
+> > +	 * the swap header and doesn't count.
+> > +	 */
+> > +	if (page_no == 0)
+> > +		first_ppage++;
+> > +	if (isi->lowest_ppage > first_ppage)
+> > +		isi->lowest_ppage = first_ppage;
+> > +	if (isi->highest_ppage < last_ppage)
+> > +		isi->highest_ppage = last_ppage;
+> > +
+> > +	/* Add extent, set up for the next call. */
+> > +	isi->nr_extents += add_swap_extent(isi->sis, page_no, nr_pages,
+> > +			first_ppage);
+> 
+> And here add_swap_extent() can return error.
+
+Fixed, thanks.
 
 --D
 
 > 
-> 1: https://github.com/osandov/linux/tree/btrfs-swap
-> 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v3: catch null iomap addr, fix too-short extent detection
-> > v2: document the swap file layout requirements, combine adjacent
-> >     real/unwritten extents, align reported swap extents to physical page
-> >     size boundaries, fix compiler errors when swap disabled
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
