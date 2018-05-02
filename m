@@ -1,100 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33718 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755402AbeEAPkB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:40:01 -0400
-Subject: [PATCH 6/9] generic/453: test creation of malicious directory
- entries
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 01 May 2018 08:39:57 -0700
-Message-ID: <152518919767.23023.15585535417009112941.stgit@magnolia>
-In-Reply-To: <152518916007.23023.4793255395982876953.stgit@magnolia>
-References: <152518916007.23023.4793255395982876953.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39303 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751371AbeEBICJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:02:09 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDmi8-0002X2-AL
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDmi8-0003BC-8T
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 09/10] xfs: add some more debug checks to buffer log item reuse
+Date: Wed,  2 May 2018 18:01:56 +1000
+Message-Id: <20180502080157.11386-10-david@fromorbit.com>
+In-Reply-To: <20180502080157.11386-1-david@fromorbit.com>
+References: <20180502080157.11386-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Create malicious . and .. entries (you didn't see the zero-width
-joiners at the end, did you?) in a directory to see if scrub will pick
-them up.
+Just to make sure the item isn't associated with another
+transaction when we try to reuse it.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- tests/generic/453 |   34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ fs/xfs/xfs_buf_item.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
-diff --git a/tests/generic/453 b/tests/generic/453
-index 91d163ca..8841f581 100755
---- a/tests/generic/453
-+++ b/tests/generic/453
-@@ -62,6 +62,15 @@ setf() {
- 	echo "Storing ${key} ($(hexbytes "${key}")) -> ${value}" >> $seqres.full
- }
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 53c07a7a14fb..3656f7cb18ad 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -722,8 +722,11 @@ xfs_buf_item_init(
+ 	 * nothing to do here so return.
+ 	 */
+ 	ASSERT(bp->b_target->bt_mount == mp);
+-	if (bip != NULL) {
++	if (bip) {
+ 		ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
++		ASSERT(!test_bit(XFS_LI_TRANS, &bip->bli_item.li_flags));
++		ASSERT(!bp->b_transp);
++		ASSERT(bip->bli_buf == bp);
+ 		return 0;
+ 	}
  
-+setd() {
-+	key="$(echo -e "$1")"
-+	value="$2"
-+
-+	mkdir -p "${testdir}/${key}"
-+	echo "${value}" > "${testdir}/${key}/value"
-+	echo "Storing ${key} ($(hexbytes "${key}")) -> ${value}" >> $seqres.full
-+}
-+
- testf() {
- 	key="$(echo -e "$1")"
- 	value="$2"
-@@ -80,6 +89,24 @@ testf() {
- 	fi
- }
- 
-+testd() {
-+	key="$(echo -e "$1")"
-+	value="$2"
-+	fname="${testdir}/${key}/value"
-+
-+	echo "Testing ${key} ($(hexbytes "${key}")) -> ${value}" >> $seqres.full
-+
-+	if [ ! -e "${fname}" ]; then
-+		echo "Key ${key} does not exist for ${value} test??"
-+		return
-+	fi
-+
-+	actual_value="$(cat "${fname}")"
-+	if [ "${actual_value}" != "${value}" ]; then
-+		echo "Key ${key} has value ${value}, expected ${actual_value}."
-+	fi
-+}
-+
- filter_scrub() {
- 	grep 'Unicode' | sed -e 's/^.*Duplicate/Duplicate/g'
- }
-@@ -143,6 +170,10 @@ setf "zerojoin_moo\xe2\x80\x8dcow.txt" "zero width joiners"
- setf "combmark_\xe1\x80\x9c\xe1\x80\xad\xe1\x80\xaf.txt" "combining marks"
- setf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
- 
-+# fake dotdot entry
-+setd ".\xe2\x80\x8d" "zero width joiners in dot entry"
-+setd "..\xe2\x80\x8d" "zero width joiners in dotdot entry"
-+
- ls -la $testdir >> $seqres.full
- 
- echo "Test files"
-@@ -190,6 +221,9 @@ testf "zerojoin_moo\xe2\x80\x8dcow.txt" "zero width joiners"
- testf "combmark_\xe1\x80\x9c\xe1\x80\xad\xe1\x80\xaf.txt" "combining marks"
- testf "combmark_\xe1\x80\x9c\xe1\x80\xaf\xe1\x80\xad.txt" "combining marks"
- 
-+testd ".\xe2\x80\x8d" "zero width joiners in dot entry"
-+testd "..\xe2\x80\x8d" "zero width joiners in dotdot entry"
-+
- echo "Uniqueness of inodes?"
- stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
- 	if [ "${nr}" -gt 1 ]; then
+-- 
+2.17.0
 
