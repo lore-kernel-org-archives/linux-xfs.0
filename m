@@ -1,115 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54398 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754727AbeEAPxW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:53:22 -0400
-Date: Tue, 1 May 2018 08:52:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 10/13] xfs: replace XFS_QMOPT_DQALLOC with boolean
-Message-ID: <20180501155259.GB4127@magnolia>
-References: <152506698177.21553.13500862866416804148.stgit@magnolia>
- <152506705736.21553.3142275765217711989.stgit@magnolia>
- <20180430054752.GB21688@magnolia>
- <20180501134503.GC4525@bfoster.bfoster>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:37228 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750849AbeEBIzI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:55:08 -0400
+Date: Wed, 2 May 2018 16:55:03 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 8/9] xfs: checkbashisms in all script files
+Message-ID: <20180502085503.GE29084@desktop>
+References: <152518916007.23023.4793255395982876953.stgit@magnolia>
+ <152518921090.23023.14958881774088486712.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180501134503.GC4525@bfoster.bfoster>
+In-Reply-To: <152518921090.23023.14958881774088486712.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, sandeen@sandeen.net, fstests@vger.kernel.org
 
-On Tue, May 01, 2018 at 09:45:04AM -0400, Brian Foster wrote:
-> On Sun, Apr 29, 2018 at 10:47:52PM -0700, Darrick J. Wong wrote:
-> > Ugh, wrong commit message.  Here's an updated one now that the flag is
-> > gone entirely.
-> > 
+On Tue, May 01, 2018 at 08:40:10AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Just FYI.. git applies this with the above as the commit log message and
-> the text below is tossed. ;P
-
-D'oh.  Yeah, I screwed up the git-to-mail export. :(
-
-This all will be done correctly in the git tree I swear.
-
-> > --D
-> > 
-> > ---
-> > Subject: [PATCH] xfs: replace XFS_QMOPT_DQALLOC with a simple boolean
-> > 
-> > DQALLOC is only ever used with xfs_qm_dqget*, and the only flag that the
-> > _dqget family of functions cares about is DQALLOC.  Therefore, change
-> > it to a boolean 'can alloc?' flag for the dqget interfaces where that
-> > makes sense.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_quota_defs.h |    1 -
-> >  fs/xfs/xfs_dquot.c             |    8 ++++----
-> >  fs/xfs/xfs_dquot.h             |    2 +-
-> >  fs/xfs/xfs_qm.c                |   12 +++++-------
-> >  fs/xfs/xfs_qm_bhv.c            |    2 +-
-> >  fs/xfs/xfs_qm_syscalls.c       |    9 ++++-----
-> >  6 files changed, 15 insertions(+), 19 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-> > index 531e8224dcb6..1fa3d6d6db40 100644
-> > --- a/fs/xfs/xfs_qm_bhv.c
-> > +++ b/fs/xfs/xfs_qm_bhv.c
-> > @@ -72,7 +72,7 @@ xfs_qm_statvfs(
-> >  	xfs_mount_t		*mp = ip->i_mount;
-> >  	xfs_dquot_t		*dqp;
-> >  
-> > -	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
-> > +	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, true, &dqp)) {
+> Find all the /bin/sh scripts in xfsprogs and check for bashisms.
 > 
-> False? Otherwise looks fine:
+> Cc: sandeen@sandeen.net
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yep, that should be false.  Fixed.
+Looks fine to me, but I'd like a review from Eric too, as it's a
+"maintainer script" :)
 
---D
-
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  tests/xfs/711     |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/711.out |    1 +
+>  tests/xfs/group   |    1 +
+>  3 files changed, 53 insertions(+)
+>  create mode 100755 tests/xfs/711
+>  create mode 100644 tests/xfs/711.out
 > 
-> >  		xfs_fill_statvfs_from_dquot(statp, dqp);
-> >  		xfs_qm_dqput(dqp);
-> >  	}
-> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> > index b9243f554697..3e05d300b14e 100644
-> > --- a/fs/xfs/xfs_qm_syscalls.c
-> > +++ b/fs/xfs/xfs_qm_syscalls.c
-> > @@ -425,7 +425,7 @@ xfs_qm_scall_setqlim(
-> >  	 * a reference to the dquot, so it's safe to do this unlock/lock without
-> >  	 * it being reclaimed in the mean time.
-> >  	 */
-> > -	error = xfs_qm_dqget(mp, id, type, XFS_QMOPT_DQALLOC, &dqp);
-> > +	error = xfs_qm_dqget(mp, id, type, true, &dqp);
-> >  	if (error) {
-> >  		ASSERT(error != -ENOENT);
-> >  		goto out_unlock;
-> > @@ -696,11 +696,10 @@ xfs_qm_scall_getquota(
-> >  	int			error;
-> >  
-> >  	/*
-> > -	 * Try to get the dquot. We don't want it allocated on disk, so
-> > -	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
-> > -	 * exist, we'll get ENOENT back.
-> > +	 * Try to get the dquot. We don't want it allocated on disk, so don't
-> > +	 * set doalloc. If it doesn't exist, we'll get ENOENT back.
-> >  	 */
-> > -	error = xfs_qm_dqget(mp, id, type, 0, &dqp);
-> > +	error = xfs_qm_dqget(mp, id, type, false, &dqp);
-> >  	if (error)
-> >  		return error;
-> >  
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> diff --git a/tests/xfs/711 b/tests/xfs/711
+> new file mode 100755
+> index 00000000..d3dc3cd4
+> --- /dev/null
+> +++ b/tests/xfs/711
+> @@ -0,0 +1,51 @@
+> +#! /bin/bash
+> +# FS QA Test No. 711
+> +#
+> +# checkbashisms on all /bin/sh scripts.  This is a maintainer script.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle, Inc.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment
+> +. ./common/rc
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +export CHECKBASHISMS_PROG="`set_prog_path checkbashisms`"
+> +_require_command "$CHECKBASHISMS_PROG" checkbashisms
+> +
+> +test -z "$WORKAREA" && _notrun "Can't find xfsprogs source"
+> +
+> +rm -f $seqres.full
+> +
+> +find $WORKAREA -name 'xfs*.sh' -print0 | xargs -0 grep '^#!/bin/sh' | sed -e 's/:.*$//g' | while read f; do
+
+Do we care about spaces between "#!" and "/bin/sh"? i.e. "#! /bin/sh",
+sometimes there can be space(s).
+
+Thanks,
+Eryu
+
+> +	$CHECKBASHISMS_PROG $f
+> +done
+> +
+> +status=0
+> diff --git a/tests/xfs/711.out b/tests/xfs/711.out
+> new file mode 100644
+> index 00000000..52ff4745
+> --- /dev/null
+> +++ b/tests/xfs/711.out
+> @@ -0,0 +1 @@
+> +QA output created by 711
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 39e259e8..b7da3fba 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -443,3 +443,4 @@
+>  443 auto quick ioctl fsr
+>  444 auto quick
+>  445 auto quick filestreams
+> +711 auto quick
+> 
