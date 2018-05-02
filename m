@@ -1,83 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52078 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752644AbeEHEnc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:32 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484f9PP034742
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:31 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2hs24sey0k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 04:43:31 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w484hV0r016008
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:31 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hVWn029386
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:31 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 19/21] xfsprogs: Remove single byte array from struct parent
-Date: Mon,  7 May 2018 21:41:17 -0700
-Message-Id: <1525754479-12177-20-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
-References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:57320 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750785AbeEBCpn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 22:45:43 -0400
+Date: Wed, 2 May 2018 12:45:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/4] iomap: iomap_dio_rw() handles all sync writes
+Message-ID: <20180502024540.GA23861@dastard>
+References: <20180418040828.18165-1-david@fromorbit.com>
+ <20180418040828.18165-3-david@fromorbit.com>
+ <20180421130309.efivmjo5ald2jchv@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180421130309.efivmjo5ald2jchv@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-Variable sized arrays implemented this way may cause
-corruptions depending on how different compilers pack
-the structure.
+On Sat, Apr 21, 2018 at 03:03:09PM +0200, Jan Kara wrote:
+> On Wed 18-04-18 14:08:26, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Currently iomap_dio_rw() only handles (data)sync write completions
+> > for AIO. This means we can't optimised non-AIO IO to minimise device
+> > flushes as we can't tell the caller whether a flush is required or
+> > not.
+> > 
+> > To solve this problem and enable further optimisations, make
+> > iomap_dio_rw responsible for data sync behaviour for all IO, not
+> > just AIO.
+> > 
+> > In doing so, the sync operation is now accounted as part of the DIO
+> > IO by inode_dio_end(), hence post-IO data stability updates will no
+> > long race against operations that serialise via inode_dio_wait()
+> > such as truncate or hole punch.
+> > 
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Looks good to me. You can add:
+> 
+> Reviewed-by: Jan Kara <jack@suse.cz>
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- include/parent.h | 1 -
- io/parent.c      | 9 ++++++---
- 2 files changed, 6 insertions(+), 4 deletions(-)
+It looks good, but it's broken in a subtle, nasty way. :/
 
-diff --git a/include/parent.h b/include/parent.h
-index f338f96..85cef85 100644
---- a/include/parent.h
-+++ b/include/parent.h
-@@ -22,7 +22,6 @@ typedef struct parent {
- 	__u64	p_ino;
- 	__u32	p_gen;
- 	__u16	p_reclen;
--	char	p_name[1];
- } parent_t;
- 
- typedef struct parent_cursor {
-diff --git a/io/parent.c b/io/parent.c
-index 1968516..55b8b49 100644
---- a/io/parent.c
-+++ b/io/parent.c
-@@ -45,7 +45,8 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
- 	struct stat statbuf;
- 	char *str;
- 
--	sprintf(fullpath, _("%s%s"), mntpt, parent->p_name);
-+	snprintf(fullpath, parent->p_reclen, _("%s%s"), mntpt,
-+				((char*)parent)+sizeof(struct parent));
- 
- 	sts = lstat(fullpath, &statbuf);
- 	if (sts != 0) {
-@@ -284,9 +285,11 @@ print_parent_entry(parent_t *parent, int fullpath)
- 	printf(_("p_gen    = %u\n"),	parent->p_gen);
- 	printf(_("p_reclen = %u\n"),	parent->p_reclen);
- 	if (fullpath)
--		printf(_("p_name   = \"%s%s\"\n"), mntpt, parent->p_name);
-+		printf(_("p_name   = \"%s%s\"\n"), mntpt,
-+					((char*)parent)+sizeof(struct parent));
- 	else
--		printf(_("p_name   = \"%s\"\n"), parent->p_name);
-+		printf(_("p_name   = \"%s\"\n"),
-+					((char*)parent)+sizeof(struct parent));
- }
- 
- static int
+> > @@ -768,14 +776,8 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+> >  static void iomap_dio_complete_work(struct work_struct *work)
+> >  {
+> >  	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
+> > -	struct kiocb *iocb = dio->iocb;
+> > -	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
+> > -	ssize_t ret;
+> >  
+> > -	ret = iomap_dio_complete(dio);
+> > -	if (is_write && ret > 0)
+> > -		ret = generic_write_sync(iocb, ret);
+> > -	iocb->ki_complete(iocb, ret, 0);
+> > +	dio->iocb->ki_complete(dio->iocb, iomap_dio_complete(dio), 0);
+
+This generates a use after free from KASAN from generic/016. it
+appears the compiler orders the code so that it dereferences
+dio->iocb after iomap_dio_complete() has freed the dio structure
+(yay!).
+
+I'll post a new version of the patchset now that I've got changes to
+2 of the 3 remaining patches in it....
+
+Cheers,
+
+Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
