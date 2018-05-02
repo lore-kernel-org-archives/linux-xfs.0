@@ -1,83 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33544 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753851AbeEAPjm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:39:42 -0400
-Subject: [PATCH 3/9] generic/45[34]: add unicode directional override checks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 01 May 2018 08:39:39 -0700
-Message-ID: <152518917904.23023.222758648230658600.stgit@magnolia>
-In-Reply-To: <152518916007.23023.4793255395982876953.stgit@magnolia>
-References: <152518916007.23023.4793255395982876953.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28489 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751019AbeEBICF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:02:05 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDmi8-0002Wo-7T
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDmi8-0003B6-5q
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 07/10] xfs: fix double ijoin in xfs_reflink_cancel_cow_range
+Date: Wed,  2 May 2018 18:01:54 +1000
+Message-Id: <20180502080157.11386-8-david@fromorbit.com>
+In-Reply-To: <20180502080157.11386-1-david@fromorbit.com>
+References: <20180502080157.11386-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Try injecting a Unicode directional override character in the middle of
-a name to see if the fs can handle it / xfs_scrub will complain.
+AN inode is joined to teh same transaction twice in
+xfs_reflink_cancel_cow_range() resulting in the following assert
+failure:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[   30.180485] XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+[   30.183435] ------------[ cut here ]------------
+......
+[   30.209264] Call Trace:
+[   30.209935]  xfs_trans_add_item+0xcc/0xe0
+[   30.210968]  xfs_reflink_cancel_cow_blocks+0xab/0x290
+[   30.212249]  ? xfs_trans_reserve+0x1b4/0x2b0
+[   30.213320]  ? kmem_zone_alloc+0x61/0xe0
+[   30.214321]  xfs_reflink_cancel_cow_range+0xb2/0x1f0
+[   30.215616]  xfs_fs_destroy_inode+0x1bd/0x280
+[   30.216757]  dispose_list+0x35/0x40
+[   30.217656]  evict_inodes+0x132/0x160
+[   30.218620]  generic_shutdown_super+0x3a/0x110
+[   30.219771]  kill_block_super+0x21/0x50
+[   30.220762]  deactivate_locked_super+0x39/0x70
+[   30.221909]  cleanup_mnt+0x3b/0x70
+[   30.222819]  task_work_run+0x7f/0xa0
+[   30.223762]  exit_to_usermode_loop+0x9b/0xa0
+[   30.224884]  do_syscall_64+0x18f/0x1a0
+
+Fix it and document that the callers of
+xfs_reflink_cancel_cow_blocks() must have already joined the inode
+to the permanent transaction passed in.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- tests/generic/453 |    7 +++++++
- tests/generic/454 |    7 +++++++
- 2 files changed, 14 insertions(+)
+ fs/xfs/xfs_reflink.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-
-diff --git a/tests/generic/453 b/tests/generic/453
-index 424412e9..f2cd81fb 100755
---- a/tests/generic/453
-+++ b/tests/generic/453
-@@ -112,6 +112,10 @@ setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt
- # Line draw characters, because why not?
- setf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cdbd342a5249..bce2b5351d64 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -552,6 +552,9 @@ xfs_reflink_trim_irec_to_next_cow(
+  *
+  * If cancel_real is true this function cancels all COW fork extents for the
+  * inode; if cancel_real is false, real extents are not cleared.
++ *
++ * Caller must have already joined the inode to the current transaction. The
++ * inode will be joined to the transaction returned to the caller.
+  */
+ int
+ xfs_reflink_cancel_cow_blocks(
+@@ -592,7 +595,6 @@ xfs_reflink_cancel_cow_blocks(
+ 			if (error)
+ 				break;
+ 		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+-			xfs_trans_ijoin(*tpp, ip, 0);
+ 			xfs_defer_init(&dfops, &firstfsb);
  
-+# unicode rtl widgets too...
-+setf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
-+setf "mootxt.png" "Harvey"
-+
- ls -la $testdir >> $seqres.full
+ 			/* Free the CoW orphan record. */
+@@ -1570,6 +1572,7 @@ xfs_reflink_clear_inode_flag(
+ 	 * We didn't find any shared blocks so turn off the reflink flag.
+ 	 * First, get rid of any leftover CoW mappings.
+ 	 */
++	xfs_trans_ijoin(*tpp, ip, 0);
+ 	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, true);
+ 	if (error)
+ 		return error;
+@@ -1578,7 +1581,6 @@ xfs_reflink_clear_inode_flag(
+ 	trace_xfs_reflink_unset_inode_flag(ip);
+ 	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+ 	xfs_inode_clear_cowblocks_tag(ip);
+-	xfs_trans_ijoin(*tpp, ip, 0);
+ 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
  
- echo "Test files"
-@@ -135,6 +139,9 @@ testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.tx
- 
- testf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
- 
-+testf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
-+testf "mootxt.png" "Harvey"
-+
- echo "Uniqueness of inodes?"
- stat -c '%i' "${testdir}/"* | sort | uniq -c | while read nr inum; do
- 	if [ "${nr}" -gt 1 ]; then
-diff --git a/tests/generic/454 b/tests/generic/454
-index 24727ab3..c6530290 100755
---- a/tests/generic/454
-+++ b/tests/generic/454
-@@ -110,6 +110,10 @@ setf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.txt
- # Line draw characters, because why not?
- setf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
- 
-+# unicode rtl widgets too...
-+setf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
-+setf "mootxt.png" "Harvey"
-+
- $GETFATTR_PROG --absolute-names -d "${testfile}" >> $seqres.full
- 
- echo "Test files"
-@@ -133,6 +137,9 @@ testf "emoji_\xf0\x9f\xa6\x91\xf0\x9f\xa6\x8b\xf0\x9f\xa6\x89\xf0\x9f\xa6\x92.tx
- 
- testf "\x6c\x69\x6e\x65\x64\x72\x61\x77\x5f\x0a\xe2\x95\x94\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x97\x0a\xe2\x95\x91\x20\x6d\x65\x74\x61\x74\x61\x62\x6c\x65\x20\xe2\x95\x91\x0a\xe2\x95\x9f\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xa2\x0a\xe2\x95\x91\x20\x5f\x5f\x69\x6e\x64\x65\x78\x20\x20\x20\xe2\x95\x91\x0a\xe2\x95\x9a\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x90\xe2\x95\x9d\x0a.txt" "ugly box because we can"
- 
-+testf "moo\xe2\x80\xaegnp.txt" "Well say hello,"
-+testf "mootxt.png" "Harvey"
-+
- echo "Uniqueness of keys?"
- crazy_keys="$($GETFATTR_PROG --absolute-names -d "${testfile}" | egrep -c '(french_|chinese_|greek_|arabic_|urk)')"
- expected_keys=11
+ 	return error;
+-- 
+2.17.0
 
