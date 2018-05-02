@@ -1,228 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47420 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753851AbeEAPjb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:39:31 -0400
-Subject: [PATCH 1/9] generic: test XATTR_REPLACE doesn't take the fs down
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 01 May 2018 08:39:26 -0700
-Message-ID: <152518916637.23023.9591675479884571356.stgit@magnolia>
-In-Reply-To: <152518916007.23023.4793255395982876953.stgit@magnolia>
-References: <152518916007.23023.4793255395982876953.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39303 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751365AbeEBICI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:02:08 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDmi8-0002Wf-3z
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDmi8-0003Ax-2c
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 04/10] xfs: adder caller IP to xfs_defer* tracepoints
+Date: Wed,  2 May 2018 18:01:51 +1000
+Message-Id: <20180502080157.11386-5-david@fromorbit.com>
+In-Reply-To: <20180502080157.11386-1-david@fromorbit.com>
+References: <20180502080157.11386-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, kanda.motohiro@gmail.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Kanda Motohiro reported that expanding a tiny xattr into a large xattr
-fails on XFS because we remove the tiny xattr from a shortform fork and
-then try to re-add it after converting the fork to extents format having
-not removed the ATTR_REPLACE flag.  This fails because the attr is no
-longer present, causing a fs shutdown.
+So it's clear in the trace where they are being called from.
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
-Reported-by: kanda.motohiro@gmail.com
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- .gitignore              |    1 +
- src/Makefile            |    3 +-
- src/attr_replace_test.c |   60 +++++++++++++++++++++++++++++++++++++++++
- tests/generic/706       |   68 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/706.out   |    2 +
- tests/generic/group     |    1 +
- 6 files changed, 134 insertions(+), 1 deletion(-)
- create mode 100644 src/attr_replace_test.c
- create mode 100755 tests/generic/706
- create mode 100644 tests/generic/706.out
+ fs/xfs/libxfs/xfs_defer.c | 12 ++++++------
+ fs/xfs/xfs_trace.h        | 17 +++++++++++------
+ 2 files changed, 17 insertions(+), 12 deletions(-)
 
-
-diff --git a/.gitignore b/.gitignore
-index 192ca35e..af9743f9 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -53,6 +53,7 @@
- /src/append_reader
- /src/append_writer
- /src/attr-list-by-handle-cursor-test
-+/src/attr_replace_test
- /src/bstat
- /src/bulkstat_unlink_test
- /src/bulkstat_unlink_test_modified
-diff --git a/src/Makefile b/src/Makefile
-index 6ca56366..c42d3bb1 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -25,7 +25,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
- 	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
- 	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
--	dio-invalidate-cache stat_test t_encrypted_d_revalidate
-+	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
-+	attr_replace_test
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 087fea02c389..51821af5d653 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -220,7 +220,7 @@ xfs_defer_trans_abort(
+ {
+ 	struct xfs_defer_pending	*dfp;
  
- SUBDIRS = log-writes perf
+-	trace_xfs_defer_trans_abort(tp->t_mountp, dop);
++	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
  
-diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
-new file mode 100644
-index 00000000..c870d165
---- /dev/null
-+++ b/src/attr_replace_test.c
-@@ -0,0 +1,60 @@
-+// setattr.c by kanda.motohiro@gmail.com
-+// xfs extended attribute corruption bug reproducer
-+#include <stdio.h>
-+#include <string.h>
-+#include <fcntl.h>
-+#include <errno.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <sys/types.h>
-+#include <sys/xattr.h>
-+#include <sys/stat.h>
-+
-+#define die() do { perror(""); \
-+fprintf(stderr, "error=%d at line %d\n", errno, __LINE__); \
-+exit(1); } while (0)
-+
-+int main(int argc, char *argv[])
-+{
-+	int ret;
-+	int fd;
-+	char *path;
-+	char *name = "user.world";
-+	char *value;
-+	struct stat sbuf;
-+	size_t size = sizeof(value);
-+
-+	if (argc != 2) die();
-+	path = argv[1];
-+
-+	fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-+	if (fd < 0) die();
-+
-+	/*
-+	 * The value should be 3/4 the size of a fs block to ensure that we
-+	 * get to extents format.
-+	 */
-+	ret = fstat(fd, &sbuf);
-+	if (ret < 0) die();
-+	size = sbuf.st_blksize * 3 / 4;
-+	if (!size) die();
-+	value = malloc(size);
-+	if (!value) die();
-+
-+	// First, create a small xattr.
-+	memset(value, '0', 1);
-+	ret = fsetxattr(fd, name, value, 1, XATTR_CREATE);
-+	if (ret < 0) die();
-+	close(fd);
-+
-+	fd = open(path, O_RDWR);
-+	if (fd < 0) die();
-+
-+	// Then, replace it with bigger one, forcing short form to leaf conversion.
-+	memset(value, '1', size);
-+	ret = fsetxattr(fd, name, value, size, XATTR_REPLACE);
-+	if (ret < 0) die();
-+	close(fd);
-+
-+	return 0;
-+}
-diff --git a/tests/generic/706 b/tests/generic/706
-new file mode 100755
-index 00000000..9f98c3b1
---- /dev/null
-+++ b/tests/generic/706
-@@ -0,0 +1,68 @@
-+#! /bin/bash
-+# FS QA Test No. 706
-+#
-+# Ensure that we can XATTR_REPLACE a tiny attr into a large attr.
-+# Kanda Motohiro <kanda.motohiro@gmail.com> reports that XATTR_REPLACE'ing
-+# a single-byte attr with a 2048-byte attr causes a fs shutdown because we
-+# remove the shortform attr, convert the attr fork to long format, and then
-+# try to re-add the attr having not cleared ATTR_REPLACE.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/attr
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_test_program "attr_replace_test"
-+_require_attrs
-+_require_scratch
-+
-+rm -f $seqres.full
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount >>$seqres.full 2>&1
-+
-+filter_attr_output() {
-+	_filter_scratch | sed -e 's/has a [0-9]* byte value/has a NNNN byte value/g'
-+}
-+
-+./src/attr_replace_test $SCRATCH_MNT/hello
-+$ATTR_PROG -l $SCRATCH_MNT/hello | filter_attr_output
-+
-+status=0
-+exit
-diff --git a/tests/generic/706.out b/tests/generic/706.out
-new file mode 100644
-index 00000000..61c8419a
---- /dev/null
-+++ b/tests/generic/706.out
-@@ -0,0 +1,2 @@
-+QA output created by 706
-+Attribute "world" has a NNNN byte value for SCRATCH_MNT/hello
-diff --git a/tests/generic/group b/tests/generic/group
-index 19be9267..54a85ea0 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -487,3 +487,4 @@
- 482 auto metadata replay
- 483 auto quick log metadata
- 484 auto quick
-+706 auto quick attr
+ 	/* Abort intent items that don't have a done item. */
+ 	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
+@@ -253,7 +253,7 @@ xfs_defer_trans_roll(
+ 	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
+ 		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
+ 
+-	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
++	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop, _RET_IP_);
+ 
+ 	/* Roll the transaction. */
+ 	error = xfs_trans_roll(tp);
+@@ -355,7 +355,7 @@ xfs_defer_finish(
+ 
+ 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 
+-	trace_xfs_defer_finish((*tp)->t_mountp, dop);
++	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
+ 
+ 	/* Until we run out of pending work to finish... */
+ 	while (xfs_defer_has_unfinished_work(dop)) {
+@@ -431,7 +431,7 @@ xfs_defer_finish(
+ 	if (error)
+ 		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
+ 	else
+-		trace_xfs_defer_finish_done((*tp)->t_mountp, dop);
++		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -447,7 +447,7 @@ xfs_defer_cancel(
+ 	struct list_head		*pwi;
+ 	struct list_head		*n;
+ 
+-	trace_xfs_defer_cancel(NULL, dop);
++	trace_xfs_defer_cancel(NULL, dop, _RET_IP_);
+ 
+ 	/*
+ 	 * Free the pending items.  Caller should already have arranged
+@@ -532,5 +532,5 @@ xfs_defer_init(
+ 	*fbp = NULLFSBLOCK;
+ 	INIT_LIST_HEAD(&dop->dop_intake);
+ 	INIT_LIST_HEAD(&dop->dop_pending);
+-	trace_xfs_defer_init(NULL, dop);
++	trace_xfs_defer_init(NULL, dop, _RET_IP_);
+ }
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 8136f2280173..947ab6e32c18 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2243,30 +2243,35 @@ struct xfs_defer_pending;
+ struct xfs_defer_ops;
+ 
+ DECLARE_EVENT_CLASS(xfs_defer_class,
+-	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop),
+-	TP_ARGS(mp, dop),
++	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop,
++		 unsigned long caller_ip),
++	TP_ARGS(mp, dop, caller_ip),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(void *, dop)
+ 		__field(char, committed)
+ 		__field(char, low)
++		__field(unsigned long, caller_ip)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp ? mp->m_super->s_dev : 0;
+ 		__entry->dop = dop;
+ 		__entry->committed = dop->dop_committed;
+ 		__entry->low = dop->dop_low;
++		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d ops %p committed %d low %d",
++	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->dop,
+ 		  __entry->committed,
+-		  __entry->low)
++		  __entry->low,
++		  (char *)__entry->caller_ip)
+ )
+ #define DEFINE_DEFER_EVENT(name) \
+ DEFINE_EVENT(xfs_defer_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop), \
+-	TP_ARGS(mp, dop))
++	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, \
++		 unsigned long caller_ip), \
++	TP_ARGS(mp, dop, caller_ip))
+ 
+ DECLARE_EVENT_CLASS(xfs_defer_error_class,
+ 	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error),
+-- 
+2.17.0
 
