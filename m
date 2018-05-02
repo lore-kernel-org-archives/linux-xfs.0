@@ -1,145 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56988 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752673AbeEALLG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 May 2018 07:11:06 -0400
-Date: Tue, 1 May 2018 07:11:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
-Message-ID: <20180501111103.GA3251@bfoster.bfoster>
-References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
- <1525102372-8430-3-git-send-email-axboe@kernel.dk>
- <20180430213120.GD13766@dastard>
- <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
- <20180430222852.GF13766@dastard>
- <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
- <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
- <20180430232319.GV23861@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180430232319.GV23861@dastard>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:19610 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751127AbeEBGCL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 02:02:11 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/3] iomap: iomap_dio_rw() handles all sync writes
+Date: Wed,  2 May 2018 15:38:06 +1000
+Message-Id: <20180502053807.13846-3-david@fromorbit.com>
+In-Reply-To: <20180502053807.13846-1-david@fromorbit.com>
+References: <20180502053807.13846-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-On Tue, May 01, 2018 at 09:23:20AM +1000, Dave Chinner wrote:
-> On Mon, Apr 30, 2018 at 05:00:14PM -0600, Jens Axboe wrote:
-> > On 4/30/18 4:40 PM, Jens Axboe wrote:
-> > > On 4/30/18 4:28 PM, Dave Chinner wrote:
-> > >> Yes, it does, but so would having the block layer to throttle device
-> > >> discard requests in flight to a queue depth of 1. And then we don't
-> > >> have to change XFS at all.
-> > > 
-> > > I'm perfectly fine with making that change by default, and much easier
-> > > for me since I don't have to patch file systems.
-> > 
-> > Totally untested, but this should do the trick. It ensures we have
-> > a QD of 1 (per caller), which should be sufficient.
-> > 
-> > If people tune down the discard size, then you'll be blocking waiting
-> > for discards on issue.
-> > 
-> > diff --git a/block/blk-lib.c b/block/blk-lib.c
-> > index a676084d4740..0bf9befcc863 100644
-> > --- a/block/blk-lib.c
-> > +++ b/block/blk-lib.c
-> > @@ -11,16 +11,19 @@
-> >  #include "blk.h"
-> >  
-> >  static struct bio *next_bio(struct bio *bio, unsigned int nr_pages,
-> > -		gfp_t gfp)
-> > +			    gfp_t gfp)
-> >  {
-> > -	struct bio *new = bio_alloc(gfp, nr_pages);
-> > -
-> > +	/*
-> > +	 * Devices suck at discard, so if we have to break up the bio
-> > +	 * size due to the max discard size setting, wait for the
-> > +	 * previous one to finish first.
-> > +	 */
-> >  	if (bio) {
-> > -		bio_chain(bio, new);
-> > -		submit_bio(bio);
-> > +		submit_bio_wait(bio);
-> > +		bio_put(bio);
-> >  	}
-> 
-> This only addresses the case where __blkdev_issue_discard() breaks
-> up a single large discard, right? It seems like a brute force
-> solution, too, because it will do so even when the underlying device
-> is idle and there's no need to throttle.
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-I think the above serializes the discards regardless of whether
-__blkdev_issue_discard() splits up a single range itself or the caller
-passes discontiguous ranges as part of a single chain.
+Currently iomap_dio_rw() only handles (data)sync write completions
+for AIO. This means we can't optimised non-AIO IO to minimise device
+flushes as we can't tell the caller whether a flush is required or
+not.
 
-That said, I agree that it seems brute force. ISTM that this wouldn't
-address separate callers causing the same problem (i.e., if the discard
-burst doesn't happen to be part of a single chain)...? Alternatively,
-what if the discard chain is large but covers a very small range (e.g.,
-consider a chain of single block discards, for example)? Given your
-previous comments around the size of the range being the determining
-factor, would we really want to serialize in that case?
+To solve this problem and enable further optimisations, make
+iomap_dio_rw responsible for data sync behaviour for all IO, not
+just AIO.
 
-BTW, what happens with submit_bio_wait() if the block device is plugged?
-Note that xlog_discard_busy_extents() currently plugs around the discard
-bio chain construction.
+In doing so, the sync operation is now accounted as part of the DIO
+IO by inode_dio_end(), hence post-IO data stability updates will no
+long race against operations that serialise via inode_dio_wait()
+such as truncate or hole punch.
 
-> Shouldn't the throttling logic at least look at device congestion?
-> i.e. if the device is not backlogged, then we should be able to
-> issue the discard without problems. 
-> 
-> I ask this because this only addresses throttling the "discard large
-> extent" case when the discard limit is set low. i.e. your exact
-> problem case. We know that XFS can issue large numbers of
-> discontiguous async discards in a single batch - this patch does not
-> address that case and so it will still cause starvation problems.
-> 
-> If we look at device congestion in determining how to throttle/back
-> off during discard issuing, then it doesn't matter what
-> max_discard_sectors is set to - it will throttle in all situations
-> that cause device overloads and starvations....
-> 
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c        | 21 +++++++++++++++------
+ fs/xfs/xfs_file.c |  5 -----
+ 2 files changed, 15 insertions(+), 11 deletions(-)
 
-Indeed, this all seems more robust to me. TBH, even something more
-simple like allowing one discard chain at a time where the chain itself
-is size limited (and so puts the onus on the caller a bit to construct
-larger chains to trade off for more simple block layer throttling logic)
-seems reasonable, but I'm not sure if/how feasible that is (or if it
-really is any more simple). Just a thought.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index afd163586aa0..b044d8ee2efd 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+  */
++#define IOMAP_DIO_NEED_SYNC	(1 << 29)
+ #define IOMAP_DIO_WRITE		(1 << 30)
+ #define IOMAP_DIO_DIRTY		(1 << 31)
+ 
+@@ -759,6 +760,13 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 			dio_warn_stale_pagecache(iocb->ki_filp);
+ 	}
+ 
++	/*
++	 * If this is a DSYNC write, make sure we push it to stable storage now
++	 * that we've written data.
++	 */
++	if (ret > 0 && (dio->flags & IOMAP_DIO_NEED_SYNC))
++		ret = generic_write_sync(iocb, ret);
++
+ 	inode_dio_end(file_inode(iocb->ki_filp));
+ 	kfree(dio);
+ 
+@@ -769,13 +777,8 @@ static void iomap_dio_complete_work(struct work_struct *work)
+ {
+ 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
+ 	struct kiocb *iocb = dio->iocb;
+-	bool is_write = (dio->flags & IOMAP_DIO_WRITE);
+-	ssize_t ret;
+ 
+-	ret = iomap_dio_complete(dio);
+-	if (is_write && ret > 0)
+-		ret = generic_write_sync(iocb, ret);
+-	iocb->ki_complete(iocb, ret, 0);
++	iocb->ki_complete(iocb, iomap_dio_complete(dio), 0);
+ }
+ 
+ /*
+@@ -961,6 +964,10 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	return copied;
+ }
+ 
++/*
++ * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
++ * is being issued as AIO or not.
++ */
+ ssize_t
+ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
+@@ -1006,6 +1013,8 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 			dio->flags |= IOMAP_DIO_DIRTY;
+ 	} else {
+ 		dio->flags |= IOMAP_DIO_WRITE;
++		if (iocb->ki_flags & IOCB_DSYNC)
++			dio->flags |= IOMAP_DIO_NEED_SYNC;
+ 		flags |= IOMAP_WRITE;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 4cbd15d84bb8..64112a57b004 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -570,11 +570,6 @@ xfs_file_dio_aio_write(
+ 	 * complete fully or fail.
+ 	 */
+ 	ASSERT(ret < 0 || ret == count);
+-
+-	if (ret > 0) {
+-		/* Handle various SYNC-type writes */
+-		ret = generic_write_sync(iocb, ret);
+-	}
+ 	return ret;
+ }
+ 
+-- 
+2.17.0
 
-Note that however the implementation, I think that channeling the
-backpressure in the form of sync submission has the potential to
-reintroduce the filesystem latencies that have been brought up a couple
-times in this thread. Unless I'm missing something, I still think there's
-value in trying to separate discard submission from log I/O completion
-in XFS.
-
-Dave, do you have any fundamental thoughts on that? For example, I'm
-wondering if there's any danger in creating a sort of intermediary busy
-state between log I/O completion and some time later when a background
-wq job or something discards the pending busy extents and removes them
-from the pag tree. That actually might open the door for more
-interesting optimizations like eliminating the need for certain discards
-at all if the assocated blocks are reallocated (after the associated log
-I/O completed but before the background discard happened to occur).
-Actually, I'm told that explicit reuse of such blocks might be a
-significant win for things like VDO (dm dedup), where discards are
-apparently extra double ungood. Thoughts?
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
