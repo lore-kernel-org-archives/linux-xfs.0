@@ -1,285 +1,257 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:34733 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755182AbeEAPXR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:23:17 -0400
-Received: by mail-pf0-f180.google.com with SMTP id a14so9336744pfi.1
-        for <linux-xfs@vger.kernel.org>; Tue, 01 May 2018 08:23:17 -0700 (PDT)
-Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
-References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
- <1525102372-8430-3-git-send-email-axboe@kernel.dk>
- <20180430213120.GD13766@dastard>
- <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
- <20180430222852.GF13766@dastard>
- <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
- <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
- <20180430232319.GV23861@dastard>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <bacc9dbb-c38b-9258-cd95-7582c27a97f7@kernel.dk>
-Date: Tue, 1 May 2018 09:23:13 -0600
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:37675 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751116AbeEBHda (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 03:33:30 -0400
+Date: Wed, 2 May 2018 15:33:25 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 1/9] generic: test XATTR_REPLACE doesn't take the fs down
+Message-ID: <20180502073325.GB29084@desktop>
+References: <152518916007.23023.4793255395982876953.stgit@magnolia>
+ <152518916637.23023.9591675479884571356.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180430232319.GV23861@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152518916637.23023.9591675479884571356.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org, kanda.motohiro@gmail.com
 
-On 4/30/18 5:23 PM, Dave Chinner wrote:
-> On Mon, Apr 30, 2018 at 05:00:14PM -0600, Jens Axboe wrote:
->> On 4/30/18 4:40 PM, Jens Axboe wrote:
->>> On 4/30/18 4:28 PM, Dave Chinner wrote:
->>>> Yes, it does, but so would having the block layer to throttle device
->>>> discard requests in flight to a queue depth of 1. And then we don't
->>>> have to change XFS at all.
->>>
->>> I'm perfectly fine with making that change by default, and much easier
->>> for me since I don't have to patch file systems.
->>
->> Totally untested, but this should do the trick. It ensures we have
->> a QD of 1 (per caller), which should be sufficient.
->>
->> If people tune down the discard size, then you'll be blocking waiting
->> for discards on issue.
->>
->> diff --git a/block/blk-lib.c b/block/blk-lib.c
->> index a676084d4740..0bf9befcc863 100644
->> --- a/block/blk-lib.c
->> +++ b/block/blk-lib.c
->> @@ -11,16 +11,19 @@
->>  #include "blk.h"
->>  
->>  static struct bio *next_bio(struct bio *bio, unsigned int nr_pages,
->> -		gfp_t gfp)
->> +			    gfp_t gfp)
->>  {
->> -	struct bio *new = bio_alloc(gfp, nr_pages);
->> -
->> +	/*
->> +	 * Devices suck at discard, so if we have to break up the bio
->> +	 * size due to the max discard size setting, wait for the
->> +	 * previous one to finish first.
->> +	 */
->>  	if (bio) {
->> -		bio_chain(bio, new);
->> -		submit_bio(bio);
->> +		submit_bio_wait(bio);
->> +		bio_put(bio);
->>  	}
+On Tue, May 01, 2018 at 08:39:26AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> This only addresses the case where __blkdev_issue_discard() breaks
-> up a single large discard, right? It seems like a brute force
-> solution, too, because it will do so even when the underlying device
-> is idle and there's no need to throttle.
-
-Right, the above would only break up a single discard, that's the
-per-caller part.
-
-> Shouldn't the throttling logic at least look at device congestion?
-> i.e. if the device is not backlogged, then we should be able to
-> issue the discard without problems. 
+> Kanda Motohiro reported that expanding a tiny xattr into a large xattr
+> fails on XFS because we remove the tiny xattr from a shortform fork and
+> then try to re-add it after converting the fork to extents format having
+> not removed the ATTR_REPLACE flag.  This fails because the attr is no
+> longer present, causing a fs shutdown.
 > 
-> I ask this because this only addresses throttling the "discard large
-> extent" case when the discard limit is set low. i.e. your exact
-> problem case. We know that XFS can issue large numbers of
-> discontiguous async discards in a single batch - this patch does not
-> address that case and so it will still cause starvation problems.
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199119
+> Reported-by: kanda.motohiro@gmail.com
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Thanks for the revision! Because I found more issues in v1 than I
+expected, so I drop the patch from last fstests update. I should have
+made that clear..
+
+> ---
+>  .gitignore              |    1 +
+>  src/Makefile            |    3 +-
+>  src/attr_replace_test.c |   60 +++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/706       |   68 +++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/706.out   |    2 +
+>  tests/generic/group     |    1 +
+>  6 files changed, 134 insertions(+), 1 deletion(-)
+>  create mode 100644 src/attr_replace_test.c
+>  create mode 100755 tests/generic/706
+>  create mode 100644 tests/generic/706.out
 > 
-> If we look at device congestion in determining how to throttle/back
-> off during discard issuing, then it doesn't matter what
-> max_discard_sectors is set to - it will throttle in all situations
-> that cause device overloads and starvations....
+> 
+> diff --git a/.gitignore b/.gitignore
+> index 192ca35e..af9743f9 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -53,6 +53,7 @@
+>  /src/append_reader
+>  /src/append_writer
+>  /src/attr-list-by-handle-cursor-test
+> +/src/attr_replace_test
 
-How about the below? It integrates it with the writeback throttling,
-treating it like background writes. Totally untested. The benefit
-of this is that it ties into that whole framework, and it's
-per-device managed.
+Seems this should be put before attr-list-by-handle-cursor-test,
+according to the result of sort.
 
-The blk-lib change is a separate patch, ensuring we break up discards
-according to the user size. Will get broken up.
+>  /src/bstat
+>  /src/bulkstat_unlink_test
+>  /src/bulkstat_unlink_test_modified
+> diff --git a/src/Makefile b/src/Makefile
+> index 6ca56366..c42d3bb1 100644
+> --- a/src/Makefile
+> +++ b/src/Makefile
+> @@ -25,7 +25,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+>  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester nsexec cloner \
+>  	renameat2 t_getcwd e4compact test-nextquota punch-alternating \
+>  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+> -	dio-invalidate-cache stat_test t_encrypted_d_revalidate
+> +	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+> +	attr_replace_test
+>  
+>  SUBDIRS = log-writes perf
+>  
+> diff --git a/src/attr_replace_test.c b/src/attr_replace_test.c
+> new file mode 100644
+> index 00000000..c870d165
+> --- /dev/null
+> +++ b/src/attr_replace_test.c
+> @@ -0,0 +1,60 @@
+> +// setattr.c by kanda.motohiro@gmail.com
+> +// xfs extended attribute corruption bug reproducer
+> +#include <stdio.h>
+> +#include <string.h>
+> +#include <fcntl.h>
+> +#include <errno.h>
+> +#include <stdlib.h>
+> +#include <unistd.h>
+> +#include <sys/types.h>
+> +#include <sys/xattr.h>
+> +#include <sys/stat.h>
+> +
+> +#define die() do { perror(""); \
+> +fprintf(stderr, "error=%d at line %d\n", errno, __LINE__); \
+> +exit(1); } while (0)
+> +
+> +int main(int argc, char *argv[])
+> +{
+> +	int ret;
+> +	int fd;
+> +	char *path;
+> +	char *name = "user.world";
+> +	char *value;
+> +	struct stat sbuf;
+> +	size_t size = sizeof(value);
+> +
+> +	if (argc != 2) die();
 
+die() doesn't seem like the right thing to do (and some other places),
+it'll print something like:
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index a676084d4740..7417d617091b 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -62,10 +62,11 @@ int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 		unsigned int req_sects;
- 		sector_t end_sect, tmp;
- 
--		/* Make sure bi_size doesn't overflow */
--		req_sects = min_t(sector_t, nr_sects, UINT_MAX >> 9);
-+		/* Issue in chunks of the user defined max discard setting */
-+		req_sects = min_t(sector_t, nr_sects,
-+					q->limits.max_discard_sectors);
- 
--		/**
-+		/*
- 		 * If splitting a request, and the next starting sector would be
- 		 * misaligned, stop the discard at the previous aligned sector.
- 		 */
-diff --git a/block/blk-stat.h b/block/blk-stat.h
-index 2dd36347252a..c22049a8125e 100644
---- a/block/blk-stat.h
-+++ b/block/blk-stat.h
-@@ -10,11 +10,11 @@
- 
- /*
-  * from upper:
-- * 3 bits: reserved for other usage
-+ * 4 bits: reserved for other usage
-  * 12 bits: size
-- * 49 bits: time
-+ * 48 bits: time
-  */
--#define BLK_STAT_RES_BITS	3
-+#define BLK_STAT_RES_BITS	4
- #define BLK_STAT_SIZE_BITS	12
- #define BLK_STAT_RES_SHIFT	(64 - BLK_STAT_RES_BITS)
- #define BLK_STAT_SIZE_SHIFT	(BLK_STAT_RES_SHIFT - BLK_STAT_SIZE_BITS)
-diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-index f92fc84b5e2c..ba0c2825d382 100644
---- a/block/blk-wbt.c
-+++ b/block/blk-wbt.c
-@@ -101,9 +101,15 @@ static bool wb_recent_wait(struct rq_wb *rwb)
- 	return time_before(jiffies, wb->dirty_sleep + HZ);
- }
- 
--static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_kswapd)
-+static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_trim,
-+					  bool is_kswapd)
- {
--	return &rwb->rq_wait[is_kswapd];
-+	if (is_trim)
-+		return &rwb->rq_wait[WBT_REQ_TRIM];
-+	else if (is_kswapd)
-+		return &rwb->rq_wait[WBT_REQ_KSWAPD];
-+	else
-+		return &rwb->rq_wait[WBT_REQ_BG];
- }
- 
- static void rwb_wake_all(struct rq_wb *rwb)
-@@ -120,13 +126,14 @@ static void rwb_wake_all(struct rq_wb *rwb)
- 
- void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
- {
-+	const bool is_trim = wb_acct & WBT_TRIM;
- 	struct rq_wait *rqw;
- 	int inflight, limit;
- 
- 	if (!(wb_acct & WBT_TRACKED))
- 		return;
- 
--	rqw = get_rq_wait(rwb, wb_acct & WBT_KSWAPD);
-+	rqw = get_rq_wait(rwb, is_trim, wb_acct & WBT_KSWAPD);
- 	inflight = atomic_dec_return(&rqw->inflight);
- 
- 	/*
-@@ -139,10 +146,13 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
- 	}
- 
- 	/*
--	 * If the device does write back caching, drop further down
--	 * before we wake people up.
-+	 * For discards, our limit is always the background. For writes, if
-+	 * the device does write back caching, drop further down before we
-+	 * wake people up.
- 	 */
--	if (rwb->wc && !wb_recent_wait(rwb))
-+	if (is_trim)
-+		limit = rwb->wb_background;
-+	else if (rwb->wc && !wb_recent_wait(rwb))
- 		limit = 0;
- 	else
- 		limit = rwb->wb_normal;
-@@ -479,6 +489,9 @@ static inline unsigned int get_limit(struct rq_wb *rwb, unsigned long rw)
- {
- 	unsigned int limit;
- 
-+	if ((rw & REQ_OP_MASK) == REQ_OP_DISCARD)
-+		return rwb->wb_background;
-+
- 	/*
- 	 * At this point we know it's a buffered write. If this is
- 	 * kswapd trying to free memory, or REQ_SYNC is set, then
-@@ -533,7 +546,8 @@ static void __wbt_wait(struct rq_wb *rwb, unsigned long rw, spinlock_t *lock)
- 	__releases(lock)
- 	__acquires(lock)
- {
--	struct rq_wait *rqw = get_rq_wait(rwb, current_is_kswapd());
-+	const bool is_trim = (rw & REQ_OP_MASK) == REQ_OP_DISCARD;
-+	struct rq_wait *rqw = get_rq_wait(rwb, is_trim, current_is_kswapd());
- 	DEFINE_WAIT(wait);
- 
- 	if (may_queue(rwb, rqw, &wait, rw))
-@@ -561,19 +575,19 @@ static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
- {
- 	const int op = bio_op(bio);
- 
--	/*
--	 * If not a WRITE, do nothing
--	 */
--	if (op != REQ_OP_WRITE)
--		return false;
-+	if (op == REQ_OP_WRITE) {
-+		/*
-+		 * Don't throttle WRITE_ODIRECT
-+		 */
-+		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
-+		    (REQ_SYNC | REQ_IDLE))
-+			return false;
- 
--	/*
--	 * Don't throttle WRITE_ODIRECT
--	 */
--	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
--		return false;
-+		return true;
-+	} else if (op == REQ_OP_DISCARD)
-+		return true;
- 
--	return true;
-+	return false;
- }
- 
- /*
-@@ -605,6 +619,8 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
- 
- 	if (current_is_kswapd())
- 		ret |= WBT_KSWAPD;
-+	if (bio_op(bio) == REQ_OP_DISCARD)
-+		ret |= WBT_TRIM;
- 
- 	return ret | WBT_TRACKED;
- }
-diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-index a232c98fbf4d..aec5bc82d580 100644
---- a/block/blk-wbt.h
-+++ b/block/blk-wbt.h
-@@ -14,12 +14,17 @@ enum wbt_flags {
- 	WBT_TRACKED		= 1,	/* write, tracked for throttling */
- 	WBT_READ		= 2,	/* read */
- 	WBT_KSWAPD		= 4,	/* write, from kswapd */
-+	WBT_TRIM		= 8,
- 
--	WBT_NR_BITS		= 3,	/* number of bits */
-+	WBT_NR_BITS		= 4,	/* number of bits */
- };
- 
- enum {
--	WBT_NUM_RWQ		= 2,
-+	WBT_REQ_BG = 0,
-+	WBT_REQ_KSWAPD,
-+	WBT_REQ_TRIM,
-+
-+	WBT_NUM_RWQ,
- };
- 
- /*
+Success
+error=0 at line NN
 
--- 
-Jens Axboe
+I'd define a new "fail()" macro and use it where appropriate.
 
++#define fail(...) do { \
++fprintf(stderr, __VA_ARGS__); exit (1); \
++} while (0)
+
+I can fix the minor issues on commit, for real this time :)
+
+Thanks,
+Eryu
+
+> +	path = argv[1];
+> +
+> +	fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+> +	if (fd < 0) die();
+> +
+> +	/*
+> +	 * The value should be 3/4 the size of a fs block to ensure that we
+> +	 * get to extents format.
+> +	 */
+> +	ret = fstat(fd, &sbuf);
+> +	if (ret < 0) die();
+> +	size = sbuf.st_blksize * 3 / 4;
+> +	if (!size) die();
+> +	value = malloc(size);
+> +	if (!value) die();
+> +
+> +	// First, create a small xattr.
+> +	memset(value, '0', 1);
+> +	ret = fsetxattr(fd, name, value, 1, XATTR_CREATE);
+> +	if (ret < 0) die();
+> +	close(fd);
+> +
+> +	fd = open(path, O_RDWR);
+> +	if (fd < 0) die();
+> +
+> +	// Then, replace it with bigger one, forcing short form to leaf conversion.
+> +	memset(value, '1', size);
+> +	ret = fsetxattr(fd, name, value, size, XATTR_REPLACE);
+> +	if (ret < 0) die();
+> +	close(fd);
+> +
+> +	return 0;
+> +}
+> diff --git a/tests/generic/706 b/tests/generic/706
+> new file mode 100755
+> index 00000000..9f98c3b1
+> --- /dev/null
+> +++ b/tests/generic/706
+> @@ -0,0 +1,68 @@
+> +#! /bin/bash
+> +# FS QA Test No. 706
+> +#
+> +# Ensure that we can XATTR_REPLACE a tiny attr into a large attr.
+> +# Kanda Motohiro <kanda.motohiro@gmail.com> reports that XATTR_REPLACE'ing
+> +# a single-byte attr with a 2048-byte attr causes a fs shutdown because we
+> +# remove the shortform attr, convert the attr fork to long format, and then
+> +# try to re-add the attr having not cleared ATTR_REPLACE.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $testfile
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/attr
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_test_program "attr_replace_test"
+> +_require_attrs
+> +_require_scratch
+> +
+> +rm -f $seqres.full
+> +_scratch_mkfs >>$seqres.full 2>&1
+> +_scratch_mount >>$seqres.full 2>&1
+> +
+> +filter_attr_output() {
+> +	_filter_scratch | sed -e 's/has a [0-9]* byte value/has a NNNN byte value/g'
+> +}
+> +
+> +./src/attr_replace_test $SCRATCH_MNT/hello
+> +$ATTR_PROG -l $SCRATCH_MNT/hello | filter_attr_output
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/706.out b/tests/generic/706.out
+> new file mode 100644
+> index 00000000..61c8419a
+> --- /dev/null
+> +++ b/tests/generic/706.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 706
+> +Attribute "world" has a NNNN byte value for SCRATCH_MNT/hello
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 19be9267..54a85ea0 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -487,3 +487,4 @@
+>  482 auto metadata replay
+>  483 auto quick log metadata
+>  484 auto quick
+> +706 auto quick attr
+> 
