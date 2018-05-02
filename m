@@ -1,76 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:14769 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932475AbeEIAuO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 20:50:14 -0400
-Date: Wed, 9 May 2018 10:50:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Message-ID: <20180509005011.GP23861@dastard>
-References: <f403043cbe8414177d0568e81405@google.com>
- <20180403043854.GL1150@dastard>
- <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
- <CACT4Y+aQZ8KbU1C-sJ2PUKn_788SEKQpYGjoLaRDJrP9vXjs-A@mail.gmail.com>
- <20180501225159.GY23861@dastard>
- <CACT4Y+YZYHG=MyujDdTLxO=cn7Yz34vv6WKVjWr3Jvo1YTk0HA@mail.gmail.com>
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:46350 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751652AbeEBJyq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 05:54:46 -0400
+Received: by mail-wr0-f180.google.com with SMTP id o2-v6so10413639wrj.13
+        for <linux-xfs@vger.kernel.org>; Wed, 02 May 2018 02:54:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+YZYHG=MyujDdTLxO=cn7Yz34vv6WKVjWr3Jvo1YTk0HA@mail.gmail.com>
+In-Reply-To: <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
+References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@dastard>
+ <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
+ <20180405213844.GE23861@dastard> <20180406161053.GF7500@magnolia>
+ <CACT4Y+aaEOffkFA-B-hMzwzSiQwVpkPrc2udC087a55OTnkS4g@mail.gmail.com>
+ <95c1400b-94f2-1af4-2d5d-c61c274c28ff@sandeen.net> <CACT4Y+aiwgRg5pk+N7bq9HYpgumTFyqG6-y3EZ8pWkq9-uB1aA@mail.gmail.com>
+ <9f8d657c-7f42-7bd9-4477-6c3addf16dee@sandeen.net> <CACT4Y+bUx4jw83Ux7w9URL9bCy1ERLaVGTTwvA9Fe_UtLFeqCw@mail.gmail.com>
+ <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Wed, 2 May 2018 11:54:24 +0200
+Message-ID: <CACj3i70Dw5=B-k5hKEXpHg5DOhG2Hi-Xb4ZVpZWL+EYdX=jCeQ@mail.gmail.com>
+Subject: Re: WARNING: bad unlock balance in xfs_iunlock
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs <syzkaller-bugs@googlegroups.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dmitry Vyukov <dvyukov@google.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Theodore Ts'o <tytso@mit.edu>, syzkaller <syzkaller@googlegroups.com>
 
-On Tue, May 08, 2018 at 09:56:01AM +0200, Dmitry Vyukov wrote:
-> On Wed, May 2, 2018 at 12:51 AM, Dave Chinner <david@fromorbit.com> wrote:
-> >> >>> Hello,
-> >> >>>
-> >> >>> syzbot hit the following crash on upstream commit
-> >> >>> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
-> >> >>> Merge branch 'ras-core-for-linus' of
-> >> >>> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-> >> >>> syzbot dashboard link:
-> >> >>> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
-> >> >>>
-> >> >>> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
-> >> >>> syzkaller reproducer:
-> >> >>> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
-> >> >>
-> >> >> What a mess. A hand built, hopelessly broken filesystem image made
-> >> >> up of hex dumps, written into a mmap()d region of memory, then
-> >> >> copied into a tmpfs file and mounted with the loop device.
-> >> >>
-> >> >> Engineers that can debug broken filesystems don't grow on trees.  If
-> >> >> we are to have any hope of understanding what the hell this test is
-> >> >> doing, the bot needs to supply us with a copy of the built
-> >> >> filesystem image the test uses. We need to be able to point forensic
-> >> >> tools at the image to decode all the structures into human readable
-> >> >> format - if we are forced to do that by hand or jump through hoops
-> >> >> to create our own filesystem image than I'm certainly not going to
-> >> >> waste time looking at these reports...
-> >> >
-> >> > Hi Dave,
-> >> >
-> >> > Here is the image:
-> >> > https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
-> >>
-> >> Have anybody looked at the bug and the image yet?
-> >
-> > Yes, I did that a couple of weeks ago. Couldn't reproduce on a TOT
-> > kernel here.
-> 
-> Do you think it is fixed now? What fixed it? The bug was there.
+On Mon, Apr 30, 2018 at 5:14 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 4/30/18 9:02 AM, Dmitry Vyukov wrote:
+>> Suggestions are welcome. Currently it says "syzbot hit the following
+>> crash on upstream commit SHA1", which was supposed to mean just the
+>> state of the source tree when the crash happened. But I am not a
+>> native speaker, so perhaps I am saying not what I intend to say.
+>>
+>> There are also suggestions on report format improvement from +Ted
+>> currently in works:
+>> https://github.com/google/syzkaller/issues/565#issuecomment-380792942
+>> Not sure if they make this distinction 100% clear, though.
+>
+> Maybe I was the only one who misunderstood, but something like
+>
 
-We merge fixes for fuzzing issues all the time. IIRC a big batch of
-them from the xfstests fuzzing infrastructure went into 4.17-rc1.
+snip
 
-If you want a commit, then do a bisect....
+You are not the only one, I (mis)understand it the same as you.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Jan
