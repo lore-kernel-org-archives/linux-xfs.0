@@ -1,140 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39303 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751365AbeEBICI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 04:02:08 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDmi8-0002Wf-3z
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDmi8-0003Ax-2c
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 18:02:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/10] xfs: adder caller IP to xfs_defer* tracepoints
-Date: Wed,  2 May 2018 18:01:51 +1000
-Message-Id: <20180502080157.11386-5-david@fromorbit.com>
-In-Reply-To: <20180502080157.11386-1-david@fromorbit.com>
-References: <20180502080157.11386-1-david@fromorbit.com>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:45292 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750800AbeEBHvt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 03:51:49 -0400
+Date: Wed, 2 May 2018 15:51:45 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 2/9] xfs/439: repair corrupted filesystem afterwards
+Message-ID: <20180502075145.GC29084@desktop>
+References: <152518916007.23023.4793255395982876953.stgit@magnolia>
+ <152518917279.23023.13530280927017959292.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152518917279.23023.13530280927017959292.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, May 01, 2018 at 08:39:32AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> After we mess with logsunit and test that we can't mount the fs, repair
+> the filesystem to make sure that repair can deal with it.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/xfs/439 |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> 
+> diff --git a/tests/xfs/439 b/tests/xfs/439
+> index 215c4b90..9d5f6892 100755
+> --- a/tests/xfs/439
+> +++ b/tests/xfs/439
+> @@ -79,6 +79,7 @@ fi
+>  _check_dmesg _filter_assert_dmesg
+>  
+>  echo "Silence is golden"
+> +_scratch_xfs_repair >> $seqres.full 2>&1
 
-So it's clear in the trace where they are being called from.
+But how should we check if repair does fix the corruption? I tried
+adding a "scratch_mount" after the repair and expected a success mount.
+But that mount also failed, and repair didn't report anything wrong in
+$seqres.full. Looks like the corruption was not detected nor repaired.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_defer.c | 12 ++++++------
- fs/xfs/xfs_trace.h        | 17 +++++++++++------
- 2 files changed, 17 insertions(+), 12 deletions(-)
+[ 8278.679149] XFS (dm-1): Mounting V5 Filesystem
+[ 8278.679743] XFS (dm-1): log stripe unit 4095 bytes must be a multiple of block size
+[ 8278.680583] XFS (dm-1): AAIEEE! Log failed size checks. Abort!
+[ 8278.681817] XFS (dm-1): log mount failed
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 087fea02c389..51821af5d653 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -220,7 +220,7 @@ xfs_defer_trans_abort(
- {
- 	struct xfs_defer_pending	*dfp;
- 
--	trace_xfs_defer_trans_abort(tp->t_mountp, dop);
-+	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
- 
- 	/* Abort intent items that don't have a done item. */
- 	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
-@@ -253,7 +253,7 @@ xfs_defer_trans_roll(
- 	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
- 		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
- 
--	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
-+	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop, _RET_IP_);
- 
- 	/* Roll the transaction. */
- 	error = xfs_trans_roll(tp);
-@@ -355,7 +355,7 @@ xfs_defer_finish(
- 
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 
--	trace_xfs_defer_finish((*tp)->t_mountp, dop);
-+	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
- 
- 	/* Until we run out of pending work to finish... */
- 	while (xfs_defer_has_unfinished_work(dop)) {
-@@ -431,7 +431,7 @@ xfs_defer_finish(
- 	if (error)
- 		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
- 	else
--		trace_xfs_defer_finish_done((*tp)->t_mountp, dop);
-+		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
- 	return error;
- }
- 
-@@ -447,7 +447,7 @@ xfs_defer_cancel(
- 	struct list_head		*pwi;
- 	struct list_head		*n;
- 
--	trace_xfs_defer_cancel(NULL, dop);
-+	trace_xfs_defer_cancel(NULL, dop, _RET_IP_);
- 
- 	/*
- 	 * Free the pending items.  Caller should already have arranged
-@@ -532,5 +532,5 @@ xfs_defer_init(
- 	*fbp = NULLFSBLOCK;
- 	INIT_LIST_HEAD(&dop->dop_intake);
- 	INIT_LIST_HEAD(&dop->dop_pending);
--	trace_xfs_defer_init(NULL, dop);
-+	trace_xfs_defer_init(NULL, dop, _RET_IP_);
- }
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 8136f2280173..947ab6e32c18 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2243,30 +2243,35 @@ struct xfs_defer_pending;
- struct xfs_defer_ops;
- 
- DECLARE_EVENT_CLASS(xfs_defer_class,
--	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop),
--	TP_ARGS(mp, dop),
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop,
-+		 unsigned long caller_ip),
-+	TP_ARGS(mp, dop, caller_ip),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(void *, dop)
- 		__field(char, committed)
- 		__field(char, low)
-+		__field(unsigned long, caller_ip)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp ? mp->m_super->s_dev : 0;
- 		__entry->dop = dop;
- 		__entry->committed = dop->dop_committed;
- 		__entry->low = dop->dop_low;
-+		__entry->caller_ip = caller_ip;
- 	),
--	TP_printk("dev %d:%d ops %p committed %d low %d",
-+	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->dop,
- 		  __entry->committed,
--		  __entry->low)
-+		  __entry->low,
-+		  (char *)__entry->caller_ip)
- )
- #define DEFINE_DEFER_EVENT(name) \
- DEFINE_EVENT(xfs_defer_class, name, \
--	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop), \
--	TP_ARGS(mp, dop))
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, \
-+		 unsigned long caller_ip), \
-+	TP_ARGS(mp, dop, caller_ip))
- 
- DECLARE_EVENT_CLASS(xfs_defer_error_class,
- 	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error),
--- 
-2.17.0
+Note that I was using latest for-next branch of xfsprogs.
 
+Thanks,
+Eryu
+
+>  
+>  # success, all done
+>  status=0
+> 
