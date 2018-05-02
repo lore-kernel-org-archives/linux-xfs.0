@@ -1,76 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47824 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751277AbeECRyb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 13:54:31 -0400
-Date: Thu, 3 May 2018 10:54:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 0.2/13] xfs: don't spray logs when dquot flush/purge fail
-Message-ID: <20180503175409.GG4127@magnolia>
-References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:11272 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751069AbeEBCfA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 22:35:00 -0400
+Date: Wed, 2 May 2018 12:34:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] iomap: Use FUA for pure data O_DSYNC DIO writes
+Message-ID: <20180502023450.GZ23861@dastard>
+References: <20180418040828.18165-1-david@fromorbit.com>
+ <20180418040828.18165-5-david@fromorbit.com>
+ <20180421125405.hyx3bbkohdgvducq@quack2.suse.cz>
+ <20180424173444.GA25233@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152506698177.21553.13500862866416804148.stgit@magnolia>
+In-Reply-To: <20180424173444.GA25233@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Apr 24, 2018 at 10:34:44AM -0700, Christoph Hellwig wrote:
+> On Sat, Apr 21, 2018 at 02:54:05PM +0200, Jan Kara wrote:
+> > > -		if (iocb->ki_flags & IOCB_DSYNC)
+> > > +		if (iocb->ki_flags & IOCB_DSYNC) {
+> > >  			dio->flags |= IOMAP_DIO_NEED_SYNC;
+> > > +			/*
+> > > +			 * We optimistically try using FUA for this IO.  Any
+> > > +			 * non-FUA write that occurs will clear this flag, hence
+> > > +			 * we know before completion whether a cache flush is
+> > > +			 * necessary.
+> > > +			 */
+> > > +			dio->flags |= IOMAP_DIO_WRITE_FUA;
+> > > +		}
+> > 
+> > So I don't think this is quite correct. IOCB_DSYNC gets set also for O_SYNC
+> > writes (in that case we also set IOCB_SYNC). And for those we cannot use
+> > the FUA optimization AFAICT (definitely IOMAP_F_DIRTY isn't a safe
+> > indicator of a need of full fsync for O_SYNC). Other than that the patch
+> > looks good to me.
+> 
+> Oops, good catch. I think the above if should just be
+> 
+> 		if (iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC) == IOCB_DSYNC)) {
+> 
+> and we are fine. 
 
-When dquot flush or purge fail there's no need to spam the logs, we've
-already logged the IO error or fs shutdown that caused the flush
-failures.
+Ah, not exactly. IOMAP_DIO_NEED_SYNC needs to be set for either
+DYSNC or SYNC writes, while IOMAP_DIO_WRITE_FUA should only be set
+for DSYNC.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_dquot_item.c |    5 +----
- fs/xfs/xfs_qm.c         |   10 ++--------
- 2 files changed, 3 insertions(+), 12 deletions(-)
+I'll fix this up appropriately.
 
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index 4b331e354da7..d632ba403527 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -209,10 +209,7 @@ xfs_qm_dquot_logitem_push(
- 	spin_unlock(&lip->li_ailp->ail_lock);
- 
- 	error = xfs_qm_dqflush(dqp, &bp);
--	if (error) {
--		xfs_warn(dqp->q_mount, "%s: push error %d on dqp "PTR_FMT,
--			__func__, error, dqp);
--	} else {
-+	if (!error) {
- 		if (!xfs_buf_delwri_queue(bp, buffer_list))
- 			rval = XFS_ITEM_FLUSHING;
- 		xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ec39ae274c78..579de656bc25 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -161,10 +161,7 @@ xfs_qm_dqpurge(
- 		 * to purge this dquot anyway, so we go ahead regardless.
- 		 */
- 		error = xfs_qm_dqflush(dqp, &bp);
--		if (error) {
--			xfs_warn(mp, "%s: dquot "PTR_FMT" flush failed",
--				__func__, dqp);
--		} else {
-+		if (!error) {
- 			error = xfs_bwrite(bp);
- 			xfs_buf_relse(bp);
- 		}
-@@ -479,11 +476,8 @@ xfs_qm_dquot_isolate(
- 		spin_unlock(lru_lock);
- 
- 		error = xfs_qm_dqflush(dqp, &bp);
--		if (error) {
--			xfs_warn(dqp->q_mount, "%s: dquot "PTR_FMT" flush failed",
--				 __func__, dqp);
-+		if (error)
- 			goto out_unlock_dirty;
--		}
- 
- 		xfs_buf_delwri_queue(bp, &isol->buffers);
- 		xfs_buf_relse(bp);
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
