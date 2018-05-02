@@ -1,53 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:40060 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750911AbeECV0W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 17:26:22 -0400
-Received: by mail-pf0-f193.google.com with SMTP id f189so15724627pfa.7
-        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 14:26:22 -0700 (PDT)
-Date: Thu, 3 May 2018 14:26:20 -0700
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH v3 1/2] iomap: add a swapfile activation function
-Message-ID: <20180503212620.GB26037@vader>
-References: <20180503174659.GD4127@magnolia>
- <20180503205803.GA26037@vader>
- <20180503212447.GG4141@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:59046 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750936AbeEBOhG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 10:37:06 -0400
+Date: Wed, 2 May 2018 07:37:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/5] xfs_io: add label command
+Message-ID: <20180502143702.GO4127@magnolia>
+References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
+ <ef880401-b4ab-56ae-8f94-c13ca8239a73@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180503212447.GG4141@magnolia>
+In-Reply-To: <ef880401-b4ab-56ae-8f94-c13ca8239a73@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, hch@infradead.org, cyberax@amazon.com, jack@suse.cz, Eryu Guan <guaneryu@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, May 03, 2018 at 02:24:47PM -0700, Darrick J. Wong wrote:
-> On Thu, May 03, 2018 at 01:58:03PM -0700, Omar Sandoval wrote:
-> > On Thu, May 03, 2018 at 10:46:59AM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add a new iomap_swapfile_activate function so that filesystems can
-> > > activate swap files without having to use the obsolete and slow bmap
-> > > function.  This enables XFS to support fallocate'd swap files and
-> > > swap files on realtime devices.
-> > > 
-> > 
-> > Shouldn't we also prevent the extents of an active swapfile from
-> > becoming shared? If I swapon(a) and reflink(a, b), swapout to a now has
-> > to break the reflink or corrupt b! In my old Btrfs swapfile series [1] I
-> > just forbid all reflink operations on active swapfiles. 
+On Mon, Apr 30, 2018 at 10:48:54AM -0500, Eric Sandeen wrote:
+> This adds a get/set label command to xfs_io.
 > 
-> xfs already does this in its reflink handler: it takes the inode lock &
-> bails out if IS_SWAPFILE().  swapon calls claim_swapfile to take the
-> inode lock and sets S_SWAPFILE (if successful) so the two are
-> effectively locked out from each other...
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> > One thing to note is that then this will need a matching
-> > ->swap_deactivate(), which currently isn't called if ->swap_activate()
-> > returned > 0.
-> 
-> ...so there shouldn't be any state to undo if the
-> iomap_swapfile_activate fails.
+> diff --git a/io/Makefile b/io/Makefile
+> index 88e4751..b40156d 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -10,9 +10,9 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
+>  HFILES = init.h io.h
+>  CFILES = init.c \
+>  	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
+> -	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
+> -	pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
+> -	truncate.c utimes.c
+> +	getrusage.c imap.c label.c link.c mmap.c open.c parent.c pread.c \
+> +	prealloc.c pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c \
+> +	swapext.c sync.c truncate.c utimes.c
+>  
+>  LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
+> diff --git a/io/init.c b/io/init.c
+> index 0336c96..612962e 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -72,6 +72,7 @@ init_commands(void)
+>  	help_init();
+>  	imap_init();
+>  	inject_init();
+> +	label_init();
+>  	log_writes_init();
+>  	madvise_init();
+>  	mincore_init();
+> diff --git a/io/io.h b/io/io.h
+> index a267636..7f8197c 100644
+> --- a/io/io.h
+> +++ b/io/io.h
+> @@ -109,6 +109,7 @@ extern void		getrusage_init(void);
+>  extern void		help_init(void);
+>  extern void		imap_init(void);
+>  extern void		inject_init(void);
+> +extern void		label_init(void);
+>  extern void		mmap_init(void);
+>  extern void		open_init(void);
+>  extern void		parent_init(void);
+> diff --git a/io/label.c b/io/label.c
+> new file mode 100644
+> index 0000000..acab67f
+> --- /dev/null
+> +++ b/io/label.c
+> @@ -0,0 +1,74 @@
+> +/*
+> + * Copyright (c) 2018 Red Hat, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include <sys/ioctl.h>
+> +#include <sys/mount.h>
+> +#include "platform_defs.h"
+> +#include "libxfs.h"
+> +#include "path.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "io.h"
+> +
+> +#ifndef FS_IOC_GET_FSLABEL
+> +/* Max chars for the interface; fs limits may differ */
+> +#define FSLABEL_MAX 256
+> +#define FS_IOC_GET_FSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
+> +#define FS_IOC_SET_FSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
+> +#endif
+> +
+> +static cmdinfo_t label_cmd;
+> +
+> +static int
+> +label_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	int		error;
+> +	char		label[FSLABEL_MAX];
+> +
+> +	if (argc == 1) {
+> +		memset(&label, 0, sizeof(label));
+> +		error = ioctl(file->fd, FS_IOC_GET_FSLABEL, &label);
+> +	} else {
+> +		strncpy(label, argv[1], sizeof(label));
+> +		error = ioctl(file->fd, FS_IOC_SET_FSLABEL, &label);
+> +	}
+> +
+> +	if (error)
+> +		perror("label");
+> +	else
+> +		printf("label = \"%s\"\n", label);
+> +
+> +	return error;
+> +}
+> +
+> +void
+> +label_init(void)
+> +{
+> +	label_cmd.name = "label";
+> +	label_cmd.cfunc = label_f;
+> +	label_cmd.argmin = 0;
+> +	label_cmd.argmax = 1;
+> +	label_cmd.args = _("[label]");
+> +	label_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> +	label_cmd.oneline =
+> +		_("query or set the filesystem label while mounted");
+> +
+> +	add_command(&label_cmd);
+> +}
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index c3ab532..52b983d 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -1175,6 +1175,16 @@ This is intended to be equivalent to the shell command:
+>  See the
+>  .B log_writes
+>  command.
+> +.TP
+> +.BI "label" " " [ " label " ]
+> +On  filesystems  that  support  online label manipulation, set or get the
+> +filesystem label.  With no options, get the current filesystem label.
+> +With one option, set the filesystem label to
+> +.IR label .
+> +If the label is longer than the filesystem will accept,
+> +.B xfs_io
+> +will print an error message.  XFS filesystem labels can be at most 12
+> +characters long.
 
-Makes sense, thanks.
+Needs proper ioctl_[gs]etlabel manpage documenting the semantics of this
+new xfs ioctl, though that should be sent to mkerrisk/linux-api so we
+don't have to maintain it. :)
+
+--D
+
+>  .SH SEE ALSO
+>  .BR mkfs.xfs (8),
+>  .BR xfsctl (3),
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
