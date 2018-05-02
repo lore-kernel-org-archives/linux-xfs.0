@@ -1,71 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45704 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750822AbeECV1a (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 May 2018 17:27:30 -0400
-Subject: Re: [PATCH 2/9] libfrog: refactor fs geometry printing function
-References: <152401952391.13048.15040850425873030425.stgit@magnolia>
- <152401953658.13048.467837665188564402.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <557aeadb-c8ea-1b63-9acd-71157e10c91c@sandeen.net>
-Date: Thu, 3 May 2018 16:27:28 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:51788 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751100AbeEBQ7S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 12:59:18 -0400
+Date: Wed, 2 May 2018 09:58:56 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 09/13] xfs: remove xfs_qm_dqread flags argument
+Message-ID: <20180502165856.GX4127@magnolia>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <152506705098.21553.6894396720813018127.stgit@magnolia>
+ <20180502163431.GB27020@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <152401953658.13048.467837665188564402.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180502163431.GB27020@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On 4/17/18 9:45 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, May 02, 2018 at 06:34:31PM +0200, Christoph Hellwig wrote:
+> On Sun, Apr 29, 2018 at 10:44:11PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Move the _qm_dqread functionality to _qm_dqensure, then remove the flags
+> > argument from xfs_qm_dqread since the only DQALLOC users were internal
+> > to xfs_dquot.c anyway.
 > 
-> Move the fs geometry printing function to libfrog so that mkfs and others
-> can share.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> I really see no point in doing the wrapper.  I'd much rather keep
+> xfs_qm_dqread with a the additional argument, be that a flags value
+> or a bool.  For example the same patch with the new xfs_dquot_setup
+> kept as xfs_qm_dqread and everyone calling it with an additional
+> false argument would seem much nicer to me.
 
+I'm trying to avoid having a can_alloc argument for the exported _dqread
+interface because none of the callers outside of xfs_dquot.c set it to
+true.
 
-> +	printf(_(
-> +"meta-data=%-22s isize=%-6d agcount=%u, agsize=%u blks\n"
-> +"         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-> +"         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
-> +"         =%-22s reflink=%u\n"
-> +"data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
-> +"         =%-22s sunit=%-6u swidth=%u blks\n"
-> +"naming   =version %-14u bsize=%-6u ascii-ci=%d, ftype=%d\n"
-> +"log      =%-22s bsize=%-6d blocks=%u, version=%d\n"
-> +"         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
-> +"realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+Later on, in online repair I'll need some kind of interface to allocate
+and get a dquot with a given transaction, but we can argue about that
+when we get there.
 
-Actually, I'd like to put a whitespace break here as there was in old code,
-as this is a giant, dense blob of code that's pretty hard to grok visually.
+--D
 
-Any objection? :)
-
--Eric
-
-> +		mntpoint, geo->inodesize, geo->agcount, geo->agblocks,
-> +		"", geo->sectsize, attrversion, projid32bit,
-> +		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
-> +		"", reflink_enabled,
-> +		"", geo->blocksize, (unsigned long long)geo->datablocks,
-> +			geo->imaxpct,
-> +		"", geo->sunit, geo->swidth,
-> +		dirversion, geo->dirblocksize, cimode, ftype_enabled,
-> +		isint ? _("internal log") : logname ? logname : _("external"),
-> +			geo->blocksize, geo->logblocks, logversion,
-> +		"", geo->logsectsize, geo->logsunit / geo->blocksize, lazycount,
-> +		!geo->rtblocks ? _("none") : rtname ? rtname : _("external"),
-> +		geo->rtextsize * geo->blocksize, (unsigned long long)geo->rtblocks,
-> +			(unsigned long long)geo->rtextents);
-> +}
-> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
