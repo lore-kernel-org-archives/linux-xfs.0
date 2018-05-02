@@ -1,37 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:58388 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750926AbeEBFvv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 01:51:51 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDkg6-0002O3-84
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 15:51:46 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDkg6-0007Wt-6l
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 15:51:46 +1000
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:19610 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750999AbeEBGCJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 02:02:09 -0400
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/2] xfs: clean up xfs_file_iomap_begin()
-Date: Wed,  2 May 2018 15:51:42 +1000
-Message-Id: <20180502055144.28851-1-david@fromorbit.com>
+Subject: [PATCH 1/3] xfs: move generic_write_sync calls inwards
+Date: Wed,  2 May 2018 15:38:05 +1000
+Message-Id: <20180502053807.13846-2-david@fromorbit.com>
+In-Reply-To: <20180502053807.13846-1-david@fromorbit.com>
+References: <20180502053807.13846-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-These patches follow up on recent changes to the locking and
-non-blocking behaviour of xfs_file_iomap_begin() to make it easier
-to follow and understand. The code is a bit of a tangle right now,
-and these two patches pull all of the locking and NOWAIT decisions
-into a single function and out of all the mapping code.
+To prepare for iomap iinfrastructure based DSYNC optimisations.
 
-There are no functional changes here, just a code re-org.
+While moving the code araound, move the XFS write bytes metric
+update for direct IO into xfs_dio_write_end_io callback so that we
+always capture the amount of data written via AIO+DIO. This fixes
+the problem where queued AIO+DIO writes are not accounted to this
+metric.
 
-Cheers,
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c | 48 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 33 insertions(+), 15 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index bbfbb8f32659..4cbd15d84bb8 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -416,6 +416,12 @@ xfs_dio_write_end_io(
+ 	if (size <= 0)
+ 		return size;
+ 
++	/*
++	 * Capture amount written on completion as we can't reliably account
++	 * for it on submission.
++	 */
++	XFS_STATS_ADD(ip->i_mount, xs_write_bytes, size);
++
+ 	if (flags & IOMAP_DIO_COW) {
+ 		error = xfs_reflink_end_cow(ip, offset, size);
+ 		if (error)
+@@ -564,6 +570,11 @@ xfs_file_dio_aio_write(
+ 	 * complete fully or fail.
+ 	 */
+ 	ASSERT(ret < 0 || ret == count);
++
++	if (ret > 0) {
++		/* Handle various SYNC-type writes */
++		ret = generic_write_sync(iocb, ret);
++	}
+ 	return ret;
+ }
+ 
+@@ -601,7 +612,16 @@ xfs_file_dax_write(
+ 	}
+ out:
+ 	xfs_iunlock(ip, iolock);
+-	return error ? error : ret;
++	if (error)
++		return error;
++
++	if (ret > 0) {
++		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
++
++		/* Handle various SYNC-type writes */
++		ret = generic_write_sync(iocb, ret);
++	}
++	return ret;
+ }
+ 
+ STATIC ssize_t
+@@ -671,6 +691,12 @@ xfs_file_buffered_aio_write(
+ out:
+ 	if (iolock)
+ 		xfs_iunlock(ip, iolock);
++
++	if (ret > 0) {
++		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
++		/* Handle various SYNC-type writes */
++		ret = generic_write_sync(iocb, ret);
++	}
+ 	return ret;
+ }
+ 
+@@ -695,8 +721,9 @@ xfs_file_write_iter(
+ 		return -EIO;
+ 
+ 	if (IS_DAX(inode))
+-		ret = xfs_file_dax_write(iocb, from);
+-	else if (iocb->ki_flags & IOCB_DIRECT) {
++		return xfs_file_dax_write(iocb, from);
++
++	if (iocb->ki_flags & IOCB_DIRECT) {
+ 		/*
+ 		 * Allow a directio write to fall back to a buffered
+ 		 * write *only* in the case that we're doing a reflink
+@@ -704,20 +731,11 @@ xfs_file_write_iter(
+ 		 * allow an operation to fall back to buffered mode.
+ 		 */
+ 		ret = xfs_file_dio_aio_write(iocb, from);
+-		if (ret == -EREMCHG)
+-			goto buffered;
+-	} else {
+-buffered:
+-		ret = xfs_file_buffered_aio_write(iocb, from);
++		if (ret != -EREMCHG)
++			return ret;
+ 	}
+ 
+-	if (ret > 0) {
+-		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
+-
+-		/* Handle various SYNC-type writes */
+-		ret = generic_write_sync(iocb, ret);
+-	}
+-	return ret;
++	return xfs_file_buffered_aio_write(iocb, from);
+ }
+ 
+ #define	XFS_FALLOC_FL_SUPPORTED						\
+-- 
+2.17.0
 
