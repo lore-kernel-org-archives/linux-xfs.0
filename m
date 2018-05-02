@@ -1,99 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39492 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756726AbeEJJKh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 05:10:37 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1D1E8859A3
-        for <linux-xfs@vger.kernel.org>; Thu, 10 May 2018 09:10:37 +0000 (UTC)
-Received: from odin.usersys.redhat.com (ovpn-204-180.brq.redhat.com [10.40.204.180])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A815463AF9
-        for <linux-xfs@vger.kernel.org>; Thu, 10 May 2018 09:10:36 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH V2] xfs_io: Document shutdown -f
-Date: Thu, 10 May 2018 11:10:30 +0200
-Message-Id: <20180510091030.15619-1-cmaiolino@redhat.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:28044 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751045AbeEBGCJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 02:02:09 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 3/3] iomap: Use FUA for pure data O_DSYNC DIO writes
+Date: Wed,  2 May 2018 15:38:07 +1000
+Message-Id: <20180502053807.13846-4-david@fromorbit.com>
+In-Reply-To: <20180502053807.13846-1-david@fromorbit.com>
+References: <20180502053807.13846-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
 
-Add help and manpage information for xfs_io shutdown -f
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+If we are doing direct IO writes with datasync semantics, we often
+have to flush metadata changes along with the data write. However,
+if we are overwriting existing data, there are no metadata changes
+that we need to flush. In this case, optimising the IO by using
+FUA write makes sense.
+
+We know from the IOMAP_F_DIRTY flag as to whether a specific inode
+requires a metadata flush - this is currently used by DAX to ensure
+extent modification as stable in page fault operations. For direct
+IO writes, we can use it to determine if we need to flush metadata
+or not once the data is on disk.
+
+Hence if we have been returned a mapped extent that is not new and
+the IO mapping is not dirty, then we can use a FUA write to provide
+datasync semantics. This allows us to short-cut the
+generic_write_sync() call in IO completion and hence avoid
+unnecessary operations. This makes pure direct IO data write
+behaviour identical to the way block devices use REQ_FUA to provide
+datasync semantics.
+
+On a FUA enabled device, a synchronous direct IO write workload
+(sequential 4k overwrites in 32MB file) had the following results:
+
+# xfs_io -fd -c "pwrite -V 1 -D 0 32m" /mnt/scratch/boo
+
+kernel		time	write()s	write iops	Write b/w
+------		----	--------	----------	---------
+(no dsync)	 4s	2173/s		2173		8.5MB/s
+vanilla		22s	 370/s		 750		1.4MB/s
+patched		19s	 420/s		 420		1.6MB/s
+
+The patched code clearly doesn't send cache flushes anymore, but
+instead uses FUA (confirmed via blktrace), and performance improves
+a bit as a result. However, the benefits will be higher on workloads
+that mix O_DSYNC overwrites with other write IO as we won't be
+flushing the entire device cache on every DSYNC overwrite IO
+anymore.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
+ fs/iomap.c | 51 ++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 46 insertions(+), 5 deletions(-)
 
-V2:
-	Add more detailed information about what shutdown command does
-
- io/shutdown.c     | 16 ++++++++++++++++
- man/man8/xfs_io.8 | 16 +++++++++++++++-
- 2 files changed, 31 insertions(+), 1 deletion(-)
-
-diff --git a/io/shutdown.c b/io/shutdown.c
-index 022a0e9a..8ac64d63 100644
---- a/io/shutdown.c
-+++ b/io/shutdown.c
-@@ -47,6 +47,21 @@ shutdown_f(
- 	return 0;
- }
+diff --git a/fs/iomap.c b/fs/iomap.c
+index b044d8ee2efd..bcfd7f3654d4 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -685,6 +685,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_data);
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+  */
++#define IOMAP_DIO_WRITE_FUA	(1 << 28)
+ #define IOMAP_DIO_NEED_SYNC	(1 << 29)
+ #define IOMAP_DIO_WRITE		(1 << 30)
+ #define IOMAP_DIO_DIRTY		(1 << 31)
+@@ -861,6 +862,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	struct iov_iter iter;
+ 	struct bio *bio;
+ 	bool need_zeroout = false;
++	bool use_fua = false;
+ 	int nr_pages, ret;
+ 	size_t copied = 0;
  
-+static void
-+shutdown_help(void)
-+{
-+	printf(_(
-+"\n"
-+" Shuts down the filesystem and prevents any further IO from occurring.\n"
-+"\n"
-+" With no arguments, shutdown will not attempt to flush completed transactions\n"
-+" to disk before marking the log as being shut down. Simulating an IO error\n"
-+" behavior.\n"
-+"\n"
-+" -f -- Flush completed transactions to disk before shut down.\n"
-+"\n"));
-+}
+@@ -884,8 +886,20 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	case IOMAP_MAPPED:
+ 		if (iomap->flags & IOMAP_F_SHARED)
+ 			dio->flags |= IOMAP_DIO_COW;
+-		if (iomap->flags & IOMAP_F_NEW)
++		if (iomap->flags & IOMAP_F_NEW) {
+ 			need_zeroout = true;
++		} else {
++			/*
++			 * Use a FUA write if we need datasync semantics, this
++			 * is a pure data IO that doesn't require any metadata
++			 * updates and the underlying device supports FUA. This
++			 * allows us to avoid cache flushes on IO completion.
++			 */
++			if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
++			    (dio->flags & IOMAP_DIO_WRITE_FUA) &&
++			    blk_queue_fua(bdev_get_queue(iomap->bdev)))
++				use_fua = true;
++		}
+ 		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+@@ -933,10 +947,14 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ 		n = bio->bi_iter.bi_size;
+ 		if (dio->flags & IOMAP_DIO_WRITE) {
+-			bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
++			bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_IDLE;
++			if (use_fua)
++				bio->bi_opf |= REQ_FUA;
++			else
++				dio->flags &= ~IOMAP_DIO_WRITE_FUA;
+ 			task_io_account_write(n);
+ 		} else {
+-			bio_set_op_attrs(bio, REQ_OP_READ, 0);
++			bio->bi_opf = REQ_OP_READ;
+ 			if (dio->flags & IOMAP_DIO_DIRTY)
+ 				bio_set_pages_dirty(bio);
+ 		}
+@@ -966,7 +984,12 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ /*
+  * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
+- * is being issued as AIO or not.
++ * is being issued as AIO or not.  This allows us to optimise pure data writes
++ * to use REQ_FUA rather than requiring generic_write_sync() to issue a
++ * REQ_FLUSH post write. This is slightly tricky because a single request here
++ * can be mapped into multiple disjoint IOs and only a subset of the IOs issued
++ * may be pure data writes. In that case, we still need to do a full data sync
++ * completion.
+  */
+ ssize_t
+ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+@@ -1012,10 +1035,21 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		if (iter->type == ITER_IOVEC)
+ 			dio->flags |= IOMAP_DIO_DIRTY;
+ 	} else {
++		flags |= IOMAP_WRITE;
+ 		dio->flags |= IOMAP_DIO_WRITE;
 +
- void
- shutdown_init(void)
- {
-@@ -56,6 +71,7 @@ shutdown_init(void)
- 	shutdown_cmd.argmax = 1;
- 	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK;
- 	shutdown_cmd.args = _("[-f]");
-+	shutdown_cmd.help = shutdown_help;
- 	shutdown_cmd.oneline =
- 		_("shuts down the filesystem where the current file resides");
++		/* for data sync or sync, we need sync completion processing */
+ 		if (iocb->ki_flags & IOCB_DSYNC)
+ 			dio->flags |= IOMAP_DIO_NEED_SYNC;
+-		flags |= IOMAP_WRITE;
++
++		/*
++		 * For datasync only writes, we optimistically try using FUA for
++		 * this IO.  Any non-FUA write that occurs will clear this flag,
++		 * hence we know before completion whether a cache flush is
++		 * necessary.
++		 */
++		if ((iocb->ki_flags & (IOCB_DSYNC | IOCB_SYNC)) == IOCB_DSYNC)
++			dio->flags |= IOMAP_DIO_WRITE_FUA;
+ 	}
  
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index c3ab532d..d4c28a0a 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1007,8 +1007,22 @@ Note \-\- this can be useful for exercising out of space behavior.
- Only available in expert mode and requires privileges.
- .TP
- .BR shutdown " [ " \-f " ]"
--Force the filesystem to shutdown (with or without flushing the log).
-+Force a shutdown of the filesystem, but keep consistency. It does not unmount
-+the filesystem, but prevents any other IO to happen on it.
- Only available in expert mode and requires privileges.
-+.PP
-+.RS
-+By default, XFS will not attempt to flush completed transactions to disk before
-+marking the log as being shut down.
-+.RE
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.B \-f
-+Force XFS to flush all completed transactions to disk before marking the log as
-+shut down.
-+.PD
-+.RE
- .TP
- .BR stat " [ " \-v "|" \-r " ]"
- Selected statistics from
+ 	if (iocb->ki_flags & IOCB_NOWAIT) {
+@@ -1071,6 +1105,13 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret < 0)
+ 		iomap_dio_set_error(dio, ret);
+ 
++	/*
++	 * If all the writes we issued were FUA, we don't need to flush the
++	 * cache on IO completion. Clear the sync flag for this case.
++	 */
++	if (dio->flags & IOMAP_DIO_WRITE_FUA)
++		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
++
+ 	if (!atomic_dec_and_test(&dio->ref)) {
+ 		if (!is_sync_kiocb(iocb))
+ 			return -EIOCBQUEUED;
 -- 
-2.14.3
+2.17.0
 
