@@ -1,69 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:25541 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:58380 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751064AbeEAWwC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 18:52:02 -0400
-Date: Wed, 2 May 2018 08:51:59 +1000
+        by vger.kernel.org with ESMTP id S1750883AbeEBFvu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 01:51:50 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDkg6-0002O4-91
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 15:51:46 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fDkg6-0007Ww-7j
+        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 15:51:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Message-ID: <20180501225159.GY23861@dastard>
-References: <f403043cbe8414177d0568e81405@google.com>
- <20180403043854.GL1150@dastard>
- <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
- <CACT4Y+aQZ8KbU1C-sJ2PUKn_788SEKQpYGjoLaRDJrP9vXjs-A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+aQZ8KbU1C-sJ2PUKn_788SEKQpYGjoLaRDJrP9vXjs-A@mail.gmail.com>
+Subject: [PATCH 1/2] xfs: simplify xfs_file_iomap_begin() logic
+Date: Wed,  2 May 2018 15:51:43 +1000
+Message-Id: <20180502055144.28851-2-david@fromorbit.com>
+In-Reply-To: <20180502055144.28851-1-david@fromorbit.com>
+References: <20180502055144.28851-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs <syzkaller-bugs@googlegroups.com>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Apr 30, 2018 at 03:24:48PM +0200, Dmitry Vyukov wrote:
-> On Thu, Apr 5, 2018 at 8:54 PM, Dmitry Vyukov <dvyukov@google.com> wrote:
-> > On Tue, Apr 3, 2018 at 6:38 AM, Dave Chinner <david@fromorbit.com> wrote:
-> >> On Mon, Apr 02, 2018 at 07:01:02PM -0700, syzbot wrote:
-> >>> Hello,
-> >>>
-> >>> syzbot hit the following crash on upstream commit
-> >>> 86bbbebac1933e6e95e8234c4f7d220c5ddd38bc (Mon Apr 2 18:47:07 2018 +0000)
-> >>> Merge branch 'ras-core-for-linus' of
-> >>> git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-> >>> syzbot dashboard link:
-> >>> https://syzkaller.appspot.com/bug?extid=84a67953651a971809ba
-> >>>
-> >>> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
-> >>> syzkaller reproducer:
-> >>> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
-> >>
-> >> What a mess. A hand built, hopelessly broken filesystem image made
-> >> up of hex dumps, written into a mmap()d region of memory, then
-> >> copied into a tmpfs file and mounted with the loop device.
-> >>
-> >> Engineers that can debug broken filesystems don't grow on trees.  If
-> >> we are to have any hope of understanding what the hell this test is
-> >> doing, the bot needs to supply us with a copy of the built
-> >> filesystem image the test uses. We need to be able to point forensic
-> >> tools at the image to decode all the structures into human readable
-> >> format - if we are forced to do that by hand or jump through hoops
-> >> to create our own filesystem image than I'm certainly not going to
-> >> waste time looking at these reports...
-> >
-> > Hi Dave,
-> >
-> > Here is the image:
-> > https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
-> 
-> Have anybody looked at the bug and the image yet?
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, I did that a couple of weeks ago. Couldn't reproduce on a TOT
-kernel here.
+The current logic that determines whether allocation should be done
+has grown somewhat spaghetti like with the addition of IOMAP_NOWAIT
+functionality. Separate out each of the different cases into single,
+obvious checks to get rid most of the nested IOMAP_NOWAIT checks
+in the allocation logic.
 
-Cheers,
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_iomap.c | 82 ++++++++++++++++++++++++++--------------------
+ 1 file changed, 46 insertions(+), 36 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 046469fcc1b8..16565da67bb6 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1040,6 +1040,10 @@ xfs_file_iomap_begin(
+ 			goto out_unlock;
+ 	}
+ 
++	/* Non-modifying mapping requested, so we are done */
++	if (!(flags & (IOMAP_WRITE | IOMAP_ZERO)))
++		goto out_found;
++
+ 	if (xfs_is_reflink_inode(ip) &&
+ 	    ((flags & IOMAP_WRITE) ||
+ 	     ((flags & IOMAP_ZERO) && needs_cow_for_zeroing(&imap, nimaps)))) {
+@@ -1068,46 +1072,45 @@ xfs_file_iomap_begin(
+ 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+ 	}
+ 
+-	if ((flags & IOMAP_WRITE) && imap_needs_alloc(inode, &imap, nimaps)) {
+-		/*
+-		 * If nowait is set bail since we are going to make
+-		 * allocations.
+-		 */
+-		if (flags & IOMAP_NOWAIT) {
+-			error = -EAGAIN;
+-			goto out_unlock;
+-		}
+-		/*
+-		 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES
+-		 * pages to keep the chunks of work done where somewhat symmetric
+-		 * with the work writeback does. This is a completely arbitrary
+-		 * number pulled out of thin air as a best guess for initial
+-		 * testing.
+-		 *
+-		 * Note that the values needs to be less than 32-bits wide until
+-		 * the lower level functions are updated.
+-		 */
+-		length = min_t(loff_t, length, 1024 * PAGE_SIZE);
+-		/*
+-		 * xfs_iomap_write_direct() expects the shared lock. It
+-		 * is unlocked on return.
+-		 */
+-		if (lockmode == XFS_ILOCK_EXCL)
+-			xfs_ilock_demote(ip, lockmode);
+-		error = xfs_iomap_write_direct(ip, offset, length, &imap,
+-				nimaps);
+-		if (error)
+-			return error;
++	/* Don't need to allocate over holes when doing zeroing operations. */
++	if (flags & IOMAP_ZERO)
++		goto out_found;
+ 
+-		iomap->flags = IOMAP_F_NEW;
+-		trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+-	} else {
+-		ASSERT(nimaps);
++	if (!imap_needs_alloc(inode, &imap, nimaps))
++		goto out_found;
+ 
+-		xfs_iunlock(ip, lockmode);
+-		trace_xfs_iomap_found(ip, offset, length, 0, &imap);
++	/* If nowait is set bail since we are going to make allocations. */
++	if (flags & IOMAP_NOWAIT) {
++		error = -EAGAIN;
++		goto out_unlock;
+ 	}
+ 
++	/*
++	 * We cap the maximum length we map to a sane size  to keep the chunks
++	 * of work done where somewhat symmetric with the work writeback does.
++	 * This is a completely arbitrary number pulled out of thin air as a
++	 * best guess for initial testing.
++	 *
++	 * Note that the values needs to be less than 32-bits wide until the
++	 * lower level functions are updated.
++	 */
++	length = min_t(loff_t, length, 1024 * PAGE_SIZE);
++
++	/*
++	 * xfs_iomap_write_direct() expects the shared lock. It is unlocked on
++	 * return.
++	 */
++	if (lockmode == XFS_ILOCK_EXCL)
++		xfs_ilock_demote(ip, lockmode);
++	error = xfs_iomap_write_direct(ip, offset, length, &imap,
++			nimaps);
++	if (error)
++		return error;
++
++	iomap->flags = IOMAP_F_NEW;
++	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
++
++out_finish:
+ 	if (xfs_ipincount(ip) && (ip->i_itemp->ili_fsync_fields
+ 				& ~XFS_ILOG_TIMESTAMP))
+ 		iomap->flags |= IOMAP_F_DIRTY;
+@@ -1117,6 +1120,13 @@ xfs_file_iomap_begin(
+ 	if (shared)
+ 		iomap->flags |= IOMAP_F_SHARED;
+ 	return 0;
++
++out_found:
++	ASSERT(nimaps);
++	xfs_iunlock(ip, lockmode);
++	trace_xfs_iomap_found(ip, offset, length, 0, &imap);
++	goto out_finish;
++
+ out_unlock:
+ 	xfs_iunlock(ip, lockmode);
+ 	return error;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.0
+
