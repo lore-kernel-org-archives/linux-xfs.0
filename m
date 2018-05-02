@@ -1,104 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-by2nam01on0114.outbound.protection.outlook.com ([104.47.34.114]:53782
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751262AbeEBO1l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 May 2018 10:27:41 -0400
-From: Robert Dorr <rdorr@microsoft.com>
-Subject: RE: [PATCH 2/4] iomap: iomap_dio_rw() handles all sync writes
-Date: Wed, 2 May 2018 14:27:37 +0000
-Message-ID: <BN6PR21MB07409BC39716894D592EB0C0B8800@BN6PR21MB0740.namprd21.prod.outlook.com>
-References: <20180418040828.18165-1-david@fromorbit.com>
- <20180418040828.18165-3-david@fromorbit.com>
- <20180421130309.efivmjo5ald2jchv@quack2.suse.cz>
- <20180502024540.GA23861@dastard>
-In-Reply-To: <20180502024540.GA23861@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Received: from userp2120.oracle.com ([156.151.31.85]:54130 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750878AbeEBOYX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 10:24:23 -0400
+Date: Wed, 2 May 2018 07:24:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/5 V2] xfs: implement online get/set fs label
+Message-ID: <20180502142420.GL4127@magnolia>
+References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
+ <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
+ <2a638f02-ea72-0d5e-30a4-1d95cfe6ff69@sandeen.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2a638f02-ea72-0d5e-30a4-1d95cfe6ff69@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, Slava Oks <slavao@microsoft.com>, Jasraj Dange <jasrajd@microsoft.com>, Michael Nelson <micn@microsoft.com>, Amit Banerjee <amit.banerjee@microsoft.com>, Travis Wright <twright@microsoft.com>, Bob Ward <bobward@microsoft.com>, Scott Konersmann <scottkon@microsoft.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Thanks for your continued effort Dave.
+On Tue, May 01, 2018 at 06:04:09PM -0500, Eric Sandeen wrote:
+> The GET ioctl is trivial, just return the current label.
+> 
+> The SET ioctl is more involved:
+> It transactionally modifies the superblock to write a new filesystem
+> label to the primary super.
+> 
+> A new variant of xfs_sync_sb then writes the superblock buffer
+> immediately to disk so that the change is visible from userspace.
+> 
+> It then invalidates any page cache that userspace might have previously
+> read on the block device so that i.e. blkid can see the change
+> immediately, and updates all secondary superblocks as userspace relable
+> does.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> V2: rework the force-sb-to-disk approach, invalidate the whole block
+> device, and block waiting for the growfs lock.  Also remove too-long-label
+> printk.
+> 
+> Thanks to dchinner for the xfs_sync_sb_buf suggestion & framework.
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index d9b94bd..54992e8 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -888,6 +888,37 @@ struct xfs_perag *
+>  	return xfs_trans_commit(tp);
+>  }
+>  
+> +/*
+> + * Same behavior as xfs_sync_sb, except that it is always synchronous and it
+> + * also writes the superblock buffer to disk sector 0 immediately.
+> + */
+> +int
+> +xfs_sync_sb_buf(
+> +	struct xfs_mount	*mp)
+> +{
+> +	struct xfs_trans	*tp;
+> +	int			error;
+> +
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0,
+> +			XFS_TRANS_NO_WRITECOUNT, &tp);
 
-In the current implementation the first write to the location updates the m=
-etadata and must issue the flush.   In Windows SQL Server can avoid this be=
-havior.   SQL Server can issue DeviceIoControl with SET_FILE_VALID_DATA and=
- then SetEndOfFile.  The SetEndOfFile acquires space and saves metadata wit=
-hout requiring the actual write.   This allows us to quickly create a large=
- file and the writes do not need the added flush.
+I suppose this is a straight clone of xfs_sync_sb, but do we need
+NO_WRITECOUNT here?  Will this get called while the fs is frozen?
 
-Is this something that fallocate could accommodate to avoid having to write=
- once (triggers flush for metadata) and then secondary writes can use FUA a=
-nd avoid the flush?
+> +	if (error)
+> +		return error;
+> +
+> +	xfs_log_sb(tp);
+> +	xfs_trans_bhold(tp, mp->m_sb_bp);
+> +	xfs_trans_set_sync(tp);
+> +	error = xfs_trans_commit(tp);
+> +	if (error)
+> +		goto out;
+> +	/*
+> +	 * write out the sb buffer to get the changes to disk
+> +	 */
+> +	error = xfs_bwrite(mp->m_sb_bp);
+> +out:
+> +	xfs_buf_relse(mp->m_sb_bp);
+> +	return error;
+> +}
+> +
+>  int
+>  xfs_fs_geometry(
+>  	struct xfs_sb		*sbp,
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 63dcd2a..2268272 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -29,6 +29,7 @@ extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
+>  
+>  extern void	xfs_log_sb(struct xfs_trans *tp);
+>  extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
+> +extern int	xfs_sync_sb_buf(struct xfs_mount *mp);
+>  extern void	xfs_sb_mount_common(struct xfs_mount *mp, struct xfs_sb *sbp);
+>  extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
+>  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 89fb1eb..effb23a 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1811,6 +1811,72 @@ struct getfsmap_info {
+>  	return error;
+>  }
+>  
+> +static int
+> +xfs_ioc_getlabel(
+> +	struct xfs_mount	*mp,
+> +	char			__user *label)
+> +{
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +
+> +	/* Paranoia */
+> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
+> +
+> +	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
 
+Needs to ensure that a null is set at the end of the (userspace) buffer
+just in case the label is "123456789012".
 
+There's nothing in the documentation for this ioctl <cough> that says
+the passed in buffer must already be zeroed.
 
------Original Message-----
-From: Dave Chinner <david@fromorbit.com>=20
-Sent: Tuesday, May 1, 2018 9:46 PM
-To: Jan Kara <jack@suse.cz>
-Cc: linux-xfs@vger.kernel.org; linux-fsdevel@vger.kernel.org; linux-block@v=
-ger.kernel.org; hch@lst.de; Robert Dorr <rdorr@microsoft.com>
-Subject: Re: [PATCH 2/4] iomap: iomap_dio_rw() handles all sync writes
+> +		return -EFAULT;
+> +	return 0;
+> +}
+> +
+> +static int
+> +xfs_ioc_setlabel(
+> +	struct file		*filp,
+> +	struct xfs_mount	*mp,
+> +	char			__user *newlabel)
+> +{
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+> +	char			label[FSLABEL_MAX];
+> +	size_t			len;
+> +	int			error;
+> +
+> +	if (!capable(CAP_SYS_ADMIN))
+> +		return -EPERM;
+> +
+> +	if (copy_from_user(label, newlabel, FSLABEL_MAX))
+> +		return -EFAULT;
+> +	/*
+> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but XFS is much
+> +	 * smaller, at 12 bytes.
+> +	 * NB: The on disk label doesn't need to be null terminated.
+> +	 */
+> +	len = strnlen(label, FSLABEL_MAX);
+> +	if (len > sizeof(sbp->sb_fname))
+> +		return -EINVAL;
+> +
+> +	error = mnt_want_write_file(filp);
+> +	if (error)
+> +		return error;
+> +
+> +	spin_lock(&mp->m_sb_lock);
+> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
+> +	spin_unlock(&mp->m_sb_lock);
+> +
+> +	/* Log primary superblock label changes & force to disk. */
+> +	error = xfs_sync_sb_buf(mp);
+> +	if (error)
+> +		goto out;
+> +
+> +	/* Invalidate any cached bdev page for userspace visibility. */
+> +	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
+> +
+> +	/* Update the backup superblocks like userspace does. */
+> +	mutex_lock(&mp->m_growlock);
+> +	error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
+> +	mutex_unlock(&mp->m_growlock);
+> +out:
+> +	mnt_drop_write_file(filp);
+> +	return error;
 
-On Sat, Apr 21, 2018 at 03:03:09PM +0200, Jan Kara wrote:
-> On Wed 18-04-18 14:08:26, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> >=20
-> > Currently iomap_dio_rw() only handles (data)sync write completions=20
-> > for AIO. This means we can't optimised non-AIO IO to minimise device=20
-> > flushes as we can't tell the caller whether a flush is required or=20
-> > not.
-> >=20
-> > To solve this problem and enable further optimisations, make=20
-> > iomap_dio_rw responsible for data sync behaviour for all IO, not=20
-> > just AIO.
-> >=20
-> > In doing so, the sync operation is now accounted as part of the DIO=20
-> > IO by inode_dio_end(), hence post-IO data stability updates will no=20
-> > long race against operations that serialise via inode_dio_wait()=20
-> > such as truncate or hole punch.
-> >=20
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
->=20
-> Looks good to me. You can add:
->=20
-> Reviewed-by: Jan Kara <jack@suse.cz>
+Looks ok enough to start testing.
 
-It looks good, but it's broken in a subtle, nasty way. :/
+--D
 
-> > @@ -768,14 +776,8 @@ static ssize_t iomap_dio_complete(struct=20
-> > iomap_dio *dio)  static void iomap_dio_complete_work(struct=20
-> > work_struct *work)  {
-> >  	struct iomap_dio *dio =3D container_of(work, struct iomap_dio, aio.wo=
-rk);
-> > -	struct kiocb *iocb =3D dio->iocb;
-> > -	bool is_write =3D (dio->flags & IOMAP_DIO_WRITE);
-> > -	ssize_t ret;
-> > =20
-> > -	ret =3D iomap_dio_complete(dio);
-> > -	if (is_write && ret > 0)
-> > -		ret =3D generic_write_sync(iocb, ret);
-> > -	iocb->ki_complete(iocb, ret, 0);
-> > +	dio->iocb->ki_complete(dio->iocb, iomap_dio_complete(dio), 0);
-
-This generates a use after free from KASAN from generic/016. it appears the=
- compiler orders the code so that it dereferences
-dio->iocb after iomap_dio_complete() has freed the dio structure
-(yay!).
-
-I'll post a new version of the patchset now that I've got changes to
-2 of the 3 remaining patches in it....
-
-Cheers,
-
-Dave.
---
-Dave Chinner
-david@fromorbit.com
+> +}
+> +
+>  /*
+>   * Note: some of the ioctl's return positive numbers as a
+>   * byte count indicating success, such as readlink_by_handle.
+> @@ -1834,6 +1900,10 @@ struct getfsmap_info {
+>  	switch (cmd) {
+>  	case FITRIM:
+>  		return xfs_ioc_trim(mp, arg);
+> +	case FS_IOC_GET_FSLABEL:
+> +		return xfs_ioc_getlabel(mp, arg);
+> +	case FS_IOC_SET_FSLABEL:
+> +		return xfs_ioc_setlabel(filp, mp, arg);
+>  	case XFS_IOC_ALLOCSP:
+>  	case XFS_IOC_FREESP:
+>  	case XFS_IOC_RESVSP:
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
