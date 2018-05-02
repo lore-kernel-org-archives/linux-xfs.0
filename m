@@ -1,215 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39514 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750947AbeECRtm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 13:49:42 -0400
-Date: Thu, 3 May 2018 10:49:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3 2/2] generic: test swapfile creation, activation, and
- deactivation
-Message-ID: <20180503174912.GE4127@magnolia>
-References: <20180503174659.GD4127@magnolia>
+Received: from mail-io0-f193.google.com ([209.85.223.193]:35445 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751078AbeEBOUD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 10:20:03 -0400
+Received: by mail-io0-f193.google.com with SMTP id g1-v6so8304316iob.2
+        for <linux-xfs@vger.kernel.org>; Wed, 02 May 2018 07:20:02 -0700 (PDT)
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+ <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+ <20180430213120.GD13766@dastard>
+ <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
+ <20180430222852.GF13766@dastard>
+ <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
+ <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
+ <20180430232319.GV23861@dastard>
+ <bacc9dbb-c38b-9258-cd95-7582c27a97f7@kernel.dk> <yq1wowm7oo8.fsf@oracle.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <4f3b8286-7ef3-c8c4-01f2-47508ee5ab16@kernel.dk>
+Date: Wed, 2 May 2018 08:20:00 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180503174659.GD4127@magnolia>
+In-Reply-To: <yq1wowm7oo8.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org
-Cc: hch@infradead.org, cyberax@amazon.com, jack@suse.cz, osandov@osandov.com, Eryu Guan <guaneryu@gmail.com>, fstests <fstests@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 5/1/18 8:54 PM, Martin K. Petersen wrote:
+> 
+> Jens,
+> 
+>> diff --git a/block/blk-wbt.h b/block/blk-wbt.h
+>> index a232c98fbf4d..aec5bc82d580 100644
+>> --- a/block/blk-wbt.h
+>> +++ b/block/blk-wbt.h
+>> @@ -14,12 +14,17 @@ enum wbt_flags {
+>>  	WBT_TRACKED		= 1,	/* write, tracked for throttling */
+>>  	WBT_READ		= 2,	/* read */
+>>  	WBT_KSWAPD		= 4,	/* write, from kswapd */
+>> +	WBT_TRIM		= 8,
+> 
+> The term TRIM does not apply to NVMe, nor SCSI. Please call it
+> WBT_DISCARD.
 
-Test swapfile activation and deactivation.
+Sure, I can do that.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/708     |  150 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/708.out |   10 +++
- tests/generic/group   |    1 
- 3 files changed, 161 insertions(+)
- create mode 100755 tests/generic/708
- create mode 100644 tests/generic/708.out
+-- 
+Jens Axboe
 
-diff --git a/tests/generic/708 b/tests/generic/708
-new file mode 100755
-index 00000000..1c576b39
---- /dev/null
-+++ b/tests/generic/708
-@@ -0,0 +1,150 @@
-+#! /bin/bash
-+# FS QA Test No. 708
-+#
-+# Test various swapfile activation oddities.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_swapfile
-+
-+rm -f $seqres.full
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount >>$seqres.full 2>&1
-+
-+swapfile=$SCRATCH_MNT/swap
-+len=$((2 * 1048576))
-+
-+swapfile_cycle() {
-+	local swapfile="$1"
-+
-+	mkswap $swapfile >> $seqres.full
-+	filefrag -v $swapfile >> $seqres.full
-+	swapon $swapfile 2>&1 | _filter_scratch
-+	swapon -v --bytes >> $seqres.full
-+	swapoff $swapfile 2>> $seeqres.full
-+	rm -f $swapfile
-+}
-+
-+test_can_falloc_swap() {
-+	local test_swapfile=$TEST_DIR/swapfile
-+
-+	echo "can we fallocate swap?"
-+	$XFS_IO_PROG -f -c "falloc 0 64k" $test_swapfile
-+	test -f $test_swapfile || return 1
-+	mkswap $test_swapfile
-+	swapon $test_swapfile
-+	res=$?
-+	swapoff $test_swapfile
-+	rm -f $test_swapfile
-+	return $res
-+}
-+
-+unset can_falloc_swap
-+test_can_falloc_swap >> $seqres.full 2>&1 && can_falloc_swap=yes
-+page_size=$(get_page_size)
-+
-+# Create a sparse swap file
-+echo "sparse swap" | tee -a $seqres.full
-+$XFS_IO_PROG -f -c "truncate $len" $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a regular swap file
-+echo "regular swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $len $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a fallocated swap file
-+echo "fallocate swap" | tee -a $seqres.full
-+if [ -n "$can_falloc_swap" ]; then
-+	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-+	swapfile_cycle $swapfile
-+fi
-+
-+# Create a swap file with a little too much junk on the end
-+echo "too long swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len + 3)) $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a swap file with a large discontiguous range(?)
-+echo "large discontig swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len * 2)) $swapfile >> $seqres.full
-+old_sz="$(stat -c '%s' $swapfile)"
-+$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
-+new_sz="$(stat -c '%s' $swapfile)"
-+if [ $old_sz -gt $new_sz ]; then
-+	swapfile_cycle $swapfile
-+fi
-+rm -f $swapfile
-+
-+# Create a swap file with a small discontiguous range(?)
-+echo "small discontig swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len + 1024)) $swapfile >> $seqres.full
-+old_sz="$(stat -c '%s' $swapfile)"
-+$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
-+new_sz="$(stat -c '%s' $swapfile)"
-+if [ $old_sz -gt $new_sz ]; then
-+	swapfile_cycle $swapfile
-+fi
-+rm -f $swapfile
-+
-+# Create a fallocated swap file and touch every other $PAGE_SIZE to create
-+# a mess of written/unwritten extent records
-+echo "mixed swap" | tee -a $seqres.full
-+if [ -n "$can_falloc_swap" ]; then
-+	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-+	seq $page_size $((page_size * 2)) $len | while read offset; do
-+		_pwrite_byte 0x58 $offset 1 $swapfile >> $seqres.full
-+	done
-+	swapfile_cycle $swapfile
-+fi
-+
-+# Create a ridiculously small swap file; mkswap says the minimum is 40k.
-+echo "tiny swap" | tee -a $seqres.full
-+tiny_len=40960
-+if [ "$page_size" -gt "$tiny_len" ]; then
-+	tiny_len=$page_size
-+fi
-+_pwrite_byte 0x58 0 $tiny_len $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+status=0
-+exit
-diff --git a/tests/generic/708.out b/tests/generic/708.out
-new file mode 100644
-index 00000000..d6199b99
---- /dev/null
-+++ b/tests/generic/708.out
-@@ -0,0 +1,10 @@
-+QA output created by 708
-+sparse swap
-+swapon: SCRATCH_MNT/swap: skipping - it appears to have holes.
-+regular swap
-+fallocate swap
-+too long swap
-+large discontig swap
-+small discontig swap
-+mixed swap
-+tiny swap
-diff --git a/tests/generic/group b/tests/generic/group
-index 49f5cbe1..94cbcee9 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -489,3 +489,4 @@
- 484 auto quick
- 600 auto quick insert
- 706 auto quick attr
-+708 auto quick swapfile
