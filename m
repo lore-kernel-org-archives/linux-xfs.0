@@ -1,69 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52426 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753789AbeEAQBb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 May 2018 12:01:31 -0400
-Date: Tue, 1 May 2018 09:01:30 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: fixes for 4.17-rc4
-Message-ID: <20180501160130.GD4127@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:51350 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751175AbeEBCyY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 22:54:24 -0400
+Subject: Re: [PATCH 2/2] xfs: add 'discard_sync' mount flag
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <1525102372-8430-1-git-send-email-axboe@kernel.dk>
+        <1525102372-8430-3-git-send-email-axboe@kernel.dk>
+        <20180430213120.GD13766@dastard>
+        <c6e9db38-51d3-ae13-58cb-2b815ddd5891@kernel.dk>
+        <20180430222852.GF13766@dastard>
+        <87589bc6-e5f5-6247-485f-2237e0c493ad@kernel.dk>
+        <799de885-34f0-0cae-ae64-bf7bc194965d@kernel.dk>
+        <20180430232319.GV23861@dastard>
+        <bacc9dbb-c38b-9258-cd95-7582c27a97f7@kernel.dk>
+Date: Tue, 01 May 2018 22:54:15 -0400
+In-Reply-To: <bacc9dbb-c38b-9258-cd95-7582c27a97f7@kernel.dk> (Jens Axboe's
+        message of "Tue, 1 May 2018 09:23:13 -0600")
+Message-ID: <yq1wowm7oo8.fsf@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de
 
-Hi Linus,
 
-Here are a few more bug fixes for xfs for 4.17-rc4.  Most of them are
-fixes for bad behavior.
+Jens,
 
-This series has been run through a full xfstests run during LSF and
-through a quick xfstests run against this morning's master, with no
-major failures reported.  Let me know if there are any merge problems.
+> diff --git a/block/blk-wbt.h b/block/blk-wbt.h
+> index a232c98fbf4d..aec5bc82d580 100644
+> --- a/block/blk-wbt.h
+> +++ b/block/blk-wbt.h
+> @@ -14,12 +14,17 @@ enum wbt_flags {
+>  	WBT_TRACKED		= 1,	/* write, tracked for throttling */
+>  	WBT_READ		= 2,	/* read */
+>  	WBT_KSWAPD		= 4,	/* write, from kswapd */
+> +	WBT_TRIM		= 8,
 
---D
+The term TRIM does not apply to NVMe, nor SCSI. Please call it
+WBT_DISCARD.
 
-The following changes since commit 60cc43fc888428bb2f18f08997432d426a243338:
-
-  Linux 4.17-rc1 (2018-04-15 18:24:20 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.17-fixes-1
-
-for you to fetch changes up to 7b38460dc8e4eafba06c78f8e37099d3b34d473c:
-
-  xfs: don't fail when converting shortform attr to long form during ATTR_REPLACE (2018-04-17 19:10:15 -0700)
-
-----------------------------------------------------------------
-Changes since last update:
-- Enhance inode fork verifiers to prevent loading of corrupted metadata.
-- Fix a crash when we try to convert extents format inodes to btree
-  format, we run out of space, but forget to revert the in-core state
-  changes.
-- Fix file size checks when doing INSERT_RANGE that could cause files
-  to end up negative size if there previously was an extent mapped at
-  s_maxbytes.
-- Fix a bug when doing a remove-then-add ATTR_REPLACE xattr update where
-  we forget to clear ATTR_REPLACE after the remove, which causes the
-  attr to be lost and the fs to shut down due to (what it thinks is)
-  inconsistent in-core state.
-
-----------------------------------------------------------------
-Darrick J. Wong (2):
-      xfs: prevent creating negative-sized file via INSERT_RANGE
-      xfs: don't fail when converting shortform attr to long form during ATTR_REPLACE
-
-Eric Sandeen (2):
-      xfs: enhance dinode verifier
-      xfs: set format back to extents if xfs_bmap_extents_to_btree
-
- fs/xfs/libxfs/xfs_attr.c      |  9 ++++++++-
- fs/xfs/libxfs/xfs_bmap.c      |  4 ++++
- fs/xfs/libxfs/xfs_inode_buf.c | 21 +++++++++++++++++++++
- fs/xfs/xfs_file.c             | 14 +++++++++-----
- 4 files changed, 42 insertions(+), 6 deletions(-)
+-- 
+Martin K. Petersen	Oracle Linux Engineering
