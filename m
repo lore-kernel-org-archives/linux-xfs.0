@@ -1,63 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60098 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755462AbeEHQiG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:38:06 -0400
-Subject: [PATCH 4/4] fsck: fix more bashisms
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 08 May 2018 09:37:46 -0700
-Message-ID: <152579746659.10641.17574404294067266121.stgit@magnolia>
-In-Reply-To: <152579743411.10641.4577883761846454290.stgit@magnolia>
-References: <152579743411.10641.4577883761846454290.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:35450 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750948AbeEBT4Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 May 2018 15:56:24 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 0D2864C1518
+        for <linux-xfs@vger.kernel.org>; Wed,  2 May 2018 14:55:09 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] xfsprogs: be careful about what we stat in
+ platform_check_mount
+Message-ID: <92bcf603-5106-9fa0-1b48-0d13ff0608c8@sandeen.net>
+Date: Wed, 2 May 2018 14:56:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+After we lost ustat(2) in commit 4e7a824, we ended up with a slightly
+bonkers method to determine if our target block device was mounted:
+it goes through every entry returned by getmntent and stats the dir
+to see if its underlying device matches ours.
 
-command -v is a bashism, so we need to get rid of it.  The shell returns
-an error code of 127 if it couldn't invoke xfs_repair, so teach
-repair2fsck_code to deal with this.
+Unfortunately that dir might be a hung nfs server and sadness ensues.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+So do some pre-checks; can we stat the mounted "device?"  If so is
+it really a block device?  If not, skip it.
+
+Fixes: 4e7a824 ("libxfs/linux.c: Replace use of ustat by stat")
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fsck/xfs_fsck.sh |   12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
 
-
-diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-index 1916c07e..6af0f224 100755
---- a/fsck/xfs_fsck.sh
-+++ b/fsck/xfs_fsck.sh
-@@ -20,6 +20,10 @@ repair2fsck_code() {
- 		;;
- 	4)  return 1 # The fs has been fixed
- 		;;
-+	127)
-+		echo "$NAME error: xfs_repair was not found!" 1>&2
-+		return 4
-+		;;
- 	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
- 		return 4 # something went wrong with xfs_repair
- 	esac
-@@ -59,13 +63,7 @@ if [ -n "$PS1" -o -t 0 ]; then
- fi
- 
- if $FORCE; then
--	XFS_REPAIR=`command -v xfs_repair`
--	if [ ! -x "$XFS_REPAIR" ] ; then
--		echo "$NAME error: xfs_repair was not found!" 1>&2
--		exit 4
--	fi
--
--	$XFS_REPAIR -e $DEV
-+	xfs_repair -e $DEV
- 	repair2fsck_code $?
- 	exit $?
- fi
+diff --git a/libxfs/linux.c b/libxfs/linux.c
+index 0bace3e..7350fa7 100644
+--- a/libxfs/linux.c
++++ b/libxfs/linux.c
+@@ -77,7 +77,21 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
+ 		    progname, name);
+ 		return 1;
+ 	}
++	/*
++	 * This whole business is to work out if our block device is mounted
++	 * after we lost ustat(2), see:
++	 * 	4e7a824 libxfs/linux.c: Replace use of ustat by stat
++	 * We don't really want to stat every single mounted directory,
++	 * as that may include tmpfs, cgroups, procfs or - worst - hung nfs
++	 * servers.  So we check the "device" before going after the mountpoint.
++	 */
+ 	while ((mnt = getmntent(f)) != NULL) {
++		/* If the "fsname" is't a stat-able device, skip it */
++		if (stat(mnt->mnt_fsname, &mst) < 0)
++			continue;
++		if (!S_ISBLK(mst.st_mode))
++			continue;
++		/* Ok, this entry does seem to be a mounted block device */
+ 		if (stat(mnt->mnt_dir, &mst) < 0)
+ 			continue;
+ 		if (mst.st_dev != s->st_rdev)
 
