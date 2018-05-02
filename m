@@ -1,231 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56218 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932644AbeEHPYz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 11:24:55 -0400
-Date: Tue, 8 May 2018 08:24:33 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:49906 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751234AbeEBUeE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 16:34:04 -0400
+Date: Wed, 2 May 2018 13:33:38 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/9] xfs_spaceman: add a superblock info command
-Message-ID: <20180508152433.GK11261@magnolia>
-References: <152401952391.13048.15040850425873030425.stgit@magnolia>
- <152401956907.13048.9916119316995542280.stgit@magnolia>
- <3166828d-0d56-adcd-32d1-2da12d13729a@sandeen.net>
- <20180503213904.GB26569@magnolia>
+Subject: [PATCH 2/2] generic: test swapfile creation, activation, and
+ deactivation
+Message-ID: <20180502203338.GB4141@magnolia>
+References: <20180502203228.GA4141@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180503213904.GB26569@magnolia>
+In-Reply-To: <20180502203228.GA4141@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, darrick.wong@oracle.com
+Cc: hch@infradead.org, cyberax@amazon.com, jack@suse.cz, osandov@osandov.com, Eryu Guan <guaneryu@gmail.com>
 
-On Thu, May 03, 2018 at 02:39:04PM -0700, Darrick J. Wong wrote:
-> On Thu, May 03, 2018 at 04:09:36PM -0500, Eric Sandeen wrote:
-> > On 4/17/18 9:46 PM, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add an 'info' command to pretty-print the superblock geometry.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > 
-> > 
-> > 
-> > > diff --git a/spaceman/file.c b/spaceman/file.c
-> > > index 4f9f66c..6adb4f5 100644
-> > > --- a/spaceman/file.c
-> > > +++ b/spaceman/file.c
-> > > @@ -84,6 +84,8 @@ openfile(
-> > 
-> >         char            *path,
-> >         xfs_fsop_geom_t *geom,
-> >         struct fs_path  *fs_path)
-> > {
-> > ..
-> > 
-> >         if (fs_path) {
-> > ...
-> > >  			return -1;
-> > >  		}
-> > >  		memcpy(fs_path, fsp, sizeof(struct fs_path));
-> > > +	} else {
-> > > +		memset(fs_path, 0, sizeof(struct fs_path));
-> > >  	}
-> > 
-> > so if fs_path == NULL memset(NULL, 0) ?
-> > 
-> > Not sure what's going on here.
-> > 
-> > (or maybe I've forgotten how C works)
-> 
-> Not sure either.  The only caller of openfile() always passes in fs_path
-> so the else clause can go away.  Bad xfs_io copy pasta, sorry. :(
-> 
-> --D
+Test swapfile activation and deactivation.
 
-Dangit, I missed some comments.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/708     |  120 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/708.out |    9 ++++
+ tests/generic/group   |    1 
+ 3 files changed, 130 insertions(+)
+ create mode 100755 tests/generic/708
+ create mode 100644 tests/generic/708.out
 
-> > >  	return fd;
-> > >  }
-> > > diff --git a/spaceman/info.c b/spaceman/info.c
-> > > new file mode 100644
-> > > index 0000000..b8b8133
-> > > --- /dev/null
-> > > +++ b/spaceman/info.c
-> > > @@ -0,0 +1,96 @@
-> > > +/*
-> > > + * Copyright (C) 2018 Oracle.  All Rights Reserved.
-> > > + *
-> > > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> > > + *
-> > > + * This program is free software; you can redistribute it and/or
-> > > + * modify it under the terms of the GNU General Public License
-> > > + * as published by the Free Software Foundation; either version 2
-> > > + * of the License, or (at your option) any later version.
-> > > + *
-> > > + * This program is distributed in the hope that it would be useful,
-> > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > > + * GNU General Public License for more details.
-> > > + *
-> > > + * You should have received a copy of the GNU General Public License
-> > > + * along with this program; if not, write the Free Software Foundation,
-> > > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> > > + */
-> > > +#include "libxfs.h"
-> > > +#include "command.h"
-> > > +#include "init.h"
-> > > +#include "path.h"
-> > > +#include "space.h"
-> > > +#include "fsgeom.h"
-> > > +
-> > > +static void
-> > > +info_help(void)
-> > > +{
-> > > +	printf(_(
-> > > +"\n"
-> > > +" Pretty-prints the filesystem geometry as derived from the superblock.\n"
-> > > +" The output has the same format as mkfs.  The opened file must be a XFS\n"
-> > 
-> > "an XFS?"
-
-Sure.
-
-> > > +" mount point.\n"
-> > > +"\n"
-> > > +));
-> > > +
-> > > +}
-> > > +
-> > > +static int
-> > > +info_f(
-> > > +	int			argc,
-> > > +	char			**argv)
-> > > +{
-> > > +	struct xfs_fsop_geom	geo;
-> > > +	int			error;
-> > > +
-> > > +	if (fs_table_lookup_mount(file->name) == NULL) {
-> > > +		fprintf(stderr, _("%s: Not a XFS mount point.\n"), file->name);
-> > > +		return 1;
-> > > +	}
-> > > +
-> > > +	/* get the current filesystem size & geometry */
-> > > +	error = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &geo);
-> > > +	if (error) {
-> > > +		/*
-> > > +		 * OK, new xfsctl barfed - back off and try earlier version
-> > > +		 * as we're probably running an older kernel version.
-> > > +		 * Only field added in the v2 geometry xfsctl is "logsunit"
-> > > +		 * so we'll zero that out for later display (as zero).
-> > > +		 */
-> > > +		geo.logsunit = 0;
-> > > +		error = ioctl(file->fd, XFS_IOC_FSGEOMETRY_V1, &geo);
-> > 
-> > We're certain that it won't fill in logsunit with junk, right?
-> > Would it be any safer to set logsunit after or is that presupposing too
-> > much about the interface?  I guess it's fine.
-
-The kernel had better not fill logsunit with anything, since it copies
-the v1 structure back to userspace and the v1 structure isn't long
-enough to overlay logsunit.
-
-> > > +		if (error) {
-> > > +			fprintf(stderr, _(
-> > > +				"%s: cannot determine geometry of filesystem"
-> > > +				" mounted at %s: %s\n"),
-> > > +				progname, file->name, strerror(errno));
-> > > +			exitcode = 1;
-> > > +			return 0;
-> > > +		}
-> > > +	}
-> > > +
-> > > +	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
-> > > +			file->fs_path.fs_rt);
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +static const struct cmdinfo info_cmd = {
-> > > +	.name =		"info",
-> > > +	.altname =	"i",
-> > > +	.cfunc =	info_f,
-> > > +	.argmin =	0,
-> > > +	.argmax =	0,
-> > > +	.canpush =	0,
-> > > +	.args =		NULL,
-> > > +	.flags =	CMD_FLAG_ONESHOT,
-> > > +	.oneline =	N_("dump superblock info"),
-> > 
-> > "print geometry superblock info"
-
-"pretty-print superblock geometry info" ?
-
---D
-
-> > > +	.help =		info_help,
-> > > +};
-> > > +
-> > > +void
-> > > +info_init(void)
-> > > +{
-> > > +	add_command(&info_cmd);
-> > > +}
-> > > diff --git a/spaceman/init.c b/spaceman/init.c
-> > > index b3eface..895504f 100644
-> > > --- a/spaceman/init.c
-> > > +++ b/spaceman/init.c
-> > > @@ -40,6 +40,7 @@ init_commands(void)
-> > >  {
-> > >  	print_init();
-> > >  	help_init();
-> > > +	info_init();
-> > >  	prealloc_init();
-> > >  	quit_init();
-> > >  	trim_init();
-> > > diff --git a/spaceman/space.h b/spaceman/space.h
-> > > index 5f4a8a0..d2a2543 100644
-> > > --- a/spaceman/space.h
-> > > +++ b/spaceman/space.h
-> > > @@ -42,5 +42,6 @@ extern void	freesp_init(void);
-> > >  #else
-> > >  # define freesp_init()	do { } while (0)
-> > >  #endif
-> > > +extern void	info_init(void);
-> > >  
-> > >  #endif /* XFS_SPACEMAN_SPACE_H_ */
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/tests/generic/708 b/tests/generic/708
+new file mode 100755
+index 00000000..49be8111
+--- /dev/null
++++ b/tests/generic/708
+@@ -0,0 +1,120 @@
++#! /bin/bash
++# FS QA Test No. 708
++#
++# Test various swapfile activation oddities.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Oracle.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $testfile
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch_swapfile
++
++rm -f $seqres.full
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount >>$seqres.full 2>&1
++
++swapfile=$SCRATCH_MNT/swap
++len=$((2 * 1048576))
++
++swapfile_cycle() {
++	local swapfile="$1"
++
++	mkswap $swapfile >> $seqres.full
++	filefrag -v $swapfile >> $seqres.full
++	swapon $swapfile 2>&1 | _filter_scratch
++	swapon -v --bytes >> $seqres.full
++	swapoff $swapfile 2>> $seeqres.full
++	rm -f $swapfile
++}
++
++# Create a sparse swap file
++echo "sparse swap" | tee -a $seqres.full
++$XFS_IO_PROG -f -c "truncate $len" $swapfile >> $seqres.full
++swapfile_cycle $swapfile
++
++# Create a regular swap file
++echo "regular swap" | tee -a $seqres.full
++_pwrite_byte 0x58 0 $len $swapfile >> $seqres.full
++swapfile_cycle $swapfile
++
++# Create a fallocated swap file
++echo "fallocate swap" | tee -a $seqres.full
++$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
++swapfile_cycle $swapfile
++
++# Create a swap file with a little too much junk on the end
++echo "too long swap" | tee -a $seqres.full
++$XFS_IO_PROG -f -c "falloc 0 $((len + 3))" $swapfile >> $seqres.full
++swapfile_cycle $swapfile
++
++# Create a swap file with a large discontiguous range(?)
++echo "large discontig swap" | tee -a $seqres.full
++$XFS_IO_PROG -f -c "falloc 0 $((len * 2))" $swapfile >> $seqres.full
++old_sz="$(stat -c '%s' $swapfile)"
++$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
++new_sz="$(stat -c '%s' $swapfile)"
++if [ $old_sz -gt $new_sz ]; then
++	swapfile_cycle $swapfile
++fi
++rm -f $swapfile
++
++# Create a swap file with a small discontiguous range(?)
++echo "small discontig swap" | tee -a $seqres.full
++$XFS_IO_PROG -f -c "falloc 0 $((len + 1024))" $swapfile >> $seqres.full
++old_sz="$(stat -c '%s' $swapfile)"
++$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
++new_sz="$(stat -c '%s' $swapfile)"
++if [ $old_sz -gt $new_sz ]; then
++	swapfile_cycle $swapfile
++fi
++rm -f $swapfile
++
++# Create a fallocated swap file and touch every other $PAGE_SIZE to create
++# a mess of written/unwritten extent records
++echo "mixed swap" | tee -a $seqres.full
++$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
++page_size=$(get_page_size)
++seq $page_size $((page_size * 2)) $len | while read offset; do
++	_pwrite_byte 0x58 $offset 1 $swapfile >> $seqres.full
++done
++swapfile_cycle $swapfile
++
++status=0
++exit
+diff --git a/tests/generic/708.out b/tests/generic/708.out
+new file mode 100644
+index 00000000..bc7b05d1
+--- /dev/null
++++ b/tests/generic/708.out
+@@ -0,0 +1,9 @@
++QA output created by 708
++sparse swap
++swapon: SCRATCH_MNT/swap: skipping - it appears to have holes.
++regular swap
++fallocate swap
++too long swap
++large discontig swap
++small discontig swap
++mixed swap
+diff --git a/tests/generic/group b/tests/generic/group
+index 49f5cbe1..94cbcee9 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -489,3 +489,4 @@
+ 484 auto quick
+ 600 auto quick insert
+ 706 auto quick attr
++708 auto quick swapfile
