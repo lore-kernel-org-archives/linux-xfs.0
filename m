@@ -1,213 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46774 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754987AbeEAORy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 1 May 2018 10:17:54 -0400
-Date: Tue, 1 May 2018 10:17:52 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/5] xfs: factor out secondary superblock updates
-Message-ID: <20180501141752.GF4525@bfoster.bfoster>
-References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
- <aecfedfa-6216-80d8-bbac-3dfad639f9c8@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:49706 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751140AbeEBQnZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 12:43:25 -0400
+Date: Wed, 2 May 2018 09:43:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 13/13] xfs: refactor dquot iteration
+Message-ID: <20180502164303.GW4127@magnolia>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <152506707631.21553.6110605230681161129.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aecfedfa-6216-80d8-bbac-3dfad639f9c8@sandeen.net>
+In-Reply-To: <152506707631.21553.6110605230681161129.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
 
-On Mon, Apr 30, 2018 at 10:43:55AM -0500, Eric Sandeen wrote:
-> growfs rewrites all secondary supers, and relabel should do so as well;
-> factor out the code which does this for use by both operations.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-FYI I think Dave has some patches in progress to rework growfs. It might
-be useful to coordinate on the refactoring bits, at least..
+Create a helper function to iterate all the dquots of a given type in
+the system, and refactor the dquot scrub to use it.  This will get more
+use in the quota repair code.
 
-Brian
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+v2: fix compiler warning about uninitialized offset
+---
+ fs/xfs/scrub/quota.c |   56 +++++++++++++++++++++++---------------------------
+ fs/xfs/xfs_dquot.c   |   32 +++++++++++++++++++++++++++++
+ fs/xfs/xfs_dquot.h   |    5 ++++
+ 3 files changed, 63 insertions(+), 30 deletions(-)
 
->  fs/xfs/xfs_fsops.c | 130 +++++++++++++++++++++++++++++++----------------------
->  fs/xfs/xfs_fsops.h |   2 +
->  2 files changed, 79 insertions(+), 53 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 5237927..8f2a73a 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -71,6 +71,79 @@
->  	return bp;
->  }
->  
-> +/*
-> + * Copy the contents of the primary super to all backup supers.
-> + * %agcount is currently existing AGs
-> + * %new_ags is the number of new AGs to write out if we're growing the
-> + * filesystem.
-> + * We can't use mp->m_sb.sb_agcount here because growfs already updated it.
-> + */
-> +int
-> +xfs_update_secondary_supers(
-> +	xfs_mount_t		*mp,
-> +	xfs_agnumber_t		agcount,
-> +	xfs_agnumber_t		new_ags)
-> +{
-> +	int			error, saved_error;
-> +	xfs_agnumber_t		agno;
-> +	xfs_buf_t		*bp;
-> +
-> +	error = saved_error = 0;
-> +
-> +	/* update secondary superblocks. */
-> +	for (agno = 1; agno < agcount + new_ags; agno++) {
-> +		error = 0;
-> +		/*
-> +		 * new secondary superblocks need to be zeroed, not read from
-> +		 * disk as the contents of the new area we are growing into is
-> +		 * completely unknown.
-> +		 */
-> +		if (agno < agcount) {
-> +			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> +				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> +				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-> +				  &xfs_sb_buf_ops);
-> +		} else {
-> +			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
-> +				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> +				  XFS_FSS_TO_BB(mp, 1), 0);
-> +			if (bp) {
-> +				bp->b_ops = &xfs_sb_buf_ops;
-> +				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> +			} else
-> +				error = -ENOMEM;
-> +		}
-> +
-> +		/*
-> +		 * If we get an error reading or writing alternate superblocks,
-> +		 * continue.  xfs_repair chooses the "best" superblock based
-> +		 * on most matches; if we break early, we'll leave more
-> +		 * superblocks un-updated than updated, and xfs_repair may
-> +		 * pick them over the properly-updated primary.
-> +		 */
-> +		if (error) {
-> +			xfs_warn(mp,
-> +		"error %d reading secondary superblock for ag %d",
-> +				error, agno);
-> +			saved_error = error;
-> +			continue;
-> +		}
-> +		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> +
-> +		error = xfs_bwrite(bp);
-> +		xfs_buf_relse(bp);
-> +		if (error) {
-> +			xfs_warn(mp,
-> +		"write error %d updating secondary superblock for ag %d",
-> +				error, agno);
-> +			saved_error = error;
-> +			continue;
-> +		}
-> +	}
-> +
-> +	return saved_error ? saved_error : error;
-> +}
-> +
->  static int
->  xfs_growfs_data_private(
->  	xfs_mount_t		*mp,		/* mount point for filesystem */
-> @@ -86,7 +159,7 @@
->  	xfs_buf_t		*bp;
->  	int			bucket;
->  	int			dpct;
-> -	int			error, saved_error = 0;
-> +	int			error;
->  	xfs_agnumber_t		nagcount;
->  	xfs_agnumber_t		nagimax = 0;
->  	xfs_rfsblock_t		nb, nb_mod;
-> @@ -557,59 +630,10 @@
->  	if (error && error != -ENOSPC)
->  		goto out;
->  
-> -	/* update secondary superblocks. */
-> -	for (agno = 1; agno < nagcount; agno++) {
-> -		error = 0;
-> -		/*
-> -		 * new secondary superblocks need to be zeroed, not read from
-> -		 * disk as the contents of the new area we are growing into is
-> -		 * completely unknown.
-> -		 */
-> -		if (agno < oagcount) {
-> -			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> -				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-> -				  &xfs_sb_buf_ops);
-> -		} else {
-> -			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
-> -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> -				  XFS_FSS_TO_BB(mp, 1), 0);
-> -			if (bp) {
-> -				bp->b_ops = &xfs_sb_buf_ops;
-> -				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> -			} else
-> -				error = -ENOMEM;
-> -		}
-> -
-> -		/*
-> -		 * If we get an error reading or writing alternate superblocks,
-> -		 * continue.  xfs_repair chooses the "best" superblock based
-> -		 * on most matches; if we break early, we'll leave more
-> -		 * superblocks un-updated than updated, and xfs_repair may
-> -		 * pick them over the properly-updated primary.
-> -		 */
-> -		if (error) {
-> -			xfs_warn(mp,
-> -		"error %d reading secondary superblock for ag %d",
-> -				error, agno);
-> -			saved_error = error;
-> -			continue;
-> -		}
-> -		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> -
-> -		error = xfs_bwrite(bp);
-> -		xfs_buf_relse(bp);
-> -		if (error) {
-> -			xfs_warn(mp,
-> -		"write error %d updating secondary superblock for ag %d",
-> -				error, agno);
-> -			saved_error = error;
-> -			continue;
-> -		}
-> -	}
-> -
-> +	/* Copy new geometry to all backup superblocks, old & new */
-> +	error = xfs_update_secondary_supers(mp, oagcount, nagcount - oagcount);
->   out:
-> -	return saved_error ? saved_error : error;
-> +	return error;
->  
->   error0:
->  	xfs_trans_cancel(tp);
-> diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-> index 20484ed..ffc5377 100644
-> --- a/fs/xfs/xfs_fsops.h
-> +++ b/fs/xfs/xfs_fsops.h
-> @@ -18,6 +18,8 @@
->  #ifndef __XFS_FSOPS_H__
->  #define	__XFS_FSOPS_H__
->  
-> +extern int xfs_update_secondary_supers(xfs_mount_t *mp, xfs_agnumber_t agcount,
-> +				xfs_agnumber_t new_ags);
->  extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
->  extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
->  extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 50415e8e5dd1..ba87c3aaa8b7 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -77,14 +77,20 @@ xfs_scrub_setup_quota(
+ 
+ /* Quotas. */
+ 
++struct xfs_scrub_quota_info {
++	struct xfs_scrub_context	*sc;
++	xfs_dqid_t			last_id;
++};
++
+ /* Scrub the fields in an individual quota item. */
+-STATIC void
++STATIC int
+ xfs_scrub_quota_item(
+-	struct xfs_scrub_context	*sc,
+-	uint				dqtype,
+ 	struct xfs_dquot		*dq,
+-	xfs_dqid_t			id)
++	uint				dqtype,
++	void				*priv)
+ {
++	struct xfs_scrub_quota_info	*sqi = priv;
++	struct xfs_scrub_context	*sc = sqi->sc;
+ 	struct xfs_mount		*mp = sc->mp;
+ 	struct xfs_disk_dquot		*d = &dq->q_core;
+ 	struct xfs_quotainfo		*qi = mp->m_quotainfo;
+@@ -99,17 +105,18 @@ xfs_scrub_quota_item(
+ 	unsigned long long		icount;
+ 	unsigned long long		rcount;
+ 	xfs_ino_t			fs_icount;
+-
+-	offset = id / qi->qi_dqperchunk;
++	xfs_dqid_t			id = be32_to_cpu(d->d_id);
+ 
+ 	/*
+-	 * We fed $id and DQNEXT into the xfs_qm_dqget call, which means
+-	 * that the actual dquot we got must either have the same id or
+-	 * the next higher id.
++	 * Except for the root dquot, the actual dquot we got must either have
++	 * the same or higher id as we saw before.
+ 	 */
+-	if (id > be32_to_cpu(d->d_id))
++	offset = id / qi->qi_dqperchunk;
++	if (id && id <= sqi->last_id)
+ 		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+ 
++	sqi->last_id = id;
++
+ 	/* Did we get the dquot type we wanted? */
+ 	if (dqtype != (d->d_flags & XFS_DQ_ALLTYPES))
+ 		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+@@ -183,6 +190,8 @@ xfs_scrub_quota_item(
+ 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
+ 	if (id != 0 && rhard != 0 && rcount > rhard)
+ 		xfs_scrub_fblock_set_warning(sc, XFS_DATA_FORK, offset);
++
++	return 0;
+ }
+ 
+ /* Scrub all of a quota type's items. */
+@@ -191,13 +200,12 @@ xfs_scrub_quota(
+ 	struct xfs_scrub_context	*sc)
+ {
+ 	struct xfs_bmbt_irec		irec = { 0 };
++	struct xfs_scrub_quota_info	sqi;
+ 	struct xfs_mount		*mp = sc->mp;
+ 	struct xfs_inode		*ip;
+ 	struct xfs_quotainfo		*qi = mp->m_quotainfo;
+-	struct xfs_dquot		*dq;
+ 	xfs_fileoff_t			max_dqid_off;
+ 	xfs_fileoff_t			off = 0;
+-	xfs_dqid_t			id = 0;
+ 	uint				dqtype;
+ 	int				nimaps;
+ 	int				error = 0;
+@@ -264,24 +272,12 @@ xfs_scrub_quota(
+ 		goto out;
+ 
+ 	/* Check all the quota items. */
+-	while (id < ((xfs_dqid_t)-1ULL)) {
+-		if (xfs_scrub_should_terminate(sc, &error))
+-			break;
+-
+-		error = xfs_qm_dqget_next(mp, id, dqtype, &dq);
+-		if (error == -ENOENT)
+-			break;
+-		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK,
+-				id * qi->qi_dqperchunk, &error))
+-			break;
+-
+-		xfs_scrub_quota_item(sc, dqtype, dq, id);
+-
+-		id = be32_to_cpu(dq->q_core.d_id) + 1;
+-		xfs_qm_dqput(dq);
+-		if (!id)
+-			break;
+-	}
++	sqi.sc = sc;
++	sqi.last_id = 0;
++	error = xfs_qm_dqiterate(mp, dqtype, xfs_scrub_quota_item, &sqi);
++	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK,
++			sqi.last_id * qi->qi_dqperchunk, &error))
++		goto out;
+ 
+ out:
+ 	/* We set sc->ip earlier, so make sure we clear it now. */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 4b76ae00e69b..f8b8c99e3e73 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -1212,3 +1212,35 @@ xfs_qm_exit(void)
+ 	kmem_zone_destroy(xfs_qm_dqtrxzone);
+ 	kmem_zone_destroy(xfs_qm_dqzone);
+ }
++
++/*
++ * Iterate every dquot of a particular type.  The caller must ensure that the
++ * particular quota type is active.  iter_fn can return negative error codes,
++ * or XFS_BTREE_QUERY_RANGE_ABORT to indicate that it wants to stop iterating.
++ */
++int
++xfs_qm_dqiterate(
++	struct xfs_mount	*mp,
++	uint			dqtype,
++	xfs_qm_dqiterate_fn	iter_fn,
++	void			*priv)
++{
++	struct xfs_dquot	*dq;
++	xfs_dqid_t		id = 0;
++	int			error;
++
++	do {
++		error = xfs_qm_dqget_next(mp, id, dqtype, &dq);
++		if (error == -ENOENT)
++			return 0;
++		if (error)
++			return error;
++
++		error = iter_fn(dq, dqtype, priv);
++		id = be32_to_cpu(dq->q_core.d_id);
++		xfs_qm_dqput(dq);
++		id++;
++	} while (error == 0 && id != 0);
++
++	return error;
++}
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 6959f0135f36..417ac03b8d7b 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -193,4 +193,9 @@ static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
+ 	return dqp;
+ }
+ 
++typedef int (*xfs_qm_dqiterate_fn)(struct xfs_dquot *dq, uint dqtype,
++		void *priv);
++int xfs_qm_dqiterate(struct xfs_mount *mp, uint dqtype,
++		xfs_qm_dqiterate_fn iter_fn, void *priv);
++
+ #endif /* __XFS_DQUOT_H__ */
