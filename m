@@ -1,49 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:34319 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751432AbeEBMcA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 08:32:00 -0400
-Received: by mail-wr0-f180.google.com with SMTP id p18-v6so13844733wrm.1
-        for <linux-xfs@vger.kernel.org>; Wed, 02 May 2018 05:32:00 -0700 (PDT)
-Date: Wed, 2 May 2018 14:31:56 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 0/2] xfs: clean up xfs_file_iomap_begin()
-Message-ID: <20180502123156.csrvt4wgdjw5lqhk@odin.usersys.redhat.com>
-References: <20180502055144.28851-1-david@fromorbit.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:58751 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750970AbeECWbs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 18:31:48 -0400
+Date: Fri, 4 May 2018 08:31:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Oops from linux-next 20180430
+Message-ID: <20180503223119.GF23861@dastard>
+References: <20180503205703.GA27821@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180502055144.28851-1-david@fromorbit.com>
+In-Reply-To: <20180503205703.GA27821@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 02, 2018 at 03:51:42PM +1000, Dave Chinner wrote:
-> Hi folks,
-> 
-> These patches follow up on recent changes to the locking and
-> non-blocking behaviour of xfs_file_iomap_begin() to make it easier
-> to follow and understand. The code is a bit of a tangle right now,
-> and these two patches pull all of the locking and NOWAIT decisions
-> into a single function and out of all the mapping code.
-> 
-> There are no functional changes here, just a code re-org.
-> 
-> Cheers,
-> 
-> Dave.
+On Thu, May 03, 2018 at 01:57:03PM -0700, Matthew Wilcox wrote:
+> I was running xfstests xfs/350 at the time.
 
-Both patches looks good:
+It's a superblock fuzzing test. Described as:
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+tests/xfs/group:350 dangerous_fuzzers dangerous_scrub dangerous_repair
 
+Are you trying to run xfstests as a regression test suite (i.e.
+check -g auto) , or as a fuzzer to find on-disk format parsing
+issues (check -g dangerous_fuzzers)?
+
+> No kernel patches applied
+> beyond linux-next (I was hoping to get a baseline).
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 5726 XFS: Assertion failed: sbp->sb_rsumino != NULLFSINO, file: ../fs/xfs/xfs_rtalloc.c, line: 1223
 
+And you're running a debug kernel, so assert failures are expected.
+
+Essentially, the fuzzed superblock has a non-null realtime bitmap
+inode, but a null realtime summary inode. Which on a non-debug
+kernel will result in mount failing, but on a CONFIG_XFS_DEBUG=y
+kernel it fires this assert....
+
+We're slowly converting asserts like this to explicit checks that
+return -EFSCORRUPTED as we come across them - this is obviously code
+that hasn't been converted yet....
+
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
