@@ -1,75 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:50838 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752414AbeEBPaP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 11:30:15 -0400
-Received: by mail-wm0-f67.google.com with SMTP id t11so23590552wmt.0
-        for <linux-xfs@vger.kernel.org>; Wed, 02 May 2018 08:30:14 -0700 (PDT)
-Date: Wed, 2 May 2018 17:30:10 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v2] xfs: cap the length of deduplication requests
-Message-ID: <20180502153010.qcnxef3wpojlbria@odin.usersys.redhat.com>
-References: <20180417051918.GD5203@magnolia>
- <20180418025755.GN24738@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:55148 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750944AbeECNQb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 May 2018 09:16:31 -0400
+Date: Thu, 3 May 2018 15:16:30 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/2] iomap: add a swapfile activation function
+Message-ID: <20180503131630.tpfv5eu744vxx4gj@quack2.suse.cz>
+References: <20180502203228.GA4141@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180418025755.GN24738@magnolia>
+In-Reply-To: <20180502203228.GA4141@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, hch@infradead.org, cyberax@amazon.com, jack@suse.cz, osandov@osandov.com, Eryu Guan <guaneryu@gmail.com>
 
-On Tue, Apr 17, 2018 at 07:57:55PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Since deduplication potentially has to read in all the pages in both
-> files in order to compare the contents, cap the deduplication request
-> length at MAX_RW_COUNT/2 (roughly 1GB) so that we have /some/ upper bound
-> on the request length and can't just lock up the kernel forever.  Found
-> by running generic/304 after commit 1ddae54555b62a ("common/rc: add
-> missing 'local' keywords").
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Looks good,
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> ---
-> v2: halve the amount so that we do MAX_RW_COUNT IO max
-> ---
->  fs/xfs/xfs_file.c |   10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 299aee4..9cafad4 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -876,8 +876,18 @@ xfs_file_dedupe_range(
->  	struct file	*dst_file,
->  	u64		dst_loff)
->  {
-> +	struct inode	*srci = file_inode(src_file);
-> +	u64		max_dedupe;
->  	int		error;
->  
+On Wed 02-05-18 13:32:28, Darrick J. Wong wrote:
+> +/*
+> + * Collect physical extents for this swap file.  Physical extents reported to
+> + * the swap code must be trimmed to align to a page boundary.  The logical
+> + * offset within the file is irrelevant since the swapfile code maps logical
+> + * page numbers of the swap device to the physical page-aligned extents.
+> + */
+> +static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
+> +{
+> +	struct iomap *iomap = &isi->iomap;
+> +	unsigned long nr_pages;
+> +	uint64_t first_ppage;
+> +	uint64_t first_ppage_reported;
+> +	uint64_t last_ppage;
+> +	int error;
+> +
 > +	/*
-> +	 * Since we have to read all these pages in to compare them, cut
-> +	 * it off at MAX_RW_COUNT/2 rounded down to the nearest block.
-> +	 * That means we won't do more than MAX_RW_COUNT IO per request.
+> +	 * Round the start up and the length down so that the physical
+> +	 * extent aligns to a page boundary.
 > +	 */
-> +	max_dedupe = (MAX_RW_COUNT >> 1) & ~(i_blocksize(srci) - 1);
-> +	if (len > max_dedupe)
-> +		len = max_dedupe;
->  	error = xfs_reflink_remap_range(src_file, loff, dst_file, dst_loff,
->  				     len, true);
->  	if (error)
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +	first_ppage = ALIGN(iomap->addr, PAGE_SIZE) >> PAGE_SHIFT;
+> +	last_ppage = (ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE) >>
+> +			PAGE_SHIFT) - 1;
+> +	nr_pages = last_ppage - first_ppage + 1;
 
+So if I pass in iomap->addr = 1k, iomap->length = 1k, I get first_ppage =
+1, last_ppage = -1, and thus nr_pages = (unsigned long)-1 and the test
+below does not hit although it should. I think you need there
+
+	if (first_ppage > last_ppage)
+
+Otherwise the patch looks good to me.
+
+								Honza
 -- 
-Carlos
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
