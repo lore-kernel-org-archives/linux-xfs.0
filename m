@@ -1,110 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51274 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751535AbeEBPDx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 11:03:53 -0400
-Date: Wed, 2 May 2018 08:03:48 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:55634 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751054AbeECSGL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:06:11 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w43I1NuY160284
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:10 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2130.oracle.com with ESMTP id 2hmeg634mk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 18:06:10 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w43I683b030156
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:09 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w43I68du009758
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:08 GMT
+Subject: [PATCH 02/12] xfs: add missing rmap error return
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 8/9] xfs: checkbashisms in all script files
-Message-ID: <20180502150348.GU4127@magnolia>
-References: <152518916007.23023.4793255395982876953.stgit@magnolia>
- <152518921090.23023.14958881774088486712.stgit@magnolia>
+Date: Thu, 03 May 2018 11:06:06 -0700
+Message-ID: <152537076596.16676.8860720933298336661.stgit@magnolia>
+In-Reply-To: <152537075334.16676.10600900179473864298.stgit@magnolia>
+References: <152537075334.16676.10600900179473864298.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152518921090.23023.14958881774088486712.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org, guaneryu@gmail.com, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Find all the /bin/sh scripts in xfsprogs and check for bashisms.
+xfs_rmap_lookup_le_range can return errors, so we need to check for
+them and bail out.
 
-Cc: sandeen@sandeen.net
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: fix find and regex we look for
----
- tests/xfs/711     |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/711.out |    1 +
- tests/xfs/group   |    1 +
- 3 files changed, 53 insertions(+)
- create mode 100755 tests/xfs/711
- create mode 100644 tests/xfs/711.out
+ fs/xfs/libxfs/xfs_rmap.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/tests/xfs/711 b/tests/xfs/711
-new file mode 100755
-index 00000000..d15f3b9d
---- /dev/null
-+++ b/tests/xfs/711
-@@ -0,0 +1,51 @@
-+#! /bin/bash
-+# FS QA Test No. 711
-+#
-+# checkbashisms on all /bin/sh scripts.  This is a maintainer script.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle, Inc.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+export CHECKBASHISMS_PROG="`set_prog_path checkbashisms`"
-+_require_command "$CHECKBASHISMS_PROG" checkbashisms
-+
-+test -z "$WORKAREA" && _notrun "Can't find xfsprogs source"
-+
-+rm -f $seqres.full
-+
-+find $WORKAREA -type f -name 'xfs*.sh' -print0 | xargs -0 grep '^#!.*/bin/sh' | sed -e 's/:.*$//g' | while read f; do
-+	$CHECKBASHISMS_PROG $f
-+done
-+
-+status=0
-diff --git a/tests/xfs/711.out b/tests/xfs/711.out
-new file mode 100644
-index 00000000..52ff4745
---- /dev/null
-+++ b/tests/xfs/711.out
-@@ -0,0 +1 @@
-+QA output created by 711
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 39e259e8..b7da3fba 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -443,3 +443,4 @@
- 443 auto quick ioctl fsr
- 444 auto quick
- 445 auto quick filestreams
-+711 auto quick
+
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index fba8d2718017..f7769edf5b68 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -1374,6 +1374,8 @@ xfs_rmap_convert_shared(
+ 	 */
+ 	error = xfs_rmap_lookup_le_range(cur, bno, owner, offset, flags,
+ 			&PREV, &i);
++	if (error)
++		goto done;
+ 	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+ 
+ 	ASSERT(PREV.rm_offset <= offset);
+
