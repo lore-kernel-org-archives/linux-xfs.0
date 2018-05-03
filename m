@@ -1,113 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51612 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751075AbeECRyI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 13:54:08 -0400
-Date: Thu, 3 May 2018 10:53:43 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:55752 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751095AbeECSGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:06:23 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w43I1HY4160232
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:22 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2hmeg634n7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 18:06:22 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w43I6Lkn032525
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:21 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w43I6LEq009848
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:21 GMT
+Subject: [PATCH 04/12] xfs: don't continue scrub if already corrupt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 0.1/13] xfs: release new dquot buffer on defer_finish error
-Message-ID: <20180503175343.GF4127@magnolia>
-References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+Date: Thu, 03 May 2018 11:06:20 -0700
+Message-ID: <152537078026.16676.17251024406358600547.stgit@magnolia>
+In-Reply-To: <152537075334.16676.10600900179473864298.stgit@magnolia>
+References: <152537075334.16676.10600900179473864298.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152506698177.21553.13500862866416804148.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
-allocating a new dquot record", we allocate a new dquot block, grab a
-buffer to initialize it, and return the locked initialized dquot buffer
-to the caller for further in-core dquot initialization.  Unfortunately,
-if the _bmap_finish errored out, _qm_dqalloc would also error out
-without bothering to free the (locked) buffer.  Leaking a locked buffer
-caused hangs in generic/388 when quotas are enabled.
-
-Furthermore, the _bmap_finish -> _defer_finish conversion in
-310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
-xfs_defer_*") failed to observe that the buffer was held going into
-_defer_finish and therefore failed to notice that the buffer lock is
-/not/ maintained afterwards.  Now that we can bjoin a buffer to a
-defer_ops, use this mechanism to ensure that the buffer stays locked
-across the _defer_finish.  Release the holds and locks on the buffer as
-appropriate if we have to error out.
-
-There is a subtlety here for the caller in that the buffer emerges
-locked and held to the transaction, so if the _trans_commit fails we
-have to release the buffer explicitly.  This fixes the unmount hang
-in generic/388 when quotas are enabled.
+If we've already decided that something is corrupt, we might as well
+abort all the loops and exit as quickly as possible.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_dquot.c |   48 +++++++++++++++++++++++++++---------------------
- 1 file changed, 27 insertions(+), 21 deletions(-)
+ fs/xfs/scrub/attr.c   |    3 ++-
+ fs/xfs/scrub/bmap.c   |    3 ++-
+ fs/xfs/scrub/dir.c    |   34 +++++++++++++++++++++++++---------
+ fs/xfs/scrub/parent.c |    3 +++
+ 4 files changed, 32 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index a7daef9e16bf..4c39d8632230 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -362,33 +362,39 @@ xfs_qm_dqalloc(
- 			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 127575f0abfb..84b6d6b66578 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -126,8 +126,9 @@ xfs_scrub_xattr_listent(
+ 	if (args.valuelen != valuelen)
+ 		xfs_scrub_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK,
+ 					     args.blkno);
+-
+ fail_xref:
++	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		context->seen_enough = 1;
+ 	return;
+ }
  
- 	/*
--	 * xfs_defer_finish() may commit the current transaction and
--	 * start a second transaction if the freelist is not empty.
-+	 * Hold the buffer and join it to the dfops so that we'll still own
-+	 * the buffer when we return to the caller.  The buffer disposal on
-+	 * error must be paid attention to very carefully, as it has been
-+	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
-+	 * code when allocating a new dquot record" in 2005, and the later
-+	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
-+	 * the buffer locked across the _defer_finish call.  We can now do
-+	 * this correctly with xfs_defer_bjoin.
- 	 *
--	 * Since we still want to modify this buffer, we need to
--	 * ensure that the buffer is not released on commit of
--	 * the first transaction and ensure the buffer is added to the
--	 * second transaction.
-+	 * Above, we allocated a disk block for the dquot information and
-+	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
-+	 * the buffer is still locked to *tpp, so we must _bhold_release and
-+	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
-+	 * transaction is gone but the new buffer is not joined or held to any
-+	 * transaction, so we must _buf_relse it.
- 	 *
--	 * If there is only one transaction then don't stop the buffer
--	 * from being released when it commits later on.
-+	 * If everything succeeds, the caller of this function is returned a
-+	 * buffer that is locked, held, and joined to the transaction.  If the
-+	 * transaction commit fails (in the caller) the caller must unlock the
-+	 * buffer manually.
- 	 */
--
--	xfs_trans_bhold(tp, bp);
--
-+	xfs_trans_bhold(*tpp, bp);
-+	error = xfs_defer_bjoin(&dfops, bp);
-+	if (error) {
-+		xfs_trans_bhold_release(*tpp, bp);
-+		xfs_trans_brelse(*tpp, bp);
-+		goto error1;
-+	}
- 	error = xfs_defer_finish(tpp, &dfops);
--	if (error)
-+	if (error) {
-+		xfs_buf_relse(bp);
- 		goto error1;
--
--	/* Transaction was committed? */
--	if (*tpp != tp) {
--		tp = *tpp;
--		xfs_trans_bjoin(tp, bp);
--	} else {
--		xfs_trans_bhold_release(tp, bp);
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index fb91caf17652..c28ff2ec201a 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -684,7 +684,8 @@ xfs_scrub_bmap(
+ 	info.lastoff = 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	for_each_xfs_iext(ifp, &icur, &irec) {
+-		if (xfs_scrub_should_terminate(sc, &error))
++		if (xfs_scrub_should_terminate(sc, &error) ||
++		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+ 			break;
+ 		if (isnullstartblock(irec.br_startblock))
+ 			continue;
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 38f29806eb54..fb56a885f443 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -172,7 +172,7 @@ xfs_scrub_dir_actor(
+ 	error = xfs_dir_lookup(sdc->sc->tp, ip, &xname, &lookup_ino, NULL);
+ 	if (!xfs_scrub_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
+ 			&error))
+-		goto fail_xref;
++		goto out;
+ 	if (lookup_ino != ino) {
+ 		xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
+ 		goto out;
+@@ -183,8 +183,13 @@ xfs_scrub_dir_actor(
+ 	if (error)
+ 		goto out;
+ out:
+-	return error;
+-fail_xref:
++	/*
++	 * A negative error code returned here is supposed to cause the
++	 * dir_emit caller (xfs_readdir) to abort the directory iteration
++	 * and return zero to xfs_scrub_dir.
++	 */
++	if (error == 0 && sdc->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return -EFSCORRUPTED;
+ 	return error;
+ }
+ 
+@@ -240,6 +245,9 @@ xfs_scrub_dir_rec(
  	}
--
--	*O_bpp = bp;
- 	return 0;
+ 	xfs_scrub_buffer_recheck(ds->sc, bp);
  
- error1:
++	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out_relse;
++
+ 	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
+ 
+ 	/* Make sure we got a real directory entry. */
+@@ -357,6 +365,9 @@ xfs_scrub_directory_data_bestfree(
+ 
+ 	/* XXX: Check xfs_dir3_data_hdr.pad is zero once we start setting it. */
+ 
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out_buf;
++
+ 	/* Do the bestfrees correspond to actual free space? */
+ 	bf = d_ops->data_bestfree_p(bp->b_addr);
+ 	smallest_bestfree = UINT_MAX;
+@@ -394,7 +405,7 @@ xfs_scrub_directory_data_bestfree(
+ 	endptr = xfs_dir3_data_endp(mp->m_dir_geo, bp->b_addr);
+ 
+ 	/* Iterate the entries, stopping when we hit or go past the end. */
+-	while (ptr < endptr) {
++	while (ptr < endptr && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
+ 		dup = (struct xfs_dir2_data_unused *)ptr;
+ 		/* Skip real entries */
+ 		if (dup->freetag != cpu_to_be16(XFS_DIR2_DATA_FREE_TAG)) {
+@@ -413,8 +424,10 @@ xfs_scrub_directory_data_bestfree(
+ 
+ 		/* Spot check this free entry */
+ 		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
+-		if (tag != ((char *)dup - (char *)bp->b_addr))
++		if (tag != ((char *)dup - (char *)bp->b_addr)) {
+ 			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
++			goto out_buf;
++		}
+ 
+ 		/*
+ 		 * Either this entry is a bestfree or it's smaller than
+@@ -549,6 +562,8 @@ xfs_scrub_directory_leaf1_bestfree(
+ 
+ 	/* Check all the bestfree entries. */
+ 	for (i = 0; i < bestcount; i++, bestp++) {
++		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++			break;
+ 		best = be16_to_cpu(*bestp);
+ 		if (best == NULLDATAOFF)
+ 			continue;
+@@ -556,9 +571,10 @@ xfs_scrub_directory_leaf1_bestfree(
+ 				i * args->geo->fsbcount, -1, &dbp);
+ 		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
+ 				&error))
+-			continue;
++			break;
+ 		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
+ 		xfs_trans_brelse(sc->tp, dbp);
++
+ 	}
+ out:
+ 	return error;
+@@ -607,7 +623,7 @@ xfs_scrub_directory_free_bestfree(
+ 				-1, &dbp);
+ 		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
+ 				&error))
+-			continue;
++			break;
+ 		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
+ 		xfs_trans_brelse(sc->tp, dbp);
+ 	}
+@@ -656,7 +672,7 @@ xfs_scrub_directory_blocks(
+ 
+ 	/* Iterate all the data extents in the directory... */
+ 	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &icur, &got);
+-	while (found) {
++	while (found && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
+ 		/* Block directories only have a single block at offset 0. */
+ 		if (is_block &&
+ 		    (got.br_startoff > 0 ||
+@@ -719,7 +735,7 @@ xfs_scrub_directory_blocks(
+ 	/* Scan for free blocks */
+ 	lblk = free_lblk;
+ 	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &icur, &got);
+-	while (found) {
++	while (found && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
+ 		/*
+ 		 * Dirs can't have blocks mapped above 2^32.
+ 		 * Single-block dirs shouldn't even be here.
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index 1fb88c18d455..95fdd0d9e65d 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -147,6 +147,9 @@ xfs_scrub_parent_validate(
+ 
+ 	*try_again = false;
+ 
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return 0;
++
+ 	/* '..' must not point to ourselves. */
+ 	if (sc->ip->i_ino == dnum) {
+ 		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+
