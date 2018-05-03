@@ -1,77 +1,195 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59728 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750969AbeECSHL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:07:11 -0400
-Subject: [PATCH 09/12] xfs: clean up scrub usage of KM_NOFS
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 May 2018 11:06:51 -0700
-Message-ID: <152537081095.16676.17433484200511069545.stgit@magnolia>
-In-Reply-To: <152537075334.16676.10600900179473864298.stgit@magnolia>
-References: <152537075334.16676.10600900179473864298.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:45080 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751108AbeECVRC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 May 2018 17:17:02 -0400
+Subject: Re: [PATCH 7/9] xfs_info: move to xfs_spaceman
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+ <152401957530.13048.12736391147882277807.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e47b3348-d036-4d83-fc61-fd42ab385ba7@sandeen.net>
+Date: Thu, 3 May 2018 16:17:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <152401957530.13048.12736391147882277807.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 4/17/18 9:46 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Move xfs_info to be under spaceman so that we can remove growfs -N.
 
-All scrub code runs in transaction context, which means that memory
-allocations are automatically run in PF_MEMALLOC_NOFS context.  It's
-therefore unnecessary to pass in KM_NOFS to allocation routines, so
-clean them all out.
+Seems ok in general, though how will this work with Dave's upcoming
+special subvol-files-no-they're-devices-no-they're-files?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/scrub/agheader.c |    3 ++-
- fs/xfs/scrub/btree.c    |    2 +-
- fs/xfs/scrub/refcount.c |    2 +-
- 3 files changed, 4 insertions(+), 3 deletions(-)
+Do we worry about all that later?  I guess?
+
+(I guess we don't document -p as it's for internal use)
+
+Modulo that concern,
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+-Eric
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index cd24ac56c21e..831acc0a328f 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -795,7 +795,8 @@ xfs_scrub_agfl(
- 	}
- 	memset(&sai, 0, sizeof(sai));
- 	sai.sz_entries = agflcount;
--	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount, KM_NOFS);
-+	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount,
-+			KM_MAYFAIL);
- 	if (!sai.entries) {
- 		error = -ENOMEM;
- 		goto out;
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 54218168c8f9..ea972dab1485 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -442,7 +442,7 @@ xfs_scrub_btree_check_owner(
- 	 */
- 	if (cur->bc_btnum == XFS_BTNUM_BNO || cur->bc_btnum == XFS_BTNUM_RMAP) {
- 		co = kmem_alloc(sizeof(struct check_owner),
--				KM_MAYFAIL | KM_NOFS);
-+				KM_MAYFAIL);
- 		if (!co)
- 			return -ENOMEM;
- 		co->level = level;
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 913b0a190e68..324a5f159145 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -150,7 +150,7 @@ xfs_scrub_refcountbt_rmap_check(
- 		 * so we don't need insertion sort here.
- 		 */
- 		frag = kmem_alloc(sizeof(struct xfs_scrub_refcnt_frag),
--				KM_MAYFAIL | KM_NOFS);
-+				KM_MAYFAIL);
- 		if (!frag)
- 			return -ENOMEM;
- 		memcpy(&frag->rm, rec, sizeof(frag->rm));
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  growfs/Makefile      |    2 --
+>  growfs/xfs_info.sh   |   32 --------------------------------
+>  spaceman/Makefile    |    2 ++
+>  spaceman/init.c      |    5 ++++-
+>  spaceman/xfs_info.sh |   32 ++++++++++++++++++++++++++++++++
+>  5 files changed, 38 insertions(+), 35 deletions(-)
+>  delete mode 100755 growfs/xfs_info.sh
+>  create mode 100755 spaceman/xfs_info.sh
+> 
+> 
+> diff --git a/growfs/Makefile b/growfs/Makefile
+> index f0190e4..adcd84b 100644
+> --- a/growfs/Makefile
+> +++ b/growfs/Makefile
+> @@ -20,7 +20,6 @@ endif
+>  
+>  LTDEPENDENCIES = $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+> -LSRCFILES = xfs_info.sh
+>  
+>  default: depend $(LTCOMMAND)
+>  
+> @@ -29,7 +28,6 @@ include $(BUILDRULES)
+>  install: default
+>  	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+>  	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+> -	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
+>  install-dev:
+>  
+>  -include .dep
+> diff --git a/growfs/xfs_info.sh b/growfs/xfs_info.sh
+> deleted file mode 100755
+> index b85f120..0000000
+> --- a/growfs/xfs_info.sh
+> +++ /dev/null
+> @@ -1,32 +0,0 @@
+> -#!/bin/sh -f
+> -#
+> -# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+> -#
+> -
+> -OPTS=""
+> -USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
+> -
+> -while getopts "t:V" c
+> -do
+> -	case $c in
+> -	t)	OPTS="-t $OPTARG" ;;
+> -	V)	xfs_growfs -p xfs_info -V
+> -		status=$?
+> -		exit $status
+> -		;;
+> -	*)	echo $USAGE 1>&2
+> -		exit 2
+> -		;;
+> -	esac
+> -done
+> -set -- extra "$@"
+> -shift $OPTIND
+> -case $# in
+> -	1)	xfs_growfs -p xfs_info -n $OPTS "$1"
+> -		status=$?
+> -		;;
+> -	*)	echo $USAGE 1>&2
+> -		exit 2
+> -		;;
+> -esac
+> -exit $status
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> index c1d903b..0d5ae2d 100644
+> --- a/spaceman/Makefile
+> +++ b/spaceman/Makefile
+> @@ -8,6 +8,7 @@ include $(TOPDIR)/include/builddefs
+>  LTCOMMAND = xfs_spaceman
+>  HFILES = init.h space.h
+>  CFILES = info.c init.c file.c prealloc.c trim.c
+> +LSRCFILES = xfs_info.sh
+>  
+>  LLDLIBS = $(LIBXCMD) $(LIBFROG)
+>  LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
+> @@ -35,6 +36,7 @@ include $(BUILDRULES)
+>  install: default
+>  	$(INSTALL) -m 755 -d $(PKG_SBIN_DIR)
+>  	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_SBIN_DIR)
+> +	$(INSTALL) -m 755 xfs_info.sh $(PKG_SBIN_DIR)/xfs_info
+>  install-dev:
+>  
+>  -include .dep
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index 895504f..91c773f 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -81,11 +81,14 @@ init(
+>  	textdomain(PACKAGE);
+>  
+>  	fs_table_initialise(0, NULL, 0, NULL);
+> -	while ((c = getopt(argc, argv, "c:V")) != EOF) {
+> +	while ((c = getopt(argc, argv, "c:p:V")) != EOF) {
+>  		switch (c) {
+>  		case 'c':
+>  			add_user_command(optarg);
+>  			break;
+> +		case 'p':
+> +			progname = optarg;
+> +			break;
+>  		case 'V':
+>  			printf(_("%s version %s\n"), progname, VERSION);
+>  			exit(0);
+> diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
+> new file mode 100755
+> index 0000000..5df0a26
+> --- /dev/null
+> +++ b/spaceman/xfs_info.sh
+> @@ -0,0 +1,32 @@
+> +#!/bin/sh -f
+> +#
+> +# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
+> +#
+> +
+> +OPTS=""
+> +USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
+> +
+> +while getopts "t:V" c
+> +do
+> +	case $c in
+> +	t)	OPTS="-t $OPTARG" ;;
+> +	V)	xfs_spaceman -p xfs_info -V
+> +		status=$?
+> +		exit $status
+> +		;;
+> +	*)	echo $USAGE 1>&2
+> +		exit 2
+> +		;;
+> +	esac
+> +done
+> +set -- extra "$@"
+> +shift $OPTIND
+> +case $# in
+> +	1)	xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
+> +		status=$?
+> +		;;
+> +	*)	echo $USAGE 1>&2
+> +		exit 2
+> +		;;
+> +esac
+> +exit $status
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
