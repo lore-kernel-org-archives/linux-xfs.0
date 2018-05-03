@@ -1,26 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55630 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751095AbeECSGf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:06:35 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w43I0x0f087021
-        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:35 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2hmgxg30pq-1
+Received: from userp2130.oracle.com ([156.151.31.86]:59738 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750969AbeECSHM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:07:12 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w43I10g2192997
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:07:12 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2hmgdju17a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 18:06:35 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w43I6YEt031897
+        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 18:07:12 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w43I7A5V009952
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:34 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w43I6Xfq027621
-        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:33 GMT
-Subject: [PATCH 06/12] xfs: quota scrub should use bmapbtd scrubber
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:07:11 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w43I7A9q015600
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:07:10 GMT
+Subject: [PATCH 12/12] xfs: avoid ABBA deadlock when scrubbing parent
+ pointers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 May 2018 11:06:32 -0700
-Message-ID: <152537079262.16676.17333080911750675574.stgit@magnolia>
+Date: Thu, 03 May 2018 11:07:09 -0700
+Message-ID: <152537082942.16676.9210160681159052756.stgit@magnolia>
 In-Reply-To: <152537075334.16676.10600900179473864298.stgit@magnolia>
 References: <152537075334.16676.10600900179473864298.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,209 +35,111 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the quota scrubber's open-coded data fork scrubber with a
-redirected call to the bmapbtd scrubber.  This strengthens the quota
-scrub to include all the cross-referencing that it does.
+In normal operation, the XFS convention is to take an inode's iolock
+and then allocate a transaction.  However, when scrubbing parent inodes
+this is inverted -- we allocated the transaction to do the scrub, and
+now we're trying to grab the parent's iolock.  This can lead to ABBA
+deadlocks: some thread grabbed the parent's iolock and is waiting for
+space for a transaction while our parent scrubber is sitting on a
+transaction trying to get the parent's iolock.
+
+Therefore, convert all iolock attempts to use trylock; if that fails,
+they can use the existing mechanisms to back off and try again.
+
+The ABBA deadlock didn't happen with a non-repair scrub because the
+transactions don't reserve any space, but repair scrubs require
+reservation in order to update metadata.  However, any other concurrent
+metadata update (e.g. directory create in the parent) could also induce
+this deadlock with the parent scrubber.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/common.c |   57 ++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h |    2 +
- fs/xfs/scrub/quota.c  |   83 ++++++++++++++++++++++++-------------------------
- 3 files changed, 99 insertions(+), 43 deletions(-)
+ fs/xfs/scrub/common.c |   22 ++++++++++++++++++++++
+ fs/xfs/scrub/common.h |    1 +
+ fs/xfs/scrub/parent.c |   16 ++++++++++++++--
+ 3 files changed, 37 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index e9ca5f0802d5..335c7a305e15 100644
+index 62b33c99efe4..518bff2be0c9 100644
 --- a/fs/xfs/scrub/common.c
 +++ b/fs/xfs/scrub/common.c
-@@ -44,6 +44,8 @@
- #include "xfs_rmap_btree.h"
- #include "xfs_log.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -777,3 +779,58 @@ xfs_scrub_buffer_recheck(
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
+@@ -844,3 +844,25 @@ xfs_scrub_metadata_inode_forks(
+ 
+ 	return error;
  }
 +
 +/*
-+ * Scrub the attr/data forks of a metadata inode.  The metadata inode must be
-+ * pointed to by sc->ip and the ILOCK must be held.
++ * Try to lock an inode in violation of the usual locking order rules.  For
++ * example, trying to get the IOLOCK while in transaction context, or just
++ * plain breaking AG-order or inode-order inode locking rules.  Either way,
++ * the only way to avoid an ABBA deadlock is to use trylock and back off if
++ * we can't.
 + */
 +int
-+xfs_scrub_metadata_inode_forks(
-+	struct xfs_scrub_context	*sc)
++xfs_scrub_ilock_inverted(
++	struct xfs_inode	*ip,
++	uint			lock_mode)
 +{
-+	__u32				smtype;
-+	bool				shared;
-+	int				error;
++	int			i;
 +
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return 0;
-+
-+	/* Metadata inodes don't live on the rt device. */
-+	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+		return 0;
++	for (i = 0; i < 20; i++) {
++		if (xfs_ilock_nowait(ip, lock_mode))
++			return 0;
++		delay(1);
 +	}
-+
-+	/* They should never participate in reflink. */
-+	if (xfs_is_reflink_inode(sc->ip)) {
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+		return 0;
-+	}
-+
-+	/* They also should never have extended attributes. */
-+	if (xfs_inode_hasattr(sc->ip)) {
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+		return 0;
-+	}
-+
-+	/* Invoke the data fork scrubber. */
-+	smtype = sc->sm->sm_type;
-+	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
-+	error = xfs_scrub_bmap_data(sc);
-+	sc->sm->sm_type = smtype;
-+	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-+		return error;
-+
-+	/* Look for incorrect shared blocks. */
-+	if (xfs_sb_version_hasreflink(&sc->mp->m_sb)) {
-+		error = xfs_reflink_inode_has_shared_extents(sc->tp, sc->ip,
-+				&shared);
-+		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
-+				&error))
-+			return error;
-+		if (shared)
-+			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+	}
-+
-+	return error;
++	return -EDEADLOCK;
 +}
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 80fa5a67c265..ad736c411287 100644
+index 5d78bb9602ab..119d9b6db887 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -167,4 +167,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
- 			       XFS_SCRUB_OFLAG_XCORRUPT);
+@@ -156,5 +156,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
  }
  
-+int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
-+
+ int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
++int xfs_scrub_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
+ 
  #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index d3d08978f53a..15ae4d23d6ac 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -206,65 +206,62 @@ xfs_scrub_quota_item(
- 	return 0;
- }
- 
--/* Scrub all of a quota type's items. */
--int
--xfs_scrub_quota(
-+/* Check the quota's data fork. */
-+STATIC int
-+xfs_scrub_quota_data_fork(
- 	struct xfs_scrub_context	*sc)
- {
- 	struct xfs_bmbt_irec		irec = { 0 };
--	struct xfs_scrub_quota_info	sqi;
--	struct xfs_mount		*mp = sc->mp;
--	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-+	struct xfs_iext_cursor		icur;
-+	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-+	struct xfs_ifork		*ifp;
- 	xfs_fileoff_t			max_dqid_off;
--	xfs_fileoff_t			off = 0;
--	uint				dqtype;
--	int				nimaps;
- 	int				error = 0;
- 
--	dqtype = xfs_scrub_quota_to_dqtype(sc);
-+	/* Invoke the fork scrubber. */
-+	error = xfs_scrub_metadata_inode_forks(sc);
-+	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-+		return error;
- 
--	/* Look for problem extents. */
--	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
--		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
--		goto out;
--	}
-+	/* Check for data fork problems that apply only to quota files. */
- 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
--	while (1) {
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-+	for_each_xfs_iext(ifp, &icur, &irec) {
- 		if (xfs_scrub_should_terminate(sc, &error))
- 			break;
--
--		off = irec.br_startoff + irec.br_blockcount;
--		nimaps = 1;
--		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
--				XFS_BMAPI_ENTIRE);
--		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
--				&error))
--			goto out;
--		if (!nimaps)
--			break;
--		if (irec.br_startblock == HOLESTARTBLOCK)
--			continue;
--
--		/* Check the extent record doesn't point to crap. */
--		if (irec.br_startblock + irec.br_blockcount <=
--		    irec.br_startblock)
--			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
--					irec.br_startoff);
--		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
--		    !xfs_verify_fsbno(mp, irec.br_startblock +
--					irec.br_blockcount - 1))
--			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
--					irec.br_startoff);
--
- 		/*
--		 * Unwritten extents or blocks mapped above the highest
-+		 * delalloc extents or blocks mapped above the highest
- 		 * quota id shouldn't happen.
- 		 */
- 		if (isnullstartblock(irec.br_startblock) ||
- 		    irec.br_startoff > max_dqid_off ||
--		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
--			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-+		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
-+			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-+					irec.br_startoff);
-+			break;
-+		}
- 	}
-+
-+	return error;
-+}
-+
-+/* Scrub all of a quota type's items. */
-+int
-+xfs_scrub_quota(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_scrub_quota_info	sqi;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-+	uint				dqtype;
-+	int				error = 0;
-+
-+	dqtype = xfs_scrub_quota_to_dqtype(sc);
-+
-+	/* Look for problem extents. */
-+	error = xfs_scrub_quota_data_fork(sc);
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index 95fdd0d9e65d..85241e680b37 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -214,7 +214,9 @@ xfs_scrub_parent_validate(
+ 	 */
+ 	xfs_iunlock(sc->ip, sc->ilock_flags);
+ 	sc->ilock_flags = 0;
+-	xfs_ilock(dp, XFS_IOLOCK_SHARED);
++	error = xfs_scrub_ilock_inverted(dp, XFS_IOLOCK_SHARED);
 +	if (error)
-+		goto out;
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
++		goto out_rele;
  
+ 	/* Go looking for our dentry. */
+ 	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
+@@ -223,8 +225,10 @@ xfs_scrub_parent_validate(
+ 
+ 	/* Drop the parent lock, relock this inode. */
+ 	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
++	error = xfs_scrub_ilock_inverted(sc->ip, XFS_IOLOCK_EXCL);
++	if (error)
++		goto out_rele;
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL;
+-	xfs_ilock(sc->ip, sc->ilock_flags);
+ 
+ 	/*
+ 	 * If we're an unlinked directory, the parent /won't/ have a link
+@@ -326,5 +330,13 @@ xfs_scrub_parent(
+ 	if (try_again && tries == 20)
+ 		xfs_scrub_set_incomplete(sc);
+ out:
++	/*
++	 * If we failed to lock the parent inode even after a retry, just mark
++	 * this scrub incomplete and return.
++	 */
++	if (sc->try_harder && error == -EDEADLOCK) {
++		error = 0;
++		xfs_scrub_set_incomplete(sc);
++	}
+ 	return error;
+ }
 
