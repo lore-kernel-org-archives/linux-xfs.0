@@ -1,65 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35450 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:45418 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750948AbeEBT4Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 May 2018 15:56:24 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0D2864C1518
-        for <linux-xfs@vger.kernel.org>; Wed,  2 May 2018 14:55:09 -0500 (CDT)
+        id S1751126AbeECVW0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 May 2018 17:22:26 -0400
+Subject: Re: [PATCH 8/9] xfs_info: call xfs_db for offline filesystems
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+ <152401958146.13048.3834702512829151272.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH] xfsprogs: be careful about what we stat in
- platform_check_mount
-Message-ID: <92bcf603-5106-9fa0-1b48-0d13ff0608c8@sandeen.net>
-Date: Wed, 2 May 2018 14:56:22 -0500
+Message-ID: <e7dea090-ae58-d3d8-c9d0-33917e993d16@sandeen.net>
+Date: Thu, 3 May 2018 16:22:24 -0500
 MIME-Version: 1.0
+In-Reply-To: <152401958146.13048.3834702512829151272.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-After we lost ustat(2) in commit 4e7a824, we ended up with a slightly
-bonkers method to determine if our target block device was mounted:
-it goes through every entry returned by getmntent and stats the dir
-to see if its underlying device matches ours.
+On 4/17/18 9:46 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> If the online filesystem geometry query doesn't work, try using xfs_db
+> to see if we can grab the information offline.
+> 
 
-Unfortunately that dir might be a hung nfs server and sadness ensues.
+I'm slightly concerned that having all-singing, all-dancing tools
+that operate on mounted, unmounted, devices, mountpoints, and images
+will further encourage people to think that operations on mounted
+block devices are Just Fine(tm).
 
-So do some pre-checks; can we stat the mounted "device?"  If so is
-it really a block device?  If not, skip it.
+But ... I suppose the convenience is worth it.
 
-Fixes: 4e7a824 ("libxfs/linux.c: Replace use of ustat by stat")
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+...
 
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index 0bace3e..7350fa7 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -77,7 +77,21 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
- 		    progname, name);
- 		return 1;
- 	}
-+	/*
-+	 * This whole business is to work out if our block device is mounted
-+	 * after we lost ustat(2), see:
-+	 * 	4e7a824 libxfs/linux.c: Replace use of ustat by stat
-+	 * We don't really want to stat every single mounted directory,
-+	 * as that may include tmpfs, cgroups, procfs or - worst - hung nfs
-+	 * servers.  So we check the "device" before going after the mountpoint.
-+	 */
- 	while ((mnt = getmntent(f)) != NULL) {
-+		/* If the "fsname" is't a stat-able device, skip it */
-+		if (stat(mnt->mnt_fsname, &mst) < 0)
-+			continue;
-+		if (!S_ISBLK(mst.st_mode))
-+			continue;
-+		/* Ok, this entry does seem to be a mounted block device */
- 		if (stat(mnt->mnt_dir, &mst) < 0)
- 			continue;
- 		if (mst.st_dev != s->st_rdev)
+> diff --git a/man/man8/xfs_info.8 b/man/man8/xfs_info.8
+> new file mode 100644
+> index 0000000..c4c470d
+> --- /dev/null
+> +++ b/man/man8/xfs_info.8
+> @@ -0,0 +1,95 @@
+> +.\" Verbatim blocks taken from openssl req manpage content
+> +.de Vb \" Begin verbatim text
+> +.ft CW
+> +.nf
+> +.ne \\$1
+> +..
+> +.de Ve \" End verbatim text
+> +.ft R
+> +.fi
+> +..
+> +
+> +.TH xfs_info 8
+> +.SH NAME
+> +xfs_info, \- display XFS filesystem geometry information
+
+drop the comma pls, or I can do this.
+
+...
+
+> +.BR \-V .
+> +.SH "EXAMPLES"
+> +
+> +Understanding xfs_info output.
+> +.PP
+> +Suppose one has the following "xfs_info /dev/sda" output:
+> +.PP
+> +.RS 2
+> +.Vb
+> +\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
+> +\&         =              sectsz=512   attr=2
+> +\&data     =              bsize=4096   blocks=536869888, imaxpct=5
+> +\&         =              sunit=32     swidth=128 blks
+> +\&naming   =version 2     bsize=4096
+> +\&log      =internal log  bsize=4096   blocks=32768, version=2
+> +\&         =              sectsz=512   sunit=32 blks, lazy-count=1
+> +\&realtime =none          extsz=524288 blocks=0, rtextents=0
+> +.Ve
+
+Should we update this to a more modern version?  *shrug*
+
+
 
