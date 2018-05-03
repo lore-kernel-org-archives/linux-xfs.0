@@ -1,237 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44020 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751841AbeEFR1J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:09 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HQGAQ128028
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:08 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2hs426a11g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:08 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w46HR8ub010942
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:08 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w46HR7FM014485
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:08 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 10/21] xfs: get directory offset when replacing a directory name
-Date: Sun,  6 May 2018 10:24:43 -0700
-Message-Id: <1525627494-12873-11-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:42682 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750962AbeECU5E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 16:57:04 -0400
+Received: from willy by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1fELHk-0000lo-5M
+        for linux-xfs@vger.kernel.org; Thu, 03 May 2018 20:57:04 +0000
+Date: Thu, 3 May 2018 13:57:03 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Oops from linux-next 20180430
+Message-ID: <20180503205703.GA27821@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Mark Tinguely <tinguely@sgi.com>
+I was running xfstests xfs/350 at the time.  No kernel patches applied
+beyond linux-next (I was hoping to get a baseline).
 
-Return the directory offset information when replacing an entry to the
-directory.
+5726 XFS: Assertion failed: sbp->sb_rsumino != NULLFSINO, file: ../fs/xfs/xfs_rtalloc.c, line: 1223
+5726 ------------[ cut here ]------------
+5726 kernel BUG at ../fs/xfs/xfs_message.c:114!
+5726 invalid opcode: 0000 [#1] SMP PTI
+5726 CPU: 2 PID: 8468 Comm: mount Tainted: G        W         4.17.0-rc3-next-20180430+ #4
+5726 Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
+5726 RIP: 0010:assfail+0x23/0x30
+5726 Code: c3 66 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 e8 ba b2 81 48 89 fa 31 ff e8 69 f9 ff ff 80 3d 26 f1 9e 00 00 75 03 0f 0b c3 <0f> 0b 90 66 2e 0f 1f 84 00 00 00 00 00 48 63 f6 49 89 f9 6a 01 ba 
+5726 RSP: 0018:ffffc900067f3d18 EFLAGS: 00010202
+5726 RAX: 0000000000000000 RBX: ffff880032ee4000 RCX: 0000000000000000
+5726 RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff81af2fa5
+5726 RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+5726 R10: ffffffff81a37940 R11: f000000000000000 R12: ffff880032ee45e8
+5726 R13: ffff880032ee48d0 R14: ffff880032ee4140 R15: 0000000000000000
+5726 FS:  00007f13e91d0100(0000) GS:ffff88007f480000(0000) knlGS:0000000000000000
+5726 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+5726 CR2: 00007f842e22b980 CR3: 0000000079afc000 CR4: 00000000000006a0
+5726 Call Trace:
+5726  xfs_rtmount_inodes+0x13e/0x170
+5726  ? xfs_iunlock+0xfd/0x200
+5726  xfs_mountfs+0x5b2/0x980
+5726  xfs_fs_fill_super+0x417/0x580
+5726  ? xfs_test_remount_options+0x50/0x50
+5726  mount_bdev+0x16c/0x1a0
+5726  mount_fs+0xa/0x70
+5726  vfs_kern_mount.part.7+0x4f/0x110
+5726  do_mount+0x208/0xc30
+5726  ksys_mount+0x7b/0xd0
+5726  __x64_sys_mount+0x1c/0x20
+5726  do_syscall_64+0x43/0x100
+5726  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+5726 RIP: 0033:0x7f13e88767fa
+5726 Code: 48 8b 0d 91 c6 2b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 5e c6 2b 00 f7 d8 64 89 01 48 
+5726 RSP: 002b:00007fff36ff4178 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+5726 RAX: ffffffffffffffda RBX: 000055eb65801970 RCX: 00007f13e88767fa
+5726 RDX: 000055eb65801be0 RSI: 000055eb65801c20 RDI: 000055eb65801c00
+5726 RBP: 0000000000000000 R08: 000055eb65801b80 R09: 000055eb65801be0
+5726 R10: 00000000c0ed0000 R11: 0000000000000206 R12: 000055eb65801c00
+5726 R13: 000055eb65801be0 R14: 0000000000000000 R15: 00007f13e8fb5ee4
+5726 Modules linked in:
+5726 ---[ end trace 5d9a89b7ed142727 ]---
+5726 RIP: 0010:assfail+0x23/0x30
+5726 Code: c3 66 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 e8 ba b2 81 48 89 fa 31 ff e8 69 f9 ff ff 80 3d 26 f1 9e 00 00 75 03 0f 0b c3 <0f> 0b 90 66 2e 0f 1f 84 00 00 00 00 00 48 63 f6 49 89 f9 6a 01 ba 
+5726 RSP: 0018:ffffc900067f3d18 EFLAGS: 00010202
+5726 RAX: 0000000000000000 RBX: ffff880032ee4000 RCX: 0000000000000000
+5726 RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff81af2fa5
+5726 RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+5726 R10: ffffffff81a37940 R11: f000000000000000 R12: ffff880032ee45e8
+5726 R13: ffff880032ee48d0 R14: ffff880032ee4140 R15: 0000000000000000
+5726 FS:  00007f13e91d0100(0000) GS:ffff88007f480000(0000) knlGS:0000000000000000
+5726 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+5726 CR2: 00007f842e22b980 CR3: 0000000079afc000 CR4: 00000000000006a0
+5726 Kernel panic - not syncing: Fatal exception
+5726 Kernel Offset: disabled
+5726 ---[ end Kernel panic - not syncing: Fatal exception ]---
 
-This offset will be used as the parent pointer offset in xfs_rename.
-
-[dchinner: forward ported and cleaned up]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-	   Changed typedefs to raw struct types]
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_dir2.c       | 16 ++++++++++------
- fs/xfs/libxfs/xfs_dir2.h       |  3 ++-
- fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
- fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
- fs/xfs/xfs_inode.c             | 28 +++++++++++++---------------
- 7 files changed, 31 insertions(+), 24 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 090ab0e..a4f7bcd 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -499,13 +499,14 @@ xfs_dir_removename(
-  */
- int
- xfs_dir_replace(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*dp,
--	struct xfs_name	*name,		/* name of entry to replace */
--	xfs_ino_t	inum,		/* new inode number */
--	xfs_fsblock_t	*first,		/* bmap's firstblock */
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_name		*name,		/* name of entry to replace */
-+	xfs_ino_t		inum,		/* new inode number */
-+	xfs_fsblock_t		*first,		/* bmap's firstblock */
- 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
--	xfs_extlen_t	total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
- {
- 	struct xfs_da_args *args;
- 	int		rval;
-@@ -555,6 +556,9 @@ xfs_dir_replace(
- 	else
- 		rval = xfs_dir2_node_replace(args);
- out_free:
-+	if (offset)
-+		*offset = args->offset;
-+
- 	kmem_free(args);
- 	return rval;
- }
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index b73bdcb..d361442 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -145,7 +145,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
--				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-+				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
-+				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name);
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 9c1e485..77744e5 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -872,9 +872,9 @@ xfs_dir2_block_replace(
- 	/*
- 	 * Point to the data entry we need to change.
- 	 */
-+	args->offset = be32_to_cpu(blp[ent].address);
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
--			xfs_dir2_dataptr_to_off(args->geo,
--						be32_to_cpu(blp[ent].address)));
-+			xfs_dir2_dataptr_to_off(args->geo, args->offset));
- 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
- 	/*
- 	 * Change the inode number to the new value.
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index c5595c1..6ad7741 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -1550,6 +1550,7 @@ xfs_dir2_leaf_replace(
- 	/*
- 	 * Point to the data entry.
- 	 */
-+	args->offset = be32_to_cpu(lep->address);
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)dbp->b_addr +
- 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index eb8b240..ccf220a 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -2256,6 +2256,7 @@ xfs_dir2_node_replace(
- 		hdr = state->extrablk.bp->b_addr;
- 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
- 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
-+		args->offset = be32_to_cpu(lep->address);
- 		dep = (xfs_dir2_data_entry_t *)
- 		      ((char *)hdr +
- 		       xfs_dir2_dataptr_to_off(args->geo,
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 1d0957c..73f1eef 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -1043,6 +1043,8 @@ xfs_dir2_sf_replace(
- 				ASSERT(args->inumber != ino);
- 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+				args->offset = xfs_dir2_byte_to_dataptr(
-+						  xfs_dir2_sf_get_offset(sfep));
- 				break;
- 			}
- 		}
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3054e9a..5c291d2 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2783,16 +2783,14 @@ xfs_cross_rename(
- 	int		dp2_flags = 0;
- 
- 	/* Swap inode number for dirent in first parent */
--	error = xfs_dir_replace(tp, dp1, name1,
--				ip2->i_ino,
--				first_block, dfops, spaceres);
-+	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block, dfops,
-+				spaceres, NULL);
- 	if (error)
- 		goto out_trans_abort;
- 
- 	/* Swap inode number for dirent in second parent */
--	error = xfs_dir_replace(tp, dp2, name2,
--				ip1->i_ino,
--				first_block, dfops, spaceres);
-+	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block, dfops,
-+				spaceres, NULL);
- 	if (error)
- 		goto out_trans_abort;
- 
-@@ -2806,8 +2804,8 @@ xfs_cross_rename(
- 
- 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
--						dp1->i_ino, first_block,
--						dfops, spaceres);
-+						dp1->i_ino, first_block, dfops,
-+						spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
- 
-@@ -2833,8 +2831,8 @@ xfs_cross_rename(
- 
- 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
--						dp2->i_ino, first_block,
--						dfops, spaceres);
-+						dp2->i_ino, first_block, dfops,
-+						spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
- 
-@@ -3081,8 +3079,8 @@ xfs_rename(
- 		 * name at the destination directory, remove it first.
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
--					src_ip->i_ino,
--					&first_block, &dfops, spaceres);
-+					src_ip->i_ino, &first_block, &dfops,
-+					spaceres, NULL);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -3116,8 +3114,8 @@ xfs_rename(
- 		 * directory.
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
--					target_dp->i_ino,
--					&first_block, &dfops, spaceres);
-+					target_dp->i_ino, &first_block, &dfops,
-+					spaceres, NULL);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_bmap_cancel;
-@@ -3156,7 +3154,7 @@ xfs_rename(
- 	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					&first_block, &dfops, spaceres);
-+					&first_block, &dfops, spaceres, NULL);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
- 					   &first_block, &dfops, spaceres,
--- 
-2.7.4
 
