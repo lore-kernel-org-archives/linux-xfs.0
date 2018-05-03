@@ -1,35 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36052 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49096 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750969AbeECSw3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 May 2018 14:52:29 -0400
-Subject: Re: [PATCH 3/9] mkfs: use geometry generation / helper functions
-References: <152401952391.13048.15040850425873030425.stgit@magnolia>
- <152401954281.13048.8462957622341585756.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <503e91d2-f369-9190-6da4-916bd3d2ba43@sandeen.net>
-Date: Thu, 3 May 2018 13:52:28 -0500
+        id S1751579AbeECMHH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 May 2018 08:07:07 -0400
+Date: Thu, 3 May 2018 08:07:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] xfs: skip discard of unwritten extents
+Message-ID: <20180503120705.GA21627@bfoster.bfoster>
+References: <20180426180624.6134-1-bfoster@redhat.com>
+ <20180430220020.GE13766@dastard>
+ <20180501173815.GJ4525@bfoster.bfoster>
+ <20180501223952.GX23861@dastard>
+ <20180502111806.GB17207@bfoster.bfoster>
+ <20180503004803.GE23861@dastard>
 MIME-Version: 1.0
-In-Reply-To: <152401954281.13048.8462957622341585756.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180503004803.GE23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 4/17/18 9:45 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, May 03, 2018 at 10:48:03AM +1000, Dave Chinner wrote:
+> On Wed, May 02, 2018 at 07:18:07AM -0400, Brian Foster wrote:
+> > On Wed, May 02, 2018 at 08:39:52AM +1000, Dave Chinner wrote:
+> > > On Tue, May 01, 2018 at 01:38:15PM -0400, Brian Foster wrote:
+> > > > On Tue, May 01, 2018 at 08:00:20AM +1000, Dave Chinner wrote:
+> > > > > On Thu, Apr 26, 2018 at 02:06:24PM -0400, Brian Foster wrote:
+> > > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > > > ---
+> > > > > > 
+> > > > > > Hi all,
+> > > > > > 
+> > > > > > What do folks think of something like this?
+> > > > > 
+> > > > > Definitely sounds like something we need to address.
+> > > > > 
+> > > > > > The motivation here is that
+> > > > > > the VDO (dedup) devs had reported seeing online discards during
+> > > > > > write-only workloads. These turn out to be related to trimming post-eof
+> > > > > > preallocation blocks after large file copies. To my knowledge, this
+> > > > > > isn't really a prevalent or serious issue, but I think that technically
+> > > > > > these discards are unnecessary and so I was looking into how we could
+> > > > > > avoid them.
+> > > > > 
+> > > > > We simply trucate post-eof extents, right? So we know in
+> > > > > xfs_itruncate_extents() if the inode size is changing, not to
+> > > > > mention we know if the extent is beyond EOF? e.g. all calls to
+> > > > > xfs_itruncate_extents() other than xfs_free_eofblocks() change the
+> > > > > inode size and so directly indicate they are removing written
+> > > > > blocks. Anything where the inode size is not changing is doing a
+> > > > > post-eof removal, and so we can assume no data has been written?
+> > > > > 
+> > > > 
+> > > > Yes, xfs_free_eofblocks() is the only caller explicitly responsible for
+> > > > trimming post-eof extents.
+> > > > 
+> > > > > So rather than converting everything to unwritten extents, the "skip
+> > > > > discard flag" is simply triggered via extents being freed sitting
+> > > > > beyond the current EOF (not the new EOF) and/or being unwritten?
+> > > > > 
+> > > > 
+> > > > That was pretty much my initial thought, but note that the extent free
+> > > > is ultimately deferred down in xfs_free_eofblocks() ->
+> > > > xfs_itruncate_extents() -> xfs_bunmapi() -> xfs_bmap_del_extent_real()
+> > > > -> xfs_bmap_add_free(). We can communicate this down to that point with
+> > > > an itruncate_extents() parameter and XFS_BMAPI_NODISCARD flag or some
+> > > > such, it just seemed a bit kludgy to pass that down through those layers
+> > > > when the unwritten state is known in the bunmapi code (but I'll take
+> > > > that approach if preferred).
+> > > 
+> > > Hmmm - don't we already pass the XFS_BMAPI* flags to
+> > > xfs_bmap_del_extent_real()? If so, I don't think there's anything
+> > > extra that needs plumbing here. Conceptually it seems cleaner to me
+> > > to direct extent freeing policy through the bmapi interface flags
+> > > than it is add another flag interface elsewhere...
+> > > 
+> > 
+> > Yeah, the bmapi flag will cover down through there. The params (or
+> > wrappers) are needed at the very top (xfs_itruncate_extents()) and
+> > bottom (xfs_bmap_add_free_nodiscard()) of the chain.
+> > 
+> > The point I was trying to make above is just that the interface for
+> > controlling discards as such for unwritten extents (eofblocks aside..)
+> > is much more simple. We reduce the need to the
+> > xfs_bmap_add_free_nodiscard() helper in that case.
 > 
-> Since libxfs now has a function to fill out the geometry structure
-> and libfrog has a function to pretty-print the geometry, have mkfs
-> use the two helpers instead of open-coding it.
+> Yeah, I see that. I was really looking at whether it's a general
+> optimisation we can make without having to add lots of plumbing,,,
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > I think we should leave that as a separate problem, as writeback
+> > > > > currently has issues with the way we manage bufferhead state.
+> > > > > i.e. things don't work right if we put unwritten extents under
+> > > > > delalloc buffers and vice versa. [ I have patches to address that
+> > > > > I'm working on.] And there's also the issue that we need to change
+> > > > > the delalloc reservations to take into account block allocations
+> > > > > required by unwritten extent conversion needed by delalloc.
+> > > > > 
+> > > > 
+> > > > Right.. I wasn't planning to try and solve the whole buffer head state
+> > > > mismatch thing as a dependency to not discard eofblocks. I was only
+> > > > going to convert blocks that happened to be post-eof after the
+> > > > xfs_iomap_write_allocate() allocation because those blocks by definition
+> > > > don't have buffers. So it's essentially just another xfs_bmapi_write()
+> > > > call from xfs_iomap_write_allocate() to convert eofblocks if the just
+> > > > allocated mapping crosses eof.
+> > > 
+> > > I think it's a bit more complex than that. We have delalloc buffers
+> > > in memory beyond the on disk EOF (i.e. in-memory EOF is far beyond
+> > > on disk EOF) but when we do the allocation we would have to mark the
+> > > entire extent covering beyond the current IO past the on-disk EOF as
+> > > unwritten. Hence the range between the on-disk EOF and the in-memory
+> > > EOF ends up with unwritten extents under a delalloc range. Now our
+> > > IO completion needs to be different for the next IO beyond EOF,
+> > > because it needs to do unwritten completion, not just a file size
+> > > update. This is currently problematic because we use the "buffer
+> > > head is delalloc" state to determine the IO completion action, not
+> > > the on disk extent state.
+> > > 
+> > 
+> > Right, but the conversion would be based on the in-core EOF so we don't
+> > end up with unwritten extents beneath delalloc buffer_head's. In fact,
+> > the intent is to only convert blocks that are guaranteed to not have any
+> > buffer_head coverage at all.
+> 
+> Which means if we truncate after the initial allocation, but before
+> we write the in-core data, we still discard the range between the
+> on-disk EOF and where the unwritten extent beyond EOF begins. And
+> for large files, that means we might not be converting any of the
+> extent allocated beyond EOF at all because we can hmore dirty data
+> queued up in memory than we can allocate contiguously.
+> 
 
-We should make (lib)xfs_fs_geometry a void and get rid of the pointless
-error handling, but that's a patch for another day.
+It's not clear to me whether you refer to explicit file truncate or
+eofblocks trimming, and they have slightly different behaviors in the
+context of the proposed "nodiscard" implementation...
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+With regard to eofblocks trimming, discard between on-disk and in-core
+eof occurs regardless because eofblocks trim only ever affects blocks
+beyond the in-core EOF. IOW, this is already-defined behavior for
+when/how we define prealloc blocks and how to safely clean it up when
+unused, etc. This work should not change any of that fundamental
+behavior, only skip the discard when an eofblocks trim occurs under the
+current framework.
+
+If we explicitly truncate the file, I think we're going to discard
+post-eof blocks no matter what even with this patch. Truncate !=
+eofblocks trim, that is simply a characteristic of the implementation
+that controls nodiscard from xfs_free_eofblocks(). Note that I don't
+think that is harmful, it still avoids blatantly unnecessary discards
+associated with prealloc management and fundamentally ties into the
+eofblocks mechanism. It's just not quite as effective as compared to the
+unwritten extents approach. I'm fine with it because it still resolves
+the "why the heck am I getting discards on a write-only workload?" issue
+the vdo guys ran into.
+
+> > Hmm, I think you're thinking that I want to change some or all of the
+> > existing delalloc -> real allocation to a delalloc -> prealloc
+> > allocation somehow or another such that it affects within-eof state, and
+> > that's not really what I had in mind.
+> 
+> Not really, I was thinking about how the in memory EOF changes can
+> affect the on-disk EOF changes and the action that we need to take
+> when completing an IO and extending EOF. Some of the issues
+> are the same as for allocations within EOF, but I think there are
+> some different ones because of the way specualtive preallocation
+> beyond EOF works....
+> 
+> I suspect we don't really want to change allocation time behaviour
+> right now, just truncate time behaviour where we know that we've
+> already locked out incoming IO and the in-memory size cannot
+> change...
+> 
+
+Yep, the stability of the in-core size at allocation/conversion time is
+definitely a concern. That's one of the reasons I wasn't totally
+convinced of the sanity of the idea. :P
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
