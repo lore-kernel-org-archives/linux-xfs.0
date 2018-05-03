@@ -1,39 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:44161 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbeECXxT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 19:53:19 -0400
-Received: by mail-oi0-f49.google.com with SMTP id e80-v6so17662948oig.11
-        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 16:53:19 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.133]:44008 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751108AbeECWsM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 18:48:12 -0400
+Date: Thu, 3 May 2018 15:48:11 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: Oops from linux-next 20180430
+Message-ID: <20180503224811.GB30823@bombadil.infradead.org>
+References: <20180503205703.GA27821@bombadil.infradead.org>
+ <20180503223119.GF23861@dastard>
 MIME-Version: 1.0
-In-Reply-To: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 3 May 2018 16:53:18 -0700
-Message-ID: <CAPcyv4ihoGPJWA4X7V0h4BsX9_+4AXdHF=bmb==8iQMfc94YMQ@mail.gmail.com>
-Subject: Re: [PATCH v9 0/9] dax: fix dma vs truncate/hole-punch
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180503223119.GF23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm <linux-nvdimm@lists.01.org>
-Cc: Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Linux MM <linux-mm@kvack.org>, Christoph Hellwig <hch@lst.de>, Thomas Meyer <thomas@m3y3r.de>, kbuild test robot <lkp@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Alasdair Kergon <agk@redhat.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Matthew Wilcox <mawilcox@microsoft.com>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Apr 24, 2018 at 4:33 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> Changes since v8 [1]:
-> * Rebase on v4.17-rc2
->
-> * Fix get_user_pages_fast() for ZONE_DEVICE pages to revalidate the pte,
->   pmd, pud after taking references (Jan)
->
-> * Kill dax_layout_lock(). With get_user_pages_fast() for ZONE_DEVICE
->   fixed we can then rely on the {pte,pmd}_lock to synchronize
->   dax_layout_busy_page() vs new page references (Jan)
->
-> * Hold the iolock over repeated invocations of dax_layout_busy_page() to
->   enable truncate/hole-punch to make forward progress in the presence of
->   a constant stream of new direct-I/O requests (Jan).
->
-> [1]: https://lists.01.org/pipermail/linux-nvdimm/2018-March/015058.html
+On Fri, May 04, 2018 at 08:31:20AM +1000, Dave Chinner wrote:
+> On Thu, May 03, 2018 at 01:57:03PM -0700, Matthew Wilcox wrote:
+> > I was running xfstests xfs/350 at the time.
+> 
+> It's a superblock fuzzing test. Described as:
+> 
+> tests/xfs/group:350 dangerous_fuzzers dangerous_scrub dangerous_repair
+> 
+> Are you trying to run xfstests as a regression test suite (i.e.
+> check -g auto) , or as a fuzzer to find on-disk format parsing
+> issues (check -g dangerous_fuzzers)?
 
-I'll push this for soak time in -next if there are no further comments...
+I just invoked it as ./check.  I was looking to test the XArray code with
+the config Ross gave me.  I didn't realise it would run 'dangerous' checks
+by default.  I'll switch to -g auto.
+
