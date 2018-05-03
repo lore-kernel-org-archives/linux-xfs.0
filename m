@@ -1,191 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:36267 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751301AbeECPUw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 11:20:52 -0400
-Received: by mail-io0-f194.google.com with SMTP id d73-v6so22090097iog.3
-        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 08:20:52 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 3/3] blk-wbt: throttle discards like background writes
-Date: Thu,  3 May 2018 09:20:43 -0600
-Message-Id: <1525360843-6504-4-git-send-email-axboe@kernel.dk>
-In-Reply-To: <1525360843-6504-1-git-send-email-axboe@kernel.dk>
-References: <1525360843-6504-1-git-send-email-axboe@kernel.dk>
+Received: from aserp2120.oracle.com ([141.146.126.78]:55736 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751095AbeECSGr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:06:47 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w43I16Jf087115
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:47 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2hmgxg30qe-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 18:06:47 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w43I6kiL001352
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:46 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w43I6jTp015475
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:46 GMT
+Subject: [PATCH 08/12] xfs: superblock scrub should use short-lived buffers
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 03 May 2018 11:06:44 -0700
+Message-ID: <152537080489.16676.3127430066483939602.stgit@magnolia>
+In-Reply-To: <152537075334.16676.10600900179473864298.stgit@magnolia>
+References: <152537075334.16676.10600900179473864298.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dchinner@redhat.com, hch@lst.de, Jens Axboe <axboe@kernel.dk>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Throttle discards like we would any background write. Discards should
-be background activity, so if they are impacting foreground IO, then
-we will throttle them down.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Secondary superblocks are rarely used, so create a helper to read a
+given non-primary AG's superblock and ensure that it won't stick around
+hogging memory.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- block/blk-stat.h |  6 +++---
- block/blk-wbt.c  | 52 ++++++++++++++++++++++++++++++++++------------------
- block/blk-wbt.h  |  9 +++++++--
- 3 files changed, 44 insertions(+), 23 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c     |   22 ++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_sb.h     |    3 +++
+ fs/xfs/libxfs/xfs_shared.h |    1 +
+ fs/xfs/scrub/agheader.c    |    4 +---
+ 4 files changed, 27 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-stat.h b/block/blk-stat.h
-index 2dd36347252a..c22049a8125e 100644
---- a/block/blk-stat.h
-+++ b/block/blk-stat.h
-@@ -10,11 +10,11 @@
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index d9b94bd5f689..d9bef41a3f26 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -972,3 +972,25 @@ xfs_fs_geometry(
  
- /*
-  * from upper:
-- * 3 bits: reserved for other usage
-+ * 4 bits: reserved for other usage
-  * 12 bits: size
-- * 49 bits: time
-+ * 48 bits: time
-  */
--#define BLK_STAT_RES_BITS	3
-+#define BLK_STAT_RES_BITS	4
- #define BLK_STAT_SIZE_BITS	12
- #define BLK_STAT_RES_SHIFT	(64 - BLK_STAT_RES_BITS)
- #define BLK_STAT_SIZE_SHIFT	(BLK_STAT_RES_SHIFT - BLK_STAT_SIZE_BITS)
-diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-index 3e34b41bcefc..4d222100746c 100644
---- a/block/blk-wbt.c
-+++ b/block/blk-wbt.c
-@@ -101,9 +101,15 @@ static bool wb_recent_wait(struct rq_wb *rwb)
- 	return time_before(jiffies, wb->dirty_sleep + HZ);
+ 	return 0;
  }
- 
--static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_kswapd)
-+static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_trim,
-+					  bool is_kswapd)
- {
--	return &rwb->rq_wait[is_kswapd];
-+	if (is_trim)
-+		return &rwb->rq_wait[WBT_REQ_DISCARD];
-+	else if (is_kswapd)
-+		return &rwb->rq_wait[WBT_REQ_KSWAPD];
-+	else
-+		return &rwb->rq_wait[WBT_REQ_BG];
- }
- 
- static void rwb_wake_all(struct rq_wb *rwb)
-@@ -120,13 +126,14 @@ static void rwb_wake_all(struct rq_wb *rwb)
- 
- void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
- {
-+	const bool is_trim = wb_acct & WBT_DISCARD;
- 	struct rq_wait *rqw;
- 	int inflight, limit;
- 
- 	if (!(wb_acct & WBT_TRACKED))
- 		return;
- 
--	rqw = get_rq_wait(rwb, wb_acct & WBT_KSWAPD);
-+	rqw = get_rq_wait(rwb, is_trim, wb_acct & WBT_KSWAPD);
- 	inflight = atomic_dec_return(&rqw->inflight);
- 
- 	/*
-@@ -139,10 +146,13 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
- 	}
- 
- 	/*
--	 * If the device does write back caching, drop further down
--	 * before we wake people up.
-+	 * For discards, our limit is always the background. For writes, if
-+	 * the device does write back caching, drop further down before we
-+	 * wake people up.
- 	 */
--	if (rwb->wc && !wb_recent_wait(rwb))
-+	if (is_trim)
-+		limit = rwb->wb_background;
-+	else if (rwb->wc && !wb_recent_wait(rwb))
- 		limit = 0;
- 	else
- 		limit = rwb->wb_normal;
-@@ -479,6 +489,9 @@ static inline unsigned int get_limit(struct rq_wb *rwb, unsigned long rw)
- {
- 	unsigned int limit;
- 
-+	if ((rw & REQ_OP_MASK) == REQ_OP_DISCARD)
-+		return rwb->wb_background;
 +
- 	/*
- 	 * At this point we know it's a buffered write. If this is
- 	 * kswapd trying to free memory, or REQ_SYNC is set, then
-@@ -533,7 +546,8 @@ static void __wbt_wait(struct rq_wb *rwb, unsigned long rw, spinlock_t *lock)
- 	__releases(lock)
- 	__acquires(lock)
- {
--	struct rq_wait *rqw = get_rq_wait(rwb, current_is_kswapd());
-+	const bool is_trim = (rw & REQ_OP_MASK) == REQ_OP_DISCARD;
-+	struct rq_wait *rqw = get_rq_wait(rwb, is_trim, current_is_kswapd());
- 	DEFINE_WAIT(wait);
- 
- 	if (may_queue(rwb, rqw, &wait, rw))
-@@ -561,19 +575,19 @@ static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
- {
- 	const int op = bio_op(bio);
- 
--	/*
--	 * If not a WRITE, do nothing
--	 */
--	if (op != REQ_OP_WRITE)
--		return false;
-+	if (op == REQ_OP_WRITE) {
-+		/*
-+		 * Don't throttle WRITE_ODIRECT
-+		 */
-+		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
-+		    (REQ_SYNC | REQ_IDLE))
-+			return false;
- 
--	/*
--	 * Don't throttle WRITE_ODIRECT
--	 */
--	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
--		return false;
-+		return true;
-+	} else if (op == REQ_OP_DISCARD)
-+		return true;
- 
--	return true;
-+	return false;
- }
- 
- /*
-@@ -605,6 +619,8 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
- 
- 	if (current_is_kswapd())
- 		ret |= WBT_KSWAPD;
-+	if (bio_op(bio) == REQ_OP_DISCARD)
-+		ret |= WBT_DISCARD;
- 
- 	return ret | WBT_TRACKED;
- }
-diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-index a232c98fbf4d..af451876ea31 100644
---- a/block/blk-wbt.h
-+++ b/block/blk-wbt.h
-@@ -14,12 +14,17 @@ enum wbt_flags {
- 	WBT_TRACKED		= 1,	/* write, tracked for throttling */
- 	WBT_READ		= 2,	/* read */
- 	WBT_KSWAPD		= 4,	/* write, from kswapd */
-+	WBT_DISCARD		= 8,
- 
--	WBT_NR_BITS		= 3,	/* number of bits */
-+	WBT_NR_BITS		= 4,	/* number of bits */
- };
- 
- enum {
--	WBT_NUM_RWQ		= 2,
-+	WBT_REQ_BG = 0,
-+	WBT_REQ_KSWAPD,
-+	WBT_REQ_DISCARD,
++/* Read a secondary superblock. */
++int
++xfs_sb_read_secondary(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_agnumber_t		agno,
++	struct xfs_buf		**bpp)
++{
++	struct xfs_buf		*bp;
++	int			error;
 +
-+	WBT_NUM_RWQ,
- };
++	ASSERT(agno != 0 && agno != NULLAGNUMBER);
++	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
++	if (error)
++		return error;
++	xfs_buf_set_ref(bp, XFS_SSB_REF);
++	*bpp = bp;
++	return 0;
++}
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index 63dcd2a1a657..5166d78b2c34 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -37,5 +37,8 @@ extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
+ #define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
+ extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
+ 				int struct_version);
++extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
++				struct xfs_trans *tp, xfs_agnumber_t agno,
++				struct xfs_buf **bpp);
+ 
+ #endif	/* __XFS_SB_H__ */
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index d0b84da0cb1e..d23f33c02f64 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -127,6 +127,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+ #define	XFS_ATTR_BTREE_REF	1
+ #define	XFS_DQUOT_REF		1
+ #define	XFS_REFC_BTREE_REF	1
++#define	XFS_SSB_REF		0
  
  /*
--- 
-2.7.4
+  * Flags for xfs_trans_ichgtime().
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 018aabbd9394..cd24ac56c21e 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -157,9 +157,7 @@ xfs_scrub_superblock(
+ 	if (agno == 0)
+ 		return 0;
+ 
+-	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+-		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+-		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
++	error = xfs_sb_read_secondary(mp, sc->tp, agno, &bp);
+ 	/*
+ 	 * The superblock verifier can return several different error codes
+ 	 * if it thinks the superblock doesn't look right.  For a mount these
 
