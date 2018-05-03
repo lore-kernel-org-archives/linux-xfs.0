@@ -1,81 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51326 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965012AbeEIQ1a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 12:27:30 -0400
-Date: Wed, 9 May 2018 09:27:10 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:55180 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750947AbeECSF4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:05:56 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w43I10pY087029
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:05:55 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2hmgxg30kc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 18:05:55 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w43I5tGb002944
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:05:55 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w43I5s4j002602
+        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:05:54 GMT
+Subject: [PATCH v4 00/12] xfs-4.18: various fixes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfs_db and ASSERT fails dur type mismatch
-Message-ID: <20180509162710.GU11261@magnolia>
-References: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
+Date: Thu, 03 May 2018 11:05:53 -0700
+Message-ID: <152537075334.16676.10600900179473864298.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, sandeen@redhat.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 09, 2018 at 01:45:54PM +0200, Carlos Maiolino wrote:
-> Hey folks,
-> 
-> I've been thinking about different ways to fix those crashes on xfs_db due type
-> mismatch, based on the previous discussion and a chat I had with Eric on irc.
-> 
-> After thinking a bit more about it, I do think using unknown header types adds
-> unneeded extra complexity to the code, to achieve the same result as an extra
-> check on print_flist_1().
-> 
-> Adding an unknown type, will require a change to all types affected by this
-> issue. I am not sure if a single unknown type can be used for all metadata types
-> which is affected by this, but I think it requires an unknown type for each of
-> these metadata. Or at least an entry for an unknown header type (in case of of
-> the known ones are not found).
-> 
-> While, the crash caused by unrecognized metadata when using these types, can be
-> fixed by something like my original change.
-> 
-> I wrote a slightly different patch like this:
-> 
-> diff --git a/db/print.c b/db/print.c
-> index 0da36c27..f8a48281 100644
-> --- a/db/print.c
-> +++ b/db/print.c
-> @@ -160,9 +160,10 @@ print_flist_1(
->                                         (f->flags & FLD_ARRAY) != 0);
->                                 if (neednl)
->                                         dbprintf("\n");
-> -                       } else {
-> -                               ASSERT(fa->arg & FTARG_OKEMPTY);
-> +                       } else if (fa->arg & FTARG_OKEMPTY) {
->                                 dbprintf(_("(empty)\n"));
-> +                       } else {
-> +                               dbprintf(_("Unrecognized metadata or type mismatch\n"));
->                         }
->                 }
->                 free_strvec(pfx);
-> 
-> 
-> This will still keep printing "(empty)" where it should be printed, or print out
-> a hint that something went wrong.
-> 
-> I honestly think this the best solution for these crashes, what you guys think?
+Hi all,
 
-Looks fine to me, I dislike ASSERTs on crap metadata, especially in the
-debugging tool.
+Here's a revised series cleaning up some problems and bugs found by
+stressing the online scrub code.  Most of the problems fixed here were
+uncovered through more thorough testing of the online repair series,
+which was posted previously.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+The first patch replaces a panic() call in the bmap debugging verifiers
+with logging code that doesn't take the whole system down.  This helps
+us to avoid panic reboots while running generic/388.  The second patch
+fixes an uncaught error return in the rmap code.
+
+Then, we amend scrub to skip cross-referencing once the first error is
+found; this patch hasn't changed since its posting during the 4.17 cycle.
+Second is a patch adding more "finish scrub as soon as we've decided
+CORRUPT" checks.
+
+The next two patches refactor the quota scrub to drop all the weird code
+that attaches to the quota ip in favor of using the well known mechanism
+that we use for all other inodes.  This enables us to call the data fork
+scrubber on the quota inodes; and the dquot iterator that we created
+earlier.  We also adapt the rtbitmap/rtsum scrubbers to check the data
+forks with the same helper.
+
+The next two patches fix some broken interaction between scrub and the
+rest of xfs.
+
+Following that are three fixes to the scrubbers themselves -- the first
+checks that a btree block never contains fewer than minrecs records
+unless it's the top block in a tree.  The second refactors the
+transaction allocation helper; and the last one fixes a potential ABBA
+deadlock in the parent scrubber.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.17-rc3.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to eat your data.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> 
-> Cheers
-> 
-> 
-> -- 
-> Carlos
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
