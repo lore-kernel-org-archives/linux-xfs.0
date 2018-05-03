@@ -1,26 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55736 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751095AbeECSGr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:06:47 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w43I16Jf087115
-        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:47 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2hmgxg30qe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 03 May 2018 18:06:47 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w43I6kiL001352
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:46 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w43I6jTp015475
-        for <linux-xfs@vger.kernel.org>; Thu, 3 May 2018 18:06:46 GMT
-Subject: [PATCH 08/12] xfs: superblock scrub should use short-lived buffers
+Received: from userp2130.oracle.com ([156.151.31.86]:59890 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750969AbeECSHW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 14:07:22 -0400
+Subject: [PATCH 11/12] xfs: refactor scrub transaction allocation function
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 03 May 2018 11:06:44 -0700
-Message-ID: <152537080489.16676.3127430066483939602.stgit@magnolia>
+Date: Thu, 03 May 2018 11:07:03 -0700
+Message-ID: <152537082334.16676.5389122114896718490.stgit@magnolia>
 In-Reply-To: <152537075334.16676.10600900179473864298.stgit@magnolia>
 References: <152537075334.16676.10600900179473864298.stgit@magnolia>
 MIME-Version: 1.0
@@ -30,91 +16,144 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Secondary superblocks are rarely used, so create a helper to read a
-given non-primary AG's superblock and ensure that it won't stick around
-hogging memory.
+Since the transaction allocation helper is about to become more complex,
+move it to common.c and remove the redundant parameters.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_sb.c     |   22 ++++++++++++++++++++++
- fs/xfs/libxfs/xfs_sb.h     |    3 +++
- fs/xfs/libxfs/xfs_shared.h |    1 +
- fs/xfs/scrub/agheader.c    |    4 +---
- 4 files changed, 27 insertions(+), 3 deletions(-)
+ fs/xfs/scrub/bmap.c   |    3 +--
+ fs/xfs/scrub/common.c |   16 +++++++++++++---
+ fs/xfs/scrub/common.h |   14 +-------------
+ fs/xfs/scrub/inode.c  |    5 ++---
+ 4 files changed, 17 insertions(+), 21 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index d9b94bd5f689..d9bef41a3f26 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -972,3 +972,25 @@ xfs_fs_geometry(
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index c28ff2ec201a..42a115e83739 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -51,7 +51,6 @@ xfs_scrub_setup_inode_bmap(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
+ {
+-	struct xfs_mount		*mp = sc->mp;
+ 	int				error;
  
- 	return 0;
- }
-+
-+/* Read a secondary superblock. */
+ 	error = xfs_scrub_get_inode(sc, ip);
+@@ -75,7 +74,7 @@ xfs_scrub_setup_inode_bmap(
+ 	}
+ 
+ 	/* Got the inode, lock it and we're ready to go. */
+-	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++	error = xfs_scrub_trans_alloc(sc);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 335c7a305e15..62b33c99efe4 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -570,13 +570,24 @@ xfs_scrub_ag_init(
+ 
+ /* Per-scrubber setup functions */
+ 
++/*
++ * Grab an empty transaction so that we can re-grab locked buffers if
++ * one of our btrees turns out to be cyclic.
++ */
 +int
-+xfs_sb_read_secondary(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	xfs_agnumber_t		agno,
-+	struct xfs_buf		**bpp)
++xfs_scrub_trans_alloc(
++	struct xfs_scrub_context	*sc)
 +{
-+	struct xfs_buf		*bp;
-+	int			error;
-+
-+	ASSERT(agno != 0 && agno != NULLAGNUMBER);
-+	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
-+			XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-+			XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-+	if (error)
-+		return error;
-+	xfs_buf_set_ref(bp, XFS_SSB_REF);
-+	*bpp = bp;
-+	return 0;
++	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
 +}
-diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-index 63dcd2a1a657..5166d78b2c34 100644
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -37,5 +37,8 @@ extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
- #define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
- extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
- 				int struct_version);
-+extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
-+				struct xfs_trans *tp, xfs_agnumber_t agno,
-+				struct xfs_buf **bpp);
++
+ /* Set us up with a transaction and an empty context. */
+ int
+ xfs_scrub_setup_fs(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
+ {
+-	return xfs_scrub_trans_alloc(sc->sm, sc->mp, &sc->tp);
++	return xfs_scrub_trans_alloc(sc);
+ }
  
- #endif	/* __XFS_SB_H__ */
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index d0b84da0cb1e..d23f33c02f64 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -127,6 +127,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define	XFS_ATTR_BTREE_REF	1
- #define	XFS_DQUOT_REF		1
- #define	XFS_REFC_BTREE_REF	1
-+#define	XFS_SSB_REF		0
+ /* Set us up with AG headers and btree cursors. */
+@@ -697,7 +708,6 @@ xfs_scrub_setup_inode_contents(
+ 	struct xfs_inode		*ip,
+ 	unsigned int			resblks)
+ {
+-	struct xfs_mount		*mp = sc->mp;
+ 	int				error;
  
- /*
-  * Flags for xfs_trans_ichgtime().
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 018aabbd9394..cd24ac56c21e 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -157,9 +157,7 @@ xfs_scrub_superblock(
- 	if (agno == 0)
- 		return 0;
+ 	error = xfs_scrub_get_inode(sc, ip);
+@@ -707,7 +717,7 @@ xfs_scrub_setup_inode_contents(
+ 	/* Got the inode, lock it and we're ready to go. */
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	xfs_ilock(sc->ip, sc->ilock_flags);
+-	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++	error = xfs_scrub_trans_alloc(sc);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index ad736c411287..5d78bb9602ab 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -38,19 +38,7 @@ xfs_scrub_should_terminate(
+ 	return false;
+ }
  
--	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
--		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
--		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-+	error = xfs_sb_read_secondary(mp, sc->tp, agno, &bp);
+-/*
+- * Grab an empty transaction so that we can re-grab locked buffers if
+- * one of our btrees turns out to be cyclic.
+- */
+-static inline int
+-xfs_scrub_trans_alloc(
+-	struct xfs_scrub_metadata	*sm,
+-	struct xfs_mount		*mp,
+-	struct xfs_trans		**tpp)
+-{
+-	return xfs_trans_alloc_empty(mp, tpp);
+-}
+-
++int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc);
+ bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ 		xfs_agblock_t bno, int *error);
+ bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 8532fc7be838..550c0cf70a92 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -55,7 +55,6 @@ xfs_scrub_setup_inode(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
+ {
+-	struct xfs_mount		*mp = sc->mp;
+ 	int				error;
+ 
  	/*
- 	 * The superblock verifier can return several different error codes
- 	 * if it thinks the superblock doesn't look right.  For a mount these
+@@ -68,7 +67,7 @@ xfs_scrub_setup_inode(
+ 		break;
+ 	case -EFSCORRUPTED:
+ 	case -EFSBADCRC:
+-		return xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++		return xfs_scrub_trans_alloc(sc);
+ 	default:
+ 		return error;
+ 	}
+@@ -76,7 +75,7 @@ xfs_scrub_setup_inode(
+ 	/* Got the inode, lock it and we're ready to go. */
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	xfs_ilock(sc->ip, sc->ilock_flags);
+-	error = xfs_scrub_trans_alloc(sc->sm, mp, &sc->tp);
++	error = xfs_scrub_trans_alloc(sc);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
 
