@@ -1,112 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58398 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751001AbeEDFDX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 01:03:23 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w444tnf6093260
-        for <linux-xfs@vger.kernel.org>; Fri, 4 May 2018 05:03:23 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2hmgxg4dqn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 04 May 2018 05:03:22 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w4453Mxp024582
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 4 May 2018 05:03:22 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4453LI9024761
-        for <linux-xfs@vger.kernel.org>; Fri, 4 May 2018 05:03:22 GMT
-Date: Thu, 3 May 2018 22:03:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: generic/388 panic
-Message-ID: <20180504050320.GJ4141@magnolia>
-References: <20180423123602.cuibxc5mo2t6pldt@odin.usersys.redhat.com>
- <20180423200353.GD26268@magnolia>
- <20180424080414.ciiotbnhycjbmdn3@odin.usersys.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:11721 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750866AbeEDLcA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 May 2018 07:32:00 -0400
+Date: Fri, 4 May 2018 07:31:58 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0.1/13] xfs: release new dquot buffer on defer_finish
+ error
+Message-ID: <20180504113157.GA26217@bfoster.bfoster>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <20180503175343.GF4127@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180424080414.ciiotbnhycjbmdn3@odin.usersys.redhat.com>
+In-Reply-To: <20180503175343.GF4127@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On Tue, Apr 24, 2018 at 10:04:14AM +0200, Carlos Maiolino wrote:
-> On Mon, Apr 23, 2018 at 01:03:53PM -0700, Darrick J. Wong wrote:
-> > On Mon, Apr 23, 2018 at 02:36:02PM +0200, Carlos Maiolino wrote:
-> > > Hi.
-> > > 
-> > > Past week Darrick mentioned to me a problem he has been seen with generic/388
-> > > hanging on XFS filesystems with quotas enabled.
-> > > 
-> > > I couldn't hit something hanging until now, but I'm sporadically seeing some
-> > > kernel panics after running generic/388 in a loop:
-> > > 
-> > > [ 5913.170041] Kernel panic - not syncing: xfs_bmap_check_leaf_extents: CORRUPTED BTREE OR SOMETHING
-> > 
-> > Yep, that's one of the things I'm seeing.  It seems easier to make it
-> > reproduce if you turn on rmap and reflink too....
+On Thu, May 03, 2018 at 10:53:43AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> K, I'll try it and see wth is going on, thanks for confirming.
+> In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
+> allocating a new dquot record", we allocate a new dquot block, grab a
+> buffer to initialize it, and return the locked initialized dquot buffer
+> to the caller for further in-core dquot initialization.  Unfortunately,
+> if the _bmap_finish errored out, _qm_dqalloc would also error out
+> without bothering to free the (locked) buffer.  Leaking a locked buffer
+> caused hangs in generic/388 when quotas are enabled.
+> 
+> Furthermore, the _bmap_finish -> _defer_finish conversion in
+> 310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
+> xfs_defer_*") failed to observe that the buffer was held going into
+> _defer_finish and therefore failed to notice that the buffer lock is
+> /not/ maintained afterwards.  Now that we can bjoin a buffer to a
+> defer_ops, use this mechanism to ensure that the buffer stays locked
+> across the _defer_finish.  Release the holds and locks on the buffer as
+> appropriate if we have to error out.
+> 
+> There is a subtlety here for the caller in that the buffer emerges
+> locked and held to the transaction, so if the _trans_commit fails we
+> have to release the buffer explicitly.  This fixes the unmount hang
+> in generic/388 when quotas are enabled.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_dquot.c |   48 +++++++++++++++++++++++++++---------------------
+>  1 file changed, 27 insertions(+), 21 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index a7daef9e16bf..4c39d8632230 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -362,33 +362,39 @@ xfs_qm_dqalloc(
+>  			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+>  
+>  	/*
+> -	 * xfs_defer_finish() may commit the current transaction and
+> -	 * start a second transaction if the freelist is not empty.
+> +	 * Hold the buffer and join it to the dfops so that we'll still own
+> +	 * the buffer when we return to the caller.  The buffer disposal on
+> +	 * error must be paid attention to very carefully, as it has been
+> +	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
+> +	 * code when allocating a new dquot record" in 2005, and the later
+> +	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
+> +	 * the buffer locked across the _defer_finish call.  We can now do
+> +	 * this correctly with xfs_defer_bjoin.
+>  	 *
+> -	 * Since we still want to modify this buffer, we need to
+> -	 * ensure that the buffer is not released on commit of
+> -	 * the first transaction and ensure the buffer is added to the
+> -	 * second transaction.
+> +	 * Above, we allocated a disk block for the dquot information and
+> +	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
+> +	 * the buffer is still locked to *tpp, so we must _bhold_release and
+> +	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
+> +	 * transaction is gone but the new buffer is not joined or held to any
+> +	 * transaction, so we must _buf_relse it.
+>  	 *
+> -	 * If there is only one transaction then don't stop the buffer
+> -	 * from being released when it commits later on.
+> +	 * If everything succeeds, the caller of this function is returned a
+> +	 * buffer that is locked, held, and joined to the transaction.  If the
+> +	 * transaction commit fails (in the caller) the caller must unlock the
+> +	 * buffer manually.
 
-FWIW I think I've fixed this with "xfs: release new dquot buffer on
-defer_finish error" that's on the list now.
+If the buffer is held due to the xfs_defer_bjoin(), doesn't that mean
+that the caller has to ultimately release it even after successful
+transaction commit (assuming we don't roll the transaction again
+somewhere)? I see we have an xfs_trans_brelse() up in xfs_qm_dqread(),
+but it looks like that only clears the hold if the buffer isn't logged
+in the tx. Hm?
 
---D
+Brian
 
-> 
-> Cheers
-> 
-> > 
-> > --D
-> > 
-> > > [ 5913.176441] CPU: 2 PID: 24611 Comm: fsstress Kdump: loaded Not tainted 4.17.0-rc1t450s #94
-> > > [ 5913.178443] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-2.fc27 04/01/2014
-> > > [ 5913.184533] Call Trace:
-> > > [ 5913.185400]  dump_stack+0x5c/0x7b
-> > > [ 5913.190164]  panic+0xe4/0x252
-> > > [ 5913.190644]  xfs_bmap_check_leaf_extents+0x323/0x5c0
-> > > [ 5913.191365]  xfs_bmap_add_extent_hole_real+0x7b0/0xa60
-> > > [ 5913.192106]  xfs_bmapi_write+0xb2e/0x12e0
-> > > [ 5913.192716]  xfs_qm_dqalloc+0x176/0x350
-> > > [ 5913.193292]  ? xfs_bmapi_read+0x1e0/0x3e0
-> > > [ 5913.193919]  xfs_qm_dqtobp+0x1e0/0x410
-> > > [ 5913.195406]  xfs_qm_dqread+0x19b/0x420
-> > > [ 5913.196028]  xfs_qm_dqget+0x417/0x7b0
-> > > [ 5913.196610]  xfs_qm_vop_dqalloc+0x156/0x5b0
-> > > [ 5913.198640]  xfs_setattr_nonsize+0x2fd/0x6d0
-> > > [ 5913.202750]  notify_change+0x303/0x420
-> > > [ 5913.206278]  chown_common.isra.17+0xec/0x1a0
-> > > [ 5913.207945]  do_fchownat+0xd3/0xf0
-> > > [ 5913.208633]  __x64_sys_lchown+0x21/0x30
-> > > [ 5913.210993]  do_syscall_64+0x5b/0x180
-> > > [ 5913.213991]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> > > [ 5913.215453] RIP: 0033:0x7fa4ff459397
-> > > [ 5913.215958] RSP: 002b:00007fff311d65e8 EFLAGS: 00000206 ORIG_RAX: 000000000000005e
-> > > [ 5913.225089] RAX: ffffffffffffffda RBX: 000000000009db9c RCX: 00007fa4ff459397
-> > > [ 5913.234352] RDX: 000000000009db9c RSI: 0000000000099ef5 RDI: 000000000116b170
-> > > [ 5913.244177] RBP: 00007fff311d6740 R08: 0000000000000010 R09: 00007fff311d673c
-> > > [ 5913.247929] R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000099ef5
-> > > [ 5913.249091] R13: 000000000009db9c R14: 0000000000000000 R15: 0000000000000000
-> > > 
-> > > 
-> > > Darrick, is this something similar with what you have mentioned? Or is this
-> > > something different?
-> > > 
-> > > Cheers
-> > > 
-> > > -- 
-> > > Carlos
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> Carlos
+>  	 */
+> -
+> -	xfs_trans_bhold(tp, bp);
+> -
+> +	xfs_trans_bhold(*tpp, bp);
+> +	error = xfs_defer_bjoin(&dfops, bp);
+> +	if (error) {
+> +		xfs_trans_bhold_release(*tpp, bp);
+> +		xfs_trans_brelse(*tpp, bp);
+> +		goto error1;
+> +	}
+>  	error = xfs_defer_finish(tpp, &dfops);
+> -	if (error)
+> +	if (error) {
+> +		xfs_buf_relse(bp);
+>  		goto error1;
+> -
+> -	/* Transaction was committed? */
+> -	if (*tpp != tp) {
+> -		tp = *tpp;
+> -		xfs_trans_bjoin(tp, bp);
+> -	} else {
+> -		xfs_trans_bhold_release(tp, bp);
+>  	}
+> -
+> -	*O_bpp = bp;
+>  	return 0;
+>  
+>  error1:
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
