@@ -1,105 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43170 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751351AbeEBO2g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 May 2018 10:28:36 -0400
-Subject: Re: [PATCH 4/5 V2] xfs: implement online get/set fs label
-References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
- <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
- <2a638f02-ea72-0d5e-30a4-1d95cfe6ff69@sandeen.net>
- <20180502142420.GL4127@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d364f3c8-110a-fb69-f2a5-c3b5716f556e@sandeen.net>
-Date: Wed, 2 May 2018 09:28:35 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:42378 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbeEDPNK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 11:13:10 -0400
+Date: Fri, 4 May 2018 08:12:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0.1/13] xfs: release new dquot buffer on defer_finish
+ error
+Message-ID: <20180504151247.GH26569@magnolia>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <20180503175343.GF4127@magnolia>
+ <20180504113157.GA26217@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180502142420.GL4127@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180504113157.GA26217@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-On 5/2/18 9:24 AM, Darrick J. Wong wrote:
-> On Tue, May 01, 2018 at 06:04:09PM -0500, Eric Sandeen wrote:
->> The GET ioctl is trivial, just return the current label.
->>
->> The SET ioctl is more involved:
->> It transactionally modifies the superblock to write a new filesystem
->> label to the primary super.
->>
->> A new variant of xfs_sync_sb then writes the superblock buffer
->> immediately to disk so that the change is visible from userspace.
->>
->> It then invalidates any page cache that userspace might have previously
->> read on the block device so that i.e. blkid can see the change
->> immediately, and updates all secondary superblocks as userspace relable
->> does.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> V2: rework the force-sb-to-disk approach, invalidate the whole block
->> device, and block waiting for the growfs lock.  Also remove too-long-label
->> printk.
->>
->> Thanks to dchinner for the xfs_sync_sb_buf suggestion & framework.
->>
->> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
->> index d9b94bd..54992e8 100644
->> --- a/fs/xfs/libxfs/xfs_sb.c
->> +++ b/fs/xfs/libxfs/xfs_sb.c
->> @@ -888,6 +888,37 @@ struct xfs_perag *
->>  	return xfs_trans_commit(tp);
->>  }
->>  
->> +/*
->> + * Same behavior as xfs_sync_sb, except that it is always synchronous and it
->> + * also writes the superblock buffer to disk sector 0 immediately.
->> + */
->> +int
->> +xfs_sync_sb_buf(
->> +	struct xfs_mount	*mp)
->> +{
->> +	struct xfs_trans	*tp;
->> +	int			error;
->> +
->> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0,
->> +			XFS_TRANS_NO_WRITECOUNT, &tp);
+On Fri, May 04, 2018 at 07:31:58AM -0400, Brian Foster wrote:
+> On Thu, May 03, 2018 at 10:53:43AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
+> > allocating a new dquot record", we allocate a new dquot block, grab a
+> > buffer to initialize it, and return the locked initialized dquot buffer
+> > to the caller for further in-core dquot initialization.  Unfortunately,
+> > if the _bmap_finish errored out, _qm_dqalloc would also error out
+> > without bothering to free the (locked) buffer.  Leaking a locked buffer
+> > caused hangs in generic/388 when quotas are enabled.
+> > 
+> > Furthermore, the _bmap_finish -> _defer_finish conversion in
+> > 310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
+> > xfs_defer_*") failed to observe that the buffer was held going into
+> > _defer_finish and therefore failed to notice that the buffer lock is
+> > /not/ maintained afterwards.  Now that we can bjoin a buffer to a
+> > defer_ops, use this mechanism to ensure that the buffer stays locked
+> > across the _defer_finish.  Release the holds and locks on the buffer as
+> > appropriate if we have to error out.
+> > 
+> > There is a subtlety here for the caller in that the buffer emerges
+> > locked and held to the transaction, so if the _trans_commit fails we
+> > have to release the buffer explicitly.  This fixes the unmount hang
+> > in generic/388 when quotas are enabled.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_dquot.c |   48 +++++++++++++++++++++++++++---------------------
+> >  1 file changed, 27 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index a7daef9e16bf..4c39d8632230 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -362,33 +362,39 @@ xfs_qm_dqalloc(
+> >  			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+> >  
+> >  	/*
+> > -	 * xfs_defer_finish() may commit the current transaction and
+> > -	 * start a second transaction if the freelist is not empty.
+> > +	 * Hold the buffer and join it to the dfops so that we'll still own
+> > +	 * the buffer when we return to the caller.  The buffer disposal on
+> > +	 * error must be paid attention to very carefully, as it has been
+> > +	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
+> > +	 * code when allocating a new dquot record" in 2005, and the later
+> > +	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
+> > +	 * the buffer locked across the _defer_finish call.  We can now do
+> > +	 * this correctly with xfs_defer_bjoin.
+> >  	 *
+> > -	 * Since we still want to modify this buffer, we need to
+> > -	 * ensure that the buffer is not released on commit of
+> > -	 * the first transaction and ensure the buffer is added to the
+> > -	 * second transaction.
+> > +	 * Above, we allocated a disk block for the dquot information and
+> > +	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
+> > +	 * the buffer is still locked to *tpp, so we must _bhold_release and
+> > +	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
+> > +	 * transaction is gone but the new buffer is not joined or held to any
+> > +	 * transaction, so we must _buf_relse it.
+> >  	 *
+> > -	 * If there is only one transaction then don't stop the buffer
+> > -	 * from being released when it commits later on.
+> > +	 * If everything succeeds, the caller of this function is returned a
+> > +	 * buffer that is locked, held, and joined to the transaction.  If the
+> > +	 * transaction commit fails (in the caller) the caller must unlock the
+> > +	 * buffer manually.
 > 
-> I suppose this is a straight clone of xfs_sync_sb, but do we need
-> NO_WRITECOUNT here?  Will this get called while the fs is frozen?
+> If the buffer is held due to the xfs_defer_bjoin(), doesn't that mean
+> that the caller has to ultimately release it even after successful
+> transaction commit (assuming we don't roll the transaction again
+> somewhere)? I see we have an xfs_trans_brelse() up in xfs_qm_dqread(),
+> but it looks like that only clears the hold if the buffer isn't logged
+> in the tx. Hm?
 
-No, I should remove that, thanks.  I might see how ugly it'd be to just
-convert xfs_sync_sb() to take flags for wait, no_writecount, and flush_sb
-or something. 
-...
- 
->> +static int
->> +xfs_ioc_getlabel(
->> +	struct xfs_mount	*mp,
->> +	char			__user *label)
->> +{
->> +	struct xfs_sb		*sbp = &mp->m_sb;
->> +
->> +	/* Paranoia */
->> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
->> +
->> +	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
+Correct.  The buffer is initialized in the same transaction as the dquot
+block allocation and committed in xfs_defer_finish.  After
+initialization (which is to say when we return to xfs_qm_dqtobp), the
+buffer is held, joined, and not logged to the transaction, and nothing
+else is supposed to dirty the buffer.  Both buffer and transaction are
+then returned in this state to _dqread, which the in-core dquot state
+out of the dquot buffer and _trans_brelse's the (still clean) buffer,
+which breaks the hold and unlocks the buffer.
+
+After the refactor we guarantee that the buffer is locked, clean, and
+not attached to a transaction by the time we get to calling
+xfs_dquot_from_disk rather than returning transaction and buffer up the
+call stack and having to reason up the stack about what state they're in.
+
+--D
+
+> Brian
 > 
-> Needs to ensure that a null is set at the end of the (userspace) buffer
-> just in case the label is "123456789012".
-
-Oh, yup!
-
-> There's nothing in the documentation for this ioctl <cough> that says
-> the passed in buffer must already be zeroed.
-
-where /do/ we document ioctls like this, anyway?
-
-Documentation/ioctl/* I guess, though of course we don't.
-
-Thanks,
--Eric
+> >  	 */
+> > -
+> > -	xfs_trans_bhold(tp, bp);
+> > -
+> > +	xfs_trans_bhold(*tpp, bp);
+> > +	error = xfs_defer_bjoin(&dfops, bp);
+> > +	if (error) {
+> > +		xfs_trans_bhold_release(*tpp, bp);
+> > +		xfs_trans_brelse(*tpp, bp);
+> > +		goto error1;
+> > +	}
+> >  	error = xfs_defer_finish(tpp, &dfops);
+> > -	if (error)
+> > +	if (error) {
+> > +		xfs_buf_relse(bp);
+> >  		goto error1;
+> > -
+> > -	/* Transaction was committed? */
+> > -	if (*tpp != tp) {
+> > -		tp = *tpp;
+> > -		xfs_trans_bjoin(tp, bp);
+> > -	} else {
+> > -		xfs_trans_bhold_release(tp, bp);
+> >  	}
+> > -
+> > -	*O_bpp = bp;
+> >  	return 0;
+> >  
+> >  error1:
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
