@@ -1,126 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:48340 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751258AbeEKBVA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 21:21:00 -0400
-Date: Fri, 11 May 2018 11:20:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v4] fs: don't scan the inode cache before SB_BORN is set
-Message-ID: <20180511012057.GV10363@dastard>
-References: <20180510042132.GS23861@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:12345 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750866AbeEDLcE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 May 2018 07:32:04 -0400
+Date: Fri, 4 May 2018 07:32:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0.2/13] xfs: don't spray logs when dquot flush/purge fail
+Message-ID: <20180504113201.GB26217@bfoster.bfoster>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <20180503175409.GG4127@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180510042132.GS23861@dastard>
+In-Reply-To: <20180503175409.GG4127@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, Al Viro <viro@ZenIV.linux.org.uk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
+On Thu, May 03, 2018 at 10:54:09AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When dquot flush or purge fail there's no need to spam the logs, we've
+> already logged the IO error or fs shutdown that caused the flush
+> failures.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-From: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-We recently had an oops reported on a 4.14 kernel in
-xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
-and so the m_perag_tree lookup walked into lala land.  It produces
-an oops down this path during the failed mount:
-
-  radix_tree_gang_lookup_tag+0xc4/0x130
-  xfs_perag_get_tag+0x37/0xf0
-  xfs_reclaim_inodes_count+0x32/0x40
-  xfs_fs_nr_cached_objects+0x11/0x20
-  super_cache_count+0x35/0xc0
-  shrink_slab.part.66+0xb1/0x370
-  shrink_node+0x7e/0x1a0
-  try_to_free_pages+0x199/0x470
-  __alloc_pages_slowpath+0x3a1/0xd20
-  __alloc_pages_nodemask+0x1c3/0x200
-  cache_grow_begin+0x20b/0x2e0
-  fallback_alloc+0x160/0x200
-  kmem_cache_alloc+0x111/0x4e0
-
-The problem is that the superblock shrinker is running before the
-filesystem structures it depends on have been fully set up. i.e.
-the shrinker is registered in sget(), before ->fill_super() has been
-called, and the shrinker can call into the filesystem before
-fill_super() does it's setup work. Essentially we are exposed to
-both use-after-free and use-before-initialisation bugs here.
-
-To fix this, add a check for the SB_BORN flag in super_cache_count.
-In general, this flag is not set until ->fs_mount() completes
-successfully, so we know that it is set after the filesystem
-setup has completed. This matches the trylock_super() behaviour
-which will not let super_cache_scan() run if SB_BORN is not set, and
-hence will not allow the superblock shrinker from entering the
-filesystem while it is being set up or after it has failed setup
-and is being torn down.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
-Version 4:
-- dropped all the XFS bits from the patch as they are unrelated to
-  the shrinker running before the filesystem is fully set up.
-
-Version 3:
-- change the memory barriers to protect the superblock data, not
-  the SB_BORN flag.
-
-Version 2:
-- convert to use SB_BORN, not SB_ACTIVE
-- add memory barriers
-- rework comment in super_cache_count()
-
----
- fs/super.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
-
-diff --git a/fs/super.c b/fs/super.c
-index 122c402049a2..4b5b562176d0 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -121,13 +121,23 @@ static unsigned long super_cache_count(struct shrinker *shrink,
- 	sb = container_of(shrink, struct super_block, s_shrink);
- 
- 	/*
--	 * Don't call trylock_super as it is a potential
--	 * scalability bottleneck. The counts could get updated
--	 * between super_cache_count and super_cache_scan anyway.
--	 * Call to super_cache_count with shrinker_rwsem held
--	 * ensures the safety of call to list_lru_shrink_count() and
--	 * s_op->nr_cached_objects().
-+	 * We don't call trylock_super() here as it is a scalability bottleneck,
-+	 * so we're exposed to partial setup state. The shrinker rwsem does not
-+	 * protect filesystem operations backing list_lru_shrink_count() or
-+	 * s_op->nr_cached_objects(). Counts can change between
-+	 * super_cache_count and super_cache_scan, so we really don't need locks
-+	 * here.
-+	 *
-+	 * However, if we are currently mounting the superblock, the underlying
-+	 * filesystem might be in a state of partial construction and hence it
-+	 * is dangerous to access it.  trylock_super() uses a SB_BORN check to
-+	 * avoid this situation, so do the same here. The memory barrier is
-+	 * matched with the one in mount_fs() as we don't hold locks here.
- 	 */
-+	if (!(sb->s_flags & SB_BORN))
-+		return 0;
-+	smp_rmb();
-+
- 	if (sb->s_op && sb->s_op->nr_cached_objects)
- 		total_objects = sb->s_op->nr_cached_objects(sb, sc);
- 
-@@ -1272,6 +1282,14 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
- 	sb = root->d_sb;
- 	BUG_ON(!sb);
- 	WARN_ON(!sb->s_bdi);
-+
-+	/*
-+	 * Write barrier is for super_cache_count(). We place it before setting
-+	 * SB_BORN as the data dependency between the two functions is the
-+	 * superblock structure contents that we just set up, not the SB_BORN
-+	 * flag.
-+	 */
-+	smp_wmb();
- 	sb->s_flags |= SB_BORN;
- 
- 	error = security_sb_kern_mount(sb, flags, secdata);
+>  fs/xfs/xfs_dquot_item.c |    5 +----
+>  fs/xfs/xfs_qm.c         |   10 ++--------
+>  2 files changed, 3 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+> index 4b331e354da7..d632ba403527 100644
+> --- a/fs/xfs/xfs_dquot_item.c
+> +++ b/fs/xfs/xfs_dquot_item.c
+> @@ -209,10 +209,7 @@ xfs_qm_dquot_logitem_push(
+>  	spin_unlock(&lip->li_ailp->ail_lock);
+>  
+>  	error = xfs_qm_dqflush(dqp, &bp);
+> -	if (error) {
+> -		xfs_warn(dqp->q_mount, "%s: push error %d on dqp "PTR_FMT,
+> -			__func__, error, dqp);
+> -	} else {
+> +	if (!error) {
+>  		if (!xfs_buf_delwri_queue(bp, buffer_list))
+>  			rval = XFS_ITEM_FLUSHING;
+>  		xfs_buf_relse(bp);
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index ec39ae274c78..579de656bc25 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -161,10 +161,7 @@ xfs_qm_dqpurge(
+>  		 * to purge this dquot anyway, so we go ahead regardless.
+>  		 */
+>  		error = xfs_qm_dqflush(dqp, &bp);
+> -		if (error) {
+> -			xfs_warn(mp, "%s: dquot "PTR_FMT" flush failed",
+> -				__func__, dqp);
+> -		} else {
+> +		if (!error) {
+>  			error = xfs_bwrite(bp);
+>  			xfs_buf_relse(bp);
+>  		}
+> @@ -479,11 +476,8 @@ xfs_qm_dquot_isolate(
+>  		spin_unlock(lru_lock);
+>  
+>  		error = xfs_qm_dqflush(dqp, &bp);
+> -		if (error) {
+> -			xfs_warn(dqp->q_mount, "%s: dquot "PTR_FMT" flush failed",
+> -				 __func__, dqp);
+> +		if (error)
+>  			goto out_unlock_dirty;
+> -		}
+>  
+>  		xfs_buf_delwri_queue(bp, &isol->buffers);
+>  		xfs_buf_relse(bp);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
