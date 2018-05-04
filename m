@@ -1,95 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42790 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:45658 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751445AbeEDT34 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 15:29:56 -0400
-Subject: Re: [PATCH 03/11] xfs_repair: validate some of the log space
- information
+        id S1751522AbeEDUN5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 May 2018 16:13:57 -0400
+Subject: Re: [PATCH 06/11] xfs_repair: invalidate dirty dir buffers when we
+ zap a directory
 References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401961080.13319.3976228325503296406.stgit@magnolia>
+ <152401962935.13319.6277644218474872245.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <aad78f86-a7a2-ade3-812b-fe78c921d15d@sandeen.net>
-Date: Fri, 4 May 2018 14:29:55 -0500
+Message-ID: <38f3540c-00e9-dd74-df2d-87135ff537fb@sandeen.net>
+Date: Fri, 4 May 2018 15:13:55 -0500
 MIME-Version: 1.0
-In-Reply-To: <152401961080.13319.3976228325503296406.stgit@magnolia>
+In-Reply-To: <152401962935.13319.6277644218474872245.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On 4/17/18 9:46 PM, Darrick J. Wong wrote:
+On 4/17/18 9:47 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Validate the log space information in a similar manner to the kernel so
-> that repair will stumble over (and fix) broken log info that prevents
-> mounting.  Fixes logsunit fuzz-and-fix failures in xfs/350.
+> If we decide to rebuild a directory in phase 6, we need to find and
+> invalidate all of the old directory buffers so that they don't get
+> written out, which can trigger write verifier errors when we finish.
+> This fixes the write verifier errors in phase 7 that can occur via
+> xfs/382.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+seems reasonable
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  repair/sb.c |   24 +++++++++++++++++++++++-
->  1 file changed, 23 insertions(+), 1 deletion(-)
+>  libxfs/libxfs_api_defs.h |    1 +
+>  repair/phase6.c          |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 47 insertions(+)
 > 
 > 
-> diff --git a/repair/sb.c b/repair/sb.c
-> index 3dc6538..f2968cd 100644
-> --- a/repair/sb.c
-> +++ b/repair/sb.c
-> @@ -299,6 +299,27 @@ sb_validate_ino_align(struct xfs_sb *sb)
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 09f1428..3b36e0e 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -100,6 +100,7 @@
+>  #define xfs_dir2_data_make_free		libxfs_dir2_data_make_free
+>  #define xfs_dir2_data_use_free		libxfs_dir2_data_use_free
+>  #define xfs_dir2_shrink_inode		libxfs_dir2_shrink_inode
+> +#define xfs_da_get_buf			libxfs_da_get_buf
+>  
+>  #define xfs_inode_from_disk		libxfs_inode_from_disk
+>  #define xfs_inode_to_disk		libxfs_inode_to_disk
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 498a3b5..2005e40 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1311,6 +1311,48 @@ entry_junked(
+>  	return !no_modify;
 >  }
 >  
->  /*
-> + * Validate the given log space.  Derived from xfs_log_mount, though we
-> + * can't validate the minimum log size until later.
-> + * Returns false if the log is garbage.
-> + */
-> +static bool
-> +verify_sb_loginfo(
-> +	struct xfs_sb	*sb)
+> +/* Find and invalidate all the directory's buffers. */
+> +static int
+> +dir_binval(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	int			whichfork)
 > +{
-> +	if (xfs_sb_version_hascrc(sb) &&
-
-Hm, this could use a comment about why these things only matter on v5 supers.
-
-
-> +	    (sb->sb_logblocks == 0 ||
-> +	     sb->sb_logblocks > XFS_MAX_LOG_BLOCKS ||
-> +	     (sb->sb_logblocks << sb->sb_blocklog) > XFS_MAX_LOG_BYTES))
-> +		return false;
+> +	struct xfs_iext_cursor	icur;
+> +	struct xfs_bmbt_irec	rec;
+> +	struct xfs_ifork	*ifp;
+> +	struct xfs_da_geometry	*geo;
+> +	struct xfs_buf		*bp;
+> +	xfs_dablk_t		dabno, end_dabno;
+> +	int			error = 0;
 > +
-> +	if (sb->sb_logsunit > 1 && sb->sb_logsunit % sb->sb_blocksize)
-> +		return false;
+> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+> +	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE)
+> +		return 0;
 > +
-> +	return true;
+> +	geo = tp->t_mountp->m_dir_geo;
+> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	for_each_xfs_iext(ifp, &icur, &rec) {
+> +		dabno = xfs_dir2_db_to_da(geo, rec.br_startoff +
+> +				geo->fsbcount - 1);
+> +		end_dabno = xfs_dir2_db_to_da(geo, rec.br_startoff +
+> +				rec.br_blockcount);
+> +		for (; dabno <= end_dabno; dabno += geo->fsbcount) {
+> +			bp = NULL;
+> +			error = -libxfs_da_get_buf(tp, ip, dabno, -2, &bp,
+> +					whichfork);
+> +			if (error)
+> +				return error;
+> +			if (!bp)
+> +				continue;
+> +			libxfs_trans_binval(tp, bp);
+> +			libxfs_trans_brelse(tp, bp);
+> +		}
+> +	}
+> +
+> +	return error;
 > +}
 > +
-> +/*
->   * verify a superblock -- does not verify root inode #
->   *	can only check that geometry info is internally
->   *	consistent.  because of growfs, that's no guarantee
-> @@ -409,7 +430,8 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
->  	    sb->sb_inodesize != (1 << sb->sb_inodelog)                 ||
->  	    sb->sb_logsunit > XLOG_MAX_RECORD_BSIZE                    ||
->  	    sb->sb_inopblock != howmany(sb->sb_blocksize, sb->sb_inodesize) ||
-> -	    (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog))
-> +	    (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog) ||
-> +	    !verify_sb_loginfo(sb))
->  		return XR_BAD_INO_SIZE_DATA;
-
-do you really want to return XR_BAD_INO_SIZE_DATA for a bad logblocks count,
-which will yield
-
-"bad inode size or inconsistent with number of inodes/block")
-
-This might even want a new XR_BAD_LOG_FOO_BAR error...?
-
--Eric
-
+>  /*
+>   * Unexpected failure during the rebuild will leave the entries in
+>   * lost+found on the next run
+> @@ -1361,6 +1403,10 @@ longform_dir2_rebuild(
+>  		res_failed(error);
+>  	libxfs_trans_ijoin(tp, ip, 0);
 >  
->  	if (xfs_sb_version_hassector(sb))  {
+> +	error = dir_binval(tp, ip, XFS_DATA_FORK);
+> +	if (error)
+> +		res_failed(error);
+> +
+>  	if ((error = -libxfs_bmap_last_offset(ip, &lastblock, XFS_DATA_FORK)))
+>  		do_error(_("xfs_bmap_last_offset failed -- error - %d\n"),
+>  			error);
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
