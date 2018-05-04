@@ -1,113 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43964 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751860AbeEFR1K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:10 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HQprY165247
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:10 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2hs5931xn9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:10 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w46HR98x010622
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:09 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w46HR89X021685
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:08 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 12/21] xfs: define parent pointer xattr format
-Date: Sun,  6 May 2018 10:24:45 -0700
-Message-Id: <1525627494-12873-13-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:53876 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751781AbeEDVhP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 17:37:15 -0400
+Date: Fri, 4 May 2018 14:36:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
+ our own parser
+Message-ID: <20180504213646.GO26569@magnolia>
+References: <20180313205911.26082-1-mcgrof@kernel.org>
+ <44fa85af-7d59-9909-20e4-c8351f630fb4@sandeen.net>
+ <54b16a43-353a-6cde-34ce-04d678131b0c@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <54b16a43-353a-6cde-34ce-04d678131b0c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, May 04, 2018 at 04:31:56PM -0500, Eric Sandeen wrote:
+> On 3/13/18 10:21 PM, Eric Sandeen wrote:
+> >> There is only a subset of options allowed to be set on the configuration
+> >> file, 
+> 
+> > I think this is problematic - allowing only booleans is pretty
+> > arbitrary.
+> 
+> ...
+>  
+> >> and currently only 1 or 0 are acceptable values. The default
+> >> parameters you can override on a configuration file and their current
+> >> built-in default settings are:
+> >>
+> >> [data]
+> >> noalign=0
+> 
+> ...
+> 
+> >> We have floated around enough bike shedding emails to have at least reached
+> >> a consensus on the fact that we'd be only supporting a mimimum set of default
+> >> parameters and would strive to simplify our parser as much as possible.
+> 
+> > See above - sorry for not chiming in sooner, but I don't think an arbitrary
+> > restriction to the boolean options will be sufficient in the long run.
+> 
+> Ok, I'm rethinking this concern now.
+> 
+> It seems like we may have two separate but related purposes for a mkfs config file:
+> 
+> 1) Set system-wide defaults based on kernel and/or OS support.
+> 2) Set specific-use defaults, such as "mkfs.xfs -c gluster" etc.
+> 
+> For the former, it may well only be the booleans that matter.  For the latter,
+> it may be more, like setting inode size, or directory block size, etc.
+> 
+> Is there anything we'd reasonably want to set system-wide that's /not/ a
+> boolean?  If not, the maybe that can be Phase 1 as long as the config file
+> format doesn't need to change; we can just add to the list of supported config
+> options at a later date, perhaps?
 
-We need to define the parent pointer attribute format before we
-start adding support for it into all the code that needs to use it.
-The EA format we will use encodes the following information:
+Looking at the *documented* mkfs options, I think it'd be useful for
+cloud users to be able to set cowextsize and extsize from mkfs.
 
-	name={parent inode #, parent inode generation, dirent offset}
-	value={dirent filename}
+As I was saying on irc, I /think/ the options (Allison feel free to
+chime in here) that we want are....
 
-The inode/gen gives all the information we need to reliably identify
-the parent without requiring child->parent lock ordering, and allows
-userspace to do pathname component level reconstruction without the
-kernel ever needing to verify the parent itself as part of ioctl
-calls.
+-m crc,finobt,rmapbt,reflink,projinherit,extszinherit,cowextsize,extsize
+-i maxpct,sparse
+-n ftype
 
-By using the dirent offset in the EA name, we have a method of
-knowing the exact parent pointer EA we need to modify/remove in
-rename/unlink without an unbound EA name search.
+--D
 
-By keeping the dirent name in the value, we have enough information
-to be able to validate and reconstruct damaged directory trees.
-While the diroffset of a filename alone is not unique enough to
-identify the child, the {diroffset,filename,child_inode} tuple is
-sufficient. That is, if the diroffset gets reused and points to a
-different filename, we can detect that from the contents of EA. If a
-link of the same name is created, then we can check whether it
-points at the same inode as the parent EA we current have.
-
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-	   changed p_ino to xfs_ino_t and p_namelen to uint8_t,
-	   moved to xfs_da_format for xfs_dir2_dataptr_t]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_da_format.h | 26 +++++++++++++++++++++++++-
- 1 file changed, 25 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 9bd2e6b..d1c1221 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -878,11 +878,35 @@ struct xfs_attr3_rmt_hdr {
- #define XFS_ATTR3_RMT_BUF_SPACE(mp, bufsize)	\
- 	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
- 			sizeof(struct xfs_attr3_rmt_hdr) : 0))
--
- /* Number of bytes in a directory block. */
- static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
- {
- 	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
- }
- 
-+/*
-+ * Parent pointer attribute format definition
-+ *
-+ * EA name encodes the parent inode number, generation and the offset of
-+ * the dirent that points to the child inode. The EA value contains the
-+ * same name as the dirent in the parent directory.
-+ */
-+struct xfs_parent_name_rec {
-+	__be64  p_ino;
-+	__be32  p_gen;
-+	__be32  p_diroffset;
-+};
-+
-+/*
-+ * incore version of the above, also contains name pointers so callers
-+ * can pass/obtain all the parent pointer information in a single structure
-+ */
-+struct xfs_parent_name_irec {
-+	xfs_ino_t		p_ino;
-+	uint32_t		p_gen;
-+	xfs_dir2_dataptr_t	p_diroffset;
-+	const char		*p_name;
-+	uint8_t			p_namelen;
-+};
-+
- #endif /* __XFS_DA_FORMAT_H__ */
--- 
-2.7.4
-
+> The system-wide, supported-features default config may be the most pressing
+> need at this point, the rest is just nice to have.
+> 
+> Thanks,
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
