@@ -1,115 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43322 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751621AbeEDWJm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 18:09:42 -0400
-Date: Fri, 4 May 2018 15:09:21 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:43982 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751630AbeEDWpj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 18:45:39 -0400
+Date: Fri, 4 May 2018 15:45:18 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/5] xfs: repair full xfs_dqblk during quotacheck
-Message-ID: <20180504220921.GQ26569@magnolia>
-References: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
- <b4796b08-5a1b-c541-395e-3450aecae29b@sandeen.net>
+Subject: Re: [PATCH 09/11] xfs_repair: don't assert if we run across a dir
+ entry with null ino ptr
+Message-ID: <20180504224518.GX26569@magnolia>
+References: <152401958920.13319.10756339531174871801.stgit@magnolia>
+ <152401964787.13319.7143262291746238151.stgit@magnolia>
+ <724f18e7-147d-4c24-ba06-559a5b057e4f@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b4796b08-5a1b-c541-395e-3450aecae29b@sandeen.net>
+In-Reply-To: <724f18e7-147d-4c24-ba06-559a5b057e4f@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Fri, May 04, 2018 at 12:34:49PM -0500, Eric Sandeen wrote:
-> It's a bit dicey to pass in the smaller xfs_disk_dquot and then cast it to
-> something larger; pass in the full xfs_dqblk so we know the caller has sent
-> us the right thing.  Rename the function to xfs_dqblk_repair for
-> clarity.
+On Fri, May 04, 2018 at 05:33:35PM -0500, Eric Sandeen wrote:
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> On 4/17/18 9:47 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > If we encounter a directory with an entry that points to inode zero,
+> > we'll crash due to an ASSERT during process_inode_chunk.  Instead, just
+> > set the in-core parent to NULLFSINO so that phase 6 will reset it for
+> > us.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> So .... this is .... probably ok?  but the ASSERT makes me think that
+> process_dinode is never supposed to return a 0 parent if isa_dir is set,
+> and so I'm a little worried about breaking that assumption up and just
+> catching it later, here.  Usually the asserts mean "the code should never
+> let this happen and if it does, some prior code is wrong"
+> 
+> Looking at the calls below it, it seems like we generally call verify_inum
+> which would set NULLFSINO if the inum is bad.
+> 
+> But in process_dir2_data
+> 
+> [17:25]  <sandeen>                 } else if (verify_inum(mp, ent_ino)) {
+> [17:25]  <sandeen>                         clearreason = _("invalid");
+> [17:26]  <sandeen> so we probably saw that it's bad, but:
+> [17:26]  <sandeen>                  * We have a special dot & dotdot fixer-upper below which can
+> [17:26]  <sandeen>                  * sort out the proper inode number, so don't clear it.
+> [17:26]  <sandeen>                         clearreason = NULL;
+> [17:26]  <sandeen> and then:
+> [17:26]  <sandeen>                  * Special .. entry processing.
+> [17:26]  <sandeen>                                 *parent = ent_ino;
+> [17:26]  <sandeen> \o/
+> 
+> so ... I wonder if it wouldn't be more consistent to find the place under
+> process_inode() where we willingly/wrongly set *parent to an invalid value,
+> and handle the problem there?  Do you know what path you were on to hit this?
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+/me doesn't remember, it was either the sf dir scrub or the dir block
+offline repair fuzztest setting the parent pointer to zero.
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_dquot_buf.c  | 21 +++++++++------------
->  fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
->  fs/xfs/xfs_qm.c                |  2 +-
->  3 files changed, 11 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> index c00174f32f0d..3b92427883fa 100644
-> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> @@ -104,29 +104,26 @@ xfs_dquot_verify(
->   * Do some primitive error checking on ondisk dquot data structures.
->   */
->  int
-> -xfs_dquot_repair(
-> +xfs_dqblk_repair(
->  	struct xfs_mount	*mp,
-> -	struct xfs_disk_dquot	*ddq,
-> +	struct xfs_dqblk	*dqb,
->  	xfs_dqid_t		id,
->  	uint			type)
->  {
-> -	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
-> -
-> -
->  	/*
->  	 * Typically, a repair is only requested by quotacheck.
->  	 */
->  	ASSERT(id != -1);
-> -	memset(d, 0, sizeof(xfs_dqblk_t));
-> +	memset(dqb, 0, sizeof(xfs_dqblk_t));
->  
-> -	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-> -	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
-> -	d->dd_diskdq.d_flags = type;
-> -	d->dd_diskdq.d_id = cpu_to_be32(id);
-> +	dqb->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-> +	dqb->dd_diskdq.d_version = XFS_DQUOT_VERSION;
-> +	dqb->dd_diskdq.d_flags = type;
-> +	dqb->dd_diskdq.d_id = cpu_to_be32(id);
->  
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> -		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
-> -		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
-> +		uuid_copy(&dqb->dd_uuid, &mp->m_sb.sb_meta_uuid);
-> +		xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
->  				 XFS_DQUOT_CRC_OFF);
->  	}
->  
-> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-> index 8433656af0da..a2f8cb334bb3 100644
-> --- a/fs/xfs/libxfs/xfs_quota_defs.h
-> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
-> @@ -154,7 +154,7 @@ typedef uint16_t	xfs_qwarncnt_t;
->  extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
->  		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
->  extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
-> -extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
-> +extern int xfs_dqblk_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
->  		xfs_dqid_t id, uint type);
->  
->  #endif	/* __XFS_QUOTA_H__ */
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index c71ad79bb2e6..6690b938d450 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -867,7 +867,7 @@ xfs_qm_reset_dqcounts(
->  		 */
->  		fa = xfs_dquot_verify(mp, ddq, id + j, type);
->  		if (fa)
-> -			xfs_dquot_repair(mp, ddq, id + j, type);
-> +			xfs_dqblk_repair(mp, &dqb[j], id + j, type);
->  
->  		/*
->  		 * Reset type in case we are reusing group quota file for
-> -- 
-> 2.17.0
-> 
+> -Eric
+> > ---
+> >  repair/dino_chunks.c |    3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+> > index 17de95f..2d34079 100644
+> > --- a/repair/dino_chunks.c
+> > +++ b/repair/dino_chunks.c
+> > @@ -874,7 +874,8 @@ process_inode_chunk(
+> >  			 * be solid then.
+> >  			 */
+> >  			if (!ino_discovery)  {
+> > -				ASSERT(parent != 0);
+> > +				if (parent == 0)
+> > +					parent = NULLFSINO;
+> >  				set_inode_parent(ino_rec, irec_offset, parent);
+> >  				ASSERT(parent ==
+> >  					get_inode_parent(ino_rec, irec_offset));
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
