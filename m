@@ -1,156 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38906 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751873AbeEFR1M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:12 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HQYEj095338
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:12 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2hs24sa429-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:58398 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751001AbeEDFDX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 01:03:23 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w444tnf6093260
+        for <linux-xfs@vger.kernel.org>; Fri, 4 May 2018 05:03:23 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2hmgxg4dqn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:11 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w46HRBkx014877
+        for <linux-xfs@vger.kernel.org>; Fri, 04 May 2018 05:03:22 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w4453Mxp024582
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:11 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w46HRBRv021693
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:11 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 17/21] xfs: remove parent pointers in unlink
-Date: Sun,  6 May 2018 10:24:50 -0700
-Message-Id: <1525627494-12873-18-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+        for <linux-xfs@vger.kernel.org>; Fri, 4 May 2018 05:03:22 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4453LI9024761
+        for <linux-xfs@vger.kernel.org>; Fri, 4 May 2018 05:03:22 GMT
+Date: Thu, 3 May 2018 22:03:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: generic/388 panic
+Message-ID: <20180504050320.GJ4141@magnolia>
+References: <20180423123602.cuibxc5mo2t6pldt@odin.usersys.redhat.com>
+ <20180423200353.GD26268@magnolia>
+ <20180424080414.ciiotbnhycjbmdn3@odin.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180424080414.ciiotbnhycjbmdn3@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Apr 24, 2018 at 10:04:14AM +0200, Carlos Maiolino wrote:
+> On Mon, Apr 23, 2018 at 01:03:53PM -0700, Darrick J. Wong wrote:
+> > On Mon, Apr 23, 2018 at 02:36:02PM +0200, Carlos Maiolino wrote:
+> > > Hi.
+> > > 
+> > > Past week Darrick mentioned to me a problem he has been seen with generic/388
+> > > hanging on XFS filesystems with quotas enabled.
+> > > 
+> > > I couldn't hit something hanging until now, but I'm sporadically seeing some
+> > > kernel panics after running generic/388 in a loop:
+> > > 
+> > > [ 5913.170041] Kernel panic - not syncing: xfs_bmap_check_leaf_extents: CORRUPTED BTREE OR SOMETHING
+> > 
+> > Yep, that's one of the things I'm seeing.  It seems easier to make it
+> > reproduce if you turn on rmap and reflink too....
+> 
+> K, I'll try it and see wth is going on, thanks for confirming.
 
-This patch removes the parent pointer attribute during unlink
+FWIW I think I've fixed this with "xfs: release new dquot buffer on
+defer_finish error" that's on the list now.
 
-[bfoster: rebase, use VFS inode generation]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
-	   implemented xfs_attr_remove_parent]
+--D
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/xfs_inode.c        | 21 ++++++++++++++++-----
- fs/xfs/xfs_parent_utils.c | 19 +++++++++++++++++++
- fs/xfs/xfs_parent_utils.h |  4 ++++
- 3 files changed, 39 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3a68e72..b18b20c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2624,6 +2624,7 @@ xfs_remove(
- 	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t           first_block;
- 	uint			resblks;
-+	xfs_dir2_dataptr_t	dir_offset;
- 
- 	trace_xfs_remove(dp, name);
- 
-@@ -2661,8 +2662,8 @@ xfs_remove(
- 
- 	xfs_lock_two_inodes(dp, XFS_ILOCK_EXCL, ip, XFS_ILOCK_EXCL);
- 
--	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, dp, 0);
-+	xfs_trans_ijoin(tp, ip, 0);
- 
- 	/*
- 	 * If we're removing a directory perform some additional validation.
-@@ -2704,12 +2705,18 @@ xfs_remove(
- 
- 	xfs_defer_init(&dfops, &first_block);
- 	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
--				   &dfops, resblks, NULL);
-+				   &dfops, resblks, &dir_offset);
- 	if (error) {
- 		ASSERT(error != -ENOENT);
- 		goto out_bmap_cancel;
- 	}
- 
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_remove_deferred(dp, ip, dir_offset, &dfops);
-+		if (error)
-+			goto out_bmap_cancel;
-+	}
-+
- 	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * remove transaction goes to disk before returning to
-@@ -2724,17 +2731,21 @@ xfs_remove(
- 
- 	error = xfs_trans_commit(tp);
- 	if (error)
--		goto std_return;
-+		goto out_unlock;
- 
- 	if (is_dir && xfs_inode_is_filestream(ip))
- 		xfs_filestream_deassociate(ip);
- 
--	return 0;
-+	error = 0;
-+	goto out_unlock;
- 
-  out_bmap_cancel:
- 	xfs_defer_cancel(&dfops);
-  out_trans_cancel:
- 	xfs_trans_cancel(tp);
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-  std_return:
- 	return error;
- }
-diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
-index cf4a7e2..0fd48b8 100644
---- a/fs/xfs/xfs_parent_utils.c
-+++ b/fs/xfs/xfs_parent_utils.c
-@@ -49,3 +49,22 @@ xfs_parent_add_deferred(
- 		(void *)child_name->name, child_name->len, ATTR_PARENT);
- }
- 
-+/*
-+ * Remove a parent record from a child inode.
-+ */
-+int
-+xfs_parent_remove_deferred(
-+	struct xfs_inode	*parent,
-+	struct xfs_inode	*child,
-+	xfs_dir2_dataptr_t	diroffset,
-+	struct xfs_defer_ops	*dfops)
-+{
-+	struct xfs_parent_name_rec rec;
-+
-+	xfs_init_parent_name_rec(&rec, parent->i_ino,
-+				 VFS_I(parent)->i_generation, diroffset);
-+
-+	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
-+					ATTR_PARENT);
-+}
-+
-diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
-index a667d1d..9e0ac13 100644
---- a/fs/xfs/xfs_parent_utils.h
-+++ b/fs/xfs/xfs_parent_utils.h
-@@ -23,4 +23,8 @@
- int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_inode *child,
- 	       struct xfs_name *child_name, uint32_t diroffset,
- 	       struct xfs_defer_ops *dfops);
-+int xfs_parent_remove_deferred(struct xfs_inode *parent,
-+			       struct xfs_inode *child,
-+			       xfs_dir2_dataptr_t diroffset,
-+			       struct xfs_defer_ops *dfops);
- #endif	/* __XFS_PARENT_UTILS_H__ */
--- 
-2.7.4
-
+> 
+> Cheers
+> 
+> > 
+> > --D
+> > 
+> > > [ 5913.176441] CPU: 2 PID: 24611 Comm: fsstress Kdump: loaded Not tainted 4.17.0-rc1t450s #94
+> > > [ 5913.178443] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-2.fc27 04/01/2014
+> > > [ 5913.184533] Call Trace:
+> > > [ 5913.185400]  dump_stack+0x5c/0x7b
+> > > [ 5913.190164]  panic+0xe4/0x252
+> > > [ 5913.190644]  xfs_bmap_check_leaf_extents+0x323/0x5c0
+> > > [ 5913.191365]  xfs_bmap_add_extent_hole_real+0x7b0/0xa60
+> > > [ 5913.192106]  xfs_bmapi_write+0xb2e/0x12e0
+> > > [ 5913.192716]  xfs_qm_dqalloc+0x176/0x350
+> > > [ 5913.193292]  ? xfs_bmapi_read+0x1e0/0x3e0
+> > > [ 5913.193919]  xfs_qm_dqtobp+0x1e0/0x410
+> > > [ 5913.195406]  xfs_qm_dqread+0x19b/0x420
+> > > [ 5913.196028]  xfs_qm_dqget+0x417/0x7b0
+> > > [ 5913.196610]  xfs_qm_vop_dqalloc+0x156/0x5b0
+> > > [ 5913.198640]  xfs_setattr_nonsize+0x2fd/0x6d0
+> > > [ 5913.202750]  notify_change+0x303/0x420
+> > > [ 5913.206278]  chown_common.isra.17+0xec/0x1a0
+> > > [ 5913.207945]  do_fchownat+0xd3/0xf0
+> > > [ 5913.208633]  __x64_sys_lchown+0x21/0x30
+> > > [ 5913.210993]  do_syscall_64+0x5b/0x180
+> > > [ 5913.213991]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> > > [ 5913.215453] RIP: 0033:0x7fa4ff459397
+> > > [ 5913.215958] RSP: 002b:00007fff311d65e8 EFLAGS: 00000206 ORIG_RAX: 000000000000005e
+> > > [ 5913.225089] RAX: ffffffffffffffda RBX: 000000000009db9c RCX: 00007fa4ff459397
+> > > [ 5913.234352] RDX: 000000000009db9c RSI: 0000000000099ef5 RDI: 000000000116b170
+> > > [ 5913.244177] RBP: 00007fff311d6740 R08: 0000000000000010 R09: 00007fff311d673c
+> > > [ 5913.247929] R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000099ef5
+> > > [ 5913.249091] R13: 000000000009db9c R14: 0000000000000000 R15: 0000000000000000
+> > > 
+> > > 
+> > > Darrick, is this something similar with what you have mentioned? Or is this
+> > > something different?
+> > > 
+> > > Cheers
+> > > 
+> > > -- 
+> > > Carlos
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> Carlos
