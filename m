@@ -1,70 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38804 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751923AbeEGQoC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 May 2018 12:44:02 -0400
-Subject: Re: [PATCH] xfs_repair: check and repair quota metadata
-References: <9e494d70-53bd-db81-c118-73ef7eaad667@redhat.com>
- <20180507163242.GZ26569@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <bee0bca3-fb1c-13a0-0dfb-ba1cd66662be@redhat.com>
-Date: Mon, 7 May 2018 11:44:00 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:42848 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751621AbeEDWJG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 18:09:06 -0400
+Date: Fri, 4 May 2018 15:08:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/5] xfs: check type in quota verifier during quotacheck
+Message-ID: <20180504220834.GP26569@magnolia>
+References: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
+ <8e4dd8ff-5202-0b9d-e3c6-193976d5b3cf@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20180507163242.GZ26569@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8e4dd8ff-5202-0b9d-e3c6-193976d5b3cf@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 5/7/18 11:32 AM, Darrick J. Wong wrote:
-
->> diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
->> index bb1b13a9..067475e2 100644
->> --- a/libxfs/xfs_quota_defs.h
->> +++ b/libxfs/xfs_quota_defs.h
->> @@ -30,6 +30,8 @@
->>  typedef uint64_t	xfs_qcnt_t;
->>  typedef uint16_t	xfs_qwarncnt_t;
->>  
->> +#define XFS_DQUOT_CLUSTER_SIZE_FSB (xfs_filblks_t)1
+On Fri, May 04, 2018 at 12:34:22PM -0500, Eric Sandeen wrote:
+> During quotacheck we send in the quota type, so verify that as well.
 > 
-> Requires a kernel patch, right? :)
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-oh derp, I'll move that elsewhere, maybe the non-priv userspace
-libxfs header, I'll see.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
 
->> diff --git a/repair/incore.h b/repair/incore.h
->> index fd66084f..78a0ed30 100644
->> --- a/repair/incore.h
->> +++ b/repair/incore.h
->> @@ -222,13 +222,16 @@ int		count_bcnt_extents(xfs_agnumber_t);
->>  #define XR_INO_RTDATA	2		/* realtime file */
->>  #define XR_INO_RTBITMAP	3		/* realtime bitmap inode */
->>  #define XR_INO_RTSUM	4		/* realtime summary inode */
->> -#define XR_INO_DATA	5		/* regular file */
->> -#define XR_INO_SYMLINK	6		/* symlink */
->> -#define XR_INO_CHRDEV	7		/* character device */
->> -#define XR_INO_BLKDEV	8		/* block device */
->> -#define XR_INO_SOCK	9		/* socket */
->> -#define XR_INO_FIFO	10		/* fifo */
->> -#define XR_INO_MOUNTPOINT 11		/* mountpoint */
->> +#define XR_INO_UQUOTA	5		/* user quota inode */
->> +#define XR_INO_GQUOTA	6		/* group quota inode */
->> +#define XR_INO_PQUOTA	7		/* project quota inode */
+> ---
+>  fs/xfs/libxfs/xfs_dquot_buf.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> /me wonders, is there an advantage/requirement to insert the three quota
-> inode types in the middle of the range instead of tacking them on the
-> end?
+> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+> index a926058f7b0c..c00174f32f0d 100644
+> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+> @@ -47,7 +47,7 @@ xfs_dquot_verify(
+>  	struct xfs_mount *mp,
+>  	xfs_disk_dquot_t *ddq,
+>  	xfs_dqid_t	 id,
+> -	uint		 type)	  /* used only when IO_dorepair is true */
+> +	uint		 type)	  /* used only during quotacheck */
+>  {
+>  	/*
+>  	 * We can encounter an uninitialized dquot buffer for 2 reasons:
+> @@ -69,6 +69,8 @@ xfs_dquot_verify(
+>  	if (ddq->d_version != XFS_DQUOT_VERSION)
+>  		return __this_address;
+>  
+> +	if (type && ddq->d_flags != type)
+> +		return __this_address;
+>  	if (ddq->d_flags != XFS_DQ_USER &&
+>  	    ddq->d_flags != XFS_DQ_PROJ &&
+>  	    ddq->d_flags != XFS_DQ_GROUP)
+> -- 
+> 2.17.0
 > 
-> Anyway the rest mostly looks ok to me.
-
-Probably not, I was grouping the internal special inodes together IIRC, but
-happy just move them to the end if that's preferable.
-
--Eric
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
