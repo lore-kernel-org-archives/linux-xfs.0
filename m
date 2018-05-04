@@ -1,56 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40236 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753520AbeEWDP1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:15:27 -0400
-Date: Tue, 22 May 2018 20:15:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 01/11] xfs_repair: examine all remote attribute blocks
-Message-ID: <20180523031513.GG14384@magnolia>
+Received: from sandeen.net ([63.231.237.45]:54882 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751621AbeEDWlI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 May 2018 18:41:08 -0400
+Subject: Re: [PATCH 11/11] xfs_repair: don't assert on bad '.' entry in
+ no-modify mode
 References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401959780.13319.9582448473529615015.stgit@magnolia>
+ <152401966025.13319.16584599904269469257.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <fff8ec8c-0c23-7a38-b323-233db98cffdd@sandeen.net>
+Date: Fri, 4 May 2018 17:41:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152401959780.13319.9582448473529615015.stgit@magnolia>
+In-Reply-To: <152401966025.13319.16584599904269469257.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 4/17/18 9:47 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> During phase 3, we check the '.' entry of a directory inode and (in
+> modify mode) zap it if the name isn't valid.  During phase 6, we assert
+> that the '.' entry now reflects the correct name.  In no-modify mode
+> this is incorrect because we didn't actually fix anything, so repair
+> asserts and crashes.
+> 
+> Found by fuzzing bu[0].namelen = 4 in xfs/387 and running xfs_repair -n.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Examine all remote xattr values of a file, not just the XFS_ATTR_ROOT
-values.  This enables us to detect and zap corrupt user xattrs, as
-tested by xfs/404.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/attr_repair.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 8b1b8a75..67bb41ec 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -537,9 +537,6 @@ process_leaf_attr_remote(
- 		return -1;
- 	}
- 
--	if (!(entry->flags & XFS_ATTR_ROOT))
--		goto out;
--
- 	value = malloc(be32_to_cpu(remotep->valuelen));
- 	if (value == NULL) {
- 		do_warn(
-@@ -555,7 +552,8 @@ process_leaf_attr_remote(
- 			i, ino);
- 		goto bad_free_out;
- 	}
--	if (valuecheck(mp, (char *)&remotep->name[0], value, remotep->namelen,
-+	if ((entry->flags & XFS_ATTR_ROOT) &&
-+	    valuecheck(mp, (char *)&remotep->name[0], value, remotep->namelen,
- 				be32_to_cpu(remotep->valuelen))) {
- 		do_warn(
- 	_("remote attribute value check failed for entry %d, inode %" PRIu64 "\n"),
+> ---
+>  repair/phase6.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 2005e40..e65fc4a 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1884,7 +1884,8 @@ longform_dir2_entry_check_data(
+>  		 * of when directory is moved to orphanage.
+>  		 */
+>  		if (ip->i_ino == inum)  {
+> -			ASSERT(dep->name[0] == '.' && dep->namelen == 1);
+> +			ASSERT(no_modify ||
+> +			       (dep->name[0] == '.' && dep->namelen == 1));
+>  			add_inode_ref(current_irec, current_ino_offset);
+>  			if (da_bno != 0 ||
+>  			    dep != M_DIROPS(mp)->data_entry_p(d)) {
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
