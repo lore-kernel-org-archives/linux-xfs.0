@@ -1,50 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:32821 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752636AbeEVTha (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 15:37:30 -0400
-Received: by mail-pl0-f68.google.com with SMTP id n10-v6so11504414plp.0
-        for <linux-xfs@vger.kernel.org>; Tue, 22 May 2018 12:37:30 -0700 (PDT)
-Date: Tue, 22 May 2018 12:37:26 -0700
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
- using our own parser
-Message-ID: <20180522193726.GA24593@garbanzo.do-not-panic.com>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-6-mcgrof@kernel.org>
- <20180518004404.GF23861@dastard>
+Received: from userp2120.oracle.com ([156.151.31.85]:45912 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751502AbeEDUWm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 16:22:42 -0400
+Date: Fri, 4 May 2018 13:22:20 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 04/11] xfs_repair: zap corrupt remote symlink
+Message-ID: <20180504202220.GL26569@magnolia>
+References: <152401958920.13319.10756339531174871801.stgit@magnolia>
+ <152401961698.13319.6780338835004190495.stgit@magnolia>
+ <95da5fba-4cb6-ddd2-6111-54f8c2cc77e0@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180518004404.GF23861@dastard>
+In-Reply-To: <95da5fba-4cb6-ddd2-6111-54f8c2cc77e0@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@sandeen.net, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Fri, May 18, 2018 at 10:44:04AM +1000, Dave Chinner wrote:
-> On Thu, May 17, 2018 at 12:27:00PM -0700, Luis R. Rodriguez wrote:
-> > +}
-> > +
-> > +static enum parse_line_type parse_get_line_type(const char *line, char *tag,
-> > +						bool *value)
-> > +{
-> > +	int ret;
-> > +	unsigned int uint_value;
-> > +
-> > +	memset(tag, 0, 80);
+On Fri, May 04, 2018 at 02:46:35PM -0500, Eric Sandeen wrote:
+> On 4/17/18 9:46 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > If a remote symlink has a corrupted remote block, just zap the symlink.
+> > Fixes total lack of repair activity in xfs/382.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Why? This should be done in the caller, and if there's a fixed
-> buffer size, then please use a #define.
+> Huh.  Yup! Weird omission...
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> Though I don't think "symlink remote" means much to an admin, *shrug*
+> I suppose it helps us triage.
+> 
+> > ---
+> >  repair/dinode.c |    7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > 
+> > diff --git a/repair/dinode.c b/repair/dinode.c
+> > index 9af4f05..ceffc52 100644
+> > --- a/repair/dinode.c
+> > +++ b/repair/dinode.c
+> > @@ -1330,6 +1330,13 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
+> >  				lino, i, fsbno);
+> >  			return 1;
+> >  		}
+> > +		if (bp->b_error == -EFSCORRUPTED) {
+> > +			do_warn(
+> > +_("Corrupt symlink remote, block %" PRIu64 ", inode %" PRIu64 ".\n"),
 
-I've modified to use 'm' specifier on scanf().
+Remove comma, pretty please? ^^^
 
-Using 'm' tells scanf() to allocate a buffer for us, this is easier as
-we then enable the parser to do as it sees fit so long as the patterns
-match. We just have to later free it after use.
+--D
 
-That removes the need to memset() and stick to a predefined buffer sizes
-for the tags (section or subopt name).
-
-  Luis
+> > +				fsbno, lino);
+> > +			libxfs_putbuf(bp);
+> > +			return 1;
+> > +		}
+> >  		if (bp->b_error == -EFSBADCRC) {
+> >  			do_warn(
+> >  _("Bad symlink buffer CRC, block %" PRIu64 ", inode %" PRIu64 ".\n"
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
