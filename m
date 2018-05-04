@@ -1,72 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52260 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751875AbeEDWAX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 18:00:23 -0400
-Subject: Re: [PATCH 08/11] xfs_repair: don't crash if da btree is corrupt
-References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401964171.13319.385054209589991590.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a9cd786e-0aa2-8852-54f3-be88b7e6e7a6@sandeen.net>
-Date: Fri, 4 May 2018 17:00:21 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:43322 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751621AbeEDWJm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 18:09:42 -0400
+Date: Fri, 4 May 2018 15:09:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/5] xfs: repair full xfs_dqblk during quotacheck
+Message-ID: <20180504220921.GQ26569@magnolia>
+References: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
+ <b4796b08-5a1b-c541-395e-3450aecae29b@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <152401964171.13319.385054209589991590.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b4796b08-5a1b-c541-395e-3450aecae29b@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On 4/17/18 9:47 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, May 04, 2018 at 12:34:49PM -0500, Eric Sandeen wrote:
+> It's a bit dicey to pass in the smaller xfs_disk_dquot and then cast it to
+> something larger; pass in the full xfs_dqblk so we know the caller has sent
+> us the right thing.  Rename the function to xfs_dqblk_repair for
+> clarity.
 > 
-> In the recursive verify_da_path call chain, we decide to examine the
-> next upper level if the current entry points past the end of the
-> entries.  However, we don't check for a node with zero entries (which
-> should be impossible) so we run right off the end of the da cursor's
-> level array and crash.  Found by fuzzing hdr.count in xfs/402.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
 
 > ---
->  repair/da_util.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+>  fs/xfs/libxfs/xfs_dquot_buf.c  | 21 +++++++++------------
+>  fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+>  fs/xfs/xfs_qm.c                |  2 +-
+>  3 files changed, 11 insertions(+), 14 deletions(-)
 > 
-> 
-> diff --git a/repair/da_util.c b/repair/da_util.c
-> index a65652f..bca4060 100644
-> --- a/repair/da_util.c
-> +++ b/repair/da_util.c
-> @@ -526,6 +526,10 @@ verify_da_path(
->  	else
->  		geo = mp->m_attr_geo;
->  
-> +	/* No buffer at this level, tree is corrupt. */
-> +	if (cursor->level[this_level].bp == NULL)
-> +		return 1;
-> +
+> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+> index c00174f32f0d..3b92427883fa 100644
+> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+> @@ -104,29 +104,26 @@ xfs_dquot_verify(
+>   * Do some primitive error checking on ondisk dquot data structures.
+>   */
+>  int
+> -xfs_dquot_repair(
+> +xfs_dqblk_repair(
+>  	struct xfs_mount	*mp,
+> -	struct xfs_disk_dquot	*ddq,
+> +	struct xfs_dqblk	*dqb,
+>  	xfs_dqid_t		id,
+>  	uint			type)
+>  {
+> -	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
+> -
+> -
 >  	/*
->  	 * index is currently set to point to the entry that
->  	 * should be processed now in this level.
-> @@ -535,6 +539,10 @@ verify_da_path(
->  	btree = M_DIROPS(mp)->node_tree_p(node);
->  	M_DIROPS(mp)->node_hdr_from_disk(&nodehdr, node);
+>  	 * Typically, a repair is only requested by quotacheck.
+>  	 */
+>  	ASSERT(id != -1);
+> -	memset(d, 0, sizeof(xfs_dqblk_t));
+> +	memset(dqb, 0, sizeof(xfs_dqblk_t));
 >  
-> +	/* No entries in this node?  Tree is corrupt. */
-> +	if (nodehdr.count == 0)
-> +		return 1;
-> +
->  	/*
->  	 * if this block is out of entries, validate this
->  	 * block and move on to the next block.
+> -	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> -	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+> -	d->dd_diskdq.d_flags = type;
+> -	d->dd_diskdq.d_id = cpu_to_be32(id);
+> +	dqb->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> +	dqb->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+> +	dqb->dd_diskdq.d_flags = type;
+> +	dqb->dd_diskdq.d_id = cpu_to_be32(id);
+>  
+>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
+> -		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+> +		uuid_copy(&dqb->dd_uuid, &mp->m_sb.sb_meta_uuid);
+> +		xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
+>  				 XFS_DQUOT_CRC_OFF);
+>  	}
+>  
+> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+> index 8433656af0da..a2f8cb334bb3 100644
+> --- a/fs/xfs/libxfs/xfs_quota_defs.h
+> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
+> @@ -154,7 +154,7 @@ typedef uint16_t	xfs_qwarncnt_t;
+>  extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
+>  		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
+>  extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+> -extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
+> +extern int xfs_dqblk_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
+>  		xfs_dqid_t id, uint type);
+>  
+>  #endif	/* __XFS_QUOTA_H__ */
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index c71ad79bb2e6..6690b938d450 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -867,7 +867,7 @@ xfs_qm_reset_dqcounts(
+>  		 */
+>  		fa = xfs_dquot_verify(mp, ddq, id + j, type);
+>  		if (fa)
+> -			xfs_dquot_repair(mp, ddq, id + j, type);
+> +			xfs_dqblk_repair(mp, &dqb[j], id + j, type);
+>  
+>  		/*
+>  		 * Reset type in case we are reusing group quota file for
+> -- 
+> 2.17.0
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
