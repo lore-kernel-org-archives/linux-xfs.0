@@ -1,66 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43816 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751709AbeEDTqh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 15:46:37 -0400
-Subject: Re: [PATCH 04/11] xfs_repair: zap corrupt remote symlink
-References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401961698.13319.6780338835004190495.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <95da5fba-4cb6-ddd2-6111-54f8c2cc77e0@sandeen.net>
-Date: Fri, 4 May 2018 14:46:35 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:53060 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751748AbeEDVUV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 17:20:21 -0400
+Date: Fri, 4 May 2018 14:19:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 0.1/13] xfs: release new dquot buffer on defer_finish error
+Message-ID: <20180504211958.GN26569@magnolia>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <20180503175343.GF4127@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <152401961698.13319.6780338835004190495.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180503175343.GF4127@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
 
-On 4/17/18 9:46 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If a remote symlink has a corrupted remote block, just zap the symlink.
-> Fixes total lack of repair activity in xfs/382.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Huh.  Yup! Weird omission...
+In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
+allocating a new dquot record", we allocate a new dquot block, grab a
+buffer to initialize it, and return the locked initialized dquot buffer
+to the caller for further in-core dquot initialization.  Unfortunately,
+if the _bmap_finish errored out, _qm_dqalloc would also error out
+without bothering to free the (locked) buffer.  Leaking a locked buffer
+caused hangs in generic/388 when quotas are enabled.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Furthermore, the _bmap_finish -> _defer_finish conversion in
+310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
+xfs_defer_*") failed to observe that the buffer was held going into
+_defer_finish and therefore failed to notice that the buffer lock is
+/not/ maintained afterwards.  Now that we can bjoin a buffer to a
+defer_ops, use this mechanism to ensure that the buffer stays locked
+across the _defer_finish.  Release the holds and locks on the buffer as
+appropriate if we have to error out.
 
-Though I don't think "symlink remote" means much to an admin, *shrug*
-I suppose it helps us triage.
+There is a subtlety here for the caller in that the buffer emerges
+locked and held to the transaction, so if the _trans_commit fails we
+have to release the buffer explicitly.  This fixes the unmount hang
+in generic/388 when quotas are enabled.
 
-> ---
->  repair/dinode.c |    7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 9af4f05..ceffc52 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -1330,6 +1330,13 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
->  				lino, i, fsbno);
->  			return 1;
->  		}
-> +		if (bp->b_error == -EFSCORRUPTED) {
-> +			do_warn(
-> +_("Corrupt symlink remote, block %" PRIu64 ", inode %" PRIu64 ".\n"),
-> +				fsbno, lino);
-> +			libxfs_putbuf(bp);
-> +			return 1;
-> +		}
->  		if (bp->b_error == -EFSBADCRC) {
->  			do_warn(
->  _("Bad symlink buffer CRC, block %" PRIu64 ", inode %" PRIu64 ".\n"
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: return buffer with consistent hold state
+---
+ fs/xfs/xfs_dquot.c |   48 ++++++++++++++++++++++++++++--------------------
+ 1 file changed, 28 insertions(+), 20 deletions(-)
+
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index a7daef9e16bf..7c71a14d0d49 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -362,32 +362,40 @@ xfs_qm_dqalloc(
+ 			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+ 
+ 	/*
+-	 * xfs_defer_finish() may commit the current transaction and
+-	 * start a second transaction if the freelist is not empty.
++	 * Hold the buffer and join it to the dfops so that we'll still own
++	 * the buffer when we return to the caller.  The buffer disposal on
++	 * error must be paid attention to very carefully, as it has been
++	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
++	 * code when allocating a new dquot record" in 2005, and the later
++	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
++	 * the buffer locked across the _defer_finish call.  We can now do
++	 * this correctly with xfs_defer_bjoin.
+ 	 *
+-	 * Since we still want to modify this buffer, we need to
+-	 * ensure that the buffer is not released on commit of
+-	 * the first transaction and ensure the buffer is added to the
+-	 * second transaction.
++	 * Above, we allocated a disk block for the dquot information and
++	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
++	 * the buffer is still locked to *tpp, so we must _bhold_release and
++	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
++	 * transaction is gone but the new buffer is not joined or held to any
++	 * transaction, so we must _buf_relse it.
+ 	 *
+-	 * If there is only one transaction then don't stop the buffer
+-	 * from being released when it commits later on.
++	 * If everything succeeds, the caller of this function is returned a
++	 * buffer that is locked and joined to the transaction.  The caller
++	 * is responsible for unlocking any buffer passed back, either
++	 * manually or by committing the transaction.
+ 	 */
+-
+-	xfs_trans_bhold(tp, bp);
+-
++	xfs_trans_bhold(*tpp, bp);
++	error = xfs_defer_bjoin(&dfops, bp);
++	if (error) {
++		xfs_trans_bhold_release(*tpp, bp);
++		xfs_trans_brelse(*tpp, bp);
++		goto error1;
++	}
+ 	error = xfs_defer_finish(tpp, &dfops);
+-	if (error)
++	if (error) {
++		xfs_buf_relse(bp);
+ 		goto error1;
+-
+-	/* Transaction was committed? */
+-	if (*tpp != tp) {
+-		tp = *tpp;
+-		xfs_trans_bjoin(tp, bp);
+-	} else {
+-		xfs_trans_bhold_release(tp, bp);
+ 	}
+-
++	xfs_trans_bhold_release(*tpp, bp);
+ 	*O_bpp = bp;
+ 	return 0;
+ 
