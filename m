@@ -1,447 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38904 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751824AbeEFR1L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:11 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HRBPJ095401
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:11 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2hs24sa428-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:11 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w46HRAR3010965
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:10 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w46HRAsg024484
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:10 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 15/21] xfs: parent pointer attribute creation
-Date: Sun,  6 May 2018 10:24:48 -0700
-Message-Id: <1525627494-12873-16-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:35788 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751495AbeEDRfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 May 2018 13:35:41 -0400
+Subject: [PATCH 5/5] xfs: print specific dqblk that failed verifiers
+References: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9d126a83-c4ef-00a2-dbb6-510e2c41de73@sandeen.net>
+Date: Fri, 4 May 2018 12:35:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+Rather than printing the top of the buffer that held a corrupted dqblk,
+restructure things to print out the specific one that failed by pushing
+the calls to the verifier_error function down into the verifier which
+iterates over the buffer and detects the error.
 
-Add parent pointer attribute during xfs_create, and
-subroutines to initialize attributes
-
-Kernel create routines take advantage of deferred attributes,
-where as libxfs routines will add parent pointers directly.
-
-[bfoster: rebase, use VFS inode generation]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-	   fixed some null pointer bugs,
-	   merged error handling patch,
-	   added subroutines to handle attribute initialization,
-	   remove unnecessary ENOSPC handling in xfs_attr_set_first_parent]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/Makefile            |   2 +
- fs/xfs/libxfs/xfs_parent.c | 158 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_parent.h |  36 +++++++++++
- fs/xfs/xfs_inode.c         |  22 ++++++-
- fs/xfs/xfs_parent_utils.c  |  51 +++++++++++++++
- fs/xfs/xfs_parent_utils.h  |  26 ++++++++
- 6 files changed, 292 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_dquot_buf.c | 41 +++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index d3c0004..d092f72 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -53,6 +53,7 @@ xfs-y				+= $(addprefix libxfs/, \
- 				   xfs_inode_fork.o \
- 				   xfs_inode_buf.o \
- 				   xfs_log_rlimit.o \
-+				   xfs_parent.o \
- 				   xfs_ag_resv.o \
- 				   xfs_rmap.o \
- 				   xfs_rmap_btree.o \
-@@ -92,6 +93,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_message.o \
- 				   xfs_mount.o \
- 				   xfs_mru_cache.o \
-+				   xfs_parent_utils.o \
- 				   xfs_reflink.o \
- 				   xfs_stats.o \
- 				   xfs_super.o \
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-new file mode 100644
-index 0000000..e6de97c
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -0,0 +1,158 @@
-+/*
-+ * Copyright (c) 2015 Red Hat, Inc.
-+ * All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_da_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_shared.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_inode.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_trans.h"
-+#include "xfs_attr.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr_sf.h"
-+#include "xfs_bmap.h"
-+
-+/*
-+ * Parent pointer attribute handling.
-+ *
-+ * Because the attribute value is a filename component, it will never be longer
-+ * than 255 bytes. This means the attribute will always be a local format
-+ * attribute as it is xfs_attr_leaf_entsize_local_max() for v5 filesystems will
-+ * always be larger than this (max is 75% of block size).
-+ *
-+ * Creating a new parent attribute will always create a new attribute - there
-+ * should never, ever be an existing attribute in the tree for a new inode.
-+ * ENOSPC behaviour is problematic - creating the inode without the parent
-+ * pointer is effectively a corruption, so we allow parent attribute creation
-+ * to dip into the reserve block pool to avoid unexpected ENOSPC errors from
-+ * occurring.
-+ */
-+
-+
-+/* Initializes a xfs_parent_name_rec to be stored as an attribute name */
-+void
-+xfs_init_parent_name_rec(
-+			struct xfs_parent_name_rec	*rec,
-+			xfs_ino_t			p_ino,
-+			uint32_t			p_gen,
-+			uint32_t			p_diroffset)
-+{
-+	rec->p_ino = cpu_to_be64(p_ino);
-+	rec->p_gen = cpu_to_be32(p_gen);
-+	rec->p_diroffset = cpu_to_be32(p_diroffset);
-+}
-+
-+/* Initializes a xfs_parent_name_irec from an xfs_parent_name_rec */
-+void
-+xfs_init_parent_name_irec(
-+			struct xfs_parent_name_irec	*irec,
-+			struct xfs_parent_name_rec	*rec)
-+{
-+	irec->p_ino = be64_to_cpu(rec->p_ino);
-+	irec->p_gen = be32_to_cpu(rec->p_gen);
-+	irec->p_diroffset = be32_to_cpu(rec->p_diroffset);
-+}
-+
-+/*
-+ * Directly add a parent pointer instead of as a deferred operation
-+ * Currently only used during protofile creation
-+ */
-+int
-+xfs_parent_add(
-+	struct xfs_inode	*parent,
-+	struct xfs_inode	*child,
-+	struct xfs_name		*child_name,
-+	uint32_t		diroffset,
-+	xfs_fsblock_t		*firstblock,
-+	struct xfs_defer_ops	*dfops)
-+{
-+	struct xfs_parent_name_rec	rec;
-+	int				error;
-+	struct xfs_da_args		args;
-+	int				flags = ATTR_PARENT;
-+	int				local = 0;
-+	int				rsvd = 0;
-+	struct xfs_buf			*leaf_bp = NULL;
-+	struct xfs_trans_res		tres;
-+	struct xfs_mount		*mp = child->i_mount;
-+
-+	xfs_init_parent_name_rec(&rec, parent->i_ino,
-+				 VFS_I(parent)->i_generation, diroffset);
-+
-+	error = xfs_attr_args_init(&args, child, (const unsigned char *)&rec,
-+				   sizeof(rec), flags);
-+	if (error)
-+		return error;
-+
-+	args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	args.value = (char *)child_name->name;
-+	args.valuelen = child_name->len;
-+	args.dfops = dfops;
-+	args.op_flags = XFS_DA_OP_OKNOENT | XFS_DA_OP_ADDNAME;
-+	args.firstblock = firstblock;
-+	args.total = xfs_attr_calc_size(&args, &local);
-+	ASSERT(local);
-+
-+	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
-+			 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
-+	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-+	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-+
-+	/*
-+	 * Root fork attributes can use reserved data blocks for this
-+	 * operation if necessary
-+	 */
-+	error = xfs_trans_alloc(mp, &tres, args.total, 0,
-+				rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * If the inode doesn't have an attribute fork, add one.
-+	 * (inode must not be locked when we call this routine)
-+	 */
-+	if (XFS_IFORK_Q(child) == 0) {
-+		int sf_size = sizeof(xfs_attr_sf_hdr_t) +
-+			XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen, args.valuelen);
-+
-+		error = xfs_bmap_add_attrfork(child, sf_size, rsvd);
-+		if (error)
-+			return error;
-+	}
-+
-+	error = xfs_attr_set_args(&args, flags, leaf_bp, false);
-+
-+	if (error)
-+		goto out;
-+
-+	xfs_trans_log_inode(args.trans, child, XFS_ILOG_CORE);
-+
-+	return error;
-+
-+out:
-+	if (args.trans)
-+		xfs_trans_cancel(args.trans);
-+
-+	return error;
-+}
-+
-diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-new file mode 100644
-index 0000000..298562b
---- /dev/null
-+++ b/fs/xfs/libxfs/xfs_parent.h
-@@ -0,0 +1,36 @@
-+/*
-+ * Copyright (c) 2017 Oracle, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation Inc.
-+ */
-+#ifndef	__XFS_PARENT_H__
-+#define	__XFS_PARENT_H__
-+
-+#include "xfs_da_format.h"
-+#include "xfs_format.h"
-+
-+/*
-+ * Parent pointer attribute prototypes
-+ */
-+void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
-+			      xfs_ino_t p_ino, uint32_t p_gen,
-+			      uint32_t p_diroffset);
-+void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
-+			       struct xfs_parent_name_rec *rec);
-+
-+int xfs_parent_add(struct xfs_trans *tp, struct xfs_inode *parent,
-+		   struct xfs_inode *child, struct xfs_name *child_name,
-+		   uint32_t diroffset, xfs_fsblock_t *firstblock,
-+		   struct xfs_defer_ops *dfops);
-+#endif	/* __XFS_PARENT_H__ */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 2859a697..a515f11 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -53,6 +53,7 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_reflink.h"
- #include "xfs_dir2_priv.h"
-+#include "xfs_parent_utils.h"
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index d71c0b53536b..fb23d941e799 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -152,7 +152,8 @@ xfs_dqblk_repair(
+ STATIC bool
+ xfs_dquot_buf_verify_crc(
+ 	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp)
++	struct xfs_buf		*bp,
++	bool			readahead)
+ {
+ 	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+ 	int			ndquots;
+@@ -173,8 +174,12 @@ xfs_dquot_buf_verify_crc(
  
- kmem_zone_t *xfs_inode_zone;
+ 	for (i = 0; i < ndquots; i++, d++) {
+ 		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 XFS_DQUOT_CRC_OFF))
++				 XFS_DQUOT_CRC_OFF)) {
++			if (!readahead)
++				xfs_buf_verifier_error(bp, -EFSBADCRC, __func__,
++					d, sizeof(*d), __this_address);
+ 			return false;
++		}
+ 	}
+ 	return true;
+ }
+@@ -182,7 +187,8 @@ xfs_dquot_buf_verify_crc(
+ STATIC xfs_failaddr_t
+ xfs_dquot_buf_verify(
+ 	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp)
++	struct xfs_buf		*bp,
++	bool			readahead)
+ {
+ 	struct xfs_dqblk	*dqb = (struct xfs_dqblk *)bp->b_addr;
+ 	xfs_failaddr_t		fa;
+@@ -216,8 +222,13 @@ xfs_dquot_buf_verify(
+ 			id = be32_to_cpu(ddq->d_id);
  
-@@ -1152,6 +1153,7 @@ xfs_create(
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_trans_res	*tres;
- 	uint			resblks;
-+	xfs_dir2_dataptr_t	diroffset;
- 
- 	trace_xfs_create(dp, name);
- 
-@@ -1211,7 +1213,7 @@ xfs_create(
- 	 * entry pointing to them, but a directory also the "." entry
- 	 * pointing to itself.
- 	 */
--	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip, XFS_ILOCK_EXCL);
-+	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip, 0);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -1222,13 +1224,13 @@ xfs_create(
- 	 * the transaction cancel unlocking dp so don't do it explicitly in the
- 	 * error path.
- 	 */
--	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, dp, 0);
- 	unlock_dp_on_error = false;
- 
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
- 					&first_block, &dfops, resblks ?
- 					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
--					NULL);
-+					&diroffset);
- 	if (error) {
- 		ASSERT(error != -ENOSPC);
- 		goto out_trans_cancel;
-@@ -1247,6 +1249,17 @@ xfs_create(
+ 		fa = xfs_dqblk_verify(mp, &dqb[i], id + i, 0);
+-		if (fa)
++		if (fa) {
++			if (!readahead)
++				xfs_buf_verifier_error(bp, -EFSCORRUPTED,
++					__func__, &dqb[i],
++					sizeof(struct xfs_dqblk), fa);
+ 			return fa;
++		}
  	}
  
- 	/*
-+	 * If we have parent pointers, we need to add the attribute containing
-+	 * the parent information now. 
-+	 */
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_add_deferred(dp, ip, name, diroffset,
-+					  &dfops);
-+		if (error)
-+			goto out_bmap_cancel;
-+	}
-+
-+	/*
- 	 * If this is a synchronous mount, make sure that the
- 	 * create transaction goes to disk before returning to
- 	 * the user.
-@@ -1274,6 +1287,9 @@ xfs_create(
- 	xfs_qm_dqrele(pdqp);
+ 	return NULL;
+@@ -229,7 +240,7 @@ xfs_dquot_buf_verify_struct(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
  
- 	*ipp = ip;
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
-+
- 	return 0;
+-	return xfs_dquot_buf_verify(mp, bp);
++	return xfs_dquot_buf_verify(mp, bp, false);
+ }
  
-  out_bmap_cancel:
-diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
-new file mode 100644
-index 0000000..cf4a7e2
---- /dev/null
-+++ b/fs/xfs/xfs_parent_utils.c
-@@ -0,0 +1,51 @@
-+/*
-+ * Copyright (c) 2015 Red Hat, Inc.
-+ * All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_shared.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_inode.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_trans.h"
-+#include "xfs_attr.h"
-+#include "xfs_parent.h"
-+
-+/*
-+ * Add a parent record to an inode with existing parent records.
-+ */
-+int
-+xfs_parent_add_deferred(
-+	struct xfs_inode        *parent,
-+	struct xfs_inode        *child,
-+	struct xfs_name         *child_name,
-+	uint32_t                diroffset,
-+	struct xfs_defer_ops    *dfops)
-+{
-+	struct xfs_parent_name_rec rec;
-+
-+	xfs_init_parent_name_rec(&rec, parent->i_ino,
-+		VFS_I(parent)->i_generation, diroffset);
-+
-+	return xfs_attr_set_deferred(child, dfops, &rec, sizeof(rec),
-+		(void *)child_name->name, child_name->len, ATTR_PARENT);
-+}
-+
-diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
-new file mode 100644
-index 0000000..a667d1d
---- /dev/null
-+++ b/fs/xfs/xfs_parent_utils.h
-@@ -0,0 +1,26 @@
-+/*
-+ * Copyright (c) 2017 Oracle, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation Inc.
-+ */
-+#ifndef	__XFS_PARENT_UTILS_H__
-+#define	__XFS_PARENT_UTILS_H__
-+
-+/*
-+ * Parent pointer attribute prototypes
-+ */
-+int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_inode *child,
-+	       struct xfs_name *child_name, uint32_t diroffset,
-+	       struct xfs_defer_ops *dfops);
-+#endif	/* __XFS_PARENT_UTILS_H__ */
+ static void
+@@ -237,15 +248,10 @@ xfs_dquot_buf_read_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-	xfs_failaddr_t		fa;
+ 
+-	if (!xfs_dquot_buf_verify_crc(mp, bp))
+-		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
+-	else {
+-		fa = xfs_dquot_buf_verify(mp, bp);
+-		if (fa)
+-			xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
+-	}
++	if (!xfs_dquot_buf_verify_crc(mp, bp, false))
++		return;
++	xfs_dquot_buf_verify(mp, bp, false);
+ }
+ 
+ /*
+@@ -260,8 +266,8 @@ xfs_dquot_buf_readahead_verify(
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 
+-	if (!xfs_dquot_buf_verify_crc(mp, bp) ||
+-	    xfs_dquot_buf_verify(mp, bp) != NULL) {
++	if (!xfs_dquot_buf_verify_crc(mp, bp, true) ||
++	    xfs_dquot_buf_verify(mp, bp, true) != NULL) {
+ 		xfs_buf_ioerror(bp, -EIO);
+ 		bp->b_flags &= ~XBF_DONE;
+ 	}
+@@ -277,11 +283,8 @@ xfs_dquot_buf_write_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-	xfs_failaddr_t		fa;
+ 
+-	fa = xfs_dquot_buf_verify(mp, bp);
+-	if (fa)
+-		xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
++	xfs_dquot_buf_verify(mp, bp, false);
+ }
+ 
+ const struct xfs_buf_ops xfs_dquot_buf_ops = {
 -- 
-2.7.4
+2.17.0
+
 
