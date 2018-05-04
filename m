@@ -1,43 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45326 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755690AbeEaQdr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 12:33:47 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4VGVaPg039122
-        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 16:33:46 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2j9x4hctsc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 16:33:46 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w4VGXkeX015183
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 16:33:46 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w4VGXj20001719
-        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 16:33:45 GMT
-Subject: [PATCH 0/4] xfs-4.18: fix rtdev programming errors
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 31 May 2018 09:33:44 -0700
-Message-ID: <152778442467.6891.15278589749191666547.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:50516 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751612AbeEDVb6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 May 2018 17:31:58 -0400
+Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
+ our own parser
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <20180313205911.26082-1-mcgrof@kernel.org>
+ <44fa85af-7d59-9909-20e4-c8351f630fb4@sandeen.net>
+Message-ID: <54b16a43-353a-6cde-34ce-04d678131b0c@sandeen.net>
+Date: Fri, 4 May 2018 16:31:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <44fa85af-7d59-9909-20e4-c8351f630fb4@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+Cc: jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu
 
-Hi all,
+On 3/13/18 10:21 PM, Eric Sandeen wrote:
+>> There is only a subset of options allowed to be set on the configuration
+>> file, 
 
-This is a fairly short series to fix some problems I found while playing
-with the realtime device on a SMR drive with one rt extent per zone.
-The first three patches fix various programming mistakes, and the fourth
-one deals with unit analysis confusion in the rtalloc range query
-functions, which only pop up if rextsize != 1.
+> I think this is problematic - allowing only booleans is pretty
+> arbitrary.
 
-Comments and questions are, as always, welcome.
+...
+ 
+>> and currently only 1 or 0 are acceptable values. The default
+>> parameters you can override on a configuration file and their current
+>> built-in default settings are:
+>>
+>> [data]
+>> noalign=0
 
---D
+...
+
+>> We have floated around enough bike shedding emails to have at least reached
+>> a consensus on the fact that we'd be only supporting a mimimum set of default
+>> parameters and would strive to simplify our parser as much as possible.
+
+> See above - sorry for not chiming in sooner, but I don't think an arbitrary
+> restriction to the boolean options will be sufficient in the long run.
+
+Ok, I'm rethinking this concern now.
+
+It seems like we may have two separate but related purposes for a mkfs config file:
+
+1) Set system-wide defaults based on kernel and/or OS support.
+2) Set specific-use defaults, such as "mkfs.xfs -c gluster" etc.
+
+For the former, it may well only be the booleans that matter.  For the latter,
+it may be more, like setting inode size, or directory block size, etc.
+
+Is there anything we'd reasonably want to set system-wide that's /not/ a
+boolean?  If not, the maybe that can be Phase 1 as long as the config file
+format doesn't need to change; we can just add to the list of supported config
+options at a later date, perhaps?
+
+The system-wide, supported-features default config may be the most pressing
+need at this point, the rest is just nice to have.
+
+Thanks,
+-Eric
