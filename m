@@ -1,115 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43986 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751884AbeEFR1N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:13 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HRCte165295
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:12 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2hs5931xnc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:12 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w46HRB3C010989
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:12 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w46HRBFj005993
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:11 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 19/21] xfs: Add the parent pointer support to the superblock version 5.
-Date: Sun,  6 May 2018 10:24:52 -0700
-Message-Id: <1525627494-12873-20-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:53092 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751479AbeEDTYF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 May 2018 15:24:05 -0400
+Date: Fri, 4 May 2018 12:23:37 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 01/11] xfs_repair: examine all remote attribute blocks
+Message-ID: <20180504192337.GJ26569@magnolia>
+References: <152401958920.13319.10756339531174871801.stgit@magnolia>
+ <152401959780.13319.9582448473529615015.stgit@magnolia>
+ <be57719e-81ed-9574-02b1-1d85efde624c@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <be57719e-81ed-9574-02b1-1d85efde624c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased and added parent pointer attribute to
-           compatible attributes mask]
+On Fri, May 04, 2018 at 01:20:42PM -0500, Eric Sandeen wrote:
+> On 4/17/18 9:46 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Examine all remote xattr values of a file, not just the XFS_ATTR_ROOT
+> > values.  This enables us to detect and zap corrupt user xattrs, as
+> > tested by xfs/404.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Whoa.  ;)  Where'd this come from?  At first glance it seems crazy to only
+> check XFS_ATTR_ROOT but then I stated digging a little...
+> 
+> This is essentially akin to other code we still have in the local
+> case,
+> 
+>         /* Only check values for root security attributes */
+>         if (entry->flags & XFS_ATTR_ROOT) {
+>                 if (valuecheck(mp, (char *)&local->nameval[0], NULL,
+>                                 local->namelen, be16_to_cpu(local->valuelen))) {
+>                         do_warn(
+>         _("bad security value for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
+>                                 i, da_bno, ino);
+>                         return -1;
+>                 }
+>         }
+> 
+> soooo this patch essentially allows valuecheck on !XFS_ATTR_ROOT attributes,
+> but valuecheck says:
+> 
+>  * Calls will be made to xfs_mac_valid or xfs_acl_valid routines if the
+>  * security attributes exist. They will be cleared if invalid.
+>  * No other values will be checked. 
+> 
+> So, um, what's actually getting fixed?  Ah, ok:
+> 
+> this also allows us to simply try to /get/ the remote attribute:
+> 
+> rmtval_get()
+> 
+> and if that fails:
+> 
+>                 do_warn(
+>         _("remote attribute get failed for entry %d, inode %" PRIu64 "\n"),
+>                         i, ino);
+>                 goto bad_free_out;
+> 
+> we zap it.
+> 
+> So ... uh...
+> 
+> I think you want to /move/ the XFS_ATTR_ROOT check before the call to valuecheck(),
+> rather than removing it entirely.
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_format.h | 7 +++++--
- fs/xfs/libxfs/xfs_fs.h     | 1 +
- fs/xfs/libxfs/xfs_sb.c     | 2 ++
- fs/xfs/xfs_super.c         | 4 ++++
- 4 files changed, 12 insertions(+), 2 deletions(-)
+Yes.  I could just make it part of the valuecheck test...
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 5e946c8..d05ffc5 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -462,10 +462,12 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-+#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)		/* parent inode ptr */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-+		 XFS_SB_FEAT_RO_COMPAT_PARENT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-@@ -561,7 +563,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- 
- static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
- {
--	return false; /* We'll enable this at the end of the set */
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index faf1a4e..641e0af 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index d9b94bd..e1f0ac1 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -955,6 +955,8 @@ xfs_fs_geometry(
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
- 	if (xfs_sb_version_hasreflink(sbp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
-+	if(xfs_sb_version_hasparent(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
- 	if (xfs_sb_version_hassector(sbp))
- 		geo->logsectsize = sbp->sb_logsectsize;
- 	else
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index dce3baf..366deee 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1731,6 +1731,10 @@ xfs_fs_fill_super(
- 		goto out_filestream_unmount;
- 	}
- 
-+	if (xfs_sb_version_hasparent(&mp->m_sb))
-+		xfs_alert(mp,
-+	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
-+
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
--- 
-2.7.4
+if (rmtval_get(...)) {
+	do_warn(...);
+	goto bad_free_out;
+}
 
+if ((entry->flags & XFS_ATTR_ROOT) &&
+    valuecheck(...)) {
+	do_warn(...);
+	goto bad_free_out;
+}
+
+free(value);
+
+--D
+
+> 
+> Ok, at this rate I'll have all 11 patches done by June.
+> 
+> -Eric
+> 
+> > ---
+> >  repair/attr_repair.c |    3 ---
+> >  1 file changed, 3 deletions(-)
+> > 
+> > 
+> > diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> > index 8b1b8a7..bb5ab3d 100644
+> > --- a/repair/attr_repair.c
+> > +++ b/repair/attr_repair.c
+> > @@ -537,9 +537,6 @@ process_leaf_attr_remote(
+> >  		return -1;
+> >  	}
+> >  
+> > -	if (!(entry->flags & XFS_ATTR_ROOT))
+> > -		goto out;
+> > -
+> >  	value = malloc(be32_to_cpu(remotep->valuelen));
+> >  	if (value == NULL) {
+> >  		do_warn(
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
