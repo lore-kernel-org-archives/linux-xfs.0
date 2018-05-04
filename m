@@ -1,47 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59646 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:51818 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751135AbeEGJuM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 May 2018 05:50:12 -0400
-Date: Mon, 7 May 2018 11:53:26 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] blk-wbt: account any writing command as a write
-Message-ID: <20180507095326.GB25210@lst.de>
-References: <1525360843-6504-1-git-send-email-axboe@kernel.dk> <1525360843-6504-3-git-send-email-axboe@kernel.dk>
+        id S1751621AbeEDVwn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 May 2018 17:52:43 -0400
+Subject: Re: [PATCH 07/11] xfs_repair: only update in-core extent state after
+ scanning full extent
+References: <152401958920.13319.10756339531174871801.stgit@magnolia>
+ <152401963554.13319.9264510034231335778.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a1a8bc18-48b6-f893-63bf-96682f7e1472@sandeen.net>
+Date: Fri, 4 May 2018 16:52:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1525360843-6504-3-git-send-email-axboe@kernel.dk>
+In-Reply-To: <152401963554.13319.9264510034231335778.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, hch@lst.de
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 03, 2018 at 09:20:42AM -0600, Jens Axboe wrote:
-> We currently special case WRITE and FLUSH, but we should really
-> just include any command with the write bit set. This ensures
-> that we account DISCARD.
+On 4/17/18 9:47 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In process_bmbt_reclist_int, only update the in-core extent state after
+> clearing the entire extent for conflicts.  If we encounter conflicts
+> we'll try rebuilding the fork from rmap data and rescanning the fork.
+> It is essential to avoid polluting the in-memory state with garbage
+> data so that we don't end up nuking other files needlessly.  Found by
+> fuzzing recs[1].blockcount = middlebit in xfs/380.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks fine,
+AFAICT this makes sense. :)
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-> index f92fc84b5e2c..3e34b41bcefc 100644
-> --- a/block/blk-wbt.c
-> +++ b/block/blk-wbt.c
-> @@ -701,7 +701,7 @@ static int wbt_data_dir(const struct request *rq)
+> ---
+>  repair/dinode.c |   30 ++++++++++++++++++++++++++++--
+>  1 file changed, 28 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index ceffc52..c8c1850 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -751,7 +751,6 @@ _("%s fork in ino %" PRIu64 " claims free block %" PRIu64 "\n"),
+>  				/* fall through ... */
+>  			case XR_E_INUSE1:	/* seen by rmap */
+>  			case XR_E_UNKNOWN:
+> -				set_bmap_ext(agno, agbno, blen, XR_E_INUSE);
+>  				break;
 >  
->  	if (op == REQ_OP_READ)
->  		return READ;
-> -	else if (op == REQ_OP_WRITE || op == REQ_OP_FLUSH)
-> +	else if (op_is_write(op))
->  		return WRITE;
+>  			case XR_E_BAD_STATE:
+> @@ -773,7 +772,6 @@ _("%s fork in inode %" PRIu64 " claims metadata block %" PRIu64 "\n"),
 >  
->  	/* don't account */
-
-But this whole function smells, the return value is an array
-index, so instead of abusing read/write this should return 0 or 1
-and be called _idx or similar.  But I guess that is a question for the
-higher level interface.
+>  			case XR_E_INUSE:
+>  			case XR_E_MULT:
+> -				set_bmap_ext(agno, agbno, blen, XR_E_MULT);
+>  				if (type == XR_INO_DATA &&
+>  				    xfs_sb_version_hasreflink(&mp->m_sb))
+>  					break;
+> @@ -792,6 +790,34 @@ _("%s fork in %s inode %" PRIu64 " claims CoW block %" PRIu64 "\n"),
+>  				do_error(
+>  _("illegal state %d in block map %" PRIu64 "\n"),
+>  					state, b);
+> +				goto done;
+> +			}
+> +		}
+> +
+> +		/*
+> +		 * Update the internal extent map only after we've checked
+> +		 * every block in this extent.  The first time we reject this
+> +		 * data fork we'll try to rebuild the bmbt from rmap data.
+> +		 * After a successful rebuild we'll try this scan again.
+> +		 * (If the rebuild fails we won't come back here.)
+> +		 */
+> +		agbno = XFS_FSB_TO_AGBNO(mp, irec.br_startblock);
+> +		ebno = agbno + irec.br_blockcount;
+> +		for (; agbno < ebno; agbno += blen) {
+> +			state = get_bmap_ext(agno, agbno, ebno, &blen);
+> +			switch (state)  {
+> +			case XR_E_FREE:
+> +			case XR_E_FREE1:
+> +			case XR_E_INUSE1:
+> +			case XR_E_UNKNOWN:
+> +				set_bmap_ext(agno, agbno, blen, XR_E_INUSE);
+> +				break;
+> +			case XR_E_INUSE:
+> +			case XR_E_MULT:
+> +				set_bmap_ext(agno, agbno, blen, XR_E_MULT);
+> +				break;
+> +			default:
+> +				break;
+>  			}
+>  		}
+>  		if (collect_rmaps) { /* && !check_dups */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
