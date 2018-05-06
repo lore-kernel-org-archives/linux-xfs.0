@@ -1,90 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51518 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751173AbeECXrc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 19:47:32 -0400
-Date: Thu, 3 May 2018 16:47:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/10] xfs: get rid of the log item descriptor
-Message-ID: <20180503234729.GG26569@magnolia>
-References: <20180502080157.11386-1-david@fromorbit.com>
- <20180502080157.11386-11-david@fromorbit.com>
- <20180502200510.GA4127@magnolia>
- <20180502215343.GB23861@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180502215343.GB23861@dastard>
+Received: from userp2130.oracle.com ([156.151.31.86]:44062 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751890AbeEFR1N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:13 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HRDDi128390
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:13 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2hs426a11k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:13 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w46HRDKF011000
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:13 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w46HRCse014580
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:12 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 21/21] xfs: Add delayed attributes error tag
+Date: Sun,  6 May 2018 10:24:54 -0700
+Message-Id: <1525627494-12873-22-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 03, 2018 at 07:53:43AM +1000, Dave Chinner wrote:
-> On Wed, May 02, 2018 at 01:05:10PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 02, 2018 at 06:01:57PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > It's just a connector between a transaction and a log item. There's
-> > > a 1:1 relationship between a log item descriptor and a log item,
-> > > and a 1:1 relationship between a log item descriptor and a
-> > > transaction. Both relationships are created and terminated at the
-> > > same time, so why do we even have the descriptor?
-> > > 
-> > > Replace it with a specific list_head in the log item and a new
-> > > log item dirtied flag to replace the XFS_LID_DIRTY flag.
-> > > 
-> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> .....
-> > >  		/*
-> > >  		 * Skip items that do not have any vectors for writing. These
-> > >  		 * log items must now be considered clean in this transaction,
-> > > -		 * so clear the XFS_LID_DIRTY flag to ensure it doesn't get
-> > > +		 * so clear the XFS_LI_DIRTY flag to ensure it doesn't get
-> > >  		 * added to the CIL by mistake.
-> > >  		 */
-> > >  		if (!shadow->lv_niovecs && !ordered) {
-> > > -			lidp->lid_flags &= ~XFS_LID_DIRTY;
-> > > +			clear_bit(XFS_LI_DIRTY, &lip->li_flags);
-> > 
-> > So this requires "xfs: handle inconsistent log item formatting state
-> > correctly" as a prerequisite...
-> 
-> Ah, forgot that was sitting high up in the patch stack. It's not
-> dependent on it - and I can't remember exactly what the state of
-> that patch was.
-> 
-> ...
-> > > @@ -633,7 +629,7 @@ xfs_trans_binval(
-> > >  	bip->bli_flags |= XFS_BLI_STALE;
-> > >  
-> > >  	/* Mark the log item as dirty. */
-> > > -	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
-> > > +	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
-> > >  	tp->t_flags |= XFS_TRANS_DIRTY;
-> > 
-> > ...but even with that patch, this hunk doesn't apply.  I've never seen
-> > the comment in any patch.  What are the prerequisites for this series?
-> 
-> Ah, I also have the buffer range logging patch in the series up near
-> the top with the other patch. Again, not dependent, just got so many
-> stalled patches in my tree that have been sitting around for ages
-> that I've forgotten where there are dependencies. 
-> 
-> I'll have to do some more reordering...
+This patch adds an error tag that we can use to test
+delayed attribute recovery and replay
 
-Ok.  The series looks ok so far at a quick glance.
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_errortag.h | 5 ++++-
+ fs/xfs/xfs_error.c           | 3 +++
+ fs/xfs/xfs_trans_attr.c      | 8 ++++++++
+ 3 files changed, 15 insertions(+), 1 deletion(-)
 
---D
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index bc1789d..f606ab6 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -65,7 +65,8 @@
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
+ #define XFS_ERRTAG_LOG_ITEM_PIN				30
+ #define XFS_ERRTAG_BUF_LRU_REF				31
+-#define XFS_ERRTAG_MAX					32
++#define XFS_ERRTAG_DELAYED_ATTR			32
++#define XFS_ERRTAG_MAX					33
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -102,5 +103,7 @@
+ #define XFS_RANDOM_LOG_BAD_CRC				1
+ #define XFS_RANDOM_LOG_ITEM_PIN				1
+ #define XFS_RANDOM_BUF_LRU_REF				2
++#define XFS_RANDOM_DELAYED_ATTR			1
+ 
+ #endif /* __XFS_ERRORTAG_H_ */
++
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index a63f508..0752f20 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -61,6 +61,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_LOG_BAD_CRC,
+ 	XFS_RANDOM_LOG_ITEM_PIN,
+ 	XFS_RANDOM_BUF_LRU_REF,
++	XFS_RANDOM_DELAYED_ATTR,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -167,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+ XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
++XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -201,6 +203,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
+ 	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
+ 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
++	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+ 	NULL,
+ };
+ 
+diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+index d1d75bb..7ea0880 100644
+--- a/fs/xfs/xfs_trans_attr.c
++++ b/fs/xfs/xfs_trans_attr.c
+@@ -35,6 +35,8 @@
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+ #include "xfs_quota.h"
++#include "xfs_errortag.h"
++#include "xfs_error.h"
+ 
+ /*
+  * This routine is called to allocate an "extent free done"
+@@ -108,6 +110,11 @@ xfs_trans_attr(
+ 	if (error)
+ 		return error;
+ 
++	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
++		error = -EIO;
++		goto out;
++	}
++
+ 	switch (op_flags) {
+ 		case XFS_ATTR_OP_FLAGS_SET:
+ 			args.op_flags |= XFS_DA_OP_ADDNAME;
+@@ -122,6 +129,7 @@ xfs_trans_attr(
+ 			error = -EFSCORRUPTED;
+ 	}
+ 
++out:
+ 	if (error) {
+ 		xfs_defer_cancel(&dfops);
+ 	        if (leaf_bp)
+-- 
+2.7.4
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
