@@ -1,80 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44666 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751507AbeEDT7t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 15:59:49 -0400
-Subject: Re: [PATCH 05/11] xfs_repair: treat zero da btree pointers as
- corruption
-References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401962320.13319.5253154840968934837.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <91427563-15d7-10d9-e641-f03712d1858b@sandeen.net>
-Date: Fri, 4 May 2018 14:59:48 -0500
-MIME-Version: 1.0
-In-Reply-To: <152401962320.13319.5253154840968934837.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from userp2120.oracle.com ([156.151.31.85]:43986 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751884AbeEFR1N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:13 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HRCte165295
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:12 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2hs5931xnc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:12 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w46HRB3C010989
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:12 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w46HRBFj005993
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:11 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 19/21] xfs: Add the parent pointer support to the superblock version 5.
+Date: Sun,  6 May 2018 10:24:52 -0700
+Message-Id: <1525627494-12873-20-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+[dchinner: forward ported and cleaned up]
+[achender: rebased and added parent pointer attribute to
+           compatible attributes mask]
 
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_format.h | 7 +++++--
+ fs/xfs/libxfs/xfs_fs.h     | 1 +
+ fs/xfs/libxfs/xfs_sb.c     | 2 ++
+ fs/xfs/xfs_super.c         | 4 ++++
+ 4 files changed, 12 insertions(+), 2 deletions(-)
 
-On 4/17/18 9:47 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If a da btree pointer is zero (i.e. the beginning of the fork) report
-> this as a corrupt tree to the caller instead of telling it that
-> everything is good.  Fixes assertion errors when fuzzing
-> nbtree[0].before to zero in xfs/394.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/dir2.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/repair/dir2.c b/repair/dir2.c
-> index 73dff90..47ece00 100644
-> --- a/repair/dir2.c
-> +++ b/repair/dir2.c
-> @@ -1238,8 +1238,8 @@ process_node_dir2(
->  	 * Skip directories with a root marked XFS_DIR2_LEAFN_MAGIC
->  	 */
->  	if (bno == 0) {
-> -		release_da_cursor(mp, &da_cursor, 0);
-> -		return 0;
-> +		err_release_da_cursor(mp, &da_cursor, 0);
-> +		return 1;
-
-Trying to make sense of this w.r.t. the comment right above it ... oh,
-ok the traverse function does:
-
-                if (whichfork == XFS_DATA_FORK &&
-                    (nodehdr.magic == XFS_DIR2_LEAFN_MAGIC ||
-                    nodehdr.magic == XFS_DIR3_LEAFN_MAGIC)) {
-                        if (i != -1) {
-                                do_warn(
-_("found non-root LEAFN node in inode %" PRIu64 " bno = %u\n"),
-                                        da_cursor->ino, bno);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 5e946c8..d05ffc5 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -462,10 +462,12 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
++#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)		/* parent inode ptr */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+ 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
++		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
++		 XFS_SB_FEAT_RO_COMPAT_PARENT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+@@ -561,7 +563,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
  
-I guess the comment should say:
+ static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+ {
+-	return false; /* We'll enable this at the end of the set */
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index faf1a4e..641e0af 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+ #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+ #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
++#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
+ 
+ /*
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index d9b94bd..e1f0ac1 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -955,6 +955,8 @@ xfs_fs_geometry(
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
+ 	if (xfs_sb_version_hasreflink(sbp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
++	if(xfs_sb_version_hasparent(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
+ 	if (xfs_sb_version_hassector(sbp))
+ 		geo->logsectsize = sbp->sb_logsectsize;
+ 	else
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index dce3baf..366deee 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1731,6 +1731,10 @@ xfs_fs_fill_super(
+ 		goto out_filestream_unmount;
+ 	}
+ 
++	if (xfs_sb_version_hasparent(&mp->m_sb))
++		xfs_alert(mp,
++	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
++
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
+-- 
+2.7.4
 
-/* Directories with root marked XFS_DIR2_LEAFN_MAGIC are corrupt */
-
-now, but I might fix that on the way in, so:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
->  	} else {
->  		/*
->  		 * Now pass cursor and bno into leaf-block processing routine.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
