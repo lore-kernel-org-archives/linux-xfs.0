@@ -1,105 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51818 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751621AbeEDVwn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 17:52:43 -0400
-Subject: Re: [PATCH 07/11] xfs_repair: only update in-core extent state after
- scanning full extent
-References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401963554.13319.9264510034231335778.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a1a8bc18-48b6-f893-63bf-96682f7e1472@sandeen.net>
-Date: Fri, 4 May 2018 16:52:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <152401963554.13319.9264510034231335778.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from userp2130.oracle.com ([156.151.31.86]:43988 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751795AbeEFR1E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:04 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HR4Ka128348
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:04 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2hs426a11a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:03 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w46HR3ve014655
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:03 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w46HR3Lx005827
+        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:03 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 00/21] Parent Pointers v6
+Date: Sun,  6 May 2018 10:24:33 -0700
+Message-Id: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 4/17/18 9:47 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In process_bmbt_reclist_int, only update the in-core extent state after
-> clearing the entire extent for conflicts.  If we encounter conflicts
-> we'll try rebuilding the fork from rmap data and rescanning the fork.
-> It is essential to avoid polluting the in-memory state with garbage
-> data so that we don't end up nuking other files needlessly.  Found by
-> fuzzing recs[1].blockcount = middlebit in xfs/380.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-AFAICT this makes sense. :)
+This is the 6th version of parent pointer attributes for xfs. The goal of
+this patch set is to add a parent pointer attribute to each inode.  The
+attribute name containing the parent inode, generation, and directory offset,
+while the  attribute value contains the file name.  This feature will enable
+future optimizations for online scrub, or any other feature that could make
+use of quickly deriving an inodes path from  the mount point.  This set also
+introduces deferred attribute operations, though it is currently only used by
+ the new parent pointer code.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Some points of interest since v5:
+Patches 2 and 14 are new, so I would appreciate some focus on those.
+They lay the ground work for delaying transaction rolls until
+the entire operation is finished.  Patches 15 through 18 have been 
+adjusted to hold locks across create, link, remove and rename operations.
 
-> ---
->  repair/dinode.c |   30 ++++++++++++++++++++++++++++--
->  1 file changed, 28 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index ceffc52..c8c1850 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -751,7 +751,6 @@ _("%s fork in ino %" PRIu64 " claims free block %" PRIu64 "\n"),
->  				/* fall through ... */
->  			case XR_E_INUSE1:	/* seen by rmap */
->  			case XR_E_UNKNOWN:
-> -				set_bmap_ext(agno, agbno, blen, XR_E_INUSE);
->  				break;
->  
->  			case XR_E_BAD_STATE:
-> @@ -773,7 +772,6 @@ _("%s fork in inode %" PRIu64 " claims metadata block %" PRIu64 "\n"),
->  
->  			case XR_E_INUSE:
->  			case XR_E_MULT:
-> -				set_bmap_ext(agno, agbno, blen, XR_E_MULT);
->  				if (type == XR_INO_DATA &&
->  				    xfs_sb_version_hasreflink(&mp->m_sb))
->  					break;
-> @@ -792,6 +790,34 @@ _("%s fork in %s inode %" PRIu64 " claims CoW block %" PRIu64 "\n"),
->  				do_error(
->  _("illegal state %d in block map %" PRIu64 "\n"),
->  					state, b);
-> +				goto done;
-> +			}
-> +		}
-> +
-> +		/*
-> +		 * Update the internal extent map only after we've checked
-> +		 * every block in this extent.  The first time we reject this
-> +		 * data fork we'll try to rebuild the bmbt from rmap data.
-> +		 * After a successful rebuild we'll try this scan again.
-> +		 * (If the rebuild fails we won't come back here.)
-> +		 */
-> +		agbno = XFS_FSB_TO_AGBNO(mp, irec.br_startblock);
-> +		ebno = agbno + irec.br_blockcount;
-> +		for (; agbno < ebno; agbno += blen) {
-> +			state = get_bmap_ext(agno, agbno, ebno, &blen);
-> +			switch (state)  {
-> +			case XR_E_FREE:
-> +			case XR_E_FREE1:
-> +			case XR_E_INUSE1:
-> +			case XR_E_UNKNOWN:
-> +				set_bmap_ext(agno, agbno, blen, XR_E_INUSE);
-> +				break;
-> +			case XR_E_INUSE:
-> +			case XR_E_MULT:
-> +				set_bmap_ext(agno, agbno, blen, XR_E_MULT);
-> +				break;
-> +			default:
-> +				break;
->  			}
->  		}
->  		if (collect_rmaps) { /* && !check_dups */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Corresponding userspace and test cases are enroute.
+As always, comments and feedback are appreciated.  Thank you!
+
+
+Allison Henderson (12):
+  xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
+  Add trans toggle to attr routines
+  xfs: Add attibute set and helper functions
+  xfs: Add attibute remove and helper functions
+  xfs: Set up infastructure for deferred attribute operations
+  xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+  xfs: Remove all strlen calls in all xfs_attr_* functions for attr
+    names.
+  Add lock_flags to xfs_ialloc and xfs_dir_ialloc
+  xfs: Add parent pointers to rename
+  xfs: Add the parent pointer support to the superblock version 5.
+  xfs: Add parent pointer ioctl
+  xfs: Add delayed attributes error tag
+
+Dave Chinner (5):
+  xfs: define parent pointer xattr format
+  xfs: extent transaction reservations for parent attributes
+  xfs: parent pointer attribute creation
+  xfs: add parent attributes to link
+  xfs: remove parent pointers in unlink
+
+Mark Tinguely (4):
+  xfs: get directory offset when adding directory name
+  xfs: get directory offset when removing directory name
+  xfs: get directory offset when replacing a directory name
+  xfs: add parent pointer support to attribute code
+
+ fs/xfs/Makefile                |   4 +
+ fs/xfs/libxfs/xfs_attr.c       | 480 ++++++++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_attr.h       | 196 +++++++++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  12 +-
+ fs/xfs/libxfs/xfs_attr_leaf.h  |   8 +-
+ fs/xfs/libxfs/xfs_bmap.c       |  49 ++--
+ fs/xfs/libxfs/xfs_bmap.h       |   1 +
+ fs/xfs/libxfs/xfs_da_btree.h   |   1 +
+ fs/xfs/libxfs/xfs_da_format.h  |  38 ++-
+ fs/xfs/libxfs/xfs_defer.h      |   1 +
+ fs/xfs/libxfs/xfs_dir2.c       |  41 ++--
+ fs/xfs/libxfs/xfs_dir2.h       |  10 +-
+ fs/xfs/libxfs/xfs_dir2_block.c |   9 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |   8 +-
+ fs/xfs/libxfs/xfs_dir2_node.c  |   8 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c    |   6 +
+ fs/xfs/libxfs/xfs_errortag.h   |   5 +-
+ fs/xfs/libxfs/xfs_format.h     |  10 +-
+ fs/xfs/libxfs/xfs_fs.h         |  39 +++
+ fs/xfs/libxfs/xfs_log_format.h |  44 +++-
+ fs/xfs/libxfs/xfs_parent.c     | 168 +++++++++++++
+ fs/xfs/libxfs/xfs_parent.h     |  38 +++
+ fs/xfs/libxfs/xfs_sb.c         |   2 +
+ fs/xfs/libxfs/xfs_trans_resv.c | 111 +++++++--
+ fs/xfs/libxfs/xfs_trans_resv.h |   1 +
+ fs/xfs/libxfs/xfs_types.h      |   1 +
+ fs/xfs/xfs_acl.c               |  12 +-
+ fs/xfs/xfs_attr.h              | 160 -------------
+ fs/xfs/xfs_attr_item.c         | 530 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_item.h         | 119 +++++++++
+ fs/xfs/xfs_attr_list.c         |   3 +
+ fs/xfs/xfs_error.c             |   3 +
+ fs/xfs/xfs_inode.c             | 220 ++++++++++++-----
+ fs/xfs/xfs_inode.h             |   2 +-
+ fs/xfs/xfs_ioctl.c             |  74 +++++-
+ fs/xfs/xfs_iops.c              |   6 +-
+ fs/xfs/xfs_log_recover.c       | 122 ++++++++++
+ fs/xfs/xfs_parent_utils.c      | 136 +++++++++++
+ fs/xfs/xfs_parent_utils.h      |  32 +++
+ fs/xfs/xfs_qm.c                |   2 +-
+ fs/xfs/xfs_super.c             |   5 +
+ fs/xfs/xfs_symlink.c           |   4 +-
+ fs/xfs/xfs_trans.h             |  13 +
+ fs/xfs/xfs_trans_attr.c        | 291 ++++++++++++++++++++++
+ fs/xfs/xfs_xattr.c             |  10 +-
+ 45 files changed, 2552 insertions(+), 483 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_attr.h
+ create mode 100644 fs/xfs/libxfs/xfs_parent.c
+ create mode 100644 fs/xfs/libxfs/xfs_parent.h
+ delete mode 100644 fs/xfs/xfs_attr.h
+ create mode 100644 fs/xfs/xfs_attr_item.c
+ create mode 100644 fs/xfs/xfs_attr_item.h
+ create mode 100644 fs/xfs/xfs_parent_utils.c
+ create mode 100644 fs/xfs/xfs_parent_utils.h
+ create mode 100644 fs/xfs/xfs_trans_attr.c
+
+-- 
+2.7.4
+
