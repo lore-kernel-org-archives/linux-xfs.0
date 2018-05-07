@@ -1,54 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46782 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752848AbeEHAEs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:04:48 -0400
-Date: Mon, 7 May 2018 17:04:25 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/13] xfs: remove xfs_qm_dqread flags argument
-Message-ID: <20180508000425.GY11261@magnolia>
-References: <152506698177.21553.13500862866416804148.stgit@magnolia>
- <152506705098.21553.6894396720813018127.stgit@magnolia>
- <20180502163431.GB27020@lst.de>
- <20180502165856.GX4127@magnolia>
- <20180507144159.GA30951@lst.de>
+Received: from bombadil.infradead.org ([198.137.202.133]:51700 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751923AbeEGPGc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 11:06:32 -0400
+Date: Mon, 7 May 2018 08:06:31 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/12] xfs: bmap debugging should never panic the system
+Message-ID: <20180507150631.GA22414@infradead.org>
+References: <152537075334.16676.10600900179473864298.stgit@magnolia>
+ <152537075974.16676.4678069099698404803.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180507144159.GA30951@lst.de>
+In-Reply-To: <152537075974.16676.4678069099698404803.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 07, 2018 at 04:41:59PM +0200, Christoph Hellwig wrote:
-> On Wed, May 02, 2018 at 09:58:56AM -0700, Darrick J. Wong wrote:
-> > > I really see no point in doing the wrapper.  I'd much rather keep
-> > > xfs_qm_dqread with a the additional argument, be that a flags value
-> > > or a bool.  For example the same patch with the new xfs_dquot_setup
-> > > kept as xfs_qm_dqread and everyone calling it with an additional
-> > > false argument would seem much nicer to me.
-> > 
-> > I'm trying to avoid having a can_alloc argument for the exported _dqread
-> > interface because none of the callers outside of xfs_dquot.c set it to
-> > true.
+On Thu, May 03, 2018 at 11:05:59AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> That's not really a good reason on its own..
+> Don't panic() the system if the bmap records are garbage, just call
+> ASSERT which gives us the same backtrace but enables developers to
+> control if the system goes down or not.  This makes debugging with
+> generic/388 much easier because it won't reboot the machine midway
+> through a run just because btree_read_bufl returns EIO when the fs has
+> already shut down.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hm, I talked to Dave on IRC, and after some spelunking we unearthed that
-the whole point of calling _dqread directly was to obtain an uncached
-dquot that isn't linked into any lists/radix trees/caches/whatever.
-That way if we end up doing quotacheck we won't have any dquots in
-memory that are now garbage.
+Looks good,
 
->From that perspective it's not as big of a jump to re-hide dqread and
-add a _dqget_uncached that has a much better comment justifying why it's
-there and who uses it...
-
---D
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Christoph Hellwig <hch@lst.de>
