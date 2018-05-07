@@ -1,328 +1,244 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45106 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:47862 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752051AbeEGQdC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 12:33:02 -0400
-Date: Mon, 7 May 2018 09:32:42 -0700
+        with ESMTP id S1752158AbeEGWea (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 18:34:30 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47MVg91085001
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:34:29 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2hs593650p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 22:34:29 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w47MYS8m007112
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:34:29 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w47MYSuS013627
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:34:28 GMT
+Date: Mon, 7 May 2018 15:34:27 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_repair: check and repair quota metadata
-Message-ID: <20180507163242.GZ26569@magnolia>
-References: <9e494d70-53bd-db81-c118-73ef7eaad667@redhat.com>
+Subject: Re: [PATCH 13/21] xfs: extent transaction reservations for parent
+ attributes
+Message-ID: <20180507223427.GI11261@magnolia>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-14-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9e494d70-53bd-db81-c118-73ef7eaad667@redhat.com>
+In-Reply-To: <1525627494-12873-14-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 07, 2018 at 09:20:28AM -0500, Eric Sandeen wrote:
-> Today, quota inodes are not checked at all in xfs_repair.  (This is
-> a little odd, because xfs_check used to do it in process_quota()).
+On Sun, May 06, 2018 at 10:24:46AM -0700, Allison Henderson wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> The kernel has quota inode validation and repair routines, but it is
-> out of the ordinary for the kernel to be doing metadata repair.  And
-> now that we have metadata verifiers, this also yields a surprisingly
-> noisy mount if quota inodes are corrupted, even immediately after an
-> xfs_repair.
+> We need to add, remove or modify parent pointer attributes during
+> create/link/unlink/rename operations atomically with the dirents in the parent
+> directories being modified. This means they need to be modified in the same
+> transaction as the parent directories, and so we need to add the required
+> space for the attribute modifications to the transaction reservations.
 > 
-> So this patch allows xfs_repair to fix the quota inode metadata.
+> [achender: rebased, added xfs_sb_version_hasparent stub]
 > 
-> Quotacheck is still left for the kernel.  After a few more releases,
-> I'll propose removing the repair calls from the kernel, and move the
-> repair functions from libxfs/ into the repair code.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
+>  fs/xfs/libxfs/xfs_format.h     |   5 ++
+>  fs/xfs/libxfs/xfs_trans_resv.c | 111 ++++++++++++++++++++++++++++++++---------
+>  fs/xfs/libxfs/xfs_trans_resv.h |   1 +
+>  3 files changed, 94 insertions(+), 23 deletions(-)
 > 
-> This will need a bit of adjustment when my other quota patches land
-> in 4.18, but that should be no big deal.
-> 
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index ab195f5f..e5eb3de1 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -196,8 +196,6 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
->  # define barrier() __memory_barrier()
->  #endif
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 42956d8..5e946c8 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -559,6 +559,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+>  }
 >  
-> -#define XFS_DQUOT_CLUSTER_SIZE_FSB (xfs_filblks_t)1
-> -
->  /* miscellaneous kernel routines not in user space */
->  #define down_read(a)		((void) 0)
->  #define up_read(a)		((void) 0)
-> diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
-> index bb1b13a9..067475e2 100644
-> --- a/libxfs/xfs_quota_defs.h
-> +++ b/libxfs/xfs_quota_defs.h
-> @@ -30,6 +30,8 @@
->  typedef uint64_t	xfs_qcnt_t;
->  typedef uint16_t	xfs_qwarncnt_t;
->  
-> +#define XFS_DQUOT_CLUSTER_SIZE_FSB (xfs_filblks_t)1
-
-Requires a kernel patch, right? :)
-
+> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+> +{
+> +	return false; /* We'll enable this at the end of the set */
+> +}
 > +
 >  /*
->   * flags for q_flags field in the dquot.
+>   * end of superblock version macros
 >   */
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 9af4f058..a4887f8c 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -1277,6 +1277,118 @@ null_check(char *name, int length)
->  	return(0);
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 3bccdf7..76440fb 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -787,29 +787,30 @@ xfs_calc_sb_reservation(
+>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
 >  }
 >  
 > +/*
-> + * This does /not/ do quotacheck, it validates the basic quota
-> + * inode metadata, checksums, etc.
+> + * Namespace reservations.
+> + *
+> + * These get tricky when parent pointers are enabled as we have attribute
+> + * modifications occurring from within these transactions. Rather than confuse
+> + * each of these reservation calculations with the conditional attribute
+> + * reservations, add them here in a clear and concise manner. This assumes that
+> + * the attribute reservations have already been calculated.
+> + *
+> + * Note that we only include the static attribute reservation here; the runtime
+> + * reservation will have to be modified by the size of the attributes being
+> + * added/removed/modified. See the comments on the attribute reservation
+> + * calculations for more details.
+> + *
+> + * Note for rename: rename will vastly overestimate requirements. This will be
+> + * addressed later when modifications are made to ensure parent attribute
+> + * modifications can be done atomically with the rename operation.
 > + */
-> +#define uuid_equal(s,d) (platform_uuid_compare((s),(d)) == 0)
-> +static int
-> +process_quota_inode(
-> +	struct xfs_mount	*mp,
-> +	xfs_ino_t		lino,
-> +	struct xfs_dinode	*dino,
-> +	uint			ino_type,
-> +	struct blkmap		*blkmap)
-> +{
-> +	xfs_fsblock_t		fsbno;
-> +	struct xfs_buf		*bp;
-> +	xfs_filblks_t		dqchunklen;
-> +	uint			dqperchunk;
-> +	int			quota_type;
-> +	char			*quota_string;
-> +	xfs_dqid_t		dqid;
-> +	xfs_fileoff_t		qbno;
-> +	int			i;
-> +	int			t = 0;
+>  void
+> -xfs_trans_resv_calc(
+> +xfs_calc_namespace_reservations(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_trans_resv	*resp)
+>  {
+> -	/*
+> -	 * The following transactions are logged in physical format and
+> -	 * require a permanent reservation on space.
+> -	 */
+> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+> -	else
+> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> -		resp->tr_itruncate.tr_logcount =
+> -				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+> -	else
+> -		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+>  
+>  	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+>  	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+> @@ -831,15 +832,77 @@ xfs_trans_resv_calc(
+>  	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+>  	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 > +
-> +	switch (ino_type) {
-> +		case XR_INO_UQUOTA:
-> +			quota_type = XFS_DQ_USER;
-> +			quota_string = _("User quota");
-> +			break;
-> +		case XR_INO_GQUOTA:
-> +			quota_type = XFS_DQ_GROUP;
-> +			quota_string = _("Group quota");
-> +			break;
-> +		case XR_INO_PQUOTA:
-> +			quota_type = XFS_DQ_PROJ;
-> +			quota_string = _("Project quota");
-> +			break;
-> +		default:
-> +			ASSERT(0);
-> +	}
-> +
-> +	dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
-> +	dqperchunk = xfs_calc_dquots_per_chunk(dqchunklen);
-> +	dqid = 0;
-> +	qbno = NULLFILEOFF;
-> +
-> +	while ((qbno = blkmap_next_off(blkmap, qbno, &t)) != NULLFILEOFF) {
-> +		xfs_dqblk_t	*dqb;
-> +		int		writebuf = 0;
-> +
-> +		fsbno = blkmap_get(blkmap, qbno);
-> +		dqid = (xfs_dqid_t)qbno * dqperchunk;
-> +
-> +		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, fsbno),
-> +				    dqchunklen, 0, &xfs_dquot_buf_ops);
-> +		if (!bp) {
-> +			do_warn(
-> +_("cannot read inode %" PRIu64 ", file block %" PRIu64 ", disk block %" PRIu64 "\n"),
-> +				lino, qbno, fsbno);
-> +			return 1;
-> +		}
-> +
-> +		dqb = bp->b_addr;
-> +		for (i = 0; i < dqperchunk; i++, dqid++, dqb++) {
-> +			xfs_failaddr_t	fa;
-> +			int		bad_dqb = 0;
-> +
-> +			/* We only print the first problem we find */
-> +			if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +				if (!xfs_verify_cksum((char *)dqb, sizeof(*dqb),
-> +							XFS_DQUOT_CRC_OFF)) {
-> +					do_warn(_("%s: bad CRC for id %u. "),
-> +							quota_string, dqid);
-> +					bad_dqb = 1;
-> +					goto bad;
-> +				}
-> +
-> +				if (!uuid_equal(&dqb->dd_uuid,
-> +						&mp->m_sb.sb_meta_uuid)) {
-> +					do_warn(_("%s: bad UUID for id %u. "),
-> +							quota_string, dqid);
-> +					bad_dqb = 1;
-> +					goto bad;
-> +				}
-> +			}
-> +			fa = xfs_dquot_verify(mp, &dqb->dd_diskdq, dqid, quota_type, 0);
-> +			if (fa) {
-> +				do_warn(_("%s: Corrupt quota for id %u. "),
-> +						quota_string, dqid);
-> +				bad_dqb = 1;
-> +			}
-> +
-> +bad:
-> +			if (bad_dqb) {
-> +				if (no_modify)
-> +					do_warn(_("Would correct.\n"));
-> +				else {
-> +					do_warn(_("Corrected.\n"));
-> +					xfs_dquot_repair(mp, &dqb->dd_diskdq, dqid, quota_type);
-> +					writebuf = 1;
-> +				}
-> +			}
-> +		}
-> +
-> +		if (writebuf && !no_modify)
-> +			libxfs_writebuf(bp, 0);
-> +		else
-> +			libxfs_putbuf(bp);
-> +	}
-> +	return 0;
+> +	xfs_calc_parent_ptr_reservations(mp);
 > +}
 > +
->  static int
->  process_symlink_remote(
->  	struct xfs_mount	*mp,
-> @@ -1479,6 +1591,13 @@ _("size of socket inode %" PRIu64 " != 0 (%" PRId64 " bytes)\n"), lino,
->  _("size of fifo inode %" PRIu64 " != 0 (%" PRId64 " bytes)\n"), lino,
->  				(int64_t)be64_to_cpu(dino->di_size));
->  			break;
-> +		case XR_INO_UQUOTA:
-> +		case XR_INO_GQUOTA:
-> +		case XR_INO_PQUOTA:
-> +			do_warn(
-> +_("size of quota inode %" PRIu64 " != 0 (%" PRId64 " bytes)\n"), lino,
-> +				(int64_t)be64_to_cpu(dino->di_size));
-> +			break;
->  		default:
->  			do_warn(_("Internal error - process_misc_ino_types, "
->  				  "illegal type %d\n"), type);
-> @@ -1599,7 +1718,7 @@ process_check_sb_inodes(
->  	int		*dirty)
->  {
->  	if (lino == mp->m_sb.sb_rootino) {
-> -	 	if (*type != XR_INO_DIR)  {
-> +		if (*type != XR_INO_DIR)  {
->  			do_warn(_("root inode %" PRIu64 " has bad type 0x%x\n"),
->  				lino, dinode_fmt(dinoc));
->  			*type = XR_INO_DIR;
-> @@ -1613,7 +1732,7 @@ process_check_sb_inodes(
->  		return 0;
->  	}
->  	if (lino == mp->m_sb.sb_uquotino)  {
-> -		if (*type != XR_INO_DATA)  {
-> +		if (*type != XR_INO_UQUOTA)  {
->  			do_warn(_("user quota inode %" PRIu64 " has bad type 0x%x\n"),
->  				lino, dinode_fmt(dinoc));
->  			mp->m_sb.sb_uquotino = NULLFSINO;
-> @@ -1622,7 +1741,7 @@ process_check_sb_inodes(
->  		return 0;
->  	}
->  	if (lino == mp->m_sb.sb_gquotino)  {
-> -		if (*type != XR_INO_DATA)  {
-> +		if (*type != XR_INO_GQUOTA)  {
->  			do_warn(_("group quota inode %" PRIu64 " has bad type 0x%x\n"),
->  				lino, dinode_fmt(dinoc));
->  			mp->m_sb.sb_gquotino = NULLFSINO;
-> @@ -1631,7 +1750,7 @@ process_check_sb_inodes(
->  		return 0;
->  	}
->  	if (lino == mp->m_sb.sb_pquotino)  {
-> -		if (*type != XR_INO_DATA)  {
-> +		if (*type != XR_INO_PQUOTA)  {
->  			do_warn(_("project quota inode %" PRIu64 " has bad type 0x%x\n"),
->  				lino, dinode_fmt(dinoc));
->  			mp->m_sb.sb_pquotino = NULLFSINO;
-> @@ -1738,6 +1857,14 @@ _("directory inode %" PRIu64 " has bad size %" PRId64 "\n"),
->  			return 1;
->  		break;
->  
-> +	case XR_INO_UQUOTA:
-> +	case XR_INO_GQUOTA:
-> +	case XR_INO_PQUOTA:
-> +		/* Quota inodes have same restrictions as above types */
-> +		if (process_misc_ino_types(mp, dino, lino, type))
-> +			return 1;
-> +		break;
+> +void xfs_calc_parent_ptr_reservations(struct xfs_mount     *mp)
+
+Parameter goes on the next line, please.
+
+> +{
+> +	struct xfs_trans_resv   *resp = M_RES(mp);
 > +
->  	case XR_INO_RTDATA:
->  		/*
->  		 * if we have no realtime blocks, any inode claiming
-> @@ -2620,6 +2747,12 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
->  			type = XR_INO_RTBITMAP;
->  		else if (lino == mp->m_sb.sb_rsumino)
->  			type = XR_INO_RTSUM;
-> +		else if (lino == mp->m_sb.sb_uquotino)
-> +			type = XR_INO_UQUOTA;
-> +		else if (lino == mp->m_sb.sb_gquotino)
-> +			type = XR_INO_GQUOTA;
-> +		else if (lino == mp->m_sb.sb_pquotino)
-> +			type = XR_INO_PQUOTA;
->  		else
->  			type = XR_INO_DATA;
->  		break;
-> @@ -2784,6 +2917,15 @@ _("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
->  			goto clear_bad_out;
->  		}
->  		break;
-> +	case XR_INO_UQUOTA:
-> +	case XR_INO_GQUOTA:
-> +	case XR_INO_PQUOTA:
-> +		if (process_quota_inode(mp, lino, dino, type, dblkmap) != 0) {
-> +			do_warn(
-> +	_("problem with quota inode %" PRIu64 "\n"), lino);
-> +			goto clear_bad_out;
-> +		}
-> +		break;
->  	default:
->  		break;
->  	}
-> diff --git a/repair/incore.h b/repair/incore.h
-> index fd66084f..78a0ed30 100644
-> --- a/repair/incore.h
-> +++ b/repair/incore.h
-> @@ -222,13 +222,16 @@ int		count_bcnt_extents(xfs_agnumber_t);
->  #define XR_INO_RTDATA	2		/* realtime file */
->  #define XR_INO_RTBITMAP	3		/* realtime bitmap inode */
->  #define XR_INO_RTSUM	4		/* realtime summary inode */
-> -#define XR_INO_DATA	5		/* regular file */
-> -#define XR_INO_SYMLINK	6		/* symlink */
-> -#define XR_INO_CHRDEV	7		/* character device */
-> -#define XR_INO_BLKDEV	8		/* block device */
-> -#define XR_INO_SOCK	9		/* socket */
-> -#define XR_INO_FIFO	10		/* fifo */
-> -#define XR_INO_MOUNTPOINT 11		/* mountpoint */
-> +#define XR_INO_UQUOTA	5		/* user quota inode */
-> +#define XR_INO_GQUOTA	6		/* group quota inode */
-> +#define XR_INO_PQUOTA	7		/* project quota inode */
+> +	/* Calculate extra space needed for parent pointer attributes */
+> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
+> +		return;
+> +
+> +	/* rename can add/remove/modify 2 parent attributes */
+> +	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
+> +					 resp->tr_attrrm.tr_logres);
+> +	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
+> +					   resp->tr_attrrm.tr_logcount);
 
-/me wonders, is there an advantage/requirement to insert the three quota
-inode types in the middle of the range instead of tacking them on the
-end?
+RENAME_EXCHANGE can perform four updates -- remove pptr from both
+inodes, then add the (now swapped) to both inodes.
 
-Anyway the rest mostly looks ok to me.
+> +
+> +	/* create will add 1 parent attribute */
+> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* mkdir will add 1 parent attribute */
+> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* link will add 1 parent attribute */
+> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* symlink will add 1 parent attribute */
+> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+> +
+> +	/* remove will remove 1 parent attribute */
+> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+> +	resp->tr_remove.tr_logcount += resp->tr_attrrm.tr_logcount;
+> +}
+> +
+> +void
+> +xfs_trans_resv_calc(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	/*
+> +	 * The following transactions are logged in physical format and
+> +	 * require a permanent reservation on space.
+> +	 */
+> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+> +	else
+> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> +		resp->tr_itruncate.tr_logcount =
+> +				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+> +	else
+> +		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+>  	resp->tr_create_tmpfile.tr_logres =
+>  			xfs_calc_create_tmpfile_reservation(mp);
+>  	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+>  	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+>  	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+>  	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+>  	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> @@ -871,6 +934,8 @@ xfs_trans_resv_calc(
+>  		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+>  	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> +	xfs_calc_namespace_reservations(mp, resp);
+> +
+>  	/*
+>  	 * The following transactions are logged in logical format with
+>  	 * a default log count.
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+> index b7e5357..c7190d6 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.h
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.h
+> @@ -105,5 +105,6 @@ struct xfs_trans_resv {
+>  
+>  void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
+>  uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
+> +void xfs_calc_parent_ptr_reservations(struct xfs_mount *mp);
+
+Are we going to need this outside xfs_trans_resv.c?  If not, leave it private.
 
 --D
 
-> +#define XR_INO_DATA	8		/* regular file */
-> +#define XR_INO_SYMLINK	9		/* symlink */
-> +#define XR_INO_CHRDEV	10		/* character device */
-> +#define XR_INO_BLKDEV	11		/* block device */
-> +#define XR_INO_SOCK	12		/* socket */
-> +#define XR_INO_FIFO	13		/* fifo */
-> +#define XR_INO_MOUNTPOINT 14		/* mountpoint */
 >  
->  /* inode allocation tree */
->  
+>  #endif	/* __XFS_TRANS_RESV_H__ */
+> -- 
+> 2.7.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
