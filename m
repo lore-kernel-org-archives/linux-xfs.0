@@ -1,139 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35788 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:33392 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751495AbeEDRfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 13:35:41 -0400
-Subject: [PATCH 5/5] xfs: print specific dqblk that failed verifiers
-References: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9d126a83-c4ef-00a2-dbb6-510e2c41de73@sandeen.net>
-Date: Fri, 4 May 2018 12:35:40 -0500
+        id S1752002AbeEGLDZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 May 2018 07:03:25 -0400
+Date: Mon, 7 May 2018 07:03:23 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 0.1/13] xfs: release new dquot buffer on defer_finish
+ error
+Message-ID: <20180507110323.GA38916@bfoster.bfoster>
+References: <152506698177.21553.13500862866416804148.stgit@magnolia>
+ <20180503175343.GF4127@magnolia>
+ <20180504211958.GN26569@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180504211958.GN26569@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, hch@lst.de
 
-Rather than printing the top of the buffer that held a corrupted dqblk,
-restructure things to print out the specific one that failed by pushing
-the calls to the verifier_error function down into the verifier which
-iterates over the buffer and detects the error.
+On Fri, May 04, 2018 at 02:19:58PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
+> allocating a new dquot record", we allocate a new dquot block, grab a
+> buffer to initialize it, and return the locked initialized dquot buffer
+> to the caller for further in-core dquot initialization.  Unfortunately,
+> if the _bmap_finish errored out, _qm_dqalloc would also error out
+> without bothering to free the (locked) buffer.  Leaking a locked buffer
+> caused hangs in generic/388 when quotas are enabled.
+> 
+> Furthermore, the _bmap_finish -> _defer_finish conversion in
+> 310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
+> xfs_defer_*") failed to observe that the buffer was held going into
+> _defer_finish and therefore failed to notice that the buffer lock is
+> /not/ maintained afterwards.  Now that we can bjoin a buffer to a
+> defer_ops, use this mechanism to ensure that the buffer stays locked
+> across the _defer_finish.  Release the holds and locks on the buffer as
+> appropriate if we have to error out.
+> 
+> There is a subtlety here for the caller in that the buffer emerges
+> locked and held to the transaction, so if the _trans_commit fails we
+> have to release the buffer explicitly.  This fixes the unmount hang
+> in generic/388 when quotas are enabled.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: return buffer with consistent hold state
+> ---
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- fs/xfs/libxfs/xfs_dquot_buf.c | 41 +++++++++++++++++++----------------
- 1 file changed, 22 insertions(+), 19 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index d71c0b53536b..fb23d941e799 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -152,7 +152,8 @@ xfs_dqblk_repair(
- STATIC bool
- xfs_dquot_buf_verify_crc(
- 	struct xfs_mount	*mp,
--	struct xfs_buf		*bp)
-+	struct xfs_buf		*bp,
-+	bool			readahead)
- {
- 	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
- 	int			ndquots;
-@@ -173,8 +174,12 @@ xfs_dquot_buf_verify_crc(
- 
- 	for (i = 0; i < ndquots; i++, d++) {
- 		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
--				 XFS_DQUOT_CRC_OFF))
-+				 XFS_DQUOT_CRC_OFF)) {
-+			if (!readahead)
-+				xfs_buf_verifier_error(bp, -EFSBADCRC, __func__,
-+					d, sizeof(*d), __this_address);
- 			return false;
-+		}
- 	}
- 	return true;
- }
-@@ -182,7 +187,8 @@ xfs_dquot_buf_verify_crc(
- STATIC xfs_failaddr_t
- xfs_dquot_buf_verify(
- 	struct xfs_mount	*mp,
--	struct xfs_buf		*bp)
-+	struct xfs_buf		*bp,
-+	bool			readahead)
- {
- 	struct xfs_dqblk	*dqb = (struct xfs_dqblk *)bp->b_addr;
- 	xfs_failaddr_t		fa;
-@@ -216,8 +222,13 @@ xfs_dquot_buf_verify(
- 			id = be32_to_cpu(ddq->d_id);
- 
- 		fa = xfs_dqblk_verify(mp, &dqb[i], id + i, 0);
--		if (fa)
-+		if (fa) {
-+			if (!readahead)
-+				xfs_buf_verifier_error(bp, -EFSCORRUPTED,
-+					__func__, &dqb[i],
-+					sizeof(struct xfs_dqblk), fa);
- 			return fa;
-+		}
- 	}
- 
- 	return NULL;
-@@ -229,7 +240,7 @@ xfs_dquot_buf_verify_struct(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	return xfs_dquot_buf_verify(mp, bp);
-+	return xfs_dquot_buf_verify(mp, bp, false);
- }
- 
- static void
-@@ -237,15 +248,10 @@ xfs_dquot_buf_read_verify(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	xfs_failaddr_t		fa;
- 
--	if (!xfs_dquot_buf_verify_crc(mp, bp))
--		xfs_verifier_error(bp, -EFSBADCRC, __this_address);
--	else {
--		fa = xfs_dquot_buf_verify(mp, bp);
--		if (fa)
--			xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
--	}
-+	if (!xfs_dquot_buf_verify_crc(mp, bp, false))
-+		return;
-+	xfs_dquot_buf_verify(mp, bp, false);
- }
- 
- /*
-@@ -260,8 +266,8 @@ xfs_dquot_buf_readahead_verify(
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 
--	if (!xfs_dquot_buf_verify_crc(mp, bp) ||
--	    xfs_dquot_buf_verify(mp, bp) != NULL) {
-+	if (!xfs_dquot_buf_verify_crc(mp, bp, true) ||
-+	    xfs_dquot_buf_verify(mp, bp, true) != NULL) {
- 		xfs_buf_ioerror(bp, -EIO);
- 		bp->b_flags &= ~XBF_DONE;
- 	}
-@@ -277,11 +283,8 @@ xfs_dquot_buf_write_verify(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	xfs_failaddr_t		fa;
- 
--	fa = xfs_dquot_buf_verify(mp, bp);
--	if (fa)
--		xfs_verifier_error(bp, -EFSCORRUPTED, __this_address);
-+	xfs_dquot_buf_verify(mp, bp, false);
- }
- 
- const struct xfs_buf_ops xfs_dquot_buf_ops = {
--- 
-2.17.0
-
-
+>  fs/xfs/xfs_dquot.c |   48 ++++++++++++++++++++++++++++--------------------
+>  1 file changed, 28 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index a7daef9e16bf..7c71a14d0d49 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -362,32 +362,40 @@ xfs_qm_dqalloc(
+>  			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+>  
+>  	/*
+> -	 * xfs_defer_finish() may commit the current transaction and
+> -	 * start a second transaction if the freelist is not empty.
+> +	 * Hold the buffer and join it to the dfops so that we'll still own
+> +	 * the buffer when we return to the caller.  The buffer disposal on
+> +	 * error must be paid attention to very carefully, as it has been
+> +	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
+> +	 * code when allocating a new dquot record" in 2005, and the later
+> +	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
+> +	 * the buffer locked across the _defer_finish call.  We can now do
+> +	 * this correctly with xfs_defer_bjoin.
+>  	 *
+> -	 * Since we still want to modify this buffer, we need to
+> -	 * ensure that the buffer is not released on commit of
+> -	 * the first transaction and ensure the buffer is added to the
+> -	 * second transaction.
+> +	 * Above, we allocated a disk block for the dquot information and
+> +	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
+> +	 * the buffer is still locked to *tpp, so we must _bhold_release and
+> +	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
+> +	 * transaction is gone but the new buffer is not joined or held to any
+> +	 * transaction, so we must _buf_relse it.
+>  	 *
+> -	 * If there is only one transaction then don't stop the buffer
+> -	 * from being released when it commits later on.
+> +	 * If everything succeeds, the caller of this function is returned a
+> +	 * buffer that is locked and joined to the transaction.  The caller
+> +	 * is responsible for unlocking any buffer passed back, either
+> +	 * manually or by committing the transaction.
+>  	 */
+> -
+> -	xfs_trans_bhold(tp, bp);
+> -
+> +	xfs_trans_bhold(*tpp, bp);
+> +	error = xfs_defer_bjoin(&dfops, bp);
+> +	if (error) {
+> +		xfs_trans_bhold_release(*tpp, bp);
+> +		xfs_trans_brelse(*tpp, bp);
+> +		goto error1;
+> +	}
+>  	error = xfs_defer_finish(tpp, &dfops);
+> -	if (error)
+> +	if (error) {
+> +		xfs_buf_relse(bp);
+>  		goto error1;
+> -
+> -	/* Transaction was committed? */
+> -	if (*tpp != tp) {
+> -		tp = *tpp;
+> -		xfs_trans_bjoin(tp, bp);
+> -	} else {
+> -		xfs_trans_bhold_release(tp, bp);
+>  	}
+> -
+> +	xfs_trans_bhold_release(*tpp, bp);
+>  	*O_bpp = bp;
+>  	return 0;
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
