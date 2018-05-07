@@ -1,146 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44008 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751825AbeEFR1H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 May 2018 13:27:07 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w46HR61p128355
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:06 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2hs426a11d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 06 May 2018 17:27:06 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w46HR6OA014744
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:06 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w46HR6pn014481
-        for <linux-xfs@vger.kernel.org>; Sun, 6 May 2018 17:27:06 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 06/21] xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
-Date: Sun,  6 May 2018 10:24:39 -0700
-Message-Id: <1525627494-12873-7-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+Received: from bullwinkle.deer-run.com ([50.23.32.3]:58494 "EHLO
+        bullwinkle.deer-run.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751949AbeEGM5t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 08:57:49 -0400
+Date: Mon, 7 May 2018 07:56:21 -0500
+From: hal@deer-run.com
+Subject: Re: [PATCH] xfs_db: add -R option
+Message-ID: <20180507125621.GA2969@deer-run.com>
+References: <20180504140244.GA32161@deer-run.com>
+ <20180504153255.GI26569@magnolia>
+ <20180507113534.GB2486@deer-run.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180507113534.GB2486@deer-run.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-These routines set up set and start a new deferred attribute
-operation.  These functions are meant to be called by other
-code needing to initiate a deferred attribute operation.  We
-will use these routines later in the parent pointer patches.
+Darrick's suggested patch to sb_logcheck() is the way to accomplish
+what I want with the minimum amount of code changes.  But as I look at
+the code, I'm not sure doing it the way Darrick suggests actually
+expresses what we're trying to accomplish.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_attr.h |  5 ++++
- 2 files changed, 74 insertions(+)
+Let's state the problem as "Recognize that the log is dirty but allow
+blockget to proceed if '-r' is used". If you accept that problem
+statement, then sb_logcheck() should just tell the caller whether the
+log is dirty or not. It's up to the caller to decide what to do with
+that information-- in this case the init() function in db/check.c.
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 2f295ca..adbcef2 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -468,6 +468,42 @@ xfs_attr_set(
- 	return error;
- }
- 
-+/* Sets an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_set_deferred(
-+	struct xfs_inode	*dp,
-+	struct xfs_defer_ops    *dfops,
-+	void			*name,
-+	unsigned int		namelen,
-+	void			*value,
-+	unsigned int		valuelen,
-+	int			flags)
-+{
-+
-+	struct xfs_attr_item	*new;
-+	char			*name_value;
-+
-+	if (!namelen || !valuelen) {
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, valuelen),
-+			 KM_SLEEP|KM_NOFS);
-+	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, valuelen));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
-+	new->xattri_name_len = namelen;
-+	new->xattri_value_len = valuelen;
-+	new->xattri_flags = flags;
-+	memcpy(&name_value[0], name, namelen);
-+	memcpy(&name_value[namelen], value, valuelen);
-+
-+	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
- 
- /*
-  * Generic handler routine to remove a name from an attribute list.
-@@ -560,6 +596,39 @@ xfs_attr_remove(
- 	return error;
- }
- 
-+/* Removes an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_remove_deferred(
-+	struct xfs_inode        *dp,
-+	struct xfs_defer_ops    *dfops,
-+	void			*name,
-+	unsigned int		namelen,
-+	int                     flags)
-+{
-+
-+	struct xfs_attr_item	*new;
-+	char			*name_value;
-+
-+	if (!namelen) {
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
-+	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
-+	new->xattri_name_len = namelen;
-+	new->xattri_value_len = 0;
-+	new->xattri_flags = flags;
-+	memcpy(name_value, name, namelen);
-+
-+	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
- /*========================================================================
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 33b33d3..ec26565 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -183,5 +183,10 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       const unsigned char *name, int flags);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-+int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
-+			  void *name, unsigned int name_len, void *value,
-+			  unsigned int valuelen, int flags);
-+int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
-+			    void *name, unsigned int namelen, int flags);
- 
- #endif	/* __XFS_ATTR_H__ */
--- 
-2.7.4
+However, right now sb_logcheck() returns 0 for the case where 
+there's a fatal error (like not being able to find the log) and for
+the log being dirty. init() would need to distinguish between those
+two cases and act appropriately. That means changing the return
+semantics of sb_logcheck() to something like -1 on error, 0 on dirty,
+and 1 on clean. 
+
+Note that sb_logcheck() is also called by sb_logzero() and
+that code would have to be tweaked to handle the new return values.
+
+So the end result is more code changes to do it this way, but I
+feel like it's a more "correct" fix. I have patches created for
+both scenarios-- does anybody have a strong opinion about which way
+to proceed?
+
+--Hal
+
+
+On Mon May 07 06:35, hal@deer-run.com wrote:
+> > Why skip the warning?  I think xfs_db should always warn on a dirty log,
+> > but perhaps we could relax the 'return 0' at the end of this hunk if the
+> > fs was opened readonly?
+> > 
+> > i.e.
+> > 
+> > dbprintf(_("ERROR: The filesystem has..."));
+> > return (x.isreadonly & LIBXFS_ISREADONLY) ? 1 : 0;
+> > 
+> > which would also make adding the -R option unnecessary.
+> 
+> I like this solution very much. I'll send in this patch in a
+> separate email.
+> 
+> Hal Pomeranz
 
