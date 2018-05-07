@@ -1,157 +1,242 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:52932 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752389AbeEGQNs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 12:13:48 -0400
-Received: by mail-it0-f67.google.com with SMTP id y189-v6so6398020itb.2
-        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 09:13:47 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 4/4] blk-wbt: throttle discards like background writes
-Date: Mon,  7 May 2018 10:13:35 -0600
-Message-Id: <1525709615-14395-5-git-send-email-axboe@kernel.dk>
-In-Reply-To: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
-References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
+Received: from aserp2120.oracle.com ([141.146.126.78]:47122 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752719AbeEGWuE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 18:50:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47Mgbcs143793
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:50:03 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2hs4k2666m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 22:50:03 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w47Mo2Iv032376
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:50:03 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w47Mo2dA011926
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:50:02 GMT
+Date: Mon, 7 May 2018 15:50:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 08/21] xfs: get directory offset when adding directory
+ name
+Message-ID: <20180507225001.GN11261@magnolia>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-9-git-send-email-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525627494-12873-9-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dchinner@redhat.com, hch@lst.de, Jens Axboe <axboe@kernel.dk>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Throttle discards like we would any background write. Discards should
-be background activity, so if they are impacting foreground IO, then
-we will throttle them down.
+On Sun, May 06, 2018 at 10:24:41AM -0700, Allison Henderson wrote:
+> From: Mark Tinguely <tinguely@sgi.com>
+> 
+> Return the directory offset information when adding an entry to the
+> directory.
+> 
+> This offset will be used as the parent pointer offset in xfs_create,
+> xfs_symlink, xfs_link and xfs_rename.
+> 
+> [dchinner: forward ported and cleaned up]
+> [dchinner: no s-o-b from Mark]
+> [bfoster: rebased, use args->geo in dir code]
+> [achender: rebased, chaged __uint32_t to xfs_dir2_dataptr_t]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
----
- block/blk-stat.h |  6 +++---
- block/blk-wbt.c  | 43 ++++++++++++++++++++++++++-----------------
- block/blk-wbt.h  |  4 +++-
- 3 files changed, 32 insertions(+), 21 deletions(-)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/block/blk-stat.h b/block/blk-stat.h
-index 2dd36347252a..c22049a8125e 100644
---- a/block/blk-stat.h
-+++ b/block/blk-stat.h
-@@ -10,11 +10,11 @@
- 
- /*
-  * from upper:
-- * 3 bits: reserved for other usage
-+ * 4 bits: reserved for other usage
-  * 12 bits: size
-- * 49 bits: time
-+ * 48 bits: time
-  */
--#define BLK_STAT_RES_BITS	3
-+#define BLK_STAT_RES_BITS	4
- #define BLK_STAT_SIZE_BITS	12
- #define BLK_STAT_RES_SHIFT	(64 - BLK_STAT_RES_BITS)
- #define BLK_STAT_SIZE_SHIFT	(BLK_STAT_RES_SHIFT - BLK_STAT_SIZE_BITS)
-diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-index 25d202345965..a7a724580033 100644
---- a/block/blk-wbt.c
-+++ b/block/blk-wbt.c
-@@ -106,6 +106,8 @@ static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb,
- {
- 	if (wb_acct & WBT_KSWAPD)
- 		return &rwb->rq_wait[WBT_RWQ_KSWAPD];
-+	else if (wb_acct & WBT_DISCARD)
-+		return &rwb->rq_wait[WBT_RWQ_DISCARD];
- 
- 	return &rwb->rq_wait[WBT_RWQ_BG];
- }
-@@ -143,10 +145,13 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
- 	}
- 
- 	/*
--	 * If the device does write back caching, drop further down
--	 * before we wake people up.
-+	 * For discards, our limit is always the background. For writes, if
-+	 * the device does write back caching, drop further down before we
-+	 * wake people up.
- 	 */
--	if (rwb->wc && !wb_recent_wait(rwb))
-+	if (wb_acct & WBT_DISCARD)
-+		limit = rwb->wb_background;
-+	else if (rwb->wc && !wb_recent_wait(rwb))
- 		limit = 0;
- 	else
- 		limit = rwb->wb_normal;
-@@ -483,6 +488,9 @@ static inline unsigned int get_limit(struct rq_wb *rwb, unsigned long rw)
- {
- 	unsigned int limit;
- 
-+	if ((rw & REQ_OP_MASK) == REQ_OP_DISCARD)
-+		return rwb->wb_background;
-+
- 	/*
- 	 * At this point we know it's a buffered write. If this is
- 	 * kswapd trying to free memory, or REQ_SYNC is set, then
-@@ -564,21 +572,20 @@ static void __wbt_wait(struct rq_wb *rwb, enum wbt_flags wb_acct,
- 
- static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
- {
--	const int op = bio_op(bio);
--
--	/*
--	 * If not a WRITE, do nothing
--	 */
--	if (op != REQ_OP_WRITE)
--		return false;
--
--	/*
--	 * Don't throttle WRITE_ODIRECT
--	 */
--	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
-+	switch (bio_op(bio)) {
-+	case REQ_OP_WRITE:
-+		/*
-+		 * Don't throttle WRITE_ODIRECT
-+		 */
-+		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
-+		    (REQ_SYNC | REQ_IDLE))
-+			return false;
-+		/* fallthrough */
-+	case REQ_OP_DISCARD:
-+		return true;
-+	default:
- 		return false;
--
--	return true;
-+	}
- }
- 
- /*
-@@ -605,6 +612,8 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
- 
- 	if (current_is_kswapd())
- 		ret |= WBT_KSWAPD;
-+	if (bio_op(bio) == REQ_OP_DISCARD)
-+		ret |= WBT_DISCARD;
- 
- 	__wbt_wait(rwb, ret, bio->bi_opf, lock);
- 
-diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-index 8038b4a0d4ef..d6a125e49db5 100644
---- a/block/blk-wbt.h
-+++ b/block/blk-wbt.h
-@@ -14,13 +14,15 @@ enum wbt_flags {
- 	WBT_TRACKED		= 1,	/* write, tracked for throttling */
- 	WBT_READ		= 2,	/* read */
- 	WBT_KSWAPD		= 4,	/* write, from kswapd */
-+	WBT_DISCARD		= 8,	/* discard */
- 
--	WBT_NR_BITS		= 3,	/* number of bits */
-+	WBT_NR_BITS		= 4,	/* number of bits */
- };
- 
- enum {
- 	WBT_RWQ_BG		= 0,
- 	WBT_RWQ_KSWAPD,
-+	WBT_RWQ_DISCARD,
- 	WBT_NUM_RWQ,
- };
- 
--- 
-2.7.4
+--D
 
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.h   | 1 +
+>  fs/xfs/libxfs/xfs_dir2.c       | 9 +++++++--
+>  fs/xfs/libxfs/xfs_dir2.h       | 3 ++-
+>  fs/xfs/libxfs/xfs_dir2_block.c | 1 +
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  | 2 ++
+>  fs/xfs/libxfs/xfs_dir2_node.c  | 2 ++
+>  fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
+>  fs/xfs/xfs_inode.c             | 9 +++++----
+>  fs/xfs/xfs_symlink.c           | 2 +-
+>  9 files changed, 23 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+> index ae6de17..bce96d6 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.h
+> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+> @@ -86,6 +86,7 @@ typedef struct xfs_da_args {
+>  	int		rmtvaluelen2;	/* remote attr value length in bytes */
+>  	int		op_flags;	/* operation flags */
+>  	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
+> +	xfs_dir2_dataptr_t offset;	/* OUT: offset in directory */
+>  } xfs_da_args_t;
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index 92f94e1..409a1e7 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -257,7 +257,8 @@ xfs_dir_createname(
+>  	xfs_ino_t		inum,		/* new entry inode number */
+>  	xfs_fsblock_t		*first,		/* bmap's firstblock */
+>  	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+> -	xfs_extlen_t		total)		/* bmap's total block count */
+> +	xfs_extlen_t		total,		/* bmap's total block count */
+> +	xfs_dir2_dataptr_t	*offset)	/* OUT entry's dir offset */
+>  {
+>  	struct xfs_da_args	*args;
+>  	int			rval;
+> @@ -313,6 +314,10 @@ xfs_dir_createname(
+>  		rval = xfs_dir2_node_addname(args);
+>  
+>  out_free:
+> +	/* return the location that this entry was place in the parent inode */
+> +	if (offset)
+> +		*offset = args->offset;
+> +
+>  	kmem_free(args);
+>  	return rval;
+>  }
+> @@ -559,7 +564,7 @@ xfs_dir_canenter(
+>  	xfs_inode_t	*dp,
+>  	struct xfs_name	*name)		/* name of entry to add */
+>  {
+> -	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0);
+> +	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0, NULL);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index 989e95a..c98a3ca 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -131,7 +131,8 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
+>  extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t inum,
+>  				xfs_fsblock_t *first,
+> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
+> +				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
+> +				xfs_dir2_dataptr_t *offset);
+>  extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t *inum,
+>  				struct xfs_name *ci_name);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index 875893d..9b7f173 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -559,6 +559,7 @@ xfs_dir2_block_addname(
+>  	dp->d_ops->data_put_ftype(dep, args->filetype);
+>  	tagp = dp->d_ops->data_entry_tag_p(dep);
+>  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+> +	args->offset = xfs_dir2_byte_to_dataptr((char *)dep - (char *)hdr);
+>  	/*
+>  	 * Clean up the bestfree array and log the header, tail, and entry.
+>  	 */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 50fc9c0..8ae2953 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -894,6 +894,8 @@ xfs_dir2_leaf_addname(
+>  	dp->d_ops->data_put_ftype(dep, args->filetype);
+>  	tagp = dp->d_ops->data_entry_tag_p(dep);
+>  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+> +	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, use_block,
+> +						(char *)dep - (char *)hdr);
+>  	/*
+>  	 * Need to scan fix up the bestfree table.
+>  	 */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 9df096c..4e544f7 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -2041,6 +2041,8 @@ xfs_dir2_node_addname_int(
+>  	dp->d_ops->data_put_ftype(dep, args->filetype);
+>  	tagp = dp->d_ops->data_entry_tag_p(dep);
+>  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+> +	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, dbno,
+> +						  (char *)dep - (char *)hdr);
+>  	xfs_dir2_data_log_entry(args, dbp, dep);
+>  	/*
+>  	 * Rescan the block for bestfree if needed.
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 0c75a7f..222ccf5 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -405,6 +405,7 @@ xfs_dir2_sf_addname_easy(
+>  	memcpy(sfep->name, args->name, sfep->namelen);
+>  	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+>  	dp->d_ops->sf_put_ftype(sfep, args->filetype);
+> +	args->offset = xfs_dir2_byte_to_dataptr(offset);
+>  
+>  	/*
+>  	 * Update the header and inode.
+> @@ -496,6 +497,7 @@ xfs_dir2_sf_addname_hard(
+>  	memcpy(sfep->name, args->name, sfep->namelen);
+>  	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+>  	dp->d_ops->sf_put_ftype(sfep, args->filetype);
+> +	args->offset = xfs_dir2_byte_to_dataptr(offset);
+>  	sfp->count++;
+>  	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
+>  		sfp->i8count++;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 2b70c8b..fc07b4f 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1226,7 +1226,8 @@ xfs_create(
+>  
+>  	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+>  					&first_block, &dfops, resblks ?
+> -					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
+> +					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
+> +					NULL);
+>  	if (error) {
+>  		ASSERT(error != -ENOSPC);
+>  		goto out_trans_cancel;
+> @@ -1462,7 +1463,7 @@ xfs_link(
+>  	}
+>  
+>  	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+> -					&first_block, &dfops, resblks);
+> +				   &first_block, &dfops, resblks, NULL);
+>  	if (error)
+>  		goto error_return;
+>  	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+> @@ -3040,8 +3041,8 @@ xfs_rename(
+>  		 * to account for the ".." reference from the new entry.
+>  		 */
+>  		error = xfs_dir_createname(tp, target_dp, target_name,
+> -						src_ip->i_ino, &first_block,
+> -						&dfops, spaceres);
+> +					   src_ip->i_ino, &first_block, &dfops,
+> +					   spaceres, NULL);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 5b66ac1..b1d3301 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -350,7 +350,7 @@ xfs_symlink(
+>  	 * Create the directory entry for the symlink.
+>  	 */
+>  	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
+> -					&first_block, &dfops, resblks);
+> +				   &first_block, &dfops, resblks, NULL);
+>  	if (error)
+>  		goto out_bmap_cancel;
+>  	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
