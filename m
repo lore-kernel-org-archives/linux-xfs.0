@@ -1,130 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53488 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752954AbeEHAHy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:07:54 -0400
-Date: Mon, 7 May 2018 17:07:31 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:50446 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752437AbeEGQP2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 12:15:28 -0400
+Date: Mon, 7 May 2018 09:15:05 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] blk-wbt: pass in enum wbt_flags to get_rq_wait()
-Message-ID: <20180508000731.GA11261@magnolia>
-References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
- <1525709615-14395-4-git-send-email-axboe@kernel.dk>
+Subject: Re: [PATCH 3/5 V2] xfs: pass full xfs_dqblk to repair during
+ quotacheck
+Message-ID: <20180507161505.GY26569@magnolia>
+References: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
+ <b4796b08-5a1b-c541-395e-3450aecae29b@sandeen.net>
+ <67f3c686-78f4-9aa1-78b7-e80fc6700f1e@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1525709615-14395-4-git-send-email-axboe@kernel.dk>
+In-Reply-To: <67f3c686-78f4-9aa1-78b7-e80fc6700f1e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, hch@lst.de
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, May 07, 2018 at 10:13:34AM -0600, Jens Axboe wrote:
-> This is in preparation for having more write queues, in which
-> case we would have needed to pass in more information than just
-> a simple 'is_kswapd' boolean.
+On Mon, May 07, 2018 at 10:22:05AM -0500, Eric Sandeen wrote:
+> It's a bit dicey to pass in the smaller xfs_disk_dquot and then cast it to
+> something larger; pass in the full xfs_dqblk so we know the caller has sent
+> us the right thing.  Rename the function to xfs_dqblk_repair for
+> clarity.
 > 
-> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok (having not run any kind of testing on this yet),
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  block/blk-wbt.c | 25 +++++++++++++++----------
->  block/blk-wbt.h |  4 +++-
->  2 files changed, 18 insertions(+), 11 deletions(-)
 > 
-> diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-> index 3e34b41bcefc..25d202345965 100644
-> --- a/block/blk-wbt.c
-> +++ b/block/blk-wbt.c
-> @@ -101,9 +101,13 @@ static bool wb_recent_wait(struct rq_wb *rwb)
->  	return time_before(jiffies, wb->dirty_sleep + HZ);
->  }
->  
-> -static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_kswapd)
-> +static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb,
-> +					  enum wbt_flags wb_acct)
+> V2: More precise commit summary
+> 
+>  fs/xfs/libxfs/xfs_dquot_buf.c  | 21 +++++++++------------
+>  fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+>  fs/xfs/xfs_qm.c                |  2 +-
+>  3 files changed, 11 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+> index c00174f32f0d..3b92427883fa 100644
+> --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+> @@ -104,29 +104,26 @@ xfs_dquot_verify(
+>   * Do some primitive error checking on ondisk dquot data structures.
+>   */
+>  int
+> -xfs_dquot_repair(
+> +xfs_dqblk_repair(
+>  	struct xfs_mount	*mp,
+> -	struct xfs_disk_dquot	*ddq,
+> +	struct xfs_dqblk	*dqb,
+>  	xfs_dqid_t		id,
+>  	uint			type)
 >  {
-> -	return &rwb->rq_wait[is_kswapd];
-> +	if (wb_acct & WBT_KSWAPD)
-> +		return &rwb->rq_wait[WBT_RWQ_KSWAPD];
-> +
-> +	return &rwb->rq_wait[WBT_RWQ_BG];
->  }
->  
->  static void rwb_wake_all(struct rq_wb *rwb)
-> @@ -126,7 +130,7 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
->  	if (!(wb_acct & WBT_TRACKED))
->  		return;
->  
-> -	rqw = get_rq_wait(rwb, wb_acct & WBT_KSWAPD);
-> +	rqw = get_rq_wait(rwb, wb_acct);
->  	inflight = atomic_dec_return(&rqw->inflight);
->  
+> -	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
+> -
+> -
 >  	/*
-> @@ -529,11 +533,12 @@ static inline bool may_queue(struct rq_wb *rwb, struct rq_wait *rqw,
->   * Block if we will exceed our limit, or if we are currently waiting for
->   * the timer to kick off queuing again.
->   */
-> -static void __wbt_wait(struct rq_wb *rwb, unsigned long rw, spinlock_t *lock)
-> +static void __wbt_wait(struct rq_wb *rwb, enum wbt_flags wb_acct,
-> +		       unsigned long rw, spinlock_t *lock)
->  	__releases(lock)
->  	__acquires(lock)
->  {
-> -	struct rq_wait *rqw = get_rq_wait(rwb, current_is_kswapd());
-> +	struct rq_wait *rqw = get_rq_wait(rwb, wb_acct);
->  	DEFINE_WAIT(wait);
+>  	 * Typically, a repair is only requested by quotacheck.
+>  	 */
+>  	ASSERT(id != -1);
+> -	memset(d, 0, sizeof(xfs_dqblk_t));
+> +	memset(dqb, 0, sizeof(xfs_dqblk_t));
 >  
->  	if (may_queue(rwb, rqw, &wait, rw))
-> @@ -584,7 +589,7 @@ static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
->   */
->  enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
->  {
-> -	unsigned int ret = 0;
-> +	enum wbt_flags ret = 0;
+> -	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> -	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+> -	d->dd_diskdq.d_flags = type;
+> -	d->dd_diskdq.d_id = cpu_to_be32(id);
+> +	dqb->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> +	dqb->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+> +	dqb->dd_diskdq.d_flags = type;
+> +	dqb->dd_diskdq.d_id = cpu_to_be32(id);
 >  
->  	if (!rwb_enabled(rwb))
->  		return 0;
-> @@ -598,14 +603,14 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
->  		return ret;
+>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
+> -		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+> +		uuid_copy(&dqb->dd_uuid, &mp->m_sb.sb_meta_uuid);
+> +		xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
+>  				 XFS_DQUOT_CRC_OFF);
 >  	}
 >  
-> -	__wbt_wait(rwb, bio->bi_opf, lock);
-> +	if (current_is_kswapd())
-> +		ret |= WBT_KSWAPD;
-> +
-> +	__wbt_wait(rwb, ret, bio->bi_opf, lock);
+> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+> index 8433656af0da..a2f8cb334bb3 100644
+> --- a/fs/xfs/libxfs/xfs_quota_defs.h
+> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
+> @@ -154,7 +154,7 @@ typedef uint16_t	xfs_qwarncnt_t;
+>  extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
+>  		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
+>  extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+> -extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
+> +extern int xfs_dqblk_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
+>  		xfs_dqid_t id, uint type);
 >  
->  	if (!blk_stat_is_active(rwb->cb))
->  		rwb_arm_timer(rwb);
+>  #endif	/* __XFS_QUOTA_H__ */
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index c71ad79bb2e6..6690b938d450 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -867,7 +867,7 @@ xfs_qm_reset_dqcounts(
+>  		 */
+>  		fa = xfs_dquot_verify(mp, ddq, id + j, type);
+>  		if (fa)
+> -			xfs_dquot_repair(mp, ddq, id + j, type);
+> +			xfs_dqblk_repair(mp, &dqb[j], id + j, type);
 >  
-> -	if (current_is_kswapd())
-> -		ret |= WBT_KSWAPD;
-> -
->  	return ret | WBT_TRACKED;
->  }
->  
-> diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-> index a232c98fbf4d..8038b4a0d4ef 100644
-> --- a/block/blk-wbt.h
-> +++ b/block/blk-wbt.h
-> @@ -19,7 +19,9 @@ enum wbt_flags {
->  };
->  
->  enum {
-> -	WBT_NUM_RWQ		= 2,
-> +	WBT_RWQ_BG		= 0,
-> +	WBT_RWQ_KSWAPD,
-> +	WBT_NUM_RWQ,
->  };
->  
->  /*
+>  		/*
+>  		 * Reset type in case we are reusing group quota file for
 > -- 
-> 2.7.4
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
