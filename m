@@ -1,183 +1,392 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4388 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751978AbeEGMSI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 May 2018 08:18:08 -0400
-Date: Mon, 7 May 2018 08:18:06 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 05/10] xfs: don't assert fail with AIL lock held
-Message-ID: <20180507121806.GF38916@bfoster.bfoster>
-References: <20180502080157.11386-1-david@fromorbit.com>
- <20180502080157.11386-6-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:48698 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753136AbeEGXjz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 19:39:55 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47NGb7K111565
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:39:55 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2hs593693y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 23:39:55 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w47NdsEf022775
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:39:54 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w47Nds6f012085
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:39:54 GMT
+Date: Mon, 7 May 2018 16:39:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 01/21] xfs: Move fs/xfs/xfs_attr.h to
+ fs/xfs/libxfs/xfs_attr.h
+Message-ID: <20180507233953.GT11261@magnolia>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-2-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180502080157.11386-6-david@fromorbit.com>
+In-Reply-To: <1525627494-12873-2-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 02, 2018 at 06:01:52PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Sun, May 06, 2018 at 10:24:34AM -0700, Allison Henderson wrote:
+> This patch moves fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
+> since xfs_attr.c is in libxfs.  We will need these later in
+> xfsprogs.
 > 
-> Been hitting AIL ordering assert failures recently, but been unable
-> to trace them down because the system immediately hangs up onteh
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 
-							     on the
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> spinlock that was held when this assert fires:
-> 
-> XFS: Assertion failed: XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0, file: fs/xfs/xfs_trans_ail.c, line: 52
-> 
-> Move the assertions outside of the spinlock so the corpse can
-> be dissected.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+--D
+
 > ---
->  fs/xfs/xfs_trans_ail.c | 40 ++++++++++++++++++++++++++++++----------
->  1 file changed, 30 insertions(+), 10 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.h | 160 +++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_attr.h        | 160 -----------------------------------------------
+>  2 files changed, 160 insertions(+), 160 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 50611d2bcbc2..58a2cf6fd4d9 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -32,13 +32,19 @@
->  #ifdef DEBUG
->  /*
->   * Check that the list is sorted as it should be.
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> new file mode 100644
+> index 0000000..d07bf27
+> --- /dev/null
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -0,0 +1,160 @@
+> +/*
+> + * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
+> + * All Rights Reserved.
 > + *
-> + * Called with the ail lock held, but we don't want to assert fail with it
-> + * held otherwise we'll lock everything up and won't be able to debug the
-> + * cause. Hence jump through hoops to drop teh lock before assert failing.
-
-					      the
-
-> + * Asserts may not be fatal, so pick teh lock back up and continue onwards.
-
-					the
-
->   */
->  STATIC void
->  xfs_ail_check(
-> -	struct xfs_ail	*ailp,
-> -	xfs_log_item_t	*lip)
-> +	struct xfs_ail		*ailp,
-> +	struct xfs_log_item	*lip)
->  {
-> -	xfs_log_item_t	*prev_lip;
-> +	struct xfs_log_item	*prev_lip;
-> +	struct xfs_log_item	*next_lip;
->  
->  	if (list_empty(&ailp->ail_head))
->  		return;
-> @@ -46,15 +52,29 @@ xfs_ail_check(
->  	/*
->  	 * Check the next and previous entries are valid.
->  	 */
-> -	ASSERT(test_bit(XFS_LI_IN_AIL, &lip->li_flags));
-> -	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
-> -	if (&prev_lip->li_ail != &ailp->ail_head)
-> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
-> +	if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags)) {
-> +		spin_unlock(&ailp->ail_lock);
-> +		ASSERT(0);
-> +		spin_lock(&ailp->ail_lock);
-> +	}
->  
-> -	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
-> -	if (&prev_lip->li_ail != &ailp->ail_head)
-> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
-> +	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
-> +	if (&prev_lip->li_ail != &ailp->ail_head) {
-> +		if (XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) > 0) {
-> +			spin_unlock(&ailp->ail_lock);
-> +			ASSERT(0);
-> +			spin_lock(&ailp->ail_lock);
-> +		}
-> +	}
->  
-> +	next_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
-> +	if (&next_lip->li_ail != &ailp->ail_head) {
-> +		if (XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) < 0) {
-> +			spin_unlock(&ailp->ail_lock);
-> +			ASSERT(0);
-> +			spin_lock(&ailp->ail_lock);
-> +		}
-> +	}
-
-Otherwise seems Ok, but kind of ugly. What about something like the
-following diff (applied on top of this patch)? Still hacky, but it
-avoids the multiple lock cycles for each check failure and preserves the
-actual assert strings. (Untested and probably could use comment
-updates..).
-
-Brian
-
---- 8< ---
-
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 58a2cf6fd4d9..98798d15b863 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -45,37 +45,36 @@ xfs_ail_check(
- {
- 	struct xfs_log_item	*prev_lip;
- 	struct xfs_log_item	*next_lip;
-+	xfs_lsn_t		prev_lsn = NULLCOMMITLSN;
-+	xfs_lsn_t		next_lsn = NULLCOMMITLSN;
-+	xfs_lsn_t		lsn;
-+	bool			in_ail;
- 
- 	if (list_empty(&ailp->ail_head))
- 		return;
- 
-+	in_ail = test_bit(XFS_LI_IN_AIL, &lip->li_flags);
-+	prev_lip = list_entry(lip->li_ail.prev, struct xfs_log_item, li_ail);
-+	if (&prev_lip->li_ail != &ailp->ail_head)
-+		prev_lsn = prev_lip->li_lsn;
-+	next_lip = list_entry(lip->li_ail.next, struct xfs_log_item, li_ail);
-+	if (&next_lip->li_ail != &ailp->ail_head)
-+		next_lsn = next_lip->li_lsn;
-+	lsn = lip->li_lsn;
-+
- 	/*
- 	 * Check the next and previous entries are valid.
- 	 */
--	if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags)) {
--		spin_unlock(&ailp->ail_lock);
--		ASSERT(0);
--		spin_lock(&ailp->ail_lock);
--	}
--
--	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
--	if (&prev_lip->li_ail != &ailp->ail_head) {
--		if (XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) > 0) {
--			spin_unlock(&ailp->ail_lock);
--			ASSERT(0);
--			spin_lock(&ailp->ail_lock);
--		}
--	}
--
--	next_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
--	if (&next_lip->li_ail != &ailp->ail_head) {
--		if (XFS_LSN_CMP(next_lip->li_lsn, lip->li_lsn) < 0) {
--			spin_unlock(&ailp->ail_lock);
--			ASSERT(0);
--			spin_lock(&ailp->ail_lock);
--		}
--	}
-+	if (in_ail &&
-+	    (prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0) &&
-+	    (next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0))
-+		return;
- 
-+	spin_unlock(&ailp->ail_lock);
-+	ASSERT(in_ail);
-+	ASSERT(prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0);
-+	ASSERT(next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0);
-+	spin_lock(&ailp->ail_lock);
- }
- #else /* !DEBUG */
- #define	xfs_ail_check(a,l)
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +#ifndef __XFS_ATTR_H__
+> +#define	__XFS_ATTR_H__
+> +
+> +struct xfs_inode;
+> +struct xfs_da_args;
+> +struct xfs_attr_list_context;
+> +
+> +/*
+> + * Large attribute lists are structured around Btrees where all the data
+> + * elements are in the leaf nodes.  Attribute names are hashed into an int,
+> + * then that int is used as the index into the Btree.  Since the hashval
+> + * of an attribute name may not be unique, we may have duplicate keys.
+> + * The internal links in the Btree are logical block offsets into the file.
+> + *
+> + * Small attribute lists use a different format and are packed as tightly
+> + * as possible so as to fit into the literal area of the inode.
+> + */
+> +
+> +/*========================================================================
+> + * External interfaces
+> + *========================================================================*/
+> +
+> +
+> +#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
+> +#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
+> +#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
+> +#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
+> +#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
+> +#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
+> +
+> +#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+> +#define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
+> +
+> +#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
+> +
+> +#define XFS_ATTR_FLAGS \
+> +	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
+> +	{ ATTR_ROOT,		"ROOT" }, \
+> +	{ ATTR_TRUST,		"TRUST" }, \
+> +	{ ATTR_SECURE,		"SECURE" }, \
+> +	{ ATTR_CREATE,		"CREATE" }, \
+> +	{ ATTR_REPLACE,		"REPLACE" }, \
+> +	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
+> +	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
+> +	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
+> +
+> +/*
+> + * The maximum size (into the kernel or returned from the kernel) of an
+> + * attribute value or the buffer used for an attr_list() call.  Larger
+> + * sizes will result in an ERANGE return code.
+> + */
+> +#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
+> +
+> +/*
+> + * Define how lists of attribute names are returned to the user from
+> + * the attr_list() call.  A large, 32bit aligned, buffer is passed in
+> + * along with its size.  We put an array of offsets at the top that each
+> + * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
+> + */
+> +typedef struct attrlist {
+> +	__s32	al_count;	/* number of entries in attrlist */
+> +	__s32	al_more;	/* T/F: more attrs (do call again) */
+> +	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
+> +} attrlist_t;
+> +
+> +/*
+> + * Show the interesting info about one attribute.  This is what the
+> + * al_offset[i] entry points to.
+> + */
+> +typedef struct attrlist_ent {	/* data from attr_list() */
+> +	__u32	a_valuelen;	/* number bytes in value of attr */
+> +	char	a_name[1];	/* attr name (NULL terminated) */
+> +} attrlist_ent_t;
+> +
+> +/*
+> + * Given a pointer to the (char*) buffer containing the attr_list() result,
+> + * and an index, return a pointer to the indicated attribute in the buffer.
+> + */
+> +#define	ATTR_ENTRY(buffer, index)		\
+> +	((attrlist_ent_t *)			\
+> +	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
+> +
+> +/*
+> + * Kernel-internal version of the attrlist cursor.
+> + */
+> +typedef struct attrlist_cursor_kern {
+> +	__u32	hashval;	/* hash value of next entry to add */
+> +	__u32	blkno;		/* block containing entry (suggestion) */
+> +	__u32	offset;		/* offset in list of equal-hashvals */
+> +	__u16	pad1;		/* padding to match user-level */
+> +	__u8	pad2;		/* padding to match user-level */
+> +	__u8	initted;	/* T/F: cursor has been initialized */
+> +} attrlist_cursor_kern_t;
+> +
+> +
+> +/*========================================================================
+> + * Structure used to pass context around among the routines.
+> + *========================================================================*/
+> +
+> +
+> +/* void; state communicated via *context */
+> +typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
+> +			      unsigned char *, int, int);
+> +
+> +typedef struct xfs_attr_list_context {
+> +	struct xfs_trans		*tp;
+> +	struct xfs_inode		*dp;		/* inode */
+> +	struct attrlist_cursor_kern	*cursor;	/* position in list */
+> +	char				*alist;		/* output buffer */
+> +	int				seen_enough;	/* T/F: seen enough of list? */
+> +	ssize_t				count;		/* num used entries */
+> +	int				dupcnt;		/* count dup hashvals seen */
+> +	int				bufsize;	/* total buffer size */
+> +	int				firstu;		/* first used byte in buffer */
+> +	int				flags;		/* from VOP call */
+> +	int				resynch;	/* T/F: resynch with cursor */
+> +	put_listent_func_t		put_listent;	/* list output fmt function */
+> +	int				index;		/* index into output buffer */
+> +} xfs_attr_list_context_t;
+> +
+> +
+> +/*========================================================================
+> + * Function prototypes for the kernel.
+> + *========================================================================*/
+> +
+> +/*
+> + * Overall external interface routines.
+> + */
+> +int xfs_attr_inactive(struct xfs_inode *dp);
+> +int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
+> +int xfs_attr_list_int(struct xfs_attr_list_context *);
+> +int xfs_inode_hasattr(struct xfs_inode *ip);
+> +int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+> +int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+> +		 unsigned char *value, int *valuelenp, int flags);
+> +int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+> +		 unsigned char *value, int valuelen, int flags);
+> +int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+> +int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+> +		  int flags, struct attrlist_cursor_kern *cursor);
+> +
+> +
+> +#endif	/* __XFS_ATTR_H__ */
+> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+> deleted file mode 100644
+> index d07bf27..0000000
+> --- a/fs/xfs/xfs_attr.h
+> +++ /dev/null
+> @@ -1,160 +0,0 @@
+> -/*
+> - * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
+> - * All Rights Reserved.
+> - *
+> - * This program is free software; you can redistribute it and/or
+> - * modify it under the terms of the GNU General Public License as
+> - * published by the Free Software Foundation.
+> - *
+> - * This program is distributed in the hope that it would be useful,
+> - * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> - * GNU General Public License for more details.
+> - *
+> - * You should have received a copy of the GNU General Public License
+> - * along with this program; if not, write the Free Software Foundation,
+> - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> - */
+> -#ifndef __XFS_ATTR_H__
+> -#define	__XFS_ATTR_H__
+> -
+> -struct xfs_inode;
+> -struct xfs_da_args;
+> -struct xfs_attr_list_context;
+> -
+> -/*
+> - * Large attribute lists are structured around Btrees where all the data
+> - * elements are in the leaf nodes.  Attribute names are hashed into an int,
+> - * then that int is used as the index into the Btree.  Since the hashval
+> - * of an attribute name may not be unique, we may have duplicate keys.
+> - * The internal links in the Btree are logical block offsets into the file.
+> - *
+> - * Small attribute lists use a different format and are packed as tightly
+> - * as possible so as to fit into the literal area of the inode.
+> - */
+> -
+> -/*========================================================================
+> - * External interfaces
+> - *========================================================================*/
+> -
+> -
+> -#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
+> -#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
+> -#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
+> -#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
+> -#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
+> -#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
+> -
+> -#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+> -#define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
+> -
+> -#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
+> -
+> -#define XFS_ATTR_FLAGS \
+> -	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
+> -	{ ATTR_ROOT,		"ROOT" }, \
+> -	{ ATTR_TRUST,		"TRUST" }, \
+> -	{ ATTR_SECURE,		"SECURE" }, \
+> -	{ ATTR_CREATE,		"CREATE" }, \
+> -	{ ATTR_REPLACE,		"REPLACE" }, \
+> -	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
+> -	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
+> -	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
+> -
+> -/*
+> - * The maximum size (into the kernel or returned from the kernel) of an
+> - * attribute value or the buffer used for an attr_list() call.  Larger
+> - * sizes will result in an ERANGE return code.
+> - */
+> -#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
+> -
+> -/*
+> - * Define how lists of attribute names are returned to the user from
+> - * the attr_list() call.  A large, 32bit aligned, buffer is passed in
+> - * along with its size.  We put an array of offsets at the top that each
+> - * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
+> - */
+> -typedef struct attrlist {
+> -	__s32	al_count;	/* number of entries in attrlist */
+> -	__s32	al_more;	/* T/F: more attrs (do call again) */
+> -	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
+> -} attrlist_t;
+> -
+> -/*
+> - * Show the interesting info about one attribute.  This is what the
+> - * al_offset[i] entry points to.
+> - */
+> -typedef struct attrlist_ent {	/* data from attr_list() */
+> -	__u32	a_valuelen;	/* number bytes in value of attr */
+> -	char	a_name[1];	/* attr name (NULL terminated) */
+> -} attrlist_ent_t;
+> -
+> -/*
+> - * Given a pointer to the (char*) buffer containing the attr_list() result,
+> - * and an index, return a pointer to the indicated attribute in the buffer.
+> - */
+> -#define	ATTR_ENTRY(buffer, index)		\
+> -	((attrlist_ent_t *)			\
+> -	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
+> -
+> -/*
+> - * Kernel-internal version of the attrlist cursor.
+> - */
+> -typedef struct attrlist_cursor_kern {
+> -	__u32	hashval;	/* hash value of next entry to add */
+> -	__u32	blkno;		/* block containing entry (suggestion) */
+> -	__u32	offset;		/* offset in list of equal-hashvals */
+> -	__u16	pad1;		/* padding to match user-level */
+> -	__u8	pad2;		/* padding to match user-level */
+> -	__u8	initted;	/* T/F: cursor has been initialized */
+> -} attrlist_cursor_kern_t;
+> -
+> -
+> -/*========================================================================
+> - * Structure used to pass context around among the routines.
+> - *========================================================================*/
+> -
+> -
+> -/* void; state communicated via *context */
+> -typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
+> -			      unsigned char *, int, int);
+> -
+> -typedef struct xfs_attr_list_context {
+> -	struct xfs_trans		*tp;
+> -	struct xfs_inode		*dp;		/* inode */
+> -	struct attrlist_cursor_kern	*cursor;	/* position in list */
+> -	char				*alist;		/* output buffer */
+> -	int				seen_enough;	/* T/F: seen enough of list? */
+> -	ssize_t				count;		/* num used entries */
+> -	int				dupcnt;		/* count dup hashvals seen */
+> -	int				bufsize;	/* total buffer size */
+> -	int				firstu;		/* first used byte in buffer */
+> -	int				flags;		/* from VOP call */
+> -	int				resynch;	/* T/F: resynch with cursor */
+> -	put_listent_func_t		put_listent;	/* list output fmt function */
+> -	int				index;		/* index into output buffer */
+> -} xfs_attr_list_context_t;
+> -
+> -
+> -/*========================================================================
+> - * Function prototypes for the kernel.
+> - *========================================================================*/
+> -
+> -/*
+> - * Overall external interface routines.
+> - */
+> -int xfs_attr_inactive(struct xfs_inode *dp);
+> -int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
+> -int xfs_attr_list_int(struct xfs_attr_list_context *);
+> -int xfs_inode_hasattr(struct xfs_inode *ip);
+> -int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+> -int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+> -		 unsigned char *value, int *valuelenp, int flags);
+> -int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+> -		 unsigned char *value, int valuelen, int flags);
+> -int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+> -int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+> -		  int flags, struct attrlist_cursor_kern *cursor);
+> -
+> -
+> -#endif	/* __XFS_ATTR_H__ */
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
