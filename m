@@ -1,131 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11721 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38804 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750866AbeEDLcA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 07:32:00 -0400
-Date: Fri, 4 May 2018 07:31:58 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0.1/13] xfs: release new dquot buffer on defer_finish
- error
-Message-ID: <20180504113157.GA26217@bfoster.bfoster>
-References: <152506698177.21553.13500862866416804148.stgit@magnolia>
- <20180503175343.GF4127@magnolia>
+        id S1751923AbeEGQoC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 May 2018 12:44:02 -0400
+Subject: Re: [PATCH] xfs_repair: check and repair quota metadata
+References: <9e494d70-53bd-db81-c118-73ef7eaad667@redhat.com>
+ <20180507163242.GZ26569@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <bee0bca3-fb1c-13a0-0dfb-ba1cd66662be@redhat.com>
+Date: Mon, 7 May 2018 11:44:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180503175343.GF4127@magnolia>
+In-Reply-To: <20180507163242.GZ26569@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, May 03, 2018 at 10:53:43AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
-> allocating a new dquot record", we allocate a new dquot block, grab a
-> buffer to initialize it, and return the locked initialized dquot buffer
-> to the caller for further in-core dquot initialization.  Unfortunately,
-> if the _bmap_finish errored out, _qm_dqalloc would also error out
-> without bothering to free the (locked) buffer.  Leaking a locked buffer
-> caused hangs in generic/388 when quotas are enabled.
-> 
-> Furthermore, the _bmap_finish -> _defer_finish conversion in
-> 310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
-> xfs_defer_*") failed to observe that the buffer was held going into
-> _defer_finish and therefore failed to notice that the buffer lock is
-> /not/ maintained afterwards.  Now that we can bjoin a buffer to a
-> defer_ops, use this mechanism to ensure that the buffer stays locked
-> across the _defer_finish.  Release the holds and locks on the buffer as
-> appropriate if we have to error out.
-> 
-> There is a subtlety here for the caller in that the buffer emerges
-> locked and held to the transaction, so if the _trans_commit fails we
-> have to release the buffer explicitly.  This fixes the unmount hang
-> in generic/388 when quotas are enabled.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_dquot.c |   48 +++++++++++++++++++++++++++---------------------
->  1 file changed, 27 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index a7daef9e16bf..4c39d8632230 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -362,33 +362,39 @@ xfs_qm_dqalloc(
->  			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
->  
->  	/*
-> -	 * xfs_defer_finish() may commit the current transaction and
-> -	 * start a second transaction if the freelist is not empty.
-> +	 * Hold the buffer and join it to the dfops so that we'll still own
-> +	 * the buffer when we return to the caller.  The buffer disposal on
-> +	 * error must be paid attention to very carefully, as it has been
-> +	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
-> +	 * code when allocating a new dquot record" in 2005, and the later
-> +	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
-> +	 * the buffer locked across the _defer_finish call.  We can now do
-> +	 * this correctly with xfs_defer_bjoin.
->  	 *
-> -	 * Since we still want to modify this buffer, we need to
-> -	 * ensure that the buffer is not released on commit of
-> -	 * the first transaction and ensure the buffer is added to the
-> -	 * second transaction.
-> +	 * Above, we allocated a disk block for the dquot information and
-> +	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
-> +	 * the buffer is still locked to *tpp, so we must _bhold_release and
-> +	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
-> +	 * transaction is gone but the new buffer is not joined or held to any
-> +	 * transaction, so we must _buf_relse it.
->  	 *
-> -	 * If there is only one transaction then don't stop the buffer
-> -	 * from being released when it commits later on.
-> +	 * If everything succeeds, the caller of this function is returned a
-> +	 * buffer that is locked, held, and joined to the transaction.  If the
-> +	 * transaction commit fails (in the caller) the caller must unlock the
-> +	 * buffer manually.
+On 5/7/18 11:32 AM, Darrick J. Wong wrote:
 
-If the buffer is held due to the xfs_defer_bjoin(), doesn't that mean
-that the caller has to ultimately release it even after successful
-transaction commit (assuming we don't roll the transaction again
-somewhere)? I see we have an xfs_trans_brelse() up in xfs_qm_dqread(),
-but it looks like that only clears the hold if the buffer isn't logged
-in the tx. Hm?
+>> diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
+>> index bb1b13a9..067475e2 100644
+>> --- a/libxfs/xfs_quota_defs.h
+>> +++ b/libxfs/xfs_quota_defs.h
+>> @@ -30,6 +30,8 @@
+>>  typedef uint64_t	xfs_qcnt_t;
+>>  typedef uint16_t	xfs_qwarncnt_t;
+>>  
+>> +#define XFS_DQUOT_CLUSTER_SIZE_FSB (xfs_filblks_t)1
+> 
+> Requires a kernel patch, right? :)
 
-Brian
+oh derp, I'll move that elsewhere, maybe the non-priv userspace
+libxfs header, I'll see.
 
->  	 */
-> -
-> -	xfs_trans_bhold(tp, bp);
-> -
-> +	xfs_trans_bhold(*tpp, bp);
-> +	error = xfs_defer_bjoin(&dfops, bp);
-> +	if (error) {
-> +		xfs_trans_bhold_release(*tpp, bp);
-> +		xfs_trans_brelse(*tpp, bp);
-> +		goto error1;
-> +	}
->  	error = xfs_defer_finish(tpp, &dfops);
-> -	if (error)
-> +	if (error) {
-> +		xfs_buf_relse(bp);
->  		goto error1;
-> -
-> -	/* Transaction was committed? */
-> -	if (*tpp != tp) {
-> -		tp = *tpp;
-> -		xfs_trans_bjoin(tp, bp);
-> -	} else {
-> -		xfs_trans_bhold_release(tp, bp);
->  	}
-> -
-> -	*O_bpp = bp;
->  	return 0;
->  
->  error1:
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>> diff --git a/repair/incore.h b/repair/incore.h
+>> index fd66084f..78a0ed30 100644
+>> --- a/repair/incore.h
+>> +++ b/repair/incore.h
+>> @@ -222,13 +222,16 @@ int		count_bcnt_extents(xfs_agnumber_t);
+>>  #define XR_INO_RTDATA	2		/* realtime file */
+>>  #define XR_INO_RTBITMAP	3		/* realtime bitmap inode */
+>>  #define XR_INO_RTSUM	4		/* realtime summary inode */
+>> -#define XR_INO_DATA	5		/* regular file */
+>> -#define XR_INO_SYMLINK	6		/* symlink */
+>> -#define XR_INO_CHRDEV	7		/* character device */
+>> -#define XR_INO_BLKDEV	8		/* block device */
+>> -#define XR_INO_SOCK	9		/* socket */
+>> -#define XR_INO_FIFO	10		/* fifo */
+>> -#define XR_INO_MOUNTPOINT 11		/* mountpoint */
+>> +#define XR_INO_UQUOTA	5		/* user quota inode */
+>> +#define XR_INO_GQUOTA	6		/* group quota inode */
+>> +#define XR_INO_PQUOTA	7		/* project quota inode */
+> 
+> /me wonders, is there an advantage/requirement to insert the three quota
+> inode types in the middle of the range instead of tacking them on the
+> end?
+> 
+> Anyway the rest mostly looks ok to me.
+
+Probably not, I was grouping the internal special inodes together IIRC, but
+happy just move them to the end if that's preferable.
+
+-Eric
+
