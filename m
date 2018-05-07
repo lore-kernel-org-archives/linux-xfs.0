@@ -1,96 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:42475 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752699AbeEGPvG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 11:51:06 -0400
-Received: by mail-io0-f176.google.com with SMTP id a10-v6so34518047ioc.9
-        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 08:51:06 -0700 (PDT)
-Subject: Re: [PATCH 3/3] blk-wbt: throttle discards like background writes
-References: <1525360843-6504-1-git-send-email-axboe@kernel.dk>
- <1525360843-6504-4-git-send-email-axboe@kernel.dk>
- <20180507095746.GC25210@lst.de>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:43083 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750934AbeEGQNk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 12:13:40 -0400
+Received: by mail-io0-f195.google.com with SMTP id t23-v6so34638336ioc.10
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 09:13:40 -0700 (PDT)
 From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <d2657561-8c24-9a29-6aa1-01e6548a0d31@kernel.dk>
-Date: Mon, 7 May 2018 09:51:03 -0600
-MIME-Version: 1.0
-In-Reply-To: <20180507095746.GC25210@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Subject: [PATCHSET v2 0/4] Add throttling for discards
+Date: Mon,  7 May 2018 10:13:31 -0600
+Message-Id: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com
+To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dchinner@redhat.com, hch@lst.de
 
-On 5/7/18 3:57 AM, Christoph Hellwig wrote:
->> -static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_kswapd)
->> +static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_trim,
->> +					  bool is_kswapd)
->>  {
->> -	return &rwb->rq_wait[is_kswapd];
->> +	if (is_trim)
->> +		return &rwb->rq_wait[WBT_REQ_DISCARD];
->> +	else if (is_kswapd)
->> +		return &rwb->rq_wait[WBT_REQ_KSWAPD];
->> +	else
->> +		return &rwb->rq_wait[WBT_REQ_BG];
->>  }
-> 
-> Wouldn't it be more useful to pass a enum wbt_flag here?
-> 
-> Or just have a wbt_flag_to_wait_idx helper and do the array indexing
-> in the callers?
+I implemented support for discards in blk-wbt, so we treat them like
+background writes. If we have competing foreground IO, then we may
+throttle discards. Otherwise they should run at full speed.
 
-It would be cleaner, but we don't have wbt_flag everywhere we need it.
-Though I guess we could swap the masking in wbt_wait() and do it
-before the __wbt_wait() call, and just use that. Since we only do
-the indexing in that one spot, I don't think we should add a helper.
+Ran a quick local test case on a NVMe device. The test case here is
+doing reads from a file, while other files are being delete. File
+system is XFS. Three separate runs:
 
-> 
->>  {
->>  	const int op = bio_op(bio);
->>  
->> -	/*
->> -	 * If not a WRITE, do nothing
->> -	 */
->> -	if (op != REQ_OP_WRITE)
->> -		return false;
->> +	if (op == REQ_OP_WRITE) {
->> +		/*
->> +		 * Don't throttle WRITE_ODIRECT
->> +		 */
->> +		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
->> +		    (REQ_SYNC | REQ_IDLE))
->> +			return false;
->>  
->> -	/*
->> -	 * Don't throttle WRITE_ODIRECT
->> -	 */
->> -	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
->> -		return false;
->> +		return true;
->> +	} else if (op == REQ_OP_DISCARD)
->> +		return true;
-> 
-> what about:
-> 
-> 	switch (bio_op(bio)) {
-> 	case REQ_OP_WRITE:
-> 		/*
-> 		 * Don't throttle WRITE_ODIRECT
-> 		 */
-> 		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
-> 		    (REQ_SYNC | REQ_IDLE))
-> 			return false;
-> 		/*FALLTHROUGH*/
-> 	case REQ_OP_DISCARD:
-> 		return true;
-> 	default:
-> 		return false;
+1) 'justreader' is just running the reader workload by itself.
+2) 'nothrottle' is running the reader with the unlinks on the stock
+   kernel.
+3) 'throttled' is running the reader with the unlinks with the patches
+   applied.
 
-Sure, I can do that. I'll spin a v2.
+The fio run logs latencies in windows of 50msec, logging only the
+worst latency seen in that window:
 
--- 
-Jens Axboe
+[read]
+filename=file0
+rw=randread
+bs=4k
+direct=1
+ioengine=libaio
+iodepth=8
+write_lat_log=read_lat
+log_avg_msec=50
+log_max_value=1
+
+Graph of the latencies here: http://kernel.dk/wbt-discard.jpg
+
+As you can see, with the throttling, the latencies and performance is
+the same as not having the unlinks running. They finish within 100msec
+of each other, after having read 10G of data. Without the throttling
+and unlinks running, we see spikes that are almost an order of magnitude
+worse. The reader also takes 1 second longer to complete. 322MB/sec vs
+313MB/sec. It's also visible in the higher Pxx. Here's the throttled
+end of the percentiles:
+
+     | 99.00th=[  145], 99.50th=[  153], 99.90th=[  180], 99.95th=[  198],
+     | 99.99th=[  889]
+
+and here's the unthrottled equivalent:
+
+     | 99.00th=[  145], 99.50th=[  155], 99.90th=[  188], 99.95th=[  322],
+     | 99.99th=[ 8586]
+
+
+Changes since v1:
+
+- Pass in enum wbt_flags for get_rq_wait()
+- Turn wbt_should_throttle() into a switch statement
+
+ blk-lib.c  |    7 +++---
+ blk-stat.h |    6 ++---
+ blk-wbt.c  |   70 ++++++++++++++++++++++++++++++++++++-------------------------
+ blk-wbt.h  |    8 +++++-
+ 4 files changed, 55 insertions(+), 36 deletions(-)
 
