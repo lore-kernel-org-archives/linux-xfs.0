@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49266 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52364 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752085AbeEGSLk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1752230AbeEGSLk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 7 May 2018 14:11:40 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+Received: from smtp.corp.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.26])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0593F821C7
+        by mx1.redhat.com (Postfix) with ESMTPS id 1B8353002F93
         for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:40 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C2E08601A5
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DE6F731320A2
         for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:39 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/4] xfs: skip online discard during eofblocks trims
-Date: Mon,  7 May 2018 14:11:36 -0400
-Message-Id: <20180507181138.43250-3-bfoster@redhat.com>
+Subject: [PATCH RFC 4/4] xfs: convert speculative preallocation to unwritten extents
+Date: Mon,  7 May 2018 14:11:38 -0400
+Message-Id: <20180507181138.43250-5-bfoster@redhat.com>
 In-Reply-To: <20180507181138.43250-1-bfoster@redhat.com>
 References: <20180507181138.43250-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,153 +22,185 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We've had reports of online discard operations being sent from XFS
-on write-only workloads. These discards occur as a result of
-eofblocks trims that can occur after a large file copy completes.
+XXX: This is hacky/racy/broken and for educational purposes only.
+     DO NOT APPLY.
 
-These discards are slightly confusing for users who might be paying
-close attention to online discards (i.e., vdo) due to performance
-sensitivity. They also happen to be spurious because freed post-eof
-blocks by definition have not been written to during the current
-allocation cycle.
+Post-eof blocks are typically converted from delalloc to real extent
+allocations when some file-mapped portion of the extent is converted
+(at writeback time). When this occurs, sample the current size of
+the file and convert any post-eof portion of the extent to an
+unwritten extent.
 
-Update xfs_free_eofblocks() to skip discards that are purely
-attributed to eofblocks trims. This cuts down the number of spurious
-discards that may occur on write-only workloads due to normal
-preallocation activity.
+The advantages of this behavior are:
 
-Note that discards of post-eof extents can still occur from other
-codepaths that do not isolate handling of post-eof blocks from those
-within eof. For example, file unlinks and truncates may still cause
-discards for any file blocks affected by the operation.
+- Eliminates the only user of XFS_BMAPI_NODISCARD (eofblocks).
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+- Reduces the window of stale data exposure associated with a
+  filesystem crash during writeback. Incomplete writeback over
+  previously converted speculative preallocation leaves behind
+  unwritten extents rather than previous content of the blocks.
+
+- Dramatically reduces the overhead of block zeroing during writes
+  that jump over eof (and eofblocks). These writes currently issue
+  buffered writes over all preallocated blocks, which consumes time,
+  bandwidth and memory. For example, this patch improves the
+  performance of the following (on a low-end vm) from ~29s to <1s:
+
+	xfs_io -fc "falloc 0 8g"
+		-c "pwrite 8g 4k"
+		-c fsync
+		-c "pwrite 16g 4k" <file>
+
+  The above may also facilitate further optimizations such as
+  invoking a selective/partial writeback @ EOF in
+  xfs_file_aio_write_checks() to proactively convert preallocation.
+
+The problems with this patch are that it is quite hacky and racy
+with respect to buffered writes that may occur over preallocated
+extents in parallel with writeback. This requires careful attention
+to i_size as well as some hacks to ensure that delalloc page buffers
+are handled properly when the underlying extent may have been
+converted after the page was allocated (observed during generic/032
+and generic/464). Finally, the separate conversion means that the
+operation requires optimistic transaction block reservation rather
+than relying on indlen blocks originally attached to the delalloc
+extents.
+
+The broader goal in this area of the writeback code is the
+elimination of buffer_heads entirely, replaced with reliance on
+underlying extent state, and unconditional conversion of all
+delalloc extents to unwritten. This closes the stale data exposure
+problem completely and eliminates the need for the selective
+post-eof hack implemented here.
+
+As a result, this patch was an experiment to document the complexity
+involved with and benefits of selective unwritten conversion of
+post-eof blocks. The fact that it still requires mucking around with
+page buffer handling suggests that in its current form, it's
+probably best to defer this to a broader writeback rework that
+treats all delalloc blocks consistently.
+
+Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_attr_inactive.c |  3 ++-
- fs/xfs/xfs_bmap_util.c     |  2 +-
- fs/xfs/xfs_inode.c         | 11 ++++++++---
- fs/xfs/xfs_inode.h         |  2 +-
- fs/xfs/xfs_iops.c          |  3 ++-
- fs/xfs/xfs_qm_syscalls.c   |  2 +-
- 6 files changed, 15 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_aops.c  |  3 +++
+ fs/xfs/xfs_iomap.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 65 insertions(+)
 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 52818ea2eb50..639311e60c5d 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -434,7 +434,8 @@ xfs_attr_inactive(
- 		if (error)
- 			goto out_cancel;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0ab824f574ed..3f507125d623 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -979,6 +979,9 @@ xfs_writepage_map(
+ 					     wpc->io_type);
+ 			if (error)
+ 				goto out;
++			if (wpc->io_type == XFS_IO_DELALLOC &&
++			    wpc->imap.br_state == XFS_EXT_UNWRITTEN)
++				wpc->io_type = XFS_IO_UNWRITTEN;
+ 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+ 							 offset);
+ 		}
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 046469fcc1b8..670404025ece 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -657,6 +657,54 @@ xfs_file_iomap_begin_delay(
+ 	return error;
+ }
  
--		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
-+		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0,
-+					      false);
- 		if (error)
- 			goto out_cancel;
- 	}
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 8cd8c412f52d..7b95d8976488 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -872,7 +872,7 @@ xfs_free_eofblocks(
- 		 * may be full of holes (ie NULL files bug).
- 		 */
- 		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK,
--					      XFS_ISIZE(ip));
-+					      XFS_ISIZE(ip), true);
- 		if (error) {
- 			/*
- 			 * If we get an error at this point we simply don't
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 2b70c8b4cee2..03b2b7099f90 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1538,7 +1538,8 @@ xfs_itruncate_extents(
- 	struct xfs_trans	**tpp,
- 	struct xfs_inode	*ip,
- 	int			whichfork,
--	xfs_fsize_t		new_size)
-+	xfs_fsize_t		new_size,
-+	bool			skip_discard)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp = *tpp;
-@@ -1549,6 +1550,7 @@ xfs_itruncate_extents(
- 	xfs_filblks_t		unmap_len;
- 	int			error = 0;
- 	int			done = 0;
-+	int			flags = 0;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
-@@ -1561,6 +1563,9 @@ xfs_itruncate_extents(
- 
- 	trace_xfs_itruncate_extents_start(ip, new_size);
- 
-+	if (skip_discard)
-+		flags |= XFS_BMAPI_NODISCARD;
++/*
++ * Convert any post-eof blocks that are part of the current allocation to
++ * unwritten extents. This optimizations prevents unnecessary online discards of
++ * speculative prealloc on file removal or truncate. It also prevents zeroing on
++ * file extending writes that might skip over preallocated blocks.
++ *
++ * NOTE: This can be removed once we finally kill off buffer_heads and convert
++ * all delalloc blocks to unwritten by default.
++ */
++static int
++xfs_iomap_convert_eofblocks(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	struct xfs_bmbt_irec	*imap,
++	xfs_fileoff_t		end_fsb,
++	xfs_fsblock_t		*first_block,
++	struct xfs_defer_ops	*dfops,
++	xfs_fileoff_t		*conv_fsb)
++{
++	struct xfs_mount	*mp	= ip->i_mount;
++	struct xfs_bmbt_irec	crec	= *imap;
++	int			nimaps	= 1;
++	int			error;
++	int64_t			nres;
 +
- 	/*
- 	 * Since it is possible for space to become allocated beyond
- 	 * the end of the file (in a crash where the space is allocated
-@@ -1581,7 +1586,7 @@ xfs_itruncate_extents(
- 		xfs_defer_init(&dfops, &first_block);
- 		error = xfs_bunmapi(tp, ip,
- 				    first_unmap_block, unmap_len,
--				    xfs_bmapi_aflag(whichfork),
-+				    xfs_bmapi_aflag(whichfork) | flags,
- 				    XFS_ITRUNC_MAX_EXTENTS,
- 				    &first_block, &dfops,
- 				    &done);
-@@ -1743,7 +1748,7 @@ xfs_inactive_truncate(
- 	ip->i_d.di_size = 0;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	/* check for post-eof blocks, nothing to do there are none */
++	xfs_trim_extent(&crec, end_fsb, crec.br_blockcount);
++	if (!crec.br_blockcount || crec.br_blockcount == imap->br_blockcount)
++		return 0;
++	ASSERT(crec.br_state == XFS_EXT_NORM);
++
++	/* XXX: transaction hack */
++	nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
++	error = xfs_mod_fdblocks(tp->t_mountp, -nres, false);
++	if (error)
++		return error == -ENOSPC ? 0 : error;
++	tp->t_blk_res += nres;
++
++	*conv_fsb = crec.br_startoff;
++
++	error = xfs_bmapi_write(tp, ip, crec.br_startoff, crec.br_blockcount,
++				XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT,
++				first_block, nres, &crec, &nimaps, dfops);
++	if (error)
++		return error;
++	return 0;
++}
++
+ /*
+  * Pass in a delayed allocate extent, convert it to real extents;
+  * return to the caller the extent we create which maps on top of
+@@ -677,6 +725,7 @@ xfs_iomap_write_allocate(
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb, last_block;
+ 	xfs_fileoff_t	end_fsb, map_start_fsb;
++	xfs_fileoff_t	conv_fsb;
+ 	xfs_fsblock_t	first_block;
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_filblks_t	count_fsb;
+@@ -712,6 +761,7 @@ xfs_iomap_write_allocate(
+ 		 * but before our buffer starts.
+ 		 */
+ 		nimaps = 0;
++		conv_fsb = NULLFILEOFF;
+ 		while (nimaps == 0) {
+ 			nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+ 			/*
+@@ -785,6 +835,11 @@ xfs_iomap_write_allocate(
+ 						count_fsb, flags, &first_block,
+ 						nres, imap, &nimaps,
+ 						&dfops);
++			/* convert any speculative prealloc in this mapping */
++			if (!error && nimaps)
++				error = xfs_iomap_convert_eofblocks(tp, ip,
++						imap, end_fsb, &first_block, &dfops,
++						&conv_fsb);
+ 			if (error)
+ 				goto trans_cancel;
  
--	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
-+	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0, false);
- 	if (error)
- 		goto error_trans_cancel;
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1eebc53df7d7..b7877692ce4b 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -416,7 +416,7 @@ uint		xfs_ip2xflags(struct xfs_inode *);
- int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
- 			   struct xfs_defer_ops *);
- int		xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
--				      int, xfs_fsize_t);
-+				      int, xfs_fsize_t, bool);
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
- 
- void		xfs_iunpin_wait(xfs_inode_t *);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a3ed3c811dfa..fee5fb4b45de 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -966,7 +966,8 @@ xfs_setattr_size(
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	if (newsize <= oldsize) {
--		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, newsize);
-+		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, newsize,
-+					      false);
- 		if (error)
- 			goto out_trans_cancel;
- 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 9cb5c381b01c..de498691d84a 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -248,7 +248,7 @@ xfs_qm_scall_trunc_qfile(
- 	ip->i_d.di_size = 0;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
--	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
-+	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0, false);
- 	if (error) {
- 		xfs_trans_cancel(tp);
- 		goto out_unlock;
+@@ -809,6 +864,13 @@ xfs_iomap_write_allocate(
+ 		if ((offset_fsb >= imap->br_startoff) &&
+ 		    (offset_fsb < (imap->br_startoff +
+ 				   imap->br_blockcount))) {
++			if (conv_fsb != NULLFILEOFF) {
++				xfs_trim_extent(imap, imap->br_startoff,
++						conv_fsb - imap->br_startoff);
++				ASSERT(offset_fsb >= imap->br_startoff &&
++				       offset_fsb < (imap->br_startoff +
++						     imap->br_blockcount));
++			}
+ 			XFS_STATS_INC(mp, xs_xstrat_quick);
+ 			return 0;
+ 		}
 -- 
 2.14.3
 
