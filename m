@@ -1,196 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42160 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42154 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751926AbeEGMRF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 May 2018 08:17:05 -0400
-Date: Mon, 7 May 2018 08:17:03 -0400
+        id S1751926AbeEGMRJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 May 2018 08:17:09 -0400
+Date: Mon, 7 May 2018 08:17:07 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 03/10] xfs: add tracing to high level transaction
- operations
-Message-ID: <20180507121702.GD38916@bfoster.bfoster>
+Subject: Re: [PATCH 04/10] xfs: adder caller IP to xfs_defer* tracepoints
+Message-ID: <20180507121706.GE38916@bfoster.bfoster>
 References: <20180502080157.11386-1-david@fromorbit.com>
- <20180502080157.11386-4-david@fromorbit.com>
+ <20180502080157.11386-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180502080157.11386-4-david@fromorbit.com>
+In-Reply-To: <20180502080157.11386-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 02, 2018 at 06:01:50PM +1000, Dave Chinner wrote:
+On Wed, May 02, 2018 at 06:01:51PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Because currently we have no idea what the transaction context we
-> are operating in is, and I need to know that information to track
-> down bugs in multiple log item joins to transactions.
+> So it's clear in the trace where they are being called from.
 > 
 > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_log_cil.c |  1 +
->  fs/xfs/xfs_trace.h   | 37 +++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_trans.c   | 19 ++++++++++++++++++-
->  3 files changed, 56 insertions(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_defer.c | 12 ++++++------
+>  fs/xfs/xfs_trace.h        | 17 +++++++++++------
+>  2 files changed, 17 insertions(+), 12 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index de9da33866eb..8342f4ee83e7 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -1026,6 +1026,7 @@ xfs_log_commit_cil(
->  		*commit_lsn = xc_commit_lsn;
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 087fea02c389..51821af5d653 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -220,7 +220,7 @@ xfs_defer_trans_abort(
+>  {
+>  	struct xfs_defer_pending	*dfp;
 >  
->  	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
-> +	tp->t_ticket = NULL;
->  	xfs_trans_unreserve_and_mod_sb(tp);
+> -	trace_xfs_defer_trans_abort(tp->t_mountp, dop);
+> +	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
+>  
+>  	/* Abort intent items that don't have a done item. */
+>  	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
+> @@ -253,7 +253,7 @@ xfs_defer_trans_roll(
+>  	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
+>  		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
+>  
+> -	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
+> +	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop, _RET_IP_);
+>  
+>  	/* Roll the transaction. */
+>  	error = xfs_trans_roll(tp);
+> @@ -355,7 +355,7 @@ xfs_defer_finish(
+>  
+>  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+>  
+> -	trace_xfs_defer_finish((*tp)->t_mountp, dop);
+> +	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
+>  
+>  	/* Until we run out of pending work to finish... */
+>  	while (xfs_defer_has_unfinished_work(dop)) {
+> @@ -431,7 +431,7 @@ xfs_defer_finish(
+>  	if (error)
+>  		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
+>  	else
+> -		trace_xfs_defer_finish_done((*tp)->t_mountp, dop);
+> +		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
+>  	return error;
+>  }
+>  
+> @@ -447,7 +447,7 @@ xfs_defer_cancel(
+>  	struct list_head		*pwi;
+>  	struct list_head		*n;
+>  
+> -	trace_xfs_defer_cancel(NULL, dop);
+> +	trace_xfs_defer_cancel(NULL, dop, _RET_IP_);
 >  
 >  	/*
+>  	 * Free the pending items.  Caller should already have arranged
+> @@ -532,5 +532,5 @@ xfs_defer_init(
+>  	*fbp = NULLFSBLOCK;
+>  	INIT_LIST_HEAD(&dop->dop_intake);
+>  	INIT_LIST_HEAD(&dop->dop_pending);
+> -	trace_xfs_defer_init(NULL, dop);
+> +	trace_xfs_defer_init(NULL, dop, _RET_IP_);
+>  }
 > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 7f4d961fae12..8136f2280173 100644
+> index 8136f2280173..947ab6e32c18 100644
 > --- a/fs/xfs/xfs_trace.h
 > +++ b/fs/xfs/xfs_trace.h
-> @@ -3346,6 +3346,43 @@ TRACE_EVENT(xfs_trans_resv_calc,
->  		  __entry->logflags)
->  );
+> @@ -2243,30 +2243,35 @@ struct xfs_defer_pending;
+>  struct xfs_defer_ops;
 >  
-> +DECLARE_EVENT_CLASS(xfs_trans_class,
-> +	TP_PROTO(struct xfs_trans *tp, unsigned long caller_ip),
-> +	TP_ARGS(tp, caller_ip),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(uint32_t, tid)
-> +		__field(uint32_t, flags)
+>  DECLARE_EVENT_CLASS(xfs_defer_class,
+> -	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop),
+> -	TP_ARGS(mp, dop),
+> +	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop,
+> +		 unsigned long caller_ip),
+> +	TP_ARGS(mp, dop, caller_ip),
+>  	TP_STRUCT__entry(
+>  		__field(dev_t, dev)
+>  		__field(void *, dop)
+>  		__field(char, committed)
+>  		__field(char, low)
 > +		__field(unsigned long, caller_ip)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = tp->t_mountp->m_super->s_dev;
-> +		__entry->tid = 0;
-> +		if (tp->t_ticket)
-> +			__entry->tid = tp->t_ticket->t_tid;
-> +		__entry->flags = tp->t_flags;
+>  	),
+>  	TP_fast_assign(
+>  		__entry->dev = mp ? mp->m_super->s_dev : 0;
+>  		__entry->dop = dop;
+>  		__entry->committed = dop->dop_committed;
+>  		__entry->low = dop->dop_low;
 > +		__entry->caller_ip = caller_ip;
-> +	),
-> +	TP_printk("dev %d:%d trans %x flags 0x%x caller %pS",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->tid,
-> +		  __entry->flags,
+>  	),
+> -	TP_printk("dev %d:%d ops %p committed %d low %d",
+> +	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->dop,
+>  		  __entry->committed,
+> -		  __entry->low)
+> +		  __entry->low,
 > +		  (char *)__entry->caller_ip)
-> +)
-> +
-> +#define DEFINE_TRANS_EVENT(name) \
-> +DEFINE_EVENT(xfs_trans_class, name, \
-> +	TP_PROTO(struct xfs_trans *tp, unsigned long caller_ip), \
-> +	TP_ARGS(tp, caller_ip))
-> +DEFINE_TRANS_EVENT(xfs_trans_alloc);
-> +DEFINE_TRANS_EVENT(xfs_trans_cancel);
-> +DEFINE_TRANS_EVENT(xfs_trans_commit);
-> +DEFINE_TRANS_EVENT(xfs_trans_dup);
-> +DEFINE_TRANS_EVENT(xfs_trans_free);
-> +DEFINE_TRANS_EVENT(xfs_trans_roll);
-> +DEFINE_TRANS_EVENT(xfs_trans_add_item);
-> +DEFINE_TRANS_EVENT(xfs_trans_free_items);
-> +
->  #endif /* _TRACE_XFS_H */
+>  )
+>  #define DEFINE_DEFER_EVENT(name) \
+>  DEFINE_EVENT(xfs_defer_class, name, \
+> -	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop), \
+> -	TP_ARGS(mp, dop))
+> +	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, \
+> +		 unsigned long caller_ip), \
+> +	TP_ARGS(mp, dop, caller_ip))
 >  
->  #undef TRACE_INCLUDE_PATH
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 33c40788cffa..63c22aa02cd8 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -79,6 +79,7 @@ xfs_trans_free(
->  	xfs_extent_busy_sort(&tp->t_busy);
->  	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
->  
-> +	trace_xfs_trans_free(tp, _RET_IP_);
->  	atomic_dec(&tp->t_mountp->m_active_trans);
->  	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
->  		sb_end_intwrite(tp->t_mountp->m_super);
-> @@ -100,6 +101,8 @@ xfs_trans_dup(
->  {
->  	xfs_trans_t	*ntp;
->  
-> +	trace_xfs_trans_dup(tp, _RET_IP_);
-> +
->  	ntp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
->  
->  	/*
-> @@ -283,6 +286,8 @@ xfs_trans_alloc(
->  		return error;
->  	}
->  
-> +	trace_xfs_trans_alloc(tp, _RET_IP_);
-> +
->  	*tpp = tp;
->  	return 0;
->  }
-> @@ -751,6 +756,7 @@ xfs_trans_add_item(
->  
->  	lip->li_desc = lidp;
->  	set_bit(XFS_LI_TRANS, &lip->li_flags);
-> +	trace_xfs_trans_add_item(tp, _RET_IP_);
->  }
->  
->  STATIC void
-> @@ -785,6 +791,8 @@ xfs_trans_free_items(
->  {
->  	struct xfs_log_item_desc *lidp, *next;
->  
-> +	trace_xfs_trans_free_items(tp, _RET_IP_);
-> +
->  	list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
->  		struct xfs_log_item	*lip = lidp->lid_item;
->  
-> @@ -938,6 +946,8 @@ __xfs_trans_commit(
->  	int			error = 0;
->  	int			sync = tp->t_flags & XFS_TRANS_SYNC;
->  
-> +	trace_xfs_trans_commit(tp, _RET_IP_);
-> +
->  	/*
->  	 * If there is nothing to be logged by the transaction,
->  	 * then unlock all of the items associated with the
-> @@ -993,6 +1003,7 @@ __xfs_trans_commit(
->  		commit_lsn = xfs_log_done(mp, tp->t_ticket, NULL, regrant);
->  		if (commit_lsn == -1 && !error)
->  			error = -EIO;
-> +		tp->t_ticket = NULL;
->  	}
->  	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
->  	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
-> @@ -1024,6 +1035,8 @@ xfs_trans_cancel(
->  	struct xfs_mount	*mp = tp->t_mountp;
->  	bool			dirty = (tp->t_flags & XFS_TRANS_DIRTY);
->  
-> +	trace_xfs_trans_cancel(tp, _RET_IP_);
-> +
->  	/*
->  	 * See if the caller is relying on us to shut down the
->  	 * filesystem.  This happens in paths where we detect
-> @@ -1044,8 +1057,10 @@ xfs_trans_cancel(
->  	xfs_trans_unreserve_and_mod_sb(tp);
->  	xfs_trans_unreserve_and_mod_dquots(tp);
->  
-> -	if (tp->t_ticket)
-> +	if (tp->t_ticket) {
->  		xfs_log_done(mp, tp->t_ticket, NULL, false);
-> +		tp->t_ticket = NULL;
-> +	}
->  
->  	/* mark this thread as no longer being in a transaction */
->  	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-> @@ -1069,6 +1084,8 @@ xfs_trans_roll(
->  	struct xfs_trans_res	tres;
->  	int			error;
->  
-> +	trace_xfs_trans_roll(trans, _RET_IP_);
-> +
->  	/*
->  	 * Copy the critical parameters from one trans to the next.
->  	 */
+>  DECLARE_EVENT_CLASS(xfs_defer_error_class,
+>  	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error),
 > -- 
 > 2.17.0
 > 
