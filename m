@@ -1,77 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35629 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752051AbeEGSLj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 May 2018 14:11:39 -0400
-Received: from smtp.corp.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D0E66C03D46E
-        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:39 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B161231320A2
-        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:39 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/4] xfs: skip unnecessary discards
-Date: Mon,  7 May 2018 14:11:34 -0400
-Message-Id: <20180507181138.43250-1-bfoster@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:48456 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752877AbeEGWfp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 18:35:45 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47MVwBj085061
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:35:45 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2hs5936534-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 22:35:44 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w47MZiAP010131
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:35:44 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w47MZiQN006047
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:35:44 GMT
+Date: Mon, 7 May 2018 15:35:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 12/21] xfs: define parent pointer xattr format
+Message-ID: <20180507223542.GJ11261@magnolia>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-13-git-send-email-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525627494-12873-13-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+On Sun, May 06, 2018 at 10:24:45AM -0700, Allison Henderson wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> We need to define the parent pointer attribute format before we
+> start adding support for it into all the code that needs to use it.
+> The EA format we will use encodes the following information:
+> 
+> 	name={parent inode #, parent inode generation, dirent offset}
+> 	value={dirent filename}
+> 
+> The inode/gen gives all the information we need to reliably identify
+> the parent without requiring child->parent lock ordering, and allows
+> userspace to do pathname component level reconstruction without the
+> kernel ever needing to verify the parent itself as part of ioctl
+> calls.
+> 
+> By using the dirent offset in the EA name, we have a method of
+> knowing the exact parent pointer EA we need to modify/remove in
+> rename/unlink without an unbound EA name search.
+> 
+> By keeping the dirent name in the value, we have enough information
+> to be able to validate and reconstruct damaged directory trees.
+> While the diroffset of a filename alone is not unique enough to
+> identify the child, the {diroffset,filename,child_inode} tuple is
+> sufficient. That is, if the diroffset gets reused and points to a
+> different filename, we can detect that from the contents of EA. If a
+> link of the same name is created, then we can check whether it
+> points at the same inode as the parent EA we current have.
+> 
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+> 	   changed p_ino to xfs_ino_t and p_namelen to uint8_t,
+> 	   moved to xfs_da_format for xfs_dir2_dataptr_t]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_da_format.h | 26 +++++++++++++++++++++++++-
+>  1 file changed, 25 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 9bd2e6b..d1c1221 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -878,11 +878,35 @@ struct xfs_attr3_rmt_hdr {
+>  #define XFS_ATTR3_RMT_BUF_SPACE(mp, bufsize)	\
+>  	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
+>  			sizeof(struct xfs_attr3_rmt_hdr) : 0))
+> -
 
-This series allows XFS to skip discards in a couple cases where they are
-spurious as the associated blocks have not been written to (e.g.,
-eofblocks and unwritten extents). This v1 series incorporates Dave's
-feedback on the previously posted RFC.
+Unrelated/unnecessary whitespace removal?  Otherwise this is still
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Patch 1 defines a new bmapi flag, patch 2 uses the flag for eofblocks
-trim operations, patch 3 skips discards of unwritten extents and patch 4
-is an rfc based on the discussion in the original rfc. While the rfc
-mostly works, it's not suitable for merge from a code standpoint (and
-while I've worked out some kinks, I still think there are lingering
-issues) and so is included only for informational purposes.
+--D
 
-Otherwise, patches 1-3 survive xfstests using a couple thin provisioned
-volumes with '-o discard.' More '-o discard' test runs with alternate
-configurations are in progress, but it hasn't spontaneously combusted to
-this point so I'm posting for review.
 
-Thoughts, reviews, flames appreciated.
-
-Brian
-
-v1:
-- Define and use bmapi flag for eofblocks trims.
-- Separate patch to skip discards of unwritten extents.
-- Various factoring cleanups.
-rfc: https://marc.info/?l=linux-xfs&m=152476598825563&w=2
-
-Brian Foster (4):
-  xfs: add bmapi nodiscard flag
-  xfs: skip online discard during eofblocks trims
-  xfs: don't discard on free of unwritten extents
-  xfs: convert speculative preallocation to unwritten extents
-
- fs/xfs/libxfs/xfs_alloc.c  | 10 +++++---
- fs/xfs/libxfs/xfs_alloc.h  | 27 ++++++++++++++++++--
- fs/xfs/libxfs/xfs_bmap.c   | 17 ++++++++++---
- fs/xfs/libxfs/xfs_bmap.h   | 30 ++++++++++++++++++++--
- fs/xfs/xfs_aops.c          |  3 +++
- fs/xfs/xfs_attr_inactive.c |  3 ++-
- fs/xfs/xfs_bmap_util.c     |  2 +-
- fs/xfs/xfs_extfree_item.c  |  2 +-
- fs/xfs/xfs_inode.c         | 11 +++++---
- fs/xfs/xfs_inode.h         |  2 +-
- fs/xfs/xfs_iomap.c         | 62 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_iops.c          |  3 ++-
- fs/xfs/xfs_qm_syscalls.c   |  2 +-
- fs/xfs/xfs_trans.h         |  3 ++-
- fs/xfs/xfs_trans_extfree.c | 13 +++++++---
- 15 files changed, 165 insertions(+), 25 deletions(-)
-
--- 
-2.14.3
-
+>  /* Number of bytes in a directory block. */
+>  static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
+>  {
+>  	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
+>  }
+>  
+> +/*
+> + * Parent pointer attribute format definition
+> + *
+> + * EA name encodes the parent inode number, generation and the offset of
+> + * the dirent that points to the child inode. The EA value contains the
+> + * same name as the dirent in the parent directory.
+> + */
+> +struct xfs_parent_name_rec {
+> +	__be64  p_ino;
+> +	__be32  p_gen;
+> +	__be32  p_diroffset;
+> +};
+> +
+> +/*
+> + * incore version of the above, also contains name pointers so callers
+> + * can pass/obtain all the parent pointer information in a single structure
+> + */
+> +struct xfs_parent_name_irec {
+> +	xfs_ino_t		p_ino;
+> +	uint32_t		p_gen;
+> +	xfs_dir2_dataptr_t	p_diroffset;
+> +	const char		*p_name;
+> +	uint8_t			p_namelen;
+> +};
+> +
+>  #endif /* __XFS_DA_FORMAT_H__ */
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
