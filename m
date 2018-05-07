@@ -1,200 +1,299 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39812 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751647AbeEHAkR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:40:17 -0400
-Date: Mon, 7 May 2018 17:40:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 13/12] xfs: refactor quota limits initialization
-Message-ID: <20180508004014.GE11261@magnolia>
-References: <152537075334.16676.10600900179473864298.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152537075334.16676.10600900179473864298.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:54500 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752081AbeEGSLk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 May 2018 14:11:40 -0400
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0147B30C809B
+        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:40 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BA2FB30B498D
+        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:39 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/4] xfs: add bmapi nodiscard flag
+Date: Mon,  7 May 2018 14:11:35 -0400
+Message-Id: <20180507181138.43250-2-bfoster@redhat.com>
+In-Reply-To: <20180507181138.43250-1-bfoster@redhat.com>
+References: <20180507181138.43250-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Freed extents are unconditionally discarded when online discard is
+enabled. Define XFS_BMAPI_NODISCARD to allow callers to bypass
+discards when unnecessary. For example, this will be useful for
+eofblocks trimming.
 
-Replace all the if (!error) weirdness with helper functions that follow
-our regular coding practices.
+This patch does not change behavior.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_qm.c |  141 ++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 77 insertions(+), 64 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c  | 10 +++++++---
+ fs/xfs/libxfs/xfs_alloc.h  | 27 +++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_bmap.c   | 16 ++++++++++++----
+ fs/xfs/libxfs/xfs_bmap.h   | 30 ++++++++++++++++++++++++++++--
+ fs/xfs/xfs_extfree_item.c  |  2 +-
+ fs/xfs/xfs_trans.h         |  3 ++-
+ fs/xfs/xfs_trans_extfree.c | 13 +++++++++----
+ 7 files changed, 84 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 90de07c6b7bc..7c9055a57521 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -561,26 +561,87 @@ xfs_qm_set_defquota(
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 4bcc095fe44a..06e4b0c47c01 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2949,18 +2949,20 @@ xfs_free_extent_fix_freelist(
+  * after fixing up the freelist.
+  */
+ int				/* error */
+-xfs_free_extent(
++__xfs_free_extent(
+ 	struct xfs_trans	*tp,	/* transaction pointer */
+ 	xfs_fsblock_t		bno,	/* starting block number of extent */
+ 	xfs_extlen_t		len,	/* length of extent */
+ 	struct xfs_owner_info	*oinfo,	/* extent owner */
+-	enum xfs_ag_resv_type	type)	/* block reservation type */
++	enum xfs_ag_resv_type	type,	/* block reservation type */
++	bool			skip_discard)
  {
- 	xfs_dquot_t		*dqp;
- 	struct xfs_def_quota    *defq;
-+	struct xfs_disk_dquot	*ddqp;
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_buf		*agbp;
+ 	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, bno);
+ 	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, bno);
  	int			error;
++	unsigned int		busy_flags = 0;
  
- 	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
--	if (!error) {
--		xfs_disk_dquot_t        *ddqp = &dqp->q_core;
-+	if (error)
-+		return;
+ 	ASSERT(len != 0);
+ 	ASSERT(type != XFS_AG_RESV_AGFL);
+@@ -2984,7 +2986,9 @@ xfs_free_extent(
+ 	if (error)
+ 		goto err;
  
--		defq = xfs_get_defquota(dqp, qinf);
-+	ddqp = &dqp->q_core;
-+	defq = xfs_get_defquota(dqp, qinf);
+-	xfs_extent_busy_insert(tp, agno, agbno, len, 0);
++	if (skip_discard)
++		busy_flags |= XFS_EXTENT_BUSY_SKIP_DISCARD;
++	xfs_extent_busy_insert(tp, agno, agbno, len, busy_flags);
+ 	return 0;
  
--		/*
--		 * Timers and warnings have been already set, let's just set the
--		 * default limits for this quota type
--		 */
--		defq->bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
--		defq->bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
--		defq->ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
--		defq->isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
--		defq->rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
--		defq->rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
--		xfs_qm_dqdestroy(dqp);
--	}
-+	/*
-+	 * Timers and warnings have been already set, let's just set the
-+	 * default limits for this quota type
-+	 */
-+	defq->bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
-+	defq->bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
-+	defq->ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
-+	defq->isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
-+	defq->rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
-+	defq->rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
-+	xfs_qm_dqdestroy(dqp);
+ err:
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index cbf789ea5a4e..4a8e8dcaf352 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -191,12 +191,35 @@ xfs_alloc_vextent(
+  * Free an extent.
+  */
+ int				/* error */
+-xfs_free_extent(
++__xfs_free_extent(
+ 	struct xfs_trans	*tp,	/* transaction pointer */
+ 	xfs_fsblock_t		bno,	/* starting block number of extent */
+ 	xfs_extlen_t		len,	/* length of extent */
+ 	struct xfs_owner_info	*oinfo,	/* extent owner */
+-	enum xfs_ag_resv_type	type);	/* block reservation type */
++	enum xfs_ag_resv_type	type,	/* block reservation type */
++	bool			skip_discard);
++
++static inline int
++xfs_free_extent(
++	struct xfs_trans	*tp,
++	xfs_fsblock_t		bno,
++	xfs_extlen_t		len,
++	struct xfs_owner_info	*oinfo,
++	enum xfs_ag_resv_type	type)
++{
++	return __xfs_free_extent(tp, bno, len, oinfo, type, false);
 +}
 +
-+/* Initialize quota time limits from the root dquot. */
-+static void
-+xfs_qm_init_timelimits(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qinf)
++static inline int
++xfs_free_extent_nodiscard(
++	struct xfs_trans	*tp,
++	xfs_fsblock_t		bno,
++	xfs_extlen_t		len,
++	struct xfs_owner_info	*oinfo,
++	enum xfs_ag_resv_type	type)
 +{
-+	struct xfs_disk_dquot	*ddqp;
-+	struct xfs_dquot	*dqp;
-+	uint			type;
-+	int			error;
-+
-+	qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-+	qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
-+	qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-+	qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
-+	qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
-+	qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
-+
-+	/*
-+	 * We try to get the limits from the superuser's limits fields.
-+	 * This is quite hacky, but it is standard quota practice.
-+	 *
-+	 * Since we may not have done a quotacheck by this point, just read
-+	 * the dquot without attaching it to any hashtables or lists.
-+	 *
-+	 * Timers and warnings are globally set by the first timer found in
-+	 * user/group/proj quota types, otherwise a default value is used.
-+	 * This should be split into different fields per quota type.
-+	 */
-+	if (XFS_IS_UQUOTA_RUNNING(mp))
-+		type = XFS_DQ_USER;
-+	else if (XFS_IS_GQUOTA_RUNNING(mp))
-+		type = XFS_DQ_GROUP;
-+	else
-+		type = XFS_DQ_PROJ;
-+	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-+	if (error)
-+		return;
-+
-+	ddqp = &dqp->q_core;
-+	/*
-+	 * The warnings and timers set the grace period given to
-+	 * a user or group before he or she can not perform any
-+	 * more writing. If it is zero, a default is used.
-+	 */
-+	qinf->qi_btimelimit = ddqp->d_btimer ?
-+		be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
-+	qinf->qi_itimelimit = ddqp->d_itimer ?
-+		be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
-+	qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
-+		be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
-+	qinf->qi_bwarnlimit = ddqp->d_bwarns ?
-+		be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
-+	qinf->qi_iwarnlimit = ddqp->d_iwarns ?
-+		be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
-+	qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
-+		be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
-+	xfs_qm_dqdestroy(dqp);
- }
++	return __xfs_free_extent(tp, bno, len, oinfo, type, true);
++}
  
- /*
-@@ -592,8 +653,6 @@ xfs_qm_init_quotainfo(
- 	struct xfs_mount	*mp)
+ int				/* error */
+ xfs_alloc_lookup_le(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 040eeda8426f..b171f4185adb 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -542,12 +542,13 @@ xfs_bmap_validate_ret(
+  * The list is maintained sorted (by block number).
+  */
+ void
+-xfs_bmap_add_free(
++__xfs_bmap_add_free(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_defer_ops		*dfops,
+ 	xfs_fsblock_t			bno,
+ 	xfs_filblks_t			len,
+-	struct xfs_owner_info		*oinfo)
++	struct xfs_owner_info		*oinfo,
++	bool				skip_discard)
  {
- 	struct xfs_quotainfo	*qinf;
--	struct xfs_dquot	*dqp;
--	uint			type;
- 	int			error;
+ 	struct xfs_extent_free_item	*new;		/* new element */
+ #ifdef DEBUG
+@@ -574,6 +575,7 @@ xfs_bmap_add_free(
+ 		new->xefi_oinfo = *oinfo;
+ 	else
+ 		xfs_rmap_skip_owner_update(&new->xefi_oinfo);
++	new->xefi_skip_discard = skip_discard;
+ 	trace_xfs_bmap_free_defer(mp, XFS_FSB_TO_AGNO(mp, bno), 0,
+ 			XFS_FSB_TO_AGBNO(mp, bno), len);
+ 	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_FREE, &new->xefi_list);
+@@ -5104,9 +5106,15 @@ xfs_bmap_del_extent_real(
+ 			error = xfs_refcount_decrease_extent(mp, dfops, del);
+ 			if (error)
+ 				goto done;
+-		} else
+-			xfs_bmap_add_free(mp, dfops, del->br_startblock,
++		} else {
++			if (bflags & XFS_BMAPI_NODISCARD)
++				xfs_bmap_add_free_nodiscard(mp, dfops,
++					del->br_startblock, del->br_blockcount,
++					NULL);
++			else
++				xfs_bmap_add_free(mp, dfops, del->br_startblock,
+ 					del->br_blockcount, NULL);
++		}
+ 	}
  
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-@@ -626,53 +685,7 @@ xfs_qm_init_quotainfo(
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 2b766b37096d..d8832e049636 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -68,6 +68,7 @@ struct xfs_extent_free_item
+ 	xfs_extlen_t		xefi_blockcount;/* number of blocks in extent */
+ 	struct list_head	xefi_list;
+ 	struct xfs_owner_info	xefi_oinfo;	/* extent owner */
++	bool			xefi_skip_discard;
+ };
  
- 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+ #define	XFS_BMAP_MAX_NMAP	4
+@@ -116,6 +117,9 @@ struct xfs_extent_free_item
+ /* Only convert unwritten extents, don't allocate new blocks */
+ #define XFS_BMAPI_CONVERT_ONLY	0x800
  
--	/*
--	 * We try to get the limits from the superuser's limits fields.
--	 * This is quite hacky, but it is standard quota practice.
--	 *
--	 * Since we may not have done a quotacheck by this point, just read
--	 * the dquot without attaching it to any hashtables or lists.
--	 *
--	 * Timers and warnings are globally set by the first timer found in
--	 * user/group/proj quota types, otherwise a default value is used.
--	 * This should be split into different fields per quota type.
--	 */
--	if (XFS_IS_UQUOTA_RUNNING(mp))
--		type = XFS_DQ_USER;
--	else if (XFS_IS_GQUOTA_RUNNING(mp))
--		type = XFS_DQ_GROUP;
--	else
--		type = XFS_DQ_PROJ;
--	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
--	if (!error) {
--		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
--
--		/*
--		 * The warnings and timers set the grace period given to
--		 * a user or group before he or she can not perform any
--		 * more writing. If it is zero, a default is used.
--		 */
--		qinf->qi_btimelimit = ddqp->d_btimer ?
--			be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
--		qinf->qi_itimelimit = ddqp->d_itimer ?
--			be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
--		qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
--			be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
--		qinf->qi_bwarnlimit = ddqp->d_bwarns ?
--			be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
--		qinf->qi_iwarnlimit = ddqp->d_iwarns ?
--			be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
--		qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
--			be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
--		xfs_qm_dqdestroy(dqp);
--	} else {
--		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
--		qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
--		qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
--		qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
--		qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
--		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
--	}
-+	xfs_qm_init_timelimits(mp, qinf);
++/* Skip online discard of freed extents */
++#define XFS_BMAPI_NODISCARD	0x1000
++
+ #define XFS_BMAPI_FLAGS \
+ 	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
+ 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+@@ -192,9 +196,9 @@ void	xfs_trim_extent(struct xfs_bmbt_irec *irec, xfs_fileoff_t bno,
+ void	xfs_trim_extent_eof(struct xfs_bmbt_irec *, struct xfs_inode *);
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
+ void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+-void	xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
++void	__xfs_bmap_add_free(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 			  xfs_fsblock_t bno, xfs_filblks_t len,
+-			  struct xfs_owner_info *oinfo);
++			  struct xfs_owner_info *oinfo, bool skip_discard);
+ void	xfs_bmap_compute_maxlevels(struct xfs_mount *mp, int whichfork);
+ int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
+@@ -240,6 +244,28 @@ int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
+ 		struct xfs_bmbt_irec *got, struct xfs_iext_cursor *cur,
+ 		int eof);
  
- 	if (XFS_IS_UQUOTA_RUNNING(mp))
- 		xfs_qm_set_defquota(mp, XFS_DQ_USER, qinf);
++static inline void
++xfs_bmap_add_free(
++	struct xfs_mount		*mp,
++	struct xfs_defer_ops		*dfops,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
++	struct xfs_owner_info		*oinfo)
++{
++	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, false);
++}
++
++static inline void
++xfs_bmap_add_free_nodiscard(
++	struct xfs_mount		*mp,
++	struct xfs_defer_ops		*dfops,
++	xfs_fsblock_t			bno,
++	xfs_filblks_t			len,
++	struct xfs_owner_info		*oinfo)
++{
++	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, true);
++}
++
+ enum xfs_bmap_intent_type {
+ 	XFS_BMAP_MAP = 1,
+ 	XFS_BMAP_UNMAP,
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index b5b1e567b9f4..4735a31793b0 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -542,7 +542,7 @@ xfs_efi_recover(
+ 	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
+ 		extp = &efip->efi_format.efi_extents[i];
+ 		error = xfs_trans_free_extent(tp, efdp, extp->ext_start,
+-					      extp->ext_len, &oinfo);
++					      extp->ext_len, &oinfo, false);
+ 		if (error)
+ 			goto abort_error;
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 9d542dfe0052..d5be3f6a3e8f 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -228,7 +228,8 @@ struct xfs_efd_log_item	*xfs_trans_get_efd(struct xfs_trans *,
+ 				  uint);
+ int		xfs_trans_free_extent(struct xfs_trans *,
+ 				      struct xfs_efd_log_item *, xfs_fsblock_t,
+-				      xfs_extlen_t, struct xfs_owner_info *);
++				      xfs_extlen_t, struct xfs_owner_info *,
++				      bool);
+ int		xfs_trans_commit(struct xfs_trans *);
+ int		xfs_trans_roll(struct xfs_trans **);
+ int		xfs_trans_roll_inode(struct xfs_trans **, struct xfs_inode *);
+diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+index ab438647592a..dab8b3b7a9b8 100644
+--- a/fs/xfs/xfs_trans_extfree.c
++++ b/fs/xfs/xfs_trans_extfree.c
+@@ -68,7 +68,8 @@ xfs_trans_free_extent(
+ 	struct xfs_efd_log_item	*efdp,
+ 	xfs_fsblock_t		start_block,
+ 	xfs_extlen_t		ext_len,
+-	struct xfs_owner_info	*oinfo)
++	struct xfs_owner_info	*oinfo,
++	bool			skip_discard)
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 	uint			next_extent;
+@@ -79,8 +80,12 @@ xfs_trans_free_extent(
+ 
+ 	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
+ 
+-	error = xfs_free_extent(tp, start_block, ext_len, oinfo,
+-			XFS_AG_RESV_NONE);
++	if (skip_discard)
++		error = xfs_free_extent_nodiscard(tp, start_block, ext_len,
++						  oinfo, XFS_AG_RESV_NONE);
++	else
++		error = xfs_free_extent(tp, start_block, ext_len, oinfo,
++					XFS_AG_RESV_NONE);
+ 
+ 	/*
+ 	 * Mark the transaction dirty, even on error. This ensures the
+@@ -195,7 +200,7 @@ xfs_extent_free_finish_item(
+ 	error = xfs_trans_free_extent(tp, done_item,
+ 			free->xefi_startblock,
+ 			free->xefi_blockcount,
+-			&free->xefi_oinfo);
++			&free->xefi_oinfo, free->xefi_skip_discard);
+ 	kmem_free(free);
+ 	return error;
+ }
+-- 
+2.14.3
+
