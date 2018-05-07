@@ -1,69 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39956 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752223AbeEGSLk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 May 2018 14:11:40 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 03F564E02E
-        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:40 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D772417B4C
-        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:39 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/4] xfs: don't discard on free of unwritten extents
-Date: Mon,  7 May 2018 14:11:37 -0400
-Message-Id: <20180507181138.43250-4-bfoster@redhat.com>
-In-Reply-To: <20180507181138.43250-1-bfoster@redhat.com>
-References: <20180507181138.43250-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:52304 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752550AbeEGV7p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 17:59:45 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47LpwH6023360
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 21:59:44 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2hs426e4ve-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 21:59:44 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w47Lxha5016766
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 21:59:44 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w47LxhGl027253
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 21:59:43 GMT
+Date: Mon, 7 May 2018 14:59:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 17/21] xfs: remove parent pointers in unlink
+Message-ID: <20180507215942.GE11261@magnolia>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-18-git-send-email-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525627494-12873-18-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Unwritten extents by definition have not been written to until they
-are converted to normal written extents. If unwritten extents are
-freed from a file, it is therefore guaranteed that the blocks have
-not been written to since allocation (note that zero range punches
-and reallocates blocks).
+On Sun, May 06, 2018 at 10:24:50AM -0700, Allison Henderson wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> This patch removes the parent pointer attribute during unlink
+> 
+> [bfoster: rebase, use VFS inode generation]
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+> 	   implemented xfs_attr_remove_parent]
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/xfs_inode.c        | 21 ++++++++++++++++-----
+>  fs/xfs/xfs_parent_utils.c | 19 +++++++++++++++++++
+>  fs/xfs/xfs_parent_utils.h |  4 ++++
+>  3 files changed, 39 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 3a68e72..b18b20c 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2624,6 +2624,7 @@ xfs_remove(
+>  	struct xfs_defer_ops	dfops;
+>  	xfs_fsblock_t           first_block;
+>  	uint			resblks;
+> +	xfs_dir2_dataptr_t	dir_offset;
+>  
+>  	trace_xfs_remove(dp, name);
+>  
+> @@ -2661,8 +2662,8 @@ xfs_remove(
+>  
+>  	xfs_lock_two_inodes(dp, XFS_ILOCK_EXCL, ip, XFS_ILOCK_EXCL);
+>  
+> -	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, dp, 0);
+> +	xfs_trans_ijoin(tp, ip, 0);
+>  
+>  	/*
+>  	 * If we're removing a directory perform some additional validation.
+> @@ -2704,12 +2705,18 @@ xfs_remove(
+>  
+>  	xfs_defer_init(&dfops, &first_block);
+>  	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+> -				   &dfops, resblks, NULL);
+> +				   &dfops, resblks, &dir_offset);
+>  	if (error) {
+>  		ASSERT(error != -ENOENT);
+>  		goto out_bmap_cancel;
+>  	}
+>  
+> +	if (xfs_sb_version_hasparent(&mp->m_sb)) {
+> +		error = xfs_parent_remove_deferred(dp, ip, dir_offset, &dfops);
+> +		if (error)
+> +			goto out_bmap_cancel;
+> +	}
+> +
+>  	/*
+>  	 * If this is a synchronous mount, make sure that the
+>  	 * remove transaction goes to disk before returning to
+> @@ -2724,17 +2731,21 @@ xfs_remove(
+>  
+>  	error = xfs_trans_commit(tp);
+>  	if (error)
+> -		goto std_return;
+> +		goto out_unlock;
+>  
+>  	if (is_dir && xfs_inode_is_filestream(ip))
+>  		xfs_filestream_deassociate(ip);
+>  
+> -	return 0;
+> +	error = 0;
+> +	goto out_unlock;
 
-To cut down on online discards generated from workloads that make
-use of preallocation, skip discards of extents if they are in the
-unwritten state when the extent is freed.
+I'd unlock the two inodes directly here instead of mixing the sucess
+return path with the error paths.
 
-Note that this optimization does not apply to log recovery, during
-which all freed extents are discarded if online discard is enabled.
-Also note that it may be possible for a filesystem crash to occur
-after write completion of an unwritten extent but before unwritten
-conversion such that the extent remains unwritten after log
-recovery. Since this pseudo-inconsistency may already be possible
-after a crash (consider writing to recently allocated blocks where
-the allocation transaction is lost after a crash), this change
-shouldn't introduce any fundamental limitations that don't already
-exist. In short, on storage stacks where discards are important,
-it's good practice to run an occasional fstrim even with online
-discard enabled in the filesystem, particularly after a crash.
+>  
+>   out_bmap_cancel:
+>  	xfs_defer_cancel(&dfops);
+>   out_trans_cancel:
+>  	xfs_trans_cancel(tp);
+> +out_unlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>   std_return:
+>  	return error;
+>  }
+> diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
+> index cf4a7e2..0fd48b8 100644
+> --- a/fs/xfs/xfs_parent_utils.c
+> +++ b/fs/xfs/xfs_parent_utils.c
+> @@ -49,3 +49,22 @@ xfs_parent_add_deferred(
+>  		(void *)child_name->name, child_name->len, ATTR_PARENT);
+>  }
+>  
+> +/*
+> + * Remove a parent record from a child inode.
+> + */
+> +int
+> +xfs_parent_remove_deferred(
+> +	struct xfs_inode	*parent,
+> +	struct xfs_inode	*child,
+> +	xfs_dir2_dataptr_t	diroffset,
+> +	struct xfs_defer_ops	*dfops)
+> +{
+> +	struct xfs_parent_name_rec rec;
+> +
+> +	xfs_init_parent_name_rec(&rec, parent->i_ino,
+> +				 VFS_I(parent)->i_generation, diroffset);
+> +
+> +	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
+> +					ATTR_PARENT);
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Two indents, no need to align these with the left paren.
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b171f4185adb..a50c197d426f 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5107,7 +5107,8 @@ xfs_bmap_del_extent_real(
- 			if (error)
- 				goto done;
- 		} else {
--			if (bflags & XFS_BMAPI_NODISCARD)
-+			if (bflags & XFS_BMAPI_NODISCARD ||
-+			    del->br_state == XFS_EXT_UNWRITTEN)
- 				xfs_bmap_add_free_nodiscard(mp, dfops,
- 					del->br_startblock, del->br_blockcount,
- 					NULL);
--- 
-2.14.3
+--D
 
+> +}
+> +
+> diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
+> index a667d1d..9e0ac13 100644
+> --- a/fs/xfs/xfs_parent_utils.h
+> +++ b/fs/xfs/xfs_parent_utils.h
+> @@ -23,4 +23,8 @@
+>  int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_inode *child,
+>  	       struct xfs_name *child_name, uint32_t diroffset,
+>  	       struct xfs_defer_ops *dfops);
+> +int xfs_parent_remove_deferred(struct xfs_inode *parent,
+> +			       struct xfs_inode *child,
+> +			       xfs_dir2_dataptr_t diroffset,
+> +			       struct xfs_defer_ops *dfops);
+>  #endif	/* __XFS_PARENT_UTILS_H__ */
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
