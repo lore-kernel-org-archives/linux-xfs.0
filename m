@@ -1,206 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52364 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752230AbeEGSLk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 May 2018 14:11:40 -0400
-Received: from smtp.corp.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 1B8353002F93
-        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:40 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DE6F731320A2
-        for <linux-xfs@vger.kernel.org>; Mon,  7 May 2018 18:11:39 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC 4/4] xfs: convert speculative preallocation to unwritten extents
-Date: Mon,  7 May 2018 14:11:38 -0400
-Message-Id: <20180507181138.43250-5-bfoster@redhat.com>
-In-Reply-To: <20180507181138.43250-1-bfoster@redhat.com>
-References: <20180507181138.43250-1-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:46334 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752721AbeEGU5I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 16:57:08 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47KtvSx182396
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 20:57:07 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2hs426dy48-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 20:57:07 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w47Kv6mD012225
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 20:57:06 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w47Kv6OO026777
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 20:57:06 GMT
+Date: Mon, 7 May 2018 13:57:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 21/21] xfs: Add delayed attributes error tag
+Message-ID: <20180507205705.GA11261@magnolia>
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-22-git-send-email-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525627494-12873-22-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-XXX: This is hacky/racy/broken and for educational purposes only.
-     DO NOT APPLY.
+On Sun, May 06, 2018 at 10:24:54AM -0700, Allison Henderson wrote:
+> This patch adds an error tag that we can use to test
+> delayed attribute recovery and replay
+> 
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 
-Post-eof blocks are typically converted from delalloc to real extent
-allocations when some file-mapped portion of the extent is converted
-(at writeback time). When this occurs, sample the current size of
-the file and convert any post-eof portion of the extent to an
-unwritten extent.
+/me starts reviewing from the back (we'll see how this goes :P)
 
-The advantages of this behavior are:
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-- Eliminates the only user of XFS_BMAPI_NODISCARD (eofblocks).
+--D
 
-- Reduces the window of stale data exposure associated with a
-  filesystem crash during writeback. Incomplete writeback over
-  previously converted speculative preallocation leaves behind
-  unwritten extents rather than previous content of the blocks.
-
-- Dramatically reduces the overhead of block zeroing during writes
-  that jump over eof (and eofblocks). These writes currently issue
-  buffered writes over all preallocated blocks, which consumes time,
-  bandwidth and memory. For example, this patch improves the
-  performance of the following (on a low-end vm) from ~29s to <1s:
-
-	xfs_io -fc "falloc 0 8g"
-		-c "pwrite 8g 4k"
-		-c fsync
-		-c "pwrite 16g 4k" <file>
-
-  The above may also facilitate further optimizations such as
-  invoking a selective/partial writeback @ EOF in
-  xfs_file_aio_write_checks() to proactively convert preallocation.
-
-The problems with this patch are that it is quite hacky and racy
-with respect to buffered writes that may occur over preallocated
-extents in parallel with writeback. This requires careful attention
-to i_size as well as some hacks to ensure that delalloc page buffers
-are handled properly when the underlying extent may have been
-converted after the page was allocated (observed during generic/032
-and generic/464). Finally, the separate conversion means that the
-operation requires optimistic transaction block reservation rather
-than relying on indlen blocks originally attached to the delalloc
-extents.
-
-The broader goal in this area of the writeback code is the
-elimination of buffer_heads entirely, replaced with reliance on
-underlying extent state, and unconditional conversion of all
-delalloc extents to unwritten. This closes the stale data exposure
-problem completely and eliminates the need for the selective
-post-eof hack implemented here.
-
-As a result, this patch was an experiment to document the complexity
-involved with and benefits of selective unwritten conversion of
-post-eof blocks. The fact that it still requires mucking around with
-page buffer handling suggests that in its current form, it's
-probably best to defer this to a broader writeback rework that
-treats all delalloc blocks consistently.
-
-Not-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_aops.c  |  3 +++
- fs/xfs/xfs_iomap.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 65 insertions(+)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 0ab824f574ed..3f507125d623 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -979,6 +979,9 @@ xfs_writepage_map(
- 					     wpc->io_type);
- 			if (error)
- 				goto out;
-+			if (wpc->io_type == XFS_IO_DELALLOC &&
-+			    wpc->imap.br_state == XFS_EXT_UNWRITTEN)
-+				wpc->io_type = XFS_IO_UNWRITTEN;
- 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
- 							 offset);
- 		}
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 046469fcc1b8..670404025ece 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -657,6 +657,54 @@ xfs_file_iomap_begin_delay(
- 	return error;
- }
- 
-+/*
-+ * Convert any post-eof blocks that are part of the current allocation to
-+ * unwritten extents. This optimizations prevents unnecessary online discards of
-+ * speculative prealloc on file removal or truncate. It also prevents zeroing on
-+ * file extending writes that might skip over preallocated blocks.
-+ *
-+ * NOTE: This can be removed once we finally kill off buffer_heads and convert
-+ * all delalloc blocks to unwritten by default.
-+ */
-+static int
-+xfs_iomap_convert_eofblocks(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*imap,
-+	xfs_fileoff_t		end_fsb,
-+	xfs_fsblock_t		*first_block,
-+	struct xfs_defer_ops	*dfops,
-+	xfs_fileoff_t		*conv_fsb)
-+{
-+	struct xfs_mount	*mp	= ip->i_mount;
-+	struct xfs_bmbt_irec	crec	= *imap;
-+	int			nimaps	= 1;
-+	int			error;
-+	int64_t			nres;
-+
-+	/* check for post-eof blocks, nothing to do there are none */
-+	xfs_trim_extent(&crec, end_fsb, crec.br_blockcount);
-+	if (!crec.br_blockcount || crec.br_blockcount == imap->br_blockcount)
-+		return 0;
-+	ASSERT(crec.br_state == XFS_EXT_NORM);
-+
-+	/* XXX: transaction hack */
-+	nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
-+	error = xfs_mod_fdblocks(tp->t_mountp, -nres, false);
-+	if (error)
-+		return error == -ENOSPC ? 0 : error;
-+	tp->t_blk_res += nres;
-+
-+	*conv_fsb = crec.br_startoff;
-+
-+	error = xfs_bmapi_write(tp, ip, crec.br_startoff, crec.br_blockcount,
-+				XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT,
-+				first_block, nres, &crec, &nimaps, dfops);
-+	if (error)
-+		return error;
-+	return 0;
-+}
-+
- /*
-  * Pass in a delayed allocate extent, convert it to real extents;
-  * return to the caller the extent we create which maps on top of
-@@ -677,6 +725,7 @@ xfs_iomap_write_allocate(
- 	xfs_mount_t	*mp = ip->i_mount;
- 	xfs_fileoff_t	offset_fsb, last_block;
- 	xfs_fileoff_t	end_fsb, map_start_fsb;
-+	xfs_fileoff_t	conv_fsb;
- 	xfs_fsblock_t	first_block;
- 	struct xfs_defer_ops	dfops;
- 	xfs_filblks_t	count_fsb;
-@@ -712,6 +761,7 @@ xfs_iomap_write_allocate(
- 		 * but before our buffer starts.
- 		 */
- 		nimaps = 0;
-+		conv_fsb = NULLFILEOFF;
- 		while (nimaps == 0) {
- 			nres = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
- 			/*
-@@ -785,6 +835,11 @@ xfs_iomap_write_allocate(
- 						count_fsb, flags, &first_block,
- 						nres, imap, &nimaps,
- 						&dfops);
-+			/* convert any speculative prealloc in this mapping */
-+			if (!error && nimaps)
-+				error = xfs_iomap_convert_eofblocks(tp, ip,
-+						imap, end_fsb, &first_block, &dfops,
-+						&conv_fsb);
- 			if (error)
- 				goto trans_cancel;
- 
-@@ -809,6 +864,13 @@ xfs_iomap_write_allocate(
- 		if ((offset_fsb >= imap->br_startoff) &&
- 		    (offset_fsb < (imap->br_startoff +
- 				   imap->br_blockcount))) {
-+			if (conv_fsb != NULLFILEOFF) {
-+				xfs_trim_extent(imap, imap->br_startoff,
-+						conv_fsb - imap->br_startoff);
-+				ASSERT(offset_fsb >= imap->br_startoff &&
-+				       offset_fsb < (imap->br_startoff +
-+						     imap->br_blockcount));
-+			}
- 			XFS_STATS_INC(mp, xs_xstrat_quick);
- 			return 0;
- 		}
--- 
-2.14.3
-
+> ---
+>  fs/xfs/libxfs/xfs_errortag.h | 5 ++++-
+>  fs/xfs/xfs_error.c           | 3 +++
+>  fs/xfs/xfs_trans_attr.c      | 8 ++++++++
+>  3 files changed, 15 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+> index bc1789d..f606ab6 100644
+> --- a/fs/xfs/libxfs/xfs_errortag.h
+> +++ b/fs/xfs/libxfs/xfs_errortag.h
+> @@ -65,7 +65,8 @@
+>  #define XFS_ERRTAG_LOG_BAD_CRC				29
+>  #define XFS_ERRTAG_LOG_ITEM_PIN				30
+>  #define XFS_ERRTAG_BUF_LRU_REF				31
+> -#define XFS_ERRTAG_MAX					32
+> +#define XFS_ERRTAG_DELAYED_ATTR			32
+> +#define XFS_ERRTAG_MAX					33
+>  
+>  /*
+>   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -102,5 +103,7 @@
+>  #define XFS_RANDOM_LOG_BAD_CRC				1
+>  #define XFS_RANDOM_LOG_ITEM_PIN				1
+>  #define XFS_RANDOM_BUF_LRU_REF				2
+> +#define XFS_RANDOM_DELAYED_ATTR			1
+>  
+>  #endif /* __XFS_ERRORTAG_H_ */
+> +
+> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+> index a63f508..0752f20 100644
+> --- a/fs/xfs/xfs_error.c
+> +++ b/fs/xfs/xfs_error.c
+> @@ -61,6 +61,7 @@ static unsigned int xfs_errortag_random_default[] = {
+>  	XFS_RANDOM_LOG_BAD_CRC,
+>  	XFS_RANDOM_LOG_ITEM_PIN,
+>  	XFS_RANDOM_BUF_LRU_REF,
+> +	XFS_RANDOM_DELAYED_ATTR,
+>  };
+>  
+>  struct xfs_errortag_attr {
+> @@ -167,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+>  XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+>  XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+>  XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
+> +XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
+>  
+>  static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(noerror),
+> @@ -201,6 +203,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+>  	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
+>  	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
+>  	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
+> +	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+>  	NULL,
+>  };
+>  
+> diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+> index d1d75bb..7ea0880 100644
+> --- a/fs/xfs/xfs_trans_attr.c
+> +++ b/fs/xfs/xfs_trans_attr.c
+> @@ -35,6 +35,8 @@
+>  #include "xfs_inode.h"
+>  #include "xfs_icache.h"
+>  #include "xfs_quota.h"
+> +#include "xfs_errortag.h"
+> +#include "xfs_error.h"
+>  
+>  /*
+>   * This routine is called to allocate an "extent free done"
+> @@ -108,6 +110,11 @@ xfs_trans_attr(
+>  	if (error)
+>  		return error;
+>  
+> +	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
+> +		error = -EIO;
+> +		goto out;
+> +	}
+> +
+>  	switch (op_flags) {
+>  		case XFS_ATTR_OP_FLAGS_SET:
+>  			args.op_flags |= XFS_DA_OP_ADDNAME;
+> @@ -122,6 +129,7 @@ xfs_trans_attr(
+>  			error = -EFSCORRUPTED;
+>  	}
+>  
+> +out:
+>  	if (error) {
+>  		xfs_defer_cancel(&dfops);
+>  	        if (leaf_bp)
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
