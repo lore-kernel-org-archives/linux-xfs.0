@@ -1,139 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46334 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752721AbeEGU5I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 16:57:08 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47KtvSx182396
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 20:57:07 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2hs426dy48-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:46680 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752719AbeEGWsx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 18:48:53 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47MfAcK143101
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:48:53 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2hs4k26653-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 20:57:07 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w47Kv6mD012225
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 22:48:53 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w47Mmq0Y030382
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 20:57:06 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w47Kv6OO026777
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 20:57:06 GMT
-Date: Mon, 7 May 2018 13:57:05 -0700
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:48:52 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w47MmqYV027425
+        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:48:52 GMT
+Date: Mon, 7 May 2018 15:48:51 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 21/21] xfs: Add delayed attributes error tag
-Message-ID: <20180507205705.GA11261@magnolia>
+Subject: Re: [PATCH 09/21] xfs: get directory offset when removing directory
+ name
+Message-ID: <20180507224851.GM11261@magnolia>
 References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-22-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-10-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1525627494-12873-22-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1525627494-12873-10-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, May 06, 2018 at 10:24:54AM -0700, Allison Henderson wrote:
-> This patch adds an error tag that we can use to test
-> delayed attribute recovery and replay
+On Sun, May 06, 2018 at 10:24:42AM -0700, Allison Henderson wrote:
+> From: Mark Tinguely <tinguely@sgi.com>
 > 
+> Return the directory offset information when removing an entry to the
+> directory.
+> 
+> This offset will be used as the parent pointer offset in xfs_remove.
+> 
+> [dchinner: forward ported and cleaned up]
+> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+> 	   Changed typedefs to raw struct types]
+> 
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_dir2.c       | 16 ++++++++++------
+>  fs/xfs/libxfs/xfs_dir2.h       |  4 +++-
+>  fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
+>  fs/xfs/libxfs/xfs_dir2_leaf.c  |  5 +++--
+>  fs/xfs/libxfs/xfs_dir2_node.c  |  5 +++--
+>  fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
+>  fs/xfs/xfs_inode.c             |  7 ++++---
+>  7 files changed, 27 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index 409a1e7..090ab0e 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -433,13 +433,14 @@ xfs_dir_lookup(
+>   */
+>  int
+>  xfs_dir_removename(
+> -	xfs_trans_t	*tp,
+> -	xfs_inode_t	*dp,
+> -	struct xfs_name	*name,
+> -	xfs_ino_t	ino,
+> -	xfs_fsblock_t	*first,		/* bmap's firstblock */
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*dp,
+> +	struct xfs_name		*name,
+> +	xfs_ino_t		ino,
+> +	xfs_fsblock_t		*first,		/* bmap's firstblock */
+>  	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+> -	xfs_extlen_t	total)		/* bmap's total block count */
+> +	xfs_extlen_t		total,		/* bmap's total block count */
+> +	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+>  {
+>  	struct xfs_da_args *args;
+>  	int		rval;
+> @@ -486,6 +487,9 @@ xfs_dir_removename(
+>  	else
+>  		rval = xfs_dir2_node_removename(args);
+>  out_free:
+> +	if (offset)
+> +		*offset = args->offset;
+> +
+>  	kmem_free(args);
+>  	return rval;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index c98a3ca..b73bdcb 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -139,7 +139,9 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t ino,
+>  				xfs_fsblock_t *first,
+> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
+> +				struct xfs_defer_ops *dfops,
+> +				xfs_extlen_t tot,
+> +				xfs_dir2_dataptr_t *offset);
+>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t inum,
+>  				xfs_fsblock_t *first,
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index 9b7f173..9c1e485 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -798,9 +798,9 @@ xfs_dir2_block_removename(
+>  	/*
+>  	 * Point to the data entry using the leaf entry.
+>  	 */
+> +	args->offset = be32_to_cpu(blp[ent].address);
+>  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+> -			xfs_dir2_dataptr_to_off(args->geo,
+> -						be32_to_cpu(blp[ent].address)));
+> +			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+>  	/*
+>  	 * Mark the data entry's space free.
+>  	 */
+> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> index 8ae2953..c5595c1 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+> @@ -1414,9 +1414,10 @@ xfs_dir2_leaf_removename(
+>  	 * Point to the leaf entry, use that to point to the data entry.
+>  	 */
+>  	lep = &ents[index];
+> -	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
+> +	args->offset = be32_to_cpu(lep->address);
+> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+>  	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+> -		xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+> +		xfs_dir2_dataptr_to_off(args->geo, args->offset));
+>  	needscan = needlog = 0;
+>  	oldbest = be16_to_cpu(bf[0].length);
+>  	ltp = xfs_dir2_leaf_tail_p(args->geo, leaf);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 4e544f7..eb8b240 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -1252,9 +1252,10 @@ xfs_dir2_leafn_remove(
+>  	/*
+>  	 * Extract the data block and offset from the entry.
+>  	 */
+> -	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
+> +	args->offset = be32_to_cpu(lep->address);
+> +	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+>  	ASSERT(dblk->blkno == db);
+> -	off = xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address));
+> +	off = xfs_dir2_dataptr_to_off(args->geo, args->offset);
+>  	ASSERT(dblk->index == off);
+>  
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 222ccf5..1d0957c 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -917,6 +917,8 @@ xfs_dir2_sf_removename(
+>  								XFS_CMP_EXACT) {
+>  			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
+>  			       args->inumber);
+> +			args->offset = xfs_dir2_byte_to_dataptr(
+> +						xfs_dir2_sf_get_offset(sfep));
+>  			break;
+>  		}
+>  	}
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index fc07b4f..3054e9a 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2648,8 +2648,8 @@ xfs_remove(
+>  		goto out_trans_cancel;
+>  
+>  	xfs_defer_init(&dfops, &first_block);
+> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
+> -					&first_block, &dfops, resblks);
+> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+> +				   &dfops, resblks, NULL);
+>  	if (error) {
+>  		ASSERT(error != -ENOENT);
+>  		goto out_bmap_cancel;
+> @@ -3159,7 +3159,8 @@ xfs_rename(
+>  					&first_block, &dfops, spaceres);
+>  	} else
+>  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+> -					   &first_block, &dfops, spaceres);
+> +					   &first_block, &dfops, spaceres,
+> +					   NULL);
 
-/me starts reviewing from the back (we'll see how this goes :P)
+Two indents for the second & third lines, please.
 
+Otherwise looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_errortag.h | 5 ++++-
->  fs/xfs/xfs_error.c           | 3 +++
->  fs/xfs/xfs_trans_attr.c      | 8 ++++++++
->  3 files changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-> index bc1789d..f606ab6 100644
-> --- a/fs/xfs/libxfs/xfs_errortag.h
-> +++ b/fs/xfs/libxfs/xfs_errortag.h
-> @@ -65,7 +65,8 @@
->  #define XFS_ERRTAG_LOG_BAD_CRC				29
->  #define XFS_ERRTAG_LOG_ITEM_PIN				30
->  #define XFS_ERRTAG_BUF_LRU_REF				31
-> -#define XFS_ERRTAG_MAX					32
-> +#define XFS_ERRTAG_DELAYED_ATTR			32
-> +#define XFS_ERRTAG_MAX					33
->  
->  /*
->   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> @@ -102,5 +103,7 @@
->  #define XFS_RANDOM_LOG_BAD_CRC				1
->  #define XFS_RANDOM_LOG_ITEM_PIN				1
->  #define XFS_RANDOM_BUF_LRU_REF				2
-> +#define XFS_RANDOM_DELAYED_ATTR			1
->  
->  #endif /* __XFS_ERRORTAG_H_ */
-> +
-> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> index a63f508..0752f20 100644
-> --- a/fs/xfs/xfs_error.c
-> +++ b/fs/xfs/xfs_error.c
-> @@ -61,6 +61,7 @@ static unsigned int xfs_errortag_random_default[] = {
->  	XFS_RANDOM_LOG_BAD_CRC,
->  	XFS_RANDOM_LOG_ITEM_PIN,
->  	XFS_RANDOM_BUF_LRU_REF,
-> +	XFS_RANDOM_DELAYED_ATTR,
->  };
->  
->  struct xfs_errortag_attr {
-> @@ -167,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
->  XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
->  XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
->  XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
-> +XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
->  
->  static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(noerror),
-> @@ -201,6 +203,7 @@ static struct attribute *xfs_errortag_attrs[] = {
->  	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
->  	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
->  	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
-> +	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
->  	NULL,
->  };
->  
-> diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
-> index d1d75bb..7ea0880 100644
-> --- a/fs/xfs/xfs_trans_attr.c
-> +++ b/fs/xfs/xfs_trans_attr.c
-> @@ -35,6 +35,8 @@
->  #include "xfs_inode.h"
->  #include "xfs_icache.h"
->  #include "xfs_quota.h"
-> +#include "xfs_errortag.h"
-> +#include "xfs_error.h"
->  
->  /*
->   * This routine is called to allocate an "extent free done"
-> @@ -108,6 +110,11 @@ xfs_trans_attr(
 >  	if (error)
->  		return error;
+>  		goto out_bmap_cancel;
 >  
-> +	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
-> +		error = -EIO;
-> +		goto out;
-> +	}
-> +
->  	switch (op_flags) {
->  		case XFS_ATTR_OP_FLAGS_SET:
->  			args.op_flags |= XFS_DA_OP_ADDNAME;
-> @@ -122,6 +129,7 @@ xfs_trans_attr(
->  			error = -EFSCORRUPTED;
->  	}
->  
-> +out:
->  	if (error) {
->  		xfs_defer_cancel(&dfops);
->  	        if (leaf_bp)
 > -- 
 > 2.7.4
 > 
