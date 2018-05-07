@@ -1,117 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60188 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:45220 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753697AbeEHAfT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:35:19 -0400
-Date: Mon, 7 May 2018 17:35:00 -0700
+        with ESMTP id S1752081AbeEGQ7z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 12:59:55 -0400
+Date: Mon, 7 May 2018 09:59:36 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/6] xfs: create agfl block free helper function
-Message-ID: <20180508003500.GD11261@magnolia>
-References: <20180418133119.21775-1-bfoster@redhat.com>
- <20180418133119.21775-2-bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_repair: check and repair quota metadata
+Message-ID: <20180507165936.GA26569@magnolia>
+References: <9e494d70-53bd-db81-c118-73ef7eaad667@redhat.com>
+ <20180507163242.GZ26569@magnolia>
+ <bee0bca3-fb1c-13a0-0dfb-ba1cd66662be@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180418133119.21775-2-bfoster@redhat.com>
+In-Reply-To: <bee0bca3-fb1c-13a0-0dfb-ba1cd66662be@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Apr 18, 2018 at 09:31:14AM -0400, Brian Foster wrote:
-> Refactor the AGFL block free code into a new helper such that it can
-> be invoked from deferred context. No functional changes.
+On Mon, May 07, 2018 at 11:44:00AM -0500, Eric Sandeen wrote:
+> On 5/7/18 11:32 AM, Darrick J. Wong wrote:
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >> diff --git a/libxfs/xfs_quota_defs.h b/libxfs/xfs_quota_defs.h
+> >> index bb1b13a9..067475e2 100644
+> >> --- a/libxfs/xfs_quota_defs.h
+> >> +++ b/libxfs/xfs_quota_defs.h
+> >> @@ -30,6 +30,8 @@
+> >>  typedef uint64_t	xfs_qcnt_t;
+> >>  typedef uint16_t	xfs_qwarncnt_t;
+> >>  
+> >> +#define XFS_DQUOT_CLUSTER_SIZE_FSB (xfs_filblks_t)1
+> > 
+> > Requires a kernel patch, right? :)
+> 
+> oh derp, I'll move that elsewhere, maybe the non-priv userspace
+> libxfs header, I'll see.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+<shrug> Seems like a trivial mod...
+
+> 
+> >> diff --git a/repair/incore.h b/repair/incore.h
+> >> index fd66084f..78a0ed30 100644
+> >> --- a/repair/incore.h
+> >> +++ b/repair/incore.h
+> >> @@ -222,13 +222,16 @@ int		count_bcnt_extents(xfs_agnumber_t);
+> >>  #define XR_INO_RTDATA	2		/* realtime file */
+> >>  #define XR_INO_RTBITMAP	3		/* realtime bitmap inode */
+> >>  #define XR_INO_RTSUM	4		/* realtime summary inode */
+> >> -#define XR_INO_DATA	5		/* regular file */
+> >> -#define XR_INO_SYMLINK	6		/* symlink */
+> >> -#define XR_INO_CHRDEV	7		/* character device */
+> >> -#define XR_INO_BLKDEV	8		/* block device */
+> >> -#define XR_INO_SOCK	9		/* socket */
+> >> -#define XR_INO_FIFO	10		/* fifo */
+> >> -#define XR_INO_MOUNTPOINT 11		/* mountpoint */
+> >> +#define XR_INO_UQUOTA	5		/* user quota inode */
+> >> +#define XR_INO_GQUOTA	6		/* group quota inode */
+> >> +#define XR_INO_PQUOTA	7		/* project quota inode */
+> > 
+> > /me wonders, is there an advantage/requirement to insert the three quota
+> > inode types in the middle of the range instead of tacking them on the
+> > end?
+> > 
+> > Anyway the rest mostly looks ok to me.
+> 
+> Probably not, I was grouping the internal special inodes together IIRC, but
+> happy just move them to the end if that's preferable.
+
+Ok.  I wasn't sure if there was some hidden ordering requirement buried
+in here, but at a first glance I didn't see a reason to renumber the
+whole list.
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 37 +++++++++++++++++++++++++++----------
->  fs/xfs/libxfs/xfs_alloc.h |  2 ++
->  2 files changed, 29 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 4bcc095fe44a..193a5b4909c5 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2060,6 +2060,30 @@ xfs_alloc_space_available(
->  	return true;
->  }
->  
-> +int
-> +xfs_free_agfl_block(
-> +	struct xfs_trans	*tp,
-> +	xfs_agnumber_t		agno,
-> +	xfs_agblock_t		agbno,
-> +	struct xfs_buf		*agbp,
-> +	struct xfs_owner_info	*oinfo)
-> +{
-> +	int			error;
-> +	struct xfs_buf		*bp;
-> +
-> +	error = xfs_free_ag_extent(tp, agbp, agno, agbno, 1, oinfo,
-> +				   XFS_AG_RESV_AGFL);
-> +	if (error)
-> +		return error;
-> +
-> +	bp = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno, 0);
-> +	if (!bp)
-> +		return -EFSCORRUPTED;
-> +	xfs_trans_binval(tp, bp);
-> +
-> +	return 0;
-> +}
-> +
->  /*
->   * Check the agfl fields of the agf for inconsistency or corruption. The purpose
->   * is to detect an agfl header padding mismatch between current and early v5
-> @@ -2247,21 +2271,14 @@ xfs_alloc_fix_freelist(
->  	else
->  		xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
->  	while (!(flags & XFS_ALLOC_FLAG_NOSHRINK) && pag->pagf_flcount > need) {
-> -		struct xfs_buf	*bp;
-> -
->  		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
->  		if (error)
->  			goto out_agbp_relse;
-> -		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
-> -					   &targs.oinfo, XFS_AG_RESV_AGFL);
-> +
-> +		error = xfs_free_agfl_block(tp, args->agno, bno, agbp,
-> +					    &targs.oinfo);
->  		if (error)
->  			goto out_agbp_relse;
-> -		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
-> -		if (!bp) {
-> -			error = -EFSCORRUPTED;
-> -			goto out_agbp_relse;
-> -		}
-> -		xfs_trans_binval(tp, bp);
->  	}
->  
->  	targs.tp = tp;
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index cbf789ea5a4e..949e21326066 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -223,6 +223,8 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
->  			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
->  int xfs_alloc_read_agfl(struct xfs_mount *mp, struct xfs_trans *tp,
->  			xfs_agnumber_t agno, struct xfs_buf **bpp);
-> +int xfs_free_agfl_block(struct xfs_trans *, xfs_agnumber_t, xfs_agblock_t,
-> +			struct xfs_buf *, struct xfs_owner_info *);
->  int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
->  int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
->  		struct xfs_buf **agbp);
-> -- 
-> 2.13.6
+> -Eric
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
