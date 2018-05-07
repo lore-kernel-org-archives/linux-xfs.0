@@ -1,76 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40966 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754736AbeEHQbo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:31:44 -0400
-Date: Tue, 8 May 2018 09:31:24 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 09/11] xfs_repair: actually fix .. entries that point to
- inode zero
-Message-ID: <20180508163124.GM11261@magnolia>
-References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401964787.13319.7143262291746238151.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:56126 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751976AbeEGPWG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 May 2018 11:22:06 -0400
+Subject: [PATCH 3/5 V2] xfs: pass full xfs_dqblk to repair during quotacheck
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <f5d059e3-28de-e365-acd4-d82aa9d17db7@redhat.com>
+ <b4796b08-5a1b-c541-395e-3450aecae29b@sandeen.net>
+Message-ID: <67f3c686-78f4-9aa1-78b7-e80fc6700f1e@sandeen.net>
+Date: Mon, 7 May 2018 10:22:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152401964787.13319.7143262291746238151.stgit@magnolia>
+In-Reply-To: <b4796b08-5a1b-c541-395e-3450aecae29b@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+It's a bit dicey to pass in the smaller xfs_disk_dquot and then cast it to
+something larger; pass in the full xfs_dqblk so we know the caller has sent
+us the right thing.  Rename the function to xfs_dqblk_repair for
+clarity.
 
-If we encounter a directory with an entry that points to inode zero,
-we'll crash due to an ASSERT during process_inode_chunk.  This is due to
-process_dir2_data not arranging for phase 6 to fix the parent pointer
-when '..' -> 0, so do that.  Found via xfs/386 fuzzing bu[1].inumber to
-zero.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- libxfs/libxfs_api_defs.h |    1 +
- repair/dir2.c            |   17 +++++++++++++++++
- 2 files changed, 18 insertions(+)
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index d588f342..56f9f8ca 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -78,6 +78,7 @@
- #define xfs_bmbt_get_all		libxfs_bmbt_get_all
- #define xfs_rtfree_extent		libxfs_rtfree_extent
- #define xfs_verify_rtbno		libxfs_verify_rtbno
-+#define xfs_verify_ino			libxfs_verify_ino
- #define xfs_zero_extent			libxfs_zero_extent
+V2: More precise commit summary
+
+ fs/xfs/libxfs/xfs_dquot_buf.c  | 21 +++++++++------------
+ fs/xfs/libxfs/xfs_quota_defs.h |  2 +-
+ fs/xfs/xfs_qm.c                |  2 +-
+ 3 files changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index c00174f32f0d..3b92427883fa 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -104,29 +104,26 @@ xfs_dquot_verify(
+  * Do some primitive error checking on ondisk dquot data structures.
+  */
+ int
+-xfs_dquot_repair(
++xfs_dqblk_repair(
+ 	struct xfs_mount	*mp,
+-	struct xfs_disk_dquot	*ddq,
++	struct xfs_dqblk	*dqb,
+ 	xfs_dqid_t		id,
+ 	uint			type)
+ {
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)ddq;
+-
+-
+ 	/*
+ 	 * Typically, a repair is only requested by quotacheck.
+ 	 */
+ 	ASSERT(id != -1);
+-	memset(d, 0, sizeof(xfs_dqblk_t));
++	memset(dqb, 0, sizeof(xfs_dqblk_t));
  
- #define xfs_defer_init			libxfs_defer_init
-diff --git a/repair/dir2.c b/repair/dir2.c
-index fbe88b50..f0371371 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -847,6 +847,23 @@ _("bad .. entry in root directory inode %" PRIu64 ", was %" PRIu64 ": "),
- 					}
- 					*parent = ino;
- 				}
-+				/*
-+				 * Make sure our parent pointer doesn't point
-+				 * off into space.
-+				 */
-+				if (!junkit &&
-+				    *parent != NULLFSINO &&
-+				    !libxfs_verify_ino(mp, *parent)) {
-+					do_warn(
-+_("bad .. entry in directory inode %" PRIu64 ", was %" PRIu64 ": "),
-+						ino, *parent);
-+					if (!no_modify) {
-+						do_warn(_("correcting\n"));
-+					} else {
-+						do_warn(_("would correct\n"));
-+					}
-+					*parent = NULLFSINO;
-+				}
- 			}
- 			/*
- 			 * Can't fix the directory unless we know which ..
+-	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+-	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+-	d->dd_diskdq.d_flags = type;
+-	d->dd_diskdq.d_id = cpu_to_be32(id);
++	dqb->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++	dqb->dd_diskdq.d_version = XFS_DQUOT_VERSION;
++	dqb->dd_diskdq.d_flags = type;
++	dqb->dd_diskdq.d_id = cpu_to_be32(id);
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
+-		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++		uuid_copy(&dqb->dd_uuid, &mp->m_sb.sb_meta_uuid);
++		xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
+ 				 XFS_DQUOT_CRC_OFF);
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index 8433656af0da..a2f8cb334bb3 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -154,7 +154,7 @@ typedef uint16_t	xfs_qwarncnt_t;
+ extern xfs_failaddr_t xfs_dquot_verify(struct xfs_mount *mp,
+ 		struct xfs_disk_dquot *ddq, xfs_dqid_t id, uint type);
+ extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+-extern int xfs_dquot_repair(struct xfs_mount *mp, struct xfs_disk_dquot *ddq,
++extern int xfs_dqblk_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
+ 		xfs_dqid_t id, uint type);
+ 
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index c71ad79bb2e6..6690b938d450 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -867,7 +867,7 @@ xfs_qm_reset_dqcounts(
+ 		 */
+ 		fa = xfs_dquot_verify(mp, ddq, id + j, type);
+ 		if (fa)
+-			xfs_dquot_repair(mp, ddq, id + j, type);
++			xfs_dqblk_repair(mp, &dqb[j], id + j, type);
+ 
+ 		/*
+ 		 * Reset type in case we are reusing group quota file for
+-- 
+2.17.0
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
