@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:52925 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752389AbeEGQNq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 12:13:46 -0400
-Received: by mail-it0-f65.google.com with SMTP id y189-v6so6397862itb.2
-        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 09:13:46 -0700 (PDT)
+Received: from mail-it0-f67.google.com ([209.85.214.67]:52932 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752389AbeEGQNs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 12:13:48 -0400
+Received: by mail-it0-f67.google.com with SMTP id y189-v6so6398020itb.2
+        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 09:13:47 -0700 (PDT)
 From: Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 3/4] blk-wbt: pass in enum wbt_flags to get_rq_wait()
-Date: Mon,  7 May 2018 10:13:34 -0600
-Message-Id: <1525709615-14395-4-git-send-email-axboe@kernel.dk>
+Subject: [PATCH 4/4] blk-wbt: throttle discards like background writes
+Date: Mon,  7 May 2018 10:13:35 -0600
+Message-Id: <1525709615-14395-5-git-send-email-axboe@kernel.dk>
 In-Reply-To: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
 References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,103 +17,141 @@ List-Id: xfs
 To: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc: dchinner@redhat.com, hch@lst.de, Jens Axboe <axboe@kernel.dk>
 
-This is in preparation for having more write queues, in which
-case we would have needed to pass in more information than just
-a simple 'is_kswapd' boolean.
+Throttle discards like we would any background write. Discards should
+be background activity, so if they are impacting foreground IO, then
+we will throttle them down.
 
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- block/blk-wbt.c | 25 +++++++++++++++----------
- block/blk-wbt.h |  4 +++-
- 2 files changed, 18 insertions(+), 11 deletions(-)
+ block/blk-stat.h |  6 +++---
+ block/blk-wbt.c  | 43 ++++++++++++++++++++++++++-----------------
+ block/blk-wbt.h  |  4 +++-
+ 3 files changed, 32 insertions(+), 21 deletions(-)
 
+diff --git a/block/blk-stat.h b/block/blk-stat.h
+index 2dd36347252a..c22049a8125e 100644
+--- a/block/blk-stat.h
++++ b/block/blk-stat.h
+@@ -10,11 +10,11 @@
+ 
+ /*
+  * from upper:
+- * 3 bits: reserved for other usage
++ * 4 bits: reserved for other usage
+  * 12 bits: size
+- * 49 bits: time
++ * 48 bits: time
+  */
+-#define BLK_STAT_RES_BITS	3
++#define BLK_STAT_RES_BITS	4
+ #define BLK_STAT_SIZE_BITS	12
+ #define BLK_STAT_RES_SHIFT	(64 - BLK_STAT_RES_BITS)
+ #define BLK_STAT_SIZE_SHIFT	(BLK_STAT_RES_SHIFT - BLK_STAT_SIZE_BITS)
 diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-index 3e34b41bcefc..25d202345965 100644
+index 25d202345965..a7a724580033 100644
 --- a/block/blk-wbt.c
 +++ b/block/blk-wbt.c
-@@ -101,9 +101,13 @@ static bool wb_recent_wait(struct rq_wb *rwb)
- 	return time_before(jiffies, wb->dirty_sleep + HZ);
+@@ -106,6 +106,8 @@ static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb,
+ {
+ 	if (wb_acct & WBT_KSWAPD)
+ 		return &rwb->rq_wait[WBT_RWQ_KSWAPD];
++	else if (wb_acct & WBT_DISCARD)
++		return &rwb->rq_wait[WBT_RWQ_DISCARD];
+ 
+ 	return &rwb->rq_wait[WBT_RWQ_BG];
  }
- 
--static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb, bool is_kswapd)
-+static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb,
-+					  enum wbt_flags wb_acct)
- {
--	return &rwb->rq_wait[is_kswapd];
-+	if (wb_acct & WBT_KSWAPD)
-+		return &rwb->rq_wait[WBT_RWQ_KSWAPD];
-+
-+	return &rwb->rq_wait[WBT_RWQ_BG];
- }
- 
- static void rwb_wake_all(struct rq_wb *rwb)
-@@ -126,7 +130,7 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
- 	if (!(wb_acct & WBT_TRACKED))
- 		return;
- 
--	rqw = get_rq_wait(rwb, wb_acct & WBT_KSWAPD);
-+	rqw = get_rq_wait(rwb, wb_acct);
- 	inflight = atomic_dec_return(&rqw->inflight);
- 
- 	/*
-@@ -529,11 +533,12 @@ static inline bool may_queue(struct rq_wb *rwb, struct rq_wait *rqw,
-  * Block if we will exceed our limit, or if we are currently waiting for
-  * the timer to kick off queuing again.
-  */
--static void __wbt_wait(struct rq_wb *rwb, unsigned long rw, spinlock_t *lock)
-+static void __wbt_wait(struct rq_wb *rwb, enum wbt_flags wb_acct,
-+		       unsigned long rw, spinlock_t *lock)
- 	__releases(lock)
- 	__acquires(lock)
- {
--	struct rq_wait *rqw = get_rq_wait(rwb, current_is_kswapd());
-+	struct rq_wait *rqw = get_rq_wait(rwb, wb_acct);
- 	DEFINE_WAIT(wait);
- 
- 	if (may_queue(rwb, rqw, &wait, rw))
-@@ -584,7 +589,7 @@ static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
-  */
- enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
- {
--	unsigned int ret = 0;
-+	enum wbt_flags ret = 0;
- 
- 	if (!rwb_enabled(rwb))
- 		return 0;
-@@ -598,14 +603,14 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
- 		return ret;
+@@ -143,10 +145,13 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
  	}
  
--	__wbt_wait(rwb, bio->bi_opf, lock);
-+	if (current_is_kswapd())
-+		ret |= WBT_KSWAPD;
+ 	/*
+-	 * If the device does write back caching, drop further down
+-	 * before we wake people up.
++	 * For discards, our limit is always the background. For writes, if
++	 * the device does write back caching, drop further down before we
++	 * wake people up.
+ 	 */
+-	if (rwb->wc && !wb_recent_wait(rwb))
++	if (wb_acct & WBT_DISCARD)
++		limit = rwb->wb_background;
++	else if (rwb->wc && !wb_recent_wait(rwb))
+ 		limit = 0;
+ 	else
+ 		limit = rwb->wb_normal;
+@@ -483,6 +488,9 @@ static inline unsigned int get_limit(struct rq_wb *rwb, unsigned long rw)
+ {
+ 	unsigned int limit;
+ 
++	if ((rw & REQ_OP_MASK) == REQ_OP_DISCARD)
++		return rwb->wb_background;
 +
-+	__wbt_wait(rwb, ret, bio->bi_opf, lock);
+ 	/*
+ 	 * At this point we know it's a buffered write. If this is
+ 	 * kswapd trying to free memory, or REQ_SYNC is set, then
+@@ -564,21 +572,20 @@ static void __wbt_wait(struct rq_wb *rwb, enum wbt_flags wb_acct,
  
- 	if (!blk_stat_is_active(rwb->cb))
- 		rwb_arm_timer(rwb);
- 
--	if (current_is_kswapd())
--		ret |= WBT_KSWAPD;
+ static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
+ {
+-	const int op = bio_op(bio);
 -
- 	return ret | WBT_TRACKED;
+-	/*
+-	 * If not a WRITE, do nothing
+-	 */
+-	if (op != REQ_OP_WRITE)
+-		return false;
+-
+-	/*
+-	 * Don't throttle WRITE_ODIRECT
+-	 */
+-	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
++	switch (bio_op(bio)) {
++	case REQ_OP_WRITE:
++		/*
++		 * Don't throttle WRITE_ODIRECT
++		 */
++		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
++		    (REQ_SYNC | REQ_IDLE))
++			return false;
++		/* fallthrough */
++	case REQ_OP_DISCARD:
++		return true;
++	default:
+ 		return false;
+-
+-	return true;
++	}
  }
  
+ /*
+@@ -605,6 +612,8 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
+ 
+ 	if (current_is_kswapd())
+ 		ret |= WBT_KSWAPD;
++	if (bio_op(bio) == REQ_OP_DISCARD)
++		ret |= WBT_DISCARD;
+ 
+ 	__wbt_wait(rwb, ret, bio->bi_opf, lock);
+ 
 diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-index a232c98fbf4d..8038b4a0d4ef 100644
+index 8038b4a0d4ef..d6a125e49db5 100644
 --- a/block/blk-wbt.h
 +++ b/block/blk-wbt.h
-@@ -19,7 +19,9 @@ enum wbt_flags {
+@@ -14,13 +14,15 @@ enum wbt_flags {
+ 	WBT_TRACKED		= 1,	/* write, tracked for throttling */
+ 	WBT_READ		= 2,	/* read */
+ 	WBT_KSWAPD		= 4,	/* write, from kswapd */
++	WBT_DISCARD		= 8,	/* discard */
+ 
+-	WBT_NR_BITS		= 3,	/* number of bits */
++	WBT_NR_BITS		= 4,	/* number of bits */
  };
  
  enum {
--	WBT_NUM_RWQ		= 2,
-+	WBT_RWQ_BG		= 0,
-+	WBT_RWQ_KSWAPD,
-+	WBT_NUM_RWQ,
+ 	WBT_RWQ_BG		= 0,
+ 	WBT_RWQ_KSWAPD,
++	WBT_RWQ_DISCARD,
+ 	WBT_NUM_RWQ,
  };
  
- /*
 -- 
 2.7.4
 
