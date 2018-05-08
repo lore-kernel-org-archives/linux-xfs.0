@@ -1,100 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43906 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44398 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751880AbeEHMdT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 May 2018 08:33:19 -0400
-Date: Tue, 8 May 2018 08:33:18 -0400
+        id S1752390AbeEHMfd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 May 2018 08:35:33 -0400
+Date: Tue, 8 May 2018 08:35:32 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 6/6] xfs: defer agfl frees from directory op
- transactions
-Message-ID: <20180508123318.GB4764@bfoster.bfoster>
-References: <20180418133119.21775-1-bfoster@redhat.com>
- <20180418133119.21775-7-bfoster@redhat.com>
- <20180508011213.GH11261@magnolia>
+Subject: Re: [PATCH 2/4] xfs: skip online discard during eofblocks trims
+Message-ID: <20180508123532.GC4764@bfoster.bfoster>
+References: <20180507181138.43250-1-bfoster@redhat.com>
+ <20180507181138.43250-3-bfoster@redhat.com>
+ <20180507233819.GJ23861@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180508011213.GH11261@magnolia>
+In-Reply-To: <20180507233819.GJ23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 07, 2018 at 06:12:13PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 18, 2018 at 09:31:19AM -0400, Brian Foster wrote:
-> > Directory operations can perform block allocations as entries are
-> > added/removed from directories. Defer AGFL block frees from the
-> > remaining directory operation transactions. This covers the hard
-> > link, remove and rename operations.
+On Tue, May 08, 2018 at 09:38:19AM +1000, Dave Chinner wrote:
+> On Mon, May 07, 2018 at 02:11:36PM -0400, Brian Foster wrote:
+> > We've had reports of online discard operations being sent from XFS
+> > on write-only workloads. These discards occur as a result of
+> > eofblocks trims that can occur after a large file copy completes.
+> > 
+> > These discards are slightly confusing for users who might be paying
+> > close attention to online discards (i.e., vdo) due to performance
+> > sensitivity. They also happen to be spurious because freed post-eof
+> > blocks by definition have not been written to during the current
+> > allocation cycle.
+> > 
+> > Update xfs_free_eofblocks() to skip discards that are purely
+> > attributed to eofblocks trims. This cuts down the number of spurious
+> > discards that may occur on write-only workloads due to normal
+> > preallocation activity.
+> > 
+> > Note that discards of post-eof extents can still occur from other
+> > codepaths that do not isolate handling of post-eof blocks from those
+> > within eof. For example, file unlinks and truncates may still cause
+> > discards for any file blocks affected by the operation.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > ---
-> >  fs/xfs/xfs_inode.c | 3 +++
-> >  1 file changed, 3 insertions(+)
+> >  fs/xfs/xfs_attr_inactive.c |  3 ++-
+> >  fs/xfs/xfs_bmap_util.c     |  2 +-
+> >  fs/xfs/xfs_inode.c         | 11 ++++++++---
+> >  fs/xfs/xfs_inode.h         |  2 +-
+> >  fs/xfs/xfs_iops.c          |  3 ++-
+> >  fs/xfs/xfs_qm_syscalls.c   |  2 +-
+> >  6 files changed, 15 insertions(+), 8 deletions(-)
 > > 
+> > diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> > index 52818ea2eb50..639311e60c5d 100644
+> > --- a/fs/xfs/xfs_attr_inactive.c
+> > +++ b/fs/xfs/xfs_attr_inactive.c
+> > @@ -434,7 +434,8 @@ xfs_attr_inactive(
+> >  		if (error)
+> >  			goto out_cancel;
+> >  
+> > -		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
+> > +		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0,
+> > +					      false);
+> >  		if (error)
+> >  			goto out_cancel;
+> >  	}
+> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > index 8cd8c412f52d..7b95d8976488 100644
+> > --- a/fs/xfs/xfs_bmap_util.c
+> > +++ b/fs/xfs/xfs_bmap_util.c
+> > @@ -872,7 +872,7 @@ xfs_free_eofblocks(
+> >  		 * may be full of holes (ie NULL files bug).
+> >  		 */
+> >  		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK,
+> > -					      XFS_ISIZE(ip));
+> > +					      XFS_ISIZE(ip), true);
+> 
+> xfs_itruncate_extents_nodiscard(), and then all the other
+> xfs_itruncate_extents() can remain unchanged.
+> 
+
+Oops, yeah.. I'll apply the same wrapper factoring approach here.
+
+> >  		if (error) {
+> >  			/*
+> >  			 * If we get an error at this point we simply don't
 > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 484ebef36fe4..47aa124e4744 100644
+> > index 2b70c8b4cee2..03b2b7099f90 100644
 > > --- a/fs/xfs/xfs_inode.c
 > > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1452,6 +1452,7 @@ xfs_link(
-> >  	}
+> > @@ -1538,7 +1538,8 @@ xfs_itruncate_extents(
+> >  	struct xfs_trans	**tpp,
+> >  	struct xfs_inode	*ip,
+> >  	int			whichfork,
+> > -	xfs_fsize_t		new_size)
+> > +	xfs_fsize_t		new_size,
+> > +	bool			skip_discard)
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	struct xfs_trans	*tp = *tpp;
+> > @@ -1549,6 +1550,7 @@ xfs_itruncate_extents(
+> >  	xfs_filblks_t		unmap_len;
+> >  	int			error = 0;
+> >  	int			done = 0;
+> > +	int			flags = 0;
 > >  
-> >  	xfs_defer_init(&dfops, &first_block);
-> > +	tp->t_agfl_dfops = &dfops;
+> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> >  	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
+> > @@ -1561,6 +1563,9 @@ xfs_itruncate_extents(
 > >  
+> >  	trace_xfs_itruncate_extents_start(ip, new_size);
+> >  
+> > +	if (skip_discard)
+> > +		flags |= XFS_BMAPI_NODISCARD;
+> > +
+> 
+> 	flags = xfs_bmapi_aflag(whichfork);
+> 	if (skip_discard)
+> 		flags |= XFS_BMAPI_NODISCARD;
+> 
 > >  	/*
-> >  	 * Handle initial link state of O_TMPFILE inode
-> > @@ -2649,6 +2650,7 @@ xfs_remove(
-> >  		goto out_trans_cancel;
-> >  
-> >  	xfs_defer_init(&dfops, &first_block);
-> > +	tp->t_agfl_dfops = &dfops;
-> >  	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
-> >  					&first_block, &dfops, resblks);
-> >  	if (error) {
-> > @@ -3016,6 +3018,7 @@ xfs_rename(
-> >  	}
-> >  
-> >  	xfs_defer_init(&dfops, &first_block);
-> > +	tp->t_agfl_dfops = &dfops;
+> >  	 * Since it is possible for space to become allocated beyond
+> >  	 * the end of the file (in a crash where the space is allocated
+> > @@ -1581,7 +1586,7 @@ xfs_itruncate_extents(
+> >  		xfs_defer_init(&dfops, &first_block);
+> >  		error = xfs_bunmapi(tp, ip,
+> >  				    first_unmap_block, unmap_len,
+> > -				    xfs_bmapi_aflag(whichfork),
+> > +				    xfs_bmapi_aflag(whichfork) | flags,
 > 
-> Hmm, do you have a reproducer xfstest for any of the last three patches?
+> so this gets simpler and easier to read.
 > 
 
-Unfortunately, no. The only reproducer I've managed so far was a (huge)
-private/customer metadump that consistently reproduced log reservation
-overruns over a long running file removal operation. Even then, that
-particular instance was worked around by the previous reworks of the
-inode transaction reservation calculations.
-
-While we ended up with a workaround for that problem, it was still known
-that the agfl fixups were unpredictable and we couldn't guarantee
-coverage by the reservation calculations without making them excessively
-large. So this series aims to make the agfl fixup (freeing,
-specifically) behavior itself predictable such that it always fits in an
-allocation log reservation unit.
-
-> Codewise,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-
-Thanks.. does this refer to just this patch, btw, or the previous 3?
+Indeed, thanks.
 
 Brian
 
-> --D
+> Cheers,
 > 
-> >  
-> >  	/* RENAME_EXCHANGE is unique from here on. */
-> >  	if (flags & RENAME_EXCHANGE)
-> > -- 
-> > 2.13.6
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
