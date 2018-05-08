@@ -1,170 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56554 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752954AbeEHAOV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:14:21 -0400
-Date: Mon, 7 May 2018 17:13:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/4] blk-wbt: throttle discards like background writes
-Message-ID: <20180508001359.GB11261@magnolia>
-References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
- <1525709615-14395-5-git-send-email-axboe@kernel.dk>
+Received: from aserp2130.oracle.com ([141.146.126.79]:47904 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751533AbeEHVOV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 17:14:21 -0400
+Subject: Re: [PATCH 20/21] xfsprogs: Add parent pointers during protofile
+ creation
+References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+ <1525754479-12177-21-git-send-email-allison.henderson@oracle.com>
+ <20180508174305.GT11261@magnolia>
+ <782721c1-f929-a5a6-ed45-b7f42b3a5c05@sandeen.net>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <6bad30c4-7bd0-5f87-8ded-c464d9991c73@oracle.com>
+Date: Tue, 8 May 2018 14:14:16 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1525709615-14395-5-git-send-email-axboe@kernel.dk>
+In-Reply-To: <782721c1-f929-a5a6-ed45-b7f42b3a5c05@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, hch@lst.de
+To: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 07, 2018 at 10:13:35AM -0600, Jens Axboe wrote:
-> Throttle discards like we would any background write. Discards should
-> be background activity, so if they are impacting foreground IO, then
-> we will throttle them down.
+
+
+On 05/08/2018 01:39 PM, Eric Sandeen wrote:
 > 
-> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  block/blk-stat.h |  6 +++---
->  block/blk-wbt.c  | 43 ++++++++++++++++++++++++++-----------------
->  block/blk-wbt.h  |  4 +++-
->  3 files changed, 32 insertions(+), 21 deletions(-)
 > 
-> diff --git a/block/blk-stat.h b/block/blk-stat.h
-> index 2dd36347252a..c22049a8125e 100644
-> --- a/block/blk-stat.h
-> +++ b/block/blk-stat.h
-> @@ -10,11 +10,11 @@
->  
->  /*
->   * from upper:
-> - * 3 bits: reserved for other usage
-> + * 4 bits: reserved for other usage
->   * 12 bits: size
-> - * 49 bits: time
-> + * 48 bits: time
->   */
-> -#define BLK_STAT_RES_BITS	3
-> +#define BLK_STAT_RES_BITS	4
->  #define BLK_STAT_SIZE_BITS	12
->  #define BLK_STAT_RES_SHIFT	(64 - BLK_STAT_RES_BITS)
->  #define BLK_STAT_SIZE_SHIFT	(BLK_STAT_RES_SHIFT - BLK_STAT_SIZE_BITS)
-> diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-> index 25d202345965..a7a724580033 100644
-> --- a/block/blk-wbt.c
-> +++ b/block/blk-wbt.c
-> @@ -106,6 +106,8 @@ static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb,
->  {
->  	if (wb_acct & WBT_KSWAPD)
->  		return &rwb->rq_wait[WBT_RWQ_KSWAPD];
-> +	else if (wb_acct & WBT_DISCARD)
-> +		return &rwb->rq_wait[WBT_RWQ_DISCARD];
->  
->  	return &rwb->rq_wait[WBT_RWQ_BG];
->  }
-> @@ -143,10 +145,13 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
->  	}
->  
->  	/*
-> -	 * If the device does write back caching, drop further down
-> -	 * before we wake people up.
-> +	 * For discards, our limit is always the background. For writes, if
-> +	 * the device does write back caching, drop further down before we
-> +	 * wake people up.
->  	 */
-> -	if (rwb->wc && !wb_recent_wait(rwb))
-> +	if (wb_acct & WBT_DISCARD)
-> +		limit = rwb->wb_background;
-> +	else if (rwb->wc && !wb_recent_wait(rwb))
->  		limit = 0;
->  	else
->  		limit = rwb->wb_normal;
-> @@ -483,6 +488,9 @@ static inline unsigned int get_limit(struct rq_wb *rwb, unsigned long rw)
->  {
->  	unsigned int limit;
->  
-> +	if ((rw & REQ_OP_MASK) == REQ_OP_DISCARD)
-> +		return rwb->wb_background;
-> +
->  	/*
->  	 * At this point we know it's a buffered write. If this is
->  	 * kswapd trying to free memory, or REQ_SYNC is set, then
-> @@ -564,21 +572,20 @@ static void __wbt_wait(struct rq_wb *rwb, enum wbt_flags wb_acct,
->  
->  static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
->  {
-> -	const int op = bio_op(bio);
-> -
-> -	/*
-> -	 * If not a WRITE, do nothing
-> -	 */
-> -	if (op != REQ_OP_WRITE)
-> -		return false;
-> -
-> -	/*
-> -	 * Don't throttle WRITE_ODIRECT
-> -	 */
-> -	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
-> +	switch (bio_op(bio)) {
-> +	case REQ_OP_WRITE:
-> +		/*
-> +		 * Don't throttle WRITE_ODIRECT
-> +		 */
-> +		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
-> +		    (REQ_SYNC | REQ_IDLE))
-> +			return false;
-> +		/* fallthrough */
-> +	case REQ_OP_DISCARD:
-> +		return true;
-> +	default:
->  		return false;
-> -
-> -	return true;
-> +	}
->  }
->  
->  /*
-> @@ -605,6 +612,8 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
->  
->  	if (current_is_kswapd())
->  		ret |= WBT_KSWAPD;
-> +	if (bio_op(bio) == REQ_OP_DISCARD)
-> +		ret |= WBT_DISCARD;
->  
->  	__wbt_wait(rwb, ret, bio->bi_opf, lock);
->  
-> diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-> index 8038b4a0d4ef..d6a125e49db5 100644
-> --- a/block/blk-wbt.h
-> +++ b/block/blk-wbt.h
-> @@ -14,13 +14,15 @@ enum wbt_flags {
->  	WBT_TRACKED		= 1,	/* write, tracked for throttling */
->  	WBT_READ		= 2,	/* read */
->  	WBT_KSWAPD		= 4,	/* write, from kswapd */
-> +	WBT_DISCARD		= 8,	/* discard */
->  
-> -	WBT_NR_BITS		= 3,	/* number of bits */
-> +	WBT_NR_BITS		= 4,	/* number of bits */
->  };
->  
->  enum {
->  	WBT_RWQ_BG		= 0,
->  	WBT_RWQ_KSWAPD,
-> +	WBT_RWQ_DISCARD,
->  	WBT_NUM_RWQ,
->  };
->  
-> -- 
-> 2.7.4
+> On 5/8/18 12:43 PM, Darrick J. Wong wrote:
+>> On Mon, May 07, 2018 at 09:41:18PM -0700, Allison Henderson wrote:
+>>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>>> ---
+>>>   mkfs/proto.c         | 59 ++++++++++++++++++++++++++++++++++------------------
+>>>   repair/attr_repair.c | 16 ++------------
+>>>   repair/phase6.c      | 47 +++++++++++++++++++++++++----------------
 > 
+>> Separate patches for separate utilities, please.
+> 
+> Or at least patch per functional change; it's not at all clear to me how protofile
+> creation has anything to do with xfs_repair, and there's nothing in the commit
+> log to help me figure it out.  :)
+> 
+> (I think it doesn't have anything to do w/ protofile creation, and the repair
+> patches are fixing up orphanage entry creation; the attr_repair changes seem
+> like some third thing that I don't grok yet, sorry - removing namecheck() for
+> some reason?).
+> 
+> -Eric
+
+Ok, it took me a minute to remember why I did this too.  We had ended up 
+adding a parameter to libxfs_dir_createname to get the offset needed for 
+creating the parent pointer in the protofile, and I ended up following 
+the compiler errors back around the repair code that uses the same 
+function calls as well.
+
+Maybe I should make a separate patch just for the offset like the kernel 
+space set does, and then have two smaller patches for the protofile and 
+repair code.
+
+Allison
+
+>   
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIDaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=RAhvaxRO4Y3BuEWfKCiKHMUeNpZj53frHeTCh1R64dU&s=KTNiitB11SrpPwMvBXEQzon_G1JLFHAd69coCAKx8_Y&e=
+> 
