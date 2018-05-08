@@ -1,218 +1,141 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38982 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751964AbeEHEn0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:26 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484grC1105671
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:26 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2hs5936sm4-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:42034 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755343AbeEHRZZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 13:25:25 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48HLCOR116644
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:25:24 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2hs4k29p5k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 04:43:26 +0000
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 17:25:24 +0000
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w484hPW3028832
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w48HPNnK006934
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:25 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hPuE029366
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:25 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 01/21] xfsprogs: Move xfs_attr.h to libxfs
-Date: Mon,  7 May 2018 21:40:59 -0700
-Message-Id: <1525754479-12177-2-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:25:23 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w48HPMrW013948
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:25:22 GMT
+Date: Tue, 8 May 2018 10:25:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 18/21] xfsprogs: Add parent pointer flag to cmd
+Message-ID: <20180508172521.GR11261@magnolia>
 References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+ <1525754479-12177-19-git-send-email-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525754479-12177-19-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-This patch moves fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
-since xfs_attr.c is in libxfs.  We will need these later in
-xfsprogs.
+On Mon, May 07, 2018 at 09:41:16PM -0700, Allison Henderson wrote:
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- libxfs/Makefile   |   1 +
- libxfs/xfs_attr.h | 157 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 158 insertions(+)
+Needs commit message:
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 0470f5f..75ce980 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -21,6 +21,7 @@ HFILES = \
- 	xfs_ag_resv.h \
- 	xfs_alloc.h \
- 	xfs_alloc_btree.h \
-+	xfs_attr.h \
- 	xfs_attr_leaf.h \
- 	xfs_attr_sf.h \
- 	xfs_bit.h \
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-new file mode 100644
-index 0000000..8abf398
---- /dev/null
-+++ b/libxfs/xfs_attr.h
-@@ -0,0 +1,157 @@
-+/*
-+ * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef __XFS_ATTR_H__
-+#define	__XFS_ATTR_H__
-+
-+struct xfs_inode;
-+struct xfs_da_args;
-+struct xfs_attr_list_context;
-+
-+/*
-+ * Large attribute lists are structured around Btrees where all the data
-+ * elements are in the leaf nodes.  Attribute names are hashed into an int,
-+ * then that int is used as the index into the Btree.  Since the hashval
-+ * of an attribute name may not be unique, we may have duplicate keys.
-+ * The internal links in the Btree are logical block offsets into the file.
-+ *
-+ * Small attribute lists use a different format and are packed as tightly
-+ * as possible so as to fit into the literal area of the inode.
-+ */
-+
-+/*========================================================================
-+ * External interfaces
-+ *========================================================================*/
-+
-+
-+#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
-+#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
-+#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
-+#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
-+#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
-+#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+
-+#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
-+
-+#define XFS_ATTR_FLAGS \
-+	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
-+	{ ATTR_ROOT,		"ROOT" }, \
-+	{ ATTR_TRUST,		"TRUST" }, \
-+	{ ATTR_SECURE,		"SECURE" }, \
-+	{ ATTR_CREATE,		"CREATE" }, \
-+	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
-+	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
-+	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
-+
-+/*
-+ * The maximum size (into the kernel or returned from the kernel) of an
-+ * attribute value or the buffer used for an attr_list() call.  Larger
-+ * sizes will result in an ERANGE return code.
-+ */
-+#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
-+
-+/*
-+ * Define how lists of attribute names are returned to the user from
-+ * the attr_list() call.  A large, 32bit aligned, buffer is passed in
-+ * along with its size.  We put an array of offsets at the top that each
-+ * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
-+ */
-+typedef struct attrlist {
-+	__s32	al_count;	/* number of entries in attrlist */
-+	__s32	al_more;	/* T/F: more attrs (do call again) */
-+	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
-+} attrlist_t;
-+
-+/*
-+ * Show the interesting info about one attribute.  This is what the
-+ * al_offset[i] entry points to.
-+ */
-+typedef struct attrlist_ent {	/* data from attr_list() */
-+	__u32	a_valuelen;	/* number bytes in value of attr */
-+	char	a_name[1];	/* attr name (NULL terminated) */
-+} attrlist_ent_t;
-+
-+/*
-+ * Given a pointer to the (char*) buffer containing the attr_list() result,
-+ * and an index, return a pointer to the indicated attribute in the buffer.
-+ */
-+#define	ATTR_ENTRY(buffer, index)		\
-+	((attrlist_ent_t *)			\
-+	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
-+
-+/*
-+ * Kernel-internal version of the attrlist cursor.
-+ */
-+typedef struct attrlist_cursor_kern {
-+	__u32	hashval;	/* hash value of next entry to add */
-+	__u32	blkno;		/* block containing entry (suggestion) */
-+	__u32	offset;		/* offset in list of equal-hashvals */
-+	__u16	pad1;		/* padding to match user-level */
-+	__u8	pad2;		/* padding to match user-level */
-+	__u8	initted;	/* T/F: cursor has been initialized */
-+} attrlist_cursor_kern_t;
-+
-+
-+/*========================================================================
-+ * Structure used to pass context around among the routines.
-+ *========================================================================*/
-+
-+
-+/* void; state communicated via *context */
-+typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
-+			      unsigned char *, int, int);
-+
-+typedef struct xfs_attr_list_context {
-+	struct xfs_trans		*tp;
-+	struct xfs_inode		*dp;		/* inode */
-+	struct attrlist_cursor_kern	*cursor;	/* position in list */
-+	char				*alist;		/* output buffer */
-+	int				seen_enough;	/* T/F: seen enough of list? */
-+	ssize_t				count;		/* num used entries */
-+	int				dupcnt;		/* count dup hashvals seen */
-+	int				bufsize;	/* total buffer size */
-+	int				firstu;		/* first used byte in buffer */
-+	int				flags;		/* from VOP call */
-+	int				resynch;	/* T/F: resynch with cursor */
-+	put_listent_func_t		put_listent;	/* list output fmt function */
-+	int				index;		/* index into output buffer */
-+} xfs_attr_list_context_t;
-+
-+
-+/*========================================================================
-+ * Function prototypes for the kernel.
-+ *========================================================================*/
-+
-+/*
-+ * Overall external interface routines.
-+ */
-+int xfs_attr_inactive(struct xfs_inode *dp);
-+int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
-+int xfs_attr_list_int(struct xfs_attr_list_context *);
-+int xfs_inode_hasattr(struct xfs_inode *ip);
-+int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
-+int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
-+		 unsigned char *value, int *valuelenp, int flags);
-+int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
-+		 unsigned char *value, int valuelen, int flags);
-+int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-+int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
-+		  int flags, struct attrlist_cursor_kern *cursor);
-+
-+
-+#endif	/* __XFS_ATTR_H__ */
--- 
-2.7.4
+mkfs: enable formatting with parent pointers
 
+Wire up parent pointer support in mkfs via the '-m parent' parameter.
+
+Signed-off-by: <etc>
+
+> ---
+>  mkfs/xfs_mkfs.c | 16 +++++++++++++++-
+>  1 file changed, 15 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 78d0ce5..554e1bf 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -129,6 +129,7 @@ enum {
+>  	M_UUID,
+>  	M_RMAPBT,
+>  	M_REFLINK,
+> +	M_PARENT,
+
+Hmm, is this better off in the naming section?
+
+e.g. "mkfs.xfs -n parent=1"
+
+>  	M_MAX_OPTS,
+>  };
+>  
+> @@ -663,6 +664,7 @@ struct opt_params mopts = {
+>  		[M_UUID] = "uuid",
+>  		[M_RMAPBT] = "rmapbt",
+>  		[M_REFLINK] = "reflink",
+> +		[M_PARENT] = "parent",
+>  	},
+>  	.subopt_params = {
+>  		{ .index = M_CRC,
+> @@ -693,6 +695,13 @@ struct opt_params mopts = {
+>  		  .maxval = 1,
+>  		  .defaultval = 1,
+>  		},
+> +		{ .index = M_PARENT,
+> +		  .conflicts = { {NULL, LAST_CONFLICT } },
+> +		  .minval = 0,
+> +		  .maxval = 1,
+> +		  .defaultval = 0,
+
+This (misleadingly named) field is the default value if you pass the
+argument without explicitly assigning a value, i.e.
+
+# mkfs.xfs -m parent /dev/sda
+
+sets parent to whatever defaultval is.  In this case you'd get no parent
+pointers, which is a little surprising.
+
+And, uh, seeing as people keep getting this wrong maybe we should rename
+it?
+
+> +		},
+> +
+>  	},
+>  };
+>  
+> @@ -865,7 +874,7 @@ usage( void )
+>  {
+>  	fprintf(stderr, _("Usage: %s\n\
+>  /* blocksize */		[-b size=num]\n\
+> -/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1]\n\
+> +/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,parent=0|1]\n\
+>  /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+>  			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
+>  			    sectsize=num\n\
+> @@ -1586,6 +1595,9 @@ meta_opts_parser(
+>  	case M_REFLINK:
+>  		cli->sb_feat.reflink = getnum(value, opts, subopt);
+>  		break;
+> +	case M_PARENT:
+> +		cli->sb_feat.parent_pointers = getnum(value, &mopts, M_PARENT);
+> +		break;
+>  	default:
+>  		return -EINVAL;
+>  	}
+> @@ -2887,6 +2899,8 @@ sb_set_features(
+>  		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
+>  	if (fp->reflink)
+>  		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
+> +	if (fp->parent_pointers)
+> +		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_PARENT;
+
+Otherwise looks ok to me....
+
+--D
+
+>  
+>  	/*
+>  	 * Sparse inode chunk support has two main inode alignment requirements.
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
