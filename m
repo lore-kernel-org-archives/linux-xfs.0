@@ -1,113 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34766 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932679AbeEHOxj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 10:53:39 -0400
-Date: Tue, 8 May 2018 07:53:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 6/6] xfs: defer agfl frees from directory op
- transactions
-Message-ID: <20180508145320.GJ11261@magnolia>
-References: <20180418133119.21775-1-bfoster@redhat.com>
- <20180418133119.21775-7-bfoster@redhat.com>
- <20180508011213.GH11261@magnolia>
- <20180508123318.GB4764@bfoster.bfoster>
+Received: from bullwinkle.deer-run.com ([50.23.32.3]:58834 "EHLO
+        bullwinkle.deer-run.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755179AbeEHQPR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:15:17 -0400
+Date: Tue, 8 May 2018 11:13:53 -0500
+From: hal@deer-run.com
+Subject: Re: [PATCH] xfs_db: add -R option
+Message-ID: <20180508161353.GA18224@deer-run.com>
+References: <20180504140244.GA32161@deer-run.com>
+ <db080bb2-a649-fbb3-ec91-d16f00ad30f0@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180508123318.GB4764@bfoster.bfoster>
+In-Reply-To: <db080bb2-a649-fbb3-ec91-d16f00ad30f0@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 08, 2018 at 08:33:18AM -0400, Brian Foster wrote:
-> On Mon, May 07, 2018 at 06:12:13PM -0700, Darrick J. Wong wrote:
-> > On Wed, Apr 18, 2018 at 09:31:19AM -0400, Brian Foster wrote:
-> > > Directory operations can perform block allocations as entries are
-> > > added/removed from directories. Defer AGFL block frees from the
-> > > remaining directory operation transactions. This covers the hard
-> > > link, remove and rename operations.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_inode.c | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > index 484ebef36fe4..47aa124e4744 100644
-> > > --- a/fs/xfs/xfs_inode.c
-> > > +++ b/fs/xfs/xfs_inode.c
-> > > @@ -1452,6 +1452,7 @@ xfs_link(
-> > >  	}
-> > >  
-> > >  	xfs_defer_init(&dfops, &first_block);
-> > > +	tp->t_agfl_dfops = &dfops;
-> > >  
-> > >  	/*
-> > >  	 * Handle initial link state of O_TMPFILE inode
-> > > @@ -2649,6 +2650,7 @@ xfs_remove(
-> > >  		goto out_trans_cancel;
-> > >  
-> > >  	xfs_defer_init(&dfops, &first_block);
-> > > +	tp->t_agfl_dfops = &dfops;
-> > >  	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
-> > >  					&first_block, &dfops, resblks);
-> > >  	if (error) {
-> > > @@ -3016,6 +3018,7 @@ xfs_rename(
-> > >  	}
-> > >  
-> > >  	xfs_defer_init(&dfops, &first_block);
-> > > +	tp->t_agfl_dfops = &dfops;
-> > 
-> > Hmm, do you have a reproducer xfstest for any of the last three patches?
-> > 
+> Hm, so this probably makes it possible that blockget will wander off
+> into inconsistencies and fail; there's a /reason/ for the check.  So
+> if anything this is probably best-effort.  I doubt you can rely on
+> blockget even completing without error, let alone being correct.  In
+> that case, is it still useful to you?
+
+I've been testing a modified version of xfs_db on live file systems
+and dirty image files, and I have yet to have blockget fail. I agree
+that it's certainly possible for blockget to blow up under these
+circumstances, but it's working often enough to be useful.
+
+> What sort of information do you hope to gather after running
+> blockget without a replay?
+
+Suppose I can match a string or magic number for a file of interest
+at a specific byte offset in the file system image. A little arithmetic
+and I have a daddr value. xfs_db let's me convert that to an fsblock
+and then call blockuse -n to get the inode and file path. I've tried
+it, and it works with my modifed xfs_db.
+
+Until we get XFS support into libsleuthkit (which I'm working towards,
+but it's going to be a while), having this functionality lets me
+use xfs_db as a forensic tool. And it also lets me use xfs_db to
+validate other forensic tools.
+
+> Given that xfs_db is a command for experts, and forensics analysis on an
+> unreplayed filesystem even more so, what about modifying the logformat
+> command to allow zeroing of a dirty log with some type of force option,
+> which would then allow blkget to proceed?  (assuming you were working on
+> a copy, of course.)  That would make things pretty explicit.
 > 
-> Unfortunately, no. The only reproducer I've managed so far was a (huge)
-> private/customer metadump that consistently reproduced log reservation
-> overruns over a long running file removal operation. Even then, that
-> particular instance was worked around by the previous reworks of the
-> inode transaction reservation calculations.
-> 
-> While we ended up with a workaround for that problem, it was still known
-> that the agfl fixups were unpredictable and we couldn't guarantee
-> coverage by the reservation calculations without making them excessively
-> large. So this series aims to make the agfl fixup (freeing,
-> specifically) behavior itself predictable such that it always fits in an
-> allocation log reservation unit.
+> Is that too convoluted?
 
-<nod>
+This is not something you'd want to do on a live file system, and 
+unfortunately I sometimes have to forensicate live file systems.
+And I'd rather not have to modify my working copy of a forensic
+image by zeroing the log if I could avoid it.
 
-> > Codewise,
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> 
-> Thanks.. does this refer to just this patch, btw, or the previous 3?
+> Otherwise I might suggest adding a switch specific to the blockget_f
+> function, which would just skip the sb_logcheck() altogether.  That would
+> be more targeted, and wouldn't be some global switch which affects
+> every current and future caller of sb_logcheck.  A warning about how
+> the log is being ignored and results may be inconsistent could then
+> be added specifically to blockget_f.
 
-All three.
+Which sort of brings us back to the conversation that Darrick and I
+have been having. Adding a command-line switch seems wrong-- I'm fully
+convinced of that. But I'd still like to be able to blockget to try
+to work if the file system is dirty but "-r" is used.
 
---D
+Darrick came up with one fix, which is the first patch option below.
+After staring at Darrick's suggestion a while, I came up with a
+different fix (second patch) that requires more code changes but I
+think more accurately addresses the problem statement. See previous
+messages in this thread for more detail.
 
-> Brian
-> 
-> > --D
-> > 
-> > >  
-> > >  	/* RENAME_EXCHANGE is unique from here on. */
-> > >  	if (flags & RENAME_EXCHANGE)
-> > > -- 
-> > > 2.13.6
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Let me know which you prefer and I'll submit the patch in the proper
+format to the list.
+
+Cheers!
+
+--Hal
+
+
+[PATCH OPTION #1]
+---
+ db/sb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/db/sb.c b/db/sb.c
+index c7fbfd6..fca048c 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -259,7 +259,10 @@ sb_logcheck(void)
+ "the xfs_repair -L option to destroy the log and attempt a repair.\n"
+ "Note that destroying the log may cause corruption -- please attempt a mount\n"
+ "of the filesystem before doing this.\n"), progname);
+-		return 0;
++		/* Dirty log would normally result in "return 0".
++		   Return 1 if "-r" (read-only) option is used so
++		   blockget can proceed. */
++		return (x.isreadonly & LIBXFS_ISREADONLY) ? 1 : 0;
+ 	}
+ 	/* Log is clean */
+ 	return 1;
+-- 
+1.8.3.1
+
+
+
+
+[PATCH OPTION #2]
+---
+ db/check.c | 5 ++++-
+ db/sb.c    | 8 ++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/db/check.c b/db/check.c
+index 2f8dee5..885e84a 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -1849,6 +1849,7 @@ init(
+ 	xfs_fsblock_t	bno;
+ 	int		c;
+ 	xfs_ino_t	ino;
++	int		lc;
+ 	int		rt;
+ 
+ 	serious_error = 0;
+@@ -1858,7 +1859,9 @@ init(
+ 		serious_error = 1;
+ 		return 0;
+ 	}
+-	if (!sb_logcheck())
++	lc = sb_logcheck();
++	/* abort on error or if log is dirty and "-r" flag not used */
++	if (lc < 0 || (lc == 0 && !(x.isreadonly & LIBXFS_ISREADONLY)))
+ 		return 0;
+ 	rt = mp->m_sb.sb_rextents != 0;
+ 	dbmap = xmalloc((mp->m_sb.sb_agcount + rt) * sizeof(*dbmap));
+diff --git a/db/sb.c b/db/sb.c
+index c7fbfd6..88e5a94 100644
+--- a/db/sb.c
++++ b/db/sb.c
+@@ -235,13 +235,13 @@ sb_logcheck(void)
+ 		if (x.logdev && x.logdev != x.ddev) {
+ 			dbprintf(_("aborting - external log specified for FS "
+ 				 "with an internal log\n"));
+-			return 0;
++			return -1;
+ 		}
+ 	} else {
+ 		if (!x.logdev || (x.logdev == x.ddev)) {
+ 			dbprintf(_("aborting - no external log specified for FS "
+ 				 "with an external log\n"));
+-			return 0;
++			return -1;
+ 		}
+ 	}
+ 
+@@ -250,7 +250,7 @@ sb_logcheck(void)
+ 	dirty = xlog_is_dirty(mp, mp->m_log, &x, 0);
+ 	if (dirty == -1) {
+ 		dbprintf(_("ERROR: cannot find log head/tail, run xfs_repair\n"));
+-		return 0;
++		return -1;
+ 	} else if (dirty == 1) {
+ 		dbprintf(_(
+ "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
+@@ -271,7 +271,7 @@ sb_logzero(uuid_t *uuidp)
+ 	int	cycle = XLOG_INIT_CYCLE;
+ 	int	error;
+ 
+-	if (!sb_logcheck())
++	if (sb_logcheck() < 1)
+ 		return 0;
+ 
+ 	/*
+-- 
+1.8.3.1
+
