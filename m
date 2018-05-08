@@ -1,32 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56180 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:57486 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932104AbeEHQ6K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:58:10 -0400
+        with ESMTP id S1755110AbeEHRAT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 13:00:19 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpDhe041544
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:09 GMT
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpQNe041635
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:18 GMT
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2hs5939huq-1
+        by userp2120.oracle.com with ESMTP id 2hs5939j6b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 16:58:09 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w48Gw8d3021501
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 17:00:18 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w48H0G6E030421
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:08 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w48Gw7Rn022049
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:07 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:17 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w48H0Geu032106
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:16 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 19/21] xfs: Add the parent pointer support to the
- superblock version 5.
+Subject: Re: [PATCH 12/21] xfs: define parent pointer xattr format
 References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-20-git-send-email-allison.henderson@oracle.com>
- <20180507213825.GC11261@magnolia>
-Message-ID: <62fb00e8-b30b-3bba-0daa-dd52245f630f@oracle.com>
-Date: Tue, 8 May 2018 09:58:06 -0700
+ <1525627494-12873-13-git-send-email-allison.henderson@oracle.com>
+ <20180507223542.GJ11261@magnolia>
+Message-ID: <c30a9d3c-b546-7b31-e4d9-38faf1254553@oracle.com>
+Date: Tue, 8 May 2018 10:00:15 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180507213825.GC11261@magnolia>
+In-Reply-To: <20180507223542.GJ11261@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -36,106 +35,100 @@ List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 05/07/2018 02:38 PM, Darrick J. Wong wrote:
-> On Sun, May 06, 2018 at 10:24:52AM -0700, Allison Henderson wrote:
->> [dchinner: forward ported and cleaned up]
->> [achender: rebased and added parent pointer attribute to
->>             compatible attributes mask]
+
+
+On 05/07/2018 03:35 PM, Darrick J. Wong wrote:
+> On Sun, May 06, 2018 at 10:24:45AM -0700, Allison Henderson wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
 >>
->> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+>> We need to define the parent pointer attribute format before we
+>> start adding support for it into all the code that needs to use it.
+>> The EA format we will use encodes the following information:
+>>
+>> 	name={parent inode #, parent inode generation, dirent offset}
+>> 	value={dirent filename}
+>>
+>> The inode/gen gives all the information we need to reliably identify
+>> the parent without requiring child->parent lock ordering, and allows
+>> userspace to do pathname component level reconstruction without the
+>> kernel ever needing to verify the parent itself as part of ioctl
+>> calls.
+>>
+>> By using the dirent offset in the EA name, we have a method of
+>> knowing the exact parent pointer EA we need to modify/remove in
+>> rename/unlink without an unbound EA name search.
+>>
+>> By keeping the dirent name in the value, we have enough information
+>> to be able to validate and reconstruct damaged directory trees.
+>> While the diroffset of a filename alone is not unique enough to
+>> identify the child, the {diroffset,filename,child_inode} tuple is
+>> sufficient. That is, if the diroffset gets reused and points to a
+>> different filename, we can detect that from the contents of EA. If a
+>> link of the same name is created, then we can check whether it
+>> points at the same inode as the parent EA we current have.
+>>
+>> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+>> 	   changed p_ino to xfs_ino_t and p_namelen to uint8_t,
+>> 	   moved to xfs_da_format for xfs_dir2_dataptr_t]
+>>
 >> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 >> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_da_format.h | 26 +++++++++++++++++++++++++-
+>>   1 file changed, 25 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+>> index 9bd2e6b..d1c1221 100644
+>> --- a/fs/xfs/libxfs/xfs_da_format.h
+>> +++ b/fs/xfs/libxfs/xfs_da_format.h
+>> @@ -878,11 +878,35 @@ struct xfs_attr3_rmt_hdr {
+>>   #define XFS_ATTR3_RMT_BUF_SPACE(mp, bufsize)	\
+>>   	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
+>>   			sizeof(struct xfs_attr3_rmt_hdr) : 0))
+>> -
 > 
-> Old kernels can't accidentally start returning the ATTR_PARENT
-> attributes, right?  I think the answer is yes.....?
-> 
-> If so,
+> Unrelated/unnecessary whitespace removal?  Otherwise this is still
 > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > --D
-
-I suppose it's possible, though it wouldn't seem correct if they didn't
-actually support the feature.  Maybe I'm not understanding your concern? 
-  You are concerned as to how we handle old file systems that may have 
-incorrectly set the attribute?
+> 
+Sorry, not sure how that got in there.  Will clean up.  Thx!
 
 Allison
 > 
->> ---
->>   fs/xfs/libxfs/xfs_format.h | 7 +++++--
->>   fs/xfs/libxfs/xfs_fs.h     | 1 +
->>   fs/xfs/libxfs/xfs_sb.c     | 2 ++
->>   fs/xfs/xfs_super.c         | 4 ++++
->>   4 files changed, 12 insertions(+), 2 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->> index 5e946c8..d05ffc5 100644
->> --- a/fs/xfs/libxfs/xfs_format.h
->> +++ b/fs/xfs/libxfs/xfs_format.h
->> @@ -462,10 +462,12 @@ xfs_sb_has_compat_feature(
->>   #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
->>   #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
->>   #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
->> +#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)		/* parent inode ptr */
->>   #define XFS_SB_FEAT_RO_COMPAT_ALL \
->>   		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
->>   		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
->> -		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
->> +		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
->> +		 XFS_SB_FEAT_RO_COMPAT_PARENT)
->>   #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
->>   static inline bool
->>   xfs_sb_has_ro_compat_feature(
->> @@ -561,7 +563,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
->>   
->>   static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>>   /* Number of bytes in a directory block. */
+>>   static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
 >>   {
->> -	return false; /* We'll enable this at the end of the set */
->> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
->> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+>>   	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
 >>   }
 >>   
->>   /*
->> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
->> index faf1a4e..641e0af 100644
->> --- a/fs/xfs/libxfs/xfs_fs.h
->> +++ b/fs/xfs/libxfs/xfs_fs.h
->> @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
->>   #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
->>   #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
->>   #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
->> +#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
->>   
->>   /*
->>    * Minimum and maximum sizes need for growth checks.
->> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
->> index d9b94bd..e1f0ac1 100644
->> --- a/fs/xfs/libxfs/xfs_sb.c
->> +++ b/fs/xfs/libxfs/xfs_sb.c
->> @@ -955,6 +955,8 @@ xfs_fs_geometry(
->>   		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
->>   	if (xfs_sb_version_hasreflink(sbp))
->>   		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
->> +	if(xfs_sb_version_hasparent(sbp))
->> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
->>   	if (xfs_sb_version_hassector(sbp))
->>   		geo->logsectsize = sbp->sb_logsectsize;
->>   	else
->> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> index dce3baf..366deee 100644
->> --- a/fs/xfs/xfs_super.c
->> +++ b/fs/xfs/xfs_super.c
->> @@ -1731,6 +1731,10 @@ xfs_fs_fill_super(
->>   		goto out_filestream_unmount;
->>   	}
->>   
->> +	if (xfs_sb_version_hasparent(&mp->m_sb))
->> +		xfs_alert(mp,
->> +	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
+>> +/*
+>> + * Parent pointer attribute format definition
+>> + *
+>> + * EA name encodes the parent inode number, generation and the offset of
+>> + * the dirent that points to the child inode. The EA value contains the
+>> + * same name as the dirent in the parent directory.
+>> + */
+>> +struct xfs_parent_name_rec {
+>> +	__be64  p_ino;
+>> +	__be32  p_gen;
+>> +	__be32  p_diroffset;
+>> +};
 >> +
->>   	error = xfs_mountfs(mp);
->>   	if (error)
->>   		goto out_filestream_unmount;
+>> +/*
+>> + * incore version of the above, also contains name pointers so callers
+>> + * can pass/obtain all the parent pointer information in a single structure
+>> + */
+>> +struct xfs_parent_name_irec {
+>> +	xfs_ino_t		p_ino;
+>> +	uint32_t		p_gen;
+>> +	xfs_dir2_dataptr_t	p_diroffset;
+>> +	const char		*p_name;
+>> +	uint8_t			p_namelen;
+>> +};
+>> +
+>>   #endif /* __XFS_DA_FORMAT_H__ */
 >> -- 
 >> 2.7.4
 >>
