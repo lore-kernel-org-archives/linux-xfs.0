@@ -1,132 +1,437 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51606 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933383AbeEIHsp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:48:45 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/33] fs: factor out a __generic_write_end helper
-Date: Wed,  9 May 2018 09:47:59 +0200
-Message-Id: <20180509074830.16196-3-hch@lst.de>
-In-Reply-To: <20180509074830.16196-1-hch@lst.de>
-References: <20180509074830.16196-1-hch@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:60268 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752209AbeEHEn1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:27 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484fXCd156950
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:27 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2hs4k26st1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 04:43:26 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w484hPsZ018444
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:26 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hPiD029369
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:25 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH 02/21] xfsprogs: Add trans toggle to attr routines
+Date: Mon,  7 May 2018 21:41:00 -0700
+Message-Id: <1525754479-12177-3-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-Bits of the buffer.c based write_end implementations that don't know
-about buffer_heads and can be reused by other implementations.
+This patch adds a roll_trans parameter to all attribute routines.
+Calling functions may pass true to roll transactions as normal,
+or false to hold them.  We will need this later for delayed
+attribute operations.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/buffer.c   | 68 +++++++++++++++++++++++++++------------------------
- fs/internal.h |  2 ++
- 2 files changed, 38 insertions(+), 32 deletions(-)
+ libxfs/xfs_attr.c      | 144 +++++++++++++++++++++++++++----------------------
+ libxfs/xfs_attr_leaf.c |  12 +++--
+ libxfs/xfs_attr_leaf.h |   8 +--
+ 3 files changed, 90 insertions(+), 74 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 249b83fafe48..923391702f51 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
- }
- EXPORT_SYMBOL(block_write_begin);
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index a4bde02..359fba1 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -50,21 +50,21 @@
+ /*
+  * Internal routines when attribute list fits inside the inode.
+  */
+-STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
++STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args, bool roll_trans);
  
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page)
-+{
-+	loff_t old_size = inode->i_size;
-+	bool i_size_changed = false;
-+
-+	/*
-+	 * No need to use i_size_read() here, the i_size cannot change under us
-+	 * because we hold i_rwsem.
-+	 *
-+	 * But it's important to update i_size while still holding page lock:
-+	 * page writeout could otherwise come in and zero beyond i_size.
-+	 */
-+	if (pos + copied > inode->i_size) {
-+		i_size_write(inode, pos + copied);
-+		i_size_changed = true;
-+	}
-+
-+	unlock_page(page);
-+	put_page(page);
-+
-+	if (old_size < pos)
-+		pagecache_isize_extended(inode, old_size, pos);
-+	/*
-+	 * Don't mark the inode dirty under page lock. First, it unnecessarily
-+	 * makes the holding time of page lock longer. Second, it forces lock
-+	 * ordering of page lock and transaction start for journaling
-+	 * filesystems.
-+	 */
-+	if (i_size_changed)
-+		mark_inode_dirty(inode);
-+	return copied;
-+}
-+
- int block_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
-@@ -2116,42 +2150,12 @@ int generic_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
+ /*
+  * Internal routines when attribute list is one block.
+  */
+ STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
+-STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
++STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
+ 
+ /*
+  * Internal routines when attribute list is more than one block.
+  */
+ STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+-STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
++STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans);
+ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+ STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+ 
+@@ -292,7 +292,7 @@ xfs_attr_set(
+ 		 * Try to add the attr to the attribute list in
+ 		 * the inode.
+ 		 */
+-		error = xfs_attr_shortform_addname(&args);
++		error = xfs_attr_shortform_addname(&args, true);
+ 		if (error != -ENOSPC) {
+ 			/*
+ 			 * Commit the shortform mods, and we're done.
+@@ -351,9 +351,9 @@ xfs_attr_set(
+ 	}
+ 
+ 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+-		error = xfs_attr_leaf_addname(&args);
++		error = xfs_attr_leaf_addname(&args, true);
+ 	else
+-		error = xfs_attr_node_addname(&args);
++		error = xfs_attr_node_addname(&args, true);
+ 	if (error)
+ 		goto out;
+ 
+@@ -448,11 +448,11 @@ xfs_attr_remove(
+ 		error = -ENOATTR;
+ 	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+ 		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+-		error = xfs_attr_shortform_remove(&args);
++		error = xfs_attr_shortform_remove(&args, true);
+ 	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+-		error = xfs_attr_leaf_removename(&args);
++		error = xfs_attr_leaf_removename(&args, true);
+ 	} else {
+-		error = xfs_attr_node_removename(&args);
++		error = xfs_attr_node_removename(&args, true);
+ 	}
+ 
+ 	if (error)
+@@ -493,7 +493,7 @@ out:
+  * This is the external routine.
+  */
+ STATIC int
+-xfs_attr_shortform_addname(xfs_da_args_t *args)
++xfs_attr_shortform_addname(xfs_da_args_t *args, bool roll_trans)
  {
--	struct inode *inode = mapping->host;
--	loff_t old_size = inode->i_size;
--	int i_size_changed = 0;
--
- 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
--
--	/*
--	 * No need to use i_size_read() here, the i_size
--	 * cannot change under us because we hold i_mutex.
--	 *
--	 * But it's important to update i_size while still holding page lock:
--	 * page writeout could otherwise come in and zero beyond i_size.
--	 */
--	if (pos+copied > inode->i_size) {
--		i_size_write(inode, pos+copied);
--		i_size_changed = 1;
--	}
--
--	unlock_page(page);
--	put_page(page);
--
--	if (old_size < pos)
--		pagecache_isize_extended(inode, old_size, pos);
--	/*
--	 * Don't mark the inode dirty under page lock. First, it unnecessarily
--	 * makes the holding time of page lock longer. Second, it forces lock
--	 * ordering of page lock and transaction start for journaling
--	 * filesystems.
--	 */
--	if (i_size_changed)
--		mark_inode_dirty(inode);
--
--	return copied;
-+	return __generic_write_end(mapping->host, pos, copied, page);
+ 	int newsize, forkoff, retval;
+ 
+@@ -505,7 +505,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+ 	} else if (retval == -EEXIST) {
+ 		if (args->flags & ATTR_CREATE)
+ 			return retval;
+-		retval = xfs_attr_shortform_remove(args);
++		retval = xfs_attr_shortform_remove(args, roll_trans);
+ 		ASSERT(retval == 0);
+ 	}
+ 
+@@ -520,7 +520,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+ 	if (!forkoff)
+ 		return -ENOSPC;
+ 
+-	xfs_attr_shortform_add(args, forkoff);
++	xfs_attr_shortform_add(args, forkoff, roll_trans);
+ 	return 0;
  }
- EXPORT_SYMBOL(generic_write_end);
  
+@@ -536,7 +536,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+  * if bmap_one_block() says there is only one block (ie: no remote blks).
+  */
+ STATIC int
+-xfs_attr_leaf_addname(xfs_da_args_t *args)
++xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_inode_t *dp;
+ 	struct xfs_buf *bp;
+@@ -599,36 +599,42 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 		 * can manage its own transactions.
+ 		 */
+ 		xfs_defer_init(args->dfops, args->firstblock);
+-		error = xfs_attr3_leaf_to_node(args);
+-		if (error)
+-			goto out_defer_cancel;
+-		xfs_defer_ijoin(args->dfops, dp);
+-		error = xfs_defer_finish(&args->trans, args->dfops);
++		error = xfs_attr3_leaf_to_node(args, roll_trans);
+ 		if (error)
+ 			goto out_defer_cancel;
++		if (roll_trans) {
++			xfs_defer_ijoin(args->dfops, dp);
++			error = xfs_defer_finish(&args->trans, args->dfops);
++			if (error)
++				goto out_defer_cancel;
+ 
+-		/*
+-		 * Commit the current trans (including the inode) and start
+-		 * a new one.
+-		 */
+-		error = xfs_trans_roll_inode(&args->trans, dp);
+-		if (error)
+-			return error;
++			/*
++			 * Commit the current trans (including the inode) and start
++			 * a new one.
++			 */
++			error = xfs_trans_roll_inode(&args->trans, dp);
++			if (error)
++				return error;
++		}
+ 
+ 		/*
+ 		 * Fob the whole rest of the problem off on the Btree code.
+ 		 */
+-		error = xfs_attr_node_addname(args);
++		error = xfs_attr_node_addname(args, roll_trans);
 +
- /*
-  * block_is_partially_uptodate checks whether buffers within a page are
-  * uptodate or not.
-diff --git a/fs/internal.h b/fs/internal.h
-index e08972db0303..b955232d3d49 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
- extern void guard_bio_eod(int rw, struct bio *bio);
- extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
- 		get_block_t *get_block, struct iomap *iomap);
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page);
+ 		return error;
+ 	}
  
+-	/*
+-	 * Commit the transaction that added the attr name so that
+-	 * later routines can manage their own transactions.
+-	 */
+-	error = xfs_trans_roll_inode(&args->trans, dp);
+-	if (error)
+-		return error;
++
++	if (roll_trans) {
++		/*
++		 * Commit the transaction that added the attr name so that
++		 * later routines can manage their own transactions.
++		 */
++		error = xfs_trans_roll_inode(&args->trans, dp);
++		if (error)
++			return error;
++	}
+ 
+ 	/*
+ 	 * If there was an out-of-line value, allocate the blocks we
+@@ -686,9 +692,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 		/*
+ 		 * If the result is small enough, shrink it all into the inode.
+ 		 */
+-		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
++		if ((forkoff = xfs_attr_shortform_allfit(bp, dp)) && roll_trans) {
+ 			xfs_defer_init(args->dfops, args->firstblock);
+-			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
++			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff, roll_trans);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+ 				goto out_defer_cancel;
+@@ -722,7 +728,7 @@ out_defer_cancel:
+  * if bmap_one_block() says there is only one block (ie: no remote blks).
+  */
+ STATIC int
+-xfs_attr_leaf_removename(xfs_da_args_t *args)
++xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_inode_t *dp;
+ 	struct xfs_buf *bp;
+@@ -750,9 +756,9 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ 	/*
+ 	 * If the result is small enough, shrink it all into the inode.
+ 	 */
+-	if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
++	if ((forkoff = xfs_attr_shortform_allfit(bp, dp)) && roll_trans) {
+ 		xfs_defer_init(args->dfops, args->firstblock);
+-		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
++		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff, roll_trans);
+ 		/* bp is gone due to xfs_da_shrink_inode */
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -814,7 +820,7 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+  * add a whole extra layer of confusion on top of that.
+  */
+ STATIC int
+-xfs_attr_node_addname(xfs_da_args_t *args)
++xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_da_state_t *state;
+ 	xfs_da_state_blk_t *blk;
+@@ -880,21 +886,23 @@ restart:
+ 			xfs_da_state_free(state);
+ 			state = NULL;
+ 			xfs_defer_init(args->dfops, args->firstblock);
+-			error = xfs_attr3_leaf_to_node(args);
++			error = xfs_attr3_leaf_to_node(args, roll_trans);
+ 			if (error)
+ 				goto out_defer_cancel;
+ 			xfs_defer_ijoin(args->dfops, dp);
+-			error = xfs_defer_finish(&args->trans, args->dfops);
+-			if (error)
+-				goto out_defer_cancel;
+-
+-			/*
+-			 * Commit the node conversion and start the next
+-			 * trans in the chain.
+-			 */
+-			error = xfs_trans_roll_inode(&args->trans, dp);
+-			if (error)
+-				goto out;
++			if (roll_trans) {
++				error = xfs_defer_finish(&args->trans, args->dfops);
++				if (error)
++					goto out_defer_cancel;
++
++				/*
++				 * Commit the node conversion and start the next
++				 * trans in the chain.
++				 */
++				error = xfs_trans_roll_inode(&args->trans, dp);
++				if (error)
++					goto out;
++			}
+ 
+ 			goto restart;
+ 		}
+@@ -910,9 +918,11 @@ restart:
+ 		if (error)
+ 			goto out_defer_cancel;
+ 		xfs_defer_ijoin(args->dfops, dp);
+-		error = xfs_defer_finish(&args->trans, args->dfops);
+-		if (error)
+-			goto out_defer_cancel;
++		if (roll_trans) {
++			error = xfs_defer_finish(&args->trans, args->dfops);
++			if (error)
++				goto out_defer_cancel;
++		}
+ 	} else {
+ 		/*
+ 		 * Addition succeeded, update Btree hashvals.
+@@ -931,9 +941,11 @@ restart:
+ 	 * Commit the leaf addition or btree split and start the next
+ 	 * trans in the chain.
+ 	 */
+-	error = xfs_trans_roll_inode(&args->trans, dp);
+-	if (error)
+-		goto out;
++	if (roll_trans) {
++		error = xfs_trans_roll_inode(&args->trans, dp);
++		if (error)
++			goto out;
++	}
+ 
+ 	/*
+ 	 * If there was an out-of-line value, allocate the blocks we
+@@ -1008,9 +1020,11 @@ restart:
+ 			if (error)
+ 				goto out_defer_cancel;
+ 			xfs_defer_ijoin(args->dfops, dp);
+-			error = xfs_defer_finish(&args->trans, args->dfops);
+-			if (error)
+-				goto out_defer_cancel;
++			if (roll_trans) {
++				error = xfs_defer_finish(&args->trans, args->dfops);
++				if (error)
++					goto out_defer_cancel;
++			}
+ 		}
+ 
+ 		/*
+@@ -1049,7 +1063,7 @@ out_defer_cancel:
+  * the root node (a special case of an intermediate node).
+  */
+ STATIC int
+-xfs_attr_node_removename(xfs_da_args_t *args)
++xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_da_state_t *state;
+ 	xfs_da_state_blk_t *blk;
+@@ -1158,9 +1172,9 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 		if (error)
+ 			goto out;
+ 
+-		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
++		if ((forkoff = xfs_attr_shortform_allfit(bp, dp)) && roll_trans) {
+ 			xfs_defer_init(args->dfops, args->firstblock);
+-			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
++			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff, roll_trans);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+ 				goto out_defer_cancel;
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index c3682eb..ef53215 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -541,7 +541,7 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
+  * Overflow from the inode has already been checked for.
+  */
+ void
+-xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
++xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff, bool roll_trans)
+ {
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+@@ -613,7 +613,7 @@ xfs_attr_fork_remove(
+  * Remove an attribute from the shortform attribute list structure.
+  */
+ int
+-xfs_attr_shortform_remove(xfs_da_args_t *args)
++xfs_attr_shortform_remove(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+@@ -965,7 +965,8 @@ int
+ xfs_attr3_leaf_to_shortform(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_da_args	*args,
+-	int			forkoff)
++	int			forkoff,
++	bool			roll_trans)
+ {
+ 	struct xfs_attr_leafblock *leaf;
+ 	struct xfs_attr3_icleaf_hdr ichdr;
+@@ -1034,7 +1035,7 @@ xfs_attr3_leaf_to_shortform(
+ 		nargs.valuelen = be16_to_cpu(name_loc->valuelen);
+ 		nargs.hashval = be32_to_cpu(entry->hashval);
+ 		nargs.flags = XFS_ATTR_NSP_ONDISK_TO_ARGS(entry->flags);
+-		xfs_attr_shortform_add(&nargs, forkoff);
++		xfs_attr_shortform_add(&nargs, forkoff, roll_trans);
+ 	}
+ 	error = 0;
+ 
+@@ -1048,7 +1049,8 @@ out:
+  */
+ int
+ xfs_attr3_leaf_to_node(
+-	struct xfs_da_args	*args)
++	struct xfs_da_args	*args,
++	bool			roll_trans)
+ {
+ 	struct xfs_attr_leafblock *leaf;
+ 	struct xfs_attr3_icleaf_hdr icleafhdr;
+diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
+index 4da08af..b5dea0e 100644
+--- a/libxfs/xfs_attr_leaf.h
++++ b/libxfs/xfs_attr_leaf.h
+@@ -45,12 +45,12 @@ typedef struct xfs_attr_inactive_list {
+  * Internal routines when attribute fork size < XFS_LITINO(mp).
+  */
+ void	xfs_attr_shortform_create(struct xfs_da_args *args);
+-void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
++void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff, bool roll_trans);
+ int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
+ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+ 			struct xfs_buf **leaf_bp);
+-int	xfs_attr_shortform_remove(struct xfs_da_args *args);
++int	xfs_attr_shortform_remove(struct xfs_da_args *args, bool roll_trans);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+ xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
+@@ -59,9 +59,9 @@ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
  /*
-  * char_dev.c
+  * Internal routines when attribute fork size == XFS_LBSIZE(mp).
+  */
+-int	xfs_attr3_leaf_to_node(struct xfs_da_args *args);
++int	xfs_attr3_leaf_to_node(struct xfs_da_args *args, bool roll_trans);
+ int	xfs_attr3_leaf_to_shortform(struct xfs_buf *bp,
+-				   struct xfs_da_args *args, int forkoff);
++				   struct xfs_da_args *args, int forkoff, bool roll_trans);
+ int	xfs_attr3_leaf_clearflag(struct xfs_da_args *args);
+ int	xfs_attr3_leaf_setflag(struct xfs_da_args *args);
+ int	xfs_attr3_leaf_flipflags(struct xfs_da_args *args);
 -- 
-2.17.0
+2.7.4
 
