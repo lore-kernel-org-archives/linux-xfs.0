@@ -1,91 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54714 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751611AbeEDWiE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 May 2018 18:38:04 -0400
-Subject: Re: [PATCH 10/11] xfs_repair: check inode nsec for obviously garbage
- values
+Received: from aserp2120.oracle.com ([141.146.126.78]:54062 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755029AbeEHQIE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:08:04 -0400
+Date: Tue, 8 May 2018 09:07:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 09/11] xfs_repair: don't assert if we run across a dir
+ entry with null ino ptr
+Message-ID: <20180508160742.GL11261@magnolia>
 References: <152401958920.13319.10756339531174871801.stgit@magnolia>
- <152401965412.13319.8835868498112431576.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8655c94b-cce9-a37a-92d7-c3d8e624c38f@sandeen.net>
-Date: Fri, 4 May 2018 17:38:02 -0500
+ <152401964787.13319.7143262291746238151.stgit@magnolia>
+ <724f18e7-147d-4c24-ba06-559a5b057e4f@sandeen.net>
+ <20180504224518.GX26569@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <152401965412.13319.8835868498112431576.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180504224518.GX26569@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On 4/17/18 9:47 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, May 04, 2018 at 03:45:18PM -0700, Darrick J. Wong wrote:
+> On Fri, May 04, 2018 at 05:33:35PM -0500, Eric Sandeen wrote:
+> > 
+> > 
+> > On 4/17/18 9:47 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > If we encounter a directory with an entry that points to inode zero,
+> > > we'll crash due to an ASSERT during process_inode_chunk.  Instead, just
+> > > set the in-core parent to NULLFSINO so that phase 6 will reset it for
+> > > us.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > So .... this is .... probably ok?  but the ASSERT makes me think that
+> > process_dinode is never supposed to return a 0 parent if isa_dir is set,
+> > and so I'm a little worried about breaking that assumption up and just
+> > catching it later, here.  Usually the asserts mean "the code should never
+> > let this happen and if it does, some prior code is wrong"
+> > 
+> > Looking at the calls below it, it seems like we generally call verify_inum
+> > which would set NULLFSINO if the inum is bad.
+> > 
+> > But in process_dir2_data
+> > 
+> > [17:25]  <sandeen>                 } else if (verify_inum(mp, ent_ino)) {
+> > [17:25]  <sandeen>                         clearreason = _("invalid");
+> > [17:26]  <sandeen> so we probably saw that it's bad, but:
+> > [17:26]  <sandeen>                  * We have a special dot & dotdot fixer-upper below which can
+> > [17:26]  <sandeen>                  * sort out the proper inode number, so don't clear it.
+> > [17:26]  <sandeen>                         clearreason = NULL;
+> > [17:26]  <sandeen> and then:
+> > [17:26]  <sandeen>                  * Special .. entry processing.
+> > [17:26]  <sandeen>                                 *parent = ent_ino;
+> > [17:26]  <sandeen> \o/
+> > 
+> > so ... I wonder if it wouldn't be more consistent to find the place under
+> > process_inode() where we willingly/wrongly set *parent to an invalid value,
+> > and handle the problem there?  Do you know what path you were on to hit this?
 > 
-> It makes no sense to have an nsec value that is larger than 1 second,
-> so zero the field if this is the case.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> /me doesn't remember, it was either the sf dir scrub or the dir block
+> offline repair fuzztest setting the parent pointer to zero.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Aha, it's xfs/386 bu[1].inumber = 0.  I've found the part of
+process_dir2_data that inexplicably doesn't check for null parent
+pointers & blows up; will rework this patch.
 
-> ---
->  repair/dinode.c |   29 +++++++++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
+--D
+
+>o
+> --D
 > 
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index c8c1850..9792293 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2233,6 +2233,28 @@ _("would clear obsolete nlink field in version 2 inode %" PRIu64 ", currently %d
->  	return dirty;
->  }
->  
-> +/* Check nanoseconds of a timestamp don't exceed 1 second. */
-> +static void
-> +check_nsec(
-> +	const char		*name,
-> +	xfs_ino_t		lino,
-> +	struct xfs_timestamp	*t,
-> +	int			*dirty)
-> +{
-> +	if (be32_to_cpu(t->t_nsec) < 1000000000)
-> +		return;
-> +
-> +	do_warn(
-> +_("Bad %s nsec %u on inode %" PRIu64 ", "), name, be32_to_cpu(t->t_nsec), lino);
-> +	if (no_modify) {
-> +		do_warn(_("would reset to zero\n"));
-> +	} else {
-> +		do_warn(_("resetting to zero\n"));
-> +		t->t_nsec = 0;
-> +		*dirty = 1;
-> +	}
-> +}
-> +
->  /*
->   * returns 0 if the inode is ok, 1 if the inode is corrupt
->   * check_dups can be set to 1 *only* when called by the
-> @@ -2749,6 +2771,13 @@ _("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
->  		}
->  	}
->  
-> +	/* nsec fields cannot be larger than 1 billion */
-> +	check_nsec("atime", lino, &dino->di_atime, dirty);
-> +	check_nsec("mtime", lino, &dino->di_mtime, dirty);
-> +	check_nsec("ctime", lino, &dino->di_ctime, dirty);
-> +	if (dino->di_version >= 3)
-> +		check_nsec("crtime", lino, &dino->di_crtime, dirty);
-> +
->  	/*
->  	 * general size/consistency checks:
->  	 */
-> 
+> > -Eric
+> > > ---
+> > >  repair/dino_chunks.c |    3 ++-
+> > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+> > > index 17de95f..2d34079 100644
+> > > --- a/repair/dino_chunks.c
+> > > +++ b/repair/dino_chunks.c
+> > > @@ -874,7 +874,8 @@ process_inode_chunk(
+> > >  			 * be solid then.
+> > >  			 */
+> > >  			if (!ino_discovery)  {
+> > > -				ASSERT(parent != 0);
+> > > +				if (parent == 0)
+> > > +					parent = NULLFSINO;
+> > >  				set_inode_parent(ino_rec, irec_offset, parent);
+> > >  				ASSERT(parent ==
+> > >  					get_inode_parent(ino_rec, irec_offset));
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
