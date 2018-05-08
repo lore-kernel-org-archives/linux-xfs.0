@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38988 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752308AbeEHEn2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:28 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484gw7a105684
+Received: from aserp2120.oracle.com ([141.146.126.78]:60290 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752362AbeEHEn3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:29 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484fWhm156938
         for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:28 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2hs5936sm7-1
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2hs4k26st5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 04:43:28 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w484hRho024147
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w484hSaM015911
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:27 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:28 GMT
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w484hQKM025120
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:26 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hSBa029383
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:28 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 05/21] xfsprogs: Set up infastructure for deferred attribute operations
-Date: Mon,  7 May 2018 21:41:03 -0700
-Message-Id: <1525754479-12177-6-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 10/21] xfsprogs: get directory offset when replacing a directory name
+Date: Mon,  7 May 2018 21:41:08 -0700
+Message-Id: <1525754479-12177-11-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
 References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,198 +28,143 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch adds two new log item types for setting or
-removing attributes as deferred operations.  The
-xfs_attri_log_item logs an intent to set or remove an
-attribute.  The corresponding xfs_attrd_log_item holds
-a reference to the xfs_attri_log_item and is freed once
-the transaction is done.  Both log items use a generic
-xfs_attr_log_format structure that contains the attribute
-name, value, flags, inode, and an op_flag that indicates
-if the operations is a set or remove.
+Return the directory offset information when replacing an entry to the
+directory.
 
-At the moment, this feature will only be used by the parent
-pointer patch set which uses attributes to store information
-about an inodes parent.
+This offset will be used as the parent pointer offset in xfs_rename.
 
+[dchinner: forward ported and cleaned up]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+       Changed typedefs to raw struct types]
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/xfs_attr.c       |  5 +++--
- libxfs/xfs_attr.h       | 24 +++++++++++++++++++++++-
- libxfs/xfs_defer.h      |  1 +
- libxfs/xfs_log_format.h | 44 ++++++++++++++++++++++++++++++++++++++++++--
- libxfs/xfs_types.h      |  1 +
- 5 files changed, 70 insertions(+), 5 deletions(-)
+ libxfs/xfs_dir2.c       | 16 ++++++++++------
+ libxfs/xfs_dir2.h       |  3 ++-
+ libxfs/xfs_dir2_block.c |  4 ++--
+ libxfs/xfs_dir2_leaf.c  |  1 +
+ libxfs/xfs_dir2_node.c  |  1 +
+ libxfs/xfs_dir2_sf.c    |  2 ++
+ repair/phase6.c         |  2 +-
+ 7 files changed, 19 insertions(+), 10 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 0869bb1..1d19f64 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -36,6 +36,7 @@
- #include "xfs_attr_remote.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
-+#include "xfs_attr_item.h"
- 
- /*
-  * xfs_attr.c
-@@ -69,7 +70,7 @@ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
- 
- 
--STATIC int
-+int
- xfs_attr_args_init(
- 	struct xfs_da_args	*args,
- 	struct xfs_inode	*dp,
-@@ -321,7 +322,7 @@ xfs_attr_remove_args(
- /*
-  * Calculate how many blocks we need for the new attribute,
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index ef9fba6..57894c8 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -497,13 +497,14 @@ out_free:
   */
--STATIC int
-+int
- xfs_attr_calc_size(
- 	struct xfs_da_args	*args,
- 	int			*local)
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index de2b99f..eebfad7 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -87,6 +87,26 @@ typedef struct attrlist_ent {	/* data from attr_list() */
- } attrlist_ent_t;
- 
- /*
-+ * List of attrs to commit later.
-+ */
-+struct xfs_attr_item {
-+	struct xfs_inode  *xattri_ip;
-+	uint32_t	  xattri_op_flags;
-+	uint32_t	  xattri_value_len;   /* length of value */
-+	uint32_t	  xattri_name_len;    /* length of name */
-+	uint32_t	  xattri_flags;       /* attr flags */
-+	struct list_head  xattri_list;
+ int
+ xfs_dir_replace(
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*dp,
+-	struct xfs_name	*name,		/* name of entry to replace */
+-	xfs_ino_t	inum,		/* new inode number */
+-	xfs_fsblock_t	*first,		/* bmap's firstblock */
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	struct xfs_name		*name,		/* name of entry to replace */
++	xfs_ino_t		inum,		/* new inode number */
++	xfs_fsblock_t		*first,		/* bmap's firstblock */
+ 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
+-	xfs_extlen_t	total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+ {
+ 	struct xfs_da_args *args;
+ 	int		rval;
+@@ -553,6 +554,9 @@ xfs_dir_replace(
+ 	else
+ 		rval = xfs_dir2_node_replace(args);
+ out_free:
++	if (offset)
++		*offset = args->offset;
 +
-+	/*
-+	 * A byte array follows the header containing the file name and
-+	 * attribute value.
-+	 */
-+};
-+
-+#define XFS_ATTR_ITEM_SIZEOF(namelen, valuelen)	\
-+	(sizeof(struct xfs_attr_item) + (namelen) + (valuelen))
-+
-+/*
-  * Given a pointer to the (char*) buffer containing the attr_list() result,
-  * and an index, return a pointer to the indicated attribute in the buffer.
-  */
-@@ -155,6 +175,8 @@ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
- int xfs_attr_remove_args(struct xfs_da_args *args, int flags, bool roll_trans);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
--
-+int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
-+		       const unsigned char *name, int flags);
-+int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+ 	kmem_free(args);
+ 	return rval;
+ }
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index e2cd70b..cb6fda0 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -145,7 +145,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+ 				xfs_fsblock_t *first,
+-				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
++				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
++				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name);
  
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index 045beac..11e1690 100644
---- a/libxfs/xfs_defer.h
-+++ b/libxfs/xfs_defer.h
-@@ -55,6 +55,7 @@ enum xfs_defer_ops_type {
- 	XFS_DEFER_OPS_TYPE_REFCOUNT,
- 	XFS_DEFER_OPS_TYPE_RMAP,
- 	XFS_DEFER_OPS_TYPE_FREE,
-+	XFS_DEFER_OPS_TYPE_ATTR,
- 	XFS_DEFER_OPS_TYPE_MAX,
- };
- 
-diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-index 349d9f8..291e5ff 100644
---- a/libxfs/xfs_log_format.h
-+++ b/libxfs/xfs_log_format.h
-@@ -116,7 +116,12 @@ static inline uint xlog_get_cycle(char *ptr)
- #define XLOG_REG_TYPE_CUD_FORMAT	24
- #define XLOG_REG_TYPE_BUI_FORMAT	25
- #define XLOG_REG_TYPE_BUD_FORMAT	26
--#define XLOG_REG_TYPE_MAX		26
-+#define XLOG_REG_TYPE_ATTRI_FORMAT	27
-+#define XLOG_REG_TYPE_ATTRD_FORMAT	28
-+#define XLOG_REG_TYPE_ATTR_NAME	29
-+#define XLOG_REG_TYPE_ATTR_VALUE	30
-+#define XLOG_REG_TYPE_MAX		31
-+
- 
- /*
-  * Flags to log operation header
-@@ -239,6 +244,8 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_CUD		0x1243
- #define	XFS_LI_BUI		0x1244	/* bmbt update intent */
- #define	XFS_LI_BUD		0x1245
-+#define	XFS_LI_ATTRI		0x1246  /* attr set/remove intent*/
-+#define	XFS_LI_ATTRD		0x1247  /* attr set/remove done */
- 
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -254,7 +261,9 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_CUI,		"XFS_LI_CUI" }, \
- 	{ XFS_LI_CUD,		"XFS_LI_CUD" }, \
- 	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
--	{ XFS_LI_BUD,		"XFS_LI_BUD" }
-+	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
-+	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
-+	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
- 
- /*
-  * Inode Log Item Format definitions.
-@@ -852,4 +861,35 @@ struct xfs_icreate_log {
- 	__be32		icl_gen;	/* inode generation number to use */
- };
- 
-+/*
-+ * Flags for deferred attribute operations.
-+ * Upper bits are flags, lower byte is type code
-+ */
-+#define XFS_ATTR_OP_FLAGS_SET		1	/* Set the attribute */
-+#define XFS_ATTR_OP_FLAGS_REMOVE	2	/* Remove the attribute */
-+#define XFS_ATTR_OP_FLAGS_TYPE_MASK	0x0FF	/* Flags type mask */
-+
-+/*
-+ * This is the structure used to lay out an attr log item in the
-+ * log.
-+ */
-+struct xfs_attri_log_format {
-+	uint16_t	alfi_type;	/* attri log item type */
-+	uint16_t	alfi_size;	/* size of this item */
-+	uint32_t	__pad;		/* pad to 64 bit aligned */
-+	uint64_t	alfi_id;	/* attri identifier */
-+	xfs_ino_t       alfi_ino;	/* the inode for this attr operation */
-+	uint32_t        alfi_op_flags;	/* marks the op as a set or remove */
-+	uint32_t        alfi_name_len;	/* attr name length */
-+	uint32_t        alfi_value_len;	/* attr value length */
-+	uint32_t        alfi_attr_flags;/* attr flags */
-+};
-+
-+struct xfs_attrd_log_format {
-+	uint16_t	alfd_type;	/* attrd log item type */
-+	uint16_t	alfd_size;	/* size of this item */
-+	uint32_t	__pad;		/* pad to 64 bit aligned */
-+	uint64_t	alfd_alf_id;	/* id of corresponding attrd */
-+};
-+
- #endif /* __XFS_LOG_FORMAT_H__ */
-diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
-index 3c56069..2905ce3 100644
---- a/libxfs/xfs_types.h
-+++ b/libxfs/xfs_types.h
-@@ -23,6 +23,7 @@ typedef uint32_t	prid_t;		/* project ID */
- typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
- typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
- typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
-+typedef uint32_t	xfs_attrlen_t;	/* attr length */
- typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
- typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
- typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index e7ce6a9..34d6a0d 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -862,9 +862,9 @@ xfs_dir2_block_replace(
+ 	/*
+ 	 * Point to the data entry we need to change.
+ 	 */
++	args->offset = be32_to_cpu(blp[ent].address);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-			xfs_dir2_dataptr_to_off(args->geo,
+-						be32_to_cpu(blp[ent].address)));
++			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
+ 	/*
+ 	 * Change the inode number to the new value.
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 8cca19e..ee16fc4 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -1542,6 +1542,7 @@ xfs_dir2_leaf_replace(
+ 	/*
+ 	 * Point to the data entry.
+ 	 */
++	args->offset = be32_to_cpu(lep->address);
+ 	dep = (xfs_dir2_data_entry_t *)
+ 	      ((char *)dbp->b_addr +
+ 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index e4ca481..e604b1c 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -2247,6 +2247,7 @@ xfs_dir2_node_replace(
+ 		hdr = state->extrablk.bp->b_addr;
+ 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+ 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
++		args->offset = be32_to_cpu(lep->address);
+ 		dep = (xfs_dir2_data_entry_t *)
+ 		      ((char *)hdr +
+ 		       xfs_dir2_dataptr_to_off(args->geo,
+diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
+index 8013ddd..11561a9 100644
+--- a/libxfs/xfs_dir2_sf.c
++++ b/libxfs/xfs_dir2_sf.c
+@@ -1041,6 +1041,8 @@ xfs_dir2_sf_replace(
+ 				ASSERT(args->inumber != ino);
+ 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+ 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
++				args->offset = xfs_dir2_byte_to_dataptr(
++						  xfs_dir2_sf_get_offset(sfep));
+ 				break;
+ 			}
+ 		}
+diff --git a/repair/phase6.c b/repair/phase6.c
+index b41cc2b..4fedb35 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1233,7 +1233,7 @@ mv_orphanage(
+ 			if (entry_ino_num != orphanage_ino)  {
+ 				err = -libxfs_dir_replace(tp, ino_p,
+ 						&xfs_name_dotdot, orphanage_ino,
+-						&first, &dfops, nres);
++						&first, &dfops, nres, NULL);
+ 				if (err)
+ 					do_error(
+ 	_("name replace op failed (%d), filesystem may be out of space\n"),
 -- 
 2.7.4
 
