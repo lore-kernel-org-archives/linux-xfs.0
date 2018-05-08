@@ -1,392 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48698 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753136AbeEGXjz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 19:39:55 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47NGb7K111565
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:39:55 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2hs593693y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 23:39:55 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w47NdsEf022775
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:39:54 GMT
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w47Nds6f012085
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:39:54 GMT
-Date: Mon, 7 May 2018 16:39:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/21] xfs: Move fs/xfs/xfs_attr.h to
- fs/xfs/libxfs/xfs_attr.h
-Message-ID: <20180507233953.GT11261@magnolia>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-2-git-send-email-allison.henderson@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:43382 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752563AbeEHNzQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 May 2018 09:55:16 -0400
+Subject: Re: [PATCH] xfs_db: add -R option
+References: <20180504140244.GA32161@deer-run.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <db080bb2-a649-fbb3-ec91-d16f00ad30f0@sandeen.net>
+Date: Tue, 8 May 2018 08:55:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1525627494-12873-2-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <20180504140244.GA32161@deer-run.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: hal@deer-run.com, linux-xfs@vger.kernel.org
 
-On Sun, May 06, 2018 at 10:24:34AM -0700, Allison Henderson wrote:
-> This patch moves fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
-> since xfs_attr.c is in libxfs.  We will need these later in
-> xfsprogs.
+On 5/4/18 9:02 AM, hal@deer-run.com wrote:
+> From: Hal Pomeranz <hal@deer-run.com>
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> -R is similar to -r, but allows for blockget on a mounted file system
+> or "dirty" file system image with pending log entries.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hm, so this probably makes it possible that blockget will wander off into
+inconsistencies and fail; there's a /reason/ for the check.  So if anything
+this is probably best-effort.  I doubt you can rely on blockget even completing
+without error, let alone being correct.  In that case, is it still useful
+to you?
 
---D
+Of course if you simply desire to not perturb the image you're analyzing
+you'd be operating on a copy in any case, and so that's presumably not the
+issue here; I assume you wish to analyze the state of the filesystem before
+any log changes are applied.
 
+What sort of information do you hope to gather after running blockget without
+a replay?
+
+I guess what I'm getting at here is yes, we could short-circuit the check
+in one way or another, but I want to be sure that it really would advance
+your goals.
+
+In any case:
+
+Using -r seems a bit odd; blockget is already a readonly operation, so
+using "-r" / readonly as a modifier seems out of place.  (The same warning
+would come up for -c check).
+
+Given that xfs_db is a command for experts, and forensics analysis on an
+unreplayed filesystem even more so, what about modifying the logformat
+command to allow zeroing of a dirty log with some type of force option,
+which would then allow blkget to proceed?  (assuming you were working on
+a copy, of course.)  That would make things pretty explicit.
+
+Is that too convoluted?
+
+Otherwise I might suggest adding a switch specific to the blockget_f
+function, which would just skip the sb_logcheck() altogether.  That would
+be more targeted, and wouldn't be some global switch which affects
+every current and future caller of sb_logcheck.  A warning about how
+the log is being ignored and results may be inconsistent could then
+be added specifically to blockget_f.
+
+-Eric
+
+>  This makes
+> xfs_db more useful for forensics where we are often dealing with these
+> types of images.  Flushing log entries to disk by mounting/unmounting
+> the file system would allow us to use blockget, but would make changes
+> to the file system state which are not desirable in forensics
+> contexts.
+> 
+> Signed-off-by: Hal Pomeranz <hal@deer-run.com>
 > ---
->  fs/xfs/libxfs/xfs_attr.h | 160 +++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_attr.h        | 160 -----------------------------------------------
->  2 files changed, 160 insertions(+), 160 deletions(-)
+>  db/init.c         | 7 +++++--
+>  db/init.h         | 1 +
+>  db/sb.c           | 2 +-
+>  man/man8/xfs_db.8 | 8 ++++++++
+>  4 files changed, 15 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> new file mode 100644
-> index 0000000..d07bf27
-> --- /dev/null
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -0,0 +1,160 @@
-> +/*
-> + * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +#ifndef __XFS_ATTR_H__
-> +#define	__XFS_ATTR_H__
-> +
-> +struct xfs_inode;
-> +struct xfs_da_args;
-> +struct xfs_attr_list_context;
-> +
-> +/*
-> + * Large attribute lists are structured around Btrees where all the data
-> + * elements are in the leaf nodes.  Attribute names are hashed into an int,
-> + * then that int is used as the index into the Btree.  Since the hashval
-> + * of an attribute name may not be unique, we may have duplicate keys.
-> + * The internal links in the Btree are logical block offsets into the file.
-> + *
-> + * Small attribute lists use a different format and are packed as tightly
-> + * as possible so as to fit into the literal area of the inode.
-> + */
-> +
-> +/*========================================================================
-> + * External interfaces
-> + *========================================================================*/
-> +
-> +
-> +#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
-> +#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
-> +#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
-> +#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
-> +#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
-> +#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-> +
-> +#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
-> +#define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-> +
-> +#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
-> +
-> +#define XFS_ATTR_FLAGS \
-> +	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
-> +	{ ATTR_ROOT,		"ROOT" }, \
-> +	{ ATTR_TRUST,		"TRUST" }, \
-> +	{ ATTR_SECURE,		"SECURE" }, \
-> +	{ ATTR_CREATE,		"CREATE" }, \
-> +	{ ATTR_REPLACE,		"REPLACE" }, \
-> +	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
-> +	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
-> +	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
-> +
-> +/*
-> + * The maximum size (into the kernel or returned from the kernel) of an
-> + * attribute value or the buffer used for an attr_list() call.  Larger
-> + * sizes will result in an ERANGE return code.
-> + */
-> +#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
-> +
-> +/*
-> + * Define how lists of attribute names are returned to the user from
-> + * the attr_list() call.  A large, 32bit aligned, buffer is passed in
-> + * along with its size.  We put an array of offsets at the top that each
-> + * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
-> + */
-> +typedef struct attrlist {
-> +	__s32	al_count;	/* number of entries in attrlist */
-> +	__s32	al_more;	/* T/F: more attrs (do call again) */
-> +	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
-> +} attrlist_t;
-> +
-> +/*
-> + * Show the interesting info about one attribute.  This is what the
-> + * al_offset[i] entry points to.
-> + */
-> +typedef struct attrlist_ent {	/* data from attr_list() */
-> +	__u32	a_valuelen;	/* number bytes in value of attr */
-> +	char	a_name[1];	/* attr name (NULL terminated) */
-> +} attrlist_ent_t;
-> +
-> +/*
-> + * Given a pointer to the (char*) buffer containing the attr_list() result,
-> + * and an index, return a pointer to the indicated attribute in the buffer.
-> + */
-> +#define	ATTR_ENTRY(buffer, index)		\
-> +	((attrlist_ent_t *)			\
-> +	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
-> +
-> +/*
-> + * Kernel-internal version of the attrlist cursor.
-> + */
-> +typedef struct attrlist_cursor_kern {
-> +	__u32	hashval;	/* hash value of next entry to add */
-> +	__u32	blkno;		/* block containing entry (suggestion) */
-> +	__u32	offset;		/* offset in list of equal-hashvals */
-> +	__u16	pad1;		/* padding to match user-level */
-> +	__u8	pad2;		/* padding to match user-level */
-> +	__u8	initted;	/* T/F: cursor has been initialized */
-> +} attrlist_cursor_kern_t;
-> +
-> +
-> +/*========================================================================
-> + * Structure used to pass context around among the routines.
-> + *========================================================================*/
-> +
-> +
-> +/* void; state communicated via *context */
-> +typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
-> +			      unsigned char *, int, int);
-> +
-> +typedef struct xfs_attr_list_context {
-> +	struct xfs_trans		*tp;
-> +	struct xfs_inode		*dp;		/* inode */
-> +	struct attrlist_cursor_kern	*cursor;	/* position in list */
-> +	char				*alist;		/* output buffer */
-> +	int				seen_enough;	/* T/F: seen enough of list? */
-> +	ssize_t				count;		/* num used entries */
-> +	int				dupcnt;		/* count dup hashvals seen */
-> +	int				bufsize;	/* total buffer size */
-> +	int				firstu;		/* first used byte in buffer */
-> +	int				flags;		/* from VOP call */
-> +	int				resynch;	/* T/F: resynch with cursor */
-> +	put_listent_func_t		put_listent;	/* list output fmt function */
-> +	int				index;		/* index into output buffer */
-> +} xfs_attr_list_context_t;
-> +
-> +
-> +/*========================================================================
-> + * Function prototypes for the kernel.
-> + *========================================================================*/
-> +
-> +/*
-> + * Overall external interface routines.
-> + */
-> +int xfs_attr_inactive(struct xfs_inode *dp);
-> +int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
-> +int xfs_attr_list_int(struct xfs_attr_list_context *);
-> +int xfs_inode_hasattr(struct xfs_inode *ip);
-> +int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
-> +int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
-> +		 unsigned char *value, int *valuelenp, int flags);
-> +int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
-> +		 unsigned char *value, int valuelen, int flags);
-> +int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-> +int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
-> +		  int flags, struct attrlist_cursor_kern *cursor);
-> +
-> +
-> +#endif	/* __XFS_ATTR_H__ */
-> diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-> deleted file mode 100644
-> index d07bf27..0000000
-> --- a/fs/xfs/xfs_attr.h
-> +++ /dev/null
-> @@ -1,160 +0,0 @@
-> -/*
-> - * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
-> - * All Rights Reserved.
-> - *
-> - * This program is free software; you can redistribute it and/or
-> - * modify it under the terms of the GNU General Public License as
-> - * published by the Free Software Foundation.
-> - *
-> - * This program is distributed in the hope that it would be useful,
-> - * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> - * GNU General Public License for more details.
-> - *
-> - * You should have received a copy of the GNU General Public License
-> - * along with this program; if not, write the Free Software Foundation,
-> - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> - */
-> -#ifndef __XFS_ATTR_H__
-> -#define	__XFS_ATTR_H__
-> -
-> -struct xfs_inode;
-> -struct xfs_da_args;
-> -struct xfs_attr_list_context;
-> -
-> -/*
-> - * Large attribute lists are structured around Btrees where all the data
-> - * elements are in the leaf nodes.  Attribute names are hashed into an int,
-> - * then that int is used as the index into the Btree.  Since the hashval
-> - * of an attribute name may not be unique, we may have duplicate keys.
-> - * The internal links in the Btree are logical block offsets into the file.
-> - *
-> - * Small attribute lists use a different format and are packed as tightly
-> - * as possible so as to fit into the literal area of the inode.
-> - */
-> -
-> -/*========================================================================
-> - * External interfaces
-> - *========================================================================*/
-> -
-> -
-> -#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
-> -#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
-> -#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
-> -#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
-> -#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
-> -#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-> -
-> -#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
-> -#define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
-> -
-> -#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
-> -
-> -#define XFS_ATTR_FLAGS \
-> -	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
-> -	{ ATTR_ROOT,		"ROOT" }, \
-> -	{ ATTR_TRUST,		"TRUST" }, \
-> -	{ ATTR_SECURE,		"SECURE" }, \
-> -	{ ATTR_CREATE,		"CREATE" }, \
-> -	{ ATTR_REPLACE,		"REPLACE" }, \
-> -	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
-> -	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
-> -	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
-> -
-> -/*
-> - * The maximum size (into the kernel or returned from the kernel) of an
-> - * attribute value or the buffer used for an attr_list() call.  Larger
-> - * sizes will result in an ERANGE return code.
-> - */
-> -#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
-> -
-> -/*
-> - * Define how lists of attribute names are returned to the user from
-> - * the attr_list() call.  A large, 32bit aligned, buffer is passed in
-> - * along with its size.  We put an array of offsets at the top that each
-> - * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
-> - */
-> -typedef struct attrlist {
-> -	__s32	al_count;	/* number of entries in attrlist */
-> -	__s32	al_more;	/* T/F: more attrs (do call again) */
-> -	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
-> -} attrlist_t;
-> -
-> -/*
-> - * Show the interesting info about one attribute.  This is what the
-> - * al_offset[i] entry points to.
-> - */
-> -typedef struct attrlist_ent {	/* data from attr_list() */
-> -	__u32	a_valuelen;	/* number bytes in value of attr */
-> -	char	a_name[1];	/* attr name (NULL terminated) */
-> -} attrlist_ent_t;
-> -
-> -/*
-> - * Given a pointer to the (char*) buffer containing the attr_list() result,
-> - * and an index, return a pointer to the indicated attribute in the buffer.
-> - */
-> -#define	ATTR_ENTRY(buffer, index)		\
-> -	((attrlist_ent_t *)			\
-> -	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
-> -
-> -/*
-> - * Kernel-internal version of the attrlist cursor.
-> - */
-> -typedef struct attrlist_cursor_kern {
-> -	__u32	hashval;	/* hash value of next entry to add */
-> -	__u32	blkno;		/* block containing entry (suggestion) */
-> -	__u32	offset;		/* offset in list of equal-hashvals */
-> -	__u16	pad1;		/* padding to match user-level */
-> -	__u8	pad2;		/* padding to match user-level */
-> -	__u8	initted;	/* T/F: cursor has been initialized */
-> -} attrlist_cursor_kern_t;
-> -
-> -
-> -/*========================================================================
-> - * Structure used to pass context around among the routines.
-> - *========================================================================*/
-> -
-> -
-> -/* void; state communicated via *context */
-> -typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
-> -			      unsigned char *, int, int);
-> -
-> -typedef struct xfs_attr_list_context {
-> -	struct xfs_trans		*tp;
-> -	struct xfs_inode		*dp;		/* inode */
-> -	struct attrlist_cursor_kern	*cursor;	/* position in list */
-> -	char				*alist;		/* output buffer */
-> -	int				seen_enough;	/* T/F: seen enough of list? */
-> -	ssize_t				count;		/* num used entries */
-> -	int				dupcnt;		/* count dup hashvals seen */
-> -	int				bufsize;	/* total buffer size */
-> -	int				firstu;		/* first used byte in buffer */
-> -	int				flags;		/* from VOP call */
-> -	int				resynch;	/* T/F: resynch with cursor */
-> -	put_listent_func_t		put_listent;	/* list output fmt function */
-> -	int				index;		/* index into output buffer */
-> -} xfs_attr_list_context_t;
-> -
-> -
-> -/*========================================================================
-> - * Function prototypes for the kernel.
-> - *========================================================================*/
-> -
-> -/*
-> - * Overall external interface routines.
-> - */
-> -int xfs_attr_inactive(struct xfs_inode *dp);
-> -int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
-> -int xfs_attr_list_int(struct xfs_attr_list_context *);
-> -int xfs_inode_hasattr(struct xfs_inode *ip);
-> -int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
-> -int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
-> -		 unsigned char *value, int *valuelenp, int flags);
-> -int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
-> -		 unsigned char *value, int valuelen, int flags);
-> -int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-> -int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
-> -		  int flags, struct attrlist_cursor_kern *cursor);
-> -
-> -
-> -#endif	/* __XFS_ATTR_H__ */
-> -- 
-> 2.7.4
+> diff --git a/db/init.c b/db/init.c
+> index 29fc344..96a0e78 100644
+> --- a/db/init.c
+> +++ b/db/init.c
+> @@ -36,6 +36,7 @@ int			blkbb;
+>  int			exitcode;
+>  int			expert_mode;
+>  int			force;
+> +int                     ignore_dirty;
+>  struct xfs_mount	xmount;
+>  struct xfs_mount	*mp;
+>  struct xlog		xlog;
+> @@ -46,7 +47,7 @@ static void
+>  usage(void)
+>  {
+>  	fprintf(stderr, _(
+> -		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
+> +		"Usage: %s [-ifFrRxV] [-p prog] [-l logdev] [-c cmd]... device\n"
+>  		), progname);
+>  	exit(1);
+>  }
+> @@ -66,7 +67,7 @@ init(
+>  	textdomain(PACKAGE);
+>  
+>  	progname = basename(argv[0]);
+> -	while ((c = getopt(argc, argv, "c:fFip:rxVl:")) != EOF) {
+> +	while ((c = getopt(argc, argv, "c:fFip:rRxVl:")) != EOF) {
+>  		switch (c) {
+>  		case 'c':
+>  			cmdline = xrealloc(cmdline, (ncmdline+1)*sizeof(char*));
+> @@ -84,6 +85,8 @@ init(
+>  		case 'p':
+>  			progname = optarg;
+>  			break;
+> +		case 'R':
+> +		        ignore_dirty = 1;
+>  		case 'r':
+>  			x.isreadonly = LIBXFS_ISREADONLY;
+>  			break;
+> diff --git a/db/init.h b/db/init.h
+> index b09389e..f6bfda9 100644
+> --- a/db/init.h
+> +++ b/db/init.h
+> @@ -20,6 +20,7 @@ extern char		*fsdevice;
+>  extern int		blkbb;
+>  extern int		exitcode;
+>  extern int		expert_mode;
+> +extern int              ignore_dirty;
+>  extern xfs_mount_t	*mp;
+>  extern libxfs_init_t	x;
+>  extern xfs_agnumber_t	cur_agno;
+> diff --git a/db/sb.c b/db/sb.c
+> index c7fbfd6..4c04d79 100644
+> --- a/db/sb.c
+> +++ b/db/sb.c
+> @@ -251,7 +251,7 @@ sb_logcheck(void)
+>  	if (dirty == -1) {
+>  		dbprintf(_("ERROR: cannot find log head/tail, run xfs_repair\n"));
+>  		return 0;
+> -	} else if (dirty == 1) {
+> +	} else if (dirty == 1 && ignore_dirty == 0) {
+>  		dbprintf(_(
+>  "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
+>  "be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 524b1ef..89be1aa 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -90,6 +90,14 @@ It is only necessary to omit this flag if a command that changes data
+>  .RB ( write ", " blocktrash ", " crc )
+>  is to be used.
+>  .TP
+> +.B -R
+> +Like
+> +.B -r
+> +but allows the 
+> +.B blockget
+> +command even if the file system is "dirty" (unreconciled transactions
+> +in the log).
+> +.TP
+>  .B \-x
+>  Specifies expert mode.
+>  This enables the
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
