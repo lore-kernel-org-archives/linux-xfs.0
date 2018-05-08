@@ -1,82 +1,255 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:61248 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933175AbeEIAON (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 20:14:13 -0400
-Date: Wed, 9 May 2018 10:14:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_db: add -R option
-Message-ID: <20180509001410.GM23861@dastard>
-References: <20180504140244.GA32161@deer-run.com>
- <db080bb2-a649-fbb3-ec91-d16f00ad30f0@sandeen.net>
- <20180508161353.GA18224@deer-run.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:59822 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754223AbeEHRAH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 13:00:07 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpotV004454
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:07 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2hs426hmnt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 17:00:06 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w48H06Dk028890
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:06 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w48H06s2030887
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:06 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 13/21] xfs: extent transaction reservations for parent
+ attributes
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-14-git-send-email-allison.henderson@oracle.com>
+ <20180507223427.GI11261@magnolia>
+Message-ID: <30b4d184-71da-cc62-3bb0-928c22459f28@oracle.com>
+Date: Tue, 8 May 2018 10:00:05 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180508161353.GA18224@deer-run.com>
+In-Reply-To: <20180507223427.GI11261@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hal@deer-run.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 08, 2018 at 11:13:53AM -0500, hal@deer-run.com wrote:
-> > Hm, so this probably makes it possible that blockget will wander off
-> > into inconsistencies and fail; there's a /reason/ for the check.  So
-> > if anything this is probably best-effort.  I doubt you can rely on
-> > blockget even completing without error, let alone being correct.  In
-> > that case, is it still useful to you?
+On 05/07/2018 03:34 PM, Darrick J. Wong wrote:
+> On Sun, May 06, 2018 at 10:24:46AM -0700, Allison Henderson wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
+>>
+>> We need to add, remove or modify parent pointer attributes during
+>> create/link/unlink/rename operations atomically with the dirents in the parent
+>> directories being modified. This means they need to be modified in the same
+>> transaction as the parent directories, and so we need to add the required
+>> space for the attribute modifications to the transaction reservations.
+>>
+>> [achender: rebased, added xfs_sb_version_hasparent stub]
+>>
+>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_format.h     |   5 ++
+>>   fs/xfs/libxfs/xfs_trans_resv.c | 111 ++++++++++++++++++++++++++++++++---------
+>>   fs/xfs/libxfs/xfs_trans_resv.h |   1 +
+>>   3 files changed, 94 insertions(+), 23 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+>> index 42956d8..5e946c8 100644
+>> --- a/fs/xfs/libxfs/xfs_format.h
+>> +++ b/fs/xfs/libxfs/xfs_format.h
+>> @@ -559,6 +559,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+>>   		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+>>   }
+>>   
+>> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>> +{
+>> +	return false; /* We'll enable this at the end of the set */
+>> +}
+>> +
+>>   /*
+>>    * end of superblock version macros
+>>    */
+>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+>> index 3bccdf7..76440fb 100644
+>> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+>> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+>> @@ -787,29 +787,30 @@ xfs_calc_sb_reservation(
+>>   	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+>>   }
+>>   
+>> +/*
+>> + * Namespace reservations.
+>> + *
+>> + * These get tricky when parent pointers are enabled as we have attribute
+>> + * modifications occurring from within these transactions. Rather than confuse
+>> + * each of these reservation calculations with the conditional attribute
+>> + * reservations, add them here in a clear and concise manner. This assumes that
+>> + * the attribute reservations have already been calculated.
+>> + *
+>> + * Note that we only include the static attribute reservation here; the runtime
+>> + * reservation will have to be modified by the size of the attributes being
+>> + * added/removed/modified. See the comments on the attribute reservation
+>> + * calculations for more details.
+>> + *
+>> + * Note for rename: rename will vastly overestimate requirements. This will be
+>> + * addressed later when modifications are made to ensure parent attribute
+>> + * modifications can be done atomically with the rename operation.
+>> + */
+>>   void
+>> -xfs_trans_resv_calc(
+>> +xfs_calc_namespace_reservations(
+>>   	struct xfs_mount	*mp,
+>>   	struct xfs_trans_resv	*resp)
+>>   {
+>> -	/*
+>> -	 * The following transactions are logged in physical format and
+>> -	 * require a permanent reservation on space.
+>> -	 */
+>> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+>> -	else
+>> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+>> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> -
+>> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+>> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> -		resp->tr_itruncate.tr_logcount =
+>> -				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+>> -	else
+>> -		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+>> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+>>   
+>>   	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+>>   	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+>> @@ -831,15 +832,77 @@ xfs_trans_resv_calc(
+>>   	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+>>   	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>   
+>> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+>> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+>> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +
+>> +	xfs_calc_parent_ptr_reservations(mp);
+>> +}
+>> +
+>> +void xfs_calc_parent_ptr_reservations(struct xfs_mount     *mp)
 > 
-> I've been testing a modified version of xfs_db on live file systems
-> and dirty image files, and I have yet to have blockget fail. I agree
-> that it's certainly possible for blockget to blow up under these
-> circumstances, but it's working often enough to be useful.
-
-That's a slippery slope.
-
-IMO, the only thing worse than not having a forensic tool for a
-specific job is having a forensic tool provided by a trusted toolkit
-whose results are unreliable and cannot be trusted....
-
-> > What sort of information do you hope to gather after running
-> > blockget without a replay?
+> Parameter goes on the next line, please.
 > 
-> Suppose I can match a string or magic number for a file of interest
-> at a specific byte offset in the file system image. A little arithmetic
-> and I have a daddr value. xfs_db let's me convert that to an fsblock
-> and then call blockuse -n to get the inode and file path. I've tried
-> it, and it works with my modifed xfs_db.
+>> +{
+>> +	struct xfs_trans_resv   *resp = M_RES(mp);
+>> +
+>> +	/* Calculate extra space needed for parent pointer attributes */
+>> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
+>> +		return;
+>> +
+>> +	/* rename can add/remove/modify 2 parent attributes */
+>> +	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
+>> +					 resp->tr_attrrm.tr_logres);
+>> +	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
+>> +					   resp->tr_attrrm.tr_logcount);
+> 
+> RENAME_EXCHANGE can perform four updates -- remove pptr from both
+> inodes, then add the (now swapped) to both inodes.
+> 
+Ok, will update
 
-There are so many ways that can go wrong on a live filesystem.
-Regardless of whether you've personally seen it go wrong, it's still
-not a reliable method of information extraction. And we know that
-there's every chance that xfs_db will stumble on something
-unexpected in a live filesystem traversal and just crash.
+>> +
+>> +	/* create will add 1 parent attribute */
+>> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* mkdir will add 1 parent attribute */
+>> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* link will add 1 parent attribute */
+>> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* symlink will add 1 parent attribute */
+>> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
+>> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
+>> +
+>> +	/* remove will remove 1 parent attribute */
+>> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
+>> +	resp->tr_remove.tr_logcount += resp->tr_attrrm.tr_logcount;
+>> +}
+>> +
+>> +void
+>> +xfs_trans_resv_calc(
+>> +	struct xfs_mount	*mp,
+>> +	struct xfs_trans_resv	*resp)
+>> +{
+>> +	/*
+>> +	 * The following transactions are logged in physical format and
+>> +	 * require a permanent reservation on space.
+>> +	 */
+>> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+>> +	else
+>> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+>> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +
+>> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+>> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
+>> +		resp->tr_itruncate.tr_logcount =
+>> +				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+>> +	else
+>> +		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+>> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> +
+>>   	resp->tr_create_tmpfile.tr_logres =
+>>   			xfs_calc_create_tmpfile_reservation(mp);
+>>   	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+>>   	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>   
+>> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+>> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+>> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> -
+>>   	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+>>   	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+>>   	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>> @@ -871,6 +934,8 @@ xfs_trans_resv_calc(
+>>   		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+>>   	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>>   
+>> +	xfs_calc_namespace_reservations(mp, resp);
+>> +
+>>   	/*
+>>   	 * The following transactions are logged in logical format with
+>>   	 * a default log count.
+>> diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+>> index b7e5357..c7190d6 100644
+>> --- a/fs/xfs/libxfs/xfs_trans_resv.h
+>> +++ b/fs/xfs/libxfs/xfs_trans_resv.h
+>> @@ -105,5 +105,6 @@ struct xfs_trans_resv {
+>>   
+>>   void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
+>>   uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
+>> +void xfs_calc_parent_ptr_reservations(struct xfs_mount *mp);
+> 
+> Are we going to need this outside xfs_trans_resv.c?  If not, leave it private.
+> 
+> --D
 
-FWIW, blockuse -n also requires a full filesystem scan to find the
-file path (i.e. via blockget -n). That can take a long time, affect
-anything that is running on the machine at the time. And by the time
-it's all done, there's no guarantee the path it comes up will be
-valid or correct....
+Ok, I dont think we do. I'll see if I can keep it private to 
+xfs_trans_resv.c
 
-What you are trying to do - offset/block to owner path lookups on
-live filesystems - is something that the FSMAP ioctl and the
-upcoming parent pointer functionality will solve.....
-
-> Until we get XFS support into libsleuthkit (which I'm working towards,
-> but it's going to be a while), having this functionality lets me
-> use xfs_db as a forensic tool. And it also lets me use xfs_db to
-> validate other forensic tools.
-
-I'd suggest, in that case, that you limit it's use to off-line or
-read-only snapshots of online filesystems? This would mean that the
-results of xfs_db operations (while eceedingly slow) will be
-reliable.
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+>>   
+>>   #endif	/* __XFS_TRANS_RESV_H__ */
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
