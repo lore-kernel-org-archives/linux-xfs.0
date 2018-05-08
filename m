@@ -1,136 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51694 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933383AbeEIHsy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:48:54 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/33] fs: use ->is_partially_uptodate in page_cache_seek_hole_data
-Date: Wed,  9 May 2018 09:48:02 +0200
-Message-Id: <20180509074830.16196-6-hch@lst.de>
-In-Reply-To: <20180509074830.16196-1-hch@lst.de>
-References: <20180509074830.16196-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:45508 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755579AbeEHUja (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 May 2018 16:39:30 -0400
+Subject: Re: [PATCH 20/21] xfsprogs: Add parent pointers during protofile
+ creation
+References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+ <1525754479-12177-21-git-send-email-allison.henderson@oracle.com>
+ <20180508174305.GT11261@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <782721c1-f929-a5a6-ed45-b7f42b3a5c05@sandeen.net>
+Date: Tue, 8 May 2018 15:39:29 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180508174305.GT11261@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-This way the implementation doesn't depend on buffer_head internals.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c | 83 +++++++++++++++++++++++++++---------------------------
- 1 file changed, 42 insertions(+), 41 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index a739f3f995d9..b3592183b1a0 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -593,31 +593,54 @@ EXPORT_SYMBOL_GPL(iomap_fiemap);
-  *
-  * Returns the offset within the file on success, and -ENOENT otherwise.
-  */
--static loff_t
--page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-+static bool
-+page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
-+		int whence)
- {
--	loff_t offset = page_offset(page);
--	struct buffer_head *bh, *head;
-+	const struct address_space_operations *ops = inode->i_mapping->a_ops;
-+	unsigned int bsize = i_blocksize(inode), off;
- 	bool seek_data = whence == SEEK_DATA;
-+	loff_t poff = page_offset(page);
- 
--	if (lastoff < offset)
--		lastoff = offset;
--
--	bh = head = page_buffers(page);
--	do {
--		offset += bh->b_size;
--		if (lastoff >= offset)
--			continue;
-+	if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
-+		return false;
- 
-+	if (*lastoff < poff) {
- 		/*
--		 * Any buffer with valid data in it should have BH_Uptodate set.
-+		 * Last offset smaller than the start of the page means we found
-+		 * a hole:
- 		 */
--		if (buffer_uptodate(bh) == seek_data)
--			return lastoff;
-+		if (whence == SEEK_HOLE)
-+			return true;
-+		*lastoff = poff;
-+	}
- 
--		lastoff = offset;
--	} while ((bh = bh->b_this_page) != head);
--	return -ENOENT;
-+	/*
-+	 * Just check the page unless we can and should check block ranges:
-+	 */
-+	if (bsize == PAGE_SIZE || !ops->is_partially_uptodate) {
-+		if (PageUptodate(page) == seek_data)
-+			return true;
-+		return false;
-+	}
-+
-+	lock_page(page);
-+	if (unlikely(page->mapping != inode->i_mapping))
-+		goto out_unlock_not_found;
-+
-+	for (off = 0; off < PAGE_SIZE; off += bsize) {
-+		if ((*lastoff & ~PAGE_MASK) >= off + bsize)
-+			continue;
-+		if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
-+			unlock_page(page);
-+			return true;
-+		}
-+		*lastoff = poff + off + bsize;
-+	}
-+
-+out_unlock_not_found:
-+	unlock_page(page);
-+	return false;
- }
- 
- /*
-@@ -654,30 +677,8 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page *page = pvec.pages[i];
- 
--			/*
--			 * At this point, the page may be truncated or
--			 * invalidated (changing page->mapping to NULL), or
--			 * even swizzled back from swapper_space to tmpfs file
--			 * mapping.  However, page->index will not change
--			 * because we have a reference on the page.
--                         *
--			 * If current page offset is beyond where we've ended,
--			 * we've found a hole.
--                         */
--			if (whence == SEEK_HOLE &&
--			    lastoff < page_offset(page))
-+			if (page_seek_hole_data(inode, page, &lastoff, whence))
- 				goto check_range;
--
--			lock_page(page);
--			if (likely(page->mapping == inode->i_mapping) &&
--			    page_has_buffers(page)) {
--				lastoff = page_seek_hole_data(page, lastoff, whence);
--				if (lastoff >= 0) {
--					unlock_page(page);
--					goto check_range;
--				}
--			}
--			unlock_page(page);
- 			lastoff = page_offset(page) + PAGE_SIZE;
- 		}
- 		pagevec_release(&pvec);
--- 
-2.17.0
+On 5/8/18 12:43 PM, Darrick J. Wong wrote:
+> On Mon, May 07, 2018 at 09:41:18PM -0700, Allison Henderson wrote:
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>  mkfs/proto.c         | 59 ++++++++++++++++++++++++++++++++++------------------
+>>  repair/attr_repair.c | 16 ++------------
+>>  repair/phase6.c      | 47 +++++++++++++++++++++++++----------------
 
+> Separate patches for separate utilities, please.
+
+Or at least patch per functional change; it's not at all clear to me how protofile
+creation has anything to do with xfs_repair, and there's nothing in the commit
+log to help me figure it out.  :)
+
+(I think it doesn't have anything to do w/ protofile creation, and the repair
+patches are fixing up orphanage entry creation; the attr_repair changes seem
+like some third thing that I don't grok yet, sorry - removing namecheck() for
+some reason?).
+
+-Eric
+ 
