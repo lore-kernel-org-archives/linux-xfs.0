@@ -1,219 +1,189 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53936 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932606AbeEHQyL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:54:11 -0400
-Subject: [PATCH 2/2] generic: test swapfile creation, activation,
- and deactivation
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 08 May 2018 09:54:06 -0700
-Message-ID: <152579844608.18959.5745995713836937294.stgit@magnolia>
-In-Reply-To: <152579843989.18959.14108003206856326245.stgit@magnolia>
-References: <152579843989.18959.14108003206856326245.stgit@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:42990 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754812AbeEHQ61 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:58:27 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpW43168304
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:27 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2hs24shqgg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 16:58:27 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w48GwQn7004116
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:26 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w48GwP36013297
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:25 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 17/21] xfs: remove parent pointers in unlink
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-18-git-send-email-allison.henderson@oracle.com>
+ <20180507215942.GE11261@magnolia>
+Message-ID: <ad9d6fc6-e30d-b267-97d7-f56937854c77@oracle.com>
+Date: Tue, 8 May 2018 09:58:24 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20180507215942.GE11261@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Test swapfile activation and deactivation.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/708     |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/708.out |   10 +++
- tests/generic/group   |    1 
- 3 files changed, 163 insertions(+)
- create mode 100755 tests/generic/708
- create mode 100644 tests/generic/708.out
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
 
-diff --git a/tests/generic/708 b/tests/generic/708
-new file mode 100755
-index 00000000..48feeb25
---- /dev/null
-+++ b/tests/generic/708
-@@ -0,0 +1,152 @@
-+#! /bin/bash
-+# FS QA Test No. 708
-+#
-+# Test various swapfile activation oddities.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_swapfile
-+
-+rm -f $seqres.full
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount >>$seqres.full 2>&1
-+
-+swapfile=$SCRATCH_MNT/swap
-+len=$((2 * 1048576))
-+
-+swapfile_cycle() {
-+	local swapfile="$1"
-+
-+	mkswap $swapfile >> $seqres.full
-+	filefrag -v $swapfile >> $seqres.full
-+	swapon $swapfile 2>&1 | _filter_scratch
-+	swapon -v --bytes >> $seqres.full
-+	swapoff $swapfile 2>> $seeqres.full
-+	rm -f $swapfile
-+}
-+
-+test_can_falloc_swap() {
-+	local test_swapfile=$TEST_DIR/swapfile
-+
-+	echo "can we fallocate swap?"
-+	$XFS_IO_PROG -f -c "falloc 0 64k" $test_swapfile
-+	test -f $test_swapfile || return 1
-+	mkswap $test_swapfile
-+	swapon $test_swapfile
-+	res=$?
-+	swapoff $test_swapfile
-+	rm -f $test_swapfile
-+	return $res
-+}
-+
-+unset can_falloc_swap
-+test_can_falloc_swap >> $seqres.full 2>&1 && can_falloc_swap=yes
-+page_size=$(get_page_size)
-+
-+# Create a sparse swap file
-+echo "sparse swap" | tee -a $seqres.full
-+$XFS_IO_PROG -f -c "truncate $len" $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a regular swap file
-+echo "regular swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $len $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a fallocated swap file
-+echo "fallocate swap" | tee -a $seqres.full
-+if [ "$can_falloc_swap" = "yes" ]; then
-+	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-+	swapfile_cycle $swapfile
-+fi
-+
-+# Create a swap file with a little too much junk on the end
-+echo "too long swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len + 3)) $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a swap file with a large discontiguous range(?)
-+echo "large discontig swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len * 2)) $swapfile >> $seqres.full
-+old_sz="$(stat -c '%s' $swapfile)"
-+$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
-+new_sz="$(stat -c '%s' $swapfile)"
-+if [ $old_sz -gt $new_sz ]; then
-+	swapfile_cycle $swapfile
-+fi
-+rm -f $swapfile
-+
-+# Create a swap file with a small discontiguous range(?)
-+echo "small discontig swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len + 1024)) $swapfile >> $seqres.full
-+old_sz="$(stat -c '%s' $swapfile)"
-+$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
-+new_sz="$(stat -c '%s' $swapfile)"
-+if [ $old_sz -gt $new_sz ]; then
-+	swapfile_cycle $swapfile
-+fi
-+rm -f $swapfile
-+
-+# Create a fallocated swap file and touch every other $PAGE_SIZE to create
-+# a mess of written/unwritten extent records
-+echo "mixed swap" | tee -a $seqres.full
-+if [ "$can_falloc_swap" = "yes" ]; then
-+	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-+	seq $page_size $((page_size * 2)) $len | while read offset; do
-+		_pwrite_byte 0x58 $offset 1 $swapfile >> $seqres.full
-+	done
-+	swapfile_cycle $swapfile
-+fi
-+
-+# Create a ridiculously small swap file; mkswap says the minimum is 40k.
-+# However, each swap file must be at least two pages long.
-+echo "tiny swap" | tee -a $seqres.full
-+tiny_len=40960
-+min_swap_size=$((page_size * 2))
-+if [ "$min_swap_size" -gt "$tiny_len" ]; then
-+	tiny_len=$min_swap_size
-+fi
-+_pwrite_byte 0x58 0 $tiny_len $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+status=0
-+exit
-diff --git a/tests/generic/708.out b/tests/generic/708.out
-new file mode 100644
-index 00000000..d6199b99
---- /dev/null
-+++ b/tests/generic/708.out
-@@ -0,0 +1,10 @@
-+QA output created by 708
-+sparse swap
-+swapon: SCRATCH_MNT/swap: skipping - it appears to have holes.
-+regular swap
-+fallocate swap
-+too long swap
-+large discontig swap
-+small discontig swap
-+mixed swap
-+tiny swap
-diff --git a/tests/generic/group b/tests/generic/group
-index 505383f7..9f3a933e 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -489,3 +489,4 @@
- 484 auto quick
- 485 auto quick insert
- 486 auto quick attr
-+708 auto quick swapfile
 
+On 05/07/2018 02:59 PM, Darrick J. Wong wrote:
+> On Sun, May 06, 2018 at 10:24:50AM -0700, Allison Henderson wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
+>>
+>> This patch removes the parent pointer attribute during unlink
+>>
+>> [bfoster: rebase, use VFS inode generation]
+>> [achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+>> 	   implemented xfs_attr_remove_parent]
+>>
+>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/xfs_inode.c        | 21 ++++++++++++++++-----
+>>   fs/xfs/xfs_parent_utils.c | 19 +++++++++++++++++++
+>>   fs/xfs/xfs_parent_utils.h |  4 ++++
+>>   3 files changed, 39 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index 3a68e72..b18b20c 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -2624,6 +2624,7 @@ xfs_remove(
+>>   	struct xfs_defer_ops	dfops;
+>>   	xfs_fsblock_t           first_block;
+>>   	uint			resblks;
+>> +	xfs_dir2_dataptr_t	dir_offset;
+>>   
+>>   	trace_xfs_remove(dp, name);
+>>   
+>> @@ -2661,8 +2662,8 @@ xfs_remove(
+>>   
+>>   	xfs_lock_two_inodes(dp, XFS_ILOCK_EXCL, ip, XFS_ILOCK_EXCL);
+>>   
+>> -	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+>> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>> +	xfs_trans_ijoin(tp, dp, 0);
+>> +	xfs_trans_ijoin(tp, ip, 0);
+>>   
+>>   	/*
+>>   	 * If we're removing a directory perform some additional validation.
+>> @@ -2704,12 +2705,18 @@ xfs_remove(
+>>   
+>>   	xfs_defer_init(&dfops, &first_block);
+>>   	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+>> -				   &dfops, resblks, NULL);
+>> +				   &dfops, resblks, &dir_offset);
+>>   	if (error) {
+>>   		ASSERT(error != -ENOENT);
+>>   		goto out_bmap_cancel;
+>>   	}
+>>   
+>> +	if (xfs_sb_version_hasparent(&mp->m_sb)) {
+>> +		error = xfs_parent_remove_deferred(dp, ip, dir_offset, &dfops);
+>> +		if (error)
+>> +			goto out_bmap_cancel;
+>> +	}
+>> +
+>>   	/*
+>>   	 * If this is a synchronous mount, make sure that the
+>>   	 * remove transaction goes to disk before returning to
+>> @@ -2724,17 +2731,21 @@ xfs_remove(
+>>   
+>>   	error = xfs_trans_commit(tp);
+>>   	if (error)
+>> -		goto std_return;
+>> +		goto out_unlock;
+>>   
+>>   	if (is_dir && xfs_inode_is_filestream(ip))
+>>   		xfs_filestream_deassociate(ip);
+>>   
+>> -	return 0;
+>> +	error = 0;
+>> +	goto out_unlock;
+> 
+> I'd unlock the two inodes directly here instead of mixing the sucess
+> return path with the error paths.
+
+Sure, will fix.  Thx!
+
+Allison
+> 
+>>   
+>>    out_bmap_cancel:
+>>   	xfs_defer_cancel(&dfops);
+>>    out_trans_cancel:
+>>   	xfs_trans_cancel(tp);
+>> +out_unlock:
+>> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>> +	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>>    std_return:
+>>   	return error;
+>>   }
+>> diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
+>> index cf4a7e2..0fd48b8 100644
+>> --- a/fs/xfs/xfs_parent_utils.c
+>> +++ b/fs/xfs/xfs_parent_utils.c
+>> @@ -49,3 +49,22 @@ xfs_parent_add_deferred(
+>>   		(void *)child_name->name, child_name->len, ATTR_PARENT);
+>>   }
+>>   
+>> +/*
+>> + * Remove a parent record from a child inode.
+>> + */
+>> +int
+>> +xfs_parent_remove_deferred(
+>> +	struct xfs_inode	*parent,
+>> +	struct xfs_inode	*child,
+>> +	xfs_dir2_dataptr_t	diroffset,
+>> +	struct xfs_defer_ops	*dfops)
+>> +{
+>> +	struct xfs_parent_name_rec rec;
+>> +
+>> +	xfs_init_parent_name_rec(&rec, parent->i_ino,
+>> +				 VFS_I(parent)->i_generation, diroffset);
+>> +
+>> +	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
+>> +					ATTR_PARENT);
+> 
+> Two indents, no need to align these with the left paren.
+> 
+> --D
+> 
+>> +}
+>> +
+>> diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
+>> index a667d1d..9e0ac13 100644
+>> --- a/fs/xfs/xfs_parent_utils.h
+>> +++ b/fs/xfs/xfs_parent_utils.h
+>> @@ -23,4 +23,8 @@
+>>   int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_inode *child,
+>>   	       struct xfs_name *child_name, uint32_t diroffset,
+>>   	       struct xfs_defer_ops *dfops);
+>> +int xfs_parent_remove_deferred(struct xfs_inode *parent,
+>> +			       struct xfs_inode *child,
+>> +			       xfs_dir2_dataptr_t diroffset,
+>> +			       struct xfs_defer_ops *dfops);
+>>   #endif	/* __XFS_PARENT_UTILS_H__ */
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=KflT8_xtU5yMnGOwd0ZPCW2pBFzUSMyjcHn0gtvVEEs&s=KWZgWUtvv6RGSfjy5GjFPxiTq-ep3IqjgXLV5P52qX0&e=
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=KflT8_xtU5yMnGOwd0ZPCW2pBFzUSMyjcHn0gtvVEEs&s=KWZgWUtvv6RGSfjy5GjFPxiTq-ep3IqjgXLV5P52qX0&e=
+> 
