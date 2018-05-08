@@ -1,32 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59822 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754223AbeEHRAH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 13:00:07 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpotV004454
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:07 GMT
+Received: from userp2120.oracle.com ([156.151.31.85]:56180 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932104AbeEHQ6K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:58:10 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpDhe041544
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:09 GMT
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2hs426hmnt-1
+        by userp2120.oracle.com with ESMTP id 2hs5939huq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 17:00:06 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w48H06Dk028890
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 16:58:09 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w48Gw8d3021501
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:06 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w48H06s2030887
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 17:00:06 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:08 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w48Gw7Rn022049
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:58:07 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 13/21] xfs: extent transaction reservations for parent
- attributes
+Subject: Re: [PATCH 19/21] xfs: Add the parent pointer support to the
+ superblock version 5.
 References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-14-git-send-email-allison.henderson@oracle.com>
- <20180507223427.GI11261@magnolia>
-Message-ID: <30b4d184-71da-cc62-3bb0-928c22459f28@oracle.com>
-Date: Tue, 8 May 2018 10:00:05 -0700
+ <1525627494-12873-20-git-send-email-allison.henderson@oracle.com>
+ <20180507213825.GC11261@magnolia>
+Message-ID: <62fb00e8-b30b-3bba-0daa-dd52245f630f@oracle.com>
+Date: Tue, 8 May 2018 09:58:06 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180507223427.GI11261@magnolia>
+In-Reply-To: <20180507213825.GC11261@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -36,216 +36,106 @@ List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 05/07/2018 03:34 PM, Darrick J. Wong wrote:
-> On Sun, May 06, 2018 at 10:24:46AM -0700, Allison Henderson wrote:
->> From: Dave Chinner <dchinner@redhat.com>
+On 05/07/2018 02:38 PM, Darrick J. Wong wrote:
+> On Sun, May 06, 2018 at 10:24:52AM -0700, Allison Henderson wrote:
+>> [dchinner: forward ported and cleaned up]
+>> [achender: rebased and added parent pointer attribute to
+>>             compatible attributes mask]
 >>
->> We need to add, remove or modify parent pointer attributes during
->> create/link/unlink/rename operations atomically with the dirents in the parent
->> directories being modified. This means they need to be modified in the same
->> transaction as the parent directories, and so we need to add the required
->> space for the attribute modifications to the transaction reservations.
->>
->> [achender: rebased, added xfs_sb_version_hasparent stub]
->>
+>> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 >> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 >> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_format.h     |   5 ++
->>   fs/xfs/libxfs/xfs_trans_resv.c | 111 ++++++++++++++++++++++++++++++++---------
->>   fs/xfs/libxfs/xfs_trans_resv.h |   1 +
->>   3 files changed, 94 insertions(+), 23 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->> index 42956d8..5e946c8 100644
->> --- a/fs/xfs/libxfs/xfs_format.h
->> +++ b/fs/xfs/libxfs/xfs_format.h
->> @@ -559,6 +559,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
->>   		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
->>   }
->>   
->> +static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
->> +{
->> +	return false; /* We'll enable this at the end of the set */
->> +}
->> +
->>   /*
->>    * end of superblock version macros
->>    */
->> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
->> index 3bccdf7..76440fb 100644
->> --- a/fs/xfs/libxfs/xfs_trans_resv.c
->> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
->> @@ -787,29 +787,30 @@ xfs_calc_sb_reservation(
->>   	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
->>   }
->>   
->> +/*
->> + * Namespace reservations.
->> + *
->> + * These get tricky when parent pointers are enabled as we have attribute
->> + * modifications occurring from within these transactions. Rather than confuse
->> + * each of these reservation calculations with the conditional attribute
->> + * reservations, add them here in a clear and concise manner. This assumes that
->> + * the attribute reservations have already been calculated.
->> + *
->> + * Note that we only include the static attribute reservation here; the runtime
->> + * reservation will have to be modified by the size of the attributes being
->> + * added/removed/modified. See the comments on the attribute reservation
->> + * calculations for more details.
->> + *
->> + * Note for rename: rename will vastly overestimate requirements. This will be
->> + * addressed later when modifications are made to ensure parent attribute
->> + * modifications can be done atomically with the rename operation.
->> + */
->>   void
->> -xfs_trans_resv_calc(
->> +xfs_calc_namespace_reservations(
->>   	struct xfs_mount	*mp,
->>   	struct xfs_trans_resv	*resp)
->>   {
->> -	/*
->> -	 * The following transactions are logged in physical format and
->> -	 * require a permanent reservation on space.
->> -	 */
->> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
->> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
->> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
->> -	else
->> -		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
->> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> -
->> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
->> -	if (xfs_sb_version_hasreflink(&mp->m_sb))
->> -		resp->tr_itruncate.tr_logcount =
->> -				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
->> -	else
->> -		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
->> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
->>   
->>   	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
->>   	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
->> @@ -831,15 +832,77 @@ xfs_trans_resv_calc(
->>   	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
->>   	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>   
->> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
->> +	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
->> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> +
->> +	xfs_calc_parent_ptr_reservations(mp);
->> +}
->> +
->> +void xfs_calc_parent_ptr_reservations(struct xfs_mount     *mp)
 > 
-> Parameter goes on the next line, please.
+> Old kernels can't accidentally start returning the ATTR_PARENT
+> attributes, right?  I think the answer is yes.....?
 > 
->> +{
->> +	struct xfs_trans_resv   *resp = M_RES(mp);
->> +
->> +	/* Calculate extra space needed for parent pointer attributes */
->> +	if (!xfs_sb_version_hasparent(&mp->m_sb))
->> +		return;
->> +
->> +	/* rename can add/remove/modify 2 parent attributes */
->> +	resp->tr_rename.tr_logres += 2 * max(resp->tr_attrsetm.tr_logres,
->> +					 resp->tr_attrrm.tr_logres);
->> +	resp->tr_rename.tr_logcount += 2 * max(resp->tr_attrsetm.tr_logcount,
->> +					   resp->tr_attrrm.tr_logcount);
-> 
-> RENAME_EXCHANGE can perform four updates -- remove pptr from both
-> inodes, then add the (now swapped) to both inodes.
-> 
-Ok, will update
-
->> +
->> +	/* create will add 1 parent attribute */
->> +	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
->> +	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +	/* mkdir will add 1 parent attribute */
->> +	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
->> +	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +	/* link will add 1 parent attribute */
->> +	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
->> +	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +	/* symlink will add 1 parent attribute */
->> +	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
->> +	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
->> +
->> +	/* remove will remove 1 parent attribute */
->> +	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
->> +	resp->tr_remove.tr_logcount += resp->tr_attrrm.tr_logcount;
->> +}
->> +
->> +void
->> +xfs_trans_resv_calc(
->> +	struct xfs_mount	*mp,
->> +	struct xfs_trans_resv	*resp)
->> +{
->> +	/*
->> +	 * The following transactions are logged in physical format and
->> +	 * require a permanent reservation on space.
->> +	 */
->> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
->> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
->> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
->> +	else
->> +		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
->> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> +
->> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
->> +	if (xfs_sb_version_hasreflink(&mp->m_sb))
->> +		resp->tr_itruncate.tr_logcount =
->> +				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
->> +	else
->> +		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
->> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> +
->>   	resp->tr_create_tmpfile.tr_logres =
->>   			xfs_calc_create_tmpfile_reservation(mp);
->>   	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
->>   	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>   
->> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
->> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
->> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> -
->>   	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
->>   	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
->>   	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->> @@ -871,6 +934,8 @@ xfs_trans_resv_calc(
->>   		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
->>   	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->>   
->> +	xfs_calc_namespace_reservations(mp, resp);
->> +
->>   	/*
->>   	 * The following transactions are logged in logical format with
->>   	 * a default log count.
->> diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
->> index b7e5357..c7190d6 100644
->> --- a/fs/xfs/libxfs/xfs_trans_resv.h
->> +++ b/fs/xfs/libxfs/xfs_trans_resv.h
->> @@ -105,5 +105,6 @@ struct xfs_trans_resv {
->>   
->>   void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
->>   uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
->> +void xfs_calc_parent_ptr_reservations(struct xfs_mount *mp);
-> 
-> Are we going to need this outside xfs_trans_resv.c?  If not, leave it private.
+> If so,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > --D
 
-Ok, I dont think we do. I'll see if I can keep it private to 
-xfs_trans_resv.c
+I suppose it's possible, though it wouldn't seem correct if they didn't
+actually support the feature.  Maybe I'm not understanding your concern? 
+  You are concerned as to how we handle old file systems that may have 
+incorrectly set the attribute?
 
+Allison
 > 
+>> ---
+>>   fs/xfs/libxfs/xfs_format.h | 7 +++++--
+>>   fs/xfs/libxfs/xfs_fs.h     | 1 +
+>>   fs/xfs/libxfs/xfs_sb.c     | 2 ++
+>>   fs/xfs/xfs_super.c         | 4 ++++
+>>   4 files changed, 12 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+>> index 5e946c8..d05ffc5 100644
+>> --- a/fs/xfs/libxfs/xfs_format.h
+>> +++ b/fs/xfs/libxfs/xfs_format.h
+>> @@ -462,10 +462,12 @@ xfs_sb_has_compat_feature(
+>>   #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+>>   #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+>>   #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+>> +#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)		/* parent inode ptr */
+>>   #define XFS_SB_FEAT_RO_COMPAT_ALL \
+>>   		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+>>   		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+>> -		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
+>> +		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
+>> +		 XFS_SB_FEAT_RO_COMPAT_PARENT)
+>>   #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+>>   static inline bool
+>>   xfs_sb_has_ro_compat_feature(
+>> @@ -561,7 +563,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
 >>   
->>   #endif	/* __XFS_TRANS_RESV_H__ */
+>>   static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+>>   {
+>> -	return false; /* We'll enable this at the end of the set */
+>> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+>> +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
+>>   }
+>>   
+>>   /*
+>> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+>> index faf1a4e..641e0af 100644
+>> --- a/fs/xfs/libxfs/xfs_fs.h
+>> +++ b/fs/xfs/libxfs/xfs_fs.h
+>> @@ -222,6 +222,7 @@ typedef struct xfs_fsop_resblks {
+>>   #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+>>   #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+>>   #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
+>> +#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
+>>   
+>>   /*
+>>    * Minimum and maximum sizes need for growth checks.
+>> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+>> index d9b94bd..e1f0ac1 100644
+>> --- a/fs/xfs/libxfs/xfs_sb.c
+>> +++ b/fs/xfs/libxfs/xfs_sb.c
+>> @@ -955,6 +955,8 @@ xfs_fs_geometry(
+>>   		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
+>>   	if (xfs_sb_version_hasreflink(sbp))
+>>   		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
+>> +	if(xfs_sb_version_hasparent(sbp))
+>> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
+>>   	if (xfs_sb_version_hassector(sbp))
+>>   		geo->logsectsize = sbp->sb_logsectsize;
+>>   	else
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index dce3baf..366deee 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -1731,6 +1731,10 @@ xfs_fs_fill_super(
+>>   		goto out_filestream_unmount;
+>>   	}
+>>   
+>> +	if (xfs_sb_version_hasparent(&mp->m_sb))
+>> +		xfs_alert(mp,
+>> +	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
+>> +
+>>   	error = xfs_mountfs(mp);
+>>   	if (error)
+>>   		goto out_filestream_unmount;
 >> -- 
 >> 2.7.4
 >>
