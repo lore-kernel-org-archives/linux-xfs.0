@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60290 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752362AbeEHEn3 (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:33518 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752456AbeEHEn3 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:29 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484fWhm156938
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:28 GMT
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484fYsm066377
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:29 GMT
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2hs4k26st5-1
+        by userp2130.oracle.com with ESMTP id 2hs426euqs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 04:43:28 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w484hSaM015911
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w484hRTY015890
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:28 GMT
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hSBa029383
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:28 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hRjH025417
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:27 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 10/21] xfsprogs: get directory offset when replacing a directory name
-Date: Mon,  7 May 2018 21:41:08 -0700
-Message-Id: <1525754479-12177-11-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH 07/21] xfsprogs: Remove all strlen calls in all xfs_attr_* functions for attr names.
+Date: Mon,  7 May 2018 21:41:05 -0700
+Message-Id: <1525754479-12177-8-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
 References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,143 +28,115 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Return the directory offset information when replacing an entry to the
-directory.
+Parent pointer attributes use a binary name, so strlen will not work.
+Calling functions will need to pass in the name length
 
-This offset will be used as the parent pointer offset in xfs_rename.
-
-[dchinner: forward ported and cleaned up]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-       Changed typedefs to raw struct types]
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/xfs_dir2.c       | 16 ++++++++++------
- libxfs/xfs_dir2.h       |  3 ++-
- libxfs/xfs_dir2_block.c |  4 ++--
- libxfs/xfs_dir2_leaf.c  |  1 +
- libxfs/xfs_dir2_node.c  |  1 +
- libxfs/xfs_dir2_sf.c    |  2 ++
- repair/phase6.c         |  2 +-
- 7 files changed, 19 insertions(+), 10 deletions(-)
+ libxfs/xfs_attr.c | 12 ++++++++----
+ libxfs/xfs_attr.h | 10 ++++++----
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index ef9fba6..57894c8 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -497,13 +497,14 @@ out_free:
-  */
- int
- xfs_dir_replace(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*dp,
--	struct xfs_name	*name,		/* name of entry to replace */
--	xfs_ino_t	inum,		/* new inode number */
--	xfs_fsblock_t	*first,		/* bmap's firstblock */
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_name		*name,		/* name of entry to replace */
-+	xfs_ino_t		inum,		/* new inode number */
-+	xfs_fsblock_t		*first,		/* bmap's firstblock */
- 	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
--	xfs_extlen_t	total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index f6b69c8..f83aa33 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -76,6 +76,7 @@ xfs_attr_args_init(
+ 	struct xfs_da_args	*args,
+ 	struct xfs_inode	*dp,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	int			flags)
  {
- 	struct xfs_da_args *args;
- 	int		rval;
-@@ -553,6 +554,9 @@ xfs_dir_replace(
- 	else
- 		rval = xfs_dir2_node_replace(args);
- out_free:
-+	if (offset)
-+		*offset = args->offset;
-+
- 	kmem_free(args);
- 	return rval;
- }
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index e2cd70b..cb6fda0 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -145,7 +145,8 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
- extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
- 				xfs_fsblock_t *first,
--				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-+				struct xfs_defer_ops *dfops, xfs_extlen_t tot,
-+				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name);
  
-diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
-index e7ce6a9..34d6a0d 100644
---- a/libxfs/xfs_dir2_block.c
-+++ b/libxfs/xfs_dir2_block.c
-@@ -862,9 +862,9 @@ xfs_dir2_block_replace(
- 	/*
- 	 * Point to the data entry we need to change.
- 	 */
-+	args->offset = be32_to_cpu(blp[ent].address);
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
--			xfs_dir2_dataptr_to_off(args->geo,
--						be32_to_cpu(blp[ent].address)));
-+			xfs_dir2_dataptr_to_off(args->geo, args->offset));
- 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
- 	/*
- 	 * Change the inode number to the new value.
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index 8cca19e..ee16fc4 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -1542,6 +1542,7 @@ xfs_dir2_leaf_replace(
- 	/*
- 	 * Point to the data entry.
- 	 */
-+	args->offset = be32_to_cpu(lep->address);
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)dbp->b_addr +
- 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index e4ca481..e604b1c 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -2247,6 +2247,7 @@ xfs_dir2_node_replace(
- 		hdr = state->extrablk.bp->b_addr;
- 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
- 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
-+		args->offset = be32_to_cpu(lep->address);
- 		dep = (xfs_dir2_data_entry_t *)
- 		      ((char *)hdr +
- 		       xfs_dir2_dataptr_to_off(args->geo,
-diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
-index 8013ddd..11561a9 100644
---- a/libxfs/xfs_dir2_sf.c
-+++ b/libxfs/xfs_dir2_sf.c
-@@ -1041,6 +1041,8 @@ xfs_dir2_sf_replace(
- 				ASSERT(args->inumber != ino);
- 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+				args->offset = xfs_dir2_byte_to_dataptr(
-+						  xfs_dir2_sf_get_offset(sfep));
- 				break;
- 			}
- 		}
-diff --git a/repair/phase6.c b/repair/phase6.c
-index b41cc2b..4fedb35 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1233,7 +1233,7 @@ mv_orphanage(
- 			if (entry_ino_num != orphanage_ino)  {
- 				err = -libxfs_dir_replace(tp, ino_p,
- 						&xfs_name_dotdot, orphanage_ino,
--						&first, &dfops, nres);
-+						&first, &dfops, nres, NULL);
- 				if (err)
- 					do_error(
- 	_("name replace op failed (%d), filesystem may be out of space\n"),
+@@ -88,7 +89,7 @@ xfs_attr_args_init(
+ 	args->dp = dp;
+ 	args->flags = flags;
+ 	args->name = name;
+-	args->namelen = strlen((const char *)name);
++	args->namelen = namelen;
+ 	if (args->namelen >= MAXNAMELEN)
+ 		return -EFAULT;		/* match IRIX behaviour */
+ 
+@@ -134,6 +135,7 @@ int
+ xfs_attr_get(
+ 	struct xfs_inode	*ip,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	unsigned char		*value,
+ 	int			*valuelenp,
+ 	int			flags)
+@@ -147,7 +149,7 @@ xfs_attr_get(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+-	error = xfs_attr_args_init(&args, ip, name, flags);
++	error = xfs_attr_args_init(&args, ip, name, namelen, flags);
+ 	if (error)
+ 		return error;
+ 
+@@ -360,6 +362,7 @@ int
+ xfs_attr_set(
+ 	struct xfs_inode	*dp,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	unsigned char		*value,
+ 	int			valuelen,
+ 	int			flags)
+@@ -378,7 +381,7 @@ xfs_attr_set(
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+ 
+-	error = xfs_attr_args_init(&args, dp, name, flags);
++	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+ 	if (error)
+ 		return error;
+ 
+@@ -509,6 +512,7 @@ int
+ xfs_attr_remove(
+ 	struct xfs_inode	*dp,
+ 	const unsigned char	*name,
++	size_t			namelen,
+ 	int			flags)
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
+@@ -522,7 +526,7 @@ xfs_attr_remove(
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
+ 
+-	error = xfs_attr_args_init(&args, dp, name, flags);
++	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index c706976..d23cf4a 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -166,17 +166,19 @@ int xfs_attr_list_int(struct xfs_attr_list_context *);
+ int xfs_inode_hasattr(struct xfs_inode *ip);
+ int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+-		 unsigned char *value, int *valuelenp, int flags);
++		size_t namelen, unsigned char *value, int *valuelenp,
++		int flags);
+ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+-		 unsigned char *value, int valuelen, int flags);
++		size_t namelen, unsigned char *value, int valuelen, int flags);
+ int xfs_attr_set_args(struct xfs_da_args *args, int flags,
+ 			struct xfs_buf *leaf_bp, bool roll_trans);
+-int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
++int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
++		size_t namelen, int flags);
+ int xfs_attr_remove_args(struct xfs_da_args *args, int flags, bool roll_trans);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+-		       const unsigned char *name, int flags);
++		       const unsigned char *name, size_t namelen, int flags);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+ int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
+ 			  void *name, unsigned int name_len, void *value,
 -- 
 2.7.4
 
