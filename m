@@ -1,56 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51920 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933832AbeEIHtR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:17 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/33] xfs: use iomap_bmap
-Date: Wed,  9 May 2018 09:48:09 +0200
-Message-Id: <20180509074830.16196-13-hch@lst.de>
-In-Reply-To: <20180509074830.16196-1-hch@lst.de>
-References: <20180509074830.16196-1-hch@lst.de>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34520 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755544AbeEHUsP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 16:48:15 -0400
+Received: by mail-pg0-f67.google.com with SMTP id g20-v6so14990266pgv.1
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 13:48:15 -0700 (PDT)
+Date: Tue, 8 May 2018 13:48:12 -0700
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH 4/4] blk-wbt: throttle discards like background writes
+Message-ID: <20180508204812.GE27324@vader>
+References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
+ <1525709615-14395-5-git-send-email-axboe@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525709615-14395-5-git-send-email-axboe@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, hch@lst.de
 
-Switch to the iomap based bmap implementation to get rid of one of the
-last users of xfs_get_blocks.
+On Mon, May 07, 2018 at 10:13:35AM -0600, Jens Axboe wrote:
+> Throttle discards like we would any background write. Discards should
+> be background activity, so if they are impacting foreground IO, then
+> we will throttle them down.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+Seems reasonable.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 0ab824f574ed..8b06be0a80da 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1378,10 +1378,9 @@ xfs_vm_bmap(
- 	struct address_space	*mapping,
- 	sector_t		block)
- {
--	struct inode		*inode = (struct inode *)mapping->host;
--	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_inode	*ip = XFS_I(mapping->host);
- 
--	trace_xfs_vm_bmap(XFS_I(inode));
-+	trace_xfs_vm_bmap(ip);
- 
- 	/*
- 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
-@@ -1394,9 +1393,7 @@ xfs_vm_bmap(
- 	 */
- 	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
- 		return 0;
--
--	filemap_write_and_wait(mapping);
--	return generic_block_bmap(mapping, block, xfs_get_blocks);
-+	return iomap_bmap(mapping, block, &xfs_iomap_ops);
- }
- 
- STATIC int
--- 
-2.17.0
+Reviewed-by: Omar Sandoval <osandov@fb.com>
 
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> ---
+>  block/blk-stat.h |  6 +++---
+>  block/blk-wbt.c  | 43 ++++++++++++++++++++++++++-----------------
+>  block/blk-wbt.h  |  4 +++-
+>  3 files changed, 32 insertions(+), 21 deletions(-)
