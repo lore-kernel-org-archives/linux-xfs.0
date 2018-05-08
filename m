@@ -1,10 +1,10 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f43.google.com ([209.85.160.43]:43340 "EHLO
-        mail-pl0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754179AbeEHHyv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 03:54:51 -0400
-Received: by mail-pl0-f43.google.com with SMTP id a39-v6so1736381pla.10
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 00:54:51 -0700 (PDT)
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:36802 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754263AbeEHHw6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 03:52:58 -0400
+Received: by mail-pf0-f176.google.com with SMTP id w129so18139565pfd.3
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 00:52:58 -0700 (PDT)
 MIME-Version: 1.0
 In-Reply-To: <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
 References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@dastard>
@@ -15,8 +15,8 @@ References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@das
  <9f8d657c-7f42-7bd9-4477-6c3addf16dee@sandeen.net> <CACT4Y+bUx4jw83Ux7w9URL9bCy1ERLaVGTTwvA9Fe_UtLFeqCw@mail.gmail.com>
  <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
 From: Dmitry Vyukov <dvyukov@google.com>
-Date: Tue, 8 May 2018 09:54:30 +0200
-Message-ID: <CACT4Y+bKL9SWm-_t1SKC6amAGsWUTLkt0b6SpMN22P-O+ofVSA@mail.gmail.com>
+Date: Tue, 8 May 2018 09:52:36 +0200
+Message-ID: <CACT4Y+YNRt5YSrOYKKFUP25jodpK0xeZhysSGoz2UaiGs_Gx=A@mail.gmail.com>
 Subject: Re: WARNING: bad unlock balance in xfs_iunlock
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
@@ -48,39 +48,61 @@ On Mon, Apr 30, 2018 at 5:14 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 > Ok, but that's the syscall side.  You are operating on a static xfs image,
 > correct?  We're only asking for the actual filesystem you're operating
 > against.
->
+
+Not necessary. Image can be dynamically generate too, all inputs to
+kernel are generally dynamically generated.
+
+
 > (When I say "image" I am talking only about the filesystem itself, not any
 > other syzkaller state)
+
+OK, let's do it this way. For the first 10 bugs, ask me, and I will do
+it manually.
+I am all for automation. And syzbot is already more automated than
+most kernel testing systems. But, as I said, this is really
+not-trivial, large amount of work, and is specific to one out of
+dozens of kernel subsystems.
+
+
+> Ok, backing up more: When you are testing against an xfs filesystem image, where
+> does that image come from?  How is it generated?  A quick look at the syzkaller
+> tree didn't make that clear to me.
+>
+> the xfs.repro file you provided at
+> https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
+>
+> is strange, it doesn't even contain AGF blocks; they aren't fuzzed or corrupted,
+> they are completely zeroed out.  I don't know if that's part of the fuzzing,
+> or what - what steps led to that image?
+>
+> Or put another way, how did you arrive at the fs image values in the reproducer,
+> i.e.:
+
+Currently they are completely random, nobody taught syzkaller about AGFs, etc.
+
+> oid loop()
+> {
+>   memcpy((void*)0x20000000, "xfs", 4);
+>   memcpy((void*)0x20000100, "./file0", 8);
+>   *(uint64_t*)0x20000200 = 0x20010000;
+>   memcpy((void*)0x20010000,
+>          "\x58\x46\x53\x42\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x10\x00\x00"
+>          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x9f\x98"
+>          "\x99\xff\xcb\xa1\x4e\xe6\xad\x52\x08\x20\x67\x09\xed\x75\x00\x00\x00"
+>          "\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x35\xe0\x00\x00\x00\x00"
+>          "\x00\x00\x35\xe1\x00\x00\x00\x00\x00\x00\x35\xe2\x00\x00\x00\x01\x00"
+>          "\x00\x10\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03\x55\xb4\xa4"
+>          "\x02\x00\x01\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+>          "\x00\x0c\x09\x08\x04\x0c\x00\x00\x19\x00\x00\x00\x00\x00\x00\x00\x40"
+>          "\x00\x00\x00\x00\x00\x00\x00\x3d\x00\x00\x00\x00\x00\x00\x0c\xa3\x00"
+>          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+>          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00"
+>          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x02\x02",
+>          204);
 >
 > ...
 >
->>> That was not at all clear to me.  I thought when syzkaller was telling us
->>> "on upstream commit XYZ," it meant that it had identified commit XYZ as bad.
->>> I'm not sure if anyone else made that mistake, but  perhaps you could also clarify
->>> the bug report text in this regard?
->>
->> Suggestions are welcome. Currently it says "syzbot hit the following
->> crash on upstream commit SHA1", which was supposed to mean just the
->> state of the source tree when the crash happened. But I am not a
->> native speaker, so perhaps I am saying not what I intend to say.
->>
->> There are also suggestions on report format improvement from +Ted
->> currently in works:
->> https://github.com/google/syzkaller/issues/565#issuecomment-380792942
->> Not sure if they make this distinction 100% clear, though.
->
-> Maybe I was the only one who misunderstood, but something like
->
-> git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-> HEAD:           f5c754d63d06 mm/swap_state.c: make bool enable_vma_readahead and swap_vma_readahead()
->
-> to make it clear that it has not identified that commit as the culprit, it's
-> just the head of the tree you were testing?  (I think I have the correct git
-> nomenclature ...)
+> The in-memory xfs filesystem it constructs is damaged, is that an intentional
+> part of the fuzzing during the test?
 
-
-This is done now, you can see example of new format here:
-
-https://lkml.org/lkml/2018/5/8/36
-
-It says "HEAD commit" and also "syzbot engineers can be reached at <email>".
+Yes, invalid inputs is part of testing.
