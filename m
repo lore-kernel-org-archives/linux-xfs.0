@@ -1,131 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38984 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:57202 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752214AbeEHEn2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:28 -0400
+        with ESMTP id S1755050AbeEHQ7w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:59:52 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484fMwn104907
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:27 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2hs5936sm6-1
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpCSX041515
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:59:52 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2hs5939j3r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 04:43:27 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w484hQvt024113
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 16:59:51 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w48GxpXx002831
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:26 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hQeL029372
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:26 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:59:51 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w48GxoXV014115
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:59:51 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH 04/21] xfsprogs: Add attibute remove and helper functions
-Date: Mon,  7 May 2018 21:41:02 -0700
-Message-Id: <1525754479-12177-5-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
-References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+Subject: Re: [PATCH 14/21] Add lock_flags to xfs_ialloc and xfs_dir_ialloc
+References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
+ <1525627494-12873-15-git-send-email-allison.henderson@oracle.com>
+ <20180507223006.GH11261@magnolia>
+Message-ID: <6505c3af-9174-e57c-5c31-dc700930501c@oracle.com>
+Date: Tue, 8 May 2018 09:59:49 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180507223006.GH11261@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-This patch adds xfs_attr_remove_args. This sub-routine removes
-the attributes specified in @args. We will use this later for setting
-parent pointers as a deferred attribute operation.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- libxfs/xfs_attr.c | 43 +++++++++++++++++++++++++++++++++----------
- libxfs/xfs_attr.h |  1 +
- 2 files changed, 34 insertions(+), 10 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 3386799..0869bb1 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -291,6 +291,34 @@ out:
- }
- 
- /*
-+ * Remove the attribute specified in @args.
-+ */
-+int
-+xfs_attr_remove_args(
-+	struct xfs_da_args      *args,
-+	int			flags,
-+	bool                    roll_trans)
-+{
-+	struct xfs_inode	*dp = args->dp;
-+	int			error;
-+
-+	xfs_trans_ijoin(args->trans, dp, 0);
-+
-+	if (!xfs_inode_hasattr(dp)) {
-+		error = -ENOATTR;
-+	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-+		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-+		error = xfs_attr_shortform_remove(args, roll_trans);
-+	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-+		error = xfs_attr_leaf_removename(args, roll_trans);
-+	} else {
-+		error = xfs_attr_node_removename(args, roll_trans);
-+	}
-+
-+	return error;
-+}
-+
-+/*
-  * Calculate how many blocks we need for the new attribute,
-  */
- STATIC int
-@@ -434,6 +462,7 @@ out_defer_cancel:
- 	return error;
- }
- 
-+
- /*
-  * Generic handler routine to remove a name from an attribute list.
-  * Transitions attribute list from Btree to shortform as necessary.
-@@ -490,17 +519,9 @@ xfs_attr_remove(
- 	 * blocks not allocate in the common case.
- 	 */
- 	xfs_trans_ijoin(args.trans, dp, 0);
-+	xfs_defer_init(args.dfops, args.firstblock);
- 
--	if (!xfs_inode_hasattr(dp)) {
--		error = -ENOATTR;
--	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
--		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
--		error = xfs_attr_shortform_remove(&args, true);
--	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
--		error = xfs_attr_leaf_removename(&args, true);
--	} else {
--		error = xfs_attr_node_removename(&args, true);
--	}
-+	error = xfs_attr_remove_args(&args, flags, true);
- 
- 	if (error)
- 		goto out;
-@@ -525,6 +546,8 @@ xfs_attr_remove(
- 	return error;
- 
- out:
-+	xfs_defer_cancel(&dfops);
-+
- 	if (args.trans)
- 		xfs_trans_cancel(args.trans);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index adb1619..de2b99f 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -152,6 +152,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- int xfs_attr_set_args(struct xfs_da_args *args, int flags,
- 			struct xfs_buf *leaf_bp, bool roll_trans);
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-+int xfs_attr_remove_args(struct xfs_da_args *args, int flags, bool roll_trans);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
- 
--- 
-2.7.4
+On 05/07/2018 03:30 PM, Darrick J. Wong wrote:
+> On Sun, May 06, 2018 at 10:24:47AM -0700, Allison Henderson wrote:
+>> Add lock_flags to  xfs_ialloc and xfs_dir_ialloc to control
+>> whick locks are released by xfs_trans_ijoin.  We will need this
+>> later in defered parent pointers
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   fs/xfs/xfs_inode.c   | 17 +++++++++--------
+>>   fs/xfs/xfs_inode.h   |  2 +-
+>>   fs/xfs/xfs_qm.c      |  2 +-
+>>   fs/xfs/xfs_symlink.c |  2 +-
+>>   4 files changed, 12 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index 5c291d2..2859a697 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -766,7 +766,8 @@ xfs_ialloc(
+>>   	dev_t		rdev,
+>>   	prid_t		prid,
+>>   	xfs_buf_t	**ialloc_context,
+>> -	xfs_inode_t	**ipp)
+>> +	xfs_inode_t	**ipp,
+>> +	int		lock_flags)
+> 
+> Wait, what?
+> 
+> Oh, these are the locks we want *dropped* at the first _trans_commit
+> after this call returns, and for xfs_create we need to retain the ilock
+> while we roll the transaction(s) during _defer_finish; and for
+> everything else (create temp file, create quota inode, and symlink??) we
+> want the ilock dropped as soon as the transaction commits.
+> 
+> I dislike having this oddly named parameter, can we amend the comment to
+> say that the caller is responsible for unlocking the inode manually
+> (i.e. we're going to xfs_trans_ijoin(tp, ip, 0)) , and then change all
+> the callers to do the iunlock explicitly if they need to?
+> 
+> --D
 
+Sure, I can update the comment.  Hmm, would an op_flag be a more 
+appropriate parameter in this case?  Thx!
+
+Allison
+
+> 
+>>   {
+>>   	struct xfs_mount *mp = tp->t_mountp;
+>>   	xfs_ino_t	ino;
+>> @@ -942,7 +943,7 @@ xfs_ialloc(
+>>   	/*
+>>   	 * Log the new values stuffed into the inode.
+>>   	 */
+>> -	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>> +	xfs_trans_ijoin(tp, ip, lock_flags);
+>>   	xfs_trans_log_inode(tp, ip, flags);
+>>   
+>>   	/* now that we have an i_mode we can setup the inode structure */
+>> @@ -972,8 +973,8 @@ xfs_dir_ialloc(
+>>   	xfs_nlink_t	nlink,
+>>   	dev_t		rdev,
+>>   	prid_t		prid,		/* project id */
+>> -	xfs_inode_t	**ipp)		/* pointer to inode; it will be
+>> -					   locked. */
+>> +	xfs_inode_t	**ipp,		/* pointer to inode; it will be locked. */
+>> +	int		lock_flags)
+>>   {
+>>   	xfs_trans_t	*tp;
+>>   	xfs_inode_t	*ip;
+>> @@ -1001,7 +1002,7 @@ xfs_dir_ialloc(
+>>   	 * the inode(s) that we've just allocated.
+>>   	 */
+>>   	code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid, &ialloc_context,
+>> -			&ip);
+>> +			&ip, lock_flags);
+>>   
+>>   	/*
+>>   	 * Return an error if we were unable to allocate a new inode.
+>> @@ -1071,7 +1072,7 @@ xfs_dir_ialloc(
+>>   		 * this call should always succeed.
+>>   		 */
+>>   		code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid,
+>> -				  &ialloc_context, &ip);
+>> +				  &ialloc_context, &ip, lock_flags);
+>>   
+>>   		/*
+>>   		 * If we get an error at this point, return to the caller
+>> @@ -1210,7 +1211,7 @@ xfs_create(
+>>   	 * entry pointing to them, but a directory also the "." entry
+>>   	 * pointing to itself.
+>>   	 */
+>> -	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip);
+>> +	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev, prid, &ip, XFS_ILOCK_EXCL);
+>>   	if (error)
+>>   		goto out_trans_cancel;
+>>   
+>> @@ -1343,7 +1344,7 @@ xfs_create_tmpfile(
+>>   	if (error)
+>>   		goto out_trans_cancel;
+>>   
+>> -	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0, prid, &ip);
+>> +	error = xfs_dir_ialloc(&tp, dp, mode, 1, 0, prid, &ip, XFS_ILOCK_EXCL);
+>>   	if (error)
+>>   		goto out_trans_cancel;
+>>   
+>> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+>> index 1eebc53..466f252 100644
+>> --- a/fs/xfs/xfs_inode.h
+>> +++ b/fs/xfs/xfs_inode.h
+>> @@ -431,7 +431,7 @@ xfs_extlen_t	xfs_get_cowextsz_hint(struct xfs_inode *ip);
+>>   
+>>   int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
+>>   			       xfs_nlink_t, dev_t, prid_t,
+>> -			       struct xfs_inode **);
+>> +			       struct xfs_inode **, int lock_flags);
+>>   
+>>   /* from xfs_file.c */
+>>   enum xfs_prealloc_flags {
+>> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+>> index ec39ae2..3e68a52 100644
+>> --- a/fs/xfs/xfs_qm.c
+>> +++ b/fs/xfs/xfs_qm.c
+>> @@ -787,7 +787,7 @@ xfs_qm_qino_alloc(
+>>   		return error;
+>>   
+>>   	if (need_alloc) {
+>> -		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, ip);
+>> +		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, ip, XFS_ILOCK_EXCL);
+>>   		if (error) {
+>>   			xfs_trans_cancel(tp);
+>>   			return error;
+>> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+>> index b1d3301..ce8dbea 100644
+>> --- a/fs/xfs/xfs_symlink.c
+>> +++ b/fs/xfs/xfs_symlink.c
+>> @@ -264,7 +264,7 @@ xfs_symlink(
+>>   	 * Allocate an inode for the symlink.
+>>   	 */
+>>   	error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
+>> -			       prid, &ip);
+>> +			       prid, &ip, XFS_ILOCK_EXCL);
+>>   	if (error)
+>>   		goto out_trans_cancel;
+>>   
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
