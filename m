@@ -1,212 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46534 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751280AbeEQPWL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 May 2018 11:22:11 -0400
-Subject: [PATCH 5/5 V3] xfs_io: add label command
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
- <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
- <0f9a7c17-233c-042a-5449-acd7e0a27316@sandeen.net>
-Message-ID: <9cee370a-41e2-6dae-4ae1-97fbd7393d38@sandeen.net>
-Date: Thu, 17 May 2018 10:22:09 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:60098 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755462AbeEHQiG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:38:06 -0400
+Subject: [PATCH 4/4] fsck: fix more bashisms
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 08 May 2018 09:37:46 -0700
+Message-ID: <152579746659.10641.17574404294067266121.stgit@magnolia>
+In-Reply-To: <152579743411.10641.4577883761846454290.stgit@magnolia>
+References: <152579743411.10641.4577883761846454290.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <0f9a7c17-233c-042a-5449-acd7e0a27316@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-This adds an online get/set/clear label command to xfs_io.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+command -v is a bashism, so we need to get rid of it.  The shell returns
+an error code of 127 if it couldn't invoke xfs_repair, so teach
+repair2fsck_code to deal with this.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fsck/xfs_fsck.sh |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-V2: Set exitcode rather than error return on ioctl failure
-     fix ioctl definitions o_O
 
-V3: add option parsing to handle -s (set) and -c (clear)
-
-diff --git a/io/Makefile b/io/Makefile
-index 88e47517..b40156da 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -10,9 +10,9 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
-  HFILES = init.h io.h
-  CFILES = init.c \
-  	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
--	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
--	pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
--	truncate.c utimes.c
-+	getrusage.c imap.c label.c link.c mmap.c open.c parent.c pread.c \
-+	prealloc.c pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c \
-+	swapext.c sync.c truncate.c utimes.c
-  
-  LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
-  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
-diff --git a/io/init.c b/io/init.c
-index 0336c962..612962e8 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -72,6 +72,7 @@ init_commands(void)
-  	help_init();
-  	imap_init();
-  	inject_init();
-+	label_init();
-  	log_writes_init();
-  	madvise_init();
-  	mincore_init();
-diff --git a/io/io.h b/io/io.h
-index a2676361..7f8197ca 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -109,6 +109,7 @@ extern void		getrusage_init(void);
-  extern void		help_init(void);
-  extern void		imap_init(void);
-  extern void		inject_init(void);
-+extern void		label_init(void);
-  extern void		mmap_init(void);
-  extern void		open_init(void);
-  extern void		parent_init(void);
-diff --git a/io/label.c b/io/label.c
-new file mode 100644
-index 00000000..0d163548
---- /dev/null
-+++ b/io/label.c
-@@ -0,0 +1,108 @@
-+/*
-+ * Copyright (c) 2018 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <sys/ioctl.h>
-+#include <sys/mount.h>
-+#include "platform_defs.h"
-+#include "libxfs.h"
-+#include "path.h"
-+#include "command.h"
-+#include "init.h"
-+#include "io.h"
-+
-+#ifndef FS_IOC_GETFSLABEL
-+/* Max chars for the interface; fs limits may differ */
-+#define FSLABEL_MAX 256
-+#define FS_IOC_GETFSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
-+#define FS_IOC_SETFSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
-+#endif
-+
-+static cmdinfo_t label_cmd;
-+
-+static void
-+label_help(void)
-+{
-+	printf(_(
-+"\n"
-+" Manipulate or query the filesystem label while mounted.\n"
-+"\n"
-+" With no arguments, displays the current filesystem label.\n"
-+" -s newlabel -- set the filesystem label to newlabel\n"
-+" -c          -- clear the filesystem label (sets to NULL string)\n"
-+"\n"));
-+}
-+
-+static int
-+label_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	int		c;
-+	int		error;
-+	char		label[FSLABEL_MAX];
-+
-+	if (argc == 1) {
-+		memset(label, 0, sizeof(label));
-+		error = ioctl(file->fd, FS_IOC_GETFSLABEL, &label);
-+		goto out;
-+	}
-+
-+	while ((c = getopt(argc, argv, "cs:")) != EOF) {
-+		switch (c) {
-+		case 'c':
-+			label[0] = '\0';
-+			break;
-+		case 's':
-+			strncpy(label, optarg, sizeof(label));
-+			break;
-+		default:
-+			return command_usage(&label_cmd);
-+		}
-+	}
-+
-+	/* Check for trailing arguments */
-+	if (argc != optind)
-+		return command_usage(&label_cmd);
-+
-+	error = ioctl(file->fd, FS_IOC_SETFSLABEL, label);
-+out:
-+	if (error) {
-+		perror("label");
-+		exitcode = 1;
-+	} else {
-+		printf("label = \"%s\"\n", label);
-+	}
-+
-+	return 0;
-+}
-+
-+void
-+label_init(void)
-+{
-+	label_cmd.name = "label";
-+	label_cmd.cfunc = label_f;
-+	label_cmd.argmin = 0;
-+	label_cmd.argmax = 3;
-+	label_cmd.args = _("[-s label|-c]");
-+	label_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	label_cmd.oneline =
-+		_("query, set, or clear the filesystem label while mounted");
-+	label_cmd.help = label_help;
-+
-+	add_command(&label_cmd);
-+}
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index c3ab532d..82ea8c1a 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1175,6 +1175,19 @@ This is intended to be equivalent to the shell command:
-  See the
-  .B log_writes
-  command.
-+.TP
-+.BI "label" " " "[ -c | -s " label " ] "
-+On filesystems that support online label manipulation, get, set, or clear the
-+filesystem label.  With no options, print the current filesystem label.  The
-+.B \-c
-+option clears the filesystem label by setting it to the null string.  The
-+.BI "\-s " label
-+option sets the filesystem label to
-+.IR label .
-+If the label is longer than the filesystem will accept,
-+.B xfs_io
-+will print an error message.  XFS filesystem labels can be at most 12
-+characters long.
-  .SH SEE ALSO
-  .BR mkfs.xfs (8),
-  .BR xfsctl (3),
+diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+index 1916c07e..6af0f224 100755
+--- a/fsck/xfs_fsck.sh
++++ b/fsck/xfs_fsck.sh
+@@ -20,6 +20,10 @@ repair2fsck_code() {
+ 		;;
+ 	4)  return 1 # The fs has been fixed
+ 		;;
++	127)
++		echo "$NAME error: xfs_repair was not found!" 1>&2
++		return 4
++		;;
+ 	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
+ 		return 4 # something went wrong with xfs_repair
+ 	esac
+@@ -59,13 +63,7 @@ if [ -n "$PS1" -o -t 0 ]; then
+ fi
+ 
+ if $FORCE; then
+-	XFS_REPAIR=`command -v xfs_repair`
+-	if [ ! -x "$XFS_REPAIR" ] ; then
+-		echo "$NAME error: xfs_repair was not found!" 1>&2
+-		exit 4
+-	fi
+-
+-	$XFS_REPAIR -e $DEV
++	xfs_repair -e $DEV
+ 	repair2fsck_code $?
+ 	exit $?
+ fi
 
