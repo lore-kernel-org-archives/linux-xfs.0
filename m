@@ -1,17 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56886 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752068AbeEHRCz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 13:02:55 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:59594 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754386AbeEHRD1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 13:03:27 -0400
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 04/21] xfs: Add attibute remove and helper functions
+Subject: Re: [PATCH 00/21] Parent Pointers v6
 References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-5-git-send-email-allison.henderson@oracle.com>
- <CAOQ4uxiNvdvw6Hn4bvESitVPgzYYy581KdYiqdBX0XXFpL59Xw@mail.gmail.com>
-Message-ID: <ef9ad62a-5e2e-1b8d-4095-7dd2beb0560c@oracle.com>
-Date: Tue, 8 May 2018 10:02:52 -0700
+ <CAOQ4uxga0DqZF+=R9Nx+XNExrrN6iJLr3uGmSmkwRLAdxB9MRw@mail.gmail.com>
+Message-ID: <f340e6bf-485d-3a63-e1d3-cdb7e680ba54@oracle.com>
+Date: Tue, 8 May 2018 10:03:24 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxiNvdvw6Hn4bvESitVPgzYYy581KdYiqdBX0XXFpL59Xw@mail.gmail.com>
+In-Reply-To: <CAOQ4uxga0DqZF+=R9Nx+XNExrrN6iJLr3uGmSmkwRLAdxB9MRw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -19,27 +18,24 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On 05/08/2018 12:33 AM, Amir Goldstein wrote:
+On 05/07/2018 10:36 PM, Amir Goldstein wrote:
 > On Sun, May 6, 2018 at 8:24 PM, Allison Henderson
 > <allison.henderson@oracle.com> wrote:
->> This patch adds xfs_attr_remove_args. These sub-routines remove
->> the attributes specified in @args. We will use this later for setting
->> parent pointers as a deferred attribute operation.
+>> Hi all,
 >>
+>> This is the 6th version of parent pointer attributes for xfs. The goal of
 > 
-> But this patch also adds xfs_defer_init()+xfs_trans_ijoin()
-> so maybe I am not understanding how this work, but it seems
-> to be changing logic as well.
+> Please try to remember to use git format-patch -v $N as it makes it easier
+> to lookup old revisions of the patch in the mailbox.
 > 
-> Please say something about this in commit message.
+> Looking back, I see that Darrick doesn't seem to be tagging individual
+> patches with revision in his patch bombs as well...
 > 
 > Thanks,
 > Amir.
 > 
-Oh, let me see if I can take those out.  I think I had tried some code 
-in here earlier that used it, but I'm pretty sure it doesnt need to be 
-there now.  Will clean up.  Thx!
+Sorry, will add the flag next time!  Thx!
 
 Allison
