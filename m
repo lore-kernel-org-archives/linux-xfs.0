@@ -1,400 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58266 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932993AbeEHQ5V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:57:21 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48GpCNo003971
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:57:21 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2hs426hm85-1
+Received: from userp2120.oracle.com ([156.151.31.85]:38978 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbeEHEn0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 00:43:26 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w484hPf2105741
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:25 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2hs5936sm3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 16:57:20 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w48GvJHZ024352
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 04:43:25 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w484hPIj028827
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:57:20 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w48GvJK1021607
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 16:57:19 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:25 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w484hPn5025409
+        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 04:43:25 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 20/21] xfs: Add parent pointer ioctl
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-21-git-send-email-allison.henderson@oracle.com>
- <20180507213620.GB11261@magnolia>
-Message-ID: <d70be9e2-22d3-ebfa-02c4-652f8beb17c7@oracle.com>
-Date: Tue, 8 May 2018 09:57:17 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180507213620.GB11261@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 00/21] xfsprogs: parent pointers v1
+Date: Mon,  7 May 2018 21:40:58 -0700
+Message-Id: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 05/07/2018 02:36 PM, Darrick J. Wong wrote:
-> On Sun, May 06, 2018 at 10:24:53AM -0700, Allison Henderson wrote:
->> This patch adds a new file ioctl to retrieve the parent
->> pointer of a given inode
->>
->> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_fs.h     | 38 ++++++++++++++++++++++++++
->>   fs/xfs/libxfs/xfs_parent.c | 10 +++++++
->>   fs/xfs/libxfs/xfs_parent.h |  2 ++
->>   fs/xfs/xfs_attr_list.c     |  3 +++
->>   fs/xfs/xfs_ioctl.c         | 61 +++++++++++++++++++++++++++++++++++++++++-
->>   fs/xfs/xfs_parent_utils.c  | 66 ++++++++++++++++++++++++++++++++++++++++++++++
->>   fs/xfs/xfs_parent_utils.h  |  2 ++
->>   7 files changed, 181 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
->> index 641e0af..4e0ccdd 100644
->> --- a/fs/xfs/libxfs/xfs_fs.h
->> +++ b/fs/xfs/libxfs/xfs_fs.h
->> @@ -552,6 +552,43 @@ struct xfs_scrub_metadata {
->>   				 XFS_SCRUB_OFLAG_WARNING)
->>   #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
->>   
->> +#define XFS_PPTR_MAXNAMELEN				255
->> +
->> +/* return parents of the handle, not the open fd */
->> +#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
->> +
->> +/* Get an inode parent pointer through ioctl */
->> +struct xfs_parent_ptr {
->> +	__u64		xpp_ino;			/* Inode */
->> +	__u32		xpp_gen;			/* Inode generation */
->> +	__u32		xpp_diroffset;			/* Directory offset */
->> +	__u32		xpp_namelen;			/* File name length */
->> +	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
->> +};
-> 
-> Hmm, this structure probably needs padding to round up the size up to an
-> even multiple of 8 bytes so that 32-bit userspace can call it without
-> problems(?)
-> 
-> (I suggest dumping the structure definitions into a plain C program and
-> calling pahole...)
-> 
->> +
->> +/* Iterate though an inodes parent pointers */
->> +struct xfs_pptr_info {
->> +	struct xfs_handle		pi_handle;
->> +	struct xfs_attrlist_cursor	pi_cursor;
->> +	__u32				pi_flags;
->> +	__u32				pi_reserved;
->> +	__u32				pi_ptrs_size;
->> +	__u32				pi_ptrs_used;
->> +	__u64				pi_reserved2[6];
->> +
->> +	/*
->> +	 * An array of struct xfs_pptr follows the header
->> +	 * information. Use XFS_PPINFO_TO_PP() to access the
->> +	 * parent pointer array entries.
->> +	 */
->> +};
->> +
->> +#define XFS_PPTR_INFO_SIZEOF(nr_ptrs) sizeof (struct xfs_pptr_info) + \
->> +				      nr_ptrs * sizeof(struct xfs_parent_ptr)
->> +
->> +#define XFS_PPINFO_TO_PP(info, idx)    \
->> +	(&(((struct xfs_parent_ptr *)((char *)(info) + sizeof(*(info))))[(idx)]))
->> +
->>   /*
->>    * ioctl limits
->>    */
->> @@ -596,6 +633,7 @@ struct xfs_scrub_metadata {
->>   #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
->>   /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
->>   #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
->> +#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_ptr)
->>   
->>   /*
->>    * ioctl commands that replace IRIX syssgi()'s
->> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
->> index e6de97c..61f1961 100644
->> --- a/fs/xfs/libxfs/xfs_parent.c
->> +++ b/fs/xfs/libxfs/xfs_parent.c
->> @@ -32,6 +32,16 @@
->>   #include "xfs_attr_sf.h"
->>   #include "xfs_bmap.h"
->>   
->> +/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
->> +void
->> +xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
->> +		     struct xfs_parent_name_rec	*rec)
->> +{
->> +	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
->> +	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
->> +	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
->> +}
->> +
->>   /*
->>    * Parent pointer attribute handling.
->>    *
->> diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
->> index 298562b..1a321db 100644
->> --- a/fs/xfs/libxfs/xfs_parent.h
->> +++ b/fs/xfs/libxfs/xfs_parent.h
->> @@ -33,4 +33,6 @@ int xfs_parent_add(struct xfs_trans *tp, struct xfs_inode *parent,
->>   		   struct xfs_inode *child, struct xfs_name *child_name,
->>   		   uint32_t diroffset, xfs_fsblock_t *firstblock,
->>   		   struct xfs_defer_ops *dfops);
->> +void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
->> +			 struct xfs_parent_name_rec *rec);
->>   #endif	/* __XFS_PARENT_H__ */
->> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
->> index 3e59a34..bdbe9fb 100644
->> --- a/fs/xfs/xfs_attr_list.c
->> +++ b/fs/xfs/xfs_attr_list.c
->> @@ -581,6 +581,9 @@ xfs_attr_put_listent(
->>   	if (((context->flags & ATTR_ROOT) == 0) !=
->>   	    ((flags & XFS_ATTR_ROOT) == 0))
->>   		return;
->> +	if (((context->flags & ATTR_PARENT) == 0) !=
->> +	    ((flags & XFS_ATTR_PARENT) == 0))
->> +		return;
->>   
->>   	arraytop = sizeof(*alist) +
->>   			context->count * sizeof(alist->al_offset[0]);
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 844480a..ee544f2 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -46,6 +46,8 @@
->>   #include "xfs_fsmap.h"
->>   #include "scrub/xfs_scrub.h"
->>   #include "xfs_sb.h"
->> +#include "xfs_da_format.h"
->> +#include "xfs_parent_utils.h"
->>   
->>   #include <linux/capability.h>
->>   #include <linux/cred.h>
->> @@ -1738,6 +1740,62 @@ xfs_ioc_scrub_metadata(
->>   	return 0;
->>   }
->>   
->> +/*
->> + * IOCTL routine to get the parent pointer of an inode and return it to user
->> + * space.  Caller must pass an struct xfs_parent_name_irec with a name buffer
->> + * large enough to hold the file name.  Returns 0 on success or non-zero on
->> + * failure
->> + */
->> +STATIC int
->> +xfs_ioc_get_parent_pointer(
->> +	struct file			*filp,
->> +	void				__user *arg)
->> +{
->> +	struct xfs_inode		*ip;
->> +	struct xfs_pptr_info		*ppi;
->> +	struct dentry			*dentry;
->> +	int				error = 0;
-> 
-> At least initially this ought to be restricted by capabilities.
-> 
-> if (!capable(CAP_SYS_ADMIN))
-> 	return -EPERM;
-> 
-> I'd be open to allowing a few other capabilities?  Maybe the DAC
-> override one?
-> 
-> Also needs to check for invalid pi_flags and nonzero reserved fields.
-> 
->> +
->> +	/* Allocate an xfs_pptr_info to put the user data */
->> +	ppi = kmem_alloc(sizeof(struct xfs_pptr_info), KM_SLEEP);
->> +	if (!ppi)
->> +		return -ENOMEM;
->> +
->> +	/* Copy the data from the user */
->> +	copy_from_user(ppi, arg, sizeof(struct xfs_pptr_info));
-> 
-> Please do not throw away the return value.
-> 
->> +
->> +	/*
->> +	 * Now that we know how big the trailing buffer is, expand
->> +	 * our kernel xfs_pptr_info to be the same size
->> +	 */
->> +	ppi = kmem_realloc(ppi, XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size),
-> 
-> Hmm, pi_ptrs_size probably needs some kind of check so that userspace
-> can't ask for insane large allocations.  64k, perhaps?  ~230 records per
-> call ought to be enough for anyone... :P
-> 
-> if (XFS_PPTR_INFO_SIZEOFI(...) > XFS_XATTR_LIST_MAX)
-> 	return -ENOMEM;
-> ppi = kmem_realloc(...);
-> 
->> +			     KM_SLEEP);
->> +	if (!ppi)
->> +		return -ENOMEM;
->> +
->> +	if (ppi->pi_flags == XFS_PPTR_IFLAG_HANDLE) {
->> +		dentry = xfs_handle_to_dentry(filp, &ppi->pi_handle,
->> +					      sizeof(struct xfs_handle));
->> +		if (IS_ERR(dentry))
->> +			return PTR_ERR(dentry);
->> +		ip = XFS_I(d_inode(dentry));
-> 
-> I would've thought that between the dentry and the ip that at least one
-> of those would require a dput/iput, and that we'd need to do something
-> to prevent the dentry or the inode from disappearing from underneath us...
-> 
-> ...but you could also extract the inode and generation numbers from the
-> handle information and call xfs_iget directly.  The exportfs code tries
-> to reconnect dentry parent information up to the root, which will turn
-> out badly if some mid-level directory is corrupt and scrub is trying to
-> reconstruct the former path of a now inaccessible file.
-> 
-> That said, I could just fix this myself to satisfy the requirements of
-> the, uh, single consumer of this information. :)
-> 
-> (Particularly since my dorky rfc used this exact exportfs_decode_fh
-> mechanism. :p)
-> 
-> ((You could also replace this hunk with 'return -EPERM' and let me sort
-> the whole thing out. :) ))
-> 
->> +	} else
->> +		ip = XFS_I(file_inode(filp));
->> +
->> +	/* Get the parent pointers */
->> +	error = xfs_attr_get_parent_pointer(ip, ppi);
->> +
->> +	if (error)
->> +		goto out;
->> +
->> +	/* Copy the parent pointers back to the user */
->> +	copy_to_user(arg, ppi, XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size));
-> 
-> Need to check the return values here too.
-> 
->> +
->> +out:
->> +	kmem_free(ppi);
->> +	return error;
->> +}
->> +
->>   int
->>   xfs_ioc_swapext(
->>   	xfs_swapext_t	*sxp)
->> @@ -1894,7 +1952,8 @@ xfs_file_ioctl(
->>   		return xfs_ioc_getxflags(ip, arg);
->>   	case XFS_IOC_SETXFLAGS:
->>   		return xfs_ioc_setxflags(ip, filp, arg);
->> -
->> +	case XFS_IOC_GETPPOINTER:
->> +		return xfs_ioc_get_parent_pointer(filp, arg);
->>   	case XFS_IOC_FSSETDM: {
->>   		struct fsdmidata	dmi;
->>   
->> diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
->> index 0fd48b8..1df003a 100644
->> --- a/fs/xfs/xfs_parent_utils.c
->> +++ b/fs/xfs/xfs_parent_utils.c
->> @@ -68,3 +68,69 @@ xfs_parent_remove_deferred(
->>   					ATTR_PARENT);
->>   }
->>   
->> +/*
->> + * Get the parent pointers for a given inode
->> + *
->> + * Returns 0 on success and non zero on error
->> + */
->> +int
->> +xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
->> +			     struct xfs_pptr_info	*ppi)
->> +
->> +{
->> +
->> +	struct attrlist			*alist;
->> +	struct attrlist_ent		*aent;
->> +	struct xfs_parent_ptr		*xpp;
->> +	struct xfs_parent_name_rec	*xpnr;
->> +	char				*namebuf;
->> +	unsigned int			namebuf_size;
->> +	int				name_len;
->> +	int				error = 0;
->> +	unsigned int			flags = ATTR_PARENT;
->> +	int				i;
->> +
->> +	/* Allocate a buffer to store the attribute names */
->> +	namebuf_size = sizeof(struct attrlist) +
->> +		       (ppi->pi_ptrs_size) * sizeof(struct attrlist_ent);
->> +	namebuf = kmem_zalloc_large(namebuf_size, KM_SLEEP);
->> +	if (!namebuf)
->> +		return -ENOMEM;
->> +
->> +	error = xfs_attr_list(ip, namebuf, namebuf_size, flags,
-> 
-> I suspect we need to hold the ILOCK across the xfs_attr_list call and
-> the xfs_attr_get loop so that we hold the attr list consistent while
-> extracting parent pointer information; see xfs_attr_list_int_ilocked and
-> xfs_attr_get_ilocked...
-> 
-> --D
-> 
+This is the first revision of the parent pointer patch set for xfsprogs.  The
+goal of the set is to enable use of the parent pointer feature on the kernel
+side, and provide basic user space utilities.
 
-Alrighty, I will get things updated.  Thx for the review!
+The first 17 patches synchronize libxfs with changes seen the kernel space patch.
+I will pick up the reviews from that series and mirror them here.  Next
+three patches plumb in the command line flag and changes to the protofile.  Last
+patch I picked up from an earlier series Darrick to print out walk through pptrs
+and print them.
 
-Allison
+As always, comments and feedback are appreciated.  Thank you!
 
->> +			      (attrlist_cursor_kern_t *)&ppi->pi_cursor);
->> +	if (error)
->> +		goto out_kfree;
->> +
->> +	alist = (struct attrlist *)namebuf;
->> +
->> +	for (i = 0; i < alist->al_count; i++) {
->> +		xpp = XFS_PPINFO_TO_PP(ppi, i);
->> +		memset(xpp, 0, sizeof(struct xfs_parent_ptr));
->> +		aent = (struct attrlist_ent *) &namebuf[alist->al_offset[i]];
->> +		xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
->> +
->> +		if (aent->a_valuelen > XFS_PPTR_MAXNAMELEN) {
->> +			error = -ERANGE;
->> +			goto out_kfree;
->> +		}
->> +
->> +		name_len = aent->a_valuelen;
->> +		error = xfs_attr_get(ip, (char *)xpnr,
->> +					sizeof(struct xfs_parent_name_rec),
->> +					(unsigned char *)(xpp->xpp_name),
->> +					&name_len, flags);
->> +		if (error)
->> +			goto out_kfree;
->> +
->> +		xpp->xpp_namelen = name_len;
->> +		xfs_init_parent_ptr(xpp, xpnr);
->> +	}
->> +	ppi->pi_ptrs_used = alist->al_count;
->> +
->> +out_kfree:
->> +	kmem_free(namebuf);
->> +
->> +	return error;
->> +}
->> +
->> diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
->> index 9e0ac13..33e3b2c 100644
->> --- a/fs/xfs/xfs_parent_utils.h
->> +++ b/fs/xfs/xfs_parent_utils.h
->> @@ -27,4 +27,6 @@ int xfs_parent_remove_deferred(struct xfs_inode *parent,
->>   			       struct xfs_inode *child,
->>   			       xfs_dir2_dataptr_t diroffset,
->>   			       struct xfs_defer_ops *dfops);
->> +int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
->> +				struct xfs_pptr_info *ppi);
->>   #endif	/* __XFS_PARENT_UTILS_H__ */
->> -- 
->> 2.7.4
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Allison Henderson (20):
+  xfsprogs: Move xfs_attr.h to libxfs
+  xfsprogs: Add trans toggle to attr routines
+  xfsprogs: Add attibute set and helper functions
+  xfsprogs: Add attibute remove and helper functions
+  xfsprogs: Set up infastructure for deferred attribute operations
+  xfsprogs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+  xfsprogs: Remove all strlen calls in all xfs_attr_* functions for attr
+    names.
+  xfsprogs: get directory offset when adding directory name
+  xfsprogs: get directory offset when removing directory name
+  xfsprogs: get directory offset when replacing a directory name
+  xfsprogs: add parent pointer support to attribute code
+  xfsprogs: define parent pointer xattr format
+  xfsprogs: extent transaction reservations for parent attributes
+  xfsprogs: parent pointer attribute creation
+  xfsprogs: Add the parent pointer support to the superblock version 5.
+  xfsprogs: Add parent pointer ioctl
+  xfsprogs: Add delayed attributes error tag
+  xfsprogs: Add parent pointer flag to cmd
+  xfsprogs: Remove single byte array from struct parent
+  xfsprogs: Add parent pointers during protofile creation
+
+Darrick J. Wong (1):
+  xfsprogs: implement the upper half of parent pointers
+
+ include/handle.h        |   2 +
+ include/parent.h        |  19 +-
+ include/path.h          |  19 ++
+ io/inject.c             |   1 +
+ io/parent.c             | 468 ++++++++++++----------------------------------
+ libfrog/paths.c         | 136 ++++++++++++++
+ libhandle/Makefile      |   2 +-
+ libhandle/handle.c      |   7 +-
+ libhandle/parent.c      | 325 ++++++++++++++++++++++++++++++++
+ libxfs/Makefile         |   3 +
+ libxfs/xfs_attr.c       | 481 ++++++++++++++++++++++++++++++++----------------
+ libxfs/xfs_attr.h       | 191 +++++++++++++++++++
+ libxfs/xfs_attr_leaf.c  |  13 +-
+ libxfs/xfs_attr_leaf.h  |   8 +-
+ libxfs/xfs_bmap.c       |  49 +++--
+ libxfs/xfs_bmap.h       |   1 +
+ libxfs/xfs_da_btree.h   |   1 +
+ libxfs/xfs_da_format.h  |  38 +++-
+ libxfs/xfs_defer.h      |   1 +
+ libxfs/xfs_dir2.c       |  41 +++--
+ libxfs/xfs_dir2.h       |  10 +-
+ libxfs/xfs_dir2_block.c |   9 +-
+ libxfs/xfs_dir2_leaf.c  |   8 +-
+ libxfs/xfs_dir2_node.c  |   8 +-
+ libxfs/xfs_dir2_sf.c    |   6 +
+ libxfs/xfs_errortag.h   |   5 +-
+ libxfs/xfs_format.h     |  10 +-
+ libxfs/xfs_fs.h         |  47 +++++
+ libxfs/xfs_log_format.h |  44 ++++-
+ libxfs/xfs_parent.c     | 178 ++++++++++++++++++
+ libxfs/xfs_parent.h     |  38 ++++
+ libxfs/xfs_sb.c         |   2 +
+ libxfs/xfs_trans_resv.c | 111 ++++++++---
+ libxfs/xfs_trans_resv.h |   1 +
+ libxfs/xfs_types.h      |   1 +
+ mkfs/proto.c            |  58 ++++--
+ mkfs/xfs_mkfs.c         |  16 +-
+ repair/attr_repair.c    |  16 +-
+ repair/phase6.c         |  54 +++---
+ scrub/inodes.c          |  26 +++
+ scrub/inodes.h          |   2 +
+ scrub/phase5.c          |   9 +-
+ 42 files changed, 1802 insertions(+), 663 deletions(-)
+ create mode 100644 libhandle/parent.c
+ create mode 100644 libxfs/xfs_attr.h
+ create mode 100644 libxfs/xfs_parent.c
+ create mode 100644 libxfs/xfs_parent.h
+
+-- 
+2.7.4
+
