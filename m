@@ -1,332 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56974 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:44104 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752158AbeEGWyY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 18:54:24 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47MpFNA096866
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:54:23 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2hs593666w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 22:54:23 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w47MsMQo023790
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:54:22 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w47MsLH2029642
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 22:54:22 GMT
-Date: Mon, 7 May 2018 15:54:20 -0700
+        with ESMTP id S1753615AbeEHAb3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:31:29 -0400
+Date: Mon, 7 May 2018 17:30:55 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/21] xfs: Remove all strlen calls in all xfs_attr_*
- functions for attr names.
-Message-ID: <20180507225420.GO11261@magnolia>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-8-git-send-email-allison.henderson@oracle.com>
+Subject: Re: [RFC] vfs: skip extra attributes check on removal for symlinks
+Message-ID: <20180508003055.GC11261@magnolia>
+References: <20180426234639.12480-1-mcgrof@kernel.org>
+ <20180501172319.GK4127@magnolia>
+ <20180501174512.GA27853@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1525627494-12873-8-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <20180501174512.GA27853@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, sandeen@sandeen.net, dhowells@redhat.com, tytso@mit.edu, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, May 06, 2018 at 10:24:40AM -0700, Allison Henderson wrote:
-> Parent pointer attributes use a binary name, so strlen will not work.
-> Calling functions will need to pass in the name length
+On Tue, May 01, 2018 at 05:45:12PM +0000, Luis R. Rodriguez wrote:
+> On Tue, May 01, 2018 at 10:23:19AM -0700, Darrick J. Wong wrote:
+> > On Thu, Apr 26, 2018 at 04:46:39PM -0700, Luis R. Rodriguez wrote:
+> > > Linux filesystems cannot set extra file attributes (stx_attributes as per
+> > > statx(2)) on a symbolic link. To set extra file attributes you issue
+> > > ioctl(2) with FS_IOC_SETFLAGS, *all* ioctl(2) calls on a symbolic link
+> > > yield EBADF.
+> > > 
+> > > This is because ioctl(2) tries to obtain struct fd from the symbolic link
+> > > file descriptor passed using fdget(), fdget() in turn always returns no
+> > > file set when a file descriptor is open with O_PATH. As per symlink(2)
+> > > O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
+> > > descriptor of a symbolic link, and this holds true for Linux, as such extra
+> > > file attributes cannot possibly be set on symbolic links on Linux.
+> > > 
+> > > Filesystems repair utilities should be updated to detect this as
+> > > corruption and correct this, however, the VFS *does* respect these
+> > > extra attributes on symlinks for removal.
+> > > 
+> > > Since we cannot set these attributes we should special-case the
+> > > immutable/append on delete for symlinks, this would be consistent with
+> > > what we *do* allow on Linux for all filesystems.
+> > 
+> > Ah, ok, so the problem here is that you can't rm an "immutable" symlink
+> > nor can you clear the immutable flag on such a beast, so therefore
+> > ignore the immutable (and append) flags if we're trying to delete a
+> > symlink?
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 12 ++++++++----
->  fs/xfs/libxfs/xfs_attr.h | 10 ++++++----
->  fs/xfs/xfs_acl.c         | 12 +++++++-----
->  fs/xfs/xfs_ioctl.c       | 13 ++++++++++---
->  fs/xfs/xfs_iops.c        |  6 ++++--
->  fs/xfs/xfs_trans_attr.c  |  2 +-
->  fs/xfs/xfs_xattr.c       | 10 +++++++---
->  7 files changed, 43 insertions(+), 22 deletions(-)
+> Yup.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index adbcef2..484fa86 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -80,6 +80,7 @@ xfs_attr_args_init(
->  	struct xfs_da_args	*args,
->  	struct xfs_inode	*dp,
->  	const unsigned char	*name,
-> +	size_t			namelen,
->  	int			flags)
->  {
->  
-> @@ -92,7 +93,7 @@ xfs_attr_args_init(
->  	args->dp = dp;
->  	args->flags = flags;
->  	args->name = name;
-> -	args->namelen = strlen((const char *)name);
-> +	args->namelen = namelen;
->  	if (args->namelen >= MAXNAMELEN)
->  		return -EFAULT;		/* match IRIX behaviour */
->  
-> @@ -138,6 +139,7 @@ int
->  xfs_attr_get(
->  	struct xfs_inode	*ip,
->  	const unsigned char	*name,
-> +	size_t			namelen,
->  	unsigned char		*value,
->  	int			*valuelenp,
->  	int			flags)
-> @@ -151,7 +153,7 @@ xfs_attr_get(
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
->  		return -EIO;
->  
-> -	error = xfs_attr_args_init(&args, ip, name, flags);
-> +	error = xfs_attr_args_init(&args, ip, name, namelen, flags);
->  	if (error)
->  		return error;
->  
-> @@ -364,6 +366,7 @@ int
->  xfs_attr_set(
->  	struct xfs_inode	*dp,
->  	const unsigned char	*name,
-> +	size_t			namelen,
->  	unsigned char		*value,
->  	int			valuelen,
->  	int			flags)
-> @@ -382,7 +385,7 @@ xfs_attr_set(
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
->  
-> -	error = xfs_attr_args_init(&args, dp, name, flags);
-> +	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
->  	if (error)
->  		return error;
->  
-> @@ -513,6 +516,7 @@ int
->  xfs_attr_remove(
->  	struct xfs_inode	*dp,
->  	const unsigned char	*name,
-> +	size_t			namelen,
->  	int			flags)
->  {
->  	struct xfs_mount	*mp = dp->i_mount;
-> @@ -526,7 +530,7 @@ xfs_attr_remove(
->  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
->  		return -EIO;
->  
-> -	error = xfs_attr_args_init(&args, dp, name, flags);
-> +	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index ec26565..308a93e 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -171,17 +171,19 @@ int xfs_attr_list_int(struct xfs_attr_list_context *);
->  int xfs_inode_hasattr(struct xfs_inode *ip);
->  int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
->  int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
-> -		 unsigned char *value, int *valuelenp, int flags);
-> +		size_t namelen, unsigned char *value, int *valuelenp,
-> +		int flags);
->  int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
-> -		 unsigned char *value, int valuelen, int flags);
-> +		size_t namelen, unsigned char *value, int valuelen, int flags);
->  int xfs_attr_set_args(struct xfs_da_args *args, int flags,
->  			struct xfs_buf *leaf_bp, bool roll_trans);
-> -int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-> +int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
-> +		size_t namelen, int flags);
->  int xfs_attr_remove_args(struct xfs_da_args *args, int flags, bool roll_trans);
->  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
->  		  int flags, struct attrlist_cursor_kern *cursor);
->  int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
-> -		       const unsigned char *name, int flags);
-> +		       const unsigned char *name, size_t namelen, int flags);
->  int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
->  int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_defer_ops *dfops,
->  			  void *name, unsigned int name_len, void *value,
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index 3354140..e59b26d 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -153,8 +153,8 @@ xfs_get_acl(struct inode *inode, int type)
->  	if (!xfs_acl)
->  		return ERR_PTR(-ENOMEM);
->  
-> -	error = xfs_attr_get(ip, ea_name, (unsigned char *)xfs_acl,
-> -							&len, ATTR_ROOT);
-> +	error = xfs_attr_get(ip, ea_name, strlen(ea_name),
-> +			     (unsigned char *)xfs_acl, &len, ATTR_ROOT);
->  	if (error) {
->  		/*
->  		 * If the attribute doesn't exist make sure we have a negative
-> @@ -204,15 +204,17 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
->  		len -= sizeof(struct xfs_acl_entry) *
->  			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
->  
-> -		error = xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
-> -				len, ATTR_ROOT);
-> +		error = xfs_attr_set(ip, ea_name, strlen(ea_name),
-> +				     (unsigned char *)xfs_acl, len, ATTR_ROOT);
->  
->  		kmem_free(xfs_acl);
->  	} else {
->  		/*
->  		 * A NULL ACL argument means we want to remove the ACL.
->  		 */
-> -		error = xfs_attr_remove(ip, ea_name, ATTR_ROOT);
-> +		error = xfs_attr_remove(ip, ea_name,
-> +					strlen(ea_name),
-> +					ATTR_ROOT);
->  
->  		/*
->  		 * If the attribute didn't exist to start with that's fine.
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 89fb1eb..844480a 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -450,6 +450,7 @@ xfs_attrmulti_attr_get(
->  {
->  	unsigned char		*kbuf;
->  	int			error = -EFAULT;
-> +	size_t			namelen;
->  
->  	if (*len > XFS_XATTR_SIZE_MAX)
->  		return -EINVAL;
-> @@ -457,7 +458,9 @@ xfs_attrmulti_attr_get(
->  	if (!kbuf)
->  		return -ENOMEM;
->  
-> -	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
-> +	namelen = strlen(name);
-> +	error = xfs_attr_get(XFS_I(inode), name, namelen,
-> +			     kbuf, (int *)len, flags);
->  	if (error)
->  		goto out_kfree;
->  
-> @@ -479,6 +482,7 @@ xfs_attrmulti_attr_set(
->  {
->  	unsigned char		*kbuf;
->  	int			error;
-> +	size_t			namelen;
->  
->  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
->  		return -EPERM;
-> @@ -489,7 +493,8 @@ xfs_attrmulti_attr_set(
->  	if (IS_ERR(kbuf))
->  		return PTR_ERR(kbuf);
->  
-> -	error = xfs_attr_set(XFS_I(inode), name, kbuf, len, flags);
-> +	namelen = strlen(name);
-> +	error = xfs_attr_set(XFS_I(inode), name, namelen, kbuf, len, flags);
->  	if (!error)
->  		xfs_forget_acl(inode, name, flags);
->  	kfree(kbuf);
-> @@ -503,10 +508,12 @@ xfs_attrmulti_attr_remove(
->  	uint32_t		flags)
->  {
->  	int			error;
-> +	size_t			namelen;
->  
->  	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
->  		return -EPERM;
-> -	error = xfs_attr_remove(XFS_I(inode), name, flags);
-> +	namelen = strlen(name);
-> +	error = xfs_attr_remove(XFS_I(inode), name, namelen, flags);
->  	if (!error)
->  		xfs_forget_acl(inode, name, flags);
->  	return error;
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index c45acf0..7920f19 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -71,8 +71,10 @@ xfs_initxattrs(
->  	int			error = 0;
->  
->  	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
-> -		error = xfs_attr_set(ip, xattr->name, xattr->value,
-> -				      xattr->value_len, ATTR_SECURE);
-> +		error = xfs_attr_set(ip, xattr->name,
-> +				     strlen(xattr->name),
-> +				     xattr->value, xattr->value_len,
-> +				     ATTR_SECURE);
->  		if (error < 0)
->  			break;
->  	}
-> diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
-> index 8e3a0a0..d1d75bb 100644
-> --- a/fs/xfs/xfs_trans_attr.c
-> +++ b/fs/xfs/xfs_trans_attr.c
-> @@ -86,7 +86,7 @@ xfs_trans_attr(
->  
->  	tp->t_flags |= XFS_TRANS_RESERVE;
->  
-> -	error = xfs_attr_args_init(&args, ip, name, flags);
-> +	error = xfs_attr_args_init(&args, ip, name, name_len, flags);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index 0594db4..6cf30ae 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -38,6 +38,7 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
->  	int xflags = handler->flags;
->  	struct xfs_inode *ip = XFS_I(inode);
->  	int error, asize = size;
-> +	size_t namelen = strlen(name);
->  
->  	/* Convert Linux syscall to XFS internal ATTR flags */
->  	if (!size) {
-> @@ -45,7 +46,8 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
->  		value = NULL;
->  	}
->  
-> -	error = xfs_attr_get(ip, (unsigned char *)name, value, &asize, xflags);
-> +	error = xfs_attr_get(ip, name, namelen, value,
-> +			     &asize, xflags);
+> > I think we ought to teach the xfs inode verifier to check for
+> > immutable/append symlinks and return error so that we don't end up with
+> > such things in core in the first place,
+> 
+> Agreed. But note that one way to end up with these things is through
+> corruption. Once a user finds this the first signs they'll run into
+> (unless they have the awesome new online scrubber) is they cannot delete
+> some odd file and not know why. And then they'll see they cannot change
+> or remove either the immutable or append flag. The immutable attribute
+> is known to not let you delete the file, but its less known that the
+> append attribute implies the same. Folks would scratch their heads.
+> 
+> Since one cannot *set* these attributes on symlinks on Linux, other than
+> ignoring such attributes perhaps we should warn about it? As the only
+> way you could end up with that is if your filesystem got corrupted.
+> 
+> But without filesystems having a fix for that merged users can't do anything.
+> 
+> > and fix xfs_repair to zap such things.
+> 
+> This is what my patch for xfs_repair does, which is pending review.
+> 
+> But note that special files are handled differently, I explain the logic on the
+> RFC commit log, which is why I suggested splitting up adding a fix for special
+> files as a separate patch.
+> 
+> > That said, for the filesystems that aren't going to check their inodes,
+> > I guess this is a (hackish) way to avoid presenting undeletable gunk in
+> > the fs to the user...
+> 
+> That's why its RFC. What is the right thing to do here?
 
-/methinks these could all stll be on one line?
+Ideally, none of the filesystems should ever feed garbage to the vfs,
+but it's not all that obvious exactly what things the vfs will trip over.
+And knowing that a lot of the filesystems do minimal checking if any, I
+guess I'll just say that...
 
+...XFS (and probably ext4) should catch immutable symlinks in the inode
+verifiers so that xfs_iget returns -EFSCORRUPTED.  For the rest of the
+filesystems, it's probably fine to let them delete the symlink since the
+user wants to kill it anyway.
 
->  	if (error)
->  		return error;
->  	return asize;
-> @@ -81,6 +83,7 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
->  	int			xflags = handler->flags;
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	int			error;
-> +	size_t			namelen = strlen(name);
->  
->  	/* Convert Linux syscall to XFS internal ATTR flags */
->  	if (flags & XATTR_CREATE)
-> @@ -89,8 +92,9 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
->  		xflags |= ATTR_REPLACE;
->  
->  	if (!value)
-> -		return xfs_attr_remove(ip, (unsigned char *)name, xflags);
-> -	error = xfs_attr_set(ip, (unsigned char *)name,
-> +		return xfs_attr_remove(ip, name,
-> +				       namelen, xflags);
-> +	error = xfs_attr_set(ip, name, namelen,
->  				(void *)value, size, xflags);
+> My own logic here was since we cannot possibly allow extended attributes on
+> symlinks is to not use them then as well, in this case for delete.
+> 
+> > (Were it up to me I'd make a common vfs_check_inode() to reject
+> > struct inode containing garbage that the vfs won't deal with,
+> 
+> There certainly are cases that we could come up with for the VFS where
+> if such things are found, regardless of the filesystem, we're very sure
+> its a corruption. This is just one example, as you note.
+> 
+> So it is correct that there are two things here:
+> 
+> 1) Do we respect the attribute for symlink on delete
+> 2) Do we warn to users of the fact that the inode is very likely corrupted
+>    regardless of the filesystem?
 
-Same here?
-
-Looks ok with those fixed up,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+But I suppose we could WARN_ON_ONCE to state that we're allowing
+deletion of an immutable symlink that we couldn't possibly have set.
+Anyway, couple this patch with a second one to fix the xfs verifier and
+I'll be happy.
 
 --D
 
->  	if (!error)
->  		xfs_forget_acl(inode, name, xflags);
-> -- 
-> 2.7.4
+> This patch only addresses 1) and makes it match the VFS expectation, and
+> I think this is safe if we're not doing 2). This is why I'm also looking
+> for feedback from linux-api folks.
 > 
+> This is one of those odd corner cases we run into, and very likely not
+> well documented anywhere.
+> 
+> > and teach the filesystems to use it;
+> 
+> Or the VFS uses it.
+> 
+>   Luis
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
