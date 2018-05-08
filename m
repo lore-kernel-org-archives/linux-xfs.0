@@ -1,112 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56724 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55552 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755304AbeEHOSF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 May 2018 10:18:05 -0400
-Date: Tue, 8 May 2018 10:18:04 -0400
+        id S932141AbeEHOST (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 May 2018 10:18:19 -0400
+Date: Tue, 8 May 2018 10:18:18 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/9] xfs: don't assert fail with AIL lock held
-Message-ID: <20180508141803.GE4764@bfoster.bfoster>
+Subject: Re: [PATCH 6/9] xfs: fix double ijoin in xfs_reflink_cancel_cow_range
+Message-ID: <20180508141818.GG4764@bfoster.bfoster>
 References: <20180508034202.10136-1-david@fromorbit.com>
- <20180508034202.10136-5-david@fromorbit.com>
+ <20180508034202.10136-7-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180508034202.10136-5-david@fromorbit.com>
+In-Reply-To: <20180508034202.10136-7-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 08, 2018 at 01:41:57PM +1000, Dave Chinner wrote:
+On Tue, May 08, 2018 at 01:41:59PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Been hitting AIL ordering assert failures recently, but been unable
-> to trace them down because the system immediately hangs up onteh
-> spinlock that was held when this assert fires:
+> AN inode is joined to teh same transaction twice in
+> xfs_reflink_cancel_cow_range() resulting in the following assert
+> failure:
 > 
-> XFS: Assertion failed: XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0, file: fs/xfs/xfs_trans_ail.c, line: 52
-> 
-> Move the assertions outside of the spinlock so the corpse can
-> be dissected. Thanks to Brian Foster for supplying a clean
-> way of doing this.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
+> [   30.180485] XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+> [   30.183435] ------------[ cut here ]------------
+
+This assert report is kind of irrelevant if the whole LI_TRANS thing was
+dropped. Might as well just simplify or generalize the commit log. With
+that, looks fine:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_trans_ail.c | 43 +++++++++++++++++++++++++++++++-----------
->  1 file changed, 32 insertions(+), 11 deletions(-)
+> ......
+> [   30.209264] Call Trace:
+> [   30.209935]  xfs_trans_add_item+0xcc/0xe0
+> [   30.210968]  xfs_reflink_cancel_cow_blocks+0xab/0x290
+> [   30.212249]  ? xfs_trans_reserve+0x1b4/0x2b0
+> [   30.213320]  ? kmem_zone_alloc+0x61/0xe0
+> [   30.214321]  xfs_reflink_cancel_cow_range+0xb2/0x1f0
+> [   30.215616]  xfs_fs_destroy_inode+0x1bd/0x280
+> [   30.216757]  dispose_list+0x35/0x40
+> [   30.217656]  evict_inodes+0x132/0x160
+> [   30.218620]  generic_shutdown_super+0x3a/0x110
+> [   30.219771]  kill_block_super+0x21/0x50
+> [   30.220762]  deactivate_locked_super+0x39/0x70
+> [   30.221909]  cleanup_mnt+0x3b/0x70
+> [   30.222819]  task_work_run+0x7f/0xa0
+> [   30.223762]  exit_to_usermode_loop+0x9b/0xa0
+> [   30.224884]  do_syscall_64+0x18f/0x1a0
 > 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 50611d2bcbc2..41e280ef1483 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -32,30 +32,51 @@
->  #ifdef DEBUG
->  /*
->   * Check that the list is sorted as it should be.
+> Fix it and document that the callers of
+> xfs_reflink_cancel_cow_blocks() must have already joined the inode
+> to the permanent transaction passed in.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_reflink.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index cdbd342a5249..bce2b5351d64 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -552,6 +552,9 @@ xfs_reflink_trim_irec_to_next_cow(
+>   *
+>   * If cancel_real is true this function cancels all COW fork extents for the
+>   * inode; if cancel_real is false, real extents are not cleared.
 > + *
-> + * Called with the ail lock held, but we don't want to assert fail with it
-> + * held otherwise we'll lock everything up and won't be able to debug the
-> + * cause. Hence we sample and check the state under the AIL lock and return if
-> + * everything is fine, otherwise we drop the lock and run the ASSERT checks.
-> + * Asserts may not be fatal, so pick the lock back up and continue onwards.
+> + * Caller must have already joined the inode to the current transaction. The
+> + * inode will be joined to the transaction returned to the caller.
 >   */
->  STATIC void
->  xfs_ail_check(
-> -	struct xfs_ail	*ailp,
-> -	xfs_log_item_t	*lip)
-> +	struct xfs_ail		*ailp,
-> +	struct xfs_log_item	*lip)
->  {
-> -	xfs_log_item_t	*prev_lip;
-> +	struct xfs_log_item	*prev_lip;
-> +	struct xfs_log_item	*next_lip;
-> +	xfs_lsn_t		prev_lsn = NULLCOMMITLSN;
-> +	xfs_lsn_t		next_lsn = NULLCOMMITLSN;
-> +	xfs_lsn_t		lsn;
-> +	bool			in_ail;
-> +
+>  int
+>  xfs_reflink_cancel_cow_blocks(
+> @@ -592,7 +595,6 @@ xfs_reflink_cancel_cow_blocks(
+>  			if (error)
+>  				break;
+>  		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+> -			xfs_trans_ijoin(*tpp, ip, 0);
+>  			xfs_defer_init(&dfops, &firstfsb);
 >  
->  	if (list_empty(&ailp->ail_head))
->  		return;
->  
->  	/*
-> -	 * Check the next and previous entries are valid.
-> +	 * Sample then check the next and previous entries are valid.
+>  			/* Free the CoW orphan record. */
+> @@ -1570,6 +1572,7 @@ xfs_reflink_clear_inode_flag(
+>  	 * We didn't find any shared blocks so turn off the reflink flag.
+>  	 * First, get rid of any leftover CoW mappings.
 >  	 */
-> -	ASSERT(test_bit(XFS_LI_IN_AIL, &lip->li_flags));
-> -	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
-> +	in_ail = test_bit(XFS_LI_IN_AIL, &lip->li_flags);
-> +	prev_lip = list_entry(lip->li_ail.prev, struct xfs_log_item, li_ail);
->  	if (&prev_lip->li_ail != &ailp->ail_head)
-> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
-> -
-> -	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
-> -	if (&prev_lip->li_ail != &ailp->ail_head)
-> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
-> +		prev_lsn = prev_lip->li_lsn;
-> +	next_lip = list_entry(lip->li_ail.next, struct xfs_log_item, li_ail);
-> +	if (&next_lip->li_ail != &ailp->ail_head)
-> +		next_lsn = next_lip->li_lsn;
-> +	lsn = lip->li_lsn;
+> +	xfs_trans_ijoin(*tpp, ip, 0);
+>  	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, true);
+>  	if (error)
+>  		return error;
+> @@ -1578,7 +1581,6 @@ xfs_reflink_clear_inode_flag(
+>  	trace_xfs_reflink_unset_inode_flag(ip);
+>  	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+>  	xfs_inode_clear_cowblocks_tag(ip);
+> -	xfs_trans_ijoin(*tpp, ip, 0);
+>  	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
 >  
-> +	if (in_ail &&
-> +	    (prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0) &&
-> +	    (next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0))
-> +		return;
->  
-> +	spin_unlock(&ailp->ail_lock);
-> +	ASSERT(in_ail);
-> +	ASSERT(prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0);
-> +	ASSERT(next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0);
-> +	spin_lock(&ailp->ail_lock);
->  }
->  #else /* !DEBUG */
->  #define	xfs_ail_check(a,l)
+>  	return error;
 > -- 
 > 2.17.0
 > 
