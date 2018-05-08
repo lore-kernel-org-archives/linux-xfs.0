@@ -1,44 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33772 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752773AbeEGXVd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 19:21:33 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w47NGObW073804
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:21:32 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2hs426ea73-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 07 May 2018 23:21:32 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w47NLV2N016291
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:21:31 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w47NLVQ6011909
-        for <linux-xfs@vger.kernel.org>; Mon, 7 May 2018 23:21:31 GMT
-Date: Mon, 7 May 2018 16:21:29 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:60188 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753697AbeEHAfT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:35:19 -0400
+Date: Mon, 7 May 2018 17:35:00 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/21] xfs: Add attibute remove and helper functions
-Message-ID: <20180507232129.GR11261@magnolia>
-References: <1525627494-12873-1-git-send-email-allison.henderson@oracle.com>
- <1525627494-12873-5-git-send-email-allison.henderson@oracle.com>
+Subject: Re: [PATCH v2 1/6] xfs: create agfl block free helper function
+Message-ID: <20180508003500.GD11261@magnolia>
+References: <20180418133119.21775-1-bfoster@redhat.com>
+ <20180418133119.21775-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1525627494-12873-5-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <20180418133119.21775-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, May 06, 2018 at 10:24:37AM -0700, Allison Henderson wrote:
-> This patch adds xfs_attr_remove_args. These sub-routines remove
-> the attributes specified in @args. We will use this later for setting
-> parent pointers as a deferred attribute operation.
+On Wed, Apr 18, 2018 at 09:31:14AM -0400, Brian Foster wrote:
+> Refactor the AGFL block free code into a new helper such that it can
+> be invoked from deferred context. No functional changes.
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
@@ -46,100 +33,85 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 43 +++++++++++++++++++++++++++++++++----------
->  fs/xfs/libxfs/xfs_attr.h |  1 +
->  2 files changed, 34 insertions(+), 10 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c | 37 +++++++++++++++++++++++++++----------
+>  fs/xfs/libxfs/xfs_alloc.h |  2 ++
+>  2 files changed, 29 insertions(+), 10 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 99c4a31..514f4f8 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -296,6 +296,34 @@ xfs_attr_set_args(
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 4bcc095fe44a..193a5b4909c5 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2060,6 +2060,30 @@ xfs_alloc_space_available(
+>  	return true;
 >  }
 >  
->  /*
-> + * Remove the attribute specified in @args.
-> + */
 > +int
-> +xfs_attr_remove_args(
-> +	struct xfs_da_args      *args,
-> +	int			flags,
-> +	bool                    roll_trans)
+> +xfs_free_agfl_block(
+> +	struct xfs_trans	*tp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_agblock_t		agbno,
+> +	struct xfs_buf		*agbp,
+> +	struct xfs_owner_info	*oinfo)
 > +{
-> +	struct xfs_inode	*dp = args->dp;
 > +	int			error;
+> +	struct xfs_buf		*bp;
 > +
-> +	xfs_trans_ijoin(args->trans, dp, 0);
+> +	error = xfs_free_ag_extent(tp, agbp, agno, agbno, 1, oinfo,
+> +				   XFS_AG_RESV_AGFL);
+> +	if (error)
+> +		return error;
 > +
-> +	if (!xfs_inode_hasattr(dp)) {
-> +		error = -ENOATTR;
-> +	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> +		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> +		error = xfs_attr_shortform_remove(args, roll_trans);
-> +	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> +		error = xfs_attr_leaf_removename(args, roll_trans);
-> +	} else {
-> +		error = xfs_attr_node_removename(args, roll_trans);
-> +	}
+> +	bp = xfs_btree_get_bufs(tp->t_mountp, tp, agno, agbno, 0);
+> +	if (!bp)
+> +		return -EFSCORRUPTED;
+> +	xfs_trans_binval(tp, bp);
 > +
-> +	return error;
+> +	return 0;
 > +}
 > +
-> +/*
->   * Calculate how many blocks we need for the new attribute,
->   */
->  STATIC int
-> @@ -439,6 +467,7 @@ xfs_attr_set(
->  	return error;
->  }
->  
-> +
 >  /*
->   * Generic handler routine to remove a name from an attribute list.
->   * Transitions attribute list from Btree to shortform as necessary.
-> @@ -495,17 +524,9 @@ xfs_attr_remove(
->  	 * blocks not allocate in the common case.
->  	 */
->  	xfs_trans_ijoin(args.trans, dp, 0);
-> +	xfs_defer_init(args.dfops, args.firstblock);
->  
-> -	if (!xfs_inode_hasattr(dp)) {
-> -		error = -ENOATTR;
-> -	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> -		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> -		error = xfs_attr_shortform_remove(&args, true);
-> -	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> -		error = xfs_attr_leaf_removename(&args, true);
-> -	} else {
-> -		error = xfs_attr_node_removename(&args, true);
-> -	}
-> +	error = xfs_attr_remove_args(&args, flags, true);
->  
->  	if (error)
->  		goto out;
-> @@ -530,6 +551,8 @@ xfs_attr_remove(
->  	return error;
->  
->  out:
-> +	xfs_defer_cancel(&dfops);
+>   * Check the agfl fields of the agf for inconsistency or corruption. The purpose
+>   * is to detect an agfl header padding mismatch between current and early v5
+> @@ -2247,21 +2271,14 @@ xfs_alloc_fix_freelist(
+>  	else
+>  		xfs_rmap_ag_owner(&targs.oinfo, XFS_RMAP_OWN_AG);
+>  	while (!(flags & XFS_ALLOC_FLAG_NOSHRINK) && pag->pagf_flcount > need) {
+> -		struct xfs_buf	*bp;
+> -
+>  		error = xfs_alloc_get_freelist(tp, agbp, &bno, 0);
+>  		if (error)
+>  			goto out_agbp_relse;
+> -		error = xfs_free_ag_extent(tp, agbp, args->agno, bno, 1,
+> -					   &targs.oinfo, XFS_AG_RESV_AGFL);
 > +
->  	if (args.trans)
->  		xfs_trans_cancel(args.trans);
->  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index b5dc02c..ef6b47e 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -155,6 +155,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
->  int xfs_attr_set_args(struct xfs_da_args *args, int flags,
->  			struct xfs_buf *leaf_bp, bool roll_trans);
->  int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-> +int xfs_attr_remove_args(struct xfs_da_args *args, int flags, bool roll_trans);
->  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
->  		  int flags, struct attrlist_cursor_kern *cursor);
+> +		error = xfs_free_agfl_block(tp, args->agno, bno, agbp,
+> +					    &targs.oinfo);
+>  		if (error)
+>  			goto out_agbp_relse;
+> -		bp = xfs_btree_get_bufs(mp, tp, args->agno, bno, 0);
+> -		if (!bp) {
+> -			error = -EFSCORRUPTED;
+> -			goto out_agbp_relse;
+> -		}
+> -		xfs_trans_binval(tp, bp);
+>  	}
 >  
+>  	targs.tp = tp;
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index cbf789ea5a4e..949e21326066 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -223,6 +223,8 @@ int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
+>  			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
+>  int xfs_alloc_read_agfl(struct xfs_mount *mp, struct xfs_trans *tp,
+>  			xfs_agnumber_t agno, struct xfs_buf **bpp);
+> +int xfs_free_agfl_block(struct xfs_trans *, xfs_agnumber_t, xfs_agblock_t,
+> +			struct xfs_buf *, struct xfs_owner_info *);
+>  int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+>  int xfs_free_extent_fix_freelist(struct xfs_trans *tp, xfs_agnumber_t agno,
+>  		struct xfs_buf **agbp);
 > -- 
-> 2.7.4
+> 2.13.6
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
