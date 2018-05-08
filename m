@@ -1,220 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59528 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43906 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754795AbeEHMbl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 May 2018 08:31:41 -0400
-Date: Tue, 8 May 2018 08:31:40 -0400
+        id S1751880AbeEHMdT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 May 2018 08:33:19 -0400
+Date: Tue, 8 May 2018 08:33:18 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 2/6] xfs: defer agfl block frees when dfops is
- available
-Message-ID: <20180508123140.GA4764@bfoster.bfoster>
+Subject: Re: [PATCH v2 6/6] xfs: defer agfl frees from directory op
+ transactions
+Message-ID: <20180508123318.GB4764@bfoster.bfoster>
 References: <20180418133119.21775-1-bfoster@redhat.com>
- <20180418133119.21775-3-bfoster@redhat.com>
- <20180508011032.GF11261@magnolia>
+ <20180418133119.21775-7-bfoster@redhat.com>
+ <20180508011213.GH11261@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180508011032.GF11261@magnolia>
+In-Reply-To: <20180508011213.GH11261@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, May 07, 2018 at 06:10:32PM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 18, 2018 at 09:31:15AM -0400, Brian Foster wrote:
-...
+On Mon, May 07, 2018 at 06:12:13PM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 18, 2018 at 09:31:19AM -0400, Brian Foster wrote:
+> > Directory operations can perform block allocations as entries are
+> > added/removed from directories. Defer AGFL block frees from the
+> > remaining directory operation transactions. This covers the hard
+> > link, remove and rename operations.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > ---
-> >  fs/xfs/libxfs/xfs_alloc.c  | 51 ++++++++++++++++++++++++++++++---
-> >  fs/xfs/libxfs/xfs_defer.h  |  1 +
-> >  fs/xfs/xfs_trace.h         |  2 ++
-> >  fs/xfs/xfs_trans.c         | 11 ++++++--
-> >  fs/xfs/xfs_trans.h         |  1 +
-> >  fs/xfs/xfs_trans_extfree.c | 70 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  6 files changed, 129 insertions(+), 7 deletions(-)
+> >  fs/xfs/xfs_inode.c | 3 +++
+> >  1 file changed, 3 insertions(+)
 > > 
-...
-> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> > index 9d542dfe0052..834388c2c9de 100644
-> > --- a/fs/xfs/xfs_trans.h
-> > +++ b/fs/xfs/xfs_trans.h
-> > @@ -111,6 +111,7 @@ typedef struct xfs_trans {
-> >  	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
-> >  	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
-> >  	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
-> > +	struct xfs_defer_ops	*t_agfl_dfops;	/* optional agfl fixup dfops */
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 484ebef36fe4..47aa124e4744 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -1452,6 +1452,7 @@ xfs_link(
+> >  	}
+> >  
+> >  	xfs_defer_init(&dfops, &first_block);
+> > +	tp->t_agfl_dfops = &dfops;
+> >  
+> >  	/*
+> >  	 * Handle initial link state of O_TMPFILE inode
+> > @@ -2649,6 +2650,7 @@ xfs_remove(
+> >  		goto out_trans_cancel;
+> >  
+> >  	xfs_defer_init(&dfops, &first_block);
+> > +	tp->t_agfl_dfops = &dfops;
+> >  	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
+> >  					&first_block, &dfops, resblks);
+> >  	if (error) {
+> > @@ -3016,6 +3018,7 @@ xfs_rename(
+> >  	}
+> >  
+> >  	xfs_defer_init(&dfops, &first_block);
+> > +	tp->t_agfl_dfops = &dfops;
 > 
-> This more or less looks fine to me, with ^^^^ this one (incoherent) quibble:
+> Hmm, do you have a reproducer xfstest for any of the last three patches?
 > 
 
-I wouldn't call it incoherent...
+Unfortunately, no. The only reproducer I've managed so far was a (huge)
+private/customer metadump that consistently reproduced log reservation
+overruns over a long running file removal operation. Even then, that
+particular instance was worked around by the previous reworks of the
+inode transaction reservation calculations.
 
-> A thread can only have one transaction and one dfops in play at a time,
-> so could we just call this t_dfops and allow anyone to access it who
-> wants to add their own deferred operations?  Then we can stop passing
-> both tp and dfops all over the stack.  Can you think of a situation
-> where we would want access to t_dfops for deferred agfl frees but not
-> for any other deferred ops?
+While we ended up with a workaround for that problem, it was still known
+that the agfl fixups were unpredictable and we couldn't guarantee
+coverage by the reservation calculations without making them excessively
+large. So this series aims to make the agfl fixup (freeing,
+specifically) behavior itself predictable such that it always fits in an
+allocation log reservation unit.
+
+> Codewise,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 
-... because that is precisely the secondary goal of this approach. :)
-Dave suggested this approach in a previous version and the last post
-actually used ->t_dfops rather than ->t_agfl_dfops and included some
-associated dfops parameter elimination cleanup I did along the way.
-
-Christoph objected to the partial refactoring, however, so I'm trying to
-do this in two parts where the first is primarily focused on fixing the
-problems resolved by deferred agfl frees. The challenge is that I don't
-want to manually plumb dfops through new codepaths to control deferred
-agfl frees only to immediately turn around and clean that code out, and
-I certainly don't want to refactor all of our dfops code just to enable
-deferred agfl frees because it creates an unnecessary dependency for
-backports. As a result, I've stripped out as much refactoring as
-possible to try and make it clear that this is a bug fix series that
-happens to create a new xfs_trans field that will open wider cleanups in
-a follow on series.
-
-IOW, I have a series in progress where patch 1 renames ->t_agfl_dfops
-back to ->t_dfops to essentially open it for general use and then starts
-to incorporate the broader cleanups like removing dfops from callstacks,
-alloc/bmap data structures, etc.
-
-BTW, something I'm curious of your (and Dave, Christoph?) opinion on...
-another thing that was dropped (permanently) from the previous series
-was an update to xfs_defer_init() to do the ->t_dfops = &dfops
-assignment that is otherwise open-coded throughout here. While I don't
-have a strong preference on that for this series, the more broader
-cleanup I do the less I like the open-coded approach because it creates
-a tx setup requirement that's easy to miss (case in point: a function
-signature change is an easy way to verify all dfops have been associated
-with transactions). Instead, I'd prefer code that looks something like
-the following as the end result of the follow-on cleanup series:
-
-	struct xfs_trans	*tp;
-	struct xfs_defer_ops	dfops;
-
-	xfs_trans_alloc(... &tp);
-	xfs_defer_init(&dfops, &first_block, tp);
-
-	...
-
-	xfs_defer_finish(&tp);
-	xfs_trans_commit(tp);
-	...
-
-Note that once we require association of dfops with tp, we don't have to
-pass dfops around to anywhere the tp isn't already needed, including
-xfs_defer_finish(). This also opens the possibility of doing things like
-replacing on-stack dfops with something that's just embedded in
-xfs_trans itself (optionally pushing down the init/finish calls into the
-trans infrastructure), but that would require changing how dfops are
-transferred to rolled transactions and whatnot. I haven't really got far
-enough to give that proper consideration, but that may be a possible 3rd
-step cleanup if there's value.
-
-Anyways, I'd really like to avoid having to switch back and forth
-between the xfs_defer_init() tweak and open-coded assignment if
-possible. Any thoughts/preferences on either approach?
+Thanks.. does this refer to just this patch, btw, or the previous 3?
 
 Brian
 
-> Separate cleanup, of course, and sorry if this has already been asked.
-> 
-> Other than that this looks ok enough to test,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
 > --D
 > 
-> 
-> >  	unsigned int		t_flags;	/* misc flags */
-> >  	int64_t			t_icount_delta;	/* superblock icount change */
-> >  	int64_t			t_ifree_delta;	/* superblock ifree change */
-> > diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-> > index ab438647592a..f5620796ae25 100644
-> > --- a/fs/xfs/xfs_trans_extfree.c
-> > +++ b/fs/xfs/xfs_trans_extfree.c
-> > @@ -231,9 +231,79 @@ static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
-> >  	.cancel_item	= xfs_extent_free_cancel_item,
-> >  };
 > >  
-> > +/*
-> > + * AGFL blocks are accounted differently in the reserve pools and are not
-> > + * inserted into the busy extent list.
-> > + */
-> > +STATIC int
-> > +xfs_agfl_free_finish_item(
-> > +	struct xfs_trans		*tp,
-> > +	struct xfs_defer_ops		*dop,
-> > +	struct list_head		*item,
-> > +	void				*done_item,
-> > +	void				**state)
-> > +{
-> > +	struct xfs_mount		*mp = tp->t_mountp;
-> > +	struct xfs_efd_log_item		*efdp = done_item;
-> > +	struct xfs_extent_free_item	*free;
-> > +	struct xfs_extent		*extp;
-> > +	struct xfs_buf			*agbp;
-> > +	int				error;
-> > +	xfs_agnumber_t			agno;
-> > +	xfs_agblock_t			agbno;
-> > +	uint				next_extent;
-> > +
-> > +	free = container_of(item, struct xfs_extent_free_item, xefi_list);
-> > +	ASSERT(free->xefi_blockcount == 1);
-> > +	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
-> > +	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
-> > +
-> > +	trace_xfs_agfl_free_deferred(mp, agno, 0, agbno, free->xefi_blockcount);
-> > +
-> > +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-> > +	if (!error)
-> > +		error = xfs_free_agfl_block(tp, agno, agbno, agbp,
-> > +					    &free->xefi_oinfo);
-> > +
-> > +	/*
-> > +	 * Mark the transaction dirty, even on error. This ensures the
-> > +	 * transaction is aborted, which:
-> > +	 *
-> > +	 * 1.) releases the EFI and frees the EFD
-> > +	 * 2.) shuts down the filesystem
-> > +	 */
-> > +	tp->t_flags |= XFS_TRANS_DIRTY;
-> > +	efdp->efd_item.li_desc->lid_flags |= XFS_LID_DIRTY;
-> > +
-> > +	next_extent = efdp->efd_next_extent;
-> > +	ASSERT(next_extent < efdp->efd_format.efd_nextents);
-> > +	extp = &(efdp->efd_format.efd_extents[next_extent]);
-> > +	extp->ext_start = free->xefi_startblock;
-> > +	extp->ext_len = free->xefi_blockcount;
-> > +	efdp->efd_next_extent++;
-> > +
-> > +	kmem_free(free);
-> > +	return error;
-> > +}
-> > +
-> > +
-> > +/* sub-type with special handling for AGFL deferred frees */
-> > +static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
-> > +	.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
-> > +	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
-> > +	.diff_items	= xfs_extent_free_diff_items,
-> > +	.create_intent	= xfs_extent_free_create_intent,
-> > +	.abort_intent	= xfs_extent_free_abort_intent,
-> > +	.log_item	= xfs_extent_free_log_item,
-> > +	.create_done	= xfs_extent_free_create_done,
-> > +	.finish_item	= xfs_agfl_free_finish_item,
-> > +	.cancel_item	= xfs_extent_free_cancel_item,
-> > +};
-> > +
-> >  /* Register the deferred op type. */
-> >  void
-> >  xfs_extent_free_init_defer_op(void)
-> >  {
-> >  	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
-> > +	xfs_defer_init_op_type(&xfs_agfl_free_defer_type);
-> >  }
+> >  	/* RENAME_EXCHANGE is unique from here on. */
+> >  	if (flags & RENAME_EXCHANGE)
 > > -- 
 > > 2.13.6
 > > 
