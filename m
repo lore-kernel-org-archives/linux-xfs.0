@@ -1,207 +1,230 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54130 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:56218 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750878AbeEBOYX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 10:24:23 -0400
-Date: Wed, 2 May 2018 07:24:20 -0700
+        with ESMTP id S932644AbeEHPYz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 11:24:55 -0400
+Date: Tue, 8 May 2018 08:24:33 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/5 V2] xfs: implement online get/set fs label
-Message-ID: <20180502142420.GL4127@magnolia>
-References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
- <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
- <2a638f02-ea72-0d5e-30a4-1d95cfe6ff69@sandeen.net>
+Subject: Re: [PATCH 6/9] xfs_spaceman: add a superblock info command
+Message-ID: <20180508152433.GK11261@magnolia>
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+ <152401956907.13048.9916119316995542280.stgit@magnolia>
+ <3166828d-0d56-adcd-32d1-2da12d13729a@sandeen.net>
+ <20180503213904.GB26569@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2a638f02-ea72-0d5e-30a4-1d95cfe6ff69@sandeen.net>
+In-Reply-To: <20180503213904.GB26569@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, May 01, 2018 at 06:04:09PM -0500, Eric Sandeen wrote:
-> The GET ioctl is trivial, just return the current label.
+On Thu, May 03, 2018 at 02:39:04PM -0700, Darrick J. Wong wrote:
+> On Thu, May 03, 2018 at 04:09:36PM -0500, Eric Sandeen wrote:
+> > On 4/17/18 9:46 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Add an 'info' command to pretty-print the superblock geometry.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > 
+> > 
+> > 
+> > > diff --git a/spaceman/file.c b/spaceman/file.c
+> > > index 4f9f66c..6adb4f5 100644
+> > > --- a/spaceman/file.c
+> > > +++ b/spaceman/file.c
+> > > @@ -84,6 +84,8 @@ openfile(
+> > 
+> >         char            *path,
+> >         xfs_fsop_geom_t *geom,
+> >         struct fs_path  *fs_path)
+> > {
+> > ..
+> > 
+> >         if (fs_path) {
+> > ...
+> > >  			return -1;
+> > >  		}
+> > >  		memcpy(fs_path, fsp, sizeof(struct fs_path));
+> > > +	} else {
+> > > +		memset(fs_path, 0, sizeof(struct fs_path));
+> > >  	}
+> > 
+> > so if fs_path == NULL memset(NULL, 0) ?
+> > 
+> > Not sure what's going on here.
+> > 
+> > (or maybe I've forgotten how C works)
 > 
-> The SET ioctl is more involved:
-> It transactionally modifies the superblock to write a new filesystem
-> label to the primary super.
+> Not sure either.  The only caller of openfile() always passes in fs_path
+> so the else clause can go away.  Bad xfs_io copy pasta, sorry. :(
 > 
-> A new variant of xfs_sync_sb then writes the superblock buffer
-> immediately to disk so that the change is visible from userspace.
-> 
-> It then invalidates any page cache that userspace might have previously
-> read on the block device so that i.e. blkid can see the change
-> immediately, and updates all secondary superblocks as userspace relable
-> does.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> V2: rework the force-sb-to-disk approach, invalidate the whole block
-> device, and block waiting for the growfs lock.  Also remove too-long-label
-> printk.
-> 
-> Thanks to dchinner for the xfs_sync_sb_buf suggestion & framework.
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index d9b94bd..54992e8 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -888,6 +888,37 @@ struct xfs_perag *
->  	return xfs_trans_commit(tp);
->  }
->  
-> +/*
-> + * Same behavior as xfs_sync_sb, except that it is always synchronous and it
-> + * also writes the superblock buffer to disk sector 0 immediately.
-> + */
-> +int
-> +xfs_sync_sb_buf(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct xfs_trans	*tp;
-> +	int			error;
-> +
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0,
-> +			XFS_TRANS_NO_WRITECOUNT, &tp);
+> --D
 
-I suppose this is a straight clone of xfs_sync_sb, but do we need
-NO_WRITECOUNT here?  Will this get called while the fs is frozen?
+Dangit, I missed some comments.
 
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_log_sb(tp);
-> +	xfs_trans_bhold(tp, mp->m_sb_bp);
-> +	xfs_trans_set_sync(tp);
-> +	error = xfs_trans_commit(tp);
-> +	if (error)
-> +		goto out;
-> +	/*
-> +	 * write out the sb buffer to get the changes to disk
-> +	 */
-> +	error = xfs_bwrite(mp->m_sb_bp);
-> +out:
-> +	xfs_buf_relse(mp->m_sb_bp);
-> +	return error;
-> +}
-> +
->  int
->  xfs_fs_geometry(
->  	struct xfs_sb		*sbp,
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 63dcd2a..2268272 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -29,6 +29,7 @@ extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
->  
->  extern void	xfs_log_sb(struct xfs_trans *tp);
->  extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
-> +extern int	xfs_sync_sb_buf(struct xfs_mount *mp);
->  extern void	xfs_sb_mount_common(struct xfs_mount *mp, struct xfs_sb *sbp);
->  extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
->  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 89fb1eb..effb23a 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1811,6 +1811,72 @@ struct getfsmap_info {
->  	return error;
->  }
->  
-> +static int
-> +xfs_ioc_getlabel(
-> +	struct xfs_mount	*mp,
-> +	char			__user *label)
-> +{
-> +	struct xfs_sb		*sbp = &mp->m_sb;
-> +
-> +	/* Paranoia */
-> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
-> +
-> +	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
+> > >  	return fd;
+> > >  }
+> > > diff --git a/spaceman/info.c b/spaceman/info.c
+> > > new file mode 100644
+> > > index 0000000..b8b8133
+> > > --- /dev/null
+> > > +++ b/spaceman/info.c
+> > > @@ -0,0 +1,96 @@
+> > > +/*
+> > > + * Copyright (C) 2018 Oracle.  All Rights Reserved.
+> > > + *
+> > > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > > + *
+> > > + * This program is free software; you can redistribute it and/or
+> > > + * modify it under the terms of the GNU General Public License
+> > > + * as published by the Free Software Foundation; either version 2
+> > > + * of the License, or (at your option) any later version.
+> > > + *
+> > > + * This program is distributed in the hope that it would be useful,
+> > > + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > + * GNU General Public License for more details.
+> > > + *
+> > > + * You should have received a copy of the GNU General Public License
+> > > + * along with this program; if not, write the Free Software Foundation,
+> > > + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> > > + */
+> > > +#include "libxfs.h"
+> > > +#include "command.h"
+> > > +#include "init.h"
+> > > +#include "path.h"
+> > > +#include "space.h"
+> > > +#include "fsgeom.h"
+> > > +
+> > > +static void
+> > > +info_help(void)
+> > > +{
+> > > +	printf(_(
+> > > +"\n"
+> > > +" Pretty-prints the filesystem geometry as derived from the superblock.\n"
+> > > +" The output has the same format as mkfs.  The opened file must be a XFS\n"
+> > 
+> > "an XFS?"
 
-Needs to ensure that a null is set at the end of the (userspace) buffer
-just in case the label is "123456789012".
+Sure.
 
-There's nothing in the documentation for this ioctl <cough> that says
-the passed in buffer must already be zeroed.
+> > > +" mount point.\n"
+> > > +"\n"
+> > > +));
+> > > +
+> > > +}
+> > > +
+> > > +static int
+> > > +info_f(
+> > > +	int			argc,
+> > > +	char			**argv)
+> > > +{
+> > > +	struct xfs_fsop_geom	geo;
+> > > +	int			error;
+> > > +
+> > > +	if (fs_table_lookup_mount(file->name) == NULL) {
+> > > +		fprintf(stderr, _("%s: Not a XFS mount point.\n"), file->name);
+> > > +		return 1;
+> > > +	}
+> > > +
+> > > +	/* get the current filesystem size & geometry */
+> > > +	error = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &geo);
+> > > +	if (error) {
+> > > +		/*
+> > > +		 * OK, new xfsctl barfed - back off and try earlier version
+> > > +		 * as we're probably running an older kernel version.
+> > > +		 * Only field added in the v2 geometry xfsctl is "logsunit"
+> > > +		 * so we'll zero that out for later display (as zero).
+> > > +		 */
+> > > +		geo.logsunit = 0;
+> > > +		error = ioctl(file->fd, XFS_IOC_FSGEOMETRY_V1, &geo);
+> > 
+> > We're certain that it won't fill in logsunit with junk, right?
+> > Would it be any safer to set logsunit after or is that presupposing too
+> > much about the interface?  I guess it's fine.
 
-> +		return -EFAULT;
-> +	return 0;
-> +}
-> +
-> +static int
-> +xfs_ioc_setlabel(
-> +	struct file		*filp,
-> +	struct xfs_mount	*mp,
-> +	char			__user *newlabel)
-> +{
-> +	struct xfs_sb		*sbp = &mp->m_sb;
-> +	char			label[FSLABEL_MAX];
-> +	size_t			len;
-> +	int			error;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EPERM;
-> +
-> +	if (copy_from_user(label, newlabel, FSLABEL_MAX))
-> +		return -EFAULT;
-> +	/*
-> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but XFS is much
-> +	 * smaller, at 12 bytes.
-> +	 * NB: The on disk label doesn't need to be null terminated.
-> +	 */
-> +	len = strnlen(label, FSLABEL_MAX);
-> +	if (len > sizeof(sbp->sb_fname))
-> +		return -EINVAL;
-> +
-> +	error = mnt_want_write_file(filp);
-> +	if (error)
-> +		return error;
-> +
-> +	spin_lock(&mp->m_sb_lock);
-> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
-> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
-> +	spin_unlock(&mp->m_sb_lock);
-> +
-> +	/* Log primary superblock label changes & force to disk. */
-> +	error = xfs_sync_sb_buf(mp);
-> +	if (error)
-> +		goto out;
-> +
-> +	/* Invalidate any cached bdev page for userspace visibility. */
-> +	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
-> +
-> +	/* Update the backup superblocks like userspace does. */
-> +	mutex_lock(&mp->m_growlock);
-> +	error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
-> +	mutex_unlock(&mp->m_growlock);
-> +out:
-> +	mnt_drop_write_file(filp);
-> +	return error;
+The kernel had better not fill logsunit with anything, since it copies
+the v1 structure back to userspace and the v1 structure isn't long
+enough to overlay logsunit.
 
-Looks ok enough to start testing.
+> > > +		if (error) {
+> > > +			fprintf(stderr, _(
+> > > +				"%s: cannot determine geometry of filesystem"
+> > > +				" mounted at %s: %s\n"),
+> > > +				progname, file->name, strerror(errno));
+> > > +			exitcode = 1;
+> > > +			return 0;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
+> > > +			file->fs_path.fs_rt);
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +static const struct cmdinfo info_cmd = {
+> > > +	.name =		"info",
+> > > +	.altname =	"i",
+> > > +	.cfunc =	info_f,
+> > > +	.argmin =	0,
+> > > +	.argmax =	0,
+> > > +	.canpush =	0,
+> > > +	.args =		NULL,
+> > > +	.flags =	CMD_FLAG_ONESHOT,
+> > > +	.oneline =	N_("dump superblock info"),
+> > 
+> > "print geometry superblock info"
+
+"pretty-print superblock geometry info" ?
 
 --D
 
-> +}
-> +
->  /*
->   * Note: some of the ioctl's return positive numbers as a
->   * byte count indicating success, such as readlink_by_handle.
-> @@ -1834,6 +1900,10 @@ struct getfsmap_info {
->  	switch (cmd) {
->  	case FITRIM:
->  		return xfs_ioc_trim(mp, arg);
-> +	case FS_IOC_GET_FSLABEL:
-> +		return xfs_ioc_getlabel(mp, arg);
-> +	case FS_IOC_SET_FSLABEL:
-> +		return xfs_ioc_setlabel(filp, mp, arg);
->  	case XFS_IOC_ALLOCSP:
->  	case XFS_IOC_FREESP:
->  	case XFS_IOC_RESVSP:
+> > > +	.help =		info_help,
+> > > +};
+> > > +
+> > > +void
+> > > +info_init(void)
+> > > +{
+> > > +	add_command(&info_cmd);
+> > > +}
+> > > diff --git a/spaceman/init.c b/spaceman/init.c
+> > > index b3eface..895504f 100644
+> > > --- a/spaceman/init.c
+> > > +++ b/spaceman/init.c
+> > > @@ -40,6 +40,7 @@ init_commands(void)
+> > >  {
+> > >  	print_init();
+> > >  	help_init();
+> > > +	info_init();
+> > >  	prealloc_init();
+> > >  	quit_init();
+> > >  	trim_init();
+> > > diff --git a/spaceman/space.h b/spaceman/space.h
+> > > index 5f4a8a0..d2a2543 100644
+> > > --- a/spaceman/space.h
+> > > +++ b/spaceman/space.h
+> > > @@ -42,5 +42,6 @@ extern void	freesp_init(void);
+> > >  #else
+> > >  # define freesp_init()	do { } while (0)
+> > >  #endif
+> > > +extern void	info_init(void);
+> > >  
+> > >  #endif /* XFS_SPACEMAN_SPACE_H_ */
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
