@@ -1,40 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46470 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932105AbeEHUwi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 May 2018 16:52:38 -0400
-Subject: Re: [PATCH 21/21] xfsprogs: implement the upper half of parent
- pointers
-References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
- <1525754479-12177-22-git-send-email-allison.henderson@oracle.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f31ce664-7173-7b99-7d65-39abd810a372@sandeen.net>
-Date: Tue, 8 May 2018 15:52:37 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:56554 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752954AbeEHAOV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 20:14:21 -0400
+Date: Mon, 7 May 2018 17:13:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/4] blk-wbt: throttle discards like background writes
+Message-ID: <20180508001359.GB11261@magnolia>
+References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
+ <1525709615-14395-5-git-send-email-axboe@kernel.dk>
 MIME-Version: 1.0
-In-Reply-To: <1525754479-12177-22-git-send-email-allison.henderson@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525709615-14395-5-git-send-email-axboe@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, hch@lst.de
 
-On 5/7/18 11:41 PM, Allison Henderson wrote:
-> From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Mon, May 07, 2018 at 10:13:35AM -0600, Jens Axboe wrote:
+> Throttle discards like we would any background write. Discards should
+> be background activity, so if they are impacting foreground IO, then
+> we will throttle them down.
 > 
-> Add ioctl definitions to libxfs, build the necessary helpers into
-> libfrog and libhandle to iterate parents (and parent paths), then wire
-> up xfs_scrub to be able to query parent pointers from userspace.  The
-> goal of this patch is to exercise userspace, and is nowhere near a
-> complete solution.  A basic xfs_io parent command implementation
-> replaces ... whatever that is that's there now.
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
 
-I wonder if it'd be better to send a patch to nuke the current parent code,
-and then another to add back something that works.  Same result in the end,
-but it doesn't look like you're trying to fix old code; the patch itself is
-pretty meaningless since it diffs against nonfunctional(?) code.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Not a huge deal, just a thought.
+--D
 
--Eric
+> ---
+>  block/blk-stat.h |  6 +++---
+>  block/blk-wbt.c  | 43 ++++++++++++++++++++++++++-----------------
+>  block/blk-wbt.h  |  4 +++-
+>  3 files changed, 32 insertions(+), 21 deletions(-)
+> 
+> diff --git a/block/blk-stat.h b/block/blk-stat.h
+> index 2dd36347252a..c22049a8125e 100644
+> --- a/block/blk-stat.h
+> +++ b/block/blk-stat.h
+> @@ -10,11 +10,11 @@
+>  
+>  /*
+>   * from upper:
+> - * 3 bits: reserved for other usage
+> + * 4 bits: reserved for other usage
+>   * 12 bits: size
+> - * 49 bits: time
+> + * 48 bits: time
+>   */
+> -#define BLK_STAT_RES_BITS	3
+> +#define BLK_STAT_RES_BITS	4
+>  #define BLK_STAT_SIZE_BITS	12
+>  #define BLK_STAT_RES_SHIFT	(64 - BLK_STAT_RES_BITS)
+>  #define BLK_STAT_SIZE_SHIFT	(BLK_STAT_RES_SHIFT - BLK_STAT_SIZE_BITS)
+> diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+> index 25d202345965..a7a724580033 100644
+> --- a/block/blk-wbt.c
+> +++ b/block/blk-wbt.c
+> @@ -106,6 +106,8 @@ static inline struct rq_wait *get_rq_wait(struct rq_wb *rwb,
+>  {
+>  	if (wb_acct & WBT_KSWAPD)
+>  		return &rwb->rq_wait[WBT_RWQ_KSWAPD];
+> +	else if (wb_acct & WBT_DISCARD)
+> +		return &rwb->rq_wait[WBT_RWQ_DISCARD];
+>  
+>  	return &rwb->rq_wait[WBT_RWQ_BG];
+>  }
+> @@ -143,10 +145,13 @@ void __wbt_done(struct rq_wb *rwb, enum wbt_flags wb_acct)
+>  	}
+>  
+>  	/*
+> -	 * If the device does write back caching, drop further down
+> -	 * before we wake people up.
+> +	 * For discards, our limit is always the background. For writes, if
+> +	 * the device does write back caching, drop further down before we
+> +	 * wake people up.
+>  	 */
+> -	if (rwb->wc && !wb_recent_wait(rwb))
+> +	if (wb_acct & WBT_DISCARD)
+> +		limit = rwb->wb_background;
+> +	else if (rwb->wc && !wb_recent_wait(rwb))
+>  		limit = 0;
+>  	else
+>  		limit = rwb->wb_normal;
+> @@ -483,6 +488,9 @@ static inline unsigned int get_limit(struct rq_wb *rwb, unsigned long rw)
+>  {
+>  	unsigned int limit;
+>  
+> +	if ((rw & REQ_OP_MASK) == REQ_OP_DISCARD)
+> +		return rwb->wb_background;
+> +
+>  	/*
+>  	 * At this point we know it's a buffered write. If this is
+>  	 * kswapd trying to free memory, or REQ_SYNC is set, then
+> @@ -564,21 +572,20 @@ static void __wbt_wait(struct rq_wb *rwb, enum wbt_flags wb_acct,
+>  
+>  static inline bool wbt_should_throttle(struct rq_wb *rwb, struct bio *bio)
+>  {
+> -	const int op = bio_op(bio);
+> -
+> -	/*
+> -	 * If not a WRITE, do nothing
+> -	 */
+> -	if (op != REQ_OP_WRITE)
+> -		return false;
+> -
+> -	/*
+> -	 * Don't throttle WRITE_ODIRECT
+> -	 */
+> -	if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) == (REQ_SYNC | REQ_IDLE))
+> +	switch (bio_op(bio)) {
+> +	case REQ_OP_WRITE:
+> +		/*
+> +		 * Don't throttle WRITE_ODIRECT
+> +		 */
+> +		if ((bio->bi_opf & (REQ_SYNC | REQ_IDLE)) ==
+> +		    (REQ_SYNC | REQ_IDLE))
+> +			return false;
+> +		/* fallthrough */
+> +	case REQ_OP_DISCARD:
+> +		return true;
+> +	default:
+>  		return false;
+> -
+> -	return true;
+> +	}
+>  }
+>  
+>  /*
+> @@ -605,6 +612,8 @@ enum wbt_flags wbt_wait(struct rq_wb *rwb, struct bio *bio, spinlock_t *lock)
+>  
+>  	if (current_is_kswapd())
+>  		ret |= WBT_KSWAPD;
+> +	if (bio_op(bio) == REQ_OP_DISCARD)
+> +		ret |= WBT_DISCARD;
+>  
+>  	__wbt_wait(rwb, ret, bio->bi_opf, lock);
+>  
+> diff --git a/block/blk-wbt.h b/block/blk-wbt.h
+> index 8038b4a0d4ef..d6a125e49db5 100644
+> --- a/block/blk-wbt.h
+> +++ b/block/blk-wbt.h
+> @@ -14,13 +14,15 @@ enum wbt_flags {
+>  	WBT_TRACKED		= 1,	/* write, tracked for throttling */
+>  	WBT_READ		= 2,	/* read */
+>  	WBT_KSWAPD		= 4,	/* write, from kswapd */
+> +	WBT_DISCARD		= 8,	/* discard */
+>  
+> -	WBT_NR_BITS		= 3,	/* number of bits */
+> +	WBT_NR_BITS		= 4,	/* number of bits */
+>  };
+>  
+>  enum {
+>  	WBT_RWQ_BG		= 0,
+>  	WBT_RWQ_KSWAPD,
+> +	WBT_RWQ_DISCARD,
+>  	WBT_NUM_RWQ,
+>  };
+>  
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
