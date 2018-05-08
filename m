@@ -1,89 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51886 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933889AbeEIHtL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:11 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/33] iomap: add an iomap-based bmap implementation
-Date: Wed,  9 May 2018 09:48:07 +0200
-Message-Id: <20180509074830.16196-11-hch@lst.de>
-In-Reply-To: <20180509074830.16196-1-hch@lst.de>
-References: <20180509074830.16196-1-hch@lst.de>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:38497 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755722AbeEHUqi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 16:46:38 -0400
+Received: by mail-pf0-f196.google.com with SMTP id o76so24516475pfi.5
+        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 13:46:38 -0700 (PDT)
+Date: Tue, 8 May 2018 13:46:36 -0700
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: [PATCH 3/4] blk-wbt: pass in enum wbt_flags to get_rq_wait()
+Message-ID: <20180508204636.GD27324@vader>
+References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
+ <1525709615-14395-4-git-send-email-axboe@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1525709615-14395-4-git-send-email-axboe@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, hch@lst.de
 
-This adds a simple iomap-based implementation of the legacy ->bmap
-interface.  Note that we can't easily add checks for rt or reflink
-files, so these will have to remain in the callers.  This interface
-just needs to die..
+On Mon, May 07, 2018 at 10:13:34AM -0600, Jens Axboe wrote:
+> This is in preparation for having more write queues, in which
+> case we would have needed to pass in more information than just
+> a simple 'is_kswapd' boolean.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c            | 29 +++++++++++++++++++++++++++++
- include/linux/iomap.h |  3 +++
- 2 files changed, 32 insertions(+)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index af525cb47339..049e0c4aacac 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1201,3 +1201,32 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
-+
-+static loff_t
-+iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap)
-+{
-+	sector_t *bno = data;
-+
-+	if (iomap->type == IOMAP_MAPPED)
-+		*bno = (iomap->addr + pos - iomap->offset) >> inode->i_blkbits;
-+	return 0;
-+}
-+
-+/* legacy ->bmap interface.  0 is the error return (!) */
-+sector_t
-+iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops)
-+{
-+	struct inode *inode = mapping->host;
-+	loff_t pos = bno >> inode->i_blkbits;
-+	unsigned blocksize = i_blocksize(inode);
-+
-+	if (filemap_write_and_wait(mapping))
-+		return 0;
-+
-+	bno = 0;
-+	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
-+	return bno;
-+}
-+EXPORT_SYMBOL_GPL(iomap_bmap);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 19a07de28212..07f73224c38b 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -4,6 +4,7 @@
- 
- #include <linux/types.h>
- 
-+struct address_space;
- struct fiemap_extent_info;
- struct inode;
- struct iov_iter;
-@@ -95,6 +96,8 @@ loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
- loff_t iomap_seek_data(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
-+sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops);
- 
- /*
-  * Flags for direct I/O ->end_io:
--- 
-2.17.0
+Reviewed-by: Omar Sandoval <osandov@fb.com>
 
+> 
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> ---
+>  block/blk-wbt.c | 25 +++++++++++++++----------
+>  block/blk-wbt.h |  4 +++-
+>  2 files changed, 18 insertions(+), 11 deletions(-)
