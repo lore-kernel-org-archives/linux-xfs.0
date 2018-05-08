@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28698 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:29054 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754217AbeEHDmK (ORCPT
+        by vger.kernel.org with ESMTP id S1754216AbeEHDmK (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 May 2018 23:42:10 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1fFtVt-0002Kg-0q
+        id 1fFtVt-0002Kk-3g
         for linux-xfs@vger.kernel.org; Tue, 08 May 2018 13:42:05 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.91)
         (envelope-from <david@fromorbit.com>)
-        id 1fFtVs-0002hk-Vt
-        for linux-xfs@vger.kernel.org; Tue, 08 May 2018 13:42:04 +1000
+        id 1fFtVt-0002hw-2q
+        for linux-xfs@vger.kernel.org; Tue, 08 May 2018 13:42:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/9] xfs: add tracing to high level transaction operations
-Date: Tue,  8 May 2018 13:41:55 +1000
-Message-Id: <20180508034202.10136-3-david@fromorbit.com>
+Subject: [PATCH 6/9] xfs: fix double ijoin in xfs_reflink_cancel_cow_range
+Date: Tue,  8 May 2018 13:41:59 +1000
+Message-Id: <20180508034202.10136-7-david@fromorbit.com>
 In-Reply-To: <20180508034202.10136-1-david@fromorbit.com>
 References: <20180508034202.10136-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,174 +25,78 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because currently we have no idea what the transaction context we
-are operating in is, and I need to know that information to track
-down bugs in multiple log item joins to transactions.
+AN inode is joined to teh same transaction twice in
+xfs_reflink_cancel_cow_range() resulting in the following assert
+failure:
+
+[   30.180485] XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+[   30.183435] ------------[ cut here ]------------
+......
+[   30.209264] Call Trace:
+[   30.209935]  xfs_trans_add_item+0xcc/0xe0
+[   30.210968]  xfs_reflink_cancel_cow_blocks+0xab/0x290
+[   30.212249]  ? xfs_trans_reserve+0x1b4/0x2b0
+[   30.213320]  ? kmem_zone_alloc+0x61/0xe0
+[   30.214321]  xfs_reflink_cancel_cow_range+0xb2/0x1f0
+[   30.215616]  xfs_fs_destroy_inode+0x1bd/0x280
+[   30.216757]  dispose_list+0x35/0x40
+[   30.217656]  evict_inodes+0x132/0x160
+[   30.218620]  generic_shutdown_super+0x3a/0x110
+[   30.219771]  kill_block_super+0x21/0x50
+[   30.220762]  deactivate_locked_super+0x39/0x70
+[   30.221909]  cleanup_mnt+0x3b/0x70
+[   30.222819]  task_work_run+0x7f/0xa0
+[   30.223762]  exit_to_usermode_loop+0x9b/0xa0
+[   30.224884]  do_syscall_64+0x18f/0x1a0
+
+Fix it and document that the callers of
+xfs_reflink_cancel_cow_blocks() must have already joined the inode
+to the permanent transaction passed in.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_cil.c |  1 +
- fs/xfs/xfs_trace.h   | 37 +++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans.c   | 20 +++++++++++++++++++-
- 3 files changed, 57 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_reflink.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 4668403b1741..a8675c631438 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -1013,6 +1013,7 @@ xfs_log_commit_cil(
- 		*commit_lsn = xc_commit_lsn;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cdbd342a5249..bce2b5351d64 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -552,6 +552,9 @@ xfs_reflink_trim_irec_to_next_cow(
+  *
+  * If cancel_real is true this function cancels all COW fork extents for the
+  * inode; if cancel_real is false, real extents are not cleared.
++ *
++ * Caller must have already joined the inode to the current transaction. The
++ * inode will be joined to the transaction returned to the caller.
+  */
+ int
+ xfs_reflink_cancel_cow_blocks(
+@@ -592,7 +595,6 @@ xfs_reflink_cancel_cow_blocks(
+ 			if (error)
+ 				break;
+ 		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+-			xfs_trans_ijoin(*tpp, ip, 0);
+ 			xfs_defer_init(&dfops, &firstfsb);
  
- 	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
-+	tp->t_ticket = NULL;
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
- 	/*
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 7f4d961fae12..8136f2280173 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3346,6 +3346,43 @@ TRACE_EVENT(xfs_trans_resv_calc,
- 		  __entry->logflags)
- );
- 
-+DECLARE_EVENT_CLASS(xfs_trans_class,
-+	TP_PROTO(struct xfs_trans *tp, unsigned long caller_ip),
-+	TP_ARGS(tp, caller_ip),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(uint32_t, tid)
-+		__field(uint32_t, flags)
-+		__field(unsigned long, caller_ip)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = tp->t_mountp->m_super->s_dev;
-+		__entry->tid = 0;
-+		if (tp->t_ticket)
-+			__entry->tid = tp->t_ticket->t_tid;
-+		__entry->flags = tp->t_flags;
-+		__entry->caller_ip = caller_ip;
-+	),
-+	TP_printk("dev %d:%d trans %x flags 0x%x caller %pS",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->tid,
-+		  __entry->flags,
-+		  (char *)__entry->caller_ip)
-+)
-+
-+#define DEFINE_TRANS_EVENT(name) \
-+DEFINE_EVENT(xfs_trans_class, name, \
-+	TP_PROTO(struct xfs_trans *tp, unsigned long caller_ip), \
-+	TP_ARGS(tp, caller_ip))
-+DEFINE_TRANS_EVENT(xfs_trans_alloc);
-+DEFINE_TRANS_EVENT(xfs_trans_cancel);
-+DEFINE_TRANS_EVENT(xfs_trans_commit);
-+DEFINE_TRANS_EVENT(xfs_trans_dup);
-+DEFINE_TRANS_EVENT(xfs_trans_free);
-+DEFINE_TRANS_EVENT(xfs_trans_roll);
-+DEFINE_TRANS_EVENT(xfs_trans_add_item);
-+DEFINE_TRANS_EVENT(xfs_trans_free_items);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index c6a2a3cb9df5..24744915357b 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -79,6 +79,7 @@ xfs_trans_free(
- 	xfs_extent_busy_sort(&tp->t_busy);
- 	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
- 
-+	trace_xfs_trans_free(tp, _RET_IP_);
- 	atomic_dec(&tp->t_mountp->m_active_trans);
- 	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_end_intwrite(tp->t_mountp->m_super);
-@@ -100,6 +101,8 @@ xfs_trans_dup(
- {
- 	xfs_trans_t	*ntp;
- 
-+	trace_xfs_trans_dup(tp, _RET_IP_);
-+
- 	ntp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
- 
- 	/*
-@@ -283,6 +286,8 @@ xfs_trans_alloc(
- 		return error;
- 	}
- 
-+	trace_xfs_trans_alloc(tp, _RET_IP_);
-+
- 	*tpp = tp;
- 	return 0;
- }
-@@ -749,6 +754,8 @@ xfs_trans_add_item(
- 	list_add_tail(&lidp->lid_trans, &tp->t_items);
- 
- 	lip->li_desc = lidp;
-+
-+	trace_xfs_trans_add_item(tp, _RET_IP_);
- }
- 
- STATIC void
-@@ -782,6 +789,8 @@ xfs_trans_free_items(
- {
- 	struct xfs_log_item_desc *lidp, *next;
- 
-+	trace_xfs_trans_free_items(tp, _RET_IP_);
-+
- 	list_for_each_entry_safe(lidp, next, &tp->t_items, lid_trans) {
- 		struct xfs_log_item	*lip = lidp->lid_item;
- 
-@@ -936,6 +945,8 @@ __xfs_trans_commit(
- 	int			error = 0;
- 	int			sync = tp->t_flags & XFS_TRANS_SYNC;
- 
-+	trace_xfs_trans_commit(tp, _RET_IP_);
-+
- 	/*
- 	 * If there is nothing to be logged by the transaction,
- 	 * then unlock all of the items associated with the
-@@ -991,6 +1002,7 @@ __xfs_trans_commit(
- 		commit_lsn = xfs_log_done(mp, tp->t_ticket, NULL, regrant);
- 		if (commit_lsn == -1 && !error)
- 			error = -EIO;
-+		tp->t_ticket = NULL;
- 	}
- 	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	xfs_trans_free_items(tp, NULLCOMMITLSN, !!error);
-@@ -1022,6 +1034,8 @@ xfs_trans_cancel(
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	bool			dirty = (tp->t_flags & XFS_TRANS_DIRTY);
- 
-+	trace_xfs_trans_cancel(tp, _RET_IP_);
-+
- 	/*
- 	 * See if the caller is relying on us to shut down the
- 	 * filesystem.  This happens in paths where we detect
-@@ -1042,8 +1056,10 @@ xfs_trans_cancel(
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 	xfs_trans_unreserve_and_mod_dquots(tp);
- 
--	if (tp->t_ticket)
-+	if (tp->t_ticket) {
- 		xfs_log_done(mp, tp->t_ticket, NULL, false);
-+		tp->t_ticket = NULL;
-+	}
- 
- 	/* mark this thread as no longer being in a transaction */
- 	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-@@ -1067,6 +1083,8 @@ xfs_trans_roll(
- 	struct xfs_trans_res	tres;
- 	int			error;
- 
-+	trace_xfs_trans_roll(trans, _RET_IP_);
-+
- 	/*
- 	 * Copy the critical parameters from one trans to the next.
+ 			/* Free the CoW orphan record. */
+@@ -1570,6 +1572,7 @@ xfs_reflink_clear_inode_flag(
+ 	 * We didn't find any shared blocks so turn off the reflink flag.
+ 	 * First, get rid of any leftover CoW mappings.
  	 */
++	xfs_trans_ijoin(*tpp, ip, 0);
+ 	error = xfs_reflink_cancel_cow_blocks(ip, tpp, 0, NULLFILEOFF, true);
+ 	if (error)
+ 		return error;
+@@ -1578,7 +1581,6 @@ xfs_reflink_clear_inode_flag(
+ 	trace_xfs_reflink_unset_inode_flag(ip);
+ 	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+ 	xfs_inode_clear_cowblocks_tag(ip);
+-	xfs_trans_ijoin(*tpp, ip, 0);
+ 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+ 
+ 	return error;
 -- 
 2.17.0
 
