@@ -1,76 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53644 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935362AbeEIPpD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 11:45:03 -0400
-Date: Wed, 9 May 2018 08:45:01 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 06/33] mm: give the 'ret' variable a better name
- __do_page_cache_readahead
-Message-ID: <20180509154501.GD1313@bombadil.infradead.org>
-References: <20180509074830.16196-1-hch@lst.de>
- <20180509074830.16196-7-hch@lst.de>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:41354 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965046AbeEIPtg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 11:49:36 -0400
+Date: Wed, 9 May 2018 23:49:31 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] test online label ioctl
+Message-ID: <20180509154931.GJ8373@desktop>
+References: <fd1e2651-099f-8acd-da4d-a67c1e45cd07@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180509074830.16196-7-hch@lst.de>
+In-Reply-To: <fd1e2651-099f-8acd-da4d-a67c1e45cd07@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: fstests <fstests@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, May 09, 2018 at 09:48:03AM +0200, Christoph Hellwig wrote:
-> It counts the number of pages acted on, so name it nr_pages to make that
-> obvious.
+On Mon, Apr 30, 2018 at 04:43:18PM -0500, Eric Sandeen wrote:
+> This tests the online label ioctl that btrfs has, which has been
+> recently proposed for XFS.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Yes!
-
-Also, it can't return an error, so how about changing it to unsigned int?
-And deleting the error check from the caller?
-
->  mm/readahead.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+> To run, it requires an updated xfs_io with the label command and a
+> filesystem that supports it
 > 
-> diff --git a/mm/readahead.c b/mm/readahead.c
-> index 539bbb6c1fad..16d0cb1e2616 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -156,7 +156,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
->  	unsigned long end_index;	/* The last page we want to read */
->  	LIST_HEAD(page_pool);
->  	int page_idx;
-> -	int ret = 0;
-> +	int nr_pages = 0;
->  	loff_t isize = i_size_read(inode);
->  	gfp_t gfp_mask = readahead_gfp_mask(mapping);
->  
-> @@ -187,7 +187,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
->  		list_add(&page->lru, &page_pool);
->  		if (page_idx == nr_to_read - lookahead_size)
->  			SetPageReadahead(page);
-> -		ret++;
-> +		nr_pages++;
->  	}
->  
->  	/*
-> @@ -195,11 +195,11 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
->  	 * uptodate then the caller will launch readpage again, and
->  	 * will then handle the error.
->  	 */
-> -	if (ret)
-> -		read_pages(mapping, filp, &page_pool, ret, gfp_mask);
-> +	if (nr_pages)
-> +		read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
->  	BUG_ON(!list_empty(&page_pool));
->  out:
-> -	return ret;
-> +	return nr_pages;
->  }
->  
->  /*
-> -- 
-> 2.17.0
+> A slight change here to _require_xfs_io_command as well, so that tests
+> which simply fail with "Inappropriate ioctl" can be caught in the
+> common case.
 > 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> this passes on btrfs, _notruns on xfs/ext4 of yore, and passes
+> on xfs w/ my online label patchset (as long as xfs_io has the new
+> capability)
+> 
+> diff --git a/common/rc b/common/rc
+> index 9ffab7f..c53a721 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2158,6 +2158,9 @@ _require_xfs_io_command()
+>  		echo $testio | grep -q "Inappropriate ioctl" && \
+>  			_notrun "xfs_io $command support is missing"
+>  		;;
+> +	"label")
+> +		testio=`$XFS_IO_PROG -c "label" $TEST_DIR 2>&1`
+> +		;;
+>  	"open")
+>  		# -c "open $f" is broken in xfs_io <= 4.8. Along with the fix,
+>  		# a new -C flag was introduced to execute one shot commands.
+> @@ -2196,7 +2199,7 @@ _require_xfs_io_command()
+>  	rm -f $testfile 2>&1 > /dev/null
+>  	echo $testio | grep -q "not found" && \
+>  		_notrun "xfs_io $command support is missing"
+> -	echo $testio | grep -q "Operation not supported" && \
+> +	echo $testio | grep -q "Operation not supported\|Inappropriate ioctl" && \
+>  		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
+>  	echo $testio | grep -q "Invalid" && \
+>  		_notrun "xfs_io $command failed (old kernel/wrong fs/bad args?)"
+> diff --git a/tests/generic/485 b/tests/generic/485
+> new file mode 100755
+> index 0000000..79902c2
+> --- /dev/null
+> +++ b/tests/generic/485
+> @@ -0,0 +1,99 @@
+> +#! /bin/bash
+> +# FS QA Test 485
+> +#
+> +# Test the online filesystem label set/get ioctls
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
+> +# Author: Eric Sandeen <sandeen@redhat.com>
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_require_xfs_io_command "label"
+> +
+> +_scratch_mkfs > $seqres.full 2>&1
+> +_scratch_mount
+> +
+> +# Make sure we can set & clear the label
+> +$XFS_IO_PROG -c "label label.$seq" $SCRATCH_MNT
+> +$XFS_IO_PROG -c "label" $SCRATCH_MNT
+> +
+> +# And that userspace can see it now, while mounted
+> +blkid -s LABEL $SCRATCH_DEV | _filter_scratch
+> +
+> +# And that the it is still there when it's unmounted
+> +_scratch_unmount
+> +blkid -s LABEL $SCRATCH_DEV | _filter_scratch
+> +
+> +# And that it persists after a remount
+> +_scratch_mount
+> +$XFS_IO_PROG -c "label" $SCRATCH_MNT
+> +
+> +# And that a too-long label is rejected, beyond the interface max:
+> +LABEL=$(perl -e "print 'l' x 257;")
+> +$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT
+> +
+> +# And that it succeeds right at the filesystem max:
+> +case $FSTYP in
+> +xfs)
+> +	MAXLEN=12;
+> +	;;
+> +btrfs)
+> +	MAXLEN=256
+
+Seems this should be 255, otherwise I got failure like:
+
+-label = "MAXLABEL"
++label: Invalid argument
+
+and MAXLEN=255 makes the test pass with btrfs.
+
+> +	;;
+> +*)
+> +	MAXLEN=256
+> +	echo "Your filesystem supports online label, please add max length"
+
+Perhaps we can introduce a new helper similar to _require_acl_get_max()
+and _notrun the test if current $FSTYP doesn't define a maxlen on
+filesystem label?
+
+> +	;;
+> +esac
+> +LABEL=$(perl -e "print 'o' x $MAXLEN;")
+> +$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT | sed -e 's/o\+/MAXLABEL/'
+> +
+> +# And that it fails just past the filesystem max:
+> +let TOOLONG=MAXLEN+1
+> +LABEL=$(perl -e "print 'o' x $TOOLONG;")
+> +$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/485.out b/tests/generic/485.out
+> new file mode 100644
+> index 0000000..bc54684
+> --- /dev/null
+> +++ b/tests/generic/485.out
+> @@ -0,0 +1,9 @@
+> +QA output created by 485
+> +label = "label.485"
+> +label = "label.485"
+> +SCRATCH_DEV: LABEL="label.485" 
+> +SCRATCH_DEV: LABEL="label.485" 
+
+There're trailing whitespaces in above two lines, I thought they're the
+output from xfs_io label command at first, but actually I have to remove
+the spaces to make test pass.
+
+Thanks,
+Eryu
+
+> +label = "label.485"
+> +label: Invalid argument
+> +label = "MAXLABEL"
+> +label: Invalid argument
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 19be926..cf6ac49 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -487,3 +487,4 @@
+>  482 auto metadata replay
+>  483 auto quick log metadata
+>  484 auto quick
+> +485 auto quick
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
