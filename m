@@ -1,37 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:38497 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755722AbeEHUqi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 16:46:38 -0400
-Received: by mail-pf0-f196.google.com with SMTP id o76so24516475pfi.5
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 13:46:38 -0700 (PDT)
-Date: Tue, 8 May 2018 13:46:36 -0700
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH 3/4] blk-wbt: pass in enum wbt_flags to get_rq_wait()
-Message-ID: <20180508204636.GD27324@vader>
-References: <1525709615-14395-1-git-send-email-axboe@kernel.dk>
- <1525709615-14395-4-git-send-email-axboe@kernel.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1525709615-14395-4-git-send-email-axboe@kernel.dk>
+Received: from bombadil.infradead.org ([198.137.202.133]:51920 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933832AbeEIHtR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:17 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 12/33] xfs: use iomap_bmap
+Date: Wed,  9 May 2018 09:48:09 +0200
+Message-Id: <20180509074830.16196-13-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, hch@lst.de
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, May 07, 2018 at 10:13:34AM -0600, Jens Axboe wrote:
-> This is in preparation for having more write queues, in which
-> case we would have needed to pass in more information than just
-> a simple 'is_kswapd' boolean.
+Switch to the iomap based bmap implementation to get rid of one of the
+last users of xfs_get_blocks.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-Reviewed-by: Omar Sandoval <osandov@fb.com>
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0ab824f574ed..8b06be0a80da 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1378,10 +1378,9 @@ xfs_vm_bmap(
+ 	struct address_space	*mapping,
+ 	sector_t		block)
+ {
+-	struct inode		*inode = (struct inode *)mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_inode	*ip = XFS_I(mapping->host);
+ 
+-	trace_xfs_vm_bmap(XFS_I(inode));
++	trace_xfs_vm_bmap(ip);
+ 
+ 	/*
+ 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
+@@ -1394,9 +1393,7 @@ xfs_vm_bmap(
+ 	 */
+ 	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+ 		return 0;
+-
+-	filemap_write_and_wait(mapping);
+-	return generic_block_bmap(mapping, block, xfs_get_blocks);
++	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+ }
+ 
+ STATIC int
+-- 
+2.17.0
 
-> 
-> Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> ---
->  block/blk-wbt.c | 25 +++++++++++++++----------
->  block/blk-wbt.h |  4 +++-
->  2 files changed, 18 insertions(+), 11 deletions(-)
