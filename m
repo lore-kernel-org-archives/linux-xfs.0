@@ -1,46 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51156 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:48716 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756582AbeEJIZE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 04:25:04 -0400
-Date: Thu, 10 May 2018 01:25:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/3] xfs: add bmapi nodiscard flag
-Message-ID: <20180510082503.GA25140@infradead.org>
-References: <20180508172231.53570-1-bfoster@redhat.com>
- <20180508172231.53570-2-bfoster@redhat.com>
- <20180509074629.GC19933@infradead.org>
- <20180509105853.GD64624@bfoster.bfoster>
- <20180509113942.GA17093@infradead.org>
- <20180509120150.GA65322@bfoster.bfoster>
- <20180509120738.GA1050@infradead.org>
- <20180509124756.GB65322@bfoster.bfoster>
+        with ESMTP id S964903AbeEIPMp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 11:12:45 -0400
+Date: Wed, 9 May 2018 08:12:43 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 01/33] block: add a lower-level bio_add_page interface
+Message-ID: <20180509151243.GA1313@bombadil.infradead.org>
+References: <20180509074830.16196-1-hch@lst.de>
+ <20180509074830.16196-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180509124756.GB65322@bfoster.bfoster>
+In-Reply-To: <20180509074830.16196-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 09, 2018 at 08:47:56AM -0400, Brian Foster wrote:
-> > 
-> > I've read the thread on the original patch now.  While not my preference
-> > I'm fine with doing an xfs_itruncate_extents_flags with a single
-> > xfs_itruncate_extents wrapper and the same for bmapi, as long as we pass
-> > flags instead of the bool, and don't add pointless wrappers for the
-> > nodiscard case - those are just trickle down flags in general, so we
-> > should keep things as simple as possible.
-> 
-> Ok, do you mean to include xfs_free_extent() in that as well? E.g.,
-> xfs_free_extent_flags(..., XFS_EXTENT_BUSY_SKIP_DISCARD) vs. a single
-> wrapper without _flags()? Note that that flag is still sourced from a
-> boolean unless we also change the xfs_extent_free_item field, which I'm
-> not sure makes sense. Alternatively, I could just kill the
-> xfs_free_extent_nodiscard() wrapper and call the internal variant from
-> the one place that wants to toggle discard behavior.
+On Wed, May 09, 2018 at 09:47:58AM +0200, Christoph Hellwig wrote:
+> +/**
+> + * __bio_try_merge_page - try adding data to an existing bvec
+> + * @bio: destination bio
+> + * @page: page to add
+> + * @len: length of the range to add
+> + * @off: offset into @page
+> + *
+> + * Try adding the data described at @page + @offset to the last bvec of @bio.
+> + * Return %true on success or %false on failure.  This can happen frequently
+> + * for file systems with a block size smaller than the page size.
+> + */
 
-I'd store flags in xfs_extent_free_item.  But most importantly
-I think the _nodiscard wrappers need to go away.
+Could we make this:
+
+/**
+ * __bio_try_merge_page() - Try appending data to an existing bvec.
+ * @bio: Destination bio.
+ * @page: Page to add.
+ * @len: Length of the data to add.
+ * @off: Offset of the data in @page.
+ *
+ * Try to add the data at @page + @off to the last bvec of @bio.  This is
+ * a useful optimisation for file systems with a block size smaller than
+ * the page size.
+ *
+ * Context: Any context.
+ * Return: %true on success or %false on failure.
+ */
+
+(page, len, off) is a bit weird to me.  Usually we do (page, off, len).
+
+> +/**
+> + * __bio_add_page - add page to a bio in a new segment
+> + * @bio: destination bio
+> + * @page: page to add
+> + * @len: length of the range to add
+> + * @off: offset into @page
+> + *
+> + * Add the data at @page + @offset to @bio as a new bvec.  The caller must
+> + * ensure that @bio has space for another bvec.
+> + */
+
+/**
+ * __bio_add_page - Add page to a bio in a new segment.
+ * @bio: Destination bio.
+ * @page: Page to add.
+ * @len: Length of the data to add.
+ * @off: Offset of the data in @page.
+ *
+ * Add the data at @page + @off to @bio as a new bvec.  The caller must
+ * ensure that @bio has space for another bvec.
+ *
+ * Context: Any context.
+ */
+
+> +static inline bool bio_full(struct bio *bio)
+> +{
+> +	return bio->bi_vcnt >= bio->bi_max_vecs;
+> +}
+
+I really like this helper.
