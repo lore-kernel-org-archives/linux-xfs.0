@@ -1,70 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52706 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933826AbeEIHt4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:56 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/33] xfs: simplify xfs_map_blocks by using xfs_iext_lookup_extent directly
-Date: Wed,  9 May 2018 09:48:18 +0200
-Message-Id: <20180509074830.16196-22-hch@lst.de>
-In-Reply-To: <20180509074830.16196-1-hch@lst.de>
-References: <20180509074830.16196-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:39308 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932593AbeEIAi6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 May 2018 20:38:58 -0400
+Date: Wed, 9 May 2018 00:38:55 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [RFC] vfs: skip extra attributes check on removal for symlinks
+Message-ID: <20180509003855.GK27853@wotan.suse.de>
+References: <20180426234639.12480-1-mcgrof@kernel.org>
+ <20180501172319.GK4127@magnolia>
+ <20180501174512.GA27853@wotan.suse.de>
+ <20180508003055.GC11261@magnolia>
+ <20180509000327.GJ27853@wotan.suse.de>
+ <20180509001741.GB11261@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180509001741.GB11261@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, sandeen@sandeen.net, dhowells@redhat.com, tytso@mit.edu, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-xfs_bmapi_read adds zero value in xfs_map_blocks.  Replace it with a
-direct call to the low-level extent lookup function.
+On Tue, May 08, 2018 at 05:17:41PM -0700, Darrick J. Wong wrote:
+> On Wed, May 09, 2018 at 12:03:28AM +0000, Luis R. Rodriguez wrote:
+> > Groovy, thanks, let's not forget the xfs_repair respective fix :) let me know
+> > if you have any feedback on that.
+> 
+> TBH I've lost any proposed xfs_repair patches to the mists of time
+> because some patch volcano keeps erupting on the lists. :P
+> 
+> Uh... I think it's fine for xfs_{repair,scrub} to clear the immutable
+> and append flags on any special inodes it finds, particularly since
+> neither flag has any real meaning for block/char/fifo/socket/symlinks
+> anyway.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+Sure, my point during review of that series for xfs_repair in particular
+though was that for symlinks the justification is different (half of the
+commit log in this new patch), as such I'd prefer to deal with them in a
+separate follow up patch.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 09fb10be1256..07d5255a0f9f 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -387,7 +387,6 @@ xfs_map_blocks(
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
--	int			nimaps = 1;
- 	bool			cow_valid = false;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -432,24 +431,16 @@ xfs_map_blocks(
- 		goto done;
- 	}
- 
--	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				imap, &nimaps, XFS_BMAPI_ENTIRE);
-+	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, imap))
-+		imap->br_startoff = end_fsb;	/* fake a hole past EOF */
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	if (error)
--		return error;
- 
--	if (!nimaps) {
--		/*
--		 * Lookup returns no match? Beyond eof? regardless,
--		 * return it as a hole so we don't write it
--		 */
-+	if (imap->br_startoff > offset_fsb) {
-+		/* landed in a hole or beyond EOF */
-+		imap->br_blockcount = imap->br_startoff - offset_fsb;
- 		imap->br_startoff = offset_fsb;
--		imap->br_blockcount = end_fsb - offset_fsb;
- 		imap->br_startblock = HOLESTARTBLOCK;
- 		*type = XFS_IO_HOLE;
--	} else if (imap->br_startblock == HOLESTARTBLOCK) {
--		/* landed in a hole */
--		*type = XFS_IO_HOLE;
- 	} else if (isnullstartblock(imap->br_startblock)) {
- 		/* got a delalloc extent */
- 		*type = XFS_IO_DELALLOC;
--- 
-2.17.0
-
+  Luis
