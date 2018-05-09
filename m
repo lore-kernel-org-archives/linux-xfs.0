@@ -1,60 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:37572 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756513AbeEIOOS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 10:14:18 -0400
-Received: by mail-pg0-f43.google.com with SMTP id a13-v6so22744916pgu.4
-        for <linux-xfs@vger.kernel.org>; Wed, 09 May 2018 07:14:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180509135528.GE28388@thunk.org>
-References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@dastard>
- <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
- <CACT4Y+aQZ8KbU1C-sJ2PUKn_788SEKQpYGjoLaRDJrP9vXjs-A@mail.gmail.com>
- <20180501225159.GY23861@dastard> <CACT4Y+YZYHG=MyujDdTLxO=cn7Yz34vv6WKVjWr3Jvo1YTk0HA@mail.gmail.com>
- <20180509005011.GP23861@dastard> <20180509135528.GE28388@thunk.org>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Wed, 9 May 2018 16:13:57 +0200
-Message-ID: <CACT4Y+abNg4z24yghDGkwq6h5trumGsm1HDZqyoghe8PJJ-7Uw@mail.gmail.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:51606 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933383AbeEIHsp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:48:45 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/33] fs: factor out a __generic_write_end helper
+Date: Wed,  9 May 2018 09:47:59 +0200
+Message-Id: <20180509074830.16196-3-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Theodore Y. Ts'o" <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs <syzkaller-bugs@googlegroups.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 9, 2018 at 3:55 PM, Theodore Y. Ts'o <tytso@mit.edu> wrote:
->>>> C reproducer: https://syzkaller.appspot.com/x/repro.c?id=5719304272084992
->>>> syzkaller reproducer:
->>>> https://syzkaller.appspot.com/x/repro.syz?id=5767783983874048
->>>
->>> What a mess. A hand built, hopelessly broken filesystem image made
->>> up of hex dumps, written into a mmap()d region of memory, then
->>> copied into a tmpfs file and mounted with the loop device.
->>>
->>> Engineers that can debug broken filesystems don't grow on trees.  If
->>> we are to have any hope of understanding what the hell this test is
->>> doing, the bot needs to supply us with a copy of the built
->>> filesystem image the test uses. We need to be able to point forensic
->>> tools at the image to decode all the structures into human readable
->>> format - if we are forced to do that by hand or jump through hoops
->>> to create our own filesystem image than I'm certainly not going to
->>> waste time looking at these reports...
->>
->> Hi Dave,
->>
->> Here is the image:
->> https://drive.google.com/file/d/1jzhGGe5SBJcqfsjxCLHoh4Kazke1oTfC/view
->
-> A suggestion --- insteading of forcing human beings --- either
-> overworked file system developers, or understaffed fuzzing tool teams,
-> to have to manually pull out the file system image out from the C
-> repro, if it's too hard to add a link where the file system iamge can
-> be downloaded from the Syzkaller web application --- how about adding
-> an option to the C repro template which causes it to dump the image to
-> a file and then immediately exit?
+Bits of the buffer.c based write_end implementations that don't know
+about buffer_heads and can be reused by other implementations.
 
-Hi Ted,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/buffer.c   | 68 +++++++++++++++++++++++++++------------------------
+ fs/internal.h |  2 ++
+ 2 files changed, 38 insertions(+), 32 deletions(-)
 
-That's what I proposed above:
-https://groups.google.com/d/msg/syzkaller-bugs/KJNNTgTdg_g/NRxarDcYBgAJ
-But I did not get response yet.
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 249b83fafe48..923391702f51 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
+ }
+ EXPORT_SYMBOL(block_write_begin);
+ 
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page)
++{
++	loff_t old_size = inode->i_size;
++	bool i_size_changed = false;
++
++	/*
++	 * No need to use i_size_read() here, the i_size cannot change under us
++	 * because we hold i_rwsem.
++	 *
++	 * But it's important to update i_size while still holding page lock:
++	 * page writeout could otherwise come in and zero beyond i_size.
++	 */
++	if (pos + copied > inode->i_size) {
++		i_size_write(inode, pos + copied);
++		i_size_changed = true;
++	}
++
++	unlock_page(page);
++	put_page(page);
++
++	if (old_size < pos)
++		pagecache_isize_extended(inode, old_size, pos);
++	/*
++	 * Don't mark the inode dirty under page lock. First, it unnecessarily
++	 * makes the holding time of page lock longer. Second, it forces lock
++	 * ordering of page lock and transaction start for journaling
++	 * filesystems.
++	 */
++	if (i_size_changed)
++		mark_inode_dirty(inode);
++	return copied;
++}
++
+ int block_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+@@ -2116,42 +2150,12 @@ int generic_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+ {
+-	struct inode *inode = mapping->host;
+-	loff_t old_size = inode->i_size;
+-	int i_size_changed = 0;
+-
+ 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
+-
+-	/*
+-	 * No need to use i_size_read() here, the i_size
+-	 * cannot change under us because we hold i_mutex.
+-	 *
+-	 * But it's important to update i_size while still holding page lock:
+-	 * page writeout could otherwise come in and zero beyond i_size.
+-	 */
+-	if (pos+copied > inode->i_size) {
+-		i_size_write(inode, pos+copied);
+-		i_size_changed = 1;
+-	}
+-
+-	unlock_page(page);
+-	put_page(page);
+-
+-	if (old_size < pos)
+-		pagecache_isize_extended(inode, old_size, pos);
+-	/*
+-	 * Don't mark the inode dirty under page lock. First, it unnecessarily
+-	 * makes the holding time of page lock longer. Second, it forces lock
+-	 * ordering of page lock and transaction start for journaling
+-	 * filesystems.
+-	 */
+-	if (i_size_changed)
+-		mark_inode_dirty(inode);
+-
+-	return copied;
++	return __generic_write_end(mapping->host, pos, copied, page);
+ }
+ EXPORT_SYMBOL(generic_write_end);
+ 
++
+ /*
+  * block_is_partially_uptodate checks whether buffers within a page are
+  * uptodate or not.
+diff --git a/fs/internal.h b/fs/internal.h
+index e08972db0303..b955232d3d49 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
+ extern void guard_bio_eod(int rw, struct bio *bio);
+ extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+ 		get_block_t *get_block, struct iomap *iomap);
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page);
+ 
+ /*
+  * char_dev.c
+-- 
+2.17.0
+
