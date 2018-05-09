@@ -1,247 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49122 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964809AbeEJMwY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 08:52:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: factor out nodiscard helpers
-Date: Thu, 10 May 2018 08:52:23 -0400
-Message-Id: <20180510125223.77364-1-bfoster@redhat.com>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:45845 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935307AbeEIWGB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 18:06:01 -0400
+Received: by mail-oi0-f67.google.com with SMTP id b130-v6so54925oif.12
+        for <linux-xfs@vger.kernel.org>; Wed, 09 May 2018 15:06:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180509105619.e3go5wj63wmnvcxo@quack2.suse.cz>
+References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152461281488.17530.18202569789906788866.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180509105619.e3go5wj63wmnvcxo@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 9 May 2018 15:06:00 -0700
+Message-ID: <CAPcyv4h1qaZnM_HgGfLS+A_zQFP5TP_VoJLtk=bpyAiiVD7knQ@mail.gmail.com>
+Subject: Re: [PATCH v9 6/9] mm, fs, dax: handle layout changes to pinned dax mappings
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-The changes to skip discards of speculative preallocation and
-unwritten extents introduced several new wrapper functions through
-the bunmapi -> extent free codepath to reduce churn in all of the
-associated callers. In several cases, these wrappers simply toggle a
-single flag to skip or not skip discards for the resulting blocks.
+On Wed, May 9, 2018 at 3:56 AM, Jan Kara <jack@suse.cz> wrote:
+> On Tue 24-04-18 16:33:35, Dan Williams wrote:
+>> Background:
+>>
+>> get_user_pages() in the filesystem pins file backed memory pages for
+>> access by devices performing dma. However, it only pins the memory pages
+>> not the page-to-file offset association. If a file is truncated the
+>> pages are mapped out of the file and dma may continue indefinitely into
+>> a page that is owned by a device driver. This breaks coherency of the
+>> file vs dma, but the assumption is that if userspace wants the
+>> file-space truncated it does not matter what data is inbound from the
+>> device, it is not relevant anymore. The only expectation is that dma can
+>> safely continue while the filesystem reallocates the block(s).
+>>
+>> Problem:
+>>
+>> This expectation that dma can safely continue while the filesystem
+>> changes the block map is broken by dax. With dax the target dma page
+>> *is* the filesystem block. The model of leaving the page pinned for dma,
+>> but truncating the file block out of the file, means that the filesytem
+>> is free to reallocate a block under active dma to another file and now
+>> the expected data-incoherency situation has turned into active
+>> data-corruption.
+>>
+>> Solution:
+>>
+>> Defer all filesystem operations (fallocate(), truncate()) on a dax mode
+>> file while any page/block in the file is under active dma. This solution
+>> assumes that dma is transient. Cases where dma operations are known to
+>> not be transient, like RDMA, have been explicitly disabled via
+>> commits like 5f1d43de5416 "IB/core: disable memory registration of
+>> filesystem-dax vmas".
+>>
+>> The dax_layout_busy_page() routine is called by filesystems with a lock
+>> held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
+>> The process of looking up a busy page invalidates all mappings
+>> to trigger any subsequent get_user_pages() to block on i_mmap_lock.
+>> The filesystem continues to call dax_layout_busy_page() until it finally
+>> returns no more active pages. This approach assumes that the page
+>> pinning is transient, if that assumption is violated the system would
+>> have likely hung from the uncompleted I/O.
+>>
+>> Cc: Jan Kara <jack@suse.cz>
+>> Cc: Jeff Moyer <jmoyer@redhat.com>
+>> Cc: Dave Chinner <david@fromorbit.com>
+>> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+>> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+>> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+>> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> Cc: Dave Hansen <dave.hansen@linux.intel.com>
+>> Cc: Andrew Morton <akpm@linux-foundation.org>
+>> Reported-by: Christoph Hellwig <hch@lst.de>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>
+> A few nits below. After fixing those feel free to add:
+>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+>
+>> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+>> index 86b3806ea35b..89f21bd9da10 100644
+>> --- a/drivers/dax/super.c
+>> +++ b/drivers/dax/super.c
+>> @@ -167,7 +167,7 @@ struct dax_device {
+>>  #if IS_ENABLED(CONFIG_FS_DAX) && IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS)
+>>  static void generic_dax_pagefree(struct page *page, void *data)
+>>  {
+>> -     /* TODO: wakeup page-idle waiters */
+>> +     wake_up_var(&page->_refcount);
+>>  }
+>>
+>>  static struct dax_device *__fs_dax_claim(struct dax_device *dax_dev,
+>
+> Why is this hunk in this patch? We don't wait for page refcount here. OTOH
+> I agree I don't see much better patch to fold this into.
 
-The explicit _nodiscard() wrappers for such an isolated set of
-callers is a bit overkill. Kill off these wrappers and replace with
-the calls to the underlying functions in the contexts that need to
-control discard behavior. Retain the wrappers that preserve the
-original calling conventions to serve the original purpose of
-reducing code churn.
+I had it here because this patch is the enabling point where
+filesystems can start using dax_layout_busy_page(). Otherwise I could
+move it to the first patch that introduces a wait_var_event() for this
+wake-up, but that's an xfs patch and seems out of place. In other
+words, theoretically someone could backport just to this point and go
+enable another filesystem without worrying about the xfs changes.
 
-This is a refactoring patch and does not change behavior.
+>
+>> diff --git a/fs/Kconfig b/fs/Kconfig
+>> index 1e050e012eb9..c9acbf695ddd 100644
+>> --- a/fs/Kconfig
+>> +++ b/fs/Kconfig
+>> @@ -40,6 +40,7 @@ config FS_DAX
+>>       depends on !(ARM || MIPS || SPARC)
+>>       select DEV_PAGEMAP_OPS if (ZONE_DEVICE && !FS_DAX_LIMITED)
+>>       select FS_IOMAP
+>> +     select SRCU
+>
+> No need for this anymore I guess.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Yup, stale, removed.
 
-Hi all,
+>
+>> diff --git a/mm/gup.c b/mm/gup.c
+>> index 84dd2063ca3d..75ade7ebddb2 100644
+>> --- a/mm/gup.c
+>> +++ b/mm/gup.c
+>> @@ -13,6 +13,7 @@
+>>  #include <linux/sched/signal.h>
+>>  #include <linux/rwsem.h>
+>>  #include <linux/hugetlb.h>
+>> +#include <linux/dax.h>
+>>
+>>  #include <asm/mmu_context.h>
+>>  #include <asm/pgtable.h>
+>
+> Why is this hunk here?
 
-Darrick had previously indicated that he was going to pull in the v2 of
-the skip discard set rather than hold it up on refactoring churn. Given
-that I was playing around with some of Christoph's compromised feedback,
-here's a followup patch with the associated cleanups that I generally
-agree with. I actually like this factoring a bit better than that of the
-v2 because while it still avoids changing all callers of the associated
-functions, I do prefer to control discard behavior with a parameter
-rather than if/else statements with calls to completely different
-functions. The additional benefit is that this removes more code than it
-adds.
+Also stale, and removed. It was there for the now removed dax_layout_lock().
 
-I left struct xfs_free_extent_item alone because I don't really agree
-that XFS_EXTENT_BUSY_ belong anywhere outside of the busy extent code.
-IOW, I'd change the xfs_extent_busy_insert() parameter before I'd change
-xfs_free_extent_item because, despite the flags name, the param really
-only has two sane values (skip discard or don't). The affected
-xfs_extent_busy->flags field is used as more of a state than a control
-flag.
-
-Brian
-
- fs/xfs/libxfs/xfs_alloc.h  | 11 -----------
- fs/xfs/libxfs/xfs_bmap.c   | 16 ++++++++--------
- fs/xfs/libxfs/xfs_bmap.h   | 11 -----------
- fs/xfs/xfs_bmap_util.c     |  4 ++--
- fs/xfs/xfs_inode.c         |  9 +++------
- fs/xfs/xfs_inode.h         | 16 +++-------------
- fs/xfs/xfs_trans_extfree.c |  9 ++-------
- 7 files changed, 18 insertions(+), 58 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 4a8e8dcaf352..21e5c0662a92 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -210,17 +210,6 @@ xfs_free_extent(
- 	return __xfs_free_extent(tp, bno, len, oinfo, type, false);
- }
- 
--static inline int
--xfs_free_extent_nodiscard(
--	struct xfs_trans	*tp,
--	xfs_fsblock_t		bno,
--	xfs_extlen_t		len,
--	struct xfs_owner_info	*oinfo,
--	enum xfs_ag_resv_type	type)
--{
--	return __xfs_free_extent(tp, bno, len, oinfo, type, true);
--}
--
- int				/* error */
- xfs_alloc_lookup_le(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 24f60ee810e4..fd3c3be4d64a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5107,15 +5107,15 @@ xfs_bmap_del_extent_real(
- 			if (error)
- 				goto done;
- 		} else {
-+			bool	skip_discard = false;
-+
- 			if ((bflags & XFS_BMAPI_NODISCARD) ||
--			    (del->br_state == XFS_EXT_UNWRITTEN)) {
--				xfs_bmap_add_free_nodiscard(mp, dfops,
--					del->br_startblock, del->br_blockcount,
--					NULL);
--			} else {
--				xfs_bmap_add_free(mp, dfops, del->br_startblock,
--					del->br_blockcount, NULL);
--			}
-+			    (del->br_state == XFS_EXT_UNWRITTEN))
-+				skip_discard = true;
-+
-+			__xfs_bmap_add_free(mp, dfops, del->br_startblock,
-+					    del->br_blockcount, NULL,
-+					    skip_discard);
- 		}
- 	}
- 
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 8d8946bfdd8c..8affd3915a11 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -256,17 +256,6 @@ xfs_bmap_add_free(
- 	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, false);
- }
- 
--static inline void
--xfs_bmap_add_free_nodiscard(
--	struct xfs_mount		*mp,
--	struct xfs_defer_ops		*dfops,
--	xfs_fsblock_t			bno,
--	xfs_filblks_t			len,
--	struct xfs_owner_info		*oinfo)
--{
--	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, true);
--}
--
- enum xfs_bmap_intent_type {
- 	XFS_BMAP_MAP = 1,
- 	XFS_BMAP_UNMAP,
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 696c3b6bd2c9..11058459ea98 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -871,8 +871,8 @@ xfs_free_eofblocks(
- 		 * contents of the file are flushed to disk then the files
- 		 * may be full of holes (ie NULL files bug).
- 		 */
--		error = xfs_itruncate_extents_nodiscard(&tp, ip, XFS_DATA_FORK,
--							XFS_ISIZE(ip));
-+		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
-+					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
- 		if (error) {
- 			/*
- 			 * If we get an error at this point we simply don't
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d63ddd806074..3c54f09fee4e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1534,12 +1534,12 @@ xfs_itruncate_clear_reflink_flags(
-  * dirty on error so that transactions can be easily aborted if possible.
-  */
- int
--__xfs_itruncate_extents(
-+xfs_itruncate_extents_flags(
- 	struct xfs_trans	**tpp,
- 	struct xfs_inode	*ip,
- 	int			whichfork,
- 	xfs_fsize_t		new_size,
--	bool			skip_discard)
-+	int			flags)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp = *tpp;
-@@ -1550,7 +1550,6 @@ __xfs_itruncate_extents(
- 	xfs_filblks_t		unmap_len;
- 	int			error = 0;
- 	int			done = 0;
--	int			flags;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
-@@ -1563,9 +1562,7 @@ __xfs_itruncate_extents(
- 
- 	trace_xfs_itruncate_extents_start(ip, new_size);
- 
--	flags = xfs_bmapi_aflag(whichfork);
--	if (skip_discard)
--		flags |= XFS_BMAPI_NODISCARD;
-+	flags |= xfs_bmapi_aflag(whichfork);
- 
- 	/*
- 	 * Since it is possible for space to become allocated beyond
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 3dd3201f4409..00fee6824745 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -415,8 +415,8 @@ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
- uint		xfs_ip2xflags(struct xfs_inode *);
- int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
- 			   struct xfs_defer_ops *);
--int		__xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
--				        int, xfs_fsize_t, bool);
-+int		xfs_itruncate_extents_flags(struct xfs_trans **,
-+				struct xfs_inode *, int, xfs_fsize_t, int);
- void		xfs_iext_realloc(xfs_inode_t *, int, int);
- 
- void		xfs_iunpin_wait(xfs_inode_t *);
-@@ -440,17 +440,7 @@ xfs_itruncate_extents(
- 	int			whichfork,
- 	xfs_fsize_t		new_size)
- {
--	return __xfs_itruncate_extents(tpp, ip, whichfork, new_size, false);
--}
--
--static inline int
--xfs_itruncate_extents_nodiscard(
--	struct xfs_trans	**tpp,
--	struct xfs_inode	*ip,
--	int			whichfork,
--	xfs_fsize_t		new_size)
--{
--	return __xfs_itruncate_extents(tpp, ip, whichfork, new_size, true);
-+	return xfs_itruncate_extents_flags(tpp, ip, whichfork, new_size, 0);
- }
- 
- /* from xfs_file.c */
-diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-index dab8b3b7a9b8..5e137ee826ff 100644
---- a/fs/xfs/xfs_trans_extfree.c
-+++ b/fs/xfs/xfs_trans_extfree.c
-@@ -80,13 +80,8 @@ xfs_trans_free_extent(
- 
- 	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
- 
--	if (skip_discard)
--		error = xfs_free_extent_nodiscard(tp, start_block, ext_len,
--						  oinfo, XFS_AG_RESV_NONE);
--	else
--		error = xfs_free_extent(tp, start_block, ext_len, oinfo,
--					XFS_AG_RESV_NONE);
--
-+	error = __xfs_free_extent(tp, start_block, ext_len,
-+				  oinfo, XFS_AG_RESV_NONE, skip_discard);
- 	/*
- 	 * Mark the transaction dirty, even on error. This ensures the
- 	 * transaction is aborted, which:
--- 
-2.14.3
-
+Good catches, thanks!
