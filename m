@@ -1,99 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60258 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60716 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933824AbeEIKKn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 May 2018 06:10:43 -0400
-Date: Wed, 9 May 2018 06:10:42 -0400
+        id S932215AbeEIKMG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 May 2018 06:12:06 -0400
+Date: Wed, 9 May 2018 06:12:04 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/9] xfs: fix double ijoin in xfs_inactive_symlink_rmt()
-Message-ID: <20180509101042.GA64624@bfoster.bfoster>
+Subject: Re: [PATCH 7/9] xfs: fix double ijoin in
+ xfs_reflink_clear_inode_flag()
+Message-ID: <20180509101204.GB64624@bfoster.bfoster>
 References: <20180508034202.10136-1-david@fromorbit.com>
- <20180508034202.10136-6-david@fromorbit.com>
- <20180508141810.GF4764@bfoster.bfoster>
- <20180509002428.GN23861@dastard>
+ <20180508034202.10136-8-david@fromorbit.com>
+ <20180508141826.GH4764@bfoster.bfoster>
+ <20180509004059.GO23861@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180509002428.GN23861@dastard>
+In-Reply-To: <20180509004059.GO23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 09, 2018 at 10:24:28AM +1000, Dave Chinner wrote:
-> On Tue, May 08, 2018 at 10:18:11AM -0400, Brian Foster wrote:
-> > On Tue, May 08, 2018 at 01:41:58PM +1000, Dave Chinner wrote:
+On Wed, May 09, 2018 at 10:40:59AM +1000, Dave Chinner wrote:
+> On Tue, May 08, 2018 at 10:18:26AM -0400, Brian Foster wrote:
+> > On Tue, May 08, 2018 at 01:42:00PM +1000, Dave Chinner wrote:
 > > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > xfs_inactive_symlink_rmt() does something nasty - it joins an inode
-> > > into a transaction it is already joined to. This means the inode can
-> > > have multiple log item descriptors attached to the transaction for
-> > > it. This breaks teh 1:1 mapping that is supposed to exist
-> > > between the log item and log item descriptor.
+> > > Another assert failure:
 > > > 
-> > > This results in the log item being processed twice during
-> > > transaction commit and CIL formatting, and there are lots of other
-> > > potential issues tha arise from double processing of log items in
-> > > the transaction commit state machine.
+> > > XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+> > 
+> > Same assert comment...
+> > 
+> > > ....
+> > > xfs_trans_add_item+0xcc/0xe0
+> > > xfs_reflink_clear_inode_flag+0x53/0x120
+> > > xfs_reflink_try_clear_inode_flag+0x5b/0xa0
+> > > ? filemap_write_and_wait+0x4f/0x70
+> > > xfs_reflink_unshare+0x18e/0x19d
+> > > xfs_file_fallocate+0x241/0x310
+> > > ? selinux_file_permission+0xd4/0x140
+> > > vfs_fallocate+0x13d/0x260
+> > > SyS_fallocate+0x43/0x80
 > > > 
-> > > In this case, the inode is already held by the rolling transaction
-> > > returned from xfs_defer_finish(), so there's no need to join it
-> > > again.
+> > > Another fix.
 > > > 
 > > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > > > ---
-> > >  fs/xfs/xfs_symlink.c | 9 ++-------
-> > >  1 file changed, 2 insertions(+), 7 deletions(-)
+> > >  fs/xfs/xfs_reflink.c | 8 ++++++--
+> > >  1 file changed, 6 insertions(+), 2 deletions(-)
 > > > 
-> > > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > > index 5b66ac12913c..27870e5cd259 100644
-> > > --- a/fs/xfs/xfs_symlink.c
-> > > +++ b/fs/xfs/xfs_symlink.c
-> > > @@ -488,16 +488,11 @@ xfs_inactive_symlink_rmt(
-> > >  	error = xfs_defer_finish(&tp, &dfops);
-> > >  	if (error)
-> > >  		goto error_bmap_cancel;
-> > > -	/*
-> > > -	 * The first xact was committed, so add the inode to the new one.
-> > > -	 * Mark it dirty so it will be logged and moved forward in the log as
-> > > -	 * part of every commit.
-> > > -	 */
-> > > -	xfs_trans_ijoin(tp, ip, 0);
-> > > -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> > > +
-> > >  	/*
-> > >  	 * Commit the transaction containing extent freeing and EFDs.
+> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > > index bce2b5351d64..12d441a73b53 100644
+> > > --- a/fs/xfs/xfs_reflink.c
+> > > +++ b/fs/xfs/xfs_reflink.c
+> > > @@ -1553,7 +1553,12 @@ xfs_reflink_inode_has_shared_extents(
+> > >  	return 0;
+> > >  }
+> > >  
+> > > -/* Clear the inode reflink flag if there are no shared extents. */
+> > > +/*
+> > > + * Clear the inode reflink flag if there are no shared extents.
+> > > + *
+> > > + * The caller is responsible for joining the inode to the transaction passed in.
+> > > + * The inode will be joined to the transaction that is returned to the caller.
+> > > + */
+> > >  int
+> > >  xfs_reflink_clear_inode_flag(
+> > >  	struct xfs_inode	*ip,
+> > > @@ -1572,7 +1577,6 @@ xfs_reflink_clear_inode_flag(
+> > >  	 * We didn't find any shared blocks so turn off the reflink flag.
+> > >  	 * First, get rid of any leftover CoW mappings.
 > > >  	 */
-> > > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > > -	xfs_trans_ijoin(*tpp, ip, 0);
 > > 
-> > Seems fine.. but do we even need this call? We're about to commit the
-> > transaction and unlock the inode...
+...
 > 
-> Yes, I think we do. We need it to be committed in each of the
-> rolling transactions so that the inode doesn't get written/replayed
-> before any of the other dependent metadata changes in this final
-> transaction.
+> > This seems a bit
+> > superfluous. If the inode was already joined by the one caller of this
+> > function, why not just remove this call in the previous patch rather
+> > than move it and remove it?
+> 
+> Because every time I put multiple independent fixes into a single
+> patch I get told to separate them into individual patches.
 > 
 
-Hmm, I don't follow what that means. IIUC the act of logging it again
-simply moves it forward in the log. That makes sense down in the dfops
-code but seems unecessary here given that we are about to complete the
-chain of transactions.
-
-xfs_inactive_symlink_rmt() makes changes to the inode, invals/unmaps the
-remote bufs, joins the inode to the dfops and finishes the dfops. We
-return from xfs_defer_finish() having committed the (still locked) inode
-modifications and have a new/rolled transaction that covers the free of
-the associated blocks (EFDs). I could certainly be missing something,
-but from that point what difference does it make whether the final
-transaction relogs the inode before it commits? The in-core inode is
-still locked and the previous inode modifications may very well already
-be in the on-disk log.
-
-That said, it seems harmless despite not understanding what it's for. So
-with or without the xfs_trans_log_inode() call:
+Ok, fair enough:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
