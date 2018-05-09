@@ -1,140 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:45845 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935307AbeEIWGB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 18:06:01 -0400
-Received: by mail-oi0-f67.google.com with SMTP id b130-v6so54925oif.12
-        for <linux-xfs@vger.kernel.org>; Wed, 09 May 2018 15:06:01 -0700 (PDT)
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:40802 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965799AbeEIWyR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 18:54:17 -0400
+Received: by mail-oi0-f66.google.com with SMTP id c203-v6so159524oib.7
+        for <linux-xfs@vger.kernel.org>; Wed, 09 May 2018 15:54:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180509105619.e3go5wj63wmnvcxo@quack2.suse.cz>
+In-Reply-To: <20180509122733.lokyqv5aluwhlml7@quack2.suse.cz>
 References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152461281488.17530.18202569789906788866.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180509105619.e3go5wj63wmnvcxo@quack2.suse.cz>
+ <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180509122733.lokyqv5aluwhlml7@quack2.suse.cz>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 9 May 2018 15:06:00 -0700
-Message-ID: <CAPcyv4h1qaZnM_HgGfLS+A_zQFP5TP_VoJLtk=bpyAiiVD7knQ@mail.gmail.com>
-Subject: Re: [PATCH v9 6/9] mm, fs, dax: handle layout changes to pinned dax mappings
+Date: Wed, 9 May 2018 15:54:16 -0700
+Message-ID: <CAPcyv4hwGc0GUST-bNrgpgrmnfHgcxKf35M8p8mnu2FbSJe7Qw@mail.gmail.com>
+Subject: Re: [PATCH v9 9/9] xfs, dax: introduce xfs_break_dax_layouts()
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Jeff Moyer <jmoyer@redhat.com>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <mawilcox@microsoft.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Hansen <dave.hansen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-On Wed, May 9, 2018 at 3:56 AM, Jan Kara <jack@suse.cz> wrote:
-> On Tue 24-04-18 16:33:35, Dan Williams wrote:
->> Background:
+On Wed, May 9, 2018 at 5:27 AM, Jan Kara <jack@suse.cz> wrote:
+> On Tue 24-04-18 16:33:50, Dan Williams wrote:
+>> xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
+>> for busy / pinned dax pages and waits for those pages to go idle before
+>> any potential extent unmap operation.
 >>
->> get_user_pages() in the filesystem pins file backed memory pages for
->> access by devices performing dma. However, it only pins the memory pages
->> not the page-to-file offset association. If a file is truncated the
->> pages are mapped out of the file and dma may continue indefinitely into
->> a page that is owned by a device driver. This breaks coherency of the
->> file vs dma, but the assumption is that if userspace wants the
->> file-space truncated it does not matter what data is inbound from the
->> device, it is not relevant anymore. The only expectation is that dma can
->> safely continue while the filesystem reallocates the block(s).
+>> dax_layout_busy_page() handles synchronizing against new page-busy
+>> events (get_user_pages). It invalidates all mappings to trigger the
+>> get_user_pages slow path which will eventually block on the xfs inode
+>> lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
+>> busy page it returns it for xfs to wait for the page-idle event that
+>> will fire when the page reference count reaches 1 (recall ZONE_DEVICE
+>> pages are idle at count 1, see generic_dax_pagefree()).
 >>
->> Problem:
+>> While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
+>> deadlock the process that might be trying to elevate the page count of
+>> more pages before arranging for any of them to go idle. I.e. the typical
+>> case of submitting I/O is that iov_iter_get_pages() elevates the
+>> reference count of all pages in the I/O before starting I/O on the first
+>> page. The process of elevating the reference count of all pages involved
+>> in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
 >>
->> This expectation that dma can safely continue while the filesystem
->> changes the block map is broken by dax. With dax the target dma page
->> *is* the filesystem block. The model of leaving the page pinned for dma,
->> but truncating the file block out of the file, means that the filesytem
->> is free to reallocate a block under active dma to another file and now
->> the expected data-incoherency situation has turned into active
->> data-corruption.
+>> Although XFS_MMAPLOCK_EXCL is dropped while waiting, XFS_IOLOCK_EXCL is
+>> held while sleeping. We need this to prevent starvation of the truncate
+>> path as continuous submission of direct-I/O could starve the truncate
+>> path indefinitely if the lock is dropped.
 >>
->> Solution:
->>
->> Defer all filesystem operations (fallocate(), truncate()) on a dax mode
->> file while any page/block in the file is under active dma. This solution
->> assumes that dma is transient. Cases where dma operations are known to
->> not be transient, like RDMA, have been explicitly disabled via
->> commits like 5f1d43de5416 "IB/core: disable memory registration of
->> filesystem-dax vmas".
->>
->> The dax_layout_busy_page() routine is called by filesystems with a lock
->> held against mm faults (i_mmap_lock) to find pinned / busy dax pages.
->> The process of looking up a busy page invalidates all mappings
->> to trigger any subsequent get_user_pages() to block on i_mmap_lock.
->> The filesystem continues to call dax_layout_busy_page() until it finally
->> returns no more active pages. This approach assumes that the page
->> pinning is transient, if that assumption is violated the system would
->> have likely hung from the uncompleted I/O.
->>
->> Cc: Jan Kara <jack@suse.cz>
->> Cc: Jeff Moyer <jmoyer@redhat.com>
 >> Cc: Dave Chinner <david@fromorbit.com>
->> Cc: Matthew Wilcox <mawilcox@microsoft.com>
->> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
 >> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 >> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Cc: Dave Hansen <dave.hansen@linux.intel.com>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Reported-by: Christoph Hellwig <hch@lst.de>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Reported-by: Jan Kara <jack@suse.cz>
+>> Cc: Christoph Hellwig <hch@lst.de>
 >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 >
-> A few nits below. After fixing those feel free to add:
+> Looks good to me except some nits below. Feel free to add:
 >
 > Reviewed-by: Jan Kara <jack@suse.cz>
 >
->> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
->> index 86b3806ea35b..89f21bd9da10 100644
->> --- a/drivers/dax/super.c
->> +++ b/drivers/dax/super.c
->> @@ -167,7 +167,7 @@ struct dax_device {
->>  #if IS_ENABLED(CONFIG_FS_DAX) && IS_ENABLED(CONFIG_DEV_PAGEMAP_OPS)
->>  static void generic_dax_pagefree(struct page *page, void *data)
->>  {
->> -     /* TODO: wakeup page-idle waiters */
->> +     wake_up_var(&page->_refcount);
->>  }
+> for as much as it is worth with XFS code ;)
+>
+>> +static int
+>> +xfs_break_dax_layouts(
+>> +     struct inode            *inode,
+>> +     uint                    iolock,
+>> +     bool                    *did_unlock)
+>> +{
+>> +     struct page             *page;
+>> +
+>> +     *did_unlock = false;
+>> +     page = dax_layout_busy_page(inode->i_mapping);
+>> +     if (!page)
+>> +             return 0;
+>> +
+>> +     return ___wait_var_event(&page->_refcount,
+>> +                     atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+>> +                     0, 0, xfs_wait_dax_page(inode, did_unlock));
+>> +}
+>> +
+>>  int
+>>  xfs_break_layouts(
+>>       struct inode            *inode,
+>> @@ -729,17 +760,23 @@ xfs_break_layouts(
 >>
->>  static struct dax_device *__fs_dax_claim(struct dax_device *dax_dev,
->
-> Why is this hunk in this patch? We don't wait for page refcount here. OTOH
-> I agree I don't see much better patch to fold this into.
-
-I had it here because this patch is the enabling point where
-filesystems can start using dax_layout_busy_page(). Otherwise I could
-move it to the first patch that introduces a wait_var_event() for this
-wake-up, but that's an xfs patch and seems out of place. In other
-words, theoretically someone could backport just to this point and go
-enable another filesystem without worrying about the xfs changes.
-
->
->> diff --git a/fs/Kconfig b/fs/Kconfig
->> index 1e050e012eb9..c9acbf695ddd 100644
->> --- a/fs/Kconfig
->> +++ b/fs/Kconfig
->> @@ -40,6 +40,7 @@ config FS_DAX
->>       depends on !(ARM || MIPS || SPARC)
->>       select DEV_PAGEMAP_OPS if (ZONE_DEVICE && !FS_DAX_LIMITED)
->>       select FS_IOMAP
->> +     select SRCU
->
-> No need for this anymore I guess.
-
-Yup, stale, removed.
-
->
->> diff --git a/mm/gup.c b/mm/gup.c
->> index 84dd2063ca3d..75ade7ebddb2 100644
->> --- a/mm/gup.c
->> +++ b/mm/gup.c
->> @@ -13,6 +13,7 @@
->>  #include <linux/sched/signal.h>
->>  #include <linux/rwsem.h>
->>  #include <linux/hugetlb.h>
->> +#include <linux/dax.h>
+>>       ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
 >>
->>  #include <asm/mmu_context.h>
->>  #include <asm/pgtable.h>
+>> -     switch (reason) {
+>> -     case BREAK_UNMAP:
+>> -             ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
+>> -             /* fall through */
+>> -     case BREAK_WRITE:
+>> -             error = xfs_break_leased_layouts(inode, iolock, &retry);
+>> -             break;
+>> -     default:
+>> -             WARN_ON_ONCE(1);
+>> -             return -EINVAL;
+>> -     }
+>> +     do {
+>> +             switch (reason) {
+>> +             case BREAK_UNMAP:
+>> +                     ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
 >
-> Why is this hunk here?
+> Maybe move the assertion to xfs_break_dax_layouts()?
 
-Also stale, and removed. It was there for the now removed dax_layout_lock().
+Makes sense, sure.
 
-Good catches, thanks!
+>
+>> +
+>> +                     error = xfs_break_dax_layouts(inode, *iolock, &retry);
+>> +                     /* fall through */
+>> +             case BREAK_WRITE:
+>> +                     if (error || retry)
+>> +                             break;
+>
+> The error handling IMHO belongs above the 'fall through' comment above.
+
+Ok, yes I think this location is a stale holdover.
+
+>
+>> +                     error = xfs_break_leased_layouts(inode, iolock, &retry);
+>> +                     break;
+>> +             default:
+>> +                     WARN_ON_ONCE(1);
+>> +                     return -EINVAL;
+>> +             }
+>> +     } while (error == 0 && retry);
+>
+> As a general 'taste' comment, I prefer if the 'retry' is always initialized
+> to 'false' at the beginning of the loop body in these kinds of loops. That
+> way it is obvious we are doing the right thing when looking at the loop
+> body and we don't have to verify that each case statement initializes
+> 'retry' properly (in fact I'd remove the initialization from
+> xfs_break_dax_layouts() and xfs_break_leased_layouts()). But this is more a
+> matter of taste and consistency with other code in the area so I defer to
+> XFS maintainers for a final opinion. Darrick?
+
+I'm fine with making this change, I'll proceed unless / until Darrick says no.
