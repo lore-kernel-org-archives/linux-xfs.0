@@ -1,32 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:49950 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934517AbeEIOwR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 10:52:17 -0400
-Date: Wed, 9 May 2018 07:52:13 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:59760 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934517AbeEIOw0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 10:52:26 -0400
+Date: Wed, 9 May 2018 07:52:22 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/9] xfs: adder caller IP to xfs_defer* tracepoints
-Message-ID: <20180509145213.GK11261@magnolia>
+Subject: Re: [PATCH 4/9] xfs: don't assert fail with AIL lock held
+Message-ID: <20180509145222.GL11261@magnolia>
 References: <20180508034202.10136-1-david@fromorbit.com>
- <20180508034202.10136-4-david@fromorbit.com>
+ <20180508034202.10136-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180508034202.10136-4-david@fromorbit.com>
+In-Reply-To: <20180508034202.10136-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 08, 2018 at 01:41:56PM +1000, Dave Chinner wrote:
+On Tue, May 08, 2018 at 01:41:57PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> So it's clear in the trace where they are being called from.
+> Been hitting AIL ordering assert failures recently, but been unable
+> to trace them down because the system immediately hangs up onteh
+> spinlock that was held when this assert fires:
+> 
+> XFS: Assertion failed: XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0, file: fs/xfs/xfs_trans_ail.c, line: 52
+> 
+> Move the assertions outside of the spinlock so the corpse can
+> be dissected. Thanks to Brian Foster for supplying a clean
+> way of doing this.
 > 
 > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
 Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
@@ -34,112 +40,76 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_defer.c | 12 ++++++------
->  fs/xfs/xfs_trace.h        | 17 +++++++++++------
->  2 files changed, 17 insertions(+), 12 deletions(-)
+>  fs/xfs/xfs_trans_ail.c | 43 +++++++++++++++++++++++++++++++-----------
+>  1 file changed, 32 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 087fea02c389..51821af5d653 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -220,7 +220,7 @@ xfs_defer_trans_abort(
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 50611d2bcbc2..41e280ef1483 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -32,30 +32,51 @@
+>  #ifdef DEBUG
+>  /*
+>   * Check that the list is sorted as it should be.
+> + *
+> + * Called with the ail lock held, but we don't want to assert fail with it
+> + * held otherwise we'll lock everything up and won't be able to debug the
+> + * cause. Hence we sample and check the state under the AIL lock and return if
+> + * everything is fine, otherwise we drop the lock and run the ASSERT checks.
+> + * Asserts may not be fatal, so pick the lock back up and continue onwards.
+>   */
+>  STATIC void
+>  xfs_ail_check(
+> -	struct xfs_ail	*ailp,
+> -	xfs_log_item_t	*lip)
+> +	struct xfs_ail		*ailp,
+> +	struct xfs_log_item	*lip)
 >  {
->  	struct xfs_defer_pending	*dfp;
+> -	xfs_log_item_t	*prev_lip;
+> +	struct xfs_log_item	*prev_lip;
+> +	struct xfs_log_item	*next_lip;
+> +	xfs_lsn_t		prev_lsn = NULLCOMMITLSN;
+> +	xfs_lsn_t		next_lsn = NULLCOMMITLSN;
+> +	xfs_lsn_t		lsn;
+> +	bool			in_ail;
+> +
 >  
-> -	trace_xfs_defer_trans_abort(tp->t_mountp, dop);
-> +	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
->  
->  	/* Abort intent items that don't have a done item. */
->  	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
-> @@ -253,7 +253,7 @@ xfs_defer_trans_roll(
->  	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
->  		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
->  
-> -	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop);
-> +	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop, _RET_IP_);
->  
->  	/* Roll the transaction. */
->  	error = xfs_trans_roll(tp);
-> @@ -355,7 +355,7 @@ xfs_defer_finish(
->  
->  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
->  
-> -	trace_xfs_defer_finish((*tp)->t_mountp, dop);
-> +	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
->  
->  	/* Until we run out of pending work to finish... */
->  	while (xfs_defer_has_unfinished_work(dop)) {
-> @@ -431,7 +431,7 @@ xfs_defer_finish(
->  	if (error)
->  		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
->  	else
-> -		trace_xfs_defer_finish_done((*tp)->t_mountp, dop);
-> +		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
->  	return error;
->  }
->  
-> @@ -447,7 +447,7 @@ xfs_defer_cancel(
->  	struct list_head		*pwi;
->  	struct list_head		*n;
->  
-> -	trace_xfs_defer_cancel(NULL, dop);
-> +	trace_xfs_defer_cancel(NULL, dop, _RET_IP_);
+>  	if (list_empty(&ailp->ail_head))
+>  		return;
 >  
 >  	/*
->  	 * Free the pending items.  Caller should already have arranged
-> @@ -532,5 +532,5 @@ xfs_defer_init(
->  	*fbp = NULLFSBLOCK;
->  	INIT_LIST_HEAD(&dop->dop_intake);
->  	INIT_LIST_HEAD(&dop->dop_pending);
-> -	trace_xfs_defer_init(NULL, dop);
-> +	trace_xfs_defer_init(NULL, dop, _RET_IP_);
+> -	 * Check the next and previous entries are valid.
+> +	 * Sample then check the next and previous entries are valid.
+>  	 */
+> -	ASSERT(test_bit(XFS_LI_IN_AIL, &lip->li_flags));
+> -	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
+> +	in_ail = test_bit(XFS_LI_IN_AIL, &lip->li_flags);
+> +	prev_lip = list_entry(lip->li_ail.prev, struct xfs_log_item, li_ail);
+>  	if (&prev_lip->li_ail != &ailp->ail_head)
+> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
+> -
+> -	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
+> -	if (&prev_lip->li_ail != &ailp->ail_head)
+> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
+> +		prev_lsn = prev_lip->li_lsn;
+> +	next_lip = list_entry(lip->li_ail.next, struct xfs_log_item, li_ail);
+> +	if (&next_lip->li_ail != &ailp->ail_head)
+> +		next_lsn = next_lip->li_lsn;
+> +	lsn = lip->li_lsn;
+>  
+> +	if (in_ail &&
+> +	    (prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0) &&
+> +	    (next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0))
+> +		return;
+>  
+> +	spin_unlock(&ailp->ail_lock);
+> +	ASSERT(in_ail);
+> +	ASSERT(prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0);
+> +	ASSERT(next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0);
+> +	spin_lock(&ailp->ail_lock);
 >  }
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 8136f2280173..947ab6e32c18 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2243,30 +2243,35 @@ struct xfs_defer_pending;
->  struct xfs_defer_ops;
->  
->  DECLARE_EVENT_CLASS(xfs_defer_class,
-> -	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop),
-> -	TP_ARGS(mp, dop),
-> +	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop,
-> +		 unsigned long caller_ip),
-> +	TP_ARGS(mp, dop, caller_ip),
->  	TP_STRUCT__entry(
->  		__field(dev_t, dev)
->  		__field(void *, dop)
->  		__field(char, committed)
->  		__field(char, low)
-> +		__field(unsigned long, caller_ip)
->  	),
->  	TP_fast_assign(
->  		__entry->dev = mp ? mp->m_super->s_dev : 0;
->  		__entry->dop = dop;
->  		__entry->committed = dop->dop_committed;
->  		__entry->low = dop->dop_low;
-> +		__entry->caller_ip = caller_ip;
->  	),
-> -	TP_printk("dev %d:%d ops %p committed %d low %d",
-> +	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->dop,
->  		  __entry->committed,
-> -		  __entry->low)
-> +		  __entry->low,
-> +		  (char *)__entry->caller_ip)
->  )
->  #define DEFINE_DEFER_EVENT(name) \
->  DEFINE_EVENT(xfs_defer_class, name, \
-> -	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop), \
-> -	TP_ARGS(mp, dop))
-> +	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, \
-> +		 unsigned long caller_ip), \
-> +	TP_ARGS(mp, dop, caller_ip))
->  
->  DECLARE_EVENT_CLASS(xfs_defer_error_class,
->  	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error),
+>  #else /* !DEBUG */
+>  #define	xfs_ail_check(a,l)
 > -- 
 > 2.17.0
 > 
