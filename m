@@ -1,59 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:38954 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755400AbeEIBkP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 21:40:15 -0400
-Date: Tue, 8 May 2018 18:39:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC] vfs: skip extra attributes check on removal for symlinks
-Message-ID: <20180509013944.GE11261@magnolia>
-References: <20180426234639.12480-1-mcgrof@kernel.org>
- <20180501172319.GK4127@magnolia>
- <20180501174512.GA27853@wotan.suse.de>
- <20180508003055.GC11261@magnolia>
- <20180509000327.GJ27853@wotan.suse.de>
- <20180509001741.GB11261@magnolia>
- <20180509003855.GK27853@wotan.suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180509003855.GK27853@wotan.suse.de>
+Received: from bombadil.infradead.org ([198.137.202.133]:51576 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933383AbeEIHsk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:48:40 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/33] block: add a lower-level bio_add_page interface
+Date: Wed,  9 May 2018 09:47:58 +0200
+Message-Id: <20180509074830.16196-2-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, sandeen@sandeen.net, dhowells@redhat.com, tytso@mit.edu, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 09, 2018 at 12:38:55AM +0000, Luis R. Rodriguez wrote:
-> On Tue, May 08, 2018 at 05:17:41PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 09, 2018 at 12:03:28AM +0000, Luis R. Rodriguez wrote:
-> > > Groovy, thanks, let's not forget the xfs_repair respective fix :) let me know
-> > > if you have any feedback on that.
-> > 
-> > TBH I've lost any proposed xfs_repair patches to the mists of time
-> > because some patch volcano keeps erupting on the lists. :P
-> > 
-> > Uh... I think it's fine for xfs_{repair,scrub} to clear the immutable
-> > and append flags on any special inodes it finds, particularly since
-> > neither flag has any real meaning for block/char/fifo/socket/symlinks
-> > anyway.
-> 
-> Sure, my point during review of that series for xfs_repair in particular
-> though was that for symlinks the justification is different (half of the
-> commit log in this new patch), as such I'd prefer to deal with them in a
-> separate follow up patch.
+For the upcoming removal of buffer heads in XFS we need to keep track of
+the number of outstanding writeback requests per page.  For this we need
+to know if bio_add_page merged a region with the previous bvec or not.
+Instead of adding additional arguments this refactors bio_add_page to
+be implemented using three lower level helpers which users like XFS can
+use directly if they care about the merge decisions.
 
-Ah, found it again finally[1].  ISTR the discussion petered out after
-Dave asked if you had a map of inode mode
-(file/dir/bdev/cdev/fifo/socket/symlink) to allowable flags.  That would
-be a good general way to detect and clear stray flags.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/bio.c         | 87 ++++++++++++++++++++++++++++++---------------
+ include/linux/bio.h |  9 +++++
+ 2 files changed, 67 insertions(+), 29 deletions(-)
 
---D
+diff --git a/block/bio.c b/block/bio.c
+index 53e0f0a1ed94..6ceba6adbf42 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -773,7 +773,7 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
+ 			return 0;
+ 	}
+ 
+-	if (bio->bi_vcnt >= bio->bi_max_vecs)
++	if (bio_full(bio))
+ 		return 0;
+ 
+ 	/*
+@@ -820,6 +820,59 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
+ }
+ EXPORT_SYMBOL(bio_add_pc_page);
+ 
++/**
++ * __bio_try_merge_page - try adding data to an existing bvec
++ * @bio: destination bio
++ * @page: page to add
++ * @len: length of the range to add
++ * @off: offset into @page
++ *
++ * Try adding the data described at @page + @offset to the last bvec of @bio.
++ * Return %true on success or %false on failure.  This can happen frequently
++ * for file systems with a block size smaller than the page size.
++ */
++bool __bio_try_merge_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off)
++{
++	if (bio->bi_vcnt > 0) {
++		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
++
++		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
++			bv->bv_len += len;
++			bio->bi_iter.bi_size += len;
++			return true;
++		}
++	}
++	return false;
++}
++EXPORT_SYMBOL_GPL(__bio_try_merge_page);
++
++/**
++ * __bio_add_page - add page to a bio in a new segment
++ * @bio: destination bio
++ * @page: page to add
++ * @len: length of the range to add
++ * @off: offset into @page
++ *
++ * Add the data at @page + @offset to @bio as a new bvec.  The caller must
++ * ensure that @bio has space for another bvec.
++ */
++void __bio_add_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off)
++{
++	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
++
++	WARN_ON_ONCE(bio_full(bio));
++
++	bv->bv_page = page;
++	bv->bv_offset = off;
++	bv->bv_len = len;
++
++	bio->bi_iter.bi_size += len;
++	bio->bi_vcnt++;
++}
++EXPORT_SYMBOL_GPL(__bio_add_page);
++
+ /**
+  *	bio_add_page	-	attempt to add page to bio
+  *	@bio: destination bio
+@@ -833,40 +886,16 @@ EXPORT_SYMBOL(bio_add_pc_page);
+ int bio_add_page(struct bio *bio, struct page *page,
+ 		 unsigned int len, unsigned int offset)
+ {
+-	struct bio_vec *bv;
+-
+ 	/*
+ 	 * cloned bio must not modify vec list
+ 	 */
+ 	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+ 		return 0;
+-
+-	/*
+-	 * For filesystems with a blocksize smaller than the pagesize
+-	 * we will often be called with the same page as last time and
+-	 * a consecutive offset.  Optimize this special case.
+-	 */
+-	if (bio->bi_vcnt > 0) {
+-		bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+-
+-		if (page == bv->bv_page &&
+-		    offset == bv->bv_offset + bv->bv_len) {
+-			bv->bv_len += len;
+-			goto done;
+-		}
++	if (!__bio_try_merge_page(bio, page, len, offset)) {
++		if (bio_full(bio))
++			return 0;
++		__bio_add_page(bio, page, len, offset);
+ 	}
+-
+-	if (bio->bi_vcnt >= bio->bi_max_vecs)
+-		return 0;
+-
+-	bv		= &bio->bi_io_vec[bio->bi_vcnt];
+-	bv->bv_page	= page;
+-	bv->bv_len	= len;
+-	bv->bv_offset	= offset;
+-
+-	bio->bi_vcnt++;
+-done:
+-	bio->bi_iter.bi_size += len;
+ 	return len;
+ }
+ EXPORT_SYMBOL(bio_add_page);
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index ce547a25e8ae..3e73c8bc25ea 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -123,6 +123,11 @@ static inline void *bio_data(struct bio *bio)
+ 	return NULL;
+ }
+ 
++static inline bool bio_full(struct bio *bio)
++{
++	return bio->bi_vcnt >= bio->bi_max_vecs;
++}
++
+ /*
+  * will die
+  */
+@@ -470,6 +475,10 @@ void bio_chain(struct bio *, struct bio *);
+ extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
+ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
++bool __bio_try_merge_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off);
++void __bio_add_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off);
+ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
+ struct rq_map_data;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
+-- 
+2.17.0
 
-[1] https://marc.info/?l=linux-xfs&m=150948985429374&w=4
-
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
