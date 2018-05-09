@@ -1,163 +1,272 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49502 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932133AbeEHWoI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 18:44:08 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w48MfDgA157491
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 22:44:08 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2hs4k2aw9t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 08 May 2018 22:44:08 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w48Mi7Sq022077
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 22:44:07 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w48Mi7hX016882
-        for <linux-xfs@vger.kernel.org>; Tue, 8 May 2018 22:44:07 GMT
-Date: Tue, 8 May 2018 15:44:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 18/21] xfsprogs: Add parent pointer flag to cmd
-Message-ID: <20180508224406.GZ11261@magnolia>
-References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
- <1525754479-12177-19-git-send-email-allison.henderson@oracle.com>
- <20180508172521.GR11261@magnolia>
- <b43b6e95-ac94-d0f0-93cf-0eae3e46656e@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <b43b6e95-ac94-d0f0-93cf-0eae3e46656e@oracle.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:51904 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933886AbeEIHtO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:14 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 11/33] iomap: add an iomap-based readpage and readpages implementation
+Date: Wed,  9 May 2018 09:48:08 +0200
+Message-Id: <20180509074830.16196-12-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, May 08, 2018 at 12:02:29PM -0700, Allison Henderson wrote:
-> On 05/08/2018 10:25 AM, Darrick J. Wong wrote:
-> > On Mon, May 07, 2018 at 09:41:16PM -0700, Allison Henderson wrote:
-> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > Needs commit message:
-> > 
-> > mkfs: enable formatting with parent pointers
-> > 
-> > Wire up parent pointer support in mkfs via the '-m parent' parameter.
-> > 
-> > Signed-off-by: <etc>
-> Ok, will update
-> > > ---
-> > >   mkfs/xfs_mkfs.c | 16 +++++++++++++++-
-> > >   1 file changed, 15 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > > index 78d0ce5..554e1bf 100644
-> > > --- a/mkfs/xfs_mkfs.c
-> > > +++ b/mkfs/xfs_mkfs.c
-> > > @@ -129,6 +129,7 @@ enum {
-> > >   	M_UUID,
-> > >   	M_RMAPBT,
-> > >   	M_REFLINK,
-> > > +	M_PARENT,
-> > Hmm, is this better off in the naming section?
-> > 
-> > e.g. "mkfs.xfs -n parent=1"
-> I suppose it could fit there too if that's preferred.  I wasnt really sure
-> which section it fit best to :-)
+Simply use iomap_apply to iterate over the file and a submit a bio for
+each non-uptodate but mapped region and zero everything else.  Note that
+as-is this can not be used for file systems with a blocksize smaller than
+the page size, but that support will be added later.
 
-<shrug> -n is where we put the other naming and directory related stuff.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 195 +++++++++++++++++++++++++++++++++++++++++-
+ include/linux/iomap.h |   4 +
+ 2 files changed, 198 insertions(+), 1 deletion(-)
 
-> > >   	M_MAX_OPTS,
-> > >   };
-> > > @@ -663,6 +664,7 @@ struct opt_params mopts = {
-> > >   		[M_UUID] = "uuid",
-> > >   		[M_RMAPBT] = "rmapbt",
-> > >   		[M_REFLINK] = "reflink",
-> > > +		[M_PARENT] = "parent",
-> > >   	},
-> > >   	.subopt_params = {
-> > >   		{ .index = M_CRC,
-> > > @@ -693,6 +695,13 @@ struct opt_params mopts = {
-> > >   		  .maxval = 1,
-> > >   		  .defaultval = 1,
-> > >   		},
-> > > +		{ .index = M_PARENT,
-> > > +		  .conflicts = { {NULL, LAST_CONFLICT } },
-> > > +		  .minval = 0,
-> > > +		  .maxval = 1,
-> > > +		  .defaultval = 0,
-> > This (misleadingly named) field is the default value if you pass the
-> > argument without explicitly assigning a value, i.e.
-> > 
-> > # mkfs.xfs -m parent /dev/sda
-> > 
-> > sets parent to whatever defaultval is.  In this case you'd get no parent
-> > pointers, which is a little surprising.
-> > 
-> > And, uh, seeing as people keep getting this wrong maybe we should rename
-> > it?
-> Oh I see.  That is a little odd, is there really a better name though? 
-> Maybe just a comment or something might make it more clear.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 049e0c4aacac..967bd31540fe 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (C) 2010 Red Hat, Inc.
+- * Copyright (c) 2016 Christoph Hellwig.
++ * Copyright (c) 2016-2018 Christoph Hellwig.
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms and conditions of the GNU General Public License,
+@@ -18,6 +18,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/gfp.h>
+ #include <linux/mm.h>
++#include <linux/mm_inline.h>
+ #include <linux/swap.h>
+ #include <linux/pagemap.h>
+ #include <linux/pagevec.h>
+@@ -102,6 +103,198 @@ iomap_sector(struct iomap *iomap, loff_t pos)
+ 	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
+ }
+ 
++static inline bool
++iomap_block_needs_zeroing(struct inode *inode, loff_t pos, struct iomap *iomap)
++{
++       return iomap->type != IOMAP_MAPPED || pos > i_size_read(inode);
++}
++
++static void
++iomap_read_end_io(struct bio *bio)
++{
++	int error = blk_status_to_errno(bio->bi_status);
++	struct bio_vec *bvec;
++	int i;
++
++	bio_for_each_segment_all(bvec, bio, i)
++		page_endio(bvec->bv_page, false, error);
++	bio_put(bio);
++}
++
++static struct bio *
++iomap_read_bio_alloc(struct iomap *iomap, sector_t sector, loff_t length)
++{
++	int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
++	struct bio *bio = bio_alloc(GFP_NOFS, min(BIO_MAX_PAGES, nr_vecs));
++
++	bio->bi_opf = REQ_OP_READ;
++	bio->bi_iter.bi_sector = sector;
++	bio_set_dev(bio, iomap->bdev);
++	bio->bi_end_io = iomap_read_end_io;
++	return bio;
++}
++
++struct iomap_readpage_ctx {
++	struct page		*cur_page;
++	bool			cur_page_in_bio;
++	struct bio		*bio;
++	struct list_head	*pages;
++};
++
++static loff_t
++iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct iomap_readpage_ctx *ctx = data;
++	struct page *page = ctx->cur_page;
++	unsigned poff = pos & (PAGE_SIZE - 1);
++	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
++	bool is_contig = false;
++	sector_t sector;
++
++	/* we don't support blocksize < PAGE_SIZE quite yet: */
++	WARN_ON_ONCE(pos != page_offset(page));
++	WARN_ON_ONCE(plen != PAGE_SIZE);
++
++	if (iomap_block_needs_zeroing(inode, pos, iomap)) {
++		zero_user(page, poff, plen);
++		SetPageUptodate(page);
++		goto done;
++	}
++
++	ctx->cur_page_in_bio = true;
++
++	/*
++	 * Try to merge into a previous segment if we can.
++	 */
++	sector = iomap_sector(iomap, pos);
++	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
++		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
++			goto done;
++		is_contig = true;
++	}
++
++	if (!ctx->bio || !is_contig || bio_full(ctx->bio)) {
++		if (ctx->bio)
++			submit_bio(ctx->bio);
++		ctx->bio = iomap_read_bio_alloc(iomap, sector, length);
++	}
++
++	__bio_add_page(ctx->bio, page, plen, poff);
++done:
++	return plen;
++}
++
++int
++iomap_readpage(struct page *page, const struct iomap_ops *ops)
++{
++	struct iomap_readpage_ctx ctx = { .cur_page = page };
++	struct inode *inode = page->mapping->host;
++	unsigned poff;
++	loff_t ret;
++
++	WARN_ON_ONCE(page_has_buffers(page));
++
++	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
++		ret = iomap_apply(inode, page_offset(page) + poff,
++				PAGE_SIZE - poff, 0, ops, &ctx,
++				iomap_readpage_actor);
++		if (ret <= 0) {
++			SetPageError(page);
++			break;
++		}
++	}
++
++	if (ctx.bio)
++		submit_bio(ctx.bio);
++	else
++		unlock_page(page);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_readpage);
++
++static struct page *
++iomap_next_page(struct inode *inode, struct list_head *pages, loff_t end,
++		loff_t *done)
++{
++	while (!list_empty(pages)) {
++		struct page *page = lru_to_page(pages);
++
++		if (page_offset(page) >= end)
++			break;
++
++		list_del(&page->lru);
++		if (!add_to_page_cache_lru(page, inode->i_mapping, page->index,
++				GFP_NOFS))
++			return page;
++
++		*done += PAGE_SIZE;
++		put_page(page);
++	}
++
++	return NULL;
++}
++
++static loff_t
++iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	struct iomap_readpage_ctx *ctx = data;
++	loff_t done, ret;
++
++	for (done = 0; done < length; done += ret) {
++		if (ctx->cur_page && ((pos + done) & (PAGE_SIZE - 1)) == 0) {
++			if (!ctx->cur_page_in_bio)
++				unlock_page(ctx->cur_page);
++			put_page(ctx->cur_page);
++			ctx->cur_page = NULL;
++		}
++		if (!ctx->cur_page) {
++			ctx->cur_page = iomap_next_page(inode, ctx->pages,
++					pos + length, &done);
++			if (!ctx->cur_page)
++				break;
++			ctx->cur_page_in_bio = false;
++		}
++		ret = iomap_readpage_actor(inode, pos + done, length - done,
++				ctx, iomap);
++	}
++
++	return done;
++}
++
++int
++iomap_readpages(struct address_space *mapping, struct list_head *pages,
++		unsigned nr_pages, const struct iomap_ops *ops)
++{
++	struct iomap_readpage_ctx ctx = { .pages = pages };
++	loff_t pos = page_offset(list_entry(pages->prev, struct page, lru));
++	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
++	loff_t length = last - pos + PAGE_SIZE, ret = 0;
++
++	while (length > 0) {
++		ret = iomap_apply(mapping->host, pos, length, 0, ops,
++				&ctx, iomap_readpages_actor);
++		if (ret <= 0)
++			break;
++		pos += ret;
++		length -= ret;
++	}
++
++	ret = 0;
++
++	if (ctx.bio)
++		submit_bio(ctx.bio);
++	if (ctx.cur_page) {
++		if (!ctx.cur_page_in_bio)
++			unlock_page(ctx.cur_page);
++		put_page(ctx.cur_page);
++	}
++	WARN_ON_ONCE(ret && !list_empty(ctx.pages));
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iomap_readpages);
++
+ static void
+ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ {
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 07f73224c38b..4710789620e7 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -9,6 +9,7 @@ struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+ struct kiocb;
++struct page;
+ struct vm_area_struct;
+ struct vm_fault;
+ 
+@@ -83,6 +84,9 @@ struct iomap_ops {
+ 
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
++int iomap_readpage(struct page *page, const struct iomap_ops *ops);
++int iomap_readpages(struct address_space *mapping, struct list_head *pages,
++		unsigned nr_pages, const struct iomap_ops *ops);
+ int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops);
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+-- 
+2.17.0
 
-"implied_default"
-"implicit_default"
-"valueIfNotExplicitlySpecified"
-"m_thevalueassignedifnovalueisgiven"
-
-(No, please not those last two...)
-
---D
-
-> > > +		},
-> > > +
-> > >   	},
-> > >   };
-> > > @@ -865,7 +874,7 @@ usage( void )
-> > >   {
-> > >   	fprintf(stderr, _("Usage: %s\n\
-> > >   /* blocksize */		[-b size=num]\n\
-> > > -/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1]\n\
-> > > +/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,parent=0|1]\n\
-> > >   /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
-> > >   			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
-> > >   			    sectsize=num\n\
-> > > @@ -1586,6 +1595,9 @@ meta_opts_parser(
-> > >   	case M_REFLINK:
-> > >   		cli->sb_feat.reflink = getnum(value, opts, subopt);
-> > >   		break;
-> > > +	case M_PARENT:
-> > > +		cli->sb_feat.parent_pointers = getnum(value, &mopts, M_PARENT);
-> > > +		break;
-> > >   	default:
-> > >   		return -EINVAL;
-> > >   	}
-> > > @@ -2887,6 +2899,8 @@ sb_set_features(
-> > >   		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
-> > >   	if (fp->reflink)
-> > >   		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
-> > > +	if (fp->parent_pointers)
-> > > +		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_PARENT;
-> > Otherwise looks ok to me....
-> > 
-> > --D
-> Alrighty, thx!
-> > >   	/*
-> > >   	 * Sparse inode chunk support has two main inode alignment requirements.
-> > > -- 
-> > > 2.7.4
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=2DFx03tmCKRPVndQLwf1P1u0PChkNowVFyXqzZ_arE8&s=JiwNEPlNO54aLxRtPd9mGL_lKU8dpX4T6ECMmDQhc70&e=
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=2DFx03tmCKRPVndQLwf1P1u0PChkNowVFyXqzZ_arE8&s=JiwNEPlNO54aLxRtPd9mGL_lKU8dpX4T6ECMmDQhc70&e=
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
