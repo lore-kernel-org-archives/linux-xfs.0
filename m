@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53518 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:53674 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933383AbeEIHuZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:50:25 -0400
+        with ESMTP id S933834AbeEIHud (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:50:33 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 27/33] xfs: remove xfs_start_page_writeback
-Date: Wed,  9 May 2018 09:48:24 +0200
-Message-Id: <20180509074830.16196-28-hch@lst.de>
+Subject: [PATCH 30/33] iomap: add initial support for writes without buffer heads
+Date: Wed,  9 May 2018 09:48:27 +0200
+Message-Id: <20180509074830.16196-31-hch@lst.de>
 In-Reply-To: <20180509074830.16196-1-hch@lst.de>
 References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,93 +15,211 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-This helper only has two callers, one of them with a constant error
-argument.  Remove it to make pending changes to the code a little easier.
+For now just limited to blocksize == PAGE_SIZE, where we can simply read
+in the full page in write begin, and just set the whole page dirty after
+copying data into it.  This code is enabled by default and XFS will now
+be feed pages without buffer heads in ->writepage and ->writepages.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c | 47 +++++++++++++++++++++--------------------------
- 1 file changed, 21 insertions(+), 26 deletions(-)
+ fs/iomap.c | 129 +++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 120 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 879599f723b6..6b39792270aa 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -521,30 +521,6 @@ xfs_imap_valid(
- 		offset < imap->br_startoff + imap->br_blockcount;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 967bd31540fe..a3861945504f 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -308,6 +308,56 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ 		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
  }
  
--STATIC void
--xfs_start_page_writeback(
--	struct page		*page,
--	int			clear_dirty)
--{
--	ASSERT(PageLocked(page));
--	ASSERT(!PageWriteback(page));
--
--	/*
--	 * if the page was not fully cleaned, we need to ensure that the higher
--	 * layers come back to it correctly. That means we need to keep the page
--	 * dirty, and for WB_SYNC_ALL writeback we need to ensure the
--	 * PAGECACHE_TAG_TOWRITE index mark is not removed so another attempt to
--	 * write this page in this writeback sweep will be made.
--	 */
--	if (clear_dirty) {
--		clear_page_dirty_for_io(page);
--		set_page_writeback(page);
--	} else
--		set_page_writeback_keepwrite(page);
--
--	unlock_page(page);
--}
--
- /*
-  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
-  * it, and we submit that bio. The ioend may be used for multiple bio
-@@ -910,6 +886,9 @@ xfs_writepage_map(
- 	ASSERT(wpc->ioend || list_empty(&submit_list));
- 
- out:
-+	ASSERT(PageLocked(page));
-+	ASSERT(!PageWriteback(page));
++static int
++iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
++		unsigned poff, unsigned plen, struct iomap *iomap)
++{
++	struct bio_vec bvec;
++	struct bio bio;
++	int ret;
 +
- 	/*
- 	 * On error, we have to fail the ioend here because we have locked
- 	 * buffers in the ioend. If we don't do this, we'll deadlock
-@@ -928,7 +907,21 @@ xfs_writepage_map(
- 	 * treated correctly on error.
- 	 */
- 	if (count) {
--		xfs_start_page_writeback(page, !error);
-+		/*
-+		 * If the page was not fully cleaned, we need to ensure that the
-+		 * higher layers come back to it correctly.  That means we need
-+		 * to keep the page dirty, and for WB_SYNC_ALL writeback we need
-+		 * to ensure the PAGECACHE_TAG_TOWRITE index mark is not removed
-+		 * so another attempt to write this page in this writeback sweep
-+		 * will be made.
-+		 */
-+		if (error) {
-+			set_page_writeback_keepwrite(page);
-+		} else {
-+			clear_page_dirty_for_io(page);
-+			set_page_writeback(page);
-+		}
-+		unlock_page(page);
++	bio_init(&bio, &bvec, 1);
++	bio.bi_opf = REQ_OP_READ;
++	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
++	bio_set_dev(&bio, iomap->bdev);
++	__bio_add_page(&bio, page, plen, poff);
++	ret = submit_bio_wait(&bio);
++	if (ret < 0 && iomap_block_needs_zeroing(inode, block_start, iomap))
++		zero_user(page, poff, plen);
++	return ret;
++}
++
++static int
++__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
++		struct page *page, struct iomap *iomap)
++{
++	loff_t block_size = i_blocksize(inode);
++	loff_t block_start = pos & ~(block_size - 1);
++	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
++	unsigned poff = block_start & (PAGE_SIZE - 1);
++	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
++	int status;
++
++	if (PageUptodate(page))
++		return 0;
++
++	if (iomap_block_needs_zeroing(inode, block_start, iomap)) {
++		unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
++		unsigned pend = poff + plen;
++
++		if (poff < from || pend > to)
++			zero_user_segments(page, poff, from, to, pend);
++	} else {
++		status = iomap_read_page_sync(inode, block_start, page,
++				poff, plen, iomap);
++		if (status < 0)
++			return status;
++		SetPageUptodate(page);
++	}
++
++	return 0;
++}
++
+ static int
+ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 		struct page **pagep, struct iomap *iomap)
+@@ -325,7 +375,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	if (!page)
+ 		return -ENOMEM;
  
- 		/*
- 		 * Preserve the original error if there was one, otherwise catch
-@@ -953,7 +946,9 @@ xfs_writepage_map(
- 		 * race with a partial page truncate on a sub-page block sized
- 		 * filesystem. In that case we need to mark the page clean.
- 		 */
--		xfs_start_page_writeback(page, 1);
-+		clear_page_dirty_for_io(page);
-+		set_page_writeback(page);
-+		unlock_page(page);
- 		end_page_writeback(page);
- 	}
+-	status = __block_write_begin_int(page, pos, len, NULL, iomap);
++	if (i_blocksize(inode) == PAGE_SIZE)
++		status = __iomap_write_begin(inode, pos, len, page, iomap);
++	else
++		status = __block_write_begin_int(page, pos, len, NULL, iomap);
+ 	if (unlikely(status)) {
+ 		unlock_page(page);
+ 		put_page(page);
+@@ -338,12 +391,63 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	return status;
+ }
  
++static int
++iomap_set_page_dirty(struct page *page)
++{
++	struct address_space *mapping = page_mapping(page);
++	int newly_dirty;
++
++	if (unlikely(!mapping))
++		return !TestSetPageDirty(page);
++
++	/*
++	 * Lock out page->mem_cgroup migration to keep PageDirty
++	 * synchronized with per-memcg dirty page counters.
++	 */
++	lock_page_memcg(page);
++	newly_dirty = !TestSetPageDirty(page);
++	if (newly_dirty)
++		__set_page_dirty(page, mapping, 0);
++	unlock_page_memcg(page);
++
++	if (newly_dirty)
++		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
++	return newly_dirty;
++}
++
++static int
++__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
++		unsigned copied, struct page *page, struct iomap *iomap)
++{
++	unsigned start = pos & (PAGE_SIZE - 1);
++	int ret;
++
++	if (unlikely(copied < len)) {
++		/* see block_write_end() for an explanation */
++		if (!PageUptodate(page))
++			copied = 0;
++		if (iomap_block_needs_zeroing(inode, pos, iomap))
++			zero_user(page, start + copied, len - copied);
++	}
++
++	flush_dcache_page(page);
++	SetPageUptodate(page);
++	iomap_set_page_dirty(page);
++	ret = __generic_write_end(inode, pos, copied, page);
++	if (ret < len)
++		iomap_write_failed(inode, pos, len);
++	return ret;
++}
++
+ static int
+ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+-		unsigned copied, struct page *page)
++		unsigned copied, struct page *page, struct iomap *iomap)
+ {
+ 	int ret;
+ 
++	if (i_blocksize(inode) == PAGE_SIZE)
++		return __iomap_write_end(inode, pos, len, copied, page, iomap);
++
+ 	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+ 			copied, page, NULL);
+ 	if (ret < len)
+@@ -400,7 +504,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		flush_dcache_page(page);
+ 
+-		status = iomap_write_end(inode, pos, bytes, copied, page);
++		status = iomap_write_end(inode, pos, bytes, copied, page,
++				iomap);
+ 		if (unlikely(status < 0))
+ 			break;
+ 		copied = status;
+@@ -494,7 +599,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		WARN_ON_ONCE(!PageUptodate(page));
+ 
+-		status = iomap_write_end(inode, pos, bytes, bytes, page);
++		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ 		if (unlikely(status <= 0)) {
+ 			if (WARN_ON_ONCE(status == 0))
+ 				return -EIO;
+@@ -546,7 +651,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 	zero_user(page, offset, bytes);
+ 	mark_page_accessed(page);
+ 
+-	return iomap_write_end(inode, pos, bytes, bytes, page);
++	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ }
+ 
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+@@ -632,11 +737,14 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	struct page *page = data;
+ 	int ret;
+ 
+-	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
+-	if (ret)
+-		return ret;
++	if (i_blocksize(inode) != PAGE_SIZE) {
++		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
++		if (ret)
++			return ret;
++
++		block_commit_write(page, 0, length);
++	}
+ 
+-	block_commit_write(page, 0, length);
+ 	return length;
+ }
+ 
+@@ -663,6 +771,9 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+ 	else
+ 		length = PAGE_SIZE;
+ 
++	if (i_blocksize(inode) == PAGE_SIZE)
++		WARN_ON_ONCE(!PageUptodate(page));
++
+ 	offset = page_offset(page);
+ 	while (length > 0) {
+ 		ret = iomap_apply(inode, offset, length,
 -- 
 2.17.0
 
