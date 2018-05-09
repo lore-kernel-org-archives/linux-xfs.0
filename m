@@ -1,61 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51584 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755366AbeEHRWc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 May 2018 13:22:32 -0400
-Received: from smtp.corp.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8921330BEA6D
-        for <linux-xfs@vger.kernel.org>; Tue,  8 May 2018 17:22:32 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6AB2D9EDE9
-        for <linux-xfs@vger.kernel.org>; Tue,  8 May 2018 17:22:32 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 0/3] xfs: skip unnecessary discards
-Date: Tue,  8 May 2018 13:22:28 -0400
-Message-Id: <20180508172231.53570-1-bfoster@redhat.com>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:40492 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932475AbeEIAlC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 20:41:02 -0400
+Date: Wed, 9 May 2018 10:40:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 7/9] xfs: fix double ijoin in
+ xfs_reflink_clear_inode_flag()
+Message-ID: <20180509004059.GO23861@dastard>
+References: <20180508034202.10136-1-david@fromorbit.com>
+ <20180508034202.10136-8-david@fromorbit.com>
+ <20180508141826.GH4764@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180508141826.GH4764@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+On Tue, May 08, 2018 at 10:18:26AM -0400, Brian Foster wrote:
+> On Tue, May 08, 2018 at 01:42:00PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Another assert failure:
+> > 
+> > XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+> 
+> Same assert comment...
+> 
+> > ....
+> > xfs_trans_add_item+0xcc/0xe0
+> > xfs_reflink_clear_inode_flag+0x53/0x120
+> > xfs_reflink_try_clear_inode_flag+0x5b/0xa0
+> > ? filemap_write_and_wait+0x4f/0x70
+> > xfs_reflink_unshare+0x18e/0x19d
+> > xfs_file_fallocate+0x241/0x310
+> > ? selinux_file_permission+0xd4/0x140
+> > vfs_fallocate+0x13d/0x260
+> > SyS_fallocate+0x43/0x80
+> > 
+> > Another fix.
+> > 
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_reflink.c | 8 ++++++--
+> >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index bce2b5351d64..12d441a73b53 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -1553,7 +1553,12 @@ xfs_reflink_inode_has_shared_extents(
+> >  	return 0;
+> >  }
+> >  
+> > -/* Clear the inode reflink flag if there are no shared extents. */
+> > +/*
+> > + * Clear the inode reflink flag if there are no shared extents.
+> > + *
+> > + * The caller is responsible for joining the inode to the transaction passed in.
+> > + * The inode will be joined to the transaction that is returned to the caller.
+> > + */
+> >  int
+> >  xfs_reflink_clear_inode_flag(
+> >  	struct xfs_inode	*ip,
+> > @@ -1572,7 +1577,6 @@ xfs_reflink_clear_inode_flag(
+> >  	 * We didn't find any shared blocks so turn off the reflink flag.
+> >  	 * First, get rid of any leftover CoW mappings.
+> >  	 */
+> > -	xfs_trans_ijoin(*tpp, ip, 0);
+> 
+> Wasn't this just added in the previous patch?
 
-Here's v2 of the skip discards series. The only difference from the
-previous version is some factoring cleanups. This has since passed more
-(online discard enabled) xfstests runs without exploding.
+No, it was /moved/ in the previous patch from lower in the same
+function to ensure that the join was done before the call to
+xfs_reflink_cancel_cow_blocks().
 
-Thoughts, reviews, flames appreciated.
+i.e. the previous patch fixed this path:
 
-Brian
+xfs_reflink_cancel_cow_range
+  xfs_trans_ijoin()
+  xfs_reflink_cancel_cow_blocks()
+    xfs_trans_ijoin()
 
-v2:
-- Minor cleanups.
-- Dropped the eofblocks unwritten extent rfc.
-v1: https://marc.info/?l=linux-xfs&m=152571670220480&w=2
-- Define and use bmapi flag for eofblocks trims.
-- Separate patch to skip discards of unwritten extents.
-- Various factoring cleanups.
-rfc: https://marc.info/?l=linux-xfs&m=152476598825563&w=2
+This patch fixes this path:
 
-Brian Foster (3):
-  xfs: add bmapi nodiscard flag
-  xfs: skip online discard during eofblocks trims
-  xfs: don't discard on free of unwritten extents
+xfs_reflink_unshare
+  xfs_reflink_try_clear_inode_flag()
+    xfs_trans_ijoin()
+    xfs_reflink_clear_inode_flag
+      xfs_trans_ijoin()
 
- fs/xfs/libxfs/xfs_alloc.c  | 10 +++++++---
- fs/xfs/libxfs/xfs_alloc.h  | 27 +++++++++++++++++++++++++--
- fs/xfs/libxfs/xfs_bmap.c   | 18 ++++++++++++++----
- fs/xfs/libxfs/xfs_bmap.h   | 30 ++++++++++++++++++++++++++++--
- fs/xfs/xfs_bmap_util.c     |  4 ++--
- fs/xfs/xfs_extfree_item.c  |  2 +-
- fs/xfs/xfs_inode.c         | 19 +++++++++++--------
- fs/xfs/xfs_inode.h         | 24 ++++++++++++++++++++++--
- fs/xfs/xfs_trans.h         |  3 ++-
- fs/xfs/xfs_trans_extfree.c | 13 +++++++++----
- 10 files changed, 121 insertions(+), 29 deletions(-)
+So even if I didn't change xfs_reflink_clear_inode_flag() in the
+previous patch, there's still a separate double ijoin bug in the
+code, and hence this patch would still be necessary.
 
+> This seems a bit
+> superfluous. If the inode was already joined by the one caller of this
+> function, why not just remove this call in the previous patch rather
+> than move it and remove it?
+
+Because every time I put multiple independent fixes into a single
+patch I get told to separate them into individual patches.
+
+Cheers,
+
+Dave.
 -- 
-2.14.3
-
+Dave Chinner
+david@fromorbit.com
