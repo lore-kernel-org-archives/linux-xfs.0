@@ -1,88 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52086 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933832AbeEIHtb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:31 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/33] xfs: move locking into xfs_bmap_punch_delalloc_range
-Date: Wed,  9 May 2018 09:48:13 +0200
-Message-Id: <20180509074830.16196-17-hch@lst.de>
-In-Reply-To: <20180509074830.16196-1-hch@lst.de>
-References: <20180509074830.16196-1-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:35673 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932475AbeEIAYb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 20:24:31 -0400
+Date: Wed, 9 May 2018 10:24:28 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/9] xfs: fix double ijoin in xfs_inactive_symlink_rmt()
+Message-ID: <20180509002428.GN23861@dastard>
+References: <20180508034202.10136-1-david@fromorbit.com>
+ <20180508034202.10136-6-david@fromorbit.com>
+ <20180508141810.GF4764@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180508141810.GF4764@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Both callers want the same looking, so do it only once.
+On Tue, May 08, 2018 at 10:18:11AM -0400, Brian Foster wrote:
+> On Tue, May 08, 2018 at 01:41:58PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfs_inactive_symlink_rmt() does something nasty - it joins an inode
+> > into a transaction it is already joined to. This means the inode can
+> > have multiple log item descriptors attached to the transaction for
+> > it. This breaks teh 1:1 mapping that is supposed to exist
+> > between the log item and log item descriptor.
+> > 
+> > This results in the log item being processed twice during
+> > transaction commit and CIL formatting, and there are lots of other
+> > potential issues tha arise from double processing of log items in
+> > the transaction commit state machine.
+> > 
+> > In this case, the inode is already held by the rolling transaction
+> > returned from xfs_defer_finish(), so there's no need to join it
+> > again.
+> > 
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_symlink.c | 9 ++-------
+> >  1 file changed, 2 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> > index 5b66ac12913c..27870e5cd259 100644
+> > --- a/fs/xfs/xfs_symlink.c
+> > +++ b/fs/xfs/xfs_symlink.c
+> > @@ -488,16 +488,11 @@ xfs_inactive_symlink_rmt(
+> >  	error = xfs_defer_finish(&tp, &dfops);
+> >  	if (error)
+> >  		goto error_bmap_cancel;
+> > -	/*
+> > -	 * The first xact was committed, so add the inode to the new one.
+> > -	 * Mark it dirty so it will be logged and moved forward in the log as
+> > -	 * part of every commit.
+> > -	 */
+> > -	xfs_trans_ijoin(tp, ip, 0);
+> > -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > +
+> >  	/*
+> >  	 * Commit the transaction containing extent freeing and EFDs.
+> >  	 */
+> > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> 
+> Seems fine.. but do we even need this call? We're about to commit the
+> transaction and unlock the inode...
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c      | 2 --
- fs/xfs/xfs_bmap_util.c | 7 ++++---
- fs/xfs/xfs_iomap.c     | 3 ---
- 3 files changed, 4 insertions(+), 8 deletions(-)
+Yes, I think we do. We need it to be committed in each of the
+rolling transactions so that the inode doesn't get written/replayed
+before any of the other dependent metadata changes in this final
+transaction.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 313449ac0288..196c5daa6dce 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -761,10 +761,8 @@ xfs_aops_discard_page(
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
- 			page, ip->i_ino, offset);
- 
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
- 			PAGE_SIZE / i_blocksize(inode));
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 7d2ba4cc8fba..82189ea97319 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -711,12 +711,11 @@ xfs_bmap_punch_delalloc_range(
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
- 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
- 		if (error)
--			return error;
-+			goto out_unlock;
- 	}
- 
- 	if (!xfs_iext_lookup_extent(ip, ifp, start_fsb, &icur, &got))
-@@ -738,6 +737,8 @@ xfs_bmap_punch_delalloc_range(
- 			break;
- 	} while (xfs_iext_next_extent(ifp, &icur, &got));
- 
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 046469fcc1b8..407bbd978d1b 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1167,11 +1167,8 @@ xfs_file_iomap_end_delalloc(
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
- 					       end_fsb - start_fsb);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--
- 		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
- 			xfs_alert(mp, "%s: unable to clean up ino %lld",
- 				__func__, ip->i_ino);
+Cheers,
+
+Dave.
 -- 
-2.17.0
-
+Dave Chinner
+david@fromorbit.com
