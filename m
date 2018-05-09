@@ -1,47 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:46350 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751652AbeEBJyq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 05:54:46 -0400
-Received: by mail-wr0-f180.google.com with SMTP id o2-v6so10413639wrj.13
-        for <linux-xfs@vger.kernel.org>; Wed, 02 May 2018 02:54:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
-References: <f403043cbe8414177d0568e81405@google.com> <20180403043854.GL1150@dastard>
- <CACT4Y+ZadV0xTqhiGTAHmadAnYaSfPKhUy_TFXMza2o_n8+o9w@mail.gmail.com>
- <20180405213844.GE23861@dastard> <20180406161053.GF7500@magnolia>
- <CACT4Y+aaEOffkFA-B-hMzwzSiQwVpkPrc2udC087a55OTnkS4g@mail.gmail.com>
- <95c1400b-94f2-1af4-2d5d-c61c274c28ff@sandeen.net> <CACT4Y+aiwgRg5pk+N7bq9HYpgumTFyqG6-y3EZ8pWkq9-uB1aA@mail.gmail.com>
- <9f8d657c-7f42-7bd9-4477-6c3addf16dee@sandeen.net> <CACT4Y+bUx4jw83Ux7w9URL9bCy1ERLaVGTTwvA9Fe_UtLFeqCw@mail.gmail.com>
- <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 2 May 2018 11:54:24 +0200
-Message-ID: <CACj3i70Dw5=B-k5hKEXpHg5DOhG2Hi-Xb4ZVpZWL+EYdX=jCeQ@mail.gmail.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:51942 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933832AbeEIHtU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:20 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 13/33] xfs: use iomap for blocksize == PAGE_SIZE readpage and readpages
+Date: Wed,  9 May 2018 09:48:10 +0200
+Message-Id: <20180509074830.16196-14-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dmitry Vyukov <dvyukov@google.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Theodore Ts'o <tytso@mit.edu>, syzkaller <syzkaller@googlegroups.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Apr 30, 2018 at 5:14 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 4/30/18 9:02 AM, Dmitry Vyukov wrote:
->> Suggestions are welcome. Currently it says "syzbot hit the following
->> crash on upstream commit SHA1", which was supposed to mean just the
->> state of the source tree when the crash happened. But I am not a
->> native speaker, so perhaps I am saying not what I intend to say.
->>
->> There are also suggestions on report format improvement from +Ted
->> currently in works:
->> https://github.com/google/syzkaller/issues/565#issuecomment-380792942
->> Not sure if they make this distinction 100% clear, though.
->
-> Maybe I was the only one who misunderstood, but something like
->
+For file systems with a block size that equals the page size we never do
+partial reads, so we can use the buffer_head-less iomap versions of
+readpage and readpages without conflicting with the buffer_head structures
+create later in write_begin.
 
-snip
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-You are not the only one, I (mis)understand it the same as you.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 8b06be0a80da..8e4d01e76fc8 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1402,6 +1402,8 @@ xfs_vm_readpage(
+ 	struct page		*page)
+ {
+ 	trace_xfs_vm_readpage(page->mapping->host, 1);
++	if (i_blocksize(page->mapping->host) == PAGE_SIZE)
++		return iomap_readpage(page, &xfs_iomap_ops);
+ 	return mpage_readpage(page, xfs_get_blocks);
+ }
+ 
+@@ -1413,6 +1415,8 @@ xfs_vm_readpages(
+ 	unsigned		nr_pages)
+ {
+ 	trace_xfs_vm_readpages(mapping->host, nr_pages);
++	if (i_blocksize(mapping->host) == PAGE_SIZE)
++		return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
+ 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
+ }
+ 
+-- 
+2.17.0
 
-Jan
