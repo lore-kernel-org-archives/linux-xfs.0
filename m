@@ -1,54 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53704 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:42696 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751096AbeEJNx1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 09:53:27 -0400
-Date: Thu, 10 May 2018 09:53:26 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/12] xfs: add missing rmap error return
-Message-ID: <20180510135325.GB69384@bfoster.bfoster>
-References: <152537075334.16676.10600900179473864298.stgit@magnolia>
- <152537076596.16676.8860720933298336661.stgit@magnolia>
+        id S935065AbeEIPJ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 May 2018 11:09:57 -0400
+Subject: Re: [PATCH] io: Document shutdown -f
+References: <20180509144320.15746-1-cmaiolino@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <dab48bca-0b33-5434-3d7f-e62d6ed5a11b@sandeen.net>
+Date: Wed, 9 May 2018 10:09:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152537076596.16676.8860720933298336661.stgit@magnolia>
+In-Reply-To: <20180509144320.15746-1-cmaiolino@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
 
-On Thu, May 03, 2018 at 11:06:06AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+I'll re-title this as "xfs_io: Document shutdown -f" FWIW
+
+On 5/9/18 9:43 AM, Carlos Maiolino wrote:
+> Add help and manpage information for xfs_io shutdown -f
 > 
-> xfs_rmap_lookup_le_range can return errors, so we need to check for
-> them and bail out.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_rmap.c |    2 ++
->  1 file changed, 2 insertions(+)
+>  io/shutdown.c     | 10 ++++++++++
+>  man/man8/xfs_io.8 |  9 ++++++++-
+>  2 files changed, 18 insertions(+), 1 deletion(-)
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> index fba8d2718017..f7769edf5b68 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.c
-> +++ b/fs/xfs/libxfs/xfs_rmap.c
-> @@ -1374,6 +1374,8 @@ xfs_rmap_convert_shared(
->  	 */
->  	error = xfs_rmap_lookup_le_range(cur, bno, owner, offset, flags,
->  			&PREV, &i);
-> +	if (error)
-> +		goto done;
->  	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
+> diff --git a/io/shutdown.c b/io/shutdown.c
+> index 022a0e9a..d5e84182 100644
+> --- a/io/shutdown.c
+> +++ b/io/shutdown.c
+> @@ -47,6 +47,15 @@ shutdown_f(
+>  	return 0;
+>  }
 >  
->  	ASSERT(PREV.rm_offset <= offset);
+> +static void
+> +shutdown_help(void)
+> +{
+> +	printf(_(
+> +"\n"
+
+Most command long help restates the purpose with a bit more detail, and /then/ shows the options, i.e.
+
+xfs_io> help fiemap
+fiemap [-alv] [-n nx] [offset [len]] -- print block mapping for a file
+
+ prints the block mapping for a file's data or attribute forks
+ Example:
+ 'fiemap -v' - tabular format verbose map
+
+ fiemap prints the map of disk blocks used by the current file.
+ The map lists each extent used by the file, as well as regions in the
+ file that do not have any corresponding blocks (holes).
+ By default, each line of the listing takes the following form:
+     extent: [startoffset..endoffset]: startblock..endblock
+ Holes are marked by replacing the startblock..endblock with 'hole'.
+ All the file offsets and disk blocks are in units of 512-byte blocks.
+ -a -- prints the attribute fork map instead of the data fork.
+
+
+
+so just for consistency, adding a bit more info, maybe something like:
+
+
+Shuts down the filesystem and prevents any further IO from occurring,
+simulating a crash.
+
+ -f -- force log to disk before shut down
+
+
+would be a bit more consistent with other long help functions.
+
+Thanks,
+-Eric
+
+> +" -f -- force log to disk before shut down\n"
+> +"\n"));
+> +}
+> +
+>  void
+>  shutdown_init(void)
+>  {
+> @@ -56,6 +65,7 @@ shutdown_init(void)
+>  	shutdown_cmd.argmax = 1;
+>  	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK;
+>  	shutdown_cmd.args = _("[-f]");
+> +	shutdown_cmd.help = shutdown_help;
+>  	shutdown_cmd.oneline =
+>  		_("shuts down the filesystem where the current file resides");
+>  
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index c3ab532d..d7b2d004 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -1007,8 +1007,15 @@ Note \-\- this can be useful for exercising out of space behavior.
+>  Only available in expert mode and requires privileges.
+>  .TP
+>  .BR shutdown " [ " \-f " ]"
+> -Force the filesystem to shutdown (with or without flushing the log).
+> +Force the filesystem to shutdown.
+>  Only available in expert mode and requires privileges.
+> +.RS 1.0i
+> +.PD 0
+> +.TP 0.4i
+> +.B \-f
+> +Force a log flush before shutting the filesystem down.
+> +.PD
+> +.RE
+>  .TP
+>  .BR stat " [ " \-v "|" \-r " ]"
+>  Selected statistics from
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
