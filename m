@@ -1,55 +1,318 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46600 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750854AbeEJGjO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 02:39:14 -0400
-Date: Thu, 10 May 2018 08:42:50 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/33] iomap: add an iomap-based bmap implementation
-Message-ID: <20180510064250.GD11422@lst.de>
-References: <20180509074830.16196-1-hch@lst.de> <20180509074830.16196-11-hch@lst.de> <20180509164628.GV11261@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:58094 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934936AbeEIOfY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 10:35:24 -0400
+Date: Wed, 9 May 2018 07:34:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 2/6] xfs: defer agfl block frees when dfops is
+ available
+Message-ID: <20180509143453.GG11261@magnolia>
+References: <20180418133119.21775-1-bfoster@redhat.com>
+ <20180418133119.21775-3-bfoster@redhat.com>
+ <20180508011032.GF11261@magnolia>
+ <20180508123140.GA4764@bfoster.bfoster>
+ <20180508180402.GV11261@magnolia>
+ <20180509111858.GE64624@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180509164628.GV11261@magnolia>
+In-Reply-To: <20180509111858.GE64624@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 09, 2018 at 09:46:28AM -0700, Darrick J. Wong wrote:
-> On Wed, May 09, 2018 at 09:48:07AM +0200, Christoph Hellwig wrote:
-> > This adds a simple iomap-based implementation of the legacy ->bmap
-> > interface.  Note that we can't easily add checks for rt or reflink
-> > files, so these will have to remain in the callers.  This interface
-> > just needs to die..
+On Wed, May 09, 2018 at 07:18:59AM -0400, Brian Foster wrote:
+> On Tue, May 08, 2018 at 11:04:02AM -0700, Darrick J. Wong wrote:
+> > On Tue, May 08, 2018 at 08:31:40AM -0400, Brian Foster wrote:
+> > > On Mon, May 07, 2018 at 06:10:32PM -0700, Darrick J. Wong wrote:
+> > > > On Wed, Apr 18, 2018 at 09:31:15AM -0400, Brian Foster wrote:
+> > > ...
+> > > > > 
+> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > > ---
+> > > > >  fs/xfs/libxfs/xfs_alloc.c  | 51 ++++++++++++++++++++++++++++++---
+> > > > >  fs/xfs/libxfs/xfs_defer.h  |  1 +
+> > > > >  fs/xfs/xfs_trace.h         |  2 ++
+> > > > >  fs/xfs/xfs_trans.c         | 11 ++++++--
+> > > > >  fs/xfs/xfs_trans.h         |  1 +
+> > > > >  fs/xfs/xfs_trans_extfree.c | 70 ++++++++++++++++++++++++++++++++++++++++++++++
+> > > > >  6 files changed, 129 insertions(+), 7 deletions(-)
+> > > > > 
+> > > ...
+> > > > > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > > > > index 9d542dfe0052..834388c2c9de 100644
+> > > > > --- a/fs/xfs/xfs_trans.h
+> > > > > +++ b/fs/xfs/xfs_trans.h
+> > > > > @@ -111,6 +111,7 @@ typedef struct xfs_trans {
+> > > > >  	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
+> > > > >  	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
+> > > > >  	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
+> > > > > +	struct xfs_defer_ops	*t_agfl_dfops;	/* optional agfl fixup dfops */
+> > > > 
+> > > > This more or less looks fine to me, with ^^^^ this one (incoherent) quibble:
+> > > > 
+> > > 
+> > > I wouldn't call it incoherent...
+> > > 
+> > > > A thread can only have one transaction and one dfops in play at a time,
+> > > > so could we just call this t_dfops and allow anyone to access it who
+> > > > wants to add their own deferred operations?  Then we can stop passing
+> > > > both tp and dfops all over the stack.  Can you think of a situation
+> > > > where we would want access to t_dfops for deferred agfl frees but not
+> > > > for any other deferred ops?
+> > > > 
+> > > 
+> > > ... because that is precisely the secondary goal of this approach. :)
+> > > Dave suggested this approach in a previous version and the last post
+> > > actually used ->t_dfops rather than ->t_agfl_dfops and included some
+> > > associated dfops parameter elimination cleanup I did along the way.
+> > > 
+> > > Christoph objected to the partial refactoring, however, so I'm trying to
+> > > do this in two parts where the first is primarily focused on fixing the
+> > > problems resolved by deferred agfl frees. The challenge is that I don't
+> > > want to manually plumb dfops through new codepaths to control deferred
+> > > agfl frees only to immediately turn around and clean that code out, and
+> > > I certainly don't want to refactor all of our dfops code just to enable
+> > > deferred agfl frees because it creates an unnecessary dependency for
+> > > backports. As a result, I've stripped out as much refactoring as
+> > > possible to try and make it clear that this is a bug fix series that
+> > > happens to create a new xfs_trans field that will open wider cleanups in
+> > > a follow on series.
+> > > 
+> > > IOW, I have a series in progress where patch 1 renames ->t_agfl_dfops
+> > > back to ->t_dfops to essentially open it for general use and then starts
+> > > to incorporate the broader cleanups like removing dfops from callstacks,
+> > > alloc/bmap data structures, etc.
+> > 
+> > Seems reasonable.  I've occasionally thought that passing around (tp,
+> > dfops, firstblock) is kinda bulky and silly.
+> > 
+> > > BTW, something I'm curious of your (and Dave, Christoph?) opinion on...
+> > > another thing that was dropped (permanently) from the previous series
+> > > was an update to xfs_defer_init() to do the ->t_dfops = &dfops
+> > > assignment that is otherwise open-coded throughout here. While I don't
+> > > have a strong preference on that for this series, the more broader
+> > > cleanup I do the less I like the open-coded approach because it creates
+> > > a tx setup requirement that's easy to miss (case in point: a function
+> > > signature change is an easy way to verify all dfops have been associated
+> > > with transactions). Instead, I'd prefer code that looks something like
+> > > the following as the end result of the follow-on cleanup series:
+> > > 
+> > > 	struct xfs_trans	*tp;
+> > > 	struct xfs_defer_ops	dfops;
+> > > 
+> > > 	xfs_trans_alloc(... &tp);
+> > > 	xfs_defer_init(&dfops, &first_block, tp);
+> > > 
+> > > 	...
+> > > 
+> > > 	xfs_defer_finish(&tp);
+> > > 	xfs_trans_commit(tp);
+> > > 	...
+> > > 
+> > > Note that once we require association of dfops with tp, we don't have to
+> > > pass dfops around to anywhere the tp isn't already needed, including
+> > > xfs_defer_finish(). This also opens the possibility of doing things like
+> > > replacing on-stack dfops with something that's just embedded in
+> > > xfs_trans itself (optionally pushing down the init/finish calls into the
+> > > trans infrastructure), but that would require changing how dfops are
+> > > transferred to rolled transactions and whatnot. I haven't really got far
+> > > enough to give that proper consideration, but that may be a possible 3rd
+> > > step cleanup if there's value.
+> > 
+> > Not sure.  There are places where it seems to make sense to be able to
+> > _defer_finish but still have a transaction around to continue making
+> > changes afterwards.  Or at least, the attr and quota code seems to do
+> > that. :P
+> > 
 > 
-> You /can/ check these...
+> Right.. I do think xfs_defer_finish() should continue to exist even if
+> we were to eventually do something like embed a dfops in the tp and
+> allow a transaction commit to do the dfops completion. Something like
+> that would just essentially clean out some of the simple trans_alloc()
+> -> do_stuff() -> xfs_defer_finish() -> xfs_trans_commit() boilerplate
+> code. Code that does looping xfs_defer_finish() calls and whatnot should
+> continue to look the same.
 > 
-> if (iomap->bdev != inode->i_sb->s_bdev)
-> 	return 0;
-> if (iomap->flags & IOMAP_F_SHARED)
-> 	return 0;
+> But I don't think that has much of a bearing on tweaking
+> xfs_defer_init() vs. tp->t_dfops = &dfops..?
 
-The latter only checks for a shared extent, not a file with possibly
-shared extents.  I'd rather keep the check for a file with possible
-shared extents.
+It doesn't; I had gone off into the weeds thinking about the _finish
+cases.  I guess we're talking about splitting the dfops usages into
+scenario (a) where the transaction owns the dfops and _finishes it as
+part of _trans_commit; and (b) the existing situation where the calling
+function owns the dfops and has to take care of _init and _finish
+explicitly.  I think that would work and it seems like a reasonable
+cleanup since there are a lot of places where the code does _finish and
+_commit and that's it.
 
-> > +static loff_t
-> > +iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
-> > +		void *data, struct iomap *iomap)
-> > +{
-> > +	sector_t *bno = data;
-> > +
-> > +	if (iomap->type == IOMAP_MAPPED)
-> > +		*bno = (iomap->addr + pos - iomap->offset) >> inode->i_blkbits;
+> > Also, there's one funny case where we can have a dfops but no
+> > transaction, which is xlog_recover_process_intents ->
+> > xlog_finish_defer_ops.  We create a dfops to collect new intents created
+> > as part of replaying unfinished intents that were in the dirty log, but
+> > since the intent recovery functions create and commit their own
+> > transactions, we don't create the transaction that goes with the dfops
+> > until we're done replaying old intents and ready to finish the new
+> > intents.
 > 
-> Does this need to be careful w.r.t. overflow on systems where sector_t
-> is a 32-bit unsigned long?
+> I should have pointed out that the tp parameter is intended to be
+> optional. So xfs_defer_init() simply does the tp->t_dfops = &dfops
+> assignment if tp != NULL. If tp == NULL, the associated dfops could
+> certainly already be associated with some transaction and be reused
+> (which appears to be the use case down in some of the xfs_da_args code
+> IIRC), or not at all. So the recovery code you refer to could simply go
+> unchanged or be an exception where we do open-code the ->t_dfops
+> assignment.
 > 
-> Also, ioctl_fibmap() typecasts the returned sector_t to an int, which
-> also seems broken.  I agree the interface needs to die, but ioctls take
-> a long time to deprecate.
+> The part I'm curious about here is really just whether it's worth
+> tweaking xfs_defer_init() so we don't have to add an additional
+> tp->t_dfops = &dfops assignment (almost) everywhere we already call
+> xfs_defer_init(). I suppose I could try that change after the fact so
+> it's easier to factor in or out...
 
-Not much we can do about the interface.
+Hm, I think I like this idea where the transaction can set up an
+internal dfops and manage it for you unless you call _defer_init to
+signal that you're going to manage the dfops yourself and want to
+override the internal dfops.  Would that fit well with all this?  I
+think it would...
+
+(And now that I think about it, no, you can't really have nested dfops
+because _defer_[bi]join means that you want the specified buffer/inode
+relogged and held across transaction rolls, which doesn't happen if a
+nested dfops rolls the transaction.)
+
+--D
+
+> 
+> Brian
+> 
+> > 
+> > --D
+> > 
+> > 
+> > > Anyways, I'd really like to avoid having to switch back and forth
+> > > between the xfs_defer_init() tweak and open-coded assignment if
+> > > possible. Any thoughts/preferences on either approach?
+> > > Brian
+> > > 
+> > > > Separate cleanup, of course, and sorry if this has already been asked.
+> > > > 
+> > > > Other than that this looks ok enough to test,
+> > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > --D
+> > > > 
+> > > > 
+> > > > >  	unsigned int		t_flags;	/* misc flags */
+> > > > >  	int64_t			t_icount_delta;	/* superblock icount change */
+> > > > >  	int64_t			t_ifree_delta;	/* superblock ifree change */
+> > > > > diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+> > > > > index ab438647592a..f5620796ae25 100644
+> > > > > --- a/fs/xfs/xfs_trans_extfree.c
+> > > > > +++ b/fs/xfs/xfs_trans_extfree.c
+> > > > > @@ -231,9 +231,79 @@ static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+> > > > >  	.cancel_item	= xfs_extent_free_cancel_item,
+> > > > >  };
+> > > > >  
+> > > > > +/*
+> > > > > + * AGFL blocks are accounted differently in the reserve pools and are not
+> > > > > + * inserted into the busy extent list.
+> > > > > + */
+> > > > > +STATIC int
+> > > > > +xfs_agfl_free_finish_item(
+> > > > > +	struct xfs_trans		*tp,
+> > > > > +	struct xfs_defer_ops		*dop,
+> > > > > +	struct list_head		*item,
+> > > > > +	void				*done_item,
+> > > > > +	void				**state)
+> > > > > +{
+> > > > > +	struct xfs_mount		*mp = tp->t_mountp;
+> > > > > +	struct xfs_efd_log_item		*efdp = done_item;
+> > > > > +	struct xfs_extent_free_item	*free;
+> > > > > +	struct xfs_extent		*extp;
+> > > > > +	struct xfs_buf			*agbp;
+> > > > > +	int				error;
+> > > > > +	xfs_agnumber_t			agno;
+> > > > > +	xfs_agblock_t			agbno;
+> > > > > +	uint				next_extent;
+> > > > > +
+> > > > > +	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+> > > > > +	ASSERT(free->xefi_blockcount == 1);
+> > > > > +	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
+> > > > > +	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
+> > > > > +
+> > > > > +	trace_xfs_agfl_free_deferred(mp, agno, 0, agbno, free->xefi_blockcount);
+> > > > > +
+> > > > > +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+> > > > > +	if (!error)
+> > > > > +		error = xfs_free_agfl_block(tp, agno, agbno, agbp,
+> > > > > +					    &free->xefi_oinfo);
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Mark the transaction dirty, even on error. This ensures the
+> > > > > +	 * transaction is aborted, which:
+> > > > > +	 *
+> > > > > +	 * 1.) releases the EFI and frees the EFD
+> > > > > +	 * 2.) shuts down the filesystem
+> > > > > +	 */
+> > > > > +	tp->t_flags |= XFS_TRANS_DIRTY;
+> > > > > +	efdp->efd_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+> > > > > +
+> > > > > +	next_extent = efdp->efd_next_extent;
+> > > > > +	ASSERT(next_extent < efdp->efd_format.efd_nextents);
+> > > > > +	extp = &(efdp->efd_format.efd_extents[next_extent]);
+> > > > > +	extp->ext_start = free->xefi_startblock;
+> > > > > +	extp->ext_len = free->xefi_blockcount;
+> > > > > +	efdp->efd_next_extent++;
+> > > > > +
+> > > > > +	kmem_free(free);
+> > > > > +	return error;
+> > > > > +}
+> > > > > +
+> > > > > +
+> > > > > +/* sub-type with special handling for AGFL deferred frees */
+> > > > > +static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
+> > > > > +	.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
+> > > > > +	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
+> > > > > +	.diff_items	= xfs_extent_free_diff_items,
+> > > > > +	.create_intent	= xfs_extent_free_create_intent,
+> > > > > +	.abort_intent	= xfs_extent_free_abort_intent,
+> > > > > +	.log_item	= xfs_extent_free_log_item,
+> > > > > +	.create_done	= xfs_extent_free_create_done,
+> > > > > +	.finish_item	= xfs_agfl_free_finish_item,
+> > > > > +	.cancel_item	= xfs_extent_free_cancel_item,
+> > > > > +};
+> > > > > +
+> > > > >  /* Register the deferred op type. */
+> > > > >  void
+> > > > >  xfs_extent_free_init_defer_op(void)
+> > > > >  {
+> > > > >  	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
+> > > > > +	xfs_defer_init_op_type(&xfs_agfl_free_defer_type);
+> > > > >  }
+> > > > > -- 
+> > > > > 2.13.6
+> > > > > 
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
