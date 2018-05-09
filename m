@@ -1,69 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47904 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751533AbeEHVOV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 17:14:21 -0400
-Subject: Re: [PATCH 20/21] xfsprogs: Add parent pointers during protofile
- creation
-References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
- <1525754479-12177-21-git-send-email-allison.henderson@oracle.com>
- <20180508174305.GT11261@magnolia>
- <782721c1-f929-a5a6-ed45-b7f42b3a5c05@sandeen.net>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <6bad30c4-7bd0-5f87-8ded-c464d9991c73@oracle.com>
-Date: Tue, 8 May 2018 14:14:16 -0700
-MIME-Version: 1.0
-In-Reply-To: <782721c1-f929-a5a6-ed45-b7f42b3a5c05@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.133]:51970 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933832AbeEIHtX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:23 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 14/33] xfs: simplify xfs_bmap_punch_delalloc_range
+Date: Wed,  9 May 2018 09:48:11 +0200
+Message-Id: <20180509074830.16196-15-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
+Instead of using xfs_bmapi_read to find delalloc extents and then punch
+them out using xfs_bunmapi, opencode the loop to iterate over the extents
+and call xfs_bmap_del_extent_delay directly.  This both simplifies the
+code and reduces the number of extent tree lookups required.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_bmap_util.c | 78 ++++++++++++++----------------------------
+ 1 file changed, 25 insertions(+), 53 deletions(-)
 
-On 05/08/2018 01:39 PM, Eric Sandeen wrote:
-> 
-> 
-> On 5/8/18 12:43 PM, Darrick J. Wong wrote:
->> On Mon, May 07, 2018 at 09:41:18PM -0700, Allison Henderson wrote:
->>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
->>> ---
->>>   mkfs/proto.c         | 59 ++++++++++++++++++++++++++++++++++------------------
->>>   repair/attr_repair.c | 16 ++------------
->>>   repair/phase6.c      | 47 +++++++++++++++++++++++++----------------
-> 
->> Separate patches for separate utilities, please.
-> 
-> Or at least patch per functional change; it's not at all clear to me how protofile
-> creation has anything to do with xfs_repair, and there's nothing in the commit
-> log to help me figure it out.  :)
-> 
-> (I think it doesn't have anything to do w/ protofile creation, and the repair
-> patches are fixing up orphanage entry creation; the attr_repair changes seem
-> like some third thing that I don't grok yet, sorry - removing namecheck() for
-> some reason?).
-> 
-> -Eric
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8cd8c412f52d..7d2ba4cc8fba 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -695,12 +695,10 @@ xfs_getbmap(
+ }
+ 
+ /*
+- * dead simple method of punching delalyed allocation blocks from a range in
+- * the inode. Walks a block at a time so will be slow, but is only executed in
+- * rare error cases so the overhead is not critical. This will always punch out
+- * both the start and end blocks, even if the ranges only partially overlap
+- * them, so it is up to the caller to ensure that partial blocks are not
+- * passed in.
++ * Dead simple method of punching delalyed allocation blocks from a range in
++ * the inode.  This will always punch out both the start and end blocks, even
++ * if the ranges only partially overlap them, so it is up to the caller to
++ * ensure that partial blocks are not passed in.
+  */
+ int
+ xfs_bmap_punch_delalloc_range(
+@@ -708,63 +706,37 @@ xfs_bmap_punch_delalloc_range(
+ 	xfs_fileoff_t		start_fsb,
+ 	xfs_fileoff_t		length)
+ {
+-	xfs_fileoff_t		remaining = length;
++	struct xfs_ifork	*ifp = &ip->i_df;
++	struct xfs_bmbt_irec	got, del;
++	struct xfs_iext_cursor	icur;
+ 	int			error = 0;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
+-	do {
+-		int		done;
+-		xfs_bmbt_irec_t	imap;
+-		int		nimaps = 1;
+-		xfs_fsblock_t	firstblock;
+-		struct xfs_defer_ops dfops;
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++		if (error)
++			return error;
++	}
+ 
+-		/*
+-		 * Map the range first and check that it is a delalloc extent
+-		 * before trying to unmap the range. Otherwise we will be
+-		 * trying to remove a real extent (which requires a
+-		 * transaction) or a hole, which is probably a bad idea...
+-		 */
+-		error = xfs_bmapi_read(ip, start_fsb, 1, &imap, &nimaps,
+-				       XFS_BMAPI_ENTIRE);
++	if (!xfs_iext_lookup_extent(ip, ifp, start_fsb, &icur, &got))
++		return 0;
+ 
+-		if (error) {
+-			/* something screwed, just bail */
+-			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_alert(ip->i_mount,
+-			"Failed delalloc mapping lookup ino %lld fsb %lld.",
+-						ip->i_ino, start_fsb);
+-			}
++	do {
++		if (got.br_startoff >= start_fsb + length)
+ 			break;
+-		}
+-		if (!nimaps) {
+-			/* nothing there */
+-			goto next_block;
+-		}
+-		if (imap.br_startblock != DELAYSTARTBLOCK) {
+-			/* been converted, ignore */
+-			goto next_block;
+-		}
+-		WARN_ON(imap.br_blockcount == 0);
++		if (!isnullstartblock(got.br_startblock))
++			continue;
+ 
+-		/*
+-		 * Note: while we initialise the firstblock/dfops pair, they
+-		 * should never be used because blocks should never be
+-		 * allocated or freed for a delalloc extent and hence we need
+-		 * don't cancel or finish them after the xfs_bunmapi() call.
+-		 */
+-		xfs_defer_init(&dfops, &firstblock);
+-		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
+-					&dfops, &done);
++		del = got;
++		xfs_trim_extent(&del, start_fsb, length);
++		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
++				&got, &del);
+ 		if (error)
+ 			break;
+-
+-		ASSERT(!xfs_defer_has_unfinished_work(&dfops));
+-next_block:
+-		start_fsb++;
+-		remaining--;
+-	} while(remaining > 0);
++		if (!xfs_iext_get_extent(ifp, &icur, &got))
++			break;
++	} while (xfs_iext_next_extent(ifp, &icur, &got));
+ 
+ 	return error;
+ }
+-- 
+2.17.0
 
-Ok, it took me a minute to remember why I did this too.  We had ended up 
-adding a parameter to libxfs_dir_createname to get the offset needed for 
-creating the parent pointer in the protofile, and I ended up following 
-the compiler errors back around the repair code that uses the same 
-function calls as well.
-
-Maybe I should make a separate patch just for the offset like the kernel 
-space set does, and then have two smaller patches for the protofile and 
-repair code.
-
-Allison
-
->   
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIDaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=RAhvaxRO4Y3BuEWfKCiKHMUeNpZj53frHeTCh1R64dU&s=KTNiitB11SrpPwMvBXEQzon_G1JLFHAd69coCAKx8_Y&e=
-> 
