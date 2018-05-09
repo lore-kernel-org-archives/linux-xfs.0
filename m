@@ -1,277 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45736 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965066AbeEJNgt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 09:36:49 -0400
-Date: Thu, 10 May 2018 15:36:46 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4] iomap: add a swapfile activation function
-Message-ID: <20180510133646.kq5aacwrvpsu3gwj@quack2.suse.cz>
-References: <20180509173319.GE9510@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:39724 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933988AbeEIOkA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 10:40:00 -0400
+Date: Wed, 9 May 2018 07:38:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v9 9/9] xfs, dax: introduce xfs_break_dax_layouts()
+Message-ID: <20180509143843.GH11261@magnolia>
+References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180509173319.GE9510@magnolia>
+In-Reply-To: <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, cyberax@amazon.com, osandov@osandov.com, Eryu Guan <guaneryu@gmail.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Wed 09-05-18 10:33:19, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Apr 24, 2018 at 04:33:50PM -0700, Dan Williams wrote:
+> xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
+> for busy / pinned dax pages and waits for those pages to go idle before
+> any potential extent unmap operation.
 > 
-> Add a new iomap_swapfile_activate function so that filesystems can
-> activate swap files without having to use the obsolete and slow bmap
-> function.  This enables XFS to support fallocate'd swap files and
-> swap files on realtime devices.
+> dax_layout_busy_page() handles synchronizing against new page-busy
+> events (get_user_pages). It invalidates all mappings to trigger the
+> get_user_pages slow path which will eventually block on the xfs inode
+> lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
+> busy page it returns it for xfs to wait for the page-idle event that
+> will fire when the page reference count reaches 1 (recall ZONE_DEVICE
+> pages are idle at count 1, see generic_dax_pagefree()).
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
+> deadlock the process that might be trying to elevate the page count of
+> more pages before arranging for any of them to go idle. I.e. the typical
+> case of submitting I/O is that iov_iter_get_pages() elevates the
+> reference count of all pages in the I/O before starting I/O on the first
+> page. The process of elevating the reference count of all pages involved
+> in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
+> 
+> Although XFS_MMAPLOCK_EXCL is dropped while waiting, XFS_IOLOCK_EXCL is
+> held while sleeping. We need this to prevent starvation of the truncate
+> path as continuous submission of direct-I/O could starve the truncate
+> path indefinitely if the lock is dropped.
+> 
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Reported-by: Jan Kara <jack@suse.cz>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-The patch looks good to me now. You can add:
+I should've acked this explicitly since it's xfs code,
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+The rest of it looks fine enough to me too, but there's no
+Acked-by-goober tag to put on them. :P
 
-								Honza
+--D
 
 > ---
->  fs/iomap.c            |  162 +++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_aops.c     |   12 ++++
->  include/linux/iomap.h |   11 +++
->  3 files changed, 185 insertions(+)
+>  fs/xfs/xfs_file.c |   59 +++++++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 48 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index afd163586aa0..99e7f1aa2779 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -27,6 +27,7 @@
->  #include <linux/task_io_accounting_ops.h>
->  #include <linux/dax.h>
->  #include <linux/sched/signal.h>
-> +#include <linux/swap.h>
->  
->  #include "internal.h"
->  
-> @@ -1089,3 +1090,164 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 1a5176b21803..4e98d0dcc035 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -718,6 +718,37 @@ xfs_file_write_iter(
 >  	return ret;
 >  }
->  EXPORT_SYMBOL_GPL(iomap_dio_rw);
-> +
-> +/* Swapfile activation */
-> +
-> +#ifdef CONFIG_SWAP
-> +struct iomap_swapfile_info {
-> +	struct iomap iomap;		/* accumulated iomap */
-> +	struct swap_info_struct *sis;
-> +	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
-> +	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
-> +	unsigned long nr_pages;		/* number of pages collected */
-> +	int nr_extents;			/* extent count */
-> +};
-> +
-> +/*
-> + * Collect physical extents for this swap file.  Physical extents reported to
-> + * the swap code must be trimmed to align to a page boundary.  The logical
-> + * offset within the file is irrelevant since the swapfile code maps logical
-> + * page numbers of the swap device to the physical page-aligned extents.
-> + */
-> +static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
-> +{
-> +	struct iomap *iomap = &isi->iomap;
-> +	unsigned long nr_pages;
-> +	uint64_t first_ppage;
-> +	uint64_t first_ppage_reported;
-> +	uint64_t next_ppage;
-> +	int error;
-> +
-> +	/*
-> +	 * Round the start up and the end down so that the physical
-> +	 * extent aligns to a page boundary.
-> +	 */
-> +	first_ppage = ALIGN(iomap->addr, PAGE_SIZE) >> PAGE_SHIFT;
-> +	next_ppage = ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE) >>
-> +			PAGE_SHIFT;
-> +
-> +	/* Skip too-short physical extents. */
-> +	if (first_ppage >= next_ppage)
-> +		return 0;
-> +	nr_pages = next_ppage - first_ppage;
-> +
-> +	/*
-> +	 * Calculate how much swap space we're adding; the first page contains
-> +	 * the swap header and doesn't count.  The mm still wants that first
-> +	 * page fed to add_swap_extent, however.
-> +	 */
-> +	first_ppage_reported = first_ppage;
-> +	if (iomap->offset == 0)
-> +		first_ppage_reported++;
-> +	if (isi->lowest_ppage > first_ppage_reported)
-> +		isi->lowest_ppage = first_ppage_reported;
-> +	if (isi->highest_ppage < (next_ppage - 1))
-> +		isi->highest_ppage = next_ppage - 1;
-> +
-> +	/* Add extent, set up for the next call. */
-> +	error = add_swap_extent(isi->sis, isi->nr_pages, nr_pages, first_ppage);
-> +	if (error < 0)
-> +		return error;
-> +	isi->nr_extents += error;
-> +	isi->nr_pages += nr_pages;
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Accumulate iomaps for this swap file.  We have to accumulate iomaps because
-> + * swap only cares about contiguous page-aligned physical extents and makes no
-> + * distinction between written and unwritten extents.
-> + */
-> +static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
-> +		loff_t count, void *data, struct iomap *iomap)
-> +{
-> +	struct iomap_swapfile_info *isi = data;
-> +	int error;
-> +
-> +	/* Skip holes. */
-> +	if (iomap->type == IOMAP_HOLE)
-> +		goto out;
-> +
-> +	/* Only one bdev per swap file. */
-> +	if (iomap->bdev != isi->sis->bdev)
-> +		goto err;
-> +
-> +	/* Only real or unwritten extents. */
-> +	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
-> +		goto err;
-> +
-> +	/* No uncommitted metadata or shared blocks or inline data. */
-> +	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
-> +			    IOMAP_F_DATA_INLINE))
-> +		goto err;
-> +
-> +	/* No null physical addresses. */
-> +	if (iomap->addr == IOMAP_NULL_ADDR)
-> +		goto err;
-> +
-> +	if (isi->iomap.length == 0) {
-> +		/* No accumulated extent, so just store it. */
-> +		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-> +	} else if (isi->iomap.addr + isi->iomap.length == iomap->addr) {
-> +		/* Append this to the accumulated extent. */
-> +		isi->iomap.length += iomap->length;
-> +	} else {
-> +		/* Otherwise, add the retained iomap and store this one. */
-> +		error = iomap_swapfile_add_extent(isi);
-> +		if (error)
-> +			return error;
-> +		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-> +	}
-> +out:
-> +	return count;
-> +err:
-> +	pr_err("swapon: file cannot be used for swap\n");
-> +	return -EINVAL;
-> +}
-> +
-> +/*
-> + * Iterate a swap file's iomaps to construct physical extents that can be
-> + * passed to the swapfile subsystem.
-> + */
-> +int iomap_swapfile_activate(struct swap_info_struct *sis,
-> +		struct file *swap_file, sector_t *pagespan,
-> +		const struct iomap_ops *ops)
-> +{
-> +	struct iomap_swapfile_info isi = {
-> +		.sis = sis,
-> +		.lowest_ppage = (sector_t)-1ULL,
-> +	};
-> +	struct address_space *mapping = swap_file->f_mapping;
-> +	struct inode *inode = mapping->host;
-> +	loff_t pos = 0;
-> +	loff_t len = ALIGN_DOWN(i_size_read(inode), PAGE_SIZE);
-> +	loff_t ret;
-> +
-> +	ret = filemap_write_and_wait(inode->i_mapping);
-> +	if (ret)
-> +		return ret;
-> +
-> +	while (len > 0) {
-> +		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
-> +				ops, &isi, iomap_swapfile_activate_actor);
-> +		if (ret <= 0)
-> +			return ret;
-> +
-> +		pos += ret;
-> +		len -= ret;
-> +	}
-> +
-> +	if (isi.iomap.length) {
-> +		ret = iomap_swapfile_add_extent(&isi);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
-> +	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
-> +	sis->max = isi.nr_pages;
-> +	sis->pages = isi.nr_pages - 1;
-> +	sis->highest_bit = isi.nr_pages - 1;
-> +	return isi.nr_extents;
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
-> +#endif /* CONFIG_SWAP */
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 0ab824f574ed..80de476cecf8 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1475,6 +1475,16 @@ xfs_vm_set_page_dirty(
->  	return newly_dirty;
->  }
 >  
+> +static void
+> +xfs_wait_dax_page(
+> +	struct inode		*inode,
+> +	bool			*did_unlock)
+> +{
+> +	struct xfs_inode        *ip = XFS_I(inode);
+> +
+> +	*did_unlock = true;
+> +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+> +	schedule();
+> +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> +}
+> +
 > +static int
-> +xfs_iomap_swapfile_activate(
-> +	struct swap_info_struct		*sis,
-> +	struct file			*swap_file,
-> +	sector_t			*span)
+> +xfs_break_dax_layouts(
+> +	struct inode		*inode,
+> +	uint			iolock,
+> +	bool			*did_unlock)
 > +{
-> +	sis->bdev = xfs_find_bdev_for_inode(file_inode(swap_file));
-> +	return iomap_swapfile_activate(sis, swap_file, span, &xfs_iomap_ops);
+> +	struct page		*page;
+> +
+> +	*did_unlock = false;
+> +	page = dax_layout_busy_page(inode->i_mapping);
+> +	if (!page)
+> +		return 0;
+> +
+> +	return ___wait_var_event(&page->_refcount,
+> +			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+> +			0, 0, xfs_wait_dax_page(inode, did_unlock));
 > +}
 > +
->  const struct address_space_operations xfs_address_space_operations = {
->  	.readpage		= xfs_vm_readpage,
->  	.readpages		= xfs_vm_readpages,
-> @@ -1488,6 +1498,7 @@ const struct address_space_operations xfs_address_space_operations = {
->  	.migratepage		= buffer_migrate_page,
->  	.is_partially_uptodate  = block_is_partially_uptodate,
->  	.error_remove_page	= generic_error_remove_page,
-> +	.swap_activate		= xfs_iomap_swapfile_activate,
->  };
+>  int
+>  xfs_break_layouts(
+>  	struct inode		*inode,
+> @@ -729,17 +760,23 @@ xfs_break_layouts(
 >  
->  const struct address_space_operations xfs_dax_aops = {
-> @@ -1495,4 +1506,5 @@ const struct address_space_operations xfs_dax_aops = {
->  	.direct_IO		= noop_direct_IO,
->  	.set_page_dirty		= noop_set_page_dirty,
->  	.invalidatepage		= noop_invalidatepage,
-> +	.swap_activate		= xfs_iomap_swapfile_activate,
->  };
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 19a07de28212..4bd87294219a 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -106,4 +106,15 @@ typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
->  ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
+>  	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
 >  
-> +#ifdef CONFIG_SWAP
-> +struct file;
-> +struct swap_info_struct;
+> -	switch (reason) {
+> -	case BREAK_UNMAP:
+> -		ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
+> -		/* fall through */
+> -	case BREAK_WRITE:
+> -		error = xfs_break_leased_layouts(inode, iolock, &retry);
+> -		break;
+> -	default:
+> -		WARN_ON_ONCE(1);
+> -		return -EINVAL;
+> -	}
+> +	do {
+> +		switch (reason) {
+> +		case BREAK_UNMAP:
+> +			ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
 > +
-> +int iomap_swapfile_activate(struct swap_info_struct *sis,
-> +		struct file *swap_file, sector_t *pagespan,
-> +		const struct iomap_ops *ops);
-> +#else
-> +# define iomap_swapfile_activate(sis, swapfile, pagespan, ops)	(-EIO)
-> +#endif /* CONFIG_SWAP */
-> +
->  #endif /* LINUX_IOMAP_H */
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> +			error = xfs_break_dax_layouts(inode, *iolock, &retry);
+> +			/* fall through */
+> +		case BREAK_WRITE:
+> +			if (error || retry)
+> +				break;
+> +			error = xfs_break_leased_layouts(inode, iolock, &retry);
+> +			break;
+> +		default:
+> +			WARN_ON_ONCE(1);
+> +			return -EINVAL;
+> +		}
+> +	} while (error == 0 && retry);
+>  
+>  	return error;
+>  }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
