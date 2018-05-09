@@ -1,116 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57778 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755819AbeEaRqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 13:46:52 -0400
-Date: Thu, 31 May 2018 10:46:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Question about Experimental of Filesystem DAX.
-Message-ID: <20180531174636.GA7825@magnolia>
-References: <20180531112731.0CAC.E1E9C6FF@jp.fujitsu.com>
- <20180531150716.GA19764@linux.intel.com>
- <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:52290 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933856AbeEIHts (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:48 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 20/33] xfs: remove xfs_reflink_trim_irec_to_next_cow
+Date: Wed,  9 May 2018 09:48:17 +0200
+Message-Id: <20180509074830.16196-21-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Yasunori Goto <y-goto@jp.fujitsu.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, NVDIMM-ML <linux-nvdimm@lists.01.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 31, 2018 at 09:29:15AM -0700, Dan Williams wrote:
-> On Thu, May 31, 2018 at 8:07 AM, Ross Zwisler
-> <ross.zwisler@linux.intel.com> wrote:
-> > On Thu, May 31, 2018 at 11:27:33AM +0900, Yasunori Goto wrote:
-> >> Hello,
-> >>
-> >>
-> >> I would like to know about the Experimental message of Filesystem DAX.
-> >> --------------------------------------------------------
-> >> DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-> >> --------------------------------------------------------
-> >>
-> >> AFAIK, the final issue of Filesystem DAX is metadata update problem,
-> >> and it is(will be?) solved by great effort of MAP_SYNC and
-> >> "fix dma vs truncate/hole-punch" patch set.
-> >> So, I suppose that the Experimental message can be removed,
-> >> but I'm not sure.
-> >>
-> >> Is it possible?
-> >> Otherwise, are there any other issues in Filesystem DAX yet?
-> >>
-> >> If this is silly question, sorry for noise....
-> >>
-> >> Thanks,
-> >> ---
-> >> Yasunori Goto
-> >
-> > Adding in the XFS and ext4 developers, as it's really their call when to
-> > remove this notice.
-> >
-> > We've talked about this off and on for a long while, but IMHO we should remove
-> > the EXPERIMENTAL warning.  The last few things that we had on our TODO list
-> > before this was removed were:
-> >
-> > 1) Get consistent handling of the DAX mount option.  We currently have this,
-> > as both filesystems will behave the same and fall back and remove the DAX
-> > mount option if it is unsupported by the block device, etc.
+In the only caller we just did a lookup in the COW extent tree for
+the same offset.  Reuse that result and save a lookup, as well as
+shortening the ilock hold time.
 
-<nod>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c    | 25 +++++++++++++++++--------
+ fs/xfs/xfs_reflink.c | 33 ---------------------------------
+ fs/xfs/xfs_reflink.h |  2 --
+ 3 files changed, 17 insertions(+), 43 deletions(-)
 
-As an aside, I wonder if Christoph's musings about "just have the kernel
-determine the appropriate dax/non-dax setting from the acpi tables and
-skip the inode flag entirely" ever got resolved?
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 41616629dd13..09fb10be1256 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -383,11 +383,12 @@ xfs_map_blocks(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			count = i_blocksize(inode);
+-	xfs_fileoff_t		offset_fsb, end_fsb;
++	xfs_fileoff_t		offset_fsb, end_fsb, cow_fsb = 0;
+ 	int			whichfork = XFS_DATA_FORK;
+ 	struct xfs_iext_cursor	icur;
+ 	int			error = 0;
+ 	int			nimaps = 1;
++	bool			cow_valid = false;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+@@ -407,8 +408,11 @@ xfs_map_blocks(
+ 	 * it directly instead of looking up anything in the data fork.
+ 	 */
+ 	if (xfs_is_reflink_inode(ip) &&
+-	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap) &&
+-	    imap->br_startoff <= offset_fsb) {
++	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap)) {
++		cow_fsb = imap->br_startoff;
++		cow_valid = true;
++	}
++	if (cow_valid && cow_fsb <= offset_fsb) {
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		/*
+ 		 * Truncate can race with writeback since writeback doesn't
+@@ -430,6 +434,10 @@ xfs_map_blocks(
+ 
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+ 				imap, &nimaps, XFS_BMAPI_ENTIRE);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	if (error)
++		return error;
++
+ 	if (!nimaps) {
+ 		/*
+ 		 * Lookup returns no match? Beyond eof? regardless,
+@@ -451,16 +459,17 @@ xfs_map_blocks(
+ 		 * is a pending CoW reservation before the end of this extent,
+ 		 * so that we pick up the COW extents in the next iteration.
+ 		 */
+-		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
++		if (cow_valid &&
++		    cow_fsb < imap->br_startoff + imap->br_blockcount) {
++			imap->br_blockcount = cow_fsb - imap->br_startoff;
++			trace_xfs_reflink_trim_irec(ip, imap);
++		}
++
+ 		if (imap->br_state == XFS_EXT_UNWRITTEN)
+ 			*type = XFS_IO_UNWRITTEN;
+ 		else
+ 			*type = XFS_IO_OVERWRITE;
+ 	}
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-	if (error)
+-		return error;
+-
+ done:
+ 	switch (*type) {
+ 	case XFS_IO_HOLE:
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 3776b7bbd8c6..8231109f6256 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -484,39 +484,6 @@ xfs_reflink_allocate_cow(
+ 	return error;
+ }
+ 
+-/*
+- * Trim an extent to end at the next CoW reservation past offset_fsb.
+- */
+-void
+-xfs_reflink_trim_irec_to_next_cow(
+-	struct xfs_inode		*ip,
+-	xfs_fileoff_t			offset_fsb,
+-	struct xfs_bmbt_irec		*imap)
+-{
+-	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+-	struct xfs_bmbt_irec		got;
+-	struct xfs_iext_cursor		icur;
+-
+-	if (!xfs_is_reflink_inode(ip))
+-		return;
+-
+-	/* Find the extent in the CoW fork. */
+-	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
+-		return;
+-
+-	/* This is the extent before; try sliding up one. */
+-	if (got.br_startoff < offset_fsb) {
+-		if (!xfs_iext_next_extent(ifp, &icur, &got))
+-			return;
+-	}
+-
+-	if (got.br_startoff >= imap->br_startoff + imap->br_blockcount)
+-		return;
+-
+-	imap->br_blockcount = got.br_startoff - imap->br_startoff;
+-	trace_xfs_reflink_trim_irec(ip, imap);
+-}
+-
+ /*
+  * Cancel CoW reservations for some block range of an inode.
+  *
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 15a456492667..e8d4d50c629f 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -32,8 +32,6 @@ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
+ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t count);
+-extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
+-		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+ 
+ extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
+ 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
+-- 
+2.17.0
 
-> > 2) Get consistent handling of the DAX inode option.  We currently have this,
-> > as all DAX behavior now happens through the mount option.  If/when we
-> > re-enable the per-inode DAX flag we should do it consistently for all DAX
-> > enabled filesystems.
-
-The behavior of the inode flag isn't all that consistent.  ext4 doesn't
-support it at all.  On XFS, you can set or clear FS_XFLAG_DAX on a
-directory which will propagate the setting to any files created in that
-directory.
-
-However, if you set or clear it on a file we update the on-disk inode
-but we can't change the in-core state flag (S_DAX) until the next
-in-core inode instantiation.  It's weird that users can change the flag
-but the intended behavior changes won't happen until some ... time ...
-in the future??
-
-> > 3) Make DAX work with other XFS features like reflink, etc.  This one isn't
-> > done, but we at least disallow DAX with XFS features like reflink where it
-> > could be an issue.  Darrick, do you still feel like we need to get these
-> > working together to remove EXPERIMENTAL, or are you happy enough that we're
-> > keeping them separated and that we're keeping user data safe?
-
-Yes, reflink and dax still need to work together.  I've not heard any
-good arguments for why page sharing + copy on write are fundamentally
-incompatible with the dax model, or why dax users will never, ever
-require reflink.
-
-The recent thread between Jan and Dan make me wonder if making mappings
-share struct pages is going to be a nightmare to add to the mm code,
-though...
-
-Also: ideally XFS would also be able to consume poison event
-notifications from the pmem so that it can try to deal with metadata
-loss, but that's probably a separate effort.
-
---D
-
-> > Jan and the other ext4 guys, do you have any additional things you need done
-> > before removing the EXPERIMENTAL warning from ext4 + DAX?
-> 
-> The one's on my list are:
-> 
-> 1/ Get proper support for recovering userspace consumed poison in DAX
-> mappings (may not make 4.18)
-> 
-> 2/ The DAX-DMA vs Truncate fix (queued for 4.18).
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
