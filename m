@@ -1,115 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:40492 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932475AbeEIAlC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 20:41:02 -0400
-Date: Wed, 9 May 2018 10:40:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 7/9] xfs: fix double ijoin in
- xfs_reflink_clear_inode_flag()
-Message-ID: <20180509004059.GO23861@dastard>
-References: <20180508034202.10136-1-david@fromorbit.com>
- <20180508034202.10136-8-david@fromorbit.com>
- <20180508141826.GH4764@bfoster.bfoster>
+Received: from aserp2130.oracle.com ([141.146.126.79]:49702 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933134AbeEIBdD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 21:33:03 -0400
+Subject: Re: [PATCH 21/21] xfsprogs: implement the upper half of parent
+ pointers
+References: <1525754479-12177-1-git-send-email-allison.henderson@oracle.com>
+ <1525754479-12177-22-git-send-email-allison.henderson@oracle.com>
+ <f31ce664-7173-7b99-7d65-39abd810a372@sandeen.net>
+ <20180508230405.GA11261@magnolia>
+ <f2a34921-e4e5-3976-675d-8b9b17429358@oracle.com>
+ <20180509012215.GC11261@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <7006b87f-ead3-f4d3-15c6-6b56ff5662bd@oracle.com>
+Date: Tue, 8 May 2018 18:32:58 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180508141826.GH4764@bfoster.bfoster>
+In-Reply-To: <20180509012215.GC11261@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Tue, May 08, 2018 at 10:18:26AM -0400, Brian Foster wrote:
-> On Tue, May 08, 2018 at 01:42:00PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Another assert failure:
-> > 
-> > XFS: Assertion failed: !(lip->li_flags & XFS_LI_TRANS), file: fs/xfs/xfs_trans.c, line: 740
+
+
+On 05/08/2018 06:22 PM, Darrick J. Wong wrote:
+> On Tue, May 08, 2018 at 04:13:49PM -0700, Allison Henderson wrote:
+>>
+>>
+>> On 05/08/2018 04:04 PM, Darrick J. Wong wrote:
+>>> On Tue, May 08, 2018 at 03:52:37PM -0500, Eric Sandeen wrote:
+>>>> On 5/7/18 11:41 PM, Allison Henderson wrote:
+>>>>> From: "Darrick J. Wong" <darrick.wong@oracle.com>
+>>>>>
+>>>>> Add ioctl definitions to libxfs, build the necessary helpers into
+>>>>> libfrog and libhandle to iterate parents (and parent paths), then wire
+>>>>> up xfs_scrub to be able to query parent pointers from userspace.  The
+>>>>> goal of this patch is to exercise userspace, and is nowhere near a
+>>>>> complete solution.  A basic xfs_io parent command implementation
+>>>>> replaces ... whatever that is that's there now.
+>>>>
+>>>> I wonder if it'd be better to send a patch to nuke the current parent code,
+>>>> and then another to add back something that works.  Same result in the end,
+>>>> but it doesn't look like you're trying to fix old code; the patch itself is
+>>>> pretty meaningless since it diffs against nonfunctional(?) code.
+>>>
+>>> Trouble is, it's exported as a shared library in the xfslibs-dev package
+>>> (should that be libxfs-dev?) so depending on how conservative you like
+>>> to be we can't just rip it out.
+>>>
+>>> (Though I suppose even Linus has occasionally allowed people to rip and
+>>> replace kernel/user ABIs when they can demonstrate that it was so broken
+>>> it never worked for anybody, ever. :P)
+>>>
+>>>> Not a huge deal, just a thought.
+>>>
+>>> Yeah, this patch was quite quick and dirty when I wrote it, on the
+>>> assumption that tons of other stuff was going to need reorganization by
+>>> the time there was a need to land this.
+>>>
+>>> --D
+>>
+>> Oh, would you prefer I not include it then?  I do have an xfstest that's
+>> using it, but it's not a giant gap to close.  I just assumed you probably
+>> had a reason for the api you set up. :-)
 > 
-> Same assert comment...
+> I prefer my new APIs.  None of this parse my way through variable-length
+> records in a buffer crap, just call my callback function for every pptr
+> you find.  But I might be biased. :)
 > 
-> > ....
-> > xfs_trans_add_item+0xcc/0xe0
-> > xfs_reflink_clear_inode_flag+0x53/0x120
-> > xfs_reflink_try_clear_inode_flag+0x5b/0xa0
-> > ? filemap_write_and_wait+0x4f/0x70
-> > xfs_reflink_unshare+0x18e/0x19d
-> > xfs_file_fallocate+0x241/0x310
-> > ? selinux_file_permission+0xd4/0x140
-> > vfs_fallocate+0x13d/0x260
-> > SyS_fallocate+0x43/0x80
-> > 
-> > Another fix.
-> > 
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_reflink.c | 8 ++++++--
-> >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index bce2b5351d64..12d441a73b53 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1553,7 +1553,12 @@ xfs_reflink_inode_has_shared_extents(
-> >  	return 0;
-> >  }
-> >  
-> > -/* Clear the inode reflink flag if there are no shared extents. */
-> > +/*
-> > + * Clear the inode reflink flag if there are no shared extents.
-> > + *
-> > + * The caller is responsible for joining the inode to the transaction passed in.
-> > + * The inode will be joined to the transaction that is returned to the caller.
-> > + */
-> >  int
-> >  xfs_reflink_clear_inode_flag(
-> >  	struct xfs_inode	*ip,
-> > @@ -1572,7 +1577,6 @@ xfs_reflink_clear_inode_flag(
-> >  	 * We didn't find any shared blocks so turn off the reflink flag.
-> >  	 * First, get rid of any leftover CoW mappings.
-> >  	 */
-> > -	xfs_trans_ijoin(*tpp, ip, 0);
+> Let's have a look at what we'd be killing off:
 > 
-> Wasn't this just added in the previous patch?
+>> typedef struct parent {
+>> 	__u64	p_ino;
+>> 	__u32	p_gen;
+>> 	__u16	p_reclen;
+>> 	char	p_name[1];
+>> } parent_t;
+>>
+>> typedef struct parent_cursor {
+>> 	__u32	opaque[4];      /* an opaque cookie */
+>> } parent_cursor_t;
+>>
+>> extern int
+>> jdm_parents( jdm_fshandle_t *fshp,
+>> 		xfs_bstat_t *statp,
+>> 		struct parent *bufp, size_t bufsz,
+>> 		unsigned int *count);
+>>
+>> extern int
+>> jdm_parentpaths( jdm_fshandle_t *fshp,
+>> 		xfs_bstat_t *statp,
+>> 		struct parent *bufp, size_t bufsz,
+>> 		unsigned int *count);
+> 
+> I suppose it wouldn't be hard to emulate these with the other code, but
+> do we care?
+> 
+> --D
+Alrighty, I can clean those in the next revision then.
 
-No, it was /moved/ in the previous patch from lower in the same
-function to ensure that the join was done before the call to
-xfs_reflink_cancel_cow_blocks().
-
-i.e. the previous patch fixed this path:
-
-xfs_reflink_cancel_cow_range
-  xfs_trans_ijoin()
-  xfs_reflink_cancel_cow_blocks()
-    xfs_trans_ijoin()
-
-This patch fixes this path:
-
-xfs_reflink_unshare
-  xfs_reflink_try_clear_inode_flag()
-    xfs_trans_ijoin()
-    xfs_reflink_clear_inode_flag
-      xfs_trans_ijoin()
-
-So even if I didn't change xfs_reflink_clear_inode_flag() in the
-previous patch, there's still a separate double ijoin bug in the
-code, and hence this patch would still be necessary.
-
-> This seems a bit
-> superfluous. If the inode was already joined by the one caller of this
-> function, why not just remove this call in the previous patch rather
-> than move it and remove it?
-
-Because every time I put multiple independent fixes into a single
-patch I get told to separate them into individual patches.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Allison
+> 
+>>
+>>>
+>>>> -Eric
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=ZYhT49wgnXi-BAqQb6XvZtIJlZmC9-GTIfYkkgzS3x8&s=oDk5xa1iaNp87c2xfX0TDTQc9Hs9-RraSgWXeoZvQkU&e=
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=ZYhT49wgnXi-BAqQb6XvZtIJlZmC9-GTIfYkkgzS3x8&s=oDk5xa1iaNp87c2xfX0TDTQc9Hs9-RraSgWXeoZvQkU&e=
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=ZYhT49wgnXi-BAqQb6XvZtIJlZmC9-GTIfYkkgzS3x8&s=oDk5xa1iaNp87c2xfX0TDTQc9Hs9-RraSgWXeoZvQkU&e=
+> 
