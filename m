@@ -1,197 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38770 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750883AbeEBKsE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 May 2018 06:48:04 -0400
-Date: Wed, 2 May 2018 06:48:03 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/5 V2] xfs: implement online get/set fs label
-Message-ID: <20180502104802.GA17207@bfoster.bfoster>
-References: <eb592fc3-3165-5ec7-3896-b798fc7f6502@redhat.com>
- <698bd41a-9281-83a2-ff51-64547025442a@sandeen.net>
- <2a638f02-ea72-0d5e-30a4-1d95cfe6ff69@sandeen.net>
+Received: from userp2120.oracle.com ([156.151.31.85]:51326 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965012AbeEIQ1a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 12:27:30 -0400
+Date: Wed, 9 May 2018 09:27:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs_db and ASSERT fails dur type mismatch
+Message-ID: <20180509162710.GU11261@magnolia>
+References: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2a638f02-ea72-0d5e-30a4-1d95cfe6ff69@sandeen.net>
+In-Reply-To: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org, sandeen@redhat.com
 
-On Tue, May 01, 2018 at 06:04:09PM -0500, Eric Sandeen wrote:
-> The GET ioctl is trivial, just return the current label.
+On Wed, May 09, 2018 at 01:45:54PM +0200, Carlos Maiolino wrote:
+> Hey folks,
 > 
-> The SET ioctl is more involved:
-> It transactionally modifies the superblock to write a new filesystem
-> label to the primary super.
+> I've been thinking about different ways to fix those crashes on xfs_db due type
+> mismatch, based on the previous discussion and a chat I had with Eric on irc.
 > 
-> A new variant of xfs_sync_sb then writes the superblock buffer
-> immediately to disk so that the change is visible from userspace.
+> After thinking a bit more about it, I do think using unknown header types adds
+> unneeded extra complexity to the code, to achieve the same result as an extra
+> check on print_flist_1().
 > 
-> It then invalidates any page cache that userspace might have previously
-> read on the block device so that i.e. blkid can see the change
-> immediately, and updates all secondary superblocks as userspace relable
-> does.
+> Adding an unknown type, will require a change to all types affected by this
+> issue. I am not sure if a single unknown type can be used for all metadata types
+> which is affected by this, but I think it requires an unknown type for each of
+> these metadata. Or at least an entry for an unknown header type (in case of of
+> the known ones are not found).
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> While, the crash caused by unrecognized metadata when using these types, can be
+> fixed by something like my original change.
 > 
-> V2: rework the force-sb-to-disk approach, invalidate the whole block
-> device, and block waiting for the growfs lock.  Also remove too-long-label
-> printk.
+> I wrote a slightly different patch like this:
 > 
-> Thanks to dchinner for the xfs_sync_sb_buf suggestion & framework.
+> diff --git a/db/print.c b/db/print.c
+> index 0da36c27..f8a48281 100644
+> --- a/db/print.c
+> +++ b/db/print.c
+> @@ -160,9 +160,10 @@ print_flist_1(
+>                                         (f->flags & FLD_ARRAY) != 0);
+>                                 if (neednl)
+>                                         dbprintf("\n");
+> -                       } else {
+> -                               ASSERT(fa->arg & FTARG_OKEMPTY);
+> +                       } else if (fa->arg & FTARG_OKEMPTY) {
+>                                 dbprintf(_("(empty)\n"));
+> +                       } else {
+> +                               dbprintf(_("Unrecognized metadata or type mismatch\n"));
+>                         }
+>                 }
+>                 free_strvec(pfx);
 > 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index d9b94bd..54992e8 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -888,6 +888,37 @@ struct xfs_perag *
->  	return xfs_trans_commit(tp);
->  }
->  
-> +/*
-> + * Same behavior as xfs_sync_sb, except that it is always synchronous and it
-> + * also writes the superblock buffer to disk sector 0 immediately.
-> + */
-> +int
-> +xfs_sync_sb_buf(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct xfs_trans	*tp;
-> +	int			error;
-> +
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0,
-> +			XFS_TRANS_NO_WRITECOUNT, &tp);
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_log_sb(tp);
-> +	xfs_trans_bhold(tp, mp->m_sb_bp);
-> +	xfs_trans_set_sync(tp);
-> +	error = xfs_trans_commit(tp);
-> +	if (error)
-> +		goto out;
-> +	/*
-> +	 * write out the sb buffer to get the changes to disk
-> +	 */
-> +	error = xfs_bwrite(mp->m_sb_bp);
+> 
+> This will still keep printing "(empty)" where it should be printed, or print out
+> a hint that something went wrong.
+> 
+> I honestly think this the best solution for these crashes, what you guys think?
 
-Ah, much more simple to just write out the buffer directly. Looks pretty
-good to me once those comment updates are incorporated.. ;)
+Looks fine to me, I dislike ASSERTs on crap metadata, especially in the
+debugging tool.
 
-Brian
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> +out:
-> +	xfs_buf_relse(mp->m_sb_bp);
-> +	return error;
-> +}
-> +
->  int
->  xfs_fs_geometry(
->  	struct xfs_sb		*sbp,
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 63dcd2a..2268272 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -29,6 +29,7 @@ extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
->  
->  extern void	xfs_log_sb(struct xfs_trans *tp);
->  extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
-> +extern int	xfs_sync_sb_buf(struct xfs_mount *mp);
->  extern void	xfs_sb_mount_common(struct xfs_mount *mp, struct xfs_sb *sbp);
->  extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
->  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 89fb1eb..effb23a 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1811,6 +1811,72 @@ struct getfsmap_info {
->  	return error;
->  }
->  
-> +static int
-> +xfs_ioc_getlabel(
-> +	struct xfs_mount	*mp,
-> +	char			__user *label)
-> +{
-> +	struct xfs_sb		*sbp = &mp->m_sb;
-> +
-> +	/* Paranoia */
-> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
-> +
-> +	if (copy_to_user(label, sbp->sb_fname, sizeof(sbp->sb_fname)))
-> +		return -EFAULT;
-> +	return 0;
-> +}
-> +
-> +static int
-> +xfs_ioc_setlabel(
-> +	struct file		*filp,
-> +	struct xfs_mount	*mp,
-> +	char			__user *newlabel)
-> +{
-> +	struct xfs_sb		*sbp = &mp->m_sb;
-> +	char			label[FSLABEL_MAX];
-> +	size_t			len;
-> +	int			error;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EPERM;
-> +
-> +	if (copy_from_user(label, newlabel, FSLABEL_MAX))
-> +		return -EFAULT;
-> +	/*
-> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but XFS is much
-> +	 * smaller, at 12 bytes.
-> +	 * NB: The on disk label doesn't need to be null terminated.
-> +	 */
-> +	len = strnlen(label, FSLABEL_MAX);
-> +	if (len > sizeof(sbp->sb_fname))
-> +		return -EINVAL;
-> +
-> +	error = mnt_want_write_file(filp);
-> +	if (error)
-> +		return error;
-> +
-> +	spin_lock(&mp->m_sb_lock);
-> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
-> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
-> +	spin_unlock(&mp->m_sb_lock);
-> +
-> +	/* Log primary superblock label changes & force to disk. */
-> +	error = xfs_sync_sb_buf(mp);
-> +	if (error)
-> +		goto out;
-> +
-> +	/* Invalidate any cached bdev page for userspace visibility. */
-> +	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
-> +
-> +	/* Update the backup superblocks like userspace does. */
-> +	mutex_lock(&mp->m_growlock);
-> +	error = xfs_update_secondary_supers(mp, mp->m_sb.sb_agcount, 0);
-> +	mutex_unlock(&mp->m_growlock);
-> +out:
-> +	mnt_drop_write_file(filp);
-> +	return error;
-> +}
-> +
->  /*
->   * Note: some of the ioctl's return positive numbers as a
->   * byte count indicating success, such as readlink_by_handle.
-> @@ -1834,6 +1900,10 @@ struct getfsmap_info {
->  	switch (cmd) {
->  	case FITRIM:
->  		return xfs_ioc_trim(mp, arg);
-> +	case FS_IOC_GET_FSLABEL:
-> +		return xfs_ioc_getlabel(mp, arg);
-> +	case FS_IOC_SET_FSLABEL:
-> +		return xfs_ioc_setlabel(filp, mp, arg);
->  	case XFS_IOC_ALLOCSP:
->  	case XFS_IOC_FREESP:
->  	case XFS_IOC_RESVSP:
+--D
+
+> 
+> Cheers
+> 
+> 
+> -- 
+> Carlos
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
