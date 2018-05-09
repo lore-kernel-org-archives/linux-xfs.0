@@ -1,43 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51168 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:51818 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933305AbeEIG13 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 02:27:29 -0400
-Date: Tue, 8 May 2018 23:27:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 9/9] xfs: get rid of the log item descriptor
-Message-ID: <20180509062728.GB25104@infradead.org>
-References: <20180508034202.10136-1-david@fromorbit.com>
- <20180508034202.10136-10-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180508034202.10136-10-david@fromorbit.com>
+        with ESMTP id S933886AbeEIHtH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 03:49:07 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/33] iomap: add a iomap_sector helper
+Date: Wed,  9 May 2018 09:48:06 +0200
+Message-Id: <20180509074830.16196-10-hch@lst.de>
+In-Reply-To: <20180509074830.16196-1-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
->  	/* Chase down all the log items to see if the bp is there */
-> -	list_for_each_entry(lidp, &cur->bc_tp->t_items, lid_trans) {
-> -		struct xfs_buf_log_item	*bip;
-> -		bip = (struct xfs_buf_log_item *)lidp->lid_item;
-> +	list_for_each_entry(lip, &cur->bc_tp->t_items, li_trans) {
-> +		struct xfs_buf_log_item	*bip = (struct xfs_buf_log_item *)lip;
-> +
->  		if (bip->bli_item.li_type == XFS_LI_BUF &&
+Factor the repeated calculation of the on-disk sector for a given logical
+block into a littler helper.
 
-This isn't really new in this patch, but I think this code needs to
-be fixed to respect typing.  That is:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-  - do the li_type check on the original log item we iterate over
-  - use containe_of to get at the buf_log_item
-  - possible move this code into a helper function in xfs_buf_item.c,
-    where it logically belongs and can use the BUF_ITEM() helper.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 58bb39bac72b..af525cb47339 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -96,6 +96,12 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	return written ? written : ret;
+ }
+ 
++static sector_t
++iomap_sector(struct iomap *iomap, loff_t pos)
++{
++	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
++}
++
+ static void
+ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ {
+@@ -353,11 +359,8 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+ 		struct iomap *iomap)
+ {
+-	sector_t sector = (iomap->addr +
+-			   (pos & PAGE_MASK) - iomap->offset) >> 9;
+-
+-	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev, sector,
+-			offset, bytes);
++	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev,
++			iomap_sector(iomap, pos & PAGE_MASK), offset, bytes);
+ }
+ 
+ static loff_t
+@@ -945,8 +948,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 
+ 	bio = bio_alloc(GFP_KERNEL, 1);
+ 	bio_set_dev(bio, iomap->bdev);
+-	bio->bi_iter.bi_sector =
+-		(iomap->addr + pos - iomap->offset) >> 9;
++	bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 	bio->bi_private = dio;
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
+ 
+@@ -1027,8 +1029,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ 		bio = bio_alloc(GFP_KERNEL, nr_pages);
+ 		bio_set_dev(bio, iomap->bdev);
+-		bio->bi_iter.bi_sector =
+-			(iomap->addr + pos - iomap->offset) >> 9;
++		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 		bio->bi_write_hint = dio->iocb->ki_hint;
+ 		bio->bi_private = dio;
+ 		bio->bi_end_io = iomap_dio_bio_end_io;
+-- 
+2.17.0
 
-but that can be done in a separate fixup patch.
-
-Otherwise looks fine:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
