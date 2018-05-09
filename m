@@ -1,110 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34482 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44154 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965232AbeEIQSH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 May 2018 12:18:07 -0400
-Subject: Re: [PATCH] test online label ioctl
-References: <fd1e2651-099f-8acd-da4d-a67c1e45cd07@redhat.com>
- <20180509154931.GJ8373@desktop>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <96efb2d0-3cb0-ba1b-35c4-8e6e3df388ac@redhat.com>
-Date: Wed, 9 May 2018 11:18:06 -0500
+        id S965438AbeEIQbV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 May 2018 12:31:21 -0400
+Date: Wed, 9 May 2018 12:31:19 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 2/6] xfs: defer agfl block frees when dfops is
+ available
+Message-ID: <20180509163118.GB66101@bfoster.bfoster>
+References: <20180418133119.21775-1-bfoster@redhat.com>
+ <20180418133119.21775-3-bfoster@redhat.com>
+ <20180509160418.GS11261@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180509154931.GJ8373@desktop>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180509160418.GS11261@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests <fstests@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 5/9/18 10:49 AM, Eryu Guan wrote:
-> On Mon, Apr 30, 2018 at 04:43:18PM -0500, Eric Sandeen wrote:
->> This tests the online label ioctl that btrfs has, which has been
->> recently proposed for XFS.
->>
->> To run, it requires an updated xfs_io with the label command and a
->> filesystem that supports it
->>
->> A slight change here to _require_xfs_io_command as well, so that tests
->> which simply fail with "Inappropriate ioctl" can be caught in the
->> common case.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
-
+On Wed, May 09, 2018 at 09:04:18AM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 18, 2018 at 09:31:15AM -0400, Brian Foster wrote:
 ...
-
->> +# And that it succeeds right at the filesystem max:
->> +case $FSTYP in
->> +xfs)
->> +	MAXLEN=12;
->> +	;;
->> +btrfs)
->> +	MAXLEN=256
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_alloc.c  | 51 ++++++++++++++++++++++++++++++---
+> >  fs/xfs/libxfs/xfs_defer.h  |  1 +
+> >  fs/xfs/xfs_trace.h         |  2 ++
+> >  fs/xfs/xfs_trans.c         | 11 ++++++--
+> >  fs/xfs/xfs_trans.h         |  1 +
+> >  fs/xfs/xfs_trans_extfree.c | 70 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  6 files changed, 129 insertions(+), 7 deletions(-)
+> > 
+...
+> > diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+> > index ab438647592a..f5620796ae25 100644
+> > --- a/fs/xfs/xfs_trans_extfree.c
+> > +++ b/fs/xfs/xfs_trans_extfree.c
+> > @@ -231,9 +231,79 @@ static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+> >  	.cancel_item	= xfs_extent_free_cancel_item,
+> >  };
+> >  
+> > +/*
+> > + * AGFL blocks are accounted differently in the reserve pools and are not
+> > + * inserted into the busy extent list.
+> > + */
+> > +STATIC int
+> > +xfs_agfl_free_finish_item(
+> > +	struct xfs_trans		*tp,
+> > +	struct xfs_defer_ops		*dop,
+> > +	struct list_head		*item,
+> > +	void				*done_item,
+> > +	void				**state)
+> > +{
+> > +	struct xfs_mount		*mp = tp->t_mountp;
+> > +	struct xfs_efd_log_item		*efdp = done_item;
+> > +	struct xfs_extent_free_item	*free;
+> > +	struct xfs_extent		*extp;
+> > +	struct xfs_buf			*agbp;
+> > +	int				error;
+> > +	xfs_agnumber_t			agno;
+> > +	xfs_agblock_t			agbno;
+> > +	uint				next_extent;
+> > +
+> > +	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+> > +	ASSERT(free->xefi_blockcount == 1);
+> > +	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
+> > +	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
+> > +
+> > +	trace_xfs_agfl_free_deferred(mp, agno, 0, agbno, free->xefi_blockcount);
+> > +
+> > +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+> > +	if (!error)
+> > +		error = xfs_free_agfl_block(tp, agno, agbno, agbp,
+> > +					    &free->xefi_oinfo);
+> > +
+> > +	/*
+> > +	 * Mark the transaction dirty, even on error. This ensures the
+> > +	 * transaction is aborted, which:
+> > +	 *
+> > +	 * 1.) releases the EFI and frees the EFD
+> > +	 * 2.) shuts down the filesystem
+> > +	 */
+> > +	tp->t_flags |= XFS_TRANS_DIRTY;
+> > +	efdp->efd_item.li_desc->lid_flags |= XFS_LID_DIRTY;
 > 
-> Seems this should be 255, otherwise I got failure like:
+> FWIW I think this becomes:
 > 
-> -label = "MAXLABEL"
-> +label: Invalid argument
+> 	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
 > 
-> and MAXLEN=255 makes the test pass with btrfs.
-
-You are correct, I missed that they exclude the trailing
-null from the length.  (Sorry, thought I tested this :( )
-
->> +	;;
->> +*)
->> +	MAXLEN=256
->> +	echo "Your filesystem supports online label, please add max length"
-> 
-> Perhaps we can introduce a new helper similar to _require_acl_get_max()
-> and _notrun the test if current $FSTYP doesn't define a maxlen on
-> filesystem label?
-
-Ok, sure.
-
->> +	;;
->> +esac
->> +LABEL=$(perl -e "print 'o' x $MAXLEN;")
->> +$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT | sed -e 's/o\+/MAXLABEL/'
->> +
->> +# And that it fails just past the filesystem max:
->> +let TOOLONG=MAXLEN+1
->> +LABEL=$(perl -e "print 'o' x $TOOLONG;")
->> +$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT
->> +
->> +# success, all done
->> +status=0
->> +exit
->> diff --git a/tests/generic/485.out b/tests/generic/485.out
->> new file mode 100644
->> index 0000000..bc54684
->> --- /dev/null
->> +++ b/tests/generic/485.out
->> @@ -0,0 +1,9 @@
->> +QA output created by 485
->> +label = "label.485"
->> +label = "label.485"
->> +SCRATCH_DEV: LABEL="label.485" 
->> +SCRATCH_DEV: LABEL="label.485" 
-> 
-> There're trailing whitespaces in above two lines, I thought they're the
-> output from xfs_io label command at first, but actually I have to remove
-> the spaces to make test pass.
-
-It might need a filter, this is output from blkid; it might have changed.
-I noticed the whitespace as well but IIRC it works here.
-
-Will look into these and fix stuff up.
-
-Thanks!
--Eric
-
-> Thanks,
-> Eryu
+> after Dave's series to remove log item descriptors, afaict.
+> Will fix it up when I pull that into the branch.
 > 
 
+Looks right, thanks!
+
+Brian
+
+> --D
+> 
+> > +
+> > +	next_extent = efdp->efd_next_extent;
+> > +	ASSERT(next_extent < efdp->efd_format.efd_nextents);
+> > +	extp = &(efdp->efd_format.efd_extents[next_extent]);
+> > +	extp->ext_start = free->xefi_startblock;
+> > +	extp->ext_len = free->xefi_blockcount;
+> > +	efdp->efd_next_extent++;
+> > +
+> > +	kmem_free(free);
+> > +	return error;
+> > +}
+> > +
+> > +
+> > +/* sub-type with special handling for AGFL deferred frees */
+> > +static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
+> > +	.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
+> > +	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
+> > +	.diff_items	= xfs_extent_free_diff_items,
+> > +	.create_intent	= xfs_extent_free_create_intent,
+> > +	.abort_intent	= xfs_extent_free_abort_intent,
+> > +	.log_item	= xfs_extent_free_log_item,
+> > +	.create_done	= xfs_extent_free_create_done,
+> > +	.finish_item	= xfs_agfl_free_finish_item,
+> > +	.cancel_item	= xfs_extent_free_cancel_item,
+> > +};
+> > +
+> >  /* Register the deferred op type. */
+> >  void
+> >  xfs_extent_free_init_defer_op(void)
+> >  {
+> >  	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
+> > +	xfs_defer_init_op_type(&xfs_agfl_free_defer_type);
+> >  }
+> > -- 
+> > 2.13.6
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
