@@ -1,116 +1,234 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53122 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55920 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757097AbeEJNzG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 09:55:06 -0400
-Date: Thu, 10 May 2018 09:55:05 -0400
+        id S935399AbeEJOHd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 May 2018 10:07:33 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8F2E381F07
+        for <linux-xfs@vger.kernel.org>; Thu, 10 May 2018 14:07:33 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-20.bos.redhat.com [10.18.41.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 59D6F19094
+        for <linux-xfs@vger.kernel.org>; Thu, 10 May 2018 14:07:33 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/12] xfs: superblock scrub should use short-lived
- buffers
-Message-ID: <20180510135504.GG69384@bfoster.bfoster>
-References: <152537075334.16676.10600900179473864298.stgit@magnolia>
- <152537080489.16676.3127430066483939602.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152537080489.16676.3127430066483939602.stgit@magnolia>
+Subject: [PATCH v2] xfs: factor out nodiscard helpers
+Date: Thu, 10 May 2018 10:07:32 -0400
+Message-Id: <20180510140732.82824-1-bfoster@redhat.com>
+In-Reply-To: <20180510125223.77364-1-bfoster@redhat.com>
+References: <20180510125223.77364-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 03, 2018 at 11:06:44AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Secondary superblocks are rarely used, so create a helper to read a
-> given non-primary AG's superblock and ensure that it won't stick around
-> hogging memory.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+The changes to skip discards of speculative preallocation and
+unwritten extents introduced several new wrapper functions through
+the bunmapi -> extent free codepath to reduce churn in all of the
+associated callers. In several cases, these wrappers simply toggle a
+single flag to skip or not skip discards for the resulting blocks.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+The explicit _nodiscard() wrappers for such an isolated set of
+callers is a bit overkill. Kill off these wrappers and replace with
+the calls to the underlying functions in the contexts that need to
+control discard behavior. Retain the wrappers that preserve the
+original calling conventions to serve the original purpose of
+reducing code churn.
 
->  fs/xfs/libxfs/xfs_sb.c     |   22 ++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_sb.h     |    3 +++
->  fs/xfs/libxfs/xfs_shared.h |    1 +
->  fs/xfs/scrub/agheader.c    |    4 +---
->  4 files changed, 27 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index d9b94bd5f689..d9bef41a3f26 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -972,3 +972,25 @@ xfs_fs_geometry(
->  
->  	return 0;
->  }
-> +
-> +/* Read a secondary superblock. */
-> +int
-> +xfs_sb_read_secondary(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_buf		**bpp)
-> +{
-> +	struct xfs_buf		*bp;
-> +	int			error;
-> +
-> +	ASSERT(agno != 0 && agno != NULLAGNUMBER);
-> +	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
-> +			XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> +			XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-> +	if (error)
-> +		return error;
-> +	xfs_buf_set_ref(bp, XFS_SSB_REF);
-> +	*bpp = bp;
-> +	return 0;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 63dcd2a1a657..5166d78b2c34 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -37,5 +37,8 @@ extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
->  #define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
->  extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
->  				int struct_version);
-> +extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
-> +				struct xfs_trans *tp, xfs_agnumber_t agno,
-> +				struct xfs_buf **bpp);
->  
->  #endif	/* __XFS_SB_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-> index d0b84da0cb1e..d23f33c02f64 100644
-> --- a/fs/xfs/libxfs/xfs_shared.h
-> +++ b/fs/xfs/libxfs/xfs_shared.h
-> @@ -127,6 +127,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
->  #define	XFS_ATTR_BTREE_REF	1
->  #define	XFS_DQUOT_REF		1
->  #define	XFS_REFC_BTREE_REF	1
-> +#define	XFS_SSB_REF		0
->  
->  /*
->   * Flags for xfs_trans_ichgtime().
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index 018aabbd9394..cd24ac56c21e 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -157,9 +157,7 @@ xfs_scrub_superblock(
->  	if (agno == 0)
->  		return 0;
->  
-> -	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-> -		  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> -		  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-> +	error = xfs_sb_read_secondary(mp, sc->tp, agno, &bp);
->  	/*
->  	 * The superblock verifier can return several different error codes
->  	 * if it thinks the superblock doesn't look right.  For a mount these
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is a refactoring patch and does not change behavior.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+
+v2:
+- Clean up xfs_bmap_del_extent_real().
+v1: https://marc.info/?l=linux-xfs&m=152595674924579&w=2
+
+ fs/xfs/libxfs/xfs_alloc.h  | 11 -----------
+ fs/xfs/libxfs/xfs_bmap.c   | 13 ++++---------
+ fs/xfs/libxfs/xfs_bmap.h   | 11 -----------
+ fs/xfs/xfs_bmap_util.c     |  4 ++--
+ fs/xfs/xfs_inode.c         |  9 +++------
+ fs/xfs/xfs_inode.h         | 16 +++-------------
+ fs/xfs/xfs_trans_extfree.c |  9 ++-------
+ 7 files changed, 14 insertions(+), 59 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 4a8e8dcaf352..21e5c0662a92 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -210,17 +210,6 @@ xfs_free_extent(
+ 	return __xfs_free_extent(tp, bno, len, oinfo, type, false);
+ }
+ 
+-static inline int
+-xfs_free_extent_nodiscard(
+-	struct xfs_trans	*tp,
+-	xfs_fsblock_t		bno,
+-	xfs_extlen_t		len,
+-	struct xfs_owner_info	*oinfo,
+-	enum xfs_ag_resv_type	type)
+-{
+-	return __xfs_free_extent(tp, bno, len, oinfo, type, true);
+-}
+-
+ int				/* error */
+ xfs_alloc_lookup_le(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 24f60ee810e4..91659dfe93ee 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5107,15 +5107,10 @@ xfs_bmap_del_extent_real(
+ 			if (error)
+ 				goto done;
+ 		} else {
+-			if ((bflags & XFS_BMAPI_NODISCARD) ||
+-			    (del->br_state == XFS_EXT_UNWRITTEN)) {
+-				xfs_bmap_add_free_nodiscard(mp, dfops,
+-					del->br_startblock, del->br_blockcount,
+-					NULL);
+-			} else {
+-				xfs_bmap_add_free(mp, dfops, del->br_startblock,
+-					del->br_blockcount, NULL);
+-			}
++			__xfs_bmap_add_free(mp, dfops, del->br_startblock,
++					del->br_blockcount, NULL,
++					(bflags & XFS_BMAPI_NODISCARD) ||
++					del->br_state == XFS_EXT_UNWRITTEN);
+ 		}
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 8d8946bfdd8c..8affd3915a11 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -256,17 +256,6 @@ xfs_bmap_add_free(
+ 	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, false);
+ }
+ 
+-static inline void
+-xfs_bmap_add_free_nodiscard(
+-	struct xfs_mount		*mp,
+-	struct xfs_defer_ops		*dfops,
+-	xfs_fsblock_t			bno,
+-	xfs_filblks_t			len,
+-	struct xfs_owner_info		*oinfo)
+-{
+-	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, true);
+-}
+-
+ enum xfs_bmap_intent_type {
+ 	XFS_BMAP_MAP = 1,
+ 	XFS_BMAP_UNMAP,
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 696c3b6bd2c9..11058459ea98 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -871,8 +871,8 @@ xfs_free_eofblocks(
+ 		 * contents of the file are flushed to disk then the files
+ 		 * may be full of holes (ie NULL files bug).
+ 		 */
+-		error = xfs_itruncate_extents_nodiscard(&tp, ip, XFS_DATA_FORK,
+-							XFS_ISIZE(ip));
++		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
++					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
+ 		if (error) {
+ 			/*
+ 			 * If we get an error at this point we simply don't
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d63ddd806074..3c54f09fee4e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1534,12 +1534,12 @@ xfs_itruncate_clear_reflink_flags(
+  * dirty on error so that transactions can be easily aborted if possible.
+  */
+ int
+-__xfs_itruncate_extents(
++xfs_itruncate_extents_flags(
+ 	struct xfs_trans	**tpp,
+ 	struct xfs_inode	*ip,
+ 	int			whichfork,
+ 	xfs_fsize_t		new_size,
+-	bool			skip_discard)
++	int			flags)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp = *tpp;
+@@ -1550,7 +1550,6 @@ __xfs_itruncate_extents(
+ 	xfs_filblks_t		unmap_len;
+ 	int			error = 0;
+ 	int			done = 0;
+-	int			flags;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
+@@ -1563,9 +1562,7 @@ __xfs_itruncate_extents(
+ 
+ 	trace_xfs_itruncate_extents_start(ip, new_size);
+ 
+-	flags = xfs_bmapi_aflag(whichfork);
+-	if (skip_discard)
+-		flags |= XFS_BMAPI_NODISCARD;
++	flags |= xfs_bmapi_aflag(whichfork);
+ 
+ 	/*
+ 	 * Since it is possible for space to become allocated beyond
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 3dd3201f4409..00fee6824745 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -415,8 +415,8 @@ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+ uint		xfs_ip2xflags(struct xfs_inode *);
+ int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
+ 			   struct xfs_defer_ops *);
+-int		__xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
+-				        int, xfs_fsize_t, bool);
++int		xfs_itruncate_extents_flags(struct xfs_trans **,
++				struct xfs_inode *, int, xfs_fsize_t, int);
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ 
+ void		xfs_iunpin_wait(xfs_inode_t *);
+@@ -440,17 +440,7 @@ xfs_itruncate_extents(
+ 	int			whichfork,
+ 	xfs_fsize_t		new_size)
+ {
+-	return __xfs_itruncate_extents(tpp, ip, whichfork, new_size, false);
+-}
+-
+-static inline int
+-xfs_itruncate_extents_nodiscard(
+-	struct xfs_trans	**tpp,
+-	struct xfs_inode	*ip,
+-	int			whichfork,
+-	xfs_fsize_t		new_size)
+-{
+-	return __xfs_itruncate_extents(tpp, ip, whichfork, new_size, true);
++	return xfs_itruncate_extents_flags(tpp, ip, whichfork, new_size, 0);
+ }
+ 
+ /* from xfs_file.c */
+diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+index dab8b3b7a9b8..5e137ee826ff 100644
+--- a/fs/xfs/xfs_trans_extfree.c
++++ b/fs/xfs/xfs_trans_extfree.c
+@@ -80,13 +80,8 @@ xfs_trans_free_extent(
+ 
+ 	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
+ 
+-	if (skip_discard)
+-		error = xfs_free_extent_nodiscard(tp, start_block, ext_len,
+-						  oinfo, XFS_AG_RESV_NONE);
+-	else
+-		error = xfs_free_extent(tp, start_block, ext_len, oinfo,
+-					XFS_AG_RESV_NONE);
+-
++	error = __xfs_free_extent(tp, start_block, ext_len,
++				  oinfo, XFS_AG_RESV_NONE, skip_discard);
+ 	/*
+ 	 * Mark the transaction dirty, even on error. This ensures the
+ 	 * transaction is aborted, which:
+-- 
+2.14.3
+
