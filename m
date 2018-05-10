@@ -1,97 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53526 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:58760 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751048AbeEKPTl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 May 2018 11:19:41 -0400
-Date: Fri, 11 May 2018 11:19:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/8] xfs: scrub the data fork of the realtime inodes
-Message-ID: <20180511151939.GE105683@bfoster.bfoster>
-References: <152597988038.25215.9276761144353662866.stgit@magnolia>
- <152597990586.25215.6135406269069566239.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152597990586.25215.6135406269069566239.stgit@magnolia>
+        id S1750798AbeEJXOG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 May 2018 19:14:06 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [RFC v2 1/4] vfs: skip extra attributes check on removal for symlinks
+Date: Thu, 10 May 2018 16:13:56 -0700
+Message-Id: <20180510231359.16899-2-mcgrof@kernel.org>
+In-Reply-To: <20180510231359.16899-1-mcgrof@kernel.org>
+References: <20180510231359.16899-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: viro@zeniv.linux.org.uk, darrick.wong@oracle.com, tytso@mit.edu, adilger.kernel@dilger.ca, clm@fb.com, jbacik@fb.com, dsterba@suse.com
+Cc: sandeen@sandeen.net, dhowells@redhat.com, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-On Thu, May 10, 2018 at 12:18:25PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The realtime bitmap and summary inodes live on the metadata device, so
-> we can scrub their data forks with the regular scrubbers.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/rtbitmap.c |   34 +++++++++++++++++++++++++++++++++-
->  1 file changed, 33 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-> index 8b048f107af2..abc885dab122 100644
-> --- a/fs/xfs/scrub/rtbitmap.c
-> +++ b/fs/xfs/scrub/rtbitmap.c
-> @@ -82,6 +82,11 @@ xfs_scrub_rtbitmap(
->  {
->  	int				error;
->  
-> +	/* Invoke the fork scrubber. */
-> +	error = xfs_scrub_metadata_inode_forks(sc);
-> +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-> +		return error;
-> +
->  	error = xfs_rtalloc_query_all(sc->tp, xfs_scrub_rtbitmap_rec, sc);
->  	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
->  		goto out;
-> @@ -95,8 +100,35 @@ int
->  xfs_scrub_rtsummary(
->  	struct xfs_scrub_context	*sc)
->  {
-> +	struct xfs_inode		*rsumip = sc->mp->m_rsumip;
-> +	uint				old_ilock_flags;
-> +	int				error = 0;
-> +
-> +	/*
-> +	 * We ILOCK'd the rt bitmap ip in the setup routine, now lock the
-> +	 * rt summary ip in compliance with the rt inode locking rules.
-> +	 *
-> +	 * Since we switch sc->ip to rsumip we have to save the old ilock
-> +	 * flags so that we don't mix up the inode state that @sc tracks.
-> +	 */
-> +	old_ilock_flags = sc->ilock_flags;
-> +	sc->ip = rsumip;
-> +	sc->ilock_flags = XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM;
-> +	xfs_ilock(sc->ip, sc->ilock_flags);
-> +
-> +	/* Invoke the fork scrubber. */
-> +	error = xfs_scrub_metadata_inode_forks(sc);
-> +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-> +		goto out;
-> +
->  	/* XXX: implement this some day */
-> -	return -ENOENT;
-> +	xfs_scrub_set_incomplete(sc);
-> +out:
-> +	/* Switch back to the rtbitmap inode and lock flags. */
-> +	xfs_iunlock(sc->ip, sc->ilock_flags);
-> +	sc->ilock_flags = old_ilock_flags;
-> +	sc->ip = sc->mp->m_rbmip;
+Linux filesystems cannot set extra file attributes (stx_attributes as per
+statx(2)) on a symbolic link. To set extra file attributes you issue
+ioctl(2) with FS_IOC_SETFLAGS, *all* ioctl(2) calls on a symbolic link
+yield EBADF.
 
-I'd use an old_ip here as well just to avoid hardcoding against some
-other function. With that, looks fine:
+This is because ioctl(2) tries to obtain struct fd from the symbolic link
+file descriptor passed using fdget(), fdget() in turn always returns no
+file set when a file descriptor is open with O_PATH. As per symlink(2)
+O_PATH and O_NOFOLLOW must *always* be used when you want to get the file
+descriptor of a symbolic link, and this holds true for Linux, as such extra
+file attributes cannot possibly be set on symbolic links on Linux.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Filesystems repair utilities should be updated to detect this as
+corruption and correct this, however, the VFS *does* respect these
+extra attributes on symlinks for removal.
 
-> +	return error;
->  }
->  
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Since we cannot set these attributes we should special-case the
+immutable/append on delete for symlinks, this would be consistent with
+what we *do* allow on Linux for all filesystems. Since this is a clear
+sign to the VFS the filesystem must be corrupted filesystems can
+implement a verifier to catch this earlier. A generic warning issued for
+filesystems which don't implement these verifiers, and the VFS also lets
+users delete these pesky symlinks as otherwise users cannot get rid of
+them.
+
+The userspace utility chattr(1) cannot set these attributes on symlinks
+*and* other special files as well:
+
+	# chattr -a symlink
+	chattr: Operation not supported while reading flags on b
+
+The reason for this is different though. Refer to commit 023d111e92195
+("chattr.1.in: Document the compression attribute flags E, X, and ...")
+merged on e2fsprogs v1.28 since August 2002. This commit prevented
+issuing the ioctl() for symlink *and* special files in consideration for
+a buggy DRM driver where issuing lsattr on their special files crashed
+the system. For details refer to Debian bug 152029 [0].
+
+You can craft your own tool to query the extra file attributes with
+the new shiny statx(2) tool, statx(2) will list the attributes if
+they were set for instance on a corrupt filesystem. However statx(2)
+is only used for *querying* -- not for setting the attributes.
+
+If you implement issuing your own ioctl() for FS_IOC_FSGETXATTR or
+FS_IOC_FSSETXATTR on special files (block, char, fifo) it will fail
+returning -1 and errno is set to ENOTTY (Inappropriate ioctl for
+device). The reason for this is different than for symlinks.
+For special files this fails on vfs_ioctl() when the filesystem
+f_op callbacks are not set for these special files:
+
+long vfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	int error = -ENOTTY;
+
+        if (!filp->f_op->unlocked_ioctl)
+		goto out;
+
+	error = filp->f_op->unlocked_ioctl(filp, cmd, arg);
+	if (error == -ENOIOCTLCMD)
+		error = -ENOTTY;
+out:
+	return error;
+}
+
+The same applies to PF_LOCAL named sockets. Since this varies by
+filesystem for special files, only make a special rule to respect
+the immutable and append attribute on symlinks.
+
+[0] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=152029
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ fs/namei.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index e861b409c241..23ebc14805dc 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2760,6 +2760,26 @@ int __check_sticky(struct inode *dir, struct inode *inode)
+ }
+ EXPORT_SYMBOL(__check_sticky);
+ 
++/* Process extra file attributes only when they make sense */
++static bool may_delete_stx_attributes(struct inode *inode)
++{
++	/*
++	 * The VFS does not allow setting append/immutable on symlinks.
++	 *
++	 * Filesystems can implement their own verifier which would avoid this
++	 * generic splat, this generic splat is desirable if the respective
++	 * filesystem repair utility won't implement a fix for this, otherwise
++	 * users end up with a nagging dangling file which is impossible to
++	 * fix in userspace.
++	 */
++	if (S_ISLNK(inode->i_mode)) {
++		WARN_ONCE((IS_APPEND(inode) || IS_IMMUTABLE(inode)),
++		 "Immutable or append flag set on symlink. VFS does not allow this, must be a filesystem corruption. Allowing deletion though");
++	} else if (IS_APPEND(inode) || IS_IMMUTABLE(inode))
++		return  false;
++	return  true;
++}
++
+ /*
+  *	Check whether we can remove a link victim from directory dir, check
+  *  whether the type of victim is right.
+@@ -2798,8 +2818,8 @@ static int may_delete(struct inode *dir, struct dentry *victim, bool isdir)
+ 	if (IS_APPEND(dir))
+ 		return -EPERM;
+ 
+-	if (check_sticky(dir, inode) || IS_APPEND(inode) ||
+-	    IS_IMMUTABLE(inode) || IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
++	if (check_sticky(dir, inode) || !may_delete_stx_attributes(inode) ||
++	    IS_SWAPFILE(inode) || HAS_UNMAPPED_ID(inode))
+ 		return -EPERM;
+ 	if (isdir) {
+ 		if (!d_is_dir(victim))
+-- 
+2.17.0
+
