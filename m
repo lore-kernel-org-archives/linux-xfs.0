@@ -1,59 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:48942 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755848AbeEaSGS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:18 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: iomap based buffered reads & iomap cleanups v5
-Date: Thu, 31 May 2018 20:06:01 +0200
-Message-Id: <20180531180614.21506-1-hch@lst.de>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:64816 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751000AbeEJBSB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 21:18:01 -0400
+Date: Thu, 10 May 2018 11:17:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/33] iomap: add an iomap-based readpage and readpages
+ implementation
+Message-ID: <20180510011758.GR10363@dastard>
+References: <20180509074830.16196-1-hch@lst.de>
+ <20180509074830.16196-12-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180509074830.16196-12-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-Hi all,
+On Wed, May 09, 2018 at 09:48:08AM +0200, Christoph Hellwig wrote:
+> Simply use iomap_apply to iterate over the file and a submit a bio for
+> each non-uptodate but mapped region and zero everything else.  Note that
+> as-is this can not be used for file systems with a blocksize smaller than
+> the page size, but that support will be added later.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+.....
+> +int
+> +iomap_readpages(struct address_space *mapping, struct list_head *pages,
+> +		unsigned nr_pages, const struct iomap_ops *ops)
+> +{
+> +	struct iomap_readpage_ctx ctx = { .pages = pages };
+> +	loff_t pos = page_offset(list_entry(pages->prev, struct page, lru));
+> +	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
+> +	loff_t length = last - pos + PAGE_SIZE, ret = 0;
+> +
+> +	while (length > 0) {
+> +		ret = iomap_apply(mapping->host, pos, length, 0, ops,
+> +				&ctx, iomap_readpages_actor);
+> +		if (ret <= 0)
+> +			break;
+> +		pos += ret;
+> +		length -= ret;
+> +	}
+> +
+> +	ret = 0;
 
-this series adds support for buffered reads without buffer heads to
-the iomap and XFS code.  It has been split from the larger series
-for easier review.
+This means the function will always return zero, regardless of
+whether iomap_apply returned an error or not.
 
+> +	if (ctx.bio)
+> +		submit_bio(ctx.bio);
+> +	if (ctx.cur_page) {
+> +		if (!ctx.cur_page_in_bio)
+> +			unlock_page(ctx.cur_page);
+> +		put_page(ctx.cur_page);
+> +	}
+> +	WARN_ON_ONCE(ret && !list_empty(ctx.pages));
 
-A git tree is available at:
+And this warning will never trigger. Was this intended behaviour?
+If it is, it needs a comment, because it looks wrong....
 
-    git://git.infradead.org/users/hch/xfs.git xfs-iomap-read.5
+Cheers,
 
-Gitweb:
-
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-read.5
-
-Changes since v4:
- - a couple comment updates
-
-Changes since v3:
- - remove iomap_read_bio_alloc
- - set REQ_RAHEAD flag for readpages
- - better commen on the add_to_page_cache_lru semantics for readpages
- - move all write related patches to a separate series
-
-Changes since v2:
- - minor page_seek_hole_data tweaks
- - don't read data entirely covered by the write operation in write_begin
- - fix zeroing on write_begin I/O failure
- - remove iomap_block_needs_zeroing to make the code more clear
- - update comments on __do_page_cache_readahead
-
-Changes since v1:
- - fix the iomap_readpages error handling
- - use unsigned file offsets in a few places to avoid arithmetic overflows
- - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
- - improve a few comments
- - add more asserts
- - warn about truncated block numbers from ->bmap
- - new patch to change the __do_page_cache_readahead return value to
-   unsigned int
- - remove an incorrectly added empty line
- - make inline data an explicit iomap type instead of a flag
- - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
-   and keep the basic buffer head infrastructure around for now.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
