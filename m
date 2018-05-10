@@ -1,205 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49306 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751010AbeEKPT0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 May 2018 11:19:26 -0400
-Date: Fri, 11 May 2018 11:19:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/8] xfs: don't continue scrub if already corrupt
-Message-ID: <20180511151924.GC105683@bfoster.bfoster>
-References: <152597988038.25215.9276761144353662866.stgit@magnolia>
- <152597989315.25215.2420081776495470973.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152597989315.25215.2420081776495470973.stgit@magnolia>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:39416 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752685AbeEJVt6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 17:49:58 -0400
+Received: by mail-pf0-f196.google.com with SMTP id a22-v6so1693498pfn.6
+        for <linux-xfs@vger.kernel.org>; Thu, 10 May 2018 14:49:58 -0700 (PDT)
+From: Andreas Dilger <adilger@dilger.ca>
+Message-Id: <AE0124C4-46F7-4051-BA24-AC2E3887E8A3@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_D589F850-881C-4AD8-A64A-59F465F470ED";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH 01/33] block: add a lower-level bio_add_page interface
+Date: Thu, 10 May 2018 15:49:53 -0600
+In-Reply-To: <20180510064013.GA11422@lst.de>
+References: <20180509074830.16196-1-hch@lst.de>
+ <20180509074830.16196-2-hch@lst.de>
+ <20180509151243.GA1313@bombadil.infradead.org>
+ <20180510064013.GA11422@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 10, 2018 at 12:18:13PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If we've already decided that something is corrupt, we might as well
-> abort all the loops and exit as quickly as possible.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+--Apple-Mail=_D589F850-881C-4AD8-A64A-59F465F470ED
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
 
->  fs/xfs/scrub/attr.c   |    3 ++-
->  fs/xfs/scrub/bmap.c   |    3 ++-
->  fs/xfs/scrub/dir.c    |   35 +++++++++++++++++++++++++++--------
->  fs/xfs/scrub/parent.c |    3 +++
->  4 files changed, 34 insertions(+), 10 deletions(-)
+On May 10, 2018, at 12:40 AM, Christoph Hellwig <hch@lst.de> wrote:
 > 
+> On Wed, May 09, 2018 at 08:12:43AM -0700, Matthew Wilcox wrote:
+>> (page, len, off) is a bit weird to me.  Usually we do (page, off, len).
 > 
-> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-> index 127575f0abfb..84b6d6b66578 100644
-> --- a/fs/xfs/scrub/attr.c
-> +++ b/fs/xfs/scrub/attr.c
-> @@ -126,8 +126,9 @@ xfs_scrub_xattr_listent(
->  	if (args.valuelen != valuelen)
->  		xfs_scrub_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK,
->  					     args.blkno);
-> -
->  fail_xref:
-> +	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		context->seen_enough = 1;
->  	return;
->  }
->  
-> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index e5a4611abf86..42a115e83739 100644
-> --- a/fs/xfs/scrub/bmap.c
-> +++ b/fs/xfs/scrub/bmap.c
-> @@ -683,7 +683,8 @@ xfs_scrub_bmap(
->  	info.lastoff = 0;
->  	ifp = XFS_IFORK_PTR(ip, whichfork);
->  	for_each_xfs_iext(ifp, &icur, &irec) {
-> -		if (xfs_scrub_should_terminate(sc, &error))
-> +		if (xfs_scrub_should_terminate(sc, &error) ||
-> +		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
->  			break;
->  		if (isnullstartblock(irec.br_startblock))
->  			continue;
-> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-> index 38f29806eb54..1a4309b3e786 100644
-> --- a/fs/xfs/scrub/dir.c
-> +++ b/fs/xfs/scrub/dir.c
-> @@ -172,7 +172,7 @@ xfs_scrub_dir_actor(
->  	error = xfs_dir_lookup(sdc->sc->tp, ip, &xname, &lookup_ino, NULL);
->  	if (!xfs_scrub_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
->  			&error))
-> -		goto fail_xref;
-> +		goto out;
->  	if (lookup_ino != ino) {
->  		xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
->  		goto out;
-> @@ -183,8 +183,13 @@ xfs_scrub_dir_actor(
->  	if (error)
->  		goto out;
->  out:
-> -	return error;
-> -fail_xref:
-> +	/*
-> +	 * A negative error code returned here is supposed to cause the
-> +	 * dir_emit caller (xfs_readdir) to abort the directory iteration
-> +	 * and return zero to xfs_scrub_directory.
-> +	 */
-> +	if (error == 0 && sdc->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		return -EFSCORRUPTED;
->  	return error;
->  }
->  
-> @@ -240,6 +245,9 @@ xfs_scrub_dir_rec(
->  	}
->  	xfs_scrub_buffer_recheck(ds->sc, bp);
->  
-> +	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		goto out_relse;
-> +
->  	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
->  
->  	/* Make sure we got a real directory entry. */
-> @@ -357,6 +365,9 @@ xfs_scrub_directory_data_bestfree(
->  
->  	/* XXX: Check xfs_dir3_data_hdr.pad is zero once we start setting it. */
->  
-> +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		goto out_buf;
-> +
->  	/* Do the bestfrees correspond to actual free space? */
->  	bf = d_ops->data_bestfree_p(bp->b_addr);
->  	smallest_bestfree = UINT_MAX;
-> @@ -413,14 +424,18 @@ xfs_scrub_directory_data_bestfree(
->  
->  		/* Spot check this free entry */
->  		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
-> -		if (tag != ((char *)dup - (char *)bp->b_addr))
-> +		if (tag != ((char *)dup - (char *)bp->b_addr)) {
->  			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-> +			goto out_buf;
-> +		}
->  
->  		/*
->  		 * Either this entry is a bestfree or it's smaller than
->  		 * any of the bestfrees.
->  		 */
->  		xfs_scrub_directory_check_free_entry(sc, lblk, bf, dup);
-> +		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +			goto out_buf;
->  
->  		/* Move on. */
->  		newlen = be16_to_cpu(dup->length);
-> @@ -546,6 +561,8 @@ xfs_scrub_directory_leaf1_bestfree(
->  	}
->  	if (leafhdr.stale != stale)
->  		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
-> +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		goto out;
->  
->  	/* Check all the bestfree entries. */
->  	for (i = 0; i < bestcount; i++, bestp++) {
-> @@ -556,9 +573,11 @@ xfs_scrub_directory_leaf1_bestfree(
->  				i * args->geo->fsbcount, -1, &dbp);
->  		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
->  				&error))
-> -			continue;
-> +			break;
->  		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
->  		xfs_trans_brelse(sc->tp, dbp);
-> +		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +			goto out;
->  	}
->  out:
->  	return error;
-> @@ -607,7 +626,7 @@ xfs_scrub_directory_free_bestfree(
->  				-1, &dbp);
->  		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
->  				&error))
-> -			continue;
-> +			break;
->  		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
->  		xfs_trans_brelse(sc->tp, dbp);
->  	}
-> @@ -656,7 +675,7 @@ xfs_scrub_directory_blocks(
->  
->  	/* Iterate all the data extents in the directory... */
->  	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &icur, &got);
-> -	while (found) {
-> +	while (found && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
->  		/* Block directories only have a single block at offset 0. */
->  		if (is_block &&
->  		    (got.br_startoff > 0 ||
-> @@ -719,7 +738,7 @@ xfs_scrub_directory_blocks(
->  	/* Scan for free blocks */
->  	lblk = free_lblk;
->  	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &icur, &got);
-> -	while (found) {
-> +	while (found && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
->  		/*
->  		 * Dirs can't have blocks mapped above 2^32.
->  		 * Single-block dirs shouldn't even be here.
-> diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-> index 1fb88c18d455..fc336807e156 100644
-> --- a/fs/xfs/scrub/parent.c
-> +++ b/fs/xfs/scrub/parent.c
-> @@ -147,6 +147,9 @@ xfs_scrub_parent_validate(
->  
->  	*try_again = false;
->  
-> +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> +		goto out;
-> +
->  	/* '..' must not point to ourselves. */
->  	if (sc->ip->i_ino == dnum) {
->  		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> That's what I'd usually do, too.  But this odd convention is what
+> bio_add_page uses, so I decided to stick to that instead of having two
+> different conventions in one family of functions.
+
+Would it make sense to change the bio_add_page() and bio_add_pc_page()
+to use the more common convention instead of continuing the spread of
+this non-standard calling convention?  This is doubly problematic since
+"off" and "len" are both unsigned int values so it is easy to get them
+mixed up, and just reordering the bio_add_page() arguments would not
+generate any errors.
+
+One option would be to rename this function bio_page_add() so there are
+build errors or first add bio_page_add() and mark bio_add_page()
+deprecated and allow some short time for transition?  There are about
+50 uses under drivers/ and 50 uses under fs/.
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_D589F850-881C-4AD8-A64A-59F465F470ED
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAlr0voIACgkQcqXauRfM
+H+A1mg/+JbxLgylupOU2sRAmpQK8Frg1K/ZSUEJHtt0hueCF83YAD0AhxVXybB71
+RJQ3I+Q4rU0ALUJMyJpQKSw29KJDMwEZ7H59Ao3YwriXSV5f19vG3S0gSj3ROzhL
+ApoiD+Z6CP8m9W/bRFq8r/Oz0WnMOwO7TiIY40Kh7AqebtqUpGqY8rb+j0q/S5ci
+lb9d0HZrwIP2Ba84iATeiZcVuXLk1Lk3EPNpzDcULZ9tmRNVoJJRHnY2pnWufkz2
+a2D8/OizVsei9y9JesLkqfdQszlKBX/MQRpK9wiYgPleGkKZnDoL7uH+QXA2tZ19
+BHU8WmSGN8yjkyaT2loY3NEOiwoZ9BW7SLqKxxKLhFjNHVyOr2Br1M70fzOU+VEC
+kxY3flBuBjhEJoNobTwbAEXMZqwqJFm+2GAH937DefnHeaJ4pRmOOwx3dY/SvLf5
+Z9o3qIEPWSbPik1x8T7ZNOXKxzDKqh/SzcJ6+bzcVZHP7E+lXxBgWiPdrmL8FMC2
+TYruk2BM6XXbauXWb1pTegDVoxEhHK/XNWP4Ft5eZ2Rj3we89MB0I0p1XCxnV145
+awy5o1lclkEowcNe8YXkw4VuBkaJPrIUPxEFIPAp7LHr295gUxvlr83aatIS7fjM
+H5t0eMuTPZzmQ0xEzuVFS23c3KKM18pj5BEOT9c6957OJbU0TgU=
+=gYo5
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_D589F850-881C-4AD8-A64A-59F465F470ED--
