@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40704 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965410AbeEJP3Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:29:25 -0400
-Subject: [PATCH 03/14] xfs: refactor XFS_QMOPT_DQNEXT out of existence
+Received: from aserp2120.oracle.com ([141.146.126.78]:39562 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965410AbeEJP3j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:29:39 -0400
+Subject: [PATCH 04/14] xfs: refactor dquot cache handling
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 10 May 2018 08:29:04 -0700
-Message-ID: <152596614455.27525.7137534544740845421.stgit@magnolia>
+Date: Thu, 10 May 2018 08:29:10 -0700
+Message-ID: <152596615091.27525.3447222197440783485.stgit@magnolia>
 In-Reply-To: <152596612549.27525.9876256551560849585.stgit@magnolia>
 References: <152596612549.27525.9876256551560849585.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,327 +20,166 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, hch@lst.de
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-There's only one caller of DQNEXT and its semantics can be moved into a
-separate function, so create the function and get rid of the flag.
+Delegate the dquot cache handling (radix tree lookup and insertion) to
+separate helper functions so that we can continue to simplify the body
+of dqget.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_quota_defs.h |    1 
- fs/xfs/scrub/quota.c           |    3 -
- fs/xfs/xfs_dquot.c             |   63 ++++++++++++++------------
- fs/xfs/xfs_dquot.h             |    2 +
- fs/xfs/xfs_qm.h                |    6 ++-
- fs/xfs/xfs_qm_syscalls.c       |   96 +++++++++++++++++++++++++++-------------
- fs/xfs/xfs_quotaops.c          |    8 +--
- 7 files changed, 108 insertions(+), 71 deletions(-)
+ fs/xfs/xfs_dquot.c |  112 ++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 78 insertions(+), 34 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index 1aac52d7fef4..619905f3bcac 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -114,7 +114,6 @@ typedef uint16_t	xfs_qwarncnt_t;
- #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
- #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
- #define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
--#define XFS_QMOPT_DQNEXT	0x0008000 /* return next dquot >= this ID */
- 
- /*
-  * flags to xfs_trans_mod_dquot to indicate which field needs to be
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 6ba465e6c885..50415e8e5dd1 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -268,8 +268,7 @@ xfs_scrub_quota(
- 		if (xfs_scrub_should_terminate(sc, &error))
- 			break;
- 
--		error = xfs_qm_dqget(mp, NULL, id, dqtype, XFS_QMOPT_DQNEXT,
--				&dq);
-+		error = xfs_qm_dqget_next(mp, id, dqtype, &dq);
- 		if (error == -ENOENT)
- 			break;
- 		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK,
 diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 32d7359b3c18..8d2a3becc4f4 100644
+index 8d2a3becc4f4..299d4ce90ded 100644
 --- a/fs/xfs/xfs_dquot.c
 +++ b/fs/xfs/xfs_dquot.c
-@@ -736,18 +736,6 @@ xfs_qm_dqget(
- 			goto restart;
+@@ -686,6 +686,81 @@ xfs_dq_get_next_id(
+ 	return error;
+ }
+ 
++/*
++ * Look up the dquot in the in-core cache.  If found, the dquot is returned
++ * locked and ready to go.
++ */
++static struct xfs_dquot *
++xfs_qm_dqget_cache_lookup(
++	struct xfs_mount	*mp,
++	struct xfs_quotainfo	*qi,
++	struct radix_tree_root	*tree,
++	xfs_dqid_t		id)
++{
++	struct xfs_dquot	*dqp;
++
++restart:
++	mutex_lock(&qi->qi_tree_lock);
++	dqp = radix_tree_lookup(tree, id);
++	if (!dqp) {
++		mutex_unlock(&qi->qi_tree_lock);
++		XFS_STATS_INC(mp, xs_qm_dqcachemisses);
++		return NULL;
++	}
++
++	xfs_dqlock(dqp);
++	if (dqp->dq_flags & XFS_DQ_FREEING) {
++		xfs_dqunlock(dqp);
++		mutex_unlock(&qi->qi_tree_lock);
++		trace_xfs_dqget_freeing(dqp);
++		delay(1);
++		goto restart;
++	}
++
++	dqp->q_nrefs++;
++	mutex_unlock(&qi->qi_tree_lock);
++
++	trace_xfs_dqget_hit(dqp);
++	XFS_STATS_INC(mp, xs_qm_dqcachehits);
++	return dqp;
++}
++
++/*
++ * Try to insert a new dquot into the in-core cache.  If an error occurs the
++ * caller should throw away the dquot and start over.  Otherwise, the dquot
++ * is returned locked (and held by the cache) as if there had been a cache
++ * hit.
++ */
++static int
++xfs_qm_dqget_cache_insert(
++	struct xfs_mount	*mp,
++	struct xfs_quotainfo	*qi,
++	struct radix_tree_root	*tree,
++	xfs_dqid_t		id,
++	struct xfs_dquot	*dqp)
++{
++	int			error;
++
++	mutex_lock(&qi->qi_tree_lock);
++	error = radix_tree_insert(tree, id, dqp);
++	if (unlikely(error)) {
++		/* Duplicate found!  Caller must try again. */
++		WARN_ON(error != -EEXIST);
++		mutex_unlock(&qi->qi_tree_lock);
++		trace_xfs_dqget_dup(dqp);
++		return error;
++	}
++
++	/* Return a locked dquot to the caller, with a reference taken. */
++	xfs_dqlock(dqp);
++	dqp->q_nrefs = 1;
++
++	qi->qi_dquots++;
++	mutex_unlock(&qi->qi_tree_lock);
++
++	return 0;
++}
++
+ /*
+  * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
+  * a locked dquot, doing an allocation (if requested) as needed.
+@@ -724,28 +799,11 @@ xfs_qm_dqget(
+ 	}
+ 
+ restart:
+-	mutex_lock(&qi->qi_tree_lock);
+-	dqp = radix_tree_lookup(tree, id);
++	dqp = xfs_qm_dqget_cache_lookup(mp, qi, tree, id);
+ 	if (dqp) {
+-		xfs_dqlock(dqp);
+-		if (dqp->dq_flags & XFS_DQ_FREEING) {
+-			xfs_dqunlock(dqp);
+-			mutex_unlock(&qi->qi_tree_lock);
+-			trace_xfs_dqget_freeing(dqp);
+-			delay(1);
+-			goto restart;
+-		}
+-
+-		dqp->q_nrefs++;
+-		mutex_unlock(&qi->qi_tree_lock);
+-
+-		trace_xfs_dqget_hit(dqp);
+-		XFS_STATS_INC(mp, xs_qm_dqcachehits);
+ 		*O_dqpp = dqp;
+ 		return 0;
+ 	}
+-	mutex_unlock(&qi->qi_tree_lock);
+-	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
+ 
+ 	/*
+ 	 * Dquot cache miss. We don't want to keep the inode lock across
+@@ -787,31 +845,17 @@ xfs_qm_dqget(
  		}
+ 	}
  
--		/* uninit / unused quota found in radix tree, keep looking  */
--		if (flags & XFS_QMOPT_DQNEXT) {
--			if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
--				xfs_dqunlock(dqp);
--				mutex_unlock(&qi->qi_tree_lock);
--				error = xfs_dq_get_next_id(mp, type, &id);
--				if (error)
--					return error;
--				goto restart;
--			}
--		}
+-	mutex_lock(&qi->qi_tree_lock);
+-	error = radix_tree_insert(tree, id, dqp);
+-	if (unlikely(error)) {
+-		WARN_ON(error != -EEXIST);
 -
- 		dqp->q_nrefs++;
- 		mutex_unlock(&qi->qi_tree_lock);
++	error = xfs_qm_dqget_cache_insert(mp, qi, tree, id, dqp);
++	if (error) {
+ 		/*
+ 		 * Duplicate found. Just throw away the new dquot and start
+ 		 * over.
+ 		 */
+-		mutex_unlock(&qi->qi_tree_lock);
+-		trace_xfs_dqget_dup(dqp);
+ 		xfs_qm_dqdestroy(dqp);
+ 		XFS_STATS_INC(mp, xs_qm_dquot_dups);
+ 		goto restart;
+ 	}
  
-@@ -774,13 +762,6 @@ xfs_qm_dqget(
- 	if (ip)
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 
--	/* If we are asked to find next active id, keep looking */
--	if (error == -ENOENT && (flags & XFS_QMOPT_DQNEXT)) {
--		error = xfs_dq_get_next_id(mp, type, &id);
--		if (!error)
--			goto restart;
--	}
+-	/*
+-	 * We return a locked dquot to the caller, with a reference taken
+-	 */
+-	xfs_dqlock(dqp);
+-	dqp->q_nrefs = 1;
 -
- 	if (error)
- 		return error;
- 
-@@ -831,17 +812,6 @@ xfs_qm_dqget(
- 	qi->qi_dquots++;
- 	mutex_unlock(&qi->qi_tree_lock);
- 
--	/* If we are asked to find next active id, keep looking */
--	if (flags & XFS_QMOPT_DQNEXT) {
--		if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
--			xfs_qm_dqput(dqp);
--			error = xfs_dq_get_next_id(mp, type, &id);
--			if (error)
--				return error;
--			goto restart;
--		}
--	}
+-	qi->qi_dquots++;
+-	mutex_unlock(&qi->qi_tree_lock);
 -
   dqret:
  	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
  	trace_xfs_dqget_miss(dqp);
-@@ -849,6 +819,39 @@ xfs_qm_dqget(
- 	return 0;
- }
- 
-+/*
-+ * Starting at @id and progressing upwards, look for an initialized incore
-+ * dquot, lock it, and return it.
-+ */
-+int
-+xfs_qm_dqget_next(
-+	struct xfs_mount	*mp,
-+	xfs_dqid_t		id,
-+	uint			type,
-+	struct xfs_dquot	**dqpp)
-+{
-+	struct xfs_dquot	*dqp;
-+	int			error = 0;
-+
-+	*dqpp = NULL;
-+	for (; !error; error = xfs_dq_get_next_id(mp, type, &id)) {
-+		error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
-+		if (error == -ENOENT)
-+			continue;
-+		else if (error != 0)
-+			break;
-+
-+		if (!XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
-+			*dqpp = dqp;
-+			return 0;
-+		}
-+
-+		xfs_qm_dqput(dqp);
-+	}
-+
-+	return error;
-+}
-+
- /*
-  * Release a reference to the dquot (decrement ref-count) and unlock it.
-  *
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 2f536f33cd26..303e71dfcf70 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -171,6 +171,8 @@ extern void		xfs_qm_adjust_dqlimits(struct xfs_mount *,
- 					       struct xfs_dquot *);
- extern int		xfs_qm_dqget(xfs_mount_t *, xfs_inode_t *,
- 					xfs_dqid_t, uint, uint, xfs_dquot_t **);
-+extern int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
-+					uint type, struct xfs_dquot **dqpp);
- extern void		xfs_qm_dqput(xfs_dquot_t *);
- 
- extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 2975a822e9f0..e3129b280423 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -170,8 +170,10 @@ extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
- 
- /* quota ops */
- extern int		xfs_qm_scall_trunc_qfiles(struct xfs_mount *, uint);
--extern int		xfs_qm_scall_getquota(struct xfs_mount *, xfs_dqid_t *,
--					uint, struct qc_dqblk *, uint);
-+extern int		xfs_qm_scall_getquota(struct xfs_mount *, xfs_dqid_t,
-+					uint, struct qc_dqblk *);
-+extern int		xfs_qm_scall_getquota_next(struct xfs_mount *,
-+					xfs_dqid_t *, uint, struct qc_dqblk *);
- extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
- 					struct qc_dqblk *);
- extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 9cb5c381b01c..0234cfc4d445 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -622,39 +622,14 @@ xfs_qm_log_quotaoff(
- 	return error;
- }
- 
--
--int
--xfs_qm_scall_getquota(
-+/* Fill out the quota context. */
-+static void
-+xfs_qm_scall_getquota_fill_qc(
- 	struct xfs_mount	*mp,
--	xfs_dqid_t		*id,
- 	uint			type,
--	struct qc_dqblk		*dst,
--	uint			dqget_flags)
-+	const struct xfs_dquot	*dqp,
-+	struct qc_dqblk		*dst)
- {
--	struct xfs_dquot	*dqp;
--	int			error;
--
--	/*
--	 * Try to get the dquot. We don't want it allocated on disk, so
--	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
--	 * exist, we'll get ENOENT back.
--	 */
--	error = xfs_qm_dqget(mp, NULL, *id, type, dqget_flags, &dqp);
--	if (error)
--		return error;
--
--	/*
--	 * If everything's NULL, this dquot doesn't quite exist as far as
--	 * our utility programs are concerned.
--	 */
--	if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
--		error = -ENOENT;
--		goto out_put;
--	}
--
--	/* Fill in the ID we actually read from disk */
--	*id = be32_to_cpu(dqp->q_core.d_id);
--
- 	memset(dst, 0, sizeof(*dst));
- 	dst->d_spc_hardlimit =
- 		XFS_FSB_TO_B(mp, be64_to_cpu(dqp->q_core.d_blk_hardlimit));
-@@ -696,7 +671,7 @@ xfs_qm_scall_getquota(
- 	if (((XFS_IS_UQUOTA_ENFORCED(mp) && type == XFS_DQ_USER) ||
- 	     (XFS_IS_GQUOTA_ENFORCED(mp) && type == XFS_DQ_GROUP) ||
- 	     (XFS_IS_PQUOTA_ENFORCED(mp) && type == XFS_DQ_PROJ)) &&
--	    *id != 0) {
-+	    dqp->q_core.d_id != 0) {
- 		if ((dst->d_space > dst->d_spc_softlimit) &&
- 		    (dst->d_spc_softlimit > 0)) {
- 			ASSERT(dst->d_spc_timer != 0);
-@@ -707,11 +682,70 @@ xfs_qm_scall_getquota(
- 		}
- 	}
- #endif
-+}
-+
-+/* Return the quota information for the dquot matching id. */
-+int
-+xfs_qm_scall_getquota(
-+	struct xfs_mount	*mp,
-+	xfs_dqid_t		id,
-+	uint			type,
-+	struct qc_dqblk		*dst)
-+{
-+	struct xfs_dquot	*dqp;
-+	int			error;
-+
-+	/*
-+	 * Try to get the dquot. We don't want it allocated on disk, so
-+	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
-+	 * exist, we'll get ENOENT back.
-+	 */
-+	error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If everything's NULL, this dquot doesn't quite exist as far as
-+	 * our utility programs are concerned.
-+	 */
-+	if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
-+		error = -ENOENT;
-+		goto out_put;
-+	}
-+
-+	xfs_qm_scall_getquota_fill_qc(mp, type, dqp, dst);
-+
- out_put:
- 	xfs_qm_dqput(dqp);
- 	return error;
- }
- 
-+/*
-+ * Return the quota information for the first initialized dquot whose id
-+ * is at least as high as id.
-+ */
-+int
-+xfs_qm_scall_getquota_next(
-+	struct xfs_mount	*mp,
-+	xfs_dqid_t		*id,
-+	uint			type,
-+	struct qc_dqblk		*dst)
-+{
-+	struct xfs_dquot	*dqp;
-+	int			error;
-+
-+	error = xfs_qm_dqget_next(mp, *id, type, &dqp);
-+	if (error)
-+		return error;
-+
-+	/* Fill in the ID we actually read from disk */
-+	*id = be32_to_cpu(dqp->q_core.d_id);
-+
-+	xfs_qm_scall_getquota_fill_qc(mp, type, dqp, dst);
-+
-+	xfs_qm_dqput(dqp);
-+	return error;
-+}
- 
- STATIC int
- xfs_dqrele_inode(
-diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-index a65108594a07..c93fc913dffb 100644
---- a/fs/xfs/xfs_quotaops.c
-+++ b/fs/xfs/xfs_quotaops.c
-@@ -239,8 +239,7 @@ xfs_fs_get_dqblk(
- 		return -ESRCH;
- 
- 	id = from_kqid(&init_user_ns, qid);
--	return xfs_qm_scall_getquota(mp, &id,
--				      xfs_quota_type(qid.type), qdq, 0);
-+	return xfs_qm_scall_getquota(mp, id, xfs_quota_type(qid.type), qdq);
- }
- 
- /* Return quota info for active quota >= this qid */
-@@ -260,9 +259,8 @@ xfs_fs_get_nextdqblk(
- 		return -ESRCH;
- 
- 	id = from_kqid(&init_user_ns, *qid);
--	ret = xfs_qm_scall_getquota(mp, &id,
--				    xfs_quota_type(qid->type), qdq,
--				    XFS_QMOPT_DQNEXT);
-+	ret = xfs_qm_scall_getquota_next(mp, &id, xfs_quota_type(qid->type),
-+			qdq);
- 	if (ret)
- 		return ret;
- 
 
