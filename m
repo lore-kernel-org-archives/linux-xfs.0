@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50024 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbeEJTSv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 15:18:51 -0400
-Subject: [PATCH 5/8] xfs: avoid ABBA deadlock when scrubbing parent pointers
+Received: from aserp2130.oracle.com ([141.146.126.79]:42396 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbeEJTTF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 15:19:05 -0400
+Subject: [PATCH 6/8] xfs: hoist xfs_scrub_agfl_walk to libxfs as
+ xfs_agfl_walk
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 10 May 2018 12:18:32 -0700
-Message-ID: <152597991216.25215.14644938205600757762.stgit@magnolia>
+Date: Thu, 10 May 2018 12:18:38 -0700
+Message-ID: <152597991832.25215.3658478358977072798.stgit@magnolia>
 In-Reply-To: <152597988038.25215.9276761144353662866.stgit@magnolia>
 References: <152597988038.25215.9276761144353662866.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,111 +21,218 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In normal operation, the XFS convention is to take an inode's iolock
-and then allocate a transaction.  However, when scrubbing parent inodes
-this is inverted -- we allocated the transaction to do the scrub, and
-now we're trying to grab the parent's iolock.  This can lead to ABBA
-deadlocks: some thread grabbed the parent's iolock and is waiting for
-space for a transaction while our parent scrubber is sitting on a
-transaction trying to get the parent's iolock.
-
-Therefore, convert all iolock attempts to use trylock; if that fails,
-they can use the existing mechanisms to back off and try again.
-
-The ABBA deadlock didn't happen with a non-repair scrub because the
-transactions don't reserve any space, but repair scrubs require
-reservation in order to update metadata.  However, any other concurrent
-metadata update (e.g. directory create in the parent) could also induce
-this deadlock with the parent scrubber.
+This function is basically a generic AGFL block iterator, so promote it
+to libxfs ahead of online repair wanting to use it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/common.c |   22 ++++++++++++++++++++++
- fs/xfs/scrub/common.h |    1 +
- fs/xfs/scrub/parent.c |   16 ++++++++++++++--
- 3 files changed, 37 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c |   37 +++++++++++++++++++++
+ fs/xfs/libxfs/xfs_alloc.h |    5 +++
+ fs/xfs/scrub/agheader.c   |   78 ++++++++-------------------------------------
+ fs/xfs/scrub/common.h     |    4 --
+ 4 files changed, 55 insertions(+), 69 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 62b33c99efe4..518bff2be0c9 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -844,3 +844,25 @@ xfs_scrub_metadata_inode_forks(
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 5410635893df..dc9dd3805d97 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3180,3 +3180,40 @@ xfs_alloc_has_record(
  
- 	return error;
+ 	return xfs_btree_has_record(cur, &low, &high, exists);
  }
 +
 +/*
-+ * Try to lock an inode in violation of the usual locking order rules.  For
-+ * example, trying to get the IOLOCK while in transaction context, or just
-+ * plain breaking AG-order or inode-order inode locking rules.  Either way,
-+ * the only way to avoid an ABBA deadlock is to use trylock and back off if
-+ * we can't.
++ * Walk all the blocks in the AGFL.  The @walk_fn can return any negative
++ * error code or XFS_BTREE_QUERY_RANGE_ABORT.
 + */
 +int
-+xfs_scrub_ilock_inverted(
-+	struct xfs_inode	*ip,
-+	uint			lock_mode)
++xfs_agfl_walk(
++	struct xfs_mount	*mp,
++	struct xfs_agf		*agf,
++	struct xfs_buf		*agflbp,
++	xfs_agfl_walk_fn	walk_fn,
++	void			*priv)
 +{
-+	int			i;
++	__be32			*agfl_bno;
++	unsigned int		i;
++	int			error;
 +
-+	for (i = 0; i < 20; i++) {
-+		if (xfs_ilock_nowait(ip, lock_mode))
-+			return 0;
-+		delay(1);
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
++	i = be32_to_cpu(agf->agf_flfirst);
++
++	/* Nothing to walk in an empty AGFL. */
++	if (agf->agf_flcount == cpu_to_be32(0))
++		return 0;
++
++	/* Otherwise, walk from first to last, wrapping as needed. */
++	for (;;) {
++		error = walk_fn(mp, be32_to_cpu(agfl_bno[i]), priv);
++		if (error)
++			return error;
++		if (i == be32_to_cpu(agf->agf_fllast))
++			break;
++		if (++i == xfs_agfl_size(mp))
++			i = 0;
 +	}
-+	return -EDEADLOCK;
++
++	return 0;
 +}
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 46d48c6f83b7..0747adcd57d6 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -262,4 +262,9 @@ bool xfs_verify_fsbno(struct xfs_mount *mp, xfs_fsblock_t fsbno);
+ int xfs_alloc_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+ 		xfs_extlen_t len, bool *exist);
+ 
++typedef int (*xfs_agfl_walk_fn)(struct xfs_mount *mp, xfs_agblock_t bno,
++		void *priv);
++int xfs_agfl_walk(struct xfs_mount *mp, struct xfs_agf *agf,
++		struct xfs_buf *agflbp, xfs_agfl_walk_fn walk_fn, void *priv);
++
+ #endif	/* __XFS_ALLOC_H__ */
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 831acc0a328f..1f71793f7db4 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -38,68 +38,6 @@
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+ 
+-/*
+- * Walk all the blocks in the AGFL.  The fn function can return any negative
+- * error code or XFS_BTREE_QUERY_RANGE_ABORT.
+- */
+-int
+-xfs_scrub_walk_agfl(
+-	struct xfs_scrub_context	*sc,
+-	int				(*fn)(struct xfs_scrub_context *,
+-					      xfs_agblock_t bno, void *),
+-	void				*priv)
+-{
+-	struct xfs_agf			*agf;
+-	__be32				*agfl_bno;
+-	struct xfs_mount		*mp = sc->mp;
+-	unsigned int			flfirst;
+-	unsigned int			fllast;
+-	int				i;
+-	int				error;
+-
+-	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+-	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, sc->sa.agfl_bp);
+-	flfirst = be32_to_cpu(agf->agf_flfirst);
+-	fllast = be32_to_cpu(agf->agf_fllast);
+-
+-	/* Nothing to walk in an empty AGFL. */
+-	if (agf->agf_flcount == cpu_to_be32(0))
+-		return 0;
+-
+-	/* first to last is a consecutive list. */
+-	if (fllast >= flfirst) {
+-		for (i = flfirst; i <= fllast; i++) {
+-			error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+-			if (error)
+-				return error;
+-			if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-				return error;
+-		}
+-
+-		return 0;
+-	}
+-
+-	/* first to the end */
+-	for (i = flfirst; i < xfs_agfl_size(mp); i++) {
+-		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+-		if (error)
+-			return error;
+-		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-			return error;
+-	}
+-
+-	/* the start to last. */
+-	for (i = 0; i <= fllast; i++) {
+-		error = fn(sc, be32_to_cpu(agfl_bno[i]), priv);
+-		if (error)
+-			return error;
+-		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-			return error;
+-	}
+-
+-	return 0;
+-}
+-
+ /* Superblock */
+ 
+ /* Cross-reference with the other btrees. */
+@@ -678,6 +616,7 @@ struct xfs_scrub_agfl_info {
+ 	unsigned int			sz_entries;
+ 	unsigned int			nr_entries;
+ 	xfs_agblock_t			*entries;
++	struct xfs_scrub_context	*sc;
+ };
+ 
+ /* Cross-reference with the other btrees. */
+@@ -699,12 +638,12 @@ xfs_scrub_agfl_block_xref(
+ /* Scrub an AGFL block. */
+ STATIC int
+ xfs_scrub_agfl_block(
+-	struct xfs_scrub_context	*sc,
++	struct xfs_mount		*mp,
+ 	xfs_agblock_t			agbno,
+ 	void				*priv)
+ {
+-	struct xfs_mount		*mp = sc->mp;
+ 	struct xfs_scrub_agfl_info	*sai = priv;
++	struct xfs_scrub_context	*sc = sai->sc;
+ 	xfs_agnumber_t			agno = sc->sa.agno;
+ 
+ 	if (xfs_verify_agbno(mp, agno, agbno) &&
+@@ -715,6 +654,9 @@ xfs_scrub_agfl_block(
+ 
+ 	xfs_scrub_agfl_block_xref(sc, agbno, priv);
+ 
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return XFS_BTREE_QUERY_RANGE_ABORT;
++
+ 	return 0;
+ }
+ 
+@@ -794,6 +736,7 @@ xfs_scrub_agfl(
+ 		goto out;
+ 	}
+ 	memset(&sai, 0, sizeof(sai));
++	sai.sc = sc;
+ 	sai.sz_entries = agflcount;
+ 	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount,
+ 			KM_MAYFAIL);
+@@ -804,7 +747,12 @@ xfs_scrub_agfl(
+ 
+ 	/* Check the blocks in the AGFL. */
+ 	xfs_rmap_ag_owner(&sai.oinfo, XFS_RMAP_OWN_AG);
+-	error = xfs_scrub_walk_agfl(sc, xfs_scrub_agfl_block, &sai);
++	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
++			sc->sa.agfl_bp, xfs_scrub_agfl_block, &sai);
++	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
++		error = 0;
++		goto out_free;
++	}
+ 	if (error)
+ 		goto out_free;
+ 
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 5d78bb9602ab..119d9b6db887 100644
+index 119d9b6db887..a660087b606e 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -156,5 +156,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
- }
- 
- int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
-+int xfs_scrub_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
- 
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index fc336807e156..77c6b22c6bfd 100644
---- a/fs/xfs/scrub/parent.c
-+++ b/fs/xfs/scrub/parent.c
-@@ -214,7 +214,9 @@ xfs_scrub_parent_validate(
- 	 */
- 	xfs_iunlock(sc->ip, sc->ilock_flags);
- 	sc->ilock_flags = 0;
--	xfs_ilock(dp, XFS_IOLOCK_SHARED);
-+	error = xfs_scrub_ilock_inverted(dp, XFS_IOLOCK_SHARED);
-+	if (error)
-+		goto out_rele;
- 
- 	/* Go looking for our dentry. */
- 	error = xfs_scrub_parent_count_parent_dentries(sc, dp, &nlink);
-@@ -223,8 +225,10 @@ xfs_scrub_parent_validate(
- 
- 	/* Drop the parent lock, relock this inode. */
- 	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
-+	error = xfs_scrub_ilock_inverted(sc->ip, XFS_IOLOCK_EXCL);
-+	if (error)
-+		goto out_rele;
- 	sc->ilock_flags = XFS_IOLOCK_EXCL;
--	xfs_ilock(sc->ip, sc->ilock_flags);
- 
- 	/*
- 	 * If we're an unlinked directory, the parent /won't/ have a link
-@@ -326,5 +330,13 @@ xfs_scrub_parent(
- 	if (try_again && tries == 20)
- 		xfs_scrub_set_incomplete(sc);
- out:
-+	/*
-+	 * If we failed to lock the parent inode even after a retry, just mark
-+	 * this scrub incomplete and return.
-+	 */
-+	if (sc->try_harder && error == -EDEADLOCK) {
-+		error = 0;
-+		xfs_scrub_set_incomplete(sc);
-+	}
- 	return error;
- }
+@@ -129,10 +129,6 @@ int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ void xfs_scrub_ag_btcur_free(struct xfs_scrub_ag *sa);
+ int xfs_scrub_ag_btcur_init(struct xfs_scrub_context *sc,
+ 			    struct xfs_scrub_ag *sa);
+-int xfs_scrub_walk_agfl(struct xfs_scrub_context *sc,
+-			int (*fn)(struct xfs_scrub_context *, xfs_agblock_t bno,
+-				  void *),
+-			void *priv);
+ int xfs_scrub_count_rmap_ownedby_ag(struct xfs_scrub_context *sc,
+ 				    struct xfs_btree_cur *cur,
+ 				    struct xfs_owner_info *oinfo,
 
