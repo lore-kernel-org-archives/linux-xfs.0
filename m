@@ -1,38 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:29801 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750805AbeEKCKD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 22:10:03 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fGxVB-0006xh-IN
-        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fGxVB-0002gI-FH
-        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/2] xfs: handle mount failures more cleanly
-Date: Fri, 11 May 2018 12:09:41 +1000
-Message-Id: <20180511020943.10132-1-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:41276 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965410AbeEJP3O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:29:14 -0400
+Subject: [PATCH 01/14] xfs: release new dquot buffer on defer_finish error
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 10 May 2018 08:28:51 -0700
+Message-ID: <152596613191.27525.1283006907371296061.stgit@magnolia>
+In-Reply-To: <152596612549.27525.9876256551560849585.stgit@magnolia>
+References: <152596612549.27525.9876256551560849585.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, hch@lst.de
 
-Hi folks,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This is the XFS side of the "fs: don't scan the inode cache before
-SB_BORN is set" changes to handle mount failures more cleanly. This
-addresses teh use-after-free problems that can occur when
-xfs_fs_fill_super() fails, frees the xfs_mount structure but
-then leaves the VFS superblock pointing to it.
+In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
+allocating a new dquot record", we allocate a new dquot block, grab a
+buffer to initialize it, and return the locked initialized dquot buffer
+to the caller for further in-core dquot initialization.  Unfortunately,
+if the _bmap_finish errored out, _qm_dqalloc would also error out
+without bothering to free the (locked) buffer.  Leaking a locked buffer
+caused hangs in generic/388 when quotas are enabled.
 
-Th efirst patch is the mount delay sysfs option I've been using to
-test this. I'll post the fstest that uses it in a minute.
+Furthermore, the _bmap_finish -> _defer_finish conversion in
+310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
+xfs_defer_*") failed to observe that the buffer was held going into
+_defer_finish and therefore failed to notice that the buffer lock is
+/not/ maintained afterwards.  Now that we can bjoin a buffer to a
+defer_ops, use this mechanism to ensure that the buffer stays locked
+across the _defer_finish.  Release the holds and locks on the buffer as
+appropriate if we have to error out.
 
-Cheers,
+There is a subtlety here for the caller in that the buffer emerges
+locked and held to the transaction, so if the _trans_commit fails we
+have to release the buffer explicitly.  This fixes the unmount hang
+in generic/388 when quotas are enabled.
 
-Dave.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_dquot.c |   48 ++++++++++++++++++++++++++++--------------------
+ 1 file changed, 28 insertions(+), 20 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 4ca9c39879ae..32d7359b3c18 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -362,32 +362,40 @@ xfs_qm_dqalloc(
+ 			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+ 
+ 	/*
+-	 * xfs_defer_finish() may commit the current transaction and
+-	 * start a second transaction if the freelist is not empty.
++	 * Hold the buffer and join it to the dfops so that we'll still own
++	 * the buffer when we return to the caller.  The buffer disposal on
++	 * error must be paid attention to very carefully, as it has been
++	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
++	 * code when allocating a new dquot record" in 2005, and the later
++	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
++	 * the buffer locked across the _defer_finish call.  We can now do
++	 * this correctly with xfs_defer_bjoin.
+ 	 *
+-	 * Since we still want to modify this buffer, we need to
+-	 * ensure that the buffer is not released on commit of
+-	 * the first transaction and ensure the buffer is added to the
+-	 * second transaction.
++	 * Above, we allocated a disk block for the dquot information and
++	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
++	 * the buffer is still locked to *tpp, so we must _bhold_release and
++	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
++	 * transaction is gone but the new buffer is not joined or held to any
++	 * transaction, so we must _buf_relse it.
+ 	 *
+-	 * If there is only one transaction then don't stop the buffer
+-	 * from being released when it commits later on.
++	 * If everything succeeds, the caller of this function is returned a
++	 * buffer that is locked and joined to the transaction.  The caller
++	 * is responsible for unlocking any buffer passed back, either
++	 * manually or by committing the transaction.
+ 	 */
+-
+-	xfs_trans_bhold(tp, bp);
+-
++	xfs_trans_bhold(*tpp, bp);
++	error = xfs_defer_bjoin(&dfops, bp);
++	if (error) {
++		xfs_trans_bhold_release(*tpp, bp);
++		xfs_trans_brelse(*tpp, bp);
++		goto error1;
++	}
+ 	error = xfs_defer_finish(tpp, &dfops);
+-	if (error)
++	if (error) {
++		xfs_buf_relse(bp);
+ 		goto error1;
+-
+-	/* Transaction was committed? */
+-	if (*tpp != tp) {
+-		tp = *tpp;
+-		xfs_trans_bjoin(tp, bp);
+-	} else {
+-		xfs_trans_bhold_release(tp, bp);
+ 	}
+-
++	xfs_trans_bhold_release(*tpp, bp);
+ 	*O_bpp = bp;
+ 	return 0;
+ 
 
