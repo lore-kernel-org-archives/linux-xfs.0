@@ -1,146 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39724 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933988AbeEIOkA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 10:40:00 -0400
-Date: Wed, 9 May 2018 07:38:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v9 9/9] xfs, dax: introduce xfs_break_dax_layouts()
-Message-ID: <20180509143843.GH11261@magnolia>
-References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:15248 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751632AbeEJNxV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 May 2018 09:53:21 -0400
+Date: Thu, 10 May 2018 09:53:19 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/12] xfs: bmap debugging should never panic the system
+Message-ID: <20180510135318.GA69384@bfoster.bfoster>
+References: <152537075334.16676.10600900179473864298.stgit@magnolia>
+ <152537075974.16676.4678069099698404803.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
+In-Reply-To: <152537075974.16676.4678069099698404803.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-nvdimm@lists.01.org, Dave Chinner <david@fromorbit.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Apr 24, 2018 at 04:33:50PM -0700, Dan Williams wrote:
-> xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
-> for busy / pinned dax pages and waits for those pages to go idle before
-> any potential extent unmap operation.
+On Thu, May 03, 2018 at 11:05:59AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> dax_layout_busy_page() handles synchronizing against new page-busy
-> events (get_user_pages). It invalidates all mappings to trigger the
-> get_user_pages slow path which will eventually block on the xfs inode
-> lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
-> busy page it returns it for xfs to wait for the page-idle event that
-> will fire when the page reference count reaches 1 (recall ZONE_DEVICE
-> pages are idle at count 1, see generic_dax_pagefree()).
+> Don't panic() the system if the bmap records are garbage, just call
+> ASSERT which gives us the same backtrace but enables developers to
+> control if the system goes down or not.  This makes debugging with
+> generic/388 much easier because it won't reboot the machine midway
+> through a run just because btree_read_bufl returns EIO when the fs has
+> already shut down.
 > 
-> While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
-> deadlock the process that might be trying to elevate the page count of
-> more pages before arranging for any of them to go idle. I.e. the typical
-> case of submitting I/O is that iov_iter_get_pages() elevates the
-> reference count of all pages in the I/O before starting I/O on the first
-> page. The process of elevating the reference count of all pages involved
-> in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
-> 
-> Although XFS_MMAPLOCK_EXCL is dropped while waiting, XFS_IOLOCK_EXCL is
-> held while sleeping. We need this to prevent starvation of the truncate
-> path as continuous submission of direct-I/O could starve the truncate
-> path indefinitely if the lock is dropped.
-> 
-> Cc: Dave Chinner <david@fromorbit.com>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Reported-by: Jan Kara <jack@suse.cz>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-
-I should've acked this explicitly since it's xfs code,
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-The rest of it looks fine enough to me too, but there's no
-Acked-by-goober tag to put on them. :P
-
---D
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_file.c |   59 +++++++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 48 insertions(+), 11 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 1a5176b21803..4e98d0dcc035 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -718,6 +718,37 @@ xfs_file_write_iter(
->  	return ret;
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 6a7c2f03ea11..393b4e2c63ad 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -312,8 +312,10 @@ xfs_check_block(
+>  				xfs_warn(mp, "%s: thispa(%d) == pp(%d) %Ld",
+>  					__func__, j, i,
+>  					(unsigned long long)be64_to_cpu(*thispa));
+> -				panic("%s: ptrs are equal in node\n",
+> +				xfs_err(mp, "%s: ptrs are equal in node\n",
+>  					__func__);
+> +				ASSERT(XFS_FORCED_SHUTDOWN(mp));
+> +				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+
+Why the assert if we're just going to shutdown? At minimum, it looks a
+bit funny to assert that the fs is shutdown just prior to issuing a
+shutdown. Can we just shutdown and let the error level dictate whether
+we want a backtrace?
+
+Brian
+
+>  			}
+>  		}
+>  	}
+> @@ -483,7 +485,9 @@ xfs_bmap_check_leaf_extents(
+>  error_norelse:
+>  	xfs_warn(mp, "%s: BAD after btree leaves for %d extents",
+>  		__func__, i);
+> -	panic("%s: CORRUPTED BTREE OR SOMETHING", __func__);
+> +	xfs_err(mp, "%s: CORRUPTED BTREE OR SOMETHING", __func__);
+> +	ASSERT(XFS_FORCED_SHUTDOWN(mp));
+> +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+>  	return;
 >  }
 >  
-> +static void
-> +xfs_wait_dax_page(
-> +	struct inode		*inode,
-> +	bool			*did_unlock)
-> +{
-> +	struct xfs_inode        *ip = XFS_I(inode);
-> +
-> +	*did_unlock = true;
-> +	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> +	schedule();
-> +	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> +}
-> +
-> +static int
-> +xfs_break_dax_layouts(
-> +	struct inode		*inode,
-> +	uint			iolock,
-> +	bool			*did_unlock)
-> +{
-> +	struct page		*page;
-> +
-> +	*did_unlock = false;
-> +	page = dax_layout_busy_page(inode->i_mapping);
-> +	if (!page)
-> +		return 0;
-> +
-> +	return ___wait_var_event(&page->_refcount,
-> +			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
-> +			0, 0, xfs_wait_dax_page(inode, did_unlock));
-> +}
-> +
->  int
->  xfs_break_layouts(
->  	struct inode		*inode,
-> @@ -729,17 +760,23 @@ xfs_break_layouts(
->  
->  	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
->  
-> -	switch (reason) {
-> -	case BREAK_UNMAP:
-> -		ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
-> -		/* fall through */
-> -	case BREAK_WRITE:
-> -		error = xfs_break_leased_layouts(inode, iolock, &retry);
-> -		break;
-> -	default:
-> -		WARN_ON_ONCE(1);
-> -		return -EINVAL;
-> -	}
-> +	do {
-> +		switch (reason) {
-> +		case BREAK_UNMAP:
-> +			ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
-> +
-> +			error = xfs_break_dax_layouts(inode, *iolock, &retry);
-> +			/* fall through */
-> +		case BREAK_WRITE:
-> +			if (error || retry)
-> +				break;
-> +			error = xfs_break_leased_layouts(inode, iolock, &retry);
-> +			break;
-> +		default:
-> +			WARN_ON_ONCE(1);
-> +			return -EINVAL;
-> +		}
-> +	} while (error == 0 && retry);
->  
->  	return error;
->  }
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
