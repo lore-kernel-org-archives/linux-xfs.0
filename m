@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49636 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:49772 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750747AbeEJTS0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 15:18:26 -0400
-Subject: [PATCH 1/8] xfs: refactor quota limits initialization
+        with ESMTP id S1750980AbeEJTSc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 15:18:32 -0400
+Subject: [PATCH 2/8] xfs: don't continue scrub if already corrupt
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 10 May 2018 12:18:06 -0700
-Message-ID: <152597988679.25215.8852024160735275694.stgit@magnolia>
+Date: Thu, 10 May 2018 12:18:13 -0700
+Message-ID: <152597989315.25215.2420081776495470973.stgit@magnolia>
 In-Reply-To: <152597988038.25215.9276761144353662866.stgit@magnolia>
 References: <152597988038.25215.9276761144353662866.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,184 +20,177 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace all the if (!error) weirdness with helper functions that follow
-our regular coding practices.
+If we've already decided that something is corrupt, we might as well
+abort all the loops and exit as quickly as possible.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_qm.c |  141 ++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 77 insertions(+), 64 deletions(-)
+ fs/xfs/scrub/attr.c   |    3 ++-
+ fs/xfs/scrub/bmap.c   |    3 ++-
+ fs/xfs/scrub/dir.c    |   35 +++++++++++++++++++++++++++--------
+ fs/xfs/scrub/parent.c |    3 +++
+ 4 files changed, 34 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index f927b7d72db1..9ce6dffc25f2 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -561,26 +561,87 @@ xfs_qm_set_defquota(
- {
- 	xfs_dquot_t		*dqp;
- 	struct xfs_def_quota    *defq;
-+	struct xfs_disk_dquot	*ddqp;
- 	int			error;
- 
- 	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
--	if (!error) {
--		xfs_disk_dquot_t        *ddqp = &dqp->q_core;
-+	if (error)
-+		return;
- 
--		defq = xfs_get_defquota(dqp, qinf);
-+	ddqp = &dqp->q_core;
-+	defq = xfs_get_defquota(dqp, qinf);
- 
--		/*
--		 * Timers and warnings have been already set, let's just set the
--		 * default limits for this quota type
--		 */
--		defq->bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
--		defq->bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
--		defq->ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
--		defq->isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
--		defq->rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
--		defq->rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
--		xfs_qm_dqdestroy(dqp);
--	}
-+	/*
-+	 * Timers and warnings have been already set, let's just set the
-+	 * default limits for this quota type
-+	 */
-+	defq->bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
-+	defq->bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
-+	defq->ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
-+	defq->isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
-+	defq->rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
-+	defq->rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
-+	xfs_qm_dqdestroy(dqp);
-+}
-+
-+/* Initialize quota time limits from the root dquot. */
-+static void
-+xfs_qm_init_timelimits(
-+	struct xfs_mount	*mp,
-+	struct xfs_quotainfo	*qinf)
-+{
-+	struct xfs_disk_dquot	*ddqp;
-+	struct xfs_dquot	*dqp;
-+	uint			type;
-+	int			error;
-+
-+	qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-+	qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
-+	qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-+	qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
-+	qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
-+	qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
-+
-+	/*
-+	 * We try to get the limits from the superuser's limits fields.
-+	 * This is quite hacky, but it is standard quota practice.
-+	 *
-+	 * Since we may not have done a quotacheck by this point, just read
-+	 * the dquot without attaching it to any hashtables or lists.
-+	 *
-+	 * Timers and warnings are globally set by the first timer found in
-+	 * user/group/proj quota types, otherwise a default value is used.
-+	 * This should be split into different fields per quota type.
-+	 */
-+	if (XFS_IS_UQUOTA_RUNNING(mp))
-+		type = XFS_DQ_USER;
-+	else if (XFS_IS_GQUOTA_RUNNING(mp))
-+		type = XFS_DQ_GROUP;
-+	else
-+		type = XFS_DQ_PROJ;
-+	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-+	if (error)
-+		return;
-+
-+	ddqp = &dqp->q_core;
-+	/*
-+	 * The warnings and timers set the grace period given to
-+	 * a user or group before he or she can not perform any
-+	 * more writing. If it is zero, a default is used.
-+	 */
-+	qinf->qi_btimelimit = ddqp->d_btimer ?
-+		be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
-+	qinf->qi_itimelimit = ddqp->d_itimer ?
-+		be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
-+	qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
-+		be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
-+	qinf->qi_bwarnlimit = ddqp->d_bwarns ?
-+		be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
-+	qinf->qi_iwarnlimit = ddqp->d_iwarns ?
-+		be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
-+	qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
-+		be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
-+	xfs_qm_dqdestroy(dqp);
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 127575f0abfb..84b6d6b66578 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -126,8 +126,9 @@ xfs_scrub_xattr_listent(
+ 	if (args.valuelen != valuelen)
+ 		xfs_scrub_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK,
+ 					     args.blkno);
+-
+ fail_xref:
++	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		context->seen_enough = 1;
+ 	return;
  }
  
- /*
-@@ -592,8 +653,6 @@ xfs_qm_init_quotainfo(
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_quotainfo	*qinf;
--	struct xfs_dquot	*dqp;
--	uint			type;
- 	int			error;
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index e5a4611abf86..42a115e83739 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -683,7 +683,8 @@ xfs_scrub_bmap(
+ 	info.lastoff = 0;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	for_each_xfs_iext(ifp, &icur, &irec) {
+-		if (xfs_scrub_should_terminate(sc, &error))
++		if (xfs_scrub_should_terminate(sc, &error) ||
++		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+ 			break;
+ 		if (isnullstartblock(irec.br_startblock))
+ 			continue;
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 38f29806eb54..1a4309b3e786 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -172,7 +172,7 @@ xfs_scrub_dir_actor(
+ 	error = xfs_dir_lookup(sdc->sc->tp, ip, &xname, &lookup_ino, NULL);
+ 	if (!xfs_scrub_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
+ 			&error))
+-		goto fail_xref;
++		goto out;
+ 	if (lookup_ino != ino) {
+ 		xfs_scrub_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
+ 		goto out;
+@@ -183,8 +183,13 @@ xfs_scrub_dir_actor(
+ 	if (error)
+ 		goto out;
+ out:
+-	return error;
+-fail_xref:
++	/*
++	 * A negative error code returned here is supposed to cause the
++	 * dir_emit caller (xfs_readdir) to abort the directory iteration
++	 * and return zero to xfs_scrub_directory.
++	 */
++	if (error == 0 && sdc->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return -EFSCORRUPTED;
+ 	return error;
+ }
  
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-@@ -626,53 +685,7 @@ xfs_qm_init_quotainfo(
+@@ -240,6 +245,9 @@ xfs_scrub_dir_rec(
+ 	}
+ 	xfs_scrub_buffer_recheck(ds->sc, bp);
  
- 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
++	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out_relse;
++
+ 	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
  
--	/*
--	 * We try to get the limits from the superuser's limits fields.
--	 * This is quite hacky, but it is standard quota practice.
--	 *
--	 * Since we may not have done a quotacheck by this point, just read
--	 * the dquot without attaching it to any hashtables or lists.
--	 *
--	 * Timers and warnings are globally set by the first timer found in
--	 * user/group/proj quota types, otherwise a default value is used.
--	 * This should be split into different fields per quota type.
--	 */
--	if (XFS_IS_UQUOTA_RUNNING(mp))
--		type = XFS_DQ_USER;
--	else if (XFS_IS_GQUOTA_RUNNING(mp))
--		type = XFS_DQ_GROUP;
--	else
--		type = XFS_DQ_PROJ;
--	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
--	if (!error) {
--		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
--
--		/*
--		 * The warnings and timers set the grace period given to
--		 * a user or group before he or she can not perform any
--		 * more writing. If it is zero, a default is used.
--		 */
--		qinf->qi_btimelimit = ddqp->d_btimer ?
--			be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
--		qinf->qi_itimelimit = ddqp->d_itimer ?
--			be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
--		qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
--			be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
--		qinf->qi_bwarnlimit = ddqp->d_bwarns ?
--			be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
--		qinf->qi_iwarnlimit = ddqp->d_iwarns ?
--			be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
--		qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
--			be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
--		xfs_qm_dqdestroy(dqp);
--	} else {
--		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
--		qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
--		qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
--		qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
--		qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
--		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
--	}
-+	xfs_qm_init_timelimits(mp, qinf);
+ 	/* Make sure we got a real directory entry. */
+@@ -357,6 +365,9 @@ xfs_scrub_directory_data_bestfree(
  
- 	if (XFS_IS_UQUOTA_RUNNING(mp))
- 		xfs_qm_set_defquota(mp, XFS_DQ_USER, qinf);
+ 	/* XXX: Check xfs_dir3_data_hdr.pad is zero once we start setting it. */
+ 
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out_buf;
++
+ 	/* Do the bestfrees correspond to actual free space? */
+ 	bf = d_ops->data_bestfree_p(bp->b_addr);
+ 	smallest_bestfree = UINT_MAX;
+@@ -413,14 +424,18 @@ xfs_scrub_directory_data_bestfree(
+ 
+ 		/* Spot check this free entry */
+ 		tag = be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup));
+-		if (tag != ((char *)dup - (char *)bp->b_addr))
++		if (tag != ((char *)dup - (char *)bp->b_addr)) {
+ 			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
++			goto out_buf;
++		}
+ 
+ 		/*
+ 		 * Either this entry is a bestfree or it's smaller than
+ 		 * any of the bestfrees.
+ 		 */
+ 		xfs_scrub_directory_check_free_entry(sc, lblk, bf, dup);
++		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++			goto out_buf;
+ 
+ 		/* Move on. */
+ 		newlen = be16_to_cpu(dup->length);
+@@ -546,6 +561,8 @@ xfs_scrub_directory_leaf1_bestfree(
+ 	}
+ 	if (leafhdr.stale != stale)
+ 		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out;
+ 
+ 	/* Check all the bestfree entries. */
+ 	for (i = 0; i < bestcount; i++, bestp++) {
+@@ -556,9 +573,11 @@ xfs_scrub_directory_leaf1_bestfree(
+ 				i * args->geo->fsbcount, -1, &dbp);
+ 		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
+ 				&error))
+-			continue;
++			break;
+ 		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
+ 		xfs_trans_brelse(sc->tp, dbp);
++		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++			goto out;
+ 	}
+ out:
+ 	return error;
+@@ -607,7 +626,7 @@ xfs_scrub_directory_free_bestfree(
+ 				-1, &dbp);
+ 		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, lblk,
+ 				&error))
+-			continue;
++			break;
+ 		xfs_scrub_directory_check_freesp(sc, lblk, dbp, best);
+ 		xfs_trans_brelse(sc->tp, dbp);
+ 	}
+@@ -656,7 +675,7 @@ xfs_scrub_directory_blocks(
+ 
+ 	/* Iterate all the data extents in the directory... */
+ 	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &icur, &got);
+-	while (found) {
++	while (found && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
+ 		/* Block directories only have a single block at offset 0. */
+ 		if (is_block &&
+ 		    (got.br_startoff > 0 ||
+@@ -719,7 +738,7 @@ xfs_scrub_directory_blocks(
+ 	/* Scan for free blocks */
+ 	lblk = free_lblk;
+ 	found = xfs_iext_lookup_extent(sc->ip, ifp, lblk, &icur, &got);
+-	while (found) {
++	while (found && !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
+ 		/*
+ 		 * Dirs can't have blocks mapped above 2^32.
+ 		 * Single-block dirs shouldn't even be here.
+diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
+index 1fb88c18d455..fc336807e156 100644
+--- a/fs/xfs/scrub/parent.c
++++ b/fs/xfs/scrub/parent.c
+@@ -147,6 +147,9 @@ xfs_scrub_parent_validate(
+ 
+ 	*try_again = false;
+ 
++	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out;
++
+ 	/* '..' must not point to ourselves. */
+ 	if (sc->ip->i_ino == dnum) {
+ 		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
 
