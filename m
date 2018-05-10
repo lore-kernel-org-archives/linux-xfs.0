@@ -1,163 +1,247 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53242 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49122 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965437AbeEIQkY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 May 2018 12:40:24 -0400
-Date: Wed, 9 May 2018 12:40:22 -0400
+        id S964809AbeEJMwY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 May 2018 08:52:24 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/13] xfs: remove direct calls to _qm_dqread
-Message-ID: <20180509164022.GC66101@bfoster.bfoster>
-References: <152506698177.21553.13500862866416804148.stgit@magnolia>
- <152506705098.21553.6894396720813018127.stgit@magnolia>
- <20180508000535.GZ11261@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180508000535.GZ11261@magnolia>
+Subject: [PATCH] xfs: factor out nodiscard helpers
+Date: Thu, 10 May 2018 08:52:23 -0400
+Message-Id: <20180510125223.77364-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, hch@lst.de, Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
 
-On Mon, May 07, 2018 at 05:05:35PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The quota initialization code needs an "uncached" variant of _dqget to
-> read in default quota limits and timers before the dquot cache is fully
-> set up.  We've already split up _dqget into its component pieces so
-> create a fourth variant to address this need, and make dqread internal
-> to xfs_dquot.c again.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+The changes to skip discards of speculative preallocation and
+unwritten extents introduced several new wrapper functions through
+the bunmapi -> extent free codepath to reduce churn in all of the
+associated callers. In several cases, these wrappers simply toggle a
+single flag to skip or not skip discards for the resulting blocks.
 
-Looks good to me:
+The explicit _nodiscard() wrappers for such an isolated set of
+callers is a bit overkill. Kill off these wrappers and replace with
+the calls to the underlying functions in the contexts that need to
+control discard behavior. Retain the wrappers that preserve the
+original calling conventions to serve the original purpose of
+reducing code churn.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This is a refactoring patch and does not change behavior.
 
->  fs/xfs/xfs_dquot.c |   24 +++++++++++++++++++++++-
->  fs/xfs/xfs_dquot.h |    5 +++--
->  fs/xfs/xfs_qm.c    |   25 +++++++++++++------------
->  3 files changed, 39 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 54c16f76d12d..0cb4b553db28 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -586,7 +586,7 @@ xfs_qm_dqread_alloc(
->   *
->   * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
->   */
-> -int
-> +static int
->  xfs_qm_dqread(
->  	struct xfs_mount	*mp,
->  	xfs_dqid_t		id,
-> @@ -832,6 +832,28 @@ xfs_qm_dqget(
->  	return 0;
->  }
->  
-> +/*
-> + * Given a dquot id and type, read and initialize a dquot from the on-disk
-> + * metadata.  This function is only for use during quota initialization so
-> + * it ignores the dquot cache assuming that the dquot shrinker isn't set up.
-> + * The caller is responsible for _qm_dqdestroy'ing the returned dquot.
-> + */
-> +int
-> +xfs_qm_dqget_uncached(
-> +	struct xfs_mount	*mp,
-> +	xfs_dqid_t		id,
-> +	uint			type,
-> +	struct xfs_dquot	**dqpp)
-> +{
-> +	int			error;
-> +
-> +	error = xfs_qm_dqget_checks(mp, type);
-> +	if (error)
-> +		return error;
-> +
-> +	return xfs_qm_dqread(mp, id, type, 0, dqpp);
-> +}
-> +
->  /* Return the quota id for a given inode and type. */
->  xfs_dqid_t
->  xfs_qm_id_for_quotatype(
-> diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-> index 8a5b30e952b0..38a42874a98c 100644
-> --- a/fs/xfs/xfs_dquot.h
-> +++ b/fs/xfs/xfs_dquot.h
-> @@ -160,8 +160,6 @@ static inline bool xfs_dquot_lowsp(struct xfs_dquot *dqp)
->  #define XFS_QM_ISPDQ(dqp)	((dqp)->dq_flags & XFS_DQ_PROJ)
->  #define XFS_QM_ISGDQ(dqp)	((dqp)->dq_flags & XFS_DQ_GROUP)
->  
-> -extern int		xfs_qm_dqread(struct xfs_mount *, xfs_dqid_t, uint,
-> -					uint, struct xfs_dquot	**);
->  extern void		xfs_qm_dqdestroy(xfs_dquot_t *);
->  extern int		xfs_qm_dqflush(struct xfs_dquot *, struct xfs_buf **);
->  extern void		xfs_qm_dqunpin_wait(xfs_dquot_t *);
-> @@ -179,6 +177,9 @@ extern int		xfs_qm_dqget_inode(struct xfs_inode *ip, uint type,
->  					struct xfs_dquot **dqpp);
->  extern int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
->  					uint type, struct xfs_dquot **dqpp);
-> +extern int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
-> +					xfs_dqid_t id, uint type,
-> +					struct xfs_dquot **dqpp);
->  extern void		xfs_qm_dqput(xfs_dquot_t *);
->  
->  extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index b9244b8983b3..ea06762aa6c1 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -563,8 +563,7 @@ xfs_qm_set_defquota(
->  	struct xfs_def_quota    *defq;
->  	int			error;
->  
-> -	error = xfs_qm_dqread(mp, 0, type, 0, &dqp);
-> -
-> +	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
->  	if (!error) {
->  		xfs_disk_dquot_t        *ddqp = &dqp->q_core;
->  
-> @@ -590,11 +589,12 @@ xfs_qm_set_defquota(
->   */
->  STATIC int
->  xfs_qm_init_quotainfo(
-> -	xfs_mount_t	*mp)
-> +	struct xfs_mount	*mp)
->  {
-> -	xfs_quotainfo_t *qinf;
-> -	int		error;
-> -	xfs_dquot_t	*dqp;
-> +	struct xfs_quotainfo	*qinf;
-> +	struct xfs_dquot	*dqp;
-> +	uint			type;
-> +	int			error;
->  
->  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
->  
-> @@ -637,12 +637,13 @@ xfs_qm_init_quotainfo(
->  	 * user/group/proj quota types, otherwise a default value is used.
->  	 * This should be split into different fields per quota type.
->  	 */
-> -	error = xfs_qm_dqread(mp, 0,
-> -			XFS_IS_UQUOTA_RUNNING(mp) ? XFS_DQ_USER :
-> -			 (XFS_IS_GQUOTA_RUNNING(mp) ? XFS_DQ_GROUP :
-> -			  XFS_DQ_PROJ),
-> -			0, &dqp);
-> -
-> +	if (XFS_IS_UQUOTA_RUNNING(mp))
-> +		type = XFS_DQ_USER;
-> +	else if (XFS_IS_GQUOTA_RUNNING(mp))
-> +		type = XFS_DQ_GROUP;
-> +	else
-> +		type = XFS_DQ_PROJ;
-> +	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
->  	if (!error) {
->  		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Hi all,
+
+Darrick had previously indicated that he was going to pull in the v2 of
+the skip discard set rather than hold it up on refactoring churn. Given
+that I was playing around with some of Christoph's compromised feedback,
+here's a followup patch with the associated cleanups that I generally
+agree with. I actually like this factoring a bit better than that of the
+v2 because while it still avoids changing all callers of the associated
+functions, I do prefer to control discard behavior with a parameter
+rather than if/else statements with calls to completely different
+functions. The additional benefit is that this removes more code than it
+adds.
+
+I left struct xfs_free_extent_item alone because I don't really agree
+that XFS_EXTENT_BUSY_ belong anywhere outside of the busy extent code.
+IOW, I'd change the xfs_extent_busy_insert() parameter before I'd change
+xfs_free_extent_item because, despite the flags name, the param really
+only has two sane values (skip discard or don't). The affected
+xfs_extent_busy->flags field is used as more of a state than a control
+flag.
+
+Brian
+
+ fs/xfs/libxfs/xfs_alloc.h  | 11 -----------
+ fs/xfs/libxfs/xfs_bmap.c   | 16 ++++++++--------
+ fs/xfs/libxfs/xfs_bmap.h   | 11 -----------
+ fs/xfs/xfs_bmap_util.c     |  4 ++--
+ fs/xfs/xfs_inode.c         |  9 +++------
+ fs/xfs/xfs_inode.h         | 16 +++-------------
+ fs/xfs/xfs_trans_extfree.c |  9 ++-------
+ 7 files changed, 18 insertions(+), 58 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 4a8e8dcaf352..21e5c0662a92 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -210,17 +210,6 @@ xfs_free_extent(
+ 	return __xfs_free_extent(tp, bno, len, oinfo, type, false);
+ }
+ 
+-static inline int
+-xfs_free_extent_nodiscard(
+-	struct xfs_trans	*tp,
+-	xfs_fsblock_t		bno,
+-	xfs_extlen_t		len,
+-	struct xfs_owner_info	*oinfo,
+-	enum xfs_ag_resv_type	type)
+-{
+-	return __xfs_free_extent(tp, bno, len, oinfo, type, true);
+-}
+-
+ int				/* error */
+ xfs_alloc_lookup_le(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 24f60ee810e4..fd3c3be4d64a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5107,15 +5107,15 @@ xfs_bmap_del_extent_real(
+ 			if (error)
+ 				goto done;
+ 		} else {
++			bool	skip_discard = false;
++
+ 			if ((bflags & XFS_BMAPI_NODISCARD) ||
+-			    (del->br_state == XFS_EXT_UNWRITTEN)) {
+-				xfs_bmap_add_free_nodiscard(mp, dfops,
+-					del->br_startblock, del->br_blockcount,
+-					NULL);
+-			} else {
+-				xfs_bmap_add_free(mp, dfops, del->br_startblock,
+-					del->br_blockcount, NULL);
+-			}
++			    (del->br_state == XFS_EXT_UNWRITTEN))
++				skip_discard = true;
++
++			__xfs_bmap_add_free(mp, dfops, del->br_startblock,
++					    del->br_blockcount, NULL,
++					    skip_discard);
+ 		}
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 8d8946bfdd8c..8affd3915a11 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -256,17 +256,6 @@ xfs_bmap_add_free(
+ 	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, false);
+ }
+ 
+-static inline void
+-xfs_bmap_add_free_nodiscard(
+-	struct xfs_mount		*mp,
+-	struct xfs_defer_ops		*dfops,
+-	xfs_fsblock_t			bno,
+-	xfs_filblks_t			len,
+-	struct xfs_owner_info		*oinfo)
+-{
+-	__xfs_bmap_add_free(mp, dfops, bno, len, oinfo, true);
+-}
+-
+ enum xfs_bmap_intent_type {
+ 	XFS_BMAP_MAP = 1,
+ 	XFS_BMAP_UNMAP,
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 696c3b6bd2c9..11058459ea98 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -871,8 +871,8 @@ xfs_free_eofblocks(
+ 		 * contents of the file are flushed to disk then the files
+ 		 * may be full of holes (ie NULL files bug).
+ 		 */
+-		error = xfs_itruncate_extents_nodiscard(&tp, ip, XFS_DATA_FORK,
+-							XFS_ISIZE(ip));
++		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
++					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
+ 		if (error) {
+ 			/*
+ 			 * If we get an error at this point we simply don't
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d63ddd806074..3c54f09fee4e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1534,12 +1534,12 @@ xfs_itruncate_clear_reflink_flags(
+  * dirty on error so that transactions can be easily aborted if possible.
+  */
+ int
+-__xfs_itruncate_extents(
++xfs_itruncate_extents_flags(
+ 	struct xfs_trans	**tpp,
+ 	struct xfs_inode	*ip,
+ 	int			whichfork,
+ 	xfs_fsize_t		new_size,
+-	bool			skip_discard)
++	int			flags)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp = *tpp;
+@@ -1550,7 +1550,6 @@ __xfs_itruncate_extents(
+ 	xfs_filblks_t		unmap_len;
+ 	int			error = 0;
+ 	int			done = 0;
+-	int			flags;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
+@@ -1563,9 +1562,7 @@ __xfs_itruncate_extents(
+ 
+ 	trace_xfs_itruncate_extents_start(ip, new_size);
+ 
+-	flags = xfs_bmapi_aflag(whichfork);
+-	if (skip_discard)
+-		flags |= XFS_BMAPI_NODISCARD;
++	flags |= xfs_bmapi_aflag(whichfork);
+ 
+ 	/*
+ 	 * Since it is possible for space to become allocated beyond
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 3dd3201f4409..00fee6824745 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -415,8 +415,8 @@ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+ uint		xfs_ip2xflags(struct xfs_inode *);
+ int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
+ 			   struct xfs_defer_ops *);
+-int		__xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
+-				        int, xfs_fsize_t, bool);
++int		xfs_itruncate_extents_flags(struct xfs_trans **,
++				struct xfs_inode *, int, xfs_fsize_t, int);
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ 
+ void		xfs_iunpin_wait(xfs_inode_t *);
+@@ -440,17 +440,7 @@ xfs_itruncate_extents(
+ 	int			whichfork,
+ 	xfs_fsize_t		new_size)
+ {
+-	return __xfs_itruncate_extents(tpp, ip, whichfork, new_size, false);
+-}
+-
+-static inline int
+-xfs_itruncate_extents_nodiscard(
+-	struct xfs_trans	**tpp,
+-	struct xfs_inode	*ip,
+-	int			whichfork,
+-	xfs_fsize_t		new_size)
+-{
+-	return __xfs_itruncate_extents(tpp, ip, whichfork, new_size, true);
++	return xfs_itruncate_extents_flags(tpp, ip, whichfork, new_size, 0);
+ }
+ 
+ /* from xfs_file.c */
+diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+index dab8b3b7a9b8..5e137ee826ff 100644
+--- a/fs/xfs/xfs_trans_extfree.c
++++ b/fs/xfs/xfs_trans_extfree.c
+@@ -80,13 +80,8 @@ xfs_trans_free_extent(
+ 
+ 	trace_xfs_bmap_free_deferred(tp->t_mountp, agno, 0, agbno, ext_len);
+ 
+-	if (skip_discard)
+-		error = xfs_free_extent_nodiscard(tp, start_block, ext_len,
+-						  oinfo, XFS_AG_RESV_NONE);
+-	else
+-		error = xfs_free_extent(tp, start_block, ext_len, oinfo,
+-					XFS_AG_RESV_NONE);
+-
++	error = __xfs_free_extent(tp, start_block, ext_len,
++				  oinfo, XFS_AG_RESV_NONE, skip_discard);
+ 	/*
+ 	 * Mark the transaction dirty, even on error. This ensures the
+ 	 * transaction is aborted, which:
+-- 
+2.14.3
+
