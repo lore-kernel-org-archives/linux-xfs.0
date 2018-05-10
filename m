@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41276 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965410AbeEJP3O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:29:14 -0400
-Subject: [PATCH 01/14] xfs: release new dquot buffer on defer_finish error
+Received: from userp2130.oracle.com ([156.151.31.86]:40624 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965410AbeEJP3U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:29:20 -0400
+Subject: [PATCH 02/14] xfs: don't spray logs when dquot flush/purge fail
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 10 May 2018 08:28:51 -0700
-Message-ID: <152596613191.27525.1283006907371296061.stgit@magnolia>
+Date: Thu, 10 May 2018 08:28:58 -0700
+Message-ID: <152596613825.27525.13579506494815344029.stgit@magnolia>
 In-Reply-To: <152596612549.27525.9876256551560849585.stgit@magnolia>
 References: <152596612549.27525.9876256551560849585.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,98 +20,61 @@ Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>, hch@lst.de
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In commit efa092f3d4c6 "[XFS] Fixes a bug in the quota code when
-allocating a new dquot record", we allocate a new dquot block, grab a
-buffer to initialize it, and return the locked initialized dquot buffer
-to the caller for further in-core dquot initialization.  Unfortunately,
-if the _bmap_finish errored out, _qm_dqalloc would also error out
-without bothering to free the (locked) buffer.  Leaking a locked buffer
-caused hangs in generic/388 when quotas are enabled.
-
-Furthermore, the _bmap_finish -> _defer_finish conversion in
-310a75a3c6c747 ("xfs: change xfs_bmap_{finish,cancel,init,free} ->
-xfs_defer_*") failed to observe that the buffer was held going into
-_defer_finish and therefore failed to notice that the buffer lock is
-/not/ maintained afterwards.  Now that we can bjoin a buffer to a
-defer_ops, use this mechanism to ensure that the buffer stays locked
-across the _defer_finish.  Release the holds and locks on the buffer as
-appropriate if we have to error out.
-
-There is a subtlety here for the caller in that the buffer emerges
-locked and held to the transaction, so if the _trans_commit fails we
-have to release the buffer explicitly.  This fixes the unmount hang
-in generic/388 when quotas are enabled.
+When dquot flush or purge fail there's no need to spam the logs, we've
+already logged the IO error or fs shutdown that caused the flush
+failures.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_dquot.c |   48 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 28 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_dquot_item.c |    5 +----
+ fs/xfs/xfs_qm.c         |   10 ++--------
+ 2 files changed, 3 insertions(+), 12 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 4ca9c39879ae..32d7359b3c18 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -362,32 +362,40 @@ xfs_qm_dqalloc(
- 			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 57df98122156..8eb7415474d6 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -209,10 +209,7 @@ xfs_qm_dquot_logitem_push(
+ 	spin_unlock(&lip->li_ailp->ail_lock);
  
- 	/*
--	 * xfs_defer_finish() may commit the current transaction and
--	 * start a second transaction if the freelist is not empty.
-+	 * Hold the buffer and join it to the dfops so that we'll still own
-+	 * the buffer when we return to the caller.  The buffer disposal on
-+	 * error must be paid attention to very carefully, as it has been
-+	 * broken since commit efa092f3d4c6 "[XFS] Fixes a bug in the quota
-+	 * code when allocating a new dquot record" in 2005, and the later
-+	 * conversion to xfs_defer_ops in commit 310a75a3c6c747 failed to keep
-+	 * the buffer locked across the _defer_finish call.  We can now do
-+	 * this correctly with xfs_defer_bjoin.
- 	 *
--	 * Since we still want to modify this buffer, we need to
--	 * ensure that the buffer is not released on commit of
--	 * the first transaction and ensure the buffer is added to the
--	 * second transaction.
-+	 * Above, we allocated a disk block for the dquot information and
-+	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
-+	 * the buffer is still locked to *tpp, so we must _bhold_release and
-+	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
-+	 * transaction is gone but the new buffer is not joined or held to any
-+	 * transaction, so we must _buf_relse it.
- 	 *
--	 * If there is only one transaction then don't stop the buffer
--	 * from being released when it commits later on.
-+	 * If everything succeeds, the caller of this function is returned a
-+	 * buffer that is locked and joined to the transaction.  The caller
-+	 * is responsible for unlocking any buffer passed back, either
-+	 * manually or by committing the transaction.
- 	 */
--
--	xfs_trans_bhold(tp, bp);
--
-+	xfs_trans_bhold(*tpp, bp);
-+	error = xfs_defer_bjoin(&dfops, bp);
-+	if (error) {
-+		xfs_trans_bhold_release(*tpp, bp);
-+		xfs_trans_brelse(*tpp, bp);
-+		goto error1;
-+	}
- 	error = xfs_defer_finish(tpp, &dfops);
--	if (error)
-+	if (error) {
-+		xfs_buf_relse(bp);
- 		goto error1;
--
--	/* Transaction was committed? */
--	if (*tpp != tp) {
--		tp = *tpp;
--		xfs_trans_bjoin(tp, bp);
+ 	error = xfs_qm_dqflush(dqp, &bp);
+-	if (error) {
+-		xfs_warn(dqp->q_mount, "%s: push error %d on dqp "PTR_FMT,
+-			__func__, error, dqp);
 -	} else {
--		xfs_trans_bhold_release(tp, bp);
- 	}
--
-+	xfs_trans_bhold_release(*tpp, bp);
- 	*O_bpp = bp;
- 	return 0;
++	if (!error) {
+ 		if (!xfs_buf_delwri_queue(bp, buffer_list))
+ 			rval = XFS_ITEM_FLUSHING;
+ 		xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 62764f3e35e2..eb106366dea1 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -161,10 +161,7 @@ xfs_qm_dqpurge(
+ 		 * to purge this dquot anyway, so we go ahead regardless.
+ 		 */
+ 		error = xfs_qm_dqflush(dqp, &bp);
+-		if (error) {
+-			xfs_warn(mp, "%s: dquot "PTR_FMT" flush failed",
+-				__func__, dqp);
+-		} else {
++		if (!error) {
+ 			error = xfs_bwrite(bp);
+ 			xfs_buf_relse(bp);
+ 		}
+@@ -479,11 +476,8 @@ xfs_qm_dquot_isolate(
+ 		spin_unlock(lru_lock);
  
+ 		error = xfs_qm_dqflush(dqp, &bp);
+-		if (error) {
+-			xfs_warn(dqp->q_mount, "%s: dquot "PTR_FMT" flush failed",
+-				 __func__, dqp);
++		if (error)
+ 			goto out_unlock_dirty;
+-		}
+ 
+ 		xfs_buf_delwri_queue(bp, &isol->buffers);
+ 		xfs_buf_relse(bp);
 
