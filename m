@@ -1,41 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51227 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:35006 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750751AbeEKGSY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 May 2018 02:18:24 -0400
-Date: Fri, 11 May 2018 08:22:08 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: stop using buffer heads in xfs and iomap
-Message-ID: <20180511062208.GC7962@lst.de>
-References: <20180509074830.16196-1-hch@lst.de> <20180510151303.GW11261@magnolia>
+        id S1752325AbeEJVUD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 May 2018 17:20:03 -0400
+Subject: Re: Question about inode64
+References: <CABnRu57R+xakqCPmhM7bjLoAfLAAEuoQDtoU9F9t6CxeNOaPJg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d7e616a7-9978-939a-2056-9846aadf20ef@sandeen.net>
+Date: Thu, 10 May 2018 16:20:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180510151303.GW11261@magnolia>
+In-Reply-To: <CABnRu57R+xakqCPmhM7bjLoAfLAAEuoQDtoU9F9t6CxeNOaPJg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Su Yue <damenly.su@gmail.com>, linux-xfs@vger.kernel.org
 
-On Thu, May 10, 2018 at 08:13:03AM -0700, Darrick J. Wong wrote:
-> I ran xfstests on this for fun last night but hung in g/095:
+On 5/10/18 12:31 PM, Su Yue wrote:
+> Hi, XFS developers
 > 
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 submarine-djwong-mtr01 4.17.0-rc4-djw
-> MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024, /dev/sdf
-> MOUNT_OPTIONS -- /dev/sdf /opt
+> Recently, I was told that some 32bit applications don't work
+> on large XFS filesystems. And it is caused by ino overflow in syscalls.
 > 
-> FWIW the stock v4 and the 'v5 with everything and 4k blocks' vms
-> passed, so I guess there's a bug somewhere in the sub-page block size
-> code paths...
+> If I don't misunderstand libxfs/xfs_format, XFS' absolute inode number
+> consists of agno_log
+> -agblklog-inopblog bits.
+> So significative bits = ROUND(log2(Disk size / AG size)) + ROUND(log2(AG
+> size / BLK size)) + ROUND(log2(BLK size / inode size)). Right?
 
-I haven't seen that in my -b size 1024 -m relink test  I'll try your above
-exact setup, too.  Is this disk or SSD?  How much memory and how many
-CPUs?
+> Does it mean that it's feasible to avoid ino overflow by control of disk
+> size, AG size, block size, inode size when mkfs even the disk will be mount
+> with option inode64.
 
-Btw, I think the series might be worthwhile even if we have to delay
-the sub-page blocksize support - the blocksize == pagesize code is
-basically entirely separate and already very useful.  Only the last
-three patches contain the small blocksize support, without that we'll
-just continue using buffer heads for that case for now.
+Yes, inode number is an encoded disk location, and the encoding depends
+on various other bits of filesystem geometry.
+
+Note that "inode64" only means that it will /allow/ some inodes to exceed
+32 bits, it does not mean that every inode number /will/ be > 32 bits.
+
+But most people don't want to constrain their filesystem geometry around
+inode number sizing; if you require 32-bit inodes, just use the inode32 mount
+option.
+
+Or better yet, fix the application.  :)
+
+-Eric
+
+> Thanks,
+> Su
