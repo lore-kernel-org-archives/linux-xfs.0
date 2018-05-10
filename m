@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49838 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750860AbeEJTSj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 15:18:39 -0400
-Subject: [PATCH 3/8] xfs: quota scrub should use bmapbtd scrubber
+Received: from userp2120.oracle.com ([156.151.31.85]:48844 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbeEJTSp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 15:18:45 -0400
+Subject: [PATCH 4/8] xfs: scrub the data fork of the realtime inodes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 10 May 2018 12:18:19 -0700
-Message-ID: <152597989952.25215.1624157008372701571.stgit@magnolia>
+Date: Thu, 10 May 2018 12:18:25 -0700
+Message-ID: <152597990586.25215.6135406269069566239.stgit@magnolia>
 In-Reply-To: <152597988038.25215.9276761144353662866.stgit@magnolia>
 References: <152597988038.25215.9276761144353662866.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,209 +20,66 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the quota scrubber's open-coded data fork scrubber with a
-redirected call to the bmapbtd scrubber.  This strengthens the quota
-scrub to include all the cross-referencing that it does.
+The realtime bitmap and summary inodes live on the metadata device, so
+we can scrub their data forks with the regular scrubbers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/common.c |   57 ++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/common.h |    2 +
- fs/xfs/scrub/quota.c  |   83 ++++++++++++++++++++++++-------------------------
- 3 files changed, 99 insertions(+), 43 deletions(-)
+ fs/xfs/scrub/rtbitmap.c |   34 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 2ac8576c4670..62b33c99efe4 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -44,6 +44,8 @@
- #include "xfs_rmap_btree.h"
- #include "xfs_log.h"
- #include "xfs_trans_priv.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -787,3 +789,58 @@ xfs_scrub_buffer_recheck(
- 	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
- }
-+
-+/*
-+ * Scrub the attr/data forks of a metadata inode.  The metadata inode must be
-+ * pointed to by sc->ip and the ILOCK must be held.
-+ */
-+int
-+xfs_scrub_metadata_inode_forks(
-+	struct xfs_scrub_context	*sc)
-+{
-+	__u32				smtype;
-+	bool				shared;
-+	int				error;
-+
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return 0;
-+
-+	/* Metadata inodes don't live on the rt device. */
-+	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+		return 0;
-+	}
-+
-+	/* They should never participate in reflink. */
-+	if (xfs_is_reflink_inode(sc->ip)) {
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+		return 0;
-+	}
-+
-+	/* They also should never have extended attributes. */
-+	if (xfs_inode_hasattr(sc->ip)) {
-+		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+		return 0;
-+	}
-+
-+	/* Invoke the data fork scrubber. */
-+	smtype = sc->sm->sm_type;
-+	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
-+	error = xfs_scrub_bmap_data(sc);
-+	sc->sm->sm_type = smtype;
-+	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-+		return error;
-+
-+	/* Look for incorrect shared blocks. */
-+	if (xfs_sb_version_hasreflink(&sc->mp->m_sb)) {
-+		error = xfs_reflink_inode_has_shared_extents(sc->tp, sc->ip,
-+				&shared);
-+		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
-+				&error))
-+			return error;
-+		if (shared)
-+			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-+	}
-+
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index a23ad7fa2b6c..5d78bb9602ab 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -155,4 +155,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
- 			       XFS_SCRUB_OFLAG_XCORRUPT);
- }
- 
-+int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
-+
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index d3d08978f53a..15ae4d23d6ac 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -206,65 +206,62 @@ xfs_scrub_quota_item(
- 	return 0;
- }
- 
--/* Scrub all of a quota type's items. */
--int
--xfs_scrub_quota(
-+/* Check the quota's data fork. */
-+STATIC int
-+xfs_scrub_quota_data_fork(
- 	struct xfs_scrub_context	*sc)
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index 8b048f107af2..abc885dab122 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -82,6 +82,11 @@ xfs_scrub_rtbitmap(
  {
- 	struct xfs_bmbt_irec		irec = { 0 };
--	struct xfs_scrub_quota_info	sqi;
--	struct xfs_mount		*mp = sc->mp;
--	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-+	struct xfs_iext_cursor		icur;
-+	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-+	struct xfs_ifork		*ifp;
- 	xfs_fileoff_t			max_dqid_off;
--	xfs_fileoff_t			off = 0;
--	uint				dqtype;
--	int				nimaps;
- 	int				error = 0;
+ 	int				error;
  
--	dqtype = xfs_scrub_quota_to_dqtype(sc);
 +	/* Invoke the fork scrubber. */
 +	error = xfs_scrub_metadata_inode_forks(sc);
 +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
 +		return error;
- 
--	/* Look for problem extents. */
--	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
--		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
--		goto out;
--	}
-+	/* Check for data fork problems that apply only to quota files. */
- 	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
--	while (1) {
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-+	for_each_xfs_iext(ifp, &icur, &irec) {
- 		if (xfs_scrub_should_terminate(sc, &error))
- 			break;
--
--		off = irec.br_startoff + irec.br_blockcount;
--		nimaps = 1;
--		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
--				XFS_BMAPI_ENTIRE);
--		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
--				&error))
--			goto out;
--		if (!nimaps)
--			break;
--		if (irec.br_startblock == HOLESTARTBLOCK)
--			continue;
--
--		/* Check the extent record doesn't point to crap. */
--		if (irec.br_startblock + irec.br_blockcount <=
--		    irec.br_startblock)
--			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
--					irec.br_startoff);
--		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
--		    !xfs_verify_fsbno(mp, irec.br_startblock +
--					irec.br_blockcount - 1))
--			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
--					irec.br_startoff);
--
- 		/*
--		 * Unwritten extents or blocks mapped above the highest
-+		 * delalloc extents or blocks mapped above the highest
- 		 * quota id shouldn't happen.
- 		 */
- 		if (isnullstartblock(irec.br_startblock) ||
- 		    irec.br_startoff > max_dqid_off ||
--		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
--			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-+		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
-+			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-+					irec.br_startoff);
-+			break;
-+		}
- 	}
 +
-+	return error;
-+}
-+
-+/* Scrub all of a quota type's items. */
-+int
-+xfs_scrub_quota(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_scrub_quota_info	sqi;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-+	uint				dqtype;
+ 	error = xfs_rtalloc_query_all(sc->tp, xfs_scrub_rtbitmap_rec, sc);
+ 	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+ 		goto out;
+@@ -95,8 +100,35 @@ int
+ xfs_scrub_rtsummary(
+ 	struct xfs_scrub_context	*sc)
+ {
++	struct xfs_inode		*rsumip = sc->mp->m_rsumip;
++	uint				old_ilock_flags;
 +	int				error = 0;
 +
-+	dqtype = xfs_scrub_quota_to_dqtype(sc);
++	/*
++	 * We ILOCK'd the rt bitmap ip in the setup routine, now lock the
++	 * rt summary ip in compliance with the rt inode locking rules.
++	 *
++	 * Since we switch sc->ip to rsumip we have to save the old ilock
++	 * flags so that we don't mix up the inode state that @sc tracks.
++	 */
++	old_ilock_flags = sc->ilock_flags;
++	sc->ip = rsumip;
++	sc->ilock_flags = XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM;
++	xfs_ilock(sc->ip, sc->ilock_flags);
 +
-+	/* Look for problem extents. */
-+	error = xfs_scrub_quota_data_fork(sc);
-+	if (error)
++	/* Invoke the fork scrubber. */
++	error = xfs_scrub_metadata_inode_forks(sc);
++	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
 +		goto out;
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
++
+ 	/* XXX: implement this some day */
+-	return -ENOENT;
++	xfs_scrub_set_incomplete(sc);
++out:
++	/* Switch back to the rtbitmap inode and lock flags. */
++	xfs_iunlock(sc->ip, sc->ilock_flags);
++	sc->ilock_flags = old_ilock_flags;
++	sc->ip = sc->mp->m_rbmip;
++	return error;
+ }
+ 
  
 
