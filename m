@@ -1,250 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45702 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966093AbeEJPei (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:34:38 -0400
-Date: Thu, 10 May 2018 08:34:18 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:47510 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966314AbeEJPpz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:45:55 -0400
+Date: Thu, 10 May 2018 08:45:34 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/12] xfs: quota scrub should use bmapbtd scrubber
-Message-ID: <20180510153418.GY11261@magnolia>
+Subject: Re: [PATCH 01/12] xfs: bmap debugging should never panic the system
+Message-ID: <20180510154534.GZ11261@magnolia>
 References: <152537075334.16676.10600900179473864298.stgit@magnolia>
- <152537079262.16676.17333080911750675574.stgit@magnolia>
- <20180510135437.GE69384@bfoster.bfoster>
+ <152537075974.16676.4678069099698404803.stgit@magnolia>
+ <20180510135318.GA69384@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180510135437.GE69384@bfoster.bfoster>
+In-Reply-To: <20180510135318.GA69384@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 10, 2018 at 09:54:38AM -0400, Brian Foster wrote:
-> On Thu, May 03, 2018 at 11:06:32AM -0700, Darrick J. Wong wrote:
+On Thu, May 10, 2018 at 09:53:19AM -0400, Brian Foster wrote:
+> On Thu, May 03, 2018 at 11:05:59AM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Replace the quota scrubber's open-coded data fork scrubber with a
-> > redirected call to the bmapbtd scrubber.  This strengthens the quota
-> > scrub to include all the cross-referencing that it does.
+> > Don't panic() the system if the bmap records are garbage, just call
+> > ASSERT which gives us the same backtrace but enables developers to
+> > control if the system goes down or not.  This makes debugging with
+> > generic/388 much easier because it won't reboot the machine midway
+> > through a run just because btree_read_bufl returns EIO when the fs has
+> > already shut down.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
+> >  fs/xfs/libxfs/xfs_bmap.c |    8 ++++++--
+> >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 6a7c2f03ea11..393b4e2c63ad 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -312,8 +312,10 @@ xfs_check_block(
+> >  				xfs_warn(mp, "%s: thispa(%d) == pp(%d) %Ld",
+> >  					__func__, j, i,
+> >  					(unsigned long long)be64_to_cpu(*thispa));
+> > -				panic("%s: ptrs are equal in node\n",
+> > +				xfs_err(mp, "%s: ptrs are equal in node\n",
+> >  					__func__);
+> > +				ASSERT(XFS_FORCED_SHUTDOWN(mp));
+> > +				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
 > 
-> FYI, I start to get patch application errors on the previous patch, this
-> patch, and couple or so of the subsequent... (against current for-next).
+> Why the assert if we're just going to shutdown? At minimum, it looks a
+> bit funny to assert that the fs is shutdown just prior to issuing a
+> shutdown. Can we just shutdown and let the error level dictate whether
+> we want a backtrace?
 
-Yeah, this series hasn't aged well. :/
-
-I was actually about to repost the whole thing later today but I'll
-incorporate your suggestions/rvb before I do that.
-
-Also in general you're better off pulling the branch in the cover letter
-because I get less aggressive about rebasing my scrub tree off for-next
-particularly once I start collecting things for the next merge window.
+Ok.
 
 --D
 
 > Brian
 > 
-> >  fs/xfs/scrub/common.c |   57 ++++++++++++++++++++++++++++++++++
-> >  fs/xfs/scrub/common.h |    2 +
-> >  fs/xfs/scrub/quota.c  |   83 ++++++++++++++++++++++++-------------------------
-> >  3 files changed, 99 insertions(+), 43 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> > index e9ca5f0802d5..335c7a305e15 100644
-> > --- a/fs/xfs/scrub/common.c
-> > +++ b/fs/xfs/scrub/common.c
-> > @@ -44,6 +44,8 @@
-> >  #include "xfs_rmap_btree.h"
-> >  #include "xfs_log.h"
-> >  #include "xfs_trans_priv.h"
-> > +#include "xfs_attr.h"
-> > +#include "xfs_reflink.h"
-> >  #include "scrub/xfs_scrub.h"
-> >  #include "scrub/scrub.h"
-> >  #include "scrub/common.h"
-> > @@ -777,3 +779,58 @@ xfs_scrub_buffer_recheck(
-> >  	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
-> >  	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
-> >  }
-> > +
-> > +/*
-> > + * Scrub the attr/data forks of a metadata inode.  The metadata inode must be
-> > + * pointed to by sc->ip and the ILOCK must be held.
-> > + */
-> > +int
-> > +xfs_scrub_metadata_inode_forks(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	__u32				smtype;
-> > +	bool				shared;
-> > +	int				error;
-> > +
-> > +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> > +		return 0;
-> > +
-> > +	/* Metadata inodes don't live on the rt device. */
-> > +	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-> > +		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-> > +		return 0;
-> > +	}
-> > +
-> > +	/* They should never participate in reflink. */
-> > +	if (xfs_is_reflink_inode(sc->ip)) {
-> > +		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-> > +		return 0;
-> > +	}
-> > +
-> > +	/* They also should never have extended attributes. */
-> > +	if (xfs_inode_hasattr(sc->ip)) {
-> > +		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-> > +		return 0;
-> > +	}
-> > +
-> > +	/* Invoke the data fork scrubber. */
-> > +	smtype = sc->sm->sm_type;
-> > +	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
-> > +	error = xfs_scrub_bmap_data(sc);
-> > +	sc->sm->sm_type = smtype;
-> > +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-> > +		return error;
-> > +
-> > +	/* Look for incorrect shared blocks. */
-> > +	if (xfs_sb_version_hasreflink(&sc->mp->m_sb)) {
-> > +		error = xfs_reflink_inode_has_shared_extents(sc->tp, sc->ip,
-> > +				&shared);
-> > +		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
-> > +				&error))
-> > +			return error;
-> > +		if (shared)
-> > +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-> > +	}
-> > +
-> > +	return error;
-> > +}
-> > diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-> > index 80fa5a67c265..ad736c411287 100644
-> > --- a/fs/xfs/scrub/common.h
-> > +++ b/fs/xfs/scrub/common.h
-> > @@ -167,4 +167,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
-> >  			       XFS_SCRUB_OFLAG_XCORRUPT);
-> >  }
-> >  
-> > +int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
-> > +
-> >  #endif	/* __XFS_SCRUB_COMMON_H__ */
-> > diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-> > index d3d08978f53a..15ae4d23d6ac 100644
-> > --- a/fs/xfs/scrub/quota.c
-> > +++ b/fs/xfs/scrub/quota.c
-> > @@ -206,65 +206,62 @@ xfs_scrub_quota_item(
-> >  	return 0;
-> >  }
-> >  
-> > -/* Scrub all of a quota type's items. */
-> > -int
-> > -xfs_scrub_quota(
-> > +/* Check the quota's data fork. */
-> > +STATIC int
-> > +xfs_scrub_quota_data_fork(
-> >  	struct xfs_scrub_context	*sc)
-> >  {
-> >  	struct xfs_bmbt_irec		irec = { 0 };
-> > -	struct xfs_scrub_quota_info	sqi;
-> > -	struct xfs_mount		*mp = sc->mp;
-> > -	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> > +	struct xfs_iext_cursor		icur;
-> > +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-> > +	struct xfs_ifork		*ifp;
-> >  	xfs_fileoff_t			max_dqid_off;
-> > -	xfs_fileoff_t			off = 0;
-> > -	uint				dqtype;
-> > -	int				nimaps;
-> >  	int				error = 0;
-> >  
-> > -	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> > +	/* Invoke the fork scrubber. */
-> > +	error = xfs_scrub_metadata_inode_forks(sc);
-> > +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-> > +		return error;
-> >  
-> > -	/* Look for problem extents. */
-> > -	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-> > -		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
-> > -		goto out;
-> > -	}
-> > +	/* Check for data fork problems that apply only to quota files. */
-> >  	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-> > -	while (1) {
-> > +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-> > +	for_each_xfs_iext(ifp, &icur, &irec) {
-> >  		if (xfs_scrub_should_terminate(sc, &error))
-> >  			break;
-> > -
-> > -		off = irec.br_startoff + irec.br_blockcount;
-> > -		nimaps = 1;
-> > -		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
-> > -				XFS_BMAPI_ENTIRE);
-> > -		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
-> > -				&error))
-> > -			goto out;
-> > -		if (!nimaps)
-> > -			break;
-> > -		if (irec.br_startblock == HOLESTARTBLOCK)
-> > -			continue;
-> > -
-> > -		/* Check the extent record doesn't point to crap. */
-> > -		if (irec.br_startblock + irec.br_blockcount <=
-> > -		    irec.br_startblock)
-> > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > -					irec.br_startoff);
-> > -		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
-> > -		    !xfs_verify_fsbno(mp, irec.br_startblock +
-> > -					irec.br_blockcount - 1))
-> > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > -					irec.br_startoff);
-> > -
-> >  		/*
-> > -		 * Unwritten extents or blocks mapped above the highest
-> > +		 * delalloc extents or blocks mapped above the highest
-> >  		 * quota id shouldn't happen.
-> >  		 */
-> >  		if (isnullstartblock(irec.br_startblock) ||
-> >  		    irec.br_startoff > max_dqid_off ||
-> > -		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
-> > -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-> > +		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
-> > +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
-> > +					irec.br_startoff);
-> > +			break;
-> > +		}
+> >  			}
+> >  		}
 > >  	}
-> > +
-> > +	return error;
-> > +}
-> > +
-> > +/* Scrub all of a quota type's items. */
-> > +int
-> > +xfs_scrub_quota(
-> > +	struct xfs_scrub_context	*sc)
-> > +{
-> > +	struct xfs_scrub_quota_info	sqi;
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
-> > +	uint				dqtype;
-> > +	int				error = 0;
-> > +
-> > +	dqtype = xfs_scrub_quota_to_dqtype(sc);
-> > +
-> > +	/* Look for problem extents. */
-> > +	error = xfs_scrub_quota_data_fork(sc);
-> > +	if (error)
-> > +		goto out;
-> >  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-> >  		goto out;
+> > @@ -483,7 +485,9 @@ xfs_bmap_check_leaf_extents(
+> >  error_norelse:
+> >  	xfs_warn(mp, "%s: BAD after btree leaves for %d extents",
+> >  		__func__, i);
+> > -	panic("%s: CORRUPTED BTREE OR SOMETHING", __func__);
+> > +	xfs_err(mp, "%s: CORRUPTED BTREE OR SOMETHING", __func__);
+> > +	ASSERT(XFS_FORCED_SHUTDOWN(mp));
+> > +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> >  	return;
+> >  }
 > >  
 > > 
 > > --
