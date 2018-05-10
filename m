@@ -1,191 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:38194 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965017AbeEJQjT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 12:39:19 -0400
-Date: Thu, 10 May 2018 09:39:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] fs: don't scan the inode cache before SB_BORN is set
-Message-ID: <20180510163914.GF11261@magnolia>
-References: <20180510042132.GS23861@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:54368 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751632AbeEJNyj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 10 May 2018 09:54:39 -0400
+Date: Thu, 10 May 2018 09:54:38 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 06/12] xfs: quota scrub should use bmapbtd scrubber
+Message-ID: <20180510135437.GE69384@bfoster.bfoster>
+References: <152537075334.16676.10600900179473864298.stgit@magnolia>
+ <152537079262.16676.17333080911750675574.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180510042132.GS23861@dastard>
+In-Reply-To: <152537079262.16676.17333080911750675574.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Al Viro <viro@ZenIV.linux.org.uk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 10, 2018 at 02:21:33PM +1000, Dave Chinner wrote:
+On Thu, May 03, 2018 at 11:06:32AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> From: Dave Chinner <dchinner@redhat.com>
+> Replace the quota scrubber's open-coded data fork scrubber with a
+> redirected call to the bmapbtd scrubber.  This strengthens the quota
+> scrub to include all the cross-referencing that it does.
 > 
-> We recently had an oops reported on a 4.14 kernel in
-> xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
-> and so the m_perag_tree lookup walked into lala land.
-> 
-> We found a mount in a failed state, blocked on the shrinker rwsem
-> here:
-> 
-> mount_bdev()
->   deactivate_locked_super()
->     unregister_shrinker()
-> 
-> Essentially, the machine was under memory pressure when the mount
-> was being run, xfs_fs_fill_super() failed after allocating the
-> xfs_mount and attaching it to sb->s_fs_info. It then cleaned up and
-> freed the xfs_mount, but the sb->s_fs_info field still pointed to
-> the freed memory. Hence when the superblock shrinker then ran
-> it fell off the bad pointer.
-> 
-> However, we also saw another manifestation of the same problem - the
-> shrinker can fall off a bad pointer if it runs before the superblock
-> is fully set up - a use before initialisation problem. This
-> typically crashed somewhere in the radix tree manipulations in
-> this path:
-> 
->   radix_tree_gang_lookup_tag+0xc4/0x130
->   xfs_perag_get_tag+0x37/0xf0
->   xfs_reclaim_inodes_count+0x32/0x40
->   xfs_fs_nr_cached_objects+0x11/0x20
->   super_cache_count+0x35/0xc0
->   shrink_slab.part.66+0xb1/0x370
->   shrink_node+0x7e/0x1a0
->   try_to_free_pages+0x199/0x470
->   __alloc_pages_slowpath+0x3a1/0xd20
->   __alloc_pages_nodemask+0x1c3/0x200
->   cache_grow_begin+0x20b/0x2e0
->   fallback_alloc+0x160/0x200
->   kmem_cache_alloc+0x111/0x4e0
-> 
-> The underlying problem is that the superblock shrinker is running
-> before the filesystem structures it depends on have been fully set
-> up. i.e.  the shrinker is registered in sget(), before
-> ->fill_super() has been called, and the shrinker can call into the
-> filesystem before fill_super() does it's setup work.
-> 
-> Setting sb->s_fs_info to NULL on xfs_mount setup failure only solves
-> the use-after-free part of the problem - it doesn't solve the
-> use-before-initialisation part. To solve that we need to check the
-> SB_BORN flag in super_cache_count().
-> 
-> The SB_BORN flag is not set until ->fs_mount() completes
-> successfully and trylock_super() won't succeed until it is set.
-> Hence super_cache_scan() will not run until SB_BORN is set, so it
-> makes sense to not allow super_cache_scan to run and enter the
-> filesystem until it is set, too. This prevents the superblock
-> shrinker from entering the filesystem while it is being set up and
-> so avoids the use-before-initialisation issue.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-
-Looks ok, will give it a spin,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> Version 3:
-> - change the memory barriers to protect the superblock data, not
->   the SB_BORN flag.
+
+FYI, I start to get patch application errors on the previous patch, this
+patch, and couple or so of the subsequent... (against current for-next).
+
+Brian
+
+>  fs/xfs/scrub/common.c |   57 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/common.h |    2 +
+>  fs/xfs/scrub/quota.c  |   83 ++++++++++++++++++++++++-------------------------
+>  3 files changed, 99 insertions(+), 43 deletions(-)
 > 
-> Version 2:
-> - convert to use SB_BORN, not SB_ACTIVE
-> - add memory barriers
-> - rework comment in super_cache_count()
 > 
-> ---
->  fs/super.c         | 30 ++++++++++++++++++++++++------
->  fs/xfs/xfs_super.c | 11 +++++++++++
->  2 files changed, 35 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/super.c b/fs/super.c
-> index 122c402049a2..4b5b562176d0 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -121,13 +121,23 @@ static unsigned long super_cache_count(struct shrinker *shrink,
->  	sb = container_of(shrink, struct super_block, s_shrink);
->  
->  	/*
-> -	 * Don't call trylock_super as it is a potential
-> -	 * scalability bottleneck. The counts could get updated
-> -	 * between super_cache_count and super_cache_scan anyway.
-> -	 * Call to super_cache_count with shrinker_rwsem held
-> -	 * ensures the safety of call to list_lru_shrink_count() and
-> -	 * s_op->nr_cached_objects().
-> +	 * We don't call trylock_super() here as it is a scalability bottleneck,
-> +	 * so we're exposed to partial setup state. The shrinker rwsem does not
-> +	 * protect filesystem operations backing list_lru_shrink_count() or
-> +	 * s_op->nr_cached_objects(). Counts can change between
-> +	 * super_cache_count and super_cache_scan, so we really don't need locks
-> +	 * here.
-> +	 *
-> +	 * However, if we are currently mounting the superblock, the underlying
-> +	 * filesystem might be in a state of partial construction and hence it
-> +	 * is dangerous to access it.  trylock_super() uses a SB_BORN check to
-> +	 * avoid this situation, so do the same here. The memory barrier is
-> +	 * matched with the one in mount_fs() as we don't hold locks here.
->  	 */
-> +	if (!(sb->s_flags & SB_BORN))
-> +		return 0;
-> +	smp_rmb();
-> +
->  	if (sb->s_op && sb->s_op->nr_cached_objects)
->  		total_objects = sb->s_op->nr_cached_objects(sb, sc);
->  
-> @@ -1272,6 +1282,14 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
->  	sb = root->d_sb;
->  	BUG_ON(!sb);
->  	WARN_ON(!sb->s_bdi);
-> +
-> +	/*
-> +	 * Write barrier is for super_cache_count(). We place it before setting
-> +	 * SB_BORN as the data dependency between the two functions is the
-> +	 * superblock structure contents that we just set up, not the SB_BORN
-> +	 * flag.
-> +	 */
-> +	smp_wmb();
->  	sb->s_flags |= SB_BORN;
->  
->  	error = security_sb_kern_mount(sb, flags, secdata);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index a523eaeb3f29..005386f1499e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1772,6 +1772,8 @@ xfs_fs_fill_super(
->   out_close_devices:
->  	xfs_close_devices(mp);
->   out_free_fsname:
-> +	sb->s_fs_info = NULL;
-> +	sb->s_op = NULL;
->  	xfs_free_fsname(mp);
->  	kfree(mp);
->   out:
-> @@ -1798,6 +1800,9 @@ xfs_fs_put_super(
->  	xfs_destroy_percpu_counters(mp);
->  	xfs_destroy_mount_workqueues(mp);
->  	xfs_close_devices(mp);
-> +
-> +	sb->s_fs_info = NULL;
-> +	sb->s_op = NULL;
->  	xfs_free_fsname(mp);
->  	kfree(mp);
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index e9ca5f0802d5..335c7a305e15 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -44,6 +44,8 @@
+>  #include "xfs_rmap_btree.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans_priv.h"
+> +#include "xfs_attr.h"
+> +#include "xfs_reflink.h"
+>  #include "scrub/xfs_scrub.h"
+>  #include "scrub/scrub.h"
+>  #include "scrub/common.h"
+> @@ -777,3 +779,58 @@ xfs_scrub_buffer_recheck(
+>  	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+>  	trace_xfs_scrub_block_error(sc, bp->b_bn, fa);
 >  }
-> @@ -1817,6 +1822,12 @@ xfs_fs_nr_cached_objects(
->  	struct super_block	*sb,
->  	struct shrink_control	*sc)
+> +
+> +/*
+> + * Scrub the attr/data forks of a metadata inode.  The metadata inode must be
+> + * pointed to by sc->ip and the ILOCK must be held.
+> + */
+> +int
+> +xfs_scrub_metadata_inode_forks(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	__u32				smtype;
+> +	bool				shared;
+> +	int				error;
+> +
+> +	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> +		return 0;
+> +
+> +	/* Metadata inodes don't live on the rt device. */
+> +	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
+> +		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+> +		return 0;
+> +	}
+> +
+> +	/* They should never participate in reflink. */
+> +	if (xfs_is_reflink_inode(sc->ip)) {
+> +		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+> +		return 0;
+> +	}
+> +
+> +	/* They also should never have extended attributes. */
+> +	if (xfs_inode_hasattr(sc->ip)) {
+> +		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+> +		return 0;
+> +	}
+> +
+> +	/* Invoke the data fork scrubber. */
+> +	smtype = sc->sm->sm_type;
+> +	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
+> +	error = xfs_scrub_bmap_data(sc);
+> +	sc->sm->sm_type = smtype;
+> +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+> +		return error;
+> +
+> +	/* Look for incorrect shared blocks. */
+> +	if (xfs_sb_version_hasreflink(&sc->mp->m_sb)) {
+> +		error = xfs_reflink_inode_has_shared_extents(sc->tp, sc->ip,
+> +				&shared);
+> +		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0,
+> +				&error))
+> +			return error;
+> +		if (shared)
+> +			xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+> +	}
+> +
+> +	return error;
+> +}
+> diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+> index 80fa5a67c265..ad736c411287 100644
+> --- a/fs/xfs/scrub/common.h
+> +++ b/fs/xfs/scrub/common.h
+> @@ -167,4 +167,6 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
+>  			       XFS_SCRUB_OFLAG_XCORRUPT);
+>  }
+>  
+> +int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
+> +
+>  #endif	/* __XFS_SCRUB_COMMON_H__ */
+> diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+> index d3d08978f53a..15ae4d23d6ac 100644
+> --- a/fs/xfs/scrub/quota.c
+> +++ b/fs/xfs/scrub/quota.c
+> @@ -206,65 +206,62 @@ xfs_scrub_quota_item(
+>  	return 0;
+>  }
+>  
+> -/* Scrub all of a quota type's items. */
+> -int
+> -xfs_scrub_quota(
+> +/* Check the quota's data fork. */
+> +STATIC int
+> +xfs_scrub_quota_data_fork(
+>  	struct xfs_scrub_context	*sc)
 >  {
-> +	/*
-> +	 * Don't do anything until the filesystem is fully set up, or in the
-> +	 * process of being torn down due to a mount failure.
-> +	 */
-> +	if (!sb->s_fs_info)
-> +		return 0;
->  	return xfs_reclaim_inodes_count(XFS_M(sb));
->  }
+>  	struct xfs_bmbt_irec		irec = { 0 };
+> -	struct xfs_scrub_quota_info	sqi;
+> -	struct xfs_mount		*mp = sc->mp;
+> -	struct xfs_quotainfo		*qi = mp->m_quotainfo;
+> +	struct xfs_iext_cursor		icur;
+> +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
+> +	struct xfs_ifork		*ifp;
+>  	xfs_fileoff_t			max_dqid_off;
+> -	xfs_fileoff_t			off = 0;
+> -	uint				dqtype;
+> -	int				nimaps;
+>  	int				error = 0;
 >  
+> -	dqtype = xfs_scrub_quota_to_dqtype(sc);
+> +	/* Invoke the fork scrubber. */
+> +	error = xfs_scrub_metadata_inode_forks(sc);
+> +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+> +		return error;
+>  
+> -	/* Look for problem extents. */
+> -	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
+> -		xfs_scrub_ino_set_corrupt(sc, sc->ip->i_ino);
+> -		goto out;
+> -	}
+> +	/* Check for data fork problems that apply only to quota files. */
+>  	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+> -	while (1) {
+> +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
+> +	for_each_xfs_iext(ifp, &icur, &irec) {
+>  		if (xfs_scrub_should_terminate(sc, &error))
+>  			break;
+> -
+> -		off = irec.br_startoff + irec.br_blockcount;
+> -		nimaps = 1;
+> -		error = xfs_bmapi_read(sc->ip, off, -1, &irec, &nimaps,
+> -				XFS_BMAPI_ENTIRE);
+> -		if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, off,
+> -				&error))
+> -			goto out;
+> -		if (!nimaps)
+> -			break;
+> -		if (irec.br_startblock == HOLESTARTBLOCK)
+> -			continue;
+> -
+> -		/* Check the extent record doesn't point to crap. */
+> -		if (irec.br_startblock + irec.br_blockcount <=
+> -		    irec.br_startblock)
+> -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> -					irec.br_startoff);
+> -		if (!xfs_verify_fsbno(mp, irec.br_startblock) ||
+> -		    !xfs_verify_fsbno(mp, irec.br_startblock +
+> -					irec.br_blockcount - 1))
+> -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> -					irec.br_startoff);
+> -
+>  		/*
+> -		 * Unwritten extents or blocks mapped above the highest
+> +		 * delalloc extents or blocks mapped above the highest
+>  		 * quota id shouldn't happen.
+>  		 */
+>  		if (isnullstartblock(irec.br_startblock) ||
+>  		    irec.br_startoff > max_dqid_off ||
+> -		    irec.br_startoff + irec.br_blockcount > max_dqid_off + 1)
+> -			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
+> +		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
+> +			xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK,
+> +					irec.br_startoff);
+> +			break;
+> +		}
+>  	}
+> +
+> +	return error;
+> +}
+> +
+> +/* Scrub all of a quota type's items. */
+> +int
+> +xfs_scrub_quota(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_scrub_quota_info	sqi;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_quotainfo		*qi = mp->m_quotainfo;
+> +	uint				dqtype;
+> +	int				error = 0;
+> +
+> +	dqtype = xfs_scrub_quota_to_dqtype(sc);
+> +
+> +	/* Look for problem extents. */
+> +	error = xfs_scrub_quota_data_fork(sc);
+> +	if (error)
+> +		goto out;
+>  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+>  		goto out;
+>  
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
