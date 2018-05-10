@@ -1,44 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58786 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751449AbeEJXOH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 19:14:07 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC v2 2/4] xfs: add verifier check for symlink with append/immutable flags
-Date: Thu, 10 May 2018 16:13:57 -0700
-Message-Id: <20180510231359.16899-3-mcgrof@kernel.org>
-In-Reply-To: <20180510231359.16899-1-mcgrof@kernel.org>
-References: <20180510231359.16899-1-mcgrof@kernel.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:58809 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751273AbeEJXzF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 19:55:05 -0400
+Date: Fri, 11 May 2018 09:55:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] fs: don't scan the inode cache before SB_BORN is set
+Message-ID: <20180510235502.GU10363@dastard>
+References: <20180510042132.GS23861@dastard>
+ <20180510190916.GQ30522@ZenIV.linux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180510190916.GQ30522@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: viro@zeniv.linux.org.uk, darrick.wong@oracle.com, tytso@mit.edu, adilger.kernel@dilger.ca, clm@fb.com, jbacik@fb.com, dsterba@suse.com
-Cc: sandeen@sandeen.net, dhowells@redhat.com, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-The Linux VFS does not allow a way to set append/immuttable attributes
-to symlinks, this is just not possible. If this is detected we can
-correct this with xfs_repair, so inform the user.
+On Thu, May 10, 2018 at 08:09:16PM +0100, Al Viro wrote:
+> On Thu, May 10, 2018 at 02:21:33PM +1000, Dave Chinner wrote:
+> 
+> > Setting sb->s_fs_info to NULL on xfs_mount setup failure only solves
+> > the use-after-free part of the problem - it doesn't solve the
+> > use-before-initialisation part. To solve that we need to check the
+> > SB_BORN flag in super_cache_count().
+> > 
+> > The SB_BORN flag is not set until ->fs_mount() completes
+> > successfully and trylock_super() won't succeed until it is set.
+> > Hence super_cache_scan() will not run until SB_BORN is set, so it
+> > makes sense to not allow super_cache_scan to run and enter the
+> > filesystem until it is set, too. This prevents the superblock
+> > shrinker from entering the filesystem while it is being set up and
+> > so avoids the use-before-initialisation issue.
+> 
+> I'm fine with the first part of that (fs/super.c, that is), but
+> I don't understand why do you need the xfs side of the patch with
+> that.  Confused...
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- fs/xfs/libxfs/xfs_symlink_remote.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Well, the zeroing of s_fs_info is necessary to prevent
+use-after-free on the ->put_super side when ->fill_super fails. The
+shrinker counter check for a null s_fs_info is paranoia -
+historically we've had so many problems over time with superblock
+shrinkers being run when they shouldn't be, and I'm certain that
+someone will get it wrong again in the future.
 
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-index 5ef5f354587e..42dd81ede3d6 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.c
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-@@ -242,5 +242,10 @@ xfs_symlink_shortform_verify(
- 	/* We /did/ null-terminate the buffer, right? */
- 	if (*endp != 0)
- 		return __this_address;
-+
-+	/* Immutable and append flags are not allowed on symlinks */
-+	if (ip->i_d.di_flags & (XFS_DIFLAG_APPEND | XFS_DIFLAG_IMMUTABLE))
-+		return __this_address;
-+
- 	return NULL;
- }
+That said, I got no idea what I was thinking with the s_op change;
+that should just go bang on a mount failure because
+generic_shutdown_super() calls ops->put_super() unconditionally.
+I'll respin and remove the sop changes, and replace it with an
+actual check in xfs_fs_put_super() for a null s_fs_info....
+
+Cheers,
+
+Dave.
 -- 
-2.17.0
-
+Dave Chinner
+david@fromorbit.com
