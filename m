@@ -1,99 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40096 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750762AbeEKXOY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 19:14:24 -0400
-Date: Fri, 11 May 2018 16:14:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 8/8] xfs: teach xfs_bmapi_remap to accept some bmapi flags
-Message-ID: <20180511231403.GJ11261@magnolia>
-References: <152597988038.25215.9276761144353662866.stgit@magnolia>
- <152597993604.25215.2923117604057991749.stgit@magnolia>
- <20180511152026.GI105683@bfoster.bfoster>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:64064 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750794AbeEKXyJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 19:54:09 -0400
+Date: Sat, 12 May 2018 09:54:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: test mount vs superblock shrinker races
+Message-ID: <20180511235406.GA23861@dastard>
+References: <20180511021152.10803-1-david@fromorbit.com>
+ <CAOQ4uxh+D_1jEJquR5uyv2-AQpnNyZ9iiXFSqW6eSMmcPDi7Jw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180511152026.GI105683@bfoster.bfoster>
+In-Reply-To: <CAOQ4uxh+D_1jEJquR5uyv2-AQpnNyZ9iiXFSqW6eSMmcPDi7Jw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, May 11, 2018 at 11:20:27AM -0400, Brian Foster wrote:
-> On Thu, May 10, 2018 at 12:18:56PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Teach xfs_bmapi_remap how to map in unwritten extent and to skip rmap
-> > updates.  This enables us to rebuild real and unwritten extents from the
-> > rmapbt.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |    9 +++++++--
-> >  1 file changed, 7 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index b63e15a114f3..7660efb5beb0 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -4543,7 +4543,9 @@ xfs_bmapi_remap(
-> >  	ASSERT(len > 0);
-> >  	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
-> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> > -	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK)));
-> > +	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC |
-> > +			   XFS_BMAPI_NORMAP)));
-> > +	ASSERT(!(flags & XFS_BMAPI_ATTRFORK) || !(flags & XFS_BMAPI_PREALLOC));
+On Fri, May 11, 2018 at 08:41:58AM +0300, Amir Goldstein wrote:
+> On Fri, May 11, 2018 at 5:11 AM, Dave Chinner
+> <david@fromorbit.com> wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> >
+> > Test case for superblock shrinkers running while the filesystem
+> > is being set up and/or torn down and tripping over inconsistent
+> > state.
+> >
+> > Signed-Off-By: Dave Chinner <dchinner@redhat.com> ---
+...
 > 
-> A little confusing.. how about something like?
-> 
-> 	ASSERT((flags & XFS_BMAPI_ATTRFORK|XFS_BMAPI_PREALLOC) !=
-> 		XFS_BMAPI_ATTRFORK|XFS_BMAPI_PREALLOC);
+> Isn't it dangerous for the time being? Your fix commit message
+> says you got reports of OOPS.
 
-Ok.
+If you have a kernel with the mount_delay sysfs option, you will
+have a kernel with the fix. If you don't have mount_delay, the test
+won't run.
 
-> >  
-> >  	if (unlikely(XFS_TEST_ERROR(
-> >  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-> > @@ -4581,7 +4583,10 @@ xfs_bmapi_remap(
-> >  	got.br_startoff = bno;
-> >  	got.br_startblock = startblock;
-> >  	got.br_blockcount = len;
-> > -	got.br_state = XFS_EXT_NORM;
-> > +	if (flags & XFS_BMAPI_PREALLOC)
-> > +		got.br_state = XFS_EXT_UNWRITTEN;
-> > +	else
-> > +		got.br_state = XFS_EXT_NORM;
-> 
-> It's hard to see the wider picture without any users of this, but I do
-> notice that the one current caller appears to have everything passed
-> down to it to construct an xfs_bmbt_irec (in fact the data appears to
-> come from an irec in the first place).
+> Not sure what should be the authoritative condition to remove dangerous
+> point kernel release with a fix??
 
-Later on in the online repair series (which I will send out after the
-review for this series concludes) I'll make use of xfs_bmapi_remap to
-reconstruct the bmbt from the rmap, which is why I've been busy adding
-BMAPI_ATTRFORK, BMAPI_NORMAP, and BMAPI_PREALLOC to this function.
+I'm not going to add "dangerous" to new regression tests that have a
+fix pending anymore because nobody is doing maintenance tasks like
+sweeping out tests that aren't dangerous to upstream. Tagging new
+regression tests as dangerous just creates unnecessary technical
+debt.
 
-This patch[1] in my branch demonstrates the new uses of this function.
+Cheers,
 
---D
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-devel&id=7d8601ba8a938179ec0dae18b8a0848122eaf5e5
-
-> Brian
-> 
-> >  
-> >  	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
-> >  			&cur, &got, &firstblock, dfops, &logflags, flags);
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
