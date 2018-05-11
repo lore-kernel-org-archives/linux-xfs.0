@@ -1,59 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25232 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751571AbeEVA3p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 May 2018 20:29:45 -0400
-From: Dave Jiang <dave.jiang@intel.com>
-Subject: xfs regression
-Message-ID: <446e1035-335f-afe1-3448-8428a338a1ad@intel.com>
-Date: Mon, 21 May 2018 17:29:44 -0700
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:48340 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751258AbeEKBVA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 21:21:00 -0400
+Date: Fri, 11 May 2018 11:20:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH v4] fs: don't scan the inode cache before SB_BORN is set
+Message-ID: <20180511012057.GV10363@dastard>
+References: <20180510042132.GS23861@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180510042132.GS23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, Al Viro <viro@ZenIV.linux.org.uk>
 
-Darrick,
-I may have hit an xfs regression that shows up in 4.16 that fails
-xfstest xfs/348. I have bisected it to this commit:
-9cfb9b47479e237d217dbcfafe034cbf98f45909 ("xfs: provide a centralized
-method for verifying inline fork data")
 
-# ./check xfs/348
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 skx-ntbusd 4.15.0-rc7+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/pmem0p2
-/mnt/xfstests_scratch
+From: Dave Chinner <dchinner@redhat.com>
 
-xfs/348 29s ... - output mismatch (see
-/root/xfstests/xfstests-dev/results//xfs/348.out.bad)
-    --- tests/xfs/348.out       2017-10-19 10:57:22.561819578 -0700
-    +++ /root/xfstests/xfstests-dev/results//xfs/348.out.bad
-2018-05-21 17:13:39.171256163 -0700
-    @@ -239,7 +239,7 @@
-     would have junked entry "DIR" in directory PARENT_INO
-     would have junked entry "EMPTY" in directory PARENT_INO
-     would have junked entry "FIFO" in directory PARENT_INO
-    -stat: 'SCRATCH_MNT/test/DIR' is a symbolic link
-    +stat: cannot stat 'SCRATCH_MNT/test/DIR': Structure needs cleaning
-     stat: 'SCRATCH_MNT/test/DATA' is a symbolic link
-     stat: cannot stat 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
-    ...
-    (Run 'diff -u tests/xfs/348.out
-/root/xfstests/xfstests-dev/results//xfs/348.out.bad'  to see the entire
-diff)
-Ran: xfs/348
-Failures: xfs/348
-Failed 1 of 1 tests
+We recently had an oops reported on a 4.14 kernel in
+xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
+and so the m_perag_tree lookup walked into lala land.  It produces
+an oops down this path during the failed mount:
 
--- 
+  radix_tree_gang_lookup_tag+0xc4/0x130
+  xfs_perag_get_tag+0x37/0xf0
+  xfs_reclaim_inodes_count+0x32/0x40
+  xfs_fs_nr_cached_objects+0x11/0x20
+  super_cache_count+0x35/0xc0
+  shrink_slab.part.66+0xb1/0x370
+  shrink_node+0x7e/0x1a0
+  try_to_free_pages+0x199/0x470
+  __alloc_pages_slowpath+0x3a1/0xd20
+  __alloc_pages_nodemask+0x1c3/0x200
+  cache_grow_begin+0x20b/0x2e0
+  fallback_alloc+0x160/0x200
+  kmem_cache_alloc+0x111/0x4e0
 
-Dave Jiang
-Software Engineer, SSG/OTC
-Intel Corp.
-dave.jiang@intel.com
+The problem is that the superblock shrinker is running before the
+filesystem structures it depends on have been fully set up. i.e.
+the shrinker is registered in sget(), before ->fill_super() has been
+called, and the shrinker can call into the filesystem before
+fill_super() does it's setup work. Essentially we are exposed to
+both use-after-free and use-before-initialisation bugs here.
+
+To fix this, add a check for the SB_BORN flag in super_cache_count.
+In general, this flag is not set until ->fs_mount() completes
+successfully, so we know that it is set after the filesystem
+setup has completed. This matches the trylock_super() behaviour
+which will not let super_cache_scan() run if SB_BORN is not set, and
+hence will not allow the superblock shrinker from entering the
+filesystem while it is being set up or after it has failed setup
+and is being torn down.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+Version 4:
+- dropped all the XFS bits from the patch as they are unrelated to
+  the shrinker running before the filesystem is fully set up.
+
+Version 3:
+- change the memory barriers to protect the superblock data, not
+  the SB_BORN flag.
+
+Version 2:
+- convert to use SB_BORN, not SB_ACTIVE
+- add memory barriers
+- rework comment in super_cache_count()
+
+---
+ fs/super.c | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
+
+diff --git a/fs/super.c b/fs/super.c
+index 122c402049a2..4b5b562176d0 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -121,13 +121,23 @@ static unsigned long super_cache_count(struct shrinker *shrink,
+ 	sb = container_of(shrink, struct super_block, s_shrink);
+ 
+ 	/*
+-	 * Don't call trylock_super as it is a potential
+-	 * scalability bottleneck. The counts could get updated
+-	 * between super_cache_count and super_cache_scan anyway.
+-	 * Call to super_cache_count with shrinker_rwsem held
+-	 * ensures the safety of call to list_lru_shrink_count() and
+-	 * s_op->nr_cached_objects().
++	 * We don't call trylock_super() here as it is a scalability bottleneck,
++	 * so we're exposed to partial setup state. The shrinker rwsem does not
++	 * protect filesystem operations backing list_lru_shrink_count() or
++	 * s_op->nr_cached_objects(). Counts can change between
++	 * super_cache_count and super_cache_scan, so we really don't need locks
++	 * here.
++	 *
++	 * However, if we are currently mounting the superblock, the underlying
++	 * filesystem might be in a state of partial construction and hence it
++	 * is dangerous to access it.  trylock_super() uses a SB_BORN check to
++	 * avoid this situation, so do the same here. The memory barrier is
++	 * matched with the one in mount_fs() as we don't hold locks here.
+ 	 */
++	if (!(sb->s_flags & SB_BORN))
++		return 0;
++	smp_rmb();
++
+ 	if (sb->s_op && sb->s_op->nr_cached_objects)
+ 		total_objects = sb->s_op->nr_cached_objects(sb, sc);
+ 
+@@ -1272,6 +1282,14 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
+ 	sb = root->d_sb;
+ 	BUG_ON(!sb);
+ 	WARN_ON(!sb->s_bdi);
++
++	/*
++	 * Write barrier is for super_cache_count(). We place it before setting
++	 * SB_BORN as the data dependency between the two functions is the
++	 * superblock structure contents that we just set up, not the SB_BORN
++	 * flag.
++	 */
++	smp_wmb();
+ 	sb->s_flags |= SB_BORN;
+ 
+ 	error = security_sb_kern_mount(sb, flags, secdata);
