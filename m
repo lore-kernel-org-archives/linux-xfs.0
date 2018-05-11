@@ -1,83 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:52581 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936240AbeEYPO6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 11:14:58 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] xfs: mark sb_fname as nonstring
-Date: Fri, 25 May 2018 17:14:09 +0200
-Message-Id: <20180525151421.2317292-1-arnd@arndb.de>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:22415 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750722AbeEKCKD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 22:10:03 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fGxVB-0006xj-KW
+        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fGxVB-0002gN-JE
+        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: clear sb->s_fs_info on mount failure
+Date: Fri, 11 May 2018 12:09:43 +1000
+Message-Id: <20180511020943.10132-3-david@fromorbit.com>
+In-Reply-To: <20180511020943.10132-1-david@fromorbit.com>
+References: <20180511020943.10132-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Eric Sandeen <sandeen@redhat.com>, Martin Sebor <msebor@gmail.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-gcc-8 reports two warnings for the newly added getlabel/setlabel code:
+From: Dave Chinner <dchinner@redhat.com>
 
-fs/xfs/xfs_ioctl.c: In function 'xfs_ioc_getlabel':
-fs/xfs/xfs_ioctl.c:1822:38: error: argument to 'sizeof' in 'strncpy' call is the same expression as the source; did you mean to use the size of the destination? [-Werror=sizeof-pointer-memaccess]
-  strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
-                                      ^
-In function 'strncpy',
-    inlined from 'xfs_ioc_setlabel' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1863:2,
-    inlined from 'xfs_file_ioctl' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1918:10:
-include/linux/string.h:254:9: error: '__builtin_strncpy' output may be truncated copying 12 bytes from a string of length 12 [-Werror=stringop-truncation]
-  return __builtin_strncpy(p, q, size);
+We recently had an oops reported on a 4.14 kernel in
+xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
+and so the m_perag_tree lookup walked into lala land.
 
-In both cases, part of the problem is that one of the strncpy()
-arguments is a fixed-length character array with zero-padding rather
-than a zero-terminated string. In the first one case, we also get an
-odd warning about sizeof-pointer-memaccess, which doesn't seem right
-(the sizeof is for an array that happens to be the same as the second
-strncpy argument).
+Essentially, the machine was under memory pressure when the mount
+was being run, xfs_fs_fill_super() failed after allocating the
+xfs_mount and attaching it to sb->s_fs_info. It then cleaned up and
+freed the xfs_mount, but the sb->s_fs_info field still pointed to
+the freed memory. Hence when the superblock shrinker then ran
+it fell off the bad pointer.
 
-To work around the bogus warning, I use a plain 'XFSLABEL_MAX' for
-the strncpy() length when copying the label in getlabel. For setlabel(),
-using memcpy() with the correct length that is already known avoids
-the second warning and is slightly simpler.
+With the superblock shrinker problem fixed at teh VFS level, this
+stale s_fs_info pointer is still a problem - we use it
+unconditionally in ->put_super when the superblock is being torn
+down, and hence we can still trip over it after a ->fill_super
+call failure. Hence we need to clear s_fs_info if
+xfs-fs_fill_super() fails, and we need to check if it's valid in
+the places it can potentially be dereferenced after a ->fill_super
+failure.
 
-In a related issue, it appears that we accidentally skip the trailing
-\0 when copying a 12-character label back to user space in getlabel().
-Using the correct sizeof() argument here copies the extra character.
-
-Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85602
-Fixes: f7664b31975b ("xfs: implement online get/set fs label")
-Cc: Eric Sandeen <sandeen@redhat.com>
-Cc: Martin Sebor <msebor@gmail.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_ioctl.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_super.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 84fbf164cbc3..eb79f2bc4dcc 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1819,12 +1819,12 @@ xfs_ioc_getlabel(
- 	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a523eaeb3f29..d7e51b08919c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1772,6 +1772,7 @@ xfs_fs_fill_super(
+  out_close_devices:
+ 	xfs_close_devices(mp);
+  out_free_fsname:
++	sb->s_fs_info = NULL;
+ 	xfs_free_fsname(mp);
+ 	kfree(mp);
+  out:
+@@ -1789,6 +1790,10 @@ xfs_fs_put_super(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
  
- 	spin_lock(&mp->m_sb_lock);
--	strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
-+	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
- 	spin_unlock(&mp->m_sb_lock);
- 
- 	/* xfs on-disk label is 12 chars, be sure we send a null to user */
- 	label[XFSLABEL_MAX] = '\0';
--	if (copy_to_user(user_label, label, sizeof(sbp->sb_fname)))
-+	if (copy_to_user(user_label, label, sizeof(label)))
- 		return -EFAULT;
- 	return 0;
++	/* if ->fill_super failed, we have no mount to tear down */
++	if (!sb->s_fs_info)
++		return;
++
+ 	xfs_notice(mp, "Unmounting Filesystem");
+ 	xfs_filestream_unmount(mp);
+ 	xfs_unmountfs(mp);
+@@ -1798,6 +1803,8 @@ xfs_fs_put_super(
+ 	xfs_destroy_percpu_counters(mp);
+ 	xfs_destroy_mount_workqueues(mp);
+ 	xfs_close_devices(mp);
++
++	sb->s_fs_info = NULL;
+ 	xfs_free_fsname(mp);
+ 	kfree(mp);
  }
-@@ -1860,7 +1860,7 @@ xfs_ioc_setlabel(
+@@ -1817,6 +1824,9 @@ xfs_fs_nr_cached_objects(
+ 	struct super_block	*sb,
+ 	struct shrink_control	*sc)
+ {
++	/* Paranoia: catch incorrect calls during mount setup or teardown */
++	if (WARN_ON_ONCE(!sb->s_fs_info))
++		return 0;
+ 	return xfs_reclaim_inodes_count(XFS_M(sb));
+ }
  
- 	spin_lock(&mp->m_sb_lock);
- 	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
--	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
-+	memcpy(sbp->sb_fname, label, len);
- 	spin_unlock(&mp->m_sb_lock);
- 
- 	/*
 -- 
-2.9.0
+2.17.0
 
