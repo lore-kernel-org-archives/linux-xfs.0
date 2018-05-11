@@ -1,51 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:54886 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964827AbeEJPUa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 11:20:30 -0400
-Date: Thu, 10 May 2018 08:20:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/13] xfs: remove direct calls to _qm_dqread
-Message-ID: <20180510152005.GX11261@magnolia>
-References: <152506698177.21553.13500862866416804148.stgit@magnolia>
- <152506705098.21553.6894396720813018127.stgit@magnolia>
- <20180508000535.GZ11261@magnolia>
- <20180510082600.GA13114@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180510082600.GA13114@lst.de>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:29801 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750805AbeEKCKD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 22:10:03 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fGxVB-0006xh-IN
+        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fGxVB-0002gI-FH
+        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: handle mount failures more cleanly
+Date: Fri, 11 May 2018 12:09:41 +1000
+Message-Id: <20180511020943.10132-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Dave Chinner <david@fromorbit.com>
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 10, 2018 at 10:26:00AM +0200, Christoph Hellwig wrote:
-> On Mon, May 07, 2018 at 05:05:35PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > The quota initialization code needs an "uncached" variant of _dqget to
-> > read in default quota limits and timers before the dquot cache is fully
-> > set up.  We've already split up _dqget into its component pieces so
-> > create a fourth variant to address this need, and make dqread internal
-> > to xfs_dquot.c again.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Looks fine,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> But can you please resend the whole series?  I've lost track of all the
-> updates..
+Hi folks,
 
-Will do.  I'll also try to push all the accumulated/reviewed 4.18 stuff
-to for-next in time for tomorrow's tree.
+This is the XFS side of the "fs: don't scan the inode cache before
+SB_BORN is set" changes to handle mount failures more cleanly. This
+addresses teh use-after-free problems that can occur when
+xfs_fs_fill_super() fails, frees the xfs_mount structure but
+then leaves the VFS superblock pointing to it.
 
---D
+Th efirst patch is the mount delay sysfs option I've been using to
+test this. I'll post the fstest that uses it in a minute.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+
+Dave.
+
