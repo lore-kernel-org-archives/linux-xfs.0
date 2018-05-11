@@ -1,56 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57528 "EHLO sandeen.net"
+Received: from mx2.suse.de ([195.135.220.15]:57305 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932745AbeEaOwi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 May 2018 10:52:38 -0400
-Subject: Re: [PATCH] xfs_io: fix null pointer deref when complaining about
- scrub command
-References: <20180530033215.GO30110@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ef8e9136-ebf3-a208-8cef-36480bd34b6b@sandeen.net>
-Date: Thu, 31 May 2018 09:52:37 -0500
+        id S1753063AbeEKOHg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 May 2018 10:07:36 -0400
+Date: Fri, 11 May 2018 16:04:51 +0200
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [RFC v2 4/4] btrfs: verify symlinks with append/immutable flags
+Message-ID: <20180511140451.GY6649@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <20180510231359.16899-1-mcgrof@kernel.org>
+ <20180510231359.16899-5-mcgrof@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20180530033215.GO30110@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180510231359.16899-5-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: viro@zeniv.linux.org.uk, darrick.wong@oracle.com, tytso@mit.edu, adilger.kernel@dilger.ca, clm@fb.com, jbacik@fb.com, dsterba@suse.com, sandeen@sandeen.net, dhowells@redhat.com, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 5/29/18 10:32 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, May 10, 2018 at 04:13:59PM -0700, Luis R. Rodriguez wrote:
+> The Linux VFS does not allow a way to set append/immuttable
+                                                   ^^^^^^^^^^
+
+Typo, in all 3 patches.
+
+> attributes to symlinks, this is just not possible. If this is
+> detected inform the user as the filesystem must be corrupted.
 > 
-> Don't increment optind until we've validated that argv[optind] is a
-> valid scrub/repair subcommand and do not need to complain about
-> argv[optind].
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 > ---
->   io/scrub.c |    3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+>  fs/btrfs/inode.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> diff --git a/io/scrub.c b/io/scrub.c
-> index 604daed9..37ffe46b 100644
-> --- a/io/scrub.c
-> +++ b/io/scrub.c
-> @@ -166,12 +166,11 @@ parse_args(
->   			break;
->   		}
->   	}
-> -	optind++;
-> -
->   	if (type < 0) {
->   		printf(_("Unknown type '%s'.\n"), argv[optind]);
->   		return command_usage(cmdinfo);
->   	}
-> +	optind++;
->   
->   	switch (d->type) {
->   	case ST_INODE:
+> diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+> index c4bdb597b323..d9c786be408c 100644
+> --- a/fs/btrfs/inode.c
+> +++ b/fs/btrfs/inode.c
+> @@ -3933,6 +3933,15 @@ static int btrfs_read_locked_inode(struct inode *inode)
+>  		inode->i_op = &btrfs_dir_inode_operations;
+>  		break;
+>  	case S_IFLNK:
+> +		/* VFS does not allow setting these so must be corruption */
+> +		if (IS_APPEND(inode) || IS_IMMUTABLE(inode)) {
+> +			ret = -EUCLEAN;
+> +			btrfs_crit(fs_info,
+> +				  "corrupt symlink with append/immutable ino=%llu root=%llu\n",
+
+no "\n" and please un-indent the string so it fits 80 columns.
+
+> +				  btrfs_ino(BTRFS_I(inode)),
+> +				  root->root_key.objectid);
+> +			goto make_bad;
+
+I found some error handling issues, before the switch, there's
+btrfs_free_path and there's one more at the make_bad label.
+
+To fix that, please set path = NULL after the first btrfs_free_path, it
+can handle a NULL when it's called again.
+
+Next thing I'm not sure about are the ACLs that get initialized in some
+cases. There's cache_no_acl() that only resets the inode::i_acl and
+inode::i_default_acl, so I think this should be called too. Thanks.
