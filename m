@@ -1,60 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56440 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750798AbeEKCU6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 22:20:58 -0400
-Date: Thu, 10 May 2018 19:20:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC v2 2/4] xfs: add verifier check for symlink with
- append/immutable flags
-Message-ID: <20180511022020.GG11261@magnolia>
-References: <20180510231359.16899-1-mcgrof@kernel.org>
- <20180510231359.16899-3-mcgrof@kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:51254 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752421AbeEKGZT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 May 2018 02:25:19 -0400
+Date: Fri, 11 May 2018 08:29:03 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 01/33] block: add a lower-level bio_add_page interface
+Message-ID: <20180511062903.GA8210@lst.de>
+References: <20180509074830.16196-1-hch@lst.de> <20180509074830.16196-2-hch@lst.de> <20180509151243.GA1313@bombadil.infradead.org> <20180510064013.GA11422@lst.de> <AE0124C4-46F7-4051-BA24-AC2E3887E8A3@dilger.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180510231359.16899-3-mcgrof@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <AE0124C4-46F7-4051-BA24-AC2E3887E8A3@dilger.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, tytso@mit.edu, adilger.kernel@dilger.ca, clm@fb.com, jbacik@fb.com, dsterba@suse.com, sandeen@sandeen.net, dhowells@redhat.com, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org, axboe@kernel.dk
 
-On Thu, May 10, 2018 at 04:13:57PM -0700, Luis R. Rodriguez wrote:
-> The Linux VFS does not allow a way to set append/immuttable attributes
-> to symlinks, this is just not possible. If this is detected we can
-> correct this with xfs_repair, so inform the user.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_symlink_remote.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-> index 5ef5f354587e..42dd81ede3d6 100644
-> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
-> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-> @@ -242,5 +242,10 @@ xfs_symlink_shortform_verify(
->  	/* We /did/ null-terminate the buffer, right? */
->  	if (*endp != 0)
->  		return __this_address;
-> +
-> +	/* Immutable and append flags are not allowed on symlinks */
-> +	if (ip->i_d.di_flags & (XFS_DIFLAG_APPEND | XFS_DIFLAG_IMMUTABLE))
-> +		return __this_address;
+On Thu, May 10, 2018 at 03:49:53PM -0600, Andreas Dilger wrote:
+> Would it make sense to change the bio_add_page() and bio_add_pc_page()
+> to use the more common convention instead of continuing the spread of
+> this non-standard calling convention?  This is doubly problematic since
+> "off" and "len" are both unsigned int values so it is easy to get them
+> mixed up, and just reordering the bio_add_page() arguments would not
+> generate any errors.
 
-This belongs in xfs_dinode_verify so that it checks all symlinks, not
-just the one shortform ones.
+We have more than hundred callers.  I don't think we want to create
+so much churn just to clean things up a bit without any meaѕurable
+benefit.  And even if you want to clean it up I'd rather keep it
+away from my iomap/xfs buffered I/O series :)
 
---D
+> One option would be to rename this function bio_page_add() so there are
+> build errors or first add bio_page_add() and mark bio_add_page()
+> deprecated and allow some short time for transition?  There are about
+> 50 uses under drivers/ and 50 uses under fs/.
 
-> +
->  	return NULL;
->  }
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If you think the churn is worthwhile send a separate series for that.
+My two new functions should have very few callers even by then, so
+feel free to just update them as well.
