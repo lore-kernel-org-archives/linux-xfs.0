@@ -1,49 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58858 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751839AbeEJXOJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 19:14:09 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [RFC v2 4/4] btrfs: verify symlinks with append/immutable flags
-Date: Thu, 10 May 2018 16:13:59 -0700
-Message-Id: <20180510231359.16899-5-mcgrof@kernel.org>
-In-Reply-To: <20180510231359.16899-1-mcgrof@kernel.org>
-References: <20180510231359.16899-1-mcgrof@kernel.org>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36074 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750858AbeEKDIF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 23:08:05 -0400
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: [PATCH] xfs: pass extra params to _scratch_mkfs_xfs_opts in _scratch_mkfs_xfs
+Date: Fri, 11 May 2018 11:05:59 +0800
+Message-Id: <20180511030559.26502-1-guaneryu@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: viro@zeniv.linux.org.uk, darrick.wong@oracle.com, tytso@mit.edu, adilger.kernel@dilger.ca, clm@fb.com, jbacik@fb.com, dsterba@suse.com
-Cc: sandeen@sandeen.net, dhowells@redhat.com, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: fstests@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>
 
-The Linux VFS does not allow a way to set append/immuttable
-attributes to symlinks, this is just not possible. If this is
-detected inform the user as the filesystem must be corrupted.
+One of _scratch_mkfs_xfs_opts()'s job is to remove any metadata
+related mkfs options if mkfs.xfs binary doesn't support them, so
+that tests that pass metadata mkfs options to _scratch_mkfs, e.g.
+"_scratch_mkfs -m crc=0" won't break with old mkfs.xfs.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+But commit 596a068bf130 ("fstests: teach _scratch_mkfs to handle
+mkfs option conflicts") broke this, because it didn't pass any mkfs
+options to _scratch_mkfs_xfs_opts(). So fix it.
+
+Also declare a variable as 'local' and fix a typo.
+
+Reported-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Eryu Guan <guaneryu@gmail.com>
 ---
- fs/btrfs/inode.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ common/xfs | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index c4bdb597b323..d9c786be408c 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -3933,6 +3933,15 @@ static int btrfs_read_locked_inode(struct inode *inode)
- 		inode->i_op = &btrfs_dir_inode_operations;
- 		break;
- 	case S_IFLNK:
-+		/* VFS does not allow setting these so must be corruption */
-+		if (IS_APPEND(inode) || IS_IMMUTABLE(inode)) {
-+			ret = -EUCLEAN;
-+			btrfs_crit(fs_info,
-+				  "corrupt symlink with append/immutable ino=%llu root=%llu\n",
-+				  btrfs_ino(BTRFS_I(inode)),
-+				  root->root_key.objectid);
-+			goto make_bad;
-+		}
- 		inode->i_op = &btrfs_symlink_inode_operations;
- 		inode_nohighmem(inode);
- 		inode->i_mapping->a_ops = &btrfs_symlink_aops;
+diff --git a/common/xfs b/common/xfs
+index e0bc3f43d3c5..498f45e64b6d 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -46,9 +46,9 @@ _setup_large_xfs_fs()
+ 
+ _scratch_mkfs_xfs_opts()
+ {
+-	mkfs_opts=$*
++	local mkfs_opts=$*
+ 
+-	# remove metadata related mkfs options if mkfs.xfs doesn't them
++	# remove metadata related mkfs options if mkfs.xfs doesn't support them
+ 	if [ -n "$XFS_MKFS_HAS_NO_META_SUPPORT" ]; then
+ 		mkfs_opts=`echo $mkfs_opts | sed "s/-m\s\+\S\+//g"`
+ 	fi
+@@ -79,14 +79,14 @@ _scratch_mkfs_xfs_supported()
+ 
+ _scratch_mkfs_xfs()
+ {
+-	local mkfs_cmd="`_scratch_mkfs_xfs_opts`"
++	local mkfs_cmd="`_scratch_mkfs_xfs_opts $*`"
+ 	local mkfs_filter="sed -e '/less than device physical sector/d' \
+ 			       -e '/switching to logical sector/d' \
+ 			       -e '/Default configuration/d'"
+ 	local tmp=`mktemp -u`
+ 	local mkfs_status
+ 
+-	_scratch_do_mkfs "$mkfs_cmd" "$mkfs_filter" $* 2>$tmp.mkfserr 1>$tmp.mkfsstd
++	_scratch_do_mkfs "$mkfs_cmd" "$mkfs_filter" 2>$tmp.mkfserr 1>$tmp.mkfsstd
+ 	mkfs_status=$?
+ 
+ 
 -- 
 2.17.0
 
