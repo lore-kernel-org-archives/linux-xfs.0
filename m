@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11929 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:59646 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751028AbeEKWvN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 18:51:13 -0400
+        by vger.kernel.org with ESMTP id S1750818AbeEKWvO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 18:51:14 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1fHGsX-0008Fj-Pb
+        id 1fHGsX-0008Fc-NJ
         for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.91)
         (envelope-from <david@fromorbit.com>)
-        id 1fHGsX-0007Ct-O6
+        id 1fHGsX-0007Cm-Lz
         for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/10] xfs: turn ag header initialisation into a table driven operation
-Date: Sat, 12 May 2018 08:51:02 +1000
-Message-Id: <20180511225107.27171-6-david@fromorbit.com>
+Subject: [PATCH 03/10] xfs: convert growfs AG header init to use buffer lists
+Date: Sat, 12 May 2018 08:51:00 +1000
+Message-Id: <20180511225107.27171-4-david@fromorbit.com>
 In-Reply-To: <20180511225107.27171-1-david@fromorbit.com>
 References: <20180511225107.27171-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,211 +25,200 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There's still more cookie cutter code in setting up each AG header.
-Separate all the variables into a simple structure and iterate a
-table of header definitions to initialise everything.
+We currently write all new AG headers synchronously, which can be
+slow for large grow operations. All we really need to do is ensure
+all the headers are on disk before we run the growfs transaction, so
+convert this to a buffer list and a delayed write operation. We
+block waiting for the delayed write buffer submission to complete,
+so this will fulfill the requirement to have all the buffers written
+correctly before proceeding.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_fsops.c | 158 +++++++++++++++++++--------------------------
- 1 file changed, 66 insertions(+), 92 deletions(-)
+ fs/xfs/xfs_fsops.c | 74 +++++++++++++++++++++-------------------------
+ 1 file changed, 33 insertions(+), 41 deletions(-)
 
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 4dbb7b41aeca..263f9b5da991 100644
+index 391d1938a6c8..4b560caaf397 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -283,12 +283,13 @@ xfs_agiblock_init(
- 		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
- }
- 
-+typedef void (*aghdr_init_work_f)(struct xfs_mount *mp, struct xfs_buf *bp,
-+				  struct aghdr_init_data *id);
- static int
- xfs_growfs_init_aghdr(
+@@ -81,7 +81,8 @@ xfs_grow_ag_headers(
  	struct xfs_mount	*mp,
- 	struct aghdr_init_data	*id,
--	void			(*work)(struct xfs_mount *, struct xfs_buf *,
--					struct aghdr_init_data *),
-+	aghdr_init_work_f	work,
- 	const struct xfs_buf_ops *ops)
- 
+ 	xfs_agnumber_t		agno,
+ 	xfs_extlen_t		agsize,
+-	xfs_rfsblock_t		*nfree)
++	xfs_rfsblock_t		*nfree,
++	struct list_head	*buffer_list)
  {
-@@ -305,6 +306,16 @@ xfs_growfs_init_aghdr(
- 	return 0;
- }
- 
-+struct xfs_aghdr_grow_data {
-+	xfs_daddr_t		daddr;
-+	size_t			numblks;
-+	const struct xfs_buf_ops *ops;
-+	aghdr_init_work_f	work;
-+	xfs_btnum_t		type;
-+	int			numrecs;
-+	bool			need_init;
-+};
-+
- /*
-  * Write new AG headers to disk. Non-transactional, but written
-  * synchronously so they are completed prior to the growfs transaction
-@@ -316,104 +327,67 @@ xfs_grow_ag_headers(
- 	struct aghdr_init_data	*id)
- 
- {
-+	struct xfs_aghdr_grow_data aghdr_data[] = {
-+		/* AGF */
-+		{ XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), &xfs_agf_buf_ops,
-+		  &xfs_agfblock_init, 0, 0, true },
-+		/* AGFL */
-+		{ XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), &xfs_agfl_buf_ops,
-+		  &xfs_agflblock_init, 0, 0, true },
-+		/* AGI */
-+		{ XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp)),
-+		  XFS_FSS_TO_BB(mp, 1), &xfs_agi_buf_ops,
-+		  &xfs_agiblock_init, 0, 0, true },
-+		/* BNO root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_allocbt_buf_ops,
-+		  &xfs_bnoroot_init, 0, 0, true },
-+		/* CNT root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_allocbt_buf_ops,
-+		  &xfs_cntroot_init, 0, 0, true },
-+		/* INO root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_inobt_buf_ops,
-+		  &xfs_btroot_init, XFS_BTNUM_INO, 0, true },
-+		/* FINO root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_inobt_buf_ops,
-+		  &xfs_btroot_init, XFS_BTNUM_FINO, 0,
-+		  xfs_sb_version_hasfinobt(&mp->m_sb) },
-+		/* RMAP root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_rmapbt_buf_ops,
-+		  &xfs_rmaproot_init, 0, 0,
-+		  xfs_sb_version_hasrmapbt(&mp->m_sb) },
-+		/* REFC root block */
-+		{ XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp)),
-+		  BTOBB(mp->m_sb.sb_blocksize), &xfs_refcountbt_buf_ops,
-+		  &xfs_btroot_init, XFS_BTNUM_REFC, 0,
-+		  xfs_sb_version_hasreflink(&mp->m_sb) },
-+		/* NULL terminating block */
-+		{ XFS_BUF_DADDR_NULL, 0, NULL, NULL, 0, 0, false },
-+	};
-+	struct  xfs_aghdr_grow_data *dp;
- 	int			error = 0;
- 
- 	/* Account for AG free space in new AG */
- 	id->nfree += id->agsize - mp->m_ag_prealloc_blocks;
- 
--	/* AG freespace header block */
--	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp));
--	id->numblks = XFS_FSS_TO_BB(mp, 1);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_agfblock_init,
--					&xfs_agf_buf_ops);
--	if (error)
--		goto out_error;
--
--	/* AG freelist header block */
--	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp));
--	id->numblks = XFS_FSS_TO_BB(mp, 1);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_agflblock_init,
--					&xfs_agfl_buf_ops);
--	if (error)
--		goto out_error;
--
--	/* AG inode header block */
--	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp));
--	id->numblks = XFS_FSS_TO_BB(mp, 1);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_agiblock_init,
--					&xfs_agi_buf_ops);
--	if (error)
--		goto out_error;
--
--
--	/* BNO btree root block */
--	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp));
--	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_bnoroot_init,
--				   &xfs_allocbt_buf_ops);
--	if (error)
--		goto out_error;
--
--
--	/* CNT btree root block */
--	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp));
--	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--	error = xfs_growfs_init_aghdr(mp, id, xfs_cntroot_init,
--				   &xfs_allocbt_buf_ops);
--	if (error)
--		goto out_error;
--
--	/* RMAP btree root block */
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
--		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp));
--		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--		error = xfs_growfs_init_aghdr(mp, id, xfs_rmaproot_init,
--					   &xfs_rmapbt_buf_ops);
--		if (error)
--			goto out_error;
--
--	}
--
--	/* INO btree root block */
--	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp));
--	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--	id->type = XFS_BTNUM_INO;
--	id->numrecs = 0;
--	error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
--				   &xfs_inobt_buf_ops);
--	if (error)
--		goto out_error;
--
--
--	/*
--	 * FINO btree root block
--	 */
--	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
--		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp));
--		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--		id->type = XFS_BTNUM_FINO;
--		id->numrecs = 0;
--		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
--					   &xfs_inobt_buf_ops);
--		if (error)
--			goto out_error;
--	}
-+	for (dp = &aghdr_data[0]; dp->daddr != XFS_BUF_DADDR_NULL; dp++) {
-+		if (!dp->need_init)
-+			continue;
- 
--	/*
--	 * refcount btree root block
--	 */
--	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
--		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp));
--		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
--		id->type = XFS_BTNUM_REFC;
--		id->numrecs = 0;
--		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
--					   &xfs_refcountbt_buf_ops);
-+		id->daddr = dp->daddr;
-+		id->numblks = dp->numblks;
-+		id->numrecs = dp->numrecs;
-+		id->type = dp->type;
-+		error = xfs_growfs_init_aghdr(mp, id, dp->work, dp->ops);
- 		if (error)
--			goto out_error;
-+			break;
+ 	struct xfs_agf		*agf;
+ 	struct xfs_agi		*agi;
+@@ -135,11 +136,8 @@ xfs_grow_ag_headers(
+ 		agf->agf_refcount_level = cpu_to_be32(1);
+ 		agf->agf_refcount_blocks = cpu_to_be32(1);
  	}
 -
--out_error:
- 	return error;
- }
+-	error = xfs_bwrite(bp);
++	xfs_buf_delwri_queue(bp, buffer_list);
+ 	xfs_buf_relse(bp);
+-	if (error)
+-		goto out_error;
  
+ 	/*
+ 	 * AG freelist header block
+@@ -164,10 +162,8 @@ xfs_grow_ag_headers(
+ 	for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+ 		agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+ 
+-	error = xfs_bwrite(bp);
++	xfs_buf_delwri_queue(bp, buffer_list);
+ 	xfs_buf_relse(bp);
+-	if (error)
+-		goto out_error;
+ 
+ 	/*
+ 	 * AG inode header block
+@@ -201,10 +197,8 @@ xfs_grow_ag_headers(
+ 	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+ 		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+ 
+-	error = xfs_bwrite(bp);
++	xfs_buf_delwri_queue(bp, buffer_list);
+ 	xfs_buf_relse(bp);
+-	if (error)
+-		goto out_error;
+ 
+ 	/*
+ 	 * BNO btree root block
+@@ -226,10 +220,8 @@ xfs_grow_ag_headers(
+ 	arec->ar_blockcount = cpu_to_be32(
+ 		agsize - be32_to_cpu(arec->ar_startblock));
+ 
+-	error = xfs_bwrite(bp);
++	xfs_buf_delwri_queue(bp, buffer_list);
+ 	xfs_buf_relse(bp);
+-	if (error)
+-		goto out_error;
+ 
+ 	/*
+ 	 * CNT btree root block
+@@ -251,10 +243,8 @@ xfs_grow_ag_headers(
+ 		agsize - be32_to_cpu(arec->ar_startblock));
+ 	*nfree += be32_to_cpu(arec->ar_blockcount);
+ 
+-	error = xfs_bwrite(bp);
++	xfs_buf_delwri_queue(bp, buffer_list);
+ 	xfs_buf_relse(bp);
+-	if (error)
+-		goto out_error;
+ 
+ 	/* RMAP btree root block */
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+@@ -326,10 +316,8 @@ xfs_grow_ag_headers(
+ 			be16_add_cpu(&block->bb_numrecs, 1);
+ 		}
+ 
+-		error = xfs_bwrite(bp);
++		xfs_buf_delwri_queue(bp, buffer_list);
+ 		xfs_buf_relse(bp);
+-		if (error)
+-			goto out_error;
+ 	}
+ 
+ 	/*
+@@ -345,11 +333,8 @@ xfs_grow_ag_headers(
+ 	}
+ 
+ 	xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+-
+-	error = xfs_bwrite(bp);
++	xfs_buf_delwri_queue(bp, buffer_list);
+ 	xfs_buf_relse(bp);
+-	if (error)
+-		goto out_error;
+ 
+ 	/*
+ 	 * FINO btree root block
+@@ -364,13 +349,9 @@ xfs_grow_ag_headers(
+ 			goto out_error;
+ 		}
+ 
+-		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
+-					     0, 0, agno, 0);
+-
+-		error = xfs_bwrite(bp);
++		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO, 0, 0, agno, 0);
++		xfs_buf_delwri_queue(bp, buffer_list);
+ 		xfs_buf_relse(bp);
+-		if (error)
+-			goto out_error;
+ 	}
+ 
+ 	/*
+@@ -386,13 +367,9 @@ xfs_grow_ag_headers(
+ 			goto out_error;
+ 		}
+ 
+-		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
+-				     0, 0, agno, 0);
+-
+-		error = xfs_bwrite(bp);
++		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC, 0, 0, agno, 0);
++		xfs_buf_delwri_queue(bp, buffer_list);
+ 		xfs_buf_relse(bp);
+-		if (error)
+-			goto out_error;
+ 	}
+ 
+ out_error:
+@@ -419,6 +396,7 @@ xfs_growfs_data_private(
+ 	xfs_agnumber_t		oagcount;
+ 	int			pct;
+ 	xfs_trans_t		*tp;
++	LIST_HEAD		(buffer_list);
+ 
+ 	nb = in->newblocks;
+ 	pct = in->imaxpct;
+@@ -459,9 +437,16 @@ xfs_growfs_data_private(
+ 		return error;
+ 
+ 	/*
+-	 * Write new AG headers to disk. Non-transactional, but written
+-	 * synchronously so they are completed prior to the growfs transaction
+-	 * being logged.
++	 * Write new AG headers to disk. Non-transactional, but need to be
++	 * written and completed prior to the growfs transaction being logged.
++	 * To do this, we use a delayed write buffer list and wait for
++	 * submission and IO completion of the list as a whole. This allows the
++	 * IO subsystem to merge all the AG headers in a single AG into a single
++	 * IO and hide most of the latency of the IO from us.
++	 *
++	 * This also means that if we get an error whilst building the buffer
++	 * list to write, we can cancel the entire list without having written
++	 * anything.
+ 	 */
+ 	nfree = 0;
+ 	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
+@@ -472,10 +457,17 @@ xfs_growfs_data_private(
+ 		else
+ 			agsize = mp->m_sb.sb_agblocks;
+ 
+-		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree);
+-		if (error)
++		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree,
++					    &buffer_list);
++		if (error) {
++			xfs_buf_delwri_cancel(&buffer_list);
+ 			goto error0;
++		}
+ 	}
++	error = xfs_buf_delwri_submit(&buffer_list);
++	if (error)
++		goto error0;
++
+ 	xfs_trans_agblocks_delta(tp, nfree);
+ 
+ 	/*
 -- 
 2.17.0
 
