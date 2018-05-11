@@ -1,187 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:29801 "EHLO
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:20179 "EHLO
         ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750722AbeEKCKB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 22:10:01 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fGxVB-0006xi-JP
-        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fGxVB-0002gK-I6
-        for linux-xfs@vger.kernel.org; Fri, 11 May 2018 12:09:45 +1000
+        by vger.kernel.org with ESMTP id S1750758AbeEKCL4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 22:11:56 -0400
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: add mount delay debug option
-Date: Fri, 11 May 2018 12:09:42 +1000
-Message-Id: <20180511020943.10132-2-david@fromorbit.com>
-In-Reply-To: <20180511020943.10132-1-david@fromorbit.com>
-References: <20180511020943.10132-1-david@fromorbit.com>
+Subject: [PATCH] xfs: test mount vs superblock shrinker races
+Date: Fri, 11 May 2018 12:11:52 +1000
+Message-Id: <20180511021152.10803-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Similar to log_recovery_delay, this delay occurs between the VFS
-superblock being initialised and the xfs_mount being fully
-initialised. It also poisons the per-ag radix tree node so that it
-can be used for triggering shrinker races during mount
-such as the following:
-
-<run memory pressure workload in background>
-
-$ cat dirty-mount.sh
-#! /bin/bash
-
-umount -f /dev/pmem0
-mkfs.xfs -f /dev/pmem0
-mount /dev/pmem0 /mnt/test
-rm -f /mnt/test/foo
-xfs_io -fxc "pwrite 0 4k" -c fsync -c "shutdown" /mnt/test/foo
-umount /dev/pmem0
-
-# let's crash it now!
-echo 30 > /sys/fs/xfs/debug/mount_delay
-mount /dev/pmem0 /mnt/test
-echo 0 > /sys/fs/xfs/debug/mount_delay
-umount /dev/pmem0
-$ sudo ./dirty-mount.sh
-.....
-[   60.378118] CPU: 3 PID: 3577 Comm: fs_mark Tainted: G      D W        4.16.0-rc5-dgc #440
-[   60.378120] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-[   60.378124] RIP: 0010:radix_tree_next_chunk+0x76/0x320
-[   60.378127] RSP: 0018:ffffc9000276f4f8 EFLAGS: 00010282
-[   60.383670] RAX: a5a5a5a5a5a5a5a4 RBX: 0000000000000010 RCX: 000000000000001a
-[   60.385277] RDX: 0000000000000000 RSI: ffffc9000276f540 RDI: 0000000000000000
-[   60.386554] RBP: 0000000000000000 R08: 0000000000000000 R09: a5a5a5a5a5a5a5a5
-[   60.388194] R10: 0000000000000006 R11: 0000000000000001 R12: ffffc9000276f598
-[   60.389288] R13: 0000000000000040 R14: 0000000000000228 R15: ffff880816cd6458
-[   60.390827] FS:  00007f5c124b9740(0000) GS:ffff88083fc00000(0000) knlGS:0000000000000000
-[   60.392253] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   60.393423] CR2: 00007f5c11bba0b8 CR3: 000000035580e001 CR4: 00000000000606e0
-[   60.394519] Call Trace:
-[   60.395252]  radix_tree_gang_lookup_tag+0xc4/0x130
-[   60.395948]  xfs_perag_get_tag+0x37/0xf0
-[   60.396522]  xfs_reclaim_inodes_count+0x32/0x40
-[   60.397178]  xfs_fs_nr_cached_objects+0x11/0x20
-[   60.397837]  super_cache_count+0x35/0xc0
-[   60.399159]  shrink_slab.part.66+0xb1/0x370
-[   60.400194]  shrink_node+0x7e/0x1a0
-[   60.401058]  try_to_free_pages+0x199/0x470
-[   60.402081]  __alloc_pages_slowpath+0x3a1/0xd20
-[   60.403729]  __alloc_pages_nodemask+0x1c3/0x200
-[   60.404941]  cache_grow_begin+0x20b/0x2e0
-[   60.406164]  fallback_alloc+0x160/0x200
-[   60.407088]  kmem_cache_alloc+0x111/0x4e0
-[   60.408038]  ? xfs_buf_rele+0x61/0x430
-[   60.408925]  kmem_zone_alloc+0x61/0xe0
-[   60.409965]  xfs_inode_alloc+0x24/0x1d0
-.....
-
+Test case for superblock shrinkers running while the filesystem is
+being set up and/or torn down and tripping over inconsistent state.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_globals.c |  1 +
- fs/xfs/xfs_super.c   | 11 +++++++++++
- fs/xfs/xfs_sysctl.h  |  1 +
- fs/xfs/xfs_sysfs.c   | 31 +++++++++++++++++++++++++++++++
- 4 files changed, 44 insertions(+)
+ tests/xfs/451     | 72 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/451.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 75 insertions(+)
+ create mode 100755 tests/xfs/451
+ create mode 100644 tests/xfs/451.out
 
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index 3e1cc3001bcb..fdde17a2333c 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -47,6 +47,7 @@ xfs_param_t xfs_params = {
- 
- struct xfs_globals xfs_globals = {
- 	.log_recovery_delay	=	0,	/* no delay by default */
-+	.mount_delay		=	0,	/* no delay by default */
- #ifdef XFS_ASSERT_FATAL
- 	.bug_on_assert		=	true,	/* assert failures BUG() */
- #else
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 5726ef496980..a523eaeb3f29 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1635,6 +1635,17 @@ xfs_fs_fill_super(
- #endif
- 	sb->s_op = &xfs_super_operations;
- 
-+	/*
-+	 * Delay mount work if the debug hook is set. This is debug
-+	 * instrumention to coordinate simulation of xfs mount failures with
-+	 * VFS superblock operations
-+	 */
-+	if (xfs_globals.mount_delay) {
-+		xfs_notice(mp, "Delaying mount for %d seconds.",
-+			xfs_globals.mount_delay);
-+		msleep(xfs_globals.mount_delay * 1000);
-+	}
+diff --git a/tests/xfs/451 b/tests/xfs/451
+new file mode 100755
+index 000000000000..d8a4a5b93bf3
+--- /dev/null
++++ b/tests/xfs/451
+@@ -0,0 +1,72 @@
++#! /bin/bash
++# FS QA Test 451
++#
++# Exercise mount vs superblock shrinker races.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
- 	if (silent)
- 		flags |= XFS_MFSI_QUIET;
- 
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index 82afee005140..b53a33e69932 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -95,6 +95,7 @@ extern xfs_param_t	xfs_params;
- 
- struct xfs_globals {
- 	int	log_recovery_delay;	/* log recovery delay (secs) */
-+	int	mount_delay;		/* mount setup delay (secs) */
- 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
- };
- extern struct xfs_globals	xfs_globals;
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 8b2ccc234f36..2d5cd2529f8e 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -165,9 +165,40 @@ log_recovery_delay_show(
- }
- XFS_SYSFS_ATTR_RW(log_recovery_delay);
- 
-+STATIC ssize_t
-+mount_delay_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val < 0 || val > 60)
-+		return -EINVAL;
-+
-+	xfs_globals.mount_delay = val;
-+
-+	return count;
++	cd /
++	rm -f $tmp.*
++	echo 0 > /sys/fs/xfs/debug/mount_delay
 +}
 +
-+STATIC ssize_t
-+mount_delay_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.mount_delay);
-+}
-+XFS_SYSFS_ATTR_RW(mount_delay);
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
 +
- static struct attribute *xfs_dbg_attrs[] = {
- 	ATTR_LIST(bug_on_assert),
- 	ATTR_LIST(log_recovery_delay),
-+	ATTR_LIST(mount_delay),
- 	NULL,
- };
- 
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch
++_require_xfs_sysfs debug/mount_delay
++
++echo "Silence is golden"
++
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount
++
++$XFS_IO_PROG -fxc "pwrite 0 4k" -c fsync \
++		-c "shutdown" $SCRATCH_MNT/foo 2>&1 > /dev_null
++
++_scratch_unmount
++
++echo 30 > /sys/fs/xfs/debug/mount_delay
++_scratch_mount
++echo 0 > /sys/fs/xfs/debug/mount_delay
++_scratch_unmount
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/451.out b/tests/xfs/451.out
+new file mode 100644
+index 000000000000..db924411b72f
+--- /dev/null
++++ b/tests/xfs/451.out
+@@ -0,0 +1,2 @@
++QA output created by 451
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 2a7f5eb68e82..72f65b6aff0a 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -443,3 +443,4 @@
+ 444 auto quick
+ 445 auto quick filestreams
+ 450 auto quick
++451 auto mount
 -- 
 2.17.0
 
