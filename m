@@ -1,60 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:58809 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751273AbeEJXzF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 19:55:05 -0400
-Date: Fri, 11 May 2018 09:55:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3] fs: don't scan the inode cache before SB_BORN is set
-Message-ID: <20180510235502.GU10363@dastard>
-References: <20180510042132.GS23861@dastard>
- <20180510190916.GQ30522@ZenIV.linux.org.uk>
+Received: from aserp2130.oracle.com ([141.146.126.79]:42332 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751352AbeEKGje (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 02:39:34 -0400
+Date: Thu, 10 May 2018 23:39:25 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: stop using buffer heads in xfs and iomap
+Message-ID: <20180511063925.GH11261@magnolia>
+References: <20180509074830.16196-1-hch@lst.de>
+ <20180510151303.GW11261@magnolia>
+ <20180511062208.GC7962@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180510190916.GQ30522@ZenIV.linux.org.uk>
+In-Reply-To: <20180511062208.GC7962@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 10, 2018 at 08:09:16PM +0100, Al Viro wrote:
-> On Thu, May 10, 2018 at 02:21:33PM +1000, Dave Chinner wrote:
-> 
-> > Setting sb->s_fs_info to NULL on xfs_mount setup failure only solves
-> > the use-after-free part of the problem - it doesn't solve the
-> > use-before-initialisation part. To solve that we need to check the
-> > SB_BORN flag in super_cache_count().
+On Fri, May 11, 2018 at 08:22:08AM +0200, Christoph Hellwig wrote:
+> On Thu, May 10, 2018 at 08:13:03AM -0700, Darrick J. Wong wrote:
+> > I ran xfstests on this for fun last night but hung in g/095:
 > > 
-> > The SB_BORN flag is not set until ->fs_mount() completes
-> > successfully and trylock_super() won't succeed until it is set.
-> > Hence super_cache_scan() will not run until SB_BORN is set, so it
-> > makes sense to not allow super_cache_scan to run and enter the
-> > filesystem until it is set, too. This prevents the superblock
-> > shrinker from entering the filesystem while it is being set up and
-> > so avoids the use-before-initialisation issue.
+> > FSTYP         -- xfs (debug)
+> > PLATFORM      -- Linux/x86_64 submarine-djwong-mtr01 4.17.0-rc4-djw
+> > MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1, -i sparse=1, -b size=1024, /dev/sdf
+> > MOUNT_OPTIONS -- /dev/sdf /opt
+> > 
+> > FWIW the stock v4 and the 'v5 with everything and 4k blocks' vms
+> > passed, so I guess there's a bug somewhere in the sub-page block size
+> > code paths...
 > 
-> I'm fine with the first part of that (fs/super.c, that is), but
-> I don't understand why do you need the xfs side of the patch with
-> that.  Confused...
+> I haven't seen that in my -b size 1024 -m relink test  I'll try your above
+> exact setup, too.  Is this disk or SSD?  How much memory and how many
+> CPUs?
 
-Well, the zeroing of s_fs_info is necessary to prevent
-use-after-free on the ->put_super side when ->fill_super fails. The
-shrinker counter check for a null s_fs_info is paranoia -
-historically we've had so many problems over time with superblock
-shrinkers being run when they shouldn't be, and I'm certain that
-someone will get it wrong again in the future.
+4 CPUs in a VM on a Nehalem-era machine, 2GB RAM, two 2.3GB virtio-scsi
+disks...
 
-That said, I got no idea what I was thinking with the s_op change;
-that should just go bang on a mount failure because
-generic_shutdown_super() calls ops->put_super() unconditionally.
-I'll respin and remove the sop changes, and replace it with an
-actual check in xfs_fs_put_super() for a null s_fs_info....
+...the VM host itself is a quad-core Nehalem, 24G RAM, atop an ext4 fs
+on spinning rust in a raid1.
 
-Cheers,
+> Btw, I think the series might be worthwhile even if we have to delay
+> the sub-page blocksize support - the blocksize == pagesize code is
+> basically entirely separate and already very useful.  Only the last
+> three patches contain the small blocksize support, without that we'll
+> just continue using buffer heads for that case for now.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+<shrug> I'll keep reading, it seemed generally ok until I hit the
+sub-page part and my eyes glazed over. :)
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
