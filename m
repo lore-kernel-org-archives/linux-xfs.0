@@ -1,185 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53264 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752112AbeENXm0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 19:42:26 -0400
-Date: Mon, 14 May 2018 16:42:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 5/4] xfs_scrub: actually check for errors coming from close()
-Message-ID: <20180514234207.GI4933@magnolia>
-References: <152579743411.10641.4577883761846454290.stgit@magnolia>
+Received: from mail-vk0-f54.google.com ([209.85.213.54]:37783 "EHLO
+        mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbeEKBme (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 21:42:34 -0400
+Received: by mail-vk0-f54.google.com with SMTP id m144-v6so2370087vke.4
+        for <linux-xfs@vger.kernel.org>; Thu, 10 May 2018 18:42:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152579743411.10641.4577883761846454290.stgit@magnolia>
+References: <CABnRu57R+xakqCPmhM7bjLoAfLAAEuoQDtoU9F9t6CxeNOaPJg@mail.gmail.com>
+ <d7e616a7-9978-939a-2056-9846aadf20ef@sandeen.net>
+In-Reply-To: <d7e616a7-9978-939a-2056-9846aadf20ef@sandeen.net>
+From: Su Yue <damenly.su@gmail.com>
+Date: Fri, 11 May 2018 09:48:20 +0800
+Message-ID: <CABnRu57cVkQXEjV2BbuEShOZovco6C-DbrrKyva7TOh-+7xrbg@mail.gmail.com>
+Subject: Re: Question about inode64
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: sandeen@sandeen.net
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Thanks a lot!
 
-Report errors reported by close().
+After one-night sleep, my brain is clear to figure out
+inode bits and inode64 mount option with your explanation.
+And your suggestions are helpful too. : )
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/phase1.c |    6 +++++-
- scrub/phase3.c |   27 +++++++++++++++++++++++++--
- scrub/phase5.c |    8 ++++++--
- scrub/phase6.c |   10 +++++++---
- scrub/vfs.c    |    4 +++-
- 5 files changed, 46 insertions(+), 9 deletions(-)
+Su
 
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index c2b9067a..87847259 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -60,6 +60,8 @@ bool
- xfs_cleanup_fs(
- 	struct scrub_ctx	*ctx)
- {
-+	int			error;
-+
- 	if (ctx->fshandle)
- 		free_handle(ctx->fshandle, ctx->fshandle_len);
- 	if (ctx->rtdev)
-@@ -69,7 +71,9 @@ xfs_cleanup_fs(
- 	if (ctx->datadev)
- 		disk_close(ctx->datadev);
- 	fshandle_destroy();
--	close(ctx->mnt_fd);
-+	error = close(ctx->mnt_fd);
-+	if (error)
-+		str_errno(ctx, _("closing mountpoint fd"));
- 	fs_table_destroy();
- 
- 	return true;
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-index 68c95e67..cbaa80ba 100644
---- a/scrub/phase3.c
-+++ b/scrub/phase3.c
-@@ -53,6 +53,25 @@ struct scrub_inode_ctx {
- 	bool			moveon;
- };
- 
-+/* Report a filesystem error that the vfs fed us on close. */
-+static void
-+xfs_scrub_inode_vfs_error(
-+	struct scrub_ctx	*ctx,
-+	struct xfs_bstat	*bstat)
-+{
-+	char			descr[DESCR_BUFSZ];
-+	xfs_agnumber_t		agno;
-+	xfs_agino_t		agino;
-+	int			old_errno = errno;
-+
-+	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
-+	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-+	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
-+			(uint64_t)bstat->bs_ino, agno, agino);
-+	errno = old_errno;
-+	str_errno(ctx, descr);
-+}
-+
- /* Verify the contents, xattrs, and extent maps of an inode. */
- static int
- xfs_scrub_inode(
-@@ -65,6 +84,7 @@ xfs_scrub_inode(
- 	struct ptcounter	*icount = ictx->icount;
- 	bool			moveon = true;
- 	int			fd = -1;
-+	int			error;
- 
- 	background_sleep();
- 
-@@ -116,8 +136,11 @@ xfs_scrub_inode(
- out:
- 	ptcounter_add(icount, 1);
- 	progress_add(1);
--	if (fd >= 0)
--		close(fd);
-+	if (fd >= 0) {
-+		error = close(fd);
-+		if (error)
-+			xfs_scrub_inode_vfs_error(ctx, bstat);
-+	}
- 	if (!moveon)
- 		ictx->moveon = false;
- 	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 01038f77..456f38e2 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -250,6 +250,7 @@ xfs_scrub_connections(
- 	xfs_agnumber_t		agno;
- 	xfs_agino_t		agino;
- 	int			fd = -1;
-+	int			error;
- 
- 	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
- 	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-@@ -285,8 +286,11 @@ xfs_scrub_connections(
- 
- out:
- 	progress_add(1);
--	if (fd >= 0)
--		close(fd);
-+	if (fd >= 0) {
-+		error = close(fd);
-+		if (error)
-+			str_errno(ctx, descr);
-+	}
- 	if (!moveon)
- 		*pmoveon = false;
- 	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index b533cbbd..26540155 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -212,7 +212,9 @@ _("Disappeared during read error reporting."));
- 
- 	/* Go find the badness. */
- 	moveon = xfs_report_verify_fd(ctx, descr, fd, arg);
--	close(fd);
-+	error = close(fd);
-+	if (error)
-+		str_errno(ctx, descr);
- 
- 	return moveon ? 0 : XFS_ITERATE_INODES_ABORT;
- }
-@@ -243,6 +245,7 @@ xfs_report_verify_dirent(
- {
- 	bool			moveon;
- 	int			fd;
-+	int			error;
- 
- 	/* Ignore things we can't open. */
- 	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode))
-@@ -268,8 +271,9 @@ xfs_report_verify_dirent(
- 		goto out;
- 
- out:
--	close(fd);
--
-+	error = close(fd);
-+	if (error)
-+		str_errno(ctx, path);
- 	return moveon;
- }
- 
-diff --git a/scrub/vfs.c b/scrub/vfs.c
-index cfb58782..77df2874 100644
---- a/scrub/vfs.c
-+++ b/scrub/vfs.c
-@@ -86,7 +86,9 @@ scan_fs_dir(
- 	/* Caller-specific directory checks. */
- 	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
- 		sft->moveon = false;
--		close(dir_fd);
-+		error = close(dir_fd);
-+		if (error)
-+			str_errno(ctx, sftd->path);
- 		goto out;
- 	}
- 
+On Fri, May 11, 2018 at 5:20 AM Eric Sandeen <sandeen@sandeen.net> wrote:
+
+> On 5/10/18 12:31 PM, Su Yue wrote:
+> > Hi, XFS developers
+> >
+> > Recently, I was told that some 32bit applications don't work
+> > on large XFS filesystems. And it is caused by ino overflow in syscalls.
+> >
+> > If I don't misunderstand libxfs/xfs_format, XFS' absolute inode number
+> > consists of agno_log
+> > -agblklog-inopblog bits.
+> > So significative bits = ROUND(log2(Disk size / AG size)) + ROUND(log2(AG
+> > size / BLK size)) + ROUND(log2(BLK size / inode size)). Right?
+
+> > Does it mean that it's feasible to avoid ino overflow by control of disk
+> > size, AG size, block size, inode size when mkfs even the disk will be
+mount
+> > with option inode64.
+
+> Yes, inode number is an encoded disk location, and the encoding depends
+> on various other bits of filesystem geometry.
+
+> Note that "inode64" only means that it will /allow/ some inodes to exceed
+> 32 bits, it does not mean that every inode number /will/ be > 32 bits.
+
+> But most people don't want to constrain their filesystem geometry around
+> inode number sizing; if you require 32-bit inodes, just use the inode32
+mount
+> option.
+
+> Or better yet, fix the application.  :)
+
+> -Eric
+
+> > Thanks,
+> > Su
