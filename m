@@ -1,58 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37754 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750762AbeELAGj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 20:06:39 -0400
-Date: Fri, 11 May 2018 17:06:34 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:40096 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750762AbeEKXOY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 19:14:24 -0400
+Date: Fri, 11 May 2018 16:14:03 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] vfs: dedupe should return EPERM if permission is not
- granted
-Message-ID: <20180512000634.GG9510@magnolia>
-References: <20180511192651.21324-1-mfasheh@suse.de>
- <20180511192651.21324-3-mfasheh@suse.de>
+Subject: Re: [PATCH 8/8] xfs: teach xfs_bmapi_remap to accept some bmapi flags
+Message-ID: <20180511231403.GJ11261@magnolia>
+References: <152597988038.25215.9276761144353662866.stgit@magnolia>
+ <152597993604.25215.2923117604057991749.stgit@magnolia>
+ <20180511152026.GI105683@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180511192651.21324-3-mfasheh@suse.de>
+In-Reply-To: <20180511152026.GI105683@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mark Fasheh <mfasheh@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 11, 2018 at 12:26:51PM -0700, Mark Fasheh wrote:
-> Right now we return EINVAL if a process does not have permission to dedupe a
-> file. This was an oversight on my part. EPERM gives a true description of
-> the nature of our error, and EINVAL is already used for the case that the
-> filesystem does not support dedupe.
+On Fri, May 11, 2018 at 11:20:27AM -0400, Brian Foster wrote:
+> On Thu, May 10, 2018 at 12:18:56PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Teach xfs_bmapi_remap how to map in unwritten extent and to skip rmap
+> > updates.  This enables us to rebuild real and unwritten extents from the
+> > rmapbt.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c |    9 +++++++--
+> >  1 file changed, 7 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index b63e15a114f3..7660efb5beb0 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -4543,7 +4543,9 @@ xfs_bmapi_remap(
+> >  	ASSERT(len > 0);
+> >  	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
+> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> > -	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK)));
+> > +	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC |
+> > +			   XFS_BMAPI_NORMAP)));
+> > +	ASSERT(!(flags & XFS_BMAPI_ATTRFORK) || !(flags & XFS_BMAPI_PREALLOC));
 > 
-> Signed-off-by: Mark Fasheh <mfasheh@suse.de>
-> ---
->  fs/read_write.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> A little confusing.. how about something like?
 > 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 77986a2e2a3b..8edef43a182c 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -2038,7 +2038,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
->  			info->status = -EINVAL;
->  		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
->  			     uid_eq(current_fsuid(), dst->i_uid))) {
-> -			info->status = -EINVAL;
-> +			info->status = -EPERM;
+> 	ASSERT((flags & XFS_BMAPI_ATTRFORK|XFS_BMAPI_PREALLOC) !=
+> 		XFS_BMAPI_ATTRFORK|XFS_BMAPI_PREALLOC);
 
-Hmm, are we allowed to change this aspect of the kabi after the fact?
+Ok.
 
-Granted, we're only trading one error code for another, but will the
-existing users of this care?  xfs_io won't and I assume duperemove won't
-either, but what about bees? :)
+> >  
+> >  	if (unlikely(XFS_TEST_ERROR(
+> >  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> > @@ -4581,7 +4583,10 @@ xfs_bmapi_remap(
+> >  	got.br_startoff = bno;
+> >  	got.br_startblock = startblock;
+> >  	got.br_blockcount = len;
+> > -	got.br_state = XFS_EXT_NORM;
+> > +	if (flags & XFS_BMAPI_PREALLOC)
+> > +		got.br_state = XFS_EXT_UNWRITTEN;
+> > +	else
+> > +		got.br_state = XFS_EXT_NORM;
+> 
+> It's hard to see the wider picture without any users of this, but I do
+> notice that the one current caller appears to have everything passed
+> down to it to construct an xfs_bmbt_irec (in fact the data appears to
+> come from an irec in the first place).
+
+Later on in the online repair series (which I will send out after the
+review for this series concludes) I'll make use of xfs_bmapi_remap to
+reconstruct the bmbt from the rmap, which is why I've been busy adding
+BMAPI_ATTRFORK, BMAPI_NORMAP, and BMAPI_PREALLOC to this function.
+
+This patch[1] in my branch demonstrates the new uses of this function.
 
 --D
 
->  		} else if (file->f_path.mnt != dst_file->f_path.mnt) {
->  			info->status = -EXDEV;
->  		} else if (S_ISDIR(dst->i_mode)) {
-> -- 
-> 2.15.1
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-devel&id=7d8601ba8a938179ec0dae18b8a0848122eaf5e5
+
+> Brian
 > 
+> >  
+> >  	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
+> >  			&cur, &got, &firstblock, dfops, &logflags, flags);
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
