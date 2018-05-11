@@ -1,86 +1,232 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from tartarus.angband.pl ([89.206.35.136]:37782 "EHLO
-        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750740AbeELCtZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 22:49:25 -0400
-Date: Sat, 12 May 2018 04:49:20 +0200
-From: Adam Borowski <kilobyte@angband.pl>
-Subject: Re: [PATCH 1/2] vfs: allow dedupe of user owned read-only files
-Message-ID: <20180512024920.i7duhoi3lnkha4yl@angband.pl>
-References: <20180511192651.21324-1-mfasheh@suse.de>
- <20180511192651.21324-2-mfasheh@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180511192651.21324-2-mfasheh@suse.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:59646 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751028AbeEKWvP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 18:51:15 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fHGsX-0008Fv-SV
+        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fHGsX-0007D2-RD
+        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 08/10] xfs: rework secondary superblock updates in growfs
+Date: Sat, 12 May 2018 08:51:05 +1000
+Message-Id: <20180511225107.27171-9-david@fromorbit.com>
+In-Reply-To: <20180511225107.27171-1-david@fromorbit.com>
+References: <20180511225107.27171-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mark Fasheh <mfasheh@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, May 11, 2018 at 12:26:50PM -0700, Mark Fasheh wrote:
-> The permission check in vfs_dedupe_file_range() is too coarse - We
-> only allow dedupe of the destination file if the user is root, or
-> they have the file open for write.
-> 
-> This effectively limits a non-root user from deduping their own
-> read-only files. As file data during a dedupe does not change,
-> this is unexpected behavior and this has caused a number of issue
-> reports. For an example, see:
-> 
-> https://github.com/markfasheh/duperemove/issues/129
-> 
-> So change the check so we allow dedupe on the target if:
-> 
-> - the root or admin is asking for it
-> - the owner of the file is asking for the dedupe
-> - the process has write access
+From: Dave Chinner <dchinner@redhat.com>
 
-I submitted a similar patch in May 2016, yet it has never been applied
-despite multiple pings, with no NAK.  My version allowed dedupe if:
-- the root or admin is asking for it
-- the file has w permission (on the inode -- ie, could have been opened rw)
+Right now we wait until we've committed changes to the primary
+superblock before we initialise any of the new secondary
+superblocks. This means that if we have any write errors for new
+secondary superblocks we end up with garbage in place rather than
+zeros or even an "in progress" superblock to indicate a grow
+operation is being done.
 
-There was a request to include in xfstests a test case for the ETXTBSY race
-this patch fixes, but there's no reasonable way to make such a test case:
-the race condition is not a bug, it's write-xor-exec working as designed.
+To ensure we can write the secondary superblocks, initialise them
+earlier in the same loop that initialises the AG headers. We stamp
+the new secondary superblocks here with the old geometry, but set
+the "sb_inprogress" field to indicate that updates are being done to
+the superblock so they cannot be used.  This will result in the
+secondary superblock fields being updated or triggering errors that
+will abort the grow before we commit any permanent changes.
 
-Another idea discussed was about possibly just allowing everyone who can
-open the file to deduplicate it, as the file contents are not modified in
-any way.  Zygo Blaxell expressed a concern that it could be used by an
-unprivileged user who can trigger a crash to abuse writeout bugs.
+This also means we can change the update mechanism of the secondary
+superblocks.  We know that we are going to wholly overwrite the
+information in the struct xfs_sb in the buffer, so there's no point
+reading it from disk. Just allocate an uncached buffer, zero it in
+memory, stamp the new superblock structure in it and write it out.
+If we fail to write it out, then we'll leave the existing sb (old or
+new w/ inprogress) on disk for repair to deal with later.
 
-I like this new version better than mine: "root or owner or w" is more
-Unixy than "could have been opened w".
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_fsops.c | 99 +++++++++++++++++++++++++++++-----------------
+ 1 file changed, 62 insertions(+), 37 deletions(-)
 
-> Signed-off-by: Mark Fasheh <mfasheh@suse.de>
-> ---
->  fs/read_write.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index c4eabbfc90df..77986a2e2a3b 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -2036,7 +2036,8 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
->  
->  		if (info->reserved) {
->  			info->status = -EINVAL;
-> -		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE))) {
-> +		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
-> +			     uid_eq(current_fsuid(), dst->i_uid))) {
-I had:
-  +		} else if (!(is_admin || !inode_permission(dst, MAY_WRITE))) {
->  			info->status = -EINVAL;
->  		} else if (file->f_path.mnt != dst_file->f_path.mnt) {
->  			info->status = -EXDEV;
-> -- 
-
-Meow!
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 69facd4aa7c1..28692b0e61ce 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -192,6 +192,25 @@ xfs_rmaproot_init(
+ 	}
+ }
+ 
++/*
++ * Initialise new secondary superblocks with the pre-grow geometry, but mark
++ * them as "in progress" so we know they haven't yet been activated. This will
++ * get cleared when the update with the new geometry information is done after
++ * changes to the primary are committed. This isn't strictly necessary, but we
++ * get it for free with the delayed buffer write lists and it means we can tell
++ * if a grow operation didn't complete properly after the fact.
++ */
++static void
++xfs_sbblock_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
++
++	xfs_sb_to_disk(dsb, &mp->m_sb);
++	dsb->sb_inprogress = 1;
++}
+ 
+ static void
+ xfs_agfblock_init(
+@@ -328,6 +347,10 @@ xfs_grow_ag_headers(
+ 
+ {
+ 	struct xfs_aghdr_grow_data aghdr_data[] = {
++		/* SB */
++		{ XFS_AG_DADDR(mp, id->agno, XFS_SB_DADDR),
++		  XFS_FSS_TO_BB(mp, 1), &xfs_sb_buf_ops,
++		  &xfs_sbblock_init, 0, 0, true },
+ 		/* AGF */
+ 		{ XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
+ 		  XFS_FSS_TO_BB(mp, 1), &xfs_agf_buf_ops,
+@@ -634,43 +657,30 @@ xfs_growfs_imaxpct(
+ 
+ /*
+  * After a grow operation, we need to update all the secondary superblocks
+- * to match the new state of the primary. Read/init the superblocks and update
+- * them appropriately.
++ * to match the new state of the primary. Because we are completely overwriting
++ * all the existing fields in the secondary superblock buffers, there is no need
++ * to read them in from disk. Just get a new buffer, stamp it and write it.
++ *
++ * The sb buffers need to be cached here so that we serialise against scrub
++ * scanning secondary superblocks, but we don't want to keep it in memory once
++ * it is written so we mark it as a one-shot buffer.
+  */
+ static int
+ xfs_growfs_update_superblocks(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		oagcount)
++	struct xfs_mount	*mp)
+ {
+-	struct xfs_buf		*bp;
+ 	xfs_agnumber_t		agno;
+ 	int			saved_error = 0;
+ 	int			error = 0;
++	LIST_HEAD		(buffer_list);
+ 
+ 	/* update secondary superblocks. */
+ 	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+-		error = 0;
+-		/*
+-		 * new secondary superblocks need to be zeroed, not read from
+-		 * disk as the contents of the new area we are growing into is
+-		 * completely unknown.
+-		 */
+-		if (agno < oagcount) {
+-			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+-				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+-				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
+-				  &xfs_sb_buf_ops);
+-		} else {
+-			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
+-				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+-				  XFS_FSS_TO_BB(mp, 1), 0);
+-			if (bp) {
+-				bp->b_ops = &xfs_sb_buf_ops;
+-				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+-			} else
+-				error = -ENOMEM;
+-		}
++		struct xfs_buf		*bp;
+ 
++		bp = xfs_buf_get(mp->m_ddev_targp,
++				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
++				 XFS_FSS_TO_BB(mp, 1), 0);
+ 		/*
+ 		 * If we get an error reading or writing alternate superblocks,
+ 		 * continue.  xfs_repair chooses the "best" superblock based
+@@ -678,25 +688,42 @@ xfs_growfs_update_superblocks(
+ 		 * superblocks un-updated than updated, and xfs_repair may
+ 		 * pick them over the properly-updated primary.
+ 		 */
+-		if (error) {
++		if (!bp) {
+ 			xfs_warn(mp,
+-		"error %d reading secondary superblock for ag %d",
+-				error, agno);
+-			saved_error = error;
++		"error allocating secondary superblock for ag %d",
++				agno);
++			if (!saved_error)
++				saved_error = -ENOMEM;
+ 			continue;
+ 		}
+-		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
+ 
+-		error = xfs_bwrite(bp);
++		bp->b_ops = &xfs_sb_buf_ops;
++		xfs_buf_oneshot(bp);
++		xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
++		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
++		xfs_buf_delwri_queue(bp, &buffer_list);
+ 		xfs_buf_relse(bp);
++
++		/* don't hold too many buffers at once */
++		if (agno % 16)
++			continue;
++
++		error = xfs_buf_delwri_submit(&buffer_list);
+ 		if (error) {
+ 			xfs_warn(mp,
+-		"write error %d updating secondary superblock for ag %d",
++		"write error %d updating a secondary superblock near ag %d",
+ 				error, agno);
+-			saved_error = error;
++			if (!saved_error)
++				saved_error = error;
+ 			continue;
+ 		}
+ 	}
++	error = xfs_buf_delwri_submit(&buffer_list);
++	if (error) {
++		xfs_warn(mp,
++		"write error %d updating a secondary superblock near ag %d",
++			error, agno);
++	}
+ 
+ 	return saved_error ? saved_error : error;
+ }
+@@ -711,7 +738,6 @@ xfs_growfs_data(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_growfs_data	*in)
+ {
+-	xfs_agnumber_t		oagcount;
+ 	int			error = 0;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -726,7 +752,6 @@ xfs_growfs_data(
+ 			goto out_error;
+ 	}
+ 
+-	oagcount = mp->m_sb.sb_agcount;
+ 	if (in->newblocks != mp->m_sb.sb_dblocks) {
+ 		error = xfs_growfs_data_private(mp, in);
+ 		if (error)
+@@ -742,7 +767,7 @@ xfs_growfs_data(
+ 		mp->m_maxicount = 0;
+ 
+ 	/* Update secondary superblocks now the physical grow has completed */
+-	error = xfs_growfs_update_superblocks(mp, oagcount);
++	error = xfs_growfs_update_superblocks(mp);
+ 
+ out_error:
+ 	/*
 -- 
-⢀⣴⠾⠻⢶⣦⠀ 
-⣾⠁⢰⠒⠀⣿⡁ 
-⢿⡄⠘⠷⠚⠋⠀ Certified airhead; got the CT scan to prove that!
-⠈⠳⣄⠀⠀⠀⠀ 
+2.17.0
+
