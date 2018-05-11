@@ -1,80 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:26020 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750751AbeEKDE5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 23:04:57 -0400
-Date: Fri, 11 May 2018 13:04:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4] fs: don't scan the inode cache before SB_BORN is set
-Message-ID: <20180511030454.GX10363@dastard>
-References: <20180510042132.GS23861@dastard>
- <20180511012057.GV10363@dastard>
- <20180511022841.GZ30522@ZenIV.linux.org.uk>
+Received: from verein.lst.de ([213.95.11.211]:51236 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752001AbeEKGUv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 May 2018 02:20:51 -0400
+Date: Fri, 11 May 2018 08:24:35 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 01/33] block: add a lower-level bio_add_page interface
+Message-ID: <20180511062435.GD7962@lst.de>
+References: <20180509074830.16196-1-hch@lst.de> <20180509074830.16196-2-hch@lst.de> <CACVXFVMPwQV8M0raTcLUtqDix-kEkYV3E3fJSVOVw8m=iiv5Uw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180511022841.GZ30522@ZenIV.linux.org.uk>
+In-Reply-To: <CACVXFVMPwQV8M0raTcLUtqDix-kEkYV3E3fJSVOVw8m=iiv5Uw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
 
-On Fri, May 11, 2018 at 03:28:41AM +0100, Al Viro wrote:
-> On Fri, May 11, 2018 at 11:20:57AM +1000, Dave Chinner wrote:
-> > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > We recently had an oops reported on a 4.14 kernel in
-> > xfs_reclaim_inodes_count() where sb->s_fs_info pointed to garbage
-> > and so the m_perag_tree lookup walked into lala land.  It produces
-> > an oops down this path during the failed mount:
-> > 
-> >   radix_tree_gang_lookup_tag+0xc4/0x130
-> >   xfs_perag_get_tag+0x37/0xf0
-> >   xfs_reclaim_inodes_count+0x32/0x40
-> >   xfs_fs_nr_cached_objects+0x11/0x20
-> >   super_cache_count+0x35/0xc0
-> >   shrink_slab.part.66+0xb1/0x370
-> >   shrink_node+0x7e/0x1a0
-> >   try_to_free_pages+0x199/0x470
-> >   __alloc_pages_slowpath+0x3a1/0xd20
-> >   __alloc_pages_nodemask+0x1c3/0x200
-> >   cache_grow_begin+0x20b/0x2e0
-> >   fallback_alloc+0x160/0x200
-> >   kmem_cache_alloc+0x111/0x4e0
-> > 
-> > The problem is that the superblock shrinker is running before the
-> > filesystem structures it depends on have been fully set up. i.e.
-> > the shrinker is registered in sget(), before ->fill_super() has been
-> > called, and the shrinker can call into the filesystem before
-> > fill_super() does it's setup work. Essentially we are exposed to
-> > both use-after-free and use-before-initialisation bugs here.
-> > 
-> > To fix this, add a check for the SB_BORN flag in super_cache_count.
-> > In general, this flag is not set until ->fs_mount() completes
-> > successfully, so we know that it is set after the filesystem
-> > setup has completed. This matches the trylock_super() behaviour
-> > which will not let super_cache_scan() run if SB_BORN is not set, and
-> > hence will not allow the superblock shrinker from entering the
-> > filesystem while it is being set up or after it has failed setup
-> > and is being torn down.
-> > 
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+On Thu, May 10, 2018 at 04:52:00PM +0800, Ming Lei wrote:
+> On Wed, May 9, 2018 at 3:47 PM, Christoph Hellwig <hch@lst.de> wrote:
+> > For the upcoming removal of buffer heads in XFS we need to keep track of
+> > the number of outstanding writeback requests per page.  For this we need
+> > to know if bio_add_page merged a region with the previous bvec or not.
+> > Instead of adding additional arguments this refactors bio_add_page to
+> > be implemented using three lower level helpers which users like XFS can
+> > use directly if they care about the merge decisions.
 > 
-> Umm...  Shouldn't that be Cc: stable, or is there something subtle I'm
-> missing here?
+> The merge policy may be transparent to fs, such as multipage bvec.
 
-I don't test stable kernels and I know that test coverage of stable
-kernels for filesystem changes is utterly abysmal. Hence I will not
-push patches on users that are unlikely to be properly tested.
+The whole point of this series it to make it explicit.  That will have to
+be carried over into a multipage bvec world.  That means the current
+__bio_try_merge_page will have to remain as-is in that new world order,
+but we'd also add a new __bio_try_merge_segment which merges beyond th
+e page.  For the iomap and xfs code we'd first call __bio_try_merge_page,
+if that fails increment the read/write count, and only after that
+call __bio_try_merge_segment.
 
-You can add a CC: <stable> when you commit it if you want, but I'm
-not going to do that.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
