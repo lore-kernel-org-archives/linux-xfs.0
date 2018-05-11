@@ -1,48 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52605 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:53526 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750714AbeEJXFx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 May 2018 19:05:53 -0400
-Date: Thu, 10 May 2018 23:05:51 +0000
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [RFC] vfs: skip extra attributes check on removal for symlinks
-Message-ID: <20180510230551.GE27853@wotan.suse.de>
-References: <20180426234639.12480-1-mcgrof@kernel.org>
- <20180510204807.GV30522@ZenIV.linux.org.uk>
+        id S1751048AbeEKPTl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 May 2018 11:19:41 -0400
+Date: Fri, 11 May 2018 11:19:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/8] xfs: scrub the data fork of the realtime inodes
+Message-ID: <20180511151939.GE105683@bfoster.bfoster>
+References: <152597988038.25215.9276761144353662866.stgit@magnolia>
+ <152597990586.25215.6135406269069566239.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180510204807.GV30522@ZenIV.linux.org.uk>
+In-Reply-To: <152597990586.25215.6135406269069566239.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, sandeen@sandeen.net, darrick.wong@oracle.com, dhowells@redhat.com, tytso@mit.edu, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 10, 2018 at 09:48:07PM +0100, Al Viro wrote:
-> On Thu, Apr 26, 2018 at 04:46:39PM -0700, Luis R. Rodriguez wrote:
+On Thu, May 10, 2018 at 12:18:25PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> > Since we cannot set these attributes we should special-case the
-> > immutable/append on delete for symlinks, this would be consistent with
-> > what we *do* allow on Linux for all filesystems.
+> The realtime bitmap and summary inodes live on the metadata device, so
+> we can scrub their data forks with the regular scrubbers.
 > 
-> Er...  So why not simply sanity-check it in places that set it on
-> inodes? 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/rtbitmap.c |   34 +++++++++++++++++++++++++++++++++-
+>  1 file changed, 33 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+> index 8b048f107af2..abc885dab122 100644
+> --- a/fs/xfs/scrub/rtbitmap.c
+> +++ b/fs/xfs/scrub/rtbitmap.c
+> @@ -82,6 +82,11 @@ xfs_scrub_rtbitmap(
+>  {
+>  	int				error;
+>  
+> +	/* Invoke the fork scrubber. */
+> +	error = xfs_scrub_metadata_inode_forks(sc);
+> +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+> +		return error;
+> +
+>  	error = xfs_rtalloc_query_all(sc->tp, xfs_scrub_rtbitmap_rec, sc);
+>  	if (!xfs_scrub_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+>  		goto out;
+> @@ -95,8 +100,35 @@ int
+>  xfs_scrub_rtsummary(
+>  	struct xfs_scrub_context	*sc)
+>  {
+> +	struct xfs_inode		*rsumip = sc->mp->m_rsumip;
+> +	uint				old_ilock_flags;
+> +	int				error = 0;
+> +
+> +	/*
+> +	 * We ILOCK'd the rt bitmap ip in the setup routine, now lock the
+> +	 * rt summary ip in compliance with the rt inode locking rules.
+> +	 *
+> +	 * Since we switch sc->ip to rsumip we have to save the old ilock
+> +	 * flags so that we don't mix up the inode state that @sc tracks.
+> +	 */
+> +	old_ilock_flags = sc->ilock_flags;
+> +	sc->ip = rsumip;
+> +	sc->ilock_flags = XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM;
+> +	xfs_ilock(sc->ip, sc->ilock_flags);
+> +
+> +	/* Invoke the fork scrubber. */
+> +	error = xfs_scrub_metadata_inode_forks(sc);
+> +	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+> +		goto out;
+> +
+>  	/* XXX: implement this some day */
+> -	return -ENOENT;
+> +	xfs_scrub_set_incomplete(sc);
+> +out:
+> +	/* Switch back to the rtbitmap inode and lock flags. */
+> +	xfs_iunlock(sc->ip, sc->ilock_flags);
+> +	sc->ilock_flags = old_ilock_flags;
+> +	sc->ip = sc->mp->m_rbmip;
 
-The patch is not about sanity-checks on setters though as *that* is in place
-already. Its about the case where the filesystem gets corrupted and the VFS
-*still* does process these attributes for symlinks and still prevents
-deletion because of these attributes.
+I'd use an old_ip here as well just to avoid hardcoding against some
+other function. With that, looks fine:
 
-So we already do not allow for settings these attributes.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> If anything, I would suggest
-> 	* converting all places that set those in ->i_flags to
-> inode_set_flags()
-> 	* making inode_set_flags() check and return an error on
-> that...
-
-But if I misunderstood your suggestion please let me know. I'll send out
-a v2 RFC next which illustrates what filesystems can do for now.
-
-  Luis
+> +	return error;
+>  }
+>  
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
