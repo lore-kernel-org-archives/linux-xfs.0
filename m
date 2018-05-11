@@ -1,72 +1,231 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42616 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751295AbeEMSQy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 May 2018 14:16:54 -0400
-Date: Sun, 13 May 2018 18:16:53 +0000
-From: Mark Fasheh <mfasheh@suse.de>
-Subject: Re: [PATCH 1/2] vfs: allow dedupe of user owned read-only files
-Message-ID: <20180513181653.GD27915@wotan.suse.de>
-Reply-To: Mark Fasheh <mfasheh@suse.de>
-References: <20180511192651.21324-1-mfasheh@suse.de>
- <20180511192651.21324-2-mfasheh@suse.de>
- <20180512024920.i7duhoi3lnkha4yl@angband.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180512024920.i7duhoi3lnkha4yl@angband.pl>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11929 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751373AbeEKWvR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 18:51:17 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fHGsX-0008G3-Un
+        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fHGsX-0007D8-T5
+        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 10/10] xfs: factor the ag length extension code into libxfs
+Date: Sat, 12 May 2018 08:51:07 +1000
+Message-Id: <20180511225107.27171-11-david@fromorbit.com>
+In-Reply-To: <20180511225107.27171-1-david@fromorbit.com>
+References: <20180511225107.27171-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Adam Borowski <kilobyte@angband.pl>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Hey Adam,
+From: Dave Chinner <dchinner@redhat.com>
 
-On Sat, May 12, 2018 at 04:49:20AM +0200, Adam Borowski wrote:
-> On Fri, May 11, 2018 at 12:26:50PM -0700, Mark Fasheh wrote:
-> > The permission check in vfs_dedupe_file_range() is too coarse - We
-> > only allow dedupe of the destination file if the user is root, or
-> > they have the file open for write.
-> > 
-> > This effectively limits a non-root user from deduping their own
-> > read-only files. As file data during a dedupe does not change,
-> > this is unexpected behavior and this has caused a number of issue
-> > reports. For an example, see:
-> > 
-> > https://github.com/markfasheh/duperemove/issues/129
-> > 
-> > So change the check so we allow dedupe on the target if:
-> > 
-> > - the root or admin is asking for it
-> > - the owner of the file is asking for the dedupe
-> > - the process has write access
-> 
-> I submitted a similar patch in May 2016, yet it has never been applied
-> despite multiple pings, with no NAK.  My version allowed dedupe if:
-> - the root or admin is asking for it
-> - the file has w permission (on the inode -- ie, could have been opened rw)
+Growfs currently manually codes teh extension of the last AG in a
+filesytem during the growfs process. Factor that out of the growfs
+code and move it into libxfs along with teh rest of the AG header
+modification code.
 
-Ahh, yes I see that now. I did wind up acking it too :)
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ag.c | 60 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h |  7 ++++-
+ fs/xfs/xfs_fsops.c     | 58 ++--------------------------------------
+ 3 files changed, 68 insertions(+), 57 deletions(-)
 
-> There was a request to include in xfstests a test case for the ETXTBSY race
-> this patch fixes, but there's no reasonable way to make such a test case:
-> the race condition is not a bug, it's write-xor-exec working as designed.
-> 
-> Another idea discussed was about possibly just allowing everyone who can
-> open the file to deduplicate it, as the file contents are not modified in
-> any way.  Zygo Blaxell expressed a concern that it could be used by an
-> unprivileged user who can trigger a crash to abuse writeout bugs.
-> 
-> I like this new version better than mine: "root or owner or w" is more
-> Unixy than "could have been opened w".
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 638bc162afb5..81c3c5b2fa65 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -16,6 +16,7 @@
+ #include "xfs_alloc_btree.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_alloc.h"
++#include "xfs_ialloc.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
+ 
+@@ -374,3 +375,62 @@ xfs_ag_init_headers(
+ 	}
+ 	return error;
+ }
++
++/*
++ * Extent the AG indicated by the @id by the length passed in
++ */
++int
++xfs_ag_extend_space(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct aghdr_init_data	*id,
++	xfs_extlen_t		len)
++{
++	struct xfs_owner_info	oinfo;
++	struct xfs_buf		*bp;
++	struct xfs_agi		*agi;
++	struct xfs_agf		*agf;
++	int			error;
++
++	/*
++	 * Change the agi length.
++	 */
++	error = xfs_ialloc_read_agi(mp, tp, id->agno, &bp);
++	if (error)
++		return error;
++
++	agi = XFS_BUF_TO_AGI(bp);
++	be32_add_cpu(&agi->agi_length, len);
++	ASSERT(id->agno == mp->m_sb.sb_agcount - 1 ||
++	       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
++	xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
++
++	/*
++	 * Change agf length.
++	 */
++	error = xfs_alloc_read_agf(mp, tp, id->agno, 0, &bp);
++	if (error)
++		return error;
++
++	agf = XFS_BUF_TO_AGF(bp);
++	be32_add_cpu(&agf->agf_length, len);
++	ASSERT(agf->agf_length == agi->agi_length);
++	xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
++
++	/*
++	 * Free the new space.
++	 *
++	 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
++	 * this doesn't actually exist in the rmap btree.
++	 */
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
++	error = xfs_rmap_free(tp, bp, id->agno,
++				be32_to_cpu(agf->agf_length) - len,
++				len, &oinfo);
++	if (error)
++		return error;
++
++	return  xfs_free_extent(tp, XFS_AGB_TO_FSB(mp, id->agno,
++					be32_to_cpu(agf->agf_length) - len),
++				len, &oinfo, XFS_AG_RESV_NONE);
++}
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 788f37df6610..695953db41e5 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -7,6 +7,9 @@
+ #ifndef __LIBXFS_AG_H
+ #define __LIBXFS_AG_H 1
+ 
++struct xfs_mount;
++struct xfs_trans;
++
+ struct aghdr_init_data {
+ 	/* per ag data */
+ 	xfs_agblock_t		agno;		/* ag to init */
+@@ -21,6 +24,8 @@ struct aghdr_init_data {
+ 	int			numrecs;	/* recs in btree root block */
+ };
+ 
+-int xfs_ag_init_headers( struct xfs_mount *mp, struct aghdr_init_data *id);
++int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
++int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
++			struct aghdr_init_data *id, xfs_extlen_t len);
+ 
+ #endif /* __LIBXFS_AG_H */
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index c5087b79bcea..bc7ef18da243 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -27,16 +27,12 @@
+ #include "xfs_trans.h"
+ #include "xfs_error.h"
+ #include "xfs_btree.h"
+-#include "xfs_alloc_btree.h"
+ #include "xfs_alloc.h"
+-#include "xfs_rmap_btree.h"
+-#include "xfs_ialloc.h"
+ #include "xfs_fsops.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_rtalloc.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
+-#include "xfs_rmap.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ 
+@@ -48,8 +44,6 @@ xfs_growfs_data_private(
+ 	xfs_mount_t		*mp,		/* mount point for filesystem */
+ 	xfs_growfs_data_t	*in)		/* growfs data input struct */
+ {
+-	xfs_agf_t		*agf;
+-	xfs_agi_t		*agi;
+ 	xfs_buf_t		*bp;
+ 	int			error;
+ 	xfs_agnumber_t		nagcount;
+@@ -132,57 +126,9 @@ xfs_growfs_data_private(
+ 
+ 	xfs_trans_agblocks_delta(tp, id.nfree);
+ 
+-	/*
+-	 * There are new blocks in the old last a.g.
+-	 */
++	/* If there are new blocks in the old last AG, extend it. */
+ 	if (new) {
+-		struct xfs_owner_info	oinfo;
+-
+-		/*
+-		 * Change the agi length.
+-		 */
+-		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+-		if (error)
+-			goto out_trans_cancel;
+-
+-		ASSERT(bp);
+-		agi = XFS_BUF_TO_AGI(bp);
+-		be32_add_cpu(&agi->agi_length, new);
+-		ASSERT(nagcount == oagcount ||
+-		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+-		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
+-
+-		/*
+-		 * Change agf length.
+-		 */
+-		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+-		if (error)
+-			goto out_trans_cancel;
+-
+-		ASSERT(bp);
+-		agf = XFS_BUF_TO_AGF(bp);
+-		be32_add_cpu(&agf->agf_length, new);
+-		ASSERT(be32_to_cpu(agf->agf_length) ==
+-		       be32_to_cpu(agi->agi_length));
+-
+-		xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
+-
+-		/*
+-		 * Free the new space.
+-		 *
+-		 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
+-		 * this doesn't actually exist in the rmap btree.
+-		 */
+-		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
+-		error = xfs_rmap_free(tp, bp, id.agno,
+-				be32_to_cpu(agf->agf_length) - new,
+-				new, &oinfo);
+-		if (error)
+-			goto out_trans_cancel;
+-		error = xfs_free_extent(tp,
+-				XFS_AGB_TO_FSB(mp, id.agno,
+-					be32_to_cpu(agf->agf_length) - new),
+-				new, &oinfo, XFS_AG_RESV_NONE);
++		error = xfs_ag_extend_space(mp, tp, &id, new);
+ 		if (error)
+ 			goto out_trans_cancel;
+ 	}
+-- 
+2.17.0
 
-I agree, IMHO the behavior in this patch is intuitive. What we had before
-would surprise users.
-
-Yeah we've been careful about not letting a user dedupe some other users
-file. Data-wise it technically might be ok but I can imagine several
-scenarios where you might not want some other user deduping your files.
-
-Thanks for the review,
-	--Mark
