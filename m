@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:59646 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11929 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750818AbeEKWvO (ORCPT
+        by vger.kernel.org with ESMTP id S1751228AbeEKWvO (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 18:51:14 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1fHGsX-0008Fc-NJ
+        id 1fHGsX-0008Fn-Qg
         for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.91)
         (envelope-from <david@fromorbit.com>)
-        id 1fHGsX-0007Cm-Lz
+        id 1fHGsX-0007Cw-PF
         for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/10] xfs: convert growfs AG header init to use buffer lists
-Date: Sat, 12 May 2018 08:51:00 +1000
-Message-Id: <20180511225107.27171-4-david@fromorbit.com>
+Subject: [PATCH 06/10] xfs: make imaxpct changes in growfs separate
+Date: Sat, 12 May 2018 08:51:03 +1000
+Message-Id: <20180511225107.27171-7-david@fromorbit.com>
 In-Reply-To: <20180511225107.27171-1-david@fromorbit.com>
 References: <20180511225107.27171-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,200 +25,144 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We currently write all new AG headers synchronously, which can be
-slow for large grow operations. All we really need to do is ensure
-all the headers are on disk before we run the growfs transaction, so
-convert this to a buffer list and a delayed write operation. We
-block waiting for the delayed write buffer submission to complete,
-so this will fulfill the requirement to have all the buffers written
-correctly before proceeding.
+When growfs changes the imaxpct value of the filesystem, it runs
+through all the "change size" growfs code, whether it needs to or
+not. Separate out changing imaxpct into it's own function and
+transaction to simplify the rest of the growfs code.
 
 Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_fsops.c | 74 +++++++++++++++++++++-------------------------
- 1 file changed, 33 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_fsops.c | 69 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 50 insertions(+), 19 deletions(-)
 
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 391d1938a6c8..4b560caaf397 100644
+index 263f9b5da991..0fd50c68f1b0 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -81,7 +81,8 @@ xfs_grow_ag_headers(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
- 	xfs_extlen_t		agsize,
--	xfs_rfsblock_t		*nfree)
-+	xfs_rfsblock_t		*nfree,
-+	struct list_head	*buffer_list)
- {
- 	struct xfs_agf		*agf;
- 	struct xfs_agi		*agi;
-@@ -135,11 +136,8 @@ xfs_grow_ag_headers(
- 		agf->agf_refcount_level = cpu_to_be32(1);
- 		agf->agf_refcount_blocks = cpu_to_be32(1);
- 	}
--
--	error = xfs_bwrite(bp);
-+	xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_relse(bp);
--	if (error)
--		goto out_error;
- 
- 	/*
- 	 * AG freelist header block
-@@ -164,10 +162,8 @@ xfs_grow_ag_headers(
- 	for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
- 		agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
- 
--	error = xfs_bwrite(bp);
-+	xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_relse(bp);
--	if (error)
--		goto out_error;
- 
- 	/*
- 	 * AG inode header block
-@@ -201,10 +197,8 @@ xfs_grow_ag_headers(
- 	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
- 		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
- 
--	error = xfs_bwrite(bp);
-+	xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_relse(bp);
--	if (error)
--		goto out_error;
- 
- 	/*
- 	 * BNO btree root block
-@@ -226,10 +220,8 @@ xfs_grow_ag_headers(
- 	arec->ar_blockcount = cpu_to_be32(
- 		agsize - be32_to_cpu(arec->ar_startblock));
- 
--	error = xfs_bwrite(bp);
-+	xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_relse(bp);
--	if (error)
--		goto out_error;
- 
- 	/*
- 	 * CNT btree root block
-@@ -251,10 +243,8 @@ xfs_grow_ag_headers(
- 		agsize - be32_to_cpu(arec->ar_startblock));
- 	*nfree += be32_to_cpu(arec->ar_blockcount);
- 
--	error = xfs_bwrite(bp);
-+	xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_relse(bp);
--	if (error)
--		goto out_error;
- 
- 	/* RMAP btree root block */
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-@@ -326,10 +316,8 @@ xfs_grow_ag_headers(
- 			be16_add_cpu(&block->bb_numrecs, 1);
- 		}
- 
--		error = xfs_bwrite(bp);
-+		xfs_buf_delwri_queue(bp, buffer_list);
- 		xfs_buf_relse(bp);
--		if (error)
--			goto out_error;
- 	}
- 
- 	/*
-@@ -345,11 +333,8 @@ xfs_grow_ag_headers(
- 	}
- 
- 	xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
--
--	error = xfs_bwrite(bp);
-+	xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_relse(bp);
--	if (error)
--		goto out_error;
- 
- 	/*
- 	 * FINO btree root block
-@@ -364,13 +349,9 @@ xfs_grow_ag_headers(
- 			goto out_error;
- 		}
- 
--		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
--					     0, 0, agno, 0);
--
--		error = xfs_bwrite(bp);
-+		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO, 0, 0, agno, 0);
-+		xfs_buf_delwri_queue(bp, buffer_list);
- 		xfs_buf_relse(bp);
--		if (error)
--			goto out_error;
- 	}
- 
- 	/*
-@@ -386,13 +367,9 @@ xfs_grow_ag_headers(
- 			goto out_error;
- 		}
- 
--		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
--				     0, 0, agno, 0);
--
--		error = xfs_bwrite(bp);
-+		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC, 0, 0, agno, 0);
-+		xfs_buf_delwri_queue(bp, buffer_list);
- 		xfs_buf_relse(bp);
--		if (error)
--			goto out_error;
- 	}
- 
- out_error:
-@@ -419,6 +396,7 @@ xfs_growfs_data_private(
+@@ -400,25 +400,21 @@ xfs_growfs_data_private(
+ 	xfs_agi_t		*agi;
+ 	xfs_agnumber_t		agno;
+ 	xfs_buf_t		*bp;
+-	int			dpct;
+ 	int			error, saved_error = 0;
+ 	xfs_agnumber_t		nagcount;
+ 	xfs_agnumber_t		nagimax = 0;
+ 	xfs_rfsblock_t		nb, nb_mod;
+ 	xfs_rfsblock_t		new;
  	xfs_agnumber_t		oagcount;
- 	int			pct;
+-	int			pct;
  	xfs_trans_t		*tp;
-+	LIST_HEAD		(buffer_list);
+ 	LIST_HEAD		(buffer_list);
+ 	struct aghdr_init_data	id = {};
  
  	nb = in->newblocks;
- 	pct = in->imaxpct;
-@@ -459,9 +437,16 @@ xfs_growfs_data_private(
+-	pct = in->imaxpct;
+-	if (nb < mp->m_sb.sb_dblocks || pct < 0 || pct > 100)
++	if (nb < mp->m_sb.sb_dblocks)
+ 		return -EINVAL;
+ 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
  		return error;
+-	dpct = pct - mp->m_sb.sb_imax_pct;
+ 	error = xfs_buf_read_uncached(mp->m_ddev_targp,
+ 				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
+ 				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+@@ -551,8 +547,6 @@ xfs_growfs_data_private(
+ 				 nb - mp->m_sb.sb_dblocks);
+ 	if (id.nfree)
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+-	if (dpct)
+-		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+ 	xfs_trans_set_sync(tp);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+@@ -561,12 +555,6 @@ xfs_growfs_data_private(
+ 	/* New allocation groups fully initialized, so update mount struct */
+ 	if (nagimax)
+ 		mp->m_maxagi = nagimax;
+-	if (mp->m_sb.sb_imax_pct) {
+-		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
+-		do_div(icount, 100);
+-		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
+-	} else
+-		mp->m_maxicount = 0;
+ 	xfs_set_low_space_thresholds(mp);
+ 	mp->m_alloc_set_aside = xfs_alloc_set_aside(mp);
  
- 	/*
--	 * Write new AG headers to disk. Non-transactional, but written
--	 * synchronously so they are completed prior to the growfs transaction
--	 * being logged.
-+	 * Write new AG headers to disk. Non-transactional, but need to be
-+	 * written and completed prior to the growfs transaction being logged.
-+	 * To do this, we use a delayed write buffer list and wait for
-+	 * submission and IO completion of the list as a whole. This allows the
-+	 * IO subsystem to merge all the AG headers in a single AG into a single
-+	 * IO and hide most of the latency of the IO from us.
-+	 *
-+	 * This also means that if we get an error whilst building the buffer
-+	 * list to write, we can cancel the entire list without having written
-+	 * anything.
- 	 */
- 	nfree = 0;
- 	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
-@@ -472,10 +457,17 @@ xfs_growfs_data_private(
- 		else
- 			agsize = mp->m_sb.sb_agblocks;
+@@ -670,25 +658,68 @@ xfs_growfs_log_private(
+ 	return -ENOSYS;
+ }
  
--		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree);
--		if (error)
-+		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree,
-+					    &buffer_list);
-+		if (error) {
-+			xfs_buf_delwri_cancel(&buffer_list);
- 			goto error0;
-+		}
- 	}
-+	error = xfs_buf_delwri_submit(&buffer_list);
-+	if (error)
-+		goto error0;
++static int
++xfs_growfs_imaxpct(
++	struct xfs_mount	*mp,
++	__u32			imaxpct)
++{
++	struct xfs_trans	*tp;
++	int64_t			dpct;
++	int			error;
 +
- 	xfs_trans_agblocks_delta(tp, nfree);
++	if (imaxpct > 100)
++		return -EINVAL;
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
++			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
++	if (error)
++		return error;
++
++	dpct = (int64_t)imaxpct - mp->m_sb.sb_imax_pct;
++	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
++	xfs_trans_set_sync(tp);
++	return xfs_trans_commit(tp);
++}
++
+ /*
+  * protected versions of growfs function acquire and release locks on the mount
+  * point - exported through ioctls: XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG,
+  * XFS_IOC_FSGROWFSRT
+  */
+-
+-
+ int
+ xfs_growfs_data(
+-	xfs_mount_t		*mp,
+-	xfs_growfs_data_t	*in)
++	struct xfs_mount	*mp,
++	struct xfs_growfs_data	*in)
+ {
+-	int error;
++	int			error = 0;
  
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 	if (!mutex_trylock(&mp->m_growlock))
+ 		return -EWOULDBLOCK;
+-	error = xfs_growfs_data_private(mp, in);
++
++	/* update imaxpct separately to the physical grow of the filesystem */
++	if (in->imaxpct != mp->m_sb.sb_imax_pct) {
++		error = xfs_growfs_imaxpct(mp, in->imaxpct);
++		if (error)
++			goto out_error;
++	}
++
++	if (in->newblocks != mp->m_sb.sb_dblocks) {
++		error = xfs_growfs_data_private(mp, in);
++		if (error)
++			goto out_error;
++	}
++
++	/* Post growfs calculations needed to reflect new state in operations */
++	if (mp->m_sb.sb_imax_pct) {
++		uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
++		do_div(icount, 100);
++		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
++	} else
++		mp->m_maxicount = 0;
++
++out_error:
  	/*
+ 	 * Increment the generation unconditionally, the error could be from
+ 	 * updating the secondary superblocks, in which case the new size
 -- 
 2.17.0
 
