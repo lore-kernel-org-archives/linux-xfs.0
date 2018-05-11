@@ -1,236 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:49953 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751233AbeENETO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 00:19:14 -0400
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11929 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750972AbeEKWvM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 18:51:12 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1fI4x0-0002vN-B0
-        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+        id 1fHGsX-0008FZ-K6
+        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.91)
         (envelope-from <david@fromorbit.com>)
-        id 1fI4x0-0002xh-9N
-        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+        id 1fHGsX-0007Ce-Gw
+        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/10] xfs: rework secondary superblock updates in growfs
-Date: Mon, 14 May 2018 14:19:02 +1000
-Message-Id: <20180514041904.11140-9-david@fromorbit.com>
-In-Reply-To: <20180514041904.11140-1-david@fromorbit.com>
-References: <20180514041904.11140-1-david@fromorbit.com>
+Subject: [PATCH v2] xfs: refactor and tablise growfs
+Date: Sat, 12 May 2018 08:50:57 +1000
+Message-Id: <20180511225107.27171-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Right now we wait until we've committed changes to the primary
-superblock before we initialise any of the new secondary
-superblocks. This means that if we have any write errors for new
-secondary superblocks we end up with garbage in place rather than
-zeros or even an "in progress" superblock to indicate a grow
-operation is being done.
+This is an update of the patch set I sent a while ago, and
+Eric and Darrick have been bugging me to get sorted. The last
+posting was here:
 
-To ensure we can write the secondary superblocks, initialise them
-earlier in the same loop that initialises the AG headers. We stamp
-the new secondary superblocks here with the old geometry, but set
-the "sb_inprogress" field to indicate that updates are being done to
-the superblock so they cannot be used.  This will result in the
-secondary superblock fields being updated or triggering errors that
-will abort the grow before we commit any permanent changes.
+https://marc.info/?l=linux-xfs&m=151746732826277&w=2
 
-This also means we can change the update mechanism of the secondary
-superblocks.  We know that we are going to wholly overwrite the
-information in the struct xfs_sb in the buffer, so there's no point
-reading it from disk. Just allocate an uncached buffer, zero it in
-memory, stamp the new superblock structure in it and write it out.
-If we fail to write it out, then we'll leave the existing sb (old or
-new w/ inprogress) on disk for repair to deal with later.
+This update addresses most of the comments that were made at the
+time. most importantly, it gets rid of the use of uncached buffers
+for secondary superblocks. Instead, I introduced a small helper to
+mark a buffer as a "one-shot" buffer, which will cause the buffer to
+be reclaimed when all active references go away rather than being
+put on the LRU. If teh buffer is already on the LRU, then it
+respects that and does not change the buffer behaviour (similar to
+XFS_IGET_DONTCACHE for inodes).  THis means the growfs code will
+play nicely with scrub and other occasional users of secondary
+superblocks, but not add any long term cache footprint.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_fsops.c | 102 +++++++++++++++++++++++++++++----------------
- 1 file changed, 65 insertions(+), 37 deletions(-)
+The other addition since the last posting is moving all the code
+that does the AG header setup to libxfs so it canbe shared with
+userspace(*). Most of the functions have been moved to new files
+fs/xfs/libxfs/xfs_ag.[ch], but the secondary superblock update got
+moved to fs/xfs/libxfs/xfs_sb.c, because it's purely about
+superblock updates.
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index a718bb002cf4..ca3cf3f6239a 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -191,6 +191,25 @@ xfs_rmaproot_init(
- 	}
- }
- 
-+/*
-+ * Initialise new secondary superblocks with the pre-grow geometry, but mark
-+ * them as "in progress" so we know they haven't yet been activated. This will
-+ * get cleared when the update with the new geometry information is done after
-+ * changes to the primary are committed. This isn't strictly necessary, but we
-+ * get it for free with the delayed buffer write lists and it means we can tell
-+ * if a grow operation didn't complete properly after the fact.
-+ */
-+static void
-+xfs_sbblock_init(
-+	struct xfs_mount	*mp,
-+	struct xfs_buf		*bp,
-+	struct aghdr_init_data	*id)
-+{
-+	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
-+
-+	xfs_sb_to_disk(dsb, &mp->m_sb);
-+	dsb->sb_inprogress = 1;
-+}
- 
- static void
- xfs_agfblock_init(
-@@ -326,6 +345,13 @@ xfs_grow_ag_headers(
- 
- {
- 	struct xfs_aghdr_grow_data aghdr_data[] = {
-+	{ /* SB */
-+		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_SB_DADDR),
-+		.numblks = XFS_FSS_TO_BB(mp, 1),
-+		.ops = &xfs_sb_buf_ops,
-+		.work = &xfs_sbblock_init,
-+		.need_init = true
-+	},
- 	{ /* AGF */
- 		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
- 		.numblks = XFS_FSS_TO_BB(mp, 1),
-@@ -658,43 +684,30 @@ xfs_growfs_imaxpct(
- 
- /*
-  * After a grow operation, we need to update all the secondary superblocks
-- * to match the new state of the primary. Read/init the superblocks and update
-- * them appropriately.
-+ * to match the new state of the primary. Because we are completely overwriting
-+ * all the existing fields in the secondary superblock buffers, there is no need
-+ * to read them in from disk. Just get a new buffer, stamp it and write it.
-+ *
-+ * The sb buffers need to be cached here so that we serialise against scrub
-+ * scanning secondary superblocks, but we don't want to keep it in memory once
-+ * it is written so we mark it as a one-shot buffer.
-  */
- static int
- xfs_growfs_update_superblocks(
--	struct xfs_mount	*mp,
--	xfs_agnumber_t		oagcount)
-+	struct xfs_mount	*mp)
- {
--	struct xfs_buf		*bp;
- 	xfs_agnumber_t		agno;
- 	int			saved_error = 0;
- 	int			error = 0;
-+	LIST_HEAD		(buffer_list);
- 
- 	/* update secondary superblocks. */
- 	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
--		error = 0;
--		/*
--		 * new secondary superblocks need to be zeroed, not read from
--		 * disk as the contents of the new area we are growing into is
--		 * completely unknown.
--		 */
--		if (agno < oagcount) {
--			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
--				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
--				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
--				  &xfs_sb_buf_ops);
--		} else {
--			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
--				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
--				  XFS_FSS_TO_BB(mp, 1), 0);
--			if (bp) {
--				bp->b_ops = &xfs_sb_buf_ops;
--				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
--			} else
--				error = -ENOMEM;
--		}
-+		struct xfs_buf		*bp;
- 
-+		bp = xfs_buf_get(mp->m_ddev_targp,
-+				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-+				 XFS_FSS_TO_BB(mp, 1), 0);
- 		/*
- 		 * If we get an error reading or writing alternate superblocks,
- 		 * continue.  xfs_repair chooses the "best" superblock based
-@@ -702,25 +715,42 @@ xfs_growfs_update_superblocks(
- 		 * superblocks un-updated than updated, and xfs_repair may
- 		 * pick them over the properly-updated primary.
- 		 */
--		if (error) {
-+		if (!bp) {
- 			xfs_warn(mp,
--		"error %d reading secondary superblock for ag %d",
--				error, agno);
--			saved_error = error;
-+		"error allocating secondary superblock for ag %d",
-+				agno);
-+			if (!saved_error)
-+				saved_error = -ENOMEM;
- 			continue;
- 		}
--		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
- 
--		error = xfs_bwrite(bp);
-+		bp->b_ops = &xfs_sb_buf_ops;
-+		xfs_buf_oneshot(bp);
-+		xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-+		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-+		xfs_buf_delwri_queue(bp, &buffer_list);
- 		xfs_buf_relse(bp);
-+
-+		/* don't hold too many buffers at once */
-+		if (agno % 16)
-+			continue;
-+
-+		error = xfs_buf_delwri_submit(&buffer_list);
- 		if (error) {
- 			xfs_warn(mp,
--		"write error %d updating secondary superblock for ag %d",
-+		"write error %d updating a secondary superblock near ag %d",
- 				error, agno);
--			saved_error = error;
-+			if (!saved_error)
-+				saved_error = error;
- 			continue;
- 		}
- 	}
-+	error = xfs_buf_delwri_submit(&buffer_list);
-+	if (error) {
-+		xfs_warn(mp,
-+		"write error %d updating a secondary superblock near ag %d",
-+			error, agno);
-+	}
- 
- 	return saved_error ? saved_error : error;
- }
-@@ -735,7 +765,6 @@ xfs_growfs_data(
- 	struct xfs_mount	*mp,
- 	struct xfs_growfs_data	*in)
- {
--	xfs_agnumber_t		oagcount;
- 	int			error = 0;
- 
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -750,7 +779,6 @@ xfs_growfs_data(
- 			goto out_error;
- 	}
- 
--	oagcount = mp->m_sb.sb_agcount;
- 	if (in->newblocks != mp->m_sb.sb_dblocks) {
- 		error = xfs_growfs_data_private(mp, in);
- 		if (error)
-@@ -766,7 +794,7 @@ xfs_growfs_data(
- 		mp->m_maxicount = 0;
- 
- 	/* Update secondary superblocks now the physical grow has completed */
--	error = xfs_growfs_update_superblocks(mp, oagcount);
-+	error = xfs_growfs_update_superblocks(mp);
- 
- out_error:
- 	/*
--- 
-2.17.0
+The pastchset just passed an overnight QA run on v4 and v5
+filesystems w/ both 1k and 4k block sizes.
+
+Comments?
+
+-Dave.
+
+Version 2:
+- rebase on current for-next
+- add oneshot cached buffer support
+- clean up more of the typedef usage.
+- move id->nfree calc to per-ag hdr init function from the freespace
+  btree root initialisation.
+- only use id->type and id->numrecs for the generic btree root block
+  init calls.
+- only call xfs_growfs_data_private() if the size is actually being
+  changed.
+- make sure we still update secondary superblocks if physical grow
+  fails with ENOSPC.
+- change secondary superblock updates to use cached one-shot
+  buffers.
+- moved the core code to libxfs so it can be shared easily with
+  userspace.
+
+(*) e.g. mkfs. More interestingly, this provides a mechanism for a
+simple offline grow implementation to be added to xfs_spaceman for
+vm/container deployment infrastructures that have to mount an fs
+image just to grow it during their setup phase.
+
 
