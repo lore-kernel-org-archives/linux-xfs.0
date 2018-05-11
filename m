@@ -1,63 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37712 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750989AbeEKVMV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 11 May 2018 17:12:21 -0400
-Date: Fri, 11 May 2018 23:12:18 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC v2 3/4] ext4: add verifier check for symlink with
- append/immutable flags
-Message-ID: <20180511211218.rs365ftuw53c4qj2@quack2.suse.cz>
-References: <20180510231359.16899-1-mcgrof@kernel.org>
- <20180510231359.16899-4-mcgrof@kernel.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:39496 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750794AbeEKXqi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 19:46:38 -0400
+Date: Fri, 11 May 2018 16:46:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 8/8] xfs: teach xfs_bmapi_remap to accept some bmapi flags
+Message-ID: <20180511234616.GL11261@magnolia>
+References: <152597988038.25215.9276761144353662866.stgit@magnolia>
+ <152597993604.25215.2923117604057991749.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180510231359.16899-4-mcgrof@kernel.org>
+In-Reply-To: <152597993604.25215.2923117604057991749.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: viro@zeniv.linux.org.uk, darrick.wong@oracle.com, tytso@mit.edu, adilger.kernel@dilger.ca, clm@fb.com, jbacik@fb.com, dsterba@suse.com, sandeen@sandeen.net, dhowells@redhat.com, fliu@suse.com, jack@suse.cz, jeffm@suse.com, nborisov@suse.com, jake.norris@suse.com, mtk.manpages@gmail.com, linux-api@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Thu 10-05-18 16:13:58, Luis R. Rodriguez wrote:
-> The Linux VFS does not allow a way to set append/immuttable
-> attributes to symlinks, this is just not possible. If this is
-> detected inform the user as the filesystem must be corrupted.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks good to me. You can add:
+Teach xfs_bmapi_remap how to map in unwritten extent and to skip rmap
+updates.  This enables us to rebuild real and unwritten extents from the
+rmapbt.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: tidy up the assert checking for ATTR|PREALLOC
+---
+ fs/xfs/libxfs/xfs_bmap.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-								Honza
-
-> ---
->  fs/ext4/inode.c | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 37a2f7a2b66a..6acf0dd6b6e6 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -4947,6 +4947,13 @@ struct inode *ext4_iget(struct super_block *sb, unsigned long ino)
->  		inode->i_op = &ext4_dir_inode_operations;
->  		inode->i_fop = &ext4_dir_operations;
->  	} else if (S_ISLNK(inode->i_mode)) {
-> +		/* VFS does not allow setting these so must be corruption */
-> +		if (IS_APPEND(inode) || IS_IMMUTABLE(inode)) {
-> +			EXT4_ERROR_INODE(inode,
-> +			  "immutable or append flags not allowed on symlinks");
-> +			ret = -EFSCORRUPTED;
-> +			goto bad_inode;
-> +		}
->  		if (ext4_encrypted_inode(inode)) {
->  			inode->i_op = &ext4_encrypted_symlink_inode_operations;
->  			ext4_set_aops(inode);
-> -- 
-> 2.17.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index b63e15a114f3..7b0e2b551e23 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4543,7 +4543,10 @@ xfs_bmapi_remap(
+ 	ASSERT(len > 0);
+ 	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK)));
++	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC |
++			   XFS_BMAPI_NORMAP)));
++	ASSERT((flags & (XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC)) !=
++			(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC));
+ 
+ 	if (unlikely(XFS_TEST_ERROR(
+ 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+@@ -4581,7 +4584,10 @@ xfs_bmapi_remap(
+ 	got.br_startoff = bno;
+ 	got.br_startblock = startblock;
+ 	got.br_blockcount = len;
+-	got.br_state = XFS_EXT_NORM;
++	if (flags & XFS_BMAPI_PREALLOC)
++		got.br_state = XFS_EXT_UNWRITTEN;
++	else
++		got.br_state = XFS_EXT_NORM;
+ 
+ 	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
+ 			&cur, &got, &firstblock, dfops, &logflags, flags);
