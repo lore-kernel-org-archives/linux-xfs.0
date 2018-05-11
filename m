@@ -1,141 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50300 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751149AbeEJTTJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 May 2018 15:19:09 -0400
-Subject: [PATCH 7/8] xfs: make xfs_bmapi_remapi work with attribute forks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 10 May 2018 12:18:49 -0700
-Message-ID: <152597992982.25215.1084122529570117868.stgit@magnolia>
-In-Reply-To: <152597988038.25215.9276761144353662866.stgit@magnolia>
-References: <152597988038.25215.9276761144353662866.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:42863 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750876AbeEKWUO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 May 2018 18:20:14 -0400
+Date: Fri, 11 May 2018 22:20:12 +0000
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH] mkfs.xfs: add configuration file parsing support using
+ our own parser
+Message-ID: <20180511222012.GK27853@wotan.suse.de>
+References: <20180313205911.26082-1-mcgrof@kernel.org>
+ <20180313213916.GD18129@dastard>
+ <20180313235227.GH4449@wotan.suse.de>
+ <20180314035531.GF18129@dastard>
+ <20180314171901.GI4449@wotan.suse.de>
+ <20180314210145.GH18129@dastard>
+ <20180426173739.GA27875@wotan.suse.de>
+ <20180503000015.GF27875@wotan.suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180503000015.GF27875@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: sandeen@sandeen.net, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, tytso@mit.edu, mcgrof@kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, May 03, 2018 at 12:00:15AM +0000, Luis R. Rodriguez wrote:
+> On Thu, Apr 26, 2018 at 05:37:39PM +0000, Luis R. Rodriguez wrote:
+> > On Thu, Mar 15, 2018 at 08:01:45AM +1100, Dave Chinner wrote:
+> > > On Wed, Mar 14, 2018 at 05:19:01PM +0000, Luis R. Rodriguez wrote:
+> > > > On Wed, Mar 14, 2018 at 02:55:31PM +1100, Dave Chinner wrote:
+> > > > > On Tue, Mar 13, 2018 at 11:52:27PM +0000, Luis R. Rodriguez wrote:
+> > > > > > On Wed, Mar 14, 2018 at 08:39:16AM +1100, Dave Chinner wrote:
+> > > > > 
+> > > > > Basically:
+> > > > > 
+> > > > > 1. the default file parsing code needs to go into it's own file.
+> > > > > xfs_mkfs.c is too large and needs to be split into smaller files, so
+> > > > > lets not make it worse by shovelling another 500 lines of code into
+> > > > > it...
+> > > > 
+> > > > Sure.
+> > 
+> > Other than using its own file you had suggested to have the config stuff have
+> > its own structure. At LSFMM you had also suggested it should have its own
+> > defaults which may change later, however for now they can be the same as the
+> > CLI defaults. I suspect likewise applies for maxval, minval.
+> > 
+> > What about the conflict mapping / checkers? Don't we want to share that? If so
+> > it would make sense to share the enums used to describe the individual subopts
+> > as well. If so I'll shove the enums into its own file. The conflict stuff
+> > is already in its own structure, so if we want to *share* that, I could just
+> > move all that into its own set of files and share that.
+> 
+> Re-poke.
 
-Add a new flags argument to xfs_bmapi_remapi so that we can pass BMAPI
-flags into the function.  This enables us to pass in BMAPI_ATTRFORK so
-that we can remap things into the attribute fork.  Eventually the
-online repair code will use this to rebuild attribute forks, so make it
-non-static.
+Alright... I'm just gonna do what I think is right :)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c |   28 ++++++++++++++++------------
- fs/xfs/libxfs/xfs_bmap.h |    4 ++++
- 2 files changed, 20 insertions(+), 12 deletions(-)
-
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 0fd051064ff0..b63e15a114f3 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4520,30 +4520,34 @@ xfs_bmapi_write(
- 	return error;
- }
- 
--static int
-+int
- xfs_bmapi_remap(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
- 	xfs_fileoff_t		bno,
- 	xfs_filblks_t		len,
- 	xfs_fsblock_t		startblock,
--	struct xfs_defer_ops	*dfops)
-+	struct xfs_defer_ops	*dfops,
-+	int			flags)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	struct xfs_ifork	*ifp;
- 	struct xfs_btree_cur	*cur = NULL;
- 	xfs_fsblock_t		firstblock = NULLFSBLOCK;
- 	struct xfs_bmbt_irec	got;
- 	struct xfs_iext_cursor	icur;
-+	int			whichfork = xfs_bmapi_whichfork(flags);
- 	int			logflags = 0, error;
- 
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(len > 0);
- 	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK)));
- 
- 	if (unlikely(XFS_TEST_ERROR(
--	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
--	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-+	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
- 	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
- 		XFS_ERROR_REPORT("xfs_bmapi_remap", XFS_ERRLEVEL_LOW, mp);
- 		return -EFSCORRUPTED;
-@@ -4553,7 +4557,7 @@ xfs_bmapi_remap(
- 		return -EIO;
- 
- 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
--		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+		error = xfs_iread_extents(tp, ip, whichfork);
- 		if (error)
- 			return error;
- 	}
-@@ -4568,7 +4572,7 @@ xfs_bmapi_remap(
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	if (ifp->if_flags & XFS_IFBROOT) {
--		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-+		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
- 		cur->bc_private.b.firstblock = firstblock;
- 		cur->bc_private.b.dfops = dfops;
- 		cur->bc_private.b.flags = 0;
-@@ -4579,16 +4583,16 @@ xfs_bmapi_remap(
- 	got.br_blockcount = len;
- 	got.br_state = XFS_EXT_NORM;
- 
--	error = xfs_bmap_add_extent_hole_real(tp, ip, XFS_DATA_FORK, &icur,
--			&cur, &got, &firstblock, dfops, &logflags, 0);
-+	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
-+			&cur, &got, &firstblock, dfops, &logflags, flags);
- 	if (error)
- 		goto error0;
- 
--	if (xfs_bmap_wants_extents(ip, XFS_DATA_FORK)) {
-+	if (xfs_bmap_wants_extents(ip, whichfork)) {
- 		int		tmp_logflags = 0;
- 
- 		error = xfs_bmap_btree_to_extents(tp, ip, cur,
--			&tmp_logflags, XFS_DATA_FORK);
-+			&tmp_logflags, whichfork);
- 		logflags |= tmp_logflags;
- 	}
- 
-@@ -6162,7 +6166,7 @@ xfs_bmap_finish_one(
- 	switch (type) {
- 	case XFS_BMAP_MAP:
- 		error = xfs_bmapi_remap(tp, ip, startoff, *blockcount,
--				startblock, dfops);
-+				startblock, dfops, 0);
- 		*blockcount = 0;
- 		break;
- 	case XFS_BMAP_UNMAP:
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 6046012674c8..2c233f9f1a26 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -297,4 +297,8 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
- xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
- 		struct xfs_bmbt_irec *irec);
- 
-+int	xfs_bmapi_remap(struct xfs_trans *tp, struct xfs_inode *ip,
-+		xfs_fileoff_t bno, xfs_filblks_t len, xfs_fsblock_t startblock,
-+		struct xfs_defer_ops *dfops, int flags);
-+
- #endif	/* __XFS_BMAP_H__ */
-
+  Luis
